@@ -415,9 +415,9 @@
 		<module>engine/impl/xml</module>
 
 		<!-- The command-line tools -->
-		<module>tools/caliente</module>
-		<module>tools/filename-mapper</module>
-		<module>tools/user-mapper</module>
-		<module>tools/validator</module>
+		<module>cli/caliente</module>
+		<module>cli/filename-mapper</module>
+		<module>cli/user-mapper</module>
+		<module>cli/validator</module>
 	</modules>
 </project>
