@@ -6,9 +6,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
-import com.armedia.cmf.engine.TransferSetting;
-import com.armedia.cmf.engine.cmis.CmisSessionSetting;
-import com.armedia.cmf.engine.cmis.importer.CmisImportEngine;
+import com.armedia.caliente.engine.TransferSetting;
+import com.armedia.caliente.engine.cmis.CmisSessionSetting;
+import com.armedia.caliente.engine.cmis.importer.CmisImportEngine;
 import com.armedia.commons.utilities.Tools;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;

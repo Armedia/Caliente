@@ -1,6 +1,6 @@
 package com.delta.cmsmf.launcher.dctm;
 
-import com.armedia.cmf.engine.documentum.DctmCrypto;
+import com.armedia.caliente.engine.documentum.DctmCrypto;
 import com.delta.cmsmf.launcher.AbstractEncrypt;
 
 /**

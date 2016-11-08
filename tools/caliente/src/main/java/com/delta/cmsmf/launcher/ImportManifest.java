@@ -15,12 +15,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.log4j.Logger;
 
-import com.armedia.cmf.engine.importer.DefaultImportEngineListener;
-import com.armedia.cmf.engine.importer.ImportOutcome;
-import com.armedia.cmf.engine.importer.ImportResult;
-import com.armedia.cmf.engine.importer.ImportState;
-import com.armedia.cmf.storage.CmfObject;
-import com.armedia.cmf.storage.CmfType;
+import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
+import com.armedia.caliente.engine.importer.ImportOutcome;
+import com.armedia.caliente.engine.importer.ImportResult;
+import com.armedia.caliente.engine.importer.ImportState;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.Tools;
 
 /**

@@ -5,8 +5,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.cmf.engine.alfresco.bulk.common.AlfSessionFactory;
-import com.armedia.cmf.engine.alfresco.bulk.importer.AlfImportEngine;
+import com.armedia.caliente.engine.alfresco.bulk.common.AlfSessionFactory;
+import com.armedia.caliente.engine.alfresco.bulk.importer.AlfImportEngine;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.cfg.Setting;
 import com.delta.cmsmf.exception.CMSMFException;

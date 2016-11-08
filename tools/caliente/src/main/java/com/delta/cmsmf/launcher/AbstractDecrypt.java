@@ -5,8 +5,8 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.armedia.cmf.engine.CmfCrypt;
-import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.caliente.engine.CmfCrypt;
+import com.armedia.caliente.store.CmfObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 
 public abstract class AbstractDecrypt implements CMSMFMain {

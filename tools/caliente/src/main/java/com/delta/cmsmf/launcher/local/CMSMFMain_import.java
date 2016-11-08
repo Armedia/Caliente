@@ -3,8 +3,8 @@ package com.delta.cmsmf.launcher.local;
 import java.io.File;
 import java.util.Map;
 
-import com.armedia.cmf.engine.local.common.LocalSetting;
-import com.armedia.cmf.engine.local.importer.LocalImportEngine;
+import com.armedia.caliente.engine.local.common.LocalSetting;
+import com.armedia.caliente.engine.local.importer.LocalImportEngine;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_import;

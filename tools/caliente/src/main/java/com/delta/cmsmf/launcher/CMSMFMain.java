@@ -1,6 +1,6 @@
 package com.delta.cmsmf.launcher;
 
-import com.armedia.cmf.storage.CmfObjectStore;
+import com.armedia.caliente.store.CmfObjectStore;
 import com.delta.cmsmf.exception.CMSMFException;
 
 public interface CMSMFMain {

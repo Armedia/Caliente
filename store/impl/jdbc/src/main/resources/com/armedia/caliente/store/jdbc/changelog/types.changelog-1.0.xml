@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+	<changeSet author="cmf" id="1002">
+    	<preConditions>
+    		<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/caliente/store/jdbc/changelog/db.changelog-1.0.xml"/>
+	    </preConditions>
+
+		<!-- Type definitions -->
+		<createTable tableName="cmf_type">
+			<column name="type_id" type="varchar(96)" remarks="This opaque attribute identiﬁes this object-type in the repository">
+				<constraints nullable="false" />
+			</column>
+			<column name="local_name" type="text" remarks="This attribute represents the underlying repository’s name for the object-type">
+				<constraints nullable="true" />
+			</column>
+			<column name="local_namespace" type="text" remarks="This attribute allows repositories to represent the internal namespace of the underlying repository’s name for the object-type">
+				<constraints nullable="true" />
+			</column>
+			<column name="query_name" type="text" remarks="Used for query and ﬁlter operations on object-types">
+				<constraints nullable="true" />
+			</column>
+			<column name="display_name" type="text" remarks="Used for presentation by application.">
+				<constraints nullable="true" />
+			</column>
+			<column name="base_type_id" type="varchar(96)" remarks="A value that indicates whether the base type for this object-type is the document, folder, relationship, policy, item, or secondary base type.">
+				<constraints nullable="false" />
+			</column>
+			<column name="parent_type_id" type="varchar(96)" remarks="The id of the object-type’s immediate parent type. It MUST be null for a base type">
+				<constraints nullable="true" />
+			</column>
+			<column name="description" type="text" remarks="Description of this object-type, such as the nature of content, or its intended use. Used for presentation by application">
+				<constraints nullable="true" />
+			</column>
+			<column name="creatable" type="boolean" remarks="Indicates whether new objects of this type MAY be created">
+				<constraints nullable="false" />
+			</column>
+			<column name="fileable" type="boolean" remarks="Indicates whether or not objects of this type are ﬁle-able">
+				<constraints nullable="false" />
+			</column>
+			<column name="queryable" type="boolean" remarks="Indicates whether or not this object-type can appear in the FROM clause of a query statement">
+				<constraints nullable="false" />
+			</column>
+			<column name="controllable_policy" type="boolean" remarks="Indicates whether or not objects of this type are controllable via policies">
+				<constraints nullable="false" />
+			</column>
+			<column name="controllable_acl" type="boolean" remarks="This attribute indicates whether or not objects of this type are controllable by ACL’s">
+				<constraints nullable="false" />
+			</column>
+			<column name="fulltext_indexed" type="boolean" remarks="Indicates whether objects of this type are indexed for full-text search for querying via the CONTAINS() query predicate.">
+				<constraints nullable="false" />
+			</column>
+			<column name="included_in_supertype_query" type="boolean" remarks="Indicates whether this type and its subtypes appear in a query of this type’s ancestor types.">
+				<constraints nullable="false" />
+			</column>
+			<column name="type_mutability_create" type="boolean" remarks="Indicates whether new child types may be created with this type as the parent.">
+				<constraints nullable="true" />
+			</column>
+			<column name="type_mutability_update" type="boolean" remarks="Indicates whether clients may make changes to this type per the constraints deﬁned in this speciﬁcation.">
+				<constraints nullable="true" />
+			</column>
+			<column name="type_mutability_delete" type="boolean" remarks="Indicates whether clients may delete this type if there are no instances of it in the repository.">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_type" columnNames="type_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_type_base_type"
+			baseTableName="cmf_type" baseColumnNames="base_type_id"
+			referencedTableName="cmf_type" referencedColumnNames="type_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<addForeignKeyConstraint constraintName="fk_cmf_type_parent"
+			baseTableName="cmf_type" baseColumnNames="parent_type_id"
+			referencedTableName="cmf_type" referencedColumnNames="type_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+
+		<!-- The content stream properties -->
+		<createTable tableName="cmf_type_attribute">
+			<column name="type_id" type="varchar(96)" remarks="The type ID this attribute belongs to">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="varchar(96)" remarks="The name of the attribute">
+				<constraints nullable="false" />
+			</column>
+			<column name="local_name" type="text" remarks="This attribute represents the underlying repository’s name for the property.">
+				<constraints nullable="true" />
+			</column>
+			<column name="local_namespace" type="text" remarks="This attribute allows repositories to represent the internal namespace of the underlying repository’s name for the property.">
+				<constraints nullable="true" />
+			</column>
+			<column name="query_name" type="text" remarks="Used for query operations on properties">
+				<constraints nullable="true" />
+			</column>
+			<column name="display_name" type="text" remarks="Used for presentation by application">
+				<constraints nullable="true" />
+			</column>
+			<column name="description" type="text" remarks="This is an optional attribute containing a description of the property">
+				<constraints nullable="true" />
+			</column>
+			<column name="data_type" type="varchar(32)" remarks="This attribute indicates the type of this property. It MUST be one of the allowed property types.">
+				<constraints nullable="false" />
+			</column>
+			<column name="multivalue" type="boolean" remarks="Indicates whether the property can have 'zero or one' or 'zero or more' values">
+				<constraints nullable="false" />
+			</column>
+			<column name="updateable" type="varchar(16)" remarks="Indicates under what circumstances the value of this property MAY be updated">
+				<constraints nullable="false" />
+			</column>
+			<column name="required" type="boolean" remarks="If TRUE, then the value of this property MUST never be set to the 'not set' state when an object of this type is created/updated.">
+				<constraints nullable="false" />
+			</column>
+			<column name="queryable" type="boolean" remarks="Indicates whether or not the property MAY appear in the WHERE clause of a CMIS query statement.">
+				<constraints nullable="false" />
+			</column>
+			<column name="orderable" type="boolean" remarks="	Indicates whether the property can appear in the ORDER BY clause of a CMIS query statement or an orderBy parameter of getChildren or getCheckedOutDocs.">
+				<constraints nullable="false" />
+			</column>
+			<column name="choices" type="text" remarks="Indicates an explicit ordered set of single values allowed for this property.">
+				<constraints nullable="true" />
+			</column>
+			<column name="open_choice" type="boolean" remarks="If FALSE, then the data value for the property MUST only be one of the values speciﬁed in the 'choices' attribute. If TRUE, then values other than those included in the 'choices' attribute may be set for the property.">
+				<constraints nullable="false" />
+			</column>
+			<column name="min_value" type="number" remarks="(INTEGER/DECIMAL) The minimum value allowed for this property.">
+				<constraints nullable="true" />
+			</column>
+			<column name="max_value" type="number" remarks="(INTEGER/DECIMAL) The maximum value allowed for this property.">
+				<constraints nullable="true" />
+			</column>
+			<column name="resolution" type="varchar(16)" remarks="(DATETIME) This is the resolution supported for values of this property. (year, date, time)">
+				<constraints nullable="true" />
+			</column>
+			<column name="precision" type="boolean" remarks="(DECIMAL) This is the precision in bits supported for values of this property. TRUE = 64-bit, FALSE = 32-bit">
+				<constraints nullable="true" />
+			</column>
+			<column name="max_length" type="bigint" remarks="(STRING) The maximum length (in characters) allowed for a value of this property.">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_type_attribute" columnNames="type_id, name" />
+		<addForeignKeyConstraint constraintName="fk_cmf_type_attribute_type"
+			baseTableName="cmf_type_attribute" baseColumnNames="type_id"
+			referencedTableName="cmf_type" referencedColumnNames="type_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+
+
+		<!-- The content stream properties -->
+		<createTable tableName="cmf_type_att_constraint">
+			<column name="type_id" type="varchar(96)" remarks="The type ID this attribute belongs to">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="varchar(96)" remarks="The name of the attribute">
+				<constraints nullable="false" />
+			</column>
+			<column name="constraint_id" type="number">
+				<constraints nullable="false" />
+			</column>
+			<column name="constraint_type" type="varchar(16)" remarks="The type of constraint">
+				<constraints nullable="true" />
+			</column>
+			<column name="constraint_metadata" type="text" remarks="Metadata describing the constraint's data">
+				<constraints nullable="true" />
+			</column>
+			<column name="constraint_data" type="text" remarks="The data associated with the constraint">
+				<constraints nullable="true" />
+			</column>
+			<column name="description" type="text" remarks="This is an optional attribute containing a description of the property">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_type_att_constraint" columnNames="type_id, name, constraint_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_type_att_constraint_type"
+			baseTableName="cmf_type_att_constraint" baseColumnNames="type_id, name"
+			referencedTableName="cmf_type_attribute" referencedColumnNames="type_id, name"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+	</changeSet>
+</databaseChangeLog>

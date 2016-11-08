@@ -7,7 +7,7 @@
 		</layout>
 	</appender>
 
-	<logger name="com.armedia.cmf.usermapper">
+	<logger name="com.armedia.caliente.usermapper">
 		<level value="DEBUG"/>
 	</logger>
 

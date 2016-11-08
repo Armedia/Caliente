@@ -2,7 +2,7 @@ package com.delta.cmsmf.launcher.dctm;
 
 import java.util.Map;
 
-import com.armedia.cmf.engine.documentum.importer.DctmImportEngine;
+import com.armedia.caliente.engine.documentum.importer.DctmImportEngine;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_import;

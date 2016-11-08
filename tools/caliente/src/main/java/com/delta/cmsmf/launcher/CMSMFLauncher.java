@@ -21,8 +21,8 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 
-import com.armedia.cmf.storage.CmfObjectStore;
-import com.armedia.cmf.storage.CmfValue;
+import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;

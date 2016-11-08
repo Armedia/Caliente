@@ -5,13 +5,13 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.cmf.engine.cmis.CmisSessionSetting;
-import com.armedia.cmf.engine.cmis.CmisSetting;
-import com.armedia.cmf.engine.cmis.exporter.CmisExportEngine;
-import com.armedia.cmf.engine.exporter.ExportEngine;
-import com.armedia.cmf.storage.CmfContentStore;
-import com.armedia.cmf.storage.CmfObjectStore;
-import com.armedia.cmf.storage.CmfStores;
+import com.armedia.caliente.engine.cmis.CmisSessionSetting;
+import com.armedia.caliente.engine.cmis.CmisSetting;
+import com.armedia.caliente.engine.cmis.exporter.CmisExportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfStores;
 
 public class BaseTest {
 

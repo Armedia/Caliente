@@ -2,8 +2,8 @@ package com.delta.cmsmf.cfg;
 
 import java.io.File;
 
-import com.armedia.cmf.engine.TransferSetting;
-import com.armedia.cmf.engine.importer.ImportSetting;
+import com.armedia.caliente.engine.TransferSetting;
+import com.armedia.caliente.engine.importer.ImportSetting;
 
 public enum Setting {
 	//

@@ -9,9 +9,9 @@ import java.util.Map;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.cmf.engine.cmis.CmisSessionSetting;
-import com.armedia.cmf.engine.cmis.CmisSetting;
-import com.armedia.cmf.engine.cmis.exporter.CmisExportEngine;
+import com.armedia.caliente.engine.cmis.CmisSessionSetting;
+import com.armedia.caliente.engine.cmis.CmisSetting;
+import com.armedia.caliente.engine.cmis.exporter.CmisExportEngine;
 import com.delta.cmsmf.cfg.CLIParam;
 import com.delta.cmsmf.exception.CMSMFException;
 import com.delta.cmsmf.launcher.AbstractCMSMFMain_export;

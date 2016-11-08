@@ -4,8 +4,8 @@
 
 package com.delta.cmsmf.utils;
 
-import com.armedia.cmf.storage.CmfDataType;
-import com.armedia.cmf.storage.CmfTypeDecoder;
+import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfTypeDecoder;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;

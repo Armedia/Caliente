@@ -8,7 +8,7 @@
 		</layout>
 	</appender>
 
-	<logger name="com.armedia.cmf.engine">
+	<logger name="com.armedia.caliente.engine">
 		<level value="DEBUG"/>
 	</logger>
 
