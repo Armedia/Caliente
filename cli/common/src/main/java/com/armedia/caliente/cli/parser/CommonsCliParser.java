@@ -22,7 +22,7 @@ public class CommonsCliParser implements CommandLineParser {
 		this.options = new Options();
 		this.parameters.clear();
 		for (Parameter p : def) {
-			Option o = CommonsCliParser.buildOption(p);
+			Option o = CommonsCliParser.buildOption(p.getDefinition());
 			this.options.addOption(o);
 			this.parameters.put(o.getOpt(), p);
 		}

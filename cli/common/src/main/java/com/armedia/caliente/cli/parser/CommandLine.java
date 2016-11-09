@@ -25,7 +25,7 @@ public abstract class CommandLine implements Iterable<Parameter> {
 	private static final ParameterDefinition HELP;
 
 	static {
-		BaseParameterDefinition help = new BaseParameterDefinition();
+		MutableParameterDefinition help = new MutableParameterDefinition();
 		help.setLongOpt("help");
 		help.setShortOpt('?');
 		help.setDescription("Show this help message");
@@ -169,7 +169,7 @@ public abstract class CommandLine implements Iterable<Parameter> {
 					}
 					// The parameters aren't equal...so...this is an error
 					throw new DuplicateParameterDefinitionException(String.format(
-						"The new parameter definition for short option [%s] collides with an existing one", shortOpt));
+						"The new parameter definition for short option [%s] collides with an existing one", shortOpt), shortParam.getDefinition(), def);
 				}
 			}
 
@@ -184,7 +184,7 @@ public abstract class CommandLine implements Iterable<Parameter> {
 					}
 					// The parameters aren't equal...so...this is an error
 					throw new DuplicateParameterDefinitionException(String.format(
-						"The new parameter definition for long option [%s] collides with an existing one", longOpt));
+						"The new parameter definition for long option [%s] collides with an existing one", longOpt), longParam.getDefinition(), def);
 				}
 			}
 

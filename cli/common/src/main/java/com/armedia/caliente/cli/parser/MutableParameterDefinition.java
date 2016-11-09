@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.parser;
 
 import com.armedia.commons.utilities.Tools;
 
-public class BaseParameterDefinition implements ParameterDefinition, Cloneable {
+public class MutableParameterDefinition implements ParameterDefinition, Cloneable {
 
 	public static final char DEFAULT_VALUE_SEP = ',';
 
@@ -13,9 +13,9 @@ public class BaseParameterDefinition implements ParameterDefinition, Cloneable {
 	protected int valueCount = 0;
 	protected String valueName = null;
 	protected boolean valueOptional = false;
-	protected Character valueSep = BaseParameterDefinition.DEFAULT_VALUE_SEP;
+	protected Character valueSep = MutableParameterDefinition.DEFAULT_VALUE_SEP;
 
-	BaseParameterDefinition(ParameterDefinition other) {
+	MutableParameterDefinition(ParameterDefinition other) {
 		this.required = other.isRequired();
 		this.description = other.getDescription();
 		this.shortOpt = other.getShortOpt();
@@ -26,12 +26,12 @@ public class BaseParameterDefinition implements ParameterDefinition, Cloneable {
 		this.valueSep = other.getValueSep();
 	}
 
-	public BaseParameterDefinition() {
+	public MutableParameterDefinition() {
 	}
 
 	@Override
-	public BaseParameterDefinition clone() {
-		return new BaseParameterDefinition(this);
+	public MutableParameterDefinition clone() {
+		return new MutableParameterDefinition(this);
 	}
 
 	@Override
@@ -115,7 +115,7 @@ public class BaseParameterDefinition implements ParameterDefinition, Cloneable {
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		BaseParameterDefinition other = BaseParameterDefinition.class.cast(obj);
+		MutableParameterDefinition other = MutableParameterDefinition.class.cast(obj);
 		if (this.isRequired() != other.isRequired()) { return false; }
 		if (this.isValueOptional() != other.isValueOptional()) { return false; }
 		if (!Tools.equals(this.getDescription(), other.getDescription())) { return false; }
@@ -130,7 +130,7 @@ public class BaseParameterDefinition implements ParameterDefinition, Cloneable {
 	@Override
 	public String toString() {
 		return String.format(
-			"BaseParameterDefinition [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s]",
+			"MutableParameterDefinition [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s]",
 			this.required, this.shortOpt, this.longOpt, this.description, this.valueCount, this.valueName,
 			this.valueOptional, this.valueSep);
 	}

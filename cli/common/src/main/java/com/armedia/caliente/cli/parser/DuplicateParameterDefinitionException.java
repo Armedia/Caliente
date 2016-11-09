@@ -5,23 +5,25 @@ import com.armedia.caliente.cli.CommandLineException;
 public class DuplicateParameterDefinitionException extends CommandLineException {
 	private static final long serialVersionUID = 1L;
 
-	public DuplicateParameterDefinitionException() {
+	private final ParameterDefinition existing;
+	private final ParameterDefinition incoming;
+
+	public DuplicateParameterDefinitionException(String msg, ParameterDefinition existing,
+		ParameterDefinition incoming) {
+		super(msg);
+		if (existing == null) { throw new IllegalArgumentException("Must have an existing value"); }
+		if (incoming == null) { throw new IllegalArgumentException("Must have an incoming value"); }
+		if (incoming == existing) { throw new IllegalArgumentException(
+			"The existing and incoming definitions must be different"); }
+		this.existing = existing;
+		this.incoming = incoming;
 	}
 
-	public DuplicateParameterDefinitionException(String message) {
-		super(message);
+	public ParameterDefinition getExisting() {
+		return this.existing;
 	}
 
-	public DuplicateParameterDefinitionException(Throwable cause) {
-		super(cause);
-	}
-
-	public DuplicateParameterDefinitionException(String message, Throwable cause) {
-		super(message, cause);
-	}
-
-	public DuplicateParameterDefinitionException(String message, Throwable cause, boolean enableSuppression,
-		boolean writableStackTrace) {
-		super(message, cause, enableSuppression, writableStackTrace);
+	public ParameterDefinition getIncoming() {
+		return this.incoming;
 	}
 }

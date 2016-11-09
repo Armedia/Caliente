@@ -4,14 +4,14 @@ import java.util.List;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class Parameter implements ParameterDefinition, Comparable<Parameter> {
+public final class Parameter implements Comparable<Parameter> {
 	private final String cliKey;
 	private final CommandLine cli;
 	private final ParameterDefinition def;
 
 	Parameter(CommandLine cli, ParameterDefinition def) {
 		this.cli = cli;
-		this.def = new BaseParameterDefinition(def);
+		this.def = new MutableParameterDefinition(def);
 		// This bit assumes that the other supporting code will not allow long options with fewer
 		// than 2 characters to be defined (why on earth would you want that?!?!)
 		String cliKey = def.getLongOpt();
@@ -49,46 +49,6 @@ public final class Parameter implements ParameterDefinition, Comparable<Paramete
 		if (!Tools.equals(this.def, other.def)) { return false; }
 		*/
 		return true;
-	}
-
-	@Override
-	public int getValueCount() {
-		return this.def.getValueCount();
-	}
-
-	@Override
-	public String getValueName() {
-		return this.def.getValueName();
-	}
-
-	@Override
-	public boolean isRequired() {
-		return this.def.isRequired();
-	}
-
-	@Override
-	public String getDescription() {
-		return this.def.getDescription();
-	}
-
-	@Override
-	public String getLongOpt() {
-		return this.def.getLongOpt();
-	}
-
-	@Override
-	public Character getShortOpt() {
-		return this.def.getShortOpt();
-	}
-
-	@Override
-	public Character getValueSep() {
-		return this.def.getValueSep();
-	}
-
-	@Override
-	public boolean isValueOptional() {
-		return this.def.isValueOptional();
 	}
 
 	public ParameterDefinition getDefinition() {
