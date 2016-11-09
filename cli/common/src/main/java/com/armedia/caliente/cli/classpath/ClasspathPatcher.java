@@ -1,12 +1,12 @@
-package com.armedia.caliente.cli.common;
+package com.armedia.caliente.cli.classpath;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -35,7 +35,7 @@ public abstract class ClasspathPatcher {
 	private static final Method METHOD;
 	private static final Set<String> ADDED = new LinkedHashSet<>();
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(ClasspathPatcher.class);
 
 	static {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
@@ -51,22 +51,22 @@ public abstract class ClasspathPatcher {
 		}
 	}
 
-	public ClasspathPatcher() {
+	protected ClasspathPatcher() {
 	}
 
-	public final boolean discoverPatches() {
-		return discoverPatches(null, true);
+	public static final boolean discoverPatches() {
+		return ClasspathPatcher.discoverPatches(null, false);
 	}
 
-	public final boolean discoverPatches(Filter filter) {
-		return discoverPatches(filter, true);
+	public static final boolean discoverPatches(Filter filter) {
+		return ClasspathPatcher.discoverPatches(filter, false);
 	}
 
-	public final boolean discoverPatches(boolean quiet) {
-		return discoverPatches(null, quiet);
+	public static final boolean discoverPatches(boolean verbose) {
+		return ClasspathPatcher.discoverPatches(null, verbose);
 	}
 
-	public final synchronized boolean discoverPatches(Filter filter, boolean quiet) {
+	public static final synchronized boolean discoverPatches(Filter filter, boolean verbose) {
 		if (filter == null) {
 			filter = ClasspathPatcher.ALL_FILTER;
 		}
@@ -78,12 +78,12 @@ public abstract class ClasspathPatcher {
 			if (!filter.include(p)) {
 				continue;
 			}
-			List<URL> l = null;
+			Collection<URL> l = null;
 			try {
-				l = p.getPatches();
+				l = p.getPatches(verbose);
 			} catch (Exception e) {
-				if (!quiet && this.log.isDebugEnabled()) {
-					this.log.warn(String.format("Failed to load the classpath patches from [%s]",
+				if (verbose && ClasspathPatcher.log.isDebugEnabled()) {
+					ClasspathPatcher.log.warn(String.format("Failed to load the classpath patches from [%s]",
 						p.getClass().getCanonicalName()), e);
 				}
 				continue;
@@ -102,15 +102,15 @@ public abstract class ClasspathPatcher {
 		for (URL u : patches) {
 			try {
 				ret |= ClasspathPatcher.addToClassPath(u);
-				if (!quiet) {
-					this.log.info("Classpath addition: [{}]", u);
+				if (verbose) {
+					ClasspathPatcher.log.info("Classpath addition: [{}]", u);
 				}
 			} catch (IOException e) {
-				if (!quiet) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error(String.format("Failed to add [%s] to the classpath", u), e);
+				if (verbose) {
+					if (ClasspathPatcher.log.isDebugEnabled()) {
+						ClasspathPatcher.log.error(String.format("Failed to add [%s] to the classpath", u), e);
 					} else {
-						this.log.error(String.format("Failed to add [%s] to the classpath", u));
+						ClasspathPatcher.log.error(String.format("Failed to add [%s] to the classpath", u));
 					}
 				}
 			}
@@ -143,5 +143,5 @@ public abstract class ClasspathPatcher {
 		return ClasspathPatcher.addToClassPath(new File(f));
 	}
 
-	public abstract List<URL> getPatches() throws Exception;
+	public abstract Collection<URL> getPatches(boolean verbose) throws Exception;
 }
