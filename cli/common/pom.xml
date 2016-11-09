@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<name>Armedia Caliente CLI - Common Classes</name>
-	<description>A set of common-use classes shared by all CLI projects</description>
+	<description>A set of common-use classes for Caliente command-line executables</description>
 	<groupId>com.armedia.caliente.cli</groupId>
 	<artifactId>common</artifactId>
 	<packaging>jar</packaging>
@@ -17,14 +17,20 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>utilities</artifactId>
+			<groupId>javax.mail</groupId>
+			<artifactId>mailapi</artifactId>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-lang3</artifactId>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
 			<scope>compile</scope>
 		</dependency>
 
@@ -35,8 +41,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.apache.commons</groupId>
-			<artifactId>commons-csv</artifactId>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>datasource-locator-pooled</artifactId>
 			<scope>compile</scope>
 		</dependency>
 
