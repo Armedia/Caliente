@@ -4,30 +4,31 @@ import java.util.List;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class ParameterValue implements ParameterDefinition, Comparable<ParameterValue> {
+public final class Parameter implements ParameterDefinition, Comparable<Parameter> {
 	private final String cliKey;
 	private final CommandLine cli;
 	private final ParameterDefinition def;
 
-	ParameterValue(CommandLine cli, ParameterDefinition def) {
+	Parameter(CommandLine cli, ParameterDefinition def) {
 		this.cli = cli;
-		this.def = def;
-
+		this.def = new BaseParameterDefinition(def);
 		// This bit assumes that the other supporting code will not allow long options with fewer
 		// than 2 characters to be defined (why on earth would you want that?!?!)
 		String cliKey = def.getLongOpt();
+		String prefix = "--";
 		if (cliKey == null) {
 			cliKey = def.getShortOpt().toString();
+			prefix = "-";
 		}
-		this.cliKey = cliKey;
+		this.cliKey = String.format("%s%s", prefix, cliKey);
 	}
 
-	String getCommandLineKey() {
+	String getKey() {
 		return this.cliKey;
 	}
 
 	@Override
-	public int compareTo(ParameterValue o) {
+	public int compareTo(Parameter o) {
 		if (o == null) { return 1; }
 		return Tools.compare(this.cliKey, o.cliKey);
 	}
@@ -40,19 +41,12 @@ public final class ParameterValue implements ParameterDefinition, Comparable<Par
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		ParameterValue other = ParameterValue.class.cast(obj);
+		Parameter other = Parameter.class.cast(obj);
 		if (this.cli != other.cli) { return false; }
 		if (!Tools.equals(this.cliKey, other.cliKey)) { return false; }
 		// TODO: enable comparison of the full definitions?
 		/*
-		if (this.def.isRequired() != other.def.isRequired()) { return false; }
-		if (this.def.isValueOptional() != other.def.isValueOptional()) { return false; }
-		if (!Tools.equals(this.def.getDescription(), other.def.getDescription())) { return false; }
-		if (!Tools.equals(this.def.getLongOpt(), other.def.getLongOpt())) { return false; }
-		if (!Tools.equals(this.def.getShortOpt(), other.def.getShortOpt())) { return false; }
-		if (this.def.getValueCount() != other.def.getValueCount()) { return false; }
-		if (!Tools.equals(this.def.getValueName(), other.def.getValueName())) { return false; }
-		if (!Tools.equals(this.def.getValueSep(), other.def.getValueSep())) { return false; }
+		if (!Tools.equals(this.def, other.def)) { return false; }
 		*/
 		return true;
 	}
@@ -97,63 +91,87 @@ public final class ParameterValue implements ParameterDefinition, Comparable<Par
 		return this.def.isValueOptional();
 	}
 
-	public final ParameterDefinition getDefinition() {
+	public ParameterDefinition getDefinition() {
 		return this.def;
 	}
 
-	public final CommandLine getCLI() {
+	public CommandLine getCLI() {
 		return this.cli;
 	}
 
-	public final boolean isPresent() {
+	public boolean isPresent() {
 		return this.cli.isPresent(this);
 	}
 
-	public final Boolean getBoolean() {
+	public Boolean getBoolean() {
 		return this.cli.getBoolean(this);
 	}
 
-	public final boolean getBoolean(boolean def) {
+	public boolean getBoolean(boolean def) {
 		return this.cli.getBoolean(this, def);
 	}
 
-	public final List<Boolean> getAllBooleans() {
+	public List<Boolean> getAllBooleans() {
 		return this.cli.getAllBooleans(this);
 	}
 
-	public final Integer getInteger() {
+	public Integer getInteger() {
 		return this.cli.getInteger(this);
 	}
 
-	public final int getInteger(int def) {
+	public int getInteger(int def) {
 		return this.cli.getInteger(this, def);
 	}
 
-	public final List<Integer> getAllIntegers() {
+	public List<Integer> getAllIntegers() {
 		return this.cli.getAllIntegers(this);
 	}
 
-	public final Double getDouble() {
+	public Long getLong() {
+		return this.cli.getLong(this);
+	}
+
+	public long getLong(long def) {
+		return this.cli.getLong(this, def);
+	}
+
+	public List<Long> getAllLongs() {
+		return this.cli.getAllLongs(this);
+	}
+
+	public Float getFloat() {
+		return this.cli.getFloat(this);
+	}
+
+	public float getFloat(float def) {
+		return this.cli.getFloat(this, def);
+	}
+
+	public List<Float> getAllFloats() {
+		return this.cli.getAllFloats(this);
+	}
+
+	public Double getDouble() {
 		return this.cli.getDouble(this);
 	}
 
-	public final double getDouble(double def) {
+	public double getDouble(double def) {
 		return this.cli.getDouble(this, def);
 	}
 
-	public final List<Double> getAllDoubles() {
+	public List<Double> getAllDoubles() {
 		return this.cli.getAllDoubles(this);
 	}
 
-	public final String getString() {
+	public String getString() {
 		return this.cli.getString(this);
 	}
 
-	public final String getString(String def) {
+	public String getString(String def) {
 		return this.cli.getString(this, def);
 	}
 
-	public final List<String> getAllStrings() {
+	public List<String> getAllStrings() {
 		return this.cli.getAllStrings(this);
 	}
 }
