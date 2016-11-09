@@ -30,7 +30,7 @@ public abstract class CommandLine implements Iterable<Parameter> {
 		help.setShortOpt('?');
 		help.setDescription("Show this help message");
 		help.setRequired(false);
-		help.setParameterCount(0);
+		help.setValueCount(0);
 		HELP = help;
 	}
 

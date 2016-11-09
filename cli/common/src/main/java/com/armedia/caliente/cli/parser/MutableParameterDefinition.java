@@ -39,7 +39,7 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.valueCount;
 	}
 
-	public void setParameterCount(int parameterCount) {
+	public void setValueCount(int parameterCount) {
 		this.valueCount = parameterCount;
 	}
 
@@ -48,7 +48,7 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.valueName;
 	}
 
-	public void setArgName(String argName) {
+	public void setValueName(String argName) {
 		this.valueName = argName;
 	}
 
