@@ -169,7 +169,8 @@ public abstract class CommandLine implements Iterable<Parameter> {
 					}
 					// The parameters aren't equal...so...this is an error
 					throw new DuplicateParameterDefinitionException(String.format(
-						"The new parameter definition for short option [%s] collides with an existing one", shortOpt), shortParam.getDefinition(), def);
+						"The new parameter definition for short option [%s] collides with an existing one", shortOpt),
+						shortParam.getDefinition(), def);
 				}
 			}
 
@@ -183,8 +184,10 @@ public abstract class CommandLine implements Iterable<Parameter> {
 						return longParam;
 					}
 					// The parameters aren't equal...so...this is an error
-					throw new DuplicateParameterDefinitionException(String.format(
-						"The new parameter definition for long option [%s] collides with an existing one", longOpt), longParam.getDefinition(), def);
+					throw new DuplicateParameterDefinitionException(
+						String.format("The new parameter definition for long option [%s] collides with an existing one",
+							longOpt),
+						longParam.getDefinition(), def);
 				}
 			}
 
@@ -314,16 +317,16 @@ public abstract class CommandLine implements Iterable<Parameter> {
 		return Tools.freezeList(r);
 	}
 
-	final String getString(Parameter param, String def) {
-		assertValid(param);
-		final String v = getString(param);
-		return (v != null ? v : def);
-	}
-
 	final String getString(Parameter param) {
 		List<String> l = getAllStrings(param);
 		if ((l == null) || l.isEmpty()) { return null; }
 		return l.get(0);
+	}
+
+	final String getString(Parameter param, String def) {
+		assertValid(param);
+		final String v = getString(param);
+		return (v != null ? v : def);
 	}
 
 	final List<String> getAllStrings(Parameter param) {
