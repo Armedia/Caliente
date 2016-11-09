@@ -2,20 +2,20 @@ package com.armedia.caliente.cli.parser;
 
 public interface ParameterDefinition {
 
-	int getParameterCount();
+	public boolean isRequired();
 
-	String getArgName();
+	public String getDescription();
 
-	boolean isRequired();
+	public String getLongOpt();
 
-	String getDescription();
+	public Character getShortOpt();
 
-	String getLongOpt();
+	public Character getValueSep();
 
-	Character getShortOpt();
+	public String getValueName();
 
-	Character getValueSep();
+	public int getValueCount();
 
-	boolean isOptionalArg();
+	public boolean isValueOptional();
 
 }
