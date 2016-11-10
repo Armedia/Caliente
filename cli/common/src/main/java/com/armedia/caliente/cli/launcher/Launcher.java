@@ -1,24 +1,53 @@
 package com.armedia.caliente.cli.launcher;
 
+import java.util.Collection;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
+import com.armedia.caliente.cli.parser.CommandLine;
+import com.armedia.caliente.cli.parser.CommandLineParseException;
+import com.armedia.caliente.cli.parser.HelpRequestedException;
+import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.parser.ParameterDefinition;
 
 public abstract class Launcher {
 	protected final Logger log = LoggerFactory.getLogger(Launcher.class);
+
+	protected boolean supportsHelp = true;
 
 	protected ClasspathPatcher.Filter getClasspathPatcherFilter() {
 		return null;
 	}
 
+	protected abstract Collection<ParameterDefinition> getCommandLineParameters();
+
+	protected abstract String getProgramName();
+
 	protected final int launch(String... args) {
-		/*
-		if (!CLIParam.parse(args)) {
-			// If the parameters didn't parse, we fail.
+		CommandLine cl = new CommandLine(this.supportsHelp);
+		Collection<ParameterDefinition> parameters = getCommandLineParameters();
+		if (parameters != null) {
+			for (ParameterDefinition def : parameters) {
+				try {
+					Parameter p = cl.define(def);
+				} catch (Exception e) {
+					throw new RuntimeException("Failed to initialize the command-line parser", e);
+				}
+			}
+		}
+		try {
+			cl.parse(getProgramName(), args);
+		} catch (CommandLineParseException e) {
+			if (e.getHelp() != null) {
+				System.err.printf("%s%n", e.getHelp());
+			}
+			return 1;
+		} catch (HelpRequestedException e) {
+			System.err.printf("%s%n", e.getMessage());
 			return 1;
 		}
-		*/
 
 		if (ClasspathPatcher.discoverPatches(getClasspathPatcherFilter(), false)) {
 			for (String s : ClasspathPatcher.getAdditions()) {
