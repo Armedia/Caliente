@@ -32,8 +32,7 @@ import com.armedia.commons.utilities.Tools;
 public class CMSMFLauncher extends AbstractLauncher {
 
 	static final Pattern ENGINE_PARSER = Pattern.compile("^\\w+$");
-	private static final String MAIN_CLASS = "com.armedia.caliente.cli.caliente.launcher.dctm.launcher.%s.CMSMFMain_%s";
-
+	private static final String MAIN_CLASS = "com.armedia.caliente.cli.caliente.launcher.%s.CMSMFMain_%s";
 	private static Properties PARAMETER_PROPERTIES = new Properties();
 
 	public static final String VERSION;
@@ -116,14 +115,14 @@ public class CMSMFLauncher extends AbstractLauncher {
 		console.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
 		console.info(String.format("Maximum heap size: %d MB", runtime.maxMemory() / 1024 / 1024));
 
-		Set<URL> patches = new LinkedHashSet<URL>();
+		Set<URL> patches = new LinkedHashSet<>();
 		PluggableServiceSelector<ClasspathPatcher> selector = new PluggableServiceSelector<ClasspathPatcher>() {
 			@Override
 			public boolean matches(ClasspathPatcher p) {
 				return p.supportsEngine(engine);
 			}
 		};
-		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<ClasspathPatcher>(
+		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<>(
 			ClasspathPatcher.class, selector);
 		patchers.setHideErrors(false);
 		for (ClasspathPatcher p : patchers) {

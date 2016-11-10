@@ -612,8 +612,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			} finally {
 				DfUtils.closeQuietly(c);
 			}
-			// if we're not virtual documents, our default depth is 0
-			return (depth != null ? depth.intValue() : 0);
+			// if we're not virtual documents, our default depth is 0... if we are or were at any
+			// point in our history, in then our depth is the deepest depth of any of our referenced
+			// objects, plus one
+			return (depth != null ? depth.intValue() + 1 : 0);
 		} finally {
 			visited.remove(objectId.getId());
 		}
