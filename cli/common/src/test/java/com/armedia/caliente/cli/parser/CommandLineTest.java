@@ -154,22 +154,50 @@ public class CommandLineTest {
 	}
 
 	@Test
-	public void testParse() {
-		CommandLine cl = null;
-		String[] args = null;
-		// TODO: parse short options
-		// TODO: parse long options
-		// TODO: parse short and long options
-		// TODO: parse short options with extra arguments
-		// TODO: parse long options with extra arguments
-		// TODO: parse short and long options with extra arguments
-		// TODO: parse illegal short options
-		// TODO: parse illegal long options
-	}
+	public void testHelp() throws Exception {
+		CommandLine cl = new CommandLine();
 
-	@Test
-	public void testHelp() {
-		// TODO: test help generation
+		String[] args = {
+			"-a", "true", //
+			"-b", "false", //
+			"-c", //
+		};
+
+		MutableParameterDefinition def = new MutableParameterDefinition();
+		def.setValueCount(1);
+		def.setShortOpt('a');
+		cl.define(def);
+
+		try {
+			cl.parse("TEST", args);
+			Assert.fail("Did not fail with a bad option");
+		} catch (CommandLineParseException e) {
+			// This is expected... -b isn't declared
+		}
+
+		def.setValueCount(1);
+		def.setShortOpt('c');
+		cl.define(def);
+		try {
+			cl.parse("TEST", args);
+			Assert.fail("Did not fail with a missing option value");
+		} catch (CommandLineParseException e) {
+			// This is expected... -b isn't declared
+		}
+
+		args = new String[] {
+			"-a", "true", //
+			"-c", "false", //
+			"-?"
+		};
+
+		try {
+			cl.parse("TEST", args);
+			Assert.fail("Did not request help");
+		} catch (HelpRequestedException e) {
+			// This is expected... -b isn't declared
+		}
+
 	}
 
 	@Test

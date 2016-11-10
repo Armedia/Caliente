@@ -119,13 +119,13 @@ public class CommandLine implements Iterable<Parameter> {
 				}
 				try {
 					parser.parse(ctx, args);
-					if (this.help.isPresent()) { throw new HelpRequestedException(
-						parser.getHelpMessage(ctx, executableName, null)); }
 				} catch (Exception e) {
 					throw new CommandLineParseException(String
 						.format("A parsing error ocurred while parsing the command line %s", Arrays.toString(args)), e,
 						parser.getHelpMessage(ctx, executableName, e));
 				}
+				if (this.help.isPresent()) { throw new HelpRequestedException(
+					parser.getHelpMessage(ctx, executableName, null)); }
 			} finally {
 				if (ctx != null) {
 					try {
