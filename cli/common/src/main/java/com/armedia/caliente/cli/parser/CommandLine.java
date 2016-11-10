@@ -17,10 +17,12 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class CommandLine implements Iterable<Parameter> {
+public class CommandLine implements Iterable<Parameter> {
 
 	private static final ParameterDefinition HELP;
 
@@ -36,17 +38,28 @@ public final class CommandLine implements Iterable<Parameter> {
 
 	protected static final String[] NO_PARAM = {};
 
+	protected final Logger log = LoggerFactory.getLogger(getClass());
+
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private final Map<Character, Parameter> shortOptions = new TreeMap<>();
 	private final Map<String, Parameter> longOptions = new TreeMap<>();
 	private final Set<Parameter> parameters = new TreeSet<>();
 
-	private Parameter help = null;
+	private final Parameter help;
 
 	private final Map<Parameter, List<String>> values = new HashMap<>();
 	private final List<String> remainingParameters = new ArrayList<>();
 
-	void setParameterValues(Parameter p, Collection<String> values) {
+	public CommandLine() {
+		try {
+			this.help = define(CommandLine.HELP);
+		} catch (DuplicateParameterDefinitionException e) {
+			// Not gonna happen...but still barf if it does
+			throw new RuntimeException("Unexpected duplicate parameter exception", e);
+		}
+	}
+
+	final void setParameterValues(Parameter p, Collection<String> values) {
 		if ((values == null) || values.isEmpty()) {
 			values = Collections.emptyList();
 		}
@@ -57,14 +70,14 @@ public final class CommandLine implements Iterable<Parameter> {
 		this.values.put(p, Tools.freezeList(l));
 	}
 
-	void addRemainingParameters(Collection<String> remaining) {
+	final void addRemainingParameters(Collection<String> remaining) {
 		if (remaining == null) {
 			remaining = Collections.emptyList();
 		}
 		this.remainingParameters.addAll(remaining);
 	}
 
-	public void parse(CommandLineParser parser, String executableName, String... args)
+	public final void parse(CommandLineParser parser, String executableName, String... args)
 		throws CommandLineParseException, HelpRequestedException {
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
@@ -109,17 +122,12 @@ public final class CommandLine implements Iterable<Parameter> {
 		}
 	}
 
-	private boolean isShortOptionValid(Character shortOpt) {
-		if (shortOpt == null) { return false; }
-		final char c = shortOpt.charValue();
-		if (!Character.isLetterOrDigit(c)) { return false; }
-		return true;
+	protected boolean isShortOptionValid(Character shortOpt) {
+		return (shortOpt != null);
 	}
 
-	private boolean isLongOptionValid(String longOpt) {
-		if (longOpt == null) { return false; }
-		if (StringUtils.containsWhitespace(longOpt)) { return false; }
-		return (longOpt.length() > 1);
+	protected boolean isLongOptionValid(String longOpt) {
+		return (longOpt != null);
 	}
 
 	private void assertValid(Parameter param) {
@@ -139,20 +147,33 @@ public final class CommandLine implements Iterable<Parameter> {
 
 		if (!hasShortOpt && !hasLongOpt) { throw new IllegalArgumentException(
 			"The given parameter definition has neither a short or a long option"); }
-		if (hasShortOpt && !isShortOptionValid(shortOpt)) { throw new IllegalArgumentException(
-			String.format("The short option value [%s] is not valid", shortOpt)); }
-		if (hasLongOpt && !isLongOptionValid(longOpt)) { throw new IllegalArgumentException(
-			String.format("The long option value [%s] is not valid", longOpt)); }
+		if (hasShortOpt) {
+			boolean valid = Character.isLetterOrDigit(shortOpt.charValue())
+				|| CommandLine.HELP.getShortOpt().equals(shortOpt);
+			if (valid) {
+				// Custom validation
+				valid &= isShortOptionValid(shortOpt);
+			}
+			if (!valid) { throw new IllegalArgumentException(
+				String.format("The short option value [%s] is not valid", shortOpt)); }
+		}
+		if (hasLongOpt) {
+			boolean valid = !StringUtils.containsWhitespace(longOpt);
+			if (valid) {
+				valid &= (longOpt.length() > 1);
+			}
+			if (valid) {
+				valid &= isLongOptionValid(longOpt);
+			}
+			if (!valid) { throw new IllegalArgumentException(
+				String.format("The long option value [%s] is not valid", longOpt)); }
+		}
 	}
 
-	public Parameter define(ParameterDefinition def) throws DuplicateParameterDefinitionException {
+	public final Parameter define(ParameterDefinition def) throws DuplicateParameterDefinitionException {
 		assertValid(def);
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
-
-		if (this.help == null) {
-			this.help = define(CommandLine.HELP);
-		}
 
 		try {
 			final Character shortOpt = def.getShortOpt();
@@ -203,7 +224,7 @@ public final class CommandLine implements Iterable<Parameter> {
 	}
 
 	@Override
-	public Iterator<Parameter> iterator() {
+	public final Iterator<Parameter> iterator() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
@@ -348,7 +369,7 @@ public final class CommandLine implements Iterable<Parameter> {
 		}
 	}
 
-	public List<String> getRemainingParameters() {
+	public final List<String> getRemainingParameters() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
