@@ -124,7 +124,7 @@ public class CommandLine implements Iterable<Parameter> {
 						.format("A parsing error ocurred while parsing the command line %s", Arrays.toString(args)), e,
 						parser.getHelpMessage(ctx, executableName, e));
 				}
-				if (this.help.isPresent()) { throw new HelpRequestedException(
+				if ((this.help != null) && this.help.isPresent()) { throw new HelpRequestedException(
 					parser.getHelpMessage(ctx, executableName, null)); }
 			} finally {
 				if (ctx != null) {
@@ -340,7 +340,8 @@ public class CommandLine implements Iterable<Parameter> {
 
 	final List<Boolean> getAllBooleans(Parameter param) {
 		List<String> l = getAllStrings(param);
-		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Boolean> r = new ArrayList<>(l.size());
 		for (String s : l) {
 			r.add(Tools.toBoolean(s));
@@ -360,7 +361,8 @@ public class CommandLine implements Iterable<Parameter> {
 
 	final List<Integer> getAllIntegers(Parameter param) {
 		List<String> l = getAllStrings(param);
-		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Integer> r = new ArrayList<>(l.size());
 		for (String s : l) {
 			r.add(Integer.valueOf(s));
@@ -380,7 +382,8 @@ public class CommandLine implements Iterable<Parameter> {
 
 	final List<Long> getAllLongs(Parameter param) {
 		List<String> l = getAllStrings(param);
-		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Long> r = new ArrayList<>(l.size());
 		for (String s : l) {
 			r.add(Long.valueOf(s));
@@ -400,7 +403,8 @@ public class CommandLine implements Iterable<Parameter> {
 
 	final List<Float> getAllFloats(Parameter param) {
 		List<String> l = getAllStrings(param);
-		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Float> r = new ArrayList<>(l.size());
 		for (String s : l) {
 			r.add(Float.valueOf(s));
@@ -421,7 +425,8 @@ public class CommandLine implements Iterable<Parameter> {
 
 	final List<Double> getAllDoubles(Parameter param) {
 		List<String> l = getAllStrings(param);
-		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Double> r = new ArrayList<>(l.size());
 		for (String s : l) {
 			r.add(Double.valueOf(s));

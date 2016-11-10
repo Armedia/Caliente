@@ -5,6 +5,7 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -156,6 +157,10 @@ public class CommandLineTest {
 	@Test
 	public void testHelp() throws Exception {
 		CommandLine cl = new CommandLine();
+		Assert.assertTrue(cl.hasHelpParameter());
+
+		Parameter help = cl.getHelpParameter();
+		Assert.assertNotNull(help);
 
 		String[] args = {
 			"-a", "true", //
@@ -198,6 +203,20 @@ public class CommandLineTest {
 			// This is expected... -b isn't declared
 		}
 
+		CommandLine cl2 = new CommandLine(false);
+		Assert.assertFalse(cl2.hasHelpParameter());
+		Assert.assertNull(cl2.getHelpParameter());
+
+		for (Parameter p : cl) {
+			cl2.define(p.getDefinition());
+		}
+
+		try {
+			cl2.parse("TEST", args);
+		} catch (CommandLineParseException e) {
+			// we're good, this is expected
+
+		}
 	}
 
 	@Test
@@ -209,6 +228,7 @@ public class CommandLineTest {
 			"-b", "false", //
 			"-c", "true,false", //
 			"-d", "garbage", //
+			"-f", //
 		};
 
 		MutableParameterDefinition def = new MutableParameterDefinition();
@@ -224,11 +244,16 @@ public class CommandLineTest {
 		def.setShortOpt('c');
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
+		def.setShortOpt('f');
+		def.setValueCount(0);
+		Parameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
 		Assert.assertTrue("a", a.getBoolean());
+		Assert.assertTrue("a-def", a.getBoolean(false));
 		Assert.assertFalse("b", b.getBoolean());
+		Assert.assertFalse("b-def", b.getBoolean(true));
 		List<Boolean> C = c.getAllBooleans();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -239,6 +264,11 @@ public class CommandLineTest {
 		}
 		Assert.assertFalse("d", d.getBoolean());
 		Assert.assertNull("e", e.getBoolean());
+		Assert.assertNull("e-all", e.getAllBooleans());
+		Assert.assertTrue("e-def-true", e.getBoolean(true));
+		Assert.assertFalse("e-def-false", e.getBoolean(false));
+		Assert.assertNull("f", f.getBoolean());
+		Assert.assertTrue("f-all", f.getAllBooleans().isEmpty());
 	}
 
 	@Test
@@ -250,6 +280,7 @@ public class CommandLineTest {
 			"-b", "2", //
 			"-c", "3,4", //
 			"-d", "5", //
+			"-f", //
 		};
 
 		MutableParameterDefinition def = new MutableParameterDefinition();
@@ -265,11 +296,16 @@ public class CommandLineTest {
 		def.setShortOpt('c');
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
+		def.setShortOpt('f');
+		def.setValueCount(0);
+		Parameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
+		Assert.assertEquals("a-def", 1, a.getInteger(2));
 		Assert.assertEquals("b", Integer.valueOf(2), b.getInteger());
+		Assert.assertEquals("b-def", 2, b.getInteger(3));
 		List<Integer> C = c.getAllIntegers();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -280,6 +316,15 @@ public class CommandLineTest {
 		}
 		Assert.assertEquals("d", Integer.valueOf(5), d.getInteger());
 		Assert.assertNull("e", e.getInteger());
+		Assert.assertNull("e-all", e.getAllIntegers());
+		Assert.assertEquals("e-def-max", Integer.MAX_VALUE, e.getInteger(Integer.MAX_VALUE));
+		Assert.assertEquals("e-def-min", Integer.MIN_VALUE, e.getInteger(Integer.MIN_VALUE));
+		for (int i = 0; i < 100; i++) {
+			int r = UUID.randomUUID().hashCode();
+			Assert.assertEquals("e-def", r, e.getInteger(r));
+		}
+		Assert.assertNull("f", f.getInteger());
+		Assert.assertTrue("f-all", f.getAllIntegers().isEmpty());
 	}
 
 	@Test
@@ -291,6 +336,7 @@ public class CommandLineTest {
 			"-b", "2", //
 			"-c", "3,4", //
 			"-d", "5", //
+			"-f", //
 		};
 
 		MutableParameterDefinition def = new MutableParameterDefinition();
@@ -306,11 +352,16 @@ public class CommandLineTest {
 		def.setShortOpt('c');
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
+		def.setShortOpt('f');
+		def.setValueCount(0);
+		Parameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", Long.valueOf(1), a.getLong());
+		Assert.assertEquals("a-def", 1, a.getLong(2));
 		Assert.assertEquals("b", Long.valueOf(2), b.getLong());
+		Assert.assertEquals("b-def", 2, b.getLong(3));
 		List<Long> C = c.getAllLongs();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -321,6 +372,15 @@ public class CommandLineTest {
 		}
 		Assert.assertEquals("d", Long.valueOf(5), d.getLong());
 		Assert.assertNull("e", e.getLong());
+		Assert.assertNull("e-all", e.getAllLongs());
+		Assert.assertEquals("e-def-max", Long.MAX_VALUE, e.getLong(Long.MAX_VALUE));
+		Assert.assertEquals("e-def-min", Long.MIN_VALUE, e.getLong(Long.MIN_VALUE));
+		for (int i = 0; i < 100; i++) {
+			long r = UUID.randomUUID().hashCode() * UUID.randomUUID().hashCode();
+			Assert.assertEquals("e-def", r, e.getLong(r));
+		}
+		Assert.assertNull("f", f.getLong());
+		Assert.assertTrue("f-all", f.getAllLongs().isEmpty());
 	}
 
 	@Test
@@ -332,6 +392,7 @@ public class CommandLineTest {
 			"-b", "2.2", //
 			"-c", "3.3,4.4", //
 			"-d", "5.5", //
+			"-f", //
 		};
 
 		MutableParameterDefinition def = new MutableParameterDefinition();
@@ -347,11 +408,16 @@ public class CommandLineTest {
 		def.setShortOpt('c');
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
+		def.setShortOpt('f');
+		def.setValueCount(0);
+		Parameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", Float.valueOf(1.1f), a.getFloat());
+		Assert.assertEquals("a-def", Float.valueOf(1.1f), a.getFloat(2.2f), 0.0f);
 		Assert.assertEquals("b", Float.valueOf(2.2f), b.getFloat());
+		Assert.assertEquals("b-def", Float.valueOf(2.2f), b.getFloat(1.1f), 0.0f);
 		List<Float> C = c.getAllFloats();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -362,6 +428,14 @@ public class CommandLineTest {
 		}
 		Assert.assertEquals("d", Float.valueOf(5.5f), d.getFloat());
 		Assert.assertNull("e", e.getFloat());
+		Assert.assertNull("e-all", e.getAllFloats());
+		Assert.assertEquals("e-def-max", Float.MAX_VALUE, e.getFloat(Float.MAX_VALUE), 0.0f);
+		Assert.assertEquals("e-def-min", Float.MIN_VALUE, e.getFloat(Float.MIN_VALUE), 0.0f);
+		Assert.assertEquals("e-def-nan", Float.NaN, e.getFloat(Float.NaN), 0.0f);
+		Assert.assertEquals("e-def-+inf", Float.POSITIVE_INFINITY, e.getFloat(Float.POSITIVE_INFINITY), 0.0f);
+		Assert.assertEquals("e-def--inf", Float.NEGATIVE_INFINITY, e.getFloat(Float.NEGATIVE_INFINITY), 0.0f);
+		Assert.assertNull("f", f.getFloat());
+		Assert.assertTrue("f-all", f.getAllFloats().isEmpty());
 	}
 
 	@Test
@@ -373,6 +447,7 @@ public class CommandLineTest {
 			"-b", "2.2", //
 			"-c", "3.3,4.4", //
 			"-d", "5.5", //
+			"-f", //
 		};
 
 		MutableParameterDefinition def = new MutableParameterDefinition();
@@ -388,11 +463,16 @@ public class CommandLineTest {
 		def.setShortOpt('c');
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
+		def.setShortOpt('f');
+		def.setValueCount(0);
+		Parameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", Double.valueOf(1.1), a.getDouble());
+		Assert.assertEquals("a-def", Double.valueOf(1.1), a.getDouble(2.2), 0.0);
 		Assert.assertEquals("b", Double.valueOf(2.2), b.getDouble());
+		Assert.assertEquals("b-def", Double.valueOf(2.2), b.getDouble(3.3), 0.0);
 		List<Double> C = c.getAllDoubles();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -403,6 +483,14 @@ public class CommandLineTest {
 		}
 		Assert.assertEquals("d", Double.valueOf(5.5), d.getDouble());
 		Assert.assertNull("e", e.getDouble());
+		Assert.assertNull("e-all", e.getAllDoubles());
+		Assert.assertEquals("e-def-max", Double.MAX_VALUE, e.getDouble(Double.MAX_VALUE), 0.0);
+		Assert.assertEquals("e-def-min", Double.MIN_VALUE, e.getDouble(Double.MIN_VALUE), 0.0);
+		Assert.assertEquals("e-def-nan", Double.NaN, e.getDouble(Double.NaN), 0.0);
+		Assert.assertEquals("e-def-+inf", Double.POSITIVE_INFINITY, e.getDouble(Double.POSITIVE_INFINITY), 0.0);
+		Assert.assertEquals("e-def--inf", Double.NEGATIVE_INFINITY, e.getDouble(Double.NEGATIVE_INFINITY), 0.0);
+		Assert.assertNull("f", f.getDouble());
+		Assert.assertTrue("f-all", f.getAllDoubles().isEmpty());
 	}
 
 	@Test
@@ -414,6 +502,7 @@ public class CommandLineTest {
 			"-b", "2", //
 			"-c", "3,4", //
 			"-d", "5", //
+			"-f",
 		};
 
 		MutableParameterDefinition def = new MutableParameterDefinition();
@@ -429,11 +518,16 @@ public class CommandLineTest {
 		def.setShortOpt('c');
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
+		def.setShortOpt('f');
+		def.setValueCount(0);
+		Parameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", "1", a.getString());
+		Assert.assertEquals("a-def", "1", a.getString("x"));
 		Assert.assertEquals("b", "2", b.getString());
+		Assert.assertEquals("b-def", "2", b.getString("x"));
 		List<String> C = c.getAllStrings();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -442,7 +536,15 @@ public class CommandLineTest {
 			Assert.assertEquals(CS.get(i), C.get(i));
 		}
 		Assert.assertEquals("d", "5", d.getString());
+		Assert.assertEquals("d", "5", d.getString("x"));
 		Assert.assertNull("e", e.getString());
+		Assert.assertNull("e-all", e.getAllStrings());
+		for (int i = 0; i < 100; i++) {
+			String s = UUID.randomUUID().toString();
+			Assert.assertEquals("e-def", s, e.getString(s));
+		}
+		Assert.assertNull("f", f.getString());
+		Assert.assertTrue("f-all", f.getAllStrings().isEmpty());
 	}
 
 	@Test
