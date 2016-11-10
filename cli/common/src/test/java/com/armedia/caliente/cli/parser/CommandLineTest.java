@@ -157,6 +157,19 @@ public class CommandLineTest {
 	public void testParse() {
 		CommandLine cl = null;
 		String[] args = null;
+		// TODO: parse short options
+		// TODO: parse long options
+		// TODO: parse short and long options
+		// TODO: parse short options with extra arguments
+		// TODO: parse long options with extra arguments
+		// TODO: parse short and long options with extra arguments
+		// TODO: parse illegal short options
+		// TODO: parse illegal long options
+	}
+
+	@Test
+	public void testHelp() {
+		// TODO: test help generation
 	}
 
 	@Test
