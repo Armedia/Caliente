@@ -5,7 +5,6 @@
 package com.armedia.caliente.engine.documentum.exporter;
 
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.armedia.caliente.engine.documentum.DctmAttributes;
@@ -20,7 +19,6 @@ import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
-import com.documentum.fc.client.distributed.IDfReference;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
@@ -56,7 +54,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		return folder.getFolderPath(0);
 	}
 
-	private static int calculateDepth(IDfSession session, IDfId folderId, Set<String> visited) throws DfException {
+	private int calculateDepth(IDfSession session, IDfId folderId, Set<String> visited) throws DfException {
 		// If the folder has already been visited, we have a loop...so let's explode loudly
 		if (!visited.add(folderId.getId())) { throw new DfException(String
 			.format("Folder loop detected, element [%s] exists twice: %s", folderId.getId(), visited.toString())); }
@@ -72,7 +70,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 					if (parentId.isNull() || !parentId.isObjectId()) {
 						continue;
 					}
-					depth = Math.max(depth, DctmExportFolder.calculateDepth(session, parentId, visited) + 1);
+					depth = Math.max(depth, calculateDepth(session, parentId, visited) + 1);
 				}
 			} finally {
 				DfUtils.closeQuietly(results);
@@ -83,20 +81,11 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		}
 	}
 
-	static int calculateFolderDepth(IDfFolder folder) throws DfException {
+	@Override
+	protected int calculateDepth(IDfFolder folder, Set<String> visited) throws DfException {
 		// Calculate the maximum depth that this folder resides in, from its parents.
 		// Keep track of visited nodes, and explode on a loop.
-		return DctmExportFolder.calculateDepth(folder.getSession(), folder.getObjectId(), new LinkedHashSet<String>());
-	}
-
-	@Override
-	protected final int calculateDependencyTier(IDfFolder folder) throws Exception {
-		int depth = DctmExportFolder.calculateFolderDepth(folder);
-		IDfReference ref = getReferenceFor(this.object);
-		if (ref != null) {
-			depth++;
-		}
-		return depth;
+		return calculateDepth(folder.getSession(), folder.getObjectId(), visited);
 	}
 
 	@Override

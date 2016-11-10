@@ -569,7 +569,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			String.format("None of the parent paths for object [%s] were found", sysObject.getObjectId().getId()));
 	}
 
-	protected int calculateDepth(IDfSysObject object, Set<String> visited) throws DfException {
+	protected int calculateSysObjectDepth(IDfSysObject object, Set<String> visited) throws DfException {
 		final IDfId objectId = object.getObjectId();
 		if (!visited.add(objectId.getId())) { throw new DfException(
 			String.format("Document reference loop detected, element [%s] exists twice: %s",
@@ -594,7 +594,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 						final int members = root.getChildCount();
 						for (int i = 0; i < members; i++) {
 							final IDfVirtualDocumentNode child = root.getChild(i);
-							int refDepth = calculateDepth(child.getSelectedObject(), visited);
+							int refDepth = calculateSysObjectDepth(child.getSelectedObject(), visited);
 
 							// If our depth exceeds that of the deepest object yet, then we take
 							// this as the new depth
@@ -619,6 +619,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		} finally {
 			visited.remove(objectId.getId());
 		}
+	}
+
+	protected int calculateDepth(T object, Set<String> visited) throws DfException {
+		return calculateSysObjectDepth(object, visited);
 	}
 
 	@Override
