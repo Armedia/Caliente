@@ -3,8 +3,10 @@ package com.armedia.caliente.cli.parser;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -79,7 +81,6 @@ public class CommandLineTest {
 						}
 					}
 				}
-
 			}
 		}
 
@@ -672,5 +673,73 @@ public class CommandLineTest {
 			List<String> remaining = cl.getRemainingParameters();
 			Assert.assertTrue(remaining.isEmpty());
 		}
+	}
+
+	@Test
+	public void testShortOptions() {
+		CommandLine cl = new CommandLine(false);
+		final Charset charset = Charset.forName("US-ASCII");
+		MutableParameterDefinition def = null;
+		Set<Parameter> shortOptions = new HashSet<>();
+		for (int i = 0; i < 255; i++) {
+			ByteBuffer bb = ByteBuffer.allocate(4);
+			bb.putInt(i);
+			String s = new String(bb.array(), charset).trim();
+			if (s.length() != 1) {
+				continue;
+			}
+			char c = s.charAt(0);
+			def = new MutableParameterDefinition();
+			def.setShortOpt(c);
+			try {
+				Parameter p = cl.define(def);
+				shortOptions.add(p);
+				Assert.assertEquals(1, p.compareTo(null));
+			} catch (InvalidParameterDefinitionException e) {
+				if (Character.isLetterOrDigit(c)) {
+					Assert.fail(String.format("Failed with legal character [%s]", c));
+				}
+			} catch (DuplicateParameterDefinitionException e) {
+				Assert.fail(String.format("Duplicate exception caught when no duplicate was in play (%s)", c));
+			}
+		}
+
+		for (Parameter expected : shortOptions) {
+			Parameter actual = cl.getParameter(expected.getDefinition().getShortOpt());
+			Assert.assertEquals(expected, actual);
+			Assert.assertTrue(cl.hasParameter(expected.getDefinition().getShortOpt()));
+		}
+
+		for (Parameter actual : cl.shortOptions()) {
+			Assert.assertNotNull(actual);
+			Assert.assertTrue(shortOptions.remove(actual));
+		}
+		Assert.assertTrue(shortOptions.isEmpty());
+	}
+
+	@Test
+	public void testLongOptions() throws Exception {
+		CommandLine cl = new CommandLine(false);
+		MutableParameterDefinition def = null;
+		Set<Parameter> longOptions = new HashSet<>();
+		for (int i = 0; i < 255; i++) {
+			def = new MutableParameterDefinition();
+			def.setLongOpt(String.format("long-%04x", i));
+			Parameter p = cl.define(def);
+			longOptions.add(p);
+			Assert.assertEquals(1, p.compareTo(null));
+		}
+
+		for (Parameter expected : longOptions) {
+			Parameter actual = cl.getParameter(expected.getDefinition().getLongOpt());
+			Assert.assertEquals(expected, actual);
+			Assert.assertTrue(cl.hasParameter(expected.getDefinition().getLongOpt()));
+		}
+
+		for (Parameter actual : cl.longOptions()) {
+			Assert.assertNotNull(actual);
+			Assert.assertTrue(longOptions.remove(actual));
+		}
+		Assert.assertTrue(longOptions.isEmpty());
 	}
 }

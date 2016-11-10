@@ -260,11 +260,11 @@ public class CommandLine implements Iterable<Parameter> {
 		}
 	}
 
-	public final Iterator<Parameter> shortOptions() {
+	public final Iterable<Parameter> shortOptions() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			return Tools.freezeList(new ArrayList<>(this.shortOptions.values())).iterator();
+			return Tools.freezeList(new ArrayList<>(this.shortOptions.values()));
 		} finally {
 			l.unlock();
 		}
@@ -290,11 +290,11 @@ public class CommandLine implements Iterable<Parameter> {
 		}
 	}
 
-	public final Iterator<Parameter> longOptions() {
+	public final Iterable<Parameter> longOptions() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			return Tools.freezeList(new ArrayList<>(this.longOptions.values())).iterator();
+			return Tools.freezeList(new ArrayList<>(this.longOptions.values()));
 		} finally {
 			l.unlock();
 		}
