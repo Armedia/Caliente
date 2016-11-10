@@ -11,15 +11,26 @@ public interface ImportListener {
 
 	/**
 	 * <p>
-	 * Invoked when the import of a batch of objects has begun, and the estimated number of objects
-	 * that will be processed.
+	 * Invoked when the import of a history of objects has begun, and the estimated number of
+	 * objects that will be processed.
 	 * </p>
 	 *
 	 * @param objectType
-	 * @param batchId
+	 * @param tier
+	 */
+	public void objectTierImportStarted(UUID jobId, CmfType objectType, int tier);
+
+	/**
+	 * <p>
+	 * Invoked when the import of a history of objects has begun, and the estimated number of
+	 * objects that will be processed.
+	 * </p>
+	 *
+	 * @param objectType
+	 * @param historyId
 	 * @param count
 	 */
-	public void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count);
+	public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String historyId, int count);
 
 	/**
 	 * <p>
@@ -54,14 +65,26 @@ public interface ImportListener {
 
 	/**
 	 * <p>
-	 * Invoked when the import of a batch has finished.
+	 * Invoked when the import of a history has finished.
 	 * </p>
 	 *
 	 * @param objectType
-	 * @param batchId
+	 * @param historyId
 	 * @param outcomes
 	 * @param failed
 	 */
-	public void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
+	public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String historyId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed);
+
+	/**
+	 * <p>
+	 * Invoked when the import of a dependency tier has finished.
+	 * </p>
+	 *
+	 * @param jobId
+	 * @param objectType
+	 * @param tier
+	 * @param failed
+	 */
+	public void objectTierImportFinished(UUID jobId, CmfType objectType, int tier, boolean failed);
 }

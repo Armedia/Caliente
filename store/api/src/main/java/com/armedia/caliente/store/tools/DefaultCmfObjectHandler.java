@@ -6,66 +6,80 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfStorageException;
 
-public abstract class DefaultCmfObjectHandler<V> implements CmfObjectHandler<V> {
+public class DefaultCmfObjectHandler<V> implements CmfObjectHandler<V> {
 
-	protected static final boolean DEF_NEW_BATCH = true;
-	protected static final boolean DEF_HANDLE_OBJECT = true;
-	protected static final boolean DEF_HANDLE_EXCEPTION = false;
-	protected static final boolean DEF_CLOSE_BATCH = true;
+	public static enum Flag {
+		//
+		NEW_TIER(true), //
+		NEW_HISTORY(true), //
+		HANDLE_OBJECT(true), //
+		HANDLE_EXCEPTION(false), //
+		END_HISTORY(true), //
+		END_TIER(true), //
+		//
+		;
 
-	public static final int NEW_BATCH = 0;
-	public static final int HANDLE_OBJECT = 1;
-	public static final int HANDLE_EXCEPTION = 2;
-	public static final int CLOSE_BATCH = 3;
+		private final boolean defaultValue;
 
-	protected final boolean retNewBatch;
-	protected final boolean retHandleException;
-	protected final boolean retHandleObject;
-	protected final boolean retCloseBatch;
+		private Flag(boolean defaultValue) {
+			this.defaultValue = defaultValue;
+		}
 
-	public DefaultCmfObjectHandler(BitSet flags) {
-		if (flags == null) {
-			this.retNewBatch = DefaultCmfObjectHandler.DEF_NEW_BATCH;
-			this.retHandleObject = DefaultCmfObjectHandler.DEF_HANDLE_OBJECT;
-			this.retHandleException = DefaultCmfObjectHandler.DEF_HANDLE_EXCEPTION;
-			this.retCloseBatch = DefaultCmfObjectHandler.DEF_CLOSE_BATCH;
-		} else {
-			this.retNewBatch = flags.get(DefaultCmfObjectHandler.NEW_BATCH);
-			this.retHandleObject = flags.get(DefaultCmfObjectHandler.HANDLE_OBJECT);
-			this.retHandleException = flags.get(DefaultCmfObjectHandler.HANDLE_EXCEPTION);
-			this.retCloseBatch = flags.get(DefaultCmfObjectHandler.CLOSE_BATCH);
+		public boolean set(BitSet bits) {
+			if (bits == null) { throw new IllegalArgumentException("Must provide a bit set to manipulate"); }
+			boolean current = get(bits);
+			bits.set(ordinal());
+			return current;
+		}
+
+		public boolean clear(BitSet bits) {
+			if (bits == null) { throw new IllegalArgumentException("Must provide a bit set to manipulate"); }
+			boolean current = get(bits);
+			bits.clear(ordinal());
+			return current;
+		}
+
+		public boolean toggle(BitSet bits) {
+			if (bits == null) { throw new IllegalArgumentException("Must provide a bit set to manipulate"); }
+			boolean current = get(bits);
+			bits.flip(ordinal());
+			return current;
+		}
+
+		public boolean get(BitSet bits) {
+			if (bits == null) { return this.defaultValue; }
+			return bits.get(ordinal());
 		}
 	}
 
+	protected final boolean retNewTier;
+	protected final boolean retNewHistory;
+	protected final boolean retHandleObject;
+	protected final boolean retHandleException;
+	protected final boolean retEndHistory;
+	protected final boolean retEndTier;
+
 	public DefaultCmfObjectHandler() {
-		this(DefaultCmfObjectHandler.DEF_NEW_BATCH, DefaultCmfObjectHandler.DEF_HANDLE_OBJECT,
-			DefaultCmfObjectHandler.DEF_HANDLE_EXCEPTION, DefaultCmfObjectHandler.DEF_CLOSE_BATCH);
+		this(null);
 	}
 
-	public DefaultCmfObjectHandler(boolean newBatch) {
-		this(newBatch, DefaultCmfObjectHandler.DEF_HANDLE_OBJECT, DefaultCmfObjectHandler.DEF_HANDLE_EXCEPTION,
-			DefaultCmfObjectHandler.DEF_CLOSE_BATCH);
-	}
-
-	public DefaultCmfObjectHandler(boolean newBatch, boolean handleObject) {
-		this(newBatch, handleObject, DefaultCmfObjectHandler.DEF_HANDLE_EXCEPTION,
-			DefaultCmfObjectHandler.DEF_CLOSE_BATCH);
-	}
-
-	public DefaultCmfObjectHandler(boolean newBatch, boolean handleObject, boolean handleException) {
-		this(newBatch, handleObject, handleException, DefaultCmfObjectHandler.DEF_CLOSE_BATCH);
-	}
-
-	public DefaultCmfObjectHandler(boolean newBatch, boolean handleObject, boolean handleException, boolean closeBatch) {
-		this.retNewBatch = newBatch;
-		this.retHandleObject = handleObject;
-		this.retHandleException = handleException;
-		this.retCloseBatch = closeBatch;
+	public DefaultCmfObjectHandler(BitSet flags) {
+		this.retNewTier = Flag.NEW_TIER.get(flags);
+		this.retNewHistory = Flag.NEW_HISTORY.get(flags);
+		this.retHandleObject = Flag.HANDLE_OBJECT.get(flags);
+		this.retHandleException = Flag.HANDLE_EXCEPTION.get(flags);
+		this.retEndHistory = Flag.END_HISTORY.get(flags);
+		this.retEndTier = Flag.END_TIER.get(flags);
 	}
 
 	@Override
-	public boolean newBatch(String batchId) throws CmfStorageException {
-		return this.retNewBatch;
+	public boolean newTier(int tierNumber) throws CmfStorageException {
+		return this.retNewTier;
+	}
+
+	@Override
+	public boolean newHistory(String historyId) throws CmfStorageException {
+		return this.retNewHistory;
 	}
 
 	@Override
@@ -79,7 +93,12 @@ public abstract class DefaultCmfObjectHandler<V> implements CmfObjectHandler<V> 
 	}
 
 	@Override
-	public boolean closeBatch(boolean ok) throws CmfStorageException {
-		return this.retCloseBatch;
+	public boolean endHistory(boolean ok) throws CmfStorageException {
+		return this.retEndHistory;
+	}
+
+	@Override
+	public boolean endTier(boolean ok) throws CmfStorageException {
+		return this.retEndTier;
 	}
 }

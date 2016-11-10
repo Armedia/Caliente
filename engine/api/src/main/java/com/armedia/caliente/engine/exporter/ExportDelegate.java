@@ -20,8 +20,9 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected final T object;
 	protected final ExportTarget exportTarget;
 	protected final String label;
-	protected final String batchId;
-	protected final boolean batchHead;
+	protected final int dependencyTier;
+	protected final String historyId;
+	protected final boolean historyCurrent;
 	protected final String name;
 	protected final Collection<CmfObjectRef> parentIds;
 	protected final String subType;
@@ -35,8 +36,9 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		this.exportTarget = new ExportTarget(calculateType(object), calculateObjectId(object),
 			calculateSearchKey(object));
 		this.label = calculateLabel(object);
-		this.batchId = calculateBatchId(object);
-		this.batchHead = calculateBatchHead(object);
+		this.dependencyTier = calculateDependencyTier(object);
+		this.historyId = calculateHistoryId(object);
+		this.historyCurrent = calculateHistoryCurrent(object);
 		this.subType = calculateSubType(this.exportTarget.getType(), object);
 		if (factory.getEngine().isSupportsDuplicateFileNames()) {
 			// We only calculate parent IDs
@@ -44,7 +46,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 			if (parentIds == null) {
 				parentIds = Collections.emptySet();
 			}
-			this.parentIds = Tools.freezeList(new ArrayList<CmfObjectRef>(parentIds));
+			this.parentIds = Tools.freezeList(new ArrayList<>(parentIds));
 		} else {
 			this.parentIds = Collections.emptyList();
 		}
@@ -94,21 +96,29 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.parentIds;
 	}
 
-	protected String calculateBatchId(T object) throws Exception {
+	protected int calculateDependencyTier(T object) throws Exception {
+		return 0;
+	}
+
+	protected String calculateHistoryId(T object) throws Exception {
 		return null;
 	}
 
-	public final String getBatchId() {
-		return this.batchId;
+	public final int getDependencyTier() {
+		return this.dependencyTier;
 	}
 
-	protected boolean calculateBatchHead(T object) throws Exception {
+	public final String getHistoryId() {
+		return this.historyId;
+	}
+
+	protected boolean calculateHistoryCurrent(T object) throws Exception {
 		// Default to true...
 		return true;
 	}
 
-	public final boolean getBatchHead() {
-		return this.batchHead;
+	public final boolean isHistoryCurrent() {
+		return this.historyCurrent;
 	}
 
 	protected String calculateSubType(CmfType type, T object) throws Exception {
@@ -127,16 +137,17 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 
 	protected Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifyAntecedents(CmfObject<V> marshalled,
 		C ctx) throws Exception {
-		return new ArrayList<ExportDelegate<?, S, W, V, C, DF, ?>>();
+		return new ArrayList<>();
 	}
 
 	protected void antecedentsExported(CmfObject<V> marshalled, C ctx) throws Exception {
 	}
 
 	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
-		CmfObject<V> marshaled = new CmfObject<V>(this.factory.getTranslator(), this.exportTarget.getType(),
-			this.exportTarget.getId(), this.name, this.parentIds, this.exportTarget.getSearchKey(), this.batchId,
-			this.batchHead, this.label, this.subType, ctx.getProductName(), ctx.getProductVersion(), null);
+		CmfObject<V> marshaled = new CmfObject<>(this.factory.getTranslator(), this.exportTarget.getType(),
+			this.exportTarget.getId(), this.name, this.parentIds, this.exportTarget.getSearchKey(), this.dependencyTier,
+			this.historyId, this.historyCurrent, this.label, this.subType, ctx.getProductName(),
+			ctx.getProductVersion(), null);
 		if (!marshal(ctx, marshaled)) { return null; }
 		this.factory.getEngine().setReferrent(marshaled, referrent);
 		return marshaled;
@@ -148,7 +159,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 
 	protected Collection<? extends ExportDelegate<?, S, W, V, C, DF, ?>> identifySuccessors(CmfObject<V> marshalled,
 		C ctx) throws Exception {
-		return new ArrayList<ExportDelegate<?, S, W, V, C, DF, ?>>();
+		return new ArrayList<>();
 	}
 
 	protected void successorsExported(CmfObject<V> marshalled, C ctx) throws Exception {

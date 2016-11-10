@@ -15,7 +15,11 @@ public class DefaultImportListener implements ImportListener {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Override
-	public void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
+	public void objectTierImportStarted(UUID jobId, CmfType objectType, int tier) {
+	}
+
+	@Override
+	public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
 	}
 
 	@Override
@@ -31,8 +35,11 @@ public class DefaultImportListener implements ImportListener {
 	}
 
 	@Override
-	public void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
+	public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String batchId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 	}
 
+	@Override
+	public void objectTierImportFinished(UUID jobId, CmfType objectType, int tier, boolean failed) {
+	}
 }

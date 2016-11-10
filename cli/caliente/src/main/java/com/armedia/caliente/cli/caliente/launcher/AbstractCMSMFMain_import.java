@@ -41,9 +41,9 @@ public abstract class AbstractCMSMFMain_import
 	private final AtomicLong aggregateTotal = new AtomicLong(0);
 	private final AtomicLong aggregateCurrent = new AtomicLong(0);
 
-	private final Map<CmfType, Long> total = new HashMap<CmfType, Long>();
-	private final Map<CmfType, AtomicLong> current = new HashMap<CmfType, AtomicLong>();
-	private final Map<CmfType, AtomicLong> previous = new HashMap<CmfType, AtomicLong>();
+	private final Map<CmfType, Long> total = new HashMap<>();
+	private final Map<CmfType, AtomicLong> current = new HashMap<>();
+	private final Map<CmfType, AtomicLong> previous = new HashMap<>();
 
 	public AbstractCMSMFMain_import(ImportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine, true, false);
@@ -64,7 +64,7 @@ public abstract class AbstractCMSMFMain_import
 			AbstractCMSMFMain.ALL, false);
 		this.engine.addListener(this);
 		this.engine.addListener(new ImportManifest(outcomes, types));
-		PluggableServiceLocator<ImportEngineListener> extraListeners = new PluggableServiceLocator<ImportEngineListener>(
+		PluggableServiceLocator<ImportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ImportEngineListener.class);
 		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 			@Override
@@ -80,7 +80,7 @@ public abstract class AbstractCMSMFMain_import
 		}
 
 		// lock
-		Map<String, Object> settings = new HashMap<String, Object>();
+		Map<String, Object> settings = new HashMap<>();
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(),
@@ -93,7 +93,7 @@ public abstract class AbstractCMSMFMain_import
 		Date start = new Date();
 		Date end = null;
 		String exceptionReport = null;
-		final CmfObjectCounter<ImportResult> results = new CmfObjectCounter<ImportResult>(ImportResult.class);
+		final CmfObjectCounter<ImportResult> results = new CmfObjectCounter<>(ImportResult.class);
 		try {
 			this.log.info("##### Import Process Started #####");
 			this.engine.runImport(this.console, this.cmfObjectStore, this.cmfContentStore, settings, results);
@@ -297,13 +297,23 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
+	public void objectTierImportStarted(UUID jobId, CmfType objectType, int tier) {
 		showProgress(objectType);
 	}
 
 	@Override
-	public final void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
+	public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String historyId, int count) {
+		showProgress(objectType);
+	}
+
+	@Override
+	public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String historyId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
+		showProgress(objectType);
+	}
+
+	@Override
+	public void objectTierImportFinished(UUID jobId, CmfType objectType, int tier, boolean failed) {
 		showProgress(objectType);
 	}
 }

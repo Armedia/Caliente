@@ -45,10 +45,10 @@ public abstract class JdbcDialect {
 			"       insert into " + //
 				"          cmf_object (" + //
 				"              object_id, object_name, search_key, object_type, " + //
-				"              object_subtype, object_label, batch_id, batch_head, " + //
+				"              object_subtype, object_label, tier_id, history_id, history_current, " + //
 				"              product_name, product_version" + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
 
 		INSERT_ALT_NAME( //
@@ -275,47 +275,28 @@ public abstract class JdbcDialect {
 				" order by content_number" //
 		),
 
+		LOAD_OBJECT_HISTORY_CURRENT_BY_HISTORY_ID( //
+			"       select o.*, n.new_name " + //
+				"     from cmf_object o, cmf_alt_name n" + //
+				"    where o.object_id = n.object_id " + //
+				"      and o.object_type = ? " + //
+				"      and o.history_id = ? " + //
+				"      and o.history_current = true " + //
+				" order by o.object_number" //
+		),
+
 		LOAD_OBJECTS( //
 			"       select o.*, n.new_name " + //
 				"     from cmf_object o, cmf_alt_name n" + //
 				"    where o.object_id = n.object_id " + //
 				"      and o.object_type = ? " + //
-				" order by o.object_number" //
+				" order by o.tier_id, o.history_id, o.object_number" //
 		),
 
-		LOAD_OBJECTS_HEAD_BY_TYPE( //
-			"       select o.*, n.new_name " + //
-				"     from cmf_object o, cmf_alt_name n" + //
-				"    where o.object_id = n.object_id " + //
-				"      and o.object_type = ? " + //
-				"      and o.batch_head = true " + //
-				" order by o.object_number" //
-		),
-
-		LOAD_OBJECTS_HEAD_BY_BATCH_ID( //
-			"       select o.*, n.new_name " + //
-				"     from cmf_object o, cmf_alt_name n" + //
-				"    where o.object_id = n.object_id " + //
-				"      and o.batch_id = ? " + //
-				"      and o.batch_head = true " + //
-				" order by o.object_number" //
-		),
-
-		LOAD_OBJECTS_BATCHED( //
-			"       select o.*, n.new_name " + //
-				"     from cmf_object o, cmf_alt_name n" + //
-				"    where o.object_id = n.object_id " + //
-				"      and o.object_type = ? " + //
-				" order by o.batch_id, o.object_number" //
-		),
+		LOAD_OBJECTS_BY_ID_CURRENT( //
+			null),
 
 		LOAD_OBJECTS_BY_ID( //
-			null),
-
-		LOAD_OBJECTS_BY_ID_HEAD( //
-			null),
-
-		LOAD_OBJECTS_BY_ID_BATCHED( //
 			null),
 
 		LOAD_PARENT_IDS( //

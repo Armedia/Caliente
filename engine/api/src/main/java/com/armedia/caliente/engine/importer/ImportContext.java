@@ -52,9 +52,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 
 	public final int loadObjects(CmfType type, Set<String> ids, CmfObjectHandler<V> handler)
 		throws CmfStorageException {
-		ImportStrategy strategy = this.factory.getEngine().getImportStrategy(type);
-		return this.cmfObjectStore.loadObjects(this.typeMapper, this.translator, type, ids, handler,
-			strategy.isBatchingSupported());
+		return this.cmfObjectStore.loadObjects(this.typeMapper, this.translator, type, ids, handler);
 	}
 
 	public final CmfObject<V> getHeadObject(CmfObject<V> sample) throws CmfStorageException {

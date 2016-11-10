@@ -47,8 +47,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	protected CmisDocumentDelegate(CmisExportDelegateFactory factory, Document object) throws Exception {
 		super(factory, Document.class, object);
 		List<Document> all = object.getAllVersions();
-		List<Document> prev = new ArrayList<Document>(all.size());
-		List<Document> succ = new ArrayList<Document>(all.size());
+		List<Document> prev = new ArrayList<>(all.size());
+		List<Document> succ = new ArrayList<>(all.size());
 
 		Document first = all.get(0);
 		if ((first.isPrivateWorkingCopy() == Boolean.TRUE) || Tools.equals("pwc", first.getVersionLabel())) {
@@ -78,7 +78,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected String calculateBatchId(Document object) throws Exception {
+	protected String calculateHistoryId(Document object) throws Exception {
 		return object.getVersionSeriesId();
 	}
 
@@ -103,8 +103,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		if (this.antecedentId != null) {
-			CmfAttribute<CmfValue> antecedentId = new CmfAttribute<CmfValue>(
-				CmisCustomAttributes.VERSION_ANTECEDENT_ID.name, CmfDataType.ID, false);
+			CmfAttribute<CmfValue> antecedentId = new CmfAttribute<>(CmisCustomAttributes.VERSION_ANTECEDENT_ID.name,
+				CmfDataType.ID, false);
 			try {
 				antecedentId.setValue(new CmfValue(CmfDataType.ID, Object.class.cast(this.antecedentId)));
 			} catch (ParseException e) {
@@ -113,12 +113,12 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			}
 			object.setAttribute(antecedentId);
 		}
-		CmfAttribute<CmfValue> current = new CmfAttribute<CmfValue>(IntermediateAttribute.IS_LATEST_VERSION,
+		CmfAttribute<CmfValue> current = new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION,
 			CmfDataType.BOOLEAN, false);
 		current.setValue(new CmfValue(this.object.isLatestVersion()));
 		object.setAttribute(current);
 
-		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<CmfValue>(IntermediateProperty.VERSION_TREE_ROOT,
+		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
 			CmfDataType.BOOLEAN, false);
 		versionTreeRoot.setValue(
 			new CmfValue((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)));
@@ -196,7 +196,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected boolean calculateBatchHead(Document document) throws Exception {
+	protected boolean calculateHistoryCurrent(Document document) throws Exception {
 		return document.isLatestVersion();
 	}
 }

@@ -1,23 +1,38 @@
 package com.armedia.caliente.store;
 
 public interface CmfObjectHandler<V> {
-
 	/**
 	 * <p>
-	 * Signal the beginning of a new batch, with the given ID. Returns {@code true} if the batch
-	 * should be processed, {@code false} if it should be skipped. If the batch is skipped, Neither
-	 * {@link #closeBatch(boolean)} nor {@link #handleObject(CmfObject)} will be invoked.
+	 * Signal the beginning of a new dependency tier, with the given number. Returns {@code true} if
+	 * the tier should be processed, {@code false} if it should be skipped. If the tier is skipped,
+	 * None of {@link #newHistory(String)}, {@link #handleObject(CmfObject)},
+	 * {@link #endHistory(boolean)}, nor {@link #endTier(boolean)} will be invoked.
 	 * </p>
 	 *
-	 * @param batchId
-	 * @return {@code true} if the batch should be processed, {@code false} if it should be skipped
+	 * @param tierNumber
+	 * @return {@code true} if the history should be processed, {@code false} if it should be
+	 *         skipped
 	 * @throws CmfStorageException
 	 */
-	public boolean newBatch(String batchId) throws CmfStorageException;
+	public boolean newTier(int tierNumber) throws CmfStorageException;
 
 	/**
 	 * <p>
-	 * Handle the given object instance in the context of the currently-open batch. This method
+	 * Signal the beginning of a new history, with the given ID. Returns {@code true} if the history
+	 * should be processed, {@code false} if it should be skipped. If the history is skipped,
+	 * Neither {@link #endHistory(boolean)} nor {@link #handleObject(CmfObject)} will be invoked.
+	 * </p>
+	 *
+	 * @param historyId
+	 * @return {@code true} if the history should be processed, {@code false} if it should be
+	 *         skipped
+	 * @throws CmfStorageException
+	 */
+	public boolean newHistory(String historyId) throws CmfStorageException;
+
+	/**
+	 * <p>
+	 * Handle the given object instance in the context of the currently-open history. This method
 	 * should return {@code true} if the loop is to be continued, or {@code false} if no further
 	 * attempt should be made to obtain objects.
 	 * </p>
@@ -45,16 +60,31 @@ public interface CmfObjectHandler<V> {
 
 	/**
 	 * <p>
-	 * Close the current batch, returning {@code true} if processing should continue with the next
-	 * batch, or {@code false} otherwise.
+	 * Close the current history, returning {@code true} if processing should continue with the next
+	 * history, or {@code false} otherwise.
 	 * </p>
 	 *
 	 * @param ok
-	 *            {@code true} if processing should continue with the next batch, or {@code false}
-	 *            otherwise
-	 * @return {@code true} if processing should continue with the next batch, or {@code false}
+	 *            {@code true} to indicate that the previous history was processed successfully,
+	 *            {@code false} otherwise
+	 * @return {@code true} if processing should continue with the next history, or {@code false}
 	 *         otherwise
 	 * @throws CmfStorageException
 	 */
-	public boolean closeBatch(boolean ok) throws CmfStorageException;
+	public boolean endHistory(boolean ok) throws CmfStorageException;
+
+	/**
+	 * <p>
+	 * Close the current dependency tier, returning {@code true} if processing should continue with
+	 * the next tier, or {@code false} otherwise.
+	 * </p>
+	 *
+	 * @param ok
+	 *            {@code true} to indicate that the previous tier was processed successfully,
+	 *            {@code false} otherwise
+	 * @return {@code true} if processing should continue with the next tier, or {@code false}
+	 *         otherwise
+	 * @throws CmfStorageException
+	 */
+	public boolean endTier(boolean ok) throws CmfStorageException;
 }

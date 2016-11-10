@@ -61,10 +61,8 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	public String calculateBatchId(Folder f) {
-		// Count the number of levels down this path is
-		Collection<String> ret = FileNameTools.tokenize(f.getServerRelativeUrl(), '/');
-		return String.format("%016x", ret.size());
+	public int calculateDependencyTier(Folder f) {
+		return FileNameTools.tokenize(f.getServerRelativeUrl(), '/').size();
 	}
 
 	@Override
@@ -75,7 +73,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	@Override
 	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.WELCOME_PAGE.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.WELCOME_PAGE.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getWelcomePage()))));
 		return true;
 	}

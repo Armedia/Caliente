@@ -396,7 +396,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		// source)
 		String altType = typeMapper.mapType(dataObject.getSubtype());
 		if (altType != null) {
-			dataObject = new CmfObject<V>(dataObject, altType);
+			dataObject = new CmfObject<>(dataObject, altType);
 		}
 		return translator.decodeObject(dataObject);
 	}
@@ -407,7 +407,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
 		if (sample == null) { throw new IllegalArgumentException("Must provide a sample to work with"); }
-		if (sample.isBatchHead()) { return sample; }
+		if (sample.isHistoryCurrent()) { return sample; }
 
 		O operation = beginConcurrentInvocation();
 		try {
@@ -433,19 +433,18 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		CmfAttributeTranslator<V> translator, CmfObject<V> sample) throws CmfStorageException;
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
-		CmfAttributeTranslator<V> translator, CmfType type, boolean batching, String... ids)
-		throws CmfStorageException {
-		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null), batching);
+		CmfAttributeTranslator<V> translator, CmfType type, String... ids) throws CmfStorageException {
+		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null));
 	}
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
-		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids, boolean batching)
+		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
 		throws CmfStorageException {
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return loadObjects(operation, typeMapper, translator, type, ids, batching);
+				return loadObjects(operation, typeMapper, translator, type, ids);
 			} finally {
 				if (tx) {
 					try {
@@ -462,7 +461,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTypeMapper typeMapper,
-		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids, boolean batching)
+		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
 		throws CmfStorageException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (translator == null) { throw new IllegalArgumentException(
@@ -474,25 +473,30 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				ids = Collections.emptyList();
 			}
 			Set<String> actualIds = null;
-			final List<CmfObject<V>> ret = new ArrayList<CmfObject<V>>(ids.size());
+			final List<CmfObject<V>> ret = new ArrayList<>(ids.size());
 			if (ids.isEmpty()) { return ret; }
-			actualIds = new HashSet<String>();
+			actualIds = new HashSet<>();
 			for (String s : ids) {
 				if (s == null) {
 					continue;
 				}
 				actualIds.add(s);
 			}
-			final CmfObjectHandler<V> h = new CollectionObjectHandler<V>(ret);
+			final CmfObjectHandler<V> h = new CollectionObjectHandler<>(ret);
 			loadObjects(operation, translator, type, actualIds, new CmfObjectHandler<V>() {
+				@Override
+				public boolean newTier(int tierNumber) throws CmfStorageException {
+					return h.newTier(tierNumber);
+				}
+
 				@Override
 				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
 					return h.handleObject(adjustLoadedObject(dataObject, typeMapper, translator));
 				}
 
 				@Override
-				public boolean newBatch(String batchId) throws CmfStorageException {
-					return h.newBatch(batchId);
+				public boolean newHistory(String historyId) throws CmfStorageException {
+					return h.newHistory(historyId);
 				}
 
 				@Override
@@ -501,10 +505,15 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				}
 
 				@Override
-				public boolean closeBatch(boolean ok) throws CmfStorageException {
-					return h.closeBatch(ok);
+				public boolean endHistory(boolean ok) throws CmfStorageException {
+					return h.endHistory(ok);
 				}
-			}, batching);
+
+				@Override
+				public boolean endTier(boolean ok) throws CmfStorageException {
+					return h.endTier(ok);
+				}
+			});
 			return ret;
 		} finally {
 			getReadLock().unlock();
@@ -512,13 +521,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	public final <V> int loadObjects(final CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
-		final CmfType type, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException {
-		return loadObjects(typeMapper, translator, type, null, handler, batching);
+		final CmfType type, CmfObjectHandler<V> handler) throws CmfStorageException {
+		return loadObjects(typeMapper, translator, type, null, handler);
 	}
 
 	public final <V> int loadObjects(final CmfTypeMapper typeMapper, final CmfAttributeTranslator<V> translator,
-		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler, boolean batching)
-		throws CmfStorageException {
+		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler) throws CmfStorageException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
@@ -529,13 +537,18 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			try {
 				return loadObjects(operation, translator, type, ids, new CmfObjectHandler<V>() {
 					@Override
+					public boolean newTier(int tierNumber) throws CmfStorageException {
+						return handler.newTier(tierNumber);
+					}
+
+					@Override
 					public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
 						return handler.handleObject(adjustLoadedObject(dataObject, typeMapper, translator));
 					}
 
 					@Override
-					public boolean newBatch(String batchId) throws CmfStorageException {
-						return handler.newBatch(batchId);
+					public boolean newHistory(String historyId) throws CmfStorageException {
+						return handler.newHistory(historyId);
 					}
 
 					@Override
@@ -544,10 +557,15 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					}
 
 					@Override
-					public boolean closeBatch(boolean ok) throws CmfStorageException {
-						return handler.closeBatch(ok);
+					public boolean endHistory(boolean ok) throws CmfStorageException {
+						return handler.endHistory(ok);
 					}
-				}, batching);
+
+					@Override
+					public boolean endTier(boolean ok) throws CmfStorageException {
+						return handler.endTier(ok);
+					}
+				});
 			} finally {
 				if (tx) {
 					try {
@@ -564,7 +582,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract <V> int loadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
-		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException;
+		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException;
 
 	public final <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(
 		final CmfAttributeTranslator<V> translator) throws CmfStorageException {

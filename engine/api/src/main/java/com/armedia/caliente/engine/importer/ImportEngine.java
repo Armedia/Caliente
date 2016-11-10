@@ -4,9 +4,6 @@
 
 package com.armedia.caliente.engine.importer;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -17,30 +14,25 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.UUID;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -61,6 +53,162 @@ import com.armedia.commons.utilities.Tools;
  */
 public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, CF>, CF extends ImportContextFactory<S, W, V, C, ?, ?>, DF extends ImportDelegateFactory<S, W, V, C, ?>>
 	extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
+
+	private class BatchWorker implements Callable<Map<String, Collection<ImportOutcome>>> {
+
+		private final SynchronizedCounter synchronizedCounter;
+
+		private final Logger log = LoggerFactory.getLogger(getClass());
+		private final SessionFactory<S> sessionFactory;
+		private final ImportEngineListener listenerDelegator;
+		private final ImportState importState;
+		private final Batch batch;
+		private final ImportContextFactory<S, W, V, C, ?, ?> contextFactory;
+		private final ImportDelegateFactory<S, W, V, C, ?> delegateFactory;
+		private final CmfTypeMapper typeMapper;
+
+		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter, SessionFactory<S> sessionFactory,
+			ImportEngineListener listenerDelegator, ImportState importState,
+			final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
+			final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper) {
+			this.sessionFactory = sessionFactory;
+			this.listenerDelegator = listenerDelegator;
+			this.importState = importState;
+			this.batch = batch;
+			this.contextFactory = contextFactory;
+			this.delegateFactory = delegateFactory;
+			this.typeMapper = typeMapper;
+			this.synchronizedCounter = synchronizedCounter;
+			synchronizedCounter.increment();
+		}
+
+		@Override
+		public Map<String, Collection<ImportOutcome>> call() {
+			try {
+				boolean failBatch = false;
+				final Map<String, Collection<ImportOutcome>> outcomes = new LinkedHashMap<>(this.batch.contents.size());
+				try {
+					if (this.batch.contents.isEmpty()) {
+						// Shouldn't happen, but still
+						this.log.warn(
+							String.format("An invalid value made it into the work queue somehow: %s", this.batch));
+						this.batch.markCompleted();
+						return null;
+					}
+
+					if (this.log.isDebugEnabled()) {
+						this.log.debug(String.format("Polled a batch with %d items", this.batch.contents.size()));
+					}
+
+					final SessionWrapper<S> session;
+					try {
+						session = this.sessionFactory.acquireSession();
+					} catch (Exception e) {
+						this.log.error("Failed to obtain a worker session", e);
+						this.batch.markAborted(e);
+						return null;
+					}
+
+					try {
+						if (this.log.isDebugEnabled()) {
+							this.log.debug(String.format("Got session [%s]", session.getId()));
+						}
+
+						this.listenerDelegator.objectHistoryImportStarted(this.importState.jobId, this.batch.type,
+							this.batch.id, this.batch.contents.size());
+						int i = 0;
+						for (CmfObject<V> next : this.batch.contents) {
+							if (failBatch) {
+								this.log.error(String.format("Batch has been failed - will not process [%s](%s) (%s)",
+									next.getLabel(), next.getId(), ImportResult.SKIPPED.name()));
+								this.listenerDelegator.objectImportCompleted(this.importState.jobId, next,
+									ImportOutcome.SKIPPED);
+								continue;
+							}
+
+							final C ctx = this.contextFactory.newContext(next.getId(), next.getType(),
+								session.getWrapped(), this.importState.output, this.importState.objectStore,
+								this.importState.streamStore, this.typeMapper, i);
+							try {
+								initContext(ctx);
+								final CmfType storedType = next.getType();
+								final boolean useTx = getImportStrategy(storedType).isSupportsTransactions();
+								if (useTx) {
+									session.begin();
+								}
+								try {
+									this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
+									// TODO: Transform the loaded object from the intermediate
+									// format into the target format
+									ImportDelegate<?, S, W, V, C, ?, ?> delegate = this.delegateFactory
+										.newImportDelegate(next);
+									final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
+										ctx);
+									outcomes.put(next.getId(), outcome);
+									for (ImportOutcome o : outcome) {
+										this.listenerDelegator.objectImportCompleted(this.importState.jobId, next, o);
+										if (this.log.isDebugEnabled()) {
+											String msg = null;
+											switch (o.getResult()) {
+												case CREATED:
+												case UPDATED:
+													msg = String.format("Persisted (%s) %s as [%s](%s)", o.getResult(),
+														next, o.getNewId(), o.getNewLabel());
+													break;
+
+												case DUPLICATE:
+													msg = String.format("Found a duplicate of %s as [%s](%s)", next,
+														o.getNewId(), o.getNewLabel());
+													break;
+
+												default:
+													msg = String.format("Persisted (%s) %s", o.getResult(), next);
+													break;
+											}
+											this.log.debug(msg);
+										}
+									}
+									if (useTx) {
+										session.commit();
+									}
+									i++;
+								} catch (Throwable t) {
+									if (useTx) {
+										session.rollback();
+									}
+									this.listenerDelegator.objectImportFailed(this.importState.jobId, next, t);
+									// Log the error, move on
+									this.log.error(String.format("Exception caught processing %s", next), t);
+									if (this.batch.strategy.isBatchFailRemainder()) {
+										// If we're supposed to kill the batch, fail all
+										// the other objects
+										failBatch = true;
+										this.log.debug(String.format(
+											"Objects of type [%s] require that the remainder of the batch fail if an object fails",
+											storedType));
+										this.batch.markAborted(t);
+										continue;
+									}
+								}
+							} finally {
+								ctx.close();
+							}
+						}
+						return outcomes;
+					} finally {
+						session.close();
+					}
+				} finally {
+					this.batch.markCompleted();
+					this.listenerDelegator.objectHistoryImportFinished(this.importState.jobId, this.batch.type,
+						this.batch.id, outcomes, failBatch);
+				}
+			} finally {
+				this.log.debug("Worker exiting...");
+				this.synchronizedCounter.decrement();
+			}
+		}
+	}
 
 	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
 	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
@@ -87,7 +235,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		private final Collection<CmfObject<V>> contents;
 		private final ImportStrategy strategy;
 		private BatchStatus status = BatchStatus.PENDING;
-		private Throwable thrown = null;
+		// private Throwable thrown = null;
 
 		private Batch() {
 			this(null, null, null, null);
@@ -100,17 +248,17 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			this.strategy = strategy;
 		}
 
-		private synchronized void markCompleted() {
+		private void markCompleted() {
 			if (this.status == BatchStatus.PENDING) {
 				this.status = BatchStatus.PROCESSED;
 				notify();
 			}
 		}
 
-		private synchronized void markAborted(Throwable thrown) {
+		private void markAborted(Throwable thrown) {
 			if (this.status == BatchStatus.PENDING) {
 				this.status = BatchStatus.ABORTED;
-				this.thrown = thrown;
+				// this.thrown = thrown;
 				notify();
 			}
 		}
@@ -118,9 +266,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		@Override
 		public String toString() {
 			return String.format(
-				"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.batchingSupported=%s, strategy.batchingStrategy=%s, strategy.failRemainder=%s, contents=%s]",
-				this.type, this.id, this.status, this.strategy.isParallelCapable(), this.strategy.isBatchingSupported(),
-				this.strategy.getBatchItemStrategy(), this.strategy.isBatchFailRemainder(), this.contents);
+				"Batch [type=%s, id=%s, status=%s, strategy.parallel=%s, strategy.failRemainder=%s, contents=%s]",
+				this.type, this.id, this.status, this.strategy.isParallelCapable(),
+				this.strategy.isBatchFailRemainder(), this.contents);
 		}
 	}
 
@@ -150,6 +298,32 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			for (ImportEngineListener l : this.listeners) {
 				try {
 					l.objectTypeImportStarted(jobId, objectType, totalObjects);
+				} catch (Exception e) {
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void objectTierImportStarted(UUID jobId, CmfType objectType, int tier) {
+			for (ImportEngineListener l : this.listeners) {
+				try {
+					l.objectTierImportStarted(jobId, objectType, tier);
+				} catch (Exception e) {
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
+			for (ImportEngineListener l : this.listeners) {
+				try {
+					l.objectHistoryImportStarted(jobId, objectType, batchId, count);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -200,6 +374,33 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
+		public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String batchId,
+			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
+			for (ImportEngineListener l : this.listeners) {
+				try {
+					l.objectHistoryImportFinished(jobId, objectType, batchId, outcomes, failed);
+				} catch (Exception e) {
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void objectTierImportFinished(UUID jobId, CmfType objectType, int tier, boolean failed) {
+			for (ImportEngineListener l : this.listeners) {
+				try {
+					l.objectTierImportFinished(jobId, objectType, tier, failed);
+				} catch (Exception e) {
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
 		public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Long> counters) {
 			for (ImportEngineListener l : this.listeners) {
 				try {
@@ -233,33 +434,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			importFinished(jobId, getStoredObjectCounter().getCummulative());
 		}
 
-		@Override
-		public void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectBatchImportStarted(jobId, objectType, batchId, count);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
-			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectBatchImportFinished(jobId, objectType, batchId, outcomes, failed);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
 	}
 
 	protected ImportEngine(CmfCrypt crypto) {
@@ -275,7 +449,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected final CmfTypeMapper getTypeMapper(S session, CfgTools cfg) throws Exception {
 		final String typeMapperName = cfg.getString(ImportEngine.TYPE_MAPPER_SELECTOR);
 
-		Map<String, Object> m = new HashMap<String, Object>();
+		Map<String, Object> m = new HashMap<>();
 		for (String str : cfg.getSettings()) {
 			if (str.startsWith(ImportEngine.TYPE_MAPPER_PREFIX)) {
 				str = str.substring(ImportEngine.TYPE_MAPPER_PREFIX.length());
@@ -382,7 +556,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		// objects require fixing, we don't sweep the whole table, but instead submit
 		// the IDs that we want fixed.
 
-		Map<CmfType, Map<String, String>> idMap = new EnumMap<CmfType, Map<String, String>>(CmfType.class);
+		Map<CmfType, Map<String, String>> idMap = new EnumMap<>(CmfType.class);
 		for (String key : p.stringPropertyNames()) {
 			final String fixedName = p.getProperty(key);
 			Matcher matcher = ImportEngine.MAP_KEY_PARSER.matcher(key);
@@ -402,7 +576,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			final String id = matcher.group(2);
 			Map<String, String> m = idMap.get(t);
 			if (m == null) {
-				m = new TreeMap<String, String>();
+				m = new TreeMap<>();
 				idMap.put(t, m);
 			}
 			m.put(id, fixedName);
@@ -444,7 +618,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	private final CmfObjectCounter<ImportResult> runImportImpl(ImportState importState,
+	private final CmfObjectCounter<ImportResult> runImportImpl(final ImportState importState,
 		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
 		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper)
@@ -452,196 +626,21 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;
 		final CmfObjectStore<?, ?> objectStore = importState.objectStore;
-		final CmfContentStore<?, ?, ?> streamStore = importState.streamStore;
 		final CfgTools settings = importState.cfg;
 
 		final int threadCount;
-		final int backlogSize;
 		synchronized (this) {
 			threadCount = getThreadCount(settings);
-			backlogSize = getBacklogSize(settings);
 		}
 
-		final AtomicInteger activeCounter = new AtomicInteger(0);
-		final AtomicLong batchCounter = new AtomicLong(0);
-		final Object workerSynchronizer = new Object();
-		final Batch exitValue = new Batch();
-		final BlockingQueue<Batch> workQueue = new ArrayBlockingQueue<Batch>(backlogSize);
-		final ExecutorService executor = newExecutor(threadCount);
+		final SynchronizedCounter synchronizedCounter = new SynchronizedCounter();
+		final ExecutorService parallelExecutor = newExecutor(threadCount);
+		final ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
 
 		if (counter == null) {
-			counter = new CmfObjectCounter<ImportResult>(ImportResult.class);
+			counter = new CmfObjectCounter<>(ImportResult.class);
 		}
 		final ImportListenerDelegator listenerDelegator = new ImportListenerDelegator(counter);
-
-		// First things first, validate that valid strategies are returned for every object
-		// type that will be imported
-		Runnable worker = new Runnable() {
-			private final Logger log = ImportEngine.this.log;
-
-			@Override
-			public void run() {
-				activeCounter.incrementAndGet();
-				synchronized (workerSynchronizer) {
-					workerSynchronizer.notify();
-				}
-				SessionWrapper<S> session = null;
-				try {
-					while (!Thread.interrupted()) {
-						if (this.log.isDebugEnabled()) {
-							this.log.debug("Polling the queue...");
-						}
-						// increase the waiter count
-						final Batch batch;
-						try {
-							batch = workQueue.take();
-							if (batch == null) {
-								// These are impossible, but this will shut FindBugs up :)
-								continue;
-							}
-						} catch (InterruptedException e) {
-							Thread.currentThread().interrupt();
-							return;
-						}
-
-						if (batch == exitValue) {
-							this.log.info("Exiting the export polling loop");
-							return;
-						}
-
-						boolean failBatch = false;
-						Map<String, Collection<ImportOutcome>> outcomes = new LinkedHashMap<String, Collection<ImportOutcome>>(
-							batch.contents.size());
-						try {
-							if (batch.contents.isEmpty()) {
-								// Shouldn't happen, but still
-								this.log.warn(
-									String.format("An invalid value made it into the work queue somehow: %s", batch));
-								batch.markCompleted();
-								continue;
-							}
-
-							if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("Polled a batch with %d items", batch.contents.size()));
-							}
-							try {
-								session = sessionFactory.acquireSession();
-							} catch (Exception e) {
-								this.log.error("Failed to obtain a worker session", e);
-								batch.markAborted(e);
-								return;
-							}
-
-							if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("Got session [%s]", session.getId()));
-							}
-
-							listenerDelegator.objectBatchImportStarted(jobId, batch.type, batch.id,
-								batch.contents.size());
-							int i = 0;
-							for (CmfObject<V> next : batch.contents) {
-								if (failBatch) {
-									this.log
-										.error(String.format("Batch has been failed - will not process [%s](%s) (%s)",
-											next.getLabel(), next.getId(), ImportResult.SKIPPED.name()));
-									listenerDelegator.objectImportCompleted(jobId, next, ImportOutcome.SKIPPED);
-									continue;
-								}
-
-								final C ctx = contextFactory.newContext(next.getId(), next.getType(),
-									session.getWrapped(), output, objectStore, streamStore, typeMapper, i);
-								try {
-									initContext(ctx);
-									final CmfType storedType = next.getType();
-									final boolean useTx = getImportStrategy(storedType).isSupportsTransactions();
-									if (useTx) {
-										session.begin();
-									}
-									try {
-										listenerDelegator.objectImportStarted(jobId, next);
-										// TODO: Transform the loaded object from the
-										// intermediate format into the target format
-										ImportDelegate<?, S, W, V, C, ?, ?> delegate = delegateFactory
-											.newImportDelegate(next);
-										final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
-											ctx);
-										outcomes.put(next.getId(), outcome);
-										for (ImportOutcome o : outcome) {
-											listenerDelegator.objectImportCompleted(jobId, next, o);
-											if (this.log.isDebugEnabled()) {
-												String msg = null;
-												switch (o.getResult()) {
-													case CREATED:
-													case UPDATED:
-														msg = String.format("Persisted (%s) %s as [%s](%s)",
-															o.getResult(), next, o.getNewId(), o.getNewLabel());
-														break;
-
-													case DUPLICATE:
-														msg = String.format("Found a duplicate of %s as [%s](%s)", next,
-															o.getNewId(), o.getNewLabel());
-														break;
-
-													default:
-														msg = String.format("Persisted (%s) %s", o.getResult(), next);
-														break;
-												}
-												this.log.debug(msg);
-											}
-										}
-										if (useTx) {
-											session.commit();
-										}
-										i++;
-									} catch (Throwable t) {
-										if (useTx) {
-											session.rollback();
-										}
-										listenerDelegator.objectImportFailed(jobId, next, t);
-										// Log the error, move on
-										this.log.error(String.format("Exception caught processing %s", next), t);
-										if (batch.strategy.isBatchFailRemainder()) {
-											// If we're supposed to kill the batch, fail all
-											// the other objects
-											failBatch = true;
-											this.log.debug(String.format(
-												"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-												storedType));
-											batch.markAborted(t);
-											continue;
-										}
-									}
-								} finally {
-									ctx.close();
-								}
-							}
-						} finally {
-							batch.markCompleted();
-							listenerDelegator.objectBatchImportFinished(jobId, batch.type, batch.id, outcomes,
-								failBatch);
-							if (session != null) {
-								session.close();
-								session = null;
-							}
-							batchCounter.incrementAndGet();
-							synchronized (workerSynchronizer) {
-								workerSynchronizer.notify();
-							}
-						}
-					}
-				} finally {
-					this.log.debug("Worker exiting...");
-					activeCounter.decrementAndGet();
-					synchronized (workerSynchronizer) {
-						workerSynchronizer.notify();
-					}
-					// Just in case
-					if (session != null) {
-						session.close();
-					}
-				}
-			}
-		};
 
 		try {
 			Map<CmfType, Long> containedTypes;
@@ -658,11 +657,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					String.format("No import strategy provided for available object type [%s]", t.name())); }
 			}
 
-			List<Future<?>> futures = new ArrayList<Future<?>>();
-			List<Batch> remaining = new ArrayList<Batch>();
 			objectStore.clearAttributeMappings();
-			listenerDelegator.importStarted(importState, containedTypes);
-
 			// Ensure the target path exists
 			{
 				final SessionWrapper<S> rootSession;
@@ -731,7 +726,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						String id = object.getId();
 						String ext = "";
 						if (object.getType() == CmfType.DOCUMENT) {
-							id = object.getBatchId();
+							id = object.getHistoryId();
 							ext = Tools.coalesce(FilenameUtils.getExtension(newName), ext);
 							if (!StringUtils.isEmpty(ext)) {
 								ext = String.format(".%s", ext);
@@ -748,6 +743,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			}
 
+			listenerDelegator.importStarted(importState, containedTypes);
 			final CmfAttributeTranslator<V> translator = getTranslator();
 			for (final CmfType type : CmfType.values()) {
 				final Long total = containedTypes.get(type);
@@ -779,231 +775,95 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				listenerDelegator.objectTypeImportStarted(jobId, type, total);
 
 				// Start the workers
-				futures.clear();
 				// If we don't support parallelization at any level, then we simply use a
 				// single worker to do everything. Otherwise, the rest of the strategy will
 				// dictate how the parallelism will work (i.e. batches are parallel and
 				// their contents serialized, or batches' contents are parallel and batches
 				// are serialized).
-				final long workerCount = (strategy.isParallelCapable() ? Math.min(total, threadCount) : 1);
-				for (int i = 0; i < workerCount; i++) {
-					futures.add(executor.submit(worker));
-				}
+				final ExecutorService executor = (strategy.isParallelCapable() ? parallelExecutor : singleExecutor);
 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 				try {
 					objectStore.loadObjects(typeMapper, translator, type, new CmfObjectHandler<V>() {
-						private final Logger log = ImportEngine.this.log;
-
-						private String batchId = null;
+						private Integer tierId = null;
+						private String historyId = null;
 						private List<CmfObject<V>> contents = null;
 
 						@Override
-						public boolean newBatch(String batchId) throws CmfStorageException {
-							this.contents = new LinkedList<CmfObject<V>>();
-							this.batchId = batchId;
+						public boolean newTier(int tier) throws CmfStorageException {
+							this.tierId = tier;
+							return true;
+						}
+
+						@Override
+						public boolean newHistory(String historyId) throws CmfStorageException {
+							this.contents = new LinkedList<>();
+							this.historyId = historyId;
 							return true;
 						}
 
 						@Override
 						public boolean handleObject(CmfObject<V> dataObject) {
-							if (this.contents == null) {
-								ImportStrategy strategy = getImportStrategy(dataObject.getType());
-								Collection<CmfObject<V>> c = new ArrayList<CmfObject<V>>(1);
-								c.add(dataObject);
-								try {
-									workQueue
-										.put(new Batch(dataObject.getType(), dataObject.getBatchId(), c, strategy));
-								} catch (InterruptedException e) {
-									Thread.currentThread().interrupt();
-									String msg = String.format(
-										"Thread interrupted while trying to submit the batch %s containing [%s]",
-										this.batchId, dataObject);
-									if (this.log.isDebugEnabled()) {
-										this.log.warn(msg, e);
-									} else {
-										this.log.warn(msg);
-									}
-									return false;
-								}
-							} else {
-								this.contents.add(dataObject);
-							}
+							this.contents.add(dataObject);
 							return true;
 						}
 
 						@Override
-						public boolean closeBatch(boolean ok) throws CmfStorageException {
+						public boolean endHistory(boolean ok) throws CmfStorageException {
 							if ((this.contents == null) || this.contents.isEmpty()) { return true; }
 							CmfObject<?> sample = this.contents.get(0);
 							CmfType storedType = sample.getType();
 							ImportStrategy strategy = getImportStrategy(storedType);
 							// We will have already validated that a valid strategy is provided
 							// for all stored types
-							if (!strategy.isParallelCapable()
-								|| (strategy.getBatchItemStrategy() == BatchItemStrategy.ITEMS_SERIALIZED)) {
-								// If we're not parallelizing AT ALL, or if we're processing
-								// batch contents serially (but whole batches in parallel), then
-								// we submit batches as a group, and don't wait
-								try {
-									workQueue.put(new Batch(storedType, this.batchId, this.contents, strategy));
-								} catch (InterruptedException e) {
-									Thread.currentThread().interrupt();
-									String msg = String.format(
-										"Thread interrupted while trying to submit the batch %s containing [%s]",
-										this.batchId, this.contents);
-									if (this.log.isDebugEnabled()) {
-										this.log.warn(msg, e);
-									} else {
-										this.log.warn(msg);
-									}
-									return false;
-								} finally {
-									this.contents = null;
-									this.batchId = null;
-								}
-							} else if ((strategy.getBatchItemStrategy() == null)
-								|| (strategy.getBatchItemStrategy() == BatchItemStrategy.ITEMS_CONCURRENT)) {
-								// Batch items are to be run in parallel. If the strategy is
-								// null, then we don't wait and simply fire every item off in
-								// its own individual batch. Otherwise, batch items are to be
-								// run in parallel, but batches themselves are to be serialized,
-								// so we have to wait until each batch is concluded before we
-								// return
-								batchCounter.set(0);
-								final int contentSize = this.contents.size();
-								List<Batch> batches = new ArrayList<Batch>(this.contents.size());
-								for (CmfObject<V> o : this.contents) {
-									List<CmfObject<V>> l = new ArrayList<CmfObject<V>>(1);
-									l.add(o);
-									try {
-										Batch batch = new Batch(o.getType(), this.batchId, l, strategy);
-										batches.add(batch);
-										workQueue.put(batch);
-									} catch (InterruptedException e) {
-										Thread.currentThread().interrupt();
-										String msg = String.format(
-											"Thread interrupted while trying to submit the batch %s containing [%s]",
-											this.batchId, this.contents);
-										if (this.log.isDebugEnabled()) {
-											this.log.warn(msg, e);
-										} else {
-											this.log.warn(msg);
-										}
-										// Thread is interrupted, take that as a sign to
-										// terminate
-										return false;
-									}
-								}
-
-								if (strategy.getBatchItemStrategy() != null) {
-									// We need to wait until the batch has been processed in its
-									// entirety, or no more workers waiting...
-									try {
-										synchronized (workerSynchronizer) {
-											while ((activeCounter.get() > 0) && (batchCounter.get() < contentSize)) {
-												workerSynchronizer.wait();
-											}
-											workerSynchronizer.notify();
-										}
-										// Check the result
-										boolean hasError = false;
-										for (Batch batch : batches) {
-											if ((batch.thrown != null) || (batch.status == BatchStatus.ABORTED)) {
-												hasError = true;
-												break;
-											}
-										}
-										if (hasError) {
-											StringBuilder b = new StringBuilder();
-											for (Batch batch : batches) {
-												if (b.length() > 0) {
-													b.append(String.format("%n"));
-												}
-												b.append(String.format("Batch [%s] %s with contents: %s", batch.id,
-													batch.status, batch.contents));
-												if (batch.thrown != null) {
-													hasError = true;
-													StringWriter sw = new StringWriter();
-													PrintWriter pw = new PrintWriter(sw);
-													batch.thrown.printStackTrace(pw);
-													b.append(String.format("%n%s", sw.toString()));
-												}
-											}
-											this.log.warn(String.format("Workers exited early%n%s", b.toString()));
-											return false;
-										}
-									} catch (InterruptedException e) {
-										Thread.currentThread().interrupt();
-										String msg = String.format(
-											"Thread interrupted while waiting for work to complete for batch %s containing [%s]",
-											this.batchId, this.contents);
-										if (this.log.isDebugEnabled()) {
-											this.log.warn(msg, e);
-										} else {
-											this.log.warn(msg);
-										}
-										// Thread is interrupted, take that as a sign to
-										// terminate
-										return false;
-									}
-								}
+							try {
+								executor.submit(
+									new BatchWorker(new Batch(storedType, this.historyId, this.contents, strategy),
+										synchronizedCounter, sessionFactory, listenerDelegator, importState,
+										contextFactory, delegateFactory, typeMapper));
+							} finally {
+								this.contents = null;
+								this.historyId = null;
 							}
-							// TODO: Perhaps check the error threshold
 							return true;
+						}
+
+						@Override
+						public boolean endTier(boolean ok) throws CmfStorageException {
+							// TODO: Wait for the currently-running tier to complete.
+							// i.e. wait until the workers are idle
+							try {
+								synchronizedCounter.waitUntil(0);
+							} catch (InterruptedException e) {
+								throw new CmfStorageException(String.format(
+									"Thread interrupted while waiting for tier [%d] to complete", this.tierId), e);
+							}
+							this.tierId = null;
+							return ok;
 						}
 
 						@Override
 						public boolean handleException(Exception e) {
 							return true;
 						}
-					}, strategy.isBatchingSupported());
+					});
 				} catch (Exception e) {
 					throw new ImportException(
 						String.format("Exception raised while loading objects of type [%s]", type), e);
 				} finally {
 					try {
-						// Ask the workers to exit civilly after the entire workload is
-						// submitted
-						this.log.info(String.format("Signaling work completion for the %s workers", type.name()));
-						for (int i = 0; i < workerCount; i++) {
-							try {
-								workQueue.put(exitValue);
-							} catch (InterruptedException e) {
-								// Here we have a problem: we're timing out while adding the
-								// exit values...
-								this.log.warn("Interrupted while attempting to request executor thread termination", e);
-								Thread.currentThread().interrupt();
-								break;
-							}
-						}
-
 						// Here, we wait for all the workers to conclude
 						this.log.info(String.format("Waiting for the %s workers to exit...", type.name()));
-						for (Future<?> future : futures) {
-							try {
-								future.get();
-							} catch (InterruptedException e) {
-								this.log.warn("Interrupted while waiting for an executor thread to exit", e);
-								Thread.currentThread().interrupt();
-								break;
-							} catch (ExecutionException e) {
-								this.log.warn("An executor thread raised an exception", e);
-							} catch (CancellationException e) {
-								this.log.warn("An executor thread was canceled!", e);
-							}
+						try {
+							synchronizedCounter.waitUntil(0);
+						} catch (InterruptedException e) {
+							this.log.warn("Interrupted while waiting for an executor thread to exit", e);
+							Thread.currentThread().interrupt();
+							break;
 						}
 						this.log.info(String.format("All the %s workers have exited", type.name()));
 					} finally {
 						listenerDelegator.objectTypeImportFinished(jobId, type);
-						workQueue.drainTo(remaining);
-						for (Batch v : remaining) {
-							if (v == exitValue) {
-								continue;
-							}
-							this.log.error(String.format("WORK LEFT PENDING IN THE QUEUE: %s", v));
-						}
-						remaining.clear();
 					}
 				}
 
@@ -1021,16 +881,17 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			// Shut down the executor
-			executor.shutdown();
+			parallelExecutor.shutdown();
+			singleExecutor.shutdown();
 
 			// If there are still pending workers, then wait for them to finish for up to 5
 			// minutes
-			int pending = activeCounter.get();
+			long pending = synchronizedCounter.get();
 			if (pending > 0) {
 				this.log.info(String.format(
 					"Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)", pending));
 				try {
-					executor.awaitTermination(5, TimeUnit.MINUTES);
+					synchronizedCounter.waitUntil(0, 5, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for normal executor termination", e);
 					Thread.currentThread().interrupt();
@@ -1038,14 +899,16 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 			return listenerDelegator.getStoredObjectCounter();
 		} finally {
-			executor.shutdownNow();
-			int pending = activeCounter.get();
+			parallelExecutor.shutdownNow();
+			singleExecutor.shutdownNow();
+
+			long pending = synchronizedCounter.get();
 			if (pending > 0) {
 				try {
 					this.log.info(String.format(
 						"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
 						pending));
-					executor.awaitTermination(1, TimeUnit.MINUTES);
+					synchronizedCounter.waitUntil(0, 1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
 					Thread.currentThread().interrupt();

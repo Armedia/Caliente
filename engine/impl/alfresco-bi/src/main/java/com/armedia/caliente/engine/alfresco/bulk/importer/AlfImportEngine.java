@@ -120,27 +120,12 @@ public class AlfImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchIndependent() {
-			return false;
-		}
-
-		@Override
 		public boolean isBatchFailRemainder() {
 			return true;
 		}
 
 		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_SERIALIZED;
-		}
-
-		@Override
 		public boolean isSupportsTransactions() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchingSupported() {
 			return false;
 		}
 	};
@@ -158,27 +143,12 @@ public class AlfImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchIndependent() {
-			return false;
-		}
-
-		@Override
 		public boolean isBatchFailRemainder() {
 			return true;
 		}
 
 		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_CONCURRENT;
-		}
-
-		@Override
 		public boolean isSupportsTransactions() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchingSupported() {
 			return false;
 		}
 	};
@@ -196,28 +166,13 @@ public class AlfImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchIndependent() {
-			return false;
-		}
-
-		@Override
 		public boolean isBatchFailRemainder() {
 			return true;
 		}
 
 		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_CONCURRENT;
-		}
-
-		@Override
 		public boolean isSupportsTransactions() {
 			return false;
-		}
-
-		@Override
-		public boolean isBatchingSupported() {
-			return true;
 		}
 	};
 
@@ -234,35 +189,20 @@ public class AlfImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchIndependent() {
-			return true;
-		}
-
-		@Override
 		public boolean isBatchFailRemainder() {
 			return true;
-		}
-
-		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_SERIALIZED;
 		}
 
 		@Override
 		public boolean isSupportsTransactions() {
 			return false;
 		}
-
-		@Override
-		public boolean isBatchingSupported() {
-			return true;
-		}
 	};
 
 	private final ImportEngineListener listener = new DefaultImportEngineListener() {
 
 		private final PrintWriter nullWriter = new PrintWriter(new NullOutputStream());
-		private final Map<UUID, PrintWriter> writers = new ConcurrentHashMap<UUID, PrintWriter>();
+		private final Map<UUID, PrintWriter> writers = new ConcurrentHashMap<>();
 
 		@Override
 		protected void importStartedImpl(ImportState importState, Map<CmfType, Long> summary) {
@@ -308,7 +248,7 @@ public class AlfImportEngine extends
 			try {
 				switch (object.getType()) {
 					case DOCUMENT:
-						if (!object.isBatchHead()) {
+						if (!object.isHistoryCurrent()) {
 							break;
 						}
 						// Fall-through

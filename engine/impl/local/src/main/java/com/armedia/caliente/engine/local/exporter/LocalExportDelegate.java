@@ -250,9 +250,9 @@ public class LocalExportDelegate extends
 	}
 
 	@Override
-	protected String calculateBatchId(LocalFile object) throws Exception {
+	protected String calculateHistoryId(LocalFile object) throws Exception {
 		if (object.getAbsolute().isDirectory()) { return String.format("%08X", object.getPathCount()); }
-		return super.calculateBatchId(object);
+		return super.calculateHistoryId(object);
 	}
 
 	@Override
@@ -266,7 +266,7 @@ public class LocalExportDelegate extends
 	}
 
 	@Override
-	protected boolean calculateBatchHead(LocalFile object) throws Exception {
+	protected boolean calculateHistoryCurrent(LocalFile object) throws Exception {
 		// Always true
 		return true;
 	}

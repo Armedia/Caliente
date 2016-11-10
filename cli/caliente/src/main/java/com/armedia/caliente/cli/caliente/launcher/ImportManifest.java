@@ -36,7 +36,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	private static final class Record {
 		private final String date;
 		private final CmfType type;
-		private final String batchId;
+		private final String historyId;
 		private final String sourceId;
 		private final String label;
 		private final String targetId;
@@ -54,7 +54,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 		private Record(CmfObject<?> object, String targetId, ImportResult result, Throwable thrown) {
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = object.getType();
-			this.batchId = StringEscapeUtils.escapeCsv(object.getBatchId());
+			this.historyId = StringEscapeUtils.escapeCsv(object.getHistoryId());
 			this.sourceId = StringEscapeUtils.escapeCsv(object.getId());
 			this.label = StringEscapeUtils.escapeCsv(object.getLabel());
 			this.result = result;
@@ -87,16 +87,16 @@ public class ImportManifest extends DefaultImportEngineListener {
 			final String msg;
 			if (this.result != ImportResult.FAILED) {
 				msg = String.format(ImportManifest.RECORD_FORMAT, this.date, this.type.name(), this.result.name(),
-					this.batchId, this.sourceId, this.targetId, this.label, "");
+					this.historyId, this.sourceId, this.targetId, this.label, "");
 			} else {
 				msg = String.format(ImportManifest.RECORD_FORMAT, this.date, this.type.name(), this.result.name(),
-					this.batchId, this.sourceId, this.targetId, this.label, getThrownMessage());
+					this.historyId, this.sourceId, this.targetId, this.label, getThrownMessage());
 			}
 			log.info(msg);
 		}
 	}
 
-	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<String, List<Record>>();
+	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<>();
 	private final Set<ImportResult> results;
 	private final Set<CmfType> types;
 
@@ -120,7 +120,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
+	public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String historyId, int count) {
 		if (!this.types.contains(objectType)) { return; }
 		if (count <= 1) {
 			// We don't track batches with a single item because it's not worth the trouble
@@ -128,7 +128,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 			// themselves are serialized (like for Folders or Types)
 			return;
 		}
-		this.openBatches.put(batchId, Collections.synchronizedList(new ArrayList<Record>(count)));
+		this.openBatches.put(historyId, Collections.synchronizedList(new ArrayList<Record>(count)));
 	}
 
 	@Override
@@ -136,7 +136,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(outcome.getResult())) { return; }
 		Record record = new Record(object, outcome.getNewId(), outcome.getResult());
-		List<Record> batch = this.openBatches.get(object.getBatchId());
+		List<Record> batch = this.openBatches.get(object.getHistoryId());
 		if (batch != null) {
 			batch.add(record);
 		} else {
@@ -150,7 +150,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(ImportResult.FAILED)) { return; }
 		Record record = new Record(object, thrown);
-		List<Record> batch = this.openBatches.get(object.getBatchId());
+		List<Record> batch = this.openBatches.get(object.getHistoryId());
 		if (batch != null) {
 			batch.add(record);
 		} else {
@@ -160,10 +160,10 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
+	public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String historyId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 		if (!this.types.contains(objectType)) { return; }
-		List<Record> batch = this.openBatches.get(batchId);
+		List<Record> batch = this.openBatches.get(historyId);
 		if (batch != null) {
 			// output each record in (roughly) the order they were imported
 			for (Record r : batch) {

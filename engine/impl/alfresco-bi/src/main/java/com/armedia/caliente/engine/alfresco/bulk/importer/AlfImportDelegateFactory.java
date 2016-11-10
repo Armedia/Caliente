@@ -521,11 +521,11 @@ public class AlfImportDelegateFactory
 
 	private final void handleVirtual(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile,
 		MarkerType type, CacheItemMarker thisMarker) throws ImportException {
-		VirtualDocument vdoc = ConcurrentUtils.createIfAbsentUnchecked(this.vdocs, cmfObject.getBatchId(),
+		VirtualDocument vdoc = ConcurrentUtils.createIfAbsentUnchecked(this.vdocs, cmfObject.getHistoryId(),
 			new ConcurrentInitializer<VirtualDocument>() {
 				@Override
 				public VirtualDocument get() throws ConcurrentException {
-					return new VirtualDocument(cmfObject.getBatchId());
+					return new VirtualDocument(cmfObject.getHistoryId());
 				}
 			});
 

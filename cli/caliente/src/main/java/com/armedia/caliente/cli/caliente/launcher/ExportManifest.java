@@ -59,7 +59,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 		private Record(CmfObject<?> object, ExportResult result, Throwable thrown, String extraInfo) {
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = object.getType();
-			this.batchId = StringEscapeUtils.escapeCsv(object.getBatchId());
+			this.batchId = StringEscapeUtils.escapeCsv(object.getHistoryId());
 			this.sourceId = StringEscapeUtils.escapeCsv(object.getId());
 			this.label = StringEscapeUtils.escapeCsv(object.getLabel());
 			this.result = result;
@@ -125,7 +125,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 		}
 	}
 
-	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<String, List<Record>>();
+	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<>();
 	private final Set<ExportResult> results;
 	private final Set<CmfType> types;
 

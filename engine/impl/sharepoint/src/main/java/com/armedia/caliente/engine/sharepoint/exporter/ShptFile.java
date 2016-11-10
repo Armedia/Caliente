@@ -78,8 +78,16 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		return String.format("%s-%s", super.calculateObjectId(object), object.getVersionNumber().toString());
 	}
 
-	public ShptVersionNumber getVersionNumber() {
-		return this.object.getVersionNumber();
+	@Override
+	public String calculateHistoryId(ShptVersion file) {
+		// This only takes into account the path, so it'll be shared by all versions of the file
+		return super.calculateObjectId(file);
+	}
+
+	@Override
+	public String calculateLabel(ShptVersion file) {
+		return String.format("%s#%s", this.factory.getRelativePath(file.getServerRelativeUrl()),
+			file.getVersionNumber().toString());
 	}
 
 	@Override
@@ -91,6 +99,10 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	@Override
 	public String calculateServerRelativeUrl(ShptVersion file) {
 		return file.getFile().getServerRelativeUrl();
+	}
+
+	public ShptVersionNumber getVersionNumber() {
+		return this.object.getVersionNumber();
 	}
 
 	@Override
@@ -160,37 +172,25 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	public String calculateBatchId(ShptVersion file) {
-		// This only takes into account the path, so it'll be shared by all versions of the file
-		return super.calculateObjectId(file);
-	}
-
-	@Override
-	public String calculateLabel(ShptVersion file) {
-		return String.format("%s#%s", this.factory.getRelativePath(file.getServerRelativeUrl()),
-			file.getVersionNumber().toString());
-	}
-
-	@Override
 	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		final ShptSession service = ctx.getSession();
-		List<CmfValue> versionNames = new ArrayList<CmfValue>();
+		List<CmfValue> versionNames = new ArrayList<>();
 
 		if (this.version != null) {
 			Date d = this.version.getCreatedTime();
 			if (d != null) {
 				Collection<CmfValue> c = Collections.singleton(new CmfValue(d));
+				object
+					.setAttribute(new CmfAttribute<>(ShptAttributes.CREATE_DATE.name, CmfDataType.DATETIME, false, c));
 				object.setAttribute(
-					new CmfAttribute<CmfValue>(ShptAttributes.CREATE_DATE.name, CmfDataType.DATETIME, false, c));
-				object.setAttribute(
-					new CmfAttribute<CmfValue>(ShptAttributes.MODIFICATION_DATE.name, CmfDataType.DATETIME, false, c));
+					new CmfAttribute<>(ShptAttributes.MODIFICATION_DATE.name, CmfDataType.DATETIME, false, c));
 			}
 		}
 
 		versionNames.add(new CmfValue(this.versionNumber.toString()));
 
-		CmfAttribute<CmfValue> current = new CmfAttribute<CmfValue>(IntermediateAttribute.IS_LATEST_VERSION,
+		CmfAttribute<CmfValue> current = new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION,
 			CmfDataType.BOOLEAN, false);
 		current.setValue(new CmfValue((this.version == null) || this.version.isCurrentVersion()));
 		object.setAttribute(current);
@@ -201,21 +201,21 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			this.successors = Collections.emptyList();
 			isRoot = (this.antecedentId == null);
 			if (this.antecedentId != null) {
-				object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID, false,
+				object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID, false,
 					Collections.singleton(new CmfValue(this.antecedentId))));
 			}
 		} else {
 			String antecedentId = this.antecedentId;
 			try {
 				List<FileVersion> l = service.getFileVersions(this.object.getServerRelativeUrl());
-				Map<ShptVersionNumber, FileVersion> versions = new TreeMap<ShptVersionNumber, FileVersion>();
+				Map<ShptVersionNumber, FileVersion> versions = new TreeMap<>();
 				for (FileVersion v : l) {
 					final ShptVersionNumber n = new ShptVersionNumber(v.getLabel());
 					versions.put(n, v);
 				}
 
-				List<ShptFile> pred = new ArrayList<ShptFile>(versions.size());
-				List<ShptFile> succ = new ArrayList<ShptFile>(versions.size());
+				List<ShptFile> pred = new ArrayList<>(versions.size());
+				List<ShptFile> succ = new ArrayList<>(versions.size());
 				ShptFile antecedent = null;
 				List<ShptFile> tgt = pred;
 				for (Map.Entry<ShptVersionNumber, FileVersion> e : versions.entrySet()) {
@@ -269,8 +269,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 							this.versionNumber, antecedentId != null ? antecedentId : "none"));
 				}
 				if (antecedentId != null) {
-					object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID,
-						false, Collections.singleton(new CmfValue(antecedentId))));
+					object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION_PRIOR.name, CmfDataType.ID, false,
+						Collections.singleton(new CmfValue(antecedentId))));
 				}
 				isRoot = (antecedentId == null);
 			} catch (ShptSessionException e) {
@@ -279,15 +279,14 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			}
 		}
 
-		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<CmfValue>(IntermediateProperty.VERSION_TREE_ROOT,
+		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
 			CmfDataType.BOOLEAN, false);
 		versionTreeRoot.setValue(new CmfValue(isRoot || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)));
 		object.setProperty(versionTreeRoot);
 
-		object.setAttribute(
-			new CmfAttribute<CmfValue>(ShptAttributes.VERSION.name, CmfDataType.STRING, true, versionNames));
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.VERSION_TREE.name, CmfDataType.ID, false,
-			Collections.singleton(new CmfValue(getBatchId()))));
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION.name, CmfDataType.STRING, true, versionNames));
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION_TREE.name, CmfDataType.ID, false,
+			Collections.singleton(new CmfValue(getHistoryId()))));
 		return true;
 	}
 
@@ -299,7 +298,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		try {
 			author = new ShptUser(this.factory, service.getFileAuthor(this.object.getServerRelativeUrl()));
 			ret.add(author);
-			marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OWNER.name, CmfDataType.STRING, false,
+			marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.OWNER.name, CmfDataType.STRING, false,
 				Collections.singleton(new CmfValue(author.getName()))));
 		} catch (IncompleteDataException e) {
 			this.log.warn(e.getMessage());
@@ -321,14 +320,14 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 		if (creator != null) {
 			ret.add(creator);
-			marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CREATOR.name, CmfDataType.STRING, false,
+			marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.CREATOR.name, CmfDataType.STRING, false,
 				Collections.singleton(new CmfValue(creator.getName()))));
 
 		}
 
 		if (modifier != null) {
 			ret.add(modifier);
-			marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.MODIFIER.name, CmfDataType.STRING, false,
+			marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.MODIFIER.name, CmfDataType.STRING, false,
 				Collections.singleton(new CmfValue(modifier.getName()))));
 		}
 
@@ -410,11 +409,11 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			type = MimeTools.DEFAULT_MIME_TYPE;
 		}
 
-		marshaled.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.CONTENT_TYPE.name, CmfDataType.STRING, false,
+		marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.CONTENT_TYPE.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(type.getBaseType()))));
 		info.setMimeType(MimeTools.resolveMimeType(type.getBaseType()));
 		info.setLength(buf.getCurrentSize());
-		List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>();
+		List<CmfContentInfo> ret = new ArrayList<>();
 		ret.add(info);
 		return ret;
 	}
@@ -434,7 +433,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	protected boolean calculateBatchHead(ShptVersion version) throws Exception {
+	protected boolean calculateHistoryCurrent(ShptVersion version) throws Exception {
 		return version.isCurrentVersion();
 	}
 }

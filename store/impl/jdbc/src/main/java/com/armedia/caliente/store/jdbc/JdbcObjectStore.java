@@ -142,11 +142,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final CmfType objectType = object.getType();
 		final String objectId = JdbcTools.composeDatabaseId(object);
 
-		Collection<Object[]> attributeParameters = new ArrayList<Object[]>();
-		Collection<Object[]> attributeValueParameters = new ArrayList<Object[]>();
-		Collection<Object[]> propertyParameters = new ArrayList<Object[]>();
-		Collection<Object[]> propertyValueParameters = new ArrayList<Object[]>();
-		Collection<Object[]> parentParameters = new ArrayList<Object[]>();
+		Collection<Object[]> attributeParameters = new ArrayList<>();
+		Collection<Object[]> attributeValueParameters = new ArrayList<>();
+		Collection<Object[]> propertyParameters = new ArrayList<>();
+		Collection<Object[]> propertyValueParameters = new ArrayList<>();
+		Collection<Object[]> parentParameters = new ArrayList<>();
 		Object[] attData = new Object[7];
 		Object[] attValue = new Object[5];
 		Object[] propData = new Object[4];
@@ -170,7 +170,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			attData[4] = 0; // Explicitly hardcoded
 			attData[5] = false; // Explicitly hardcoded
 			attValue[0] = objectId; // This should never change within the loop
-			final Map<String, String> encodedNames = new HashMap<String, String>();
+			final Map<String, String> encodedNames = new HashMap<>();
 			for (final CmfAttribute<V> attribute : object.getAttributes()) {
 				final String name = translator.encodeAttributeName(object.getType(), attribute.getName());
 				final String duplicate = encodedNames.put(name, attribute.getName());
@@ -276,7 +276,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			final Long ret = qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT),
 				this.dialect.getObjectNumberHandler(), objectId, object.getName(), object.getSearchKey(),
 				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
-				object.getBatchId(), object.isBatchHead(), object.getProductName(), object.getProductVersion());
+				object.getDependencyTier(), object.getHistoryId(), object.isHistoryCurrent(), object.getProductName(),
+				object.getProductVersion());
 			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_ALT_NAME), JdbcTools.HANDLER_NULL, objectId,
 				object.getName());
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_PARENTS), JdbcTools.HANDLER_NULL,
@@ -289,8 +290,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				propertyParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_PROPERTY_VALUE), JdbcTools.HANDLER_NULL,
 				propertyValueParameters.toArray(JdbcTools.NO_PARAMS));
-			// lockRS.updateBoolean(1, true);
-			// lockRS.updateRow();
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("Stored object #%d: %s", ret, object));
 			}
@@ -330,7 +329,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			PreparedStatement propertyValuePS = null;
 			PreparedStatement parentsPS = null;
 			try {
-				objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECTS_HEAD_BY_BATCH_ID));
+				objectPS = connection
+					.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECT_HISTORY_CURRENT_BY_HISTORY_ID));
 				attributePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTES));
 				attributeValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTE_VALUES));
 				propertyPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTIES));
@@ -343,7 +343,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				ResultSet valueRS = null;
 				ResultSet parentsRS = null;
 
-				objectPS.setString(1, sample.getBatchId());
+				objectPS.setString(1, sample.getType().name());
+				objectPS.setString(2, sample.getHistoryId());
 				objectRS = objectPS.executeQuery();
 				try {
 					while (objectRS.next()) {
@@ -444,7 +445,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected <V> int loadObjects(JdbcOperation operation, CmfAttributeTranslator<V> translator, final CmfType type,
-		Collection<String> ids, CmfObjectHandler<V> handler, boolean batching) throws CmfStorageException {
+		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException {
 
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
@@ -460,12 +461,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			try {
 				boolean limitByIDs = false;
 				if (ids == null) {
-					objectPS = connection.prepareStatement(translateQuery(
-						batching ? JdbcDialect.Query.LOAD_OBJECTS_BATCHED : JdbcDialect.Query.LOAD_OBJECTS));
+					objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECTS));
 				} else {
 					limitByIDs = true;
-					objectPS = connection.prepareStatement(translateQuery(batching
-						? JdbcDialect.Query.LOAD_OBJECTS_BY_ID_BATCHED : JdbcDialect.Query.LOAD_OBJECTS_BY_ID));
+					objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECTS_BY_ID));
 				}
 
 				attributePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTES));
@@ -477,8 +476,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				ResultSet objectRS = null;
 				ResultSet attributeRS = null;
 				ResultSet propertyRS = null;
-				ResultSet valueRS = null;
 				ResultSet parentsRS = null;
+				ResultSet valueRS = null;
 
 				if (!limitByIDs) {
 					objectPS.setString(1, type.name());
@@ -497,7 +496,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					}
 				}
 				objectRS = objectPS.executeQuery();
-				String currentBatch = null;
+				Integer currentTier = null;
+				String currentHistory = null;
 				boolean ok = false;
 				int ret = 0;
 				try {
@@ -505,37 +505,58 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						final CmfObject<V> obj;
 						try {
 							final int objNum = objectRS.getInt("object_number");
-							// If batching is not required, then we simply use the object number
-							// as the batch ID, to ensure that object_number remains the sole
-							// ordering factor
-							if (batching) {
-								String batchId = objectRS.getString("batch_id");
-								if ((batchId == null) || objectRS.wasNull()) {
-									batchId = String.format("%08x", objNum);
-								}
-								if (!Tools.equals(currentBatch, batchId)) {
-									if (currentBatch != null) {
-										if (this.log.isDebugEnabled()) {
-											this.log.debug(String.format("CLOSE BATCH: %s", currentBatch));
-										}
-										if (!handler.closeBatch(true)) {
-											this.log
-												.warn(String.format("%s batch [%s] requested processing cancellation",
-													type.name(), batchId));
-											currentBatch = null;
-											break;
-										}
-									}
+							final int tierId = objectRS.getInt("tier_id");
+							String historyId = objectRS.getString("history_id");
+							if ((historyId == null) || objectRS.wasNull()) {
+								historyId = String.format("%08x", objNum);
+							}
 
+							// Do the tier checking
+							if (!Tools.equals(currentTier, tierId)) {
+								if (currentTier != null) {
 									if (this.log.isDebugEnabled()) {
-										this.log.debug(String.format("NEW BATCH: %s", batchId));
+										this.log.debug(String.format("CLOSE TIER: %d", currentTier));
 									}
-									if (!handler.newBatch(batchId)) {
-										this.log.warn(String.format("%s batch [%s] skipped", type.name(), batchId));
-										continue;
+									if (!handler.endTier(true)) {
+										this.log.warn(String.format("%s tier [%d] requested processing cancellation",
+											type.name(), tierId));
+										currentTier = null;
+										break;
 									}
-									currentBatch = batchId;
 								}
+
+								if (this.log.isDebugEnabled()) {
+									this.log.debug(String.format("NEW TIER: %s", tierId));
+								}
+								if (!handler.newTier(tierId)) {
+									this.log.warn(String.format("%s tier [%s] skipped", type.name(), tierId));
+									continue;
+								}
+								currentTier = tierId;
+							}
+
+							// Do the history checking
+							if (!Tools.equals(currentHistory, historyId)) {
+								if (currentHistory != null) {
+									if (this.log.isDebugEnabled()) {
+										this.log.debug(String.format("CLOSE HISTORY: %s", currentHistory));
+									}
+									if (!handler.endHistory(true)) {
+										this.log.warn(String.format("%s history [%s] requested processing cancellation",
+											type.name(), historyId));
+										currentHistory = null;
+										break;
+									}
+								}
+
+								if (this.log.isDebugEnabled()) {
+									this.log.debug(String.format("NEW HISTORY: %s", historyId));
+								}
+								if (!handler.newHistory(historyId)) {
+									this.log.warn(String.format("%s history [%s] skipped", type.name(), historyId));
+									continue;
+								}
+								currentHistory = historyId;
 							}
 
 							final String objId = objectRS.getString("object_id");
@@ -605,6 +626,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 								}
 							}
 						} catch (SQLException e) {
+							// TODO: WTF?!?! Why is it detecting this when it's clearly impossible?
 							if (!handler.handleException(e)) { throw new CmfStorageException(
 								"Exception raised while loading objects - ObjectHandler did not handle the exception",
 								e); }
@@ -627,14 +649,28 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					return ret;
 				} finally {
 					// Make sure we clean up after ourselves
-					if (currentBatch != null) {
+					if (currentHistory != null) {
 						try {
-							handler.closeBatch(ok);
+							handler.endHistory(ok);
 						} catch (CmfStorageException e) {
 							this.log.error(
-								String.format("Exception caught attempting to close the pending batch [%s] (ok=%s)",
-									currentBatch, ok),
+								String.format("Exception caught attempting to close the pending history [%s] (ok=%s)",
+									currentHistory, ok),
 								e);
+						} finally {
+							currentHistory = null;
+						}
+					}
+					if (currentTier != null) {
+						try {
+							handler.endTier(ok);
+						} catch (CmfStorageException e) {
+							this.log.error(
+								String.format("Exception caught attempting to close the pending tier [%d] (ok=%s)",
+									currentTier, ok),
+								e);
+						} finally {
+							currentTier = null;
 						}
 					}
 					DbUtils.closeQuietly(objectRS);
@@ -670,9 +706,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 
 			loadObjects(operation, translator, currentType, ids, new CmfObjectHandler<V>() {
+				@Override
+				public boolean newTier(int tierNumber) throws CmfStorageException {
+					return true;
+				}
 
 				@Override
-				public boolean newBatch(String batchId) throws CmfStorageException {
+				public boolean newHistory(String historyId) throws CmfStorageException {
 					return true;
 				}
 
@@ -701,10 +741,15 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 
 				@Override
-				public boolean closeBatch(boolean ok) throws CmfStorageException {
+				public boolean endHistory(boolean ok) throws CmfStorageException {
 					return true;
 				}
-			}, false);
+
+				@Override
+				public boolean endTier(boolean ok) throws CmfStorageException {
+					return true;
+				}
+			});
 
 		}
 		return result.get();
@@ -907,7 +952,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				new ResultSetHandler<Map<CmfType, Long>>() {
 					@Override
 					public Map<CmfType, Long> handle(ResultSet rs) throws SQLException {
-						Map<CmfType, Long> ret = new EnumMap<CmfType, Long>(CmfType.class);
+						Map<CmfType, Long> ret = new EnumMap<>(CmfType.class);
 						while (rs.next()) {
 							String t = rs.getString(1);
 							if ((t == null) || rs.wasNull()) {
@@ -950,7 +995,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected Map<CmfType, Set<String>> getAvailableMappings(JdbcOperation operation) throws CmfStorageException {
-		final Map<CmfType, Set<String>> ret = new EnumMap<CmfType, Set<String>>(CmfType.class);
+		final Map<CmfType, Set<String>> ret = new EnumMap<>(CmfType.class);
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
 			public Void handle(ResultSet rs) throws SQLException {
@@ -959,7 +1004,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				while (rs.next()) {
 					final CmfType newType = CmfType.decodeString(rs.getString("object_type"));
 					if (newType != currentType) {
-						names = new TreeSet<String>();
+						names = new TreeSet<>();
 						ret.put(newType, names);
 						currentType = newType;
 					}
@@ -978,7 +1023,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected Set<String> getAvailableMappings(JdbcOperation operation, CmfType type) throws CmfStorageException {
-		final Set<String> ret = new TreeSet<String>();
+		final Set<String> ret = new TreeSet<>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
 			public Void handle(ResultSet rs) throws SQLException {
@@ -1000,7 +1045,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected Map<String, String> getMappings(JdbcOperation operation, CmfType type, String name) {
-		final Map<String, String> ret = new HashMap<String, String>();
+		final Map<String, String> ret = new HashMap<>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
 			public Void handle(ResultSet rs) throws SQLException {
@@ -1034,7 +1079,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private Set<String> getCmfTables(Connection c) throws SQLException {
 		DatabaseMetaData dmd = c.getMetaData();
 		ResultSet rs = null;
-		Set<String> tableNames = new TreeSet<String>();
+		Set<String> tableNames = new TreeSet<>();
 		try {
 			rs = dmd.getTables(null, null, null, new String[] {
 				"TABLE"
@@ -1117,15 +1162,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		if (objectRS.wasNull()) {
 			number = null;
 		}
-		String batchId = objectRS.getString("batch_id");
-		boolean batchHead = objectRS.getBoolean("batch_head");
+		int tierId = objectRS.getInt("tier_id");
+		String historyId = objectRS.getString("history_id");
+		boolean historyCurrent = objectRS.getBoolean("history_current");
 		String label = objectRS.getString("object_label");
 		String subtype = objectRS.getString("object_subtype");
 		String productName = objectRS.getString("product_name");
 		String productVersion = objectRS.getString("product_version");
 
 		// Load the parent IDs
-		List<CmfObjectRef> parentIds = new ArrayList<CmfObjectRef>();
+		List<CmfObjectRef> parentIds = new ArrayList<>();
 		while (parentsRS.next()) {
 			String parentId = parentsRS.getString("parent_id");
 			if (parentsRS.wasNull()) {
@@ -1137,8 +1183,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			parentIds = Collections.emptyList();
 		}
 
-		return new CmfObject<V>(translator, type, id, name, parentIds, searchKey, batchId, batchHead, label, subtype,
-			productName, productVersion, number);
+		return new CmfObject<>(translator, type, id, name, parentIds, searchKey, tierId, historyId, historyCurrent,
+			label, subtype, productName, productVersion, number);
 	}
 
 	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
@@ -1147,7 +1193,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		String name = rs.getString("name");
 		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
-		return new CmfProperty<V>(name, type, repeating);
+		return new CmfProperty<>(name, type, repeating);
 	}
 
 	private <V> CmfAttribute<V> loadAttribute(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
@@ -1156,13 +1202,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		String name = translator.decodeAttributeName(objectType, rs.getString("name"));
 		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
-		return new CmfAttribute<V>(name, type, repeating);
+		return new CmfAttribute<>(name, type, repeating);
 	}
 
 	private <V> void loadValues(CmfValueCodec<V> codec, CmfValueSerializer deserializer, ResultSet rs,
 		CmfProperty<V> property) throws SQLException, CmfStorageException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
-		List<V> values = new LinkedList<V>();
+		List<V> values = new LinkedList<>();
 		while (rs.next()) {
 			final boolean nullValue = rs.getBoolean("null_value");
 			final String data = rs.getString("data");
@@ -1187,7 +1233,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private <V> void loadAttributes(CmfAttributeTranslator<V> translator, ResultSet rs, CmfObject<V> obj)
 		throws SQLException {
-		List<CmfAttribute<V>> attributes = new LinkedList<CmfAttribute<V>>();
+		List<CmfAttribute<V>> attributes = new LinkedList<>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
 			attributes.add(loadAttribute(obj.getType(), translator, rs));
@@ -1197,7 +1243,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private <V> void loadProperties(CmfAttributeTranslator<V> translator, ResultSet rs, CmfObject<V> obj)
 		throws SQLException {
-		List<CmfProperty<V>> properties = new LinkedList<CmfProperty<V>>();
+		List<CmfProperty<V>> properties = new LinkedList<>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
 			properties.add(loadProperty(obj.getType(), translator, rs));
@@ -1293,8 +1339,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 
 		// Step 2: prepare the new content records and properties
-		List<Object[]> contents = new ArrayList<Object[]>();
-		List<Object[]> properties = new ArrayList<Object[]>();
+		List<Object[]> contents = new ArrayList<>();
+		List<Object[]> properties = new ArrayList<>();
 		Object[] cArr = new Object[9];
 		Object[] pArr = new Object[6];
 		int pos = 0;
@@ -1358,7 +1404,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			final ResultSetHandler<Map<String, String>> pHandler = new ResultSetHandler<Map<String, String>>() {
 				@Override
 				public Map<String, String> handle(ResultSet rs) throws SQLException {
-					final Map<String, String> ret = new TreeMap<String, String>();
+					final Map<String, String> ret = new TreeMap<>();
 					while (rs.next()) {
 						ret.put(rs.getString("name"), rs.getString("value"));
 					}
@@ -1370,7 +1416,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			final ResultSetHandler<List<CmfContentInfo>> cHandler = new ResultSetHandler<List<CmfContentInfo>>() {
 				@Override
 				public List<CmfContentInfo> handle(ResultSet rs) throws SQLException {
-					final List<CmfContentInfo> ret = new ArrayList<CmfContentInfo>();
+					final List<CmfContentInfo> ret = new ArrayList<>();
 					final QueryRunner qr = new QueryRunner();
 					while (rs.next()) {
 						final CmfContentInfo info = new CmfContentInfo(rs.getString("rendition_id"),
@@ -1434,7 +1480,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		CmfAttributeTranslator<V> translator) throws CmfStorageException {
 
 		final Connection c = operation.getConnection();
-		final Map<CmfType, Collection<String>> bucket = new EnumMap<CmfType, Collection<String>>(CmfType.class);
+		final Map<CmfType, Collection<String>> bucket = new EnumMap<>(CmfType.class);
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		final AtomicInteger counter = new AtomicInteger(0);
 		try {
@@ -1449,7 +1495,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						CmfObjectRef ref = JdbcTools.decodeDatabaseId(objectId);
 						Collection<String> c = bucket.get(ref.getType());
 						if (c == null) {
-							c = new HashSet<String>();
+							c = new HashSet<>();
 							bucket.put(ref.getType(), c);
 						}
 						c.add(ref.getId());
@@ -1462,7 +1508,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			throw new CmfStorageException("Failed to load the name collision records", e);
 		}
 
-		final List<CmfObject<V>> ret = new ArrayList<CmfObject<V>>(counter.get());
+		final List<CmfObject<V>> ret = new ArrayList<>(counter.get());
 		for (CmfType type : bucket.keySet()) {
 			Collection<String> ids = bucket.get(type);
 			loadObjects(operation, translator, type, ids, new DefaultCmfObjectHandler<V>() {
@@ -1471,7 +1517,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					ret.add(dataObject);
 					return super.handleObject(dataObject);
 				}
-			}, false);
+			});
 		}
 
 		Collections.sort(ret, new Comparator<CmfObject<V>>() {
@@ -1554,7 +1600,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected void cacheTargets(JdbcOperation operation, Collection<CmfObjectSpec> targets) throws CmfStorageException {
 		Object[] arr = new Object[3];
-		Collection<Object[]> cacheTargets = new ArrayList<Object[]>(targets.size());
+		Collection<Object[]> cacheTargets = new ArrayList<>(targets.size());
 		for (CmfObjectSpec spec : targets) {
 			arr[0] = (spec.getType() != null ? spec.getType().name() : null);
 			arr[1] = spec.getId();

@@ -20,6 +20,7 @@ import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.distributed.IDfReference;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
@@ -55,11 +56,10 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		return folder.getFolderPath(0);
 	}
 
-	private int calculateDepth(IDfSession session, IDfId folderId, Set<String> visited) throws DfException {
+	private static int calculateDepth(IDfSession session, IDfId folderId, Set<String> visited) throws DfException {
 		// If the folder has already been visited, we have a loop...so let's explode loudly
-		if (visited.contains(folderId.getId())) { throw new DfException(String
+		if (!visited.add(folderId.getId())) { throw new DfException(String
 			.format("Folder loop detected, element [%s] exists twice: %s", folderId.getId(), visited.toString())); }
-		visited.add(folderId.getId());
 		try {
 			int depth = 0;
 			String dql = String.format("select i_folder_id from dm_sysobject where r_object_id = '%s'",
@@ -72,7 +72,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 					if (parentId.isNull() || !parentId.isObjectId()) {
 						continue;
 					}
-					depth = Math.max(depth, calculateDepth(session, parentId, visited) + 1);
+					depth = Math.max(depth, DctmExportFolder.calculateDepth(session, parentId, visited) + 1);
 				}
 			} finally {
 				DfUtils.closeQuietly(results);
@@ -83,15 +83,20 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		}
 	}
 
-	@Override
-	protected String calculateBatchId(IDfFolder folder) throws Exception {
+	static int calculateFolderDepth(IDfFolder folder) throws DfException {
 		// Calculate the maximum depth that this folder resides in, from its parents.
 		// Keep track of visited nodes, and explode on a loop.
-		Set<String> visited = new LinkedHashSet<String>();
-		int depth = calculateDepth(folder.getSession(), folder.getObjectId(), visited);
-		// We return it in zero-padded hex to allow for large numbers (up to 2^64
-		// depth), and also maintain consistent sorting
-		return String.format("%016x", depth);
+		return DctmExportFolder.calculateDepth(folder.getSession(), folder.getObjectId(), new LinkedHashSet<String>());
+	}
+
+	@Override
+	protected final int calculateDependencyTier(IDfFolder folder) throws Exception {
+		int depth = DctmExportFolder.calculateFolderDepth(folder);
+		IDfReference ref = getReferenceFor(this.object);
+		if (ref != null) {
+			depth++;
+		}
+		return depth;
 	}
 
 	@Override
@@ -103,10 +108,10 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
 			String.format(DctmExportFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
 		try {
-			CmfProperty<IDfValue> usersWithDefaultFolder = new CmfProperty<IDfValue>(
-				DctmFolder.USERS_WITH_DEFAULT_FOLDER, DctmDataType.DF_STRING.getStoredType());
-			CmfProperty<IDfValue> usersDefaultFolderPaths = new CmfProperty<IDfValue>(
-				DctmFolder.USERS_DEFAULT_FOLDER_PATHS, DctmDataType.DF_STRING.getStoredType());
+			CmfProperty<IDfValue> usersWithDefaultFolder = new CmfProperty<>(DctmFolder.USERS_WITH_DEFAULT_FOLDER,
+				DctmDataType.DF_STRING.getStoredType());
+			CmfProperty<IDfValue> usersDefaultFolderPaths = new CmfProperty<>(DctmFolder.USERS_DEFAULT_FOLDER_PATHS,
+				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				IDfValue v = resultCol.getValueAt(0);
 				if (DctmMappingUtils.isMappableUser(ctx.getSession(), v.asString())
@@ -127,8 +132,8 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		resultCol = DfUtils.executeQuery(folder.getSession(),
 			String.format(DctmExportFolder.DQL_FIND_GROUPS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
 		try {
-			CmfProperty<IDfValue> groupsWithDefaultFolder = new CmfProperty<IDfValue>(
-				DctmFolder.GROUPS_WITH_DEFAULT_FOLDER, DctmDataType.DF_STRING.getStoredType());
+			CmfProperty<IDfValue> groupsWithDefaultFolder = new CmfProperty<>(DctmFolder.GROUPS_WITH_DEFAULT_FOLDER,
+				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				IDfValue v = resultCol.getValueAt(0);
 				if (ctx.isSpecialGroup(v.asString())) {

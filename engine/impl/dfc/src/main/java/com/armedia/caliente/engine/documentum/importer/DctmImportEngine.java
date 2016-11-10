@@ -39,11 +39,6 @@ public class DctmImportEngine extends
 		}
 
 		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return null;
-		}
-
-		@Override
 		public boolean isParallelCapable() {
 			return true;
 		}
@@ -54,17 +49,7 @@ public class DctmImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchIndependent() {
-			return true;
-		}
-
-		@Override
 		public boolean isSupportsTransactions() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchingSupported() {
 			return false;
 		}
 	};

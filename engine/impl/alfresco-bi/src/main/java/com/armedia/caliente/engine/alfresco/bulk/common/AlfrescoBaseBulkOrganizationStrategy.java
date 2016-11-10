@@ -62,7 +62,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		String appendix = calculateVersionAppendix(translator, object, info, primaryContent, vdoc);
 
 		if (vdoc) {
-			paths.add(object.getBatchId());
+			paths.add(object.getHistoryId());
 			paths.add(appendix);
 			appendix = "";
 		}
@@ -78,7 +78,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		switch (object.getType()) {
 			case DOCUMENT:
 				if (primaryContent) {
-					baseName = object.getBatchId();
+					baseName = object.getHistoryId();
 				} else {
 					baseName = AlfrescoBaseBulkOrganizationStrategy.generateRenditionName(object, info);
 				}

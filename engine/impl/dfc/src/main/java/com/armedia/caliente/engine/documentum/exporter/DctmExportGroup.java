@@ -60,7 +60,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 
 		try {
 			IDfCollection results = group.getGroupsNames();
-			Set<String> groupsNames = new TreeSet<String>();
+			Set<String> groupsNames = new TreeSet<>();
 			try {
 				while (results.next()) {
 					// My depth is the maximum depth from any of my parents, plus one
@@ -89,15 +89,10 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected String calculateBatchId(IDfGroup group) throws Exception {
+	protected int calculateDependencyTier(IDfGroup group) throws Exception {
 		// Calculate the maximum depth that this group resides in, from the other groups
 		// it references.
-		// Keep track of visited nodes, and explode on a loop.
-		Set<String> visited = new LinkedHashSet<String>();
-		int depth = calculateDepth(group, visited);
-		// We return it in zero-padded hex to allow for large numbers (up to 2^64
-		// depth), and also maintain consistent sorting
-		return String.format("%016x", depth);
+		return calculateDepth(group, new LinkedHashSet<String>());
 	}
 
 	@Override
@@ -110,7 +105,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		IDfGroup group) throws DfException, ExportException {
 		if (!super.getDataProperties(ctx, properties, group)) { return false; }
 		// CmfStore all the users that have this group as their default group
-		CmfProperty<IDfValue> property = new CmfProperty<IDfValue>(DctmGroup.USERS_WITH_DEFAULT_GROUP,
+		CmfProperty<IDfValue> property = new CmfProperty<>(DctmGroup.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());
 		IDfCollection resultCol = DfUtils.executeQuery(group.getSession(),
 			String.format(DctmExportGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, group.getObjectId().getId()),

@@ -25,14 +25,15 @@ public class CmfObject<V> extends CmfObjectSpec {
 	private Long number = null;
 	private final String name;
 	private final Collection<CmfObjectRef> parentIds;
-	private final String batchId;
-	private final boolean batchHead;
+	private final int dependencyTier;
+	private final String historyId;
+	private final boolean historyCurrent;
 	private final String label;
 	private final String subtype;
 	private final String productName;
 	private final String productVersion;
-	private final Map<String, CmfAttribute<V>> attributes = new HashMap<String, CmfAttribute<V>>();
-	private final Map<String, CmfProperty<V>> properties = new HashMap<String, CmfProperty<V>>();
+	private final Map<String, CmfAttribute<V>> attributes = new HashMap<>();
+	private final Map<String, CmfProperty<V>> properties = new HashMap<>();
 	private final CmfAttributeTranslator<V> translator;
 
 	/**
@@ -44,20 +45,21 @@ public class CmfObject<V> extends CmfObjectSpec {
 	 */
 	public CmfObject(CmfObject<V> pattern) {
 		super(pattern);
-		this.number = pattern.number;
-		this.name = pattern.name;
+		this.number = pattern.getNumber();
+		this.name = pattern.getName();
 		this.parentIds = pattern.parentIds;
-		this.batchId = pattern.getBatchId();
-		this.batchHead = pattern.batchHead;
+		this.dependencyTier = pattern.getDependencyTier();
+		this.historyId = pattern.getHistoryId();
+		this.historyCurrent = pattern.isHistoryCurrent();
 		this.label = pattern.getLabel();
 		this.subtype = pattern.getSubtype();
 		this.productName = pattern.getProductName();
 		this.productVersion = pattern.getProductVersion();
 		for (CmfAttribute<V> attribute : pattern.getAttributes()) {
-			this.attributes.put(attribute.getName(), new CmfAttribute<V>(attribute));
+			this.attributes.put(attribute.getName(), new CmfAttribute<>(attribute));
 		}
 		for (CmfProperty<V> property : pattern.getProperties()) {
-			this.properties.put(property.getName(), new CmfProperty<V>(property));
+			this.properties.put(property.getName(), new CmfProperty<>(property));
 		}
 		this.translator = pattern.translator;
 	}
@@ -73,13 +75,14 @@ public class CmfObject<V> extends CmfObjectSpec {
 	 */
 	CmfObject(CmfObject<V> pattern, String altSubType) {
 		super(pattern);
-		this.number = pattern.number;
-		this.subtype = altSubType;
-		this.name = pattern.name;
+		this.number = pattern.getNumber();
+		this.name = pattern.getName();
 		this.parentIds = pattern.parentIds;
-		this.batchId = pattern.getBatchId();
-		this.batchHead = pattern.batchHead;
+		this.dependencyTier = pattern.getDependencyTier();
+		this.historyId = pattern.getHistoryId();
+		this.historyCurrent = pattern.isHistoryCurrent();
 		this.label = pattern.getLabel();
+		this.subtype = altSubType;
 		this.productName = pattern.getProductName();
 		this.productVersion = pattern.getProductVersion();
 		for (CmfAttribute<V> attribute : pattern.getAttributes()) {
@@ -92,15 +95,15 @@ public class CmfObject<V> extends CmfObjectSpec {
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
-		Collection<CmfObjectRef> parentIds, String batchId, boolean batchHead, String label, String subtype,
-		String productName, String productVersion, Long number) {
-		this(translator, type, id, name, parentIds, id, batchId, batchHead, label, subtype, productName, productVersion,
-			number);
+		Collection<CmfObjectRef> parentIds, int dependencyTier, String historyId, boolean historyCurrent, String label,
+		String subtype, String productName, String productVersion, Long number) {
+		this(translator, type, id, name, parentIds, id, dependencyTier, historyId, historyCurrent, label, subtype,
+			productName, productVersion, number);
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
-		Collection<CmfObjectRef> parentIds, String searchKey, String batchId, boolean batchHead, String label,
-		String subtype, String productName, String productVersion, Long number) {
+		Collection<CmfObjectRef> parentIds, String searchKey, int dependencyTier, String historyId,
+		boolean historyCurrent, String label, String subtype, String productName, String productVersion, Long number) {
 		super(type, id, searchKey);
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
@@ -115,8 +118,9 @@ public class CmfObject<V> extends CmfObjectSpec {
 		this.number = number;
 		this.name = name;
 		this.parentIds = parentIds;
-		this.batchId = Tools.coalesce(batchId, id);
-		this.batchHead = (batchId == null ? true : batchHead);
+		this.dependencyTier = dependencyTier;
+		this.historyId = Tools.coalesce(historyId, id);
+		this.historyCurrent = (historyId == null ? true : historyCurrent);
 		this.label = label;
 		this.subtype = subtype;
 		this.productName = productName;
@@ -146,12 +150,16 @@ public class CmfObject<V> extends CmfObjectSpec {
 		return this.subtype;
 	}
 
-	public final String getBatchId() {
-		return this.batchId;
+	public final int getDependencyTier() {
+		return this.dependencyTier;
 	}
 
-	public final boolean isBatchHead() {
-		return this.batchHead;
+	public final String getHistoryId() {
+		return this.historyId;
+	}
+
+	public final boolean isHistoryCurrent() {
+		return this.historyCurrent;
 	}
 
 	public final String getLabel() {
@@ -263,8 +271,8 @@ public class CmfObject<V> extends CmfObjectSpec {
 		final String trailer = toStringTrailer();
 		final String trailerSep = ((trailer != null) && (trailer.length() > 0) ? ", " : "");
 		return String.format(
-			"%s [type=%s, subtype=%s, id=%s, name=%s, searchKey=%s, batchId=%s, batchHead=%s, label=%s%s%s]",
-			getClass().getSimpleName(), getType(), this.subtype, getId(), this.name, getSearchKey(), this.batchId,
-			this.batchHead, this.label, trailerSep, trailer);
+			"%s [type=%s, subtype=%s, id=%s, name=%s, searchKey=%s, dependencyTier=%d, historyId=%s, historyCurrent=%s, label=%s%s%s]",
+			getClass().getSimpleName(), getType(), this.subtype, getId(), this.name, getSearchKey(),
+			this.dependencyTier, this.historyId, this.historyCurrent, this.label, trailerSep, trailer);
 	}
 }

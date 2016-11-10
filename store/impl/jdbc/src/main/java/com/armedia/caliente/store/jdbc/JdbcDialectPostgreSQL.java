@@ -24,26 +24,17 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 			"    where o.object_id = n.object_id " + //
 			"      and o.object_type = ? " + //
 			"      and o.object_id = any ( ? ) " + //
-			" order by o.object_number" //
+			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
-	private static final String LOAD_OBJECTS_BY_ID_HEAD = //
+	private static final String LOAD_OBJECTS_BY_ID_CURRENT = //
 		"       select o.*, n.new_name " + //
 			"     from cmf_object o, cmf_alt_name n " + //
 			"    where o.object_id = n.object_id " + //
 			"      and o.object_type = ? " + //
 			"      and o.object_id = any ( ? ) " + //
-			"      and o.batch_head = true " + //
-			" order by o.object_number" //
-	;
-
-	private static final String LOAD_OBJECTS_BY_ID_BATCHED = //
-		"       select o.*, n.new_name " + //
-			"     from cmf_object o, cmf_alt_name n " + //
-			"    where o.object_id = n.object_id " + //
-			"      and o.object_type = ? " + //
-			"      and o.object_id = any ( ? ) " + //
-			" order by o.batch_id, o.object_number" //
+			"      and o.history_current = true " + //
+			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
 	private static final String RESET_ALT_NAME = //
@@ -79,10 +70,8 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID;
-			case LOAD_OBJECTS_BY_ID_BATCHED:
-				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_BATCHED;
-			case LOAD_OBJECTS_BY_ID_HEAD:
-				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_HEAD;
+			case LOAD_OBJECTS_BY_ID_CURRENT:
+				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_CURRENT;
 			case TRUNCATE_TABLE_FMT:
 				return JdbcDialectPostgreSQL.TRUNCATE_TABLE_FMT;
 			case ENABLE_REFERENTIAL_INTEGRITY:

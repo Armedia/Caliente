@@ -34,7 +34,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	protected String calculateBatchId(Group object) throws Exception {
+	protected String calculateHistoryId(Group object) throws Exception {
 		return calculateObjectId(object);
 	}
 
@@ -42,46 +42,46 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		// UserID
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OBJECT_ID.name, CmfDataType.ID, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_ID.name, CmfDataType.ID, false,
 			Collections.singleton(new CmfValue(String.format("USER(%08x)", this.object.getId())))));
 
 		// LoginName
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OBJECT_NAME.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_NAME.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getLoginName()))));
 
 		// AutoAcceptMembershipRequest
 		object.setAttribute(
-			new CmfAttribute<CmfValue>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name, CmfDataType.BOOLEAN, false,
+			new CmfAttribute<>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name, CmfDataType.BOOLEAN, false,
 				Collections.singleton(new CmfValue(this.object.isAutoAcceptRequestToJoinLeave()))));
 
 		// AllowMembershipRequest
 		object
-			.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.ALLOW_MEMBERSHIP_REQUEST.name, CmfDataType.BOOLEAN,
+			.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERSHIP_REQUEST.name, CmfDataType.BOOLEAN,
 				false, Collections.singleton(new CmfValue(this.object.isRequestToJoinLeaveAllowed()))));
 
 		// AllowMembersEditMembership
 		object.setAttribute(
-			new CmfAttribute<CmfValue>(ShptAttributes.ALLOW_MEMBERS_EDIT_MEMBERSHIP.name, CmfDataType.BOOLEAN, false,
+			new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERS_EDIT_MEMBERSHIP.name, CmfDataType.BOOLEAN, false,
 				Collections.singleton(new CmfValue(this.object.isMembersEditMembershipAllowed()))));
 
 		// PrincipalType
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.PRINCIPAL_TYPE.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.PRINCIPAL_TYPE.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getType().name()))));
 
 		// Description
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.DESCRIPTION.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.DESCRIPTION.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getDescription()))));
 
 		// Email
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.EMAIL.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.EMAIL.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getRequestToJoinLeaveEmailSetting()))));
 
 		// Title
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.TITLE.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.TITLE.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getTitle()))));
 
 		// Owner Title
-		object.setAttribute(new CmfAttribute<CmfValue>(ShptAttributes.OWNER_TITLE.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.OWNER_TITLE.name, CmfDataType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getOwnerTitle()))));
 
 		// User Groups
@@ -93,7 +93,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			throw new ExportException(String.format("Failed to obtain the group list for user [%s](%d)",
 				this.object.getLoginName(), this.object.getId()), e);
 		}
-		CmfAttribute<CmfValue> users = new CmfAttribute<CmfValue>(ShptAttributes.GROUP_MEMBERS.name, CmfDataType.STRING,
+		CmfAttribute<CmfValue> users = new CmfAttribute<>(ShptAttributes.GROUP_MEMBERS.name, CmfDataType.STRING,
 			true);
 		object.setAttribute(users);
 		if ((l != null) && !l.isEmpty()) {

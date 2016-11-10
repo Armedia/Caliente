@@ -58,12 +58,8 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected String calculateBatchId(IDfType type) throws DfException {
-		// Calculate the maximum depth that this folder resides in, from its parents.
-		// Keep track of visited nodes, and explode on a loop.
-		// We return it in zero-padded hex to allow for large numbers (up to 2^64
-		// depth), and also maintain consistent sorting
-		return String.format("%016x", calculateDepth(type.getSession(), type));
+	protected int calculateDependencyTier(IDfType type) throws Exception {
+		return calculateDepth(type.getSession(), type);
 	}
 
 	private int calculateDepth(IDfSession session, IDfType type) throws DfException {
@@ -82,7 +78,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			String aclDom = typeInfo.getString(DctmAttributes.ACL_DOMAIN);
 			String aclName = typeInfo.getString(DctmAttributes.ACL_NAME);
 			if (!StringUtils.isEmpty(aclDom) && !StringUtils.isEmpty(aclName)) {
-				properties.add(new CmfProperty<IDfValue>(IntermediateProperty.DEFAULT_ACL, CmfDataType.STRING, false,
+				properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_ACL, CmfDataType.STRING, false,
 					DfValueFactory.newStringValue(String.format("%s:%s", aclDom, aclName))));
 			}
 
@@ -90,8 +86,8 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			if (!StringUtils.isEmpty(defaultStorage)) {
 				try {
 					IDfStore store = IDfStore.class.cast(ctx.getSession().getObject(new DfId(defaultStorage)));
-					properties.add(new CmfProperty<IDfValue>(IntermediateProperty.DEFAULT_STORAGE, CmfDataType.STRING,
-						false, DfValueFactory.newStringValue(store.getName())));
+					properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_STORAGE, CmfDataType.STRING, false,
+						DfValueFactory.newStringValue(store.getName())));
 				} catch (DfObjectNotFoundException e) {
 					throw new ExportException(
 						String.format("Type [%s] references a nonexistent default object store with ID [%s]",
@@ -100,7 +96,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 				}
 			}
 
-			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.DEFAULT_ASPECTS, CmfDataType.STRING, true,
+			properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_ASPECTS, CmfDataType.STRING, true,
 				DfValueFactory.getAllRepeatingValues(DctmAttributes.DEFAULT_ASPECTS, typeInfo)));
 		}
 
@@ -165,10 +161,8 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			final int attCount = type.getValueCount(DctmAttributes.ATTR_NAME);
 			// We map the name for every attribute, just to be safe
 			final CmfAttributeTranslator<IDfValue> translator = this.factory.getTranslator();
-			CmfProperty<IDfValue> orig = new CmfProperty<IDfValue>(IntermediateProperty.ORIG_ATTR_NAME,
-				CmfDataType.STRING);
-			CmfProperty<IDfValue> mapped = new CmfProperty<IDfValue>(IntermediateProperty.MAPPED_ATTR_NAME,
-				CmfDataType.STRING);
+			CmfProperty<IDfValue> orig = new CmfProperty<>(IntermediateProperty.ORIG_ATTR_NAME, CmfDataType.STRING);
+			CmfProperty<IDfValue> mapped = new CmfProperty<>(IntermediateProperty.MAPPED_ATTR_NAME, CmfDataType.STRING);
 			for (int i = 0; i < attCount; i++) {
 				IDfValue o = type.getRepeatingValue(DctmAttributes.ATTR_NAME, i);
 				IDfValue m = DfValueFactory.newStringValue(

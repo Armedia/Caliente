@@ -33,27 +33,12 @@ public class CmisImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchIndependent() {
-			return false;
-		}
-
-		@Override
 		public boolean isBatchFailRemainder() {
 			return true;
 		}
 
 		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_SERIALIZED;
-		}
-
-		@Override
 		public boolean isSupportsTransactions() {
-			return false;
-		}
-
-		@Override
-		public boolean isBatchingSupported() {
 			return false;
 		}
 	};
@@ -71,28 +56,13 @@ public class CmisImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchIndependent() {
-			return false;
-		}
-
-		@Override
 		public boolean isBatchFailRemainder() {
-			return false;
-		}
-
-		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_CONCURRENT;
+			return true;
 		}
 
 		@Override
 		public boolean isSupportsTransactions() {
 			return false;
-		}
-
-		@Override
-		public boolean isBatchingSupported() {
-			return true;
 		}
 	};
 
@@ -109,28 +79,13 @@ public class CmisImportEngine extends
 		}
 
 		@Override
-		public boolean isBatchIndependent() {
-			return true;
-		}
-
-		@Override
 		public boolean isBatchFailRemainder() {
 			return true;
 		}
 
 		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			return BatchItemStrategy.ITEMS_SERIALIZED;
-		}
-
-		@Override
 		public boolean isSupportsTransactions() {
 			return false;
-		}
-
-		@Override
-		public boolean isBatchingSupported() {
-			return true;
 		}
 	};
 

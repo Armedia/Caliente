@@ -1,11 +1,12 @@
 package com.armedia.caliente.engine.documentum;
 
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.armedia.caliente.engine.importer.ImportStrategy;
-import com.armedia.caliente.engine.importer.ImportStrategy.BatchItemStrategy;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
@@ -21,27 +22,87 @@ import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 
+enum DctmObjectTypeFlag {
+	//
+	PARALLEL_CAPABLE, FAILURE_INTERRUPTS_BATCH, SUPPORTS_TRANSACTIONS,
+	//
+	;
+}
+
 public enum DctmObjectType {
 
 	// IMPORTANT: The object types must be declared in the proper import order
 	// otherwise that operation will fail.
 
-	STORE(CmfType.DATASTORE, IDfStore.class),
-	USER(CmfType.USER, IDfUser.class),
-	GROUP(CmfType.GROUP, IDfGroup.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, false, true, false),
-	ACL(CmfType.ACL, IDfACL.class),
-	TYPE(CmfType.TYPE, IDfType.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false, false),
-	FORMAT(CmfType.FORMAT, IDfFormat.class),
-	FOLDER(CmfType.FOLDER, IDfFolder.class, BatchItemStrategy.ITEMS_CONCURRENT, null, true, false),
-	DOCUMENT(CmfType.DOCUMENT, IDfDocument.class, BatchItemStrategy.ITEMS_SERIALIZED, null, true, true),
+	STORE(
+		CmfType.DATASTORE,
+		IDfStore.class,
+		null,
+		Flag.FAILURE_INTERRUPTS_BATCH,
+		Flag.SUPPORTS_TRANSACTIONS,
+		Flag.PARALLEL_CAPABLE),
+	USER(
+		CmfType.USER,
+		IDfUser.class,
+		null,
+		Flag.FAILURE_INTERRUPTS_BATCH,
+		Flag.SUPPORTS_TRANSACTIONS,
+		Flag.PARALLEL_CAPABLE),
+	GROUP(
+		CmfType.GROUP,
+		IDfGroup.class,
+		null,
+		Flag.FAILURE_INTERRUPTS_BATCH,
+		Flag.SUPPORTS_TRANSACTIONS,
+		Flag.PARALLEL_CAPABLE),
+	ACL(
+		CmfType.ACL,
+		IDfACL.class,
+		null,
+		Flag.FAILURE_INTERRUPTS_BATCH,
+		Flag.SUPPORTS_TRANSACTIONS,
+		Flag.PARALLEL_CAPABLE),
+	TYPE(
+		CmfType.TYPE,
+		IDfType.class,
+		null,
+		Flag.FAILURE_INTERRUPTS_BATCH,
+		// Flag.SUPPORTS_TRANSACTIONS,
+		Flag.PARALLEL_CAPABLE),
+	FORMAT(
+		CmfType.FORMAT,
+		IDfFormat.class,
+		null,
+		Flag.FAILURE_INTERRUPTS_BATCH,
+		Flag.SUPPORTS_TRANSACTIONS,
+		Flag.PARALLEL_CAPABLE),
+	FOLDER(
+		CmfType.FOLDER,
+		IDfFolder.class,
+		null,
+		Flag.FAILURE_INTERRUPTS_BATCH,
+		Flag.SUPPORTS_TRANSACTIONS,
+		Flag.PARALLEL_CAPABLE),
+	DOCUMENT(
+		CmfType.DOCUMENT,
+		IDfDocument.class,
+		null,
+		Flag.FAILURE_INTERRUPTS_BATCH,
+		Flag.SUPPORTS_TRANSACTIONS,
+		Flag.PARALLEL_CAPABLE),
 	//
 	;
+
+	private static enum Flag {
+		//
+		PARALLEL_CAPABLE, FAILURE_INTERRUPTS_BATCH, SUPPORTS_TRANSACTIONS,
+		//
+		;
+	}
 
 	private final CmfType cmsType;
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
-	private final BatchItemStrategy batchingStrategy;
-	private final boolean supportsBatching;
 	private final boolean failureInterruptsBatch;
 	private final boolean supportsTransactions;
 	private final boolean parallelCapable;
@@ -50,12 +111,6 @@ public enum DctmObjectType {
 		@Override
 		public boolean isIgnored() {
 			return false;
-		}
-
-		@Override
-		public BatchItemStrategy getBatchItemStrategy() {
-			if (!DctmObjectType.this.supportsBatching) { return null; }
-			return DctmObjectType.this.batchingStrategy;
 		}
 
 		@Override
@@ -69,55 +124,17 @@ public enum DctmObjectType {
 		}
 
 		@Override
-		public boolean isBatchingSupported() {
-			return DctmObjectType.this.supportsBatching;
-		}
-
-		@Override
-		public boolean isBatchIndependent() {
-			// For now, eventually we'll do something different
-			return true;
-		}
-
-		@Override
 		public boolean isSupportsTransactions() {
 			return DctmObjectType.this.supportsTransactions;
 		}
 	};
 
 	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass) {
-		this(cmsType, dfClass, null, null);
+		this(cmsType, dfClass, null);
 	}
 
-	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass, String dmType) {
-		this(cmsType, dfClass, null, dmType);
-	}
-
-	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
-		BatchItemStrategy batchingStrategy) {
-		this(cmsType, dfClass, batchingStrategy, null);
-	}
-
-	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
-		BatchItemStrategy batchingStrategy, String dmType) {
-		this(cmsType, dfClass, batchingStrategy, dmType, false, false);
-	}
-
-	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
-		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch) {
-		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch, true, true);
-	}
-
-	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
-		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
-		boolean supportsTransactions) {
-		this(cmsType, dfClass, batchingStrategy, dmType, supportsBatching, failureInterruptsBatch, supportsTransactions,
-			true);
-	}
-
-	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass,
-		BatchItemStrategy batchingStrategy, String dmType, boolean supportsBatching, boolean failureInterruptsBatch,
-		boolean supportsTransactions, boolean parallelCapable) {
+	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass, String dmType,
+		Flag... flags) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
 			this.dmType = String.format("dm_%s", name().toLowerCase());
@@ -125,11 +142,15 @@ public enum DctmObjectType {
 			this.dmType = dmType;
 		}
 		this.dfClass = dfClass;
-		this.batchingStrategy = batchingStrategy;
-		this.supportsBatching = supportsBatching;
-		this.failureInterruptsBatch = failureInterruptsBatch;
-		this.supportsTransactions = supportsTransactions;
-		this.parallelCapable = parallelCapable;
+		Set<Flag> s = EnumSet.noneOf(Flag.class);
+		if (flags != null) {
+			for (Flag f : flags) {
+				s.add(f);
+			}
+		}
+		this.failureInterruptsBatch = s.contains(Flag.FAILURE_INTERRUPTS_BATCH);
+		this.supportsTransactions = s.contains(Flag.SUPPORTS_TRANSACTIONS);
+		this.parallelCapable = s.contains(Flag.PARALLEL_CAPABLE);
 	}
 
 	public final CmfType getStoredObjectType() {
@@ -186,7 +207,7 @@ public enum DctmObjectType {
 	private static DctmObjectType decodeType(String type) throws UnsupportedDctmObjectTypeException {
 		synchronized (DctmObjectType.class) {
 			if (DctmObjectType.DM_TYPE_DECODER == null) {
-				Map<String, DctmObjectType> m = new HashMap<String, DctmObjectType>();
+				Map<String, DctmObjectType> m = new HashMap<>();
 				for (DctmObjectType t : DctmObjectType.values()) {
 					m.put(t.dmType, t);
 				}
@@ -202,7 +223,7 @@ public enum DctmObjectType {
 	public static DctmObjectType decodeType(CmfType type) {
 		synchronized (DctmObjectType.class) {
 			if (DctmObjectType.OBJECT_TYPE_TRANSLATOR == null) {
-				Map<CmfType, DctmObjectType> m = new EnumMap<CmfType, DctmObjectType>(CmfType.class);
+				Map<CmfType, DctmObjectType> m = new EnumMap<>(CmfType.class);
 				for (DctmObjectType t : DctmObjectType.values()) {
 					CmfType c = t.getStoredObjectType();
 					if (c != null) {

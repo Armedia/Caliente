@@ -94,7 +94,7 @@ public class XmlImportDelegateFactory
 		private int filesWritten = 0;
 
 		@Override
-		public void objectBatchImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
+		public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
 			if (objectType != CmfType.DOCUMENT) { return; }
 			List<DocumentVersionT> l = XmlImportDelegateFactory.this.threadedVersionList.get();
 			if (l == null) {
@@ -105,7 +105,7 @@ public class XmlImportDelegateFactory
 		}
 
 		@Override
-		public void objectBatchImportFinished(UUID jobId, CmfType objectType, String batchId,
+		public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String batchId,
 			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 			if (objectType != CmfType.DOCUMENT) { return; }
 			if (failed) { return; }

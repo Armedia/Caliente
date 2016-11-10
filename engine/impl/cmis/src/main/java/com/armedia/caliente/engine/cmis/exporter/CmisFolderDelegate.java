@@ -46,8 +46,8 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected String calculateBatchId(Folder object) throws Exception {
-		return String.format("%016x", calculateDepth(object, new LinkedHashSet<String>()));
+	protected int calculateDependencyTier(Folder object) throws Exception {
+		return calculateDepth(object, new LinkedHashSet<String>());
 	}
 
 	@Override
@@ -57,9 +57,9 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 		// We will only include the folder's contents if the referencing object is NOT one of our
 		// children
 		ExportTarget referrent = ctx.getReferrent();
-		CmisPagingIterator<CmisObject> it = new CmisPagingIterator<CmisObject>(this.object.getChildren());
-		Collection<CmisFolderDelegate> childFolders = new ArrayList<CmisFolderDelegate>();
-		Collection<CmisDocumentDelegate> childDocs = new ArrayList<CmisDocumentDelegate>();
+		CmisPagingIterator<CmisObject> it = new CmisPagingIterator<>(this.object.getChildren());
+		Collection<CmisFolderDelegate> childFolders = new ArrayList<>();
+		Collection<CmisDocumentDelegate> childDocs = new ArrayList<>();
 		while (it.hasNext()) {
 			CmisObject o = it.next();
 			// Don't continue if the referrent object is one of this object's children

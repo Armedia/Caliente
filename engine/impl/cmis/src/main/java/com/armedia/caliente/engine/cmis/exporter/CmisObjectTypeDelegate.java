@@ -47,8 +47,8 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 	}
 
 	@Override
-	protected String calculateBatchId(ObjectType objectType) throws Exception {
-		return String.format("%016x", calculateDepth(objectType, new LinkedHashSet<String>()));
+	protected int calculateDependencyTier(ObjectType objectType) throws Exception {
+		return calculateDepth(objectType, new LinkedHashSet<String>());
 	}
 
 	@Override

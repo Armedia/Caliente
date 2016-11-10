@@ -5,10 +5,10 @@ import java.util.Collection;
 import java.util.List;
 
 import com.armedia.caliente.engine.documentum.DctmAttributeHandlers;
+import com.armedia.caliente.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.documentum.DctmDataType;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
 import com.armedia.caliente.engine.documentum.DctmSessionWrapper;
-import com.armedia.caliente.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.exporter.ExportDelegate;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
@@ -71,8 +71,8 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected String calculateBatchId(T object) throws Exception {
-		return null;
+	protected String calculateHistoryId(T object) throws Exception {
+		return object.getObjectId().getId();
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
 		T object, DctmExportContext ctx) throws Exception {
-		Collection<DctmExportDelegate<?>> ret = new ArrayList<DctmExportDelegate<?>>();
+		Collection<DctmExportDelegate<?>> ret = new ArrayList<>();
 		ret.add(this.factory.newExportDelegate(object.getType()));
 		return ret;
 	}
@@ -101,7 +101,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 	protected Collection<DctmExportDelegate<?>> findAntecedents(IDfSession session, CmfObject<IDfValue> marshaled,
 		T object, DctmExportContext ctx) throws Exception {
-		return new ArrayList<DctmExportDelegate<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
@@ -112,7 +112,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 	protected Collection<DctmExportDelegate<?>> findSuccessors(IDfSession session, CmfObject<IDfValue> marshaled,
 		T object, DctmExportContext ctx) throws Exception {
-		return new ArrayList<DctmExportDelegate<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
@@ -123,7 +123,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 	protected Collection<DctmExportDelegate<?>> findDependents(IDfSession session, CmfObject<IDfValue> marshaled,
 		T object, DctmExportContext ctx) throws Exception {
-		return new ArrayList<DctmExportDelegate<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
@@ -137,7 +137,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 				final AttributeHandler handler = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
 				// Get the attribute handler
 				if (handler.includeInExport(this.object, attr)) {
-					CmfAttribute<IDfValue> attribute = new CmfAttribute<IDfValue>(attr.getName(),
+					CmfAttribute<IDfValue> attribute = new CmfAttribute<>(attr.getName(),
 						DctmDataType.fromAttribute(attr).getStoredType(), attr.isRepeating(),
 						handler.getExportableValues(this.object, attr));
 					object.setAttribute(attribute);
@@ -148,7 +148,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 			// instance, a property would only be settable via direct SQL, or via an explicit method
 			// call, etc., because setting it directly as an attribute would cmsImportResult in an
 			// error from DFC, and therefore specialized code is required to handle it
-			List<CmfProperty<IDfValue>> properties = new ArrayList<CmfProperty<IDfValue>>();
+			List<CmfProperty<IDfValue>> properties = new ArrayList<>();
 			getDataProperties(ctx, properties, typedObject);
 			for (CmfProperty<IDfValue> property : properties) {
 				// This mechanism overwrites properties, and intentionally so

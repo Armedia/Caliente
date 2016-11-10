@@ -411,7 +411,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		values.clear();
 		values.add(AlfImportFileableDelegate.STATUS_ASPECT);
 		if (!isReference()) {
-			p.setProperty("dctm:i_chronicle_id", this.cmfObject.getBatchId());
+			p.setProperty("dctm:i_chronicle_id", this.cmfObject.getHistoryId());
 
 			// Finally, perform user mappings for special user-relative attributes
 			for (String s : AlfImportFileableDelegate.USER_CONVERSIONS) {
@@ -460,7 +460,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			head = ctx.getHeadObject(this.cmfObject);
 		} catch (CmfStorageException e) {
 			this.log.warn(String.format("Failed to load the HEAD object for %s batch [%s]",
-				this.cmfObject.getType().name(), this.cmfObject.getBatchId()), e);
+				this.cmfObject.getType().name(), this.cmfObject.getHistoryId()), e);
 		}
 		p.setProperty("cm:name", head.getName());
 	}
@@ -695,7 +695,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					Properties versionProps = new Properties();
 					populatePrimaryAttributes(ctx, versionProps, this.vdocRoot, content);
 
-					if (this.cmfObject.isBatchHead() && !vdocRootIndexed) {
+					if (this.cmfObject.isHistoryCurrent() && !vdocRootIndexed) {
 						final File vdocRootMeta = generateMetadataFile(ctx, versionProps, vdocVersion.getParentFile());
 						this.factory.storeToIndex(this.cmfObject, vdocVersion.getParentFile(), vdocRootMeta,
 							MarkerType.VDOC_ROOT);
@@ -753,7 +753,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				// location with no version number - including the properties.
 				String mainName = main.getName();
 				final String suffix = AlfImportDelegateFactory.parseVersionSuffix(mainName);
-				if (this.cmfObject.isBatchHead() && !StringUtils.isEmpty(suffix)) {
+				if (this.cmfObject.isHistoryCurrent() && !StringUtils.isEmpty(suffix)) {
 					final String versionTag = String.format("\\Q%s\\E$", suffix);
 					File newMain = new File(main.getAbsolutePath().replaceAll(versionTag, ""));
 					File newMeta = new File(meta.getAbsolutePath().replaceAll(versionTag, ""));

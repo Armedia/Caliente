@@ -45,6 +45,11 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	}
 
 	@Override
+	public int calculateDependencyTier(T object) {
+		return 0;
+	}
+
+	@Override
 	protected final Collection<? extends ShptExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
 		return findRequirements(ctx.getSession(), marshaled, ctx);
@@ -52,7 +57,7 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 
 	protected Collection<ShptObject<?>> findRequirements(ShptSession session, CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
-		return new ArrayList<ShptObject<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
@@ -63,7 +68,7 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 
 	protected Collection<ShptObject<?>> findAntecedents(ShptSession session, CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
-		return new ArrayList<ShptObject<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
@@ -74,7 +79,7 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 
 	protected Collection<ShptObject<?>> findSuccessors(ShptSession session, CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
-		return new ArrayList<ShptObject<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
@@ -85,7 +90,7 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 
 	protected Collection<ShptObject<?>> findDependents(ShptSession service, CmfObject<CmfValue> marshaled,
 		ShptExportContext ctx) throws Exception {
-		return new ArrayList<ShptObject<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
