@@ -1,6 +1,6 @@
 package com.armedia.caliente.cli.launcher;
 
-import java.util.Collection;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,7 @@ import com.armedia.caliente.cli.parser.HelpRequestedException;
 import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 
-public abstract class Launcher {
+public abstract class Launcher<K> {
 	protected final Logger log = LoggerFactory.getLogger(Launcher.class);
 
 	protected boolean supportsHelp = true;
@@ -21,22 +21,26 @@ public abstract class Launcher {
 		return null;
 	}
 
-	protected abstract Collection<ParameterDefinition> getCommandLineParameters();
+	protected abstract Map<K, ParameterDefinition> getCommandLineParameters();
+
+	protected abstract void parameterDefined(K key, Parameter param);
 
 	protected abstract String getProgramName();
 
 	protected final int launch(String... args) {
 		CommandLine cl = new CommandLine(this.supportsHelp);
-		Collection<ParameterDefinition> parameters = getCommandLineParameters();
+		Map<K, ParameterDefinition> parameters = getCommandLineParameters();
 		if (parameters != null) {
-			for (ParameterDefinition def : parameters) {
+			for (final K key : parameters.keySet()) {
+				final ParameterDefinition def = parameters.get(key);
 				try {
-					Parameter p = cl.define(def);
+					parameterDefined(key, cl.define(def));
 				} catch (Exception e) {
 					throw new RuntimeException("Failed to initialize the command-line parser", e);
 				}
 			}
 		}
+
 		try {
 			cl.parse(getProgramName(), args);
 		} catch (CommandLineParseException e) {

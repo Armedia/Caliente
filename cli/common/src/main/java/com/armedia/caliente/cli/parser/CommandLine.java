@@ -110,7 +110,7 @@ public class CommandLine implements Iterable<Parameter> {
 			CommandLineParser.Context ctx = null;
 			try {
 				try {
-					ctx = parser.initContext(this, Tools.freezeSet(this.parameters));
+					ctx = parser.initContext(this, executableName, Tools.freezeSet(this.parameters));
 				} catch (Exception e) {
 					throw new CommandLineParseException(
 						String.format("A initialization error ocurred while initializing the command-line parser",
@@ -122,10 +122,10 @@ public class CommandLine implements Iterable<Parameter> {
 				} catch (Exception e) {
 					throw new CommandLineParseException(String
 						.format("A parsing error ocurred while parsing the command line %s", Arrays.toString(args)), e,
-						parser.getHelpMessage(ctx, executableName, e));
+						parser.getHelpMessage(ctx, e));
 				}
-				if ((this.help != null) && this.help.isPresent()) { throw new HelpRequestedException(
-					parser.getHelpMessage(ctx, executableName, null)); }
+				if ((this.help != null)
+					&& this.help.isPresent()) { throw new HelpRequestedException(parser.getHelpMessage(ctx, null)); }
 			} finally {
 				if (ctx != null) {
 					try {

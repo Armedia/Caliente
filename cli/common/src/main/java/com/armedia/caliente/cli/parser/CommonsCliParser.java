@@ -14,8 +14,17 @@ import org.apache.commons.cli.Options;
 
 public class CommonsCliParser extends CommandLineParser {
 
-	private static final String PARAMETERS = "parameters";
-	private static final String OPTIONS = "options";
+	private class State {
+		final Options options = new Options();
+		final Map<String, Parameter> parameters = new HashMap<>();
+		final String exe;
+
+		private State(String executableName) {
+			this.exe = executableName;
+		}
+	}
+
+	private static final String STATE = "state";
 
 	private String getOptionKey(Option o) {
 		String prefix = "--";
@@ -27,38 +36,36 @@ public class CommonsCliParser extends CommandLineParser {
 		return String.format("%s%s", prefix, key);
 	}
 
+	private State getState(Context ctx) {
+		State state = ctx.getState(CommonsCliParser.STATE, State.class);
+		if (state == null) { throw new IllegalStateException(
+			String.format("Failed to find the required state field [%s]", CommonsCliParser.STATE)); }
+		return state;
+	}
+
 	@Override
-	protected void init(Context ctx, Set<Parameter> def) throws Exception {
-		Options options = new Options();
-		Map<String, Parameter> parameters = new HashMap<>();
+	protected void init(Context ctx, String executableName, Set<Parameter> def) throws Exception {
+		final State state = new State(executableName);
 		for (Parameter p : def) {
 			Option o = CommonsCliParser.buildOption(p.getDefinition());
-			options.addOption(o);
+			state.options.addOption(o);
 			String key = getOptionKey(o);
-			Parameter old = parameters.put(key, p);
+			Parameter old = state.parameters.put(key, p);
 			if (old != null) { throw new Exception(
 				String.format("Duplicate parameter definition for option [%s]", key)); }
 		}
-		ctx.setState(CommonsCliParser.PARAMETERS, parameters);
-		ctx.setState(CommonsCliParser.OPTIONS, options);
+		ctx.setState(CommonsCliParser.STATE, state);
 	}
 
 	@Override
 	protected void parse(Context ctx, String... args) throws Exception {
-		@SuppressWarnings("unchecked")
-		Map<String, Parameter> parameters = ctx.getState(CommonsCliParser.PARAMETERS, Map.class);
-		if (parameters == null) { throw new IllegalStateException(
-			String.format("Failed to find the required state field [%s]", CommonsCliParser.PARAMETERS)); }
-		Options options = ctx.getState(CommonsCliParser.OPTIONS, Options.class);
-		if (options == null) { throw new IllegalStateException(
-			String.format("Failed to find the required state field [%s]", CommonsCliParser.OPTIONS)); }
-
+		final State state = getState(ctx);
 		org.apache.commons.cli.CommandLineParser parser = new DefaultParser();
-		final org.apache.commons.cli.CommandLine cli = parser.parse(options, args);
+		final org.apache.commons.cli.CommandLine cli = parser.parse(state.options, args);
 
 		for (Option o : cli.getOptions()) {
 			String key = getOptionKey(o);
-			Parameter p = parameters.get(key);
+			Parameter p = state.parameters.get(key);
 			if (p == null) { throw new Exception(
 				String.format("Failed to locate a parameter for option [%s] which should have been there", key)); }
 			ctx.setParameter(p, o.getValuesList());
@@ -68,10 +75,8 @@ public class CommonsCliParser extends CommandLineParser {
 	}
 
 	@Override
-	protected String getHelpMessage(Context ctx, String executableName, Throwable t) {
-		Options options = ctx.getState(CommonsCliParser.OPTIONS, Options.class);
-		if (options == null) { throw new IllegalStateException(
-			String.format("Failed to find the required state field [%s]", CommonsCliParser.OPTIONS)); }
+	protected String getHelpMessage(Context ctx, Throwable t) {
+		final State state = getState(ctx);
 		StringWriter w = new StringWriter();
 		PrintWriter pw = new PrintWriter(w);
 		HelpFormatter hf = new HelpFormatter();
@@ -79,9 +84,9 @@ public class CommonsCliParser extends CommandLineParser {
 		if (t != null) {
 			footer = String.format("%nERROR: %s%n%n", t.getMessage());
 		}
-		hf.printHelp(pw, hf.getWidth(), executableName,
-			String.format("%nAvailable Parameters:%n------------------------------%n"), options, hf.getLeftPadding(),
-			hf.getDescPadding(), footer, true);
+		hf.printHelp(pw, hf.getWidth(), state.exe,
+			String.format("%nAvailable Parameters:%n------------------------------%n"), state.options,
+			hf.getLeftPadding(), hf.getDescPadding(), footer, true);
 		w.flush();
 		return w.toString();
 	}
