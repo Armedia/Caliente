@@ -626,7 +626,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected int calculateDependencyTier(T object) throws Exception {
+	protected final int calculateDependencyTier(T object) throws Exception {
 		int depth = calculateDepth(object, new LinkedHashSet<String>());
 		if (isDfReference(object)) {
 			depth++;
