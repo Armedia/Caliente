@@ -39,8 +39,9 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.valueCount;
 	}
 
-	public void setValueCount(int parameterCount) {
+	public MutableParameterDefinition setValueCount(int parameterCount) {
 		this.valueCount = parameterCount;
+		return this;
 	}
 
 	@Override
@@ -48,8 +49,9 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.valueName;
 	}
 
-	public void setValueName(String argName) {
+	public MutableParameterDefinition setValueName(String argName) {
 		this.valueName = argName;
+		return this;
 	}
 
 	@Override
@@ -57,8 +59,9 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.required;
 	}
 
-	public void setRequired(boolean required) {
+	public MutableParameterDefinition setRequired(boolean required) {
 		this.required = required;
+		return this;
 	}
 
 	@Override
@@ -66,8 +69,9 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.description;
 	}
 
-	public void setDescription(String description) {
+	public MutableParameterDefinition setDescription(String description) {
 		this.description = description;
+		return this;
 	}
 
 	@Override
@@ -75,8 +79,9 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.longOpt;
 	}
 
-	public void setLongOpt(String longOpt) {
+	public MutableParameterDefinition setLongOpt(String longOpt) {
 		this.longOpt = longOpt;
+		return this;
 	}
 
 	@Override
@@ -84,8 +89,9 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.shortOpt;
 	}
 
-	public void setShortOpt(Character shortOpt) {
+	public MutableParameterDefinition setShortOpt(Character shortOpt) {
 		this.shortOpt = shortOpt;
+		return this;
 	}
 
 	@Override
@@ -93,8 +99,9 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.valueSep;
 	}
 
-	public void setValueSep(Character valueSep) {
+	public MutableParameterDefinition setValueSep(Character valueSep) {
 		this.valueSep = valueSep;
+		return this;
 	}
 
 	@Override
@@ -102,8 +109,9 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 		return this.valueOptional;
 	}
 
-	public void setValueOptional(boolean valueOptional) {
+	public MutableParameterDefinition setValueOptional(boolean valueOptional) {
 		this.valueOptional = valueOptional;
+		return this;
 	}
 
 	@Override
