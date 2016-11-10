@@ -165,6 +165,7 @@ public class CommandLineTest {
 
 		Parameter help = cl.getHelpParameter();
 		Assert.assertNotNull(help);
+		Assert.assertNotNull(help.getKey());
 
 		String[] args = {
 			"-a", "true", //
@@ -182,6 +183,7 @@ public class CommandLineTest {
 			Assert.fail("Did not fail with a bad option");
 		} catch (CommandLineParseException e) {
 			// This is expected... -b isn't declared
+			Assert.assertNotNull(e.getHelp());
 		}
 
 		def.setValueCount(1);
@@ -192,6 +194,7 @@ public class CommandLineTest {
 			Assert.fail("Did not fail with a missing option value");
 		} catch (CommandLineParseException e) {
 			// This is expected... -b isn't declared
+			Assert.assertNotNull(e.getHelp());
 		}
 
 		args = new String[] {
@@ -223,7 +226,7 @@ public class CommandLineTest {
 			cl2.parse("TEST", args);
 		} catch (CommandLineParseException e) {
 			// we're good, this is expected
-
+			Assert.assertNull(e.getHelp());
 		}
 	}
 
