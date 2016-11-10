@@ -17,6 +17,16 @@ public class CommonsCliParser extends CommandLineParser {
 	private static final String PARAMETERS = "parameters";
 	private static final String OPTIONS = "options";
 
+	private String getOptionKey(Option o) {
+		String prefix = "--";
+		String key = o.getLongOpt();
+		if (key == null) {
+			key = o.getOpt();
+			prefix = "-";
+		}
+		return String.format("%s%s", prefix, key);
+	}
+
 	@Override
 	protected void init(Context ctx, Set<Parameter> def) throws Exception {
 		Options options = new Options();
@@ -24,9 +34,10 @@ public class CommonsCliParser extends CommandLineParser {
 		for (Parameter p : def) {
 			Option o = CommonsCliParser.buildOption(p.getDefinition());
 			options.addOption(o);
-			Parameter old = parameters.put(o.getOpt(), p);
-			if (old != null) { throw new Exception(String.format(
-				"Duplicate parameter definition for option [%s]: %s and %s", o.getOpt(), old.getKey(), p.getKey())); }
+			String key = getOptionKey(o);
+			Parameter old = parameters.put(key, p);
+			if (old != null) { throw new Exception(
+				String.format("Duplicate parameter definition for option [%s]", key)); }
 		}
 		ctx.setState(CommonsCliParser.PARAMETERS, parameters);
 		ctx.setState(CommonsCliParser.OPTIONS, options);
@@ -46,9 +57,10 @@ public class CommonsCliParser extends CommandLineParser {
 		final org.apache.commons.cli.CommandLine cli = parser.parse(options, args);
 
 		for (Option o : cli.getOptions()) {
-			Parameter p = parameters.get(o.getOpt());
-			if (p == null) { throw new Exception(String
-				.format("Failed to locate a parameter for option [%s] which should have been there", o.getOpt())); }
+			String key = getOptionKey(o);
+			Parameter p = parameters.get(key);
+			if (p == null) { throw new Exception(
+				String.format("Failed to locate a parameter for option [%s] which should have been there", key)); }
 			ctx.setParameter(p, o.getValuesList());
 		}
 

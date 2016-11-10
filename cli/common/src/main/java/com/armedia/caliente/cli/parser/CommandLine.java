@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.CommandLineException;
 import com.armedia.commons.utilities.Tools;
 
 public class CommandLine implements Iterable<Parameter> {
@@ -51,11 +52,19 @@ public class CommandLine implements Iterable<Parameter> {
 	private final List<String> remainingParameters = new ArrayList<>();
 
 	public CommandLine() {
-		try {
-			this.help = define(CommandLine.HELP);
-		} catch (DuplicateParameterDefinitionException e) {
-			// Not gonna happen...but still barf if it does
-			throw new RuntimeException("Unexpected duplicate parameter exception", e);
+		this(true);
+	}
+
+	public CommandLine(boolean defaultHelp) {
+		if (defaultHelp) {
+			try {
+				this.help = define(CommandLine.HELP, true);
+			} catch (CommandLineException e) {
+				// Not gonna happen...but still barf if it does
+				throw new RuntimeException("Unexpected Command Line exception", e);
+			}
+		} else {
+			this.help = null;
 		}
 	}
 
@@ -136,8 +145,8 @@ public class CommandLine implements Iterable<Parameter> {
 			"The given parameter is not associated to this command-line interface"); }
 	}
 
-	private void assertValid(ParameterDefinition def) {
-		Objects.requireNonNull(def, "Must provide a parameter definition");
+	private void assertValid(ParameterDefinition def) throws InvalidParameterDefinitionException {
+		if (def == null) { throw new InvalidParameterDefinitionException("Parameter definition may not be null"); }
 
 		final Character shortOpt = def.getShortOpt();
 		final boolean hasShortOpt = (shortOpt != null);
@@ -145,7 +154,7 @@ public class CommandLine implements Iterable<Parameter> {
 		final String longOpt = def.getLongOpt();
 		final boolean hasLongOpt = (longOpt != null);
 
-		if (!hasShortOpt && !hasLongOpt) { throw new IllegalArgumentException(
+		if (!hasShortOpt && !hasLongOpt) { throw new InvalidParameterDefinitionException(
 			"The given parameter definition has neither a short or a long option"); }
 		if (hasShortOpt) {
 			boolean valid = Character.isLetterOrDigit(shortOpt.charValue())
@@ -154,7 +163,7 @@ public class CommandLine implements Iterable<Parameter> {
 				// Custom validation
 				valid &= isShortOptionValid(shortOpt);
 			}
-			if (!valid) { throw new IllegalArgumentException(
+			if (!valid) { throw new InvalidParameterDefinitionException(
 				String.format("The short option value [%s] is not valid", shortOpt)); }
 		}
 		if (hasLongOpt) {
@@ -165,20 +174,23 @@ public class CommandLine implements Iterable<Parameter> {
 			if (valid) {
 				valid &= isLongOptionValid(longOpt);
 			}
-			if (!valid) { throw new IllegalArgumentException(
+			if (!valid) { throw new InvalidParameterDefinitionException(
 				String.format("The long option value [%s] is not valid", longOpt)); }
 		}
 	}
 
-	public final Parameter define(ParameterDefinition def) throws DuplicateParameterDefinitionException {
-		assertValid(def);
+	private final Parameter define(ParameterDefinition def, boolean unchecked)
+		throws DuplicateParameterDefinitionException, InvalidParameterDefinitionException {
+		if (!unchecked) {
+			assertValid(def);
+		}
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
 
 		try {
 			final Character shortOpt = def.getShortOpt();
 			Parameter shortParam = null;
-			if (shortOpt != null) {
+			if (!unchecked && (shortOpt != null)) {
 				shortParam = this.shortOptions.get(shortOpt);
 				if (shortParam != null) {
 					if (shortParam.getDefinition().equals(def)) {
@@ -194,7 +206,7 @@ public class CommandLine implements Iterable<Parameter> {
 
 			final String longOpt = def.getLongOpt();
 			Parameter longParam = null;
-			if (longOpt != null) {
+			if (!unchecked && (longOpt != null)) {
 				longParam = this.longOptions.get(longOpt);
 				if (longParam != null) {
 					if (longParam.getDefinition().equals(def)) {
@@ -223,6 +235,11 @@ public class CommandLine implements Iterable<Parameter> {
 		}
 	}
 
+	public final Parameter define(ParameterDefinition def)
+		throws DuplicateParameterDefinitionException, InvalidParameterDefinitionException {
+		return define(def, false);
+	}
+
 	@Override
 	public final Iterator<Parameter> iterator() {
 		final Lock l = this.rwLock.readLock();
@@ -232,6 +249,74 @@ public class CommandLine implements Iterable<Parameter> {
 		} finally {
 			l.unlock();
 		}
+	}
+
+	public final Iterator<Parameter> shortOptions() {
+		final Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			return Tools.freezeList(new ArrayList<>(this.shortOptions.values())).iterator();
+		} finally {
+			l.unlock();
+		}
+	}
+
+	public final Parameter getParameter(char shortOpt) {
+		final Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			return this.shortOptions.get(shortOpt);
+		} finally {
+			l.unlock();
+		}
+	}
+
+	public final boolean hasParameter(char shortOpt) {
+		final Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			return this.shortOptions.containsKey(shortOpt);
+		} finally {
+			l.unlock();
+		}
+	}
+
+	public final Iterator<Parameter> longOptions() {
+		final Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			return Tools.freezeList(new ArrayList<>(this.longOptions.values())).iterator();
+		} finally {
+			l.unlock();
+		}
+	}
+
+	public final Parameter getParameter(String longOpt) {
+		final Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			return this.longOptions.get(longOpt);
+		} finally {
+			l.unlock();
+		}
+	}
+
+	public final boolean hasParameter(String longOpt) {
+		final Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			return this.longOptions.containsKey(longOpt);
+		} finally {
+			l.unlock();
+		}
+	}
+
+	public final boolean hasHelpParameter() {
+		return (this.help != null);
+	}
+
+	public final Parameter getHelpParameter() {
+		return this.help;
 	}
 
 	final Boolean getBoolean(Parameter param) {
