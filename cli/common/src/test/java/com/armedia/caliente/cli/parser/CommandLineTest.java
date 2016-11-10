@@ -61,6 +61,7 @@ public class CommandLineTest {
 				}
 				try {
 					Parameter p = cl.define(def);
+					Assert.assertEquals(1, p.compareTo(null));
 					if (!Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
 					}
@@ -109,6 +110,9 @@ public class CommandLineTest {
 
 		def.setLongOpt("ab");
 		Parameter p = cl.define(def);
+		Assert.assertEquals(p, p);
+		Assert.assertNotEquals(p, null);
+		Assert.assertNotEquals(p, "");
 		Assert.assertSame(cl, p.getCLI());
 		Assert.assertEquals(def, p.getDefinition());
 
@@ -207,8 +211,12 @@ public class CommandLineTest {
 		Assert.assertFalse(cl2.hasHelpParameter());
 		Assert.assertNull(cl2.getHelpParameter());
 
+		Parameter p2prev = null;
 		for (Parameter p : cl) {
-			cl2.define(p.getDefinition());
+			Parameter p2 = cl2.define(p.getDefinition());
+			Assert.assertNotEquals(p, p2);
+			Assert.assertNotEquals(p, p2prev);
+			p2prev = p2;
 		}
 
 		try {

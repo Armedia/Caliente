@@ -42,8 +42,8 @@ public final class Parameter implements Comparable<Parameter> {
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Parameter other = Parameter.class.cast(obj);
-		if (this.cli != other.cli) { return false; }
 		if (!Tools.equals(this.cliKey, other.cliKey)) { return false; }
+		if (this.cli != other.cli) { return false; }
 		// TODO: enable comparison of the full definitions?
 		/*
 		if (!Tools.equals(this.def, other.def)) { return false; }

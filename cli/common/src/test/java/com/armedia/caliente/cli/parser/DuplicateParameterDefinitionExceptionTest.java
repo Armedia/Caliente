@@ -32,6 +32,13 @@ public class DuplicateParameterDefinitionExceptionTest {
 			// All is well
 		}
 
+		try {
+			new DuplicateParameterDefinitionException(null, existing, existing);
+			Assert.fail("Did not fail the same definition given twice");
+		} catch (IllegalArgumentException e) {
+			// All is well
+		}
+
 		DuplicateParameterDefinitionException e = new DuplicateParameterDefinitionException(null, existing, incoming);
 		Assert.assertSame(existing, e.getExisting());
 		Assert.assertSame(incoming, e.getIncoming());
