@@ -61,6 +61,29 @@ public class MutableParameterDefinitionTest {
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
 		Assert.assertEquals(expected.hashCode(), actual.hashCode());
+
+		Assert.assertNotNull(expected.toString());
+	}
+
+	@Test
+	public void testEquals() {
+		MutableParameterDefinition def = null;
+
+		def = new MutableParameterDefinition();
+		Assert.assertNotNull(def);
+		def.setValueName(UUID.randomUUID().toString());
+		def.setDescription(UUID.randomUUID().toString());
+		def.setLongOpt(UUID.randomUUID().toString());
+		def.setShortOpt('x');
+		def.setValueCount(UUID.randomUUID().hashCode());
+		def.setRequired(true);
+		def.setValueOptional(true);
+		def.setValueSep('|');
+
+		Assert.assertNotEquals(def, null);
+		Assert.assertNotEquals(def, new Object());
+		Assert.assertNotEquals(def, "");
+		Assert.assertEquals(def, def);
 	}
 
 	@Test
