@@ -12,41 +12,54 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Option.Builder;
 import org.apache.commons.cli.Options;
 
-public class CommonsCliParser implements CommandLineParser {
+public class CommonsCliParser extends CommandLineParser {
 
-	private final Map<String, Parameter> parameters = new HashMap<>();
-	private Options options = null;
+	private static final String PARAMETERS = "parameters";
+	private static final String OPTIONS = "options";
 
 	@Override
-	public void init(Set<Parameter> def) throws Exception {
-		this.options = new Options();
-		this.parameters.clear();
+	protected void init(Context ctx, Set<Parameter> def) throws Exception {
+		Options options = new Options();
+		Map<String, Parameter> parameters = new HashMap<>();
 		for (Parameter p : def) {
 			Option o = CommonsCliParser.buildOption(p.getDefinition());
-			this.options.addOption(o);
-			this.parameters.put(o.getOpt(), p);
+			options.addOption(o);
+			Parameter old = parameters.put(o.getOpt(), p);
+			if (old != null) { throw new Exception(String.format(
+				"Duplicate parameter definition for option [%s]: %s and %s", o.getOpt(), old.getKey(), p.getKey())); }
 		}
+		ctx.setState(CommonsCliParser.PARAMETERS, parameters);
+		ctx.setState(CommonsCliParser.OPTIONS, options);
 	}
 
 	@Override
-	public void parse(CommandLineParserListener listener, String... args) throws Exception {
+	protected void parse(Context ctx, String... args) throws Exception {
+		@SuppressWarnings("unchecked")
+		Map<String, Parameter> parameters = ctx.getState(CommonsCliParser.PARAMETERS, Map.class);
+		if (parameters == null) { throw new IllegalStateException(
+			String.format("Failed to find the required state field [%s]", CommonsCliParser.PARAMETERS)); }
+		Options options = ctx.getState(CommonsCliParser.OPTIONS, Options.class);
+		if (options == null) { throw new IllegalStateException(
+			String.format("Failed to find the required state field [%s]", CommonsCliParser.OPTIONS)); }
 
 		org.apache.commons.cli.CommandLineParser parser = new DefaultParser();
-		final org.apache.commons.cli.CommandLine cli = parser.parse(this.options, args);
+		final org.apache.commons.cli.CommandLine cli = parser.parse(options, args);
 
 		for (Option o : cli.getOptions()) {
-			Parameter p = this.parameters.get(o.getOpt());
-			if (p == null) {
-				// WTF!?
-			}
-			listener.setParameter(p, o.getValuesList());
+			Parameter p = parameters.get(o.getOpt());
+			if (p == null) { throw new Exception(String
+				.format("Failed to locate a parameter for option [%s] which should have been there", o.getOpt())); }
+			ctx.setParameter(p, o.getValuesList());
 		}
 
-		listener.addRemainingParameters(cli.getArgList());
+		ctx.addRemainingParameters(cli.getArgList());
 	}
 
 	@Override
-	public String getHelpMessage(String executableName, Throwable t) {
+	protected String getHelpMessage(Context ctx, String executableName, Throwable t) {
+		Options options = ctx.getState(CommonsCliParser.OPTIONS, Options.class);
+		if (options == null) { throw new IllegalStateException(
+			String.format("Failed to find the required state field [%s]", CommonsCliParser.OPTIONS)); }
 		StringWriter w = new StringWriter();
 		PrintWriter pw = new PrintWriter(w);
 		HelpFormatter hf = new HelpFormatter();
@@ -55,15 +68,10 @@ public class CommonsCliParser implements CommandLineParser {
 			footer = String.format("%nERROR: %s%n%n", t.getMessage());
 		}
 		hf.printHelp(pw, hf.getWidth(), executableName,
-			String.format("%nAvailable Parameters:%n------------------------------%n"), this.options,
-			hf.getLeftPadding(), hf.getDescPadding(), footer, true);
+			String.format("%nAvailable Parameters:%n------------------------------%n"), options, hf.getLeftPadding(),
+			hf.getDescPadding(), footer, true);
 		w.flush();
 		return w.toString();
-	}
-
-	@Override
-	public void cleanup() {
-		this.options = null;
 	}
 
 	private static Option buildOption(ParameterDefinition def) {

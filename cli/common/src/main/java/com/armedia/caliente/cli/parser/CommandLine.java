@@ -20,7 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class CommandLine implements Iterable<Parameter> {
+public final class CommandLine implements Iterable<Parameter> {
 
 	private static final ParameterDefinition HELP;
 
@@ -46,35 +46,25 @@ public abstract class CommandLine implements Iterable<Parameter> {
 	private final Map<Parameter, List<String>> values = new HashMap<>();
 	private final List<String> remainingParameters = new ArrayList<>();
 
-	private final CommandLineParserListener listener = new CommandLineParserListener() {
-
-		@Override
-		public void setParameter(Parameter p, Collection<String> values) {
-			if ((values == null) || values.isEmpty()) {
-				values = Collections.emptyList();
-			}
-			List<String> l = new ArrayList<>(values.size());
-			for (String s : values) {
-				l.add(s);
-			}
-			CommandLine.this.values.put(p, Tools.freezeList(l));
+	void setParameterValues(Parameter p, Collection<String> values) {
+		if ((values == null) || values.isEmpty()) {
+			values = Collections.emptyList();
 		}
-
-		@Override
-		public void setParameter(Parameter p) {
-			setParameter(p, null);
+		List<String> l = new ArrayList<>(values.size());
+		for (String s : values) {
+			l.add(s);
 		}
+		this.values.put(p, Tools.freezeList(l));
+	}
 
-		@Override
-		public void addRemainingParameters(Collection<String> remaining) {
-			if (remaining == null) {
-				remaining = Collections.emptyList();
-			}
-			CommandLine.this.remainingParameters.addAll(remaining);
+	void addRemainingParameters(Collection<String> remaining) {
+		if (remaining == null) {
+			remaining = Collections.emptyList();
 		}
-	};
+		this.remainingParameters.addAll(remaining);
+	}
 
-	public final void parse(CommandLineParser parser, String executableName, String... args)
+	public void parse(CommandLineParser parser, String executableName, String... args)
 		throws CommandLineParseException, HelpRequestedException {
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
@@ -86,9 +76,10 @@ public abstract class CommandLine implements Iterable<Parameter> {
 			this.values.clear();
 			this.remainingParameters.clear();
 			// Parse!
+			CommandLineParser.Context ctx = null;
 			try {
 				try {
-					parser.init(Tools.freezeSet(this.parameters));
+					ctx = parser.initContext(this, Tools.freezeSet(this.parameters));
 				} catch (Exception e) {
 					throw new CommandLineParseException(
 						String.format("A initialization error ocurred while initializing the command-line parser",
@@ -96,16 +87,22 @@ public abstract class CommandLine implements Iterable<Parameter> {
 						e, null);
 				}
 				try {
-					parser.parse(this.listener, args);
-					if (this.help
-						.isPresent()) { throw new HelpRequestedException(parser.getHelpMessage(executableName, null)); }
+					parser.parse(ctx, args);
+					if (this.help.isPresent()) { throw new HelpRequestedException(
+						parser.getHelpMessage(ctx, executableName, null)); }
 				} catch (Exception e) {
 					throw new CommandLineParseException(String
 						.format("A parsing error ocurred while parsing the command line %s", Arrays.toString(args)), e,
-						parser.getHelpMessage(executableName, e));
+						parser.getHelpMessage(ctx, executableName, e));
 				}
 			} finally {
-				parser.cleanup();
+				if (ctx != null) {
+					try {
+						parser.cleanup(ctx);
+					} finally {
+						ctx.clearState();
+					}
+				}
 			}
 		} finally {
 			l.unlock();
@@ -148,7 +145,7 @@ public abstract class CommandLine implements Iterable<Parameter> {
 			String.format("The long option value [%s] is not valid", longOpt)); }
 	}
 
-	public final Parameter define(ParameterDefinition def) throws DuplicateParameterDefinitionException {
+	public Parameter define(ParameterDefinition def) throws DuplicateParameterDefinitionException {
 		assertValid(def);
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
@@ -206,7 +203,7 @@ public abstract class CommandLine implements Iterable<Parameter> {
 	}
 
 	@Override
-	public final Iterator<Parameter> iterator() {
+	public Iterator<Parameter> iterator() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
@@ -351,7 +348,7 @@ public abstract class CommandLine implements Iterable<Parameter> {
 		}
 	}
 
-	public final List<String> getRemainingParameters() {
+	public List<String> getRemainingParameters() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
