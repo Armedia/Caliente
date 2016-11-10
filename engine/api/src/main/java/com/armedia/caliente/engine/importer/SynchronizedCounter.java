@@ -86,4 +86,9 @@ public final class SynchronizedCounter {
 			l.unlock();
 		}
 	}
+
+	@Override
+	public String toString() {
+		return String.format("SynchronizedCounter[%08x]", this.counter);
+	}
 }
