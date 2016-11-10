@@ -184,7 +184,7 @@ public class CommandLineTest {
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
 
-		cl.parse(new CommonsCliParser(), "TEST", args);
+		cl.parse("TEST", args);
 
 		Assert.assertTrue("a", a.getBoolean());
 		Assert.assertFalse("b", b.getBoolean());
@@ -225,7 +225,7 @@ public class CommandLineTest {
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
 
-		cl.parse(new CommonsCliParser(), "TEST", args);
+		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
 		Assert.assertEquals("b", Integer.valueOf(2), b.getInteger());
@@ -266,7 +266,7 @@ public class CommandLineTest {
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
 
-		cl.parse(new CommonsCliParser(), "TEST", args);
+		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", Long.valueOf(1), a.getLong());
 		Assert.assertEquals("b", Long.valueOf(2), b.getLong());
@@ -307,7 +307,7 @@ public class CommandLineTest {
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
 
-		cl.parse(new CommonsCliParser(), "TEST", args);
+		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", Float.valueOf(1.1f), a.getFloat());
 		Assert.assertEquals("b", Float.valueOf(2.2f), b.getFloat());
@@ -348,7 +348,7 @@ public class CommandLineTest {
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
 
-		cl.parse(new CommonsCliParser(), "TEST", args);
+		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", Double.valueOf(1.1), a.getDouble());
 		Assert.assertEquals("b", Double.valueOf(2.2), b.getDouble());
@@ -389,7 +389,7 @@ public class CommandLineTest {
 		def.setValueCount(-1);
 		Parameter c = cl.define(def);
 
-		cl.parse(new CommonsCliParser(), "TEST", args);
+		cl.parse("TEST", args);
 
 		Assert.assertEquals("a", "1", a.getString());
 		Assert.assertEquals("b", "2", b.getString());
@@ -431,7 +431,7 @@ public class CommandLineTest {
 			def.setShortOpt('d');
 			Parameter d = cl.define(def);
 
-			cl.parse(new CommonsCliParser(), "TEST", args);
+			cl.parse("TEST", args);
 
 			Assert.assertTrue(a.isPresent());
 			Assert.assertTrue(b.isPresent());
@@ -463,7 +463,7 @@ public class CommandLineTest {
 			def.setLongOpt("long-d");
 			Parameter d = cl.define(def);
 
-			cl.parse(new CommonsCliParser(), "TEST", args);
+			cl.parse("TEST", args);
 
 			Assert.assertTrue(a.isPresent());
 			Assert.assertTrue(b.isPresent());
@@ -490,7 +490,7 @@ public class CommandLineTest {
 			def.setShortOpt('a');
 			Parameter a = cl.define(def);
 
-			cl.parse(new CommonsCliParser(), "TEST", args);
+			cl.parse("TEST", args);
 
 			Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
 			List<String> remaining = cl.getRemainingParameters();
@@ -512,7 +512,7 @@ public class CommandLineTest {
 			def.setShortOpt('a');
 			Parameter a = cl.define(def);
 
-			cl.parse(new CommonsCliParser(), "TEST", args);
+			cl.parse("TEST", args);
 
 			Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
 			List<String> remaining = cl.getRemainingParameters();

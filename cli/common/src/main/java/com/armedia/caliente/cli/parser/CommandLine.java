@@ -86,8 +86,17 @@ public class CommandLine implements Iterable<Parameter> {
 		this.remainingParameters.addAll(remaining);
 	}
 
+	public final void parse(String executableName, String... args)
+		throws CommandLineParseException, HelpRequestedException {
+		parse(new CommonsCliParser(), executableName, args);
+	}
+
 	public final void parse(CommandLineParser parser, String executableName, String... args)
 		throws CommandLineParseException, HelpRequestedException {
+		if (parser == null) { throw new IllegalArgumentException("Must provide a parser implementation"); }
+		if (executableName == null) {
+			executableName = "Command Line";
+		}
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
 		try {
