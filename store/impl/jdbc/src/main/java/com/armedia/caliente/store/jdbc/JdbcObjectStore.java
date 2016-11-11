@@ -511,30 +511,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 								historyId = String.format("%08x", objNum);
 							}
 
-							// Do the tier checking
-							if (!Tools.equals(currentTier, tierId)) {
-								if (currentTier != null) {
-									if (this.log.isDebugEnabled()) {
-										this.log.debug(String.format("CLOSE TIER: %d", currentTier));
-									}
-									if (!handler.endTier(true)) {
-										this.log.warn(String.format("%s tier [%d] requested processing cancellation",
-											type.name(), tierId));
-										currentTier = null;
-										break;
-									}
-								}
-
-								if (this.log.isDebugEnabled()) {
-									this.log.debug(String.format("NEW TIER: %s", tierId));
-								}
-								if (!handler.newTier(tierId)) {
-									this.log.warn(String.format("%s tier [%s] skipped", type.name(), tierId));
-									continue;
-								}
-								currentTier = tierId;
-							}
-
 							// Do the history checking
 							if (!Tools.equals(currentHistory, historyId)) {
 								if (currentHistory != null) {
@@ -547,6 +523,30 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 										currentHistory = null;
 										break;
 									}
+								}
+
+								// Do the tier checking
+								if (!Tools.equals(currentTier, tierId)) {
+									if (currentTier != null) {
+										if (this.log.isDebugEnabled()) {
+											this.log.debug(String.format("CLOSE TIER: %d", currentTier));
+										}
+										if (!handler.endTier(true)) {
+											this.log.warn(String.format(
+												"%s tier [%d] requested processing cancellation", type.name(), tierId));
+											currentTier = null;
+											break;
+										}
+									}
+
+									if (this.log.isDebugEnabled()) {
+										this.log.debug(String.format("NEW TIER: %s", tierId));
+									}
+									if (!handler.newTier(tierId)) {
+										this.log.warn(String.format("%s tier [%s] skipped", type.name(), tierId));
+										continue;
+									}
+									currentTier = tierId;
 								}
 
 								if (this.log.isDebugEnabled()) {
