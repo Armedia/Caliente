@@ -1,21 +1,59 @@
 package com.armedia.caliente.cli.parser;
 
-public interface ParameterDefinition {
+import com.armedia.commons.utilities.Tools;
 
-	public boolean isRequired();
+public abstract class ParameterDefinition {
 
-	public String getDescription();
+	public static final char DEFAULT_VALUE_SEP = ',';
 
-	public String getLongOpt();
+	protected String getKey() {
+		return ParameterDefinition.calculateKey(getLongOpt(), getShortOpt());
+	}
 
-	public Character getShortOpt();
+	public abstract boolean isRequired();
 
-	public Character getValueSep();
+	public abstract String getDescription();
 
-	public String getValueName();
+	public abstract String getLongOpt();
 
-	public int getValueCount();
+	public abstract Character getShortOpt();
 
-	public boolean isValueOptional();
+	public abstract Character getValueSep();
 
+	public abstract String getValueName();
+
+	public abstract int getValueCount();
+
+	public abstract boolean isValueOptional();
+
+	@Override
+	public int hashCode() {
+		return getKey().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == this) { return true; }
+		if (!Tools.baseEquals(this, o)) { return false; }
+		ParameterDefinition other = ParameterDefinition.class.cast(o);
+		return Tools.equals(this.getKey(), other.getKey());
+	}
+
+	static String calculateKey(ParameterDefinition def) {
+		if (def == null) { throw new IllegalArgumentException(
+			"Must provide a parameter definition to calculate a key for"); }
+		return ParameterDefinition.calculateKey(def.getLongOpt(), def.getShortOpt());
+	}
+
+	static String calculateKey(String longOpt, String shortOpt) {
+		if ((longOpt == null) && (shortOpt == null)) { throw new IllegalArgumentException(
+			"Must provide one or both short and long options"); }
+		String opt = (longOpt != null ? longOpt : shortOpt.toString());
+		String prefix = (longOpt != null ? "-" : "");
+		return String.format("-%s%s", prefix, opt);
+	}
+
+	static String calculateKey(String longOpt, Character shortOpt) {
+		return ParameterDefinition.calculateKey(longOpt, shortOpt != null ? shortOpt.toString() : null);
+	}
 }

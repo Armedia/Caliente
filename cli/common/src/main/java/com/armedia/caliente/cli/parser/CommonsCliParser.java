@@ -2,9 +2,9 @@ package com.armedia.caliente.cli.parser;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -26,16 +26,6 @@ public class CommonsCliParser extends CommandLineParser {
 
 	private static final String STATE = "state";
 
-	private String getOptionKey(Option o) {
-		String prefix = "--";
-		String key = o.getLongOpt();
-		if (key == null) {
-			key = o.getOpt();
-			prefix = "-";
-		}
-		return String.format("%s%s", prefix, key);
-	}
-
 	private State getState(Context ctx) {
 		State state = ctx.getState(CommonsCliParser.STATE, State.class);
 		if (state == null) { throw new IllegalStateException(
@@ -44,12 +34,12 @@ public class CommonsCliParser extends CommandLineParser {
 	}
 
 	@Override
-	protected void init(Context ctx, String executableName, Set<Parameter> def) throws Exception {
+	protected void init(Context ctx, String executableName, Collection<Parameter> def) throws Exception {
 		final State state = new State(executableName);
 		for (Parameter p : def) {
 			Option o = CommonsCliParser.buildOption(p.getDefinition());
 			state.options.addOption(o);
-			String key = getOptionKey(o);
+			String key = CommonsCliParser.calculateKey(o);
 			Parameter old = state.parameters.put(key, p);
 			if (old != null) { throw new Exception(
 				String.format("Duplicate parameter definition for option [%s]", key)); }
@@ -64,7 +54,7 @@ public class CommonsCliParser extends CommandLineParser {
 		final org.apache.commons.cli.CommandLine cli = parser.parse(state.options, args);
 
 		for (Option o : cli.getOptions()) {
-			String key = getOptionKey(o);
+			String key = CommonsCliParser.calculateKey(o);
 			Parameter p = state.parameters.get(key);
 			if (p == null) { throw new Exception(
 				String.format("Failed to locate a parameter for option [%s] which should have been there", key)); }
@@ -117,5 +107,10 @@ public class CommonsCliParser extends CommandLineParser {
 			}
 		}
 		return b.build();
+	}
+
+	static String calculateKey(Option o) {
+		if (o == null) { throw new IllegalArgumentException("Must provide an option whose key to calculate"); }
+		return ParameterDefinition.calculateKey(o.getLongOpt(), o.getOpt());
 	}
 }

@@ -266,6 +266,8 @@ public class CommandLineTest {
 		Assert.assertTrue("a-def", a.getBoolean(false));
 		Assert.assertFalse("b", b.getBoolean());
 		Assert.assertFalse("b-def", b.getBoolean(true));
+		Assert.assertEquals("a-dual", b.getBoolean(), cl.getBoolean(b));
+		Assert.assertEquals("a-dual-def", b.getBoolean(false), cl.getBoolean(b, false));
 		List<Boolean> C = c.getAllBooleans();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -316,6 +318,8 @@ public class CommandLineTest {
 
 		Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
 		Assert.assertEquals("a-def", 1, a.getInteger(2));
+		Assert.assertEquals("a-dual", b.getInteger(), cl.getInteger(b));
+		Assert.assertEquals("a-dual-def", b.getInteger(2), cl.getInteger(b, 2));
 		Assert.assertEquals("b", Integer.valueOf(2), b.getInteger());
 		Assert.assertEquals("b-def", 2, b.getInteger(3));
 		List<Integer> C = c.getAllIntegers();
@@ -374,6 +378,8 @@ public class CommandLineTest {
 		Assert.assertEquals("a-def", 1, a.getLong(2));
 		Assert.assertEquals("b", Long.valueOf(2), b.getLong());
 		Assert.assertEquals("b-def", 2, b.getLong(3));
+		Assert.assertEquals("a-dual", b.getLong(), cl.getLong(b));
+		Assert.assertEquals("a-dual-def", b.getLong(2), cl.getLong(b, 2));
 		List<Long> C = c.getAllLongs();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -430,6 +436,8 @@ public class CommandLineTest {
 		Assert.assertEquals("a-def", Float.valueOf(1.1f), a.getFloat(2.2f), 0.0f);
 		Assert.assertEquals("b", Float.valueOf(2.2f), b.getFloat());
 		Assert.assertEquals("b-def", Float.valueOf(2.2f), b.getFloat(1.1f), 0.0f);
+		Assert.assertEquals("a-dual", b.getFloat(), cl.getFloat(b));
+		Assert.assertEquals("a-dual-def", b.getFloat(2), cl.getFloat(b, 2), 0.0f);
 		List<Float> C = c.getAllFloats();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -485,6 +493,8 @@ public class CommandLineTest {
 		Assert.assertEquals("a-def", Double.valueOf(1.1), a.getDouble(2.2), 0.0);
 		Assert.assertEquals("b", Double.valueOf(2.2), b.getDouble());
 		Assert.assertEquals("b-def", Double.valueOf(2.2), b.getDouble(3.3), 0.0);
+		Assert.assertEquals("a-dual", b.getDouble(), cl.getDouble(b));
+		Assert.assertEquals("a-dual-def", b.getDouble(2), cl.getDouble(b, 2), 0.0);
 		List<Double> C = c.getAllDoubles();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -540,6 +550,8 @@ public class CommandLineTest {
 		Assert.assertEquals("a-def", "1", a.getString("x"));
 		Assert.assertEquals("b", "2", b.getString());
 		Assert.assertEquals("b-def", "2", b.getString("x"));
+		Assert.assertEquals("a-dual", b.getString(), cl.getString(b));
+		Assert.assertEquals("a-dual-def", b.getString("x"), cl.getString(b, "x"));
 		List<String> C = c.getAllStrings();
 		Assert.assertNotNull(C);
 		List<String> CS = c.getAllStrings();
@@ -589,9 +601,11 @@ public class CommandLineTest {
 			cl.parse("TEST", args);
 
 			Assert.assertTrue(a.isPresent());
+			Assert.assertEquals(a.isPresent(), cl.isPresent(a));
 			Assert.assertTrue(b.isPresent());
 			Assert.assertTrue(c.isPresent());
 			Assert.assertFalse(d.isPresent());
+			Assert.assertEquals(d.isPresent(), cl.isPresent(d));
 		}
 		// Long options
 		{
@@ -621,9 +635,11 @@ public class CommandLineTest {
 			cl.parse("TEST", args);
 
 			Assert.assertTrue(a.isPresent());
+			Assert.assertEquals(a.isPresent(), cl.isPresent(a));
 			Assert.assertTrue(b.isPresent());
 			Assert.assertTrue(c.isPresent());
 			Assert.assertFalse(d.isPresent());
+			Assert.assertEquals(d.isPresent(), cl.isPresent(d));
 		}
 	}
 
@@ -741,5 +757,51 @@ public class CommandLineTest {
 			Assert.assertTrue(longOptions.remove(actual));
 		}
 		Assert.assertTrue(longOptions.isEmpty());
+	}
+
+	@Test
+	public void testGetParameter() throws Exception {
+		CommandLine cl = new CommandLine();
+		Assert.assertNotNull(cl);
+
+		MutableParameterDefinition def = null;
+
+		def = new MutableParameterDefinition();
+
+		def.setShortOpt('a');
+		Parameter a = cl.define(def);
+
+		def.setShortOpt('b');
+		Parameter b = cl.define(def);
+
+		def = new MutableParameterDefinition();
+
+		def.setLongOpt("ab");
+		Parameter ab = cl.define(def);
+
+		def.setLongOpt("cd");
+		Parameter cd = cl.define(def);
+
+		String[] args = {
+			"-a", "--ab"
+		};
+
+		cl.parse("TEST", args);
+
+		Assert.assertTrue(cl.isParameterDefined(a));
+		Assert.assertSame(a, cl.getParameterFromDefinition(a));
+		Assert.assertTrue(cl.isPresent(a));
+
+		Assert.assertTrue(cl.isParameterDefined(b));
+		Assert.assertSame(b, cl.getParameterFromDefinition(b));
+		Assert.assertFalse(cl.isPresent(b));
+
+		Assert.assertTrue(cl.isParameterDefined(ab));
+		Assert.assertSame(ab, cl.getParameterFromDefinition(ab));
+		Assert.assertTrue(cl.isPresent(ab));
+
+		Assert.assertTrue(cl.isParameterDefined(cd));
+		Assert.assertSame(cd, cl.getParameterFromDefinition(cd));
+		Assert.assertFalse(cl.isPresent(cd));
 	}
 }

@@ -9,9 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -44,11 +42,11 @@ public class CommandLine implements Iterable<Parameter> {
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private final Map<Character, Parameter> shortOptions = new TreeMap<>();
 	private final Map<String, Parameter> longOptions = new TreeMap<>();
-	private final Set<Parameter> parameters = new TreeSet<>();
+	private final Map<String, Parameter> parameters = new TreeMap<>();
 
 	private final Parameter help;
 
-	private final Map<Parameter, List<String>> values = new HashMap<>();
+	private final Map<String, List<String>> values = new HashMap<>();
 	private final List<String> remainingParameters = new ArrayList<>();
 
 	public CommandLine() {
@@ -76,7 +74,7 @@ public class CommandLine implements Iterable<Parameter> {
 		for (String s : values) {
 			l.add(s);
 		}
-		this.values.put(p, Tools.freezeList(l));
+		this.values.put(p.getKey(), Tools.freezeList(l));
 	}
 
 	final void addRemainingParameters(Collection<String> remaining) {
@@ -110,7 +108,8 @@ public class CommandLine implements Iterable<Parameter> {
 			CommandLineParser.Context ctx = null;
 			try {
 				try {
-					ctx = parser.initContext(this, executableName, Tools.freezeSet(this.parameters));
+					ctx = parser.initContext(this, executableName,
+						Collections.unmodifiableCollection(this.parameters.values()));
 				} catch (Exception e) {
 					throw new CommandLineParseException(
 						String.format("A initialization error ocurred while initializing the command-line parser",
@@ -148,13 +147,19 @@ public class CommandLine implements Iterable<Parameter> {
 		return (longOpt != null);
 	}
 
-	private void assertValid(Parameter param) {
+	private <P extends ParameterDefinition> void assertValid(P param) {
 		Objects.requireNonNull(param, "Must provide a parameter whose presence to check for");
-		if (param.getCLI() != this) { throw new IllegalArgumentException(
-			"The given parameter is not associated to this command-line interface"); }
+		String key = param.getKey();
+		if (key == null) { throw new IllegalArgumentException(
+			"The given parameter definition does not define a valid key"); }
+		if (Parameter.class.isInstance(param)) {
+			Parameter p = Parameter.class.cast(param);
+			if (p.getCLI() != this) { throw new IllegalArgumentException(
+				"The given parameter is not associated to this command-line interface"); }
+		}
 	}
 
-	private void assertValid(ParameterDefinition def) throws InvalidParameterDefinitionException {
+	private void assertValidDefinition(ParameterDefinition def) throws InvalidParameterDefinitionException {
 		if (def == null) { throw new InvalidParameterDefinitionException("Parameter definition may not be null"); }
 
 		final Character shortOpt = def.getShortOpt();
@@ -191,7 +196,7 @@ public class CommandLine implements Iterable<Parameter> {
 	private final Parameter define(ParameterDefinition def, boolean unchecked)
 		throws DuplicateParameterDefinitionException, InvalidParameterDefinitionException {
 		if (!unchecked) {
-			assertValid(def);
+			assertValidDefinition(def);
 		}
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
@@ -237,7 +242,7 @@ public class CommandLine implements Iterable<Parameter> {
 			if (longOpt != null) {
 				this.longOptions.put(longOpt, ret);
 			}
-			this.parameters.add(ret);
+			this.parameters.put(ret.getKey(), ret);
 			return ret;
 		} finally {
 			l.unlock();
@@ -254,7 +259,7 @@ public class CommandLine implements Iterable<Parameter> {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			return Tools.freezeSet(this.parameters).iterator();
+			return Tools.freezeList(new ArrayList<>(this.parameters.values())).iterator();
 		} finally {
 			l.unlock();
 		}
@@ -320,6 +325,25 @@ public class CommandLine implements Iterable<Parameter> {
 		}
 	}
 
+	public final boolean isParameterDefined(ParameterDefinition parameter) {
+		return (getParameterFromDefinition(parameter) != null);
+	}
+
+	public final Parameter getParameterFromDefinition(ParameterDefinition parameter) {
+		if (parameter == null) { throw new IllegalArgumentException(
+			"Must provide a parameter definition to retrieve"); }
+		final String key = parameter.getKey();
+		if (key == null) { throw new IllegalArgumentException(
+			"The parameter definition given doesn't generate a valid key"); }
+		final Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			return this.parameters.get(key);
+		} finally {
+			l.unlock();
+		}
+	}
+
 	public final boolean hasHelpParameter() {
 		return (this.help != null);
 	}
@@ -328,17 +352,17 @@ public class CommandLine implements Iterable<Parameter> {
 		return this.help;
 	}
 
-	final Boolean getBoolean(Parameter param) {
+	public final Boolean getBoolean(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Tools.toBoolean(s) : null);
 	}
 
-	final boolean getBoolean(Parameter param, boolean def) {
+	public final boolean getBoolean(ParameterDefinition param, boolean def) {
 		Boolean v = getBoolean(param);
 		return (v != null ? v.booleanValue() : def);
 	}
 
-	final List<Boolean> getAllBooleans(Parameter param) {
+	public final List<Boolean> getAllBooleans(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -349,17 +373,17 @@ public class CommandLine implements Iterable<Parameter> {
 		return Tools.freezeList(r);
 	}
 
-	final Integer getInteger(Parameter param) {
+	public final Integer getInteger(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Integer.valueOf(s) : null);
 	}
 
-	final int getInteger(Parameter param, int def) {
+	public final int getInteger(ParameterDefinition param, int def) {
 		Integer v = getInteger(param);
 		return (v != null ? v.intValue() : def);
 	}
 
-	final List<Integer> getAllIntegers(Parameter param) {
+	public final List<Integer> getAllIntegers(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -370,17 +394,17 @@ public class CommandLine implements Iterable<Parameter> {
 		return Tools.freezeList(r);
 	}
 
-	final Long getLong(Parameter param) {
+	public final Long getLong(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Long.valueOf(s) : null);
 	}
 
-	final long getLong(Parameter param, long def) {
+	public final long getLong(ParameterDefinition param, long def) {
 		Long v = getLong(param);
 		return (v != null ? v.longValue() : def);
 	}
 
-	final List<Long> getAllLongs(Parameter param) {
+	public final List<Long> getAllLongs(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -391,17 +415,17 @@ public class CommandLine implements Iterable<Parameter> {
 		return Tools.freezeList(r);
 	}
 
-	final Float getFloat(Parameter param) {
+	public final Float getFloat(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Float.valueOf(s) : null);
 	}
 
-	final float getFloat(Parameter param, float def) {
+	public final float getFloat(ParameterDefinition param, float def) {
 		Float v = getFloat(param);
 		return (v != null ? v.floatValue() : def);
 	}
 
-	final List<Float> getAllFloats(Parameter param) {
+	public final List<Float> getAllFloats(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -412,18 +436,18 @@ public class CommandLine implements Iterable<Parameter> {
 		return Tools.freezeList(r);
 	}
 
-	final Double getDouble(Parameter param) {
+	public final Double getDouble(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Double.valueOf(s) : null);
 	}
 
-	final double getDouble(Parameter param, double def) {
+	public final double getDouble(ParameterDefinition param, double def) {
 		assertValid(param);
 		Double v = getDouble(param);
 		return (v != null ? v.doubleValue() : def);
 	}
 
-	final List<Double> getAllDoubles(Parameter param) {
+	public final List<Double> getAllDoubles(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -434,35 +458,35 @@ public class CommandLine implements Iterable<Parameter> {
 		return Tools.freezeList(r);
 	}
 
-	final String getString(Parameter param) {
+	public final String getString(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if ((l == null) || l.isEmpty()) { return null; }
 		return l.get(0);
 	}
 
-	final String getString(Parameter param, String def) {
+	public final String getString(ParameterDefinition param, String def) {
 		assertValid(param);
 		final String v = getString(param);
 		return (v != null ? v : def);
 	}
 
-	final List<String> getAllStrings(Parameter param) {
+	public final List<String> getAllStrings(ParameterDefinition param) {
 		assertValid(param);
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			return this.values.get(param);
+			return this.values.get(param.getKey());
 		} finally {
 			l.unlock();
 		}
 	}
 
-	final boolean isPresent(Parameter param) {
+	public final boolean isPresent(ParameterDefinition param) {
 		assertValid(param);
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			return this.values.containsKey(param);
+			return this.values.containsKey(param.getKey());
 		} finally {
 			l.unlock();
 		}

@@ -83,13 +83,13 @@ public abstract class CommandLineParser {
 		}
 	}
 
-	final Context initContext(CommandLine cl, String executableName, Set<Parameter> def) throws Exception {
+	final Context initContext(CommandLine cl, String executableName, Collection<Parameter> def) throws Exception {
 		Context ctx = new Context(cl);
 		init(ctx, executableName, def);
 		return ctx;
 	}
 
-	protected abstract void init(Context ctx, String executableName, Set<Parameter> def) throws Exception;
+	protected abstract void init(Context ctx, String executableName, Collection<Parameter> def) throws Exception;
 
 	protected abstract void parse(final Context ctx, String... parameters) throws Exception;
 

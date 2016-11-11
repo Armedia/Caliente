@@ -2,9 +2,7 @@ package com.armedia.caliente.cli.parser;
 
 import com.armedia.commons.utilities.Tools;
 
-public class MutableParameterDefinition implements ParameterDefinition, Cloneable {
-
-	public static final char DEFAULT_VALUE_SEP = ',';
+public final class MutableParameterDefinition extends ParameterDefinition implements Cloneable {
 
 	protected boolean required = false;
 	protected String description = null;
