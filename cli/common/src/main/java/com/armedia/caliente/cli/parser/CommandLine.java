@@ -35,7 +35,7 @@ public class CommandLine implements Iterable<Parameter> {
 		HELP = help;
 	}
 
-	protected static final String[] NO_PARAM = {};
+	protected static final String[] NO_ARGS = {};
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -86,6 +86,18 @@ public class CommandLine implements Iterable<Parameter> {
 		this.remainingParameters.addAll(remaining);
 	}
 
+	public final void parse(String executableName, Collection<String> args) throws CommandLineParseException {
+		parse(new CommonsCliParser(), executableName, args);
+	}
+
+	public final void parse(CommandLineParser parser, String executableName, Collection<String> args)
+		throws CommandLineParseException {
+		if (args == null) {
+			args = Collections.emptyList();
+		}
+		parse(parser, executableName, (args.isEmpty() ? CommandLine.NO_ARGS : args.toArray(CommandLine.NO_ARGS)));
+	}
+
 	public final void parse(String executableName, String... args) throws CommandLineParseException {
 		parse(new CommonsCliParser(), executableName, args);
 	}
@@ -100,7 +112,7 @@ public class CommandLine implements Iterable<Parameter> {
 		l.lock();
 		try {
 			if (args == null) {
-				args = CommandLine.NO_PARAM;
+				args = CommandLine.NO_ARGS;
 			}
 			// Clear the current state
 			this.values.clear();
