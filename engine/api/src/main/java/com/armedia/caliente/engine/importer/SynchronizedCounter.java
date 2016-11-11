@@ -25,7 +25,7 @@ public final class SynchronizedCounter {
 		Lock l = this.rwLock.writeLock();
 		l.lock();
 		try {
-			long ret = this.counter++;
+			long ret = (this.counter += c);
 			this.changed.signal();
 			return ret;
 		} finally {

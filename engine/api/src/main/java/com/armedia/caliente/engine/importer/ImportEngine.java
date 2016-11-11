@@ -56,7 +56,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private class BatchWorker implements Callable<Map<String, Collection<ImportOutcome>>> {
 
-		private final SynchronizedCounter synchronizedCounter;
+		private final SynchronizedCounter workerCounter;
 
 		private final Logger log = LoggerFactory.getLogger(getClass());
 		private final SessionFactory<S> sessionFactory;
@@ -78,8 +78,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			this.contextFactory = contextFactory;
 			this.delegateFactory = delegateFactory;
 			this.typeMapper = typeMapper;
-			this.synchronizedCounter = synchronizedCounter;
-			synchronizedCounter.increment();
+			this.workerCounter = synchronizedCounter;
+			this.workerCounter.increment();
 		}
 
 		@Override
@@ -205,7 +205,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			} finally {
 				this.log.debug("Worker exiting...");
-				this.synchronizedCounter.decrement();
+				this.workerCounter.decrement();
 			}
 		}
 	}
@@ -633,7 +633,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			threadCount = getThreadCount(settings);
 		}
 
-		final SynchronizedCounter synchronizedCounter = new SynchronizedCounter();
+		final SynchronizedCounter workerCounter = new SynchronizedCounter();
 		final ExecutorService parallelExecutor = newExecutor(threadCount);
 		final ExecutorService singleExecutor = Executors.newSingleThreadExecutor();
 
@@ -792,6 +792,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						@Override
 						public boolean newTier(int tier) throws CmfStorageException {
 							this.tierId = tier;
+							output.info("Starting to process {} tier {}", type.name(), tier);
 							return true;
 						}
 
@@ -819,7 +820,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							try {
 								executor.submit(
 									new BatchWorker(new Batch(storedType, this.historyId, this.contents, strategy),
-										synchronizedCounter, sessionFactory, listenerDelegator, importState,
+										workerCounter, sessionFactory, listenerDelegator, importState,
 										contextFactory, delegateFactory, typeMapper));
 							} finally {
 								this.contents = null;
@@ -833,10 +834,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							// TODO: Wait for the currently-running tier to complete.
 							// i.e. wait until the workers are idle
 							try {
-								synchronizedCounter.waitUntil(0);
+								workerCounter.waitUntil(0);
 							} catch (InterruptedException e) {
 								throw new CmfStorageException(String.format(
 									"Thread interrupted while waiting for tier [%d] to complete", this.tierId), e);
+							} finally {
+								output.info("Completed processing {} tier {}", type.name(), this.tierId);
 							}
 							this.tierId = null;
 							return ok;
@@ -855,7 +858,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						// Here, we wait for all the workers to conclude
 						this.log.info(String.format("Waiting for the %s workers to exit...", type.name()));
 						try {
-							synchronizedCounter.waitUntil(0);
+							workerCounter.waitUntil(0);
 						} catch (InterruptedException e) {
 							this.log.warn("Interrupted while waiting for an executor thread to exit", e);
 							Thread.currentThread().interrupt();
@@ -886,12 +889,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			// If there are still pending workers, then wait for them to finish for up to 5
 			// minutes
-			long pending = synchronizedCounter.get();
+			long pending = workerCounter.get();
 			if (pending > 0) {
 				this.log.info(String.format(
 					"Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)", pending));
 				try {
-					synchronizedCounter.waitUntil(0, 5, TimeUnit.MINUTES);
+					workerCounter.waitUntil(0, 5, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for normal executor termination", e);
 					Thread.currentThread().interrupt();
@@ -902,13 +905,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			parallelExecutor.shutdownNow();
 			singleExecutor.shutdownNow();
 
-			long pending = synchronizedCounter.get();
+			long pending = workerCounter.get();
 			if (pending > 0) {
 				try {
 					this.log.info(String.format(
 						"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
 						pending));
-					synchronizedCounter.waitUntil(0, 1, TimeUnit.MINUTES);
+					workerCounter.waitUntil(0, 1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);
 					Thread.currentThread().interrupt();
