@@ -43,6 +43,9 @@ public abstract class Launcher<K> {
 	protected abstract Collection<ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
 		int pass);
 
+	protected void processCommandLine(CommandLineValues commandLine) {
+	}
+
 	/**
 	 * <p>
 	 * Returns the name to be given to this executable after the given command parsing pass. The
@@ -92,6 +95,9 @@ public abstract class Launcher<K> {
 			}
 		}
 
+		// Process the parameters given...
+		processCommandLine(cl);
+
 		if (ClasspathPatcher.discoverPatches(getClasspathPatcherFilter(cl), false)) {
 			for (String s : ClasspathPatcher.getAdditions()) {
 				this.log.info("Classpath addition: [{}]", s);
@@ -128,12 +134,12 @@ public abstract class Launcher<K> {
 		*/
 
 		try {
-			return run();
+			return run(cl);
 		} catch (Exception e) {
 			this.log.error("Exception caught", e);
 			return 1;
 		}
 	}
 
-	protected abstract int run() throws Exception;
+	protected abstract int run(CommandLineValues commandLine) throws Exception;
 }
