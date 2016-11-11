@@ -418,9 +418,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 								}
 							}
 						} catch (SQLException e) {
-							throw new CmfStorageException(
-								"Exception raised while loading objects - ObjectHandler did not handle the exception",
-								e);
+							throw handlerExceptionUnhandled(e);
 						}
 						return obj;
 					}
@@ -627,9 +625,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							}
 						} catch (SQLException e) {
 							// TODO: WTF?!?! Why is it detecting this when it's clearly impossible?
-							if (!handler.handleException(e)) { throw new CmfStorageException(
-								"Exception raised while loading objects - ObjectHandler did not handle the exception",
-								e); }
+							if (!handler.handleException(e)) {
+								handlerExceptionUnhandled(e);
+							}
 							continue;
 						}
 
@@ -688,6 +686,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			throw new CmfStorageException(
 				String.format("Exception raised trying to deserialize objects of type [%s]", type), e);
 		}
+	}
+
+	private CmfStorageException handlerExceptionUnhandled(SQLException e) throws CmfStorageException {
+		return new CmfStorageException(
+			"Exception raised while loading objects - ObjectHandler did not handle the exception", e);
 	}
 
 	@Override
