@@ -792,7 +792,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						@Override
 						public boolean newTier(int tier) throws CmfStorageException {
 							this.tierId = tier;
-							output.info("Starting to process {} tier {}", type.name(), tier);
+							output.info("Processing {} tier {}", type.name(), tier);
 							return true;
 						}
 
@@ -820,8 +820,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							try {
 								executor.submit(
 									new BatchWorker(new Batch(storedType, this.historyId, this.contents, strategy),
-										workerCounter, sessionFactory, listenerDelegator, importState,
-										contextFactory, delegateFactory, typeMapper));
+										workerCounter, sessionFactory, listenerDelegator, importState, contextFactory,
+										delegateFactory, typeMapper));
 							} finally {
 								this.contents = null;
 								this.historyId = null;
@@ -839,7 +839,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								throw new CmfStorageException(String.format(
 									"Thread interrupted while waiting for tier [%d] to complete", this.tierId), e);
 							} finally {
-								output.info("Completed processing {} tier {}", type.name(), this.tierId);
+								output.info("Completed {} tier {}", type.name(), this.tierId);
 							}
 							this.tierId = null;
 							return ok;
