@@ -20,6 +20,7 @@ import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmDataType;
+import com.armedia.caliente.engine.documentum.DctmVdocMember;
 import com.armedia.caliente.engine.documentum.DfUtils;
 import com.armedia.caliente.engine.documentum.DfValueFactory;
 import com.armedia.caliente.engine.documentum.common.DctmDocument;
@@ -66,38 +67,38 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		if (!super.getDataProperties(ctx, properties, document)) { return false; }
 
 		List<Version<IDfDocument>> history = getVersionHistory(ctx, document);
-		properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_COUNT,
-			DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(history.size())));
+		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, DctmDataType.DF_INTEGER.getStoredType(),
+			false, DfValueFactory.newIntValue(history.size())));
 		Integer historyIndex = getVersionIndex(document, ctx);
 		if (historyIndex != null) {
-			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_INDEX,
+			properties.add(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
 				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(historyIndex)));
 			historyIndex = getHeadIndex(document, ctx);
 			if (historyIndex != null) {
-				properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_HEAD_INDEX,
+				properties.add(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
 					DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(historyIndex)));
 			}
 		}
 
 		List<IDfValue> patches = getVersionPatches(document, ctx);
 		if ((patches != null) && !patches.isEmpty()) {
-			properties.add(new CmfProperty<IDfValue>(DctmSysObject.VERSION_PATCHES,
-				DctmDataType.DF_STRING.getStoredType(), true, patches));
+			properties.add(new CmfProperty<>(DctmSysObject.VERSION_PATCHES, DctmDataType.DF_STRING.getStoredType(),
+				true, patches));
 		}
 		IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
 		if (patchAntecedent != null) {
-			properties.add(new CmfProperty<IDfValue>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID.getStoredType(),
-				false, patchAntecedent));
+			properties.add(new CmfProperty<>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID.getStoredType(), false,
+				patchAntecedent));
 		}
 
 		if (ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)) {
-			properties.add(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_TREE_ROOT,
+			properties.add(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
 				IntermediateProperty.VERSION_TREE_ROOT.type, DfValueFactory.newBooleanValue(true)));
 		}
 
 		// If this is a virtual document, we export the document's components first
 		if (document.isVirtualDocument() || (document.getLinkCount() > 0)) {
-			CmfProperty<IDfValue> p = new CmfProperty<IDfValue>(IntermediateProperty.VDOC_MEMBER,
+			CmfProperty<IDfValue> p = new CmfProperty<>(IntermediateProperty.VDOC_MEMBER,
 				IntermediateProperty.VDOC_MEMBER.type);
 			properties.add(p);
 			final IDfVirtualDocument vDoc = document.asVirtualDocument("CURRENT", false);
@@ -105,9 +106,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			final int members = root.getChildCount();
 			for (int i = 0; i < members; i++) {
 				final IDfVirtualDocumentNode child = root.getChild(i);
-				p.addValue(DfValueFactory.newStringValue(String.format("[%s|%s|%s|%s|%s]{%s}", child.getId().getId(),
-					child.getChronId().getId(), child.getBinding(), child.getFollowAssembly(),
-					child.getOverrideLateBindingValue(), child.getSelectedObject().getObjectName())));
+				p.addValue(DfValueFactory.newStringValue(new DctmVdocMember(child).getEncoded()));
 
 			}
 		}
@@ -119,7 +118,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		if (document == null) { throw new IllegalArgumentException(
 			"Must provide a document whose versions to analyze"); }
 
-		final List<IDfDocument> ret = new LinkedList<IDfDocument>();
+		final List<IDfDocument> ret = new LinkedList<>();
 
 		boolean add = prior;
 		for (Version<IDfDocument> version : getVersionHistory(ctx, document)) {
@@ -198,7 +197,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 				break;
 			}
 		}
-		marshaled.setProperty(new CmfProperty<IDfValue>(IntermediateProperty.VERSION_TREE_ROOT,
+		marshaled.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
 			IntermediateProperty.VERSION_TREE_ROOT.type, DfValueFactory.newBooleanValue(rootObject)));
 		return req;
 	}
@@ -250,7 +249,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		final IDfSession session = ctx.getSession();
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
-		List<CmfContentInfo> cmfContentInfo = new ArrayList<CmfContentInfo>();
+		List<CmfContentInfo> cmfContentInfo = new ArrayList<>();
 		for (int i = 0; i < pageCount; i++) {
 			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
 				IDfQuery.DF_EXECREAD_QUERY);

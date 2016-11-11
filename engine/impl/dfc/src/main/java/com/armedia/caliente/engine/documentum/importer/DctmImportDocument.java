@@ -20,6 +20,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmDataType;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
+import com.armedia.caliente.engine.documentum.DctmVdocMember;
 import com.armedia.caliente.engine.documentum.DctmVersionNumber;
 import com.armedia.caliente.engine.documentum.DfUtils;
 import com.armedia.caliente.engine.documentum.DfValueFactory;
@@ -27,6 +28,7 @@ import com.armedia.caliente.engine.documentum.common.DctmDocument;
 import com.armedia.caliente.engine.documentum.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -35,7 +37,6 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
@@ -289,8 +290,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			for (IDfValue p : patches) {
 				// Now we checkout and checkin and branch and whatnot as necessary until we can
 				// actually proceed with the rest of the algorithm...
-				final CmfProperty<IDfValue> prop = new CmfProperty<IDfValue>(DctmAttributes.R_VERSION_LABEL,
-					CmfDataType.STRING, false, DfValueFactory.newStringValue(p.toString()));
+				final CmfProperty<IDfValue> prop = new CmfProperty<>(DctmAttributes.R_VERSION_LABEL, CmfDataType.STRING,
+					false, DfValueFactory.newStringValue(p.toString()));
 				if (substituteRoot) {
 					antecedentVersion.save();
 					// Don't need to do this again...
@@ -641,7 +642,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		// Not a format, so it must be a mime type... so we use its declared type, and the
 		// type identified from the stream
-		List<String> mimeTypes = new ArrayList<String>();
+		List<String> mimeTypes = new ArrayList<>();
 		if (aContentType != null) {
 			mimeTypes.add(aContentType);
 		}
@@ -780,9 +781,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 				context.printf("\tAdding %d Virtual Document child nodes for [%s](%s)", childCount,
 					this.cmfObject.getLabel(), this.cmfObject.getId());
 				for (IDfValue v : p) {
-					String[] s = v.asString().split("\\|");
+					DctmVdocMember member = new DctmVdocMember(v.asString());
 					Mapping m = context.getAttributeMapper().getTargetMapping(CmfType.DOCUMENT,
-						DctmAttributes.I_CHRONICLE_ID, s[0]);
+						DctmAttributes.I_CHRONICLE_ID, member.getChronicleId().getId());
 					if (m == null) { throw new ImportException(String.format(
 						"Virtual Document [%s](%s) references a component [%s] which could not be located (maybe it hasn't been imported yet?)",
 						this.cmfObject.getLabel(), this.cmfObject.getId(), v.asString())); }
@@ -792,10 +793,11 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 						"Virtual Document [%s](%s) references a component [%s] which could not be located, but may have failed during import",
 						this.cmfObject.getLabel(), this.cmfObject.getId(), m.getTargetValue())); }
 
-					final String childBinding = (StringUtils.isBlank(s[1]) ? "CURRENT" : s[1]);
+					final String childBinding = (StringUtils.isBlank(member.getBinding()) ? "CURRENT"
+						: member.getBinding());
 					final boolean childIsVirtualDoc = (so.isVirtualDocument() || (so.getLinkCount() > 0));
-					final boolean followAssembly = childIsVirtualDoc ? Boolean.valueOf(s[2]) : false;
-					final boolean overrideLateBinding = childIsVirtualDoc ? Boolean.valueOf(s[3]) : false;
+					final boolean followAssembly = childIsVirtualDoc ? member.isFollowAssembly() : false;
+					final boolean overrideLateBinding = childIsVirtualDoc ? member.isOverrideLateBinding() : false;
 
 					context.printf("\t\tAdding child node #%d (of %d) to VDoc [%s](%s) (%s|%s|%s|%s)", i, childCount,
 						this.cmfObject.getLabel(), this.cmfObject.getId(), so.getChronicleId().getId(), childBinding,
