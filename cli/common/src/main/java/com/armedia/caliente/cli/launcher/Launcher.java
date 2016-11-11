@@ -1,6 +1,7 @@
 package com.armedia.caliente.cli.launcher;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,8 +58,20 @@ public abstract class Launcher<K> {
 	 */
 	protected abstract String getProgramName(int pass);
 
+	protected Collection<ClasspathPatcher> getClasspathPatchersPre(CommandLineValues commandLine) {
+		return Collections.emptyList();
+	}
+
+	protected Collection<ClasspathPatcher> getClasspathPatchersPost(CommandLineValues commandLine) {
+		return Collections.emptyList();
+	}
+
 	protected final int launch(String... args) {
 		return launch(true, args);
+	}
+
+	protected void initLogging(CommandLineValues cl) {
+		// By default, do nothing...
 	}
 
 	protected final int launch(boolean supportsHelp, String... args) {
@@ -98,40 +111,37 @@ public abstract class Launcher<K> {
 		// Process the parameters given...
 		processCommandLine(cl);
 
-		if (ClasspathPatcher.discoverPatches(getClasspathPatcherFilter(cl), false)) {
-			for (String s : ClasspathPatcher.getAdditions()) {
-				this.log.info("Classpath addition: [{}]", s);
+		Collection<ClasspathPatcher> extraPatchers = getClasspathPatchersPre(cl);
+		if (extraPatchers != null) {
+			for (ClasspathPatcher p : extraPatchers) {
+				if (p != null) {
+					try {
+						p.applyPatches(false);
+					} catch (Exception e) {
+						throw new RuntimeException("Failed to apply the a-poriori classpath patches", e);
+					}
+				}
+			}
+		}
+		ClasspathPatcher.discoverPatches(getClasspathPatcherFilter(cl), false);
+		extraPatchers = getClasspathPatchersPost(cl);
+		if (extraPatchers != null) {
+			for (ClasspathPatcher p : extraPatchers) {
+				if (p != null) {
+					try {
+						p.applyPatches(false);
+					} catch (Exception e) {
+						throw new RuntimeException("Failed to apply the a-posteriori classpath patches", e);
+					}
+				}
 			}
 		}
 
-		// final boolean debug = CLIParam.debug.isPresent();
-		/*
-		if (CLIParam.dfc_prop.isPresent()) {
-			File f = new File(CLIParam.dfc_prop.getString("dfc.properties"));
-			try {
-				f = f.getCanonicalFile();
-			} catch (IOException e) {
-				// Do nothing...stay with the non-canonical path
-				f = f.getAbsoluteFile();
-			}
-			String error = null;
-			if ((error == null) && !f.exists()) {
-				error = "does not exist";
-			}
-			if ((error == null) && !f.isFile()) {
-				error = "is not a regular file";
-			}
-			if ((error == null) && !f.canRead()) {
-				error = "cannot be read";
-			}
-			if (error == null) {
-				System.setProperty(Launcher.DFC_PROPERTIES_PROP, f.getAbsolutePath());
-			} else {
-				this.log.warn("The DFC properties file [{}] {} - will continue using DFC defaults", f.getAbsolutePath(),
-					error);
-			}
+		initLogging(cl);
+
+		for (String s : ClasspathPatcher.getAdditions()) {
+			this.log.info("Classpath addition: [{}]", s);
 		}
-		*/
 
 		try {
 			return run(cl);

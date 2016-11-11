@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -144,4 +145,19 @@ public abstract class ClasspathPatcher {
 	}
 
 	public abstract Collection<URL> getPatches(boolean verbose) throws Exception;
+
+	public final Collection<URL> applyPatches(boolean verbose) throws Exception {
+		Collection<URL> patches = getPatches(verbose);
+		Collection<URL> applied = new ArrayList<>();
+		if (patches != null) {
+			for (URL u : patches) {
+				if (u == null) {
+					continue;
+				}
+				ClasspathPatcher.addToClassPath(u);
+				applied.add(u);
+			}
+		}
+		return applied;
+	}
 }
