@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "scan.t", propOrder = {
 	"items"
 })
-@XmlRootElement(name = "item")
+@XmlRootElement(name = "scan")
 public class Cache {
 	@XmlElement(name = "item", required = true)
 	protected List<CacheItem> items;
