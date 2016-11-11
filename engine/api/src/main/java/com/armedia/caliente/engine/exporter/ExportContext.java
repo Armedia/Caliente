@@ -19,7 +19,7 @@ import com.armedia.commons.utilities.CfgTools;
  */
 public class ExportContext<S, V, CF extends ExportContextFactory<S, ?, V, ?, ?>> extends TransferContext<S, V, CF> {
 
-	private final Stack<ExportTarget> referrents = new Stack<ExportTarget>();
+	private final Stack<ExportTarget> referrents = new Stack<>();
 
 	/**
 	 * @param rootId

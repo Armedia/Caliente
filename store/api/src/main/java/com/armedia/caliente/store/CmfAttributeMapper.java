@@ -61,7 +61,8 @@ public abstract class CmfAttributeMapper {
 		}
 
 		public boolean isSameTypeAndName(Mapping other) {
-			if (other == null) { throw new IllegalArgumentException("Must provide another mapping to compare against"); }
+			if (other == null) { throw new IllegalArgumentException(
+				"Must provide another mapping to compare against"); }
 			if (!Tools.equals(this.objectType, other.objectType)) { return false; }
 			if (!Tools.equals(this.mappingName, other.mappingName)) { return false; }
 			return true;

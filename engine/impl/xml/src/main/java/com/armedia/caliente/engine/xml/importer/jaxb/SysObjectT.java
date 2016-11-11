@@ -84,14 +84,14 @@ public class SysObjectT {
 
 	public List<AttributeT> getAttributes() {
 		if (this.attributes == null) {
-			this.attributes = new ArrayList<AttributeT>();
+			this.attributes = new ArrayList<>();
 		}
 		return this.attributes;
 	}
 
 	public List<PropertyT> getProperties() {
 		if (this.properties == null) {
-			this.properties = new ArrayList<PropertyT>();
+			this.properties = new ArrayList<>();
 		}
 		return this.properties;
 	}

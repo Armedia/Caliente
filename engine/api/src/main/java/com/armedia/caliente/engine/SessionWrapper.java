@@ -78,8 +78,8 @@ public abstract class SessionWrapper<S> {
 				rollbackTransaction();
 			}
 		} catch (Exception e) {
-			throw new RuntimeException(String.format("Failed to %s the current transaction", (commit ? "commit"
-				: "roll back")), e);
+			throw new RuntimeException(
+				String.format("Failed to %s the current transaction", (commit ? "commit" : "roll back")), e);
 		} finally {
 			this.openCount--;
 		}

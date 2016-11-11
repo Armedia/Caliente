@@ -37,7 +37,7 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 
 	@Override
 	public PooledObject<IDfSession> makeObject() throws Exception {
-		return new DefaultPooledObject<IDfSession>(this.factory.makeObject());
+		return new DefaultPooledObject<>(this.factory.makeObject());
 	}
 
 	@Override

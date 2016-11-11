@@ -121,7 +121,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 				final IDfDocument doc = IDfDocument.class.cast(this.session.getObjectByQualification(qualification));
 				Map<String, Object> settings = null;
 				if (doc != null) {
-					settings = new HashMap<String, Object>();
+					settings = new HashMap<>();
 					InputStream in = doc.getContent();
 					Properties props = new Properties();
 					try {
@@ -177,7 +177,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 				final IDfFolder exportFolder = getCmsmfStateFolder(true);
 				final String qualification = getJobQualification(jobName, exportFolder);
 				IDfDocument doc = IDfDocument.class.cast(this.session.getObjectByQualification(qualification));
-				Map<String, Object> m = new HashMap<String, Object>();
+				Map<String, Object> m = new HashMap<>();
 				if ((settings != null) && !settings.isEmpty()) {
 					m.putAll(settings);
 				}
@@ -264,7 +264,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 					// If we were able to find it, then we can certainly modify the query as
 					// required to safely apply the date filter
 					String objectType = m.group(1);
-					Map<String, Object> data = new HashMap<String, Object>();
+					Map<String, Object> data = new HashMap<>();
 					data.put("objectType", objectType);
 					data.put("dateColumn", dateColumnName);
 

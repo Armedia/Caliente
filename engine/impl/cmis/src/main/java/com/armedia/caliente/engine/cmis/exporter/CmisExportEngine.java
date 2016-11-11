@@ -145,7 +145,7 @@ public class CmisExportEngine extends
 				};
 			} else {
 				try {
-					return new CloseableIteratorWrapper<ExportTarget>(Collections
+					return new CloseableIteratorWrapper<>(Collections
 						.singleton(new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), obj.getId())));
 				} catch (CmisObjectNotFoundException e) {
 					return null;
@@ -157,9 +157,8 @@ public class CmisExportEngine extends
 		if (query != null) {
 			final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 				.isAllVersionsSearchableSupported();
-			return new CloseableIteratorWrapper<ExportTarget>(
-				new CmisPagingTransformerIterator<QueryResult, ExportTarget>(session.query(query, searchAllVersions),
-					this.transformer));
+			return new CloseableIteratorWrapper<>(
+				new CmisPagingTransformerIterator<>(session.query(query, searchAllVersions), this.transformer));
 		}
 		return null;
 	}

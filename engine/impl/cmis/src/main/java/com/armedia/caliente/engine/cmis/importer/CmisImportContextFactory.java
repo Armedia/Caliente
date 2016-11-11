@@ -83,7 +83,7 @@ public class CmisImportContextFactory
 		if (parent == null) {
 			parent = session.getRootFolder();
 		}
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 		properties.put(PropertyIds.OBJECT_TYPE_ID, BaseTypeId.CMIS_FOLDER.value());
 		properties.put(PropertyIds.NAME, name);
 		return parent.createFolder(properties);

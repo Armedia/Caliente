@@ -45,7 +45,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 		props.remove(PropertyIds.PARENT_ID);
 
 		List<Folder> parents = getParentFolders(ctx);
-		List<ImportOutcome> outcomes = new ArrayList<ImportOutcome>(parents.size());
+		List<ImportOutcome> outcomes = new ArrayList<>(parents.size());
 		CmfAttribute<CmfValue> nameAtt = this.cmfObject.getAttribute(PropertyIds.NAME);
 		if ((nameAtt == null)
 			|| !nameAtt.hasValues()) { throw new ImportException(String.format("No %s attribute found for %s [%s](%s)",

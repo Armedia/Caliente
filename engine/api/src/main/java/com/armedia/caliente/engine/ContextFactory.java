@@ -44,7 +44,7 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 
 				@Override
 				public Iterator<Object> iterator() {
-					return new ArrayIterator<Object>(this.arr);
+					return new ArrayIterator<>(this.arr);
 				}
 
 			}; }

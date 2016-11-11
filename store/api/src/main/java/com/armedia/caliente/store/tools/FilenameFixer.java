@@ -19,14 +19,14 @@ public final class FilenameFixer {
 	private static final Map<Character, String> WIN_ENCODER;
 
 	static {
-		Map<Character, String> m = new HashMap<Character, String>();
+		Map<Character, String> m = new HashMap<>();
 		for (int i = 0; i < FilenameFixer.LIN_INVALID_CHARS.length(); i++) {
 			final char c = FilenameFixer.LIN_INVALID_CHARS.charAt(i);
 			m.put(Character.valueOf(c), String.format("%%%02X", (int) c));
 		}
 		LIN_ENCODER = Tools.freezeMap(m);
 
-		m = new HashMap<Character, String>();
+		m = new HashMap<>();
 		for (int i = 0; i < FilenameFixer.WIN_INVALID_CHARS.length(); i++) {
 			final char c = FilenameFixer.WIN_INVALID_CHARS.charAt(i);
 			m.put(Character.valueOf(c), String.format("%%%02X", (int) c));
@@ -68,8 +68,8 @@ public final class FilenameFixer {
 		try {
 			return URLEncoder.encode(str, FilenameFixer.ENCODING);
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(
-				String.format("%s encoding isn't supported in this JVM", FilenameFixer.ENCODING), e);
+			throw new RuntimeException(String.format("%s encoding isn't supported in this JVM", FilenameFixer.ENCODING),
+				e);
 		}
 	}
 
@@ -77,8 +77,8 @@ public final class FilenameFixer {
 		try {
 			return URLDecoder.decode(str, FilenameFixer.ENCODING);
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(
-				String.format("%s encoding isn't supported in this JVM", FilenameFixer.ENCODING), e);
+			throw new RuntimeException(String.format("%s encoding isn't supported in this JVM", FilenameFixer.ENCODING),
+				e);
 		}
 	}
 

@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.cli.caliente.launcher.dctm.DqlQuery;
 import com.armedia.caliente.cli.caliente.launcher.dctm.DqlQuery.Clause;
 import com.armedia.caliente.cli.caliente.launcher.dctm.DqlQuery.ClauseGenerator;
 

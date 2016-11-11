@@ -23,9 +23,9 @@ public class AlfrescoType {
 			appliedAspects = Collections.emptyList();
 		}
 		this.name = type.name;
-		Set<String> aspects = new LinkedHashSet<String>(type.mandatoryAspects);
+		Set<String> aspects = new LinkedHashSet<>(type.mandatoryAspects);
 
-		Map<String, SchemaMember<?>> attributes = new TreeMap<String, SchemaMember<?>>();
+		Map<String, SchemaMember<?>> attributes = new TreeMap<>();
 		for (String attribute : type.getAllAttributeNames()) {
 			attributes.put(attribute, type);
 		}
@@ -37,7 +37,7 @@ public class AlfrescoType {
 				}
 			}
 		}
-		this.attributes = new LinkedHashMap<String, SchemaMember<?>>();
+		this.attributes = new LinkedHashMap<>();
 		for (String att : attributes.keySet()) {
 			this.attributes.put(att, attributes.get(att));
 		}

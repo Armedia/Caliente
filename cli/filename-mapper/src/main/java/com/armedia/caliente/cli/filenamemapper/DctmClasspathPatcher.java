@@ -54,7 +54,7 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 			dfcFound = dfc;
 		}
 
-		List<URL> ret = new ArrayList<URL>(3);
+		List<URL> ret = new ArrayList<>(3);
 		try {
 			String var = CLIParam.dfc_prop.getString("dfc.properties");
 			if (var != null) {

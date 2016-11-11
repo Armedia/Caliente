@@ -49,11 +49,11 @@ public class ContentInfoT {
 	protected List<ContentInfoPropertyT> properties;
 
 	@XmlTransient
-	protected final Map<String, String> props = new TreeMap<String, String>();
+	protected final Map<String, String> props = new TreeMap<>();
 
 	protected void beforeMarshal(Marshaller m) {
 		if (this.properties == null) {
-			this.properties = new ArrayList<ContentInfoPropertyT>(this.props.size());
+			this.properties = new ArrayList<>(this.props.size());
 		}
 		this.properties.clear();
 		for (String k : this.props.keySet()) {

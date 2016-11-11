@@ -11,9 +11,7 @@ import com.armedia.commons.utilities.Tools;
 public enum CmisProperty implements Mappable, CmfEncodeableName {
 
 	//
-	PRODUCT_NAME(CmfDataType.STRING),
-	PRODUCT_VERSION(CmfDataType.STRING),
-	ACL_PERMISSION(CmfDataType.STRING, true),
+	PRODUCT_NAME(CmfDataType.STRING), PRODUCT_VERSION(CmfDataType.STRING), ACL_PERMISSION(CmfDataType.STRING, true),
 	//
 	;
 
@@ -49,8 +47,8 @@ public enum CmisProperty implements Mappable, CmfEncodeableName {
 		if (CmisProperty.MAPPINGS == null) {
 			synchronized (CmisProperty.class) {
 				if (CmisProperty.MAPPINGS == null) {
-					CmisProperty.MAPPINGS = Tools.freezeMap(MappingManager.createMappings(CmisProperty.class,
-						CmisProperty.values()));
+					CmisProperty.MAPPINGS = Tools
+						.freezeMap(MappingManager.createMappings(CmisProperty.class, CmisProperty.values()));
 				}
 			}
 		}
@@ -60,8 +58,8 @@ public enum CmisProperty implements Mappable, CmfEncodeableName {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
 		CmisProperty.initMappings();
 		CmisProperty ret = CmisProperty.MAPPINGS.get(name);
-		if (ret == null) { throw new IllegalArgumentException(String.format(
-			"Failed to decode [%s] into a valid intermediate property", name)); }
+		if (ret == null) { throw new IllegalArgumentException(
+			String.format("Failed to decode [%s] into a valid intermediate property", name)); }
 		return ret;
 	}
 }

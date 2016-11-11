@@ -74,7 +74,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	static {
-		Map<String, String> m = new HashMap<String, String>();
+		Map<String, String> m = new HashMap<>();
 
 		// Attribute X "gets populated from" Y
 		String[][] unmappings = {
@@ -145,7 +145,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		ATTRIBUTE_MAPPER = Tools.freezeMap(m);
 
 		// Attribute X "gets populated from" Y, Y may need re-mapping through ATTRIBUTE_MAPPER
-		m = new HashMap<String, String>();
+		m = new HashMap<>();
 		String[][] copies = {
 			{
 				"cm:author", "dctm:authors"
@@ -178,14 +178,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 		ATTRIBUTE_SPECIAL_COPIES = Tools.freezeMap(m);
 
-		m = new HashMap<String, String>();
+		m = new HashMap<>();
 		String[] conversions = {
 			"cm:owner", "cm:creator", "cm:modifier"
 		};
 		for (String s : conversions) {
 			m.put(s, s);
 		}
-		USER_CONVERSIONS = Tools.freezeSet(new HashSet<String>(m.keySet()));
+		USER_CONVERSIONS = Tools.freezeSet(new HashSet<>(m.keySet()));
 	}
 
 	private final boolean reference;
@@ -312,7 +312,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		Set<String> tgtNames = targetType.getAttributeNames();
 		Set<String> srcNames = this.cmfObject.getAttributeNames();
 
-		Set<String> common = new HashSet<String>();
+		Set<String> common = new HashSet<>();
 		common.addAll(tgtNames);
 		common.retainAll(srcNames);
 		// Copy everything that exists with the same name at the source and at the target
@@ -322,7 +322,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			storeValue(src, tgt, p, true);
 		}
 
-		Set<String> tgtOnly = new HashSet<String>();
+		Set<String> tgtOnly = new HashSet<>();
 		tgtOnly.addAll(tgtNames);
 		tgtOnly.removeAll(srcNames);
 		// Copy everything that exists only at the target
@@ -379,7 +379,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		// Now handle the special properties
-		Set<String> values = new LinkedHashSet<String>();
+		Set<String> values = new LinkedHashSet<>();
 		for (CmfValue v : getPropertyValues(IntermediateProperty.PARENT_TREE_IDS)) {
 			String s = v.asString();
 			if (StringUtils.isEmpty(s)) {
@@ -563,7 +563,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		// Set the type property
 		AlfrescoType type = this.vdocReference;
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, type.getName());
-		Collection<String> aspects = new LinkedHashSet<String>();
+		Collection<String> aspects = new LinkedHashSet<>();
 		for (String aspect : type.getAspects()) {
 			aspects.add(aspect);
 		}
@@ -633,9 +633,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		boolean vdocRootIndexed = false;
-		Set<String> vdocVersionsIndexed = new HashSet<String>();
+		Set<String> vdocVersionsIndexed = new HashSet<>();
 		boolean renditionsRootIndexed = false;
-		Set<String> renditionTypesIndexed = new HashSet<String>();
+		Set<String> renditionTypesIndexed = new HashSet<>();
 		for (CmfContentInfo content : contents) {
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(this.factory.getTranslator(),
 				this.cmfObject, content);
@@ -705,7 +705,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					versionProps.setProperty("cm:name", vdocVersion.getName());
 					versionProps.setProperty("dctm:object_name", vdocVersion.getName());
 					versionProps.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, this.vdocVersion.getName());
-					Set<String> aspects = new LinkedHashSet<String>(this.vdocVersion.getAspects());
+					Set<String> aspects = new LinkedHashSet<>(this.vdocVersion.getAspects());
 					aspects.add(AlfImportFileableDelegate.STATUS_ASPECT);
 					versionProps.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
 					final File vdocVersionMeta = generateMetadataFile(ctx, versionProps, vdocVersion);

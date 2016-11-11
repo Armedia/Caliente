@@ -52,7 +52,7 @@ public class Constraint {
 	 */
 	public List<Constraint.Parameter> getParameter() {
 		if (this.parameter == null) {
-			this.parameter = new ArrayList<Constraint.Parameter>();
+			this.parameter = new ArrayList<>();
 		}
 		return this.parameter;
 	}

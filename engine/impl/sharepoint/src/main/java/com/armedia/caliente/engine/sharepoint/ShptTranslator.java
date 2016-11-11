@@ -30,12 +30,11 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<CmfType, BidiMap<String, IntermediateAttribute>>(
-			CmfType.class);
+		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfType.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (USER)
 		// OBJECT_TYPE_ID (DM_USER)
@@ -46,7 +45,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(CmfType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (GROUP)
 		// OBJECT_TYPE_ID (DM_GROUP)
@@ -56,7 +55,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(CmfType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (TYPE)
 		// OBJECT_TYPE_ID (DM_TYPE)
@@ -65,7 +64,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.OWNER.name, IntermediateAttribute.OWNER);
 		attributeMappings.put(CmfType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (FORMAT)
 		// OBJECT_TYPE_ID (DM_FORMAT)
@@ -73,7 +72,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		attributeMappings.put(CmfType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (FOLDER)
 		// OBJECT_TYPE_ID (DM_FOLDER|DM_CABINET|...)
@@ -91,7 +90,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.PATHS.name, IntermediateAttribute.PATH);
 		attributeMappings.put(CmfType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (DM_DOCUMENT|...)
@@ -152,8 +151,8 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 			}
 			if (att != null) { return att; }
 		}
-		if (attributeName.startsWith(ShptTranslator.SHPT_PREFIX)) { return attributeName
-			.substring(ShptTranslator.SHPT_PREFIX.length()); }
+		if (attributeName.startsWith(
+			ShptTranslator.SHPT_PREFIX)) { return attributeName.substring(ShptTranslator.SHPT_PREFIX.length()); }
 		return super.decodeAttributeName(type, attributeName);
 	}
 

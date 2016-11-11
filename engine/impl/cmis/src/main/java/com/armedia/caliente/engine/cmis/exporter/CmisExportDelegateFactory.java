@@ -14,15 +14,16 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public class CmisExportDelegateFactory extends
-	ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
+public class CmisExportDelegateFactory
+	extends ExportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportEngine> {
 
 	CmisExportDelegateFactory(CmisExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
 	@Override
-	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfType type, String searchKey) throws Exception {
+	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfType type, String searchKey)
+		throws Exception {
 		CmisObject obj = session.getObject(searchKey);
 		switch (type) {
 			case FOLDER:

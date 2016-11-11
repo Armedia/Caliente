@@ -122,8 +122,8 @@ public class CMSMFLauncher extends AbstractLauncher {
 				return p.supportsEngine(engine);
 			}
 		};
-		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<>(
-			ClasspathPatcher.class, selector);
+		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<>(ClasspathPatcher.class,
+			selector);
 		patchers.setHideErrors(false);
 		for (ClasspathPatcher p : patchers) {
 			List<URL> l = p.getPatches(engine);

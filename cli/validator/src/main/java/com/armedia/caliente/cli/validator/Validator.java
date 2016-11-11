@@ -74,24 +74,24 @@ public class Validator {
 
 	private static final Map<String, String> REFERENCE_TYPE_MAPPING;
 	static {
-		Map<String, String> m = new TreeMap<String, String>();
+		Map<String, String> m = new TreeMap<>();
 		m.put("app:folderlink", "arm:reference");
 		m.put("app:filelink", "arm:reference");
-		REFERENCE_TYPE_MAPPING = Tools.freezeMap(new LinkedHashMap<String, String>(m));
+		REFERENCE_TYPE_MAPPING = Tools.freezeMap(new LinkedHashMap<>(m));
 	}
 
 	private static final Map<String, Set<String>> ALLOWED_ENFORCED_MISSES;
 	static {
-		Map<String, Set<String>> m = new TreeMap<String, Set<String>>();
-		Set<String> s = new TreeSet<String>();
+		Map<String, Set<String>> m = new TreeMap<>();
+		Set<String> s = new TreeSet<>();
 		s.add("cm:created");
 		s.add("cm:creator");
 		s.add("cm:modified");
 		s.add("cm:modifier");
-		s = Tools.freezeSet(new LinkedHashSet<String>(s));
+		s = Tools.freezeSet(new LinkedHashSet<>(s));
 		m.put("arm:reference", s);
 		m.put("arm:rendition", s);
-		ALLOWED_ENFORCED_MISSES = Tools.freezeMap(new LinkedHashMap<String, Set<String>>(m));
+		ALLOWED_ENFORCED_MISSES = Tools.freezeMap(new LinkedHashMap<>(m));
 	}
 
 	private static enum ValidationErrorType {
@@ -212,8 +212,7 @@ public class Validator {
 			if (ValueComparator.MAP == null) {
 				synchronized (ValueComparator.class) {
 					if (ValueComparator.MAP == null) {
-						Map<AlfrescoDataType, ValueComparator> m = new EnumMap<AlfrescoDataType, ValueComparator>(
-							AlfrescoDataType.class);
+						Map<AlfrescoDataType, ValueComparator> m = new EnumMap<>(AlfrescoDataType.class);
 						for (ValueComparator c : ValueComparator.values()) {
 							for (AlfrescoDataType t : c.supported) {
 								ValueComparator C = m.put(t, c);
@@ -554,14 +553,14 @@ public class Validator {
 		if ((contentModel == null)
 			|| contentModel.isEmpty()) { throw new Exception("Must provide a valid, non-emtpy content model"); }
 
-		Collection<URI> modelUris = new ArrayList<URI>(contentModel.size());
+		Collection<URI> modelUris = new ArrayList<>(contentModel.size());
 		for (String m : contentModel) {
 			modelUris.add(new File(m).toURI());
 		}
 		this.schema = new AlfrescoSchema(modelUris);
 
-		this.errors = new EnumMap<ValidationErrorType, CSVPrinter>(ValidationErrorType.class);
-		this.faultCounters = new EnumMap<ValidationErrorType, AtomicLong>(ValidationErrorType.class);
+		this.errors = new EnumMap<>(ValidationErrorType.class);
+		this.faultCounters = new EnumMap<>(ValidationErrorType.class);
 	}
 
 	public final long getFaultCount() {
@@ -691,7 +690,7 @@ public class Validator {
 
 	private Set<String> loadAspects(Properties properties) {
 		String aspectsStr = properties.getProperty(Validator.PROP_ASPECTS, "");
-		Set<String> aspects = new TreeSet<String>();
+		Set<String> aspects = new TreeSet<>();
 		for (String aspect : aspectsStr.split(",")) {
 			if (StringUtils.isBlank(aspect)) {
 				continue;

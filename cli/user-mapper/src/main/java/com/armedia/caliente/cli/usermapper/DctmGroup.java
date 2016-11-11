@@ -32,7 +32,7 @@ public class DctmGroup extends DctmPrincipal {
 		IDfGroup group = session.getGroup(getName());
 		if (group == null) { throw new DfException(String.format("Failed to locate the group named [%s]", getName())); }
 
-		Set<String> u = new TreeSet<String>();
+		Set<String> u = new TreeSet<>();
 		IDfCollection users = group.getUsersNames();
 		try {
 			while (users.next()) {
@@ -48,7 +48,7 @@ public class DctmGroup extends DctmPrincipal {
 		IDfGroup group = session.getGroup(getName());
 		if (group == null) { throw new DfException(String.format("Failed to locate the group named [%s]", getName())); }
 
-		Set<String> u = new TreeSet<String>();
+		Set<String> u = new TreeSet<>();
 		IDfCollection users = group.getGroupsNames();
 		try {
 			while (users.next()) {
@@ -83,7 +83,7 @@ public class DctmGroup extends DctmPrincipal {
 							"select group_name, group_source, group_global_unique_id from dm_group order by 2, 1",
 							IDfQuery.DF_READ_QUERY);
 						try {
-							Map<String, DctmGroup> allGroups = new LinkedHashMap<String, DctmGroup>();
+							Map<String, DctmGroup> allGroups = new LinkedHashMap<>();
 							int i = 0;
 							while (c.next()) {
 								String name = c.getString("group_name");

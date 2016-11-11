@@ -19,8 +19,8 @@ public class DFCLauncher extends AbstractLauncher {
 		Map<CLIParam, List<String>> cliParams = CLIParam.getParsed();
 		if (cliParams == null) { return; }
 
-		Collection<File> classpath = new ArrayList<File>();
-		Map<String, String> environment = new HashMap<String, String>();
+		Collection<File> classpath = new ArrayList<>();
+		Map<String, String> environment = new HashMap<>();
 
 		String var = null;
 		File base = null;

@@ -28,7 +28,7 @@ public class DctmUser extends DctmPrincipal {
 		this.login = obj.getString("user_login_name");
 		this.osName = obj.getString("user_os_name");
 		final int attCount = obj.getAttrCount();
-		Map<String, String> attributes = new HashMap<String, String>(attCount);
+		Map<String, String> attributes = new HashMap<>(attCount);
 		for (int i = 0; i < attCount; i++) {
 			final IDfAttr att = obj.getAttr(i);
 			final String attName = att.getName();
@@ -85,7 +85,7 @@ public class DctmUser extends DctmPrincipal {
 							"select * from dm_user where r_is_group = 0 order by 1", IDfQuery.DF_READ_QUERY);
 						int i = 0;
 						try {
-							Map<String, DctmUser> users = new LinkedHashMap<String, DctmUser>();
+							Map<String, DctmUser> users = new LinkedHashMap<>();
 							while (c.next()) {
 								String name = c.getString("user_name");
 								String source = c.getString("user_source");

@@ -43,7 +43,7 @@ public class DocumentIndexEntryT {
 
 	protected final List<DocumentIndexVersionT> getVersions() {
 		if (this.versions == null) {
-			this.versions = new ArrayList<DocumentIndexVersionT>();
+			this.versions = new ArrayList<>();
 		}
 		return this.versions;
 	}

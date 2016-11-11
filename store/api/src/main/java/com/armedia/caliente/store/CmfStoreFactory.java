@@ -31,7 +31,7 @@ public abstract class CmfStoreFactory<S extends CmfStore<?, ?>> {
 	}
 
 	CmfStoreFactory(Collection<String> aliases) {
-		Set<String> a = new TreeSet<String>();
+		Set<String> a = new TreeSet<>();
 		if (aliases != null) {
 			for (String alias : aliases) {
 				if (CmfStoreFactory.isValidAlias(alias)) {

@@ -27,7 +27,7 @@ public class BaseTest {
 		contentStore.clearAllStreams();
 		Logger output = LoggerFactory.getLogger("console");
 
-		Map<String, String> settings = new TreeMap<String, String>();
+		Map<String, String> settings = new TreeMap<>();
 		settings.put(CmisSessionSetting.ATOMPUB_URL.getLabel(),
 			"http://armedia-vm.rivera.prv/alfresco/api/-default-/public/cmis/versions/1.0/atom");
 		settings.put(CmisSessionSetting.USER.getLabel(), "admin");

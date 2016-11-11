@@ -71,8 +71,8 @@ public enum AlfrescoDataType {
 
 	private static synchronized Map<CmfDataType, AlfrescoDataType> getCmfMappings() {
 		if (AlfrescoDataType.CMF_MAP != null) { return AlfrescoDataType.CMF_MAP; }
-		Map<CmfDataType, AlfrescoDataType> m = new EnumMap<CmfDataType, AlfrescoDataType>(CmfDataType.class);
-		Map<String, AlfrescoDataType> m2 = new HashMap<String, AlfrescoDataType>();
+		Map<CmfDataType, AlfrescoDataType> m = new EnumMap<>(CmfDataType.class);
+		Map<String, AlfrescoDataType> m2 = new HashMap<>();
 		for (AlfrescoDataType p : AlfrescoDataType.values()) {
 
 			AlfrescoDataType p2 = m2.put(p.nameString, p);

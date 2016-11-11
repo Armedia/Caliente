@@ -21,11 +21,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoSchema;
-import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoType;
-import com.armedia.caliente.engine.alfresco.bulk.importer.model.SchemaAttribute;
-import com.armedia.caliente.engine.alfresco.bulk.importer.model.SchemaMember;
-
 public class AlfrescoSchemaTest {
 
 	private static final Pattern TYPE_MAPPING_PARSER = Pattern.compile("^([^\\[]+)(?:\\[(.*)\\])?$");
@@ -53,7 +48,7 @@ public class AlfrescoSchemaTest {
 			cl.getResource("systemModel.xml"), cl.getResource("contentModel.xml"), cl.getResource("cmisModel.xml"),
 			cl.getResource("calienteModel.xml"), cl.getResource("jsapModel.xml"),
 		};
-		List<URI> urlList = new ArrayList<URI>();
+		List<URI> urlList = new ArrayList<>();
 		for (URL u : urls) {
 			urlList.add(u.toURI());
 		}
@@ -101,7 +96,7 @@ public class AlfrescoSchemaTest {
 			cl.getResource("systemModel.xml"), cl.getResource("contentModel.xml"), cl.getResource("cmisModel.xml"),
 			cl.getResource("calienteModel.xml"), cl.getResource("jsapModel.xml"),
 		};
-		List<URI> urlList = new ArrayList<URI>();
+		List<URI> urlList = new ArrayList<>();
 		for (URL u : urls) {
 			urlList.add(u.toURI());
 		}

@@ -36,14 +36,14 @@ public class StoreDefinitions extends SettingContainer {
 
 	public List<StoreConfiguration> getObjectStores() {
 		if (this.objectstore == null) {
-			this.objectstore = new ArrayList<StoreConfiguration>();
+			this.objectstore = new ArrayList<>();
 		}
 		return this.objectstore;
 	}
 
 	public List<StoreConfiguration> getContentStores() {
 		if (this.contentstore == null) {
-			this.contentstore = new ArrayList<StoreConfiguration>();
+			this.contentstore = new ArrayList<>();
 		}
 		return this.contentstore;
 	}
@@ -52,10 +52,10 @@ public class StoreDefinitions extends SettingContainer {
 	public StoreDefinitions clone() {
 		StoreDefinitions newClone = StoreDefinitions.class.cast(super.clone());
 		if (this.objectstore != null) {
-			newClone.objectstore = new ArrayList<StoreConfiguration>(this.objectstore);
+			newClone.objectstore = new ArrayList<>(this.objectstore);
 		}
 		if (this.contentstore != null) {
-			newClone.contentstore = new ArrayList<StoreConfiguration>(this.contentstore);
+			newClone.contentstore = new ArrayList<>(this.contentstore);
 		}
 		return newClone;
 	}

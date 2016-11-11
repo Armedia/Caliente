@@ -26,9 +26,8 @@ public class Launcher {
 			// If the parameters didn't parse, we fail.
 			return 1;
 		}
-		Set<URL> patches = new LinkedHashSet<URL>();
-		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<ClasspathPatcher>(
-			ClasspathPatcher.class);
+		Set<URL> patches = new LinkedHashSet<>();
+		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<>(ClasspathPatcher.class);
 		patchers.setHideErrors(false);
 		for (ClasspathPatcher p : patchers) {
 			List<URL> l = p.getPatches();

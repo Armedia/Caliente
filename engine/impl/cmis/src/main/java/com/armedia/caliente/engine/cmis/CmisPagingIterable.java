@@ -16,6 +16,6 @@ public class CmisPagingIterable<E> implements Iterable<E> {
 
 	@Override
 	public CmisPagingIterator<E> iterator() {
-		return new CmisPagingIterator<E>(this.results);
+		return new CmisPagingIterator<>(this.results);
 	}
 }

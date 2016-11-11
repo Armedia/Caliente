@@ -52,15 +52,16 @@ public class ShptRecursiveIterator implements Iterator<ExportTarget> {
 		}
 	}
 
-	private static final Iterator<File> EMPTY_FILE_ITERATOR = new EmptyIterator<File>();
-	private static final Iterator<Folder> EMPTY_FOLDER_ITERATOR = new EmptyIterator<Folder>();
+	private static final Iterator<File> EMPTY_FILE_ITERATOR = new EmptyIterator<>();
+	private static final Iterator<Folder> EMPTY_FOLDER_ITERATOR = new EmptyIterator<>();
 
 	private final ShptSession service;
 	private final boolean excludeEmptyFolders;
 
-	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
+	private final Stack<RecursiveState> stateStack = new Stack<>();
 
-	public ShptRecursiveIterator(ShptSession service, Folder root, CfgTools configuration, boolean excludeEmptyFolders) {
+	public ShptRecursiveIterator(ShptSession service, Folder root, CfgTools configuration,
+		boolean excludeEmptyFolders) {
 		this.service = service;
 		this.stateStack.push(new RecursiveState(root));
 		this.excludeEmptyFolders = excludeEmptyFolders;

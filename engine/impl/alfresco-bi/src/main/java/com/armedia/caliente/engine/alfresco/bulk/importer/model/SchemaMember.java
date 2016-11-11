@@ -26,7 +26,7 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		this.parent = parent;
 		this.name = e.getName();
 
-		Map<String, SchemaAttribute> localAttributes = new TreeMap<String, SchemaAttribute>();
+		Map<String, SchemaAttribute> localAttributes = new TreeMap<>();
 		for (Property property : e.getProperties()) {
 			String name = property.getName();
 			// Is this a duplicate at this level?
@@ -46,7 +46,7 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		}
 
 		// Next, apply the attributes from the mandatory aspects as our own
-		Set<String> ma = new LinkedHashSet<String>();
+		Set<String> ma = new LinkedHashSet<>();
 		for (Aspect aspect : mandatoryAspects) {
 			ma.add(aspect.name);
 
@@ -62,15 +62,15 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		}
 
 		this.mandatoryAspects = Tools.freezeSet(ma);
-		this.localAttributes = Tools.freezeMap(new LinkedHashMap<String, SchemaAttribute>(localAttributes));
+		this.localAttributes = Tools.freezeMap(new LinkedHashMap<>(localAttributes));
 
 		// Finally, create the list of all the attributes this object supports
-		Set<String> allAttributeNames = new TreeSet<String>();
+		Set<String> allAttributeNames = new TreeSet<>();
 		allAttributeNames.addAll(this.localAttributes.keySet());
 		if (parent != null) {
 			allAttributeNames.addAll(parent.getAllAttributeNames());
 		}
-		this.allAttributeNames = Tools.freezeSet(new LinkedHashSet<String>(allAttributeNames));
+		this.allAttributeNames = Tools.freezeSet(new LinkedHashSet<>(allAttributeNames));
 	}
 
 	public T getParent() {

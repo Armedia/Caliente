@@ -101,7 +101,7 @@ public class DocumentVersionT extends SysObjectT {
 
 	public List<ContentInfoT> getContents() {
 		if (this.contents == null) {
-			this.contents = new ArrayList<ContentInfoT>();
+			this.contents = new ArrayList<>();
 		}
 		return this.contents;
 	}

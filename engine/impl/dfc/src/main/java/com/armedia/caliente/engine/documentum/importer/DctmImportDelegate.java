@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.documentum.DctmAttributeHandlers;
+import com.armedia.caliente.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmDataType;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
@@ -24,17 +25,16 @@ import com.armedia.caliente.engine.documentum.DctmTranslator;
 import com.armedia.caliente.engine.documentum.DfUtils;
 import com.armedia.caliente.engine.documentum.DfValueFactory;
 import com.armedia.caliente.engine.documentum.UnsupportedDctmObjectTypeException;
-import com.armedia.caliente.engine.documentum.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
@@ -67,7 +67,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		private final Set<String> defaultAspects;
 
 		private AspectHelper(T object) throws DfException {
-			this.ref = new AtomicReference<T>(object);
+			this.ref = new AtomicReference<>(object);
 			IDfSession session = object.getSession();
 			IDfType type = object.getType();
 			IDfPersistentObject info = session.getObjectByQualification(
@@ -75,7 +75,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			Set<String> defaultAspects = Collections.emptySet();
 			if ((info != null) && info.hasAttr(DctmAttributes.DEFAULT_ASPECTS)) {
 				final int c = info.getValueCount(DctmAttributes.DEFAULT_ASPECTS);
-				defaultAspects = new LinkedHashSet<String>();
+				defaultAspects = new LinkedHashSet<>();
 				for (int i = 0; i < c; i++) {
 					defaultAspects.add(info.getRepeatingString(DctmAttributes.DEFAULT_ASPECTS, i));
 				}
@@ -155,8 +155,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	protected final CmfAttribute<IDfValue> newStoredAttribute(IDfAttr attr, Collection<IDfValue> values) {
-		return new CmfAttribute<IDfValue>(attr.getName(), DctmDataType.fromAttribute(attr).getStoredType(),
-			attr.isRepeating(), values);
+		return new CmfAttribute<>(attr.getName(), DctmDataType.fromAttribute(attr).getStoredType(), attr.isRepeating(),
+			values);
 	}
 
 	protected boolean isTransitoryObject(T object) throws DfException, ImportException {
@@ -185,7 +185,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		DctmImportContext context) throws ImportException, CmfStorageException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 		try {
-			List<ImportOutcome> ret = new ArrayList<ImportOutcome>(1);
+			List<ImportOutcome> ret = new ArrayList<>(1);
 			ret.add(doImportObject(context));
 			return ret;
 		} catch (DfException e) {
@@ -323,8 +323,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 						if (!versionLabel.isRepeating()) {
 							// If the incoming attribute doesn't support multiple values, we
 							// need to change that...
-							versionLabel = new CmfAttribute<IDfValue>(versionLabel.getName(), versionLabel.getType(),
-								true, versionLabel.getValues());
+							versionLabel = new CmfAttribute<>(versionLabel.getName(), versionLabel.getType(), true,
+								versionLabel.getValues());
 							this.cmfObject.setAttribute(versionLabel);
 						}
 						versionLabel.addValue(DctmImportDelegate.CURRENT_VERSION_LABEL);
@@ -397,13 +397,13 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		if (!IDfAspects.class.isInstance(object)) { return object; }
 
 		// First things first: which aspects does it already have?
-		Set<String> currentAspects = new LinkedHashSet<String>();
+		Set<String> currentAspects = new LinkedHashSet<>();
 		int aspectCount = object.getValueCount(DctmAttributes.R_ASPECT_NAME);
 		for (int i = 0; i < aspectCount; i++) {
 			currentAspects.add(object.getRepeatingString(DctmAttributes.R_ASPECT_NAME, i));
 		}
 
-		Set<String> newAspects = new LinkedHashSet<String>();
+		Set<String> newAspects = new LinkedHashSet<>();
 		// Next... which aspects does the incoming object have?
 		CmfAttribute<IDfValue> aspectAttr = this.cmfObject.getAttribute(DctmAttributes.R_ASPECT_NAME);
 		if (aspectAttr != null) {
@@ -415,7 +415,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		final AspectHelper helper = new AspectHelper(object);
 
 		// Detach only those aspects we won't have to re-add later
-		Set<String> oldAspects = new LinkedHashSet<String>(currentAspects);
+		Set<String> oldAspects = new LinkedHashSet<>(currentAspects);
 		oldAspects.removeAll(newAspects);
 		helper.detachAspects(oldAspects);
 
@@ -683,7 +683,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		if (m == null) { return false; }
 
 		Set<String> s = Collections.singleton(m.getSourceValue());
-		final AtomicReference<CmfObject<IDfValue>> loaded = new AtomicReference<CmfObject<IDfValue>>(null);
+		final AtomicReference<CmfObject<IDfValue>> loaded = new AtomicReference<>(null);
 		final CmfObjectHandler<IDfValue> handler = new DefaultCmfObjectHandler<IDfValue>() {
 
 			@Override

@@ -12,7 +12,7 @@ public final class CmisPagingTransformerIterator<S, T> implements Iterator<T> {
 	public CmisPagingTransformerIterator(ItemIterable<S> results, CmisResultTransformer<S, T> transformer) {
 		if (transformer == null) { throw new IllegalArgumentException("Must provide a transformer"); }
 		this.transformer = transformer;
-		this.it = new CmisPagingIterator<S>(results);
+		this.it = new CmisPagingIterator<>(results);
 	}
 
 	@Override

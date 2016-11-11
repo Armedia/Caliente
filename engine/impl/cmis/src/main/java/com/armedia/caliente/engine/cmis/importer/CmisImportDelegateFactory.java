@@ -8,8 +8,8 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
-public class CmisImportDelegateFactory extends
-	ImportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportEngine> {
+public class CmisImportDelegateFactory
+	extends ImportDelegateFactory<Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportEngine> {
 
 	CmisImportDelegateFactory(CmisImportEngine engine, Session session, CfgTools configuration) {
 		super(engine, configuration);

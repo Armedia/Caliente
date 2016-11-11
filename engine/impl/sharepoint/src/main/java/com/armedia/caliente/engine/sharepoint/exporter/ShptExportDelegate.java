@@ -27,7 +27,7 @@ public abstract class ShptExportDelegate<T> extends
 	private static final Map<Class<?>, CmfType> TYPE_MAP;
 
 	static {
-		Map<Class<?>, CmfType> m = new LinkedHashMap<Class<?>, CmfType>();
+		Map<Class<?>, CmfType> m = new LinkedHashMap<>();
 		m.put(ShptVersion.class, CmfType.DOCUMENT);
 		m.put(Folder.class, CmfType.FOLDER);
 		m.put(Group.class, CmfType.GROUP);

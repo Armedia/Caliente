@@ -19,7 +19,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 		if (pattern == null) { throw new IllegalArgumentException("Must provide a pattern to construct from"); }
 		this.singleValue = pattern.singleValue;
 		final int valueCount = pattern.values.size();
-		this.values = new ArrayList<V>(valueCount);
+		this.values = new ArrayList<>(valueCount);
 		setValues(pattern.values);
 	}
 
@@ -73,7 +73,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 			values = Collections.emptyList();
 		}
 		final int valueCount = values.size();
-		this.values = new ArrayList<V>(valueCount);
+		this.values = new ArrayList<>(valueCount);
 		setValues(values);
 	}
 
@@ -153,7 +153,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 */
 	public final List<V> getValues() {
 		if (isRepeating()) { return this.values; }
-		List<V> l = new ArrayList<V>(1);
+		List<V> l = new ArrayList<>(1);
 		l.add(this.singleValue);
 		return l;
 	}

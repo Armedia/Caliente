@@ -26,7 +26,7 @@ public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<PropertyType, CmfDataType> m = new EnumMap<PropertyType, CmfDataType>(PropertyType.class);
+		Map<PropertyType, CmfDataType> m = new EnumMap<>(PropertyType.class);
 		m.put(PropertyType.BOOLEAN, CmfDataType.BOOLEAN);
 		m.put(PropertyType.INTEGER, CmfDataType.INTEGER);
 		m.put(PropertyType.DECIMAL, CmfDataType.DOUBLE);
@@ -37,7 +37,7 @@ public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 		m.put(PropertyType.HTML, CmfDataType.STRING); // TODO: Add this to CmfDataType
 		DATA_TYPES = Tools.freezeMap(m);
 
-		Map<CmfDataType, PropertyType> n = new EnumMap<CmfDataType, PropertyType>(CmfDataType.class);
+		Map<CmfDataType, PropertyType> n = new EnumMap<>(CmfDataType.class);
 		n.put(CmfDataType.BOOLEAN, PropertyType.BOOLEAN);
 		n.put(CmfDataType.INTEGER, PropertyType.INTEGER);
 		n.put(CmfDataType.DOUBLE, PropertyType.DECIMAL);
@@ -46,12 +46,11 @@ public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 		n.put(CmfDataType.STRING, PropertyType.STRING); // TODO: Need to handle HTML and URI
 		DATA_TYPES_REV = Tools.freezeMap(n);
 
-		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<CmfType, BidiMap<String, IntermediateAttribute>>(
-			CmfType.class);
+		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfType.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (cmis:document|...)
 		// am.put(LocalAttributes.VERSION_ANTECEDENT_ID.name,

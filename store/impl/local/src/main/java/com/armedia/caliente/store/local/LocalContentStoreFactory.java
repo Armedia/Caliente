@@ -20,8 +20,8 @@ public class LocalContentStoreFactory extends CmfContentStoreFactory<LocalConten
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		String basePath = cfg.getString(Setting.BASE_DIR);
-		if (basePath == null) { throw new CmfStorageException(String.format("No setting [%s] specified",
-			Setting.BASE_DIR.getLabel())); }
+		if (basePath == null) { throw new CmfStorageException(
+			String.format("No setting [%s] specified", Setting.BASE_DIR.getLabel())); }
 		// Resolve system properties
 
 		CmfOrganizationStrategy strategy = CmfOrganizationStrategy.getStrategy(cfg.getString(Setting.URI_STRATEGY));

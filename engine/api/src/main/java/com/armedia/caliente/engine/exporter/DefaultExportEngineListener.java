@@ -9,7 +9,7 @@ import com.armedia.caliente.store.CmfType;
 
 public class DefaultExportEngineListener extends DefaultExportListener implements ExportEngineListener {
 
-	private final Map<UUID, ExportState> jobStates = new ConcurrentHashMap<UUID, ExportState>();
+	private final Map<UUID, ExportState> jobStates = new ConcurrentHashMap<>();
 
 	protected final ExportState getState(UUID uuid) {
 		if (uuid == null) { throw new NullPointerException("Must provide a job ID to find"); }

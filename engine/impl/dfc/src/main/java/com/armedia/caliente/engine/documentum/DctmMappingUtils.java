@@ -28,7 +28,7 @@ public class DctmMappingUtils {
 
 	public static final Set<String> SPECIAL_NAMES;
 	static {
-		Set<String> s = new HashSet<String>();
+		Set<String> s = new HashSet<>();
 		s.add(DctmACL.DM_OWNER);
 		s.add(DctmACL.DM_GROUP);
 		s.add(DctmACL.DM_WORLD);
@@ -36,8 +36,8 @@ public class DctmMappingUtils {
 	}
 
 	private static final Pattern SUBSTITUTION = Pattern.compile("^\\$\\{([\\w]+)\\}$");
-	private static final Map<String, Map<String, IDfValue>> FWD_MAPPINGS = new HashMap<String, Map<String, IDfValue>>();
-	private static final Map<String, Map<String, IDfValue>> REV_MAPPINGS = new HashMap<String, Map<String, IDfValue>>();
+	private static final Map<String, Map<String, IDfValue>> FWD_MAPPINGS = new HashMap<>();
+	private static final Map<String, Map<String, IDfValue>> REV_MAPPINGS = new HashMap<>();
 
 	// TODO: Make this configurable via a configuration setting/CLI parameter
 	private static final String[] SUBSTITUTION_ATTRIBUTES = {
@@ -63,8 +63,8 @@ public class DctmMappingUtils {
 				forward = DctmMappingUtils.FWD_MAPPINGS.get(docbase);
 				reverse = DctmMappingUtils.REV_MAPPINGS.get(docbase);
 				if ((forward == null) || (reverse == null)) {
-					forward = new HashMap<String, IDfValue>();
-					reverse = new HashMap<String, IDfValue>();
+					forward = new HashMap<>();
+					reverse = new HashMap<>();
 					for (IDfTypedObject src : DctmMappingUtils.getSources(session)) {
 						for (String serverAttribute : DctmMappingUtils.SUBSTITUTION_ATTRIBUTES) {
 							int idx = src.findAttrIndex(serverAttribute);
@@ -137,8 +137,8 @@ public class DctmMappingUtils {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session to calculate the mappings from"); }
 		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
-		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
-		List<IDfValue> ret = new ArrayList<IDfValue>(values.size());
+		if (values.isEmpty()) { return new ArrayList<>(); }
+		List<IDfValue> ret = new ArrayList<>(values.size());
 		// These are the mappings indexed by username
 		Map<String, IDfValue> substitutions = DctmMappingUtils.getSubstitutionMappings(session);
 		for (IDfValue user : values) {
@@ -164,9 +164,9 @@ public class DctmMappingUtils {
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to get the session from"); }
 		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
-		if (values.isEmpty()) { return new ArrayList<IDfValue>(); }
+		if (values.isEmpty()) { return new ArrayList<>(); }
 		Map<String, IDfValue> resolutions = null;
-		List<IDfValue> ret = new ArrayList<IDfValue>(values.size());
+		List<IDfValue> ret = new ArrayList<>(values.size());
 		for (IDfValue oldValue : values) {
 			Matcher m = DctmMappingUtils.SUBSTITUTION.matcher(oldValue.asString());
 			if (m.matches()) {

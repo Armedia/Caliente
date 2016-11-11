@@ -112,7 +112,7 @@ public abstract class CmfOrganizationStrategy {
 		@Override
 		public <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 			CmfContentInfo info) {
-			List<String> path = new ArrayList<String>(3);
+			List<String> path = new ArrayList<>(3);
 			path.add(object.getType().name());
 			path.add(object.getSubtype());
 			return newLocation(path, object.getId(), null, null, null);
@@ -128,8 +128,8 @@ public abstract class CmfOrganizationStrategy {
 	private static final Map<String, CmfOrganizationStrategy> STRATEGIES;
 
 	static {
-		Map<String, CmfOrganizationStrategy> strategies = new HashMap<String, CmfOrganizationStrategy>();
-		PluggableServiceLocator<CmfOrganizationStrategy> l = new PluggableServiceLocator<CmfOrganizationStrategy>(
+		Map<String, CmfOrganizationStrategy> strategies = new HashMap<>();
+		PluggableServiceLocator<CmfOrganizationStrategy> l = new PluggableServiceLocator<>(
 			CmfOrganizationStrategy.class);
 		l.setHideErrors(true);
 		for (CmfOrganizationStrategy s : l) {

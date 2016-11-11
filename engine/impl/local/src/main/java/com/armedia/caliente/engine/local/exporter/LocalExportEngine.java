@@ -27,7 +27,7 @@ public class LocalExportEngine extends
 	@Override
 	protected CloseableIterator<ExportTarget> findExportResults(LocalRoot session, CfgTools configuration,
 		LocalExportDelegateFactory factory) throws Exception {
-		return new CloseableIteratorWrapper<ExportTarget>(new LocalRecursiveIterator(session, true));
+		return new CloseableIteratorWrapper<>(new LocalRecursiveIterator(session, true));
 	}
 
 	@Override

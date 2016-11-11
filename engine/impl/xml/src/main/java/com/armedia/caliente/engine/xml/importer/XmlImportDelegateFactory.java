@@ -87,7 +87,7 @@ public class XmlImportDelegateFactory
 	private final File db;
 	private final File content;
 
-	private final ThreadLocal<List<DocumentVersionT>> threadedVersionList = new ThreadLocal<List<DocumentVersionT>>();
+	private final ThreadLocal<List<DocumentVersionT>> threadedVersionList = new ThreadLocal<>();
 
 	private final ImportEngineListener documentListener = new DefaultImportEngineListener() {
 
@@ -98,7 +98,7 @@ public class XmlImportDelegateFactory
 			if (objectType != CmfType.DOCUMENT) { return; }
 			List<DocumentVersionT> l = XmlImportDelegateFactory.this.threadedVersionList.get();
 			if (l == null) {
-				l = new ArrayList<DocumentVersionT>();
+				l = new ArrayList<>();
 				XmlImportDelegateFactory.this.threadedVersionList.set(l);
 			}
 			l.clear();
@@ -160,7 +160,7 @@ public class XmlImportDelegateFactory
 
 					DocumentIndexT index = DocumentIndexT.class
 						.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT));
-					List<DocumentIndexVersionT> entries = new ArrayList<DocumentIndexVersionT>(l.size());
+					List<DocumentIndexVersionT> entries = new ArrayList<>(l.size());
 					for (DocumentVersionT v : l) {
 						DocumentIndexVersionT idx = new DocumentIndexVersionT();
 						idx.setId(v.getId());
@@ -297,7 +297,7 @@ public class XmlImportDelegateFactory
 		this.aggregateFolders = configuration.getBoolean(XmlSetting.AGGREGATE_FOLDERS);
 		this.aggregateDocuments = configuration.getBoolean(XmlSetting.AGGREGATE_DOCUMENTS);
 
-		Map<CmfType, AggregatorBase<?>> xml = new EnumMap<CmfType, AggregatorBase<?>>(CmfType.class);
+		Map<CmfType, AggregatorBase<?>> xml = new EnumMap<>(CmfType.class);
 		xml.put(CmfType.USER, new UsersT());
 		xml.put(CmfType.GROUP, new GroupsT());
 		xml.put(CmfType.ACL, new AclsT());

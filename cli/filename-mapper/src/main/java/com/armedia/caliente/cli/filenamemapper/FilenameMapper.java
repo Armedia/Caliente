@@ -118,7 +118,7 @@ public class FilenameMapper {
 					Pattern.compile(forbiddenChars);
 				} catch (PatternSyntaxException e) {
 					throw new RuntimeException(
-						String.format("Forbidden characters must be a valid pattern for %s", this.name()), e);
+						String.format("Forbidden characters must be a valid pattern for %s", name()), e);
 				}
 			}
 		}
@@ -250,7 +250,7 @@ public class FilenameMapper {
 	}
 
 	private static boolean checkDedupPattern(String pattern) {
-		final Set<String> found = new HashSet<String>();
+		final Set<String> found = new HashSet<>();
 		new StrSubstitutor(new StrLookup<String>() {
 			@Override
 			public String lookup(String key) {
@@ -366,7 +366,7 @@ public class FilenameMapper {
 		}
 
 		try {
-			final FilenameDeduplicator<CmfObjectRef> deduplicator = new FilenameDeduplicator<CmfObjectRef>(
+			final FilenameDeduplicator<CmfObjectRef> deduplicator = new FilenameDeduplicator<>(
 				FilenameMapper.ID_VALIDATOR, CLIParam.ignore_case.isPresent());
 
 			IDfSession session = dfcPool.acquireSession();
@@ -446,7 +446,7 @@ public class FilenameMapper {
 					FilenameMapper.log.info("Found the following naming conflicts:");
 					deduplicator.showConflicts(FilenameMapper.log);
 					FilenameMapper.log.info("Will resolve any conflicts using the pattern [{}]", resolverPattern);
-					final Map<String, Object> resolverMap = new HashMap<String, Object>();
+					final Map<String, Object> resolverMap = new HashMap<>();
 					// This is the only one that never changes...so we add it once and never again
 					resolverMap.put("fixChar", Tools.coalesce(fixChar, FilenameMapper.DEFAULT_FIX_CHAR).toString());
 					long fixes = deduplicator.fixConflicts(new ConflictResolver<CmfObjectRef>() {

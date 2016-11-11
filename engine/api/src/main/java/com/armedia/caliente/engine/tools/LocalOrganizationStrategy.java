@@ -44,7 +44,7 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 		// of a "universally-valid" format.
 		CmfProperty<T> paths = object.getProperty(IntermediateProperty.PATH);
 
-		List<String> ret = new ArrayList<String>();
+		List<String> ret = new ArrayList<>();
 		if (paths.hasValues()) {
 			for (String p : FileNameTools.tokenize(paths.getValue().toString(), '/')) {
 				ret.add(p);

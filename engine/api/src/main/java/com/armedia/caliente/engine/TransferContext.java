@@ -25,8 +25,8 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 	private final String rootId;
 	private final CmfType rootType;
 	private final S session;
-	private final Map<String, V> values = new HashMap<String, V>();
-	private final Map<String, Object> objects = new HashMap<String, Object>();
+	private final Map<String, V> values = new HashMap<>();
+	private final Map<String, Object> objects = new HashMap<>();
 	private final CfgTools settings;
 	private final Logger output;
 	private final String productName;

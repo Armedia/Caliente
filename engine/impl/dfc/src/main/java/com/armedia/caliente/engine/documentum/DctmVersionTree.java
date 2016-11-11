@@ -104,12 +104,12 @@ public class DctmVersionTree {
 		if (chronicle.isNull()) { throw new IllegalArgumentException("Must provide a valid (non-NULLID) chronicle"); }
 		// First, create an index by object ID...
 		final String chronicleId = chronicle.getId();
-		Map<String, DctmVersionNumber> indexById = new HashMap<String, DctmVersionNumber>();
-		Map<DctmVersionNumber, IDfSysObject> sysObjectsByVersionNumber = new TreeMap<DctmVersionNumber, IDfSysObject>();
-		Map<DctmVersionNumber, String> indexByVersionNumber = new TreeMap<DctmVersionNumber, String>();
-		Set<DctmVersionNumber> allVersions = new TreeSet<DctmVersionNumber>();
-		Map<DctmVersionNumber, DctmVersionNumber> alternateAntecedents = new TreeMap<DctmVersionNumber, DctmVersionNumber>();
-		Set<DctmVersionNumber> trunkVersions = new TreeSet<DctmVersionNumber>(DctmVersionNumber.REVERSE_ORDER);
+		Map<String, DctmVersionNumber> indexById = new HashMap<>();
+		Map<DctmVersionNumber, IDfSysObject> sysObjectsByVersionNumber = new TreeMap<>();
+		Map<DctmVersionNumber, String> indexByVersionNumber = new TreeMap<>();
+		Set<DctmVersionNumber> allVersions = new TreeSet<>();
+		Map<DctmVersionNumber, DctmVersionNumber> alternateAntecedents = new TreeMap<>();
+		Set<DctmVersionNumber> trunkVersions = new TreeSet<>(DctmVersionNumber.REVERSE_ORDER);
 
 		IDfCollection results = null;
 		final List<IDfId> all;
@@ -118,7 +118,7 @@ public class DctmVersionTree {
 				"select r_object_id from dm_sysobject (ALL) where i_chronicle_id = '%s' order by r_object_id",
 				chronicle.getId());
 			results = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
-			all = new ArrayList<IDfId>();
+			all = new ArrayList<>();
 			while (results.next()) {
 				all.add(results.getId(DctmAttributes.R_OBJECT_ID));
 			}
@@ -164,7 +164,7 @@ public class DctmVersionTree {
 
 		// Start by identifying the versions for which no antecedent is present
 
-		Set<DctmVersionNumber> missingAntecedent = new TreeSet<DctmVersionNumber>();
+		Set<DctmVersionNumber> missingAntecedent = new TreeSet<>();
 		IDfSysObject rootNode = null;
 		for (DctmVersionNumber versionNumber : sysObjectsByVersionNumber.keySet()) {
 			final IDfSysObject sysObject = sysObjectsByVersionNumber.get(versionNumber);
@@ -208,13 +208,13 @@ public class DctmVersionTree {
 
 		// Ok...so now we walk through the items in missingAntecedent and determine where they need
 		// to be grafted onto the tree
-		Set<DctmVersionNumber> patches = new TreeSet<DctmVersionNumber>();
+		Set<DctmVersionNumber> patches = new TreeSet<>();
 		for (DctmVersionNumber versionNumber : missingAntecedent) {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("Repairing version [%s]", versionNumber));
 			}
 			// First, see if we can find any of its required antecedents...
-			Set<DctmVersionNumber> antecedents = new TreeSet<DctmVersionNumber>(DctmVersionNumber.REVERSE_ORDER);
+			Set<DctmVersionNumber> antecedents = new TreeSet<>(DctmVersionNumber.REVERSE_ORDER);
 			antecedents.addAll(versionNumber.getAllAntecedents(true));
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("Searching for the required antecedents: %s", antecedents));
@@ -299,7 +299,7 @@ public class DctmVersionTree {
 		this.indexByVersionNumber = Tools.freezeMap(indexByVersionNumber);
 		this.missingAntecedent = Tools.freezeSet(missingAntecedent);
 		this.totalPatches = Tools.freezeSet(patches);
-		List<DctmVersionNumber> l = new ArrayList<DctmVersionNumber>(allVersions.size());
+		List<DctmVersionNumber> l = new ArrayList<>(allVersions.size());
 		l.addAll(allVersions);
 		this.allVersions = Tools.freezeList(l);
 		this.alternateAntecedent = Tools.freezeMap(alternateAntecedents);
@@ -314,7 +314,7 @@ public class DctmVersionTree {
 	public List<IDfId> getVersionsPre(IDfId current) {
 		if (current == null) { throw new IllegalArgumentException("Must provide an ID to split the tree"); }
 		if (this.indexById.containsKey(current.getId())) { return null; }
-		List<IDfId> l = new ArrayList<IDfId>();
+		List<IDfId> l = new ArrayList<>();
 		for (DctmVersionNumber vn : this.indexByVersionNumber.keySet()) {
 			final String id = this.indexByVersionNumber.get(vn);
 			if (id.equals(current.getId())) {
@@ -334,7 +334,7 @@ public class DctmVersionTree {
 	public List<IDfId> getVersionsPost(IDfId current) {
 		if (current == null) { throw new IllegalArgumentException("Must provide an ID to split the tree"); }
 		if (this.indexById.containsKey(current.getId())) { return null; }
-		List<IDfId> l = new ArrayList<IDfId>();
+		List<IDfId> l = new ArrayList<>();
 		boolean add = false;
 		for (DctmVersionNumber vn : this.indexByVersionNumber.keySet()) {
 			final String id = this.indexByVersionNumber.get(vn);

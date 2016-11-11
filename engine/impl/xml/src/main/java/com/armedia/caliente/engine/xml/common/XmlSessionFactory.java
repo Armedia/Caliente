@@ -33,7 +33,7 @@ public class XmlSessionFactory extends SessionFactory<XmlRoot> {
 
 	@Override
 	public PooledObject<XmlRoot> makeObject() throws Exception {
-		return new DefaultPooledObject<XmlRoot>(this.root);
+		return new DefaultPooledObject<>(this.root);
 	}
 
 	@Override

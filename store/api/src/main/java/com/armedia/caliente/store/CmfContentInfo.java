@@ -25,7 +25,7 @@ public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 	private String extension = null;
 	private String fileName = null;
 
-	private final Map<String, String> properties = new HashMap<String, String>();
+	private final Map<String, String> properties = new HashMap<>();
 	private final CfgTools cfg = new CfgTools(this.properties);
 
 	public CmfContentInfo() {
@@ -150,7 +150,7 @@ public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 	}
 
 	public Set<String> getPropertyNames() {
-		return new HashSet<String>(this.properties.keySet());
+		return new HashSet<>(this.properties.keySet());
 	}
 
 	@Override

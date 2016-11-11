@@ -42,9 +42,10 @@ public enum CmfDataType {
 			try {
 				return value.asTime();
 			} catch (ParseException e) {
-				throw new UnsupportedOperationException(String.format(
-					"Failed to convert value [%s] of type [%s] into a DATETIME value", value.asString(),
-					value.getDataType()), e);
+				throw new UnsupportedOperationException(
+					String.format("Failed to convert value [%s] of type [%s] into a DATETIME value", value.asString(),
+						value.getDataType()),
+					e);
 			}
 		}
 	},
@@ -56,7 +57,8 @@ public enum CmfDataType {
 			} catch (URISyntaxException e) {
 				throw new UnsupportedOperationException(
 					String.format("Failed to convert value [%s] of type [%s] into a URI value", value.asString(),
-						value.getDataType()), e);
+						value.getDataType()),
+					e);
 			}
 		}
 	},
@@ -80,9 +82,10 @@ public enum CmfDataType {
 		try {
 			return doGetValue(value);
 		} catch (Exception e) {
-			throw new UnsupportedOperationException(String.format(
-				"Failed to convert value [%s] of type [%s] into a %s value", value.asObject(), value.getDataType(),
-				name()), e);
+			throw new UnsupportedOperationException(
+				String.format("Failed to convert value [%s] of type [%s] into a %s value", value.asObject(),
+					value.getDataType(), name()),
+				e);
 		}
 	}
 
@@ -97,8 +100,8 @@ public enum CmfDataType {
 				CmfDataType ret = d.translateDataType(str);
 				if (ret != null) { return ret; }
 			}
-			throw new IllegalArgumentException(String.format(
-				"The string [%s] could not be translated to a CmfDataType", str));
+			throw new IllegalArgumentException(
+				String.format("The string [%s] could not be translated to a CmfDataType", str));
 		}
 	}
 }

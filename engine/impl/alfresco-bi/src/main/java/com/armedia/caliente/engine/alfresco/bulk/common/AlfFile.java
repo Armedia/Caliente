@@ -23,7 +23,7 @@ public class AlfFile {
 	}
 
 	public static String decodeSafePath(String safePath) throws IOException {
-		List<String> r = new ArrayList<String>();
+		List<String> r = new ArrayList<>();
 		for (String s : FileNameTools.tokenize(safePath, '/')) {
 			r.add(AlfFile.makeUnsafe(s));
 		}
@@ -48,7 +48,7 @@ public class AlfFile {
 		this.relativeFile = f;
 		this.absoluteFile = root.makeAbsolute(f);
 
-		List<String> r = new ArrayList<String>();
+		List<String> r = new ArrayList<>();
 		for (String s : FileNameTools.tokenize(this.relativeFile.getPath())) {
 			r.add(AlfFile.makeSafe(s));
 		}

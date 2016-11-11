@@ -16,7 +16,7 @@ import com.documentum.fc.client.IDfSession;
  */
 public class DctmSessionWrapper extends SessionWrapper<IDfSession> {
 
-	private Stack<IDfLocalTransaction> localTx = new Stack<IDfLocalTransaction>();
+	private Stack<IDfLocalTransaction> localTx = new Stack<>();
 	private final String id;
 
 	protected DctmSessionWrapper(DctmSessionFactory factory, IDfSession wrapped) throws Exception {

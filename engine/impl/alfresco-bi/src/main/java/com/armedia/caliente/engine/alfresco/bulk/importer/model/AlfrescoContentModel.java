@@ -42,8 +42,8 @@ public class AlfrescoContentModel {
 
 	private AlfrescoContentModel(String name, Map<String, Type> types, Map<String, Aspect> aspects) {
 		this.name = name;
-		this.aspects = Tools.freezeMap(new LinkedHashMap<String, Aspect>(aspects));
-		this.types = Tools.freezeMap(new LinkedHashMap<String, Type>(types));
+		this.aspects = Tools.freezeMap(new LinkedHashMap<>(aspects));
+		this.types = Tools.freezeMap(new LinkedHashMap<>(types));
 	}
 
 	public String getName() {
@@ -81,17 +81,17 @@ public class AlfrescoContentModel {
 		}
 
 		// First, make an index of all the aspects we have
-		Map<String, ClassElement> rawAspects = new TreeMap<String, ClassElement>();
+		Map<String, ClassElement> rawAspects = new TreeMap<>();
 		for (ClassElement e : m.getAspects()) {
 			rawAspects.put(e.getName(), e);
 		}
-		Map<String, ClassElement> rawTypes = new TreeMap<String, ClassElement>();
+		Map<String, ClassElement> rawTypes = new TreeMap<>();
 		for (ClassElement e : m.getTypes()) {
 			rawTypes.put(e.getName(), e);
 		}
 
-		Map<String, Aspect> aspects = new TreeMap<String, Aspect>();
-		Map<String, Type> types = new TreeMap<String, Type>();
+		Map<String, Aspect> aspects = new TreeMap<>();
+		Map<String, Type> types = new TreeMap<>();
 		for (ClassElement e : m.getAspects()) {
 			Aspect a = AlfrescoContentModel.buildAspect(m.getName(), e, aspects, rawAspects, references, null);
 			aspects.put(a.name, a);
@@ -139,7 +139,7 @@ public class AlfrescoContentModel {
 		Set<String> visited) {
 
 		if (visited == null) {
-			visited = new LinkedHashSet<String>();
+			visited = new LinkedHashSet<>();
 		}
 
 		final String name = src.getName();
@@ -153,7 +153,7 @@ public class AlfrescoContentModel {
 
 		// First things first: check to see if all my mandatory aspects are ready. If not,
 		// recurse into each of them to make sure they're ready
-		List<Aspect> mandatoryAspects = new ArrayList<Aspect>(src.getMandatoryAspects().size());
+		List<Aspect> mandatoryAspects = new ArrayList<>(src.getMandatoryAspects().size());
 		for (String mandatoryName : src.getMandatoryAspects()) {
 			Aspect ready = AlfrescoContentModel.locateOrBuildAspect(modelName, name, mandatoryName, aspects, rawAspects,
 				references, visited);
@@ -202,7 +202,7 @@ public class AlfrescoContentModel {
 		final Collection<AlfrescoContentModel> references, Set<String> visited) {
 
 		if (visited == null) {
-			visited = new LinkedHashSet<String>();
+			visited = new LinkedHashSet<>();
 		}
 
 		final String name = src.getName();
@@ -215,7 +215,7 @@ public class AlfrescoContentModel {
 
 		// First things first: check to see if all my mandatory aspects are ready. If not,
 		// recurse into each of them to make sure they're ready
-		List<Aspect> mandatoryAspects = new ArrayList<Aspect>(src.getMandatoryAspects().size());
+		List<Aspect> mandatoryAspects = new ArrayList<>(src.getMandatoryAspects().size());
 		for (String mandatoryName : src.getMandatoryAspects()) {
 			Aspect aspect = aspects.get(mandatoryName);
 			if (aspect == null) {

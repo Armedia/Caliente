@@ -48,7 +48,7 @@ public class StorePropertiesT {
 	 */
 	public List<PropertyT> getProperty() {
 		if (this.property == null) {
-			this.property = new ArrayList<PropertyT>();
+			this.property = new ArrayList<>();
 		}
 		return this.property;
 	}

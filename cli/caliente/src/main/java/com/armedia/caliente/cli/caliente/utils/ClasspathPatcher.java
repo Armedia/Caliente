@@ -17,11 +17,12 @@ public abstract class ClasspathPatcher {
 	};
 	private static final URLClassLoader CL;
 	private static final Method METHOD;
-	private static final Set<String> ADDED = new HashSet<String>();
+	private static final Set<String> ADDED = new HashSet<>();
 
 	static {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
-		if (!(cl instanceof URLClassLoader)) { throw new RuntimeException("System Classloader is not a URLClassLoader"); }
+		if (!(cl instanceof URLClassLoader)) { throw new RuntimeException(
+			"System Classloader is not a URLClassLoader"); }
 		CL = URLClassLoader.class.cast(cl);
 		try {
 			METHOD = URLClassLoader.class.getDeclaredMethod("addURL", ClasspathPatcher.PARAMETERS);
@@ -56,7 +57,7 @@ public abstract class ClasspathPatcher {
 	private final Set<String> engines;
 
 	protected ClasspathPatcher(String... engines) {
-		Set<String> s = new HashSet<String>();
+		Set<String> s = new HashSet<>();
 		for (String e : engines) {
 			if (e != null) {
 				s.add(e.toLowerCase());

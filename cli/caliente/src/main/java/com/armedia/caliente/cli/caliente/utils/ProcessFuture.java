@@ -100,14 +100,14 @@ public class ProcessFuture {
 
 		try {
 			Method m = klass.getMethod("main", String[].class);
-			if (!Modifier.isStatic(m.getModifiers())) { throw new IllegalArgumentException(String.format(
-				"Class [%s] lacks a visible static main() method%n", klass.getCanonicalName())); }
+			if (!Modifier.isStatic(m.getModifiers())) { throw new IllegalArgumentException(
+				String.format("Class [%s] lacks a visible static main() method%n", klass.getCanonicalName())); }
 		} catch (SecurityException e) {
 			// Can't tell, so we keep going...
 		} catch (NoSuchMethodException e) {
 			// No such method...
-			throw new IllegalArgumentException(String.format("Class [%s] lacks a main() method%n",
-				klass.getCanonicalName()), e);
+			throw new IllegalArgumentException(
+				String.format("Class [%s] lacks a main() method%n", klass.getCanonicalName()), e);
 		}
 
 		// This will help identify
@@ -142,7 +142,7 @@ public class ProcessFuture {
 			}
 			b.append(f.getAbsolutePath());
 		}
-		List<String> command = new ArrayList<String>();
+		List<String> command = new ArrayList<>();
 		command.add(javaBin.getAbsolutePath());
 
 		// Add the classpath first

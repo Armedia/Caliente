@@ -20,15 +20,15 @@ import com.armedia.commons.utilities.Tools;
 public class JdbcStorePropertyManager {
 
 	private static enum Op {
-							//
-							INSERT("insert into %s (name, data_type, value) values (?, ?, ?)"),
-							GET("select * from %s where name = ?"),
-							UPDATE("update %s set value = ? where name = ?"),
-							DELETE("delete from %s where name = ?"),
-							GET_NAMES("select name from %s order by name"),
-							DELETE_ALL("delete from %s"),
-							//
-							;
+		//
+		INSERT("insert into %s (name, data_type, value) values (?, ?, ?)"),
+		GET("select * from %s where name = ?"),
+		UPDATE("update %s set value = ? where name = ?"),
+		DELETE("delete from %s where name = ?"),
+		GET_NAMES("select name from %s order by name"),
+		DELETE_ALL("delete from %s"),
+		//
+		;
 
 		private final String sql;
 
@@ -42,7 +42,7 @@ public class JdbcStorePropertyManager {
 	JdbcStorePropertyManager(String table) {
 		if (table == null) { throw new IllegalArgumentException(
 			"Must provide the name of the table holding the properties"); }
-		Map<Op, String> sql = new EnumMap<Op, String>(Op.class);
+		Map<Op, String> sql = new EnumMap<>(Op.class);
 		for (Op op : Op.values()) {
 			sql.put(op, String.format(op.sql, table));
 		}
@@ -122,7 +122,7 @@ public class JdbcStorePropertyManager {
 			return JdbcTools.getQueryRunner().query(c, getSql(Op.GET_NAMES), new ResultSetHandler<Set<String>>() {
 				@Override
 				public Set<String> handle(ResultSet rs) throws SQLException {
-					Set<String> ret = new TreeSet<String>();
+					Set<String> ret = new TreeSet<>();
 					while (rs.next()) {
 						ret.add(rs.getString("name"));
 					}

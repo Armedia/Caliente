@@ -115,8 +115,7 @@ public abstract class LocalImportDelegate extends
 		}
 
 		final BasicFileAttributes basic = basicView.readAttributes();
-		Map<IntermediateAttribute, FileTime> dates = new EnumMap<IntermediateAttribute, FileTime>(
-			IntermediateAttribute.class);
+		Map<IntermediateAttribute, FileTime> dates = new EnumMap<>(IntermediateAttribute.class);
 		dates.put(IntermediateAttribute.CREATION_DATE, basic.creationTime());
 		dates.put(IntermediateAttribute.LAST_MODIFICATION_DATE, basic.lastModifiedTime());
 		dates.put(IntermediateAttribute.LAST_ACCESS_DATE, basic.lastAccessTime());

@@ -67,20 +67,18 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 		// Copy the ACL Data into the object's attributes using the common ACL attributes
 		final Acl acl = this.object.getAcl();
 
-		CmfProperty<CmfValue> owner = new CmfProperty<CmfValue>(IntermediateProperty.ACL_OWNER, CmfDataType.STRING,
-			false);
+		CmfProperty<CmfValue> owner = new CmfProperty<>(IntermediateProperty.ACL_OWNER, CmfDataType.STRING, false);
 		owner.setValue(new CmfValue(this.object.getCreatedBy()));
-		CmfProperty<CmfValue> name = new CmfProperty<CmfValue>(IntermediateProperty.ACL_OBJECT_ID, CmfDataType.STRING,
-			false);
+		CmfProperty<CmfValue> name = new CmfProperty<>(IntermediateProperty.ACL_OBJECT_ID, CmfDataType.STRING, false);
 		name.setValue(new CmfValue(this.object.getId()));
 
 		if (acl != null) {
 			String permissionsName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT,
 				ctx.getRepositoryInfo().getProductName().toLowerCase());
-			CmfProperty<CmfValue> accessors = new CmfProperty<CmfValue>(IntermediateProperty.ACL_ACCESSOR_NAME,
+			CmfProperty<CmfValue> accessors = new CmfProperty<>(IntermediateProperty.ACL_ACCESSOR_NAME,
 				CmfDataType.STRING, true);
-			CmfProperty<CmfValue> permissions = new CmfProperty<CmfValue>(permissionsName, CmfDataType.STRING, true);
-			CmfProperty<CmfValue> accessorActions = new CmfProperty<CmfValue>(IntermediateProperty.ACL_ACCESSOR_ACTIONS,
+			CmfProperty<CmfValue> permissions = new CmfProperty<>(permissionsName, CmfDataType.STRING, true);
+			CmfProperty<CmfValue> accessorActions = new CmfProperty<>(IntermediateProperty.ACL_ACCESSOR_ACTIONS,
 				CmfDataType.STRING, true);
 
 			for (Ace ace : acl.getAces()) {
@@ -89,7 +87,7 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 					continue;
 				}
 
-				Set<String> actions = new TreeSet<String>();
+				Set<String> actions = new TreeSet<>();
 				for (String permission : ace.getPermissions()) {
 					actions.addAll(ctx.convertPermissionToAllowableActions(permission));
 				}

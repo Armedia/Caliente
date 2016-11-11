@@ -19,13 +19,13 @@ import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 
 public abstract class CmisImportDelegate<T> extends
 	ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
@@ -71,7 +71,7 @@ public abstract class CmisImportDelegate<T> extends
 				typeName, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 
-		Map<String, Object> properties = new HashMap<String, Object>();
+		Map<String, Object> properties = new HashMap<>();
 		properties.put(PropertyIds.OBJECT_TYPE_ID, finalTypeName);
 		for (PropertyDefinition<?> def : type.getPropertyDefinitions().values()) {
 			CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(def.getId());
@@ -91,7 +91,7 @@ public abstract class CmisImportDelegate<T> extends
 				case MULTI:
 					// Copy ALL the values
 					final int count = att.getValueCount();
-					List<Object> l = new ArrayList<Object>(count);
+					List<Object> l = new ArrayList<>(count);
 					for (int i = 0; i < count; i++) {
 						CmfValue v = att.getValue(i);
 						if (v.isNull()) {

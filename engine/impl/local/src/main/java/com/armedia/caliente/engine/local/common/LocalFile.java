@@ -23,7 +23,7 @@ public class LocalFile {
 	}
 
 	public static String decodeSafePath(String safePath) throws IOException {
-		List<String> r = new ArrayList<String>();
+		List<String> r = new ArrayList<>();
 		for (String s : FileNameTools.tokenize(safePath, '/')) {
 			r.add(LocalFile.makeUnsafe(s));
 		}
@@ -50,7 +50,7 @@ public class LocalFile {
 		this.relativeFile = f;
 		this.absoluteFile = root.makeAbsolute(f);
 
-		List<String> r = new ArrayList<String>();
+		List<String> r = new ArrayList<>();
 		this.fullPath = this.relativeFile.getPath();
 		for (String s : FileNameTools.tokenize(this.fullPath)) {
 			r.add(LocalFile.makeSafe(s));

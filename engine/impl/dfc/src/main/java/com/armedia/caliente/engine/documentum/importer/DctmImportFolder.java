@@ -114,7 +114,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			|| (usersDefaultFolderPaths.getValueCount() == 0)) { return; }
 
 		final int total = usersWithDefaultFolder.getValueCount();
-		Map<String, String> m = new TreeMap<String, String>();
+		Map<String, String> m = new TreeMap<>();
 		for (int i = 0; i < total; i++) {
 			String user = usersWithDefaultFolder.getValue(i).asString();
 			// Don't touch the special users!!
@@ -173,7 +173,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		final CmfProperty<IDfValue> groupsWithDefaultFolder = this.cmfObject
 			.getProperty(DctmFolder.GROUPS_WITH_DEFAULT_FOLDER);
 		if ((groupsWithDefaultFolder != null) && groupsWithDefaultFolder.hasValues()) {
-			Set<String> s = new TreeSet<String>();
+			Set<String> s = new TreeSet<>();
 			for (IDfValue v : groupsWithDefaultFolder) {
 				s.add(v.asString());
 			}

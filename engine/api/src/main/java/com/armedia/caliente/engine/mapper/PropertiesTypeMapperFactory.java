@@ -57,7 +57,7 @@ public class PropertiesTypeMapperFactory extends CmfTypeMapperFactory {
 		private final Map<String, String> mappings;
 
 		private Mapper(Properties properties) throws Exception {
-			Map<String, String> m = new HashMap<String, String>();
+			Map<String, String> m = new HashMap<>();
 			for (Object o : properties.keySet()) {
 				if (o == null) {
 					continue;

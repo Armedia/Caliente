@@ -78,21 +78,21 @@ public class PermissionMapper {
 
 	public PermissionMapper(Session session) {
 		final RepositoryInfo info = session.getRepositoryInfo();
-		Map<String, Set<String>> permissionsToActions = new TreeMap<String, Set<String>>();
-		Map<String, Set<String>> actionsToPermissions = new TreeMap<String, Set<String>>();
+		Map<String, Set<String>> permissionsToActions = new TreeMap<>();
+		Map<String, Set<String>> actionsToPermissions = new TreeMap<>();
 		Map<String, PermissionMapping> m = info.getAclCapabilities().getPermissionMapping();
 		final Set<String> empty = Collections.emptySet();
 
-		Set<String> permissions = new HashSet<String>();
+		Set<String> permissions = new HashSet<>();
 		for (String action : m.keySet()) {
 			PermissionMapping mapping = m.get(action);
-			Set<String> p = new TreeSet<String>();
+			Set<String> p = new TreeSet<>();
 			for (String permission : mapping.getPermissions()) {
 				p.add(permission);
 				permissions.add(permission);
 				Set<String> s = permissionsToActions.get(permission);
 				if (s == null) {
-					s = new TreeSet<String>();
+					s = new TreeSet<>();
 					permissionsToActions.put(permission, s);
 				}
 				s.add(action);
@@ -103,14 +103,14 @@ public class PermissionMapper {
 					.warn(String.format("Allowable Action [%s] is not granted by any existing permissions", action));
 				actionsToPermissions.put(action, empty);
 			} else {
-				actionsToPermissions.put(action, Tools.freezeSet(new LinkedHashSet<String>(p)));
+				actionsToPermissions.put(action, Tools.freezeSet(new LinkedHashSet<>(p)));
 			}
 		}
 
 		// Use Linked* to preserve order, but get better performance
 		for (String p : permissions) {
 			Set<String> s = permissionsToActions.get(p);
-			permissionsToActions.put(p, Tools.freezeSet(new LinkedHashSet<String>(s)));
+			permissionsToActions.put(p, Tools.freezeSet(new LinkedHashSet<>(s)));
 		}
 
 		// Make sure all permissions have "some" mapping - even if it's an empty mapping
@@ -122,7 +122,7 @@ public class PermissionMapper {
 			this.log.warn(String.format("Permission [%s] grants no Allowable Actions", p.getId()));
 			permissionsToActions.put(p.getId(), empty);
 		}
-		this.permissionsToActions = Tools.freezeMap(new LinkedHashMap<String, Set<String>>(permissionsToActions));
+		this.permissionsToActions = Tools.freezeMap(new LinkedHashMap<>(permissionsToActions));
 
 		// This only works in OpenCMIS...but will do for now
 		// Make sure all actions have "some" mapping - even if it's an empty mapping
@@ -140,12 +140,12 @@ public class PermissionMapper {
 				if (actionsToPermissions.containsKey(v.toString())) {
 					continue;
 				}
-				this.log.warn(String.format("Allowable Action [%s] is not granted by any existing permissions",
-					v.toString()));
+				this.log.warn(
+					String.format("Allowable Action [%s] is not granted by any existing permissions", v.toString()));
 				actionsToPermissions.put(v.toString(), empty);
 			}
 		}
-		this.actionsToPermissions = Tools.freezeMap(new LinkedHashMap<String, Set<String>>(actionsToPermissions));
+		this.actionsToPermissions = Tools.freezeMap(new LinkedHashMap<>(actionsToPermissions));
 	}
 
 	/**
@@ -160,7 +160,8 @@ public class PermissionMapper {
 	public Set<String> convertPermissionToAllowableActions(String permission) {
 		if (permission == null) { throw new IllegalArgumentException("Must provide a non-null permission"); }
 		Set<String> ret = this.permissionsToActions.get(permission);
-		if (ret == null) { throw new IllegalArgumentException(String.format("Unsupported permission [%s]", permission)); }
+		if (ret == null) { throw new IllegalArgumentException(
+			String.format("Unsupported permission [%s]", permission)); }
 		return ret;
 	}
 
@@ -181,21 +182,21 @@ public class PermissionMapper {
 		// find the actions that permission allows
 		// select the permission that allows the fewest extra actions that aren't included
 		// in the original set of actions
-		actions = new TreeSet<String>(actions);
-		Set<String> ret = new TreeSet<String>();
+		actions = new TreeSet<>(actions);
+		Set<String> ret = new TreeSet<>();
 		for (String a : actions) {
 
 			// First, find the permissions that may allow that action to be performed
 			Set<String> permissions = this.actionsToPermissions.get(a);
-			if (permissions == null) { throw new IllegalArgumentException(String.format(
-				"The action [%s] is not a valid allowable action", a)); }
+			if (permissions == null) { throw new IllegalArgumentException(
+				String.format("The action [%s] is not a valid allowable action", a)); }
 
 			if (permissions.isEmpty()) {
 				continue;
 			}
 
 			// For each permission, index them based on their PriorityKey
-			Set<PriorityKey> sortedPermissions = new TreeSet<PriorityKey>();
+			Set<PriorityKey> sortedPermissions = new TreeSet<>();
 			for (String p : permissions) {
 				Set<String> permissionActions = this.permissionsToActions.get(p);
 				int extra = 0;

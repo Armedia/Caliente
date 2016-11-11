@@ -35,7 +35,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 	private final boolean excludeEmptyFolders;
 	private final LocalRoot root;
 
-	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
+	private final Stack<RecursiveState> stateStack = new Stack<>();
 
 	public LocalRecursiveIterator(LocalRoot root, boolean excludeEmptyFolders) throws IOException {
 		this.root = root;
@@ -59,7 +59,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 			if (state.childIterator == null) {
 				File[] children = current.listFiles();
 				if ((children != null) && (children.length > 0)) {
-					state.childIterator = new ArrayIterator<File>(children);
+					state.childIterator = new ArrayIterator<>(children);
 				} else {
 					state.childIterator = null;
 				}

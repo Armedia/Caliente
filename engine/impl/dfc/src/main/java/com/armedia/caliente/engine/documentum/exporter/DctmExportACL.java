@@ -59,7 +59,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		IDfACL acl) throws DfException {
 		CmfProperty<IDfValue> property = null;
 
-		property = new CmfProperty<IDfValue>(DctmACL.DOCUMENTUM_MARKER, DctmDataType.DF_BOOLEAN.getStoredType(), false);
+		property = new CmfProperty<>(DctmACL.DOCUMENTUM_MARKER, DctmDataType.DF_BOOLEAN.getStoredType(), false);
 		property.setValue(DfValueFactory.newBooleanValue(true));
 		properties.add(property);
 
@@ -67,8 +67,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
 		try {
-			property = new CmfProperty<IDfValue>(DctmACL.USERS_WITH_DEFAULT_ACL,
-				DctmDataType.DF_STRING.getStoredType());
+			property = new CmfProperty<>(DctmACL.USERS_WITH_DEFAULT_ACL, DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				property.addValue(resultCol.getValueAt(0));
 			}
@@ -77,18 +76,18 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			DfUtils.closeQuietly(resultCol);
 		}
 
-		CmfProperty<IDfValue> accessors = new CmfProperty<IDfValue>(DctmACL.ACCESSORS,
+		CmfProperty<IDfValue> accessors = new CmfProperty<>(DctmACL.ACCESSORS, DctmDataType.DF_STRING.getStoredType(),
+			true);
+		CmfProperty<IDfValue> accessorTypes = new CmfProperty<>(DctmACL.ACCESSOR_TYPES,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		CmfProperty<IDfValue> accessorTypes = new CmfProperty<IDfValue>(DctmACL.ACCESSOR_TYPES,
-			DctmDataType.DF_STRING.getStoredType(), true);
-		CmfProperty<IDfValue> permitTypes = new CmfProperty<IDfValue>(DctmACL.PERMIT_TYPES,
+		CmfProperty<IDfValue> permitTypes = new CmfProperty<>(DctmACL.PERMIT_TYPES,
 			DctmDataType.DF_INTEGER.getStoredType(), true);
-		CmfProperty<IDfValue> permitValues = new CmfProperty<IDfValue>(DctmACL.PERMIT_VALUES,
+		CmfProperty<IDfValue> permitValues = new CmfProperty<>(DctmACL.PERMIT_VALUES,
 			DctmDataType.DF_STRING.getStoredType(), true);
 		IDfList permits = acl.getPermissions();
 		final int permitCount = permits.getCount();
 		final IDfSession session = acl.getSession();
-		Set<String> missingAccessors = new HashSet<String>();
+		Set<String> missingAccessors = new HashSet<>();
 		for (int i = 0; i < permitCount; i++) {
 			IDfPermit p = IDfPermit.class.cast(permits.get(i));
 			// First, validate the accessor

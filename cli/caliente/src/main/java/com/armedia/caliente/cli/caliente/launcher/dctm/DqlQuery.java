@@ -54,7 +54,7 @@ class DqlQuery {
 		}
 
 		private Keyword(Keyword... chasers) {
-			Set<Keyword> s = new HashSet<Keyword>();
+			Set<Keyword> s = new HashSet<>();
 			for (Keyword k : chasers) {
 				s.add(k);
 			}
@@ -99,13 +99,13 @@ class DqlQuery {
 	private static final Map<String, Clause> CLAUSES;
 
 	static {
-		Map<String, Keyword> kw = new HashMap<String, Keyword>();
+		Map<String, Keyword> kw = new HashMap<>();
 		for (Keyword k : Keyword.values()) {
 			kw.put(k.name(), k);
 		}
 		KEYWORDS = Tools.freezeMap(kw);
 
-		Map<String, Clause> cl = new HashMap<String, Clause>();
+		Map<String, Clause> cl = new HashMap<>();
 		for (Clause c : Clause.values()) {
 			cl.put(c.string, c);
 		}
@@ -212,7 +212,7 @@ class DqlQuery {
 		// * UNION DQL doesn't support ORDER_BY or ENABLE
 		// * IN DOCUMENT and IN ASSEMBLY are mutually exclusive, but neither is required
 
-		Map<Clause, Object> clauses = new EnumMap<Clause, Object>(Clause.class);
+		Map<Clause, Object> clauses = new EnumMap<>(Clause.class);
 
 		String leading = "";
 		ClausePosition previousClause = null;
@@ -235,7 +235,7 @@ class DqlQuery {
 				List<DqlQuery> unions = null;
 				data = clauses.get(clause.clause);
 				if (data == null) {
-					unions = new ArrayList<DqlQuery>();
+					unions = new ArrayList<>();
 					data = unions;
 				} else {
 					@SuppressWarnings("unchecked")

@@ -243,7 +243,7 @@ public final class DctmVersionNumber implements Comparable<DctmVersionNumber>, C
 	}
 
 	public Set<DctmVersionNumber> getAllAntecedents(final boolean includeBranchSibling) {
-		Set<DctmVersionNumber> s = new TreeSet<DctmVersionNumber>();
+		Set<DctmVersionNumber> s = new TreeSet<>();
 		DctmVersionNumber vn = this;
 		while (vn != null) {
 			vn = vn.getAntecedent(includeBranchSibling);

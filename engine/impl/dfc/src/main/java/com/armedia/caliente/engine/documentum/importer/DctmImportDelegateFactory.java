@@ -10,8 +10,8 @@ import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
-public class DctmImportDelegateFactory extends
-	ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine> {
+public class DctmImportDelegateFactory
+	extends ImportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine> {
 
 	protected DctmImportDelegateFactory(DctmImportEngine engine, CfgTools configuration) {
 		super(engine, configuration);

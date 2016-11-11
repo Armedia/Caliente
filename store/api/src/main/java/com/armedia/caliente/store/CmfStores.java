@@ -35,17 +35,17 @@ public final class CmfStores {
 	private final AtomicBoolean open = new AtomicBoolean(true);
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 	private final Map<String, CmfStoreFactory<?>> factories;
-	private final Map<String, CmfStore<?, ?>> cmfStores = new HashMap<String, CmfStore<?, ?>>();
-	private final Map<String, StoreConfiguration> configurations = new HashMap<String, StoreConfiguration>();
+	private final Map<String, CmfStore<?, ?>> cmfStores = new HashMap<>();
+	private final Map<String, StoreConfiguration> configurations = new HashMap<>();
 
 	private final String type;
 
 	private <F extends CmfStoreFactory<?>> CmfStores(String type, Class<F> factoryClass) {
 		this.type = type;
-		PluggableServiceLocator<F> factories = new PluggableServiceLocator<F>(factoryClass);
+		PluggableServiceLocator<F> factories = new PluggableServiceLocator<>(factoryClass);
 		factories.setHideErrors(true);
-		Set<String> registration = new TreeSet<String>();
-		Map<String, CmfStoreFactory<?>> m = new HashMap<String, CmfStoreFactory<?>>();
+		Set<String> registration = new TreeSet<>();
+		Map<String, CmfStoreFactory<?>> m = new HashMap<>();
 		for (F f : factories) {
 			registration.clear();
 			for (String alias : f.getAliases()) {

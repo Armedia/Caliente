@@ -115,8 +115,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		final IDfValue ownerName = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME).getValue();
 		final IDfValue objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue();
 		final IDfSession session = ctx.getSession();
-		return session.getACL(ownerName != null ? DctmMappingUtils.resolveMappableUser(session, ownerName.asString())
-			: null, objectName.asString());
+		return session.getACL(
+			ownerName != null ? DctmMappingUtils.resolveMappableUser(session, ownerName.asString()) : null,
+			objectName.asString());
 	}
 
 	@Override
@@ -151,8 +152,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			return false;
 		}
 
-		Set<Permit> existing = new HashSet<Permit>();
-		Set<Permit> incoming = new HashSet<Permit>();
+		Set<Permit> existing = new HashSet<>();
+		Set<Permit> incoming = new HashSet<>();
 		IDfSession session = acl.getSession();
 		final int permitCount = existingPermits.getCount();
 		for (int i = 0; i < permitCount; i++) {
@@ -165,8 +166,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected void finalizeConstruction(IDfACL acl, boolean newObject, DctmImportContext context) throws DfException,
-		ImportException {
+	protected void finalizeConstruction(IDfACL acl, boolean newObject, DctmImportContext context)
+		throws DfException, ImportException {
 		if (newObject) {
 			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.OWNER_NAME);
 			String user = null;
@@ -191,9 +192,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 			user = DctmMappingUtils.resolveMappableUser(acl.getSession(), user);
 			IDfUser u = DctmImportUser.locateExistingUser(context, user);
-			if (u == null) { throw new ImportException(String.format(
-				"Failed to locate the owner [%s] for ACL [%s](%s)", user, this.cmfObject.getLabel(),
-				this.cmfObject.getId())); }
+			if (u == null) { throw new ImportException(String.format("Failed to locate the owner [%s] for ACL [%s](%s)",
+				user, this.cmfObject.getLabel(), this.cmfObject.getId())); }
 			acl.setDomain(u.getUserName());
 			acl.setObjectName(name);
 			acl.save();
@@ -215,12 +215,10 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			} catch (DfACLException e) {
 				if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
 					// we can survive this...
-					this.log
-						.warn(String
-							.format(
-								"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
-								this.cmfObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
-								permit.getPermitValueInt(), permit.getPermitValueString()));
+					this.log.warn(String.format(
+						"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
+						this.cmfObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
+						permit.getPermitValueInt(), permit.getPermitValueString()));
 					continue;
 				}
 				// something else? don't snuff it...
@@ -229,7 +227,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		}
 
 		// Now, apply the new permissions
-		List<IDfPermit> extendedPerms = new ArrayList<IDfPermit>();
+		List<IDfPermit> extendedPerms = new ArrayList<>();
 		if (this.documentumMode) {
 			CmfProperty<IDfValue> accessors = this.cmfObject.getProperty(DctmACL.ACCESSORS);
 			if (this.log.isTraceEnabled()) {
@@ -258,9 +256,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			if ((accessors == null) || (permitTypes == null) || (permitValues == null)
 				|| (accessors.getValueCount() != permitTypes.getValueCount())
 				|| (accessors.getValueCount() != permitValues.getValueCount())) { throw new ImportException(
-				String.format(
-					"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%npermitType = %s%npermitValue = %s",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), accessors, permitTypes, permitValues)); }
+					String.format(
+						"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%npermitType = %s%npermitValue = %s",
+						this.cmfObject.getLabel(), this.cmfObject.getId(), accessors, permitTypes, permitValues)); }
 
 			// One final check to shortcut and avoid unnecessary processing...
 			final int accessorCount = accessors.getValueCount();
@@ -318,11 +316,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 						// Safety net?
 						if (!exists) {
 							// This shouldn't be necessary
-							this.log
-								.warn(String
-									.format(
-										"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-										this.cmfObject.getLabel(), name));
+							this.log.warn(String.format(
+								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
+								this.cmfObject.getLabel(), name));
 							exists = (session.getGroup(name) != null);
 							accessorType = "accessor (user or group)";
 						}
@@ -333,9 +329,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 				}
 
 				if (!exists) {
-					this.log.warn(String.format(
-						"ACL [%s] references the %s [%s] for %s permission %s, but the %1$s wasn't found",
-						this.cmfObject.getLabel(), accessorType, name, type, perm));
+					this.log.warn(
+						String.format("ACL [%s] references the %s [%s] for %s permission %s, but the %1$s wasn't found",
+							this.cmfObject.getLabel(), accessorType, name, type, perm));
 					continue;
 				}
 
@@ -417,7 +413,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		if ((usersWithDefaultACL == null) || (usersWithDefaultACL.getValueCount() == 0)) { return; }
 
 		final IDfSession session = context.getSession();
-		Set<String> users = new TreeSet<String>();
+		Set<String> users = new TreeSet<>();
 		for (IDfValue value : usersWithDefaultACL) {
 			String userName = value.asString();
 			// Don't touch the special users!!
@@ -446,9 +442,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			}
 
 			if (user == null) {
-				this.log.warn(String.format(
-					"Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found",
-					acl.getDomain(), acl.getObjectName(), userName));
+				this.log.warn(
+					String.format("Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found",
+						acl.getDomain(), acl.getObjectName(), userName));
 				continue;
 			}
 
@@ -461,12 +457,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			try {
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
-				this.log
-					.warn(
-						String
-							.format(
-								"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-								user.getUserName(), this.cmfObject.getLabel()), e);
+				this.log.warn(String.format(
+					"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
+					user.getUserName(), this.cmfObject.getLabel()), e);
 			}
 		}
 	}

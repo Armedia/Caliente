@@ -11,7 +11,6 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.engine.local.exporter.LocalRecursiveIterator;
 
 public class LocalRecursiveIteratorTest {
 

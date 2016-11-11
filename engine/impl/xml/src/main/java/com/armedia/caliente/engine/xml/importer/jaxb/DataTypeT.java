@@ -46,15 +46,15 @@ public enum DataTypeT {
 		if (DataTypeT.TO_CMF == null) {
 			synchronized (DataTypeT.class) {
 				if (DataTypeT.TO_CMF == null) {
-					DataTypeT.TO_CMF = new EnumMap<DataTypeT, CmfDataType>(DataTypeT.class);
-					DataTypeT.FROM_CMF = new EnumMap<CmfDataType, DataTypeT>(CmfDataType.class);
+					DataTypeT.TO_CMF = new EnumMap<>(DataTypeT.class);
+					DataTypeT.FROM_CMF = new EnumMap<>(CmfDataType.class);
 
 					for (DataTypeT t : DataTypeT.values()) {
 						DataTypeT.TO_CMF.put(t, t.equiv);
 						DataTypeT t2 = DataTypeT.FROM_CMF.put(t.equiv, t);
-						if (t2 != null) { throw new RuntimeException(String.format(
-							"Duplicate mapping: DataTypeT.%s and DataTypeT.%s both map to CmfDataType.%s", t, t2,
-							t.equiv)); }
+						if (t2 != null) { throw new RuntimeException(
+							String.format("Duplicate mapping: DataTypeT.%s and DataTypeT.%s both map to CmfDataType.%s",
+								t, t2, t.equiv)); }
 					}
 				}
 			}

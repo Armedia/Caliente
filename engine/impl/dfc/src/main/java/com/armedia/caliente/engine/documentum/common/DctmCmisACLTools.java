@@ -96,7 +96,7 @@ public class DctmCmisACLTools implements DctmACL {
 		private PermitToAction(int permit, String... actions) {
 			DfUtils.decodeAccessPermission(permit);
 			this.permit = permit;
-			Set<String> a = new HashSet<String>();
+			Set<String> a = new HashSet<>();
 			for (String s : actions) {
 				if (s == null) {
 					continue;
@@ -111,14 +111,14 @@ public class DctmCmisACLTools implements DctmACL {
 	private static final Map<String, Integer> ACTION_TO_PERMIT;
 
 	static {
-		Map<Integer, Set<String>> p2a = new HashMap<Integer, Set<String>>();
-		Map<String, Integer> a2p = new HashMap<String, Integer>();
+		Map<Integer, Set<String>> p2a = new HashMap<>();
+		Map<String, Integer> a2p = new HashMap<>();
 		for (PermitToAction e : PermitToAction.values()) {
 			if (e.actions.isEmpty()) {
 				continue;
 			}
 			int permit = e.permit;
-			Set<String> s = new HashSet<String>();
+			Set<String> s = new HashSet<>();
 			s.addAll(e.actions);
 			Set<String> oldS = p2a.put(permit, Tools.freezeSet(s));
 			if (oldS != null) { throw new RuntimeException(
@@ -153,7 +153,7 @@ public class DctmCmisACLTools implements DctmACL {
 
 		private XPermitToAction(String permit, String... actions) {
 			this.permit = permit;
-			Set<String> a = new HashSet<String>();
+			Set<String> a = new HashSet<>();
 			for (String s : actions) {
 				if (s == null) {
 					continue;
@@ -168,14 +168,14 @@ public class DctmCmisACLTools implements DctmACL {
 	private static final Map<String, String> ACTION_TO_XPERMIT;
 
 	static {
-		Map<String, Set<String>> x2a = new HashMap<String, Set<String>>();
-		Map<String, String> a2x = new HashMap<String, String>();
+		Map<String, Set<String>> x2a = new HashMap<>();
+		Map<String, String> a2x = new HashMap<>();
 		for (XPermitToAction e : XPermitToAction.values()) {
 			if (e.actions.isEmpty()) {
 				continue;
 			}
 			String permit = e.permit;
-			Set<String> s = new HashSet<String>();
+			Set<String> s = new HashSet<>();
 			s.addAll(e.actions);
 			Set<String> oldS = x2a.put(permit, Tools.freezeSet(s));
 			if (oldS != null) { throw new RuntimeException(String.format(
@@ -192,7 +192,7 @@ public class DctmCmisACLTools implements DctmACL {
 	}
 
 	private static Set<String> calculateActionsForPermissions(int permit, String extended) {
-		Set<String> ret = new TreeSet<String>();
+		Set<String> ret = new TreeSet<>();
 		Set<String> actions = null;
 
 		permit = Tools.ensureBetween(IDfACL.DF_PERMIT_NONE, permit, IDfACL.DF_PERMIT_DELETE);
@@ -232,12 +232,12 @@ public class DctmCmisACLTools implements DctmACL {
 				cmisAcl.getId(), accessors.getValueCount(), accessorActions.getValueCount())); }
 
 		// Ok...we have the triplets, so we start walking...
-		List<IDfPermit> ret = new ArrayList<IDfPermit>();
+		List<IDfPermit> ret = new ArrayList<>();
 		for (int i = 0; i < accessors.getValueCount(); i++) {
 			final String accessorName = accessors.getValue(i).asString();
 
 			int perm = IDfACL.DF_PERMIT_NONE;
-			Set<String> extended = new TreeSet<String>();
+			Set<String> extended = new TreeSet<>();
 			Set<String> actions = AclTools.decode(accessorActions.getValue(i).asString());
 			for (String a : actions) {
 				Integer newPerm = DctmCmisACLTools.ACTION_TO_PERMIT.get(a);
@@ -272,13 +272,13 @@ public class DctmCmisACLTools implements DctmACL {
 		if (acl == null) { return; }
 		final IDfSession session = acl.getSession();
 
-		Set<String> missingAccessors = new HashSet<String>();
+		Set<String> missingAccessors = new HashSet<>();
 
-		CmfProperty<IDfValue> accessors = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ACCESSOR_NAME,
+		CmfProperty<IDfValue> accessors = new CmfProperty<>(IntermediateProperty.ACL_ACCESSOR_NAME,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		CmfProperty<IDfValue> accessorTypes = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ACCESSOR_TYPE,
+		CmfProperty<IDfValue> accessorTypes = new CmfProperty<>(IntermediateProperty.ACL_ACCESSOR_TYPE,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		CmfProperty<IDfValue> accessorActions = new CmfProperty<IDfValue>(IntermediateProperty.ACL_ACCESSOR_ACTIONS,
+		CmfProperty<IDfValue> accessorActions = new CmfProperty<>(IntermediateProperty.ACL_ACCESSOR_ACTIONS,
 			DctmDataType.DF_STRING.getStoredType(), true);
 
 		// Now do the CMIS part...

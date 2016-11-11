@@ -38,10 +38,9 @@ public class CmisUserDelegate extends CmisExportDelegate<FileableCmisObject> {
 
 	@Override
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		CmfAttribute<CmfValue> userName = new CmfAttribute<CmfValue>(IntermediateAttribute.NAME, CmfDataType.STRING,
-			false);
+		CmfAttribute<CmfValue> userName = new CmfAttribute<>(IntermediateAttribute.NAME, CmfDataType.STRING, false);
 		userName.setValue(new CmfValue(this.object.getCreatedBy()));
-		userName = new CmfAttribute<CmfValue>(IntermediateAttribute.LOGIN_NAME, CmfDataType.STRING, false);
+		userName = new CmfAttribute<>(IntermediateAttribute.LOGIN_NAME, CmfDataType.STRING, false);
 		userName.setValue(new CmfValue(this.object.getCreatedBy()));
 		return true;
 	}

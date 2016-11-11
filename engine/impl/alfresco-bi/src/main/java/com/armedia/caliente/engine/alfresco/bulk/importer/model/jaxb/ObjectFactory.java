@@ -142,7 +142,7 @@ public class ObjectFactory {
 	}
 
 	public static <T> List<T> getList(List<T> l) {
-		if (l == null) { return new ArrayList<T>(); }
+		if (l == null) { return new ArrayList<>(); }
 		return l;
 	}
 }

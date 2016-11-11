@@ -106,7 +106,7 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 
 	private class FSEntry extends FSObject implements Comparable<FSEntry> {
 		private final ReadWriteLock parentsLock = new ReentrantReadWriteLock();
-		private final Map<R, FSEntryContainer> parents = new HashMap<R, FSEntryContainer>();
+		private final Map<R, FSEntryContainer> parents = new HashMap<>();
 		private final String originalName;
 		private String newName = null;
 
@@ -185,12 +185,12 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 		private final ReadWriteLock childrenLock = new ReentrantReadWriteLock();
 
 		// Children, indexed by name...
-		private final Map<String, Map<R, FSEntry>> children = new HashMap<String, Map<R, FSEntry>>();
+		private final Map<String, Map<R, FSEntry>> children = new HashMap<>();
 
 		private final ReadWriteLock conflictsLock = new ReentrantReadWriteLock();
 
 		// Names that are in conflict...
-		private final Set<String> conflicts = new HashSet<String>();
+		private final Set<String> conflicts = new HashSet<>();
 
 		private FSEntryContainer(R id) {
 			super(id);
@@ -209,7 +209,7 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 				if (namedChildren == null) {
 					// This is a new object name, so we create the map to contain
 					// all entries with that name
-					namedChildren = new HashMap<R, FSEntry>();
+					namedChildren = new HashMap<>();
 					this.children.put(childName, namedChildren);
 				}
 				namedChildren.put(child.id, child);
@@ -249,7 +249,7 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 
 				Map<R, FSEntry> newNamedChildren = this.children.get(canonicalNewName);
 				if (newNamedChildren == null) {
-					newNamedChildren = new HashMap<R, FSEntry>();
+					newNamedChildren = new HashMap<>();
 					this.children.put(canonicalNewName, newNamedChildren);
 				}
 				newNamedChildren.put(child.id, child);
@@ -325,20 +325,20 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 	}
 
 	protected static final <R extends CmfObjectRef> IdValidator<R> getDefaultValidator() {
-		return new DefaultIdValidator<R>();
+		return new DefaultIdValidator<>();
 	}
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final LockDispenser<R, Object> containerLocks = LockDispenser.getBasic();
-	private final Map<R, FSEntryContainer> containers = new ConcurrentHashMap<R, FSEntryContainer>();
+	private final Map<R, FSEntryContainer> containers = new ConcurrentHashMap<>();
 
 	private final LockDispenser<R, Object> allEntriesLocks = LockDispenser.getBasic();
-	private final Map<R, FSEntry> allEntries = new ConcurrentHashMap<R, FSEntry>();
+	private final Map<R, FSEntry> allEntries = new ConcurrentHashMap<>();
 
-	private final Map<R, FSEntryContainer> conflictContainers = new ConcurrentHashMap<R, FSEntryContainer>();
+	private final Map<R, FSEntryContainer> conflictContainers = new ConcurrentHashMap<>();
 
-	private final Map<R, FSEntry> renamedEntries = new ConcurrentHashMap<R, FSEntry>();
+	private final Map<R, FSEntry> renamedEntries = new ConcurrentHashMap<>();
 
 	private final IdValidator<R> idValidator;
 
@@ -402,7 +402,7 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 					// so that we're now able to choose what order the entries will be renamed
 					// in when fixing a conflict. The order should prioritize those who
 					// have fewer parents, and thus those who cause the lowest impact.
-					List<FSEntry> l = new ArrayList<FSEntry>(conflictEntries.size());
+					List<FSEntry> l = new ArrayList<>(conflictEntries.size());
 					l.addAll(conflictEntries.values());
 					if (comparator != null) {
 						// If the user requested a specific ordering of entries, we use that.

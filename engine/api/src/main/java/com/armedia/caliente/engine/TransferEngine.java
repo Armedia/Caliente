@@ -35,8 +35,8 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 	private static final Pattern SETTING_NAME_PATTERN = Pattern.compile("^[\\w&&[^\\d]][\\w]*$");
 
-	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<String, Map<String, Object>>();
-	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<String, PluggableServiceLocator<?>>();
+	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<>();
+	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<>();
 
 	private static synchronized <E extends TransferEngine<?, ?, ?, ?, ?, ?>> void registerSubclass(Class<E> subclass) {
 
@@ -44,8 +44,8 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		Map<String, Object> m = TransferEngine.REGISTRY.get(key);
 		if (m != null) { return; }
 
-		m = new HashMap<String, Object>();
-		PluggableServiceLocator<E> locator = new PluggableServiceLocator<E>(subclass);
+		m = new HashMap<>();
+		PluggableServiceLocator<E> locator = new PluggableServiceLocator<>(subclass);
 		locator.setHideErrors(true);
 		for (E e : locator) {
 			boolean empty = true;
@@ -114,7 +114,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	private static final int DEFAULT_BACKLOG_SIZE = 1000;
 	private static final int MAX_BACKLOG_SIZE = 10000;
 
-	private final List<L> listeners = new ArrayList<L>();
+	private final List<L> listeners = new ArrayList<>();
 
 	protected final CmfCrypt crypto;
 
@@ -144,7 +144,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	}
 
 	protected final synchronized Collection<L> getListeners() {
-		return new ArrayList<L>(this.listeners);
+		return new ArrayList<>(this.listeners);
 	}
 
 	protected final int getBacklogSize(CfgTools settings) {
@@ -206,14 +206,14 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		// Now, add the properties to reference the referrent object
 		if (referrent != null) {
 			final CmfAttributeTranslator<V> translator = getTranslator();
-			CmfProperty<V> referrentType = new CmfProperty<V>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING, false);
+			CmfProperty<V> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING, false);
 			try {
 				referrentType.setValue(translator.getValue(CmfDataType.STRING, referrent.getType().name()));
 				marshaled.setProperty(referrentType);
-				CmfProperty<V> referrentId = new CmfProperty<V>(TransferEngine.REFERRENT_ID, CmfDataType.STRING, false);
+				CmfProperty<V> referrentId = new CmfProperty<>(TransferEngine.REFERRENT_ID, CmfDataType.STRING, false);
 				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getId()));
 				marshaled.setProperty(referrentId);
-				CmfProperty<V> referrentKey = new CmfProperty<V>(TransferEngine.REFERRENT_KEY, CmfDataType.STRING,
+				CmfProperty<V> referrentKey = new CmfProperty<>(TransferEngine.REFERRENT_KEY, CmfDataType.STRING,
 					false);
 				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getSearchKey()));
 				marshaled.setProperty(referrentKey);
@@ -229,11 +229,11 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	}
 
 	public final Collection<TransferEngineSetting> getSupportedSettings() {
-		Map<String, TransferEngineSetting> settings = new TreeMap<String, TransferEngineSetting>();
+		Map<String, TransferEngineSetting> settings = new TreeMap<>();
 		for (TransferSetting s : TransferSetting.values()) {
 			settings.put(s.getLabel(), s);
 		}
-		Collection<TransferEngineSetting> c = new ArrayList<TransferEngineSetting>();
+		Collection<TransferEngineSetting> c = new ArrayList<>();
 		getSupportedSettings(c);
 		for (TransferEngineSetting s : c) {
 			if (s == null) {
@@ -244,7 +244,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 				this.log.warn(String.format("Duplicate setting name [%s]", s.getLabel()));
 			}
 		}
-		c = new ArrayList<TransferEngineSetting>(settings.size());
+		c = new ArrayList<>(settings.size());
 		for (String s : settings.keySet()) {
 			Matcher m = TransferEngine.SETTING_NAME_PATTERN.matcher(s);
 			if (!m.matches()) {

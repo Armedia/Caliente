@@ -17,7 +17,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.documentum.DctmVersionNumber;
 import com.armedia.commons.utilities.Tools;
 
 public class DctmVersionNumberTest {
@@ -32,7 +31,7 @@ public class DctmVersionNumberTest {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		Set<String> branchedVersions = new TreeSet<String>();
+		Set<String> branchedVersions = new TreeSet<>();
 
 		for (int M = 1; M <= DctmVersionNumberTest.majors; M++) {
 			for (int m = 0; m < DctmVersionNumberTest.minorsPerLevel; m++) {
@@ -43,7 +42,7 @@ public class DctmVersionNumberTest {
 		DctmVersionNumberTest.BRANCHED_VERSIONS = Collections.unmodifiableSet(branchedVersions);
 
 		StringBuilder sb = new StringBuilder();
-		Map<String, Integer> componentCounters = new TreeMap<String, Integer>();
+		Map<String, Integer> componentCounters = new TreeMap<>();
 		for (int i = 1; i < 100; i += 2) {
 			String part = String.format("%d.%d", i, i + 1);
 			sb.append(part);
@@ -53,7 +52,7 @@ public class DctmVersionNumberTest {
 		}
 		DctmVersionNumberTest.COMPONENT_COUNTERS = Collections.unmodifiableMap(componentCounters);
 
-		Set<String> testVersions = new TreeSet<String>();
+		Set<String> testVersions = new TreeSet<>();
 		testVersions.addAll(DctmVersionNumberTest.BRANCHED_VERSIONS);
 		testVersions.addAll(DctmVersionNumberTest.COMPONENT_COUNTERS.keySet());
 		DctmVersionNumberTest.TEST_VERSIONS = Collections.unmodifiableSet(testVersions);
@@ -371,7 +370,7 @@ public class DctmVersionNumberTest {
 
 	@Test
 	public void testCompareTo() {
-		List<DctmVersionNumber> l = new ArrayList<DctmVersionNumber>(DctmVersionNumberTest.TEST_VERSIONS.size());
+		List<DctmVersionNumber> l = new ArrayList<>(DctmVersionNumberTest.TEST_VERSIONS.size());
 		for (String s : DctmVersionNumberTest.TEST_VERSIONS) {
 			DctmVersionNumber va = new DctmVersionNumber(s);
 			DctmVersionNumber vb = new DctmVersionNumber(s);
@@ -401,7 +400,7 @@ public class DctmVersionNumberTest {
 
 	@Test
 	public void testGetSubset() {
-		List<DctmVersionNumber> l = new ArrayList<DctmVersionNumber>(DctmVersionNumberTest.COMPONENT_COUNTERS.size());
+		List<DctmVersionNumber> l = new ArrayList<>(DctmVersionNumberTest.COMPONENT_COUNTERS.size());
 		for (String s : DctmVersionNumberTest.COMPONENT_COUNTERS.keySet()) {
 			l.add(new DctmVersionNumber(s));
 		}

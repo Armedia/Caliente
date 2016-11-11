@@ -16,7 +16,7 @@ public abstract class ClasspathPatcher {
 	};
 	private static final URLClassLoader CL;
 	private static final Method METHOD;
-	private static final Set<String> ADDED = new HashSet<String>();
+	private static final Set<String> ADDED = new HashSet<>();
 
 	static {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();

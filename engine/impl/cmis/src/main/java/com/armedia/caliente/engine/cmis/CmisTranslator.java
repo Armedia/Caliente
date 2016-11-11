@@ -30,7 +30,7 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<PropertyType, CmfDataType> m = new EnumMap<PropertyType, CmfDataType>(PropertyType.class);
+		Map<PropertyType, CmfDataType> m = new EnumMap<>(PropertyType.class);
 		m.put(PropertyType.BOOLEAN, CmfDataType.BOOLEAN);
 		m.put(PropertyType.INTEGER, CmfDataType.INTEGER);
 		m.put(PropertyType.DECIMAL, CmfDataType.DOUBLE);
@@ -41,7 +41,7 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		m.put(PropertyType.HTML, CmfDataType.HTML);
 		DATA_TYPES = Tools.freezeMap(m);
 
-		Map<CmfDataType, PropertyType> n = new EnumMap<CmfDataType, PropertyType>(CmfDataType.class);
+		Map<CmfDataType, PropertyType> n = new EnumMap<>(CmfDataType.class);
 		n.put(CmfDataType.BOOLEAN, PropertyType.BOOLEAN);
 		n.put(CmfDataType.INTEGER, PropertyType.INTEGER);
 		n.put(CmfDataType.DOUBLE, PropertyType.DECIMAL);
@@ -52,23 +52,22 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		n.put(CmfDataType.HTML, PropertyType.HTML);
 		DATA_TYPES_REV = Tools.freezeMap(n);
 
-		Map<BaseTypeId, CmfType> o = new EnumMap<BaseTypeId, CmfType>(BaseTypeId.class);
+		Map<BaseTypeId, CmfType> o = new EnumMap<>(BaseTypeId.class);
 		o.put(BaseTypeId.CMIS_DOCUMENT, CmfType.DOCUMENT);
 		o.put(BaseTypeId.CMIS_FOLDER, CmfType.FOLDER);
 		// TODO: add other types...such as policies
 		OBJECT_TYPES = Tools.freezeMap(o);
 
-		Map<CmfType, BaseTypeId> p = new EnumMap<CmfType, BaseTypeId>(CmfType.class);
+		Map<CmfType, BaseTypeId> p = new EnumMap<>(CmfType.class);
 		p.put(CmfType.DOCUMENT, BaseTypeId.CMIS_DOCUMENT);
 		p.put(CmfType.FOLDER, BaseTypeId.CMIS_FOLDER);
 		// TODO: add other types...such as policies
 		OBJECT_TYPES_REV = Tools.freezeMap(p);
 
-		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<CmfType, BidiMap<String, IntermediateAttribute>>(
-			CmfType.class);
+		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfType.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (cmis:document|...)
 		am.put(CmisCustomAttributes.VERSION_ANTECEDENT_ID.name, IntermediateAttribute.VERSION_ANTECEDENT_ID);

@@ -139,7 +139,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 		StringBuilder report = new StringBuilder();
 		String exceptionReport = null;
 
-		Map<String, Object> settings = new HashMap<String, Object>();
+		Map<String, Object> settings = new HashMap<>();
 		if (this.server != null) {
 			settings.put(DfcSessionFactory.DOCBASE, this.server);
 		}
@@ -257,7 +257,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 			String activity = "retrieving the list of cabinets";
 			try {
 				final IDfSession session = pool.acquireSession();
-				final Set<IDfId> traversed = new HashSet<IDfId>();
+				final Set<IDfId> traversed = new HashSet<>();
 
 				workers.start(Setting.THREADS.getInt(), DfId.DF_NULLID, true);
 				try {
@@ -266,7 +266,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 					// If paths are both included and excluded, then the exclusions are applied to
 					// the included set. First, we identify the excluded folders so we may filter
 					// them out. It's OK for exclusions to not exist...
-					Set<IDfId> excludedIds = new HashSet<IDfId>();
+					Set<IDfId> excludedIds = new HashSet<>();
 					for (String folderSpec : excludedPaths) {
 						IDfFolder f = session.getFolderBySpecification(folderSpec);
 						if (f != null) {
@@ -277,7 +277,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 
 					if (includedPaths.isEmpty()) {
 						// Make sure we use a list we can modify...
-						includedPaths = new ArrayList<String>();
+						includedPaths = new ArrayList<>();
 						// No paths...we find all cabinets then
 						IDfCollection c = null;
 						String dql = CMSMFMain_counter.CABINET_ALL_LISTER;
@@ -294,7 +294,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 						}
 					}
 
-					Set<String> includedFolders = new HashSet<String>();
+					Set<String> includedFolders = new HashSet<>();
 					for (String folderSpec : includedPaths) {
 						IDfFolder f = session.getFolderBySpecification(folderSpec);
 						if (f == null) {

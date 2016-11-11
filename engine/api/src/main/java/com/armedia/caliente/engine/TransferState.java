@@ -19,7 +19,7 @@ public abstract class TransferState {
 	public final CmfContentStore<?, ?, ?> streamStore;
 	public final CfgTools cfg;
 
-	private final Map<String, Object> properties = new HashMap<String, Object>();
+	private final Map<String, Object> properties = new HashMap<>();
 
 	/**
 	 * @param output
@@ -72,6 +72,6 @@ public abstract class TransferState {
 	}
 
 	public final synchronized Set<String> getPropertyNames() {
-		return new HashSet<String>(this.properties.keySet());
+		return new HashSet<>(this.properties.keySet());
 	}
 }

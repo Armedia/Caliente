@@ -17,7 +17,7 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public enum IntermediateAttribute implements Mappable,CmfEncodeableName {
+public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	// CMIS attributes
 	OBJECT_ID(PropertyIds.OBJECT_ID, CmfDataType.ID),
 	BASE_TYPE_ID(PropertyIds.BASE_TYPE_ID, CmfDataType.STRING),

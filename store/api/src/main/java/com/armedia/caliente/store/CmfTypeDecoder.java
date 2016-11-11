@@ -4,8 +4,7 @@ import com.armedia.commons.utilities.PluggableServiceLocator;
 
 public class CmfTypeDecoder {
 
-	static final PluggableServiceLocator<CmfTypeDecoder> DECODERS = new PluggableServiceLocator<CmfTypeDecoder>(
-		CmfTypeDecoder.class);
+	static final PluggableServiceLocator<CmfTypeDecoder> DECODERS = new PluggableServiceLocator<>(CmfTypeDecoder.class);
 	static {
 		CmfTypeDecoder.DECODERS.setHideErrors(true);
 	}

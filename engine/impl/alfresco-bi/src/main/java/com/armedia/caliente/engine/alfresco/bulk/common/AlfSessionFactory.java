@@ -42,7 +42,7 @@ public class AlfSessionFactory extends SessionFactory<AlfRoot> {
 
 	@Override
 	public PooledObject<AlfRoot> makeObject() throws Exception {
-		return new DefaultPooledObject<AlfRoot>(this.root);
+		return new DefaultPooledObject<>(this.root);
 	}
 
 	@Override

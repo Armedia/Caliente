@@ -46,7 +46,7 @@ public class ObjectFactory {
 
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "stores")
 	public JAXBElement<StoreDefinitions> createStores(StoreDefinitions value) {
-		return new JAXBElement<StoreDefinitions>(ObjectFactory._Stores_QNAME, StoreDefinitions.class, null, value);
+		return new JAXBElement<>(ObjectFactory._Stores_QNAME, StoreDefinitions.class, null, value);
 	}
 
 }

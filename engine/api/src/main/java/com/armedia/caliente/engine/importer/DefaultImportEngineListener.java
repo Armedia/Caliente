@@ -9,7 +9,7 @@ import com.armedia.caliente.store.CmfType;
 
 public class DefaultImportEngineListener extends DefaultImportListener implements ImportEngineListener {
 
-	private final Map<UUID, ImportState> jobStates = new ConcurrentHashMap<UUID, ImportState>();
+	private final Map<UUID, ImportState> jobStates = new ConcurrentHashMap<>();
 
 	protected final ImportState getState(UUID uuid) {
 		if (!this.jobStates.containsKey(uuid)) { throw new NoSuchElementException(

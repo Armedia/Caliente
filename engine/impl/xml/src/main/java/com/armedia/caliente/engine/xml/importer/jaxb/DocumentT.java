@@ -21,7 +21,7 @@ public class DocumentT {
 
 	public List<DocumentVersionT> getVersion() {
 		if (this.version == null) {
-			this.version = new ArrayList<DocumentVersionT>();
+			this.version = new ArrayList<>();
 		}
 		return this.version;
 	}

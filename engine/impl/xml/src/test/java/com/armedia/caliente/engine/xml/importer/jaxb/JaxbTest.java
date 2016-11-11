@@ -10,17 +10,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.xml.importer.jaxb.AclsT;
-import com.armedia.caliente.engine.xml.importer.jaxb.DocumentIndexT;
-import com.armedia.caliente.engine.xml.importer.jaxb.DocumentT;
-import com.armedia.caliente.engine.xml.importer.jaxb.DocumentsT;
-import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexT;
-import com.armedia.caliente.engine.xml.importer.jaxb.FolderT;
-import com.armedia.caliente.engine.xml.importer.jaxb.FoldersT;
-import com.armedia.caliente.engine.xml.importer.jaxb.FormatsT;
-import com.armedia.caliente.engine.xml.importer.jaxb.GroupsT;
-import com.armedia.caliente.engine.xml.importer.jaxb.TypesT;
-import com.armedia.caliente.engine.xml.importer.jaxb.UsersT;
 import com.armedia.commons.utilities.XmlTools;
 
 public class JaxbTest {

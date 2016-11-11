@@ -21,7 +21,7 @@ public class XmlAclImportDelegate extends XmlAggregatedImportDelegate<AclT, Acls
 	private static final Map<Integer, String> XPERMITS;
 
 	static {
-		Map<Integer, String> m = new HashMap<Integer, String>();
+		Map<Integer, String> m = new HashMap<>();
 		m.put(19, "DELETE_OBJECT");
 		m.put(18, "CHANGE_OWNER");
 		m.put(17, "CHANGE_PERMIT");

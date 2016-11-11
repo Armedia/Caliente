@@ -29,11 +29,9 @@ public class DctmImportStore extends DctmImportDelegate<IDfStore> {
 	protected IDfStore newObject(DctmImportContext ctx) throws ImportException {
 		// We can't create stores programmatically....so always explode
 		IDfValue name = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue();
-		throw new ImportException(
-			String
-				.format(
-					"CmfStore object creation is not supported - please contact an administrator and ask them to create a store named [%s]",
-					name));
+		throw new ImportException(String.format(
+			"CmfStore object creation is not supported - please contact an administrator and ask them to create a store named [%s]",
+			name));
 	}
 
 	@Override

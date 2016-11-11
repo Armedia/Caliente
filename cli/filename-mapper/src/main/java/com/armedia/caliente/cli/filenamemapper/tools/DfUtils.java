@@ -88,12 +88,12 @@ public class DfUtils {
 	private static final Map<String, Integer> PERMISSIONS_MAP;
 	private static final Map<String, Integer> PERMIT_TYPES_MAP;
 	static {
-		Map<String, Integer> m = new HashMap<String, Integer>();
+		Map<String, Integer> m = new HashMap<>();
 		for (Permission p : Permission.values()) {
 			m.put(p.str, p.num);
 		}
 		PERMISSIONS_MAP = Collections.unmodifiableMap(m);
-		m = new HashMap<String, Integer>();
+		m = new HashMap<>();
 		for (PermitType p : PermitType.values()) {
 			m.put(p.str, p.num);
 		}

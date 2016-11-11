@@ -58,10 +58,10 @@ public class GroupT implements Comparable<GroupT> {
 	protected List<PropertyT> properties;
 
 	@XmlTransient
-	protected Set<String> userSet = new TreeSet<String>();
+	protected Set<String> userSet = new TreeSet<>();
 
 	@XmlTransient
-	protected Set<String> groupSet = new TreeSet<String>();
+	protected Set<String> groupSet = new TreeSet<>();
 
 	protected void sortAttributes() {
 		if (this.attributes != null) {
@@ -75,14 +75,14 @@ public class GroupT implements Comparable<GroupT> {
 	protected void beforeMarshal(Marshaller m) {
 		sortAttributes();
 		if ((this.users == null) && !this.userSet.isEmpty()) {
-			this.users = new ArrayList<String>();
+			this.users = new ArrayList<>();
 		}
 		if ((this.userSet != null) && !this.userSet.isEmpty()) {
 			this.users.clear();
 			this.users.addAll(this.userSet);
 		}
 		if ((this.groups == null) && !this.groupSet.isEmpty()) {
-			this.groups = new ArrayList<String>();
+			this.groups = new ArrayList<>();
 		}
 		if ((this.groupSet != null) && !this.groupSet.isEmpty()) {
 			this.groups.clear();
@@ -93,14 +93,14 @@ public class GroupT implements Comparable<GroupT> {
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
 		sortAttributes();
 		if (this.userSet == null) {
-			this.userSet = new TreeSet<String>();
+			this.userSet = new TreeSet<>();
 		}
 		this.userSet.clear();
 		if (this.users != null) {
 			this.userSet.addAll(this.users);
 		}
 		if (this.groupSet == null) {
-			this.groupSet = new TreeSet<String>();
+			this.groupSet = new TreeSet<>();
 		}
 		this.groupSet.clear();
 		if (this.groups != null) {
@@ -110,14 +110,14 @@ public class GroupT implements Comparable<GroupT> {
 
 	public List<PropertyT> getProperties() {
 		if (this.properties == null) {
-			this.properties = new ArrayList<PropertyT>();
+			this.properties = new ArrayList<>();
 		}
 		return this.properties;
 	}
 
 	public List<AttributeT> getAttributes() {
 		if (this.attributes == null) {
-			this.attributes = new ArrayList<AttributeT>();
+			this.attributes = new ArrayList<>();
 		}
 		return this.attributes;
 	}

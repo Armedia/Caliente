@@ -34,7 +34,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 
 	public CmisSessionFactory(CfgTools settings, CmfCrypt crypto) throws CryptException {
 		super(settings, crypto);
-		Map<String, String> parameters = new HashMap<String, String>();
+		Map<String, String> parameters = new HashMap<>();
 
 		String repoId = null;
 		for (CmisSessionSetting s : CmisSessionSetting.values()) {
@@ -71,7 +71,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 		if (repositories == null) {
 			repositories = Collections.emptyList(); // safety net
 		}
-		Map<String, String> ids = new TreeMap<String, String>();
+		Map<String, String> ids = new TreeMap<>();
 		for (Repository r : repositories) {
 			if ((repoId == null) || Tools.equals(repoId, r.getId())) {
 				repo = r;
@@ -101,7 +101,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 
 	@Override
 	public PooledObject<Session> makeObject() throws Exception {
-		Session session = this.factory.createSession(new HashMap<String, String>(this.parameters));
+		Session session = this.factory.createSession(new HashMap<>(this.parameters));
 		// NOTE: This context MUST NOT be modified elsewhere, under any circumstances
 		OperationContext ctx = session.createOperationContext();
 		ctx.setCacheEnabled(true);
@@ -115,7 +115,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 		}
 		ctx.setRenditionFilterString("*");
 		session.setDefaultContext(ctx);
-		return new DefaultPooledObject<Session>(session);
+		return new DefaultPooledObject<>(session);
 	}
 
 	@Override

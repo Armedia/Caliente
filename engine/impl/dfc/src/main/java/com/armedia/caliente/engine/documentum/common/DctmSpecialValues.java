@@ -23,7 +23,7 @@ public class DctmSpecialValues {
 	private static Set<String> parseCSV(CfgTools cfg, Setting setting) {
 		String str = cfg.getString(setting);
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(str);
-		Set<String> ret = Collections.unmodifiableSet(new HashSet<String>(strTokenizer.getTokenList()));
+		Set<String> ret = Collections.unmodifiableSet(new HashSet<>(strTokenizer.getTokenList()));
 		if (ret.isEmpty()) {
 			ret = Collections.emptySet();
 		}

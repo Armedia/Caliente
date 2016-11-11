@@ -73,8 +73,8 @@ public enum CmfValueSerializer {
 		@Override
 		public CmfValue doDeserialize(String str) throws ParseException {
 			Matcher m = this.parser.matcher(str);
-			if (!m.matches()) { throw new ParseException(
-				String.format("The string [%s] is not a valid ID string", str), 0); }
+			if (!m.matches()) { throw new ParseException(String.format("The string [%s] is not a valid ID string", str),
+				0); }
 			return new CmfValue(CmfDataType.ID, m.group(1));
 		}
 
@@ -123,8 +123,8 @@ public enum CmfValueSerializer {
 
 	public final String serialize(CmfValue value) throws ParseException {
 		if (value == null) { return null; }
-		if (!canSerialize(value.getDataType())) { throw new ParseException(String.format(
-			"Can't serialize a value of type [%s] as a [%s]", value.getDataType(), name()), 0); }
+		if (!canSerialize(value.getDataType())) { throw new ParseException(
+			String.format("Can't serialize a value of type [%s] as a [%s]", value.getDataType(), name()), 0); }
 		return doSerialize(value);
 	}
 
@@ -146,10 +146,10 @@ public enum CmfValueSerializer {
 	public static CmfValueSerializer get(CmfDataType type) {
 		synchronized (CmfValueSerializer.class) {
 			if (CmfValueSerializer.MAP == null) {
-				Map<CmfDataType, CmfValueSerializer> m = new EnumMap<CmfDataType, CmfValueSerializer>(CmfDataType.class);
+				Map<CmfDataType, CmfValueSerializer> m = new EnumMap<>(CmfDataType.class);
 				for (CmfValueSerializer s : CmfValueSerializer.values()) {
-					if (m.containsKey(s.type)) { throw new IllegalStateException(String.format(
-						"Duplicate mapping for data type [%s]", s.type)); }
+					if (m.containsKey(s.type)) { throw new IllegalStateException(
+						String.format("Duplicate mapping for data type [%s]", s.type)); }
 					m.put(s.type, s);
 				}
 				CmfValueSerializer.MAP = Tools.freezeMap(m);

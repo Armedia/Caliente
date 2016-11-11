@@ -25,31 +25,31 @@ public abstract class CmisExportDelegate<T> extends
 	@Override
 	protected Collection<CmisExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return new ArrayList<CmisExportDelegate<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
 	protected Collection<CmisExportDelegate<?>> identifyAntecedents(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return new ArrayList<CmisExportDelegate<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
 	protected Collection<CmisExportDelegate<?>> identifySuccessors(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return new ArrayList<CmisExportDelegate<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
 	protected Collection<CmisExportDelegate<?>> identifyDependents(CmfObject<CmfValue> marshalled,
 		CmisExportContext ctx) throws Exception {
-		return new ArrayList<CmisExportDelegate<?>>();
+		return new ArrayList<>();
 	}
 
 	@Override
 	protected List<CmfContentInfo> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception {
-		return new ArrayList<CmfContentInfo>();
+		return new ArrayList<>();
 	}
 }

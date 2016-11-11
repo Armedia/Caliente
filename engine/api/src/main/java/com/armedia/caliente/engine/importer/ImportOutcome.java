@@ -40,7 +40,7 @@ public class ImportOutcome {
 
 	@Override
 	public String toString() {
-		return String
-			.format("ImportOutcome [result=%s, newId=%s, newLabel=%s]", this.result, this.newId, this.newLabel);
+		return String.format("ImportOutcome [result=%s, newId=%s, newLabel=%s]", this.result, this.newId,
+			this.newLabel);
 	}
 }

@@ -23,9 +23,9 @@ public class AlfrescoSchema {
 	private final Map<String, SchemaMember<?>> aspectIndex;
 
 	public AlfrescoSchema(Collection<URI> modelFiles) throws IOException, JAXBException {
-		List<AlfrescoContentModel> models = new ArrayList<AlfrescoContentModel>();
-		Map<String, SchemaMember<?>> typeIndex = new TreeMap<String, SchemaMember<?>>();
-		Map<String, SchemaMember<?>> aspectIndex = new TreeMap<String, SchemaMember<?>>();
+		List<AlfrescoContentModel> models = new ArrayList<>();
+		Map<String, SchemaMember<?>> typeIndex = new TreeMap<>();
+		Map<String, SchemaMember<?>> aspectIndex = new TreeMap<>();
 		for (URI uri : modelFiles) {
 			AlfrescoContentModel model = AlfrescoContentModel.newModel(uri, models);
 			for (String typeName : model.getTypeNames()) {
@@ -36,8 +36,8 @@ public class AlfrescoSchema {
 			}
 			models.add(model);
 		}
-		this.typeIndex = Tools.freezeCopy(new LinkedHashMap<String, SchemaMember<?>>(typeIndex));
-		this.aspectIndex = Tools.freezeCopy(new LinkedHashMap<String, SchemaMember<?>>(aspectIndex));
+		this.typeIndex = Tools.freezeCopy(new LinkedHashMap<>(typeIndex));
+		this.aspectIndex = Tools.freezeCopy(new LinkedHashMap<>(aspectIndex));
 	}
 
 	public boolean hasType(String typeName) {
@@ -64,7 +64,7 @@ public class AlfrescoSchema {
 		if (baseType == null) { return null; }
 		List<SchemaMember<?>> aspects = Collections.emptyList();
 		if (aspectNames.size() > 0) {
-			aspects = new ArrayList<SchemaMember<?>>(aspectNames.size());
+			aspects = new ArrayList<>(aspectNames.size());
 			for (String aspectName : aspectNames) {
 				SchemaMember<?> aspect = this.aspectIndex.get(aspectName);
 				if (aspect == null) { throw new IllegalArgumentException(

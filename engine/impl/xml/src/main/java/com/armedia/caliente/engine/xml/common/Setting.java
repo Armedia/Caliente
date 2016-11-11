@@ -4,9 +4,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum Setting implements ConfigurationSetting {
 	//
-	COPY_CONTENT(true),
-	INCLUDE_ALL_VERSIONS(false),
-	FAIL_ON_COLLISIONS(true),
+	COPY_CONTENT(true), INCLUDE_ALL_VERSIONS(false), FAIL_ON_COLLISIONS(true),
 	//
 	;
 

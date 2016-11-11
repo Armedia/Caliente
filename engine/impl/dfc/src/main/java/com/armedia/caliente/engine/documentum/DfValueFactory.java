@@ -123,7 +123,7 @@ public final class DfValueFactory {
 
 	public static List<IDfValue> getAllRepeatingValues(String attr, IDfTypedObject object) throws DfException {
 		int valueCount = object.getValueCount(attr);
-		List<IDfValue> ret = new ArrayList<IDfValue>(valueCount);
+		List<IDfValue> ret = new ArrayList<>(valueCount);
 		for (int i = 0; i < valueCount; i++) {
 			ret.add(object.getRepeatingValue(attr, i));
 		}

@@ -37,8 +37,8 @@ import com.armedia.caliente.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItem;
 import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItemMarker;
-import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItemVersion;
 import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItemMarker.MarkerType;
+import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItemVersion;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
@@ -60,8 +60,8 @@ public class AlfImportDelegateFactory
 	private final class VirtualDocument {
 		private final String historyId;
 		private CacheItemMarker root = null;
-		private final Map<String, CacheItemMarker> versions = new TreeMap<String, CacheItemMarker>();
-		private final Map<String, List<CacheItemMarker>> members = new TreeMap<String, List<CacheItemMarker>>();
+		private final Map<String, CacheItemMarker> versions = new TreeMap<>();
+		private final Map<String, List<CacheItemMarker>> members = new TreeMap<>();
 
 		private VirtualDocument(String historyId) {
 			this.historyId = historyId;
@@ -166,8 +166,8 @@ public class AlfImportDelegateFactory
 	private final Map<String, AlfrescoType> defaultTypes;
 	private final Map<String, AlfrescoType> mappedTypes;
 
-	private final ConcurrentMap<String, VirtualDocument> vdocs = new ConcurrentHashMap<String, VirtualDocument>();
-	private final ThreadLocal<List<CacheItemMarker>> currentVersions = new ThreadLocal<List<CacheItemMarker>>();
+	private final ConcurrentMap<String, VirtualDocument> vdocs = new ConcurrentHashMap<>();
+	private final ThreadLocal<List<CacheItemMarker>> currentVersions = new ThreadLocal<>();
 
 	private final AlfXmlIndex fileIndex;
 	private final AlfXmlIndex folderIndex;
@@ -204,7 +204,7 @@ public class AlfImportDelegateFactory
 		if (contentModels == null) { throw new IllegalStateException(
 			"Must provide a valid set of content model XML files"); }
 
-		List<URI> modelUrls = new ArrayList<URI>();
+		List<URI> modelUrls = new ArrayList<>();
 		for (String s : contentModels.split(",")) {
 			File f = new File(s).getCanonicalFile();
 			if (!f.exists()) { throw new FileNotFoundException(f.getAbsolutePath()); }
@@ -218,15 +218,15 @@ public class AlfImportDelegateFactory
 
 		this.schema = new AlfrescoSchema(modelUrls);
 
-		Map<String, AlfrescoType> m = new TreeMap<String, AlfrescoType>();
+		Map<String, AlfrescoType> m = new TreeMap<>();
 		// First, we build all the base types, to have them cached and ready to go
 		for (String t : this.schema.getTypeNames()) {
 			m.put(t, this.schema.buildType(t));
 		}
 
-		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<String, AlfrescoType>(m));
+		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<>(m));
 
-		final Map<String, AlfrescoType> mappedTypes = new TreeMap<String, AlfrescoType>();
+		final Map<String, AlfrescoType> mappedTypes = new TreeMap<>();
 		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.TYPE_MAP), this.typeMap,
 			new MappingValidator() {
 
@@ -246,7 +246,7 @@ public class AlfImportDelegateFactory
 
 					String aspects = m.group(2);
 					if (!StringUtils.isEmpty(aspects)) {
-						List<String> l = new ArrayList<String>();
+						List<String> l = new ArrayList<>();
 						for (String aspect : aspects.split(",")) {
 							aspect = aspect.trim();
 							if (StringUtils.isEmpty(aspects)) {
@@ -374,7 +374,7 @@ public class AlfImportDelegateFactory
 		thisMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
 		thisMarker.setCmsPath("");
 
-		List<CacheItemMarker> markerList = new ArrayList<CacheItemMarker>(1);
+		List<CacheItemMarker> markerList = new ArrayList<>(1);
 		markerList.add(thisMarker);
 
 		final CacheItem item = thisMarker.getItem(markerList);
@@ -568,13 +568,13 @@ public class AlfImportDelegateFactory
 			case RENDITION_ROOT:
 			case RENDITION_TYPE:
 			case RENDITION_ENTRY:
-				markerList = new ArrayList<CacheItemMarker>(1);
+				markerList = new ArrayList<>(1);
 				break;
 
 			case NORMAL:
 				markerList = this.currentVersions.get();
 				if (markerList == null) {
-					markerList = new ArrayList<CacheItemMarker>();
+					markerList = new ArrayList<>();
 					this.currentVersions.set(markerList);
 				}
 				break;

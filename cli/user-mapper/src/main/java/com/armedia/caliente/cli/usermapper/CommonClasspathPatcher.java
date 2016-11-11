@@ -47,7 +47,7 @@ public class CommonClasspathPatcher extends ClasspathPatcher {
 
 	@Override
 	public List<URL> getPatches() {
-		List<URL> ret = new ArrayList<URL>(3);
+		List<URL> ret = new ArrayList<>(3);
 		try {
 			File f = createFile(System.getProperty("user.dir"));
 			ret.add(createFile(f, "cfg").toURI().toURL());
@@ -66,7 +66,7 @@ public class CommonClasspathPatcher extends ClasspathPatcher {
 				}
 
 				// Make sure they're sorted by name
-				Map<String, URL> urls = new TreeMap<String, URL>();
+				Map<String, URL> urls = new TreeMap<>();
 				for (File jar : f.listFiles(CommonClasspathPatcher.LIB_FILTER)) {
 					urls.put(jar.getName(), jar.toURI().toURL());
 				}

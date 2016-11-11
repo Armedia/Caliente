@@ -41,7 +41,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	protected static final String BASE_SELECTOR = "cmsmfBaseSelector";
 	protected static final String FINAL_SELECTOR = "cmsmfFinalSelector";
 
-	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
+	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<>(ExportResult.class);
 
 	protected AbstractCMSMFMain_export(ExportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine, true, true);
@@ -90,7 +90,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	}
 
 	protected Map<String, Object> loadDefaultSettings() throws CMSMFException {
-		return new HashMap<String, Object>();
+		return new HashMap<>();
 	}
 
 	protected boolean storeSettings(String jobName, Map<String, Object> settings, Date exportStart, Date exportEnd)
@@ -124,7 +124,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 			AbstractCMSMFMain.ALL, false);
 		this.engine.addListener(this);
 		this.engine.addListener(new ExportManifest(outcomes, types));
-		PluggableServiceLocator<ExportEngineListener> extraListeners = new PluggableServiceLocator<ExportEngineListener>(
+		PluggableServiceLocator<ExportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ExportEngineListener.class);
 		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 			@Override
@@ -141,7 +141,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		final String jobName = CLIParam.job_name.getString();
 		final boolean resetJob = CLIParam.reset_job.isPresent();
 		validateState();
-		Map<String, Object> settings = new HashMap<String, Object>();
+		Map<String, Object> settings = new HashMap<>();
 		prepareSettings(settings);
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(),
 			Setting.THREADS.getInt(AbstractCMSMFMain.DEFAULT_THREADS));

@@ -66,7 +66,7 @@ public class CacheItem {
 
 	public List<CacheItemVersion> getVersions() {
 		if (this.versions == null) {
-			this.versions = new ArrayList<CacheItemVersion>();
+			this.versions = new ArrayList<>();
 		}
 		return this.versions;
 	}

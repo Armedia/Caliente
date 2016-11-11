@@ -33,7 +33,7 @@ public class SettingManager {
 
 	private static final String DEFAULT_PROPERTIES = "default.properties";
 	private static final AbstractConfiguration DEFAULTS;
-	private static final List<AbstractConfiguration> CONFIGURATIONS = new ArrayList<AbstractConfiguration>();
+	private static final List<AbstractConfiguration> CONFIGURATIONS = new ArrayList<>();
 
 	static {
 		PropertiesConfiguration def = new PropertiesConfiguration();

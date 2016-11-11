@@ -169,7 +169,7 @@ public class ObjectFactory {
 	 */
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "documentIndex")
 	public JAXBElement<DocumentIndexT> createDocumentIndex(DocumentIndexT value) {
-		return new JAXBElement<DocumentIndexT>(ObjectFactory._DocumentIndex_QNAME, DocumentIndexT.class, null, value);
+		return new JAXBElement<>(ObjectFactory._DocumentIndex_QNAME, DocumentIndexT.class, null, value);
 	}
 
 	/**
@@ -178,7 +178,7 @@ public class ObjectFactory {
 	 */
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "types")
 	public JAXBElement<TypesT> createTypes(TypesT value) {
-		return new JAXBElement<TypesT>(ObjectFactory._Types_QNAME, TypesT.class, null, value);
+		return new JAXBElement<>(ObjectFactory._Types_QNAME, TypesT.class, null, value);
 	}
 
 	/**
@@ -187,7 +187,7 @@ public class ObjectFactory {
 	 */
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "groups")
 	public JAXBElement<GroupsT> createGroups(GroupsT value) {
-		return new JAXBElement<GroupsT>(ObjectFactory._Groups_QNAME, GroupsT.class, null, value);
+		return new JAXBElement<>(ObjectFactory._Groups_QNAME, GroupsT.class, null, value);
 	}
 
 	/**
@@ -196,7 +196,7 @@ public class ObjectFactory {
 	 */
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "folder")
 	public JAXBElement<FolderT> createFolder(FolderT value) {
-		return new JAXBElement<FolderT>(ObjectFactory._Folder_QNAME, FolderT.class, null, value);
+		return new JAXBElement<>(ObjectFactory._Folder_QNAME, FolderT.class, null, value);
 	}
 
 	/**
@@ -205,7 +205,7 @@ public class ObjectFactory {
 	 */
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "users")
 	public JAXBElement<UsersT> createUsers(UsersT value) {
-		return new JAXBElement<UsersT>(ObjectFactory._Users_QNAME, UsersT.class, null, value);
+		return new JAXBElement<>(ObjectFactory._Users_QNAME, UsersT.class, null, value);
 	}
 
 	/**
@@ -214,7 +214,7 @@ public class ObjectFactory {
 	 */
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "document")
 	public JAXBElement<DocumentT> createDocument(DocumentT value) {
-		return new JAXBElement<DocumentT>(ObjectFactory._Document_QNAME, DocumentT.class, null, value);
+		return new JAXBElement<>(ObjectFactory._Document_QNAME, DocumentT.class, null, value);
 	}
 
 }

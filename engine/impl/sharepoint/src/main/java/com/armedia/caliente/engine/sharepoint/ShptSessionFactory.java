@@ -35,7 +35,7 @@ public class ShptSessionFactory extends SessionFactory<ShptSession> {
 
 	@Override
 	public PooledObject<ShptSession> makeObject() {
-		return new DefaultPooledObject<ShptSession>(new ShptSession(this.url, this.user, this.password, this.domain));
+		return new DefaultPooledObject<>(new ShptSession(this.url, this.user, this.password, this.domain));
 	}
 
 	@Override

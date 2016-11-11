@@ -90,7 +90,7 @@ public enum CLIParam {
 	public List<Boolean> getAllBoolean() {
 		List<String> l = getAllString();
 		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
-		List<Boolean> r = new ArrayList<Boolean>(l.size());
+		List<Boolean> r = new ArrayList<>(l.size());
 		for (String s : l) {
 			r.add(Tools.toBoolean(s));
 		}
@@ -110,7 +110,7 @@ public enum CLIParam {
 	public List<Integer> getAllInteger() {
 		List<String> l = getAllString();
 		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
-		List<Integer> r = new ArrayList<Integer>(l.size());
+		List<Integer> r = new ArrayList<>(l.size());
 		for (String s : l) {
 			r.add(Integer.valueOf(s));
 		}
@@ -130,7 +130,7 @@ public enum CLIParam {
 	public List<Double> getAllDouble() {
 		List<String> l = getAllString();
 		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
-		List<Double> r = new ArrayList<Double>(l.size());
+		List<Double> r = new ArrayList<>(l.size());
 		for (String s : l) {
 			r.add(Double.valueOf(s));
 		}
@@ -159,10 +159,8 @@ public enum CLIParam {
 	private static final String[] NO_OPTS = new String[0];
 	private static final Map<CLIParam, List<String>> NO_PARSED = Collections.emptyMap();
 	private static final List<String> NO_REMAINING = Collections.emptyList();
-	private static AtomicReference<Map<CLIParam, List<String>>> CLI_PARSED = new AtomicReference<Map<CLIParam, List<String>>>(
-		CLIParam.NO_PARSED);
-	private static AtomicReference<List<String>> CLI_REMAINING = new AtomicReference<List<String>>(
-		CLIParam.NO_REMAINING);
+	private static AtomicReference<Map<CLIParam, List<String>>> CLI_PARSED = new AtomicReference<>(CLIParam.NO_PARSED);
+	private static AtomicReference<List<String>> CLI_REMAINING = new AtomicReference<>(CLIParam.NO_REMAINING);
 
 	public static String getString(CLIParam param) {
 		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
@@ -226,7 +224,7 @@ public enum CLIParam {
 		}
 
 		// Convert the command-line parameters into "configuration properties"
-		Map<CLIParam, List<String>> cliParams = new EnumMap<CLIParam, List<String>>(CLIParam.class);
+		Map<CLIParam, List<String>> cliParams = new EnumMap<>(CLIParam.class);
 		for (CLIParam p : CLIParam.values()) {
 			if (cli.hasOption(p.option.getLongOpt())) {
 				// If it takes no parameters, ignore whatever was submitted
@@ -255,7 +253,7 @@ public enum CLIParam {
 		}
 		List<?> remaining = cli.getArgList();
 		if (!remaining.isEmpty()) {
-			List<String> l = new ArrayList<String>(remaining.size());
+			List<String> l = new ArrayList<>(remaining.size());
 			for (Object o : remaining) {
 				l.add(Tools.toString(o));
 			}

@@ -51,7 +51,7 @@ public class XmlTypeImportDelegate extends XmlAggregatedImportDelegate<TypeT, Ty
 		CmfProperty<CmfValue> origName = this.cmfObject.getProperty(IntermediateProperty.ORIG_ATTR_NAME);
 		CmfProperty<CmfValue> mappedName = this.cmfObject.getProperty(IntermediateProperty.MAPPED_ATTR_NAME);
 
-		Map<String, String> mapping = new HashMap<String, String>();
+		Map<String, String> mapping = new HashMap<>();
 		// If the mappings are in order, use them...
 		if ((origName != null) && (mappedName != null) && (origName.getValueCount() == mappedName.getValueCount())) {
 			for (int i = 0; i < origName.getValueCount(); i++) {

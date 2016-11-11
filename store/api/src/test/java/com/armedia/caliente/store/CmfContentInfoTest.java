@@ -8,8 +8,6 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.store.CmfContentInfo;
-
 public class CmfContentInfoTest {
 
 	@Test
@@ -156,7 +154,7 @@ public class CmfContentInfoTest {
 	@Test
 	public void testGetPropertyNames() {
 		CmfContentInfo a = new CmfContentInfo(UUID.randomUUID().toString());
-		Set<String> names = new HashSet<String>();
+		Set<String> names = new HashSet<>();
 		for (int i = 0; i < 100; i++) {
 			String k = String.format("key-%03d", i);
 			String v = String.format("value-%03d", i);

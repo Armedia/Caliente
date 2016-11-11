@@ -45,7 +45,7 @@ public abstract class CmfAttributeTranslator<V> {
 	private static final Map<CmfDataType, Codec> CODECS;
 
 	static {
-		Map<CmfDataType, Codec> codecs = new EnumMap<CmfDataType, Codec>(CmfDataType.class);
+		Map<CmfDataType, Codec> codecs = new EnumMap<>(CmfDataType.class);
 		for (CmfDataType t : CmfDataType.values()) {
 			codecs.put(t, new Codec(t));
 		}

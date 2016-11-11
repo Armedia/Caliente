@@ -19,7 +19,7 @@ public class AttributeT extends AttributeBaseT {
 
 	public List<String> getValue() {
 		if (this.value == null) {
-			this.value = new ArrayList<String>();
+			this.value = new ArrayList<>();
 		}
 		return this.value;
 	}

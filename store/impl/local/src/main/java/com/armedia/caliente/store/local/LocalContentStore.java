@@ -37,10 +37,10 @@ import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfOrganizationStrategy;
+import com.armedia.caliente.store.CmfOrganizationStrategy.Location;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
-import com.armedia.caliente.store.CmfOrganizationStrategy.Location;
 import com.armedia.caliente.store.local.xml.PropertyT;
 import com.armedia.caliente.store.local.xml.StorePropertiesT;
 import com.armedia.caliente.store.tools.FilenameFixer;
@@ -62,7 +62,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	private static final Set<String> SUPPORTED;
 
 	static {
-		Set<String> s = new HashSet<String>();
+		Set<String> s = new HashSet<>();
 		s.add(LocalContentStore.SCHEME_RAW);
 		s.add(LocalContentStore.SCHEME_FIXED);
 		s.add(LocalContentStore.SCHEME_SAFE);
@@ -84,7 +84,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	private final File propertiesFile;
 	private final AtomicBoolean modified = new AtomicBoolean(false);
 	private final CfgTools settings;
-	private final Map<String, CmfValue> properties = new TreeMap<String, CmfValue>();
+	private final Map<String, CmfValue> properties = new TreeMap<>();
 	private final boolean forceSafeFilenames;
 	private final Charset safeFilenameEncoding;
 	private final boolean fixFilenames;
@@ -266,14 +266,14 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	protected <T> URI doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
 		final Location location = this.strategy.getLocation(translator, object, info);
-		final List<String> rawPath = new ArrayList<String>(location.containerSpec);
+		final List<String> rawPath = new ArrayList<>(location.containerSpec);
 		rawPath.add(constructFileName(location));
 
 		final String scheme;
 		final String ssp;
 		if (this.forceSafeFilenames || this.fixFilenames) {
 			boolean fixed = false;
-			List<String> sspParts = new ArrayList<String>();
+			List<String> sspParts = new ArrayList<>();
 			for (String s : rawPath) {
 				String S = safeEncode(s);
 				fixed |= !Tools.equals(s, S);
@@ -507,7 +507,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	@Override
 	protected Set<String> getPropertyNames(LocalStoreOperation operation) throws CmfStorageException {
-		return new TreeSet<String>(this.properties.keySet());
+		return new TreeSet<>(this.properties.keySet());
 	}
 
 	@Override

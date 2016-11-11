@@ -26,7 +26,7 @@ public class CmfAttribute<V> extends CmfProperty<V> {
 
 	@Override
 	public String toString() {
-		return String.format("CmfAttribute [name=%s, type=%s, repeating=%s %s=%s]", getName(), getType(),
-			isRepeating(), (isRepeating() ? "values" : "singleValue"), (isRepeating() ? getValues() : getValue()));
+		return String.format("CmfAttribute [name=%s, type=%s, repeating=%s %s=%s]", getName(), getType(), isRepeating(),
+			(isRepeating() ? "values" : "singleValue"), (isRepeating() ? getValues() : getValue()));
 	}
 }

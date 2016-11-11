@@ -110,9 +110,9 @@ public class CMSMFUtils {
 
 		String smtpHostAddress = Setting.MAIL_SMTP_HOST.getString();
 		if (StringUtils.isBlank(smtpHostAddress)) {
-			CMSMFUtils.log.warn(String
-				.format("No HOST address to send the e-mail, the intended recipients (%s) won't receive an e-mail.",
-					recipients));
+			CMSMFUtils.log.warn(String.format(
+				"No HOST address to send the e-mail, the intended recipients (%s) won't receive an e-mail.",
+				recipients));
 			return;
 		}
 
@@ -125,11 +125,9 @@ public class CMSMFUtils {
 		}
 
 		if (!CMSMFUtils.validateSmtp(smtpHostAddress, smtpHostPort)) {
-			CMSMFUtils.log
-				.warn(String
-					.format(
-						"Host [%s] is not running an SMTP server on port 25. The intended recipients (%s) won't receive an e-mail.",
-						smtpHostAddress, recipients));
+			CMSMFUtils.log.warn(String.format(
+				"Host [%s] is not running an SMTP server on port 25. The intended recipients (%s) won't receive an e-mail.",
+				smtpHostAddress, recipients));
 			return;
 		}
 

@@ -42,7 +42,7 @@ public class AlfXmlIndex implements Closeable {
 
 	public AlfXmlIndex(File target, Class<?>... classes) {
 		this.target = target;
-		List<Class<?>> l = new ArrayList<Class<?>>();
+		List<Class<?>> l = new ArrayList<>();
 		if (classes != null) {
 			for (Class<?> c : classes) {
 				if (c != null) {

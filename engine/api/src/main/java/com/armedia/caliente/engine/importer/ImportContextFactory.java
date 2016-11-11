@@ -32,8 +32,8 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 		try {
 			ensurePath(session, this.rootPathStr);
 		} catch (Exception e) {
-			throw new ImportException(String.format("Failed to ensure the existence of the target path [%s]",
-				this.rootPathStr), e);
+			throw new ImportException(
+				String.format("Failed to ensure the existence of the target path [%s]", this.rootPathStr), e);
 		}
 	}
 
@@ -53,19 +53,17 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 
 	public final String getTargetPath(String sourcePath) throws ImportException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }
-		if (!sourcePath.startsWith("/")) { throw new IllegalArgumentException(String.format(
-			"The path [%s] must be absolute", sourcePath)); }
+		if (!sourcePath.startsWith(
+			"/")) { throw new IllegalArgumentException(String.format("The path [%s] must be absolute", sourcePath)); }
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
 		final int delta = (this.rootPath.size() > 0 ? 1 : 0);
-		if (l.size() < (this.pathTrunc - delta)) { throw new ImportException(
-			String
-				.format(
-					"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
-					this.pathTrunc, sourcePath, l.size())); }
+		if (l.size() < (this.pathTrunc - delta)) { throw new ImportException(String.format(
+			"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
+			this.pathTrunc, sourcePath, l.size())); }
 		for (int i = 0; i < this.pathTrunc; i++) {
 			l.remove(0);
 		}
-		List<String> finalPath = new ArrayList<String>(this.rootPath.size() + l.size());
+		List<String> finalPath = new ArrayList<>(this.rootPath.size() + l.size());
 		finalPath.addAll(this.rootPath);
 		finalPath.addAll(l);
 		return FileNameTools.reconstitute(finalPath, true, false, '/');

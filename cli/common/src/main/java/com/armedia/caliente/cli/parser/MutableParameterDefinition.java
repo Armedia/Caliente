@@ -124,14 +124,14 @@ public class MutableParameterDefinition implements ParameterDefinition, Cloneabl
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		MutableParameterDefinition other = MutableParameterDefinition.class.cast(obj);
-		if (this.isRequired() != other.isRequired()) { return false; }
-		if (this.isValueOptional() != other.isValueOptional()) { return false; }
-		if (!Tools.equals(this.getDescription(), other.getDescription())) { return false; }
-		if (!Tools.equals(this.getLongOpt(), other.getLongOpt())) { return false; }
-		if (!Tools.equals(this.getShortOpt(), other.getShortOpt())) { return false; }
-		if (this.getValueCount() != other.getValueCount()) { return false; }
-		if (!Tools.equals(this.getValueName(), other.getValueName())) { return false; }
-		if (!Tools.equals(this.getValueSep(), other.getValueSep())) { return false; }
+		if (isRequired() != other.isRequired()) { return false; }
+		if (isValueOptional() != other.isValueOptional()) { return false; }
+		if (!Tools.equals(getDescription(), other.getDescription())) { return false; }
+		if (!Tools.equals(getLongOpt(), other.getLongOpt())) { return false; }
+		if (!Tools.equals(getShortOpt(), other.getShortOpt())) { return false; }
+		if (getValueCount() != other.getValueCount()) { return false; }
+		if (!Tools.equals(getValueName(), other.getValueName())) { return false; }
+		if (!Tools.equals(getValueSep(), other.getValueSep())) { return false; }
 		return true;
 	}
 

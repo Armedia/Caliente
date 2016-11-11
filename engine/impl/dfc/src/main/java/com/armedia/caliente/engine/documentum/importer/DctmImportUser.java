@@ -19,9 +19,9 @@ import com.armedia.caliente.engine.documentum.DfValueFactory;
 import com.armedia.caliente.engine.documentum.common.Setting;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfQuery;
@@ -86,7 +86,7 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 					if (ret != null) {
 						// If we've found more than one candidate, we list them all...
 						if (candidates == null) {
-							candidates = new ArrayList<String>();
+							candidates = new ArrayList<>();
 							candidates.add(String.format("%s (D=%s)", ret.getString(DctmAttributes.USER_NAME),
 								ret.getString(DctmAttributes.USER_LOGIN_DOMAIN)));
 						}

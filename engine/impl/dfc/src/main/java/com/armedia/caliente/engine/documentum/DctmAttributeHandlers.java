@@ -130,11 +130,10 @@ public class DctmAttributeHandlers {
 	private static boolean OPERATORS_INITIALIZED = false;
 
 	static {
-		Map<DctmObjectType, Map<DctmDataType, Map<String, AttributeHandler>>> perObjectType = new EnumMap<DctmObjectType, Map<DctmDataType, Map<String, AttributeHandler>>>(
+		Map<DctmObjectType, Map<DctmDataType, Map<String, AttributeHandler>>> perObjectType = new EnumMap<>(
 			DctmObjectType.class);
 		for (DctmObjectType objectType : DctmObjectType.values()) {
-			Map<DctmDataType, Map<String, AttributeHandler>> perCmsDataType = new EnumMap<DctmDataType, Map<String, AttributeHandler>>(
-				DctmDataType.class);
+			Map<DctmDataType, Map<String, AttributeHandler>> perCmsDataType = new EnumMap<>(DctmDataType.class);
 			for (DctmDataType dataType : DctmDataType.values()) {
 				perCmsDataType.put(dataType, new ConcurrentHashMap<String, AttributeHandler>());
 			}
@@ -142,8 +141,7 @@ public class DctmAttributeHandlers {
 		}
 		PER_TYPE = Collections.unmodifiableMap(perObjectType);
 
-		Map<DctmDataType, Map<String, AttributeHandler>> global = new EnumMap<DctmDataType, Map<String, AttributeHandler>>(
-			DctmDataType.class);
+		Map<DctmDataType, Map<String, AttributeHandler>> global = new EnumMap<>(DctmDataType.class);
 		for (DctmDataType dataType : DctmDataType.values()) {
 			global.put(dataType, new ConcurrentHashMap<String, AttributeHandler>());
 		}
@@ -347,7 +345,7 @@ public class DctmAttributeHandlers {
 			String attrsToCheck = cfg.getString("owner.attributes", "");
 			StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
 			List<String> l = strTokenizer.getTokenList();
-			for (String att : new HashSet<String>(l)) {
+			for (String att : new HashSet<>(l)) {
 				DctmAttributeHandlers.setAttributeHandler(null, DctmDataType.DF_STRING, att,
 					DctmAttributeHandlers.SESSION_CONFIG_USER_HANDLER);
 			}

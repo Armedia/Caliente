@@ -35,11 +35,11 @@ import com.armedia.caliente.engine.documentum.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.DfPermit;
@@ -74,7 +74,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	private static final Set<String> AUTO_PERMITS;
 
 	static {
-		Set<String> s = new HashSet<String>();
+		Set<String> s = new HashSet<>();
 		s.add(IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 		s.add(IDfACL.DF_XPERMIT_EXECUTE_PROC_STR);
 		AUTO_PERMITS = Collections.unmodifiableSet(s);
@@ -120,8 +120,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.newPermit = null;
 			}
 
-			Set<String> s = new HashSet<String>(StrTokenizer.getCSVInstance(object.getXPermitList()).getTokenList());
-			Set<String> autoRemove = new HashSet<String>();
+			Set<String> s = new HashSet<>(StrTokenizer.getCSVInstance(object.getXPermitList()).getTokenList());
+			Set<String> autoRemove = new HashSet<>();
 			for (String x : DctmImportSysObject.AUTO_PERMITS) {
 				if (!s.contains(x)) {
 					autoRemove.add(x);
@@ -130,7 +130,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			this.autoRemove = Collections.unmodifiableSet(autoRemove);
 
 			// Now the ones we're adding
-			Set<String> nx = new TreeSet<String>();
+			Set<String> nx = new TreeSet<>();
 			for (String x : newXPermits) {
 				if (x == null) {
 					continue;
@@ -731,7 +731,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	 *             Signals that Dctm Server error has occurred.
 	 */
 	protected final Set<String> removeAllLinks(IDfSysObject object) throws DfException {
-		Set<String> ret = new HashSet<String>();
+		Set<String> ret = new HashSet<>();
 		int folderIdCount = object.getFolderIdCount();
 		for (int i = 0; i < folderIdCount; i++) {
 			// We have to do it backwards, instead of forwards, because it's
@@ -938,7 +938,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected List<String> getProspectiveParents(DctmImportContext context) throws DfException, ImportException {
 		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
-		List<String> newParents = new ArrayList<String>();
+		List<String> newParents = new ArrayList<>();
 		if ((parents == null) || (parents.getValueCount() == 0)) {
 			// This might be a cabinet import, so we try to find the target folder
 			String rootPath = context.getTargetPath("/");
@@ -964,7 +964,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		// First, get the list of the current parents, and reverse its order.
 		// The reverse order will accelerate the unlinking process later on
 		final int cpcount = sysObject.getFolderIdCount();
-		LinkedList<String> oldParents = new LinkedList<String>();
+		LinkedList<String> oldParents = new LinkedList<>();
 		for (int i = 0; i < cpcount; i++) {
 			oldParents.addLast(sysObject.getFolderId(i).getId());
 		}
@@ -973,11 +973,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		// This ensures that we acquire ALL locks in the correct lowest-id-first order,
 		// since parentLinkActions will be a sorted tree in that order.
-		Set<String> lockingOrder = new TreeSet<String>();
+		Set<String> lockingOrder = new TreeSet<>();
 		lockingOrder.addAll(oldParents);
 		lockingOrder.addAll(newParents);
 
-		Set<String> common = new HashSet<String>(oldParents);
+		Set<String> common = new HashSet<>(oldParents);
 		common.retainAll(newParents);
 
 		// If the "common" set is the same size as the "lockingOrder" set,
@@ -991,7 +991,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		// Ok...so first things first: lock the objects, and pull them in for
 		// processing
-		Map<String, IDfSysObject> parentCache = new HashMap<String, IDfSysObject>(lockingOrder.size());
+		Map<String, IDfSysObject> parentCache = new HashMap<>(lockingOrder.size());
 		for (String parentId : lockingOrder) {
 			// We HAVE to lock everything in the correct order prior to modification
 			final IDfId id = new DfId(parentId);
@@ -1004,7 +1004,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		// Ok...so now we have the parents locked, in the right order, and the object
 		// for the parent is cached...proceed with the unlink first
-		this.parentLinkActions = new ArrayList<ParentFolderAction>(lockingOrder.size());
+		this.parentLinkActions = new ArrayList<>(lockingOrder.size());
 		for (String parentId : oldParents) {
 			IDfSysObject parent = parentCache.get(parentId);
 			ParentFolderAction action = new ParentFolderAction(parent, false);
@@ -1100,7 +1100,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		// First things first: fix the parent paths in the incoming object
 		CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		if (paths == null) {
-			paths = new CmfProperty<IDfValue>(IntermediateProperty.PATH, CmfDataType.STRING, true);
+			paths = new CmfProperty<>(IntermediateProperty.PATH, CmfDataType.STRING, true);
 			this.cmfObject.setProperty(paths);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
 				IntermediateProperty.PATH, this.cmfObject.getLabel(), this.cmfObject.getId()));
@@ -1108,7 +1108,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		if (parents == null) {
-			parents = new CmfProperty<IDfValue>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
+			parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
 			this.cmfObject.setProperty(parents);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
 				PropertyIds.PARENT_ID, this.cmfObject.getLabel(), this.cmfObject.getId()));

@@ -59,7 +59,7 @@ public class UserMapper {
 
 	private static final List<String> DEFAULT_DCTM_SAM_ATTRIBUTES;
 	static {
-		List<String> l = new ArrayList<String>();
+		List<String> l = new ArrayList<>();
 		l.add("user_login_name");
 		l.add("user_os_name");
 		DEFAULT_DCTM_SAM_ATTRIBUTES = Tools.freezeList(l);
@@ -79,7 +79,7 @@ public class UserMapper {
 	private static final String GROUP_MEMBERS = UUID.randomUUID().toString();
 
 	static {
-		Map<String, String> m = new LinkedHashMap<String, String>();
+		Map<String, String> m = new LinkedHashMap<>();
 		final String[][] userHeadings = {
 			{
 				"User Name", "user_login_name"
@@ -130,7 +130,7 @@ public class UserMapper {
 		}
 		USER_HEADINGS = Tools.freezeMap(m);
 
-		m = new LinkedHashMap<String, String>();
+		m = new LinkedHashMap<>();
 		final String[][] groupHeadings = {
 			{
 				"Group Source", "group_source"
@@ -222,7 +222,7 @@ public class UserMapper {
 				} else if (v == UserMapper.USER_MEMBERS) {
 					// Encode the user members into a single value
 					IDfCollection c = g.getUsersNames();
-					List<String> users = new ArrayList<String>(g.getUsersNamesCount());
+					List<String> users = new ArrayList<>(g.getUsersNamesCount());
 					try {
 						while (c.next()) {
 							String n = c.getString("users_names");
@@ -235,7 +235,7 @@ public class UserMapper {
 				} else if (v == UserMapper.GROUP_MEMBERS) {
 					// Encode the group members into a single value
 					IDfCollection c = g.getGroupsNames();
-					List<String> groups = new ArrayList<String>(g.getGroupsNamesCount());
+					List<String> groups = new ArrayList<>(g.getGroupsNamesCount());
 					try {
 						while (c.next()) {
 							String n = c.getString("groups_names");
@@ -417,8 +417,8 @@ public class UserMapper {
 		// Shortcut - if there's nothing to validate, don't bother validating...
 		if (attributes.isEmpty()) { return Collections.emptySet(); }
 
-		Set<String> candidates = new LinkedHashSet<String>(attributes);
-		Set<String> finalAttributes = new LinkedHashSet<String>();
+		Set<String> candidates = new LinkedHashSet<>(attributes);
+		Set<String> finalAttributes = new LinkedHashSet<>();
 		IDfSession session = pool.acquireSession();
 		try {
 			// Who is the current user? Use that as a validation point...
@@ -635,11 +635,11 @@ public class UserMapper {
 				return 1;
 			}
 
-			final Set<String> userSources = new TreeSet<String>();
-			final Set<String> groupSources = new TreeSet<String>();
+			final Set<String> userSources = new TreeSet<>();
+			final Set<String> groupSources = new TreeSet<>();
 
 			final Properties userMapping = new Properties();
-			final Set<String> newUsers = new LinkedHashSet<String>();
+			final Set<String> newUsers = new LinkedHashSet<>();
 			for (String u : dctmUsers.keySet()) {
 				DctmUser user = dctmUsers.get(u);
 				// Look the user up by login in LDAP. If it's there, then
@@ -679,7 +679,7 @@ public class UserMapper {
 			}
 
 			final Properties groupMapping = new Properties();
-			final Set<String> newGroups = new LinkedHashSet<String>();
+			final Set<String> newGroups = new LinkedHashSet<>();
 			for (String g : dctmGroups.keySet()) {
 				DctmGroup group = dctmGroups.get(g);
 				// Look the user up by login in LDAP. If it's there, then
@@ -712,8 +712,8 @@ public class UserMapper {
 			int ret = UserMapper.writeMappings(startMarkerString, docbase, userMapping, groupMapping);
 			if (ret != 0) { return ret; }
 
-			final Map<String, CSVPrinter> userRecords = new HashMap<String, CSVPrinter>();
-			final Map<String, CSVPrinter> groupRecords = new HashMap<String, CSVPrinter>();
+			final Map<String, CSVPrinter> userRecords = new HashMap<>();
+			final Map<String, CSVPrinter> groupRecords = new HashMap<>();
 			try {
 				for (String source : userSources) {
 					userRecords.put(source,
@@ -730,8 +730,8 @@ public class UserMapper {
 
 			try {
 				executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-				List<Future<?>> futures = new ArrayList<Future<?>>(newUsers.size() + newGroups.size());
-				List<DctmPrincipal> principals = new ArrayList<DctmPrincipal>(newUsers.size() + newGroups.size());
+				List<Future<?>> futures = new ArrayList<>(newUsers.size() + newGroups.size());
+				List<DctmPrincipal> principals = new ArrayList<>(newUsers.size() + newGroups.size());
 				for (String u : newUsers) {
 					DctmUser user = dctmUsers.get(u);
 					futures.add(executor.submit(new UserWorker(user, userRecords.get(user.getSource()), dfcPool)));
@@ -758,7 +758,7 @@ public class UserMapper {
 					}
 				}
 
-				Map<Integer, Throwable> thrown = new TreeMap<Integer, Throwable>();
+				Map<Integer, Throwable> thrown = new TreeMap<>();
 				int i = 0;
 				boolean exceptionRaised = false;
 				for (Future<?> f : futures) {

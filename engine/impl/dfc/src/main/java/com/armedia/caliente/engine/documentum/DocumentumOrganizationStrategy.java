@@ -41,7 +41,7 @@ public class DocumentumOrganizationStrategy extends LocalOrganizationStrategy {
 			uniqueId.substring(0, 3), // The first 3 characters of the unique object ID
 			uniqueId.substring(3, 6), // The 2nd 3 characters of the unique object ID
 		};
-		return new ArrayList<String>(Arrays.asList(components));
+		return new ArrayList<>(Arrays.asList(components));
 	}
 
 	@Override

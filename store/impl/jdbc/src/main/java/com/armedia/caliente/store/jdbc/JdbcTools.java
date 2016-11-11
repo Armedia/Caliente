@@ -35,7 +35,7 @@ class JdbcTools {
 
 	static final Object[][] NO_PARAMS = new Object[0][0];
 
-	private static final ThreadLocal<QueryRunner> QUERY_RUNNER = new ThreadLocal<QueryRunner>();
+	private static final ThreadLocal<QueryRunner> QUERY_RUNNER = new ThreadLocal<>();
 
 	static boolean isValidId(String id) {
 		if (id == null) { return false; }

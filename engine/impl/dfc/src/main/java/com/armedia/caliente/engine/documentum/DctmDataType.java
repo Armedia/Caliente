@@ -131,8 +131,8 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			try {
 				return new DfValue(new DfTime(value.asTime()));
 			} catch (ParseException e) {
-				throw new RuntimeException(String.format("Failed to decode the value [%s] as a Date value",
-					value.asString()));
+				throw new RuntimeException(
+					String.format("Failed to decode the value [%s] as a Date value", value.asString()));
 			}
 		}
 

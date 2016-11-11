@@ -50,7 +50,7 @@ public class ShptExportEngine extends
 		final boolean excludeEmptyFolders = configuration.getBoolean(ShptSetting.EXCLUDE_EMPTY_FOLDERS);
 
 		try {
-			return new CloseableIteratorWrapper<ExportTarget>(
+			return new CloseableIteratorWrapper<>(
 				new ShptRecursiveIterator(service, service.getFolder(path), configuration, excludeEmptyFolders));
 		} catch (ShptSessionException e) {
 			throw new ShptException("Export target search failed", e);

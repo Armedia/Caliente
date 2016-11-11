@@ -34,7 +34,7 @@ public class CmisRecursiveIterator implements Iterator<CmisObject> {
 	private final boolean excludeEmptyFolders;
 	private final OperationContext ctx;
 
-	private final Stack<RecursiveState> stateStack = new Stack<RecursiveState>();
+	private final Stack<RecursiveState> stateStack = new Stack<>();
 
 	public CmisRecursiveIterator(Session session, Folder root, boolean excludeEmptyFolders) {
 		this(session, root, excludeEmptyFolders, null);
@@ -61,9 +61,9 @@ public class CmisRecursiveIterator implements Iterator<CmisObject> {
 			// No next yet, go looking for it...
 			final Folder current = state.base;
 			if (state.childIterator == null) {
-				ItemIterable<CmisObject> children = (this.ctx != null ? current.getChildren(this.ctx) : current
-					.getChildren());
-				state.childIterator = new CmisPagingIterator<CmisObject>(children);
+				ItemIterable<CmisObject> children = (this.ctx != null ? current.getChildren(this.ctx)
+					: current.getChildren());
+				state.childIterator = new CmisPagingIterator<>(children);
 			}
 			while (state.childIterator.hasNext()) {
 				CmisObject f = state.childIterator.next();

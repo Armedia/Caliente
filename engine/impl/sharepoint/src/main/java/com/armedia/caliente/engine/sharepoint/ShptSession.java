@@ -104,9 +104,10 @@ public class ShptSession {
 		if (replaceService == true) {
 			if (!silent) {
 				if (this.log.isTraceEnabled()) {
-					this.log.warn(String.format(
-						"Exception raised for URL [%s] resulted in a new Service instance being created",
-						e.getRequestUrl()), e);
+					this.log.warn(
+						String.format("Exception raised for URL [%s] resulted in a new Service instance being created",
+							e.getRequestUrl()),
+						e);
 				} else {
 					this.log.warn(String.format(
 						"Exception raised for URL [%s] resulted in a new Service instance being created - %s",
@@ -116,9 +117,8 @@ public class ShptSession {
 			this.service = newService();
 		}
 		return new ShptSessionException(String.format(
-			"ServiceException caught - %s, message = [%s], errorString = [%s], requestUrl = [%s], newService = %s", e
-				.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
-			e);
+			"ServiceException caught - %s, message = [%s], errorString = [%s], requestUrl = [%s], newService = %s",
+			e.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService), e);
 	}
 
 	private ShptSessionException processException(ServiceException e) {
@@ -751,8 +751,8 @@ public class ShptSession {
 		}
 	}
 
-	public java.util.List<Change> getChanges(ChangeQuery query, String listId, java.util.List<IQueryOption> queryOptions)
-		throws ShptSessionException {
+	public java.util.List<Change> getChanges(ChangeQuery query, String listId,
+		java.util.List<IQueryOption> queryOptions) throws ShptSessionException {
 		try {
 			return this.service.getChanges(query, listId, queryOptions);
 		} catch (ServiceException e) {
@@ -1219,7 +1219,7 @@ public class ShptSession {
 			if (this.log.isTraceEnabled()) {
 				this.log.trace(String.format("Will reprocess URL [%s] for getInputStream() invocation", url));
 			}
-			java.util.List<String> items = new ArrayList<String>();
+			java.util.List<String> items = new ArrayList<>();
 			for (String s : FileNameTools.tokenize(url, '/')) {
 				try {
 					String S = URLEncoder.encode(s, ShptSession.URL_ENCODING);
@@ -1727,7 +1727,8 @@ public class ShptSession {
 		}
 	}
 
-	public java.util.List<SiteInfo> getSiteInfos(java.util.List<IQueryOption> queryOptions) throws ShptSessionException {
+	public java.util.List<SiteInfo> getSiteInfos(java.util.List<IQueryOption> queryOptions)
+		throws ShptSessionException {
 		try {
 			return this.service.getSiteInfos(queryOptions);
 		} catch (ServiceException e) {
@@ -1814,7 +1815,8 @@ public class ShptSession {
 		}
 	}
 
-	public java.util.List<TimeZone> getTimeZones(java.util.List<IQueryOption> queryOptions) throws ShptSessionException {
+	public java.util.List<TimeZone> getTimeZones(java.util.List<IQueryOption> queryOptions)
+		throws ShptSessionException {
 		try {
 			return this.service.getTimeZones(queryOptions);
 		} catch (ServiceException e) {
@@ -2085,7 +2087,8 @@ public class ShptSession {
 		}
 	}
 
-	public boolean moveViewField(String listId, String viewId, String fieldName, int index) throws ShptSessionException {
+	public boolean moveViewField(String listId, String viewId, String fieldName, int index)
+		throws ShptSessionException {
 		try {
 			return this.service.moveViewField(listId, viewId, fieldName, index);
 		} catch (ServiceException e) {

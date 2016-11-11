@@ -39,10 +39,10 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectSpec;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfObjectStore.LockStatus;
 import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
+import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.PooledWorkers;
@@ -331,7 +331,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 			// We use a TreeSet to ensure that all our targets are always waited upon in the same
 			// order, to avoid deadlocks.
-			Collection<ExportTarget> waitTargets = new TreeSet<ExportTarget>();
+			Collection<ExportTarget> waitTargets = new TreeSet<>();
 			for (ExportDelegate<?, S, W, V, C, ?, ?> requirement : referenced) {
 				if (requirement.getExportTarget().equals(target)) {
 					continue;
@@ -645,10 +645,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		if (counter == null) {
-			counter = new CmfObjectCounter<ExportResult>(ExportResult.class);
+			counter = new CmfObjectCounter<>(ExportResult.class);
 		}
 		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
-		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<ExportTarget, ExportOperation>();
+		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<>();
 
 		PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
 			backlogSize) {
@@ -823,7 +823,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
 
 		final List<CmfObjectSpec> end = Collections.emptyList();
-		final BlockingQueue<Collection<CmfObjectSpec>> queue = new LinkedBlockingQueue<Collection<CmfObjectSpec>>();
+		final BlockingQueue<Collection<CmfObjectSpec>> queue = new LinkedBlockingQueue<>();
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		final Future<Long> cachingTask = executor.submit(new Callable<Long>() {
 			@Override
@@ -863,7 +863,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			CloseableIterator<ExportTarget> it = findExportResults(session, configuration, factory);
 			try {
 				final int segmentSize = 1000;
-				List<CmfObjectSpec> temp = new ArrayList<CmfObjectSpec>(segmentSize);
+				List<CmfObjectSpec> temp = new ArrayList<>(segmentSize);
 				// It's OK to ask if the thread is finished up front because the only way it could
 				// happen is if it ran into an error, in which case we need to fail short.
 				while (!cachingTask.isDone() && it.hasNext()) {
@@ -871,7 +871,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						try {
 							queue.put(temp);
 						} finally {
-							temp = new ArrayList<CmfObjectSpec>(segmentSize);
+							temp = new ArrayList<>(segmentSize);
 						}
 					}
 					temp.add(it.next());

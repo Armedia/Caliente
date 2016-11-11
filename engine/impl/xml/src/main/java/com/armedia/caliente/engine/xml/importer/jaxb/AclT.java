@@ -59,28 +59,28 @@ public class AclT {
 
 	public List<AttributeT> getAttributes() {
 		if (this.attributes == null) {
-			this.attributes = new ArrayList<AttributeT>();
+			this.attributes = new ArrayList<>();
 		}
 		return this.attributes;
 	}
 
 	public List<PropertyT> getProperties() {
 		if (this.properties == null) {
-			this.properties = new ArrayList<PropertyT>();
+			this.properties = new ArrayList<>();
 		}
 		return this.properties;
 	}
 
 	public List<AclPermitT> getUsers() {
 		if (this.users == null) {
-			this.users = new ArrayList<AclPermitT>();
+			this.users = new ArrayList<>();
 		}
 		return this.users;
 	}
 
 	public List<AclPermitT> getGroups() {
 		if (this.groups == null) {
-			this.groups = new ArrayList<AclPermitT>();
+			this.groups = new ArrayList<>();
 		}
 		return this.groups;
 	}

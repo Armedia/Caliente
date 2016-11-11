@@ -33,7 +33,7 @@ public class LocalSessionFactory extends SessionFactory<LocalRoot> {
 
 	@Override
 	public PooledObject<LocalRoot> makeObject() throws Exception {
-		return new DefaultPooledObject<LocalRoot>(this.root);
+		return new DefaultPooledObject<>(this.root);
 	}
 
 	@Override

@@ -15,7 +15,7 @@ abstract class AbstractLauncher {
 	protected static final String DCTM_JAR = "dctm.jar";
 
 	protected static List<File> generateClasspath() throws IOException {
-		List<File> ret = new ArrayList<File>();
+		List<File> ret = new ArrayList<>();
 		String var = null;
 		File base = null;
 		File tgt = null;
@@ -30,34 +30,34 @@ abstract class AbstractLauncher {
 		// Next, add ${DOCUMENTUM}/config to the classpath
 		var = CLIParam.dctm.getString(System.getenv(AbstractLauncher.ENV_DOCUMENTUM));
 		// Go with the environment
-		if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
-			AbstractLauncher.ENV_DOCUMENTUM)); }
+		if (var == null) { throw new RuntimeException(
+			String.format("The environment variable [%s] is not set", AbstractLauncher.ENV_DOCUMENTUM)); }
 
 		base = new File(var).getCanonicalFile();
-		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
-			base.getAbsolutePath())); }
+		if (!base.isDirectory()) { throw new FileNotFoundException(
+			String.format("Could not find the directory [%s]", base.getAbsolutePath())); }
 
 		tgt = new File(base, "config");
-		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
-			tgt.getAbsolutePath())); }
+		if (!base.isDirectory()) { throw new FileNotFoundException(
+			String.format("Could not find the directory [%s]", tgt.getAbsolutePath())); }
 
 		ret.add(tgt);
 
 		// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
 		var = CLIParam.dfc.getString(System.getenv(AbstractLauncher.ENV_DOCUMENTUM_SHARED));
 		// Go with the environment
-		if (var == null) { throw new RuntimeException(String.format("The environment variable [%s] is not set",
-			AbstractLauncher.ENV_DOCUMENTUM_SHARED)); }
+		if (var == null) { throw new RuntimeException(
+			String.format("The environment variable [%s] is not set", AbstractLauncher.ENV_DOCUMENTUM_SHARED)); }
 
 		// Next, is it a directory?
 		base = new File(var).getCanonicalFile();
-		if (!base.isDirectory()) { throw new FileNotFoundException(String.format("Could not find the directory [%s]",
-			base.getAbsolutePath())); }
+		if (!base.isDirectory()) { throw new FileNotFoundException(
+			String.format("Could not find the directory [%s]", base.getAbsolutePath())); }
 
 		// Next, does dctm.jar exist in there?
 		tgt = new File(base, AbstractLauncher.DCTM_JAR);
-		if (!tgt.isFile()) { throw new FileNotFoundException(String.format("Could not find the JAR file [%s]",
-			tgt.getAbsolutePath())); }
+		if (!tgt.isFile()) { throw new FileNotFoundException(
+			String.format("Could not find the JAR file [%s]", tgt.getAbsolutePath())); }
 
 		// Next, to the classpath
 		ret.add(tgt);

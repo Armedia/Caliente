@@ -72,7 +72,7 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 		this.nameAttribute = searchAttributes[0];
 		// if batched, populate the DB's in one go.
 		// If not batched, the DBs will only be populated as we go
-		List<String> l = new ArrayList<String>();
+		List<String> l = new ArrayList<>();
 		for (String s : searchAttributes) {
 			if (s != null) {
 				l.add(s);
@@ -82,9 +82,9 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 
 		if (!onDemand) {
 			// Populate up front
-			final Map<String, P> byName = new HashMap<String, P>();
-			final Map<String, P> byGuid = new HashMap<String, P>();
-			final Map<DN, P> byDn = new HashMap<DN, P>();
+			final Map<String, P> byName = new HashMap<>();
+			final Map<String, P> byGuid = new HashMap<>();
+			final Map<DN, P> byDn = new HashMap<>();
 			final AtomicInteger counter = new AtomicInteger(0);
 			final String label = pClass.getSimpleName();
 			SearchRequest request = new SearchRequest(new SearchResultListener() {
@@ -122,9 +122,9 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 			this.pool = null;
 		} else {
 			// Populate on demand...
-			this.byName = new ConcurrentHashMap<String, P>();
-			this.byGuid = new ConcurrentHashMap<String, P>();
-			this.byDn = new ConcurrentHashMap<DN, P>();
+			this.byName = new ConcurrentHashMap<>();
+			this.byGuid = new ConcurrentHashMap<>();
+			this.byDn = new ConcurrentHashMap<>();
 			this.pool = pool;
 		}
 	}

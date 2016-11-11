@@ -52,7 +52,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		final IDfSession session = group.getSession();
 		CmfAttribute<IDfValue> usersNames = this.cmfObject.getAttribute(DctmAttributes.USERS_NAMES);
 		// Keep track of missing users so we don't look for them again.
-		Set<String> missingUsers = new HashSet<String>();
+		Set<String> missingUsers = new HashSet<>();
 		if (usersNames != null) {
 			group.removeAllUsers();
 			for (IDfValue v : usersNames) {
@@ -151,7 +151,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		// Set this group as users' default group
 		CmfProperty<IDfValue> property = this.cmfObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
 		if ((property == null) || (property.getValueCount() == 0)) { return; }
-		Set<String> users = new TreeSet<String>();
+		Set<String> users = new TreeSet<>();
 		for (IDfValue v : property) {
 			String user = v.asString();
 			// Don't touch the special users!

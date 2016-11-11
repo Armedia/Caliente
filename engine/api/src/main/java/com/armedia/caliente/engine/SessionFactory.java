@@ -41,7 +41,7 @@ public abstract class SessionFactory<S> implements PooledObjectFactory<S> {
 
 	protected SessionFactory(CfgTools settings, CmfCrypt crypto) {
 		this.crypto = crypto;
-		this.pool = new GenericObjectPool<S>(this);
+		this.pool = new GenericObjectPool<>(this);
 		this.pool.setConfig(getPoolConfig(settings));
 	}
 

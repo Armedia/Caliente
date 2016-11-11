@@ -40,7 +40,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 
 		final boolean primaryContent = (info.isDefaultRendition() && (info.getRenditionPage() == 0));
 
-		List<String> paths = new ArrayList<String>();
+		List<String> paths = new ArrayList<>();
 		// Make sure the contents all land in the bulk-import root location, so it's easy to point
 		// the bulk importer at that directory and not import any unwanted crap
 		paths.add(AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);

@@ -41,7 +41,7 @@ public abstract class AclTools {
 
 	public static String encode(Collection<String> names) {
 		if ((names == null) || names.isEmpty()) { return ""; }
-		Set<String> ret = new TreeSet<String>();
+		Set<String> ret = new TreeSet<>();
 		for (String p : names) {
 			if (p == null) {
 				continue;
@@ -52,7 +52,7 @@ public abstract class AclTools {
 	}
 
 	public static Set<String> decode(String encodedNames) {
-		Set<String> ret = new TreeSet<String>();
+		Set<String> ret = new TreeSet<>();
 		if (encodedNames != null) {
 			for (String p : new StrTokenizer(encodedNames, AclTools.SEPARATOR).getTokenList()) {
 				ret.add(AclTools.UrlDecode(p));

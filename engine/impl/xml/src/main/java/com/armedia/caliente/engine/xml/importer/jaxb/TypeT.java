@@ -51,14 +51,14 @@ public class TypeT {
 
 	public List<AttributeDefT> getAttributes() {
 		if (this.attributes == null) {
-			this.attributes = new ArrayList<AttributeDefT>();
+			this.attributes = new ArrayList<>();
 		}
 		return this.attributes;
 	}
 
 	public List<PropertyT> getProperties() {
 		if (this.properties == null) {
-			this.properties = new ArrayList<PropertyT>();
+			this.properties = new ArrayList<>();
 		}
 		return this.properties;
 	}

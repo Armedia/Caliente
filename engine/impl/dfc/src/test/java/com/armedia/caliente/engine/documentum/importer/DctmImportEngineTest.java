@@ -21,7 +21,7 @@ public class DctmImportEngineTest extends DctmEngineTest {
 	public void test() throws Exception {
 		ImportEngine<?, ?, ?, ?, ?, ?> importer = ImportEngine.getImportEngine("dctm");
 
-		Map<String, String> settings = new HashMap<String, String>();
+		Map<String, String> settings = new HashMap<>();
 		settings.put(DctmSetting.DOCBASE.getLabel(), "dctmvm01");
 		settings.put(DctmSetting.USERNAME.getLabel(), "dctmadmin");
 		settings.put(DctmSetting.PASSWORD.getLabel(), "123");

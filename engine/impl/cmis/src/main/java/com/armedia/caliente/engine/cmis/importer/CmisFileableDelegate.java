@@ -92,7 +92,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 							MutableAce ace = new AccessControlEntryImpl();
 							ace.setDirect(true);
-							ace.setPermissions(new ArrayList<String>(AclTools.decode(permissions.asString())));
+							ace.setPermissions(new ArrayList<>(AclTools.decode(permissions.asString())));
 							ace.setPrincipal(new AccessControlPrincipalDataImpl(accessor.asString()));
 							// TODO: Copy extensions!!
 							aces.add(ace);
@@ -123,7 +123,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 						.convertAllowableActionsToPermissions(AclTools.decode(actions.asString()));
 					MutableAce ace = new AccessControlEntryImpl();
 					ace.setDirect(true);
-					ace.setPermissions(new ArrayList<String>(permissions));
+					ace.setPermissions(new ArrayList<>(permissions));
 					ace.setPrincipal(new AccessControlPrincipalDataImpl(accessor.asString()));
 					aces.add(ace);
 				}
@@ -144,7 +144,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 	protected List<Folder> getParentFolders(CmisImportContext ctx) throws ImportException {
 
-		final List<Folder> ret = new ArrayList<Folder>();
+		final List<Folder> ret = new ArrayList<>();
 		final Session session = ctx.getSession();
 
 		// We only search by path, since by CMIS specification, a folder may have one and only
@@ -249,17 +249,17 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	protected void linkToParents(CmisImportContext ctx, T existing, List<Folder> finalParents) {
-		Map<String, Folder> oldParents = new HashMap<String, Folder>();
-		Map<String, Folder> newParents = new HashMap<String, Folder>();
+		Map<String, Folder> oldParents = new HashMap<>();
+		Map<String, Folder> newParents = new HashMap<>();
 		for (Folder f : finalParents) {
 			newParents.put(f.getId(), f);
 		}
 		for (Folder f : existing.getParents()) {
 			oldParents.put(f.getId(), f);
 		}
-		Set<String> oldParentsIds = new HashSet<String>(oldParents.keySet());
-		Set<String> newParentsIds = new HashSet<String>(newParents.keySet());
-		Set<String> bothParentsIds = new HashSet<String>();
+		Set<String> oldParentsIds = new HashSet<>(oldParents.keySet());
+		Set<String> newParentsIds = new HashSet<>(newParents.keySet());
+		Set<String> bothParentsIds = new HashSet<>();
 
 		// Remove those that need not be unlinked
 		for (String s : newParentsIds) {

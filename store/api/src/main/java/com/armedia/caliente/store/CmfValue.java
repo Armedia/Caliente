@@ -14,13 +14,13 @@ public final class CmfValue {
 	public static final Map<CmfDataType, CmfValue> NULL;
 
 	static {
-		Map<CmfDataType, CmfValue> nvl = new EnumMap<CmfDataType, CmfValue>(CmfDataType.class);
+		Map<CmfDataType, CmfValue> nvl = new EnumMap<>(CmfDataType.class);
 		for (CmfDataType t : CmfDataType.values()) {
 			try {
 				nvl.put(t, new CmfValue(t, null));
 			} catch (ParseException e) {
-				throw new RuntimeException(String.format(
-					"Failed to create a CMF value with a null value for type [%s]", t), e);
+				throw new RuntimeException(
+					String.format("Failed to create a CMF value with a null value for type [%s]", t), e);
 			}
 		}
 		NULL = Tools.freezeMap(nvl);

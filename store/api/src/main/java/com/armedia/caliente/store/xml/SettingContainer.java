@@ -49,13 +49,13 @@ public class SettingContainer implements Cloneable {
 	private List<Setting> setting;
 
 	@XmlTransient
-	private Map<String, String> settings = new LinkedHashMap<String, String>();
+	private Map<String, String> settings = new LinkedHashMap<>();
 
 	@XmlTransient
 	private SettingContainer parent = null;
 
 	protected void afterUnmarshal(Unmarshaller unmarshaller, Object parent) {
-		this.settings = new LinkedHashMap<String, String>();
+		this.settings = new LinkedHashMap<>();
 		if (this.setting != null) {
 			for (Setting s : this.setting) {
 				this.settings.put(s.getName(), s.getValue());
@@ -67,7 +67,7 @@ public class SettingContainer implements Cloneable {
 	}
 
 	protected void beforeMarshal(Marshaller marshaller) {
-		this.setting = new ArrayList<Setting>(this.settings.size());
+		this.setting = new ArrayList<>(this.settings.size());
 		for (Map.Entry<String, String> e : this.settings.entrySet()) {
 			Setting s = new Setting();
 			s.setName(e.getKey());
@@ -86,11 +86,11 @@ public class SettingContainer implements Cloneable {
 
 	@SuppressWarnings("unchecked")
 	public final Map<String, String> getEffectiveSettings() {
-		final Map<String, String> m = new HashMap<String, String>();
+		final Map<String, String> m = new HashMap<>();
 		Tools.overlayMaps(m, getSettings(), (this.parent != null ? this.parent.getEffectiveSettings() : null));
 		StrSubstitutor sub = new StrSubstitutor(new Lookup(m));
 		// We make a copy of the keys to avoid concurrent modification errors
-		for (String k : new HashSet<String>(m.keySet())) {
+		for (String k : new HashSet<>(m.keySet())) {
 			m.put(k, sub.replace(m.get(k)));
 		}
 		return m;
@@ -106,10 +106,10 @@ public class SettingContainer implements Cloneable {
 			throw new RuntimeException("Can't clone the SettingContainer", e);
 		}
 		if (this.setting != null) {
-			newClone.setting = new ArrayList<Setting>(this.setting);
+			newClone.setting = new ArrayList<>(this.setting);
 		}
 		if (this.settings != null) {
-			newClone.settings = new HashMap<String, String>(this.settings);
+			newClone.settings = new HashMap<>(this.settings);
 		}
 		if (this.parent != null) {
 			newClone.parent = this.parent.clone();

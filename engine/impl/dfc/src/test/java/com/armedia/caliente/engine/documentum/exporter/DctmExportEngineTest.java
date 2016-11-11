@@ -23,7 +23,7 @@ public class DctmExportEngineTest extends DctmEngineTest {
 	public void test() throws Exception {
 		ExportEngine<?, ?, ?, ?, ?, ?> exporter = ExportEngine.getExportEngine("dctm");
 
-		Map<String, String> settings = new HashMap<String, String>();
+		Map<String, String> settings = new HashMap<>();
 		settings.put(DctmSetting.DOCBASE.getLabel(), "documentum");
 		settings.put(DctmSetting.USERNAME.getLabel(), "dmadmin2");
 		settings.put(DctmSetting.PASSWORD.getLabel(), "XZ6ZkrcrHEg=");

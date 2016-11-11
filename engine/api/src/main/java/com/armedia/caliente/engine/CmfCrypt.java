@@ -161,7 +161,7 @@ public class CmfCrypt {
 		if ((alternateSchemes == null) || alternateSchemes.isEmpty()) {
 			this.alternateSchemes = Collections.emptyList();
 		} else {
-			this.alternateSchemes = Tools.freezeList(new ArrayList<Scheme>(alternateSchemes));
+			this.alternateSchemes = Tools.freezeList(new ArrayList<>(alternateSchemes));
 		}
 		this.encryptionScheme = Tools.coalesce(primaryScheme, CmfCrypt.DEFAULT_SCHEME);
 	}
