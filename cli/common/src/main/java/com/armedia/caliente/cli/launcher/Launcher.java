@@ -1,6 +1,6 @@
 package com.armedia.caliente.cli.launcher;
 
-import java.util.Map;
+import java.util.Collection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,54 +8,60 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.parser.CommandLine;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
-import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 
 public abstract class Launcher<K> {
 	protected final Logger log = LoggerFactory.getLogger(Launcher.class);
 
-	protected boolean supportsHelp = true;
-
 	protected ClasspathPatcher.Filter getClasspathPatcherFilter() {
 		return null;
 	}
 
-	protected abstract Map<K, ParameterDefinition> getCommandLineParameters();
+	protected abstract Collection<ParameterDefinition> getCommandLineParameters(CommandLine commandLine, int pass);
 
-	protected abstract void parameterDefined(K key, Parameter param);
-
-	protected abstract String getProgramName();
+	protected abstract String getProgramName(int pass);
 
 	protected final int launch(String... args) {
-		CommandLine cl = new CommandLine(this.supportsHelp);
-		Map<K, ParameterDefinition> parameters = getCommandLineParameters();
-		if (parameters != null) {
-			for (final K key : parameters.keySet()) {
-				final ParameterDefinition def = parameters.get(key);
-				try {
-					parameterDefined(key, cl.define(def));
-				} catch (Exception e) {
-					throw new RuntimeException("Failed to initialize the command-line parser", e);
-				}
-			}
-		}
+		return launch(true, args);
+	}
 
-		try {
-			cl.parse(getProgramName(), args);
-			if (cl.isHelpRequested()) {
-				System.err.printf("%s%n", cl.getHelpMessage());
-				return 1;
-			}
-		} catch (CommandLineParseException e) {
-			if (e.getHelp() != null) {
-				System.err.printf("%s%n", e.getHelp());
-			}
-			return 1;
-		}
+	protected final int launch(boolean supportsHelp, String... args) {
 
 		if (ClasspathPatcher.discoverPatches(getClasspathPatcherFilter(), false)) {
 			for (String s : ClasspathPatcher.getAdditions()) {
 				this.log.info("Classpath addition: [{}]", s);
+			}
+		}
+
+		// This loop subclasses a chance to cleanly break the parameter parsing loop, while
+		// also affording them the opportunity to modify the parameter availability based on
+		// previously parsed parameters
+		CommandLine cl = new CommandLine(supportsHelp);
+		int pass = -1;
+		while (true) {
+			Collection<ParameterDefinition> parameters = getCommandLineParameters(cl, ++pass);
+			if ((parameters == null) || parameters.isEmpty()) {
+				break;
+			}
+
+			for (ParameterDefinition def : parameters) {
+				try {
+					cl.define(def);
+				} catch (Exception e) {
+					throw new RuntimeException("Failed to initialize the command-line parser", e);
+				}
+			}
+			try {
+				cl.parse(getProgramName(pass), args);
+				if (cl.isHelpRequested()) {
+					System.err.printf("%s%n", cl.getHelpMessage());
+					return 1;
+				}
+			} catch (CommandLineParseException e) {
+				if (e.getHelp() != null) {
+					System.err.printf("%s%n", e.getHelp());
+				}
+				return 1;
 			}
 		}
 
