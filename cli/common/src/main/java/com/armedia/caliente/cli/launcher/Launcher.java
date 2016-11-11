@@ -6,19 +6,52 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
+import com.armedia.caliente.cli.classpath.ClasspathPatcher.Filter;
 import com.armedia.caliente.cli.parser.CommandLine;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
+import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 
 public abstract class Launcher<K> {
 	protected final Logger log = LoggerFactory.getLogger(Launcher.class);
 
-	protected ClasspathPatcher.Filter getClasspathPatcherFilter() {
+	/**
+	 * <p>
+	 * Return a {@link Filter} instance that will be used when selecting which
+	 * {@link ClasspathPatcher} instances are employed during the patching stage.
+	 * </p>
+	 *
+	 * @return the {@link Filter} instance to use
+	 */
+	protected ClasspathPatcher.Filter getClasspathPatcherFilter(CommandLineValues commandLine) {
 		return null;
 	}
 
-	protected abstract Collection<ParameterDefinition> getCommandLineParameters(CommandLine commandLine, int pass);
+	/**
+	 * <p>
+	 * Returns the parameters definitions to be used in the given pass. If {@code null} is returned,
+	 * or an empty {@link Collection}, then the parsing cycle will be broken and no further command
+	 * parameter parsing will be performed. The {@code pass} argument is guaranteed to always be
+	 * increasing.
+	 * </p>
+	 *
+	 * @param commandLine
+	 * @param pass
+	 * @return the collection of {@link ParameterDefinition} instances to use in the next parsing
+	 *         pass
+	 */
+	protected abstract Collection<ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
+		int pass);
 
+	/**
+	 * <p>
+	 * Returns the name to be given to this executable after the given command parsing pass. The
+	 * {@code pass} argument is guaranteed to always be increasing.
+	 * </p>
+	 *
+	 * @param pass
+	 * @return the name to be used for this executable
+	 */
 	protected abstract String getProgramName(int pass);
 
 	protected final int launch(String... args) {
@@ -26,12 +59,6 @@ public abstract class Launcher<K> {
 	}
 
 	protected final int launch(boolean supportsHelp, String... args) {
-
-		if (ClasspathPatcher.discoverPatches(getClasspathPatcherFilter(), false)) {
-			for (String s : ClasspathPatcher.getAdditions()) {
-				this.log.info("Classpath addition: [{}]", s);
-			}
-		}
 
 		// This loop subclasses a chance to cleanly break the parameter parsing loop, while
 		// also affording them the opportunity to modify the parameter availability based on
@@ -62,6 +89,12 @@ public abstract class Launcher<K> {
 					System.err.printf("%s%n", e.getHelp());
 				}
 				return 1;
+			}
+		}
+
+		if (ClasspathPatcher.discoverPatches(getClasspathPatcherFilter(cl), false)) {
+			for (String s : ClasspathPatcher.getAdditions()) {
+				this.log.info("Classpath addition: [{}]", s);
 			}
 		}
 
