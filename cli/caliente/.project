@@ -29,6 +29,15 @@
 	</natures>
 	<filteredResources>
 		<filter>
+			<id>1478883005184</id>
+			<name>cmsmf</name>
+			<type>26</type>
+			<matcher>
+				<id>org.eclipse.ui.ide.multiFilter</id>
+				<arguments>1.0-name-matches-false-false-content</arguments>
+			</matcher>
+		</filter>
+		<filter>
 			<id>1431965036375</id>
 			<name>documentum</name>
 			<type>14</type>
