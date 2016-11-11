@@ -10,12 +10,12 @@ import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
-import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.content.IDfStore;
@@ -85,7 +85,7 @@ public enum DctmObjectType {
 		Flag.PARALLEL_CAPABLE),
 	DOCUMENT(
 		CmfType.DOCUMENT,
-		IDfDocument.class,
+		IDfSysObject.class,
 		null,
 		Flag.FAILURE_INTERRUPTS_BATCH,
 		Flag.SUPPORTS_TRANSACTIONS,
@@ -269,8 +269,7 @@ public enum DctmObjectType {
 			case IDfId.DM_FOLDER:
 				return DctmObjectType.FOLDER;
 
-			case IDfId.DM_SYSOBJECT: // fall-through - dm_sysobject types will be folded into
-										// dm_document
+			case IDfId.DM_SYSOBJECT:
 			case IDfId.DM_DOCUMENT:
 				return DctmObjectType.DOCUMENT;
 

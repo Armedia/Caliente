@@ -48,6 +48,10 @@ public class DctmExportDelegateFactory
 	}
 
 	DctmExportDelegate<?> newExportDelegate(IDfPersistentObject object, CmfType type) throws Exception {
+		if ("08de75d18002b162,08de75d18002b163".toLowerCase()
+			.indexOf(object.getObjectId().getId().toLowerCase()) >= 0) {
+			"".hashCode();
+		}
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...
 		String typeStr = null;

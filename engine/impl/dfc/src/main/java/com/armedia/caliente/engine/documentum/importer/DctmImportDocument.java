@@ -41,7 +41,6 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -61,7 +60,7 @@ import com.documentum.fc.common.IDfValue;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class DctmImportDocument extends DctmImportSysObject<IDfDocument> implements DctmDocument {
+public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implements DctmDocument {
 
 	private static final String DEFAULT_BINARY_MIME = "application/octet-stream";
 	private static final String DEFAULT_BINARY_FORMAT = "binary";
@@ -70,7 +69,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	private TemporaryPermission branchTemporaryPermission = null;
 
 	protected DctmImportDocument(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
-		super(factory, IDfDocument.class, DctmObjectType.DOCUMENT, storedObject);
+		super(factory, IDfSysObject.class, DctmObjectType.DOCUMENT, storedObject);
 	}
 
 	@Override
@@ -97,7 +96,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		return super.skipImport(ctx);
 	}
 
-	private String calculateVersionString(IDfDocument document, boolean full) throws DfException {
+	private String calculateVersionString(IDfSysObject document, boolean full) throws DfException {
 		if (!full) { return String.format("%s%s", document.getImplicitVersionLabel(),
 			document.getHasFolder() ? ",CURRENT" : ""); }
 		int labelCount = document.getVersionLabelCount();
@@ -112,7 +111,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected String calculateLabel(IDfDocument document) throws DfException, ImportException {
+	protected String calculateLabel(IDfSysObject document) throws DfException, ImportException {
 		final int folderCount = document.getFolderIdCount();
 		for (int i = 0; i < folderCount; i++) {
 			IDfId id = document.getFolderId(i);
@@ -129,7 +128,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected IDfDocument locateInCms(DctmImportContext ctx) throws ImportException, DfException {
+	protected IDfSysObject locateInCms(DctmImportContext ctx) throws ImportException, DfException {
 		final IDfSession session = ctx.getSession();
 
 		if (isReference()) { return locateExistingByPath(ctx); }
@@ -151,7 +150,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		// If we don't have a chronicle mapping, we're likely the root document and thus
 		// will have to search by path...
 		final String chronicleId;
-		IDfDocument existing = null;
+		IDfSysObject existing = null;
 		if (chronicleMapping != null) {
 			chronicleId = chronicleMapping.getTargetValue();
 		} else {
@@ -183,12 +182,12 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected boolean isVersionable(IDfDocument object) throws DfException {
+	protected boolean isVersionable(IDfSysObject object) throws DfException {
 		return true;
 	}
 
 	@Override
-	protected IDfId persistChanges(IDfDocument document, DctmImportContext context)
+	protected IDfId persistChanges(IDfSysObject document, DctmImportContext context)
 		throws DfException, ImportException {
 		// Apparently, references require no saving
 		if (isReference()) { return document.getObjectId(); }
@@ -196,20 +195,20 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected boolean isSameObject(IDfDocument object) throws DfException {
+	protected boolean isSameObject(IDfSysObject object) throws DfException {
 		// If we're a reference, and there's something there already, we don't import...
 		if (isReference()) { return true; }
 		return super.isSameObject(object);
 	}
 
-	protected IDfDocument newDocument(DctmImportContext context) throws DfException, ImportException {
-		IDfDocument doc = super.newObject(context);
+	protected IDfSysObject newDocument(DctmImportContext context) throws DfException, ImportException {
+		IDfSysObject doc = super.newObject(context);
 		setVirtualDocumentFlag(doc);
 		return doc;
 	}
 
 	@Override
-	protected IDfDocument newObject(DctmImportContext context) throws DfException, ImportException {
+	protected IDfSysObject newObject(DctmImportContext context) throws DfException, ImportException {
 
 		if (isReference()) { return newReference(context); }
 
@@ -221,7 +220,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		final boolean root = ((rootProp != null) && rootProp.hasValues() && rootProp.getValue().asBoolean());
 		if (root) {
 			// This is the start of a new chronicle
-			final IDfDocument newDoc = newDocument(context);
+			final IDfSysObject newDoc = newDocument(context);
 			context.getAttributeMapper().setMapping(this.cmfObject.getType(), DctmAttributes.I_CHRONICLE_ID,
 				sourceChronicleId, newDoc.getChronicleId().getId());
 			return newDoc;
@@ -230,7 +229,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		final IDfSession session = context.getSession();
 
 		final IDfId antecedentId;
-		IDfDocument antecedentVersion = null;
+		IDfSysObject antecedentVersion = null;
 		final CmfAttribute<IDfValue> antecedentAtt = this.cmfObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID);
 		final CmfProperty<IDfValue> antecedentProperty = this.cmfObject.getProperty(DctmSysObject.PATCH_ANTECEDENT);
 		if (antecedentProperty == null) {
@@ -285,7 +284,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 			// At the end of patching, antecedentVersion should point to the actual
 			// version that will be checked out/branched (i.e. the LAST patch version added)
 			// If there is no object, and a root must be created, then do so as well
-			IDfDocument lastAntecedent = null;
+			IDfSysObject lastAntecedent = null;
 			IDfValue lastAntecedentVersion = null;
 			for (IDfValue p : patches) {
 				// Now we checkout and checkin and branch and whatnot as necessary until we can
@@ -297,7 +296,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 					// Don't need to do this again...
 					substituteRoot = false;
 				}
-				IDfDocument patchDocument = createSuccessorVersion(antecedentVersion, prop, context);
+				IDfSysObject patchDocument = createSuccessorVersion(antecedentVersion, prop, context);
 				IDfId checkinId = persistNewVersion(patchDocument, p.asString(), context);
 				cleanUpTemporaryPermissions(session);
 				resetMutabilityFlags();
@@ -329,7 +328,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		return createSuccessorVersion(antecedentVersion, null, context);
 	}
 
-	private IDfDocument createSuccessorVersion(IDfDocument antecedentVersion, CmfProperty<IDfValue> rVersionLabel,
+	private IDfSysObject createSuccessorVersion(IDfSysObject antecedentVersion, CmfProperty<IDfValue> rVersionLabel,
 		DctmImportContext context) throws ImportException, DfException {
 		final IDfSession session = antecedentVersion.getSession();
 		antecedentVersion.fetch(null);
@@ -378,7 +377,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	private void cleanUpTemporaryPermissions(IDfSession session) throws DfException {
 		if (this.antecedentTemporaryPermission != null) {
 			IDfId antecedentId = new DfId(this.antecedentTemporaryPermission.getObjectId());
-			IDfDocument antecedent = castObject(session.getObject(antecedentId));
+			IDfSysObject antecedent = castObject(session.getObject(antecedentId));
 			session.flushObject(antecedentId);
 			antecedent.fetch(null);
 			if (this.antecedentTemporaryPermission.revoke(antecedent)) {
@@ -389,7 +388,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 
 		if (this.branchTemporaryPermission != null) {
 			IDfId branchId = new DfId(this.branchTemporaryPermission.getObjectId());
-			IDfDocument branch = castObject(session.getObject(branchId));
+			IDfSysObject branch = castObject(session.getObject(branchId));
 			session.flushObject(branchId);
 			branch.fetch(null);
 			if (this.branchTemporaryPermission.revoke(branch)) {
@@ -400,7 +399,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected void prepareOperation(IDfDocument sysObject, boolean newObject, DctmImportContext context)
+	protected void prepareOperation(IDfSysObject sysObject, boolean newObject, DctmImportContext context)
 		throws DfException, ImportException {
 		super.prepareOperation(sysObject, newObject, context);
 		if (!newObject) {
@@ -411,7 +410,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected void prepareForConstruction(IDfDocument document, boolean newObject, DctmImportContext context)
+	protected void prepareForConstruction(IDfSysObject document, boolean newObject, DctmImportContext context)
 		throws DfException {
 
 		// Is root?
@@ -431,7 +430,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		}
 	}
 
-	protected void saveContentStream(DctmImportContext context, IDfDocument document, CmfContentInfo info,
+	protected void saveContentStream(DctmImportContext context, IDfSysObject document, CmfContentInfo info,
 		CmfContentStore<?, ?, ?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
 		int renditionNumber, String pageModifier, int currentContent, int totalContentCount)
 		throws DfException, ImportException {
@@ -672,7 +671,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		return DctmImportDocument.DEFAULT_BINARY_FORMAT;
 	}
 
-	protected boolean loadContent(final IDfDocument document, boolean newObject, final DctmImportContext context)
+	protected boolean loadContent(final IDfSysObject document, boolean newObject, final DctmImportContext context)
 		throws DfException, ImportException {
 		List<CmfContentInfo> infoList;
 		try {
@@ -737,7 +736,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		return false;
 	}
 
-	protected boolean setVirtualDocumentFlag(final IDfDocument document) throws DfException {
+	protected boolean setVirtualDocumentFlag(final IDfSysObject document) throws DfException {
 		final CmfAttribute<IDfValue> a = this.cmfObject.getAttribute(DctmAttributes.R_IS_VIRTUAL_DOC);
 		final boolean vdocFlag = ((a != null) && a.hasValues() && a.getValue().asBoolean());
 		if (vdocFlag != document.isVirtualDocument()) {
@@ -746,7 +745,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 		return vdocFlag;
 	}
 
-	protected void handleVirtualDocumentMembers(final IDfDocument document, final DctmImportContext context)
+	protected void handleVirtualDocumentMembers(final IDfSysObject document, final DctmImportContext context)
 		throws DfException, ImportException {
 		final boolean addVdocMembers;
 		if (document.isVirtualDocument()) {
@@ -816,7 +815,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected void doFinalizeConstruction(final IDfDocument document, boolean newObject,
+	protected void doFinalizeConstruction(final IDfSysObject document, boolean newObject,
 		final DctmImportContext context) throws DfException, ImportException {
 
 		// References don't require any of this being done
@@ -828,7 +827,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfDocument> impleme
 	}
 
 	@Override
-	protected boolean cleanupAfterSave(IDfDocument document, boolean newObject, DctmImportContext context)
+	protected boolean cleanupAfterSave(IDfSysObject document, boolean newObject, DctmImportContext context)
 		throws DfException, ImportException {
 		final IDfSession session = document.getSession();
 

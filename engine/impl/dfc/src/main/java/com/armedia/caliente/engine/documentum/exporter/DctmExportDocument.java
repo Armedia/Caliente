@@ -35,11 +35,11 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
-import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfVirtualDocument;
 import com.documentum.fc.client.IDfVirtualDocumentNode;
 import com.documentum.fc.client.content.IDfContent;
@@ -51,22 +51,22 @@ import com.documentum.fc.common.IDfValue;
  * @author diego
  *
  */
-public class DctmExportDocument extends DctmExportSysObject<IDfDocument> implements DctmDocument {
+public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implements DctmDocument {
 
-	protected DctmExportDocument(DctmExportDelegateFactory factory, IDfDocument document) throws Exception {
-		super(factory, IDfDocument.class, document);
+	protected DctmExportDocument(DctmExportDelegateFactory factory, IDfSysObject document) throws Exception {
+		super(factory, IDfSysObject.class, document);
 	}
 
 	DctmExportDocument(DctmExportDelegateFactory factory, IDfPersistentObject document) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfDocument.class, document));
+		this(factory, DctmExportDelegate.staticCast(IDfSysObject.class, document));
 	}
 
 	@Override
 	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties,
-		IDfDocument document) throws DfException, ExportException {
+		IDfSysObject document) throws DfException, ExportException {
 		if (!super.getDataProperties(ctx, properties, document)) { return false; }
 
-		List<Version<IDfDocument>> history = getVersionHistory(ctx, document);
+		List<Version<IDfSysObject>> history = getVersionHistory(ctx, document);
 		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, DctmDataType.DF_INTEGER.getStoredType(),
 			false, DfValueFactory.newIntValue(history.size())));
 		Integer historyIndex = getVersionIndex(document, ctx);
@@ -113,16 +113,16 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		return true;
 	}
 
-	private List<IDfDocument> getVersions(DctmExportContext ctx, boolean prior, IDfDocument document)
+	private List<IDfSysObject> getVersions(DctmExportContext ctx, boolean prior, IDfSysObject document)
 		throws ExportException, DfException {
 		if (document == null) { throw new IllegalArgumentException(
 			"Must provide a document whose versions to analyze"); }
 
-		final List<IDfDocument> ret = new LinkedList<>();
+		final List<IDfSysObject> ret = new LinkedList<>();
 
 		boolean add = prior;
-		for (Version<IDfDocument> version : getVersionHistory(ctx, document)) {
-			IDfDocument doc = version.object;
+		for (Version<IDfSysObject> version : getVersionHistory(ctx, document)) {
+			IDfSysObject doc = version.object;
 			final IDfId id = doc.getObjectId();
 			if (Tools.equals(id.getId(), document.getObjectId().getId())) {
 				// Once we've found the "reference" object in the history, we skip adding it
@@ -148,7 +148,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	@Override
 	protected Collection<DctmExportDelegate<?>> findRequirements(IDfSession session, CmfObject<IDfValue> marshaled,
-		IDfDocument document, DctmExportContext ctx) throws Exception {
+		IDfSysObject document, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> req = super.findRequirements(session, marshaled, document, ctx);
 
 		// We do nothing else for references, as we need nothing else
@@ -167,7 +167,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	@Override
 	protected Collection<DctmExportDelegate<?>> findAntecedents(IDfSession session, CmfObject<IDfValue> marshaled,
-		IDfDocument document, DctmExportContext ctx) throws Exception {
+		IDfSysObject document, DctmExportContext ctx) throws Exception {
 		Collection<DctmExportDelegate<?>> req = super.findAntecedents(session, marshaled, document, ctx);
 
 		// We do nothing else for references, as we need nothing else
@@ -181,7 +181,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
 			// Now, also do the *PREVIOUS* versions... we'll do the later versions as dependents
 			int previousCount = 0;
-			for (IDfDocument versionDoc : getVersions(ctx, true, document)) {
+			for (IDfSysObject versionDoc : getVersions(ctx, true, document)) {
 				if (this.log.isDebugEnabled()) {
 					this.log
 						.debug(String.format("Adding prior version [%s]", calculateVersionString(versionDoc, false)));
@@ -192,7 +192,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 			rootObject = (previousCount == 0);
 		} else {
 			// If we're the first object in the version history, we mark ourselves as such.
-			for (Version<IDfDocument> v : getVersionHistory(ctx, document)) {
+			for (Version<IDfSysObject> v : getVersionHistory(ctx, document)) {
 				rootObject = (Tools.equals(v.object.getObjectId(), document.getObjectId()));
 				break;
 			}
@@ -204,7 +204,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	@Override
 	protected Collection<DctmExportDelegate<?>> findSuccessors(IDfSession session, CmfObject<IDfValue> marshaled,
-		IDfDocument document, DctmExportContext ctx) throws Exception {
+		IDfSysObject document, DctmExportContext ctx) throws Exception {
 		// TODO Auto-generated method stub
 		Collection<DctmExportDelegate<?>> ret = super.findSuccessors(session, marshaled, document, ctx);
 
@@ -217,7 +217,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 		// which is BAAAD
 		if (Tools.equals(marshaled.getId(), ctx.getRootObjectId())) {
 			// Now, also do the *SUBSEQUENT* versions...
-			for (IDfDocument versionDoc : getVersions(ctx, false, document)) {
+			for (IDfSysObject versionDoc : getVersions(ctx, false, document)) {
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(
 						String.format("Adding subsequent version [%s]", calculateVersionString(versionDoc, false)));
@@ -230,7 +230,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 
 	@Override
 	protected List<CmfContentInfo> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfDocument document,
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfSysObject document,
 		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) throws Exception {
 		if (isDfReference(document)) { return super.doStoreContent(ctx, translator, marshaled, referrent, document,
 			streamStore, includeRenditions); }
@@ -274,7 +274,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfDocument> impleme
 	}
 
 	protected CmfContentInfo storeContentStream(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, IDfDocument document, IDfContent content, CmfContentStore<?, ?, ?> streamStore,
+		CmfObject<IDfValue> marshaled, IDfSysObject document, IDfContent content, CmfContentStore<?, ?, ?> streamStore,
 		boolean skipContent) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (document == null) { throw new Exception(String
