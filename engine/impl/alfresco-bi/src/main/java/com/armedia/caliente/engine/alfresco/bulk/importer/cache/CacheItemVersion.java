@@ -7,13 +7,15 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "itemVersion.t", propOrder = {
+@XmlType(name = "version.t", propOrder = {
 	"number", "content", "metadata"
 })
+@XmlRootElement(name = "version")
 public class CacheItemVersion implements Cloneable {
 	@XmlElement(required = true)
 	protected String number;

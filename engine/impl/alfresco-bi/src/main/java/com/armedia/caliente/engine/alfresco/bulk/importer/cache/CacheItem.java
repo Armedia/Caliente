@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {
+@XmlType(name = "item.t", propOrder = {
 	"directory", "name", "fsRelativePath", "relativePath", "versions"
 })
 @XmlRootElement(name = "item")
