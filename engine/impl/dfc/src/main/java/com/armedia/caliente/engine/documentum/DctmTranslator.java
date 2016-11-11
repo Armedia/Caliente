@@ -26,12 +26,11 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<CmfType, BidiMap<String, IntermediateAttribute>>(
-			CmfType.class);
+		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfType.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (USER)
 		// OBJECT_TYPE_ID (DM_USER)
@@ -48,7 +47,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.USER_SOURCE, IntermediateAttribute.USER_SOURCE);
 		attributeMappings.put(CmfType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (GROUP)
 		// OBJECT_TYPE_ID (DM_GROUP)
@@ -62,7 +61,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.R_MODIFY_DATE, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		attributeMappings.put(CmfType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (TYPE)
 		// OBJECT_TYPE_ID (DM_TYPE)
@@ -72,7 +71,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.OWNER, IntermediateAttribute.OWNER);
 		attributeMappings.put(CmfType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		// BASE_TYPE_ID (FORMAT)
 		// OBJECT_TYPE_ID (DM_FORMAT)
@@ -80,7 +79,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.DESCRIPTION, IntermediateAttribute.DESCRIPTION);
 		attributeMappings.put(CmfType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		am.put(DctmAttributes.R_OBJECT_TYPE, IntermediateAttribute.OBJECT_TYPE_ID);
 		// BASE_TYPE_ID (FOLDER)
@@ -103,7 +102,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
 		attributeMappings.put(CmfType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
-		am = new DualHashBidiMap<String, IntermediateAttribute>();
+		am = new DualHashBidiMap<>();
 		am.put(DctmAttributes.R_OBJECT_ID, IntermediateAttribute.OBJECT_ID);
 		am.put(DctmAttributes.R_OBJECT_TYPE, IntermediateAttribute.OBJECT_TYPE_ID);
 		// BASE_TYPE_ID (DOCUMENT)
@@ -165,19 +164,22 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		final IDfSession session = ctx.getSession();
 		final String subType = object.getSubtype();
 		IDfType type = session.getType(subType);
-		if (type != null) {
-			if (type.isTypeOf("dm_cabinet") && ctx.isPathAltering()) {
-				// If our context is putting things other than the root, then we need to demote this
-				// into a folder...
-				// TODO: What about custom cabinet types? What do those get demoted as? Do we have
-				// to create a new folder subtype that adds the extra attributes?
-				type = type.getSuperType();
-			}
-			return type;
+
+		if (type == null) {
+			// TODO: Resort to a type map...
+			DctmObjectType dctmType = DctmObjectType.decodeType(object.getType());
+			if (dctmType == null) { return null; }
+			type = session.getType(dctmType.getDmType());
 		}
-		DctmObjectType dctmType = DctmObjectType.decodeType(object.getType());
-		if (dctmType == null) { return null; }
-		return session.getType(dctmType.getDmType());
+
+		if (type.isTypeOf("dm_cabinet") && ctx.isPathAltering()) {
+			// If our context is putting things other than the root, then we need to demote this
+			// into a folder...
+			// TODO: What about custom cabinet types? What do those get demoted as? Do we have
+			// to create a new folder subtype that adds the extra attributes?
+			type = type.getSuperType();
+		}
+		return type;
 	}
 
 	@Override

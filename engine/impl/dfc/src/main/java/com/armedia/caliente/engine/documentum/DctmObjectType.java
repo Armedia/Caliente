@@ -196,7 +196,13 @@ public enum DctmObjectType {
 				return DctmObjectType.decodeType(type.getName());
 			} catch (UnsupportedDctmObjectTypeException e) {
 				// This type isn't supported...try its parent
-				type = type.getSuperType();
+				IDfType parent = type.getSuperType();
+				if ((parent == null) && "dm_sysobject".equalsIgnoreCase(type.getName())) {
+					// If we're about to fail, take one last look... if the supertype is EXACTLY
+					// dm_sysobject, then we return DOCUMENT
+					return DctmObjectType.DOCUMENT;
+				}
+				type = parent;
 				continue;
 			}
 		}
@@ -241,30 +247,31 @@ public enum DctmObjectType {
 		// TODO: Not happy with this hardcoded table - maybe find a way to dynamically populate this
 		// from the installation?
 		switch (id.getTypePart()) {
-			case 0x28:
+			case IDfId.DM_STORE:
 				return DctmObjectType.STORE;
 
-			case 0x11:
+			case IDfId.DM_USER:
 				return DctmObjectType.USER;
 
-			case 0x12:
+			case IDfId.DM_GROUP:
 				return DctmObjectType.GROUP;
 
-			case 0x45:
+			case IDfId.DM_ACL:
 				return DctmObjectType.ACL;
 
-			case 0x03:
+			case IDfId.DM_TYPE:
 				return DctmObjectType.TYPE;
 
-			case 0x27:
+			case IDfId.DM_FORMAT:
 				return DctmObjectType.FORMAT;
 
-			case 0x0b: // fall-through, both folders and cabinets map as folders
-			case 0x0c:
+			case IDfId.DM_CABINET:
+			case IDfId.DM_FOLDER:
 				return DctmObjectType.FOLDER;
 
-			// case 0x08: // fall-through - dm_sysobject types will be folded into dm_document
-			case 0x09:
+			case IDfId.DM_SYSOBJECT: // fall-through - dm_sysobject types will be folded into
+										// dm_document
+			case IDfId.DM_DOCUMENT:
 				return DctmObjectType.DOCUMENT;
 
 			default:
