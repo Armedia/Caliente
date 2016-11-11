@@ -204,12 +204,9 @@ public class CommandLineTest {
 			"-?"
 		};
 
-		try {
-			cl.parse("TEST", args);
-			Assert.fail("Did not request help");
-		} catch (HelpRequestedException e) {
-			// This is expected... -b isn't declared
-		}
+		cl.parse("TEST", args);
+		Assert.assertTrue(cl.isHelpRequested());
+		Assert.assertNotNull(cl.getHelpMessage());
 
 		CommandLine cl2 = new CommandLine(false);
 		Assert.assertFalse(cl2.hasHelpParameter());

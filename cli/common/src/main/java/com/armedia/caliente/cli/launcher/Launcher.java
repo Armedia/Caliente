@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.parser.CommandLine;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
-import com.armedia.caliente.cli.parser.HelpRequestedException;
 import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 
@@ -43,13 +42,14 @@ public abstract class Launcher<K> {
 
 		try {
 			cl.parse(getProgramName(), args);
+			if (cl.isHelpRequested()) {
+				System.err.printf("%s%n", cl.getHelpMessage());
+				return 1;
+			}
 		} catch (CommandLineParseException e) {
 			if (e.getHelp() != null) {
 				System.err.printf("%s%n", e.getHelp());
 			}
-			return 1;
-		} catch (HelpRequestedException e) {
-			System.err.printf("%s%n", e.getMessage());
 			return 1;
 		}
 

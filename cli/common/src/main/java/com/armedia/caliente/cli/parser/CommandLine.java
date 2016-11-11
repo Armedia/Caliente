@@ -49,6 +49,8 @@ public class CommandLine implements Iterable<Parameter> {
 	private final Map<String, List<String>> values = new HashMap<>();
 	private final List<String> remainingParameters = new ArrayList<>();
 
+	private String helpMessage = null;
+
 	public CommandLine() {
 		this(true);
 	}
@@ -84,13 +86,12 @@ public class CommandLine implements Iterable<Parameter> {
 		this.remainingParameters.addAll(remaining);
 	}
 
-	public final void parse(String executableName, String... args)
-		throws CommandLineParseException, HelpRequestedException {
+	public final void parse(String executableName, String... args) throws CommandLineParseException {
 		parse(new CommonsCliParser(), executableName, args);
 	}
 
 	public final void parse(CommandLineParser parser, String executableName, String... args)
-		throws CommandLineParseException, HelpRequestedException {
+		throws CommandLineParseException {
 		if (parser == null) { throw new IllegalArgumentException("Must provide a parser implementation"); }
 		if (executableName == null) {
 			executableName = "Command Line";
@@ -123,8 +124,11 @@ public class CommandLine implements Iterable<Parameter> {
 						.format("A parsing error ocurred while parsing the command line %s", Arrays.toString(args)), e,
 						parser.getHelpMessage(ctx, e));
 				}
-				if ((this.help != null)
-					&& this.help.isPresent()) { throw new HelpRequestedException(parser.getHelpMessage(ctx, null)); }
+				if ((this.help != null) && this.help.isPresent()) {
+					this.helpMessage = parser.getHelpMessage(ctx, null);
+				} else {
+					this.helpMessage = null;
+				}
 			} finally {
 				if (ctx != null) {
 					try {
@@ -137,6 +141,15 @@ public class CommandLine implements Iterable<Parameter> {
 		} finally {
 			l.unlock();
 		}
+	}
+
+	public boolean isHelpRequested() {
+		return ((this.help != null) && this.help.isPresent());
+	}
+
+	public String getHelpMessage() {
+		if (!isHelpRequested()) { return null; }
+		return this.helpMessage;
 	}
 
 	protected boolean isShortOptionValid(Character shortOpt) {
