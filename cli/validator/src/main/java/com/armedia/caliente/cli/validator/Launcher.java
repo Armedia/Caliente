@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.parser.CommandLineValues;
@@ -61,12 +60,11 @@ public class Launcher extends AbstractLauncher {
 	protected int run(CommandLineValues cli) throws Exception {
 		final String reportMarker = DateFormatUtils.format(new Date(), Launcher.REPORT_MARKER_FORMAT);
 		System.setProperty("logName", String.format("caliente-validator-%s", reportMarker));
-		final Logger log = LoggerFactory.getLogger(Launcher.class);
 
 		final File biFile = new File(cli.getString(CLIParam.bulk_import)).getCanonicalFile();
-		if (!Launcher.verifyPath(log, biFile, "bulk import")) { return 1; }
+		if (!Launcher.verifyPath(this.log, biFile, "bulk import")) { return 1; }
 		final File beFile = new File(cli.getString(CLIParam.bulk_export)).getCanonicalFile();
-		if (!Launcher.verifyPath(log, beFile, "bulk export")) { return 1; }
+		if (!Launcher.verifyPath(this.log, beFile, "bulk export")) { return 1; }
 
 		final String reportDirStr = cli.getString(CLIParam.report_dir, System.getProperty("user.dir"));
 		File reportDir = new File(reportDirStr);
@@ -80,22 +78,22 @@ public class Launcher extends AbstractLauncher {
 		try {
 			FileUtils.forceMkdir(reportDir);
 		} catch (IOException e) {
-			log.error("Failed to ensure that the target directory [{}] exists", reportDir.getAbsolutePath());
+			this.log.error("Failed to ensure that the target directory [{}] exists", reportDir.getAbsolutePath());
 			return 1;
 		}
 
 		final int threads = Tools.ensureBetween(1, cli.getInteger(CLIParam.threads, Launcher.DEFAULT_THREADS),
 			Launcher.MAX_THREADS);
 
-		log.info("Starting validation with {} thread{}", threads, threads > 1 ? "s" : "");
+		this.log.info("Starting validation with {} thread{}", threads, threads > 1 ? "s" : "");
 		Runtime runtime = Runtime.getRuntime();
-		log.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
-		log.info(String.format("Maximum heap size: %d MB", runtime.maxMemory() / 1024 / 1024));
-		log.info("Bulk Import path: [{}]", biFile.getAbsolutePath());
-		log.info("Bulk Export path: [{}]", beFile.getAbsolutePath());
-		log.info("Report directory: [{}]", reportDir.getAbsolutePath());
-		log.info("Content models  : {}", cli.getAllStrings(CLIParam.model));
-		log.info("Report marker   : [{}]", reportMarker);
+		this.log.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
+		this.log.info(String.format("Maximum heap size: %d MB", runtime.maxMemory() / 1024 / 1024));
+		this.log.info("Bulk Import path: [{}]", biFile.getAbsolutePath());
+		this.log.info("Bulk Export path: [{}]", beFile.getAbsolutePath());
+		this.log.info("Report directory: [{}]", reportDir.getAbsolutePath());
+		this.log.info("Content models  : {}", cli.getAllStrings(CLIParam.model));
+		this.log.info("Report marker   : [{}]", reportMarker);
 
 		final Validator validator = new Validator(reportDir.toPath(), biFile.toPath(), beFile.toPath(),
 			cli.getAllStrings(CLIParam.model), reportMarker);
@@ -143,7 +141,7 @@ public class Launcher extends AbstractLauncher {
 			try {
 				validator.writeAndClear();
 			} finally {
-				log.info(String.format("Total duration: %d:%02d:%02d.%03d", hours, minutes, seconds, duration));
+				this.log.info(String.format("Total duration: %d:%02d:%02d.%03d", hours, minutes, seconds, duration));
 			}
 		}
 
