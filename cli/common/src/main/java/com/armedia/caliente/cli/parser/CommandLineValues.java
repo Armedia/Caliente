@@ -67,6 +67,8 @@ public interface CommandLineValues {
 
 	public List<String> getAllStrings(ParameterDefinition param);
 
+	public List<String> getAllStrings(ParameterDefinition param, List<String> def);
+
 	public boolean isPresent(ParameterDefinition param);
 
 	public List<String> getRemainingParameters();

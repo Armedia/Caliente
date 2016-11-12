@@ -193,7 +193,8 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 	}
 
 	private void assertValidDefinition(ParameterDefinition def) throws InvalidParameterDefinitionException {
-		if (def == null) { throw new InvalidParameterDefinitionException("CommandLineParameter definition may not be null"); }
+		if (def == null) { throw new InvalidParameterDefinitionException(
+			"CommandLineParameter definition may not be null"); }
 
 		final Character shortOpt = def.getShortOpt();
 		final boolean hasShortOpt = (shortOpt != null);
@@ -600,6 +601,14 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 		} finally {
 			l.unlock();
 		}
+	}
+
+	@Override
+	public final List<String> getAllStrings(ParameterDefinition param, List<String> def) {
+		assertValid(param);
+		List<String> ret = getAllStrings(param);
+		if (ret == null) { return def; }
+		return ret;
 	}
 
 	@Override
