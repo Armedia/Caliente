@@ -27,14 +27,14 @@ public enum CLIParam implements ParameterDefinition {
 		.setDescription("The location of the Bulk Export validation data") //
 	), //
 	report_dir(new MutableParameterDefinition() //
-		.setShortOpt('i') //
+		.setShortOpt('r') //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("directory") //
 		.setDescription("The directory where the validation reports will be output to") //
 	), //
 	model(new MutableParameterDefinition() //
-		.setShortOpt('i') //
+		.setShortOpt('m') //
 		.setValueCount(-1) //
 		.setValueOptional(false) //
 		.setValueName("model1,model2,model3,...,modelN") //
