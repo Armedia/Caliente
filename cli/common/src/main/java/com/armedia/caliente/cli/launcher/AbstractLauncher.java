@@ -30,7 +30,7 @@ public abstract class AbstractLauncher {
 	 * @return the collection of {@link ParameterDefinition} instances to use in the next parsing
 	 *         pass
 	 */
-	protected abstract Collection<ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
+	protected abstract Collection<? extends ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
 		int pass);
 
 	/**
@@ -83,7 +83,7 @@ public abstract class AbstractLauncher {
 		CommandLine cl = new CommandLine(supportsHelp);
 		int pass = -1;
 		while (true) {
-			Collection<ParameterDefinition> parameters = getCommandLineParameters(cl, ++pass);
+			Collection<? extends ParameterDefinition> parameters = getCommandLineParameters(cl, ++pass);
 			if ((parameters == null) || parameters.isEmpty()) {
 				break;
 			}
