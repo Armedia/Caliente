@@ -12,30 +12,6 @@ public abstract class BaseParameterDefinition implements ParameterDefinition {
 	}
 
 	@Override
-	public abstract boolean isRequired();
-
-	@Override
-	public abstract String getDescription();
-
-	@Override
-	public abstract String getLongOpt();
-
-	@Override
-	public abstract Character getShortOpt();
-
-	@Override
-	public abstract Character getValueSep();
-
-	@Override
-	public abstract String getValueName();
-
-	@Override
-	public abstract int getValueCount();
-
-	@Override
-	public abstract boolean isValueOptional();
-
-	@Override
 	public int hashCode() {
 		return getKey().hashCode();
 	}
