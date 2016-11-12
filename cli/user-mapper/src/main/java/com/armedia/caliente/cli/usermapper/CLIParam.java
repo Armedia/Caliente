@@ -44,6 +44,7 @@ public enum CLIParam implements ParameterDefinition {
 		.setDescription("The username to connect to Documentum with") //
 	), //
 	dctm_pass(new MutableParameterDefinition() //
+		.setRequired(true) //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("password") //
