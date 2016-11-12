@@ -1,265 +1,166 @@
 package com.armedia.caliente.cli.usermapper;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import com.armedia.caliente.cli.parser.MutableParameterDefinition;
+import com.armedia.caliente.cli.parser.ParameterDefinition;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Option.Builder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-
-import com.armedia.commons.utilities.Tools;
-
-public enum CLIParam {
+public enum CLIParam implements ParameterDefinition {
 	//
-	help(0, "This help message"),
-	debug(0, "Enable debugging"),
-	lib(
-		1,
-		"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath"),
-	dfc_prop(1, "The dfc.properties file to use instead of the default"),
-	docbase(1, true, "The Documentum repostory name to connect to"),
-	dfc(1, "The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)"),
-	dctm(1, "The user's local Documentum path (i.e. instead of DOCUMENTUM)"),
-	dctm_user(1, true, "The username to connect to Documentum with"),
-	dctm_pass(1, "The password to connect to Documentum with"),
-	dctm_sam(
-		-1,
-		"The Documentum attribute to attempt to use for mapping directly to the sAMAccountName. Multiple instances of this parameter may be specified and each will be tried in turn.  The default mode is to first try user_login_name, then try user_os_name"),
-	ldap_url(1, "The LDAP URL to bind to"),
-	ldap_binddn(1, "The DN to bind to LDAP with"),
-	ldap_basedn(1, "The Base DN to search LDAP for both users and groups (SUB scope)"),
-	ldap_user_basedn(1, "The Base DN to search LDAP for users (SUB scope)"),
-	ldap_group_basedn(1, "The Base DN to search LDAP for groups (SUB scope)"),
-	ldap_pass(1, "The password to bind to LDAP with"),
-	ldap_on_demand(0, "Execute LDAP queries on demand vs. batched up front"),
-	add_docbase(
-		0,
-		"Add the docbase name to the files generated (use for running multiple instances at once in the same directory)"),
-	//
+	lib(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("directory") //
+		.setDescription(
+			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
+	), //
+	dfc(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("dfc install location") //
+		.setDescription("The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)") //
+	), //
+	dfc_prop(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("dfc.properties location") //
+		.setDescription("The dfc.properties file to use instead of the default") //
+	), //
+	dctm(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("directory") //
+		.setDescription("The user's local Documentum path (i.e. instead of DOCUMENTUM)") //
+	), //
+	docbase(new MutableParameterDefinition() //
+		.setRequired(true) //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("repository") //
+		.setDescription("The Documentum repostory name to connect to") //
+	), //
+	dctm_user(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("username") //
+		.setDescription("The username to connect to Documentum with") //
+	), //
+	dctm_pass(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("password") //
+		.setDescription("The password to connect to Documentum with (may be encrypted)") //
+	), //
+	dctm_sam(new MutableParameterDefinition() //
+		.setValueCount(-1) //
+		.setValueOptional(false) //
+		.setValueName("attribute name") //
+		.setDescription("The Documentum attribute to attempt to use for mapping directly to the sAMAccountName. "
+			+ "Multiple instances of this parameter may be specified and each will be tried in turn "
+			+ "(The default mode is to first try user_login_name, then try user_os_name") //
+	), //
+	ldap_url(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("ldap url") //
+		.setDescription("The LDAP URL to bind to") //
+	), //
+	ldap_binddn(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("ldap dn") //
+		.setDescription("The DN to bind to LDAP with") //
+	), //
+	ldap_basedn(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("ldap dn") //
+		.setDescription("The Base DN to search LDAP for both users and groups (SUB scope)") //
+	), //
+	ldap_user_basedn(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("ldap dn") //
+		.setDescription("The Base DN to search LDAP for users (SUB scope)") //
+	), //
+	ldap_group_basedn(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("ldap dn") //
+		.setDescription("The Base DN to search LDAP for groups (SUB scope)") //
+	), //
+	ldap_pass(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("password") //
+		.setDescription("The password to bind to LDAP with") //
+	), //
+	ldap_on_demand(new MutableParameterDefinition() //
+		.setValueCount(0) //
+		.setDescription("Execute LDAP queries on demand vs. batched up front (default is batched up front)") //
+	), //
+	add_docbase(new MutableParameterDefinition() //
+		.setValueCount(0) //
+		.setDescription("Add the docbase name to the files generated (use for running multiple "
+			+ "instances at once in the same directory)") //
+	), //
+		//
 	;
 
-	public final Option option;
-	private final int paramCount;
+	private final ParameterDefinition parameter;
 
-	private CLIParam(int paramCount, boolean required, String description) {
-		String longOpt = name().replace('_', '-');
-		Builder b = Option.builder();
-		if (required) {
-			b.required();
+	private CLIParam(MutableParameterDefinition parameter) {
+		String name = name();
+		if (name.length() == 1) {
+			// If we decide that the name of the option will be a single character, we use that
+			parameter.setShortOpt(name.charAt(0));
+		} else if (parameter.getLongOpt() == null) {
+			// Otherwise, use the name replacing underscores with dashes
+			parameter.setLongOpt(name().replace('_', '-'));
 		}
-		b.longOpt(longOpt);
-		b.desc(description);
-		b.valueSeparator(',');
-		if (paramCount < 0) {
-			b.hasArgs();
-		} else if (paramCount > 0) {
-			b.numberOfArgs(paramCount);
-		}
-		this.option = b.build();
-		this.paramCount = paramCount;
+		this.parameter = parameter.clone();
 	}
 
-	private CLIParam(int paramCount, String description) {
-		this(paramCount, false, description);
+	@Override
+	public final String getKey() {
+		return this.parameter.getKey();
 	}
 
-	public boolean isPresent() {
-		return CLIParam.isPresent(this);
+	@Override
+	public final boolean isRequired() {
+		return this.parameter.isRequired();
 	}
 
-	public Boolean getBoolean() {
-		String s = getString();
-		return (s != null ? Tools.toBoolean(s) : null);
+	@Override
+	public final String getDescription() {
+		return this.parameter.getDescription();
 	}
 
-	public boolean getBoolean(boolean def) {
-		Boolean v = getBoolean();
-		return (v != null ? v.booleanValue() : def);
+	@Override
+	public final String getLongOpt() {
+		return this.parameter.getLongOpt();
 	}
 
-	public List<Boolean> getAllBoolean() {
-		List<String> l = getAllString();
-		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
-		List<Boolean> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Tools.toBoolean(s));
-		}
-		return Tools.freezeList(r);
+	@Override
+	public final Character getShortOpt() {
+		return this.parameter.getShortOpt();
 	}
 
-	public Integer getInteger() {
-		String s = getString();
-		return (s != null ? Integer.valueOf(s) : null);
+	@Override
+	public final Character getValueSep() {
+		return this.parameter.getValueSep();
 	}
 
-	public int getInteger(int def) {
-		Integer v = getInteger();
-		return (v != null ? v.intValue() : def);
+	@Override
+	public final String getValueName() {
+		return this.parameter.getValueName();
 	}
 
-	public List<Integer> getAllInteger() {
-		List<String> l = getAllString();
-		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
-		List<Integer> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Integer.valueOf(s));
-		}
-		return Tools.freezeList(r);
+	@Override
+	public final int getValueCount() {
+		return this.parameter.getValueCount();
 	}
 
-	public Double getDouble() {
-		String s = getString();
-		return (s != null ? Double.valueOf(s) : null);
-	}
-
-	public double getDouble(double def) {
-		Double v = getDouble();
-		return (v != null ? v.doubleValue() : def);
-	}
-
-	public List<Double> getAllDouble() {
-		List<String> l = getAllString();
-		if ((l == null) || l.isEmpty()) { return Collections.emptyList(); }
-		List<Double> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Double.valueOf(s));
-		}
-		return Tools.freezeList(r);
-	}
-
-	public String getString() {
-		return CLIParam.getString(this);
-	}
-
-	public String getString(String def) {
-		final String v = getString();
-		return (v != null ? v : def);
-	}
-
-	public List<String> getAllString() {
-		return CLIParam.getAllString(this);
-	}
-
-	public List<String> getAllString(List<String> def) {
-		List<String> v = CLIParam.getAllString(this);
-		if (v == null) { return def; }
-		return v;
-	}
-
-	private static final String[] NO_OPTS = new String[0];
-	private static final Map<CLIParam, List<String>> NO_PARSED = Collections.emptyMap();
-	private static final List<String> NO_REMAINING = Collections.emptyList();
-	private static AtomicReference<Map<CLIParam, List<String>>> CLI_PARSED = new AtomicReference<>(CLIParam.NO_PARSED);
-	private static AtomicReference<List<String>> CLI_REMAINING = new AtomicReference<>(CLIParam.NO_REMAINING);
-
-	public static String getString(CLIParam param) {
-		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
-		Map<CLIParam, List<String>> m = CLIParam.getParsed();
-		if (m == null) { return null; }
-		List<String> l = m.get(param);
-		if ((l == null) || l.isEmpty()) { return null; }
-		return l.get(0);
-	}
-
-	public static List<String> getAllString(CLIParam param) {
-		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
-		Map<CLIParam, List<String>> m = CLIParam.getParsed();
-		if (m == null) { return null; }
-		List<String> l = m.get(param);
-		if (l != null) { return l; }
-		if (m.containsKey(param)) { return CLIParam.NO_REMAINING; }
-		return null;
-	}
-
-	public static boolean isPresent(CLIParam param) {
-		if (param == null) { throw new IllegalArgumentException("Must provide a parameter to search for"); }
-		Map<CLIParam, List<String>> m = CLIParam.getParsed();
-		if (m == null) { return false; }
-		return m.containsKey(param);
-	}
-
-	public static Map<CLIParam, List<String>> getParsed() {
-		return CLIParam.CLI_PARSED.get();
-	}
-
-	public static List<String> getRemaining() {
-		return CLIParam.CLI_REMAINING.get();
-	}
-
-	public static synchronized boolean parse(String... args) {
-		if (args == null) {
-			args = CLIParam.NO_OPTS;
-		}
-		// To start off, parse the command line
-		Options options = new Options();
-		for (CLIParam p : CLIParam.values()) {
-			options.addOption(p.option);
-		}
-
-		CommandLineParser parser = new DefaultParser();
-		final CommandLine cli;
-		try {
-			cli = parser.parse(options, args);
-		} catch (ParseException e) {
-			new HelpFormatter().printHelp("CMSMF",
-				String.format("%nAvailable Parameters:%n------------------------------%n"), options,
-				String.format("%nERROR: %s%n%n", e.getMessage()), true);
-			return false;
-		}
-
-		if (cli.hasOption(CLIParam.help.option.getLongOpt())) {
-			new HelpFormatter().printHelp("CMSMF",
-				String.format("%nAvailable Parameters:%n------------------------------%n"), options, null, true);
-			return false;
-		}
-
-		// Convert the command-line parameters into "configuration properties"
-		Map<CLIParam, List<String>> cliParams = new EnumMap<>(CLIParam.class);
-		for (CLIParam p : CLIParam.values()) {
-			if (cli.hasOption(p.option.getLongOpt())) {
-				// If it takes no parameters, ignore whatever was submitted
-				if (p.paramCount == 0) {
-					cliParams.put(p, CLIParam.NO_REMAINING);
-					continue;
-				}
-
-				// It takes parameters, so ... store them
-				String[] v = cli.getOptionValues(p.option.getLongOpt());
-				if ((v != null) && (v.length > 0)) {
-					List<String> l = null;
-					// If it only has one, or it only takes one, only keep one
-					if ((v.length == 1) || (p.paramCount == 1)) {
-						// Single value, life is easy :)
-						l = Collections.singletonList(v[0]);
-					} else {
-						l = Arrays.asList(v);
-					}
-					cliParams.put(p, Tools.freezeList(l));
-				} else {
-					// The parameters may be optional....???
-					cliParams.put(p, CLIParam.NO_REMAINING);
-				}
-			}
-		}
-		List<?> remaining = cli.getArgList();
-		if (!remaining.isEmpty()) {
-			List<String> l = new ArrayList<>(remaining.size());
-			for (Object o : remaining) {
-				l.add(Tools.toString(o));
-			}
-			CLIParam.CLI_REMAINING.set(Tools.freezeList(l));
-		}
-		CLIParam.CLI_PARSED.set(Tools.freezeMap(cliParams));
-		return true;
+	@Override
+	public final boolean isValueOptional() {
+		return this.parameter.isValueOptional();
 	}
 }

@@ -37,6 +37,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.usermapper.tools.DfUtils;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
@@ -150,8 +151,14 @@ public class UserMapper {
 		GROUP_HEADINGS = Tools.freezeMap(m);
 	}
 
-	private static void outputUser(IDfSession session, DctmUser user, CSVPrinter userRecords)
-		throws DfException, IOException {
+	private final CommandLineValues cli;
+
+	UserMapper(CommandLineValues cli) {
+		if (cli == null) { throw new IllegalArgumentException("Must provide a command line"); }
+		this.cli = cli;
+	}
+
+	private void outputUser(IDfSession session, DctmUser user, CSVPrinter userRecords) throws DfException, IOException {
 		IDfUser u = session.getUser(user.getName());
 		if (u == null) {
 			// WTF?!?!?
@@ -200,8 +207,8 @@ public class UserMapper {
 		userRecords.flush();
 	}
 
-	private static void outputGroup(IDfSession session, DctmGroup group, Properties userMappings,
-		Properties groupMappings, CSVPrinter groupRecords) throws DfException, IOException {
+	private void outputGroup(IDfSession session, DctmGroup group, Properties userMappings, Properties groupMappings,
+		CSVPrinter groupRecords) throws DfException, IOException {
 		IDfGroup g = session.getGroup(group.getName());
 		if (g == null) {
 			// WTF?!?!?
@@ -256,18 +263,18 @@ public class UserMapper {
 		groupRecords.flush();
 	}
 
-	private static String getDocbaseSuffix(String docbase) {
-		if (!CLIParam.add_docbase.isPresent()) { return ""; }
+	private String getDocbaseSuffix(String docbase) {
+		if (!this.cli.isPresent(CLIParam.add_docbase)) { return ""; }
 		if (StringUtils.isBlank(docbase)) { return ""; }
 		return String.format(".%s", docbase.toLowerCase());
 	}
 
-	private static CSVPrinter newCSVPrinter(String name, String docbase, Set<String> headings, String source)
+	private CSVPrinter newCSVPrinter(String name, String docbase, Set<String> headings, String source)
 		throws IOException {
 		if (StringUtils.isEmpty(source)) {
 			source = "INTERNAL";
 		}
-		docbase = UserMapper.getDocbaseSuffix(docbase);
+		docbase = getDocbaseSuffix(docbase);
 		source = source.toUpperCase();
 		source = source.replaceAll("\\s", "_");
 		CSVFormat format = CSVFormat.DEFAULT.withRecordSeparator(UserMapper.NEWLINE);
@@ -287,11 +294,11 @@ public class UserMapper {
 		return ret;
 	}
 
-	private static int writeMappings(String startMarkerString, String docbase, Properties userMapping,
+	private int writeMappings(String startMarkerString, String docbase, Properties userMapping,
 		Properties groupMapping) {
 		File mapFile = null;
 		FileOutputStream out = null;
-		docbase = UserMapper.getDocbaseSuffix(docbase);
+		docbase = getDocbaseSuffix(docbase);
 		mapFile = new File(String.format("usermap%s.xml", docbase)).getAbsoluteFile();
 		try {
 			try {
@@ -335,7 +342,7 @@ public class UserMapper {
 		return 0;
 	}
 
-	private static abstract class RecordWorker<P extends DctmPrincipal> implements Runnable {
+	private abstract class RecordWorker<P extends DctmPrincipal> implements Runnable {
 		protected final P principal;
 		protected final CSVPrinter printer;
 		protected final DfcSessionPool pool;
@@ -370,7 +377,7 @@ public class UserMapper {
 		protected abstract void doWork(IDfSession session) throws Exception;
 	}
 
-	private static class UserWorker extends RecordWorker<DctmUser> {
+	private class UserWorker extends RecordWorker<DctmUser> {
 
 		protected UserWorker(DctmUser principal, CSVPrinter printer, DfcSessionPool pool) {
 			super(principal, printer, pool);
@@ -378,11 +385,11 @@ public class UserMapper {
 
 		@Override
 		protected void doWork(IDfSession session) throws Exception {
-			UserMapper.outputUser(session, this.principal, this.printer);
+			outputUser(session, this.principal, this.printer);
 		}
 	}
 
-	private static class GroupWorker extends RecordWorker<DctmGroup> {
+	private class GroupWorker extends RecordWorker<DctmGroup> {
 
 		private final Properties userMapping;
 		private final Properties groupMapping;
@@ -396,13 +403,13 @@ public class UserMapper {
 
 		@Override
 		protected void doWork(IDfSession session) throws Exception {
-			UserMapper.outputGroup(session, this.principal, this.userMapping, this.groupMapping, this.printer);
+			outputGroup(session, this.principal, this.userMapping, this.groupMapping, this.printer);
 		}
 	}
 
-	private static String getPasswordValue(CLIParam param, String prompt, Object... promptParams) {
+	private String getPasswordValue(CLIParam param, String prompt, Object... promptParams) {
 		final Console console = System.console();
-		if ((param != null) && param.isPresent()) { return param.getString(); }
+		if ((param != null) && this.cli.isPresent(param)) { return this.cli.getString(param); }
 		if (console == null) { return null; }
 		if (prompt == null) {
 			prompt = "Password:";
@@ -412,8 +419,8 @@ public class UserMapper {
 		return null;
 	}
 
-	private static Set<String> getMappingAttributes(DfcSessionPool pool) throws Exception {
-		List<String> attributes = CLIParam.dctm_sam.getAllString(UserMapper.DEFAULT_DCTM_SAM_ATTRIBUTES);
+	private Set<String> getMappingAttributes(DfcSessionPool pool) throws Exception {
+		List<String> attributes = this.cli.getAllStrings(CLIParam.dctm_sam, UserMapper.DEFAULT_DCTM_SAM_ATTRIBUTES);
 		// Shortcut - if there's nothing to validate, don't bother validating...
 		if (attributes.isEmpty()) { return Collections.emptySet(); }
 
@@ -456,14 +463,14 @@ public class UserMapper {
 		return Tools.freezeSet(finalAttributes);
 	}
 
-	static int run() {
+	int run() {
 		DfcSessionPool dfcPool = null;
 		LDAPConnectionPool ldapPool = null;
 		ExecutorService executor = null;
 		try {
-			final String docbase = CLIParam.docbase.getString();
-			final String dctmUser = CLIParam.dctm_user.getString();
-			final String dctmPass = UserMapper.getPasswordValue(CLIParam.dctm_pass,
+			final String docbase = this.cli.getString(CLIParam.docbase);
+			final String dctmUser = this.cli.getString(CLIParam.dctm_user);
+			final String dctmPass = getPasswordValue(CLIParam.dctm_pass,
 				"Please enter the Password for user [%s] in Docbase %s: ", Tools.coalesce(dctmUser, ""), docbase);
 
 			try {
@@ -478,7 +485,7 @@ public class UserMapper {
 			// in the user type. They must be string or ID-valued, and non-repeating
 			final Set<String> mappingAttributes;
 			try {
-				mappingAttributes = UserMapper.getMappingAttributes(dfcPool);
+				mappingAttributes = getMappingAttributes(dfcPool);
 			} catch (Exception e) {
 				UserMapper.log.error("Failed to validate the mapping attributes provided", e);
 				return 1;
@@ -493,8 +500,8 @@ public class UserMapper {
 
 			Callable<LdapUserDb> ldapUserCallable = null;
 			Callable<LdapGroupDb> ldapGroupCallable = null;
-			if (CLIParam.ldap_url.isPresent()) {
-				final String ldapUrlString = CLIParam.ldap_url.getString("ldap://");
+			if (this.cli.isPresent(CLIParam.ldap_url)) {
+				final String ldapUrlString = this.cli.getString(CLIParam.ldap_url, "ldap://");
 				LDAPURL ldapUrl;
 				try {
 					ldapUrl = new LDAPURL(ldapUrlString);
@@ -503,12 +510,12 @@ public class UserMapper {
 					return 1;
 				}
 
-				final String bindDn = CLIParam.ldap_binddn.getString();
-				final String bindPass = UserMapper.getPasswordValue(CLIParam.ldap_pass,
+				final String bindDn = this.cli.getString(CLIParam.ldap_binddn);
+				final String bindPass = getPasswordValue(CLIParam.ldap_pass,
 					"Please enter the LDAP Password for DN [%s] at %s: ", Tools.coalesce(bindDn, ""),
 					ldapUrl.toString());
 
-				final boolean ldapOnDemand = CLIParam.ldap_on_demand.isPresent();
+				final boolean ldapOnDemand = this.cli.isPresent(CLIParam.ldap_on_demand);
 
 				final SSLSocketFactory sslSocketFactory;
 				if (StringUtils.equalsIgnoreCase("ldaps", ldapUrl.getScheme())) {
@@ -536,15 +543,15 @@ public class UserMapper {
 				ldapUserCallable = new Callable<LdapUserDb>() {
 					@Override
 					public LdapUserDb call() throws Exception {
-						return new LdapUserDb(pool, ldapOnDemand,
-							CLIParam.ldap_user_basedn.getString(CLIParam.ldap_basedn.getString()));
+						return new LdapUserDb(pool, ldapOnDemand, UserMapper.this.cli
+							.getString(CLIParam.ldap_user_basedn, UserMapper.this.cli.getString(CLIParam.ldap_basedn)));
 					}
 				};
 				ldapGroupCallable = new Callable<LdapGroupDb>() {
 					@Override
 					public LdapGroupDb call() throws Exception {
-						return new LdapGroupDb(pool, ldapOnDemand,
-							CLIParam.ldap_group_basedn.getString(CLIParam.ldap_basedn.getString()));
+						return new LdapGroupDb(pool, ldapOnDemand, UserMapper.this.cli.getString(
+							CLIParam.ldap_group_basedn, UserMapper.this.cli.getString(CLIParam.ldap_basedn)));
 					}
 				};
 			}
@@ -709,19 +716,18 @@ public class UserMapper {
 				groupSources.add(group.getSource());
 			}
 
-			int ret = UserMapper.writeMappings(startMarkerString, docbase, userMapping, groupMapping);
+			int ret = writeMappings(startMarkerString, docbase, userMapping, groupMapping);
 			if (ret != 0) { return ret; }
 
 			final Map<String, CSVPrinter> userRecords = new HashMap<>();
 			final Map<String, CSVPrinter> groupRecords = new HashMap<>();
 			try {
 				for (String source : userSources) {
-					userRecords.put(source,
-						UserMapper.newCSVPrinter("users", docbase, UserMapper.USER_HEADINGS.keySet(), source));
+					userRecords.put(source, newCSVPrinter("users", docbase, UserMapper.USER_HEADINGS.keySet(), source));
 				}
 				for (String source : groupSources) {
 					groupRecords.put(source,
-						UserMapper.newCSVPrinter("groups", docbase, UserMapper.GROUP_HEADINGS.keySet(), source));
+						newCSVPrinter("groups", docbase, UserMapper.GROUP_HEADINGS.keySet(), source));
 				}
 			} catch (IOException e) {
 				UserMapper.log.error("Failed to initialize the CSV files", e);

@@ -1,60 +1,144 @@
 package com.armedia.caliente.cli.usermapper;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.io.FileUtils;
 
-import com.armedia.commons.utilities.PluggableServiceLocator;
+import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.parser.CommandLineValues;
+import com.armedia.caliente.cli.parser.ParameterDefinition;
 
-public class Launcher {
+public class Launcher extends AbstractLauncher {
 	protected static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
-
-	private static final Logger log = LoggerFactory.getLogger(Launcher.class);
+	protected static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
+	protected static final String ENV_DOCUMENTUM = "DOCUMENTUM";
+	protected static final String DCTM_JAR = "dctm.jar";
+	protected static final String DFC_TEST_CLASS = "com.documentum.fc.client.IDfFolder";
 
 	public static final void main(String... args) {
-		System.exit(Launcher.runMain(args));
+		System.exit(new Launcher().launch(args));
 	}
 
-	private static int runMain(String... args) {
-		if (!CLIParam.parse(args)) {
-			// If the parameters didn't parse, we fail.
-			return 1;
+	private File createFile(String path) {
+		return createFile(null, path);
+	}
+
+	private File createFile(File parent, String path) {
+		File f = (parent != null ? new File(parent, path) : new File(path));
+		try {
+			f = f.getCanonicalFile();
+		} catch (IOException e) {
+			f = f.getAbsoluteFile();
+			this.log.warn(String.format("Failed to canonicalize the path for [%s]", f.getAbsolutePath()), e);
 		}
-		Set<URL> patches = new LinkedHashSet<>();
-		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<>(ClasspathPatcher.class);
-		patchers.setHideErrors(false);
-		for (ClasspathPatcher p : patchers) {
-			List<URL> l = p.getPatches();
-			if ((l == null) || l.isEmpty()) {
-				continue;
+		return f;
+	}
+
+	@Override
+	protected Collection<? extends ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
+		int pass) {
+		if (pass > 0) { return null; }
+		return Arrays.asList(CLIParam.values());
+	}
+
+	@Override
+	protected int processCommandLine(CommandLineValues commandLine) {
+		return super.processCommandLine(commandLine);
+	}
+
+	@Override
+	protected Collection<URL> getClasspathPatchesPre(CommandLineValues cli) {
+		final boolean dfcFound;
+		{
+			boolean dfc = false;
+			try {
+				Class.forName(Launcher.DFC_TEST_CLASS);
+				dfc = true;
+			} catch (Exception e) {
+				dfc = false;
 			}
-			for (URL u : l) {
-				if (u != null) {
-					patches.add(u);
+			dfcFound = dfc;
+		}
+
+		List<URL> ret = new ArrayList<>(3);
+		try {
+			String var = cli.getString(CLIParam.dfc_prop, "dfc.properties");
+			if (var != null) {
+				File f = createFile(var);
+				if (f.exists() && f.isFile() && f.canRead()) {
+					System.setProperty(Launcher.DFC_PROPERTIES_PROP, f.getAbsolutePath());
 				}
 			}
-		}
 
-		for (URL u : patches) {
-			try {
-				ClasspathPatcher.addToClassPath(u);
-			} catch (IOException e) {
-				Launcher.log.error("Failed to configure the dynamic classpath", e);
-				return 1;
+			// Next, add ${DOCUMENTUM}/config to the classpath
+			var = cli.getString(CLIParam.dctm, System.getenv(Launcher.ENV_DOCUMENTUM));
+			// Go with the environment
+			if (var == null) {
+				String msg = String.format("The environment variable [%s] is not set", Launcher.ENV_DOCUMENTUM);
+				if (!dfcFound) { throw new RuntimeException(msg); }
+				this.log.warn("{}, integrated DFC may encounter errors", msg);
 			}
-			Launcher.log.info(String.format("Classpath addition: [%s]", u));
+
+			if (var != null) {
+				File f = createFile(var);
+				if (!f.exists()) {
+					FileUtils.forceMkdir(f);
+				}
+				if (!f.isDirectory()) { throw new FileNotFoundException(
+					String.format("Could not find the directory [%s]", f.getAbsolutePath())); }
+
+				ret.add(createFile(f, "config").toURI().toURL());
+			}
+
+			// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
+			var = cli.getString(CLIParam.dfc, System.getenv(Launcher.ENV_DOCUMENTUM_SHARED));
+			// Go with the environment
+			if (var == null) {
+				String msg = String.format("The environment variable [%s] is not set", Launcher.ENV_DOCUMENTUM_SHARED);
+				if (!dfcFound) { throw new RuntimeException(msg); }
+				this.log.warn("{}, integrated DFC may encounter errors", msg);
+			}
+
+			if (var != null) {
+				// Next, is it a directory?
+				File f = createFile(var);
+				if (!f.isDirectory()) { throw new FileNotFoundException(String.format(
+					"Could not find the [%s] directory [%s]", Launcher.ENV_DOCUMENTUM_SHARED, f.getAbsolutePath())); }
+
+				// Next, does dctm.jar exist in there?
+				if (!dfcFound) {
+					File tgt = createFile(f, Launcher.DCTM_JAR);
+					if (!tgt.isFile()) { throw new FileNotFoundException(
+						String.format("Could not find the JAR file [%s]", tgt.getAbsolutePath())); }
+
+					// Next, to the classpath
+					ret.add(tgt.toURI().toURL());
+				}
+			}
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to configure the dynamic classpath", e);
 		}
+		return ret;
+	}
 
-		// final boolean debug = CLIParam.debug.isPresent();
+	@Override
+	protected String getProgramName(int pass) {
+		return "Caliente User Mapper";
+	}
 
-		if (CLIParam.dfc_prop.isPresent()) {
-			File f = new File(CLIParam.dfc_prop.getString("dfc.properties"));
+	@Override
+	protected int run(CommandLineValues cli) throws Exception {
+		// final boolean debug = cli.isPresent(CLIParam.debug);
+
+		if (cli.isPresent(CLIParam.dfc_prop)) {
+			File f = new File(cli.getString(CLIParam.dfc_prop, "dfc.properties"));
 			try {
 				f = f.getCanonicalFile();
 			} catch (IOException e) {
@@ -74,11 +158,11 @@ public class Launcher {
 			if (error == null) {
 				System.setProperty(Launcher.DFC_PROPERTIES_PROP, f.getAbsolutePath());
 			} else {
-				Launcher.log.warn("The DFC properties file [{}] {} - will continue using DFC defaults",
-					f.getAbsolutePath(), error);
+				this.log.warn("The DFC properties file [{}] {} - will continue using DFC defaults", f.getAbsolutePath(),
+					error);
 			}
 		}
 
-		return UserMapper.run();
+		return new UserMapper(cli).run();
 	}
 }
