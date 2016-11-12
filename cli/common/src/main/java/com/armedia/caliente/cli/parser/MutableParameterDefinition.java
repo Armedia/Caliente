@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.parser;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class MutableParameterDefinition extends ParameterDefinition implements Cloneable {
+public final class MutableParameterDefinition extends BaseParameterDefinition implements Cloneable {
 
 	protected boolean required = false;
 	protected String description = null;

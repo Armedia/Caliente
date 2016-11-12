@@ -4,9 +4,9 @@ import java.util.Collection;
 
 public interface CommandLineParserListener {
 
-	public void setParameter(Parameter p);
+	public void setParameter(CommandLineParameter p);
 
-	public void setParameter(Parameter p, Collection<String> values);
+	public void setParameter(CommandLineParameter p, Collection<String> values);
 
 	public void addRemainingParameters(Collection<String> remaining);
 }

@@ -23,11 +23,11 @@ public abstract class CommandLineParser {
 			this.cl = cl;
 		}
 
-		public void setParameter(Parameter p) {
+		public void setParameter(CommandLineParameter p) {
 			setParameter(p, null);
 		}
 
-		public void setParameter(Parameter p, Collection<String> values) {
+		public void setParameter(CommandLineParameter p, Collection<String> values) {
 			if (p == null) { throw new IllegalArgumentException("Must provide a parameter to set"); }
 			if (values == null) {
 				values = Collections.emptyList();
@@ -83,13 +83,13 @@ public abstract class CommandLineParser {
 		}
 	}
 
-	final Context initContext(CommandLine cl, String executableName, Collection<Parameter> def) throws Exception {
+	final Context initContext(CommandLine cl, String executableName, Collection<CommandLineParameter> def) throws Exception {
 		Context ctx = new Context(cl);
 		init(ctx, executableName, def);
 		return ctx;
 	}
 
-	protected abstract void init(Context ctx, String executableName, Collection<Parameter> def) throws Exception;
+	protected abstract void init(Context ctx, String executableName, Collection<CommandLineParameter> def) throws Exception;
 
 	protected abstract void parse(final Context ctx, String... parameters) throws Exception;
 

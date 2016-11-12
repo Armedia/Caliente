@@ -19,7 +19,7 @@ public abstract class AbstractLauncher {
 
 	/**
 	 * <p>
-	 * Returns the parameters definitions to be used in the given pass. If {@code null} is returned,
+	 * Returns the commandLineParameters definitions to be used in the given pass. If {@code null} is returned,
 	 * or an empty {@link Collection}, then the parsing cycle will be broken and no further command
 	 * parameter parsing will be performed. The {@code pass} argument is guaranteed to always be
 	 * increasing.
@@ -35,7 +35,7 @@ public abstract class AbstractLauncher {
 
 	/**
 	 * <p>
-	 * Process the command-line parameters. Return {@code 0} if everything is OK and execution
+	 * Process the command-line commandLineParameters. Return {@code 0} if everything is OK and execution
 	 * should continue, any other value otherwise. This same value will be used as the return code
 	 * for the {@link #launch(boolean, String...)} invocation.
 	 * </p>
@@ -79,7 +79,7 @@ public abstract class AbstractLauncher {
 
 		// This loop subclasses a chance to cleanly break the parameter parsing loop, while
 		// also affording them the opportunity to modify the parameter availability based on
-		// previously parsed parameters
+		// previously parsed commandLineParameters
 		CommandLine cl = new CommandLine(supportsHelp);
 		int pass = -1;
 		while (true) {
@@ -109,7 +109,7 @@ public abstract class AbstractLauncher {
 			}
 		}
 
-		// Process the parameters given...
+		// Process the commandLineParameters given...
 		int rc = processCommandLine(cl);
 		if (rc != 0) { return rc; }
 

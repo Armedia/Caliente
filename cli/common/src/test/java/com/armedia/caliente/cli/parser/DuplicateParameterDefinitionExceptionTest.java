@@ -8,8 +8,8 @@ import org.junit.Test;
 public class DuplicateParameterDefinitionExceptionTest {
 	@Test
 	public void testConstructor() {
-		ParameterDefinition existing = new MutableParameterDefinition();
-		ParameterDefinition incoming = new MutableParameterDefinition();
+		BaseParameterDefinition existing = new MutableParameterDefinition();
+		BaseParameterDefinition incoming = new MutableParameterDefinition();
 
 		try {
 			new DuplicateParameterDefinitionException(null, null, null);

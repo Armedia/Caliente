@@ -16,7 +16,7 @@ public class CommonsCliParser extends CommandLineParser {
 
 	private class State {
 		final Options options = new Options();
-		final Map<String, Parameter> parameters = new HashMap<>();
+		final Map<String, CommandLineParameter> commandLineParameters = new HashMap<>();
 		final String exe;
 
 		private State(String executableName) {
@@ -34,13 +34,13 @@ public class CommonsCliParser extends CommandLineParser {
 	}
 
 	@Override
-	protected void init(Context ctx, String executableName, Collection<Parameter> def) throws Exception {
+	protected void init(Context ctx, String executableName, Collection<CommandLineParameter> def) throws Exception {
 		final State state = new State(executableName);
-		for (Parameter p : def) {
+		for (CommandLineParameter p : def) {
 			Option o = CommonsCliParser.buildOption(p.getDefinition());
 			state.options.addOption(o);
 			String key = CommonsCliParser.calculateKey(o);
-			Parameter old = state.parameters.put(key, p);
+			CommandLineParameter old = state.commandLineParameters.put(key, p);
 			if (old != null) { throw new Exception(
 				String.format("Duplicate parameter definition for option [%s]", key)); }
 		}
@@ -55,7 +55,7 @@ public class CommonsCliParser extends CommandLineParser {
 
 		for (Option o : cli.getOptions()) {
 			String key = CommonsCliParser.calculateKey(o);
-			Parameter p = state.parameters.get(key);
+			CommandLineParameter p = state.commandLineParameters.get(key);
 			if (p == null) { throw new Exception(
 				String.format("Failed to locate a parameter for option [%s] which should have been there", key)); }
 			ctx.setParameter(p, o.getValuesList());
@@ -111,6 +111,6 @@ public class CommonsCliParser extends CommandLineParser {
 
 	static String calculateKey(Option o) {
 		if (o == null) { throw new IllegalArgumentException("Must provide an option whose key to calculate"); }
-		return ParameterDefinition.calculateKey(o.getLongOpt(), o.getOpt());
+		return BaseParameterDefinition.calculateKey(o.getLongOpt(), o.getOpt());
 	}
 }

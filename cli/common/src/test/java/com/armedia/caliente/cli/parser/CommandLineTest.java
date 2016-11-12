@@ -62,7 +62,7 @@ public class CommandLineTest {
 					def.setLongOpt(longOpt);
 				}
 				try {
-					Parameter p = cl.define(def);
+					CommandLineParameter p = cl.define(def);
 					Assert.assertEquals(1, p.compareTo(null));
 					if (!Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
@@ -110,14 +110,14 @@ public class CommandLineTest {
 		}
 
 		def.setLongOpt("ab");
-		Parameter p = cl.define(def);
+		CommandLineParameter p = cl.define(def);
 		Assert.assertEquals(p, p);
 		Assert.assertNotEquals(p, null);
 		Assert.assertNotEquals(p, "");
 		Assert.assertSame(cl, p.getCLI());
 		Assert.assertEquals(def, p.getDefinition());
 
-		Parameter p2 = cl.define(def);
+		CommandLineParameter p2 = cl.define(def);
 		Assert.assertSame(p, p2);
 
 		def.setLongOpt("cd");
@@ -142,14 +142,14 @@ public class CommandLineTest {
 		Assert.assertNotNull(cl);
 
 		MutableParameterDefinition def = new MutableParameterDefinition();
-		Map<String, Parameter> m = new HashMap<>();
+		Map<String, CommandLineParameter> m = new HashMap<>();
 		for (int i = 0; i < 100; i++) {
 			def.setLongOpt(String.format("long-%04x", i));
-			Parameter p = cl.define(def);
+			CommandLineParameter p = cl.define(def);
 			m.put(def.getLongOpt(), p);
 		}
 
-		for (Parameter p : cl) {
+		for (CommandLineParameter p : cl) {
 			final String longOpt = p.getDefinition().getLongOpt();
 			if ("help".equals(longOpt)) {
 				// We're OK here...
@@ -164,7 +164,7 @@ public class CommandLineTest {
 		CommandLine cl = new CommandLine();
 		Assert.assertTrue(cl.hasHelpParameter());
 
-		Parameter help = cl.getHelpParameter();
+		CommandLineParameter help = cl.getHelpParameter();
 		Assert.assertNotNull(help);
 		Assert.assertNotNull(help.getKey());
 
@@ -212,9 +212,9 @@ public class CommandLineTest {
 		Assert.assertFalse(cl2.hasHelpParameter());
 		Assert.assertNull(cl2.getHelpParameter());
 
-		Parameter p2prev = null;
-		for (Parameter p : cl) {
-			Parameter p2 = cl2.define(p.getDefinition());
+		CommandLineParameter p2prev = null;
+		for (CommandLineParameter p : cl) {
+			CommandLineParameter p2 = cl2.define(p.getDefinition());
 			Assert.assertNotEquals(p, p2);
 			Assert.assertNotEquals(p, p2prev);
 			p2prev = p2;
@@ -243,19 +243,19 @@ public class CommandLineTest {
 		MutableParameterDefinition def = new MutableParameterDefinition();
 		def.setValueCount(1);
 		def.setShortOpt('a');
-		Parameter a = cl.define(def);
+		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
-		Parameter b = cl.define(def);
+		CommandLineParameter b = cl.define(def);
 		def.setShortOpt('d');
-		Parameter d = cl.define(def);
+		CommandLineParameter d = cl.define(def);
 		def.setShortOpt('e');
-		Parameter e = cl.define(def);
+		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
 		def.setValueCount(-1);
-		Parameter c = cl.define(def);
+		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
 		def.setValueCount(0);
-		Parameter f = cl.define(def);
+		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
@@ -297,19 +297,19 @@ public class CommandLineTest {
 		MutableParameterDefinition def = new MutableParameterDefinition();
 		def.setValueCount(1);
 		def.setShortOpt('a');
-		Parameter a = cl.define(def);
+		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
-		Parameter b = cl.define(def);
+		CommandLineParameter b = cl.define(def);
 		def.setShortOpt('d');
-		Parameter d = cl.define(def);
+		CommandLineParameter d = cl.define(def);
 		def.setShortOpt('e');
-		Parameter e = cl.define(def);
+		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
 		def.setValueCount(-1);
-		Parameter c = cl.define(def);
+		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
 		def.setValueCount(0);
-		Parameter f = cl.define(def);
+		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
@@ -355,19 +355,19 @@ public class CommandLineTest {
 		MutableParameterDefinition def = new MutableParameterDefinition();
 		def.setValueCount(1);
 		def.setShortOpt('a');
-		Parameter a = cl.define(def);
+		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
-		Parameter b = cl.define(def);
+		CommandLineParameter b = cl.define(def);
 		def.setShortOpt('d');
-		Parameter d = cl.define(def);
+		CommandLineParameter d = cl.define(def);
 		def.setShortOpt('e');
-		Parameter e = cl.define(def);
+		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
 		def.setValueCount(-1);
-		Parameter c = cl.define(def);
+		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
 		def.setValueCount(0);
-		Parameter f = cl.define(def);
+		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
@@ -413,19 +413,19 @@ public class CommandLineTest {
 		MutableParameterDefinition def = new MutableParameterDefinition();
 		def.setValueCount(1);
 		def.setShortOpt('a');
-		Parameter a = cl.define(def);
+		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
-		Parameter b = cl.define(def);
+		CommandLineParameter b = cl.define(def);
 		def.setShortOpt('d');
-		Parameter d = cl.define(def);
+		CommandLineParameter d = cl.define(def);
 		def.setShortOpt('e');
-		Parameter e = cl.define(def);
+		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
 		def.setValueCount(-1);
-		Parameter c = cl.define(def);
+		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
 		def.setValueCount(0);
-		Parameter f = cl.define(def);
+		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
@@ -470,19 +470,19 @@ public class CommandLineTest {
 		MutableParameterDefinition def = new MutableParameterDefinition();
 		def.setValueCount(1);
 		def.setShortOpt('a');
-		Parameter a = cl.define(def);
+		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
-		Parameter b = cl.define(def);
+		CommandLineParameter b = cl.define(def);
 		def.setShortOpt('d');
-		Parameter d = cl.define(def);
+		CommandLineParameter d = cl.define(def);
 		def.setShortOpt('e');
-		Parameter e = cl.define(def);
+		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
 		def.setValueCount(-1);
-		Parameter c = cl.define(def);
+		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
 		def.setValueCount(0);
-		Parameter f = cl.define(def);
+		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
@@ -527,19 +527,19 @@ public class CommandLineTest {
 		MutableParameterDefinition def = new MutableParameterDefinition();
 		def.setValueCount(1);
 		def.setShortOpt('a');
-		Parameter a = cl.define(def);
+		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
-		Parameter b = cl.define(def);
+		CommandLineParameter b = cl.define(def);
 		def.setShortOpt('d');
-		Parameter d = cl.define(def);
+		CommandLineParameter d = cl.define(def);
 		def.setShortOpt('e');
-		Parameter e = cl.define(def);
+		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
 		def.setValueCount(-1);
-		Parameter c = cl.define(def);
+		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
 		def.setValueCount(0);
-		Parameter f = cl.define(def);
+		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
 
@@ -582,18 +582,18 @@ public class CommandLineTest {
 
 			MutableParameterDefinition def = new MutableParameterDefinition();
 			def.setShortOpt('a');
-			Parameter a = cl.define(def);
+			CommandLineParameter a = cl.define(def);
 
 			def.setValueCount(1);
 			def.setShortOpt('b');
-			Parameter b = cl.define(def);
+			CommandLineParameter b = cl.define(def);
 
 			def.setValueCount(-1);
 			def.setShortOpt('c');
-			Parameter c = cl.define(def);
+			CommandLineParameter c = cl.define(def);
 
 			def.setShortOpt('d');
-			Parameter d = cl.define(def);
+			CommandLineParameter d = cl.define(def);
 
 			cl.parse("TEST", args);
 
@@ -616,18 +616,18 @@ public class CommandLineTest {
 
 			MutableParameterDefinition def = new MutableParameterDefinition();
 			def.setLongOpt("long-a");
-			Parameter a = cl.define(def);
+			CommandLineParameter a = cl.define(def);
 
 			def.setValueCount(1);
 			def.setLongOpt("long-b");
-			Parameter b = cl.define(def);
+			CommandLineParameter b = cl.define(def);
 
 			def.setValueCount(-1);
 			def.setLongOpt("long-c");
-			Parameter c = cl.define(def);
+			CommandLineParameter c = cl.define(def);
 
 			def.setLongOpt("long-d");
-			Parameter d = cl.define(def);
+			CommandLineParameter d = cl.define(def);
 
 			cl.parse("TEST", args);
 
@@ -656,7 +656,7 @@ public class CommandLineTest {
 			MutableParameterDefinition def = new MutableParameterDefinition();
 			def.setValueCount(1);
 			def.setShortOpt('a');
-			Parameter a = cl.define(def);
+			CommandLineParameter a = cl.define(def);
 
 			cl.parse("TEST", args);
 
@@ -678,7 +678,7 @@ public class CommandLineTest {
 			MutableParameterDefinition def = new MutableParameterDefinition();
 			def.setValueCount(1);
 			def.setShortOpt('a');
-			Parameter a = cl.define(def);
+			CommandLineParameter a = cl.define(def);
 
 			cl.parse("TEST", args);
 
@@ -693,7 +693,7 @@ public class CommandLineTest {
 		CommandLine cl = new CommandLine(false);
 		final Charset charset = Charset.forName("US-ASCII");
 		MutableParameterDefinition def = null;
-		Set<Parameter> shortOptions = new HashSet<>();
+		Set<CommandLineParameter> shortOptions = new HashSet<>();
 		for (int i = 0; i < 255; i++) {
 			ByteBuffer bb = ByteBuffer.allocate(4);
 			bb.putInt(i);
@@ -705,7 +705,7 @@ public class CommandLineTest {
 			def = new MutableParameterDefinition();
 			def.setShortOpt(c);
 			try {
-				Parameter p = cl.define(def);
+				CommandLineParameter p = cl.define(def);
 				shortOptions.add(p);
 				Assert.assertEquals(1, p.compareTo(null));
 			} catch (InvalidParameterDefinitionException e) {
@@ -717,13 +717,13 @@ public class CommandLineTest {
 			}
 		}
 
-		for (Parameter expected : shortOptions) {
-			Parameter actual = cl.getParameter(expected.getDefinition().getShortOpt());
+		for (CommandLineParameter expected : shortOptions) {
+			CommandLineParameter actual = cl.getParameter(expected.getDefinition().getShortOpt());
 			Assert.assertEquals(expected, actual);
 			Assert.assertTrue(cl.hasParameter(expected.getDefinition().getShortOpt()));
 		}
 
-		for (Parameter actual : cl.shortOptions()) {
+		for (CommandLineParameter actual : cl.shortOptions()) {
 			Assert.assertNotNull(actual);
 			Assert.assertTrue(shortOptions.remove(actual));
 		}
@@ -734,22 +734,22 @@ public class CommandLineTest {
 	public void testLongOptions() throws Exception {
 		CommandLine cl = new CommandLine(false);
 		MutableParameterDefinition def = null;
-		Set<Parameter> longOptions = new HashSet<>();
+		Set<CommandLineParameter> longOptions = new HashSet<>();
 		for (int i = 0; i < 255; i++) {
 			def = new MutableParameterDefinition();
 			def.setLongOpt(String.format("long-%04x", i));
-			Parameter p = cl.define(def);
+			CommandLineParameter p = cl.define(def);
 			longOptions.add(p);
 			Assert.assertEquals(1, p.compareTo(null));
 		}
 
-		for (Parameter expected : longOptions) {
-			Parameter actual = cl.getParameter(expected.getDefinition().getLongOpt());
+		for (CommandLineParameter expected : longOptions) {
+			CommandLineParameter actual = cl.getParameter(expected.getDefinition().getLongOpt());
 			Assert.assertEquals(expected, actual);
 			Assert.assertTrue(cl.hasParameter(expected.getDefinition().getLongOpt()));
 		}
 
-		for (Parameter actual : cl.longOptions()) {
+		for (CommandLineParameter actual : cl.longOptions()) {
 			Assert.assertNotNull(actual);
 			Assert.assertTrue(longOptions.remove(actual));
 		}
@@ -766,18 +766,18 @@ public class CommandLineTest {
 		def = new MutableParameterDefinition();
 
 		def.setShortOpt('a');
-		Parameter a = cl.define(def);
+		CommandLineParameter a = cl.define(def);
 
 		def.setShortOpt('b');
-		Parameter b = cl.define(def);
+		CommandLineParameter b = cl.define(def);
 
 		def = new MutableParameterDefinition();
 
 		def.setLongOpt("ab");
-		Parameter ab = cl.define(def);
+		CommandLineParameter ab = cl.define(def);
 
 		def.setLongOpt("cd");
-		Parameter cd = cl.define(def);
+		CommandLineParameter cd = cl.define(def);
 
 		String[] args = {
 			"-a", "--ab"

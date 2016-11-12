@@ -5,70 +5,70 @@ import java.util.List;
 
 public interface CommandLineValues {
 
-	boolean isHelpRequested();
+	public boolean isHelpRequested();
 
-	String getHelpMessage();
+	public String getHelpMessage();
 
-	Iterator<Parameter> iterator();
+	public Iterator<CommandLineParameter> iterator();
 
-	Iterable<Parameter> shortOptions();
+	public Iterable<CommandLineParameter> shortOptions();
 
-	Parameter getParameter(char shortOpt);
+	public CommandLineParameter getParameter(char shortOpt);
 
-	boolean hasParameter(char shortOpt);
+	public boolean hasParameter(char shortOpt);
 
-	Iterable<Parameter> longOptions();
+	public Iterable<CommandLineParameter> longOptions();
 
-	Parameter getParameter(String longOpt);
+	public CommandLineParameter getParameter(String longOpt);
 
-	boolean hasParameter(String longOpt);
+	public boolean hasParameter(String longOpt);
 
-	boolean isParameterDefined(ParameterDefinition parameter);
+	public boolean isParameterDefined(ParameterDefinition parameter);
 
-	Parameter getParameterFromDefinition(ParameterDefinition parameter);
+	public CommandLineParameter getParameterFromDefinition(ParameterDefinition parameter);
 
-	boolean hasHelpParameter();
+	public boolean hasHelpParameter();
 
-	Parameter getHelpParameter();
+	public CommandLineParameter getHelpParameter();
 
-	Boolean getBoolean(ParameterDefinition param);
+	public Boolean getBoolean(ParameterDefinition param);
 
-	boolean getBoolean(ParameterDefinition param, boolean def);
+	public boolean getBoolean(ParameterDefinition param, boolean def);
 
-	List<Boolean> getAllBooleans(ParameterDefinition param);
+	public List<Boolean> getAllBooleans(ParameterDefinition param);
 
-	Integer getInteger(ParameterDefinition param);
+	public Integer getInteger(ParameterDefinition param);
 
-	int getInteger(ParameterDefinition param, int def);
+	public int getInteger(ParameterDefinition param, int def);
 
-	List<Integer> getAllIntegers(ParameterDefinition param);
+	public List<Integer> getAllIntegers(ParameterDefinition param);
 
-	Long getLong(ParameterDefinition param);
+	public Long getLong(ParameterDefinition param);
 
-	long getLong(ParameterDefinition param, long def);
+	public long getLong(ParameterDefinition param, long def);
 
-	List<Long> getAllLongs(ParameterDefinition param);
+	public List<Long> getAllLongs(ParameterDefinition param);
 
-	Float getFloat(ParameterDefinition param);
+	public Float getFloat(ParameterDefinition param);
 
-	float getFloat(ParameterDefinition param, float def);
+	public float getFloat(ParameterDefinition param, float def);
 
-	List<Float> getAllFloats(ParameterDefinition param);
+	public List<Float> getAllFloats(ParameterDefinition param);
 
-	Double getDouble(ParameterDefinition param);
+	public Double getDouble(ParameterDefinition param);
 
-	double getDouble(ParameterDefinition param, double def);
+	public double getDouble(ParameterDefinition param, double def);
 
-	List<Double> getAllDoubles(ParameterDefinition param);
+	public List<Double> getAllDoubles(ParameterDefinition param);
 
-	String getString(ParameterDefinition param);
+	public String getString(ParameterDefinition param);
 
-	String getString(ParameterDefinition param, String def);
+	public String getString(ParameterDefinition param, String def);
 
-	List<String> getAllStrings(ParameterDefinition param);
+	public List<String> getAllStrings(ParameterDefinition param);
 
-	boolean isPresent(ParameterDefinition param);
+	public boolean isPresent(ParameterDefinition param);
 
-	List<String> getRemainingParameters();
+	public List<String> getRemainingParameters();
 
 }

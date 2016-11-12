@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.CommandLineException;
 import com.armedia.commons.utilities.Tools;
 
-public class CommandLine implements CommandLineValues, Iterable<Parameter> {
+public class CommandLine implements CommandLineValues, Iterable<CommandLineParameter> {
 
 	private static final ParameterDefinition HELP;
 
@@ -40,11 +40,11 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-	private final Map<Character, Parameter> shortOptions = new TreeMap<>();
-	private final Map<String, Parameter> longOptions = new TreeMap<>();
-	private final Map<String, Parameter> parameters = new TreeMap<>();
+	private final Map<Character, CommandLineParameter> shortOptions = new TreeMap<>();
+	private final Map<String, CommandLineParameter> longOptions = new TreeMap<>();
+	private final Map<String, CommandLineParameter> commandLineParameters = new TreeMap<>();
 
-	private final Parameter help;
+	private final CommandLineParameter help;
 
 	private final Map<String, List<String>> values = new HashMap<>();
 	private final List<String> remainingParameters = new ArrayList<>();
@@ -68,7 +68,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		}
 	}
 
-	final void setParameterValues(Parameter p, Collection<String> values) {
+	final void setParameterValues(CommandLineParameter p, Collection<String> values) {
 		if ((values == null) || values.isEmpty()) {
 			values = Collections.emptyList();
 		}
@@ -122,7 +122,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 			try {
 				try {
 					ctx = parser.initContext(this, executableName,
-						Collections.unmodifiableCollection(this.parameters.values()));
+						Collections.unmodifiableCollection(this.commandLineParameters.values()));
 				} catch (Exception e) {
 					throw new CommandLineParseException(
 						String.format("A initialization error ocurred while initializing the command-line parser",
@@ -185,15 +185,15 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		String key = param.getKey();
 		if (key == null) { throw new IllegalArgumentException(
 			"The given parameter definition does not define a valid key"); }
-		if (Parameter.class.isInstance(param)) {
-			Parameter p = Parameter.class.cast(param);
+		if (CommandLineParameter.class.isInstance(param)) {
+			CommandLineParameter p = CommandLineParameter.class.cast(param);
 			if (p.getCLI() != this) { throw new IllegalArgumentException(
 				"The given parameter is not associated to this command-line interface"); }
 		}
 	}
 
 	private void assertValidDefinition(ParameterDefinition def) throws InvalidParameterDefinitionException {
-		if (def == null) { throw new InvalidParameterDefinitionException("Parameter definition may not be null"); }
+		if (def == null) { throw new InvalidParameterDefinitionException("CommandLineParameter definition may not be null"); }
 
 		final Character shortOpt = def.getShortOpt();
 		final boolean hasShortOpt = (shortOpt != null);
@@ -226,7 +226,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		}
 	}
 
-	private final Parameter define(ParameterDefinition def, boolean unchecked)
+	private final CommandLineParameter define(ParameterDefinition def, boolean unchecked)
 		throws DuplicateParameterDefinitionException, InvalidParameterDefinitionException {
 		if (!unchecked) {
 			assertValidDefinition(def);
@@ -236,7 +236,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 
 		try {
 			final Character shortOpt = def.getShortOpt();
-			Parameter shortParam = null;
+			CommandLineParameter shortParam = null;
 			if (!unchecked && (shortOpt != null)) {
 				shortParam = this.shortOptions.get(shortOpt);
 				if (shortParam != null) {
@@ -244,7 +244,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 						// It's the same parameter, so we can safely return the existing one
 						return shortParam;
 					}
-					// The parameters aren't equal...so...this is an error
+					// The commandLineParameters aren't equal...so...this is an error
 					throw new DuplicateParameterDefinitionException(String.format(
 						"The new parameter definition for short option [%s] collides with an existing one", shortOpt),
 						shortParam.getDefinition(), def);
@@ -252,7 +252,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 			}
 
 			final String longOpt = def.getLongOpt();
-			Parameter longParam = null;
+			CommandLineParameter longParam = null;
 			if (!unchecked && (longOpt != null)) {
 				longParam = this.longOptions.get(longOpt);
 				if (longParam != null) {
@@ -260,7 +260,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 						// It's the same parameter, so we can safely return the existing one
 						return longParam;
 					}
-					// The parameters aren't equal...so...this is an error
+					// The commandLineParameters aren't equal...so...this is an error
 					throw new DuplicateParameterDefinitionException(
 						String.format("The new parameter definition for long option [%s] collides with an existing one",
 							longOpt),
@@ -268,21 +268,21 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 				}
 			}
 
-			Parameter ret = new Parameter(this, def);
+			CommandLineParameter ret = new CommandLineParameter(this, def);
 			if (shortOpt != null) {
 				this.shortOptions.put(shortOpt, ret);
 			}
 			if (longOpt != null) {
 				this.longOptions.put(longOpt, ret);
 			}
-			this.parameters.put(ret.getKey(), ret);
+			this.commandLineParameters.put(ret.getKey(), ret);
 			return ret;
 		} finally {
 			l.unlock();
 		}
 	}
 
-	public final Parameter define(ParameterDefinition def)
+	public final CommandLineParameter define(ParameterDefinition def)
 		throws DuplicateParameterDefinitionException, InvalidParameterDefinitionException {
 		return define(def, false);
 	}
@@ -291,11 +291,11 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 	 * @see com.armedia.caliente.cli.parser.CommandLineValues#iterator()
 	 */
 	@Override
-	public final Iterator<Parameter> iterator() {
+	public final Iterator<CommandLineParameter> iterator() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			return Tools.freezeList(new ArrayList<>(this.parameters.values())).iterator();
+			return Tools.freezeList(new ArrayList<>(this.commandLineParameters.values())).iterator();
 		} finally {
 			l.unlock();
 		}
@@ -305,7 +305,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 	 * @see com.armedia.caliente.cli.parser.CommandLineValues#shortOptions()
 	 */
 	@Override
-	public final Iterable<Parameter> shortOptions() {
+	public final Iterable<CommandLineParameter> shortOptions() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
@@ -319,7 +319,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getParameter(char)
 	 */
 	@Override
-	public final Parameter getParameter(char shortOpt) {
+	public final CommandLineParameter getParameter(char shortOpt) {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
@@ -347,7 +347,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 	 * @see com.armedia.caliente.cli.parser.CommandLineValues#longOptions()
 	 */
 	@Override
-	public final Iterable<Parameter> longOptions() {
+	public final Iterable<CommandLineParameter> longOptions() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
@@ -361,7 +361,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getParameter(java.lang.String)
 	 */
 	@Override
-	public final Parameter getParameter(String longOpt) {
+	public final CommandLineParameter getParameter(String longOpt) {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
@@ -397,7 +397,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getParameterFromDefinition(com.armedia.caliente.cli.parser.ParameterDefinition)
 	 */
 	@Override
-	public final Parameter getParameterFromDefinition(ParameterDefinition parameter) {
+	public final CommandLineParameter getParameterFromDefinition(ParameterDefinition parameter) {
 		if (parameter == null) { throw new IllegalArgumentException(
 			"Must provide a parameter definition to retrieve"); }
 		final String key = parameter.getKey();
@@ -406,7 +406,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			return this.parameters.get(key);
+			return this.commandLineParameters.get(key);
 		} finally {
 			l.unlock();
 		}
@@ -424,7 +424,7 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getHelpParameter()
 	 */
 	@Override
-	public final Parameter getHelpParameter() {
+	public final CommandLineParameter getHelpParameter() {
 		return this.help;
 	}
 
@@ -527,27 +527,18 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		return Tools.freezeList(r);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getFloat(com.armedia.caliente.cli.parser.ParameterDefinition)
-	 */
 	@Override
 	public final Float getFloat(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Float.valueOf(s) : null);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getFloat(com.armedia.caliente.cli.parser.ParameterDefinition, float)
-	 */
 	@Override
 	public final float getFloat(ParameterDefinition param, float def) {
 		Float v = getFloat(param);
 		return (v != null ? v.floatValue() : def);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getAllFloats(com.armedia.caliente.cli.parser.ParameterDefinition)
-	 */
 	@Override
 	public final List<Float> getAllFloats(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
@@ -560,18 +551,12 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		return Tools.freezeList(r);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getDouble(com.armedia.caliente.cli.parser.ParameterDefinition)
-	 */
 	@Override
 	public final Double getDouble(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Double.valueOf(s) : null);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getDouble(com.armedia.caliente.cli.parser.ParameterDefinition, double)
-	 */
 	@Override
 	public final double getDouble(ParameterDefinition param, double def) {
 		assertValid(param);
@@ -579,9 +564,6 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		return (v != null ? v.doubleValue() : def);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getAllDoubles(com.armedia.caliente.cli.parser.ParameterDefinition)
-	 */
 	@Override
 	public final List<Double> getAllDoubles(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
@@ -594,9 +576,6 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		return Tools.freezeList(r);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getString(com.armedia.caliente.cli.parser.ParameterDefinition)
-	 */
 	@Override
 	public final String getString(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
@@ -604,9 +583,6 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		return l.get(0);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getString(com.armedia.caliente.cli.parser.ParameterDefinition, java.lang.String)
-	 */
 	@Override
 	public final String getString(ParameterDefinition param, String def) {
 		assertValid(param);
@@ -614,9 +590,6 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		return (v != null ? v : def);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getAllStrings(com.armedia.caliente.cli.parser.ParameterDefinition)
-	 */
 	@Override
 	public final List<String> getAllStrings(ParameterDefinition param) {
 		assertValid(param);
@@ -629,9 +602,6 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#isPresent(com.armedia.caliente.cli.parser.ParameterDefinition)
-	 */
 	@Override
 	public final boolean isPresent(ParameterDefinition param) {
 		assertValid(param);
@@ -644,9 +614,6 @@ public class CommandLine implements CommandLineValues, Iterable<Parameter> {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getRemainingParameters()
-	 */
 	@Override
 	public final List<String> getRemainingParameters() {
 		final Lock l = this.rwLock.readLock();

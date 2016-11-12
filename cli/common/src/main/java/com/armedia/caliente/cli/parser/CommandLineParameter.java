@@ -4,15 +4,15 @@ import java.util.List;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class Parameter extends ParameterDefinition implements Comparable<Parameter> {
+public final class CommandLineParameter extends BaseParameterDefinition implements Comparable<CommandLineParameter> {
 	private final String cliKey;
 	private final CommandLine cli;
 	private final ParameterDefinition def;
 
-	Parameter(CommandLine cli, ParameterDefinition def) {
+	CommandLineParameter(CommandLine cli, ParameterDefinition def) {
 		this.cli = cli;
 		this.def = new MutableParameterDefinition(def);
-		this.cliKey = def.getKey();
+		this.cliKey = BaseParameterDefinition.calculateKey(def);
 	}
 
 	@Override
@@ -61,7 +61,7 @@ public final class Parameter extends ParameterDefinition implements Comparable<P
 	}
 
 	@Override
-	public int compareTo(Parameter o) {
+	public int compareTo(CommandLineParameter o) {
 		if (o == null) { return 1; }
 		return Tools.compare(this.cliKey, o.cliKey);
 	}
@@ -74,7 +74,7 @@ public final class Parameter extends ParameterDefinition implements Comparable<P
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		Parameter other = Parameter.class.cast(obj);
+		CommandLineParameter other = CommandLineParameter.class.cast(obj);
 		if (!Tools.equals(this.cliKey, other.cliKey)) { return false; }
 		if (this.cli != other.cli) { return false; }
 		// TODO: enable comparison of the full definitions?
