@@ -22,35 +22,20 @@ public class Launcher extends AbstractLauncher {
 	protected static final String DCTM_JAR = "dctm.jar";
 	protected static final String DFC_TEST_CLASS = "com.documentum.fc.client.IDfFolder";
 
-	public static final void main(String... args) {
-		System.exit(new Launcher().launch(args));
+	private File newFileObject(String path) {
+		return newFileObject(null, path);
 	}
 
-	private File createFile(String path) {
-		return createFile(null, path);
-	}
-
-	private File createFile(File parent, String path) {
+	private File newFileObject(File parent, String path) {
 		File f = (parent != null ? new File(parent, path) : new File(path));
 		try {
 			f = f.getCanonicalFile();
 		} catch (IOException e) {
-			f = f.getAbsoluteFile();
 			this.log.warn(String.format("Failed to canonicalize the path for [%s]", f.getAbsolutePath()), e);
+		} finally {
+			f = f.getAbsoluteFile();
 		}
 		return f;
-	}
-
-	@Override
-	protected Collection<? extends ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
-		int pass) {
-		if (pass > 0) { return null; }
-		return Arrays.asList(CLIParam.values());
-	}
-
-	@Override
-	protected int processCommandLine(CommandLineValues commandLine) {
-		return super.processCommandLine(commandLine);
 	}
 
 	@Override
@@ -69,9 +54,11 @@ public class Launcher extends AbstractLauncher {
 
 		List<URL> ret = new ArrayList<>(3);
 		try {
+			// Even if not configured, if there's a dfc.properties in our current
+			// working directory, we try to use it
 			String var = cli.getString(CLIParam.dfc_prop, "dfc.properties");
 			if (var != null) {
-				File f = createFile(var);
+				File f = newFileObject(var);
 				if (f.exists() && f.isFile() && f.canRead()) {
 					System.setProperty(Launcher.DFC_PROPERTIES_PROP, f.getAbsolutePath());
 				}
@@ -87,14 +74,14 @@ public class Launcher extends AbstractLauncher {
 			}
 
 			if (var != null) {
-				File f = createFile(var);
+				File f = newFileObject(var);
 				if (!f.exists()) {
 					FileUtils.forceMkdir(f);
 				}
 				if (!f.isDirectory()) { throw new FileNotFoundException(
 					String.format("Could not find the directory [%s]", f.getAbsolutePath())); }
 
-				ret.add(createFile(f, "config").toURI().toURL());
+				ret.add(newFileObject(f, "config").toURI().toURL());
 			}
 
 			// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
@@ -108,13 +95,13 @@ public class Launcher extends AbstractLauncher {
 
 			if (var != null) {
 				// Next, is it a directory?
-				File f = createFile(var);
+				File f = newFileObject(var);
 				if (!f.isDirectory()) { throw new FileNotFoundException(String.format(
 					"Could not find the [%s] directory [%s]", Launcher.ENV_DOCUMENTUM_SHARED, f.getAbsolutePath())); }
 
 				// Next, does dctm.jar exist in there?
 				if (!dfcFound) {
-					File tgt = createFile(f, Launcher.DCTM_JAR);
+					File tgt = newFileObject(f, Launcher.DCTM_JAR);
 					if (!tgt.isFile()) { throw new FileNotFoundException(
 						String.format("Could not find the JAR file [%s]", tgt.getAbsolutePath())); }
 
@@ -126,6 +113,22 @@ public class Launcher extends AbstractLauncher {
 			throw new RuntimeException("Failed to configure the dynamic classpath", e);
 		}
 		return ret;
+	}
+
+	public static final void main(String... args) {
+		System.exit(new Launcher().launch(args));
+	}
+
+	@Override
+	protected Collection<? extends ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
+		int pass) {
+		if (pass > 0) { return null; }
+		return Arrays.asList(CLIParam.values());
+	}
+
+	@Override
+	protected int processCommandLine(CommandLineValues commandLine) {
+		return super.processCommandLine(commandLine);
 	}
 
 	@Override
