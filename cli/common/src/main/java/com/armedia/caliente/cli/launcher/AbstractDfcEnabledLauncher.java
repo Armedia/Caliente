@@ -26,8 +26,11 @@ public abstract class AbstractDfcEnabledLauncher extends AbstractLauncher {
 	protected final ParameterDefinition paramDfc;
 	protected final ParameterDefinition paramDctm;
 	protected final ParameterDefinition paramDfcProp;
+	protected final ParameterDefinition paramDocbase;
+	protected final ParameterDefinition paramUser;
+	protected final ParameterDefinition paramPassword;
 
-	protected AbstractDfcEnabledLauncher() {
+	protected AbstractDfcEnabledLauncher(boolean includeConnection) {
 		this.paramDfc = new MutableParameterDefinition() //
 			.setLongOpt("paramDfc") //
 			.setValueCount(1) //
@@ -46,6 +49,29 @@ public abstract class AbstractDfcEnabledLauncher extends AbstractLauncher {
 			.setValueOptional(false) //
 			.setValueName("paramDfc.properties location") //
 			.setDescription("The paramDfc.properties file to use instead of the default");
+		if (includeConnection) {
+			this.paramDocbase = new MutableParameterDefinition() //
+				.setRequired(true) //
+				.setValueCount(1) //
+				.setValueOptional(false) //
+				.setValueName("docbase") //
+				.setDescription("The Documentum repostory name to connect to");
+			this.paramUser = new MutableParameterDefinition() //
+				.setRequired(true) //
+				.setValueCount(1) //
+				.setValueOptional(false) //
+				.setValueName("username") //
+				.setDescription("The username to connect to Documentum with");
+			this.paramPassword = new MutableParameterDefinition() //
+				.setValueCount(1) //
+				.setValueOptional(false) //
+				.setValueName("password") //
+				.setDescription("The password to connect to Documentum with");
+		} else {
+			this.paramDocbase = null;
+			this.paramUser = null;
+			this.paramPassword = null;
+		}
 	}
 
 	protected final File newFileObject(String path) {
@@ -67,7 +93,12 @@ public abstract class AbstractDfcEnabledLauncher extends AbstractLauncher {
 	}
 
 	protected final Collection<ParameterDefinition> getDfcParameters() {
-		return Arrays.asList(this.paramDfcProp, this.paramDfc, this.paramDctm);
+		if (this.paramUser == null) {
+			return Arrays.asList(this.paramDfcProp, this.paramDfc, this.paramDctm);
+		} else {
+			return Arrays.asList(this.paramDfcProp, this.paramDfc, this.paramDctm, this.paramDocbase, this.paramUser,
+				this.paramPassword);
+		}
 	}
 
 	protected final boolean checkForDfc() {

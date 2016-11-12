@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.launcher;
 
+import java.io.Console;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.parser.CommandLine;
+import com.armedia.caliente.cli.parser.CommandLineParameter;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
@@ -163,4 +165,25 @@ public abstract class AbstractLauncher {
 	}
 
 	protected abstract int run(CommandLineValues commandLine) throws Exception;
+
+	protected final String getPassword(CommandLineValues cli, ParameterDefinition param, String prompt,
+		Object... promptParams) {
+		CommandLineParameter cliParam = null;
+		if ((cli != null) && (param != null)) {
+			cliParam = cli.getParameterFromDefinition(cliParam);
+		}
+		return getPassword(cliParam, prompt, promptParams);
+	}
+
+	protected final String getPassword(CommandLineParameter param, String prompt, Object... promptParams) {
+		final Console console = System.console();
+		if (param != null) { return param.getString(); }
+		if (console == null) { return null; }
+		if (prompt == null) {
+			prompt = "Password:";
+		}
+		char[] pass = console.readPassword(prompt, promptParams);
+		if (pass != null) { return new String(pass); }
+		return null;
+	}
 }

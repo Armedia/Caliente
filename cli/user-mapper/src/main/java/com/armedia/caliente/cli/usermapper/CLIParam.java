@@ -12,46 +12,6 @@ public enum CLIParam implements ParameterDefinition {
 		.setDescription(
 			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
 	), //
-	/*
-	dfc(new MutableParameterDefinition() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("dfc install location") //
-		.setDescription("The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)") //
-	), //
-	dfc_prop(new MutableParameterDefinition() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("dfc.properties location") //
-		.setDescription("The dfc.properties file to use instead of the default") //
-	), //
-	dctm(new MutableParameterDefinition() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("directory") //
-		.setDescription("The user's local Documentum path (i.e. instead of DOCUMENTUM)") //
-	), //
-	*/
-	docbase(new MutableParameterDefinition() //
-		.setRequired(true) //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("repository") //
-		.setDescription("The Documentum repostory name to connect to") //
-	), //
-	dctm_user(new MutableParameterDefinition() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("username") //
-		.setDescription("The username to connect to Documentum with") //
-	), //
-	dctm_pass(new MutableParameterDefinition() //
-		.setRequired(true) //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("password") //
-		.setDescription("The password to connect to Documentum with (may be encrypted)") //
-	), //
 	dctm_sam(new MutableParameterDefinition() //
 		.setValueCount(-1) //
 		.setValueOptional(false) //
