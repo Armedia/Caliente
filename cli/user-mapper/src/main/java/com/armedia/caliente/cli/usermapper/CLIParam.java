@@ -12,6 +12,7 @@ public enum CLIParam implements ParameterDefinition {
 		.setDescription(
 			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
 	), //
+	/*
 	dfc(new MutableParameterDefinition() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
@@ -30,6 +31,7 @@ public enum CLIParam implements ParameterDefinition {
 		.setValueName("directory") //
 		.setDescription("The user's local Documentum path (i.e. instead of DOCUMENTUM)") //
 	), //
+	*/
 	docbase(new MutableParameterDefinition() //
 		.setRequired(true) //
 		.setValueCount(1) //
