@@ -147,7 +147,8 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 		return v;
 	}
 
-	private final ThreadsParameterSet threadsParameter = new ThreadsParameterSet();
+	private final ThreadsParameterSet threadsParameter = new ThreadsParameterSet(Launcher.MIN_THREADS,
+		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
 	@Override
@@ -289,8 +290,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 					final IDfFolder root = NodeGenerator.ensureFolder(mainSession, target);
 					final NodeGenerator generator = new NodeGenerator(mainSession, objectTypes, new CSVRM());
 
-					final int threads = this.threadsParameter.getThreads(cli, Launcher.MIN_THREADS,
-						Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
+					final int threads = this.threadsParameter.getThreads(cli);
 					final ExecutorService executor = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS,
 						new ArrayBlockingQueue<Runnable>(threads, true));
 

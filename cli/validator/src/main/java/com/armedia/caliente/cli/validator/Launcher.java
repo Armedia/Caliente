@@ -43,7 +43,8 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 		return true;
 	}
 
-	private final ThreadsParameterSet threadsParameter = new ThreadsParameterSet();
+	private final ThreadsParameterSet threadsParameter = new ThreadsParameterSet(Launcher.MIN_THREADS,
+		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
 	public Collection<CLIParam> getParameterDefinitions(CommandLineValues commandLine) {
@@ -91,8 +92,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 			return 1;
 		}
 
-		final int threads = this.threadsParameter.getThreads(cli, Launcher.MIN_THREADS, Launcher.DEFAULT_THREADS,
-			Launcher.MAX_THREADS);
+		final int threads = this.threadsParameter.getThreads(cli);
 
 		this.log.info("Starting validation with {} thread{}", threads, threads > 1 ? "s" : "");
 		Runtime runtime = Runtime.getRuntime();
