@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -24,10 +26,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.datagen.data.csv.CSVDataRecordManager;
+import com.armedia.caliente.cli.launcher.AbstractDfcEnabledLauncher;
+import com.armedia.caliente.cli.parser.CommandLineValues;
+import com.armedia.caliente.cli.parser.ParameterDefinition;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
@@ -37,7 +40,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 
-public class Main {
+public class Launcher extends AbstractDfcEnabledLauncher {
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() / 2);
 	protected static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
 	protected static final String DEFAULT_NAME_FORMAT = "${type}-[${id}]";
@@ -46,10 +49,10 @@ public class Main {
 	private static final Pattern SIZE_PATTERN = Pattern.compile("^([1-9][0-9]*)([mk]b?)?$", Pattern.CASE_INSENSITIVE);
 
 	private static final int KB = 1024;
-	private static final int MB = Main.KB * Main.KB;
-	private static final int BUFFER_CHUNK_SIZE = 16 * Main.KB;
+	private static final int MB = Launcher.KB * Launcher.KB;
+	private static final int BUFFER_CHUNK_SIZE = 16 * Launcher.KB;
 	private static final int MIN_DOC_SIZE = 1;
-	private static final int MAX_DOC_SIZE = 16 * Main.MB;
+	private static final int MAX_DOC_SIZE = 16 * Launcher.MB;
 
 	private static class CSVRM extends CSVDataRecordManager {
 
@@ -95,9 +98,9 @@ public class Main {
 		protected URL findStreamRecords() throws IOException {
 			URL url = findFile("datagen.stream-records.csv");
 			if (url != null) {
-				log.info("Datastream information will be loaded from [{}]", url.toString());
+				this.log.info("Datastream information will be loaded from [{}]", url.toString());
 			} else {
-				log.warn("No datastream information was supplied");
+				this.log.warn("No datastream information was supplied");
 			}
 			return url;
 		}
@@ -109,16 +112,16 @@ public class Main {
 			}
 			URL url = findFile(String.format("datagen.%s.csv", type));
 			if (url != null) {
-				log.info("Metadata values for type [{}] will be loaded from [{}]", type, url.toString());
+				this.log.info("Metadata values for type [{}] will be loaded from [{}]", type, url.toString());
 			} else {
-				log.warn("No metadata file found for object type [{}]", type);
+				this.log.warn("No metadata file found for object type [{}]", type);
 			}
 			return url;
 		}
 	}
 
 	private static Integer parseInt(String cliValue) {
-		Matcher m = Main.SIZE_PATTERN.matcher(cliValue);
+		Matcher m = Launcher.SIZE_PATTERN.matcher(cliValue);
 		if (!m.matches()) { return null; }
 
 		int v = Integer.valueOf(m.group(1));
@@ -126,10 +129,10 @@ public class Main {
 		if (suffix != null) {
 			switch (suffix.charAt(0)) {
 				case 'm':
-					v *= Main.MB;
+					v *= Launcher.MB;
 					break;
 				case 'k':
-					v *= Main.KB;
+					v *= Launcher.KB;
 					break;
 				default:
 					break;
@@ -138,51 +141,39 @@ public class Main {
 		return v;
 	}
 
-	public static final void main(String... args) {
-		if (!CLIParam.parse(args)) {
-			// If the parameters didn't parse, we fail.
-			return;
-		}
+	protected Launcher() {
+		super(true);
+	}
 
-		final Logger log = LoggerFactory.getLogger(Main.class);
-		final boolean debug = CLIParam.debug.isPresent();
+	@Override
+	protected Collection<? extends ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
+		int pass) {
+		if (pass > 0) { return null; }
+		List<ParameterDefinition> ret = new ArrayList<>();
+		ret.addAll(getDfcParameters());
+		ret.addAll(Arrays.asList(CLIParam.values()));
+		return ret;
+	}
 
-		List<String> objectTypes = CLIParam.object_types.getAllString();
+	@Override
+	protected String getProgramName(int pass) {
+		return "Caliente Data Generator";
+	}
+
+	@Override
+	protected int run(CommandLineValues cli) throws Exception {
+		final boolean debug = cli.isPresent(CLIParam.debug);
+
+		List<String> objectTypes = cli.getAllStrings(CLIParam.object_types);
 		if ((objectTypes == null) || objectTypes.isEmpty()) {
 			objectTypes = Collections.emptyList();
 		}
 
-		if (CLIParam.dfc_prop.isPresent()) {
-			File f = new File(CLIParam.dfc_prop.getString("dfc.properties"));
-			try {
-				f = f.getCanonicalFile();
-			} catch (IOException e) {
-				// Do nothing...stay with the non-canonical path
-				f = f.getAbsoluteFile();
-			}
-			String error = null;
-			if ((error == null) && !f.exists()) {
-				error = "does not exist";
-			}
-			if ((error == null) && !f.isFile()) {
-				error = "is not a regular file";
-			}
-			if ((error == null) && !f.canRead()) {
-				error = "cannot be read";
-			}
-			if (error == null) {
-				System.setProperty(Main.DFC_PROPERTIES_PROP, f.getAbsolutePath());
-			} else {
-				log.warn("The DFC properties file [{}] {} - will continue using DFC defaults", f.getAbsolutePath(),
-					error);
-			}
-		}
-
 		try {
-			final String nameFormat = CLIParam.name_format.getString(Main.DEFAULT_NAME_FORMAT);
-			if (!StringUtils.equals(nameFormat, Main.DEFAULT_NAME_FORMAT)) {
+			final String nameFormat = cli.getString(CLIParam.name_format, Launcher.DEFAULT_NAME_FORMAT);
+			if (!StringUtils.equals(nameFormat, Launcher.DEFAULT_NAME_FORMAT)) {
 				// If a non-default name format is provided, we have to do QA on it
-				final Set<String> provided = new HashSet<String>();
+				final Set<String> provided = new HashSet<>();
 				StrSubstitutor subs = new StrSubstitutor(new StrLookup<String>() {
 					@Override
 					public String lookup(String key) {
@@ -192,30 +183,32 @@ public class Main {
 				});
 				subs.replace(nameFormat);
 				if (!provided.contains("id") && !provided.contains("uuid")) {
-					log.error(
+					this.log.error(
 						"The name format must contain one of ${id} or ${uuid} markers, to avoid object duplicity");
-					return;
+					return 1;
 				}
 			}
 
 			final int minDocSize;
 			final int maxDocSize;
 			{
-				String minStr = CLIParam.document_min_size.getString(String.valueOf(Main.MIN_DOC_SIZE)).toLowerCase();
-				Integer min = Main.parseInt(minStr);
+				String minStr = cli.getString(CLIParam.document_min_size, String.valueOf(Launcher.MIN_DOC_SIZE))
+					.toLowerCase();
+				Integer min = Launcher.parseInt(minStr);
 				if (min == null) {
-					log.error("Bad number format (--document-min-size): [{}]", minStr);
-					return;
+					this.log.error("Bad number format (--document-min-size): [{}]", minStr);
+					return 1;
 				}
-				min = Tools.ensureBetween(Main.MIN_DOC_SIZE, min, Main.MAX_DOC_SIZE);
+				min = Tools.ensureBetween(Launcher.MIN_DOC_SIZE, min, Launcher.MAX_DOC_SIZE);
 
-				String maxStr = CLIParam.document_max_size.getString(String.valueOf(Main.MAX_DOC_SIZE)).toLowerCase();
-				Integer max = Main.parseInt(maxStr);
+				String maxStr = cli.getString(CLIParam.document_max_size, String.valueOf(Launcher.MAX_DOC_SIZE))
+					.toLowerCase();
+				Integer max = Launcher.parseInt(maxStr);
 				if (max == null) {
-					log.error("Bad number format (--document-max-size): [{}]", maxStr);
-					return;
+					this.log.error("Bad number format (--document-max-size): [{}]", maxStr);
+					return 1;
 				}
-				max = Tools.ensureBetween(Main.MIN_DOC_SIZE, max, Main.MAX_DOC_SIZE);
+				max = Tools.ensureBetween(Launcher.MIN_DOC_SIZE, max, Launcher.MAX_DOC_SIZE);
 
 				if (min > max) {
 					// Flip them around
@@ -227,38 +220,39 @@ public class Main {
 				maxDocSize = max;
 			}
 
-			final BinaryMemoryBuffer BASE_BUFFER = new BinaryMemoryBuffer(Main.BUFFER_CHUNK_SIZE);
+			final BinaryMemoryBuffer BASE_BUFFER = new BinaryMemoryBuffer(Launcher.BUFFER_CHUNK_SIZE);
 			try {
 				final int chunkCount = (maxDocSize / BASE_BUFFER.getChunkSize());
 				byte[] buf = new byte[BASE_BUFFER.getChunkSize()];
 				for (int i = 0; i < chunkCount; i++) {
-					Main.RANDOM.nextBytes(buf);
+					Launcher.RANDOM.nextBytes(buf);
 					try {
 						BASE_BUFFER.write(buf);
 					} catch (IOException e) {
 						// Can't continue...
-						log.warn("Unexpected exception writing to memory", e);
-						return;
+						this.log.warn("Unexpected exception writing to memory", e);
+						return 1;
 					}
 				}
 				final int chunkRemainder = (maxDocSize % BASE_BUFFER.getChunkSize());
-				Main.RANDOM.nextBytes(buf);
+				Launcher.RANDOM.nextBytes(buf);
 				try {
 					BASE_BUFFER.write(buf, 0, chunkRemainder);
 				} catch (IOException e) {
 					// Can't continue...
-					log.warn("Unexpected exception writing to memory", e);
-					return;
+					this.log.warn("Unexpected exception writing to memory", e);
+					return 1;
 				}
 			} finally {
 				IOUtils.closeQuietly(BASE_BUFFER);
 			}
 
-			log.info("Random data buffer of {} bytes ready", BASE_BUFFER.getCurrentSize());
+			this.log.info("Random data buffer of {} bytes ready", BASE_BUFFER.getCurrentSize());
 
-			final String user = CLIParam.user.getString();
-			final String password = CLIParam.password.getString();
-			final String docbase = CLIParam.docbase.getString();
+			final String docbase = cli.getString(this.paramDocbase);
+			final String user = cli.getString(this.paramUser);
+			final String password = getPassword(cli, this.paramPassword,
+				"Please enter the Password for user [%s] in Docbase %s: ", Tools.coalesce(user, ""), docbase);
 
 			final DfcSessionPool pool = new DfcSessionPool(docbase, user, password);
 
@@ -269,28 +263,28 @@ public class Main {
 				} catch (Exception e) {
 					String msg = String.format("Failed to open a session to docbase [%s] as user [%s]", docbase, user);
 					if (debug) {
-						log.error(msg, e);
+						this.log.error(msg, e);
 					} else {
-						log.error("{}: {}", msg, e.getMessage());
+						this.log.error("{}: {}", msg, e.getMessage());
 					}
-					return;
+					return 1;
 				}
 
-				final String target = CLIParam.target.getString();
-				final int treeDepth = CLIParam.tree_depth.getInteger(1);
-				final int folderCount = CLIParam.folder_count.getInteger(1);
-				final int documentCount = CLIParam.document_count.getInteger(1);
+				final String target = cli.getString(CLIParam.target);
+				final int treeDepth = cli.getInteger(CLIParam.tree_depth, 1);
+				final int folderCount = cli.getInteger(CLIParam.folder_count, 1);
+				final int documentCount = cli.getInteger(CLIParam.document_count, 1);
 
 				try {
 					final IDfFolder root = NodeGenerator.ensureFolder(mainSession, target);
 					final NodeGenerator generator = new NodeGenerator(mainSession, objectTypes, new CSVRM());
 
-					final int threads = CLIParam.threads.getInteger(Main.DEFAULT_THREADS);
+					final int threads = cli.getInteger(CLIParam.threads, Launcher.DEFAULT_THREADS);
 					final ExecutorService executor = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS,
 						new ArrayBlockingQueue<Runnable>(threads, true));
 
-					final BlockingQueue<IDfId> queue = new ArrayBlockingQueue<IDfId>(10000, true);
-					final List<Future<Integer>> futures = new ArrayList<Future<Integer>>(threads);
+					final BlockingQueue<IDfId> queue = new ArrayBlockingQueue<>(10000, true);
+					final List<Future<Integer>> futures = new ArrayList<>(threads);
 					for (int i = 0; i < threads; i++) {
 						futures.add(executor.submit(new Callable<Integer>() {
 							@Override
@@ -301,9 +295,9 @@ public class Main {
 								} catch (Exception e) {
 									String msg = "Failed to obtain a client session for processing";
 									if (debug) {
-										log.error(msg, e);
+										Launcher.this.log.error(msg, e);
 									} else {
-										log.error("{}: {}", msg, e.getMessage());
+										Launcher.this.log.error("{}: {}", msg, e.getMessage());
 									}
 									return null;
 								}
@@ -318,15 +312,15 @@ public class Main {
 											// exit gracefully
 											String msg = "Thread interrupted while waiting on the queue, exiting";
 											if (debug) {
-												log.error(msg, e);
+												Launcher.this.log.error(msg, e);
 											} else {
-												log.error(msg);
+												Launcher.this.log.error(msg);
 											}
 											return null;
 										}
 
 										if ((id == null) || id.isNull()) {
-											log.info("Thread completed");
+											Launcher.this.log.info("Thread completed");
 											break;
 										}
 										String path = "<unknown>";
@@ -338,12 +332,12 @@ public class Main {
 											path = folder.getFolderPath(0);
 											int size = minDocSize;
 											if (minDocSize != maxDocSize) {
-												size += Main.RANDOM.nextInt(maxDocSize - minDocSize);
+												size += Launcher.RANDOM.nextInt(maxDocSize - minDocSize);
 											}
 											total += generator.generateDocuments(folder, documentCount, nameFormat,
 												BASE_BUFFER.getInputStream(), size);
 										} catch (DfException e) {
-											log.error(String.format(
+											Launcher.this.log.error(String.format(
 												"Failed to generate the documents at ID [%s] with path [%s]",
 												id.getId(), path), e);
 										}
@@ -359,18 +353,18 @@ public class Main {
 
 					int size = minDocSize;
 					if (minDocSize != maxDocSize) {
-						size += Main.RANDOM.nextInt(maxDocSize - minDocSize);
+						size += Launcher.RANDOM.nextInt(maxDocSize - minDocSize);
 					}
 					int total = generator.generateDocuments(root, documentCount, nameFormat,
 						BASE_BUFFER.getInputStream(), size);
 					try {
 						total += generator.generateFolders(queue, root, folderCount, treeDepth, nameFormat);
 					} catch (InterruptedException e) {
-						String msg = "Main thread interrupted while generating the folder tree";
+						String msg = "Launcher thread interrupted while generating the folder tree";
 						if (debug) {
-							log.error(msg, e);
+							this.log.error(msg, e);
 						} else {
-							log.error(msg);
+							this.log.error(msg);
 						}
 					} finally {
 						// The last items should be null IDs to ensure that the threads end
@@ -379,11 +373,11 @@ public class Main {
 							try {
 								queue.put(DfId.DF_NULLID);
 							} catch (InterruptedException e) {
-								String msg = "Main thread interrupted while submitting the end markers";
+								String msg = "Launcher thread interrupted while submitting the end markers";
 								if (debug) {
-									log.error(msg, e);
+									this.log.error(msg, e);
 								} else {
-									log.error(msg);
+									this.log.error(msg);
 								}
 							}
 						}
@@ -409,27 +403,28 @@ public class Main {
 							}
 							String msg = "Thread interrupted retrieving results";
 							if (debug) {
-								log.warn(msg, e);
+								this.log.warn(msg, e);
 							} else {
-								log.warn(msg);
+								this.log.warn(msg);
 							}
 							break;
 						} catch (ExecutionException e) {
 							String msg = "Exception raised from a Document generator";
 							if (debug) {
-								log.error(msg, e);
+								this.log.error(msg, e);
 							} else {
-								log.error("{}: {}", msg, e.getMessage());
+								this.log.error("{}: {}", msg, e.getMessage());
 							}
 						}
 					}
 
 					if (finished != futures.size()) {
-						log.error("Did not finish processing: processed only {} out of {} generators", finished,
+						this.log.error("Did not finish processing: processed only {} out of {} generators", finished,
 							futures.size());
 					}
 
-					log.info("Generated {} objects", total);
+					this.log.info("Generated {} objects", total);
+					return 0;
 				} finally {
 					pool.releaseSession(mainSession);
 				}
@@ -437,7 +432,8 @@ public class Main {
 				pool.close();
 			}
 		} catch (DfException e) {
-			log.error("Documentum exception caught", e);
+			this.log.error("Documentum exception caught", e);
+			return 1;
 		}
 	}
 }
