@@ -19,10 +19,10 @@ public abstract class AbstractLauncher {
 
 	/**
 	 * <p>
-	 * Returns the commandLineParameters definitions to be used in the given pass. If {@code null} is returned,
-	 * or an empty {@link Collection}, then the parsing cycle will be broken and no further command
-	 * parameter parsing will be performed. The {@code pass} argument is guaranteed to always be
-	 * increasing.
+	 * Returns the commandLineParameters definitions to be used in the given pass. If {@code null}
+	 * is returned, or an empty {@link Collection}, then the parsing cycle will be broken and no
+	 * further command parameter parsing will be performed. The {@code pass} argument is guaranteed
+	 * to always be increasing, starting with {@code 0}.
 	 * </p>
 	 *
 	 * @param commandLine
@@ -35,9 +35,9 @@ public abstract class AbstractLauncher {
 
 	/**
 	 * <p>
-	 * Process the command-line commandLineParameters. Return {@code 0} if everything is OK and execution
-	 * should continue, any other value otherwise. This same value will be used as the return code
-	 * for the {@link #launch(boolean, String...)} invocation.
+	 * Process the command-line commandLineParameters. Return {@code 0} if everything is OK and
+	 * execution should continue, any other value otherwise. This same value will be used as the
+	 * return code for the {@link #launch(boolean, String...)} invocation.
 	 * </p>
 	 *
 	 * @param commandLine
@@ -51,7 +51,7 @@ public abstract class AbstractLauncher {
 	/**
 	 * <p>
 	 * Returns the name to be given to this executable after the given command parsing pass. The
-	 * {@code pass} argument is guaranteed to always be increasing.
+	 * {@code pass} argument is guaranteed to always be increasing, starting with {@code 0}.
 	 * </p>
 	 *
 	 * @param pass
@@ -92,9 +92,11 @@ public abstract class AbstractLauncher {
 				try {
 					cl.define(def);
 				} catch (Exception e) {
-					throw new RuntimeException("Failed to initialize the command-line parser", e);
+					throw new RuntimeException(
+						String.format("Failed to initialize the command-line parser (pass # %d)", pass + 1), e);
 				}
 			}
+
 			try {
 				cl.parse(getProgramName(pass), args);
 				if (cl.isHelpRequested()) {
