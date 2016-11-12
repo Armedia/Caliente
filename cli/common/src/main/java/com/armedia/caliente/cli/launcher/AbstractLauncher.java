@@ -13,8 +13,9 @@ import com.armedia.caliente.cli.parser.CommandLineParseException;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 
-public abstract class Launcher<K> {
-	protected final Logger log = LoggerFactory.getLogger(Launcher.class);
+public abstract class AbstractLauncher {
+	protected static final Logger LOG = LoggerFactory.getLogger(AbstractLauncher.class);
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	/**
 	 * <p>
