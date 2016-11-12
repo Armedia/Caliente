@@ -2,21 +2,18 @@ package com.armedia.caliente.cli.parser;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class MutableParameterDefinition extends BaseParameterDefinition implements Cloneable {
+public final class ImmutableParameterDefinition extends BaseParameterDefinition implements Cloneable {
 
-	protected boolean required = false;
-	protected String description = null;
-	protected Character shortOpt = null;
-	protected String longOpt = null;
-	protected int valueCount = 0;
-	protected String valueName = null;
-	protected boolean valueOptional = false;
-	protected Character valueSep = MutableParameterDefinition.DEFAULT_VALUE_SEP;
+	private final boolean required;
+	private final String description;
+	private final Character shortOpt;
+	private final String longOpt;
+	private final int valueCount;
+	private final String valueName;
+	private final boolean valueOptional;
+	private final Character valueSep;
 
-	public MutableParameterDefinition() {
-	}
-
-	MutableParameterDefinition(ParameterDefinition other) {
+	public ImmutableParameterDefinition(ParameterDefinition other) {
 		this.required = other.isRequired();
 		this.description = other.getDescription();
 		this.shortOpt = other.getShortOpt();
@@ -28,8 +25,8 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 	}
 
 	@Override
-	public MutableParameterDefinition clone() {
-		return new MutableParameterDefinition(this);
+	public ImmutableParameterDefinition clone() {
+		return new ImmutableParameterDefinition(this);
 	}
 
 	@Override
@@ -37,19 +34,9 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.valueCount;
 	}
 
-	public MutableParameterDefinition setValueCount(int parameterCount) {
-		this.valueCount = parameterCount;
-		return this;
-	}
-
 	@Override
 	public String getValueName() {
 		return this.valueName;
-	}
-
-	public MutableParameterDefinition setValueName(String argName) {
-		this.valueName = argName;
-		return this;
 	}
 
 	@Override
@@ -57,19 +44,9 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.required;
 	}
 
-	public MutableParameterDefinition setRequired(boolean required) {
-		this.required = required;
-		return this;
-	}
-
 	@Override
 	public String getDescription() {
 		return this.description;
-	}
-
-	public MutableParameterDefinition setDescription(String description) {
-		this.description = description;
-		return this;
 	}
 
 	@Override
@@ -77,19 +54,9 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.longOpt;
 	}
 
-	public MutableParameterDefinition setLongOpt(String longOpt) {
-		this.longOpt = longOpt;
-		return this;
-	}
-
 	@Override
 	public Character getShortOpt() {
 		return this.shortOpt;
-	}
-
-	public MutableParameterDefinition setShortOpt(Character shortOpt) {
-		this.shortOpt = shortOpt;
-		return this;
 	}
 
 	@Override
@@ -97,23 +64,9 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.valueSep;
 	}
 
-	public MutableParameterDefinition setValueSep(Character valueSep) {
-		this.valueSep = valueSep;
-		return this;
-	}
-
 	@Override
 	public boolean isValueOptional() {
 		return this.valueOptional;
-	}
-
-	public MutableParameterDefinition setValueOptional(boolean valueOptional) {
-		this.valueOptional = valueOptional;
-		return this;
-	}
-
-	public ParameterDefinition freezeCopy() {
-		return new ImmutableParameterDefinition(this);
 	}
 
 	@Override
@@ -125,7 +78,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		MutableParameterDefinition other = MutableParameterDefinition.class.cast(obj);
+		ImmutableParameterDefinition other = ImmutableParameterDefinition.class.cast(obj);
 		if (isRequired() != other.isRequired()) { return false; }
 		if (isValueOptional() != other.isValueOptional()) { return false; }
 		if (!Tools.equals(getDescription(), other.getDescription())) { return false; }

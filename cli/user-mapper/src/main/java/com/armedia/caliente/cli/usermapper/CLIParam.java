@@ -5,13 +5,6 @@ import com.armedia.caliente.cli.parser.ParameterDefinition;
 
 public enum CLIParam implements ParameterDefinition {
 	//
-	lib(new MutableParameterDefinition() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("directory") //
-		.setDescription(
-			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
-	), //
 	dctm_sam(new MutableParameterDefinition() //
 		.setValueCount(-1) //
 		.setValueOptional(false) //
@@ -32,6 +25,12 @@ public enum CLIParam implements ParameterDefinition {
 		.setValueName("ldap dn") //
 		.setDescription("The DN to bind to LDAP with") //
 	), //
+	ldap_pass(new MutableParameterDefinition() //
+		.setValueCount(1) //
+		.setValueOptional(false) //
+		.setValueName("password") //
+		.setDescription("The password to bind to LDAP with") //
+	), //
 	ldap_basedn(new MutableParameterDefinition() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
@@ -49,12 +48,6 @@ public enum CLIParam implements ParameterDefinition {
 		.setValueOptional(false) //
 		.setValueName("ldap dn") //
 		.setDescription("The Base DN to search LDAP for groups (SUB scope)") //
-	), //
-	ldap_pass(new MutableParameterDefinition() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("password") //
-		.setDescription("The password to bind to LDAP with") //
 	), //
 	ldap_on_demand(new MutableParameterDefinition() //
 		.setValueCount(0) //

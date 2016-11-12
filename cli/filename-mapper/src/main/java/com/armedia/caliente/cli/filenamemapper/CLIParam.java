@@ -4,14 +4,6 @@ import com.armedia.caliente.cli.parser.MutableParameterDefinition;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 
 public enum CLIParam implements ParameterDefinition {
-	//
-	lib(new MutableParameterDefinition() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("directory") //
-		.setDescription(
-			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
-	), //
 	no_fix(new MutableParameterDefinition() //
 		.setValueCount(0) //
 		.setDescription("Disable filename fixes") //

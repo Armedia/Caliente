@@ -2,6 +2,7 @@ package com.armedia.caliente.cli.launcher;
 
 import java.io.Console;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -18,22 +19,6 @@ import com.armedia.caliente.cli.parser.ParameterDefinition;
 public abstract class AbstractLauncher {
 	protected static final Logger LOG = LoggerFactory.getLogger(AbstractLauncher.class);
 	protected final Logger log = LoggerFactory.getLogger(getClass());
-
-	/**
-	 * <p>
-	 * Returns the commandLineParameters definitions to be used in the given pass. If {@code null}
-	 * is returned, or an empty {@link Collection}, then the parsing cycle will be broken and no
-	 * further command parameter parsing will be performed. The {@code pass} argument is guaranteed
-	 * to always be increasing, starting with {@code 0}.
-	 * </p>
-	 *
-	 * @param commandLine
-	 * @param pass
-	 * @return the collection of {@link ParameterDefinition} instances to use in the next parsing
-	 *         pass
-	 */
-	protected abstract Collection<? extends ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
-		int pass);
 
 	/**
 	 * <p>
@@ -61,20 +46,20 @@ public abstract class AbstractLauncher {
 	 */
 	protected abstract String getProgramName(int pass);
 
-	protected Collection<URL> getClasspathPatchesPre(CommandLineValues commandLine) {
-		return Collections.emptyList();
-	}
-
-	protected Collection<URL> getClasspathPatchesPost(CommandLineValues commandLine) {
-		return Collections.emptyList();
-	}
-
 	protected final int launch(String... args) {
 		return launch(true, args);
 	}
 
 	protected void initLogging(CommandLineValues cl) {
 		// By default, do nothing...
+	}
+
+	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
+		return Collections.emptyList();
+	}
+
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
+		return Collections.emptyList();
 	}
 
 	protected final int launch(boolean supportsHelp, String... args) {
@@ -84,13 +69,25 @@ public abstract class AbstractLauncher {
 		// previously parsed commandLineParameters
 		CommandLine cl = new CommandLine(supportsHelp);
 		int pass = -1;
+		final Collection<ParameterDefinition> newParameters = new ArrayList<>();
 		while (true) {
-			Collection<? extends ParameterDefinition> parameters = getCommandLineParameters(cl, ++pass);
-			if ((parameters == null) || parameters.isEmpty()) {
+			newParameters.clear();
+			// If there are any helpers to be applied, we do so now
+			Collection<? extends LaunchParameterSet> launchParameterSets = getLaunchParameterSets(cl, ++pass);
+			if (launchParameterSets != null) {
+				for (LaunchParameterSet parameterSet : launchParameterSets) {
+					final Collection<? extends ParameterDefinition> p = parameterSet.getParameterDefinitions(cl);
+					if ((p != null) && !p.isEmpty()) {
+						newParameters.addAll(p);
+					}
+				}
+			}
+
+			if (newParameters.isEmpty()) {
 				break;
 			}
 
-			for (ParameterDefinition def : parameters) {
+			for (ParameterDefinition def : newParameters) {
 				try {
 					cl.define(def);
 				} catch (Exception e) {
@@ -117,15 +114,22 @@ public abstract class AbstractLauncher {
 		int rc = processCommandLine(cl);
 		if (rc != 0) { return rc; }
 
-		Collection<URL> extraPatches = getClasspathPatchesPre(cl);
-		if ((extraPatches != null) && !extraPatches.isEmpty()) {
-			for (URL u : extraPatches) {
-				if (u != null) {
-					try {
-						ClasspathPatcher.addToClassPath(u);
-					} catch (Exception e) {
-						throw new RuntimeException(
-							String.format("Failed to apply the a-priori classpath patch [%s]", u), e);
+		Collection<? extends LaunchClasspathHelper> classpathHelpers = getClasspathHelpers(cl);
+		if (classpathHelpers == null) {
+			Collections.emptyList();
+		}
+
+		for (LaunchClasspathHelper helper : classpathHelpers) {
+			final Collection<URL> extraPatches = helper.getClasspathPatchesPre(cl);
+			if ((extraPatches != null) && !extraPatches.isEmpty()) {
+				for (URL u : extraPatches) {
+					if (u != null) {
+						try {
+							ClasspathPatcher.addToClassPath(u);
+						} catch (Exception e) {
+							throw new RuntimeException(
+								String.format("Failed to apply the a-priori classpath patch [%s]", u), e);
+						}
 					}
 				}
 			}
@@ -133,15 +137,17 @@ public abstract class AbstractLauncher {
 
 		ClasspathPatcher.discoverPatches(false);
 
-		extraPatches = getClasspathPatchesPost(cl);
-		if ((extraPatches != null) && !extraPatches.isEmpty()) {
-			for (URL u : extraPatches) {
-				if (u != null) {
-					try {
-						ClasspathPatcher.addToClassPath(u);
-					} catch (Exception e) {
-						throw new RuntimeException(
-							String.format("Failed to apply the a-posteriori classpath patch [%s]", u), e);
+		for (LaunchClasspathHelper helper : classpathHelpers) {
+			final Collection<URL> extraPatches = helper.getClasspathPatchesPost(cl);
+			if ((extraPatches != null) && !extraPatches.isEmpty()) {
+				for (URL u : extraPatches) {
+					if (u != null) {
+						try {
+							ClasspathPatcher.addToClassPath(u);
+						} catch (Exception e) {
+							throw new RuntimeException(
+								String.format("Failed to apply the a-posteriori classpath patch [%s]", u), e);
+						}
 					}
 				}
 			}

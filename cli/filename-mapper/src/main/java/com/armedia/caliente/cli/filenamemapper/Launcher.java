@@ -4,12 +4,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -27,9 +25,12 @@ import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.ConflictReso
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.IdValidator;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.Processor;
 import com.armedia.caliente.cli.filenamemapper.tools.DfUtils;
-import com.armedia.caliente.cli.launcher.AbstractDfcEnabledLauncher;
+import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
@@ -41,7 +42,7 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 
-public class Launcher extends AbstractDfcEnabledLauncher {
+public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 
 	private static final Character DEFAULT_FIX_CHAR = '_';
 
@@ -192,18 +193,22 @@ public class Launcher extends AbstractDfcEnabledLauncher {
 		System.exit(new Launcher().launch(args));
 	}
 
-	protected Launcher() {
-		super(true);
+	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+
+	@Override
+	public Collection<? extends ParameterDefinition> getParameterDefinitions(CommandLineValues commandLine) {
+		return Arrays.asList(CLIParam.values());
 	}
 
 	@Override
-	protected Collection<? extends ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
-		int pass) {
+	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
 		if (pass > 0) { return null; }
-		List<ParameterDefinition> ret = new ArrayList<>();
-		ret.addAll(getDfcParameters());
-		ret.addAll(Arrays.asList(CLIParam.values()));
-		return ret;
+		return Arrays.asList(this, this.dfcLaunchHelper);
+	}
+
+	@Override
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
+		return Arrays.asList(this.dfcLaunchHelper);
 	}
 
 	@Override
@@ -294,10 +299,9 @@ public class Launcher extends AbstractDfcEnabledLauncher {
 
 	@Override
 	protected int run(CommandLineValues cli) throws Exception {
-		final String docbase = cli.getString(this.paramDocbase);
-		final String dctmUser = cli.getString(this.paramUser);
-		final String dctmPass = getPassword(cli, this.paramPassword,
-			"Please enter the Password for user [%s] in Docbase %s: ", Tools.coalesce(dctmUser, ""), docbase);
+		final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
+		final String dctmUser = this.dfcLaunchHelper.getDfcUser(cli);
+		final String dctmPass = this.dfcLaunchHelper.getDfcPassword(cli);
 
 		final File targetFile;
 		{

@@ -11,7 +11,7 @@ public final class CommandLineParameter extends BaseParameterDefinition implemen
 
 	CommandLineParameter(CommandLine cli, ParameterDefinition def) {
 		this.cli = cli;
-		this.def = new MutableParameterDefinition(def);
+		this.def = new ImmutableParameterDefinition(def);
 		this.cliKey = BaseParameterDefinition.calculateKey(def);
 	}
 

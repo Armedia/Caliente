@@ -28,9 +28,13 @@ import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
 import com.armedia.caliente.cli.datagen.data.csv.CSVDataRecordManager;
-import com.armedia.caliente.cli.launcher.AbstractDfcEnabledLauncher;
+import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import com.armedia.caliente.cli.utils.ThreadsParameterSet;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
@@ -40,9 +44,11 @@ import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 
-public class Launcher extends AbstractDfcEnabledLauncher {
+public class Launcher extends AbstractLauncher implements LaunchParameterSet {
+	protected static final int MIN_THREADS = 1;
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() / 2);
-	protected static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
+	protected static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors());
+
 	protected static final String DEFAULT_NAME_FORMAT = "${type}-[${id}]";
 
 	private static final Random RANDOM = new Random(System.currentTimeMillis());
@@ -141,18 +147,23 @@ public class Launcher extends AbstractDfcEnabledLauncher {
 		return v;
 	}
 
-	protected Launcher() {
-		super(true);
+	private final ThreadsParameterSet threadsParameter = new ThreadsParameterSet();
+	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+
+	@Override
+	public Collection<? extends ParameterDefinition> getParameterDefinitions(CommandLineValues commandLine) {
+		return Arrays.asList(CLIParam.values());
 	}
 
 	@Override
-	protected Collection<? extends ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
-		int pass) {
+	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
 		if (pass > 0) { return null; }
-		List<ParameterDefinition> ret = new ArrayList<>();
-		ret.addAll(getDfcParameters());
-		ret.addAll(Arrays.asList(CLIParam.values()));
-		return ret;
+		return Arrays.asList(this, this.dfcLaunchHelper, this.threadsParameter);
+	}
+
+	@Override
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
+		return Arrays.asList(this.dfcLaunchHelper);
 	}
 
 	@Override
@@ -249,10 +260,9 @@ public class Launcher extends AbstractDfcEnabledLauncher {
 
 			this.log.info("Random data buffer of {} bytes ready", BASE_BUFFER.getCurrentSize());
 
-			final String docbase = cli.getString(this.paramDocbase);
-			final String user = cli.getString(this.paramUser);
-			final String password = getPassword(cli, this.paramPassword,
-				"Please enter the Password for user [%s] in Docbase %s: ", Tools.coalesce(user, ""), docbase);
+			final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
+			final String user = this.dfcLaunchHelper.getDfcUser(cli);
+			final String password = this.dfcLaunchHelper.getDfcPassword(cli);
 
 			final DfcSessionPool pool = new DfcSessionPool(docbase, user, password);
 
@@ -279,7 +289,8 @@ public class Launcher extends AbstractDfcEnabledLauncher {
 					final IDfFolder root = NodeGenerator.ensureFolder(mainSession, target);
 					final NodeGenerator generator = new NodeGenerator(mainSession, objectTypes, new CSVRM());
 
-					final int threads = cli.getInteger(CLIParam.threads, Launcher.DEFAULT_THREADS);
+					final int threads = this.threadsParameter.getThreads(cli, Launcher.MIN_THREADS,
+						Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 					final ExecutorService executor = new ThreadPoolExecutor(threads, threads, 30, TimeUnit.SECONDS,
 						new ArrayBlockingQueue<Runnable>(threads, true));
 

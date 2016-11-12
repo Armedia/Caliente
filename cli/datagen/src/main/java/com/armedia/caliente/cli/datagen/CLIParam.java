@@ -4,22 +4,8 @@ import com.armedia.caliente.cli.parser.MutableParameterDefinition;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 
 public enum CLIParam implements ParameterDefinition {
-	//
-	lib(new MutableParameterDefinition() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("directory") //
-		.setDescription(
-			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
-	), //
 	debug(new MutableParameterDefinition() //
 		.setDescription("Enable increased logging for debugging") //
-	), //
-	threads(new MutableParameterDefinition() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("threads") //
-		.setDescription("The number of threads to use for document generation") //
 	), //
 	target(new MutableParameterDefinition() //
 		.setRequired(true) //

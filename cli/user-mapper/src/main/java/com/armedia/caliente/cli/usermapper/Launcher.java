@@ -38,10 +38,15 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.launcher.AbstractDfcEnabledLauncher;
+import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 import com.armedia.caliente.cli.usermapper.tools.DfUtils;
+import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import com.armedia.caliente.cli.utils.LibLaunchHelper;
+import com.armedia.caliente.cli.utils.ThreadsParameterSet;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
@@ -56,7 +61,7 @@ import com.unboundid.ldap.sdk.LDAPException;
 import com.unboundid.ldap.sdk.LDAPURL;
 import com.unboundid.util.ssl.SSLUtil;
 
-public class Launcher extends AbstractDfcEnabledLauncher {
+public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 
 	private static final Logger log = LoggerFactory.getLogger(Launcher.class);
 
@@ -159,18 +164,24 @@ public class Launcher extends AbstractDfcEnabledLauncher {
 		System.exit(new Launcher().launch(args));
 	}
 
-	protected Launcher() {
-		super(true);
+	private final ThreadsParameterSet threadsParameter = new ThreadsParameterSet();
+	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
+
+	@Override
+	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
+		if (pass > 0) { return null; }
+		return Arrays.asList(this, this.libLaunchHelper, this.dfcLaunchHelper, this.threadsParameter);
 	}
 
 	@Override
-	protected Collection<? extends ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
-		int pass) {
-		if (pass > 0) { return null; }
-		List<ParameterDefinition> ret = new ArrayList<>();
-		ret.addAll(getDfcParameters());
-		ret.addAll(Arrays.asList(CLIParam.values()));
-		return ret;
+	public Collection<? extends ParameterDefinition> getParameterDefinitions(CommandLineValues commandLine) {
+		return Arrays.asList(CLIParam.values());
+	}
+
+	@Override
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
+		return Arrays.asList(this.libLaunchHelper, this.dfcLaunchHelper);
 	}
 
 	@Override
@@ -481,10 +492,9 @@ public class Launcher extends AbstractDfcEnabledLauncher {
 		LDAPConnectionPool ldapPool = null;
 		ExecutorService executor = null;
 		try {
-			final String docbase = cli.getString(this.paramDocbase);
-			final String dctmUser = cli.getString(this.paramUser);
-			final String dctmPass = getPassword(cli, this.paramPassword,
-				"Please enter the Password for user [%s] in Docbase %s: ", Tools.coalesce(dctmUser, ""), docbase);
+			final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
+			final String dctmUser = this.dfcLaunchHelper.getDfcUser(cli);
+			final String dctmPass = this.dfcLaunchHelper.getDfcPassword(cli);
 
 			try {
 				dfcPool = new DfcSessionPool(docbase, dctmUser, dctmPass);

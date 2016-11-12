@@ -15,11 +15,13 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
+import com.armedia.caliente.cli.utils.ThreadsParameterSet;
 import com.armedia.commons.utilities.PooledWorkers;
-import com.armedia.commons.utilities.Tools;
 
-public class Launcher extends AbstractLauncher {
+public class Launcher extends AbstractLauncher implements LaunchParameterSet {
+	private static final int MIN_THREADS = 1;
 	private static final int DEFAULT_THREADS = Math.min(16, Runtime.getRuntime().availableProcessors() * 2);
 	private static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 3);
 
@@ -41,10 +43,17 @@ public class Launcher extends AbstractLauncher {
 		return true;
 	}
 
+	private final ThreadsParameterSet threadsParameter = new ThreadsParameterSet();
+
 	@Override
-	protected Collection<CLIParam> getCommandLineParameters(CommandLineValues commandLine, int pass) {
-		if (pass != 0) { return null; }
+	public Collection<CLIParam> getParameterDefinitions(CommandLineValues commandLine) {
 		return Arrays.asList(CLIParam.values());
+	}
+
+	@Override
+	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
+		if (pass > 0) { return null; }
+		return Arrays.asList(this, this.threadsParameter);
 	}
 
 	@Override
@@ -82,7 +91,7 @@ public class Launcher extends AbstractLauncher {
 			return 1;
 		}
 
-		final int threads = Tools.ensureBetween(1, cli.getInteger(CLIParam.threads, Launcher.DEFAULT_THREADS),
+		final int threads = this.threadsParameter.getThreads(cli, Launcher.MIN_THREADS, Launcher.DEFAULT_THREADS,
 			Launcher.MAX_THREADS);
 
 		this.log.info("Starting validation with {} thread{}", threads, threads > 1 ? "s" : "");

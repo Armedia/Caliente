@@ -4,14 +4,6 @@ import com.armedia.caliente.cli.parser.MutableParameterDefinition;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 
 public enum CLIParam implements ParameterDefinition {
-	//
-	threads(new MutableParameterDefinition() //
-		.setShortOpt('t') //
-		.setValueCount(1) //
-		.setValueOptional(false) //
-		.setValueName("threads") //
-		.setDescription("The number of threads to use during validation") //
-	), //
 	bulk_import(new MutableParameterDefinition() //
 		.setRequired(true) //
 		.setShortOpt('i') //
