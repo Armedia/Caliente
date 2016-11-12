@@ -13,6 +13,7 @@ public enum CLIParam implements ParameterDefinition {
 		.setDescription("The number of threads to use during validation") //
 	), //
 	bulk_import(new MutableParameterDefinition() //
+		.setRequired(true) //
 		.setShortOpt('i') //
 		.setValueCount(1) //
 		.setValueOptional(false) //
@@ -20,6 +21,7 @@ public enum CLIParam implements ParameterDefinition {
 		.setDescription("The location of the Bulk Import source data") //
 	), //
 	bulk_export(new MutableParameterDefinition() //
+		.setRequired(true) //
 		.setShortOpt('e') //
 		.setValueCount(1) //
 		.setValueOptional(false) //
@@ -34,6 +36,7 @@ public enum CLIParam implements ParameterDefinition {
 		.setDescription("The directory where the validation reports will be output to") //
 	), //
 	model(new MutableParameterDefinition() //
+		.setRequired(true) //
 		.setShortOpt('m') //
 		.setValueCount(-1) //
 		.setValueOptional(false) //
