@@ -43,7 +43,7 @@ public enum CLIParam implements ParameterDefinition {
 		//
 	;
 
-	public final ParameterDefinition parameter;
+	private final ParameterDefinition parameter;
 
 	private CLIParam(MutableParameterDefinition parameter) {
 		String name = name();
