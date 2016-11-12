@@ -18,17 +18,6 @@ import com.armedia.commons.utilities.Tools;
 
 public abstract class ClasspathPatcher {
 
-	public static interface Filter {
-		public boolean include(ClasspathPatcher patcher);
-	}
-
-	private static final Filter ALL_FILTER = new Filter() {
-		@Override
-		public boolean include(ClasspathPatcher patcher) {
-			return (patcher != null);
-		}
-	};
-
 	private static final Class<?>[] PARAMETERS = new Class[] {
 		URL.class
 	};
@@ -56,29 +45,15 @@ public abstract class ClasspathPatcher {
 	}
 
 	public static final boolean discoverPatches() {
-		return ClasspathPatcher.discoverPatches(null, false);
+		return ClasspathPatcher.discoverPatches(false);
 	}
 
-	public static final boolean discoverPatches(Filter filter) {
-		return ClasspathPatcher.discoverPatches(filter, false);
-	}
-
-	public static final boolean discoverPatches(boolean verbose) {
-		return ClasspathPatcher.discoverPatches(null, verbose);
-	}
-
-	public static final synchronized boolean discoverPatches(Filter filter, boolean verbose) {
-		if (filter == null) {
-			filter = ClasspathPatcher.ALL_FILTER;
-		}
+	public static final synchronized boolean discoverPatches(boolean verbose) {
 		Set<URL> patches = new LinkedHashSet<>();
 		PluggableServiceLocator<ClasspathPatcher> patchers = new PluggableServiceLocator<>(ClasspathPatcher.class);
 		patchers.setHideErrors(false);
 		for (ClasspathPatcher p : patchers) {
 			// Make sure we only include the patchers we're interested in
-			if (!filter.include(p)) {
-				continue;
-			}
 			Collection<URL> l = null;
 			try {
 				l = p.getPatches(verbose);

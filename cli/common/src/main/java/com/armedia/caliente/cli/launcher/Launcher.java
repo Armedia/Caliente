@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.launcher;
 
+import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -7,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
-import com.armedia.caliente.cli.classpath.ClasspathPatcher.Filter;
 import com.armedia.caliente.cli.parser.CommandLine;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
 import com.armedia.caliente.cli.parser.CommandLineValues;
@@ -15,18 +15,6 @@ import com.armedia.caliente.cli.parser.ParameterDefinition;
 
 public abstract class Launcher<K> {
 	protected final Logger log = LoggerFactory.getLogger(Launcher.class);
-
-	/**
-	 * <p>
-	 * Return a {@link Filter} instance that will be used when selecting which
-	 * {@link ClasspathPatcher} instances are employed during the patching stage.
-	 * </p>
-	 *
-	 * @return the {@link Filter} instance to use
-	 */
-	protected ClasspathPatcher.Filter getClasspathPatcherFilter(CommandLineValues commandLine) {
-		return null;
-	}
 
 	/**
 	 * <p>
@@ -44,7 +32,19 @@ public abstract class Launcher<K> {
 	protected abstract Collection<ParameterDefinition> getCommandLineParameters(CommandLineValues commandLine,
 		int pass);
 
-	protected void processCommandLine(CommandLineValues commandLine) {
+	/**
+	 * <p>
+	 * Process the command-line parameters. Return {@code 0} if everything is OK and execution
+	 * should continue, any other value otherwise. This same value will be used as the return code
+	 * for the {@link #launch(boolean, String...)} invocation.
+	 * </p>
+	 *
+	 * @param commandLine
+	 * @return {@code 0} if everything is OK and execution should continue, any other value
+	 *         otherwise.
+	 */
+	protected int processCommandLine(CommandLineValues commandLine) {
+		return 0;
 	}
 
 	/**
@@ -58,11 +58,11 @@ public abstract class Launcher<K> {
 	 */
 	protected abstract String getProgramName(int pass);
 
-	protected Collection<ClasspathPatcher> getClasspathPatchersPre(CommandLineValues commandLine) {
+	protected Collection<URL> getClasspathPatchesPre(CommandLineValues commandLine) {
 		return Collections.emptyList();
 	}
 
-	protected Collection<ClasspathPatcher> getClasspathPatchersPost(CommandLineValues commandLine) {
+	protected Collection<URL> getClasspathPatchesPost(CommandLineValues commandLine) {
 		return Collections.emptyList();
 	}
 
@@ -109,36 +109,44 @@ public abstract class Launcher<K> {
 		}
 
 		// Process the parameters given...
-		processCommandLine(cl);
+		int rc = processCommandLine(cl);
+		if (rc != 0) { return rc; }
 
-		Collection<ClasspathPatcher> extraPatchers = getClasspathPatchersPre(cl);
-		if (extraPatchers != null) {
-			for (ClasspathPatcher p : extraPatchers) {
-				if (p != null) {
+		Collection<URL> extraPatches = getClasspathPatchesPre(cl);
+		if ((extraPatches != null) && !extraPatches.isEmpty()) {
+			for (URL u : extraPatches) {
+				if (u != null) {
 					try {
-						p.applyPatches(false);
+						ClasspathPatcher.addToClassPath(u);
 					} catch (Exception e) {
-						throw new RuntimeException("Failed to apply the a-poriori classpath patches", e);
-					}
-				}
-			}
-		}
-		ClasspathPatcher.discoverPatches(getClasspathPatcherFilter(cl), false);
-		extraPatchers = getClasspathPatchersPost(cl);
-		if (extraPatchers != null) {
-			for (ClasspathPatcher p : extraPatchers) {
-				if (p != null) {
-					try {
-						p.applyPatches(false);
-					} catch (Exception e) {
-						throw new RuntimeException("Failed to apply the a-posteriori classpath patches", e);
+						throw new RuntimeException(
+							String.format("Failed to apply the a-priori classpath patch [%s]", u), e);
 					}
 				}
 			}
 		}
 
+		ClasspathPatcher.discoverPatches(false);
+
+		extraPatches = getClasspathPatchesPost(cl);
+		if ((extraPatches != null) && !extraPatches.isEmpty()) {
+			for (URL u : extraPatches) {
+				if (u != null) {
+					try {
+						ClasspathPatcher.addToClassPath(u);
+					} catch (Exception e) {
+						throw new RuntimeException(
+							String.format("Failed to apply the a-posteriori classpath patch [%s]", u), e);
+					}
+				}
+			}
+		}
+
+		// We have a complete command line, and the final classpath. Let's initialize
+		// the logging.
 		initLogging(cl);
 
+		// The logging is initialized, we can make use of it now.
 		for (String s : ClasspathPatcher.getAdditions()) {
 			this.log.info("Classpath addition: [{}]", s);
 		}
