@@ -6,9 +6,9 @@ package com.armedia.caliente.engine.documentum.importer;
 
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
-import com.armedia.caliente.engine.documentum.DfUtils;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.content.IDfStore;

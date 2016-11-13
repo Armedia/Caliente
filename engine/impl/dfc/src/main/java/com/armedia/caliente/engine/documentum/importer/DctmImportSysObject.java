@@ -29,7 +29,6 @@ import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmMappingUtils;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
 import com.armedia.caliente.engine.documentum.DctmTranslator;
-import com.armedia.caliente.engine.documentum.DfUtils;
 import com.armedia.caliente.engine.documentum.DfValueFactory;
 import com.armedia.caliente.engine.documentum.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
@@ -40,6 +39,7 @@ import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.DfPermit;
@@ -613,7 +613,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected IDfId persistNewVersion(T sysObject, String versionLabel, DctmImportContext context) throws DfException {
 		String vl = (versionLabel != null ? versionLabel
-			: DfUtils.concatenateStrings(this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL), ','));
+			: DctmImportTools.concatenateStrings(this.cmfObject.getAttribute(DctmAttributes.R_VERSION_LABEL), ','));
 		IDfValue branchMarker = context.getValue(DctmImportSysObject.BRANCH_MARKER);
 		final IDfId newId;
 		final String action;
@@ -675,7 +675,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (modifierName.length() == 0) {
 			modifierName = "${owner_name}";
 		}
-		modifierName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, modifierName));
+		modifierName = DfUtils.quoteStringForSql(DctmMappingUtils.resolveMappableUser(session, modifierName));
 
 		CmfAttribute<IDfValue> creationDateAtt = stored.getAttribute(DctmAttributes.R_CREATION_DATE);
 		final String creationDate;
@@ -700,7 +700,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (creatorName.length() == 0) {
 			creatorName = "${owner_name}";
 		}
-		creatorName = DfUtils.sqlQuoteString(DctmMappingUtils.resolveMappableUser(session, creatorName));
+		creatorName = DfUtils.quoteStringForSql(DctmMappingUtils.resolveMappableUser(session, creatorName));
 
 		CmfAttribute<IDfValue> deletedAtt = stored.getAttribute(DctmAttributes.I_IS_DELETED);
 		final boolean deletedFlag = (deletedAtt != null) && deletedAtt.getValue().asBoolean();
@@ -719,7 +719,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		// (Setting.SKIP_VSTAMP.getBoolean() ? "" : String.format(", i_vstamp = %d",
 		// dctmObj.getIntSingleAttrValue(CmsAttributes.I_VSTAMP)));
 		return String.format(sql, modifyDate, modifierName, creationDate, creatorName, (deletedFlag ? 1 : 0),
-			vstampFlag, DfUtils.sqlQuoteString(sysObject.getObjectId().getId()));
+			vstampFlag, DfUtils.quoteStringForSql(sysObject.getObjectId().getId()));
 	}
 
 	/**

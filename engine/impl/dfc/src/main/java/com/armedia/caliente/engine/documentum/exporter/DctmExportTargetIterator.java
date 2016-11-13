@@ -7,10 +7,10 @@ package com.armedia.caliente.engine.documentum.exporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.documentum.DfUtils;
 import com.armedia.caliente.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.CloseableIterator;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.common.DfException;
@@ -52,7 +52,7 @@ public class DctmExportTargetIterator extends CloseableIterator<ExportTarget> {
 	}
 
 	private ExportTarget newTarget() throws DfException, UnsupportedDctmObjectTypeException {
-		return DfUtils.getExportTarget(this.collection, this.idAttribute, this.typeAttribute);
+		return DctmExportTools.getExportTarget(this.collection, this.idAttribute, this.typeAttribute);
 	}
 
 	@Override

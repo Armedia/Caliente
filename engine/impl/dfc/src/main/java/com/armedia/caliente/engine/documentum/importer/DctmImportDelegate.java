@@ -22,7 +22,6 @@ import com.armedia.caliente.engine.documentum.DctmDataType;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
 import com.armedia.caliente.engine.documentum.DctmSessionWrapper;
 import com.armedia.caliente.engine.documentum.DctmTranslator;
-import com.armedia.caliente.engine.documentum.DfUtils;
 import com.armedia.caliente.engine.documentum.DfValueFactory;
 import com.armedia.caliente.engine.documentum.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.importer.ImportDelegate;
@@ -36,6 +35,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
+import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -732,7 +732,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 
 		return String.format(sql, objType,
 			DfUtils.generateSqlDateClause(modifyDate.asTime().getDate(), object.getSession()), vstampFlag,
-			DfUtils.sqlQuoteString(object.getObjectId().getId()));
+			DfUtils.quoteStringForSql(object.getObjectId().getId()));
 	}
 
 	/**

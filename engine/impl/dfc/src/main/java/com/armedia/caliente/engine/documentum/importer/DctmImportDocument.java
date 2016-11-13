@@ -21,8 +21,6 @@ import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmDataType;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
 import com.armedia.caliente.engine.documentum.DctmVdocMember;
-import com.armedia.caliente.engine.documentum.DctmVersionNumber;
-import com.armedia.caliente.engine.documentum.DfUtils;
 import com.armedia.caliente.engine.documentum.DfValueFactory;
 import com.armedia.caliente.engine.documentum.common.DctmDocument;
 import com.armedia.caliente.engine.documentum.common.DctmSysObject;
@@ -37,6 +35,8 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.commons.dfc.util.DctmVersionNumber;
+import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
@@ -534,7 +534,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		}
 
 		if (!StringUtils.isBlank(pageModifier)) {
-			pageModifier = DfUtils.sqlQuoteString(pageModifier);
+			pageModifier = DfUtils.quoteStringForSql(pageModifier);
 		} else {
 			pageModifier = "dcr.page_modifier";
 		}
@@ -565,9 +565,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		final String documentId = document.getObjectId().getId();
 		try {
 			// Run the exec sql
-			sql = String.format(sql, DfUtils.sqlQuoteString(setFile), DfUtils.sqlQuoteString(setClient), setTimeStr,
-				DfUtils.sqlQuoteString(documentId), renditionNumber, pageModifier, pageNumber,
-				DfUtils.sqlQuoteString(fullFormat));
+			sql = String.format(sql, DfUtils.quoteStringForSql(setFile), DfUtils.quoteStringForSql(setClient),
+				setTimeStr, DfUtils.quoteStringForSql(documentId), renditionNumber, pageModifier, pageNumber,
+				DfUtils.quoteStringForSql(fullFormat));
 			if (!runExecSQL(session, sql)) {
 				final String msg = String.format(
 					"SQL Execution failed for updating the content's system attributes for document [%s](%s) -> {%s/%s/%s/%s}:%n%s%n",
