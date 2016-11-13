@@ -83,10 +83,12 @@ public abstract class AbstractLauncher {
 				}
 			}
 
+			// If there are no new parameters, there's no point in re-parsing, so we move on...
 			if (newParameters.isEmpty()) {
 				break;
 			}
 
+			// We have new parameters, so we define them...
 			for (ParameterDefinition def : newParameters) {
 				try {
 					cl.define(def);
@@ -96,8 +98,13 @@ public abstract class AbstractLauncher {
 				}
 			}
 
+			// Now, we re-parse with the new parameter set...
 			try {
 				cl.parse(getProgramName(pass), args);
+
+				// TODO: We may need to modify the help support so that it doesn't bork out on the
+				// first pass, but instead we can do 2 or 3 or more passes and display help for
+				// those as we go... we may need to rethink how this is supported...
 				if (cl.isHelpRequested()) {
 					System.err.printf("%s%n", cl.getHelpMessage());
 					return 1;
