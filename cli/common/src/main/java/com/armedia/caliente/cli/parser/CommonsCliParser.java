@@ -51,7 +51,7 @@ public class CommonsCliParser extends CommandLineParser {
 	protected void parse(Context ctx, String... args) throws Exception {
 		final State state = getState(ctx);
 		org.apache.commons.cli.CommandLineParser parser = new DefaultParser();
-		final org.apache.commons.cli.CommandLine cli = parser.parse(state.options, args);
+		final org.apache.commons.cli.CommandLine cli = parser.parse(state.options, args, true);
 
 		for (Option o : cli.getOptions()) {
 			String key = CommonsCliParser.calculateKey(o);
