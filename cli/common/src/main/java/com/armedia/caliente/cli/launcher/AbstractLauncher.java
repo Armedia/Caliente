@@ -191,7 +191,7 @@ public abstract class AbstractLauncher {
 	protected final String getPassword(CommandLineValues cli, Parameter param, String prompt, Object... promptParams) {
 		CommandLineParameter cliParam = null;
 		if ((cli != null) && (param != null)) {
-			cliParam = cli.getParameterFromDefinition(cliParam);
+			cliParam = cli.getParameter(cliParam);
 		}
 		return getPassword(cliParam, prompt, promptParams);
 	}

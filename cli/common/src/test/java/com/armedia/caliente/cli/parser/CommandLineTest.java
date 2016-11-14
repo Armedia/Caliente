@@ -124,7 +124,7 @@ public class CommandLineTest {
 		p2 = cl.define(def);
 		Assert.assertSame(cl, p2.getCLI());
 		Assert.assertNotSame(p, p2);
-		Assert.assertEquals(def, p2.getDefinition());
+		Assert.assertTrue(def.isEqual(p2.getDefinition()));
 		Assert.assertNotEquals(p.getDefinition(), p2.getDefinition());
 
 		def.setShortOpt('x');
@@ -773,20 +773,20 @@ public class CommandLineTest {
 
 		cl.parse("TEST", args);
 
-		Assert.assertTrue(cl.isParameterDefined(a));
-		Assert.assertSame(a, cl.getParameterFromDefinition(a));
+		Assert.assertTrue(cl.isDefined(a));
+		Assert.assertSame(a, cl.getParameter(a));
 		Assert.assertTrue(cl.isPresent(a));
 
-		Assert.assertTrue(cl.isParameterDefined(b));
-		Assert.assertSame(b, cl.getParameterFromDefinition(b));
+		Assert.assertTrue(cl.isDefined(b));
+		Assert.assertSame(b, cl.getParameter(b));
 		Assert.assertFalse(cl.isPresent(b));
 
-		Assert.assertTrue(cl.isParameterDefined(ab));
-		Assert.assertSame(ab, cl.getParameterFromDefinition(ab));
+		Assert.assertTrue(cl.isDefined(ab));
+		Assert.assertSame(ab, cl.getParameter(ab));
 		Assert.assertTrue(cl.isPresent(ab));
 
-		Assert.assertTrue(cl.isParameterDefined(cd));
-		Assert.assertSame(cd, cl.getParameterFromDefinition(cd));
+		Assert.assertTrue(cl.isDefined(cd));
+		Assert.assertSame(cd, cl.getParameter(cd));
 		Assert.assertFalse(cl.isPresent(cd));
 	}
 }

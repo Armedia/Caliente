@@ -41,6 +41,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>net.sourceforge.argparse4j</groupId>
+			<artifactId>argparse4j</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.armedia.commons</groupId>
 			<artifactId>datasource-locator-pooled</artifactId>
 			<scope>compile</scope>

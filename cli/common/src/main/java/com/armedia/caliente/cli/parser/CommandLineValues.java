@@ -23,9 +23,11 @@ public interface CommandLineValues {
 
 	public boolean hasParameter(String longOpt);
 
-	public boolean isParameterDefined(Parameter parameter);
+	public boolean isDefined(Parameter parameter);
 
-	public CommandLineParameter getParameterFromDefinition(Parameter parameter);
+	public CommandLineParameter getParameter(Parameter parameter);
+
+	public CommandLineParameter getParameterByKey(String key);
 
 	public boolean hasHelpParameter();
 
