@@ -14,7 +14,7 @@ import com.armedia.caliente.cli.parser.CommandLine;
 import com.armedia.caliente.cli.parser.CommandLineParameter;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.parser.Parameter;
 
 public abstract class AbstractLauncher {
 	protected static final Logger LOG = LoggerFactory.getLogger(AbstractLauncher.class);
@@ -69,14 +69,14 @@ public abstract class AbstractLauncher {
 		// previously parsed commandLineParameters
 		CommandLine cl = new CommandLine(supportsHelp);
 		int pass = -1;
-		final Collection<ParameterDefinition> newParameters = new ArrayList<>();
+		final Collection<Parameter> newParameters = new ArrayList<>();
 		while (true) {
 			newParameters.clear();
 			// If there are any helpers to be applied, we do so now
 			Collection<? extends LaunchParameterSet> launchParameterSets = getLaunchParameterSets(cl, ++pass);
 			if (launchParameterSets != null) {
 				for (LaunchParameterSet parameterSet : launchParameterSets) {
-					final Collection<? extends ParameterDefinition> p = parameterSet.getParameterDefinitions(cl);
+					final Collection<? extends Parameter> p = parameterSet.getParameterDefinitions(cl);
 					if ((p != null) && !p.isEmpty()) {
 						newParameters.addAll(p);
 					}
@@ -89,7 +89,7 @@ public abstract class AbstractLauncher {
 			}
 
 			// We have new parameters, so we define them...
-			for (ParameterDefinition def : newParameters) {
+			for (Parameter def : newParameters) {
 				try {
 					cl.define(def);
 				} catch (Exception e) {
@@ -179,7 +179,7 @@ public abstract class AbstractLauncher {
 
 	protected abstract int run(CommandLineValues commandLine) throws Exception;
 
-	protected final String getPassword(CommandLineValues cli, ParameterDefinition param, String prompt,
+	protected final String getPassword(CommandLineValues cli, Parameter param, String prompt,
 		Object... promptParams) {
 		CommandLineParameter cliParam = null;
 		if ((cli != null) && (param != null)) {

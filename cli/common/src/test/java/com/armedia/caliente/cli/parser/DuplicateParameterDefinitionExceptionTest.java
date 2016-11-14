@@ -8,44 +8,44 @@ import org.junit.Test;
 public class DuplicateParameterDefinitionExceptionTest {
 	@Test
 	public void testConstructor() {
-		BaseParameterDefinition existing = new MutableParameterDefinition();
-		BaseParameterDefinition incoming = new MutableParameterDefinition();
+		BaseParameter existing = new MutableParameter();
+		BaseParameter incoming = new MutableParameter();
 
 		try {
-			new DuplicateParameterDefinitionException(null, null, null);
+			new DuplicateParameterException(null, null, null);
 			Assert.fail("Did not fail with a null definitions");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 
 		try {
-			new DuplicateParameterDefinitionException(null, null, incoming);
+			new DuplicateParameterException(null, null, incoming);
 			Assert.fail("Did not fail with a null incoming definition");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 
 		try {
-			new DuplicateParameterDefinitionException(null, existing, null);
+			new DuplicateParameterException(null, existing, null);
 			Assert.fail("Did not fail with a null existing definition");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 
 		try {
-			new DuplicateParameterDefinitionException(null, existing, existing);
+			new DuplicateParameterException(null, existing, existing);
 			Assert.fail("Did not fail the same definition given twice");
 		} catch (IllegalArgumentException e) {
 			// All is well
 		}
 
-		DuplicateParameterDefinitionException e = new DuplicateParameterDefinitionException(null, existing, incoming);
+		DuplicateParameterException e = new DuplicateParameterException(null, existing, incoming);
 		Assert.assertSame(existing, e.getExisting());
 		Assert.assertSame(incoming, e.getIncoming());
 		Assert.assertNull(e.getMessage());
 
 		String message = UUID.randomUUID().toString();
-		e = new DuplicateParameterDefinitionException(message, existing, incoming);
+		e = new DuplicateParameterException(message, existing, incoming);
 		Assert.assertSame(existing, e.getExisting());
 		Assert.assertSame(incoming, e.getIncoming());
 		Assert.assertEquals(message, e.getMessage());

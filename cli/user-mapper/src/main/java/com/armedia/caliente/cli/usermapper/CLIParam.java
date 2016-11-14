@@ -2,12 +2,12 @@ package com.armedia.caliente.cli.usermapper;
 
 import java.util.Set;
 
-import com.armedia.caliente.cli.parser.MutableParameterDefinition;
-import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.parser.MutableParameter;
+import com.armedia.caliente.cli.parser.Parameter;
 
-public enum CLIParam implements ParameterDefinition {
+public enum CLIParam implements Parameter {
 	//
-	dctm_sam(new MutableParameterDefinition() //
+	dctm_sam(new MutableParameter() //
 		.setValueCount(-1) //
 		.setValueOptional(false) //
 		.setValueName("attribute name") //
@@ -15,47 +15,47 @@ public enum CLIParam implements ParameterDefinition {
 			+ "Multiple instances of this parameter may be specified and each will be tried in turn "
 			+ "(The default mode is to first try user_login_name, then try user_os_name") //
 	), //
-	ldap_url(new MutableParameterDefinition() //
+	ldap_url(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("ldap url") //
 		.setDescription("The LDAP URL to bind to") //
 	), //
-	ldap_binddn(new MutableParameterDefinition() //
+	ldap_binddn(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("ldap dn") //
 		.setDescription("The DN to bind to LDAP with") //
 	), //
-	ldap_pass(new MutableParameterDefinition() //
+	ldap_pass(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("password") //
 		.setDescription("The password to bind to LDAP with") //
 	), //
-	ldap_basedn(new MutableParameterDefinition() //
+	ldap_basedn(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("ldap dn") //
 		.setDescription("The Base DN to search LDAP for both users and groups (SUB scope)") //
 	), //
-	ldap_user_basedn(new MutableParameterDefinition() //
+	ldap_user_basedn(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("ldap dn") //
 		.setDescription("The Base DN to search LDAP for users (SUB scope)") //
 	), //
-	ldap_group_basedn(new MutableParameterDefinition() //
+	ldap_group_basedn(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("ldap dn") //
 		.setDescription("The Base DN to search LDAP for groups (SUB scope)") //
 	), //
-	ldap_on_demand(new MutableParameterDefinition() //
+	ldap_on_demand(new MutableParameter() //
 		.setValueCount(0) //
 		.setDescription("Execute LDAP queries on demand vs. batched up front (default is batched up front)") //
 	), //
-	add_docbase(new MutableParameterDefinition() //
+	add_docbase(new MutableParameter() //
 		.setValueCount(0) //
 		.setDescription("Add the docbase name to the files generated (use for running multiple "
 			+ "instances at once in the same directory)") //
@@ -63,9 +63,9 @@ public enum CLIParam implements ParameterDefinition {
 		//
 	;
 
-	private final ParameterDefinition parameter;
+	private final Parameter parameter;
 
-	private CLIParam(MutableParameterDefinition parameter) {
+	private CLIParam(MutableParameter parameter) {
 		String name = name();
 		if (name.length() == 1) {
 			// If we decide that the name of the option will be a single character, we use that
@@ -128,7 +128,7 @@ public enum CLIParam implements ParameterDefinition {
 	}
 
 	@Override
-	public boolean isEqual(ParameterDefinition other) {
+	public boolean isEqual(Parameter other) {
 		return this.parameter.isEqual(other);
 	}
 }

@@ -14,8 +14,8 @@ import org.apache.commons.io.FileUtils;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.MutableParameterDefinition;
-import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.parser.MutableParameter;
+import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.commons.utilities.Tools;
 
 public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParameterSet {
@@ -26,56 +26,56 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	private static final String DCTM_JAR = "dctm.jar";
 	private static final String DFC_TEST_CLASS = "com.documentum.fc.client.IDfFolder";
 
-	private static final ParameterDefinition DFC_LOCATION = new MutableParameterDefinition() //
+	private static final Parameter DFC_LOCATION = new MutableParameter() //
 		.setLongOpt("paramDfc") //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("paramDfc install location") //
 		.setDescription("The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)") //
 		.freezeCopy();;
-	private static final ParameterDefinition DFC_DOCUMENTUM = new MutableParameterDefinition() //
+	private static final Parameter DFC_DOCUMENTUM = new MutableParameter() //
 		.setLongOpt("paramDctm") //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("directory") //
 		.setDescription("The user's local Documentum path (i.e. instead of DOCUMENTUM)") //
 		.freezeCopy();;
-	private static final ParameterDefinition DFC_PROPERTIES = new MutableParameterDefinition() //
+	private static final Parameter DFC_PROPERTIES = new MutableParameter() //
 		.setLongOpt("paramDfc-prop") //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("paramDfc.properties location") //
 		.setDescription("The paramDfc.properties file to use instead of the default") //
 		.freezeCopy();;
-	private static final ParameterDefinition DFC_DOCBASE = new MutableParameterDefinition() //
+	private static final Parameter DFC_DOCBASE = new MutableParameter() //
 		.setRequired(true) //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("docbase") //
 		.setDescription("The Documentum repostory name to connect to") //
 		.freezeCopy();;
-	private static final ParameterDefinition DFC_USER = new MutableParameterDefinition() //
+	private static final Parameter DFC_USER = new MutableParameter() //
 		.setRequired(true) //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("username") //
 		.setDescription("The username to connect to Documentum with") //
 		.freezeCopy();
-	private static final ParameterDefinition DFC_PASSWORD = new MutableParameterDefinition() //
+	private static final Parameter DFC_PASSWORD = new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("password") //
 		.setDescription("The password to connect to Documentum with")//
 		.freezeCopy();
 
-	private final ParameterDefinition paramDfc;
-	private final ParameterDefinition paramDctm;
-	private final ParameterDefinition paramDfcProp;
+	private final Parameter paramDfc;
+	private final Parameter paramDctm;
+	private final Parameter paramDfcProp;
 
 	private final boolean includesConnectionInfo;
-	private final ParameterDefinition paramDocbase;
-	private final ParameterDefinition paramUser;
-	private final ParameterDefinition paramPassword;
+	private final Parameter paramDocbase;
+	private final Parameter paramUser;
+	private final Parameter paramPassword;
 
 	public DfcLaunchHelper(boolean includesConnectionInfo) {
 		this.paramDfc = DfcLaunchHelper.DFC_LOCATION;
@@ -129,8 +129,8 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	}
 
 	@Override
-	public Collection<? extends ParameterDefinition> getParameterDefinitions(CommandLineValues commandLine) {
-		ArrayList<ParameterDefinition> ret = new ArrayList<>();
+	public Collection<? extends Parameter> getParameterDefinitions(CommandLineValues commandLine) {
+		ArrayList<Parameter> ret = new ArrayList<>();
 		ret.add(this.paramDfcProp);
 		ret.add(this.paramDfc);
 		ret.add(this.paramDctm);

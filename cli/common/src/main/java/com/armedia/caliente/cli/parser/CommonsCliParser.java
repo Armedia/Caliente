@@ -72,7 +72,7 @@ public class CommonsCliParser extends CommandLineParser<CommonsCliState> {
 		return w.toString();
 	}
 
-	private static Option buildOption(ParameterDefinition def) {
+	private static Option buildOption(Parameter def) {
 		Builder b = (def.getShortOpt() == null ? Option.builder() : Option.builder(def.getShortOpt().toString()));
 		b.required(def.isRequired());
 		if (def.getLongOpt() != null) {
@@ -102,7 +102,7 @@ public class CommonsCliParser extends CommandLineParser<CommonsCliState> {
 
 	static String calculateKey(Option o) {
 		if (o == null) { throw new IllegalArgumentException("Must provide an option whose key to calculate"); }
-		return BaseParameterDefinition.calculateKey(o.getLongOpt(), o.getOpt());
+		return BaseParameter.calculateKey(o.getLongOpt(), o.getOpt());
 	}
 
 	@Override

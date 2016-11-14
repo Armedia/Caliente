@@ -2,11 +2,11 @@ package com.armedia.caliente.cli.validator;
 
 import java.util.Set;
 
-import com.armedia.caliente.cli.parser.MutableParameterDefinition;
-import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.parser.MutableParameter;
+import com.armedia.caliente.cli.parser.Parameter;
 
-public enum CLIParam implements ParameterDefinition {
-	bulk_import(new MutableParameterDefinition() //
+public enum CLIParam implements Parameter {
+	bulk_import(new MutableParameter() //
 		.setRequired(true) //
 		.setShortOpt('i') //
 		.setValueCount(1) //
@@ -14,7 +14,7 @@ public enum CLIParam implements ParameterDefinition {
 		.setValueName("bulk import directory") //
 		.setDescription("The location of the Bulk Import source data") //
 	), //
-	bulk_export(new MutableParameterDefinition() //
+	bulk_export(new MutableParameter() //
 		.setRequired(true) //
 		.setShortOpt('e') //
 		.setValueCount(1) //
@@ -22,14 +22,14 @@ public enum CLIParam implements ParameterDefinition {
 		.setValueName("bulk export directory") //
 		.setDescription("The location of the Bulk Export validation data") //
 	), //
-	report_dir(new MutableParameterDefinition() //
+	report_dir(new MutableParameter() //
 		.setShortOpt('r') //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("directory") //
 		.setDescription("The directory where the validation reports will be output to") //
 	), //
-	model(new MutableParameterDefinition() //
+	model(new MutableParameter() //
 		.setRequired(true) //
 		.setShortOpt('m') //
 		.setValueCount(-1) //
@@ -40,9 +40,9 @@ public enum CLIParam implements ParameterDefinition {
 		//
 	;
 
-	private final ParameterDefinition parameter;
+	private final Parameter parameter;
 
-	private CLIParam(MutableParameterDefinition parameter) {
+	private CLIParam(MutableParameter parameter) {
 		String name = name();
 		if (name.length() == 1) {
 			// If we decide that the name of the option will be a single character, we use that
@@ -105,7 +105,7 @@ public enum CLIParam implements ParameterDefinition {
 	}
 
 	@Override
-	public boolean isEqual(ParameterDefinition other) {
+	public boolean isEqual(Parameter other) {
 		return this.parameter.isEqual(other);
 	}
 }

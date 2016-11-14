@@ -5,7 +5,7 @@ import java.util.TreeSet;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class MutableParameterDefinition extends BaseParameterDefinition implements Cloneable {
+public final class MutableParameter extends BaseParameter implements Cloneable {
 
 	protected boolean required = false;
 	protected String description = null;
@@ -14,13 +14,13 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 	protected int valueCount = 0;
 	protected String valueName = null;
 	protected boolean valueOptional = false;
-	protected Character valueSep = MutableParameterDefinition.DEFAULT_VALUE_SEP;
+	protected Character valueSep = MutableParameter.DEFAULT_VALUE_SEP;
 	protected Set<String> allowedValues = new TreeSet<>();
 
-	public MutableParameterDefinition() {
+	public MutableParameter() {
 	}
 
-	MutableParameterDefinition(ParameterDefinition other) {
+	MutableParameter(Parameter other) {
 		this.required = other.isRequired();
 		this.description = other.getDescription();
 		this.shortOpt = other.getShortOpt();
@@ -36,8 +36,8 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 	}
 
 	@Override
-	public MutableParameterDefinition clone() {
-		return new MutableParameterDefinition(this);
+	public MutableParameter clone() {
+		return new MutableParameter(this);
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.valueCount;
 	}
 
-	public MutableParameterDefinition setValueCount(int parameterCount) {
+	public MutableParameter setValueCount(int parameterCount) {
 		this.valueCount = parameterCount;
 		return this;
 	}
@@ -55,7 +55,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.valueName;
 	}
 
-	public MutableParameterDefinition setValueName(String argName) {
+	public MutableParameter setValueName(String argName) {
 		this.valueName = argName;
 		return this;
 	}
@@ -65,7 +65,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.required;
 	}
 
-	public MutableParameterDefinition setRequired(boolean required) {
+	public MutableParameter setRequired(boolean required) {
 		this.required = required;
 		return this;
 	}
@@ -75,7 +75,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.description;
 	}
 
-	public MutableParameterDefinition setDescription(String description) {
+	public MutableParameter setDescription(String description) {
 		this.description = description;
 		return this;
 	}
@@ -85,7 +85,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.longOpt;
 	}
 
-	public MutableParameterDefinition setLongOpt(String longOpt) {
+	public MutableParameter setLongOpt(String longOpt) {
 		this.longOpt = longOpt;
 		return this;
 	}
@@ -95,7 +95,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.shortOpt;
 	}
 
-	public MutableParameterDefinition setShortOpt(Character shortOpt) {
+	public MutableParameter setShortOpt(Character shortOpt) {
 		this.shortOpt = shortOpt;
 		return this;
 	}
@@ -105,7 +105,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.valueSep;
 	}
 
-	public MutableParameterDefinition setValueSep(Character valueSep) {
+	public MutableParameter setValueSep(Character valueSep) {
 		this.valueSep = valueSep;
 		return this;
 	}
@@ -115,7 +115,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this.valueOptional;
 	}
 
-	public MutableParameterDefinition setValueOptional(boolean valueOptional) {
+	public MutableParameter setValueOptional(boolean valueOptional) {
 		this.valueOptional = valueOptional;
 		return this;
 	}
@@ -129,8 +129,8 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		this.allowedValues = allowedValues;
 	}
 
-	public ParameterDefinition freezeCopy() {
-		return new ImmutableParameterDefinition(this);
+	public Parameter freezeCopy() {
+		return new ImmutableParameter(this);
 	}
 
 	@Override
@@ -142,12 +142,12 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		MutableParameterDefinition other = MutableParameterDefinition.class.cast(obj);
+		MutableParameter other = MutableParameter.class.cast(obj);
 		return isEqual(other);
 	}
 
 	@Override
-	public boolean isEqual(ParameterDefinition other) {
+	public boolean isEqual(Parameter other) {
 		if (other == null) { return false; }
 		if (isRequired() != other.isRequired()) { return false; }
 		if (isValueOptional() != other.isValueOptional()) { return false; }
@@ -164,7 +164,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 	@Override
 	public String toString() {
 		return String.format(
-			"MutableParameterDefinition [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s]",
+			"MutableParameter [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s]",
 			this.required, this.shortOpt, this.longOpt, this.description, this.valueCount, this.valueName,
 			this.valueOptional, this.valueSep);
 	}

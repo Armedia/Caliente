@@ -2,42 +2,42 @@ package com.armedia.caliente.cli.filenamemapper;
 
 import java.util.Set;
 
-import com.armedia.caliente.cli.parser.MutableParameterDefinition;
-import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.parser.MutableParameter;
+import com.armedia.caliente.cli.parser.Parameter;
 
-public enum CLIParam implements ParameterDefinition {
-	no_fix(new MutableParameterDefinition() //
+public enum CLIParam implements Parameter {
+	no_fix(new MutableParameter() //
 		.setValueCount(0) //
 		.setDescription("Disable filename fixes") //
 	), //
-	no_length_fix(new MutableParameterDefinition() //
+	no_length_fix(new MutableParameter() //
 		.setValueCount(0) //
 		.setDescription("Disable length repairs on the filename fixer") //
 	), //
-	no_char_fix(new MutableParameterDefinition() //
+	no_char_fix(new MutableParameter() //
 		.setValueCount(0) //
 		.setDescription("Disable invalid character repairs on the filename fixer") //
 	), //
-	ignore_case(new MutableParameterDefinition() //
+	ignore_case(new MutableParameter() //
 		.setValueCount(0) //
 		.setDescription("Disable case sensitivity when performing name comparisons") //
 	), //
-	fix_char(new MutableParameterDefinition() //
+	fix_char(new MutableParameter() //
 		.setValueCount(0) //
 		.setDescription("Use the given character as the replacement for illegal characters (default is '_', "
 			+ "must not be a forbidden character in the target fix scheme, and the period ('.') "
 			+ "and spaces are not allowed in Windows)") //
 	), //
-	fix_mode(new MutableParameterDefinition() //
+	fix_mode(new MutableParameter() //
 		.setValueCount(0) //
 		.setDescription("Filename fix mode. Valid values are WIN (Windows compatibility) or "
 			+ "UNIX (Unix compatibility) - defaults to the current platform") //
 	), //
-	no_dedup(new MutableParameterDefinition() //
+	no_dedup(new MutableParameter() //
 		.setValueCount(0) //
 		.setDescription("Disable filename deduplication") //
 	), //
-	dedup_pattern(new MutableParameterDefinition() //
+	dedup_pattern(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("pattern") //
@@ -45,7 +45,7 @@ public enum CLIParam implements ParameterDefinition {
 			+ "${fixChar}, and ${count} (the number of conflicts resolved so far) - default is "
 			+ "\"${name}${fixChar}${id}\"") //
 	), //
-	target(new MutableParameterDefinition() //
+	target(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("file") //
@@ -54,9 +54,9 @@ public enum CLIParam implements ParameterDefinition {
 		//
 	;
 
-	private final ParameterDefinition parameter;
+	private final Parameter parameter;
 
-	private CLIParam(MutableParameterDefinition parameter) {
+	private CLIParam(MutableParameter parameter) {
 		String name = name();
 		if (name.length() == 1) {
 			// If we decide that the name of the option will be a single character, we use that
@@ -119,7 +119,7 @@ public enum CLIParam implements ParameterDefinition {
 	}
 
 	@Override
-	public boolean isEqual(ParameterDefinition other) {
+	public boolean isEqual(Parameter other) {
 		return this.parameter.isEqual(other);
 	}
 }

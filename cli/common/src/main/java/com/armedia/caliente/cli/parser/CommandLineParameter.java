@@ -5,15 +5,15 @@ import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class CommandLineParameter extends BaseParameterDefinition implements Comparable<CommandLineParameter> {
+public final class CommandLineParameter extends BaseParameter implements Comparable<CommandLineParameter> {
 	private final String cliKey;
 	private final CommandLine cli;
-	private final ParameterDefinition def;
+	private final Parameter def;
 
-	CommandLineParameter(CommandLine cli, ParameterDefinition def) {
+	CommandLineParameter(CommandLine cli, Parameter def) {
 		this.cli = cli;
-		this.def = new ImmutableParameterDefinition(def);
-		this.cliKey = BaseParameterDefinition.calculateKey(def);
+		this.def = new ImmutableParameter(def);
+		this.cliKey = BaseParameter.calculateKey(def);
 	}
 
 	@Override
@@ -90,7 +90,7 @@ public final class CommandLineParameter extends BaseParameterDefinition implemen
 		return true;
 	}
 
-	public ParameterDefinition getDefinition() {
+	public Parameter getDefinition() {
 		return this.def;
 	}
 
@@ -175,7 +175,7 @@ public final class CommandLineParameter extends BaseParameterDefinition implemen
 	}
 
 	@Override
-	public boolean isEqual(ParameterDefinition other) {
+	public boolean isEqual(Parameter other) {
 		return this.def.isEqual(other);
 	}
 }

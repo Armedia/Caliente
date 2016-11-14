@@ -9,10 +9,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testConstructor() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -23,7 +23,7 @@ public class MutableParameterDefinitionTest {
 		expected.setValueOptional(true);
 		expected.setValueSep('|');
 
-		actual = new MutableParameterDefinition(expected);
+		actual = new MutableParameter(expected);
 		Assert.assertNotNull(actual);
 		Assert.assertEquals("ValueName", expected.getValueName(), actual.getValueName());
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
@@ -37,7 +37,7 @@ public class MutableParameterDefinitionTest {
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
 		Assert.assertEquals(expected.hashCode(), actual.hashCode());
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -48,7 +48,7 @@ public class MutableParameterDefinitionTest {
 		expected.setValueOptional(false);
 		expected.setValueSep('$');
 
-		actual = new MutableParameterDefinition(expected);
+		actual = new MutableParameter(expected);
 		Assert.assertNotNull(actual);
 		Assert.assertEquals("ValueName", expected.getValueName(), actual.getValueName());
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
@@ -67,9 +67,9 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testEquals() {
-		MutableParameterDefinition def = null;
+		MutableParameter def = null;
 
-		def = new MutableParameterDefinition();
+		def = new MutableParameter();
 		Assert.assertNotNull(def);
 		def.setValueName(UUID.randomUUID().toString());
 		def.setDescription(UUID.randomUUID().toString());
@@ -88,10 +88,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testClone() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -119,10 +119,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testSetValueCount() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -166,10 +166,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testSetValueName() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName("test-value-name");
 		expected.setDescription(UUID.randomUUID().toString());
@@ -214,10 +214,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testSetDescription() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription("test-description");
@@ -262,10 +262,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testSetLongOpt() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -310,10 +310,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testSetShortOpt() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -357,10 +357,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testSetValueSep() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -404,10 +404,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testSetValueOptional() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -461,10 +461,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testSetRequired() {
-		MutableParameterDefinition expected = null;
-		MutableParameterDefinition actual = null;
+		MutableParameter expected = null;
+		MutableParameter actual = null;
 
-		expected = new MutableParameterDefinition();
+		expected = new MutableParameter();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());

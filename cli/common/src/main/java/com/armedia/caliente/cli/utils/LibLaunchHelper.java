@@ -14,12 +14,12 @@ import java.util.TreeMap;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.MutableParameterDefinition;
-import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.parser.MutableParameter;
+import com.armedia.caliente.cli.parser.Parameter;
 
 public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspathHelper {
 
-	private static final ParameterDefinition LIB = new MutableParameterDefinition() //
+	private static final Parameter LIB = new MutableParameter() //
 		.setShortOpt('l') //
 		.setValueCount(1) //
 		.setValueOptional(false) //
@@ -57,7 +57,7 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 	}
 
 	@Override
-	public Collection<? extends ParameterDefinition> getParameterDefinitions(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameterDefinitions(CommandLineValues commandLine) {
 		return Collections.singleton(LibLaunchHelper.LIB);
 	}
 

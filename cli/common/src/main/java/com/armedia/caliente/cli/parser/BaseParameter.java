@@ -2,13 +2,13 @@ package com.armedia.caliente.cli.parser;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class BaseParameterDefinition implements ParameterDefinition {
+public abstract class BaseParameter implements Parameter {
 
 	public static final char DEFAULT_VALUE_SEP = ',';
 
 	@Override
 	public String getKey() {
-		return BaseParameterDefinition.calculateKey(getLongOpt(), getShortOpt());
+		return BaseParameter.calculateKey(getLongOpt(), getShortOpt());
 	}
 
 	@Override
@@ -20,14 +20,14 @@ public abstract class BaseParameterDefinition implements ParameterDefinition {
 	public boolean equals(Object o) {
 		if (o == this) { return true; }
 		if (!Tools.baseEquals(this, o)) { return false; }
-		BaseParameterDefinition other = BaseParameterDefinition.class.cast(o);
+		BaseParameter other = BaseParameter.class.cast(o);
 		return Tools.equals(this.getKey(), other.getKey());
 	}
 
-	static String calculateKey(ParameterDefinition def) {
+	static String calculateKey(Parameter def) {
 		if (def == null) { throw new IllegalArgumentException(
 			"Must provide a parameter definition to calculate a key for"); }
-		return BaseParameterDefinition.calculateKey(def.getLongOpt(), def.getShortOpt());
+		return BaseParameter.calculateKey(def.getLongOpt(), def.getShortOpt());
 	}
 
 	static String calculateKey(String longOpt, String shortOpt) {
@@ -39,6 +39,6 @@ public abstract class BaseParameterDefinition implements ParameterDefinition {
 	}
 
 	static String calculateKey(String longOpt, Character shortOpt) {
-		return BaseParameterDefinition.calculateKey(longOpt, shortOpt != null ? shortOpt.toString() : null);
+		return BaseParameter.calculateKey(longOpt, shortOpt != null ? shortOpt.toString() : null);
 	}
 }

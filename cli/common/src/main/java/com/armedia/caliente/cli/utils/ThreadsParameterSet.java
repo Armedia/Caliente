@@ -5,13 +5,13 @@ import java.util.Collections;
 
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.MutableParameterDefinition;
-import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.parser.MutableParameter;
+import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.commons.utilities.Tools;
 
 public final class ThreadsParameterSet implements LaunchParameterSet {
 
-	private static final ParameterDefinition THREADS = new MutableParameterDefinition() //
+	private static final Parameter THREADS = new MutableParameter() //
 		.setShortOpt('t') //
 		.setValueCount(1) //
 		.setValueOptional(false) //
@@ -70,7 +70,7 @@ public final class ThreadsParameterSet implements LaunchParameterSet {
 	}
 
 	@Override
-	public Collection<? extends ParameterDefinition> getParameterDefinitions(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameterDefinitions(CommandLineValues commandLine) {
 		return Collections.singleton(ThreadsParameterSet.THREADS);
 	}
 

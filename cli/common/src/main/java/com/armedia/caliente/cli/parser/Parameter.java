@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.parser;
 
 import java.util.Set;
 
-public interface ParameterDefinition {
+public interface Parameter {
 
 	public String getKey();
 
@@ -24,6 +24,6 @@ public interface ParameterDefinition {
 
 	public boolean isValueOptional();
 
-	public boolean isEqual(ParameterDefinition other);
+	public boolean isEqual(Parameter other);
 
 }

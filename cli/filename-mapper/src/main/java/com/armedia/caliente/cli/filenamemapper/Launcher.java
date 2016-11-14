@@ -28,7 +28,6 @@ import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.ParameterDefinition;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
@@ -196,7 +195,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
 	@Override
-	public Collection<? extends ParameterDefinition> getParameterDefinitions(CommandLineValues commandLine) {
+	public Collection<CLIParam> getParameterDefinitions(CommandLineValues commandLine) {
 		return Arrays.asList(CLIParam.values());
 	}
 

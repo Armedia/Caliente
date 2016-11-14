@@ -2,45 +2,45 @@ package com.armedia.caliente.cli.datagen;
 
 import java.util.Set;
 
-import com.armedia.caliente.cli.parser.MutableParameterDefinition;
-import com.armedia.caliente.cli.parser.ParameterDefinition;
+import com.armedia.caliente.cli.parser.MutableParameter;
+import com.armedia.caliente.cli.parser.Parameter;
 
-public enum CLIParam implements ParameterDefinition {
-	debug(new MutableParameterDefinition() //
+public enum CLIParam implements Parameter {
+	debug(new MutableParameter() //
 		.setDescription("Enable increased logging for debugging") //
 	), //
-	target(new MutableParameterDefinition() //
+	target(new MutableParameter() //
 		.setRequired(true) //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("folder or cabinet") //
 		.setDescription("The root folder within which to create the data") //
 	), //
-	object_types(new MutableParameterDefinition() //
+	object_types(new MutableParameter() //
 		.setValueCount(-1) //
 		.setValueOptional(false) //
 		.setValueName("type1,type2,type3,...,typeN") //
 		.setDescription("Names of the object types to generate samples for (must be subtypes of dm_sysobject)") //
 	), //
-	tree_depth(new MutableParameterDefinition() //
+	tree_depth(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("depth") //
 		.setDescription("The depth of the tree (defaults to 1)") //
 	), //
-	folder_count(new MutableParameterDefinition() //
+	folder_count(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("number") //
 		.setDescription("The number of folders inside each folder (defaults to one per folder type included)") //
 	), //
-	document_count(new MutableParameterDefinition() //
+	document_count(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("number") //
 		.setDescription("The number of documents inside each folder (defaults to one per non-folder type included)") //
 	), //
-	document_min_size(new MutableParameterDefinition() //
+	document_min_size(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("threads") //
@@ -48,7 +48,7 @@ public enum CLIParam implements ParameterDefinition {
 			"The minimum size for the (random) content stream for each document (min = 1 byte). Suffixes such "
 				+ "as KB and MB are supported - no suffix = bytes.") //
 	), //
-	document_max_size(new MutableParameterDefinition() //
+	document_max_size(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("threads") //
@@ -56,7 +56,7 @@ public enum CLIParam implements ParameterDefinition {
 			"The maximum size for the (random) content stream for each document (capped out at 16MB). Suffixes such "
 				+ "as KB and MB are supported - no suffix = bytes.") //
 	), //
-	name_format(new MutableParameterDefinition() //
+	name_format(new MutableParameter() //
 		.setValueCount(1) //
 		.setValueOptional(false) //
 		.setValueName("threads") //
@@ -66,9 +66,9 @@ public enum CLIParam implements ParameterDefinition {
 		//
 	;
 
-	private final ParameterDefinition parameter;
+	private final Parameter parameter;
 
-	private CLIParam(MutableParameterDefinition parameter) {
+	private CLIParam(MutableParameter parameter) {
 		String name = name();
 		if (name.length() == 1) {
 			// If we decide that the name of the option will be a single character, we use that
@@ -131,7 +131,7 @@ public enum CLIParam implements ParameterDefinition {
 	}
 
 	@Override
-	public boolean isEqual(ParameterDefinition other) {
+	public boolean isEqual(Parameter other) {
 		return this.parameter.isEqual(other);
 	}
 }

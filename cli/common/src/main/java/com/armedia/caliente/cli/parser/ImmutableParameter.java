@@ -4,7 +4,7 @@ import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class ImmutableParameterDefinition extends BaseParameterDefinition implements Cloneable {
+public final class ImmutableParameter extends BaseParameter implements Cloneable {
 
 	private final boolean required;
 	private final String description;
@@ -16,7 +16,7 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 	private final Character valueSep;
 	private final Set<String> allowedValues;
 
-	public ImmutableParameterDefinition(ParameterDefinition other) {
+	public ImmutableParameter(Parameter other) {
 		this.required = other.isRequired();
 		this.description = other.getDescription();
 		this.shortOpt = other.getShortOpt();
@@ -29,8 +29,8 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 	}
 
 	@Override
-	public ImmutableParameterDefinition clone() {
-		return new ImmutableParameterDefinition(this);
+	public ImmutableParameter clone() {
+		return new ImmutableParameter(this);
 	}
 
 	@Override
@@ -87,12 +87,12 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		ImmutableParameterDefinition other = ImmutableParameterDefinition.class.cast(obj);
+		ImmutableParameter other = ImmutableParameter.class.cast(obj);
 		return isEqual(other);
 	}
 
 	@Override
-	public boolean isEqual(ParameterDefinition other) {
+	public boolean isEqual(Parameter other) {
 		if (other == null) { return false; }
 		if (isRequired() != other.isRequired()) { return false; }
 		if (isValueOptional() != other.isValueOptional()) { return false; }
@@ -109,7 +109,7 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 	@Override
 	public String toString() {
 		return String.format(
-			"ImmutableParameterDefinition [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s, allowedValues=%s]",
+			"ImmutableParameter [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s, allowedValues=%s]",
 			this.required, this.shortOpt, this.longOpt, this.description, this.valueCount, this.valueName,
 			this.valueOptional, this.valueSep, this.allowedValues);
 	}
