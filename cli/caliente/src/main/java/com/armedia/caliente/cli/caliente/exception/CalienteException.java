@@ -1,11 +1,11 @@
 package com.armedia.caliente.cli.caliente.exception;
 
 /**
- * The Class CMSMFException. This is a CMSMF application exception.
+ * The Class CalienteException. This is a CMSMF application exception.
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFException extends Exception {
+public class CalienteException extends Exception {
 
 	/** The Constant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
@@ -13,7 +13,7 @@ public class CMSMFException extends Exception {
 	/**
 	 * Instantiates a new CMSMF exception.
 	 */
-	public CMSMFException() {
+	public CalienteException() {
 		super();
 	}
 
@@ -25,7 +25,7 @@ public class CMSMFException extends Exception {
 	 * @param cause
 	 *            the cause
 	 */
-	public CMSMFException(String message, Throwable cause) {
+	public CalienteException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
@@ -35,7 +35,7 @@ public class CMSMFException extends Exception {
 	 * @param message
 	 *            the exception message
 	 */
-	public CMSMFException(String message) {
+	public CalienteException(String message) {
 		super(message);
 	}
 
@@ -45,7 +45,7 @@ public class CMSMFException extends Exception {
 	 * @param cause
 	 *            the cause
 	 */
-	public CMSMFException(Throwable cause) {
+	public CalienteException(Throwable cause) {
 		super(cause);
 	}
 

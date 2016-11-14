@@ -10,7 +10,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_export;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.cmis.CmisSetting;
@@ -25,25 +25,25 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export {
 	}
 
 	@Override
-	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
+	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later
 		try {
 			// baseUri = new URI(String.format("%s/", this.server));
 			baseUri = new URI(this.server);
 		} catch (URISyntaxException e) {
-			throw new CMSMFException(String.format("Bad URL for the the CMIS repository: [%s]", this.server), e);
+			throw new CalienteException(String.format("Bad URL for the the CMIS repository: [%s]", this.server), e);
 		}
 		baseUri = baseUri.normalize();
 		final URL baseUrl;
 		try {
 			baseUrl = baseUri.toURL();
 		} catch (MalformedURLException e) {
-			throw new CMSMFException(String.format("Bad URL for the CMIS repository: [%s]", this.server), e);
+			throw new CalienteException(String.format("Bad URL for the CMIS repository: [%s]", this.server), e);
 		}
 
 		String srcPath = CLIParam.source.getString();
-		if (StringUtils.isEmpty(srcPath)) { throw new CMSMFException("Must provide the CMIS source path or ID"); }
+		if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Must provide the CMIS source path or ID"); }
 
 		// If it has a leading slash, it's a path
 		if (srcPath.startsWith("/")) {
@@ -52,7 +52,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export {
 		// If it has a leading "id:", it's an object ID
 		if (srcPath.startsWith(CMSMFMain_export.ID_PREFIX)) {
 			srcPath = srcPath.substring(CMSMFMain_export.ID_PREFIX.length());
-			if (StringUtils.isEmpty(srcPath)) { throw new CMSMFException("Must provide a non-empty CMIS object ID"); }
+			if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Must provide a non-empty CMIS object ID"); }
 			settings.put(CmisSetting.EXPORT_ID.getLabel(), srcPath);
 		} else {
 			// If it's neither a path or an ID, it's a query

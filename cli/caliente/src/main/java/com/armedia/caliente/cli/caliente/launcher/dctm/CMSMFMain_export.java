@@ -20,7 +20,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_export;
 import com.armedia.caliente.engine.documentum.DctmSetting;
 import com.armedia.caliente.engine.documentum.DocumentumOrganizationStrategy;
@@ -69,7 +69,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	}
 
 	@Override
-	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
+	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		if (this.server != null) {
 			settings.put(DctmSetting.DOCBASE.getLabel(), this.server);
 		}
@@ -82,12 +82,12 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	}
 
 	@Override
-	protected void prepareState(Map<String, Object> settings) throws CMSMFException {
+	protected void prepareState(Map<String, Object> settings) throws CalienteException {
 		try {
 			this.pool = new DfcSessionPool(settings);
 			this.session = this.pool.acquireSession();
 		} catch (Exception e) {
-			throw new CMSMFException("Failed to initialize the connection pool or get the primary session", e);
+			throw new CalienteException("Failed to initialize the connection pool or get the primary session", e);
 		}
 	}
 
@@ -108,7 +108,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	}
 
 	@Override
-	protected Map<String, Object> loadSettings(String jobName) throws CMSMFException {
+	protected Map<String, Object> loadSettings(String jobName) throws CalienteException {
 
 		try {
 			try {
@@ -144,13 +144,13 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 				}
 			}
 		} catch (Exception e) {
-			throw new CMSMFException(
+			throw new CalienteException(
 				String.format("Exception caught loading the export settings for job [%s]", jobName), e);
 		}
 	}
 
 	@Override
-	protected Map<String, Object> loadDefaultSettings() throws CMSMFException {
+	protected Map<String, Object> loadDefaultSettings() throws CalienteException {
 		Map<String, Object> settings = super.loadDefaultSettings();
 
 		String predicate = Setting.EXPORT_PREDICATE.getString();
@@ -165,7 +165,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 
 	@Override
 	protected boolean storeSettings(String jobName, Map<String, Object> settings, Date exportStart, Date exportEnd)
-		throws CMSMFException {
+		throws CalienteException {
 
 		try {
 			/**
@@ -231,13 +231,13 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 			}
 			return true;
 		} catch (Exception e) {
-			throw new CMSMFException("Exception caught storing the export metadata", e);
+			throw new CalienteException("Exception caught storing the export metadata", e);
 		}
 	}
 
 	@Override
 	protected void processSettings(Map<String, Object> settings, boolean loaded, boolean resetJob)
-		throws CMSMFException {
+		throws CalienteException {
 		if (loaded) {
 			// If there are previous settings, we need to look at BASE_SELECTOR and the dates given,
 			// and based on that construct the new FINAL_SELECTOR (dql)
@@ -252,7 +252,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 				try {
 					startDate = convertUTCDateToServerDate(startDate.toString());
 				} catch (DfException e) {
-					throw new CMSMFException(
+					throw new CalienteException(
 						"Failed to perform UTC date conversion (required to account for broken server configurations)",
 						e);
 				}
@@ -300,7 +300,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 							wrapperPattern = CMSMFMain_export.FIXED_PREDICATE_6;
 						}
 					} catch (DfException e) {
-						throw new CMSMFException("Failed to determine the Documentum server version", e);
+						throw new CalienteException("Failed to determine the Documentum server version", e);
 					}
 					data.put("dateValue", DfUtils.quoteString(startDate.toString()));
 					data.put("dateFormat", DfUtils.quoteString(CMSMFMain_export.DATE_FORMAT_DQL));
@@ -358,13 +358,13 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 		}
 	}
 
-	private IDfFolder getCmsmfStateFolder(boolean createIfMissing) throws DfException, CMSMFException {
+	private IDfFolder getCmsmfStateFolder(boolean createIfMissing) throws DfException, CalienteException {
 		final String stateFolderName = Setting.STATE_FOLDER.getString();
 		final IDfUser currentUser = this.session.getUser(this.session.getLoginUserName());
 
 		final String prefix = currentUser.getDefaultFolder();
 		final IDfFolder homeFolder = this.session.getFolderByPath(prefix);
-		if (homeFolder == null) { throw new CMSMFException(String.format(
+		if (homeFolder == null) { throw new CalienteException(String.format(
 			"Could not locate the home folder at [%s] for user [%s] - please make sure it exists and is writable by the user",
 			prefix, currentUser.getUserName())); }
 

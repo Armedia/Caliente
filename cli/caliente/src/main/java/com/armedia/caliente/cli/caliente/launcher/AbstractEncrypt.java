@@ -5,7 +5,7 @@ import java.io.Console;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.store.CmfObjectStore;
 
@@ -35,7 +35,7 @@ public abstract class AbstractEncrypt implements CMSMFMain {
 	}
 
 	@Override
-	public final void run() throws CMSMFException {
+	public final void run() throws CalienteException {
 		final Console console = System.console();
 		String password = null;
 		if (console != null) {
@@ -48,13 +48,13 @@ public abstract class AbstractEncrypt implements CMSMFMain {
 			try {
 				password = br.readLine();
 			} catch (IOException e) {
-				throw new CMSMFException("IOException caught reading the password", e);
+				throw new CalienteException("IOException caught reading the password", e);
 			}
 		}
 		try {
 			System.out.printf("%s%s%n", (console != null ? "The encrypted password is: " : ""), encrypt(password));
 		} catch (Exception e) {
-			throw new CMSMFException("Failed to decrypt the password", e);
+			throw new CalienteException("Failed to decrypt the password", e);
 		}
 	}
 

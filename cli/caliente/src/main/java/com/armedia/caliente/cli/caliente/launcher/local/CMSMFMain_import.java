@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Map;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_import;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.importer.LocalImportEngine;
@@ -21,14 +21,14 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 		}
 		this.targetDir = new File(target).getCanonicalFile();
 		this.targetDir.mkdirs();
-		if (!this.targetDir.exists()) { throw new CMSMFException(
+		if (!this.targetDir.exists()) { throw new CalienteException(
 			String.format("The target directory [%s] does not exist, and could not be created", this.targetDir)); }
-		if (!this.targetDir.isDirectory()) { throw new CMSMFException(
+		if (!this.targetDir.isDirectory()) { throw new CalienteException(
 			String.format("A non-directory already exists at the location [%s] - can't continue", this.targetDir)); }
 	}
 
 	@Override
-	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
+	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		settings.put(LocalSetting.ROOT.getLabel(), this.targetDir.getAbsolutePath());
 		// TODO: Enable these, but get them from a system-wide configuration
 		/*

@@ -25,10 +25,10 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 
-public class CMSMFUtils {
+public class EmailUtils {
 
 	/** The log object used for logging. */
-	static Logger log = LoggerFactory.getLogger(CMSMFUtils.class);
+	private static Logger log = LoggerFactory.getLogger(EmailUtils.class);
 
 	/**
 	 * Post mail.
@@ -97,20 +97,20 @@ public class CMSMFUtils {
 		Collection<String> recipients = strTokenizer.getTokenList();
 
 		if (recipients.isEmpty()) {
-			CMSMFUtils.log.warn("No recipients found for submitting the e-mail.");
+			EmailUtils.log.warn("No recipients found for submitting the e-mail.");
 			return;
 		}
 
 		String mailFromAddress = Setting.MAIL_FROM_ADDX.getString();
 		if (StringUtils.isBlank(mailFromAddress)) {
-			CMSMFUtils.log.warn(String.format(
+			EmailUtils.log.warn(String.format(
 				"No FROM address for the e-mail, the intended recipients (%s) won't receive an e-mail.", recipients));
 			return;
 		}
 
 		String smtpHostAddress = Setting.MAIL_SMTP_HOST.getString();
 		if (StringUtils.isBlank(smtpHostAddress)) {
-			CMSMFUtils.log.warn(String.format(
+			EmailUtils.log.warn(String.format(
 				"No HOST address to send the e-mail, the intended recipients (%s) won't receive an e-mail.",
 				recipients));
 			return;
@@ -118,27 +118,27 @@ public class CMSMFUtils {
 
 		int smtpHostPort = Setting.MAIL_SMTP_PORT.getInt();
 		if ((smtpHostPort < 1) || (smtpHostPort > 0xFFFF)) {
-			CMSMFUtils.log.warn(String.format(
+			EmailUtils.log.warn(String.format(
 				"SMTP Port [%d] is out of range (1-65535), the intended recipients (%s) won't receive an e-mail",
 				smtpHostPort, recipients));
 			return;
 		}
 
-		if (!CMSMFUtils.validateSmtp(smtpHostAddress, smtpHostPort)) {
-			CMSMFUtils.log.warn(String.format(
+		if (!EmailUtils.validateSmtp(smtpHostAddress, smtpHostPort)) {
+			EmailUtils.log.warn(String.format(
 				"Host [%s] is not running an SMTP server on port 25. The intended recipients (%s) won't receive an e-mail.",
 				smtpHostAddress, recipients));
 			return;
 		}
 
-		if (CMSMFUtils.log.isTraceEnabled()) {
-			CMSMFUtils.log.info(String.format("Sending this message as [%s] via [%s], to %s:%n%n%s%n", mailFromAddress,
+		if (EmailUtils.log.isTraceEnabled()) {
+			EmailUtils.log.info(String.format("Sending this message as [%s] via [%s], to %s:%n%n%s%n", mailFromAddress,
 				smtpHostAddress, recipients, message));
 		} else {
-			CMSMFUtils.log.info(String.format("Sending the message as [%s] via [%s], to %s", mailFromAddress,
+			EmailUtils.log.info(String.format("Sending the message as [%s] via [%s], to %s", mailFromAddress,
 				smtpHostAddress, recipients));
 		}
-		CMSMFUtils.postMail(smtpHostAddress, recipients, subject, message, mailFromAddress);
+		EmailUtils.postMail(smtpHostAddress, recipients, subject, message, mailFromAddress);
 	}
 
 	private static boolean validateSmtp(String address, int port) {
@@ -165,8 +165,8 @@ public class CMSMFUtils {
 				if (str.matches("^\\s*250(\\s.*)?$")) { return true; }
 			}
 		} catch (Throwable t) {
-			if (CMSMFUtils.log.isTraceEnabled()) {
-				CMSMFUtils.log.trace("Exception raised trying to determine if localhost has an SMTP server running", t);
+			if (EmailUtils.log.isTraceEnabled()) {
+				EmailUtils.log.trace("Exception raised trying to determine if localhost has an SMTP server running", t);
 			}
 		} finally {
 			if (s != null) {

@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_export;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.local.common.LocalSetting;
@@ -22,16 +22,16 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	}
 
 	@Override
-	protected void validateState() throws CMSMFException {
+	protected void validateState() throws CalienteException {
 		// Make sure a source has been specified
-		if (this.source == null) { throw new CMSMFException("Must specify a source to export from"); }
-		if (!this.source.exists()) { throw new CMSMFException(
+		if (this.source == null) { throw new CalienteException("Must specify a source to export from"); }
+		if (!this.source.exists()) { throw new CalienteException(
 			String.format("The specified source at [%s] does not exist", this.source.getPath())); }
-		if (!this.source.exists()) { throw new CMSMFException(
+		if (!this.source.exists()) { throw new CalienteException(
 			String.format("The specified source at [%s] does not exist", this.source.getPath())); }
-		if (!this.source.isDirectory()) { throw new CMSMFException(
+		if (!this.source.isDirectory()) { throw new CalienteException(
 			String.format("The specified source at [%s] is not a directory", this.source.getPath())); }
-		if (!this.source.canRead()) { throw new CMSMFException(
+		if (!this.source.canRead()) { throw new CalienteException(
 			String.format("The specified source at [%s] is not readable", this.source.getPath())); }
 		try {
 			File f = this.source.getCanonicalFile();
@@ -52,7 +52,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	}
 
 	@Override
-	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
+	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		settings.put(LocalSetting.ROOT.getLabel(), this.source.getAbsolutePath());
 		settings.put(LocalSetting.COPY_CONTENT.getLabel(), false);
 	}

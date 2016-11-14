@@ -18,7 +18,7 @@ import org.apache.log4j.Logger;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain;
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.exporter.DctmExportEngine;
@@ -132,7 +132,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 	 *
 	 */
 	@Override
-	public void run() throws CMSMFException {
+	public void run() throws CalienteException {
 
 		final Date start = new Date();
 		Date end = null;
@@ -160,7 +160,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 		try {
 			pool = new DfcSessionPool(settings);
 		} catch (Exception e) {
-			throw new CMSMFException("Failed to initialize the connection pool", e);
+			throw new CalienteException("Failed to initialize the connection pool", e);
 		}
 
 		try {
@@ -183,7 +183,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 					return s;
 				}
 
-				private CounterResult doWork(IDfSession session, IDfId id) throws DfException, CMSMFException {
+				private CounterResult doWork(IDfSession session, IDfId id) throws DfException, CalienteException {
 					IDfFolder folder = session.getFolderBySpecification(id.getId());
 					if (folder == null) {
 						CMSMFMain_counter.this.console.warn("Failed to locate the folder with ID [{}]", id.getId());
@@ -198,7 +198,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 						IDfQuery.DF_EXECREAD_QUERY);
 					final IDfValue count;
 					try {
-						if (!queryResult.next()) { throw new CMSMFException(
+						if (!queryResult.next()) { throw new CalienteException(
 							String.format("Counter query for [%s] did not return any values", path)); }
 						count = queryResult.getValueAt(0);
 					} finally {
@@ -214,7 +214,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 							IDfQuery.DF_EXECREAD_QUERY);
 						final IDfValue size;
 						try {
-							if (!queryResult.next()) { throw new CMSMFException(
+							if (!queryResult.next()) { throw new CalienteException(
 								String.format("Sizer query for [%s] did not return any values", path)); }
 							size = queryResult.getValueAt(0);
 							Double sDouble = size.asDouble();
@@ -316,7 +316,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 					for (String folderPath : includedFolders) {
 						activity = String.format("analyzing the contents of folder [%s]", folderPath);
 						IDfFolder folder = session.getFolderByPath(folderPath);
-						if (folder == null) { throw new CMSMFException(
+						if (folder == null) { throw new CalienteException(
 							String.format("Could not find the folder at [%s]", folderPath)); }
 
 						if (traversed.contains(folder.getObjectId())) {

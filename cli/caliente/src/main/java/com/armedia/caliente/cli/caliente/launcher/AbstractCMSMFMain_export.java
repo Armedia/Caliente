@@ -16,8 +16,8 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
-import com.armedia.caliente.cli.caliente.utils.CMSMFUtils;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.utils.EmailUtils;
 import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
@@ -47,12 +47,12 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		super(engine, true, true);
 	}
 
-	protected void validateState() throws CMSMFException {
-		if (this.server == null) { throw new CMSMFException(
+	protected void validateState() throws CalienteException {
+		if (this.server == null) { throw new CalienteException(
 			"Must provide the location where the repository may be accessed"); }
 	}
 
-	protected final void prepareSettings(Map<String, Object> settings) throws CMSMFException {
+	protected final void prepareSettings(Map<String, Object> settings) throws CalienteException {
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
@@ -71,7 +71,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		customizeSettings(settings);
 	}
 
-	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
+	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 	}
 
 	/**
@@ -83,26 +83,26 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	 *
 	 * @param jobName
 	 * @return the settings stored for the given job name, or {@code null} if there are none
-	 * @throws CMSMFException
+	 * @throws CalienteException
 	 */
-	protected Map<String, Object> loadSettings(String jobName) throws CMSMFException {
+	protected Map<String, Object> loadSettings(String jobName) throws CalienteException {
 		return null;
 	}
 
-	protected Map<String, Object> loadDefaultSettings() throws CMSMFException {
+	protected Map<String, Object> loadDefaultSettings() throws CalienteException {
 		return new HashMap<>();
 	}
 
 	protected boolean storeSettings(String jobName, Map<String, Object> settings, Date exportStart, Date exportEnd)
-		throws CMSMFException {
+		throws CalienteException {
 		return false;
 	}
 
 	protected void processSettings(Map<String, Object> settings, boolean loaded, boolean resetJob)
-		throws CMSMFException {
+		throws CalienteException {
 	}
 
-	protected void prepareState(Map<String, Object> settings) throws CMSMFException {
+	protected void prepareState(Map<String, Object> settings) throws CalienteException {
 
 	}
 
@@ -117,7 +117,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	 *
 	 */
 	@Override
-	public final void run() throws CMSMFException {
+	public final void run() throws CalienteException {
 		Set<ExportResult> outcomes = Tools.parseEnumCSV(ExportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
 			AbstractCMSMFMain.ALL, false);
 		Set<CmfType> types = Tools.parseEnumCSV(CmfType.class, Setting.MANIFEST_TYPES.getString(),
@@ -308,7 +308,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		String reportString = report.toString();
 		this.log.info(String.format("Action report for export operation:%n%n%s%n", reportString));
 		try {
-			CMSMFUtils.postCmsmfMail(String.format("Action report for CMSMF Export"), reportString);
+			EmailUtils.postCmsmfMail(String.format("Action report for CMSMF Export"), reportString);
 		} catch (MessagingException e) {
 			this.log.error("Exception caught attempting to send the report e-mail", e);
 		}

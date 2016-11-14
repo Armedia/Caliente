@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.caliente.launcher.dctm;
 
 import java.util.Map;
 
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_import;
 import com.armedia.caliente.engine.documentum.importer.DctmImportEngine;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
@@ -19,7 +19,7 @@ public class CMSMFMain_import extends AbstractCMSMFMain_import {
 	}
 
 	@Override
-	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
+	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		if (this.server != null) {
 			settings.put(DfcSessionFactory.DOCBASE, this.server);
 		}

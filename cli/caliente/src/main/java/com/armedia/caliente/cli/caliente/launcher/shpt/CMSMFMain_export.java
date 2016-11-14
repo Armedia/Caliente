@@ -11,7 +11,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_export;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
@@ -25,29 +25,29 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 	}
 
 	@Override
-	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
+	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later
 		try {
 			baseUri = new URI(String.format("%s/", this.server));
 		} catch (URISyntaxException e) {
-			throw new CMSMFException(String.format("Bad URL for Sharepoint: [%s]", this.server), e);
+			throw new CalienteException(String.format("Bad URL for Sharepoint: [%s]", this.server), e);
 		}
 		baseUri = baseUri.normalize();
 		final URL baseUrl;
 		try {
 			baseUrl = baseUri.toURL();
 		} catch (MalformedURLException e) {
-			throw new CMSMFException(String.format("Bad URL for Sharepoint: [%s]", this.server), e);
+			throw new CalienteException(String.format("Bad URL for Sharepoint: [%s]", this.server), e);
 		}
 
 		String srcPath = CLIParam.source.getString();
-		if (srcPath == null) { throw new CMSMFException("Must provide the name of the sharepoint site to export"); }
+		if (srcPath == null) { throw new CalienteException("Must provide the name of the sharepoint site to export"); }
 		List<String> l = FileNameTools.tokenize(srcPath, '/');
-		if (l.isEmpty()) { throw new CMSMFException("Must provide the name of the sharepoint site to export"); }
+		if (l.isEmpty()) { throw new CalienteException("Must provide the name of the sharepoint site to export"); }
 		final String site = l.get(0);
 		if (StringUtils
-			.isEmpty(site)) { throw new CMSMFException("Must provide the name of the sharepoint site to export"); }
+			.isEmpty(site)) { throw new CalienteException("Must provide the name of the sharepoint site to export"); }
 
 		srcPath = FileNameTools.reconstitute(l, false, false, '/');
 
@@ -67,7 +67,7 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export implements Export
 					String.format("%s%s", StringUtils.isEmpty(srcPrefix) ? "" : String.format("%s/", srcPrefix), site))
 						.toString());
 		} catch (MalformedURLException e) {
-			throw new CMSMFException("Bad base URL", e);
+			throw new CalienteException("Bad base URL", e);
 		}
 		if (this.user != null) {
 			settings.put(ShptSetting.USER.getLabel(), this.user);

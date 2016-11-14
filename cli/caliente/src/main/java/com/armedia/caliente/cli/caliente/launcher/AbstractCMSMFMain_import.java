@@ -18,8 +18,8 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
-import com.armedia.caliente.cli.caliente.exception.CMSMFException;
-import com.armedia.caliente.cli.caliente.utils.CMSMFUtils;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.utils.EmailUtils;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportEngineListener;
@@ -49,7 +49,7 @@ public abstract class AbstractCMSMFMain_import
 		super(engine, true, false);
 	}
 
-	protected void customizeSettings(Map<String, Object> settings) throws CMSMFException {
+	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		settings.put(ImportSetting.DEDUP.getLabel(), CLIParam.dedup.isPresent());
 		settings.put(ImportSetting.NAME_FIX.getLabel(), CLIParam.name_fix.isPresent());
 		settings.put(ImportSetting.NO_FILENAME_MAP.getLabel(), CLIParam.no_filename_map.isPresent());
@@ -57,7 +57,7 @@ public abstract class AbstractCMSMFMain_import
 	}
 
 	@Override
-	public final void run() throws CMSMFException {
+	public final void run() throws CalienteException {
 		Set<ImportResult> outcomes = Tools.parseEnumCSV(ImportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
 			AbstractCMSMFMain.ALL, false);
 		Set<CmfType> types = Tools.parseEnumCSV(CmfType.class, Setting.MANIFEST_TYPES.getString(),
@@ -157,7 +157,7 @@ public abstract class AbstractCMSMFMain_import
 		this.log.info(String.format("Action report for import operation:%n%n%s%n", reportString));
 		this.console.info(String.format("Action report for import operation:%n%n%s%n", reportString));
 		try {
-			CMSMFUtils.postCmsmfMail(String.format("Action report for CMSMF Import"), reportString);
+			EmailUtils.postCmsmfMail(String.format("Action report for CMSMF Import"), reportString);
 		} catch (MessagingException e) {
 			this.log.error("Exception caught attempting to send the report e-mail", e);
 			this.console.error("Exception caught attempting to send the report e-mail", e);
