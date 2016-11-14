@@ -15,10 +15,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +46,7 @@ public class TestLoop {
 
 	private static DfcSessionPool POOL = null;
 
-	@BeforeClass
+	// @BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		if (TestLoop.POOL == null) {
 			TestLoop.POOL = new DfcSessionPool("documentum", "dmadmin2", "ArM3D!A");
@@ -58,7 +55,7 @@ public class TestLoop {
 		}
 	}
 
-	@AfterClass
+	// @AfterClass
 	public static void tearDownAfterClass() throws Exception {
 		if (TestLoop.POOL != null) {
 			try {
@@ -626,7 +623,7 @@ public class TestLoop {
 		}
 	}
 
-	@Test
+	// @Test
 	public void generateData() throws Exception {
 
 		final IDfSession session = TestLoop.POOL.acquireSession();
