@@ -22,17 +22,17 @@ public abstract class DataRecordManager<RS extends DataRecordSet<?, ?, ?>, L ext
 
 	private static final Set<String> REQUIRED_STREAM_COLUMNS;
 	static {
-		Set<String> s = new TreeSet<String>();
+		Set<String> s = new TreeSet<>();
 		s.add("format");
 		s.add("location");
-		REQUIRED_STREAM_COLUMNS = Tools.freezeSet(new LinkedHashSet<String>(s));
+		REQUIRED_STREAM_COLUMNS = Tools.freezeSet(new LinkedHashSet<>(s));
 	}
 
 	private boolean streamRecordsInitialized = false;
 	private RS streamRecords = null;
 
 	private final LockDispenser<String, Object> typeLocks = LockDispenser.getBasic();
-	private final ConcurrentMap<String, RS> typeRecords = new ConcurrentHashMap<String, RS>();
+	private final ConcurrentMap<String, RS> typeRecords = new ConcurrentHashMap<>();
 
 	protected abstract RS buildRecordSet(L location, int loopCount) throws Exception;
 
@@ -58,7 +58,7 @@ public abstract class DataRecordManager<RS extends DataRecordSet<?, ?, ?>, L ext
 			try {
 				RS c = loadDataRecordSet(findStreamRecords(), loopCount);
 				if (c == null) { return null; }
-				Set<String> missing = new LinkedHashSet<String>(DataRecordManager.REQUIRED_STREAM_COLUMNS);
+				Set<String> missing = new LinkedHashSet<>(DataRecordManager.REQUIRED_STREAM_COLUMNS);
 				missing.removeAll(c.getColumnNames());
 				if (!missing.isEmpty()) { throw new Exception(
 					String.format("The CSV stream records lack the following required columns: %s", missing)); }

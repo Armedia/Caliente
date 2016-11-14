@@ -74,7 +74,7 @@ public class NodeGenerator {
 
 	private static final Set<String> DM_SYSOBJECT_ATTR;
 	static {
-		Set<String> s = new TreeSet<String>();
+		Set<String> s = new TreeSet<>();
 		String[] atts = {
 			"authors", "keywords", "subject", "title"
 		};
@@ -95,7 +95,7 @@ public class NodeGenerator {
 
 	private static void buildAttributeData(IDfType type, Map<String, Map<String, IDfAttr>> attributes)
 		throws DfException {
-		Map<String, IDfAttr> a = new TreeMap<String, IDfAttr>();
+		Map<String, IDfAttr> a = new TreeMap<>();
 		final String typeName = type.getName();
 		while (type != null) {
 			final String currentName = type.getName();
@@ -145,7 +145,7 @@ public class NodeGenerator {
 		if (a.isEmpty()) {
 			a = Collections.emptyMap();
 		} else {
-			a = Tools.freezeMap(new LinkedHashMap<String, IDfAttr>(a));
+			a = Tools.freezeMap(new LinkedHashMap<>(a));
 		}
 		attributes.put(typeName, a);
 	}
@@ -156,9 +156,9 @@ public class NodeGenerator {
 			objectTypes = Collections.emptySet();
 		}
 
-		Map<String, Map<String, IDfAttr>> attributes = new TreeMap<String, Map<String, IDfAttr>>();
-		Set<String> folderTypes = new TreeSet<String>();
-		Set<String> documentTypes = new TreeSet<String>();
+		Map<String, Map<String, IDfAttr>> attributes = new TreeMap<>();
+		Set<String> folderTypes = new TreeSet<>();
+		Set<String> documentTypes = new TreeSet<>();
 
 		this.recordsManager = recordsManager;
 
@@ -191,14 +191,14 @@ public class NodeGenerator {
 		if (folderTypes.isEmpty()) {
 			folderTypes = Collections.singleton("dm_folder");
 		} else {
-			folderTypes = new LinkedHashSet<String>(folderTypes);
+			folderTypes = new LinkedHashSet<>(folderTypes);
 		}
 		this.folderTypes = Tools.freezeSet(folderTypes);
 
 		if (documentTypes.isEmpty()) {
 			documentTypes = Collections.singleton("dm_document");
 		} else {
-			documentTypes = new LinkedHashSet<String>(documentTypes);
+			documentTypes = new LinkedHashSet<>(documentTypes);
 		}
 		this.documentTypes = Tools.freezeSet(documentTypes);
 
@@ -209,7 +209,7 @@ public class NodeGenerator {
 			NodeGenerator.buildAttributeData(session.getType(typeName), attributes);
 		}
 
-		this.attributes = Tools.freezeMap(new LinkedHashMap<String, Map<String, IDfAttr>>(attributes));
+		this.attributes = Tools.freezeMap(new LinkedHashMap<>(attributes));
 	}
 
 	public final Set<String> getFolderTypes() {
@@ -327,7 +327,7 @@ public class NodeGenerator {
 				if (!attribute.isRepeating()) {
 					externalValues = Collections.singletonList(sanitizeValue(attribute, baseValue));
 				} else {
-					List<IDfValue> l = new ArrayList<IDfValue>();
+					List<IDfValue> l = new ArrayList<>();
 					// Split by commas, then parse each value separately
 					StrTokenizer tok = StrTokenizer.getCSVInstance(baseValue);
 					tok.setIgnoreEmptyTokens(false); // Do not ignore empty tokens...
@@ -395,7 +395,7 @@ public class NodeGenerator {
 
 			generateAttributes(typeName, sysObject);
 
-			Map<String, String> nameVariables = new HashMap<String, String>();
+			Map<String, String> nameVariables = new HashMap<>();
 			nameVariables.put("id", sysObject.getObjectId().getId());
 			nameVariables.put("uuid", UUID.randomUUID().toString());
 			nameVariables.put("number", String.format("#%08x", childNumber));
