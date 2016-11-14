@@ -20,4 +20,6 @@ public interface ParameterDefinition {
 
 	public boolean isValueOptional();
 
+	public boolean isEqual(ParameterDefinition other);
+
 }

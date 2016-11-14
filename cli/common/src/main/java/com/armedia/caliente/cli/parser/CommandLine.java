@@ -90,8 +90,8 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 		parse(new CommonsCliParser(), executableName, args);
 	}
 
-	public final void parse(CommandLineParser parser, String executableName, Collection<String> args)
-		throws CommandLineParseException {
+	public final <C extends CommandLineParserContext> void parse(CommandLineParser<C> parser, String executableName,
+		Collection<String> args) throws CommandLineParseException {
 		if (args == null) {
 			args = Collections.emptyList();
 		}
@@ -102,8 +102,8 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 		parse(new CommonsCliParser(), executableName, args);
 	}
 
-	public final void parse(CommandLineParser parser, String executableName, String... args)
-		throws CommandLineParseException {
+	public final <C extends CommandLineParserContext> void parse(CommandLineParser<C> parser, String executableName,
+		String... args) throws CommandLineParseException {
 		if (parser == null) { throw new IllegalArgumentException("Must provide a parser implementation"); }
 		if (executableName == null) {
 			executableName = "Command Line";
@@ -118,10 +118,10 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 			this.values.clear();
 			this.remainingParameters.clear();
 			// Parse!
-			CommandLineParser.Context ctx = null;
+			C ctx = null;
 			try {
 				try {
-					ctx = parser.initContext(this, executableName,
+					ctx = parser.createContext(this, executableName,
 						Collections.unmodifiableCollection(this.commandLineParameters.values()));
 				} catch (Exception e) {
 					throw new CommandLineParseException(
@@ -143,11 +143,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 				}
 			} finally {
 				if (ctx != null) {
-					try {
-						parser.cleanup(ctx);
-					} finally {
-						ctx.clearState();
-					}
+					parser.cleanup(ctx);
 				}
 			}
 		} finally {
@@ -241,7 +237,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 			if (!unchecked && (shortOpt != null)) {
 				shortParam = this.shortOptions.get(shortOpt);
 				if (shortParam != null) {
-					if (shortParam.getDefinition().equals(def)) {
+					if (shortParam.getDefinition().isEqual(def)) {
 						// It's the same parameter, so we can safely return the existing one
 						return shortParam;
 					}
@@ -257,7 +253,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 			if (!unchecked && (longOpt != null)) {
 				longParam = this.longOptions.get(longOpt);
 				if (longParam != null) {
-					if (longParam.getDefinition().equals(def)) {
+					if (longParam.getDefinition().isEqual(def)) {
 						// It's the same parameter, so we can safely return the existing one
 						return longParam;
 					}

@@ -12,50 +12,42 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Option.Builder;
 import org.apache.commons.cli.Options;
 
-public class CommonsCliParser extends CommandLineParser {
+class CommonsCliState extends CommandLineParserContext {
+	final Options options = new Options();
+	final Map<String, CommandLineParameter> commandLineParameters = new HashMap<>();
+	final String exe;
 
-	private class State {
-		final Options options = new Options();
-		final Map<String, CommandLineParameter> commandLineParameters = new HashMap<>();
-		final String exe;
-
-		private State(String executableName) {
-			this.exe = executableName;
-		}
+	CommonsCliState(CommandLine cl, String executableName) {
+		super(cl);
+		this.exe = executableName;
 	}
+}
 
-	private static final String STATE = "state";
-
-	private State getState(Context ctx) {
-		State state = ctx.getState(CommonsCliParser.STATE, State.class);
-		if (state == null) { throw new IllegalStateException(
-			String.format("Failed to find the required state field [%s]", CommonsCliParser.STATE)); }
-		return state;
-	}
+public class CommonsCliParser extends CommandLineParser<CommonsCliState> {
 
 	@Override
-	protected void init(Context ctx, String executableName, Collection<CommandLineParameter> def) throws Exception {
-		final State state = new State(executableName);
+	protected CommonsCliState createContext(CommandLine cl, String executableName, Collection<CommandLineParameter> def)
+		throws Exception {
+		CommonsCliState ctx = new CommonsCliState(cl, executableName);
 		for (CommandLineParameter p : def) {
 			Option o = CommonsCliParser.buildOption(p.getDefinition());
-			state.options.addOption(o);
+			ctx.options.addOption(o);
 			String key = CommonsCliParser.calculateKey(o);
-			CommandLineParameter old = state.commandLineParameters.put(key, p);
+			CommandLineParameter old = ctx.commandLineParameters.put(key, p);
 			if (old != null) { throw new Exception(
 				String.format("Duplicate parameter definition for option [%s]", key)); }
 		}
-		ctx.setState(CommonsCliParser.STATE, state);
+		return ctx;
 	}
 
 	@Override
-	protected void parse(Context ctx, String... args) throws Exception {
-		final State state = getState(ctx);
+	protected void parse(CommonsCliState ctx, String... args) throws Exception {
 		org.apache.commons.cli.CommandLineParser parser = new DefaultParser();
-		final org.apache.commons.cli.CommandLine cli = parser.parse(state.options, args, true);
+		final org.apache.commons.cli.CommandLine cli = parser.parse(ctx.options, args, true);
 
 		for (Option o : cli.getOptions()) {
 			String key = CommonsCliParser.calculateKey(o);
-			CommandLineParameter p = state.commandLineParameters.get(key);
+			CommandLineParameter p = ctx.commandLineParameters.get(key);
 			if (p == null) { throw new Exception(
 				String.format("Failed to locate a parameter for option [%s] which should have been there", key)); }
 			ctx.setParameter(p, o.getValuesList());
@@ -65,8 +57,7 @@ public class CommonsCliParser extends CommandLineParser {
 	}
 
 	@Override
-	protected String getHelpMessage(Context ctx, Throwable t) {
-		final State state = getState(ctx);
+	protected String getHelpMessage(CommonsCliState ctx, Throwable t) {
 		StringWriter w = new StringWriter();
 		PrintWriter pw = new PrintWriter(w);
 		HelpFormatter hf = new HelpFormatter();
@@ -74,8 +65,8 @@ public class CommonsCliParser extends CommandLineParser {
 		if (t != null) {
 			footer = String.format("%nERROR: %s%n%n", t.getMessage());
 		}
-		hf.printHelp(pw, hf.getWidth(), state.exe,
-			String.format("%nAvailable Parameters:%n------------------------------%n"), state.options,
+		hf.printHelp(pw, hf.getWidth(), ctx.exe,
+			String.format("%nAvailable Parameters:%n------------------------------%n"), ctx.options,
 			hf.getLeftPadding(), hf.getDescPadding(), footer, true);
 		w.flush();
 		return w.toString();
@@ -112,5 +103,10 @@ public class CommonsCliParser extends CommandLineParser {
 	static String calculateKey(Option o) {
 		if (o == null) { throw new IllegalArgumentException("Must provide an option whose key to calculate"); }
 		return BaseParameterDefinition.calculateKey(o.getLongOpt(), o.getOpt());
+	}
+
+	@Override
+	protected void cleanup(CommonsCliState ctx) {
+		ctx.commandLineParameters.clear();
 	}
 }

@@ -79,7 +79,7 @@ public final class CommandLineParameter extends BaseParameterDefinition implemen
 		if (this.cli != other.cli) { return false; }
 		// TODO: enable comparison of the full definitions?
 		/*
-		if (!Tools.equals(this.def, other.def)) { return false; }
+		if (!this.def.isEqual(other.def)) { return false; }
 		*/
 		return true;
 	}
@@ -166,5 +166,10 @@ public final class CommandLineParameter extends BaseParameterDefinition implemen
 
 	public List<String> getAllStrings() {
 		return this.cli.getAllStrings(this);
+	}
+
+	@Override
+	public boolean isEqual(ParameterDefinition other) {
+		return this.def.isEqual(other);
 	}
 }

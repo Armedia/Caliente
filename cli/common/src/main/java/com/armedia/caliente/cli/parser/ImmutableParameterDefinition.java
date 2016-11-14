@@ -79,6 +79,12 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		ImmutableParameterDefinition other = ImmutableParameterDefinition.class.cast(obj);
+		return isEqual(other);
+	}
+
+	@Override
+	public boolean isEqual(ParameterDefinition other) {
+		if (other == null) { return false; }
 		if (isRequired() != other.isRequired()) { return false; }
 		if (isValueOptional() != other.isValueOptional()) { return false; }
 		if (!Tools.equals(getDescription(), other.getDescription())) { return false; }
@@ -93,7 +99,7 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 	@Override
 	public String toString() {
 		return String.format(
-			"MutableParameterDefinition [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s]",
+			"ImmutableParameterDefinition [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s]",
 			this.required, this.shortOpt, this.longOpt, this.description, this.valueCount, this.valueName,
 			this.valueOptional, this.valueSep);
 	}

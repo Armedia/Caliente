@@ -126,6 +126,12 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		MutableParameterDefinition other = MutableParameterDefinition.class.cast(obj);
+		return isEqual(other);
+	}
+
+	@Override
+	public boolean isEqual(ParameterDefinition other) {
+		if (other == null) { return false; }
 		if (isRequired() != other.isRequired()) { return false; }
 		if (isValueOptional() != other.isValueOptional()) { return false; }
 		if (!Tools.equals(getDescription(), other.getDescription())) { return false; }

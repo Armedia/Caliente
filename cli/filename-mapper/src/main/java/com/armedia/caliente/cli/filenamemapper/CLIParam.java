@@ -110,4 +110,9 @@ public enum CLIParam implements ParameterDefinition {
 	public final boolean isValueOptional() {
 		return this.parameter.isValueOptional();
 	}
+
+	@Override
+	public boolean isEqual(ParameterDefinition other) {
+		return this.parameter.isEqual(other);
+	}
 }

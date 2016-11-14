@@ -68,7 +68,7 @@ public class CommandLineTest {
 						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
 					}
 					Assert.assertSame(cl, p.getCLI());
-					Assert.assertEquals(def, p.getDefinition());
+					Assert.assertTrue(def.isEqual(p.getDefinition()));
 				} catch (InvalidParameterDefinitionException e) {
 					if (Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Failed with legal character [%s]", c));
@@ -115,7 +115,7 @@ public class CommandLineTest {
 		Assert.assertNotEquals(p, null);
 		Assert.assertNotEquals(p, "");
 		Assert.assertSame(cl, p.getCLI());
-		Assert.assertEquals(def, p.getDefinition());
+		Assert.assertTrue(def.isEqual(p.getDefinition()));
 
 		CommandLineParameter p2 = cl.define(def);
 		Assert.assertSame(p, p2);
@@ -179,24 +179,12 @@ public class CommandLineTest {
 		def.setShortOpt('a');
 		cl.define(def);
 
-		try {
-			cl.parse("TEST", args);
-			Assert.fail("Did not fail with a bad option");
-		} catch (CommandLineParseException e) {
-			// This is expected... -b isn't declared
-			Assert.assertNotNull(e.getHelp());
-		}
+		cl.parse("TEST", args);
 
 		def.setValueCount(1);
 		def.setShortOpt('c');
 		cl.define(def);
-		try {
-			cl.parse("TEST", args);
-			Assert.fail("Did not fail with a missing option value");
-		} catch (CommandLineParseException e) {
-			// This is expected... -b isn't declared
-			Assert.assertNotNull(e.getHelp());
-		}
+		cl.parse("TEST", args);
 
 		args = new String[] {
 			"-a", "true", //
