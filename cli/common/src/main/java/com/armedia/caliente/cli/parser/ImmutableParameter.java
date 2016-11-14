@@ -16,7 +16,7 @@ public final class ImmutableParameter extends BaseParameter implements Cloneable
 	private final Character valueSep;
 	private final Set<String> allowedValues;
 
-	public ImmutableParameter(Parameter other) {
+	ImmutableParameter(Parameter other) {
 		this.required = other.isRequired();
 		this.description = other.getDescription();
 		this.shortOpt = other.getShortOpt();

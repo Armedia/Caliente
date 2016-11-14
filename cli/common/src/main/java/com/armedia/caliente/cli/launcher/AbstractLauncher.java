@@ -15,6 +15,7 @@ import com.armedia.caliente.cli.parser.CommandLineParameter;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.parser.ParameterGroup;
 
 public abstract class AbstractLauncher {
 	protected static final Logger LOG = LoggerFactory.getLogger(AbstractLauncher.class);
@@ -52,6 +53,14 @@ public abstract class AbstractLauncher {
 
 	protected void initLogging(CommandLineValues cl) {
 		// By default, do nothing...
+	}
+
+	protected ParameterGroup getParameterGroup() {
+		return null;
+	}
+
+	protected Collection<? extends ParameterGroup> getParameterGroups(CommandLineValues cli, int pass) {
+		return Collections.emptyList();
 	}
 
 	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
@@ -179,8 +188,7 @@ public abstract class AbstractLauncher {
 
 	protected abstract int run(CommandLineValues commandLine) throws Exception;
 
-	protected final String getPassword(CommandLineValues cli, Parameter param, String prompt,
-		Object... promptParams) {
+	protected final String getPassword(CommandLineValues cli, Parameter param, String prompt, Object... promptParams) {
 		CommandLineParameter cliParam = null;
 		if ((cli != null) && (param != null)) {
 			cliParam = cli.getParameterFromDefinition(cliParam);
