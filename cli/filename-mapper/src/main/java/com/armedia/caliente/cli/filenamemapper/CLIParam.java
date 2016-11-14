@@ -1,5 +1,7 @@
 package com.armedia.caliente.cli.filenamemapper;
 
+import java.util.Set;
+
 import com.armedia.caliente.cli.parser.MutableParameterDefinition;
 import com.armedia.caliente.cli.parser.ParameterDefinition;
 
@@ -109,6 +111,11 @@ public enum CLIParam implements ParameterDefinition {
 	@Override
 	public final boolean isValueOptional() {
 		return this.parameter.isValueOptional();
+	}
+
+	@Override
+	public Set<String> getAllowedValues() {
+		return this.parameter.getAllowedValues();
 	}
 
 	@Override

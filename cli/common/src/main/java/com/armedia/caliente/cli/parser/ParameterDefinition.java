@@ -1,5 +1,7 @@
 package com.armedia.caliente.cli.parser;
 
+import java.util.Set;
+
 public interface ParameterDefinition {
 
 	public String getKey();
@@ -13,6 +15,8 @@ public interface ParameterDefinition {
 	public Character getShortOpt();
 
 	public Character getValueSep();
+
+	public Set<String> getAllowedValues();
 
 	public String getValueName();
 

@@ -1,5 +1,7 @@
 package com.armedia.caliente.cli.parser;
 
+import java.util.Set;
+
 import com.armedia.commons.utilities.Tools;
 
 public final class ImmutableParameterDefinition extends BaseParameterDefinition implements Cloneable {
@@ -12,6 +14,7 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 	private final String valueName;
 	private final boolean valueOptional;
 	private final Character valueSep;
+	private final Set<String> allowedValues;
 
 	public ImmutableParameterDefinition(ParameterDefinition other) {
 		this.required = other.isRequired();
@@ -22,6 +25,7 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 		this.valueName = other.getValueName();
 		this.valueOptional = other.isValueOptional();
 		this.valueSep = other.getValueSep();
+		this.allowedValues = Tools.freezeCopy(other.getAllowedValues(), true);
 	}
 
 	@Override
@@ -70,9 +74,14 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 	}
 
 	@Override
+	public Set<String> getAllowedValues() {
+		return this.allowedValues;
+	}
+
+	@Override
 	public int hashCode() {
 		return Tools.hashTool(this, null, this.required, this.description, this.shortOpt, this.longOpt, this.valueName,
-			this.valueCount, this.valueOptional, this.valueSep);
+			this.valueCount, this.valueOptional, this.valueSep, this.allowedValues);
 	}
 
 	@Override
@@ -93,14 +102,15 @@ public final class ImmutableParameterDefinition extends BaseParameterDefinition 
 		if (getValueCount() != other.getValueCount()) { return false; }
 		if (!Tools.equals(getValueName(), other.getValueName())) { return false; }
 		if (!Tools.equals(getValueSep(), other.getValueSep())) { return false; }
+		if (!Tools.equals(getAllowedValues(), other.getAllowedValues())) { return false; }
 		return true;
 	}
 
 	@Override
 	public String toString() {
 		return String.format(
-			"ImmutableParameterDefinition [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s]",
+			"ImmutableParameterDefinition [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s, allowedValues=%s]",
 			this.required, this.shortOpt, this.longOpt, this.description, this.valueCount, this.valueName,
-			this.valueOptional, this.valueSep);
+			this.valueOptional, this.valueSep, this.allowedValues);
 	}
 }

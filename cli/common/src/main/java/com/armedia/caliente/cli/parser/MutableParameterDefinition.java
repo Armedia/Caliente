@@ -1,5 +1,8 @@
 package com.armedia.caliente.cli.parser;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 import com.armedia.commons.utilities.Tools;
 
 public final class MutableParameterDefinition extends BaseParameterDefinition implements Cloneable {
@@ -12,6 +15,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 	protected String valueName = null;
 	protected boolean valueOptional = false;
 	protected Character valueSep = MutableParameterDefinition.DEFAULT_VALUE_SEP;
+	protected Set<String> allowedValues = new TreeSet<>();
 
 	public MutableParameterDefinition() {
 	}
@@ -25,6 +29,10 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		this.valueName = other.getValueName();
 		this.valueOptional = other.isValueOptional();
 		this.valueSep = other.getValueSep();
+		Set<String> allowedValues = other.getAllowedValues();
+		if (allowedValues != null) {
+			this.allowedValues.addAll(allowedValues);
+		}
 	}
 
 	@Override
@@ -112,6 +120,15 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		return this;
 	}
 
+	@Override
+	public Set<String> getAllowedValues() {
+		return this.allowedValues;
+	}
+
+	public void setAllowedValues(Set<String> allowedValues) {
+		this.allowedValues = allowedValues;
+	}
+
 	public ParameterDefinition freezeCopy() {
 		return new ImmutableParameterDefinition(this);
 	}
@@ -140,6 +157,7 @@ public final class MutableParameterDefinition extends BaseParameterDefinition im
 		if (getValueCount() != other.getValueCount()) { return false; }
 		if (!Tools.equals(getValueName(), other.getValueName())) { return false; }
 		if (!Tools.equals(getValueSep(), other.getValueSep())) { return false; }
+		if (!Tools.equals(getAllowedValues(), other.getAllowedValues())) { return false; }
 		return true;
 	}
 

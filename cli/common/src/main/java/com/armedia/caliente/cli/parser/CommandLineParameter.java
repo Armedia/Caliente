@@ -1,6 +1,7 @@
 package com.armedia.caliente.cli.parser;
 
 import java.util.List;
+import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -58,6 +59,11 @@ public final class CommandLineParameter extends BaseParameterDefinition implemen
 	@Override
 	public boolean isValueOptional() {
 		return this.def.isValueOptional();
+	}
+
+	@Override
+	public Set<String> getAllowedValues() {
+		return this.def.getAllowedValues();
 	}
 
 	@Override
