@@ -11,11 +11,11 @@ public class CommandLineParserContext {
 		this.cl = cl;
 	}
 
-	public void setParameter(CommandLineParameter p) {
+	public void setParameter(Parameter p) {
 		setParameter(p, null);
 	}
 
-	public void setParameter(CommandLineParameter p, Collection<String> values) {
+	public void setParameter(Parameter p, Collection<String> values) {
 		if (p == null) { throw new IllegalArgumentException("Must provide a parameter to set"); }
 		if (values == null) {
 			values = Collections.emptyList();

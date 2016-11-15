@@ -68,7 +68,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 		}
 	}
 
-	final void setParameterValues(CommandLineParameter p, Collection<String> values) {
+	final void setParameterValues(Parameter p, Collection<String> values) {
 		if ((values == null) || values.isEmpty()) {
 			values = Collections.emptyList();
 		}
