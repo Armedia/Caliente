@@ -3,6 +3,8 @@ package com.armedia.caliente.tools;
 import java.io.ByteArrayOutputStream;
 import java.util.Date;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -14,7 +16,7 @@ import com.documentum.fc.common.DfTime;
 
 /**
  * This class is used as a testbed to run quick'n'dirty DFC test programs
- * 
+ *
  * @author diego.rivera@armedia.com
  *
  */
@@ -23,6 +25,23 @@ public class Scratchpad {
 	// private final Logger log = LoggerFactory.getLogger(getClass());
 
 	public static void main(String... args) throws Exception {
+
+		Pattern FILE_COMMENT = Pattern.compile("(?<!\\\\)#");
+
+		String[] S = {
+			"asdfasdfasdf # asdfasdf", "asdfasdfasdf#asdfasdfasdf", "012345678\\#abcdef#"
+		};
+
+		for (String s : S) {
+			Matcher m = FILE_COMMENT.matcher(s);
+			if (m.find()) {
+				int p = m.start();
+				System.out.printf("%d", p);
+				continue;
+			}
+			throw new RuntimeException();
+		}
+
 		final DfcSessionPool pool;
 
 		pool = new DfcSessionPool("documentum", "dmadmin2", "ArM3D!A");
