@@ -201,17 +201,18 @@ public class Parser {
 		return this.valueSeparator;
 	}
 
-	private TokenCatalog catalogTokens(String... args) throws IOException, ParserException {
+	private TokenCatalog catalogTokens(String... args)
+		throws ParserFileAccessException, ParserFileRecursionLoopException {
 		return new TokenCatalog(catalogTokens(null, null, args));
 	}
 
 	private List<Token> catalogTokens(Set<String> fileRecursion, File sourceFile, String... args)
-		throws IOException, ParserException {
+		throws ParserFileAccessException, ParserFileRecursionLoopException {
 		if (fileRecursion == null) {
 			fileRecursion = new LinkedHashSet<>();
 		}
-		if ((sourceFile != null) && !fileRecursion
-			.add(sourceFile.getAbsolutePath())) { throw new FileRecursionLoopException(fileRecursion); }
+		if ((sourceFile != null) && !fileRecursion.add(
+			sourceFile.getAbsolutePath())) { throw new ParserFileRecursionLoopException(sourceFile, fileRecursion); }
 		boolean terminated = false;
 		try {
 			Matcher m = null;
@@ -265,7 +266,12 @@ public class Parser {
 					} finally {
 						parameterFile = parameterFile.getAbsoluteFile();
 					}
-					List<String> lines = FileUtils.readLines(parameterFile, Charset.forName("UTF-8"));
+					final List<String> lines;
+					try {
+						lines = FileUtils.readLines(parameterFile, Charset.forName("UTF-8"));
+					} catch (IOException e) {
+						throw new ParserFileAccessException(parameterFile, e);
+					}
 					List<String> fileArgs = new ArrayList<>();
 					for (String line : lines) {
 						Matcher commentMatcher = Parser.FILE_COMMENT.matcher(line);
@@ -301,14 +307,11 @@ public class Parser {
 		return Arrays.asList(StringUtils.splitPreserveAllTokens(str, this.valueSeparator.charValue()));
 	}
 
-	public void parse(ParameterSet params, ParserListener listener, String... args) throws ParserException {
+	public void parse(ParameterSet params, ParserListener listener, String... args)
+		throws MissingParameterValueException, UnknownParameterException, TooManyValuesException,
+		UnknownSubcommandException, ParserFileAccessException, ParserFileRecursionLoopException {
 
-		final TokenCatalog tokens;
-		try {
-			tokens = catalogTokens(args);
-		} catch (IOException e) {
-			throw new ParserException("Failed to load all the required parameters", e);
-		}
+		final TokenCatalog tokens = catalogTokens(args);
 
 		int i = -1;
 		Token currentParameterToken = null;
