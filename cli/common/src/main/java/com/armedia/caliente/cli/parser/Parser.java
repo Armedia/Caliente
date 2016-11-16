@@ -201,13 +201,12 @@ public class Parser {
 		return this.valueSeparator;
 	}
 
-	private TokenCatalog catalogTokens(String... args)
-		throws ParserFileAccessException, ParserFileRecursionLoopException {
+	private TokenCatalog catalogTokens(String... args) throws IOException, ParserFileRecursionLoopException {
 		return new TokenCatalog(catalogTokens(null, null, args));
 	}
 
 	private List<Token> catalogTokens(Set<String> fileRecursion, File sourceFile, String... args)
-		throws ParserFileAccessException, ParserFileRecursionLoopException {
+		throws IOException, ParserFileRecursionLoopException {
 		if (fileRecursion == null) {
 			fileRecursion = new LinkedHashSet<>();
 		}
@@ -266,12 +265,7 @@ public class Parser {
 					} finally {
 						parameterFile = parameterFile.getAbsoluteFile();
 					}
-					final List<String> lines;
-					try {
-						lines = FileUtils.readLines(parameterFile, Charset.forName("UTF-8"));
-					} catch (IOException e) {
-						throw new ParserFileAccessException(parameterFile, e);
-					}
+					final List<String> lines = FileUtils.readLines(parameterFile, Charset.forName("UTF-8"));
 					List<String> fileArgs = new ArrayList<>();
 					for (String line : lines) {
 						Matcher commentMatcher = Parser.FILE_COMMENT.matcher(line);
@@ -309,7 +303,7 @@ public class Parser {
 
 	public void parse(ParameterSet params, ParserListener listener, String... args)
 		throws MissingParameterValueException, UnknownParameterException, TooManyValuesException,
-		UnknownSubcommandException, ParserFileAccessException, ParserFileRecursionLoopException {
+		UnknownSubcommandException, ParserFileRecursionLoopException, IOException {
 
 		final TokenCatalog tokens = catalogTokens(args);
 

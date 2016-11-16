@@ -7,14 +7,19 @@ import java.util.List;
 
 import com.armedia.commons.utilities.Tools;
 
-public class ParserFileRecursionLoopException extends ParserFileException {
+public class ParserFileRecursionLoopException extends ParserException {
 	private static final long serialVersionUID = 1L;
 
+	private final File loopedFile;
 	private final List<String> files;
 
 	public ParserFileRecursionLoopException(File loopedFile, Collection<String> files) {
-		super(loopedFile);
+		this.loopedFile = loopedFile;
 		this.files = Tools.freezeList(new ArrayList<>(files));
+	}
+
+	public final File getLoopedFile() {
+		return this.loopedFile;
 	}
 
 	public final List<String> getFiles() {
