@@ -217,43 +217,46 @@ public class Parser {
 			Matcher m = null;
 			List<Token> tokens = new ArrayList<>();
 			int i = -1;
-			for (String s : args) {
+			for (final String s : args) {
+				final String sTrim = s.trim();
 				i++;
-				if (StringUtils.isBlank(s) && (sourceFile != null)) {
+				if (StringUtils.isEmpty(sTrim) && (sourceFile != null)) {
 					// If we're inside a file, we skip empty tokens. We don't do that
 					// when processing values in the primary
 					continue;
 				}
+
 				if (terminated) {
 					tokens.add(new Token(sourceFile, i, TokenType.PLAIN, s, s));
 					continue;
 				}
 
-				if (this.terminator.equals(s)) {
+				if (this.terminator.equals(sTrim)) {
 					if (sourceFile == null) {
 						// We only add the terminator token at the top level, since for files
 						// we simply consume the rest of the file's tokens as plain tokens, and
 						// we don't want to terminate parsing of anything that might come after
-						tokens.add(new Token(sourceFile, i, TokenType.TERMINATOR, s, s));
+						tokens.add(new Token(sourceFile, i, TokenType.TERMINATOR, sTrim, sTrim));
 					}
 					terminated = true;
 					continue;
 				}
 
-				m = this.patShort.matcher(s);
+				m = this.patShort.matcher(sTrim);
 				if (m.matches()) {
-					tokens.add(new Token(sourceFile, i, TokenType.SHORT_OPTION, m.group(1), s));
+					tokens.add(new Token(sourceFile, i, TokenType.SHORT_OPTION, m.group(1), sTrim));
 					continue;
 				}
 
-				m = this.patLong.matcher(s);
+				m = this.patLong.matcher(sTrim);
 				if (m.matches()) {
-					tokens.add(new Token(sourceFile, i, TokenType.LONG_OPTION, m.group(1), s));
+					tokens.add(new Token(sourceFile, i, TokenType.LONG_OPTION, m.group(1), sTrim));
 					continue;
 				}
 
-				if ((this.fileMarker != null) && (s.charAt(0) == this.fileMarker.charValue())) {
-					String fileName = s.substring(1);
+				// If the first non-whitespace character is the file marker, then treat it as a file
+				if ((this.fileMarker != null) && (sTrim.charAt(0) == this.fileMarker.charValue())) {
+					String fileName = s.substring(s.indexOf(this.fileMarker.charValue()) + 1);
 					File parameterFile = new File(fileName);
 					try {
 						parameterFile = parameterFile.getCanonicalFile();
@@ -270,7 +273,7 @@ public class Parser {
 							// Strip everything past the first comment character
 							line = line.substring(0, commentMatcher.start() + 1);
 						}
-						fileArgs.add(line);
+						fileArgs.add(line.trim());
 					}
 					if (!fileArgs.isEmpty()) {
 						List<Token> fileTokens = catalogTokens(fileRecursion, parameterFile,
