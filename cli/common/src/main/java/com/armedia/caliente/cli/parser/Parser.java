@@ -160,8 +160,8 @@ public class Parser {
 		if (fileRecursion == null) {
 			fileRecursion = new LinkedHashSet<>();
 		}
-		if ((sourceFile != null) && !fileRecursion.add(sourceFile.getAbsolutePath())) { throw new ParserException(
-			String.format("Recursion loop detected: %s", fileRecursion)); }
+		if ((sourceFile != null) && !fileRecursion
+			.add(sourceFile.getAbsolutePath())) { throw new FileRecursionLoopException(fileRecursion); }
 		boolean terminated = false;
 		try {
 			Matcher m = null;
@@ -279,7 +279,8 @@ public class Parser {
 						if (!current.isValueOptional() && (current.getValueCount() != 0) && currentArgs.isEmpty()) {
 							// The current parameter requires values, so complain loudly, or stow
 							// the complaint for later...
-							if (listener.errorMissingArguments(current)) { throw new ParserException(); }
+							if (listener
+								.errorMissingValues(current)) { throw new MissingParameterValueException(current); }
 							continue;
 						}
 
@@ -306,7 +307,7 @@ public class Parser {
 								// move on
 								continue;
 							}
-							throw new ParserException();
+							throw new UnknownParameterException(token.sourceFile, token.index, token.sourceStr);
 						}
 
 						// Re-set the state
@@ -321,9 +322,17 @@ public class Parser {
 					// Are we processing a parameter?
 					if (current != null) {
 						// Can this be considered an argument?
-						if ((current.getValueCount() < 0) || (currentArgs.size() < current.getValueCount())) {
-							// This token is an argument...stow it as such
+						if (current.getValueCount() != 0) {
+							// Arguments are allowed...
 							currentArgs.addAll(Parser.split(multiValueSplit, token.value));
+							if ((current.getValueCount() > 0) && (currentArgs.size() > current.getValueCount())) {
+								// There is a limit breach...
+								if (listener.errorTooManyValues(current,
+									currentArgs)) { throw new TooManyValuesException(current, currentArgs); }
+								// If this isn't to be treated as an error, we simply keep going
+							}
+							// There is no limit on argument count, or the count of arguments
+							// is below the set limit
 							continue;
 						}
 
@@ -339,7 +348,8 @@ public class Parser {
 					if (sub == null) {
 						// Not a subcommand, so ... is this a trailing argument?
 						if (i < tokens.lastParameter) {
-							if (listener.errorOrphanedValue(token.value)) { throw new ParserException(); }
+							if (listener.errorOrphanedValue(token.value)) { throw new UnknownSubcommandException(
+								token.sourceFile, token.index, token.sourceStr); }
 							// Orphaned value, but not causing a failure
 							continue;
 						}

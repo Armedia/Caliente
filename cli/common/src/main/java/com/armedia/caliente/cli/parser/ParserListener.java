@@ -12,7 +12,9 @@ public interface ParserListener {
 
 	public void extraArguments(List<String> arguments);
 
-	public boolean errorMissingArguments(Parameter parameter);
+	public boolean errorMissingValues(Parameter parameter);
+
+	public boolean errorTooManyValues(Parameter parameter, List<String> values);
 
 	public boolean errorUnknownParameter(String value);
 
