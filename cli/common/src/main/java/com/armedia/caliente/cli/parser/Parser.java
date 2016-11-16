@@ -152,8 +152,8 @@ public class Parser {
 	private static final Pattern FILE_COMMENT = Pattern.compile("(?<!\\\\)#");
 
 	public static final char DEFAULT_PARAMETER_MARKER = '-';
-	public static final char DEFAULT_FILE_MARKER = '@';
-	public static final char DEFAULT_VALUE_SPLITTER = ',';
+	public static final Character DEFAULT_FILE_MARKER = '@';
+	public static final Character DEFAULT_VALUE_SPLITTER = ',';
 
 	private final char parameterMarker;
 	private final String terminator;
@@ -311,39 +311,43 @@ public class Parser {
 		}
 
 		int i = -1;
-		Parameter current = null;
+		Token currentParameterToken = null;
+		Parameter currentParameter = null;
 		List<String> currentArgs = new ArrayList<>();
 		boolean terminated = false;
-		for (final Token token : tokens.tokens) {
+		for (final Token currentToken : tokens.tokens) {
 			i++;
 
 			if (terminated) {
-				currentArgs.addAll(splitValues(token.value));
+				currentArgs.addAll(splitValues(currentToken.value));
 				continue;
 			}
 
-			switch (token.type) {
+			switch (currentToken.type) {
 
 				case TERMINATOR:
 				case SHORT_OPTION:
 				case LONG_OPTION:
-					if (current != null) {
-						if (!current.isValueOptional() && (current.getValueCount() != 0) && currentArgs.isEmpty()) {
+					if (currentParameter != null) {
+						if (!currentParameter.isValueOptional() && (currentParameter.getValueCount() != 0)
+							&& currentArgs.isEmpty()) {
 							// The current parameter requires values, so complain loudly, or stow
 							// the complaint for later...
-							if (listener
-								.errorMissingValues(current)) { throw new MissingParameterValueException(current); }
+							if (listener.missingValues(currentParameter)) { throw new MissingParameterValueException(
+								currentParameterToken.sourceFile, currentParameterToken.index, currentParameter); }
 							continue;
 						}
 
 						// The current parameter is valid, so we close it up and clear the argument
 						// list
-						listener.parameterFound(current, currentArgs);
+						listener.parameterFound(currentParameter, currentArgs);
 						currentArgs.clear();
+						currentParameter = null;
+						currentParameterToken = null;
 					}
 
 					// If this is a terminator, then we terminate, and that's that
-					if (token.type == TokenType.TERMINATOR) {
+					if (currentToken.type == TokenType.TERMINATOR) {
 						terminated = true;
 						listener.terminatorFound();
 						continue;
@@ -351,19 +355,21 @@ public class Parser {
 
 					// Ok...so...now we need to set up the next parameter
 					try {
-						final Parameter next = (token.type == TokenType.SHORT_OPTION
-							? params.getShort(token.value.charAt(0)) : params.getLong(token.value));
-						if (next == null) {
-							if (!listener.errorUnknownParameter(token.sourceStr)) {
+						final Parameter nextParameter = (currentToken.type == TokenType.SHORT_OPTION
+							? params.getShort(currentToken.value.charAt(0)) : params.getLong(currentToken.value));
+						if (nextParameter == null) {
+							if (!listener.unknownParameterFound(currentToken.sourceFile, currentToken.index,
+								currentToken.sourceStr)) {
 								// The parameter is unknown, but this isn't an error, so we simply
 								// move on
 								continue;
 							}
-							throw new UnknownParameterException(token.sourceFile, token.index, token.sourceStr);
+							throw new UnknownParameterException(currentToken.sourceFile, currentToken.index,
+								currentToken.sourceStr);
 						}
 
-						// Re-set the state
-						current = next;
+						currentParameterToken = currentToken;
+						currentParameter = nextParameter;
 					} finally {
 						// Regardless of the outcome, the currentArgs list needs to be cleared
 						currentArgs.clear();
@@ -372,15 +378,17 @@ public class Parser {
 
 				case PLAIN:
 					// Are we processing a parameter?
-					if (current != null) {
+					if (currentParameter != null) {
 						// Can this be considered an argument?
-						if (current.getValueCount() != 0) {
+						if (currentParameter.getValueCount() != 0) {
 							// Arguments are allowed...
-							currentArgs.addAll(splitValues(token.value));
-							if ((current.getValueCount() > 0) && (currentArgs.size() > current.getValueCount())) {
+							currentArgs.addAll(splitValues(currentToken.value));
+							if ((currentParameter.getValueCount() > 0)
+								&& (currentArgs.size() > currentParameter.getValueCount())) {
 								// There is a limit breach...
-								if (listener.errorTooManyValues(current,
-									currentArgs)) { throw new TooManyValuesException(current, currentArgs); }
+								if (listener.tooManyValues(currentParameter,
+									currentArgs)) { throw new TooManyValuesException(currentParameterToken.sourceFile,
+										currentParameterToken.index, currentParameter, currentArgs); }
 								// If this isn't to be treated as an error, we simply keep going
 							}
 							// There is no limit on argument count, or the count of arguments
@@ -396,24 +404,25 @@ public class Parser {
 					// them (or we have no parameter)...so it's either a subcommand, or one of the
 					// trailing command-line values...
 
-					ParameterSet sub = params.getSub(token.value);
+					ParameterSet sub = params.getSub(currentToken.value);
 					if (sub == null) {
 						// Not a subcommand, so ... is this a trailing argument?
 						if (i < tokens.lastParameter) {
-							if (listener.errorOrphanedValue(token.value)) { throw new UnknownSubcommandException(
-								token.sourceFile, token.index, token.sourceStr); }
+							if (listener.orphanedValueFound(currentToken.sourceFile, currentToken.index,
+								currentToken.value)) { throw new UnknownSubcommandException(currentToken.sourceFile,
+									currentToken.index, currentToken.sourceStr); }
 							// Orphaned value, but not causing a failure
 							continue;
 						}
 
 						// We're OK..this is a trailing value...
-						currentArgs.addAll(splitValues(token.value));
+						currentArgs.addAll(splitValues(currentToken.value));
 						continue;
 					}
 
 					// This is a subcommand, so we replace the current one with this one
 					params = sub;
-					listener.subCommandFound(token.sourceStr);
+					listener.subCommandFound(currentToken.sourceStr);
 					continue;
 			}
 		}

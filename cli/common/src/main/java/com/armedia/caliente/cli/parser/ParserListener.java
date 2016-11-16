@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.parser;
 
+import java.io.File;
 import java.util.List;
 
 public interface ParserListener {
@@ -12,11 +13,11 @@ public interface ParserListener {
 
 	public void extraArguments(List<String> arguments);
 
-	public boolean errorMissingValues(Parameter parameter);
+	public boolean missingValues(Parameter parameter);
 
-	public boolean errorTooManyValues(Parameter parameter, List<String> values);
+	public boolean tooManyValues(Parameter parameter, List<String> values);
 
-	public boolean errorUnknownParameter(String value);
+	public boolean unknownParameterFound(File sourceFile, int index, String value);
 
-	public boolean errorOrphanedValue(String value);
+	public boolean orphanedValueFound(File sourceFile, int index, String value);
 }
