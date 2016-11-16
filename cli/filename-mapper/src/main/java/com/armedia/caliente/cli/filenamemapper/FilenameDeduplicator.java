@@ -9,16 +9,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.Tools;
 
 public class FilenameDeduplicator<R extends CmfObjectRef> {
@@ -330,15 +332,13 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final LockDispenser<R, Object> containerLocks = LockDispenser.getBasic();
-	private final Map<R, FSEntryContainer> containers = new ConcurrentHashMap<>();
+	private final ConcurrentMap<R, FSEntryContainer> containers = new ConcurrentHashMap<>();
 
-	private final LockDispenser<R, Object> allEntriesLocks = LockDispenser.getBasic();
-	private final Map<R, FSEntry> allEntries = new ConcurrentHashMap<>();
+	private final ConcurrentMap<R, FSEntry> allEntries = new ConcurrentHashMap<>();
 
-	private final Map<R, FSEntryContainer> conflictContainers = new ConcurrentHashMap<>();
+	private final ConcurrentMap<R, FSEntryContainer> conflictContainers = new ConcurrentHashMap<>();
 
-	private final Map<R, FSEntry> renamedEntries = new ConcurrentHashMap<>();
+	private final ConcurrentMap<R, FSEntry> renamedEntries = new ConcurrentHashMap<>();
 
 	private final IdValidator<R> idValidator;
 
@@ -364,15 +364,14 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 		this.conflictContainers.remove(container.id);
 	}
 
-	private FSEntryContainer getContainer(R id) {
-		synchronized (this.containerLocks.getLock(id)) {
-			FSEntryContainer ret = this.containers.get(id);
-			if (ret == null) {
-				ret = new FSEntryContainer(id);
-				this.containers.put(id, ret);
-			}
-			return ret;
-		}
+	private FSEntryContainer getContainer(final R id) {
+		return ConcurrentUtils.createIfAbsentUnchecked(this.containers, id,
+			new ConcurrentInitializer<FSEntryContainer>() {
+				@Override
+				public FSEntryContainer get() {
+					return new FSEntryContainer(id);
+				}
+			});
 	}
 
 	public synchronized long renameEntries(Renamer<R> renamer) {
@@ -458,18 +457,17 @@ public class FilenameDeduplicator<R extends CmfObjectRef> {
 		}
 	}
 
-	public boolean addEntry(R containerId, R entryId, String name) {
+	public boolean addEntry(R containerId, final R entryId, final String name) {
 		if (!this.idValidator.isValidId(containerId)) { return false; }
 		if (!this.idValidator.isValidId(entryId)) { return false; }
 		final FSEntryContainer container = getContainer(containerId);
-		FSEntry entry = null;
-		synchronized (this.allEntriesLocks.getLock(entryId)) {
-			entry = this.allEntries.get(entryId);
-			if (entry == null) {
-				entry = new FSEntry(entryId, name);
-				this.allEntries.put(entryId, entry);
-			}
-		}
+		FSEntry entry = ConcurrentUtils.createIfAbsentUnchecked(this.allEntries, entryId,
+			new ConcurrentInitializer<FSEntry>() {
+				@Override
+				public FSEntry get() {
+					return new FSEntry(entryId, name);
+				}
+			});
 		entry.addParent(container);
 		container.addChild(entry);
 		return true;
