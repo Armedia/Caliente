@@ -145,17 +145,67 @@ public class Parser {
 
 	private static final String[] NO_ARGS = {};
 
-	private static final String TERMINATOR = "--";
-	private static final Pattern SHORT = Pattern.compile("^-(\\S)$");
-	private static final Pattern LONG = Pattern.compile("^--(\\S+)$");
-	private static final Pattern FILE = Pattern.compile("^@(.+)$");
+	private static final String TERMINATOR_FMT = "%s%s";
+	private static final String SHORT_FMT = "^%s(\\S)$";
+	private static final String LONG_FMT = "^%s%s(\\S+)$";
+
 	private static final Pattern FILE_COMMENT = Pattern.compile("(?<!\\\\)#");
 
-	private static TokenCatalog catalogTokens(String... args) throws IOException, ParserException {
-		return new TokenCatalog(Parser.catalogTokens(null, null, args));
+	public static final char DEFAULT_PARAMETER_MARKER = '-';
+	public static final char DEFAULT_FILE_MARKER = '@';
+	public static final char DEFAULT_VALUE_SPLITTER = ',';
+
+	private final char parameterMarker;
+	private final String terminator;
+	private final Pattern patShort;
+	private final Pattern patLong;
+	private final Character fileMarker;
+	private final Character valueSeparator;
+
+	public Parser() {
+		this(Parser.DEFAULT_PARAMETER_MARKER, Parser.DEFAULT_FILE_MARKER, Parser.DEFAULT_VALUE_SPLITTER);
 	}
 
-	private static List<Token> catalogTokens(Set<String> fileRecursion, File sourceFile, String... args)
+	public Parser(char parameterMarker) {
+		this(parameterMarker, Parser.DEFAULT_FILE_MARKER, Parser.DEFAULT_VALUE_SPLITTER);
+	}
+
+	public Parser(char parameterMarker, Character fileMarker) {
+		this(parameterMarker, fileMarker, Parser.DEFAULT_VALUE_SPLITTER);
+	}
+
+	public Parser(char parameterMarker, Character fileMarker, Character valueSeparator) {
+		this.parameterMarker = parameterMarker;
+		this.fileMarker = fileMarker;
+		if ((fileMarker != null) && (parameterMarker == fileMarker.charValue())) { throw new IllegalArgumentException(
+			"Must provide different characters for paramter marker and file marker"); }
+		this.valueSeparator = valueSeparator;
+		if ((valueSeparator != null)
+			&& (parameterMarker == valueSeparator.charValue())) { throw new IllegalArgumentException(
+				"Must provide different characters for paramter marker and value separator"); }
+
+		this.terminator = String.format(Parser.TERMINATOR_FMT, parameterMarker, parameterMarker);
+		this.patShort = Pattern.compile(String.format(Parser.SHORT_FMT, parameterMarker));
+		this.patLong = Pattern.compile(String.format(Parser.LONG_FMT, parameterMarker, parameterMarker));
+	}
+
+	public final char getParameterMarker() {
+		return this.parameterMarker;
+	}
+
+	public final Character getFileMarker() {
+		return this.fileMarker;
+	}
+
+	public final Character getValueSplitter() {
+		return this.valueSeparator;
+	}
+
+	private TokenCatalog catalogTokens(String... args) throws IOException, ParserException {
+		return new TokenCatalog(catalogTokens(null, null, args));
+	}
+
+	private List<Token> catalogTokens(Set<String> fileRecursion, File sourceFile, String... args)
 		throws IOException, ParserException {
 		if (fileRecursion == null) {
 			fileRecursion = new LinkedHashSet<>();
@@ -179,7 +229,7 @@ public class Parser {
 					continue;
 				}
 
-				if (Parser.TERMINATOR.equals(s)) {
+				if (this.terminator.equals(s)) {
 					if (sourceFile == null) {
 						// We only add the terminator token at the top level, since for files
 						// we simply consume the rest of the file's tokens as plain tokens, and
@@ -190,21 +240,21 @@ public class Parser {
 					continue;
 				}
 
-				m = Parser.SHORT.matcher(s);
+				m = this.patShort.matcher(s);
 				if (m.matches()) {
 					tokens.add(new Token(sourceFile, i, TokenType.SHORT_OPTION, m.group(1), s));
 					continue;
 				}
 
-				m = Parser.LONG.matcher(s);
+				m = this.patLong.matcher(s);
 				if (m.matches()) {
 					tokens.add(new Token(sourceFile, i, TokenType.LONG_OPTION, m.group(1), s));
 					continue;
 				}
 
-				m = Parser.FILE.matcher(s);
-				if (m.matches()) {
-					File parameterFile = new File(m.group(1));
+				if ((this.fileMarker != null) && (s.charAt(0) == this.fileMarker.charValue())) {
+					String fileName = s.substring(1);
+					File parameterFile = new File(fileName);
 					try {
 						parameterFile = parameterFile.getCanonicalFile();
 					} catch (IOException e) {
@@ -223,7 +273,7 @@ public class Parser {
 						fileArgs.add(line);
 					}
 					if (!fileArgs.isEmpty()) {
-						List<Token> fileTokens = Parser.catalogTokens(fileRecursion, parameterFile,
+						List<Token> fileTokens = catalogTokens(fileRecursion, parameterFile,
 							fileArgs.toArray(Parser.NO_ARGS));
 						if (fileTokens != null) {
 							tokens.addAll(fileTokens);
@@ -242,18 +292,17 @@ public class Parser {
 		}
 	}
 
-	private static List<String> split(Character splitChar, String str) {
+	private List<String> splitValues(String str) {
 		if (str == null) { return Collections.emptyList(); }
-		if (splitChar == null) { return Collections.singletonList(str); }
-		return Arrays.asList(StringUtils.splitPreserveAllTokens(str, splitChar.charValue()));
+		if (this.valueSeparator == null) { return Collections.singletonList(str); }
+		return Arrays.asList(StringUtils.splitPreserveAllTokens(str, this.valueSeparator.charValue()));
 	}
 
-	public static void parse(ParameterSet params, ParserListener listener, Character multiValueSplit, String... args)
-		throws ParserException {
+	public void parse(ParameterSet params, ParserListener listener, String... args) throws ParserException {
 
 		final TokenCatalog tokens;
 		try {
-			tokens = Parser.catalogTokens(args);
+			tokens = catalogTokens(args);
 		} catch (IOException e) {
 			throw new ParserException("Failed to load all the required parameters", e);
 		}
@@ -266,7 +315,7 @@ public class Parser {
 			i++;
 
 			if (terminated) {
-				currentArgs.addAll(Parser.split(multiValueSplit, token.value));
+				currentArgs.addAll(splitValues(token.value));
 				continue;
 			}
 
@@ -324,7 +373,7 @@ public class Parser {
 						// Can this be considered an argument?
 						if (current.getValueCount() != 0) {
 							// Arguments are allowed...
-							currentArgs.addAll(Parser.split(multiValueSplit, token.value));
+							currentArgs.addAll(splitValues(token.value));
 							if ((current.getValueCount() > 0) && (currentArgs.size() > current.getValueCount())) {
 								// There is a limit breach...
 								if (listener.errorTooManyValues(current,
@@ -355,7 +404,7 @@ public class Parser {
 						}
 
 						// We're OK..this is a trailing value...
-						currentArgs.addAll(Parser.split(multiValueSplit, token.value));
+						currentArgs.addAll(splitValues(token.value));
 						continue;
 					}
 
