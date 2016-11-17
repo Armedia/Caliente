@@ -1,7 +1,5 @@
 package com.armedia.caliente.cli.parser;
 
-import java.io.File;
-
 /**
  * <p>
  * An object signifying a token that will be part of the parameter stream. It indicates not only the
@@ -41,11 +39,10 @@ public class Token {
 
 	/**
 	 * <p>
-	 * The file from which the token was read. The value {@code null} means that it was read from
-	 * the main parameter stream.
+	 * The {@link TokenSource} from which the token was read.
 	 * </p>
 	 */
-	final File sourceFile;
+	final TokenSource source;
 
 	/**
 	 * <p>
@@ -75,19 +72,19 @@ public class Token {
 	 * The original string the token was derived from
 	 * </p>
 	 */
-	final String sourceStr;
+	final String rawString;
 
-	Token(File sourceFile, int index, Type type, String value, String source) {
-		this.sourceFile = sourceFile;
+	Token(TokenSource tokenSource, int index, Type type, String value, String rawString) {
+		this.source = tokenSource;
 		this.index = index;
 		this.type = type;
 		this.value = value;
-		this.sourceStr = source;
+		this.rawString = rawString;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("Token [sourceFile=%s, index=%s, type=%s, value=%s, sourceStr=%s]", this.sourceFile,
-			this.index, this.type.name(), this.value, this.sourceStr);
+		return String.format("Token [source=%s, index=%s, type=%s, value=%s, rawString=%s]",
+			this.source, this.index, this.type.name(), this.value, this.rawString);
 	}
 }

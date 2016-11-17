@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.parser;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,19 +9,19 @@ import com.armedia.commons.utilities.Tools;
 public class ParserFileRecursionLoopException extends ParserException {
 	private static final long serialVersionUID = 1L;
 
-	private final File loopedFile;
-	private final List<String> files;
+	private final TokenSource loopedSource;
+	private final List<String> sources;
 
-	public ParserFileRecursionLoopException(File loopedFile, Collection<String> files) {
-		this.loopedFile = loopedFile;
-		this.files = Tools.freezeList(new ArrayList<>(files));
+	public ParserFileRecursionLoopException(TokenSource loopedSource, Collection<String> sources) {
+		this.loopedSource = loopedSource;
+		this.sources = Tools.freezeList(new ArrayList<>(sources));
 	}
 
-	public final File getLoopedFile() {
-		return this.loopedFile;
+	public final TokenSource getLoopedURL() {
+		return this.loopedSource;
 	}
 
-	public final List<String> getFiles() {
-		return this.files;
+	public final List<String> getSources() {
+		return this.sources;
 	}
 }

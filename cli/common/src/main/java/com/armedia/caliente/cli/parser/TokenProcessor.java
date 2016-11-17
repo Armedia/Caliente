@@ -1,8 +1,6 @@
 package com.armedia.caliente.cli.parser;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,13 +11,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.parser.Token.Type;
 import com.armedia.commons.utilities.Tools;
 
-public class Parser {
+public class TokenProcessor {
 
 	private static class TokenCatalog {
 		private final List<Token> tokens;
@@ -67,22 +64,23 @@ public class Parser {
 	private final Character fileMarker;
 	private final Character valueSeparator;
 
-	public Parser() {
-		this(Parser.DEFAULT_PARAMETER_MARKER, Parser.DEFAULT_FILE_MARKER, Parser.DEFAULT_VALUE_SPLITTER);
+	public TokenProcessor() {
+		this(TokenProcessor.DEFAULT_PARAMETER_MARKER, TokenProcessor.DEFAULT_FILE_MARKER,
+			TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
 
 	// TODO: Shall we expose these constructurs? What would be the point?
 	/*
-	private Parser(char parameterMarker) {
-		this(parameterMarker, Parser.DEFAULT_FILE_MARKER, Parser.DEFAULT_VALUE_SPLITTER);
+	private TokenProcessor(char parameterMarker) {
+		this(parameterMarker, TokenProcessor.DEFAULT_FILE_MARKER, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
-	
-	private Parser(char parameterMarker, Character fileMarker) {
-		this(parameterMarker, fileMarker, Parser.DEFAULT_VALUE_SPLITTER);
+
+	private TokenProcessor(char parameterMarker, Character fileMarker) {
+		this(parameterMarker, fileMarker, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
 	*/
 
-	private Parser(char parameterMarker, Character fileMarker, Character valueSeparator) {
+	private TokenProcessor(char parameterMarker, Character fileMarker, Character valueSeparator) {
 		this.parameterMarker = parameterMarker;
 		this.fileMarker = fileMarker;
 		if ((fileMarker != null) && (parameterMarker == fileMarker.charValue())) { throw new IllegalArgumentException(
@@ -92,9 +90,9 @@ public class Parser {
 			&& (parameterMarker == valueSeparator.charValue())) { throw new IllegalArgumentException(
 				"Must provide different characters for paramter marker and value separator"); }
 
-		this.terminator = String.format(Parser.TERMINATOR_FMT, parameterMarker, parameterMarker);
-		this.patShort = Pattern.compile(String.format(Parser.SHORT_FMT, parameterMarker));
-		this.patLong = Pattern.compile(String.format(Parser.LONG_FMT, parameterMarker, parameterMarker));
+		this.terminator = String.format(TokenProcessor.TERMINATOR_FMT, parameterMarker, parameterMarker);
+		this.patShort = Pattern.compile(String.format(TokenProcessor.SHORT_FMT, parameterMarker));
+		this.patLong = Pattern.compile(String.format(TokenProcessor.LONG_FMT, parameterMarker, parameterMarker));
 	}
 
 	public final char getParameterMarker() {
@@ -113,74 +111,76 @@ public class Parser {
 		return new TokenCatalog(catalogTokens(null, null, args));
 	}
 
-	private List<Token> catalogTokens(Set<String> fileRecursion, File sourceFile, Collection<String> args)
+	private List<Token> catalogTokens(Set<String> recursionGuard, TokenSource source, Collection<String> args)
 		throws IOException, ParserFileRecursionLoopException {
-		if (fileRecursion == null) {
-			fileRecursion = new LinkedHashSet<>();
+		if (source == null) { throw new IllegalArgumentException("Must provide the source of the tokens to parse"); }
+		if (recursionGuard == null) {
+			recursionGuard = new LinkedHashSet<>();
 		}
-		if ((sourceFile != null) && !fileRecursion.add(
-			sourceFile.getAbsolutePath())) { throw new ParserFileRecursionLoopException(sourceFile, fileRecursion); }
 		boolean terminated = false;
-		try {
-			Matcher m = null;
-			List<Token> tokens = new ArrayList<>();
-			int i = -1;
-			for (final String s : args) {
-				final String sTrim = s.trim();
-				i++;
-				if (StringUtils.isEmpty(sTrim) && (sourceFile != null)) {
-					// If we're inside a file, we skip empty tokens. We don't do that
-					// when processing values in the primary
-					continue;
+		Matcher m = null;
+		List<Token> tokens = new ArrayList<>();
+		int i = -1;
+		for (final String s : args) {
+			final String sTrim = s.trim();
+			i++;
+			if (StringUtils.isEmpty(sTrim) && (source != null)) {
+				// If we're inside a file, we skip empty tokens. We don't do that
+				// when processing values in the primary
+				continue;
+			}
+
+			if (terminated) {
+				// If we've found a terminator, all other parameters that follow will be treated
+				// as plain values, regardless
+				tokens.add(new Token(source, i, Type.PLAIN, s, s));
+				continue;
+			}
+
+			if (this.terminator.equals(sTrim)) {
+				if (source == null) {
+					// We only add the terminator token at the top level, since for files
+					// we simply consume the rest of the file's tokens as plain tokens, and
+					// we don't want to terminate the consumption of anything that might come
+					// after
+					tokens.add(new Token(source, i, Type.TERMINATOR, sTrim, sTrim));
+				}
+				terminated = true;
+				continue;
+			}
+
+			m = this.patShort.matcher(sTrim);
+			if (m.matches()) {
+				tokens.add(new Token(source, i, Type.SHORT_OPTION, m.group(1), sTrim));
+				continue;
+			}
+
+			m = this.patLong.matcher(sTrim);
+			if (m.matches()) {
+				tokens.add(new Token(source, i, Type.LONG_OPTION, m.group(1), sTrim));
+				continue;
+			}
+
+			// If the first character is the file marker, then treat it as a file
+			if ((this.fileMarker != null) && (s.charAt(0) == this.fileMarker.charValue())) {
+				// Remove the file marker
+				String fileName = s.substring(1);
+				final TokenSource newSource;
+				if (fileName.charAt(0) == this.fileMarker.charValue()) {
+					// It's a URL...
+					newSource = new TokenUrlSource(fileName.substring(1));
+				} else {
+					newSource = new TokenLocalFileSource(fileName);
 				}
 
-				if (terminated) {
-					// If we've found a terminator, all other parameters that follow will be treated
-					// as plain values, regardless
-					tokens.add(new Token(sourceFile, i, Type.PLAIN, s, s));
-					continue;
-				}
+				// Before we recurse, we check...
+				if (!recursionGuard
+					.add(newSource.getKey())) { throw new ParserFileRecursionLoopException(source, recursionGuard); }
 
-				if (this.terminator.equals(sTrim)) {
-					if (sourceFile == null) {
-						// We only add the terminator token at the top level, since for files
-						// we simply consume the rest of the file's tokens as plain tokens, and
-						// we don't want to terminate the consumption of anything that might come
-						// after
-						tokens.add(new Token(sourceFile, i, Type.TERMINATOR, sTrim, sTrim));
-					}
-					terminated = true;
-					continue;
-				}
-
-				m = this.patShort.matcher(sTrim);
-				if (m.matches()) {
-					tokens.add(new Token(sourceFile, i, Type.SHORT_OPTION, m.group(1), sTrim));
-					continue;
-				}
-
-				m = this.patLong.matcher(sTrim);
-				if (m.matches()) {
-					tokens.add(new Token(sourceFile, i, Type.LONG_OPTION, m.group(1), sTrim));
-					continue;
-				}
-
-				// If the first character is the file marker, then treat it as a file
-				if ((this.fileMarker != null) && (s.charAt(0) == this.fileMarker.charValue())) {
-					// Remove the file marker
-					String fileName = s.substring(1);
-					File parameterFile = new File(fileName);
-					try {
-						parameterFile = parameterFile.getCanonicalFile();
-					} catch (IOException e) {
-						// Do nothing...log it, maybe?
-					} finally {
-						parameterFile = parameterFile.getAbsoluteFile();
-					}
-					final List<String> lines = FileUtils.readLines(parameterFile, Charset.forName("UTF-8"));
+				try {
 					List<String> fileArgs = new ArrayList<>();
-					for (String line : lines) {
-						Matcher commentMatcher = Parser.FILE_COMMENT.matcher(line);
+					for (String line : newSource.getTokens()) {
+						Matcher commentMatcher = TokenProcessor.FILE_COMMENT.matcher(line);
 						if (commentMatcher.find()) {
 							// Strip everything past the first comment character
 							line = line.substring(0, commentMatcher.start() + 1);
@@ -188,22 +188,19 @@ public class Parser {
 						fileArgs.add(line.trim());
 					}
 					if (!fileArgs.isEmpty()) {
-						List<Token> fileTokens = catalogTokens(fileRecursion, parameterFile, fileArgs);
+						List<Token> fileTokens = catalogTokens(recursionGuard, newSource, fileArgs);
 						if (fileTokens != null) {
 							tokens.addAll(fileTokens);
 						}
 					}
+				} finally {
+					recursionGuard.remove(newSource.getKey());
 				}
+			}
 
-				tokens.add(new Token(sourceFile, i, Type.PLAIN, s, s));
-			}
-			return tokens;
-		} finally {
-			if (sourceFile != null) {
-				// Remove the current file from the recursion loop
-				fileRecursion.remove(sourceFile.getAbsolutePath());
-			}
+			tokens.add(new Token(source, i, Type.PLAIN, s, s));
 		}
+		return tokens;
 	}
 
 	private List<String> splitValues(String str) {
@@ -276,14 +273,14 @@ public class Parser {
 							? params.getParameter(currentToken.value.charAt(0))
 							: params.getParameter(currentToken.value));
 						if (nextParameter == null) {
-							if (!listener.unknownParameterFound(currentToken.sourceFile, currentToken.index,
-								currentToken.sourceStr)) {
+							if (!listener.unknownParameterFound(currentToken.source, currentToken.index,
+								currentToken.rawString)) {
 								// The parameter is unknown, but this isn't an error, so we simply
 								// move on
 								continue;
 							}
-							throw new UnknownParameterException(currentToken.sourceFile, currentToken.index,
-								currentToken.sourceStr);
+							throw new UnknownParameterException(currentToken.source, currentToken.index,
+								currentToken.rawString);
 						}
 
 						currentParameterToken = currentToken;
@@ -304,9 +301,9 @@ public class Parser {
 							if ((currentParameter.getValueCount() > 0)
 								&& (currentArgs.size() > currentParameter.getValueCount())) {
 								// There is a limit breach...
-								if (listener.tooManyValues(currentParameterToken.sourceFile,
-									currentParameterToken.index, currentParameter,
-									currentArgs)) { throw new TooManyValuesException(currentParameterToken.sourceFile,
+								if (listener.tooManyValues(currentParameterToken.source, currentParameterToken.index,
+									currentParameter,
+									currentArgs)) { throw new TooManyValuesException(currentParameterToken.source,
 										currentParameterToken.index, currentParameter, currentArgs); }
 								// If this isn't to be treated as an error, we simply keep going
 							}
@@ -327,9 +324,9 @@ public class Parser {
 					if (sub == null) {
 						// Not a subcommand, so ... is this a trailing argument?
 						if (i < tokens.lastParameter) {
-							if (listener.orphanedValueFound(currentToken.sourceFile, currentToken.index,
-								currentToken.value)) { throw new UnknownSubcommandException(currentToken.sourceFile,
-									currentToken.index, currentToken.sourceStr); }
+							if (listener.orphanedValueFound(currentToken.source, currentToken.index,
+								currentToken.value)) { throw new UnknownSubcommandException(currentToken.source,
+									currentToken.index, currentToken.rawString); }
 							// Orphaned value, but not causing a failure
 							continue;
 						}
@@ -341,7 +338,7 @@ public class Parser {
 
 					// This is a subcommand, so we replace the current one with this one
 					params = sub;
-					listener.subCommandFound(currentToken.sourceStr);
+					listener.subCommandFound(currentToken.rawString);
 					continue;
 			}
 		}

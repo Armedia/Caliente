@@ -1,14 +1,12 @@
 package com.armedia.caliente.cli.parser;
 
-import java.io.File;
-
-public class MissingParameterValueException extends ParserSyntaxException {
+public class MissingParameterValueException extends TokenSyntaxException {
 	private static final long serialVersionUID = 1L;
 
 	private final Parameter parameter;
 
-	public MissingParameterValueException(File sourceFile, int index, Parameter parameter) {
-		super(sourceFile, index);
+	public MissingParameterValueException(TokenSource source, int index, Parameter parameter) {
+		super(source, index);
 		this.parameter = parameter;
 	}
 

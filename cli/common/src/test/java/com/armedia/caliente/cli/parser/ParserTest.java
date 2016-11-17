@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.parser;
 
-import java.io.File;
 import java.util.List;
 
 import org.junit.Assert;
@@ -10,18 +9,18 @@ public class ParserTest {
 
 	@Test
 	public void testParser() {
-		Parser p = new Parser();
+		TokenProcessor p = new TokenProcessor();
 		Assert.assertNotNull(p);
-		Assert.assertEquals(Parser.DEFAULT_PARAMETER_MARKER, p.getParameterMarker());
-		Assert.assertEquals(Parser.DEFAULT_FILE_MARKER, p.getFileMarker());
-		Assert.assertEquals(Parser.DEFAULT_VALUE_SPLITTER, p.getValueSplitter());
+		Assert.assertEquals(TokenProcessor.DEFAULT_PARAMETER_MARKER, p.getParameterMarker());
+		Assert.assertEquals(TokenProcessor.DEFAULT_FILE_MARKER, p.getFileMarker());
+		Assert.assertEquals(TokenProcessor.DEFAULT_VALUE_SPLITTER, p.getValueSplitter());
 	}
 
 	@Test
 	public void testParse() throws Exception {
 		String[] args = null;
 
-		Parser p = new Parser();
+		TokenProcessor p = new TokenProcessor();
 
 		args = new String[] {
 			"-a", "--bb", "asdfasdf", "--", "@file", "--ff"
@@ -56,22 +55,22 @@ public class ParserTest {
 			}
 
 			@Override
-			public boolean missingValues(File sourceFile, int index, Parameter parameter) {
+			public boolean missingValues(TokenSource source, int index, Parameter parameter) {
 				return false;
 			}
 
 			@Override
-			public boolean tooManyValues(File sourceFile, int index, Parameter parameter, List<String> values) {
+			public boolean tooManyValues(TokenSource source, int index, Parameter parameter, List<String> values) {
 				return false;
 			}
 
 			@Override
-			public boolean unknownParameterFound(File sourceFile, int index, String value) {
+			public boolean unknownParameterFound(TokenSource source, int index, String value) {
 				return false;
 			}
 
 			@Override
-			public boolean orphanedValueFound(File sourceFile, int index, String value) {
+			public boolean orphanedValueFound(TokenSource source, int index, String value) {
 				return false;
 			}
 		};

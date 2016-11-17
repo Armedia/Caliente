@@ -29,7 +29,7 @@ public class ParameterSet {
 
 	private boolean validateShort(Character shortOpt) {
 		if (!ParameterSet.VALID_SHORT.matcher(shortOpt.toString()).matches()) { return false; }
-		if (Tools.equals(shortOpt, Parser.DEFAULT_PARAMETER_MARKER)) { return false; }
+		if (Tools.equals(shortOpt, TokenProcessor.DEFAULT_PARAMETER_MARKER)) { return false; }
 		if (!isShortOptionValid(shortOpt)) { return false; }
 		return true;
 	}
