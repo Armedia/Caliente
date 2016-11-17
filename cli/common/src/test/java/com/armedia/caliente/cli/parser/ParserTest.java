@@ -3,6 +3,8 @@ package com.armedia.caliente.cli.parser;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.armedia.caliente.cli.parser.Parser.ParameterSet;
+
 public class ParserTest {
 
 	@Test
@@ -15,19 +17,19 @@ public class ParserTest {
 	}
 
 	@Test
-	public void testGetParameterMarker() {
-	}
+	public void testParse() throws Exception {
+		String[] args = null;
 
-	@Test
-	public void testGetFileMarker() {
-	}
+		Parser p = new Parser();
 
-	@Test
-	public void testGetValueSplitter() {
-	}
+		args = new String[] {
+			"-a", "--bb", "asdfasdf", "@file", "--", "@file", "--ff"
+		};
 
-	@Test
-	public void testParse() {
+		ParameterSet parameters = null;
+		ParserListener listener = null;
+
+		p.parse(parameters, listener, args);
 	}
 
 }

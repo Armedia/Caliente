@@ -135,11 +135,11 @@ public class Parser {
 
 	public static interface ParameterSet {
 
-		public ParameterSet getSub(String name);
+		public ParameterSet getSubcommand(String name);
 
-		public Parameter getShort(char shortOption);
+		public Parameter getParameter(char shortOption);
 
-		public Parameter getLong(String longOption);
+		public Parameter getParameter(String longOption);
 
 	}
 
@@ -166,15 +166,18 @@ public class Parser {
 		this(Parser.DEFAULT_PARAMETER_MARKER, Parser.DEFAULT_FILE_MARKER, Parser.DEFAULT_VALUE_SPLITTER);
 	}
 
-	public Parser(char parameterMarker) {
+	// TODO: Shall we expose these constructurs? What would be the point?
+	/*
+	private Parser(char parameterMarker) {
 		this(parameterMarker, Parser.DEFAULT_FILE_MARKER, Parser.DEFAULT_VALUE_SPLITTER);
 	}
 
-	public Parser(char parameterMarker, Character fileMarker) {
+	private Parser(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, Parser.DEFAULT_VALUE_SPLITTER);
 	}
+	*/
 
-	public Parser(char parameterMarker, Character fileMarker, Character valueSeparator) {
+	private Parser(char parameterMarker, Character fileMarker, Character valueSeparator) {
 		this.parameterMarker = parameterMarker;
 		this.fileMarker = fileMarker;
 		if ((fileMarker != null) && (parameterMarker == fileMarker.charValue())) { throw new IllegalArgumentException(
@@ -330,8 +333,11 @@ public class Parser {
 							&& currentArgs.isEmpty()) {
 							// The current parameter requires values, so complain loudly, or stow
 							// the complaint for later...
-							if (listener.missingValues(currentParameter)) { throw new MissingParameterValueException(
-								currentParameterToken.sourceFile, currentParameterToken.index, currentParameter); }
+							if (listener
+								.missingValues(currentParameterToken.sourceFile, currentParameterToken.index,
+									currentParameter)) { throw new MissingParameterValueException(
+										currentParameterToken.sourceFile, currentParameterToken.index,
+										currentParameter); }
 							continue;
 						}
 
@@ -353,7 +359,8 @@ public class Parser {
 					// Ok...so...now we need to set up the next parameter
 					try {
 						final Parameter nextParameter = (currentToken.type == TokenType.SHORT_OPTION
-							? params.getShort(currentToken.value.charAt(0)) : params.getLong(currentToken.value));
+							? params.getParameter(currentToken.value.charAt(0))
+							: params.getParameter(currentToken.value));
 						if (nextParameter == null) {
 							if (!listener.unknownParameterFound(currentToken.sourceFile, currentToken.index,
 								currentToken.sourceStr)) {
@@ -383,7 +390,8 @@ public class Parser {
 							if ((currentParameter.getValueCount() > 0)
 								&& (currentArgs.size() > currentParameter.getValueCount())) {
 								// There is a limit breach...
-								if (listener.tooManyValues(currentParameter,
+								if (listener.tooManyValues(currentParameterToken.sourceFile,
+									currentParameterToken.index, currentParameter,
 									currentArgs)) { throw new TooManyValuesException(currentParameterToken.sourceFile,
 										currentParameterToken.index, currentParameter, currentArgs); }
 								// If this isn't to be treated as an error, we simply keep going
@@ -401,7 +409,7 @@ public class Parser {
 					// them (or we have no parameter)...so it's either a subcommand, or one of the
 					// trailing command-line values...
 
-					ParameterSet sub = params.getSub(currentToken.value);
+					ParameterSet sub = params.getSubcommand(currentToken.value);
 					if (sub == null) {
 						// Not a subcommand, so ... is this a trailing argument?
 						if (i < tokens.lastParameter) {
