@@ -11,9 +11,9 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	protected String description = null;
 	protected Character shortOpt = null;
 	protected String longOpt = null;
-	protected int valueCount = 0;
+	protected int minValueCount = 0;
+	protected int maxValueCount = 0;
 	protected String valueName = null;
-	protected boolean valueOptional = false;
 	protected Character valueSep = MutableParameter.DEFAULT_VALUE_SEP;
 	protected Set<String> allowedValues = new TreeSet<>();
 
@@ -25,9 +25,9 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 		this.description = other.getDescription();
 		this.shortOpt = other.getShortOpt();
 		this.longOpt = other.getLongOpt();
-		this.valueCount = other.getValueCount();
+		this.minValueCount = other.getMinValueCount();
+		this.maxValueCount = other.getMaxValueCount();
 		this.valueName = other.getValueName();
-		this.valueOptional = other.isValueOptional();
 		this.valueSep = other.getValueSep();
 		Set<String> allowedValues = other.getAllowedValues();
 		if (allowedValues != null) {
@@ -41,12 +41,22 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	}
 
 	@Override
-	public int getValueCount() {
-		return this.valueCount;
+	public int getMinValueCount() {
+		return this.minValueCount;
 	}
 
-	public MutableParameter setValueCount(int parameterCount) {
-		this.valueCount = parameterCount;
+	public MutableParameter setMinValueCount(int count) {
+		this.minValueCount = count;
+		return this;
+	}
+
+	@Override
+	public int getMaxValueCount() {
+		return this.maxValueCount;
+	}
+
+	public MutableParameter setMaxValueCount(int count) {
+		this.maxValueCount = count;
 		return this;
 	}
 
@@ -111,16 +121,6 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	}
 
 	@Override
-	public boolean isValueOptional() {
-		return this.valueOptional;
-	}
-
-	public MutableParameter setValueOptional(boolean valueOptional) {
-		this.valueOptional = valueOptional;
-		return this;
-	}
-
-	@Override
 	public Set<String> getAllowedValues() {
 		return this.allowedValues;
 	}
@@ -136,7 +136,7 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	@Override
 	public int hashCode() {
 		return Tools.hashTool(this, null, this.required, this.description, this.shortOpt, this.longOpt, this.valueName,
-			this.valueCount, this.valueOptional, this.valueSep);
+			this.maxValueCount, this.minValueCount, this.valueSep);
 	}
 
 	@Override
@@ -150,11 +150,11 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	public boolean isEqual(Parameter other) {
 		if (other == null) { return false; }
 		if (isRequired() != other.isRequired()) { return false; }
-		if (isValueOptional() != other.isValueOptional()) { return false; }
+		if (getMinValueCount() != other.getMinValueCount()) { return false; }
+		if (getMaxValueCount() != other.getMaxValueCount()) { return false; }
 		if (!Tools.equals(getDescription(), other.getDescription())) { return false; }
 		if (!Tools.equals(getLongOpt(), other.getLongOpt())) { return false; }
 		if (!Tools.equals(getShortOpt(), other.getShortOpt())) { return false; }
-		if (getValueCount() != other.getValueCount()) { return false; }
 		if (!Tools.equals(getValueName(), other.getValueName())) { return false; }
 		if (!Tools.equals(getValueSep(), other.getValueSep())) { return false; }
 		if (!Tools.equals(getAllowedValues(), other.getAllowedValues())) { return false; }
@@ -164,8 +164,8 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	@Override
 	public String toString() {
 		return String.format(
-			"MutableParameter [required=%s, shortOpt=%s, longOpt=%s, description=%s, valueCount=%s, valueName=%s, valueOptional=%s, valueSep=%s]",
-			this.required, this.shortOpt, this.longOpt, this.description, this.valueCount, this.valueName,
-			this.valueOptional, this.valueSep);
+			"MutableParameter [required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s]",
+			this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount, this.maxValueCount,
+			this.valueName, this.minValueCount, this.valueSep);
 	}
 }

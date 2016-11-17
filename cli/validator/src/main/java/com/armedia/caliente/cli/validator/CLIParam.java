@@ -9,31 +9,31 @@ public enum CLIParam implements Parameter {
 	bulk_import(new MutableParameter() //
 		.setRequired(true) //
 		.setShortOpt('i') //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("bulk import directory") //
 		.setDescription("The location of the Bulk Import source data") //
 	), //
 	bulk_export(new MutableParameter() //
 		.setRequired(true) //
 		.setShortOpt('e') //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("bulk export directory") //
 		.setDescription("The location of the Bulk Export validation data") //
 	), //
 	report_dir(new MutableParameter() //
 		.setShortOpt('r') //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("directory") //
 		.setDescription("The directory where the validation reports will be output to") //
 	), //
 	model(new MutableParameter() //
 		.setRequired(true) //
 		.setShortOpt('m') //
-		.setValueCount(-1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(-1) //
 		.setValueName("model1,model2,model3,...,modelN") //
 		.setDescription("The (list of) content model(s) in XML format and proper dependency order") //
 	), //
@@ -90,13 +90,13 @@ public enum CLIParam implements Parameter {
 	}
 
 	@Override
-	public final int getValueCount() {
-		return this.parameter.getValueCount();
+	public final int getMinValueCount() {
+		return this.parameter.getMinValueCount();
 	}
 
 	@Override
-	public final boolean isValueOptional() {
-		return this.parameter.isValueOptional();
+	public final int getMaxValueCount() {
+		return this.parameter.getMaxValueCount();
 	}
 
 	@Override

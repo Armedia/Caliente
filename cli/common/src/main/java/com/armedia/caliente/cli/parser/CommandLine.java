@@ -31,7 +31,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 		help.setShortOpt('?');
 		help.setDescription("Show this help message");
 		help.setRequired(false);
-		help.setValueCount(0);
+		help.setMinValueCount(0);
 		HELP = help;
 	}
 

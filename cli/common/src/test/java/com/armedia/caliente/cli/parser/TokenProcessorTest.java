@@ -5,7 +5,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class ParserTest {
+public class TokenProcessorTest {
 
 	@Test
 	public void testParser() {
@@ -23,54 +23,66 @@ public class ParserTest {
 		TokenProcessor p = new TokenProcessor();
 
 		args = new String[] {
-			"-a", "--bb", "asdfasdf", "--", "@file", "--ff"
+			"-a", "--bb", "subcommand", "asdfasdf", "--", "@file", "--ff"
 		};
 
 		RootParameterSet rootParams = new RootParameterSet("root");
+		rootParams.addParameter(new MutableParameter().setShortOpt('a'));
+		rootParams.addParameter(new MutableParameter().setLongOpt("bb"));
+		rootParams.addSubcommand("subcommand", new ParameterSet("subcommand"));
+
 		TokenListener listener = new TokenListener() {
 
 			@Override
 			public void positionalParametersFound(List<String> values) {
-				System.out.printf("POSITIONAL: %s", values);
+				System.out.printf("POSITIONAL: %s%n", values);
 			}
 
 			@Override
 			public void namedParameterFound(Parameter parameter, List<String> values) {
-				System.out.printf("PARAMETER: %s %s", parameter.getKey(), values);
+				System.out.printf("PARAMETER: %s %s%n", parameter.getKey(), values);
 			}
 
 			@Override
 			public void terminatorFound() {
-				System.out.printf("TERMINATOR");
+				System.out.printf("TERMINATOR%n");
 			}
 
 			@Override
 			public void subCommandFound(String subCommand) {
-				System.out.printf("SUBCOMMAND [%s]", subCommand);
+				System.out.printf("SUBCOMMAND [%s]%n", subCommand);
 			}
 
 			@Override
 			public void extraArguments(List<String> arguments) {
-				System.out.printf("EXTRA ARGS: %s", arguments);
+				System.out.printf("EXTRA ARGS: %s%n", arguments);
 			}
 
 			@Override
 			public boolean missingValues(TokenSource source, int index, Parameter parameter) {
+				System.out.printf("MISSING VALUES FOR %s (%d @ %s)%n", parameter.getKey(), index,
+					source != null ? source.getKey() : "(root)");
 				return false;
 			}
 
 			@Override
 			public boolean tooManyValues(TokenSource source, int index, Parameter parameter, List<String> values) {
+				System.out.printf("TOO MANY VALUES FOR %s (%d @ %s): %s%n", parameter.getKey(), index,
+					source != null ? source.getKey() : "(root)", values);
 				return false;
 			}
 
 			@Override
 			public boolean unknownParameterFound(TokenSource source, int index, String value) {
+				System.out.printf("UNKNOWN PARAMETER %s (%d @ %s)%n", value, index,
+					source != null ? source.getKey() : "(root)");
 				return false;
 			}
 
 			@Override
 			public boolean orphanedValueFound(TokenSource source, int index, String value) {
+				System.out.printf("ORPHANED VALUE %s (%d @ %s)%n", value, index,
+					source != null ? source.getKey() : "(root)");
 				return false;
 			}
 		};

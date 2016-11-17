@@ -84,12 +84,12 @@ public class CommonsCliParser extends CommandLineParser<CommonsCliState> {
 		if (def.getValueSep() != null) {
 			b.valueSeparator(def.getValueSep());
 		}
-		final int paramCount = def.getValueCount();
+		final int paramCount = def.getMaxValueCount();
 		if (paramCount != 0) {
 			if (def.getValueName() != null) {
 				b.argName(def.getValueName());
 			}
-			b.optionalArg(def.isValueOptional());
+			b.optionalArg(def.getMinValueCount() <= 0);
 			if (paramCount < 0) {
 				b.hasArgs();
 			}

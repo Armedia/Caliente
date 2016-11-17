@@ -347,7 +347,7 @@ public class NodeGenerator {
 				final IDfValue value;
 				if (externalValues != null) {
 					// No need to range-check... if externalValues is not null then by
-					// definition p will always be in range, since valueCount will be set
+					// definition p will always be in range, since maxValueCount will be set
 					// to the size of the externalValues list
 					value = externalValues.get(p);
 				} else {

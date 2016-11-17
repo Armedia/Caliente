@@ -18,9 +18,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('x');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = new MutableParameter(expected);
@@ -29,9 +29,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
@@ -43,9 +43,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('P');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(false);
-		expected.setValueOptional(false);
+		expected.setMinValueCount(1);
 		expected.setValueSep('$');
 
 		actual = new MutableParameter(expected);
@@ -54,9 +54,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
@@ -75,9 +75,9 @@ public class MutableParameterDefinitionTest {
 		def.setDescription(UUID.randomUUID().toString());
 		def.setLongOpt(UUID.randomUUID().toString());
 		def.setShortOpt('x');
-		def.setValueCount(UUID.randomUUID().hashCode());
+		def.setMaxValueCount(UUID.randomUUID().hashCode());
 		def.setRequired(true);
-		def.setValueOptional(true);
+		def.setMinValueCount(0);
 		def.setValueSep('|');
 
 		Assert.assertNotEquals(def, null);
@@ -97,9 +97,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('x');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = expected.clone();
@@ -108,9 +108,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
@@ -128,9 +128,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('x');
-		expected.setValueCount(0);
+		expected.setMaxValueCount(0);
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = expected.clone();
@@ -139,24 +139,24 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
 		Assert.assertEquals(expected.hashCode(), actual.hashCode());
 
 		for (int i = 1; i < 100; i++) {
-			actual.setValueCount(i);
-			Assert.assertEquals(i, actual.getValueCount());
+			actual.setMaxValueCount(i);
+			Assert.assertEquals(i, actual.getMaxValueCount());
 			Assert.assertEquals("ValueName", expected.getValueName(), actual.getValueName());
 			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertNotEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+			Assert.assertNotEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 			Assert.assertFalse("equality test", expected.equals(actual));
 			Assert.assertFalse("inverse equality test", actual.equals(expected));
@@ -175,9 +175,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('x');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = expected.clone();
@@ -186,9 +186,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
@@ -202,9 +202,9 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+			Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 			Assert.assertFalse("equality test", expected.equals(actual));
 			Assert.assertFalse("inverse equality test", actual.equals(expected));
@@ -223,9 +223,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription("test-description");
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('x');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = expected.clone();
@@ -234,9 +234,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
@@ -250,9 +250,9 @@ public class MutableParameterDefinitionTest {
 			Assert.assertNotEquals("Description", expected.getDescription(), actual.getDescription());
 			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+			Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 			Assert.assertFalse("equality test", expected.equals(actual));
 			Assert.assertFalse("inverse equality test", actual.equals(expected));
@@ -271,9 +271,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt("test-description");
 		expected.setShortOpt('x');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = expected.clone();
@@ -282,9 +282,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
@@ -298,9 +298,9 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 			Assert.assertNotEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+			Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 			Assert.assertFalse("equality test", expected.equals(actual));
 			Assert.assertFalse("inverse equality test", actual.equals(expected));
@@ -319,9 +319,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('G');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = expected.clone();
@@ -330,9 +330,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
@@ -345,9 +345,9 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 			Assert.assertNotEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+			Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 			Assert.assertFalse("equality test", expected.equals(actual));
 			Assert.assertFalse("inverse equality test", actual.equals(expected));
@@ -366,9 +366,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('G');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = expected.clone();
@@ -377,9 +377,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
@@ -392,9 +392,9 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 			Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 			Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-			Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+			Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-			Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertNotEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 			Assert.assertFalse("equality test", expected.equals(actual));
 			Assert.assertFalse("inverse equality test", actual.equals(expected));
@@ -413,9 +413,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('G');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = expected.clone();
@@ -424,34 +424,34 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
 		Assert.assertEquals(expected.hashCode(), actual.hashCode());
 
-		actual.setValueOptional(false);
-		Assert.assertFalse(actual.isValueOptional());
+		actual.setMinValueCount(1);
+		Assert.assertEquals(1, actual.getMinValueCount());
 		Assert.assertEquals("ValueName", expected.getValueName(), actual.getValueName());
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertFalse("equality test", expected.equals(actual));
 		Assert.assertFalse("inverse equality test", actual.equals(expected));
 		Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
 
-		actual.setValueOptional(true);
-		Assert.assertTrue(actual.isValueOptional());
+		actual.setMinValueCount(0);
+		Assert.assertEquals(0, actual.getMinValueCount());
 		Assert.assertEquals("ValueName", expected.getValueName(), actual.getValueName());
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
@@ -470,9 +470,9 @@ public class MutableParameterDefinitionTest {
 		expected.setDescription(UUID.randomUUID().toString());
 		expected.setLongOpt(UUID.randomUUID().toString());
 		expected.setShortOpt('G');
-		expected.setValueCount(UUID.randomUUID().hashCode());
+		expected.setMaxValueCount(UUID.randomUUID().hashCode());
 		expected.setRequired(true);
-		expected.setValueOptional(true);
+		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
 		actual = expected.clone();
@@ -481,9 +481,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));
@@ -495,8 +495,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertFalse("equality test", expected.equals(actual));
 		Assert.assertFalse("inverse equality test", actual.equals(expected));
@@ -508,8 +508,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
 		Assert.assertEquals("LongOpt", expected.getLongOpt(), actual.getLongOpt());
 		Assert.assertEquals("ShortOpt", expected.getShortOpt(), actual.getShortOpt());
-		Assert.assertEquals("ValueCount", expected.getValueCount(), actual.getValueCount());
-		Assert.assertEquals("ValueOptional", expected.isValueOptional(), actual.isValueOptional());
+		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
+		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
 		Assert.assertTrue("equality test", expected.equals(actual));
 		Assert.assertTrue("inverse equality test", actual.equals(expected));

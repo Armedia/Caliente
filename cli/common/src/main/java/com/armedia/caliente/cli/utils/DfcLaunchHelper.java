@@ -28,42 +28,42 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 
 	private static final Parameter DFC_LOCATION = new MutableParameter() //
 		.setLongOpt("paramDfc") //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("paramDfc install location") //
 		.setDescription("The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)") //
 		.freezeCopy();;
 	private static final Parameter DFC_DOCUMENTUM = new MutableParameter() //
 		.setLongOpt("paramDctm") //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("directory") //
 		.setDescription("The user's local Documentum path (i.e. instead of DOCUMENTUM)") //
 		.freezeCopy();;
 	private static final Parameter DFC_PROPERTIES = new MutableParameter() //
 		.setLongOpt("paramDfc-prop") //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("paramDfc.properties location") //
 		.setDescription("The paramDfc.properties file to use instead of the default") //
 		.freezeCopy();;
 	private static final Parameter DFC_DOCBASE = new MutableParameter() //
 		.setRequired(true) //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("docbase") //
 		.setDescription("The Documentum repostory name to connect to") //
 		.freezeCopy();;
 	private static final Parameter DFC_USER = new MutableParameter() //
 		.setRequired(true) //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("username") //
 		.setDescription("The username to connect to Documentum with") //
 		.freezeCopy();
 	private static final Parameter DFC_PASSWORD = new MutableParameter() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("password") //
 		.setDescription("The password to connect to Documentum with")//
 		.freezeCopy();

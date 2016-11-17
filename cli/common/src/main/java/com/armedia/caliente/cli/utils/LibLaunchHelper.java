@@ -21,8 +21,8 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 
 	private static final Parameter LIB = new MutableParameter() //
 		.setShortOpt('l') //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("directory") //
 		.setDescription(
 			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //

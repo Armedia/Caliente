@@ -52,13 +52,13 @@ public final class CommandLineParameter extends BaseParameter implements Compara
 	}
 
 	@Override
-	public int getValueCount() {
-		return this.def.getValueCount();
+	public int getMinValueCount() {
+		return this.def.getMinValueCount();
 	}
 
 	@Override
-	public boolean isValueOptional() {
-		return this.def.isValueOptional();
+	public int getMaxValueCount() {
+		return this.def.getMaxValueCount();
 	}
 
 	@Override

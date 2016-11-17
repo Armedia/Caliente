@@ -13,8 +13,8 @@ public final class ThreadsParameterSet implements LaunchParameterSet {
 
 	private static final Parameter THREADS = new MutableParameter() //
 		.setShortOpt('t') //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("threads") //
 		.setDescription("The number of threads to use") //
 		.freezeCopy();

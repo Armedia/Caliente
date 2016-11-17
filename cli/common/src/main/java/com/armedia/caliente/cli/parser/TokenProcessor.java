@@ -209,7 +209,7 @@ public class TokenProcessor {
 	}
 
 	public void processTokens(RootParameterSet rootParams, TokenListener listener, String... args)
-		throws MissingParameterValueException, UnknownParameterException, TooManyValuesException,
+		throws MissingParameterValuesException, UnknownParameterException, TooManyValuesException,
 		UnknownSubcommandException, ParserFileRecursionLoopException, IOException {
 
 		final Collection<String> c;
@@ -222,9 +222,32 @@ public class TokenProcessor {
 		processTokens(rootParams, listener, c);
 	}
 
+	private boolean processParameter(TokenListener listener, Token token, Parameter parameter, List<String> values)
+		throws MissingParameterValuesException, TooManyValuesException {
+		final int minValues = parameter.getMinValueCount();
+		final int maxValues = parameter.getMaxValueCount();
+		final boolean optional = (minValues <= 0);
+		final boolean unlimited = (maxValues < 0);
+
+		if (!optional && (values.size() < minValues)) {
+			if (listener.tooManyValues(token.source, token.index, parameter,
+				values)) { throw new MissingParameterValuesException(token.source, token.index, parameter, values); }
+			return false;
+		}
+		if (!unlimited && (values.size() > maxValues)) {
+			if (listener.tooManyValues(token.source, token.index, parameter,
+				values)) { throw new TooManyValuesException(token.source, token.index, parameter, values); }
+			// If this isn't an error as per the listener...
+			return false;
+		}
+
+		listener.namedParameterFound(parameter, values);
+		return true;
+	}
+
 	public void processTokens(RootParameterSet rootParams, TokenListener listener, Collection<String> args)
 		throws ParserFileRecursionLoopException, IOException, UnknownParameterException, UnknownSubcommandException,
-		TooManyValuesException {
+		MissingParameterValuesException, TooManyValuesException {
 
 		final TokenCatalog tokens = catalogTokens(args);
 
@@ -251,9 +274,7 @@ public class TokenProcessor {
 				case SHORT_OPTION:
 				case LONG_OPTION:
 					if (currentParameterToken != null) {
-						// The current parameter is valid, so we close it up and clear the argument
-						// list
-						listener.namedParameterFound(currentParameter, currentArgs);
+						processParameter(listener, currentParameterToken, currentParameter, currentArgs);
 						currentArgs.clear();
 						currentParameter = null;
 						currentParameterToken = null;
@@ -293,12 +314,15 @@ public class TokenProcessor {
 				case PLAIN:
 					// Are we processing a parameter?
 					if (currentParameter != null) {
+						final int maxValues = currentParameter.getMaxValueCount();
 						// Can this be considered an argument?
-						if (currentParameter.getValueCount() != 0) {
-							// Arguments are allowed...
+						if (maxValues != 0) {
+							// Arguments are allowed...so we apply the multivalue splitter
 							currentArgs.addAll(splitValues(currentToken.value));
-							if ((currentParameter.getValueCount() > 0)
-								&& (currentArgs.size() > currentParameter.getValueCount())) {
+							// We check the size now because if concatenated values are allowed,
+							// then
+							// the count of attribute
+							if ((maxValues > 0) && (currentArgs.size() > maxValues)) {
 								// There is a limit breach...
 								if (listener.tooManyValues(currentParameterToken.source, currentParameterToken.index,
 									currentParameter,
@@ -335,9 +359,17 @@ public class TokenProcessor {
 						continue;
 					}
 
+					if (currentParameter != null) {
+						processParameter(listener, currentParameterToken, currentParameter, currentArgs);
+						currentArgs.clear();
+						currentParameter = null;
+						currentParameterToken = null;
+					}
+
 					// This is a subcommand, so we replace the current one with this one
 					params = sub;
 					listener.subCommandFound(currentToken.rawString);
+
 					continue;
 			}
 		}

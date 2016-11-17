@@ -175,13 +175,13 @@ public class CommandLineTest {
 		};
 
 		MutableParameter def = new MutableParameter();
-		def.setValueCount(1);
+		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.define(def);
 
 		cl.parse("TEST", args);
 
-		def.setValueCount(1);
+		def.setMaxValueCount(1);
 		def.setShortOpt('c');
 		cl.define(def);
 		cl.parse("TEST", args);
@@ -229,7 +229,7 @@ public class CommandLineTest {
 		};
 
 		MutableParameter def = new MutableParameter();
-		def.setValueCount(1);
+		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
@@ -239,10 +239,10 @@ public class CommandLineTest {
 		def.setShortOpt('e');
 		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
-		def.setValueCount(-1);
+		def.setMaxValueCount(-1);
 		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
-		def.setValueCount(0);
+		def.setMaxValueCount(0);
 		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
@@ -283,7 +283,7 @@ public class CommandLineTest {
 		};
 
 		MutableParameter def = new MutableParameter();
-		def.setValueCount(1);
+		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
@@ -293,10 +293,10 @@ public class CommandLineTest {
 		def.setShortOpt('e');
 		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
-		def.setValueCount(-1);
+		def.setMaxValueCount(-1);
 		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
-		def.setValueCount(0);
+		def.setMaxValueCount(0);
 		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
@@ -341,7 +341,7 @@ public class CommandLineTest {
 		};
 
 		MutableParameter def = new MutableParameter();
-		def.setValueCount(1);
+		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
@@ -351,10 +351,10 @@ public class CommandLineTest {
 		def.setShortOpt('e');
 		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
-		def.setValueCount(-1);
+		def.setMaxValueCount(-1);
 		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
-		def.setValueCount(0);
+		def.setMaxValueCount(0);
 		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
@@ -399,7 +399,7 @@ public class CommandLineTest {
 		};
 
 		MutableParameter def = new MutableParameter();
-		def.setValueCount(1);
+		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
@@ -409,10 +409,10 @@ public class CommandLineTest {
 		def.setShortOpt('e');
 		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
-		def.setValueCount(-1);
+		def.setMaxValueCount(-1);
 		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
-		def.setValueCount(0);
+		def.setMaxValueCount(0);
 		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
@@ -456,7 +456,7 @@ public class CommandLineTest {
 		};
 
 		MutableParameter def = new MutableParameter();
-		def.setValueCount(1);
+		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
@@ -466,10 +466,10 @@ public class CommandLineTest {
 		def.setShortOpt('e');
 		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
-		def.setValueCount(-1);
+		def.setMaxValueCount(-1);
 		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
-		def.setValueCount(0);
+		def.setMaxValueCount(0);
 		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
@@ -513,7 +513,7 @@ public class CommandLineTest {
 		};
 
 		MutableParameter def = new MutableParameter();
-		def.setValueCount(1);
+		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
 		def.setShortOpt('b');
@@ -523,10 +523,10 @@ public class CommandLineTest {
 		def.setShortOpt('e');
 		CommandLineParameter e = cl.define(def);
 		def.setShortOpt('c');
-		def.setValueCount(-1);
+		def.setMaxValueCount(-1);
 		CommandLineParameter c = cl.define(def);
 		def.setShortOpt('f');
-		def.setValueCount(0);
+		def.setMaxValueCount(0);
 		CommandLineParameter f = cl.define(def);
 
 		cl.parse("TEST", args);
@@ -572,11 +572,11 @@ public class CommandLineTest {
 			def.setShortOpt('a');
 			CommandLineParameter a = cl.define(def);
 
-			def.setValueCount(1);
+			def.setMaxValueCount(1);
 			def.setShortOpt('b');
 			CommandLineParameter b = cl.define(def);
 
-			def.setValueCount(-1);
+			def.setMaxValueCount(-1);
 			def.setShortOpt('c');
 			CommandLineParameter c = cl.define(def);
 
@@ -606,11 +606,11 @@ public class CommandLineTest {
 			def.setLongOpt("long-a");
 			CommandLineParameter a = cl.define(def);
 
-			def.setValueCount(1);
+			def.setMaxValueCount(1);
 			def.setLongOpt("long-b");
 			CommandLineParameter b = cl.define(def);
 
-			def.setValueCount(-1);
+			def.setMaxValueCount(-1);
 			def.setLongOpt("long-c");
 			CommandLineParameter c = cl.define(def);
 
@@ -642,7 +642,7 @@ public class CommandLineTest {
 			};
 
 			MutableParameter def = new MutableParameter();
-			def.setValueCount(1);
+			def.setMaxValueCount(1);
 			def.setShortOpt('a');
 			CommandLineParameter a = cl.define(def);
 
@@ -664,7 +664,7 @@ public class CommandLineTest {
 			};
 
 			MutableParameter def = new MutableParameter();
-			def.setValueCount(1);
+			def.setMaxValueCount(1);
 			def.setShortOpt('a');
 			CommandLineParameter a = cl.define(def);
 

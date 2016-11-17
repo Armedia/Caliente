@@ -20,9 +20,9 @@ public interface Parameter {
 
 	public String getValueName();
 
-	public int getValueCount();
+	public int getMinValueCount();
 
-	public boolean isValueOptional();
+	public int getMaxValueCount();
 
 	public boolean isEqual(Parameter other);
 

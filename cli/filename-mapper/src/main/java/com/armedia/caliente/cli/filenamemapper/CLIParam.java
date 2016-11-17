@@ -7,47 +7,54 @@ import com.armedia.caliente.cli.parser.Parameter;
 
 public enum CLIParam implements Parameter {
 	no_fix(new MutableParameter() //
-		.setValueCount(0) //
+		.setMinValueCount(0) //
+		.setMaxValueCount(0) //
 		.setDescription("Disable filename fixes") //
 	), //
 	no_length_fix(new MutableParameter() //
-		.setValueCount(0) //
+		.setMinValueCount(0) //
+		.setMaxValueCount(0) //
 		.setDescription("Disable length repairs on the filename fixer") //
 	), //
 	no_char_fix(new MutableParameter() //
-		.setValueCount(0) //
+		.setMinValueCount(0) //
+		.setMaxValueCount(0) //
 		.setDescription("Disable invalid character repairs on the filename fixer") //
 	), //
 	ignore_case(new MutableParameter() //
-		.setValueCount(0) //
+		.setMinValueCount(0) //
+		.setMaxValueCount(0) //
 		.setDescription("Disable case sensitivity when performing name comparisons") //
 	), //
 	fix_char(new MutableParameter() //
-		.setValueCount(0) //
+		.setMinValueCount(0) //
+		.setMaxValueCount(0) //
 		.setDescription("Use the given character as the replacement for illegal characters (default is '_', "
 			+ "must not be a forbidden character in the target fix scheme, and the period ('.') "
 			+ "and spaces are not allowed in Windows)") //
 	), //
 	fix_mode(new MutableParameter() //
-		.setValueCount(0) //
+		.setMinValueCount(0) //
+		.setMaxValueCount(0) //
 		.setDescription("Filename fix mode. Valid values are WIN (Windows compatibility) or "
 			+ "UNIX (Unix compatibility) - defaults to the current platform") //
 	), //
 	no_dedup(new MutableParameter() //
-		.setValueCount(0) //
+		.setMinValueCount(0) //
+		.setMaxValueCount(0) //
 		.setDescription("Disable filename deduplication") //
 	), //
 	dedup_pattern(new MutableParameter() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("pattern") //
 		.setDescription("The Deduplication pattern to apply - must contain ${id}, and can contain any of ${name}, "
 			+ "${fixChar}, and ${count} (the number of conflicts resolved so far) - default is "
 			+ "\"${name}${fixChar}${id}\"") //
 	), //
 	target(new MutableParameter() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("file") //
 		.setDescription("The target file to write the properties into (default filenamemap.xml)") //
 	), //
@@ -104,13 +111,13 @@ public enum CLIParam implements Parameter {
 	}
 
 	@Override
-	public final int getValueCount() {
-		return this.parameter.getValueCount();
+	public final int getMinValueCount() {
+		return this.parameter.getMinValueCount();
 	}
 
 	@Override
-	public final boolean isValueOptional() {
-		return this.parameter.isValueOptional();
+	public final int getMaxValueCount() {
+		return this.parameter.getMaxValueCount();
 	}
 
 	@Override

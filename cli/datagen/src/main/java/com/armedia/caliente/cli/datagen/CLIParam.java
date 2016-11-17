@@ -11,54 +11,54 @@ public enum CLIParam implements Parameter {
 	), //
 	target(new MutableParameter() //
 		.setRequired(true) //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("folder or cabinet") //
 		.setDescription("The root folder within which to create the data") //
 	), //
 	object_types(new MutableParameter() //
-		.setValueCount(-1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(-1) //
 		.setValueName("type1,type2,type3,...,typeN") //
 		.setDescription("Names of the object types to generate samples for (must be subtypes of dm_sysobject)") //
 	), //
 	tree_depth(new MutableParameter() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("depth") //
 		.setDescription("The depth of the tree (defaults to 1)") //
 	), //
 	folder_count(new MutableParameter() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("number") //
 		.setDescription("The number of folders inside each folder (defaults to one per folder type included)") //
 	), //
 	document_count(new MutableParameter() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("number") //
 		.setDescription("The number of documents inside each folder (defaults to one per non-folder type included)") //
 	), //
 	document_min_size(new MutableParameter() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("threads") //
 		.setDescription(
 			"The minimum size for the (random) content stream for each document (min = 1 byte). Suffixes such "
 				+ "as KB and MB are supported - no suffix = bytes.") //
 	), //
 	document_max_size(new MutableParameter() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("threads") //
 		.setDescription(
 			"The maximum size for the (random) content stream for each document (capped out at 16MB). Suffixes such "
 				+ "as KB and MB are supported - no suffix = bytes.") //
 	), //
 	name_format(new MutableParameter() //
-		.setValueCount(1) //
-		.setValueOptional(false) //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
 		.setValueName("threads") //
 		.setDescription(
 			"The format string to name files and folders after (supports ${type}, ${id}, ${number} and ${uuid})") //
@@ -116,13 +116,13 @@ public enum CLIParam implements Parameter {
 	}
 
 	@Override
-	public final int getValueCount() {
-		return this.parameter.getValueCount();
+	public final int getMinValueCount() {
+		return this.parameter.getMinValueCount();
 	}
 
 	@Override
-	public final boolean isValueOptional() {
-		return this.parameter.isValueOptional();
+	public final int getMaxValueCount() {
+		return this.parameter.getMaxValueCount();
 	}
 
 	@Override
