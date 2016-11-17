@@ -74,7 +74,7 @@ public class TokenProcessor {
 	private TokenProcessor(char parameterMarker) {
 		this(parameterMarker, TokenProcessor.DEFAULT_FILE_MARKER, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
-
+	
 	private TokenProcessor(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
@@ -113,7 +113,6 @@ public class TokenProcessor {
 
 	private List<Token> catalogTokens(Set<String> recursionGuard, TokenSource source, Collection<String> args)
 		throws IOException, ParserFileRecursionLoopException {
-		if (source == null) { throw new IllegalArgumentException("Must provide the source of the tokens to parse"); }
 		if (recursionGuard == null) {
 			recursionGuard = new LinkedHashSet<>();
 		}
@@ -125,7 +124,7 @@ public class TokenProcessor {
 			final String sTrim = s.trim();
 			i++;
 			if (StringUtils.isEmpty(sTrim) && (source != null)) {
-				// If we're inside a file, we skip empty tokens. We don't do that
+				// If we're inside a token source, we skip empty tokens. We don't do that
 				// when processing values in the primary
 				continue;
 			}

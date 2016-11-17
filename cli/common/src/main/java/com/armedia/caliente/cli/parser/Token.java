@@ -39,7 +39,8 @@ public class Token {
 
 	/**
 	 * <p>
-	 * The {@link TokenSource} from which the token was read.
+	 * The {@link TokenSource} from which the token was read. If the value is {@code null}, it means
+	 * it was read from the command line.
 	 * </p>
 	 */
 	final TokenSource source;
@@ -84,7 +85,7 @@ public class Token {
 
 	@Override
 	public String toString() {
-		return String.format("Token [source=%s, index=%s, type=%s, value=%s, rawString=%s]",
-			this.source, this.index, this.type.name(), this.value, this.rawString);
+		return String.format("Token [source=%s, index=%s, type=%s, value=%s, rawString=%s]", this.source, this.index,
+			this.type.name(), this.value, this.rawString);
 	}
 }
