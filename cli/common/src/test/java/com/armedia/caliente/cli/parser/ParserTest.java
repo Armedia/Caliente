@@ -1,9 +1,10 @@
 package com.armedia.caliente.cli.parser;
 
+import java.io.File;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.armedia.caliente.cli.parser.Parser.ParameterSet;
 
 public class ParserTest {
 
@@ -23,13 +24,58 @@ public class ParserTest {
 		Parser p = new Parser();
 
 		args = new String[] {
-			"-a", "--bb", "asdfasdf", "@file", "--", "@file", "--ff"
+			"-a", "--bb", "asdfasdf", "--", "@file", "--ff"
 		};
 
-		ParameterSet parameters = null;
-		ParserListener listener = null;
+		RootParameterSet rootParams = new RootParameterSet("root");
+		TokenListener listener = new TokenListener() {
 
-		p.parse(parameters, listener, args);
+			@Override
+			public void positionalParametersFound(List<String> values) {
+				System.out.printf("POSITIONAL: %s", values);
+			}
+
+			@Override
+			public void namedParameterFound(Parameter parameter, List<String> values) {
+				System.out.printf("PARAMETER: %s %s", parameter.getKey(), values);
+			}
+
+			@Override
+			public void terminatorFound() {
+				System.out.printf("TERMINATOR");
+			}
+
+			@Override
+			public void subCommandFound(String subCommand) {
+				System.out.printf("SUBCOMMAND [%s]", subCommand);
+			}
+
+			@Override
+			public void extraArguments(List<String> arguments) {
+				System.out.printf("EXTRA ARGS: %s", arguments);
+			}
+
+			@Override
+			public boolean missingValues(File sourceFile, int index, Parameter parameter) {
+				return false;
+			}
+
+			@Override
+			public boolean tooManyValues(File sourceFile, int index, Parameter parameter, List<String> values) {
+				return false;
+			}
+
+			@Override
+			public boolean unknownParameterFound(File sourceFile, int index, String value) {
+				return false;
+			}
+
+			@Override
+			public boolean orphanedValueFound(File sourceFile, int index, String value) {
+				return false;
+			}
+		};
+		p.processTokens(rootParams, listener, args);
 	}
 
 }

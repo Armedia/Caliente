@@ -3,9 +3,11 @@ package com.armedia.caliente.cli.parser;
 import java.io.File;
 import java.util.List;
 
-public interface ParserListener {
+public interface TokenListener {
 
-	public void parameterFound(Parameter parameter, List<String> arguments);
+	public void positionalParametersFound(List<String> values);
+
+	public void namedParameterFound(Parameter parameter, List<String> values);
 
 	public void terminatorFound();
 
@@ -20,4 +22,5 @@ public interface ParserListener {
 	public boolean unknownParameterFound(File sourceFile, int index, String value);
 
 	public boolean orphanedValueFound(File sourceFile, int index, String value);
+
 }

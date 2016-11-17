@@ -3,10 +3,15 @@ package com.armedia.caliente.cli.parser;
 import java.io.File;
 import java.util.List;
 
-public class DefaultParserListener implements ParserListener {
+public class DefaultTokenListener implements TokenListener {
 
 	@Override
-	public void parameterFound(Parameter parameter, List<String> arguments) {
+	public void positionalParametersFound(List<String> values) {
+
+	}
+
+	@Override
+	public void namedParameterFound(Parameter parameter, List<String> values) {
 	}
 
 	@Override

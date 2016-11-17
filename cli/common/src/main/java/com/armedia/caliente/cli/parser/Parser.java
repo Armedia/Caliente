@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,98 +16,10 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.cli.parser.Token.Type;
 import com.armedia.commons.utilities.Tools;
 
 public class Parser {
-
-	private static enum TokenType {
-		//
-		/**
-		 * A short option (i.e. -c, -x, etc.) its value is always one character long
-		 */
-		SHORT_OPTION,
-
-		/**
-		 * A long option (i.e. --long-option) - its value is always a string
-		 */
-		LONG_OPTION,
-
-		/**
-		 * A "plain" string - i.e. no prefix of any kind
-		 */
-		PLAIN,
-
-		/**
-		 * The special value '--' to terminate the argument list
-		 */
-		TERMINATOR,
-		//
-		;
-	}
-
-	/**
-	 * <p>
-	 * An object signifying a token that will be part of the parameter stream. It indicates not only
-	 * the {@link TokenType type of the token}, information about where it was read from (the main
-	 * parameter stream or a parameter file), as well as its relative position within that sourceStr
-	 * (index within the parameter stream, or line number within the parameter file).
-	 *
-	 * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
-	 *
-	 */
-	private static class Token {
-		/**
-		 * <p>
-		 * The file from which the token was read. The value {@code null} means that it was read
-		 * from the main parameter stream.
-		 * </p>
-		 */
-		private final File sourceFile;
-
-		/**
-		 * <p>
-		 * The index from within the sourceStr that the token was read. When {@link #sourceFile} is
-		 * {@code null}, this means the index within the parameter stream. Otherwise, it means the
-		 * line number within the file.
-		 * </p>
-		 */
-		private final int index;
-
-		/**
-		 * <p>
-		 * The type of the token
-		 * </p>
-		 */
-		private final TokenType type;
-
-		/**
-		 * <p>
-		 * The token's value, minus any applicable prefixes.
-		 * </p>
-		 */
-		private final String value;
-
-		/**
-		 * <p>
-		 * The original string the token was derived from
-		 * </p>
-		 */
-		private final String sourceStr;
-
-		private Token(File sourceFile, int index, TokenType type, String value, String source) {
-			this.sourceFile = sourceFile;
-			this.index = index;
-			this.type = type;
-			this.value = value;
-			this.sourceStr = source;
-		}
-
-		@Override
-		public String toString() {
-			return String.format("Token [sourceFile=%s, index=%s, type=%s, value=%s, sourceStr=%s]", this.sourceFile,
-				this.index, this.type, this.value, this.sourceStr);
-		}
-	}
 
 	private static class TokenCatalog {
 		private final List<Token> tokens;
@@ -114,36 +27,28 @@ public class Parser {
 
 		private TokenCatalog(List<Token> tokens) {
 			int last = -1;
-			for (int i = tokens.size() - 1; i >= 0; i++) {
+			loop: for (int i = tokens.size() - 1; i >= 0; i--) {
 				Token t = tokens.get(i);
 				switch (t.type) {
 					case LONG_OPTION:
 					case SHORT_OPTION:
 						last = i;
-						// fall-through
-					case PLAIN:
-						continue;
+						break loop;
 
-					case TERMINATOR:
-						break;
+					default:
+						last *= 1;
+						continue;
 				}
 			}
 			this.lastParameter = last;
 			this.tokens = Tools.freezeList(tokens);
 		}
+
+		@Override
+		public String toString() {
+			return String.format("TokenCatalog [lastParameter=%d, tokens=%s]", this.lastParameter, this.tokens);
+		}
 	}
-
-	public static interface ParameterSet {
-
-		public ParameterSet getSubcommand(String name);
-
-		public Parameter getParameter(char shortOption);
-
-		public Parameter getParameter(String longOption);
-
-	}
-
-	private static final String[] NO_ARGS = {};
 
 	private static final String TERMINATOR_FMT = "%s%s";
 	private static final String SHORT_FMT = "^%s(\\S)$";
@@ -171,7 +76,7 @@ public class Parser {
 	private Parser(char parameterMarker) {
 		this(parameterMarker, Parser.DEFAULT_FILE_MARKER, Parser.DEFAULT_VALUE_SPLITTER);
 	}
-
+	
 	private Parser(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, Parser.DEFAULT_VALUE_SPLITTER);
 	}
@@ -204,11 +109,11 @@ public class Parser {
 		return this.valueSeparator;
 	}
 
-	private TokenCatalog catalogTokens(String... args) throws IOException, ParserFileRecursionLoopException {
+	private TokenCatalog catalogTokens(Collection<String> args) throws IOException, ParserFileRecursionLoopException {
 		return new TokenCatalog(catalogTokens(null, null, args));
 	}
 
-	private List<Token> catalogTokens(Set<String> fileRecursion, File sourceFile, String... args)
+	private List<Token> catalogTokens(Set<String> fileRecursion, File sourceFile, Collection<String> args)
 		throws IOException, ParserFileRecursionLoopException {
 		if (fileRecursion == null) {
 			fileRecursion = new LinkedHashSet<>();
@@ -230,7 +135,9 @@ public class Parser {
 				}
 
 				if (terminated) {
-					tokens.add(new Token(sourceFile, i, TokenType.PLAIN, s, s));
+					// If we've found a terminator, all other parameters that follow will be treated
+					// as plain values, regardless
+					tokens.add(new Token(sourceFile, i, Type.PLAIN, s, s));
 					continue;
 				}
 
@@ -238,8 +145,9 @@ public class Parser {
 					if (sourceFile == null) {
 						// We only add the terminator token at the top level, since for files
 						// we simply consume the rest of the file's tokens as plain tokens, and
-						// we don't want to terminate parsing of anything that might come after
-						tokens.add(new Token(sourceFile, i, TokenType.TERMINATOR, sTrim, sTrim));
+						// we don't want to terminate the consumption of anything that might come
+						// after
+						tokens.add(new Token(sourceFile, i, Type.TERMINATOR, sTrim, sTrim));
 					}
 					terminated = true;
 					continue;
@@ -247,19 +155,20 @@ public class Parser {
 
 				m = this.patShort.matcher(sTrim);
 				if (m.matches()) {
-					tokens.add(new Token(sourceFile, i, TokenType.SHORT_OPTION, m.group(1), sTrim));
+					tokens.add(new Token(sourceFile, i, Type.SHORT_OPTION, m.group(1), sTrim));
 					continue;
 				}
 
 				m = this.patLong.matcher(sTrim);
 				if (m.matches()) {
-					tokens.add(new Token(sourceFile, i, TokenType.LONG_OPTION, m.group(1), sTrim));
+					tokens.add(new Token(sourceFile, i, Type.LONG_OPTION, m.group(1), sTrim));
 					continue;
 				}
 
-				// If the first non-whitespace character is the file marker, then treat it as a file
-				if ((this.fileMarker != null) && (sTrim.charAt(0) == this.fileMarker.charValue())) {
-					String fileName = s.substring(s.indexOf(this.fileMarker.charValue()) + 1);
+				// If the first character is the file marker, then treat it as a file
+				if ((this.fileMarker != null) && (s.charAt(0) == this.fileMarker.charValue())) {
+					// Remove the file marker
+					String fileName = s.substring(1);
 					File parameterFile = new File(fileName);
 					try {
 						parameterFile = parameterFile.getCanonicalFile();
@@ -279,15 +188,14 @@ public class Parser {
 						fileArgs.add(line.trim());
 					}
 					if (!fileArgs.isEmpty()) {
-						List<Token> fileTokens = catalogTokens(fileRecursion, parameterFile,
-							fileArgs.toArray(Parser.NO_ARGS));
+						List<Token> fileTokens = catalogTokens(fileRecursion, parameterFile, fileArgs);
 						if (fileTokens != null) {
 							tokens.addAll(fileTokens);
 						}
 					}
 				}
 
-				tokens.add(new Token(sourceFile, i, TokenType.PLAIN, s, s));
+				tokens.add(new Token(sourceFile, i, Type.PLAIN, s, s));
 			}
 			return tokens;
 		} finally {
@@ -304,53 +212,59 @@ public class Parser {
 		return Arrays.asList(StringUtils.splitPreserveAllTokens(str, this.valueSeparator.charValue()));
 	}
 
-	public void parse(ParameterSet params, ParserListener listener, String... args)
+	public void processTokens(RootParameterSet rootParams, TokenListener listener, String... args)
 		throws MissingParameterValueException, UnknownParameterException, TooManyValuesException,
 		UnknownSubcommandException, ParserFileRecursionLoopException, IOException {
+
+		final Collection<String> c;
+		if (args == null) {
+			c = Collections.emptyList();
+		} else {
+			c = Arrays.asList(args);
+		}
+
+		processTokens(rootParams, listener, c);
+	}
+
+	public void processTokens(RootParameterSet rootParams, TokenListener listener, Collection<String> args)
+		throws ParserFileRecursionLoopException, IOException, UnknownParameterException, UnknownSubcommandException,
+		TooManyValuesException {
 
 		final TokenCatalog tokens = catalogTokens(args);
 
 		int i = -1;
+		ParameterSet params = rootParams;
+
 		Token currentParameterToken = null;
 		Parameter currentParameter = null;
 		List<String> currentArgs = new ArrayList<>();
 		boolean terminated = false;
+
 		for (final Token currentToken : tokens.tokens) {
 			i++;
 
+			// If we've reached the terminator, simply add the remaining values verbatim
+			// to the currentArgs list, since we'll eventually report them separately
 			if (terminated) {
-				currentArgs.addAll(splitValues(currentToken.value));
+				currentArgs.add(currentToken.value);
 				continue;
 			}
 
 			switch (currentToken.type) {
-
 				case TERMINATOR:
 				case SHORT_OPTION:
 				case LONG_OPTION:
-					if (currentParameter != null) {
-						if (!currentParameter.isValueOptional() && (currentParameter.getValueCount() != 0)
-							&& currentArgs.isEmpty()) {
-							// The current parameter requires values, so complain loudly, or stow
-							// the complaint for later...
-							if (listener
-								.missingValues(currentParameterToken.sourceFile, currentParameterToken.index,
-									currentParameter)) { throw new MissingParameterValueException(
-										currentParameterToken.sourceFile, currentParameterToken.index,
-										currentParameter); }
-							continue;
-						}
-
+					if (currentParameterToken != null) {
 						// The current parameter is valid, so we close it up and clear the argument
 						// list
-						listener.parameterFound(currentParameter, currentArgs);
+						listener.namedParameterFound(currentParameter, currentArgs);
 						currentArgs.clear();
 						currentParameter = null;
 						currentParameterToken = null;
 					}
 
 					// If this is a terminator, then we terminate, and that's that
-					if (currentToken.type == TokenType.TERMINATOR) {
+					if (currentToken.type == Token.Type.TERMINATOR) {
 						terminated = true;
 						listener.terminatorFound();
 						continue;
@@ -358,7 +272,7 @@ public class Parser {
 
 					// Ok...so...now we need to set up the next parameter
 					try {
-						final Parameter nextParameter = (currentToken.type == TokenType.SHORT_OPTION
+						final Parameter nextParameter = (currentToken.type == Token.Type.SHORT_OPTION
 							? params.getParameter(currentToken.value.charAt(0))
 							: params.getParameter(currentToken.value));
 						if (nextParameter == null) {
@@ -409,7 +323,7 @@ public class Parser {
 					// them (or we have no parameter)...so it's either a subcommand, or one of the
 					// trailing command-line values...
 
-					ParameterSet sub = params.getSubcommand(currentToken.value);
+					ParameterSet sub = rootParams.getSubcommand(currentToken.value);
 					if (sub == null) {
 						// Not a subcommand, so ... is this a trailing argument?
 						if (i < tokens.lastParameter) {
@@ -421,7 +335,7 @@ public class Parser {
 						}
 
 						// We're OK..this is a trailing value...
-						currentArgs.addAll(splitValues(currentToken.value));
+						currentArgs.add(currentToken.value);
 						continue;
 					}
 

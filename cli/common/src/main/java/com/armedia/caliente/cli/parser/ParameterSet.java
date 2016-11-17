@@ -8,10 +8,9 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.cli.parser.Parser.ParameterSet;
 import com.armedia.commons.utilities.Tools;
 
-public class DefaultParameterSet implements ParameterSet {
+public class ParameterSet {
 
 	protected static final Pattern VALID_SHORT = Pattern.compile("^[[\\p{Punct}&&[^-]]\\p{Alnum}]$");
 
@@ -19,9 +18,8 @@ public class DefaultParameterSet implements ParameterSet {
 
 	private final Map<Character, Parameter> shortOpts = new HashMap<>();
 	private final Map<String, Parameter> longOpts = new HashMap<>();
-	private final Map<String, ParameterSet> subs = new HashMap<>();
 
-	public DefaultParameterSet(String name) {
+	public ParameterSet(String name) {
 		this.name = name;
 	}
 
@@ -30,7 +28,7 @@ public class DefaultParameterSet implements ParameterSet {
 	}
 
 	private boolean validateShort(Character shortOpt) {
-		if (!DefaultParameterSet.VALID_SHORT.matcher(shortOpt.toString()).matches()) { return false; }
+		if (!ParameterSet.VALID_SHORT.matcher(shortOpt.toString()).matches()) { return false; }
 		if (Tools.equals(shortOpt, Parser.DEFAULT_PARAMETER_MARKER)) { return false; }
 		if (!isShortOptionValid(shortOpt)) { return false; }
 		return true;
@@ -40,7 +38,7 @@ public class DefaultParameterSet implements ParameterSet {
 		return (shortOpt != null);
 	}
 
-	private boolean validateLong(String name) {
+	protected boolean validateLong(String name) {
 		if (StringUtils.isEmpty(name)) { return false; }
 		if (StringUtils.containsWhitespace(name)) { return false; }
 		if (!isLongOptionValid(name)) { return false; }
@@ -51,43 +49,12 @@ public class DefaultParameterSet implements ParameterSet {
 		return (longOpt != null);
 	}
 
-	@Override
-	public ParameterSet getSubcommand(String subName) {
-		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
-			"The string [%s] is not a valid subcommand name - it may not be null, the empty string, or contain whitespace",
-			subName)); }
-		return this.subs.get(subName);
-	}
-
-	public boolean hasSubcommand(String subName) {
-		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
-			"The string [%s] is not a valid subcommand name - it may not be null, the empty string, or contain whitespace",
-			subName)); }
-		return this.subs.containsKey(subName);
-	}
-
-	public void addSubcommand(String subName, ParameterSet sub) {
-		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
-			"The string [%s] is not a valid subcommand name - it may not be null, the empty string, or contain whitespace",
-			subName)); }
-		if (sub == null) { throw new IllegalArgumentException("Must provide a subcommand parameter set"); }
-		this.subs.put(subName, sub);
-	}
-
-	public ParameterSet removeSubcommand(String subName) {
-		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
-			"The string [%s] is not a valid subcommand name - it may not be null, the empty string, or contain whitespace",
-			subName)); }
-		return this.subs.remove(subName);
-	}
-
 	public boolean hasParameter(char shortOpt) {
 		if (!validateShort(shortOpt)) { throw new IllegalArgumentException(
 			String.format("The character [%s] is not a valid short option", shortOpt)); }
 		return this.shortOpts.containsKey(shortOpt);
 	}
 
-	@Override
 	public Parameter getParameter(char shortOpt) {
 		if (!validateShort(shortOpt)) { throw new IllegalArgumentException(
 			String.format("The character [%s] is not a valid short option", shortOpt)); }
@@ -106,7 +73,6 @@ public class DefaultParameterSet implements ParameterSet {
 		return this.longOpts.containsKey(longOpt);
 	}
 
-	@Override
 	public Parameter getParameter(String longOpt) {
 		if (!validateLong(longOpt)) { throw new IllegalArgumentException(
 			String.format("The string [%s] is not a valid long option name", longOpt)); }
