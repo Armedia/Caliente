@@ -167,6 +167,7 @@ public class TokenProcessor {
 				final TokenSource newSource;
 				if (fileName.charAt(0) == this.fileMarker.charValue()) {
 					// It's a URL...
+					// TODO: Eventually port this to support Commons-VFS URLs?
 					newSource = new TokenUrlSource(fileName.substring(1));
 				} else {
 					newSource = new TokenLocalFileSource(fileName);
