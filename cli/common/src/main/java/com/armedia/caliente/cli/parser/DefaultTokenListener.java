@@ -6,7 +6,6 @@ public class DefaultTokenListener implements TokenListener {
 
 	@Override
 	public void positionalParametersFound(List<String> values) {
-
 	}
 
 	@Override
@@ -14,7 +13,7 @@ public class DefaultTokenListener implements TokenListener {
 	}
 
 	@Override
-	public void terminatorFound(TokenSource source, int index) {
+	public void terminatorFound(Token token) {
 	}
 
 	@Override
@@ -26,22 +25,22 @@ public class DefaultTokenListener implements TokenListener {
 	}
 
 	@Override
-	public boolean missingValues(TokenSource source, int index, Parameter parameter) {
-		return true;
+	public boolean missingValues(Token token, Parameter parameter) {
+		return false;
 	}
 
 	@Override
-	public boolean tooManyValues(TokenSource source, int index, Parameter parameter, List<String> values) {
-		return true;
+	public boolean tooManyValues(Token token, Parameter parameter, List<String> values) {
+		return false;
 	}
 
 	@Override
-	public boolean unknownParameterFound(TokenSource source, int index, String value) {
-		return true;
+	public boolean unknownParameterFound(Token token) {
+		return false;
 	}
 
 	@Override
-	public boolean orphanedValueFound(TokenSource source, int index, String value) {
-		return true;
+	public boolean orphanedValueFound(Token token) {
+		return false;
 	}
 }

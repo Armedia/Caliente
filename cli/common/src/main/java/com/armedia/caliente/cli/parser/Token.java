@@ -12,7 +12,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class Token {
+public final class Token {
 
 	public static enum Type {
 		//
@@ -83,6 +83,26 @@ public class Token {
 		this.type = type;
 		this.value = value;
 		this.rawString = rawString;
+	}
+
+	public TokenSource getSource() {
+		return this.source;
+	}
+
+	public int getIndex() {
+		return this.index;
+	}
+
+	public Type getType() {
+		return this.type;
+	}
+
+	public String getValue() {
+		return this.value;
+	}
+
+	public String getRawString() {
+		return this.rawString;
 	}
 
 	@Override

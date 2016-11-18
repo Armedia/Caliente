@@ -8,18 +8,18 @@ public interface TokenListener {
 
 	public void namedParameterFound(Parameter parameter, List<String> values);
 
-	public void terminatorFound(TokenSource source, int index);
+	public void terminatorFound(Token token);
 
 	public void subCommandFound(String subCommand);
 
 	public void extraArguments(List<String> arguments);
 
-	public boolean missingValues(TokenSource source, int index, Parameter parameter);
+	public boolean missingValues(Token token, Parameter parameter);
 
-	public boolean tooManyValues(TokenSource source, int index, Parameter parameter, List<String> values);
+	public boolean tooManyValues(Token token, Parameter parameter, List<String> values);
 
-	public boolean unknownParameterFound(TokenSource source, int index, String value);
+	public boolean unknownParameterFound(Token token);
 
-	public boolean orphanedValueFound(TokenSource source, int index, String value);
+	public boolean orphanedValueFound(Token token);
 
 }

@@ -75,7 +75,7 @@ public class TokenProcessor {
 	private TokenProcessor(char parameterMarker) {
 		this(parameterMarker, TokenProcessor.DEFAULT_FILE_MARKER, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
-
+	
 	private TokenProcessor(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
@@ -241,12 +241,12 @@ public class TokenProcessor {
 		final boolean unlimited = (maxValues < 0);
 
 		if (!optional && (values.size() < minValues)) {
-			if (listener.tooManyValues(token.source, token.index, parameter,
+			if (listener.tooManyValues(token, parameter,
 				values)) { throw new MissingParameterValuesException(token.source, token.index, parameter, values); }
 			return false;
 		}
 		if (!unlimited && (values.size() > maxValues)) {
-			if (listener.tooManyValues(token.source, token.index, parameter,
+			if (listener.tooManyValues(token, parameter,
 				values)) { throw new TooManyValuesException(token.source, token.index, parameter, values); }
 			// If this isn't an error as per the listener...
 			return false;
@@ -294,7 +294,7 @@ public class TokenProcessor {
 					// If this is a terminator, then we terminate, and that's that
 					if (currentToken.type == Token.Type.TERMINATOR) {
 						terminated = true;
-						listener.terminatorFound(currentToken.source, currentToken.index);
+						listener.terminatorFound(currentToken);
 						continue;
 					}
 
@@ -304,8 +304,7 @@ public class TokenProcessor {
 							? parameterSet.getParameter(currentToken.value.charAt(0))
 							: parameterSet.getParameter(currentToken.value));
 						if (nextParameter == null) {
-							if (!listener.unknownParameterFound(currentToken.source, currentToken.index,
-								currentToken.rawString)) {
+							if (!listener.unknownParameterFound(currentToken)) {
 								// The parameter is unknown, but this isn't an error, so we simply
 								// move on
 								continue;
@@ -335,8 +334,7 @@ public class TokenProcessor {
 							// the count of attribute
 							if ((maxValues > 0) && (currentValues.size() > maxValues)) {
 								// There is a limit breach...
-								if (listener.tooManyValues(currentParameterToken.source, currentParameterToken.index,
-									currentParameter,
+								if (listener.tooManyValues(currentParameterToken, currentParameter,
 									currentValues)) { throw new TooManyValuesException(currentParameterToken.source,
 										currentParameterToken.index, currentParameter, currentValues); }
 								// If this isn't to be treated as an error, we simply keep going
@@ -357,9 +355,8 @@ public class TokenProcessor {
 					if (subCommand == null) {
 						// Not a subcommand, so ... is this a trailing argument?
 						if (index < tokens.lastParameter) {
-							if (listener.orphanedValueFound(currentToken.source, currentToken.index,
-								currentToken.value)) { throw new UnknownSubcommandException(currentToken.source,
-									currentToken.index, currentToken.rawString); }
+							if (listener.orphanedValueFound(currentToken)) { throw new UnknownSubcommandException(
+								currentToken.source, currentToken.index, currentToken.rawString); }
 							// Orphaned value, but not causing a failure
 							continue;
 						}

@@ -44,8 +44,9 @@ public class TokenProcessorTest {
 			}
 
 			@Override
-			public void terminatorFound(TokenSource source, int index) {
-				System.out.printf("TERMINATOR (%d @ %s)%n", index, source != null ? source.getKey() : "(root)");
+			public void terminatorFound(Token token) {
+				System.out.printf("TERMINATOR (%d @ %s)%n", token.index,
+					token.source != null ? token.source.getKey() : "(root)");
 			}
 
 			@Override
@@ -59,30 +60,30 @@ public class TokenProcessorTest {
 			}
 
 			@Override
-			public boolean missingValues(TokenSource source, int index, Parameter parameter) {
-				System.out.printf("MISSING VALUES FOR %s (%d @ %s)%n", parameter.getKey(), index,
-					source != null ? source.getKey() : "(root)");
+			public boolean missingValues(Token token, Parameter parameter) {
+				System.out.printf("MISSING VALUES FOR %s (%d @ %s)%n", parameter.getKey(), token.index,
+					token.source != null ? token.source.getKey() : "(root)");
 				return false;
 			}
 
 			@Override
-			public boolean tooManyValues(TokenSource source, int index, Parameter parameter, List<String> values) {
-				System.out.printf("TOO MANY VALUES FOR %s (%d @ %s): %s%n", parameter.getKey(), index,
-					source != null ? source.getKey() : "(root)", values);
+			public boolean tooManyValues(Token token, Parameter parameter, List<String> values) {
+				System.out.printf("TOO MANY VALUES FOR %s (%d @ %s): %s%n", parameter.getKey(), token.index,
+					token.source != null ? token.source.getKey() : "(root)", values);
 				return false;
 			}
 
 			@Override
-			public boolean unknownParameterFound(TokenSource source, int index, String value) {
-				System.out.printf("UNKNOWN PARAMETER %s (%d @ %s)%n", value, index,
-					source != null ? source.getKey() : "(root)");
+			public boolean unknownParameterFound(Token token) {
+				System.out.printf("UNKNOWN PARAMETER %s (%d @ %s)%n", token.value, token.index,
+					token.source != null ? token.source.getKey() : "(root)");
 				return false;
 			}
 
 			@Override
-			public boolean orphanedValueFound(TokenSource source, int index, String value) {
-				System.out.printf("ORPHANED VALUE %s (%d @ %s)%n", value, index,
-					source != null ? source.getKey() : "(root)");
+			public boolean orphanedValueFound(Token token) {
+				System.out.printf("ORPHANED VALUE %s (%d @ %s)%n", token.value, token.index,
+					token.source != null ? token.source.getKey() : "(root)");
 				return false;
 			}
 		};
