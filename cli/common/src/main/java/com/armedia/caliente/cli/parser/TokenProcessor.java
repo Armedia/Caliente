@@ -2,12 +2,16 @@ package com.armedia.caliente.cli.parser;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -109,13 +113,17 @@ public class TokenProcessor {
 	}
 
 	private TokenCatalog catalogTokens(Collection<String> args) throws IOException, ParserFileRecursionLoopException {
-		return new TokenCatalog(catalogTokens(null, null, args));
+		return new TokenCatalog(catalogTokens(null, null, null, args));
 	}
 
-	private List<Token> catalogTokens(Set<String> recursionGuard, TokenSource source, Collection<String> args)
+	private List<Token> catalogTokens(Set<String> recursionGuard, TokenSource source,
+		Map<String, List<Token>> tokenSourceCache, Collection<String> args)
 		throws IOException, ParserFileRecursionLoopException {
 		if (recursionGuard == null) {
 			recursionGuard = new LinkedHashSet<>();
+		}
+		if (tokenSourceCache == null) {
+			tokenSourceCache = new HashMap<>();
 		}
 		boolean terminated = false;
 		Matcher m = null;
@@ -176,7 +184,15 @@ public class TokenProcessor {
 						throw new IOException(String.format("Failed to properly process the URI [%s]", uri), e);
 					}
 				} else {
-					newSource = new TokenLocalFileSource(fileName);
+					// It's a local file... if the current source is another local file,
+					// and the given path isn't absolute, take its path to be relative to that one
+					Path path = Paths.get(fileName);
+					if (!path.isAbsolute() && TokenLocalPathSource.class.isInstance(source)) {
+						TokenLocalPathSource pathSource = TokenLocalPathSource.class.cast(source);
+						Path relativeTo = pathSource.getSourcePath().getParent();
+						path = relativeTo.resolve(path);
+					}
+					newSource = new TokenLocalPathSource(path);
 				}
 
 				// Before we recurse, we check...
@@ -184,25 +200,30 @@ public class TokenProcessor {
 					.add(newSource.getKey())) { throw new ParserFileRecursionLoopException(source, recursionGuard); }
 
 				try {
-					List<String> fileArgs = new ArrayList<>();
-					for (String line : newSource.getTokens()) {
-						Matcher commentMatcher = TokenProcessor.FILE_COMMENT.matcher(line);
-						if (commentMatcher.find()) {
-							// Strip everything past the first comment character
-							line = line.substring(0, commentMatcher.start());
-						}
-						// If we have any # characters left, we remove all preceding backslashes, to
-						// un-escape them
-						line = line.replaceAll("\\\\\\\\#", "#");
+					List<Token> subTokens = tokenSourceCache.get(newSource.getKey());
+					if (subTokens == null) {
+						// Nothing cached... fetch the tokens!
+						Collection<String> fileArgs = new ArrayList<>();
+						for (String line : newSource.getTokens()) {
+							Matcher commentMatcher = TokenProcessor.FILE_COMMENT.matcher(line);
+							if (commentMatcher.find()) {
+								// Strip everything past the first comment character
+								line = line.substring(0, commentMatcher.start());
+							}
+							// If we have any # characters left, we remove all preceding
+							// backslashes, to
+							// un-escape them
+							line = line.replaceAll("\\\\\\\\#", "#");
 
-						fileArgs.add(line.trim());
-					}
-					if (!fileArgs.isEmpty()) {
-						List<Token> fileTokens = catalogTokens(recursionGuard, newSource, fileArgs);
-						if (fileTokens != null) {
-							tokens.addAll(fileTokens);
+							fileArgs.add(line.trim());
 						}
+						if (!fileArgs.isEmpty()) {
+							subTokens = catalogTokens(recursionGuard, newSource, tokenSourceCache, fileArgs);
+						}
+						subTokens = Tools.freezeList(subTokens, true);
+						tokenSourceCache.put(newSource.getKey(), subTokens);
 					}
+					tokens.addAll(subTokens);
 				} finally {
 					recursionGuard.remove(newSource.getKey());
 				}

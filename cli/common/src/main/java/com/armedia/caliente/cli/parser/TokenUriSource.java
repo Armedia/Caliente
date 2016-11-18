@@ -29,7 +29,7 @@ public class TokenUriSource extends TokenStreamSource {
 	}
 
 	public TokenUriSource(URI sourceUri) {
-		if (sourceUri == null) { throw new IllegalArgumentException("Must provide a non-null URL object"); }
+		if (sourceUri == null) { throw new IllegalArgumentException("Must provide a non-null URI object"); }
 		this.sourceUri = sourceUri;
 	}
 
