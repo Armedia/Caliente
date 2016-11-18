@@ -191,6 +191,10 @@ public class TokenProcessor {
 							// Strip everything past the first comment character
 							line = line.substring(0, commentMatcher.start());
 						}
+						// If we have any # characters left, we remove all preceding backslashes, to
+						// un-escape them
+						line = line.replaceAll("\\\\\\\\#", "#");
+
 						fileArgs.add(line.trim());
 					}
 					if (!fileArgs.isEmpty()) {
