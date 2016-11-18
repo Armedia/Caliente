@@ -6,7 +6,8 @@ first-line
 -s
 fourth crap
 --fifth
-@@classpath:/test-parameter-file2.txt # cause a recursion loop
+something\#escapedcomment
+#@@classpath:/test-parameter-file.txt # cause a recursion loop
 --
 skjdlf dsafjklasdf lkjalskjfd a
 f dasdf a
@@ -16,4 +17,5 @@ asdf asdf
 asdf 
 asdf
  asdf 
+ 
  
