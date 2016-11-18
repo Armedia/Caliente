@@ -26,10 +26,10 @@ public class TokenProcessorTest {
 			"-a", "--bb", "subcommand", "asdfasdf", "@@classpath:/test-parameter-file.txt", "--", "@file", "--ff"
 		};
 
-		RootParameterSet rootParams = new RootParameterSet("root");
+		CommandLineInterface rootParams = new CommandLineInterface("root");
 		rootParams.addParameter(new MutableParameter().setShortOpt('a'));
 		rootParams.addParameter(new MutableParameter().setLongOpt("bb"));
-		rootParams.addSubcommand("subcommand", new ParameterSet("subcommand"));
+		rootParams.addSubcommand("subcommand", new MutableParameterSet("subcommand"));
 
 		TokenListener listener = new TokenListener() {
 
