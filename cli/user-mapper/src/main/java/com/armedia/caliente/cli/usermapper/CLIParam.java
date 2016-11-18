@@ -8,7 +8,6 @@ import com.armedia.caliente.cli.parser.Parameter;
 public enum CLIParam implements Parameter {
 	//
 	dctm_sam(new MutableParameter() //
-		.setMinValueCount(0) //
 		.setMaxValueCount(-1) //
 		.setValueName("attribute name") //
 		.setDescription("The Documentum attribute to attempt to use for mapping directly to the sAMAccountName. "
@@ -52,13 +51,9 @@ public enum CLIParam implements Parameter {
 		.setDescription("The Base DN to search LDAP for groups (SUB scope)") //
 	), //
 	ldap_on_demand(new MutableParameter() //
-		.setMinValueCount(0) //
-		.setMaxValueCount(0) //
 		.setDescription("Execute LDAP queries on demand vs. batched up front (default is batched up front)") //
 	), //
 	add_docbase(new MutableParameter() //
-		.setMinValueCount(0) //
-		.setMaxValueCount(0) //
 		.setDescription("Add the docbase name to the files generated (use for running multiple "
 			+ "instances at once in the same directory)") //
 	), //
