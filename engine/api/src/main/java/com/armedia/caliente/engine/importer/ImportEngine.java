@@ -45,6 +45,7 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
 
 /**
