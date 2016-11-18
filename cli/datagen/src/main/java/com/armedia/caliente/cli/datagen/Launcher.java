@@ -152,7 +152,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
 	@Override
-	public Collection<? extends Parameter> getParameterDefinitions(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
 		return Arrays.asList(CLIParam.values());
 	}
 

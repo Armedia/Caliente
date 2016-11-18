@@ -15,6 +15,6 @@ public interface LaunchParameterSet {
 	 * @param commandLine
 	 * @return the collection of {@link Parameter} instances to use in parsing the command line
 	 */
-	public Collection<? extends Parameter> getParameterDefinitions(CommandLineValues commandLine);
+	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine);
 
 }

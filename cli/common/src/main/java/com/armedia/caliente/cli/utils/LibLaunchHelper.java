@@ -57,7 +57,7 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameterDefinitions(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
 		return Collections.singleton(LibLaunchHelper.LIB);
 	}
 

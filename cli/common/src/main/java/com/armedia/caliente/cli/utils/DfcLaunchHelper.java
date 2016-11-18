@@ -129,7 +129,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameterDefinitions(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
 		ArrayList<Parameter> ret = new ArrayList<>();
 		ret.add(this.paramDfcProp);
 		ret.add(this.paramDfc);

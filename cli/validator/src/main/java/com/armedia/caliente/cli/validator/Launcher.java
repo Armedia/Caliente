@@ -47,7 +47,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
-	public Collection<CLIParam> getParameterDefinitions(CommandLineValues commandLine) {
+	public Collection<CLIParam> getParameters(CommandLineValues commandLine) {
 		return Arrays.asList(CLIParam.values());
 	}
 

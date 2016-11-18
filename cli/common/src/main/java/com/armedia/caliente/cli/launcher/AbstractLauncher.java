@@ -103,7 +103,7 @@ public abstract class AbstractLauncher {
 			Collection<? extends LaunchParameterSet> launchParameterSets = getLaunchParameterSets(cl, ++pass);
 			if (launchParameterSets != null) {
 				for (LaunchParameterSet parameterSet : launchParameterSets) {
-					final Collection<? extends Parameter> p = parameterSet.getParameterDefinitions(cl);
+					final Collection<? extends Parameter> p = parameterSet.getParameters(cl);
 					if ((p != null) && !p.isEmpty()) {
 						newParameters.addAll(p);
 					}

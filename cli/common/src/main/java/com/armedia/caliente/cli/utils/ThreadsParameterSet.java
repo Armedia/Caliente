@@ -70,7 +70,7 @@ public final class ThreadsParameterSet implements LaunchParameterSet {
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameterDefinitions(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
 		return Collections.singleton(ThreadsParameterSet.THREADS);
 	}
 
