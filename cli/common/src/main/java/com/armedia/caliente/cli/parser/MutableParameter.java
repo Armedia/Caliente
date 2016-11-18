@@ -3,8 +3,6 @@ package com.armedia.caliente.cli.parser;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.armedia.commons.utilities.Tools;
-
 public final class MutableParameter extends BaseParameter implements Cloneable {
 
 	protected boolean required = false;
@@ -18,26 +16,34 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	protected Set<String> allowedValues = new TreeSet<>();
 
 	public MutableParameter() {
+		this(null);
 	}
 
-	MutableParameter(Parameter other) {
-		this.required = other.isRequired();
-		this.description = other.getDescription();
-		this.shortOpt = other.getShortOpt();
-		this.longOpt = other.getLongOpt();
-		this.minValueCount = other.getMinValueCount();
-		this.maxValueCount = other.getMaxValueCount();
-		this.valueName = other.getValueName();
-		this.valueSep = other.getValueSep();
-		Set<String> allowedValues = other.getAllowedValues();
-		if (allowedValues != null) {
-			this.allowedValues.addAll(allowedValues);
+	public MutableParameter(Parameter other) {
+		if (other != null) {
+			this.required = other.isRequired();
+			this.description = other.getDescription();
+			this.shortOpt = other.getShortOpt();
+			this.longOpt = other.getLongOpt();
+			this.minValueCount = other.getMinValueCount();
+			this.maxValueCount = other.getMaxValueCount();
+			this.valueName = other.getValueName();
+			this.valueSep = other.getValueSep();
+			Set<String> allowedValues = other.getAllowedValues();
+			if (allowedValues != null) {
+				this.allowedValues.addAll(allowedValues);
+			}
 		}
 	}
 
 	@Override
 	public MutableParameter clone() {
 		return new MutableParameter(this);
+	}
+
+	@Override
+	public String getKey() {
+		return BaseParameter.calculateKey(this);
 	}
 
 	@Override
@@ -134,38 +140,10 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	}
 
 	@Override
-	public int hashCode() {
-		return Tools.hashTool(this, null, this.required, this.description, this.shortOpt, this.longOpt, this.valueName,
-			this.maxValueCount, this.minValueCount, this.valueSep);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (!Tools.baseEquals(this, obj)) { return false; }
-		MutableParameter other = MutableParameter.class.cast(obj);
-		return isEqual(other);
-	}
-
-	@Override
-	public boolean isEqual(Parameter other) {
-		if (other == null) { return false; }
-		if (isRequired() != other.isRequired()) { return false; }
-		if (getMinValueCount() != other.getMinValueCount()) { return false; }
-		if (getMaxValueCount() != other.getMaxValueCount()) { return false; }
-		if (!Tools.equals(getDescription(), other.getDescription())) { return false; }
-		if (!Tools.equals(getLongOpt(), other.getLongOpt())) { return false; }
-		if (!Tools.equals(getShortOpt(), other.getShortOpt())) { return false; }
-		if (!Tools.equals(getValueName(), other.getValueName())) { return false; }
-		if (!Tools.equals(getValueSep(), other.getValueSep())) { return false; }
-		if (!Tools.equals(getAllowedValues(), other.getAllowedValues())) { return false; }
-		return true;
-	}
-
-	@Override
 	public String toString() {
 		return String.format(
-			"MutableParameter [required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s]",
-			this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount, this.maxValueCount,
-			this.valueName, this.minValueCount, this.valueSep);
+			"MutableParameter [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s]",
+			getKey(), this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount,
+			this.maxValueCount, this.valueName, this.minValueCount, this.valueSep);
 	}
 }

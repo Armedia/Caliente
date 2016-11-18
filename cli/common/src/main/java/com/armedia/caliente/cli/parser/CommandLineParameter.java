@@ -72,28 +72,6 @@ public final class CommandLineParameter extends BaseParameter implements Compara
 		return Tools.compare(this.cliKey, o.cliKey);
 	}
 
-	@Override
-	public int hashCode() {
-		return Tools.hashTool(this, null, this.cli, this.cliKey);
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (!Tools.baseEquals(this, obj)) { return false; }
-		CommandLineParameter other = CommandLineParameter.class.cast(obj);
-		if (!Tools.equals(this.cliKey, other.cliKey)) { return false; }
-		if (this.cli != other.cli) { return false; }
-		// TODO: enable comparison of the full definitions?
-		/*
-		if (!this.def.isEqual(other.def)) { return false; }
-		*/
-		return true;
-	}
-
-	public Parameter getDefinition() {
-		return this.def;
-	}
-
 	public CommandLine getCLI() {
 		return this.cli;
 	}
@@ -172,10 +150,5 @@ public final class CommandLineParameter extends BaseParameter implements Compara
 
 	public List<String> getAllStrings() {
 		return this.cli.getAllStrings(this);
-	}
-
-	@Override
-	public boolean isEqual(Parameter other) {
-		return this.def.isEqual(other);
 	}
 }

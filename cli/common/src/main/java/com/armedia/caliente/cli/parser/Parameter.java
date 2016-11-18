@@ -23,7 +23,4 @@ public interface Parameter {
 	public int getMinValueCount();
 
 	public int getMaxValueCount();
-
-	public boolean isEqual(Parameter other);
-
 }

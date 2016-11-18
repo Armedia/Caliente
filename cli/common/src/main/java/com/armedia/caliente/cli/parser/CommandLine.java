@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.CommandLineException;
 import com.armedia.commons.utilities.Tools;
 
-public class CommandLine implements CommandLineValues, Iterable<CommandLineParameter> {
+public class CommandLine implements CommandLineValues {
 
 	private static final Parameter HELP;
 
@@ -43,7 +43,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 	private final Map<String, CommandLineParameter> longOptions = new TreeMap<>();
 	private final Map<String, CommandLineParameter> commandLineParameters = new TreeMap<>();
 
-	private final CommandLineParameter help;
+	private final boolean helpSupported;
 
 	private final Map<String, List<String>> values = new HashMap<>();
 	private final List<String> remainingParameters = new ArrayList<>();
@@ -57,13 +57,14 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 	public CommandLine(boolean defaultHelp) {
 		if (defaultHelp) {
 			try {
-				this.help = define(CommandLine.HELP, true);
+				define(CommandLine.HELP, true);
+				this.helpSupported = true;
 			} catch (CommandLineException e) {
 				// Not gonna happen...but still barf if it does
 				throw new RuntimeException("Unexpected Command Line exception", e);
 			}
 		} else {
-			this.help = null;
+			this.helpSupported = false;
 		}
 	}
 
@@ -135,7 +136,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 						.format("A parsing error ocurred while parsing the command line %s", Arrays.toString(args)), e,
 						parser.getHelpMessage(ctx, e));
 				}
-				if ((this.help != null) && this.help.isPresent()) {
+				if (this.helpSupported && isPresent(CommandLine.HELP)) {
 					this.helpMessage = parser.getHelpMessage(ctx, null);
 				} else {
 					this.helpMessage = null;
@@ -155,7 +156,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 	 */
 	@Override
 	public boolean isHelpRequested() {
-		return ((this.help != null) && this.help.isPresent());
+		return (this.helpSupported && isPresent(CommandLine.HELP));
 	}
 
 	/* (non-Javadoc)
@@ -221,6 +222,11 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 		}
 	}
 
+	public final CommandLineParameter define(Parameter def)
+		throws DuplicateParameterException, InvalidParameterException {
+		return define(def, false);
+	}
+
 	private final CommandLineParameter define(Parameter def, boolean unchecked)
 		throws DuplicateParameterException, InvalidParameterException {
 		if (!unchecked) {
@@ -235,14 +241,14 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 			if (!unchecked && (shortOpt != null)) {
 				shortParam = this.shortOptions.get(shortOpt);
 				if (shortParam != null) {
-					if (shortParam.getDefinition().isEqual(def)) {
+					if (BaseParameter.isEquivalent(shortParam, def)) {
 						// It's the same parameter, so we can safely return the existing one
 						return shortParam;
 					}
 					// The commandLineParameters aren't equal...so...this is an error
 					throw new DuplicateParameterException(String.format(
 						"The new parameter definition for short option [%s] collides with an existing one", shortOpt),
-						shortParam.getDefinition(), def);
+						shortParam, def);
 				}
 			}
 
@@ -251,7 +257,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 			if (!unchecked && (longOpt != null)) {
 				longParam = this.longOptions.get(longOpt);
 				if (longParam != null) {
-					if (longParam.getDefinition().isEqual(def)) {
+					if (BaseParameter.isEquivalent(longParam, def)) {
 						// It's the same parameter, so we can safely return the existing one
 						return longParam;
 					}
@@ -259,7 +265,7 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 					throw new DuplicateParameterException(
 						String.format("The new parameter definition for long option [%s] collides with an existing one",
 							longOpt),
-						longParam.getDefinition(), def);
+						longParam, def);
 				}
 			}
 
@@ -275,11 +281,6 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 		} finally {
 			l.unlock();
 		}
-	}
-
-	public final CommandLineParameter define(Parameter def)
-		throws DuplicateParameterException, InvalidParameterException {
-		return define(def, false);
 	}
 
 	@Override
@@ -385,12 +386,12 @@ public class CommandLine implements CommandLineValues, Iterable<CommandLineParam
 
 	@Override
 	public final boolean hasHelpParameter() {
-		return (this.help != null);
+		return this.helpSupported;
 	}
 
 	@Override
 	public final CommandLineParameter getHelpParameter() {
-		return this.help;
+		return getParameter(CommandLine.HELP);
 	}
 
 	@Override

@@ -68,7 +68,7 @@ public class CommandLineTest {
 						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
 					}
 					Assert.assertSame(cl, p.getCLI());
-					Assert.assertTrue(def.isEqual(p.getDefinition()));
+					Assert.assertTrue(BaseParameter.isIdentical(def, p));
 				} catch (InvalidParameterException e) {
 					if (Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Failed with legal character [%s]", c));
@@ -115,7 +115,7 @@ public class CommandLineTest {
 		Assert.assertNotEquals(p, null);
 		Assert.assertNotEquals(p, "");
 		Assert.assertSame(cl, p.getCLI());
-		Assert.assertTrue(def.isEqual(p.getDefinition()));
+		Assert.assertTrue(BaseParameter.isIdentical(def, p));
 
 		CommandLineParameter p2 = cl.define(def);
 		Assert.assertSame(p, p2);
@@ -124,8 +124,8 @@ public class CommandLineTest {
 		p2 = cl.define(def);
 		Assert.assertSame(cl, p2.getCLI());
 		Assert.assertNotSame(p, p2);
-		Assert.assertTrue(def.isEqual(p2.getDefinition()));
-		Assert.assertNotEquals(p.getDefinition(), p2.getDefinition());
+		Assert.assertTrue(BaseParameter.isIdentical(def, p2));
+		Assert.assertNotEquals(p, p2);
 
 		def.setShortOpt('x');
 		try {
@@ -150,7 +150,7 @@ public class CommandLineTest {
 		}
 
 		for (CommandLineParameter p : cl) {
-			final String longOpt = p.getDefinition().getLongOpt();
+			final String longOpt = p.getLongOpt();
 			if ("help".equals(longOpt)) {
 				// We're OK here...
 				continue;
@@ -202,7 +202,7 @@ public class CommandLineTest {
 
 		CommandLineParameter p2prev = null;
 		for (CommandLineParameter p : cl) {
-			CommandLineParameter p2 = cl2.define(p.getDefinition());
+			CommandLineParameter p2 = cl2.define(p);
 			Assert.assertNotEquals(p, p2);
 			Assert.assertNotEquals(p, p2prev);
 			p2prev = p2;
@@ -706,9 +706,9 @@ public class CommandLineTest {
 		}
 
 		for (CommandLineParameter expected : shortOptions) {
-			CommandLineParameter actual = cl.getParameter(expected.getDefinition().getShortOpt());
+			CommandLineParameter actual = cl.getParameter(expected.getShortOpt());
 			Assert.assertEquals(expected, actual);
-			Assert.assertTrue(cl.hasParameter(expected.getDefinition().getShortOpt()));
+			Assert.assertTrue(cl.hasParameter(expected.getShortOpt()));
 		}
 
 		for (CommandLineParameter actual : cl.shortOptions()) {
@@ -732,9 +732,9 @@ public class CommandLineTest {
 		}
 
 		for (CommandLineParameter expected : longOptions) {
-			CommandLineParameter actual = cl.getParameter(expected.getDefinition().getLongOpt());
+			CommandLineParameter actual = cl.getParameter(expected.getLongOpt());
 			Assert.assertEquals(expected, actual);
-			Assert.assertTrue(cl.hasParameter(expected.getDefinition().getLongOpt()));
+			Assert.assertTrue(cl.hasParameter(expected.getLongOpt()));
 		}
 
 		for (CommandLineParameter actual : cl.longOptions()) {

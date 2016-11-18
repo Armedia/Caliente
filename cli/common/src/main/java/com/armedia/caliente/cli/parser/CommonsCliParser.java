@@ -14,7 +14,7 @@ import org.apache.commons.cli.Options;
 
 class CommonsCliState extends CommandLineParserContext {
 	final Options options = new Options();
-	final Map<String, CommandLineParameter> commandLineParameters = new HashMap<>();
+	final Map<String, Parameter> commandLineParameters = new HashMap<>();
 	final String exe;
 
 	CommonsCliState(CommandLine cl, String executableName) {
@@ -26,14 +26,14 @@ class CommonsCliState extends CommandLineParserContext {
 public class CommonsCliParser extends CommandLineParser<CommonsCliState> {
 
 	@Override
-	protected CommonsCliState createContext(CommandLine cl, String executableName, Collection<CommandLineParameter> def)
+	protected CommonsCliState createContext(CommandLine cl, String executableName, Collection<? extends Parameter> def)
 		throws Exception {
 		CommonsCliState ctx = new CommonsCliState(cl, executableName);
-		for (CommandLineParameter p : def) {
-			Option o = CommonsCliParser.buildOption(p.getDefinition());
+		for (Parameter p : def) {
+			Option o = CommonsCliParser.buildOption(p);
 			ctx.options.addOption(o);
 			String key = CommonsCliParser.calculateKey(o);
-			CommandLineParameter old = ctx.commandLineParameters.put(key, p);
+			Parameter old = ctx.commandLineParameters.put(key, p);
 			if (old != null) { throw new Exception(
 				String.format("Duplicate parameter definition for option [%s]", key)); }
 		}
@@ -47,7 +47,7 @@ public class CommonsCliParser extends CommandLineParser<CommonsCliState> {
 
 		for (Option o : cli.getOptions()) {
 			String key = CommonsCliParser.calculateKey(o);
-			CommandLineParameter p = ctx.commandLineParameters.get(key);
+			Parameter p = ctx.commandLineParameters.get(key);
 			if (p == null) { throw new Exception(
 				String.format("Failed to locate a parameter for option [%s] which should have been there", key)); }
 			ctx.setParameter(p, o.getValuesList());

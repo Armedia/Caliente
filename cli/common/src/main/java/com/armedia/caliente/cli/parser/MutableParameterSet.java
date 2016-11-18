@@ -148,7 +148,7 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 		if (shortOpt != null) {
 			shortParam = this.shortOpts.get(shortOpt);
 			if (shortParam != null) {
-				if (shortParam.isEqual(def)) {
+				if (BaseParameter.isEquivalent(shortParam, def)) {
 					// It's the same parameter, so we can safely return the existing one
 					return;
 				}
@@ -164,7 +164,7 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 		if (longOpt != null) {
 			longParam = this.longOpts.get(longOpt);
 			if (longParam != null) {
-				if (longParam.isEqual(def)) {
+				if (BaseParameter.isEquivalent(longParam, def)) {
 					// It's the same parameter, so we can safely return the existing one
 					return;
 				}

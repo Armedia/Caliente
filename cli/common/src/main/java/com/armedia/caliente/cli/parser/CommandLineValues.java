@@ -1,15 +1,12 @@
 package com.armedia.caliente.cli.parser;
 
-import java.util.Iterator;
 import java.util.List;
 
-public interface CommandLineValues {
+public interface CommandLineValues extends Iterable<CommandLineParameter> {
 
 	public boolean isHelpRequested();
 
 	public String getHelpMessage();
-
-	public Iterator<CommandLineParameter> iterator();
 
 	public Iterable<CommandLineParameter> shortOptions();
 
