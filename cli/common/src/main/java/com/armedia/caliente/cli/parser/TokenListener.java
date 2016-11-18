@@ -14,12 +14,12 @@ public interface TokenListener {
 
 	public void extraArguments(List<String> arguments);
 
-	public boolean missingValues(Token token, Parameter parameter);
+	public boolean isErrorMissingValues(Token token, Parameter parameter, List<String> values);
 
-	public boolean tooManyValues(Token token, Parameter parameter, List<String> values);
+	public boolean isErrorTooManyValues(Token token, Parameter parameter, List<String> values);
 
-	public boolean unknownParameterFound(Token token);
+	public boolean isErrorUnknownParameterFound(Token token);
 
-	public boolean orphanedValueFound(Token token);
+	public boolean isErrorOrphanedValueFound(Token token);
 
 }

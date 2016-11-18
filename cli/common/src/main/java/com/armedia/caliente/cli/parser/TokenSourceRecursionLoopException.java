@@ -6,13 +6,13 @@ import java.util.List;
 
 import com.armedia.commons.utilities.Tools;
 
-public class ParserFileRecursionLoopException extends ParserException {
+public class TokenSourceRecursionLoopException extends TokenProcessorException {
 	private static final long serialVersionUID = 1L;
 
 	private final TokenSource loopedSource;
 	private final List<String> sources;
 
-	public ParserFileRecursionLoopException(TokenSource loopedSource, Collection<String> sources) {
+	public TokenSourceRecursionLoopException(TokenSource loopedSource, Collection<String> sources) {
 		this.loopedSource = loopedSource;
 		this.sources = Tools.freezeList(new ArrayList<>(sources));
 	}

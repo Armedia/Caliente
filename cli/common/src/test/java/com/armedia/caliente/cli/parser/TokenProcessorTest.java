@@ -60,28 +60,28 @@ public class TokenProcessorTest {
 			}
 
 			@Override
-			public boolean missingValues(Token token, Parameter parameter) {
+			public boolean isErrorMissingValues(Token token, Parameter parameter, List<String> values) {
 				System.out.printf("MISSING VALUES FOR %s (%d @ %s)%n", parameter.getKey(), token.index,
 					token.source != null ? token.source.getKey() : "(root)");
 				return false;
 			}
 
 			@Override
-			public boolean tooManyValues(Token token, Parameter parameter, List<String> values) {
+			public boolean isErrorTooManyValues(Token token, Parameter parameter, List<String> values) {
 				System.out.printf("TOO MANY VALUES FOR %s (%d @ %s): %s%n", parameter.getKey(), token.index,
 					token.source != null ? token.source.getKey() : "(root)", values);
 				return false;
 			}
 
 			@Override
-			public boolean unknownParameterFound(Token token) {
+			public boolean isErrorUnknownParameterFound(Token token) {
 				System.out.printf("UNKNOWN PARAMETER %s (%d @ %s)%n", token.value, token.index,
 					token.source != null ? token.source.getKey() : "(root)");
 				return false;
 			}
 
 			@Override
-			public boolean orphanedValueFound(Token token) {
+			public boolean isErrorOrphanedValueFound(Token token) {
 				System.out.printf("ORPHANED VALUE %s (%d @ %s)%n", token.value, token.index,
 					token.source != null ? token.source.getKey() : "(root)");
 				return false;

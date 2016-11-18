@@ -1,6 +1,6 @@
 package com.armedia.caliente.cli.parser;
 
-public class TokenSyntaxException extends ParserException {
+public class TokenSyntaxException extends TokenProcessorException {
 	private static final long serialVersionUID = 1L;
 
 	private final TokenSource source;

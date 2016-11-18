@@ -112,13 +112,13 @@ public class TokenProcessor {
 		return this.valueSeparator;
 	}
 
-	private TokenCatalog catalogTokens(Collection<String> args) throws IOException, ParserFileRecursionLoopException {
+	private TokenCatalog catalogTokens(Collection<String> args) throws IOException, TokenSourceRecursionLoopException {
 		return new TokenCatalog(catalogTokens(null, null, null, args));
 	}
 
 	private List<Token> catalogTokens(Set<String> recursionGuard, TokenSource source,
 		Map<String, List<Token>> tokenSourceCache, Collection<String> args)
-		throws IOException, ParserFileRecursionLoopException {
+		throws IOException, TokenSourceRecursionLoopException {
 		if (recursionGuard == null) {
 			recursionGuard = new LinkedHashSet<>();
 		}
@@ -197,7 +197,7 @@ public class TokenProcessor {
 
 				// Before we recurse, we check...
 				if (!recursionGuard
-					.add(newSource.getKey())) { throw new ParserFileRecursionLoopException(source, recursionGuard); }
+					.add(newSource.getKey())) { throw new TokenSourceRecursionLoopException(source, recursionGuard); }
 
 				try {
 					List<Token> subTokens = tokenSourceCache.get(newSource.getKey());
@@ -241,8 +241,8 @@ public class TokenProcessor {
 	}
 
 	public void processTokens(CommandLineInterface rootParams, TokenListener listener, String... args)
-		throws MissingParameterValuesException, UnknownParameterException, TooManyValuesException,
-		UnknownSubcommandException, ParserFileRecursionLoopException, IOException {
+		throws MissingParameterValuesException, UnknownParameterException, TooManyParameterValuesException,
+		UnknownSubcommandException, TokenSourceRecursionLoopException, IOException {
 
 		final Collection<String> c;
 		if (args == null) {
@@ -255,20 +255,20 @@ public class TokenProcessor {
 	}
 
 	private boolean processParameter(TokenListener listener, Token token, Parameter parameter, List<String> values)
-		throws MissingParameterValuesException, TooManyValuesException {
+		throws MissingParameterValuesException, TooManyParameterValuesException {
 		final int minValues = parameter.getMinValueCount();
 		final int maxValues = parameter.getMaxValueCount();
 		final boolean optional = (minValues <= 0);
 		final boolean unlimited = (maxValues < 0);
 
 		if (!optional && (values.size() < minValues)) {
-			if (listener.tooManyValues(token, parameter,
+			if (listener.isErrorTooManyValues(token, parameter,
 				values)) { throw new MissingParameterValuesException(token.source, token.index, parameter, values); }
 			return false;
 		}
 		if (!unlimited && (values.size() > maxValues)) {
-			if (listener.tooManyValues(token, parameter,
-				values)) { throw new TooManyValuesException(token.source, token.index, parameter, values); }
+			if (listener.isErrorTooManyValues(token, parameter,
+				values)) { throw new TooManyParameterValuesException(token.source, token.index, parameter, values); }
 			// If this isn't an error as per the listener...
 			return false;
 		}
@@ -278,8 +278,8 @@ public class TokenProcessor {
 	}
 
 	public void processTokens(CommandLineInterface rootParams, TokenListener listener, Collection<String> args)
-		throws ParserFileRecursionLoopException, IOException, UnknownParameterException, UnknownSubcommandException,
-		MissingParameterValuesException, TooManyValuesException {
+		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException, UnknownSubcommandException,
+		MissingParameterValuesException, TooManyParameterValuesException {
 
 		final TokenCatalog tokens = catalogTokens(args);
 
@@ -325,7 +325,7 @@ public class TokenProcessor {
 							? parameterSet.getParameter(currentToken.value.charAt(0))
 							: parameterSet.getParameter(currentToken.value));
 						if (nextParameter == null) {
-							if (!listener.unknownParameterFound(currentToken)) {
+							if (!listener.isErrorUnknownParameterFound(currentToken)) {
 								// The parameter is unknown, but this isn't an error, so we simply
 								// move on
 								continue;
@@ -355,8 +355,8 @@ public class TokenProcessor {
 							// the count of attribute
 							if ((maxValues > 0) && (currentValues.size() > maxValues)) {
 								// There is a limit breach...
-								if (listener.tooManyValues(currentParameterToken, currentParameter,
-									currentValues)) { throw new TooManyValuesException(currentParameterToken.source,
+								if (listener.isErrorTooManyValues(currentParameterToken, currentParameter,
+									currentValues)) { throw new TooManyParameterValuesException(currentParameterToken.source,
 										currentParameterToken.index, currentParameter, currentValues); }
 								// If this isn't to be treated as an error, we simply keep going
 							}
@@ -376,7 +376,7 @@ public class TokenProcessor {
 					if (subCommand == null) {
 						// Not a subcommand, so ... is this a trailing argument?
 						if (index < tokens.lastParameter) {
-							if (listener.orphanedValueFound(currentToken)) { throw new UnknownSubcommandException(
+							if (listener.isErrorOrphanedValueFound(currentToken)) { throw new UnknownSubcommandException(
 								currentToken.source, currentToken.index, currentToken.rawString); }
 							// Orphaned value, but not causing a failure
 							continue;

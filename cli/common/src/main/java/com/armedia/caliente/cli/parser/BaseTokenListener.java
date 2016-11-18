@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.parser;
 
 import java.util.List;
 
-public class DefaultTokenListener implements TokenListener {
+public class BaseTokenListener implements TokenListener {
 
 	@Override
 	public void positionalParametersFound(List<String> values) {
@@ -25,22 +25,22 @@ public class DefaultTokenListener implements TokenListener {
 	}
 
 	@Override
-	public boolean missingValues(Token token, Parameter parameter) {
-		return false;
+	public boolean isErrorMissingValues(Token token, Parameter parameter, List<String> values) {
+		return true;
 	}
 
 	@Override
-	public boolean tooManyValues(Token token, Parameter parameter, List<String> values) {
-		return false;
+	public boolean isErrorTooManyValues(Token token, Parameter parameter, List<String> values) {
+		return true;
 	}
 
 	@Override
-	public boolean unknownParameterFound(Token token) {
-		return false;
+	public boolean isErrorUnknownParameterFound(Token token) {
+		return true;
 	}
 
 	@Override
-	public boolean orphanedValueFound(Token token) {
-		return false;
+	public boolean isErrorOrphanedValueFound(Token token) {
+		return true;
 	}
 }

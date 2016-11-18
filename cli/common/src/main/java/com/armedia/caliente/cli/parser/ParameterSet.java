@@ -8,6 +8,12 @@ import com.armedia.commons.utilities.Tools;
 
 public interface ParameterSet {
 
+	/**
+	 * <p>
+	 * A default comparator that sorts parameters based on both their short and long options
+	 * alphabetically, prioritizing the short option over the long one.
+	 * </p>
+	 */
 	public static final Comparator<Parameter> DEFAULT_COMPARATOR = new Comparator<Parameter>() {
 
 		private String getValue(Parameter p) {
