@@ -13,21 +13,11 @@ public final class CommandLineInterface extends MutableParameterSet {
 		super(name);
 	}
 
-	public boolean isSubcommandName(String subName) {
-		return validateLong(subName) && this.subs.containsKey(subName);
-	}
-
 	public MutableParameterSet getSubcommand(String subName) {
-		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
-			"The string [%s] is not a valid subcommand name - it may not be null, the empty string, or contain whitespace",
-			subName)); }
 		return this.subs.get(subName);
 	}
 
 	public boolean hasSubcommand(String subName) {
-		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
-			"The string [%s] is not a valid subcommand name - it may not be null, the empty string, or contain whitespace",
-			subName)); }
 		return this.subs.containsKey(subName);
 	}
 
@@ -40,9 +30,6 @@ public final class CommandLineInterface extends MutableParameterSet {
 	}
 
 	public MutableParameterSet removeSubcommand(String subName) {
-		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
-			"The string [%s] is not a valid subcommand name - it may not be null, the empty string, or contain whitespace",
-			subName)); }
 		return this.subs.remove(subName);
 	}
 

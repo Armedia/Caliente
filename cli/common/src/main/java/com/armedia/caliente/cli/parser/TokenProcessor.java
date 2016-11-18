@@ -75,7 +75,7 @@ public class TokenProcessor {
 	private TokenProcessor(char parameterMarker) {
 		this(parameterMarker, TokenProcessor.DEFAULT_FILE_MARKER, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
-	
+
 	private TokenProcessor(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
@@ -263,11 +263,11 @@ public class TokenProcessor {
 		final TokenCatalog tokens = catalogTokens(args);
 
 		int index = -1;
-		ParameterSet params = rootParams;
+		ParameterSet parameterSet = rootParams;
 
 		Token currentParameterToken = null;
 		Parameter currentParameter = null;
-		List<String> currentArgs = new ArrayList<>();
+		List<String> currentValues = new ArrayList<>();
 		boolean terminated = false;
 
 		for (final Token currentToken : tokens.tokens) {
@@ -276,7 +276,7 @@ public class TokenProcessor {
 			// If we've reached the terminator, simply add the remaining values verbatim
 			// to the currentArgs list, since we'll eventually report them separately
 			if (terminated) {
-				currentArgs.add(currentToken.value);
+				currentValues.add(currentToken.value);
 				continue;
 			}
 
@@ -285,8 +285,8 @@ public class TokenProcessor {
 				case SHORT_OPTION:
 				case LONG_OPTION:
 					if (currentParameterToken != null) {
-						processParameter(listener, currentParameterToken, currentParameter, currentArgs);
-						currentArgs.clear();
+						processParameter(listener, currentParameterToken, currentParameter, currentValues);
+						currentValues.clear();
 						currentParameter = null;
 						currentParameterToken = null;
 					}
@@ -301,8 +301,8 @@ public class TokenProcessor {
 					// Ok...so...now we need to set up the next parameter
 					try {
 						final Parameter nextParameter = (currentToken.type == Token.Type.SHORT_OPTION
-							? params.getParameter(currentToken.value.charAt(0))
-							: params.getParameter(currentToken.value));
+							? parameterSet.getParameter(currentToken.value.charAt(0))
+							: parameterSet.getParameter(currentToken.value));
 						if (nextParameter == null) {
 							if (!listener.unknownParameterFound(currentToken.source, currentToken.index,
 								currentToken.rawString)) {
@@ -318,7 +318,7 @@ public class TokenProcessor {
 						currentParameter = nextParameter;
 					} finally {
 						// Regardless of the outcome, the currentArgs list needs to be cleared
-						currentArgs.clear();
+						currentValues.clear();
 					}
 					continue;
 
@@ -329,16 +329,16 @@ public class TokenProcessor {
 						// Can this be considered an argument?
 						if (maxValues != 0) {
 							// Arguments are allowed...so we apply the multivalue splitter
-							currentArgs.addAll(splitValues(currentToken.value));
+							currentValues.addAll(splitValues(currentToken.value));
 							// We check the size now because if concatenated values are allowed,
 							// then
 							// the count of attribute
-							if ((maxValues > 0) && (currentArgs.size() > maxValues)) {
+							if ((maxValues > 0) && (currentValues.size() > maxValues)) {
 								// There is a limit breach...
 								if (listener.tooManyValues(currentParameterToken.source, currentParameterToken.index,
 									currentParameter,
-									currentArgs)) { throw new TooManyValuesException(currentParameterToken.source,
-										currentParameterToken.index, currentParameter, currentArgs); }
+									currentValues)) { throw new TooManyValuesException(currentParameterToken.source,
+										currentParameterToken.index, currentParameter, currentValues); }
 								// If this isn't to be treated as an error, we simply keep going
 							}
 							// There is no limit on argument count, or the count of arguments
@@ -353,7 +353,8 @@ public class TokenProcessor {
 					// This token is not an argument b/c this parameter doesn't support
 					// them (or we have no parameter)...so it's either a subcommand, or one of the
 					// trailing command-line values...
-					if (!rootParams.isSubcommandName(currentToken.value)) {
+					final ParameterSet subCommand = rootParams.getSubcommand(currentToken.value);
+					if (subCommand == null) {
 						// Not a subcommand, so ... is this a trailing argument?
 						if (index < tokens.lastParameter) {
 							if (listener.orphanedValueFound(currentToken.source, currentToken.index,
@@ -364,28 +365,27 @@ public class TokenProcessor {
 						}
 
 						// We're OK..this is a trailing value...
-						currentArgs.add(currentToken.value);
+						currentValues.add(currentToken.value);
 						continue;
 					}
 
-					ParameterSet sub = rootParams.getSubcommand(currentToken.value);
 					if (currentParameter != null) {
-						processParameter(listener, currentParameterToken, currentParameter, currentArgs);
-						currentArgs.clear();
+						processParameter(listener, currentParameterToken, currentParameter, currentValues);
+						currentValues.clear();
 						currentParameter = null;
 						currentParameterToken = null;
 					}
 
 					// This is a subcommand, so we replace the current one with this one
-					params = sub;
+					parameterSet = subCommand;
 					listener.subCommandFound(currentToken.rawString);
 
 					continue;
 			}
 		}
 
-		if (!currentArgs.isEmpty()) {
-			listener.extraArguments(currentArgs);
+		if (!currentValues.isEmpty()) {
+			listener.extraArguments(currentValues);
 		}
 	}
 }

@@ -2,6 +2,7 @@ package com.armedia.caliente.cli.parser;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -67,6 +68,15 @@ public interface ParameterSet {
 
 	/**
 	 * <p>
+	 * Returns the names of the short options available in this instance
+	 * </p>
+	 *
+	 * @return the names of the short options available in this instance
+	 */
+	public Set<Character> getShortOptions();
+
+	/**
+	 * <p>
 	 * Returns {@code true} if the given long option has been defined, {@code false} otherwise
 	 * </p>
 	 *
@@ -85,6 +95,15 @@ public interface ParameterSet {
 	 * @return the {@link Parameter} instance which describes the long option
 	 */
 	public Parameter getParameter(String longOpt);
+
+	/**
+	 * <p>
+	 * Returns the names of the long options available in this instance
+	 * </p>
+	 *
+	 * @return the names of the long options available in this instance
+	 */
+	public Set<String> getLongOptions();
 
 	/**
 	 * <p>

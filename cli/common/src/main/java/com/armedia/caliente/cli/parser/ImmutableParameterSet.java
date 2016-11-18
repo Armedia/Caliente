@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -63,6 +64,11 @@ public class ImmutableParameterSet implements ParameterSet {
 	}
 
 	@Override
+	public Set<Character> getShortOptions() {
+		return this.shortOpts.keySet();
+	}
+
+	@Override
 	public boolean hasParameter(String longOpt) {
 		return this.longOpts.containsKey(longOpt);
 	}
@@ -70,6 +76,11 @@ public class ImmutableParameterSet implements ParameterSet {
 	@Override
 	public Parameter getParameter(String longOpt) {
 		return this.longOpts.get(longOpt);
+	}
+
+	@Override
+	public Set<String> getLongOptions() {
+		return this.longOpts.keySet();
 	}
 
 	@Override

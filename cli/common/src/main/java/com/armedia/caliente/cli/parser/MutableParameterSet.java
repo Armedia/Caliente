@@ -5,15 +5,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public class MutableParameterSet implements ParameterSet {
+public class MutableParameterSet implements ParameterSet, Cloneable {
 
 	protected static final Pattern VALID_SHORT = Pattern.compile("^[[\\p{Punct}&&[^-]]\\p{Alnum}]$");
 
@@ -24,8 +26,32 @@ public class MutableParameterSet implements ParameterSet {
 	private final Map<String, Parameter> longOpts = new HashMap<>();
 	private final Map<String, Parameter> parameters = new HashMap<>();
 
+	public MutableParameterSet(ParameterSet other) {
+		this.name = other.getName();
+		this.description = other.getDescription();
+		for (Character s : other.getShortOptions()) {
+			Parameter p = other.getParameter(s);
+			this.shortOpts.put(s, p);
+			this.parameters.put(p.getKey(), p);
+		}
+		for (String l : other.getLongOptions()) {
+			Parameter p = other.getParameter(l);
+			this.longOpts.put(l, p);
+			this.parameters.put(p.getKey(), p);
+		}
+	}
+
 	public MutableParameterSet(String name) {
 		this.name = name;
+	}
+
+	@Override
+	public MutableParameterSet clone() {
+		return new MutableParameterSet(this);
+	}
+
+	public ParameterSet freeze() {
+		return new ImmutableParameterSet(this);
 	}
 
 	@Override
@@ -79,6 +105,11 @@ public class MutableParameterSet implements ParameterSet {
 	}
 
 	@Override
+	public Set<Character> getShortOptions() {
+		return new LinkedHashSet<>(this.shortOpts.keySet());
+	}
+
+	@Override
 	public boolean hasParameter(String longOpt) {
 		return this.longOpts.containsKey(longOpt);
 	}
@@ -90,6 +121,11 @@ public class MutableParameterSet implements ParameterSet {
 
 	public Parameter removeParameter(String longOpt) {
 		return this.longOpts.remove(longOpt);
+	}
+
+	@Override
+	public Set<String> getLongOptions() {
+		return new LinkedHashSet<>(this.longOpts.keySet());
 	}
 
 	public void addParameter(Parameter def) throws InvalidParameterException, DuplicateParameterException {
