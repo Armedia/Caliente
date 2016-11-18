@@ -1,5 +1,7 @@
 package com.armedia.caliente.cli.parser;
 
+import com.armedia.commons.utilities.Tools;
+
 /**
  * <p>
  * An object signifying a token that will be part of the parameter stream. It indicates not only the
@@ -81,6 +83,21 @@ public class Token {
 		this.type = type;
 		this.value = value;
 		this.rawString = rawString;
+	}
+
+	@Override
+	public int hashCode() {
+		return Tools.hashTool(this, null, this.type, this.value);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) { return true; }
+		if (!Tools.baseEquals(this, obj)) { return false; }
+		Token other = Token.class.cast(obj);
+		if (this.type != other.type) { return false; }
+		if (!Tools.equals(this.value, other.value)) { return false; }
+		return true;
 	}
 
 	@Override
