@@ -13,6 +13,10 @@ public final class RootParameterSet extends ParameterSet {
 		super(name);
 	}
 
+	public boolean isSubcommandName(String subName) {
+		return validateLong(subName) && this.subs.containsKey(subName);
+	}
+
 	public ParameterSet getSubcommand(String subName) {
 		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
 			"The string [%s] is not a valid subcommand name - it may not be null, the empty string, or contain whitespace",

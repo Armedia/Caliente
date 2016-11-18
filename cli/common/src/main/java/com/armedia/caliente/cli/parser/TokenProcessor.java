@@ -1,6 +1,7 @@
 package com.armedia.caliente.cli.parser;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -119,7 +120,7 @@ public class TokenProcessor {
 		boolean terminated = false;
 		Matcher m = null;
 		List<Token> tokens = new ArrayList<>();
-		int i = -1;
+		int i = (source == null ? -1 : 0);
 		for (final String s : args) {
 			final String sTrim = s.trim();
 			i++;
@@ -168,7 +169,12 @@ public class TokenProcessor {
 				if (fileName.charAt(0) == this.fileMarker.charValue()) {
 					// It's a URL...
 					// TODO: Eventually port this to support Commons-VFS URLs?
-					newSource = new TokenUrlSource(fileName.substring(1));
+					final String uri = fileName.substring(1);
+					try {
+						newSource = new TokenUriSource(uri);
+					} catch (URISyntaxException e) {
+						throw new IOException(String.format("Failed to properly process the URI [%s]", uri), e);
+					}
 				} else {
 					newSource = new TokenLocalFileSource(fileName);
 				}
@@ -183,7 +189,7 @@ public class TokenProcessor {
 						Matcher commentMatcher = TokenProcessor.FILE_COMMENT.matcher(line);
 						if (commentMatcher.find()) {
 							// Strip everything past the first comment character
-							line = line.substring(0, commentMatcher.start() + 1);
+							line = line.substring(0, commentMatcher.start());
 						}
 						fileArgs.add(line.trim());
 					}
@@ -252,7 +258,7 @@ public class TokenProcessor {
 
 		final TokenCatalog tokens = catalogTokens(args);
 
-		int i = -1;
+		int index = -1;
 		ParameterSet params = rootParams;
 
 		Token currentParameterToken = null;
@@ -261,7 +267,7 @@ public class TokenProcessor {
 		boolean terminated = false;
 
 		for (final Token currentToken : tokens.tokens) {
-			i++;
+			index++;
 
 			// If we've reached the terminator, simply add the remaining values verbatim
 			// to the currentArgs list, since we'll eventually report them separately
@@ -284,7 +290,7 @@ public class TokenProcessor {
 					// If this is a terminator, then we terminate, and that's that
 					if (currentToken.type == Token.Type.TERMINATOR) {
 						terminated = true;
-						listener.terminatorFound();
+						listener.terminatorFound(currentToken.source, currentToken.index);
 						continue;
 					}
 
@@ -343,11 +349,9 @@ public class TokenProcessor {
 					// This token is not an argument b/c this parameter doesn't support
 					// them (or we have no parameter)...so it's either a subcommand, or one of the
 					// trailing command-line values...
-
-					ParameterSet sub = rootParams.getSubcommand(currentToken.value);
-					if (sub == null) {
+					if (!rootParams.isSubcommandName(currentToken.value)) {
 						// Not a subcommand, so ... is this a trailing argument?
-						if (i < tokens.lastParameter) {
+						if (index < tokens.lastParameter) {
 							if (listener.orphanedValueFound(currentToken.source, currentToken.index,
 								currentToken.value)) { throw new UnknownSubcommandException(currentToken.source,
 									currentToken.index, currentToken.rawString); }
@@ -360,6 +364,7 @@ public class TokenProcessor {
 						continue;
 					}
 
+					ParameterSet sub = rootParams.getSubcommand(currentToken.value);
 					if (currentParameter != null) {
 						processParameter(listener, currentParameterToken, currentParameter, currentArgs);
 						currentArgs.clear();

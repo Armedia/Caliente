@@ -14,7 +14,7 @@ public class DefaultTokenListener implements TokenListener {
 	}
 
 	@Override
-	public void terminatorFound() {
+	public void terminatorFound(TokenSource source, int index) {
 	}
 
 	@Override

@@ -8,7 +8,7 @@ public interface TokenListener {
 
 	public void namedParameterFound(Parameter parameter, List<String> values);
 
-	public void terminatorFound();
+	public void terminatorFound(TokenSource source, int index);
 
 	public void subCommandFound(String subCommand);
 

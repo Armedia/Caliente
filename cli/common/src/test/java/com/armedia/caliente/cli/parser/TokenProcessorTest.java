@@ -23,7 +23,7 @@ public class TokenProcessorTest {
 		TokenProcessor p = new TokenProcessor();
 
 		args = new String[] {
-			"-a", "--bb", "subcommand", "asdfasdf", "--", "@file", "--ff"
+			"-a", "--bb", "subcommand", "asdfasdf", "@@classpath:/test-parameter-file.txt", "--", "@file", "--ff"
 		};
 
 		RootParameterSet rootParams = new RootParameterSet("root");
@@ -44,8 +44,8 @@ public class TokenProcessorTest {
 			}
 
 			@Override
-			public void terminatorFound() {
-				System.out.printf("TERMINATOR%n");
+			public void terminatorFound(TokenSource source, int index) {
+				System.out.printf("TERMINATOR (%d @ %s)%n", index, source != null ? source.getKey() : "(root)");
 			}
 
 			@Override
@@ -88,5 +88,4 @@ public class TokenProcessorTest {
 		};
 		p.processTokens(rootParams, listener, args);
 	}
-
 }

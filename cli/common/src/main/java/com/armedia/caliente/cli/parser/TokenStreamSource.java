@@ -27,15 +27,18 @@ public abstract class TokenStreamSource implements TokenSource {
 
 		// The class is reset, so we re-read...
 		InputStream in = openStream();
+		if (in == null) { throw new IOException(String.format("Failed to open the stream from [%s]", getKey())); }
 		try {
 			this.parameters = Tools.freezeList(IOUtils.readLines(in, getCharset()), true);
 			this.thrown = null;
-			return this.parameters;
 		} catch (final IOException e) {
 			this.thrown = e;
 			this.parameters = null;
 			throw e;
+		} finally {
+			IOUtils.closeQuietly(in);
 		}
+		return this.parameters;
 	}
 
 	public final synchronized void reset() {
