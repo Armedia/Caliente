@@ -123,9 +123,4 @@ public enum CLIParam implements Parameter {
 	public Set<String> getAllowedValues() {
 		return this.parameter.getAllowedValues();
 	}
-
-	@Override
-	public boolean isEqual(Parameter other) {
-		return this.parameter.isEqual(other);
-	}
 }
