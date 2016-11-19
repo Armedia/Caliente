@@ -45,12 +45,12 @@ public class TokenProcessor {
 			TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
 
-	// TODO: Shall we expose these constructurs? What would be the point?
+	// TODO: Shall we expose these constructors? What would be the point?
 	/*
 	private TokenProcessor(char parameterMarker) {
 		this(parameterMarker, TokenProcessor.DEFAULT_FILE_MARKER, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
-	
+
 	private TokenProcessor(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
