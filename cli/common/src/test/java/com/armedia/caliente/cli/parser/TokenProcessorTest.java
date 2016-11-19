@@ -36,7 +36,7 @@ public class TokenProcessorTest {
 			"@@classpath:/test-parameter-file.txt", "--ff"
 		};
 
-		CommandLineInterface rootParams = new CommandLineInterface("root");
+		CommandSet rootParams = new CommandSet("root");
 		rootParams.addParameter(new MutableParameter().setShortOpt('a'));
 		rootParams.addParameter(new MutableParameter().setLongOpt("bb"));
 		rootParams.addSubcommand("subcommand", new MutableParameterSet("subcommand"));

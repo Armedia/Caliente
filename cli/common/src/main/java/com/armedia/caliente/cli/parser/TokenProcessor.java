@@ -208,7 +208,7 @@ public class TokenProcessor {
 		return Arrays.asList(StringUtils.splitPreserveAllTokens(str, this.valueSeparator.charValue()));
 	}
 
-	public void processTokens(CommandLineInterface rootParams, TokenListener listener, String... args)
+	public void processTokens(CommandSet rootParams, TokenListener listener, String... args)
 		throws MissingParameterValuesException, UnknownParameterException, TooManyParameterValuesException,
 		UnknownSubcommandException, TokenSourceRecursionLoopException, IOException {
 
@@ -246,7 +246,7 @@ public class TokenProcessor {
 		return true;
 	}
 
-	public void processTokens(CommandLineInterface rootParams, TokenListener listener, Collection<String> args)
+	public void processTokens(CommandSet rootParams, TokenListener listener, Collection<String> args)
 		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException, UnknownSubcommandException,
 		MissingParameterValuesException, TooManyParameterValuesException {
 

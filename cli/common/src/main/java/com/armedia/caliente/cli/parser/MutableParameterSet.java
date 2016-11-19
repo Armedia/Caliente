@@ -19,7 +19,7 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 
 	protected static final Pattern VALID_SHORT = Pattern.compile("^[[\\p{Punct}&&[^-]]\\p{Alnum}]$");
 
-	private final String name;
+	private String name = null;
 	private String description;
 
 	private final Map<Character, Parameter> shortOpts = new HashMap<>();
@@ -41,7 +41,9 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 		}
 	}
 
-	public MutableParameterSet(String name) {
+	public MutableParameterSet(String name, String... aliases) {
+		if (!validateLong(name)) { throw new IllegalArgumentException(
+			String.format("The string [%s] is not a valid parameter set name", name)); }
 		this.name = name;
 	}
 
@@ -57,6 +59,12 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 	@Override
 	public String getName() {
 		return this.name;
+	}
+
+	public void setName(String name) {
+		if (!validateLong(name)) { throw new IllegalArgumentException(
+			String.format("The string [%s] is not a valid parameter set name", name)); }
+		this.name = name;
 	}
 
 	@Override
