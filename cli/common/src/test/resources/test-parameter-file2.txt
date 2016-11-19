@@ -7,6 +7,9 @@ first-line
 fourth crap
 --fifth
 something\#escapedcomment
+something\\#escapedcomment
+something\#\escapedcomment
+something\\\#escapedcomment
 #@@classpath:/test-parameter-file.txt # cause a recursion loop
 --
 skjdlf dsafjklasdf lkjalskjfd a

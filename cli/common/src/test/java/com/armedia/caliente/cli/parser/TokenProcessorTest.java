@@ -5,7 +5,16 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+
 public class TokenProcessorTest {
+
+	static {
+
+		ArgumentParser parser = ArgumentParsers.newArgumentParser("Checksum").defaultHelp(true);
+		parser.addArgument("a");
+	}
 
 	@Test
 	public void testParser() {
@@ -23,7 +32,8 @@ public class TokenProcessorTest {
 		TokenProcessor p = new TokenProcessor();
 
 		args = new String[] {
-			"-a", "--bb", "subcommand", "asdfasdf", "@@classpath:/test-parameter-file.txt", "--", "@file", "--ff"
+			"-a", "--bb", "subcommand", "asdfasdf", "@@classpath:/test-parameter-file.txt", "--",
+			"@@classpath:/test-parameter-file.txt", "--ff"
 		};
 
 		CommandLineInterface rootParams = new CommandLineInterface("root");

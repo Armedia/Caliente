@@ -29,12 +29,7 @@ public final class Token {
 		/**
 		 * A "plain" string - i.e. no prefix of any kind
 		 */
-		PLAIN,
-
-		/**
-		 * The special value '--' to terminate the argument list
-		 */
-		TERMINATOR,
+		STRING,
 		//
 		;
 	}

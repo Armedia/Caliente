@@ -23,35 +23,6 @@ import com.armedia.commons.utilities.Tools;
 
 public class TokenProcessor {
 
-	private static class TokenCatalog {
-		private final List<Token> tokens;
-		private final int lastParameter;
-
-		private TokenCatalog(List<Token> tokens) {
-			int last = -1;
-			loop: for (int i = tokens.size() - 1; i >= 0; i--) {
-				Token t = tokens.get(i);
-				switch (t.type) {
-					case LONG_OPTION:
-					case SHORT_OPTION:
-						last = i;
-						break loop;
-
-					default:
-						last *= 1;
-						continue;
-				}
-			}
-			this.lastParameter = last;
-			this.tokens = Tools.freezeList(tokens);
-		}
-
-		@Override
-		public String toString() {
-			return String.format("TokenCatalog [lastParameter=%d, tokens=%s]", this.lastParameter, this.tokens);
-		}
-	}
-
 	private static final String TERMINATOR_FMT = "%s%s";
 	private static final String SHORT_FMT = "^%s(\\S)$";
 	private static final String LONG_FMT = "^%s%s(\\S+)$";
@@ -112,11 +83,16 @@ public class TokenProcessor {
 		return this.valueSeparator;
 	}
 
-	private TokenCatalog catalogTokens(Collection<String> args) throws IOException, TokenSourceRecursionLoopException {
-		return new TokenCatalog(catalogTokens(null, null, null, args));
+	public List<Token> identifyTokens(String... args) throws IOException, TokenSourceRecursionLoopException {
+		if (args == null) { return Collections.emptyList(); }
+		return identifyTokens(Arrays.asList(args));
 	}
 
-	private List<Token> catalogTokens(Set<String> recursionGuard, TokenSource source,
+	public List<Token> identifyTokens(Collection<String> args) throws IOException, TokenSourceRecursionLoopException {
+		return identifyTokens(null, null, null, args);
+	}
+
+	private List<Token> identifyTokens(Set<String> recursionGuard, TokenSource source,
 		Map<String, List<Token>> tokenSourceCache, Collection<String> args)
 		throws IOException, TokenSourceRecursionLoopException {
 		if (recursionGuard == null) {
@@ -129,50 +105,19 @@ public class TokenProcessor {
 		Matcher m = null;
 		List<Token> tokens = new ArrayList<>();
 		int i = (source == null ? -1 : 0);
-		for (final String s : args) {
-			final String sTrim = s.trim();
+		nextToken: for (final String rawArg : args) {
+			final String current = (source == null ? rawArg : rawArg.trim());
 			i++;
-			if (StringUtils.isEmpty(sTrim) && (source != null)) {
+			if (StringUtils.isEmpty(current) && (source != null)) {
 				// If we're inside a token source, we skip empty tokens. We don't do that
 				// when processing values in the primary
 				continue;
 			}
 
-			if (terminated) {
-				// If we've found a terminator, all other parameters that follow will be treated
-				// as plain values, regardless
-				tokens.add(new Token(source, i, Type.PLAIN, s, s));
-				continue;
-			}
-
-			if (this.terminator.equals(sTrim)) {
-				if (source == null) {
-					// We only add the terminator token at the top level, since for files
-					// we simply consume the rest of the file's tokens as plain tokens, and
-					// we don't want to terminate the consumption of anything that might come
-					// after
-					tokens.add(new Token(source, i, Type.TERMINATOR, sTrim, sTrim));
-				}
-				terminated = true;
-				continue;
-			}
-
-			m = this.patShort.matcher(sTrim);
-			if (m.matches()) {
-				tokens.add(new Token(source, i, Type.SHORT_OPTION, m.group(1), sTrim));
-				continue;
-			}
-
-			m = this.patLong.matcher(sTrim);
-			if (m.matches()) {
-				tokens.add(new Token(source, i, Type.LONG_OPTION, m.group(1), sTrim));
-				continue;
-			}
-
 			// If the first character is the file marker, then treat it as a file
-			if ((this.fileMarker != null) && (s.charAt(0) == this.fileMarker.charValue())) {
+			if ((this.fileMarker != null) && (current.charAt(0) == this.fileMarker.charValue())) {
 				// Remove the file marker
-				String fileName = s.substring(1);
+				String fileName = current.substring(1);
 				final TokenSource newSource;
 				if (fileName.charAt(0) == this.fileMarker.charValue()) {
 					// It's a URL...
@@ -211,14 +156,11 @@ public class TokenProcessor {
 								line = line.substring(0, commentMatcher.start());
 							}
 							// If we have any # characters left, we remove all preceding
-							// backslashes, to
-							// un-escape them
-							line = line.replaceAll("\\\\\\\\#", "#");
-
-							fileArgs.add(line.trim());
+							// backslashes, to un-escape them
+							fileArgs.add(line.replaceAll("\\\\#", "#").trim());
 						}
 						if (!fileArgs.isEmpty()) {
-							subTokens = catalogTokens(recursionGuard, newSource, tokenSourceCache, fileArgs);
+							subTokens = identifyTokens(recursionGuard, newSource, tokenSourceCache, fileArgs);
 						}
 						subTokens = Tools.freezeList(subTokens, true);
 						tokenSourceCache.put(newSource.getKey(), subTokens);
@@ -227,9 +169,35 @@ public class TokenProcessor {
 				} finally {
 					recursionGuard.remove(newSource.getKey());
 				}
+
+				continue nextToken;
 			}
 
-			tokens.add(new Token(source, i, Type.PLAIN, s, s));
+			if (terminated) {
+				// If we've found a terminator, all other parameters that follow will be treated
+				// as plain values, regardless
+				tokens.add(new Token(source, i, Type.STRING, current, current));
+				continue nextToken;
+			}
+
+			if (this.terminator.equals(current)) {
+				terminated = true;
+				continue nextToken;
+			}
+
+			m = this.patShort.matcher(current);
+			if (m.matches()) {
+				tokens.add(new Token(source, i, Type.SHORT_OPTION, m.group(1), current));
+				continue nextToken;
+			}
+
+			m = this.patLong.matcher(current);
+			if (m.matches()) {
+				tokens.add(new Token(source, i, Type.LONG_OPTION, m.group(1), current));
+				continue nextToken;
+			}
+
+			tokens.add(new Token(source, i, Type.STRING, current, current));
 		}
 		return tokens;
 	}
@@ -262,10 +230,11 @@ public class TokenProcessor {
 		final boolean unlimited = (maxValues < 0);
 
 		if (!optional && (values.size() < minValues)) {
-			if (listener.isErrorTooManyValues(token, parameter,
+			if (listener.isErrorMissingValues(token, parameter,
 				values)) { throw new MissingParameterValuesException(token.source, token.index, parameter, values); }
 			return false;
 		}
+
 		if (!unlimited && (values.size() > maxValues)) {
 			if (listener.isErrorTooManyValues(token, parameter,
 				values)) { throw new TooManyParameterValuesException(token.source, token.index, parameter, values); }
@@ -281,118 +250,81 @@ public class TokenProcessor {
 		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException, UnknownSubcommandException,
 		MissingParameterValuesException, TooManyParameterValuesException {
 
-		final TokenCatalog tokens = catalogTokens(args);
+		final List<Token> tokens = identifyTokens(args);
 
-		int index = -1;
 		ParameterSet parameterSet = rootParams;
 
 		Token currentParameterToken = null;
 		Parameter currentParameter = null;
-		List<String> currentValues = new ArrayList<>();
+		List<String> positionalValues = new ArrayList<>();
+		List<String> noValues = Collections.emptyList();
 		boolean terminated = false;
 
-		for (final Token currentToken : tokens.tokens) {
-			index++;
-
-			// If we've reached the terminator, simply add the remaining values verbatim
-			// to the currentArgs list, since we'll eventually report them separately
-			if (terminated) {
-				currentValues.add(currentToken.value);
-				continue;
-			}
-
+		for (final Token currentToken : tokens) {
 			switch (currentToken.type) {
-				case TERMINATOR:
 				case SHORT_OPTION:
 				case LONG_OPTION:
 					if (currentParameterToken != null) {
-						processParameter(listener, currentParameterToken, currentParameter, currentValues);
-						currentValues.clear();
+						processParameter(listener, currentParameterToken, currentParameter, noValues);
 						currentParameter = null;
 						currentParameterToken = null;
 					}
 
-					// If this is a terminator, then we terminate, and that's that
-					if (currentToken.type == Token.Type.TERMINATOR) {
-						terminated = true;
-						listener.terminatorFound(currentToken);
+					// The erminator only disables processing of --xxx and -x parameters
+					if (terminated) {
+						positionalValues.add(currentToken.value);
 						continue;
 					}
 
 					// Ok...so...now we need to set up the next parameter
-					try {
-						final Parameter nextParameter = (currentToken.type == Token.Type.SHORT_OPTION
-							? parameterSet.getParameter(currentToken.value.charAt(0))
-							: parameterSet.getParameter(currentToken.value));
-						if (nextParameter == null) {
-							if (!listener.isErrorUnknownParameterFound(currentToken)) {
-								// The parameter is unknown, but this isn't an error, so we simply
-								// move on
-								continue;
-							}
-							throw new UnknownParameterException(currentToken.source, currentToken.index,
-								currentToken.rawString);
-						}
-
-						currentParameterToken = currentToken;
-						currentParameter = nextParameter;
-					} finally {
-						// Regardless of the outcome, the currentArgs list needs to be cleared
-						currentValues.clear();
-					}
-					continue;
-
-				case PLAIN:
-					// Are we processing a parameter?
-					if (currentParameter != null) {
-						final int maxValues = currentParameter.getMaxValueCount();
-						// Can this be considered an argument?
-						if (maxValues != 0) {
-							// Arguments are allowed...so we apply the multivalue splitter
-							currentValues.addAll(splitValues(currentToken.value));
-							// We check the size now because if concatenated values are allowed,
-							// then
-							// the count of attribute
-							if ((maxValues > 0) && (currentValues.size() > maxValues)) {
-								// There is a limit breach...
-								if (listener.isErrorTooManyValues(currentParameterToken, currentParameter,
-									currentValues)) { throw new TooManyParameterValuesException(currentParameterToken.source,
-										currentParameterToken.index, currentParameter, currentValues); }
-								// If this isn't to be treated as an error, we simply keep going
-							}
-							// There is no limit on argument count, or the count of arguments
-							// is below the set limit
+					final Parameter nextParameter = (currentToken.type == Token.Type.SHORT_OPTION
+						? parameterSet.getParameter(currentToken.value.charAt(0))
+						: parameterSet.getParameter(currentToken.value));
+					if (nextParameter == null) {
+						if (!listener.isErrorUnknownParameterFound(currentToken)) {
+							// The parameter is unknown, but this isn't an error, so we simply
+							// move on
 							continue;
 						}
+						throw new UnknownParameterException(currentToken.source, currentToken.index,
+							currentToken.rawString);
+					}
 
-						// This isn't an argument...so...it's either a subcommand, a trailing
-						// value, or an out-of-place value
+					currentParameterToken = currentToken;
+					currentParameter = nextParameter;
+					continue;
+
+				case STRING:
+					// Are we processing a parameter?
+					if (currentParameter != null) {
+						boolean tokenConsumed = false;
+						// Can this be considered an argument?
+						List<String> values = noValues;
+						if (currentParameter.getMaxValueCount() != 0) {
+							// Arguments are allowed...so...submit the argument's value(s)
+							values = splitValues(currentToken.value);
+							tokenConsumed = true;
+						}
+						processParameter(listener, currentParameterToken, currentParameter, values);
+						currentParameter = null;
+						currentParameterToken = null;
+						if (tokenConsumed) {
+							// The token was consumed and thus shouldn't be processed further...
+							continue;
+						}
 					}
 
 					// This token is not an argument b/c this parameter doesn't support
-					// them (or we have no parameter)...so it's either a subcommand, or one of the
-					// trailing command-line values...
+					// them (or we have no parameter)...so it's either a subcommand, or a
+					// positional value
 					final ParameterSet subCommand = rootParams.getSubcommand(currentToken.value);
 					if (subCommand == null) {
-						// Not a subcommand, so ... is this a trailing argument?
-						if (index < tokens.lastParameter) {
-							if (listener.isErrorOrphanedValueFound(currentToken)) { throw new UnknownSubcommandException(
-								currentToken.source, currentToken.index, currentToken.rawString); }
-							// Orphaned value, but not causing a failure
-							continue;
-						}
-
 						// We're OK..this is a trailing value...
-						currentValues.add(currentToken.value);
+						positionalValues.add(currentToken.value);
 						continue;
 					}
 
-					if (currentParameter != null) {
-						processParameter(listener, currentParameterToken, currentParameter, currentValues);
-						currentValues.clear();
-						currentParameter = null;
-						currentParameterToken = null;
-					}
+					listener.positionalParametersFound(positionalValues);
 
 					// This is a subcommand, so we replace the current one with this one
 					parameterSet = subCommand;
@@ -402,8 +334,8 @@ public class TokenProcessor {
 			}
 		}
 
-		if (!currentValues.isEmpty()) {
-			listener.extraArguments(currentValues);
+		if (!positionalValues.isEmpty()) {
+			listener.extraArguments(positionalValues);
 		}
 	}
 }
