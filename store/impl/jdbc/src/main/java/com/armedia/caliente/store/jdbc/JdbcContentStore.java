@@ -73,9 +73,9 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 				ok = true;
 			} finally {
 				if (!ok) {
-					JdbcUtils.closeQuietly(this.rs);
+					JdbcTools.closeQuietly(this.rs);
 					this.rs = null;
-					JdbcUtils.closeQuietly(this.ps);
+					JdbcTools.closeQuietly(this.ps);
 					this.ps = null;
 					if (this.operation != null) {
 						try {
@@ -149,8 +149,8 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 			assertOpenRT();
 			this.finished = true;
 			IOUtils.closeQuietly(this.stream);
-			JdbcUtils.closeQuietly(this.rs);
-			JdbcUtils.closeQuietly(this.ps);
+			JdbcTools.closeQuietly(this.rs);
+			JdbcTools.closeQuietly(this.ps);
 			try {
 				if (this.tx) {
 					try {
@@ -230,7 +230,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 				}
 			}
 		} finally {
-			JdbcUtils.closeQuietly(c);
+			JdbcTools.closeQuietly(c);
 		}
 	}
 

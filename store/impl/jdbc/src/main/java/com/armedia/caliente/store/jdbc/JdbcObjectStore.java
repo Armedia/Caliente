@@ -127,7 +127,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 			}
 		} finally {
-			JdbcUtils.closeQuietly(c);
+			JdbcTools.closeQuietly(c);
 		}
 	}
 
@@ -376,7 +376,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							try {
 								loadAttributes(translator, attributeRS, obj);
 							} finally {
-								JdbcUtils.closeQuietly(attributeRS);
+								JdbcTools.closeQuietly(attributeRS);
 							}
 
 							attributeValuePS.clearParameters();
@@ -390,7 +390,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 									loadValues(translator.getCodec(att.getType()),
 										CmfValueSerializer.get(att.getType()), valueRS, att);
 								} finally {
-									JdbcUtils.closeQuietly(valueRS);
+									JdbcTools.closeQuietly(valueRS);
 								}
 							}
 
@@ -400,7 +400,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							try {
 								loadProperties(translator, propertyRS, obj);
 							} finally {
-								JdbcUtils.closeQuietly(propertyRS);
+								JdbcTools.closeQuietly(propertyRS);
 							}
 
 							propertyValuePS.clearParameters();
@@ -414,7 +414,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 									loadValues(translator.getCodec(prop.getType()),
 										CmfValueSerializer.get(prop.getType()), valueRS, prop);
 								} finally {
-									JdbcUtils.closeQuietly(valueRS);
+									JdbcTools.closeQuietly(valueRS);
 								}
 							}
 						} catch (SQLException e) {
@@ -424,16 +424,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					}
 					return null;
 				} finally {
-					JdbcUtils.closeQuietly(objectRS);
-					JdbcUtils.closeQuietly(parentsRS);
+					JdbcTools.closeQuietly(objectRS);
+					JdbcTools.closeQuietly(parentsRS);
 				}
 			} finally {
-				JdbcUtils.closeQuietly(parentsPS);
-				JdbcUtils.closeQuietly(propertyValuePS);
-				JdbcUtils.closeQuietly(propertyPS);
-				JdbcUtils.closeQuietly(attributeValuePS);
-				JdbcUtils.closeQuietly(attributePS);
-				JdbcUtils.closeQuietly(objectPS);
+				JdbcTools.closeQuietly(parentsPS);
+				JdbcTools.closeQuietly(propertyValuePS);
+				JdbcTools.closeQuietly(propertyPS);
+				JdbcTools.closeQuietly(attributeValuePS);
+				JdbcTools.closeQuietly(attributePS);
+				JdbcTools.closeQuietly(objectPS);
 			}
 		} catch (SQLException e) {
 			throw new CmfStorageException(
@@ -582,7 +582,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							try {
 								loadAttributes(translator, attributeRS, obj);
 							} finally {
-								JdbcUtils.closeQuietly(attributeRS);
+								JdbcTools.closeQuietly(attributeRS);
 							}
 
 							attributeValuePS.clearParameters();
@@ -596,7 +596,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 									loadValues(translator.getCodec(att.getType()),
 										CmfValueSerializer.get(att.getType()), valueRS, att);
 								} finally {
-									JdbcUtils.closeQuietly(valueRS);
+									JdbcTools.closeQuietly(valueRS);
 								}
 							}
 
@@ -606,7 +606,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							try {
 								loadProperties(translator, propertyRS, obj);
 							} finally {
-								JdbcUtils.closeQuietly(propertyRS);
+								JdbcTools.closeQuietly(propertyRS);
 							}
 
 							propertyValuePS.clearParameters();
@@ -620,7 +620,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 									loadValues(translator.getCodec(prop.getType()),
 										CmfValueSerializer.get(prop.getType()), valueRS, prop);
 								} finally {
-									JdbcUtils.closeQuietly(valueRS);
+									JdbcTools.closeQuietly(valueRS);
 								}
 							}
 						} catch (SQLException e) {
@@ -671,16 +671,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							currentTier = null;
 						}
 					}
-					JdbcUtils.closeQuietly(objectRS);
-					JdbcUtils.closeQuietly(parentsRS);
+					JdbcTools.closeQuietly(objectRS);
+					JdbcTools.closeQuietly(parentsRS);
 				}
 			} finally {
-				JdbcUtils.closeQuietly(parentsPS);
-				JdbcUtils.closeQuietly(propertyValuePS);
-				JdbcUtils.closeQuietly(propertyPS);
-				JdbcUtils.closeQuietly(attributeValuePS);
-				JdbcUtils.closeQuietly(attributePS);
-				JdbcUtils.closeQuietly(objectPS);
+				JdbcTools.closeQuietly(parentsPS);
+				JdbcTools.closeQuietly(propertyValuePS);
+				JdbcTools.closeQuietly(propertyPS);
+				JdbcTools.closeQuietly(attributeValuePS);
+				JdbcTools.closeQuietly(attributePS);
+				JdbcTools.closeQuietly(objectPS);
 			}
 		} catch (SQLException e) {
 			throw new CmfStorageException(
@@ -1095,7 +1095,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 			return tableNames;
 		} finally {
-			JdbcUtils.closeQuietly(rs);
+			JdbcTools.closeQuietly(rs);
 		}
 	}
 
@@ -1459,8 +1459,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			throw new CmfStorageException(String.format("Failed to load the content records for %s [%s](%s)",
 				object.getType(), object.getLabel(), object.getId()), e);
 		} finally {
-			JdbcUtils.closeQuietly(pPS);
-			JdbcUtils.closeQuietly(cPS);
+			JdbcTools.closeQuietly(pPS);
+			JdbcTools.closeQuietly(cPS);
 		}
 	}
 
@@ -1564,7 +1564,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			this.log.trace("Failed to disable the referential integrity constraints", e);
 			return false;
 		} finally {
-			JdbcUtils.closeQuietly(s);
+			JdbcTools.closeQuietly(s);
 		}
 	}
 
@@ -1579,7 +1579,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to re-enable the referential integrity constraints", e);
 		} finally {
-			JdbcUtils.closeQuietly(s);
+			JdbcTools.closeQuietly(s);
 		}
 	}
 
@@ -1646,8 +1646,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 
 		private void close() {
-			JdbcUtils.closeQuietly(this.results);
-			JdbcUtils.closeQuietly(this.statement);
+			JdbcTools.closeQuietly(this.results);
+			JdbcTools.closeQuietly(this.statement);
 		}
 	}
 

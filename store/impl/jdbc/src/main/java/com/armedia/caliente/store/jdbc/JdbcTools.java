@@ -1,18 +1,24 @@
 package com.armedia.caliente.store.jdbc;
 
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
 
 class JdbcTools {
+
+	private static final Logger LOG = LoggerFactory.getLogger(JdbcTools.class);
 
 	private JdbcTools() {
 	}
@@ -77,5 +83,39 @@ class JdbcTools {
 			throw new IllegalArgumentException(String.format("The object type [%s] is not a valid object type", id), e);
 		}
 		return new CmfObjectRef(type, m.group(2));
+	}
+
+	private static void handleException(SQLException e) {
+		// if (LOG.isTraceEnabled())
+		{
+			JdbcTools.LOG.error("SQLException caught while closing down resources", e);
+		}
+	}
+
+	static void closeQuietly(ResultSet rs) {
+		if (rs == null) { return; }
+		try {
+			rs.close();
+		} catch (SQLException e) {
+			JdbcTools.handleException(e);
+		}
+	}
+
+	static void closeQuietly(Statement s) {
+		if (s == null) { return; }
+		try {
+			s.close();
+		} catch (SQLException e) {
+			JdbcTools.handleException(e);
+		}
+	}
+
+	static void closeQuietly(Connection c) {
+		if (c == null) { return; }
+		try {
+			c.close();
+		} catch (SQLException e) {
+			JdbcTools.handleException(e);
+		}
 	}
 }
