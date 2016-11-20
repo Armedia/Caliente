@@ -13,7 +13,6 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.io.IOUtils;
@@ -74,9 +73,9 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 				ok = true;
 			} finally {
 				if (!ok) {
-					DbUtils.closeQuietly(this.rs);
+					JdbcUtils.closeQuietly(this.rs);
 					this.rs = null;
-					DbUtils.closeQuietly(this.ps);
+					JdbcUtils.closeQuietly(this.ps);
 					this.ps = null;
 					if (this.operation != null) {
 						try {
@@ -150,8 +149,8 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 			assertOpenRT();
 			this.finished = true;
 			IOUtils.closeQuietly(this.stream);
-			DbUtils.closeQuietly(this.rs);
-			DbUtils.closeQuietly(this.ps);
+			JdbcUtils.closeQuietly(this.rs);
+			JdbcUtils.closeQuietly(this.ps);
 			try {
 				if (this.tx) {
 					try {
@@ -231,7 +230,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 				}
 			}
 		} finally {
-			DbUtils.closeQuietly(c);
+			JdbcUtils.closeQuietly(c);
 		}
 	}
 
