@@ -53,62 +53,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.caliente.store</groupId>
-			<artifactId>caliente-store-local</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.store</groupId>
-			<artifactId>caliente-store-jdbc</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-documentum</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-sharepoint</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-cmis</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-local</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-xml</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-alfresco-bi</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>com.armedia.commons</groupId>
 			<artifactId>datasource-locator-pooled</artifactId>
 			<scope>compile</scope>
