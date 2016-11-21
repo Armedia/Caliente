@@ -36,38 +36,7 @@ public class TokenProcessorTest {
 			"@@classpath:/test-parameter-file.txt", "--ff"
 		};
 
-		CommandSet rootParams = new CommandSet("root");
-		rootParams.addParameter(new MutableParameter().setShortOpt('a'));
-		rootParams.addParameter(new MutableParameter().setLongOpt("bb"));
-		rootParams.addSubcommand("subcommand", new MutableParameterSet("subcommand"));
-
-		TokenListener listener = new TokenListener() {
-
-			@Override
-			public void positionalParametersFound(List<String> values) {
-				System.out.printf("POSITIONAL: %s%n", values);
-			}
-
-			@Override
-			public void namedParameterFound(Parameter parameter, List<String> values) {
-				System.out.printf("PARAMETER: %s %s%n", parameter.getKey(), values);
-			}
-
-			@Override
-			public void terminatorFound(Token token) {
-				System.out.printf("TERMINATOR (%d @ %s)%n", token.index,
-					token.source != null ? token.source.getKey() : "(root)");
-			}
-
-			@Override
-			public void subCommandFound(String subCommand) {
-				System.out.printf("SUBCOMMAND [%s]%n", subCommand);
-			}
-
-			@Override
-			public void extraArguments(List<String> arguments) {
-				System.out.printf("EXTRA ARGS: %s%n", arguments);
-			}
+		final ParserErrorPolicy errorPolicy = new ParserErrorPolicy() {
 
 			@Override
 			public boolean isErrorMissingValues(Token token, Parameter parameter, List<String> values) {
@@ -89,14 +58,22 @@ public class TokenProcessorTest {
 					token.source != null ? token.source.getKey() : "(root)");
 				return false;
 			}
-
+		};
+		ParameterProcessorSet rootParams = new ParameterProcessorSet("root") {
 			@Override
-			public boolean isErrorOrphanedValueFound(Token token) {
-				System.out.printf("ORPHANED VALUE %s (%d @ %s)%n", token.value, token.index,
-					token.source != null ? token.source.getKey() : "(root)");
-				return false;
+			public ParserErrorPolicy getErrorPolicy() {
+				return errorPolicy;
 			}
 		};
-		p.processTokens(rootParams, listener, args);
+		rootParams.addParameter(new MutableParameter().setShortOpt('a'));
+		rootParams.addParameter(new MutableParameter().setLongOpt("bb"));
+		rootParams.addSubProcessor("subcommand", new ParameterProcessor("subcommand") {
+			@Override
+			public ParserErrorPolicy getErrorPolicy() {
+				return errorPolicy;
+			}
+		});
+
+		p.processTokens(rootParams, args);
 	}
 }

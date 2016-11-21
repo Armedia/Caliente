@@ -67,7 +67,7 @@ public class CommandLineTest {
 					if (!Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
 					}
-					Assert.assertSame(cl, p.getCLI());
+					Assert.assertSame(cl, p.getCommandLineValues());
 					Assert.assertTrue(BaseParameter.isIdentical(def, p));
 				} catch (InvalidParameterException e) {
 					if (Character.isLetterOrDigit(c)) {
@@ -114,7 +114,7 @@ public class CommandLineTest {
 		Assert.assertEquals(p, p);
 		Assert.assertNotEquals(p, null);
 		Assert.assertNotEquals(p, "");
-		Assert.assertSame(cl, p.getCLI());
+		Assert.assertSame(cl, p.getCommandLineValues());
 		Assert.assertTrue(BaseParameter.isIdentical(def, p));
 
 		CommandLineParameter p2 = cl.define(def);
@@ -122,7 +122,7 @@ public class CommandLineTest {
 
 		def.setLongOpt("cd");
 		p2 = cl.define(def);
-		Assert.assertSame(cl, p2.getCLI());
+		Assert.assertSame(cl, p2.getCommandLineValues());
 		Assert.assertNotSame(p, p2);
 		Assert.assertTrue(BaseParameter.isIdentical(def, p2));
 		Assert.assertNotEquals(p, p2);
@@ -649,7 +649,7 @@ public class CommandLineTest {
 			cl.parse("TEST", args);
 
 			Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
-			List<String> remaining = cl.getRemainingParameters();
+			List<String> remaining = cl.getPositionalValues();
 			Assert.assertEquals(6, remaining.size());
 			for (int i = 2; i < args.length; i++) {
 				Assert.assertEquals(args[i], remaining.get(i - 2));
@@ -671,7 +671,7 @@ public class CommandLineTest {
 			cl.parse("TEST", args);
 
 			Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
-			List<String> remaining = cl.getRemainingParameters();
+			List<String> remaining = cl.getPositionalValues();
 			Assert.assertTrue(remaining.isEmpty());
 		}
 	}

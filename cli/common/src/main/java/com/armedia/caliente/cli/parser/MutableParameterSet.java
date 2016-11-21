@@ -41,7 +41,7 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 		}
 	}
 
-	public MutableParameterSet(String name, String... aliases) {
+	public MutableParameterSet(String name) {
 		if (!validateLong(name)) { throw new IllegalArgumentException(
 			String.format("The string [%s] is not a valid parameter set name", name)); }
 		this.name = name;
@@ -195,11 +195,10 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 
 	@Override
 	public Collection<Parameter> getOrderedParameters(Comparator<? super Parameter> c) {
-		if (c == null) {
-			c = ParameterSet.DEFAULT_COMPARATOR;
-		}
 		List<Parameter> ret = new ArrayList<>(this.parameters.values());
-		Collections.sort(ret, c);
+		if (c != null) {
+			Collections.sort(ret, c);
+		}
 		return ret;
 	}
 }

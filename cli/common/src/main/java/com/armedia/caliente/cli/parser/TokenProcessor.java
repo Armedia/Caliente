@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -88,12 +89,12 @@ public class TokenProcessor {
 		return identifyTokens(Arrays.asList(args));
 	}
 
-	public List<Token> identifyTokens(Collection<String> args) throws IOException, TokenSourceRecursionLoopException {
+	public List<Token> identifyTokens(Iterable<String> args) throws IOException, TokenSourceRecursionLoopException {
 		return identifyTokens(null, null, null, args);
 	}
 
 	private List<Token> identifyTokens(Set<String> recursionGuard, TokenSource source,
-		Map<String, List<Token>> tokenSourceCache, Collection<String> args)
+		Map<String, List<Token>> tokenSourceCache, Iterable<String> args)
 		throws IOException, TokenSourceRecursionLoopException {
 		if (recursionGuard == null) {
 			recursionGuard = new LinkedHashSet<>();
@@ -208,7 +209,7 @@ public class TokenProcessor {
 		return Arrays.asList(StringUtils.splitPreserveAllTokens(str, this.valueSeparator.charValue()));
 	}
 
-	public void processTokens(CommandSet rootParams, TokenListener listener, String... args)
+	public void processTokens(ParameterProcessorSet rootParams, String... args)
 		throws MissingParameterValuesException, UnknownParameterException, TooManyParameterValuesException,
 		UnknownSubcommandException, TokenSourceRecursionLoopException, IOException {
 
@@ -219,58 +220,52 @@ public class TokenProcessor {
 			c = Arrays.asList(args);
 		}
 
-		processTokens(rootParams, listener, c);
+		processTokens(rootParams, c);
 	}
 
-	private boolean processParameter(TokenListener listener, Token token, Parameter parameter, List<String> values)
-		throws MissingParameterValuesException, TooManyParameterValuesException {
-		final int minValues = parameter.getMinValueCount();
-		final int maxValues = parameter.getMaxValueCount();
-		final boolean optional = (minValues <= 0);
-		final boolean unlimited = (maxValues < 0);
-
-		if (!optional && (values.size() < minValues)) {
-			if (listener.isErrorMissingValues(token, parameter,
-				values)) { throw new MissingParameterValuesException(token.source, token.index, parameter, values); }
-			return false;
-		}
-
-		if (!unlimited && (values.size() > maxValues)) {
-			if (listener.isErrorTooManyValues(token, parameter,
-				values)) { throw new TooManyParameterValuesException(token.source, token.index, parameter, values); }
-			// If this isn't an error as per the listener...
-			return false;
-		}
-
-		listener.namedParameterFound(parameter, values);
-		return true;
-	}
-
-	public void processTokens(CommandSet rootParams, TokenListener listener, Collection<String> args)
+	public void processTokens(final ParameterProcessorSet rootProcessor, final Iterable<String> args)
 		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException, UnknownSubcommandException,
 		MissingParameterValuesException, TooManyParameterValuesException {
 
 		final List<Token> tokens = identifyTokens(args);
 
-		ParameterSet parameterSet = rootParams;
-
 		Token currentParameterToken = null;
 		Parameter currentParameter = null;
+
 		List<String> positionalValues = new ArrayList<>();
 		List<String> noValues = Collections.emptyList();
+
+		final ParserErrorPolicy defaultPolicy = new BasicParserErrorPolicy();
+		final Set<String> globalLong = new HashSet<>();
+		final Set<Character> globalShort = new HashSet<>();
+		ParameterProcessor currentProcessor = rootProcessor;
+		for (String p : currentProcessor.getLongOptions()) {
+			globalLong.add(p);
+		}
+		for (Character p : currentProcessor.getShortOptions()) {
+			globalShort.add(p);
+		}
+
 		boolean terminated = false;
 
 		for (final Token currentToken : tokens) {
+			final ParserErrorPolicy errorPolicy = Tools.coalesce(currentProcessor.getErrorPolicy(), defaultPolicy);
+
 			switch (currentToken.type) {
 				case SHORT_OPTION:
 				case LONG_OPTION:
 					if (currentParameterToken != null) {
-						processParameter(listener, currentParameterToken, currentParameter, noValues);
+						ParameterProcessor target = currentProcessor;
+						if (globalLong.contains(currentParameter.getLongOpt())
+							|| globalShort.contains(currentParameter.getShortOpt())) {
+							target = rootProcessor;
+						}
+						target.addNamedValues(currentParameter, noValues);
 						currentParameter = null;
 						currentParameterToken = null;
 					}
 
-					// The erminator only disables processing of --xxx and -x parameters
+					// The terminator only disables processing of --xxx and -x parameters
 					if (terminated) {
 						positionalValues.add(currentToken.value);
 						continue;
@@ -278,10 +273,10 @@ public class TokenProcessor {
 
 					// Ok...so...now we need to set up the next parameter
 					final Parameter nextParameter = (currentToken.type == Token.Type.SHORT_OPTION
-						? parameterSet.getParameter(currentToken.value.charAt(0))
-						: parameterSet.getParameter(currentToken.value));
+						? currentProcessor.getParameter(currentToken.value.charAt(0))
+						: currentProcessor.getParameter(currentToken.value));
 					if (nextParameter == null) {
-						if (!listener.isErrorUnknownParameterFound(currentToken)) {
+						if (!errorPolicy.isErrorUnknownParameterFound(currentToken)) {
 							// The parameter is unknown, but this isn't an error, so we simply
 							// move on
 							continue;
@@ -305,7 +300,12 @@ public class TokenProcessor {
 							values = splitValues(currentToken.value);
 							tokenConsumed = true;
 						}
-						processParameter(listener, currentParameterToken, currentParameter, values);
+						ParameterProcessor target = currentProcessor;
+						if (globalLong.contains(currentParameter.getLongOpt())
+							|| globalShort.contains(currentParameter.getShortOpt())) {
+							target = rootProcessor;
+						}
+						target.addNamedValues(currentParameter, values);
 						currentParameter = null;
 						currentParameterToken = null;
 						if (tokenConsumed) {
@@ -317,25 +317,25 @@ public class TokenProcessor {
 					// This token is not an argument b/c this parameter doesn't support
 					// them (or we have no parameter)...so it's either a subcommand, or a
 					// positional value
-					final ParameterSet subCommand = rootParams.getSubcommand(currentToken.value);
+					final ParameterProcessor subCommand = rootProcessor.getSubProcessor(currentToken.value);
 					if (subCommand == null) {
 						// We're OK..this is a trailing value...
 						positionalValues.add(currentToken.value);
 						continue;
 					}
 
-					listener.positionalParametersFound(positionalValues);
+					currentProcessor.setPositionalValues(positionalValues);
+					positionalValues.clear();
 
 					// This is a subcommand, so we replace the current one with this one
-					parameterSet = subCommand;
-					listener.subCommandFound(currentToken.rawString);
+					currentProcessor = subCommand;
 
 					continue;
 			}
 		}
 
 		if (!positionalValues.isEmpty()) {
-			listener.extraArguments(positionalValues);
+			currentProcessor.setPositionalValues(positionalValues);
 		}
 	}
 }

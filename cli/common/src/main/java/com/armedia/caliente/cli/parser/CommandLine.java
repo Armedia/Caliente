@@ -46,7 +46,7 @@ public class CommandLine implements CommandLineValues {
 	private final boolean helpSupported;
 
 	private final Map<String, List<String>> values = new HashMap<>();
-	private final List<String> remainingParameters = new ArrayList<>();
+	private final List<String> positionalValues = new ArrayList<>();
 
 	private String helpMessage = null;
 
@@ -83,7 +83,7 @@ public class CommandLine implements CommandLineValues {
 		if (remaining == null) {
 			remaining = Collections.emptyList();
 		}
-		this.remainingParameters.addAll(remaining);
+		this.positionalValues.addAll(remaining);
 	}
 
 	public final void parse(String executableName, Collection<String> args) throws CommandLineParseException {
@@ -116,7 +116,7 @@ public class CommandLine implements CommandLineValues {
 			}
 			// Clear the current state
 			this.values.clear();
-			this.remainingParameters.clear();
+			this.positionalValues.clear();
 			// Parse!
 			C ctx = null;
 			try {
@@ -183,7 +183,7 @@ public class CommandLine implements CommandLineValues {
 			"The given parameter definition does not define a valid key"); }
 		if (CommandLineParameter.class.isInstance(param)) {
 			CommandLineParameter p = CommandLineParameter.class.cast(param);
-			if (p.getCLI() != this) { throw new IllegalArgumentException(
+			if (p.getCommandLineValues() != this) { throw new IllegalArgumentException(
 				"The given parameter is not associated to this command-line interface"); }
 		}
 	}
@@ -372,8 +372,7 @@ public class CommandLine implements CommandLineValues {
 		return getParameterByKey(parameter.getKey());
 	}
 
-	@Override
-	public final CommandLineParameter getParameterByKey(String key) {
+	protected final CommandLineParameter getParameterByKey(String key) {
 		if (key == null) { throw new IllegalArgumentException("Must provide a key to search for"); }
 		final Lock l = this.rwLock.readLock();
 		l.lock();
@@ -562,11 +561,11 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final List<String> getRemainingParameters() {
+	public final List<String> getPositionalValues() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			return Tools.freezeCopy(this.remainingParameters);
+			return Tools.freezeCopy(this.positionalValues);
 		} finally {
 			l.unlock();
 		}

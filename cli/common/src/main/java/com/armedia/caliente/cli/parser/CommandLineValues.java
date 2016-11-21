@@ -24,8 +24,6 @@ public interface CommandLineValues extends Iterable<CommandLineParameter> {
 
 	public CommandLineParameter getParameter(Parameter parameter);
 
-	public CommandLineParameter getParameterByKey(String key);
-
 	public boolean hasHelpParameter();
 
 	public CommandLineParameter getHelpParameter();
@@ -70,6 +68,6 @@ public interface CommandLineValues extends Iterable<CommandLineParameter> {
 
 	public boolean isPresent(Parameter param);
 
-	public List<String> getRemainingParameters();
+	public List<String> getPositionalValues();
 
 }

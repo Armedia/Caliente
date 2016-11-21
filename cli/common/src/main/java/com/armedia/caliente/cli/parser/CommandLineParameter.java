@@ -7,10 +7,10 @@ import com.armedia.commons.utilities.Tools;
 
 public final class CommandLineParameter extends BaseParameter implements Comparable<CommandLineParameter> {
 	private final String cliKey;
-	private final CommandLine cli;
+	private final CommandLineValues cli;
 	private final Parameter def;
 
-	CommandLineParameter(CommandLine cli, Parameter def) {
+	CommandLineParameter(CommandLineValues cli, Parameter def) {
 		this.cli = cli;
 		this.def = new ImmutableParameter(def);
 		this.cliKey = BaseParameter.calculateKey(def);
@@ -72,7 +72,7 @@ public final class CommandLineParameter extends BaseParameter implements Compara
 		return Tools.compare(this.cliKey, o.cliKey);
 	}
 
-	public CommandLine getCLI() {
+	public CommandLineValues getCommandLineValues() {
 		return this.cli;
 	}
 
