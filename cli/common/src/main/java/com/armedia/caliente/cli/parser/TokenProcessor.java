@@ -53,7 +53,7 @@ public class TokenProcessor {
 	private TokenProcessor(char parameterMarker) {
 		this(parameterMarker, TokenProcessor.DEFAULT_FILE_MARKER, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
-	
+
 	private TokenProcessor(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
@@ -226,7 +226,7 @@ public class TokenProcessor {
 
 	public void processTokens(ParameterProcessorSet rootParams, String... args)
 		throws MissingParameterValuesException, UnknownParameterException, TooManyParameterValuesException,
-		UnknownSubcommandException, TokenSourceRecursionLoopException, IOException {
+		UnknownSubcommandException, TokenSourceRecursionLoopException, IOException, RequiredParameterMissingException {
 
 		final Collection<String> c;
 		if (args == null) {
@@ -240,7 +240,7 @@ public class TokenProcessor {
 
 	public void processTokens(final ParameterProcessorSet rootProcessor, final Iterable<String> args)
 		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException, UnknownSubcommandException,
-		MissingParameterValuesException, TooManyParameterValuesException {
+		MissingParameterValuesException, TooManyParameterValuesException, RequiredParameterMissingException {
 
 		final List<Token> tokens = identifyTokens(args);
 
@@ -252,19 +252,21 @@ public class TokenProcessor {
 
 		final Set<String> globalLong = new HashSet<>();
 		final Set<Character> globalShort = new HashSet<>();
-		ParameterProcessor currentProcessor = rootProcessor;
-		for (String p : currentProcessor.getLongOptions()) {
+		for (String p : rootProcessor.getLongOptions()) {
 			globalLong.add(p);
 		}
-		for (Character p : currentProcessor.getShortOptions()) {
+		for (Character p : rootProcessor.getShortOptions()) {
 			globalShort.add(p);
 		}
 
 		boolean terminated = false;
 
+		final ParameterErrorPolicy rootErrorPolicy = Tools.coalesce(rootProcessor.getErrorPolicy(),
+			this.defaultErrorPolicy);
+		ParameterErrorPolicy currentErrorPolicy = rootErrorPolicy;
+		ParameterProcessor currentProcessor = rootProcessor;
 		for (final Token currentToken : tokens) {
-			final ParameterErrorPolicy errorPolicy = Tools.coalesce(currentProcessor.getErrorPolicy(),
-				rootProcessor.getErrorPolicy(), this.defaultErrorPolicy);
+			currentErrorPolicy = Tools.coalesce(currentProcessor.getErrorPolicy(), rootErrorPolicy);
 
 			switch (currentToken.type) {
 				case SHORT_OPTION:
@@ -291,7 +293,7 @@ public class TokenProcessor {
 						? currentProcessor.getParameter(currentToken.value.charAt(0))
 						: currentProcessor.getParameter(currentToken.value));
 					if (nextParameter == null) {
-						if (!errorPolicy.isErrorUnknownParameterFound(currentToken)) {
+						if (!currentErrorPolicy.isErrorUnknownParameterFound(currentToken)) {
 							// The parameter is unknown, but this isn't an error, so we simply
 							// move on
 							continue;
@@ -332,6 +334,7 @@ public class TokenProcessor {
 					// This token is not an argument b/c this parameter doesn't support
 					// them (or we have no parameter)...so it's either a subcommand, or a
 					// positional value
+					final boolean currentIsRoot = (currentProcessor == rootProcessor);
 					final ParameterProcessor subCommand = rootProcessor.getSubProcessor(currentToken.value);
 					if (subCommand == null) {
 						// We're OK..this is a trailing value...
@@ -343,14 +346,18 @@ public class TokenProcessor {
 					positionalValues.clear();
 
 					// This is a subcommand, so we replace the current one with this one
+					if (!currentIsRoot) {
+						currentProcessor.processingComplete(currentErrorPolicy);
+					}
 					currentProcessor = subCommand;
 
 					continue;
 			}
 		}
-
-		if (!positionalValues.isEmpty()) {
-			currentProcessor.setPositionalValues(positionalValues);
+		currentProcessor.setPositionalValues(positionalValues);
+		if (currentProcessor != rootProcessor) {
+			currentProcessor.processingComplete(currentErrorPolicy);
 		}
+		rootProcessor.processingComplete(rootErrorPolicy);
 	}
 }

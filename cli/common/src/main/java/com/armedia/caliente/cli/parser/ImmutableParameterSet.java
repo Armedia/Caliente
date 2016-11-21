@@ -26,7 +26,7 @@ public class ImmutableParameterSet implements ParameterSet {
 		Map<Character, Parameter> shortOpts = new HashMap<>();
 		Map<String, Parameter> longOpts = new HashMap<>();
 		List<Parameter> parameters = new ArrayList<>();
-		for (Parameter p : other.getOrderedParameters(ParameterSet.DEFAULT_COMPARATOR)) {
+		for (Parameter p : other.getParameters(ParameterSet.DEFAULT_COMPARATOR)) {
 			Character s = p.getShortOpt();
 			if (s != null) {
 				shortOpts.put(s, p);
@@ -84,7 +84,7 @@ public class ImmutableParameterSet implements ParameterSet {
 	}
 
 	@Override
-	public Collection<Parameter> getOrderedParameters(Comparator<? super Parameter> c) {
+	public Collection<Parameter> getParameters(Comparator<? super Parameter> c) {
 		if ((c == null) || (c == ParameterSet.DEFAULT_COMPARATOR)) { return this.sorted; }
 		List<Parameter> l = new ArrayList<>(this.sorted);
 		Collections.sort(l, c);

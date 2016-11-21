@@ -17,10 +17,10 @@ public class DefaultParameterProcessor extends MutableParameterSet implements Pa
 		if (positionals != null) {
 			this.positionals.addAll(positionals);
 		}
-		for (Parameter p : other.getOrderedParameters(null)) {
+		for (Parameter p : other.getParameters(null)) {
 			List<String> l = other.getNamedValues(p);
 			if (l != null) {
-				this.namedValues.put(BaseParameter.calculateKey(p), new ArrayList<>(l));
+				this.namedValues.put(p.getKey(), new ArrayList<>(l));
 			}
 		}
 	}
@@ -31,7 +31,7 @@ public class DefaultParameterProcessor extends MutableParameterSet implements Pa
 
 	@Override
 	public void addNamedValues(Parameter parameter, List<String> values) throws TooManyParameterValuesException {
-		final String key = BaseParameter.calculateKey(parameter);
+		final String key = parameter.getKey();
 		if (values == null) {
 			values = Collections.emptyList();
 		}
@@ -73,5 +73,36 @@ public class DefaultParameterProcessor extends MutableParameterSet implements Pa
 	@Override
 	public ParameterErrorPolicy getErrorPolicy() {
 		return null;
+	}
+
+	private final void validateSchema(Parameter p, List<String> v)
+		throws TooManyParameterValuesException, MissingParameterValuesException, RequiredParameterMissingException {
+		// Validate schema correctness... required values, parameter counts, etc
+		if (p.isRequired() && (v == null)) {
+			// TODO: Apply policy?
+			throw new RequiredParameterMissingException(p);
+		}
+		if (p.getMinValueCount() > v.size()) {
+			// TODO: Apply policy?
+			throw new TooManyParameterValuesException(p, v);
+		}
+		if ((p.getMaxValueCount() == 0) && !v.isEmpty()) {
+			// TODO: Apply policy?
+			throw new MissingParameterValuesException(p, v);
+		}
+	}
+
+	@Override
+	public final void processingComplete(ParameterErrorPolicy errorPolicy)
+		throws TooManyParameterValuesException, MissingParameterValuesException, RequiredParameterMissingException {
+		for (final Parameter p : getParameters(null)) {
+			final List<String> v = this.namedValues.get(p.getKey());
+			validateSchema(p, v);
+			processParameter(p, v);
+		}
+	}
+
+	protected void processParameter(Parameter p, List<String> values) {
+		// By default, do nothing
 	}
 }

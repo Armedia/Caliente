@@ -119,6 +119,6 @@ public interface ParameterSet {
 	 *
 	 * @return a sorted {@link Collection} of the defined parameters
 	 */
-	public Collection<Parameter> getOrderedParameters(Comparator<? super Parameter> comparator);
+	public Collection<Parameter> getParameters(Comparator<? super Parameter> comparator);
 
 }

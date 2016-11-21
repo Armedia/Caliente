@@ -14,4 +14,7 @@ public interface ParameterProcessor extends ParameterSet {
 
 	public ParameterErrorPolicy getErrorPolicy();
 
+	public void processingComplete(ParameterErrorPolicy errorPolicy)
+		throws TooManyParameterValuesException, MissingParameterValuesException, RequiredParameterMissingException;
+
 }

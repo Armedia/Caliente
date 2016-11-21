@@ -194,7 +194,7 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 	}
 
 	@Override
-	public Collection<Parameter> getOrderedParameters(Comparator<? super Parameter> c) {
+	public Collection<Parameter> getParameters(Comparator<? super Parameter> c) {
 		List<Parameter> ret = new ArrayList<>(this.parameters.values());
 		if (c != null) {
 			Collections.sort(ret, c);
