@@ -41,6 +41,8 @@ public class TokenProcessor {
 	private final Character fileMarker;
 	private final Character valueSeparator;
 
+	private ParameterErrorPolicy defaultErrorPolicy = new BasicParserErrorPolicy();
+
 	public TokenProcessor() {
 		this(TokenProcessor.DEFAULT_PARAMETER_MARKER, TokenProcessor.DEFAULT_FILE_MARKER,
 			TokenProcessor.DEFAULT_VALUE_SPLITTER);
@@ -51,7 +53,7 @@ public class TokenProcessor {
 	private TokenProcessor(char parameterMarker) {
 		this(parameterMarker, TokenProcessor.DEFAULT_FILE_MARKER, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
-
+	
 	private TokenProcessor(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
@@ -70,6 +72,19 @@ public class TokenProcessor {
 		this.terminator = String.format(TokenProcessor.TERMINATOR_FMT, parameterMarker, parameterMarker);
 		this.patShort = Pattern.compile(String.format(TokenProcessor.SHORT_FMT, parameterMarker));
 		this.patLong = Pattern.compile(String.format(TokenProcessor.LONG_FMT, parameterMarker, parameterMarker));
+	}
+
+	public ParameterErrorPolicy getDefaultErrorPolicy() {
+		return this.defaultErrorPolicy;
+	}
+
+	public ParameterErrorPolicy setDefaultErrorPolicy(ParameterErrorPolicy policy) {
+		ParameterErrorPolicy oldPolicy = this.defaultErrorPolicy;
+		if (policy == null) {
+			policy = new BasicParserErrorPolicy();
+		}
+		this.defaultErrorPolicy = policy;
+		return oldPolicy;
 	}
 
 	public final char getParameterMarker() {
@@ -235,7 +250,6 @@ public class TokenProcessor {
 		List<String> positionalValues = new ArrayList<>();
 		List<String> noValues = Collections.emptyList();
 
-		final ParserErrorPolicy defaultPolicy = new BasicParserErrorPolicy();
 		final Set<String> globalLong = new HashSet<>();
 		final Set<Character> globalShort = new HashSet<>();
 		ParameterProcessor currentProcessor = rootProcessor;
@@ -249,7 +263,8 @@ public class TokenProcessor {
 		boolean terminated = false;
 
 		for (final Token currentToken : tokens) {
-			final ParserErrorPolicy errorPolicy = Tools.coalesce(currentProcessor.getErrorPolicy(), defaultPolicy);
+			final ParameterErrorPolicy errorPolicy = Tools.coalesce(currentProcessor.getErrorPolicy(),
+				rootProcessor.getErrorPolicy(), this.defaultErrorPolicy);
 
 			switch (currentToken.type) {
 				case SHORT_OPTION:

@@ -6,7 +6,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-public final class BasicParserErrorPolicy implements ParserErrorPolicy {
+public final class BasicParserErrorPolicy implements ParameterErrorPolicy {
 
 	public static enum Error {
 		//

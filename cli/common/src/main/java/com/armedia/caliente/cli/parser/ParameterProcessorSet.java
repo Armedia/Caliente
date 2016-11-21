@@ -7,9 +7,9 @@ import java.util.TreeMap;
 
 import com.armedia.commons.utilities.Tools;
 
-public class ParameterProcessorSet extends ParameterProcessor {
+public class ParameterProcessorSet extends DefaultParameterProcessor {
 
-	private static final ParserErrorPolicy DEFAULT_ERROR_POLICY = new BasicParserErrorPolicy();
+	private static final ParameterErrorPolicy DEFAULT_ERROR_POLICY = new BasicParserErrorPolicy();
 
 	private final Map<String, ParameterProcessor> subs = new TreeMap<>();
 	private final Map<String, String> aliasToName = new TreeMap<>();
@@ -31,7 +31,7 @@ public class ParameterProcessorSet extends ParameterProcessor {
 		return this.subs.containsKey(subName) || this.aliasToName.containsKey(subName);
 	}
 
-	public void addSubProcessor(String subName, ParameterProcessor sub, String... aliases) {
+	public void addSubProcessor(String subName, DefaultParameterProcessor sub, String... aliases) {
 		if (sub == null) { throw new IllegalArgumentException("Must provide a subprocessor"); }
 		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
 			"The string [%s] is not a valid subprocessor name - it may not be null, the empty string, or contain whitespace",
@@ -81,7 +81,7 @@ public class ParameterProcessorSet extends ParameterProcessor {
 	}
 
 	@Override
-	public ParserErrorPolicy getErrorPolicy() {
+	public ParameterErrorPolicy getErrorPolicy() {
 		return ParameterProcessorSet.DEFAULT_ERROR_POLICY;
 	}
 }
