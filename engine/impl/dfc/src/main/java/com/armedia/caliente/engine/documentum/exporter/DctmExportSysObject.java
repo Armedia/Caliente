@@ -570,6 +570,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	protected int calculateSysObjectDepth(IDfSysObject object, Set<String> visited) throws DfException {
+		if (visited == null) {
+			// Allow for easy invocation with only one parameter
+			visited = new LinkedHashSet<>();
+		}
 		final IDfId objectId = object.getObjectId();
 		if (!visited.add(objectId.getId())) { throw new DfException(
 			String.format("Document reference loop detected, element [%s] exists twice: %s",
@@ -627,7 +631,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 	@Override
 	protected final int calculateDependencyTier(T object) throws Exception {
-		int depth = calculateDepth(object, new LinkedHashSet<String>());
+		int depth = calculateDepth(object, null);
 		if (isDfReference(object)) {
 			depth++;
 		}

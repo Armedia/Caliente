@@ -5,6 +5,7 @@
 package com.armedia.caliente.engine.documentum.exporter;
 
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.armedia.caliente.engine.documentum.DctmAttributes;
@@ -54,7 +55,10 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		return folder.getFolderPath(0);
 	}
 
-	private int calculateDepth(IDfSession session, IDfId folderId, Set<String> visited) throws DfException {
+	private int calculateFolderDepth(IDfSession session, IDfId folderId, Set<String> visited) throws DfException {
+		if (visited == null) {
+			visited = new LinkedHashSet<>();
+		}
 		// If the folder has already been visited, we have a loop...so let's explode loudly
 		if (!visited.add(folderId.getId())) { throw new DfException(String
 			.format("Folder loop detected, element [%s] exists twice: %s", folderId.getId(), visited.toString())); }
@@ -70,7 +74,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 					if (parentId.isNull() || !parentId.isObjectId()) {
 						continue;
 					}
-					depth = Math.max(depth, calculateDepth(session, parentId, visited) + 1);
+					depth = Math.max(depth, calculateFolderDepth(session, parentId, visited) + 1);
 				}
 			} finally {
 				DfUtils.closeQuietly(results);
@@ -85,7 +89,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	protected int calculateDepth(IDfFolder folder, Set<String> visited) throws DfException {
 		// Calculate the maximum depth that this folder resides in, from its parents.
 		// Keep track of visited nodes, and explode on a loop.
-		return calculateDepth(folder.getSession(), folder.getObjectId(), visited);
+		return calculateFolderDepth(folder.getSession(), folder.getObjectId(), visited);
 	}
 
 	@Override
