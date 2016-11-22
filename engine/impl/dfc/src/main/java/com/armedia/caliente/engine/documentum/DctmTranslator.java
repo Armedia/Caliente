@@ -15,6 +15,7 @@ import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueCodec;
+import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfType;
@@ -236,7 +237,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 
 	@Override
 	public IDfValue getValue(CmfDataType type, Object value) {
-		return DfValueFactory.newValue(type, value);
+		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
 	}
 
 	@Override

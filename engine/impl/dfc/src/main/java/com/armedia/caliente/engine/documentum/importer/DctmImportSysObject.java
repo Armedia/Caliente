@@ -29,7 +29,6 @@ import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmMappingUtils;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
 import com.armedia.caliente.engine.documentum.DctmTranslator;
-import com.armedia.caliente.engine.documentum.DfValueFactory;
 import com.armedia.caliente.engine.documentum.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
@@ -40,6 +39,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.DfPermit;
@@ -519,7 +519,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			IDfUser u = session.getUser(user);
 			if (u == null) {
 				String msg = String.format(
-				"Can't inherit an ACL from user [%s] for %s [%s](%s) - the user doesn't exist (mapped to [%s])",
+					"Can't inherit an ACL from user [%s] for %s [%s](%s) - the user doesn't exist (mapped to [%s])",
 					reference, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId(),
 					user);
 				if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
@@ -540,7 +540,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		if (StringUtils.isEmpty(aclName) || StringUtils.isEmpty(aclDomain)) {
 			String msg = String.format(
-			"The %s [%s] doesn't contain any ACL information - can't inherit an ACL for %s [%s](%s)", type,
+				"The %s [%s] doesn't contain any ACL information - can't inherit an ACL for %s [%s](%s)", type,
 				actualReference, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
 			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
 			this.log.warn(msg);

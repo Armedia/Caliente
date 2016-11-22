@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.documentum.common.DctmACL;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.commons.dfc.util.DfValueFactory;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.DfException;

@@ -14,13 +14,13 @@ import com.armedia.caliente.engine.documentum.DctmObjectType;
 import com.armedia.caliente.engine.documentum.DctmSessionFactory;
 import com.armedia.caliente.engine.documentum.DctmSessionWrapper;
 import com.armedia.caliente.engine.documentum.DctmTranslator;
-import com.armedia.caliente.engine.documentum.DfValueFactory;
 import com.armedia.caliente.engine.documentum.common.DctmCommon;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -74,7 +74,7 @@ public class DctmImportEngine extends
 
 	@Override
 	protected IDfValue getValue(CmfDataType type, Object value) {
-		return DfValueFactory.newValue(type, value);
+		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
 	}
 
 	@Override
