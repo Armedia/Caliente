@@ -1,0 +1,127 @@
+Pass 1 (Globals)
+*	<action> (subcommand: export/import/count/encrypt/decrypt)
+*	--engine (dfc/cmis/shpt/local/etc...)
+	--lib
+	--help
+
+ENCRYPT/DECRYPT:
+	-- no params
+	positionals = password values to encrypt/decrypt
+
+EXPORT/IMPORT:
+(common)
+	--log-name (?)
+	--log-cfg (?)
+	--threads
+	--db
+	--content
+	--content-strategy
+	--manifest-types
+	--manifest-outcomes
+	--mail-to
+	--mail-from
+	--smtp-host
+	--smtp-port
+	--no-renditions
+	--no-versions
+	--object-store-config
+	--content-store-config
+	--exclude-types
+	--error-count
+	--skip-content
+	--direct-fs
+
+Pass 2 EXPORT
+	(common)
+		--job-name
+		--reset-job
+
+	Pass 3 ENGINE
+
+		DFC
+		*	--docbase
+		*	--user
+		*	--password
+		*	--predicate
+			--dfc
+			--dfc-prop
+			--dctm
+			--special-users
+			--special-groups
+			--special-types
+			--batch-size
+			--owner-attributes
+
+		ALFRESCO
+		*	--url
+		*	--user
+			--domain
+		*	--password
+		*	--path
+
+		SHAREPOINT
+		*	--url
+		*	--user
+			--domain
+		*	--password
+		*	--path
+			--source-prefix
+
+Pass 2 IMPORT
+(common)
+	--default-password
+	--target-location
+	--trim-prefix
+	--dedup
+	--name-fix
+	--no-filename-map
+	--filename-map
+
+	Pass 3 ENGINE
+
+	Pass 3 ENGINE
+
+		DFC
+		*	--docbase
+		*	--user
+		*	--password
+			--dfc
+			--dfc-prop
+			--dctm
+
+		ALFRESCO
+		*	--url
+		*	--user
+			--domain
+		*	--password
+		*	--content-model
+			--user-map
+			--group-map
+			--role-map
+			--type-map
+
+Pass 2 COUNT
+(common)
+	--non-recursive
+	--count-empty
+	--count-hidden
+	--count-private
+	--count-include
+	--count-exclude
+
+	Pass 3 ENGINE
+		DFC
+		*	--docbase
+		*	--user
+		*	--password
+			--dfc
+			--dfc-prop
+			--dctm
+		*	--predicate
+
+		ALFRESCO
+		*	--url
+		*	--user
+			--domain
+		*	--password
+		*	--path
