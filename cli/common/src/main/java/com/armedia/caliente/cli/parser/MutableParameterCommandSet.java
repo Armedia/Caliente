@@ -7,11 +7,13 @@ import java.util.TreeMap;
 
 import com.armedia.commons.utilities.Tools;
 
-public class MutableParameterCommandSet extends MutableParameterSet implements ParameterSchema, Cloneable {
+public final class MutableParameterCommandSet extends MutableParameterSet implements ParameterSchema, Cloneable {
 
-	private final Map<String, ParameterSet> subs = new TreeMap<>();
+	private final Map<String, ParameterSubSchema> subs = new TreeMap<>();
 	private final Map<String, String> aliasToName = new TreeMap<>();
 	private final Map<String, Set<String>> aliases = new TreeMap<>();
+
+	private boolean requiresSubSet = false;
 
 	public MutableParameterCommandSet() {
 		this(null);
@@ -21,13 +23,14 @@ public class MutableParameterCommandSet extends MutableParameterSet implements P
 		super(other);
 		if (other != null) {
 			for (String s : other.getSubSetNames()) {
-				ParameterSet set = other.getSubSet(s);
+				ParameterSubSchema set = other.getSubSet(s);
 				Set<String> a = Tools.freezeCopy(other.getSubSetAliases(s), true);
 				this.subs.put(s, new MutableParameterSet(set));
 				this.aliases.put(s, a);
 				for (String alias : a) {
 					this.aliasToName.put(alias, s);
 				}
+				this.requiresSubSet = other.isRequiresSubSet();
 			}
 		}
 	}
@@ -43,7 +46,7 @@ public class MutableParameterCommandSet extends MutableParameterSet implements P
 	}
 
 	@Override
-	public ParameterSet getSubSet(String subName) {
+	public ParameterSubSchema getSubSet(String subName) {
 		String alias = this.aliasToName.get(subName);
 		if (alias != null) {
 			subName = alias;
@@ -56,7 +59,7 @@ public class MutableParameterCommandSet extends MutableParameterSet implements P
 		return this.subs.containsKey(subName) || this.aliasToName.containsKey(subName);
 	}
 
-	public void addSubSet(String subName, ParameterSet sub, String... aliases) {
+	public void addSubSet(String subName, ParameterSubSchema sub, String... aliases) {
 		if (sub == null) { throw new IllegalArgumentException("Must provide a subset"); }
 		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
 			"The string [%s] is not a valid subset name - it may not be null, the empty string, or contain whitespace",
@@ -75,7 +78,7 @@ public class MutableParameterCommandSet extends MutableParameterSet implements P
 		}
 	}
 
-	public ParameterSet removeSubSet(String subName) {
+	public ParameterSubSchema removeSubSet(String subName) {
 		String alias = this.aliasToName.get(subName);
 		if (alias != null) {
 			subName = alias;
@@ -106,5 +109,14 @@ public class MutableParameterCommandSet extends MutableParameterSet implements P
 		Set<String> ret = this.aliases.get(subName);
 		if (ret == null) { return null; }
 		return new LinkedHashSet<>(ret);
+	}
+
+	@Override
+	public boolean isRequiresSubSet() {
+		return this.requiresSubSet;
+	}
+
+	public void setRequiresSubSet(boolean requiresSubSet) {
+		this.requiresSubSet = requiresSubSet;
 	}
 }

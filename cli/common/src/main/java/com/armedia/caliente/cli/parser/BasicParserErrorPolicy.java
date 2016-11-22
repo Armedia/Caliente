@@ -10,7 +10,7 @@ public final class BasicParserErrorPolicy implements TokenErrorPolicy {
 
 	public static enum Error {
 		//
-		MISSING_VALUES, TOO_MANY_VALUES, UNKNOWN_PARAMETER,
+		MISSING_VALUES, TOO_MANY_VALUES, UNKNOWN_PARAMETER, UNKNOWN_SUBCOMMAND,
 		//
 		;
 	}
@@ -135,5 +135,10 @@ public final class BasicParserErrorPolicy implements TokenErrorPolicy {
 	@Override
 	public boolean isErrorUnknownParameterFound(Token token) {
 		return isEnabled(Error.UNKNOWN_PARAMETER);
+	}
+
+	@Override
+	public boolean isErrorUnknownSubCommandFound(Token token) {
+		return isEnabled(Error.UNKNOWN_SUBCOMMAND);
 	}
 }

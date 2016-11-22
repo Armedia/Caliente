@@ -15,7 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public class MutableParameterSet implements ParameterSet, Cloneable {
+public class MutableParameterSet implements ParameterSubSchema, Cloneable {
 
 	protected static final Pattern VALID_SHORT = Pattern.compile("^[[\\p{Punct}&&[^-]]\\p{Alnum}]$");
 
@@ -29,7 +29,7 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 		this(null);
 	}
 
-	public MutableParameterSet(ParameterSet other) {
+	public MutableParameterSet(ParameterSubSchema other) {
 		if (other != null) {
 			this.description = other.getDescription();
 			for (Parameter p : other.getParameters(null)) {

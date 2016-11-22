@@ -54,7 +54,7 @@ public class TokenProcessor {
 	private TokenProcessor(char parameterMarker) {
 		this(parameterMarker, TokenProcessor.DEFAULT_FILE_MARKER, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
-
+	
 	private TokenProcessor(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
@@ -227,13 +227,13 @@ public class TokenProcessor {
 
 	public Collection<ParameterData> processTokens(final ParameterSchema rootSet, String... args)
 		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
-		TooManyParameterValuesException, MissingParameterValuesException {
+		TooManyParameterValuesException, MissingParameterValuesException, UnknownSubCommandException {
 		return processTokens(rootSet, null, args);
 	}
 
-	public Collection<ParameterData> processTokens(final ParameterSchema rootSet,
-		final TokenErrorPolicy errorPolicy, String... args) throws TokenSourceRecursionLoopException, IOException,
-		UnknownParameterException, TooManyParameterValuesException, MissingParameterValuesException {
+	public Collection<ParameterData> processTokens(final ParameterSchema rootSet, final TokenErrorPolicy errorPolicy,
+		String... args) throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
+		TooManyParameterValuesException, MissingParameterValuesException, UnknownSubCommandException {
 
 		final Collection<String> c;
 		if (args == null) {
@@ -247,7 +247,7 @@ public class TokenProcessor {
 
 	public Collection<ParameterData> processTokens(final ParameterSchema rootSet, final Iterable<String> args)
 		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
-		TooManyParameterValuesException, MissingParameterValuesException {
+		TooManyParameterValuesException, MissingParameterValuesException, UnknownSubCommandException {
 		return processTokens(rootSet, null, args);
 	}
 
@@ -264,9 +264,9 @@ public class TokenProcessor {
 
 	public Collection<ParameterData> processTokens(final ParameterSchema rootSet, TokenErrorPolicy errorPolicy,
 		final Iterable<String> args) throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
-		TooManyParameterValuesException, MissingParameterValuesException {
+		TooManyParameterValuesException, MissingParameterValuesException, UnknownSubCommandException {
 		if (rootSet == null) { throw new IllegalArgumentException(
-			"Must provide a valid ParameterSet to process the tokens against"); }
+			"Must provide a valid ParameterSubSchema to process the tokens against"); }
 
 		final List<Token> tokens = identifyTokens(args);
 
@@ -294,7 +294,7 @@ public class TokenProcessor {
 		final Collection<ParameterData> data = new LinkedList<>();
 		data.add(rootData);
 
-		ParameterSet currentSet = rootSet;
+		ParameterSubSchema currentSet = rootSet;
 		ParameterData currentData = rootData;
 		for (final Token currentToken : tokens) {
 
@@ -366,13 +366,17 @@ public class TokenProcessor {
 					}
 
 					String subName = null;
-					ParameterSet subCommand = null;
+					ParameterSubSchema subCommand = null;
 					if (positionalValues.isEmpty()) {
 						// Only the first positional parameter may be a subcommand
 						subName = rootSet.getSubSetName(currentToken.value);
 						if (subName != null) {
 							subCommand = rootSet.getSubSet(subName);
 						}
+						if ((subCommand == null) && rootSet.isRequiresSubSet()
+							&& errorPolicy.isErrorUnknownSubCommandFound(
+								currentToken)) { throw new UnknownSubCommandException(currentToken.source,
+									currentToken.index, currentToken.rawString); }
 					}
 
 					// This isn't a subcommand, so it's a positional value

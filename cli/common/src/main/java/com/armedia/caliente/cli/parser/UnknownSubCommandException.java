@@ -1,11 +1,11 @@
 package com.armedia.caliente.cli.parser;
 
-public class UnknownSubcommandException extends TokenSyntaxException {
+public class UnknownSubCommandException extends TokenSyntaxException {
 	private static final long serialVersionUID = 1L;
 
 	private final String string;
 
-	public UnknownSubcommandException(TokenSource source, int index, String string) {
+	public UnknownSubCommandException(TokenSource source, int index, String string) {
 		super(source, index);
 		this.string = string;
 	}

@@ -11,7 +11,7 @@ import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
-public class ImmutableParameterSet implements ParameterSet {
+public class ImmutableParameterSet implements ParameterSubSchema {
 
 	private final String description;
 
@@ -19,12 +19,12 @@ public class ImmutableParameterSet implements ParameterSet {
 	private final Map<String, Parameter> longOpts;
 	private final Collection<Parameter> sorted;
 
-	public ImmutableParameterSet(ParameterSet other) {
+	public ImmutableParameterSet(ParameterSubSchema other) {
 		this.description = other.getDescription();
 		Map<Character, Parameter> shortOpts = new HashMap<>();
 		Map<String, Parameter> longOpts = new HashMap<>();
 		List<Parameter> parameters = new ArrayList<>();
-		for (Parameter p : other.getParameters(ParameterSet.DEFAULT_COMPARATOR)) {
+		for (Parameter p : other.getParameters(ParameterSubSchema.DEFAULT_COMPARATOR)) {
 			p = new ImmutableParameter(p);
 			Character s = p.getShortOpt();
 			if (s != null) {
@@ -36,7 +36,7 @@ public class ImmutableParameterSet implements ParameterSet {
 			}
 			parameters.add(p);
 		}
-		Collections.sort(parameters, ParameterSet.DEFAULT_COMPARATOR);
+		Collections.sort(parameters, ParameterSubSchema.DEFAULT_COMPARATOR);
 		this.shortOpts = Tools.freezeMap(shortOpts);
 		this.longOpts = Tools.freezeMap(longOpts);
 		this.sorted = Tools.freezeList(parameters);
@@ -83,7 +83,7 @@ public class ImmutableParameterSet implements ParameterSet {
 
 	@Override
 	public Collection<Parameter> getParameters(Comparator<? super Parameter> c) {
-		if ((c == null) || (c == ParameterSet.DEFAULT_COMPARATOR)) { return this.sorted; }
+		if ((c == null) || (c == ParameterSubSchema.DEFAULT_COMPARATOR)) { return this.sorted; }
 		List<Parameter> l = new ArrayList<>(this.sorted);
 		Collections.sort(l, c);
 		return l;

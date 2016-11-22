@@ -57,6 +57,13 @@ public class TokenProcessorTest {
 					token.source != null ? token.source.getKey() : "(root)");
 				return false;
 			}
+
+			@Override
+			public boolean isErrorUnknownSubCommandFound(Token token) {
+				System.out.printf("UNKNOWN SUBCOMMAND %s (%d @ %s)%n", token.rawString, token.index,
+					token.source != null ? token.source.getKey() : "(root)");
+				return false;
+			}
 		};
 		MutableParameterCommandSet rootParams = new MutableParameterCommandSet();
 

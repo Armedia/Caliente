@@ -6,20 +6,20 @@ import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class ImmutableParameterCommandSet extends ImmutableParameterSet
-	implements ParameterSchema, Cloneable {
+public final class ImmutableParameterCommandSet extends ImmutableParameterSet implements ParameterSchema, Cloneable {
 
-	private final Map<String, ParameterSet> subs;
+	private final Map<String, ParameterSubSchema> subs;
 	private final Map<String, String> aliasToName;
 	private final Map<String, Set<String>> aliases;
+	private final boolean requiresSubSet;
 
 	public ImmutableParameterCommandSet(ParameterSchema other) {
 		super(other);
-		Map<String, ParameterSet> subs = new LinkedHashMap<>();
+		Map<String, ParameterSubSchema> subs = new LinkedHashMap<>();
 		Map<String, String> aliasToName = new LinkedHashMap<>();
 		Map<String, Set<String>> aliases = new LinkedHashMap<>();
 		for (String s : other.getSubSetNames()) {
-			ParameterSet set = other.getSubSet(s);
+			ParameterSubSchema set = other.getSubSet(s);
 			Set<String> a = Tools.freezeCopy(other.getSubSetAliases(s), true);
 			subs.put(s, new ImmutableParameterSet(set));
 			aliases.put(s, a);
@@ -30,6 +30,7 @@ public final class ImmutableParameterCommandSet extends ImmutableParameterSet
 		this.subs = Tools.freezeMap(subs);
 		this.aliasToName = Tools.freezeMap(aliasToName);
 		this.aliases = Tools.freezeMap(aliases);
+		this.requiresSubSet = other.isRequiresSubSet();
 	}
 
 	@Override
@@ -43,7 +44,7 @@ public final class ImmutableParameterCommandSet extends ImmutableParameterSet
 	}
 
 	@Override
-	public ParameterSet getSubSet(String subName) {
+	public ParameterSubSchema getSubSet(String subName) {
 		String alias = this.aliasToName.get(subName);
 		if (alias != null) {
 			subName = alias;
@@ -71,5 +72,10 @@ public final class ImmutableParameterCommandSet extends ImmutableParameterSet
 	@Override
 	public Set<String> getSubSetAliases(String subName) {
 		return this.aliases.get(subName);
+	}
+
+	@Override
+	public boolean isRequiresSubSet() {
+		return this.requiresSubSet;
 	}
 }

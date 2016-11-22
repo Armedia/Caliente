@@ -10,4 +10,5 @@ public interface TokenErrorPolicy {
 
 	public boolean isErrorUnknownParameterFound(Token token);
 
+	public boolean isErrorUnknownSubCommandFound(Token token);
 }

@@ -6,7 +6,7 @@ import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
-public interface ParameterSet extends Cloneable {
+public interface ParameterSubSchema extends Cloneable {
 
 	/**
 	 * <p>

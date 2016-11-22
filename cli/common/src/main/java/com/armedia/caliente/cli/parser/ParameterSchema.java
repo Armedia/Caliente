@@ -2,11 +2,23 @@ package com.armedia.caliente.cli.parser;
 
 import java.util.Set;
 
-public interface ParameterSchema extends ParameterSet {
+public interface ParameterSchema extends ParameterSubSchema {
 
 	/**
 	 * <p>
-	 * Returns a {@link ParameterSet} instance that includes specific sub-commands and parameters to
+	 * Returns {@code true} if this schema requires a SubSet as its first positional parameter,
+	 * {@code false} otherwise.
+	 * </p>
+	 * 
+	 * @return {@code true} if this schema requires a SubSet as its first positional parameter,
+	 *         {@code false} otherwise.
+	 *         </p>
+	 */
+	public boolean isRequiresSubSet();
+
+	/**
+	 * <p>
+	 * Returns a {@link ParameterSubSchema} instance that includes specific sub-commands and parameters to
 	 * be treated distinctly from the parent's.
 	 * </p>
 	 *
@@ -14,7 +26,7 @@ public interface ParameterSchema extends ParameterSet {
 	 *            name or alias of the subset to find
 	 * @return the named instance, or {@code null} if none exists
 	 */
-	public ParameterSet getSubSet(String subName);
+	public ParameterSubSchema getSubSet(String subName);
 
 	/**
 	 * <p>
