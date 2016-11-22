@@ -19,32 +19,32 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 
 	protected static final Pattern VALID_SHORT = Pattern.compile("^[[\\p{Punct}&&[^-]]\\p{Alnum}]$");
 
-	private String name = null;
 	private String description;
 
 	private final Map<Character, Parameter> shortOpts = new HashMap<>();
 	private final Map<String, Parameter> longOpts = new HashMap<>();
 	private final Map<String, Parameter> parameters = new HashMap<>();
 
-	public MutableParameterSet(ParameterSet other) {
-		this.name = other.getName();
-		this.description = other.getDescription();
-		for (Character s : other.getShortOptions()) {
-			Parameter p = other.getParameter(s);
-			this.shortOpts.put(s, p);
-			this.parameters.put(p.getKey(), p);
-		}
-		for (String l : other.getLongOptions()) {
-			Parameter p = other.getParameter(l);
-			this.longOpts.put(l, p);
-			this.parameters.put(p.getKey(), p);
-		}
+	public MutableParameterSet() {
+		this(null);
 	}
 
-	public MutableParameterSet(String name) {
-		if (!validateLong(name)) { throw new IllegalArgumentException(
-			String.format("The string [%s] is not a valid parameter set name", name)); }
-		this.name = name;
+	public MutableParameterSet(ParameterSet other) {
+		if (other != null) {
+			this.description = other.getDescription();
+			for (Parameter p : other.getParameters(null)) {
+				p = new MutableParameter(p);
+				Character s = p.getShortOpt();
+				if (s != null) {
+					this.shortOpts.put(s, p);
+				}
+				String l = p.getLongOpt();
+				if (l != null) {
+					this.longOpts.put(l, p);
+				}
+				this.parameters.put(p.getKey(), p);
+			}
+		}
 	}
 
 	@Override
@@ -52,19 +52,8 @@ public class MutableParameterSet implements ParameterSet, Cloneable {
 		return new MutableParameterSet(this);
 	}
 
-	public ParameterSet freeze() {
+	public ImmutableParameterSet freezeCopy() {
 		return new ImmutableParameterSet(this);
-	}
-
-	@Override
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(String name) {
-		if (!validateLong(name)) { throw new IllegalArgumentException(
-			String.format("The string [%s] is not a valid parameter set name", name)); }
-		this.name = name;
 	}
 
 	@Override

@@ -7,19 +7,43 @@ import java.util.TreeMap;
 
 import com.armedia.commons.utilities.Tools;
 
-public class ParameterProcessorSet extends DefaultParameterProcessor {
+public class MutableParameterCommandSet extends MutableParameterSet implements ParameterCommandSet, Cloneable {
 
-	private static final ParameterErrorPolicy DEFAULT_ERROR_POLICY = new BasicParserErrorPolicy();
-
-	private final Map<String, ParameterProcessor> subs = new TreeMap<>();
+	private final Map<String, ParameterSet> subs = new TreeMap<>();
 	private final Map<String, String> aliasToName = new TreeMap<>();
 	private final Map<String, Set<String>> aliases = new TreeMap<>();
 
-	public ParameterProcessorSet(String name) {
-		super(name);
+	public MutableParameterCommandSet() {
+		this(null);
 	}
 
-	public ParameterProcessor getSubProcessor(String subName) {
+	public MutableParameterCommandSet(ParameterCommandSet other) {
+		super(other);
+		if (other != null) {
+			for (String s : other.getSubSetNames()) {
+				ParameterSet set = other.getSubSet(s);
+				Set<String> a = Tools.freezeCopy(other.getSubSetAliases(s), true);
+				this.subs.put(s, new MutableParameterSet(set));
+				this.aliases.put(s, a);
+				for (String alias : a) {
+					this.aliasToName.put(alias, s);
+				}
+			}
+		}
+	}
+
+	@Override
+	public MutableParameterCommandSet clone() {
+		return new MutableParameterCommandSet(this);
+	}
+
+	@Override
+	public ImmutableParameterCommandSet freezeCopy() {
+		return new ImmutableParameterCommandSet(this);
+	}
+
+	@Override
+	public ParameterSet getSubSet(String subName) {
 		String alias = this.aliasToName.get(subName);
 		if (alias != null) {
 			subName = alias;
@@ -27,14 +51,15 @@ public class ParameterProcessorSet extends DefaultParameterProcessor {
 		return this.subs.get(subName);
 	}
 
-	public boolean hasSubProcessor(String subName) {
+	@Override
+	public boolean hasSubSet(String subName) {
 		return this.subs.containsKey(subName) || this.aliasToName.containsKey(subName);
 	}
 
-	public void addSubProcessor(String subName, DefaultParameterProcessor sub, String... aliases) {
-		if (sub == null) { throw new IllegalArgumentException("Must provide a subprocessor"); }
+	public void addSubSet(String subName, ParameterSet sub, String... aliases) {
+		if (sub == null) { throw new IllegalArgumentException("Must provide a subset"); }
 		if (!validateLong(subName)) { throw new IllegalArgumentException(String.format(
-			"The string [%s] is not a valid subprocessor name - it may not be null, the empty string, or contain whitespace",
+			"The string [%s] is not a valid subset name - it may not be null, the empty string, or contain whitespace",
 			subName)); }
 
 		this.subs.put(subName, sub);
@@ -50,7 +75,7 @@ public class ParameterProcessorSet extends DefaultParameterProcessor {
 		}
 	}
 
-	public ParameterProcessor removeSubProcessor(String subName) {
+	public ParameterSet removeSubSet(String subName) {
 		String alias = this.aliasToName.get(subName);
 		if (alias != null) {
 			subName = alias;
@@ -64,24 +89,22 @@ public class ParameterProcessorSet extends DefaultParameterProcessor {
 		return this.subs.remove(subName);
 	}
 
-	public String getSubprocessorName(String alias) {
+	@Override
+	public String getSubSetName(String alias) {
 		if (this.aliasToName.containsKey(alias)) { return this.aliasToName.get(alias); }
 		if (this.subs.containsKey(alias)) { return alias; }
 		return null;
 	}
 
-	public Set<String> getSubProcessorNames() {
+	@Override
+	public Set<String> getSubSetNames() {
 		return new LinkedHashSet<>(this.subs.keySet());
 	}
 
-	public Set<String> getSubProcessorAliases(String subName) {
+	@Override
+	public Set<String> getSubSetAliases(String subName) {
 		Set<String> ret = this.aliases.get(subName);
 		if (ret == null) { return null; }
 		return new LinkedHashSet<>(ret);
-	}
-
-	@Override
-	public ParameterErrorPolicy getErrorPolicy() {
-		return ParameterProcessorSet.DEFAULT_ERROR_POLICY;
 	}
 }

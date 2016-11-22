@@ -41,6 +41,10 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 		return new MutableParameter(this);
 	}
 
+	public ImmutableParameter freezeCopy() {
+		return new ImmutableParameter(this);
+	}
+
 	@Override
 	public String getKey() {
 		return BaseParameter.calculateKey(this);
@@ -133,10 +137,6 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 
 	public void setAllowedValues(Set<String> allowedValues) {
 		this.allowedValues = allowedValues;
-	}
-
-	public Parameter freezeCopy() {
-		return new ImmutableParameter(this);
 	}
 
 	@Override

@@ -31,6 +31,10 @@ public final class ImmutableParameter extends BaseParameter {
 		this.key = BaseParameter.calculateKey(this.longOpt, this.shortOpt);
 	}
 
+	public MutableParameter thawCopy() {
+		return new MutableParameter(this);
+	}
+
 	@Override
 	public String getKey() {
 		return this.key;

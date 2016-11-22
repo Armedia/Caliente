@@ -6,7 +6,7 @@ import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
-public interface ParameterSet {
+public interface ParameterSet extends Cloneable {
 
 	/**
 	 * <p>
@@ -32,15 +32,6 @@ public interface ParameterSet {
 			return Tools.compare(A, B);
 		}
 	};
-
-	/**
-	 * <p>
-	 * Returns the name by which this parameter set is known
-	 * </p>
-	 *
-	 * @return the name by which this parameter set is known (may be {@code null})
-	 */
-	public String getName();
 
 	/**
 	 * <p>
@@ -120,5 +111,4 @@ public interface ParameterSet {
 	 * @return a sorted {@link Collection} of the defined parameters
 	 */
 	public Collection<Parameter> getParameters(Comparator<? super Parameter> comparator);
-
 }

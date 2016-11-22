@@ -32,12 +32,11 @@ public class TokenProcessorTest {
 		TokenProcessor p = new TokenProcessor();
 
 		args = new String[] {
-			"-a", "--bb", "subcommand", "asdfasdf", "@@classpath:/test-parameter-file.txt", "--",
+			"-a", "--bb", "XXX", "subcommand", "asdfasdf", "@@classpath:/test-parameter-file.txt", "--",
 			"@@classpath:/test-parameter-file.txt", "--ff"
 		};
 
-		final ParameterErrorPolicy errorPolicy = new ParameterErrorPolicy() {
-
+		final TokenErrorPolicy errorPolicy = new TokenErrorPolicy() {
 			@Override
 			public boolean isErrorMissingValues(Token token, Parameter parameter, List<String> values) {
 				System.out.printf("MISSING VALUES FOR %s (%d @ %s)%n", parameter.getKey(), token.index,
@@ -59,49 +58,13 @@ public class TokenProcessorTest {
 				return false;
 			}
 		};
-		ParameterProcessorSet rootParams = new ParameterProcessorSet("root") {
+		MutableParameterCommandSet rootParams = new MutableParameterCommandSet();
 
-			@Override
-			public void addNamedValues(Parameter parameter, List<String> values)
-				throws TooManyParameterValuesException {
-				System.out.printf("FOUND PARAMETER VALUES %s = %s%n", parameter.getKey(), values);
-				super.addNamedValues(parameter, values);
-			}
-
-			@Override
-			public void setPositionalValues(List<String> values) {
-				System.out.printf("GOT POSITIONAL VALUES = %s%n", values);
-				super.setPositionalValues(values);
-			}
-
-			@Override
-			public ParameterErrorPolicy getErrorPolicy() {
-				return errorPolicy;
-			}
-		};
 		rootParams.addParameter(new MutableParameter().setShortOpt('a'));
 		rootParams.addParameter(new MutableParameter().setLongOpt("bb"));
-		rootParams.addSubProcessor("subcommand", new DefaultParameterProcessor("subcommand") {
+		MutableParameterSet subcommand = new MutableParameterSet();
+		rootParams.addSubSet("subcommand", subcommand);
 
-			@Override
-			public void addNamedValues(Parameter parameter, List<String> values)
-				throws TooManyParameterValuesException {
-				System.out.printf("FOUND PARAMETER VALUES %s = %s%n", parameter.getKey(), values);
-				super.addNamedValues(parameter, values);
-			}
-
-			@Override
-			public void setPositionalValues(List<String> values) {
-				System.out.printf("GOT POSITIONAL VALUES = %s%n", values);
-				super.setPositionalValues(values);
-			}
-
-			@Override
-			public ParameterErrorPolicy getErrorPolicy() {
-				return errorPolicy;
-			}
-		});
-
-		p.processTokens(rootParams, args);
+		System.out.printf("%s%n", p.processTokens(rootParams, errorPolicy, args));
 	}
 }

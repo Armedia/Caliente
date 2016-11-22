@@ -13,7 +13,6 @@ import com.armedia.commons.utilities.Tools;
 
 public class ImmutableParameterSet implements ParameterSet {
 
-	private final String name;
 	private final String description;
 
 	private final Map<Character, Parameter> shortOpts;
@@ -21,12 +20,12 @@ public class ImmutableParameterSet implements ParameterSet {
 	private final Collection<Parameter> sorted;
 
 	public ImmutableParameterSet(ParameterSet other) {
-		this.name = other.getName();
 		this.description = other.getDescription();
 		Map<Character, Parameter> shortOpts = new HashMap<>();
 		Map<String, Parameter> longOpts = new HashMap<>();
 		List<Parameter> parameters = new ArrayList<>();
 		for (Parameter p : other.getParameters(ParameterSet.DEFAULT_COMPARATOR)) {
+			p = new ImmutableParameter(p);
 			Character s = p.getShortOpt();
 			if (s != null) {
 				shortOpts.put(s, p);
@@ -43,9 +42,8 @@ public class ImmutableParameterSet implements ParameterSet {
 		this.sorted = Tools.freezeList(parameters);
 	}
 
-	@Override
-	public String getName() {
-		return this.name;
+	public MutableParameterSet thawCopy() {
+		return new MutableParameterSet(this);
 	}
 
 	@Override

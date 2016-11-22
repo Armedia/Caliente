@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +42,7 @@ public class TokenProcessor {
 	private final Character fileMarker;
 	private final Character valueSeparator;
 
-	private ParameterErrorPolicy defaultErrorPolicy = new BasicParserErrorPolicy();
+	private TokenErrorPolicy defaultErrorPolicy = new BasicParserErrorPolicy();
 
 	public TokenProcessor() {
 		this(TokenProcessor.DEFAULT_PARAMETER_MARKER, TokenProcessor.DEFAULT_FILE_MARKER,
@@ -74,12 +75,12 @@ public class TokenProcessor {
 		this.patLong = Pattern.compile(String.format(TokenProcessor.LONG_FMT, parameterMarker, parameterMarker));
 	}
 
-	public ParameterErrorPolicy getDefaultErrorPolicy() {
+	public TokenErrorPolicy getDefaultErrorPolicy() {
 		return this.defaultErrorPolicy;
 	}
 
-	public ParameterErrorPolicy setDefaultErrorPolicy(ParameterErrorPolicy policy) {
-		ParameterErrorPolicy oldPolicy = this.defaultErrorPolicy;
+	public TokenErrorPolicy setDefaultErrorPolicy(TokenErrorPolicy policy) {
+		TokenErrorPolicy oldPolicy = this.defaultErrorPolicy;
 		if (policy == null) {
 			policy = new BasicParserErrorPolicy();
 		}
@@ -224,9 +225,15 @@ public class TokenProcessor {
 		return Arrays.asList(StringUtils.splitPreserveAllTokens(str, this.valueSeparator.charValue()));
 	}
 
-	public void processTokens(ParameterProcessorSet rootParams, String... args)
-		throws MissingParameterValuesException, UnknownParameterException, TooManyParameterValuesException,
-		UnknownSubcommandException, TokenSourceRecursionLoopException, IOException, RequiredParameterMissingException {
+	public Collection<ParameterData> processTokens(final ParameterCommandSet rootSet, String... args)
+		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
+		TooManyParameterValuesException, MissingParameterValuesException {
+		return processTokens(rootSet, null, args);
+	}
+
+	public Collection<ParameterData> processTokens(final ParameterCommandSet rootSet,
+		final TokenErrorPolicy errorPolicy, String... args) throws TokenSourceRecursionLoopException, IOException,
+		UnknownParameterException, TooManyParameterValuesException, MissingParameterValuesException {
 
 		final Collection<String> c;
 		if (args == null) {
@@ -235,12 +242,31 @@ public class TokenProcessor {
 			c = Arrays.asList(args);
 		}
 
-		processTokens(rootParams, c);
+		return processTokens(rootSet, errorPolicy, c);
 	}
 
-	public void processTokens(final ParameterProcessorSet rootProcessor, final Iterable<String> args)
-		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException, UnknownSubcommandException,
-		MissingParameterValuesException, TooManyParameterValuesException, RequiredParameterMissingException {
+	public Collection<ParameterData> processTokens(final ParameterCommandSet rootSet, final Iterable<String> args)
+		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
+		TooManyParameterValuesException, MissingParameterValuesException {
+		return processTokens(rootSet, null, args);
+	}
+
+	private void addNamedValues(ParameterData data, Token token, Parameter parameter, List<String> values,
+		TokenErrorPolicy policy) throws TooManyParameterValuesException, MissingParameterValuesException {
+		try {
+			data.addNamedValues(parameter, values);
+		} catch (TooManyParameterValuesException e) {
+			if (policy.isErrorTooManyValues(token, parameter, values)) { throw e; }
+		} catch (MissingParameterValuesException e) {
+			if (policy.isErrorMissingValues(token, parameter, values)) { throw e; }
+		}
+	}
+
+	public Collection<ParameterData> processTokens(final ParameterCommandSet rootSet, TokenErrorPolicy errorPolicy,
+		final Iterable<String> args) throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
+		TooManyParameterValuesException, MissingParameterValuesException {
+		if (rootSet == null) { throw new IllegalArgumentException(
+			"Must provide a valid ParameterSet to process the tokens against"); }
 
 		final List<Token> tokens = identifyTokens(args);
 
@@ -252,32 +278,40 @@ public class TokenProcessor {
 
 		final Set<String> globalLong = new HashSet<>();
 		final Set<Character> globalShort = new HashSet<>();
-		for (String p : rootProcessor.getLongOptions()) {
+		for (String p : rootSet.getLongOptions()) {
 			globalLong.add(p);
 		}
-		for (Character p : rootProcessor.getShortOptions()) {
+		for (Character p : rootSet.getShortOptions()) {
 			globalShort.add(p);
 		}
 
 		boolean terminated = false;
 
-		final ParameterErrorPolicy rootErrorPolicy = Tools.coalesce(rootProcessor.getErrorPolicy(),
-			this.defaultErrorPolicy);
-		ParameterErrorPolicy currentErrorPolicy = rootErrorPolicy;
-		ParameterProcessor currentProcessor = rootProcessor;
+		final ParameterData rootData = new DefaultParameterData();
+
+		errorPolicy = Tools.coalesce(errorPolicy, this.defaultErrorPolicy);
+
+		final Collection<ParameterData> data = new LinkedList<>();
+		data.add(rootData);
+
+		ParameterSet currentSet = rootSet;
+		ParameterData currentData = rootData;
 		for (final Token currentToken : tokens) {
-			currentErrorPolicy = Tools.coalesce(currentProcessor.getErrorPolicy(), rootErrorPolicy);
 
 			switch (currentToken.type) {
+				default:
+					// Unhandled token type
+					continue;
+
 				case SHORT_OPTION:
 				case LONG_OPTION:
 					if (currentParameterToken != null) {
-						ParameterProcessor target = currentProcessor;
+						ParameterData target = currentData;
 						if (globalLong.contains(currentParameter.getLongOpt())
 							|| globalShort.contains(currentParameter.getShortOpt())) {
-							target = rootProcessor;
+							target = rootData;
 						}
-						target.addNamedValues(currentParameter, noValues);
+						addNamedValues(target, currentToken, currentParameter, noValues, errorPolicy);
 						currentParameter = null;
 						currentParameterToken = null;
 					}
@@ -290,10 +324,10 @@ public class TokenProcessor {
 
 					// Ok...so...now we need to set up the next parameter
 					final Parameter nextParameter = (currentToken.type == Token.Type.SHORT_OPTION
-						? currentProcessor.getParameter(currentToken.value.charAt(0))
-						: currentProcessor.getParameter(currentToken.value));
+						? currentSet.getParameter(currentToken.value.charAt(0))
+						: currentSet.getParameter(currentToken.value));
 					if (nextParameter == null) {
-						if (!currentErrorPolicy.isErrorUnknownParameterFound(currentToken)) {
+						if (!errorPolicy.isErrorUnknownParameterFound(currentToken)) {
 							// The parameter is unknown, but this isn't an error, so we simply
 							// move on
 							continue;
@@ -317,12 +351,12 @@ public class TokenProcessor {
 							values = splitValues(currentToken.value);
 							tokenConsumed = true;
 						}
-						ParameterProcessor target = currentProcessor;
+						ParameterData target = currentData;
 						if (globalLong.contains(currentParameter.getLongOpt())
 							|| globalShort.contains(currentParameter.getShortOpt())) {
-							target = rootProcessor;
+							target = rootData;
 						}
-						target.addNamedValues(currentParameter, values);
+						addNamedValues(target, currentToken, currentParameter, values, errorPolicy);
 						currentParameter = null;
 						currentParameterToken = null;
 						if (tokenConsumed) {
@@ -331,33 +365,34 @@ public class TokenProcessor {
 						}
 					}
 
-					// This token is not an argument b/c this parameter doesn't support
-					// them (or we have no parameter)...so it's either a subcommand, or a
-					// positional value
-					final boolean currentIsRoot = (currentProcessor == rootProcessor);
-					final ParameterProcessor subCommand = rootProcessor.getSubProcessor(currentToken.value);
+					String subName = null;
+					ParameterSet subCommand = null;
+					if (positionalValues.isEmpty()) {
+						// Only the first positional parameter may be a subcommand
+						subName = rootSet.getSubSetName(currentToken.value);
+						if (subName != null) {
+							subCommand = rootSet.getSubSet(subName);
+						}
+					}
+
+					// This isn't a subcommand, so it's a positional value
 					if (subCommand == null) {
-						// We're OK..this is a trailing value...
 						positionalValues.add(currentToken.value);
 						continue;
 					}
 
-					currentProcessor.setPositionalValues(positionalValues);
+					// We're processing a subcommand...so...close out the previous one
+					currentData.setPositionalValues(positionalValues);
 					positionalValues.clear();
 
 					// This is a subcommand, so we replace the current one with this one
-					if (!currentIsRoot) {
-						currentProcessor.processingComplete(currentErrorPolicy);
-					}
-					currentProcessor = subCommand;
-
+					currentSet = subCommand;
+					currentData = new DefaultParameterData(subName);
+					data.add(currentData);
 					continue;
 			}
 		}
-		currentProcessor.setPositionalValues(positionalValues);
-		if (currentProcessor != rootProcessor) {
-			currentProcessor.processingComplete(currentErrorPolicy);
-		}
-		rootProcessor.processingComplete(rootErrorPolicy);
+		currentData.setPositionalValues(positionalValues);
+		return data;
 	}
 }
