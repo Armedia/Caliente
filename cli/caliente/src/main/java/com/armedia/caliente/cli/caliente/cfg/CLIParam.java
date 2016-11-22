@@ -101,7 +101,7 @@ public enum CLIParam {
 		Setting.CONTENT_ORGANIZATION,
 		1,
 		"The name of the organization strategy to use in the Content directory (specific engines may use their own defaults)"),
-	attributes(Setting.OWNER_ATTRIBUTES, 1, "The attributes to check for"),
+	owner_attributes(Setting.OWNER_ATTRIBUTES, 1, "The owner_attributes to check for"),
 	errorCount(Setting.IMPORT_MAX_ERRORS, 1, "The number of errors to accept before aborting an import"),
 	default_password(
 		Setting.DEFAULT_USER_PASSWORD,
