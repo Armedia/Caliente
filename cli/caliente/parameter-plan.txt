@@ -1,44 +1,44 @@
-Pass 1 (Globals)
+Pass 1
 	--help
 *	<action> ${export|import|count|encrypt|decrypt|...}
-*	--engine ${dfc|cmis|shpt|local|...}
 	--lib ${lib-dir}
 
-Pass 2
-	ACTION: export | import:
-	(common)
-		--no-renditions
-		--no-versions
-		--skip-content
-		--direct-fs
+Pass 2 (from <action>)
+	ACTION: ( * )
+		(common)
+		*	--engine ${dfc|cmis|shpt|local|...}
+			--log ${log-file}
+
+	ACTION: ( EXPORT | IMPORT )
+		(common)
+			--no-renditions
+			--no-versions
+			--skip-content
+			--direct-fs
+			--manifest ${manifest-file}
+			--threads ${threads}
+			--db ${db-dir}
+			--content ${content-dir}
+			--content-strategy ${strategy}
+			--mail-from ${sender}
+			--smtp-host ${host}
+			--smtp-port ${port}
+			--smtp-auth-user ${user}
+			--smtp-auth-pass ${pass}
+			--error-count ${count}
+			--object-store-config ${config}
+			--content-store-config ${config}
+			--manifest-types ${type1,type2,...,typeN}
+			--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
+			--mail-to ${recipient1,recipient2,...,recipientN}
+			--exclude-types ${type1,type2,...,typeN}
 	
-		--log ${log-file}
-		--manifest ${manifest-file}
-		--threads ${threads}
-		--db ${db-dir}
-		--content ${content-dir}
-		--content-strategy ${strategy}
-		--mail-from ${sender}
-		--smtp-host ${host}
-		--smtp-port ${port}
-		--smtp-auth-user ${user}
-		--smtp-auth-pass ${pass}
-		--error-count ${count}
-		--object-store-config ${config}
-		--content-store-config ${config}
-	
-		--manifest-types ${type1,type2,...,typeN}
-		--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
-		--mail-to ${recipient1,recipient2,...,recipientN}
-		--exclude-types ${type1,type2,...,typeN}
-	
-	ACTION: EXPORT
+	ACTION: ( EXPORT | EXP | EX )
 		(common)
 			--job-name ${name}
 			--reset-job
 	
-		Pass 3 ENGINE
-	
+		Pass 3 (from --engine)
 			DFC
 			*	--docbase ${docbase}
 			*	--user ${user}
@@ -68,17 +68,16 @@ Pass 2
 			*	--path ${path}
 				--source-prefix ${prefix}
 	
-	ACTION: IMPORT
-	(common)
-		--dedup
-		--filename-map
-		--name-fix
-		--no-filename-map
-		--trim-prefix ${num}
-		--target-location ${location}
+	ACTION: ( IMPORT | IMP | IM )
+		(common)
+			--dedup
+			--filename-map
+			--name-fix
+			--no-filename-map
+			--trim-prefix ${num}
+			--target-location ${location}
 	
-		Pass 3 ENGINE
-	
+		Pass 3 (from --engine)
 			DFC
 			*	--docbase ${docbase}
 			*	--user ${user}
@@ -99,16 +98,16 @@ Pass 2
 				--role-map ${map}
 				--type-map ${map}
 
-	ACTION: COUNT
-	(common)
-		--non-recursive
-		--count-empty
-		--count-hidden
-		--count-private
-		--count-include ${folder1,folder2,...,folderN}
-		--count-exclude ${folder1,folder2,...,folderN}
+	ACTION: ( COUNT | CNT | CN )
+		(common)
+			--non-recursive
+			--count-empty
+			--count-hidden
+			--count-private
+			--count-include ${folder1,folder2,...,folderN}
+			--count-exclude ${folder1,folder2,...,folderN}
 	
-		Pass 3 ENGINE
+		Pass 3 (from --engine)
 			DFC
 			*	--docbase ${docbase}
 			*	--user ${user}
@@ -125,5 +124,5 @@ Pass 2
 			*	--password ${password}
 			*	--source ${path|nodeRef}
 	
-	ACTION: ENCRYPT/DECRYPT:
+	ACTION: ( ENCRYPT | ENC | DECRYPT | DEC )
 		positionals = password values to encrypt/decrypt. if none, read from console
