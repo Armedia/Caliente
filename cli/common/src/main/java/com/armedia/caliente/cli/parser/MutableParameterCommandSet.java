@@ -7,7 +7,7 @@ import java.util.TreeMap;
 
 import com.armedia.commons.utilities.Tools;
 
-public class MutableParameterCommandSet extends MutableParameterSet implements ParameterCommandSet, Cloneable {
+public class MutableParameterCommandSet extends MutableParameterSet implements ParameterSchema, Cloneable {
 
 	private final Map<String, ParameterSet> subs = new TreeMap<>();
 	private final Map<String, String> aliasToName = new TreeMap<>();
@@ -17,7 +17,7 @@ public class MutableParameterCommandSet extends MutableParameterSet implements P
 		this(null);
 	}
 
-	public MutableParameterCommandSet(ParameterCommandSet other) {
+	public MutableParameterCommandSet(ParameterSchema other) {
 		super(other);
 		if (other != null) {
 			for (String s : other.getSubSetNames()) {

@@ -225,13 +225,13 @@ public class TokenProcessor {
 		return Arrays.asList(StringUtils.splitPreserveAllTokens(str, this.valueSeparator.charValue()));
 	}
 
-	public Collection<ParameterData> processTokens(final ParameterCommandSet rootSet, String... args)
+	public Collection<ParameterData> processTokens(final ParameterSchema rootSet, String... args)
 		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
 		TooManyParameterValuesException, MissingParameterValuesException {
 		return processTokens(rootSet, null, args);
 	}
 
-	public Collection<ParameterData> processTokens(final ParameterCommandSet rootSet,
+	public Collection<ParameterData> processTokens(final ParameterSchema rootSet,
 		final TokenErrorPolicy errorPolicy, String... args) throws TokenSourceRecursionLoopException, IOException,
 		UnknownParameterException, TooManyParameterValuesException, MissingParameterValuesException {
 
@@ -245,7 +245,7 @@ public class TokenProcessor {
 		return processTokens(rootSet, errorPolicy, c);
 	}
 
-	public Collection<ParameterData> processTokens(final ParameterCommandSet rootSet, final Iterable<String> args)
+	public Collection<ParameterData> processTokens(final ParameterSchema rootSet, final Iterable<String> args)
 		throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
 		TooManyParameterValuesException, MissingParameterValuesException {
 		return processTokens(rootSet, null, args);
@@ -262,7 +262,7 @@ public class TokenProcessor {
 		}
 	}
 
-	public Collection<ParameterData> processTokens(final ParameterCommandSet rootSet, TokenErrorPolicy errorPolicy,
+	public Collection<ParameterData> processTokens(final ParameterSchema rootSet, TokenErrorPolicy errorPolicy,
 		final Iterable<String> args) throws TokenSourceRecursionLoopException, IOException, UnknownParameterException,
 		TooManyParameterValuesException, MissingParameterValuesException {
 		if (rootSet == null) { throw new IllegalArgumentException(

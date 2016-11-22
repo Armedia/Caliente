@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.parser;
 
 import java.util.Set;
 
-public interface ParameterCommandSet extends ParameterSet {
+public interface ParameterSchema extends ParameterSet {
 
 	/**
 	 * <p>

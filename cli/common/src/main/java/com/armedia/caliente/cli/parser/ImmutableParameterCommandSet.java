@@ -7,13 +7,13 @@ import java.util.Set;
 import com.armedia.commons.utilities.Tools;
 
 public final class ImmutableParameterCommandSet extends ImmutableParameterSet
-	implements ParameterCommandSet, Cloneable {
+	implements ParameterSchema, Cloneable {
 
 	private final Map<String, ParameterSet> subs;
 	private final Map<String, String> aliasToName;
 	private final Map<String, Set<String>> aliases;
 
-	public ImmutableParameterCommandSet(ParameterCommandSet other) {
+	public ImmutableParameterCommandSet(ParameterSchema other) {
 		super(other);
 		Map<String, ParameterSet> subs = new LinkedHashMap<>();
 		Map<String, String> aliasToName = new LinkedHashMap<>();
