@@ -1,127 +1,129 @@
 Pass 1 (Globals)
-*	<action> (subcommand: export/import/count/encrypt/decrypt)
-*	--engine (dfc/cmis/shpt/local/etc...)
-	--lib
 	--help
+*	<action> ${export|import|count|encrypt|decrypt|...}
+*	--engine ${dfc|cmis|shpt|local|...}
+	--lib ${lib-dir}
 
-ENCRYPT/DECRYPT:
-	-- no params
-	positionals = password values to encrypt/decrypt
-
-EXPORT/IMPORT:
-(common)
-	--log-name (?)
-	--log-cfg (?)
-	--threads
-	--db
-	--content
-	--content-strategy
-	--manifest-types
-	--manifest-outcomes
-	--mail-to
-	--mail-from
-	--smtp-host
-	--smtp-port
-	--no-renditions
-	--no-versions
-	--object-store-config
-	--content-store-config
-	--exclude-types
-	--error-count
-	--skip-content
-	--direct-fs
-
-Pass 2 EXPORT
+Pass 2
+	ACTION: export | import:
 	(common)
-		--job-name
-		--reset-job
+		--no-renditions
+		--no-versions
+		--skip-content
+		--direct-fs
+	
+		--log ${log-file}
+		--manifest ${manifest-file}
+		--threads ${threads}
+		--db ${db-dir}
+		--content ${content-dir}
+		--content-strategy ${strategy}
+		--mail-from ${sender}
+		--smtp-host ${host}
+		--smtp-port ${port}
+		--smtp-auth-user ${user}
+		--smtp-auth-pass ${pass}
+		--error-count ${count}
+		--object-store-config ${config}
+		--content-store-config ${config}
+	
+		--manifest-types ${type1,type2,...,typeN}
+		--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
+		--mail-to ${recipient1,recipient2,...,recipientN}
+		--exclude-types ${type1,type2,...,typeN}
+	
+	ACTION: EXPORT
+		(common)
+			--job-name ${name}
+			--reset-job
+	
+		Pass 3 ENGINE
+	
+			DFC
+			*	--docbase ${docbase}
+			*	--user ${user}
+			*	--password ${password}
+			*	--predicate ${predicate}
+				--dfc ${dfc-dir}
+				--dfc-prop ${dfc-prop-file}
+				--dctm ${dctm-dir}
+				--special-users ${user1,user2,...,userN}
+				--special-groups ${group1,group2,...,groupN}
+				--special-types ${type1,type2,...,typeN}
+				--batch-size ${size}
+				--owner-attributes ${att1,att2,...,attN}
+	
+			ALFRESCO
+			*	--url ${url}
+			*	--user ${user}
+				--domain ${domain}
+			*	--password ${password}
+			*	--source ${path|nodeRef}
+	
+			SHAREPOINT
+			*	--url ${url}
+			*	--user ${user}
+				--domain ${domain}
+			*	--password ${password}
+			*	--path ${path}
+				--source-prefix ${prefix}
+	
+	ACTION: IMPORT
+	(common)
+		--dedup
+		--filename-map
+		--name-fix
+		--no-filename-map
+		--trim-prefix ${num}
+		--target-location ${location}
+	
+		Pass 3 ENGINE
+	
+			DFC
+			*	--docbase ${docbase}
+			*	--user ${user}
+			*	--password ${password}
+				--dfc ${dfc-dir}
+				--dfc-prop ${dfc-prop-file}
+				--dctm ${dctm-dir}
+				--default-password
+	
+			ALFRESCO
+			*	--url ${url}
+			*	--user ${user}
+				--domain ${domain}
+			*	--password ${password}
+			*	--content-model ${model1,model2,...,modelN}
+				--user-map ${map}
+				--group-map ${map}
+				--role-map ${map}
+				--type-map ${map}
 
-	Pass 3 ENGINE
-
-		DFC
-		*	--docbase
-		*	--user
-		*	--password
-		*	--predicate
-			--dfc
-			--dfc-prop
-			--dctm
-			--special-users
-			--special-groups
-			--special-types
-			--batch-size
-			--owner-attributes
-
-		ALFRESCO
-		*	--url
-		*	--user
-			--domain
-		*	--password
-		*	--path
-
-		SHAREPOINT
-		*	--url
-		*	--user
-			--domain
-		*	--password
-		*	--path
-			--source-prefix
-
-Pass 2 IMPORT
-(common)
-	--default-password
-	--target-location
-	--trim-prefix
-	--dedup
-	--name-fix
-	--no-filename-map
-	--filename-map
-
-	Pass 3 ENGINE
-
-	Pass 3 ENGINE
-
-		DFC
-		*	--docbase
-		*	--user
-		*	--password
-			--dfc
-			--dfc-prop
-			--dctm
-
-		ALFRESCO
-		*	--url
-		*	--user
-			--domain
-		*	--password
-		*	--content-model
-			--user-map
-			--group-map
-			--role-map
-			--type-map
-
-Pass 2 COUNT
-(common)
-	--non-recursive
-	--count-empty
-	--count-hidden
-	--count-private
-	--count-include
-	--count-exclude
-
-	Pass 3 ENGINE
-		DFC
-		*	--docbase
-		*	--user
-		*	--password
-			--dfc
-			--dfc-prop
-			--dctm
-		*	--predicate
-
-		ALFRESCO
-		*	--url
-		*	--user
-			--domain
-		*	--password
-		*	--path
+	ACTION: COUNT
+	(common)
+		--non-recursive
+		--count-empty
+		--count-hidden
+		--count-private
+		--count-include ${folder1,folder2,...,folderN}
+		--count-exclude ${folder1,folder2,...,folderN}
+	
+		Pass 3 ENGINE
+			DFC
+			*	--docbase ${docbase}
+			*	--user ${user}
+			*	--password ${password}
+				--dfc ${dfc-dir}
+				--dfc-prop ${dfc-prop-file}
+				--dctm ${dctm-dir}
+			*	--predicate ${predicate}
+	
+			ALFRESCO
+			*	--url ${url}
+			*	--user ${user}
+				--domain ${domain}
+			*	--password ${password}
+			*	--source ${path|nodeRef}
+	
+	ACTION: ENCRYPT/DECRYPT:
+		positionals = password values to encrypt/decrypt. if none, read from console
