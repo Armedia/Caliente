@@ -1,7 +1,8 @@
 Pass 1
-	--help
-*	<action> ${export|import|count|encrypt|decrypt|...}
-	--lib ${lib-dir}
+	GLOBALS
+			--help
+		*	<action> ${export|import|count|encrypt|decrypt|...}
+			--lib ${lib-dir}
 
 Pass 2 (from <action>)
 	ACTION: ( * )
