@@ -1,7 +1,7 @@
 Pass 1
 	GLOBALS
 			--help
-		*	<action> ${export|import|count|encrypt|decrypt|...}
+		*	--mode <action> ${export|import|count|encrypt|decrypt|...}
 			--lib ${lib-dir}
 
 Pass 2 (from <action>)
