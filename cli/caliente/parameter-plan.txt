@@ -2,14 +2,11 @@ Pass 1
 	GLOBALS
 			--help
 		*	--mode <action> ${export|import|count|encrypt|decrypt|...}
-			--lib ${lib-dir}
-
-Pass 2 (from <action>)
-	ACTION: ( * )
-		(common)
 		*	--engine ${dfc|cmis|shpt|local|...}
+			--lib ${lib-dir}
 			--log ${log-file}
 
+Pass 2 (from <action>)
 	ACTION: ( EXPORT | IMPORT )
 		(common)
 			--no-renditions
@@ -20,7 +17,6 @@ Pass 2 (from <action>)
 			--threads ${threads}
 			--db ${db-dir}
 			--content ${content-dir}
-			--content-strategy ${strategy}
 			--mail-from ${sender}
 			--smtp-host ${host}
 			--smtp-port ${port}
@@ -33,11 +29,12 @@ Pass 2 (from <action>)
 			--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
 			--mail-to ${recipient1,recipient2,...,recipientN}
 			--exclude-types ${type1,type2,...,typeN}
-	
+
 	ACTION: ( EXPORT | EXP | EX )
 		(common)
 			--job-name ${name}
 			--reset-job
+			--content-strategy ${strategy}
 	
 		Pass 3 (from --engine)
 			DFC
