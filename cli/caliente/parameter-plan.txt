@@ -1,10 +1,10 @@
 Pass 1
 	GLOBALS
-			--help
-		*	--mode <action> ${export|import|count|encrypt|decrypt|...}
-		*	--engine ${dfc|cmis|shpt|local|...}
-			--lib ${lib-dir}
-			--log ${log-file}
+		--help
+	*	--mode <action> ${export|import|count|encrypt|decrypt|...}
+	*	--engine ${dfc|cmis|shpt|local|...}
+		--lib ${libdir1,libdir2,...,libdirN}
+		--log ${log-file}
 
 Pass 2 (from <action>)
 	ACTION: ( EXPORT | IMPORT )
