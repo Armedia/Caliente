@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.parser;
 
+import java.util.List;
 import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
@@ -15,6 +16,7 @@ public final class ImmutableParameter extends BaseParameter {
 	private final String valueName;
 	private final Character valueSep;
 	private final Set<String> allowedValues;
+	private final List<String> defaults;
 	private final String key;
 
 	public ImmutableParameter(Parameter other) {
@@ -28,6 +30,7 @@ public final class ImmutableParameter extends BaseParameter {
 		this.valueName = other.getValueName();
 		this.valueSep = other.getValueSep();
 		this.allowedValues = Tools.freezeCopy(other.getAllowedValues(), true);
+		this.defaults = Tools.freezeCopy(other.getDefaults(), true);
 		this.key = BaseParameter.calculateKey(this.longOpt, this.shortOpt);
 	}
 
@@ -86,10 +89,20 @@ public final class ImmutableParameter extends BaseParameter {
 	}
 
 	@Override
+	public String getDefault() {
+		return this.defaults.isEmpty() ? null : this.defaults.get(0);
+	}
+
+	@Override
+	public List<String> getDefaults() {
+		return this.defaults.isEmpty() ? null : this.defaults;
+	}
+
+	@Override
 	public String toString() {
 		return String.format(
-			"ImmutableParameter [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s]",
+			"ImmutableParameter [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s, defaults=%s]",
 			this.key, this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount,
-			this.maxValueCount, this.valueName, this.minValueCount, this.valueSep);
+			this.maxValueCount, this.valueName, this.minValueCount, this.valueSep, this.defaults);
 	}
 }

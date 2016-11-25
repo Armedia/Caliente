@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.parser;
 
+import java.util.List;
 import java.util.Set;
 
 public interface Parameter {
@@ -23,4 +24,8 @@ public interface Parameter {
 	public int getMinValueCount();
 
 	public int getMaxValueCount();
+
+	public String getDefault();
+
+	public List<String> getDefaults();
 }

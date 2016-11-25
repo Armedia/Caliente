@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.usermapper;
 
+import java.util.List;
 import java.util.Set;
 
 import com.armedia.caliente.cli.parser.MutableParameter;
@@ -122,5 +123,15 @@ public enum CLIParam implements Parameter {
 	@Override
 	public Set<String> getAllowedValues() {
 		return this.parameter.getAllowedValues();
+	}
+
+	@Override
+	public String getDefault() {
+		return this.parameter.getDefault();
+	}
+
+	@Override
+	public List<String> getDefaults() {
+		return this.parameter.getDefaults();
 	}
 }

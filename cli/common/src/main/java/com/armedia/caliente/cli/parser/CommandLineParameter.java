@@ -67,6 +67,16 @@ public final class CommandLineParameter extends BaseParameter implements Compara
 	}
 
 	@Override
+	public String getDefault() {
+		return this.def.getDefault();
+	}
+
+	@Override
+	public List<String> getDefaults() {
+		return this.def.getDefaults();
+	}
+
+	@Override
 	public int compareTo(CommandLineParameter o) {
 		if (o == null) { return 1; }
 		return Tools.compare(this.cliKey, o.cliKey);

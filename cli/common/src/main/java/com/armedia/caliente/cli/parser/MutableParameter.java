@@ -1,5 +1,9 @@
 package com.armedia.caliente.cli.parser;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -13,7 +17,8 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	protected int maxValueCount = 0;
 	protected String valueName = null;
 	protected Character valueSep = MutableParameter.DEFAULT_VALUE_SEP;
-	protected Set<String> allowedValues = new TreeSet<>();
+	protected final Set<String> allowedValues = new TreeSet<>();
+	protected final List<String> defaults = new ArrayList<>();
 
 	public MutableParameter() {
 		this(null);
@@ -135,15 +140,67 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 		return this.allowedValues;
 	}
 
-	public void setAllowedValues(Set<String> allowedValues) {
-		this.allowedValues = allowedValues;
+	public MutableParameter setAllowedValues(Collection<String> allowedValues) {
+		this.allowedValues.clear();
+		if (allowedValues != null) {
+			for (String s : allowedValues) {
+				if (s != null) {
+					this.allowedValues.add(s);
+				}
+			}
+		}
+		return this;
+	}
+
+	public MutableParameter setAllowedValues(String... allowedValues) {
+		if (allowedValues != null) {
+			setAllowedValues(Arrays.asList(allowedValues));
+		} else {
+			this.allowedValues.clear();
+		}
+		return this;
+	}
+
+	@Override
+	public String getDefault() {
+		return this.defaults.isEmpty() ? null : this.defaults.get(0);
+	}
+
+	public MutableParameter setDefault(String value) {
+		return setDefaults(value);
+	}
+
+	@Override
+	public List<String> getDefaults() {
+		return this.defaults.isEmpty() ? null : this.defaults;
+	}
+
+	public MutableParameter setDefaults(Collection<String> defaults) {
+		this.defaults.clear();
+		if (defaults != null) {
+			for (String s : defaults) {
+				if (s != null) {
+					this.defaults.add(s);
+				}
+			}
+		}
+		return this;
+	}
+
+	public MutableParameter setDefaults(String... defaults) {
+		if (defaults != null) {
+			setDefaults(Arrays.asList(defaults));
+		} else {
+			this.defaults.clear();
+		}
+		return this;
 	}
 
 	@Override
 	public String toString() {
 		return String.format(
-			"MutableParameter [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s]",
+			"MutableParameter [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s, defaults=%s]",
 			getKey(), this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount,
-			this.maxValueCount, this.valueName, this.minValueCount, this.valueSep);
+			this.maxValueCount, this.valueName, this.minValueCount, this.valueSep, this.defaults);
 	}
 }

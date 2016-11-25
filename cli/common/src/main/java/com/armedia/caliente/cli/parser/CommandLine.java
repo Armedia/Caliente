@@ -517,7 +517,7 @@ public class CommandLine implements CommandLineValues {
 	@Override
 	public final String getString(Parameter param) {
 		List<String> l = getAllStrings(param);
-		if ((l == null) || l.isEmpty()) { return null; }
+		if ((l == null) || l.isEmpty()) { return param.getDefault(); }
 		return l.get(0);
 	}
 
@@ -534,7 +534,11 @@ public class CommandLine implements CommandLineValues {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			return this.values.get(param.getKey());
+			List<String> v = this.values.get(param.getKey());
+			if (v == null) {
+				v = param.getDefaults();
+			}
+			return v;
 		} finally {
 			l.unlock();
 		}
