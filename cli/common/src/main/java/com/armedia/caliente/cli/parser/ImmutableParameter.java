@@ -17,7 +17,7 @@ public final class ImmutableParameter extends BaseParameter {
 	private final Set<String> allowedValues;
 	private final String key;
 
-	ImmutableParameter(Parameter other) {
+	public ImmutableParameter(Parameter other) {
 		if (other == null) { throw new IllegalArgumentException("Must provide a parameter definition to copy from"); }
 		this.required = other.isRequired();
 		this.description = other.getDescription();
