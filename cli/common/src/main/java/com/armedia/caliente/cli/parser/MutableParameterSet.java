@@ -13,8 +13,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.commons.utilities.Tools;
-
 public class MutableParameterSet implements ParameterSubSchema, Cloneable {
 
 	protected static final Pattern VALID_SHORT = Pattern.compile("^[[\\p{Punct}&&[^-]]\\p{Alnum}]$");
@@ -67,7 +65,6 @@ public class MutableParameterSet implements ParameterSubSchema, Cloneable {
 
 	private boolean validateShort(Character shortOpt) {
 		if (!MutableParameterSet.VALID_SHORT.matcher(shortOpt.toString()).matches()) { return false; }
-		if (Tools.equals(shortOpt, TokenProcessor.DEFAULT_PARAMETER_MARKER)) { return false; }
 		if (!isShortOptionValid(shortOpt)) { return false; }
 		return true;
 	}
