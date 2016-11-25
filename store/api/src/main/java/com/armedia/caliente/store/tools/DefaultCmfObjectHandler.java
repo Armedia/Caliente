@@ -93,12 +93,12 @@ public class DefaultCmfObjectHandler<V> implements CmfObjectHandler<V> {
 	}
 
 	@Override
-	public boolean endHistory(boolean ok) throws CmfStorageException {
+	public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
 		return this.retEndHistory;
 	}
 
 	@Override
-	public boolean endTier(boolean ok) throws CmfStorageException {
+	public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
 		return this.retEndTier;
 	}
 }

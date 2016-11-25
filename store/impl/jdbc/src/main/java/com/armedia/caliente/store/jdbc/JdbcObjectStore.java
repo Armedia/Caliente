@@ -515,7 +515,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 									if (this.log.isDebugEnabled()) {
 										this.log.debug(String.format("CLOSE HISTORY: %s", currentHistory));
 									}
-									if (!handler.endHistory(true)) {
+									if (!handler.endHistory(currentHistory, true)) {
 										this.log.warn(String.format("%s history [%s] requested processing cancellation",
 											type.name(), historyId));
 										currentHistory = null;
@@ -529,7 +529,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 										if (this.log.isDebugEnabled()) {
 											this.log.debug(String.format("CLOSE TIER: %d", currentTier));
 										}
-										if (!handler.endTier(true)) {
+										if (!handler.endTier(currentTier, true)) {
 											this.log.warn(String.format(
 												"%s tier [%d] requested processing cancellation", type.name(), tierId));
 											currentTier = null;
@@ -649,7 +649,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					// Make sure we clean up after ourselves
 					if (currentHistory != null) {
 						try {
-							handler.endHistory(ok);
+							handler.endHistory(currentHistory, ok);
 						} catch (CmfStorageException e) {
 							this.log.error(
 								String.format("Exception caught attempting to close the pending history [%s] (ok=%s)",
@@ -661,7 +661,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					}
 					if (currentTier != null) {
 						try {
-							handler.endTier(ok);
+							handler.endTier(currentTier, ok);
 						} catch (CmfStorageException e) {
 							this.log.error(
 								String.format("Exception caught attempting to close the pending tier [%d] (ok=%s)",
@@ -744,12 +744,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 
 				@Override
-				public boolean endHistory(boolean ok) throws CmfStorageException {
+				public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
 					return true;
 				}
 
 				@Override
-				public boolean endTier(boolean ok) throws CmfStorageException {
+				public boolean endTier(int tierNum, boolean ok) throws CmfStorageException {
 					return true;
 				}
 			});

@@ -6,7 +6,7 @@ public interface CmfObjectHandler<V> {
 	 * Signal the beginning of a new dependency tier, with the given number. Returns {@code true} if
 	 * the tier should be processed, {@code false} if it should be skipped. If the tier is skipped,
 	 * None of {@link #newHistory(String)}, {@link #handleObject(CmfObject)},
-	 * {@link #endHistory(boolean)}, nor {@link #endTier(boolean)} will be invoked.
+	 * {@link #endHistory(String, boolean)}, nor {@link #endTier(int, boolean)} will be invoked.
 	 * </p>
 	 *
 	 * @param tierNumber
@@ -20,7 +20,8 @@ public interface CmfObjectHandler<V> {
 	 * <p>
 	 * Signal the beginning of a new history, with the given ID. Returns {@code true} if the history
 	 * should be processed, {@code false} if it should be skipped. If the history is skipped,
-	 * Neither {@link #endHistory(boolean)} nor {@link #handleObject(CmfObject)} will be invoked.
+	 * Neither {@link #endHistory(String, boolean)} nor {@link #handleObject(CmfObject)} will be
+	 * invoked.
 	 * </p>
 	 *
 	 * @param historyId
@@ -71,7 +72,7 @@ public interface CmfObjectHandler<V> {
 	 *         otherwise
 	 * @throws CmfStorageException
 	 */
-	public boolean endHistory(boolean ok) throws CmfStorageException;
+	public boolean endHistory(String historyId, boolean ok) throws CmfStorageException;
 
 	/**
 	 * <p>
@@ -86,5 +87,5 @@ public interface CmfObjectHandler<V> {
 	 *         otherwise
 	 * @throws CmfStorageException
 	 */
-	public boolean endTier(boolean ok) throws CmfStorageException;
+	public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException;
 }

@@ -505,13 +505,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				}
 
 				@Override
-				public boolean endHistory(boolean ok) throws CmfStorageException {
-					return h.endHistory(ok);
+				public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
+					return h.endHistory(historyId, ok);
 				}
 
 				@Override
-				public boolean endTier(boolean ok) throws CmfStorageException {
-					return h.endTier(ok);
+				public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
+					return h.endTier(tierNumber, ok);
 				}
 			});
 			return ret;
@@ -557,13 +557,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					}
 
 					@Override
-					public boolean endHistory(boolean ok) throws CmfStorageException {
-						return handler.endHistory(ok);
+					public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
+						return handler.endHistory(historyId, ok);
 					}
 
 					@Override
-					public boolean endTier(boolean ok) throws CmfStorageException {
-						return handler.endTier(ok);
+					public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
+						return handler.endTier(tierNumber, ok);
 					}
 				});
 			} finally {

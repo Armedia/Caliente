@@ -786,13 +786,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 				try {
 					objectStore.loadObjects(typeMapper, translator, type, new CmfObjectHandler<V>() {
-						private Integer tierId = null;
-						private String historyId = null;
 						private List<CmfObject<V>> contents = null;
 
 						@Override
 						public boolean newTier(int tier) throws CmfStorageException {
-							this.tierId = tier;
 							output.info("Processing {} tier {}", type.name(), tier);
 							return true;
 						}
@@ -800,7 +797,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						@Override
 						public boolean newHistory(String historyId) throws CmfStorageException {
 							this.contents = new LinkedList<>();
-							this.historyId = historyId;
 							return true;
 						}
 
@@ -811,7 +807,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						}
 
 						@Override
-						public boolean endHistory(boolean ok) throws CmfStorageException {
+						public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
 							if ((this.contents == null) || this.contents.isEmpty()) { return true; }
 							CmfObject<?> sample = this.contents.get(0);
 							CmfType storedType = sample.getType();
@@ -819,30 +815,29 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							// We will have already validated that a valid strategy is provided
 							// for all stored types
 							try {
-								executor.submit(
-									new BatchWorker(new Batch(storedType, this.historyId, this.contents, strategy),
+								executor
+									.submit(new BatchWorker(new Batch(storedType, historyId, this.contents, strategy),
 										workerCounter, sessionFactory, listenerDelegator, importState, contextFactory,
 										delegateFactory, typeMapper));
 							} finally {
 								this.contents = null;
-								this.historyId = null;
 							}
 							return true;
 						}
 
 						@Override
-						public boolean endTier(boolean ok) throws CmfStorageException {
+						public boolean endTier(int tierId, boolean ok) throws CmfStorageException {
 							// TODO: Wait for the currently-running tier to complete.
 							// i.e. wait until the workers are idle
 							try {
 								workerCounter.waitUntil(0);
 							} catch (InterruptedException e) {
-								throw new CmfStorageException(String.format(
-									"Thread interrupted while waiting for tier [%d] to complete", this.tierId), e);
+								throw new CmfStorageException(
+									String.format("Thread interrupted while waiting for tier [%d] to complete", tierId),
+									e);
 							} finally {
-								output.info("Completed {} tier {}", type.name(), this.tierId);
+								output.info("Completed {} tier {}", type.name(), tierId);
 							}
-							this.tierId = null;
 							return ok;
 						}
 
