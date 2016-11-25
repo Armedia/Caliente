@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli.parser.token;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,6 +12,13 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+
+import com.armedia.caliente.cli.parser.BaseParameter;
+import com.armedia.caliente.cli.parser.DuplicateParameterException;
+import com.armedia.caliente.cli.parser.ImmutableParameter;
+import com.armedia.caliente.cli.parser.InvalidParameterException;
+import com.armedia.caliente.cli.parser.MutableParameter;
+import com.armedia.caliente.cli.parser.Parameter;
 
 public class MutableParameterSet implements ParameterSubSchema, Cloneable {
 

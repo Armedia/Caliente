@@ -21,8 +21,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.parser.Parameter;
-import com.armedia.caliente.cli.parser.ParameterSchema;
-import com.armedia.caliente.cli.parser.ParameterSubSchema;
 import com.armedia.caliente.cli.parser.token.Token.Type;
 import com.armedia.commons.utilities.Tools;
 

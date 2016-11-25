@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli.parser.token;
 
 import java.util.Set;
 

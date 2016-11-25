@@ -5,9 +5,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.armedia.caliente.cli.parser.MutableParameterSet;
-import com.armedia.caliente.cli.parser.ParameterSchema;
-import com.armedia.caliente.cli.parser.ParameterSubSchema;
 import com.armedia.commons.utilities.Tools;
 
 public final class MutableParameterCommandSet extends MutableParameterSet implements ParameterSchema, Cloneable {
