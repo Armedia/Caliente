@@ -102,7 +102,7 @@ public class CommonsCliParser extends CommandLineParser<CommonsCliState> {
 
 	static String calculateKey(Option o) {
 		if (o == null) { throw new IllegalArgumentException("Must provide an option whose key to calculate"); }
-		return BaseParameter.calculateKey(o.getLongOpt(), o.getOpt());
+		return Parameter.calculateKey(o.getLongOpt(), o.getOpt());
 	}
 
 	@Override

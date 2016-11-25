@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.armedia.caliente.cli.parser.BaseParameter;
 import com.armedia.caliente.cli.parser.Parameter;
 
 final class DefaultParameterData implements ParameterData {
@@ -69,7 +68,7 @@ final class DefaultParameterData implements ParameterData {
 
 	@Override
 	public List<String> getValues(Parameter parameter) {
-		return this.namedValues.get(BaseParameter.calculateKey(parameter));
+		return this.namedValues.get(parameter.getKey());
 	}
 
 	@Override

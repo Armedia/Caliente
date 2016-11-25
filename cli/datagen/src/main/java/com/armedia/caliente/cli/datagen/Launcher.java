@@ -153,7 +153,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 
 	@Override
 	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
-		return Arrays.asList(CLIParam.values());
+		return Parameter.getUnwrappedList(CLIParam.values());
 	}
 
 	@Override

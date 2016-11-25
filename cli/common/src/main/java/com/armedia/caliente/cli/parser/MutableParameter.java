@@ -7,18 +7,20 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public final class MutableParameter extends BaseParameter implements Cloneable {
+public final class MutableParameter extends Parameter implements Cloneable {
 
-	protected boolean required = false;
-	protected String description = null;
-	protected Character shortOpt = null;
-	protected String longOpt = null;
-	protected int minValueCount = 0;
-	protected int maxValueCount = 0;
-	protected String valueName = null;
-	protected Character valueSep = MutableParameter.DEFAULT_VALUE_SEP;
-	protected final Set<String> allowedValues = new TreeSet<>();
-	protected final List<String> defaults = new ArrayList<>();
+	private boolean required = false;
+	private String description = null;
+	private Character shortOpt = null;
+	private String longOpt = null;
+	private int minValueCount = 0;
+	private int maxValueCount = 0;
+	private String valueName = null;
+	private Character valueSep = MutableParameter.DEFAULT_VALUE_SEP;
+	private final Set<String> allowedValues = new TreeSet<>();
+	private final List<String> defaults = new ArrayList<>();
+
+	private String key = null;
 
 	public MutableParameter() {
 		this(null);
@@ -38,6 +40,7 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 			if (allowedValues != null) {
 				this.allowedValues.addAll(allowedValues);
 			}
+			this.key = other.getKey();
 		}
 	}
 
@@ -52,7 +55,7 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 
 	@Override
 	public String getKey() {
-		return BaseParameter.calculateKey(this);
+		return this.key;
 	}
 
 	@Override
@@ -112,6 +115,7 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 
 	public MutableParameter setLongOpt(String longOpt) {
 		this.longOpt = longOpt;
+		this.key = Parameter.calculateKey(this);
 		return this;
 	}
 
@@ -122,6 +126,7 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 
 	public MutableParameter setShortOpt(Character shortOpt) {
 		this.shortOpt = shortOpt;
+		this.key = Parameter.calculateKey(this);
 		return this;
 	}
 
@@ -200,7 +205,7 @@ public final class MutableParameter extends BaseParameter implements Cloneable {
 	public String toString() {
 		return String.format(
 			"MutableParameter [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s, defaults=%s]",
-			getKey(), this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount,
+			this.key, this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount,
 			this.maxValueCount, this.valueName, this.minValueCount, this.valueSep, this.defaults);
 	}
 }

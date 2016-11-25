@@ -68,7 +68,7 @@ public class CommandLineTest {
 						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
 					}
 					Assert.assertSame(cl, p.getCommandLineValues());
-					Assert.assertTrue(BaseParameter.isIdentical(def, p));
+					Assert.assertTrue(Parameter.isIdentical(def, p));
 				} catch (InvalidParameterException e) {
 					if (Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Failed with legal character [%s]", c));
@@ -115,7 +115,7 @@ public class CommandLineTest {
 		Assert.assertNotEquals(p, null);
 		Assert.assertNotEquals(p, "");
 		Assert.assertSame(cl, p.getCommandLineValues());
-		Assert.assertTrue(BaseParameter.isIdentical(def, p));
+		Assert.assertTrue(Parameter.isIdentical(def, p));
 
 		CommandLineParameter p2 = cl.define(def);
 		Assert.assertSame(p, p2);
@@ -124,7 +124,7 @@ public class CommandLineTest {
 		p2 = cl.define(def);
 		Assert.assertSame(cl, p2.getCommandLineValues());
 		Assert.assertNotSame(p, p2);
-		Assert.assertTrue(BaseParameter.isIdentical(def, p2));
+		Assert.assertTrue(Parameter.isIdentical(def, p2));
 		Assert.assertNotEquals(p, p2);
 
 		def.setShortOpt('x');

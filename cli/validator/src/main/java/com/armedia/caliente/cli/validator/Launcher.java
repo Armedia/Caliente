@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
+import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.caliente.cli.utils.ThreadsParameterSet;
 import com.armedia.commons.utilities.PooledWorkers;
 
@@ -47,8 +48,8 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
-	public Collection<CLIParam> getParameters(CommandLineValues commandLine) {
-		return Arrays.asList(CLIParam.values());
+	public Collection<Parameter> getParameters(CommandLineValues commandLine) {
+		return Parameter.getUnwrappedList(CLIParam.values());
 	}
 
 	@Override

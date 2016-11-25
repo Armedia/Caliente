@@ -13,7 +13,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.cli.parser.BaseParameter;
 import com.armedia.caliente.cli.parser.DuplicateParameterException;
 import com.armedia.caliente.cli.parser.ImmutableParameter;
 import com.armedia.caliente.cli.parser.InvalidParameterException;
@@ -149,7 +148,7 @@ public class MutableParameterSet implements ParameterSubSchema, Cloneable {
 		if (shortOpt != null) {
 			shortParam = this.shortOpts.get(shortOpt);
 			if (shortParam != null) {
-				if (BaseParameter.isEquivalent(shortParam, def)) {
+				if (Parameter.isEquivalent(shortParam, def)) {
 					// It's the same parameter, so we can safely return the existing one
 					return;
 				}
@@ -165,7 +164,7 @@ public class MutableParameterSet implements ParameterSubSchema, Cloneable {
 		if (longOpt != null) {
 			longParam = this.longOpts.get(longOpt);
 			if (longParam != null) {
-				if (BaseParameter.isEquivalent(longParam, def)) {
+				if (Parameter.isEquivalent(longParam, def)) {
 					// It's the same parameter, so we can safely return the existing one
 					return;
 				}

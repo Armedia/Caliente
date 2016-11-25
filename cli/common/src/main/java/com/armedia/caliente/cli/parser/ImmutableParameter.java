@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class ImmutableParameter extends BaseParameter {
+public final class ImmutableParameter extends Parameter {
 
 	private final boolean required;
 	private final String description;
@@ -31,7 +31,7 @@ public final class ImmutableParameter extends BaseParameter {
 		this.valueSep = other.getValueSep();
 		this.allowedValues = Tools.freezeCopy(other.getAllowedValues(), true);
 		this.defaults = Tools.freezeCopy(other.getDefaults(), true);
-		this.key = BaseParameter.calculateKey(this.longOpt, this.shortOpt);
+		this.key = other.getKey();
 	}
 
 	public MutableParameter thawCopy() {

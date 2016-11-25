@@ -14,6 +14,7 @@ import com.armedia.caliente.cli.parser.CommandLine;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.parser.ParameterWrapper;
 
 public abstract class AbstractLauncher {
 	protected static final Logger LOG = LoggerFactory.getLogger(AbstractLauncher.class);
@@ -66,24 +67,24 @@ public abstract class AbstractLauncher {
 		- find @xxxxx -> read parameters from @xxxxx and graft them into the command line at that location (i.e. insert the parameters from the file)
 			- one line = one parameter position (?)
 			- support quoting for multi-lined values (?)
-		
-		
-		
+
+
+
 		while (true) {
 			add new parameters/groups for this pass;
 			if (no new parameters or groups) break;
-		
+
 			parse what's known
-		
+
 			if (required params missing || parameter values missing) {
 			// Malformed = requires arguments but doesn't have any, doesn't support arguments but has one, etc...
 				store errors;
 				break;
 			}
-		
+
 		// Loop for the next pass
 		}
-		
+
 		if (has errors || help requested) {
 			// show error or help message
 			return 1
@@ -205,8 +206,12 @@ public abstract class AbstractLauncher {
 
 	protected abstract int run(CommandLineValues commandLine) throws Exception;
 
-	protected final String getPassword(CommandLineValues cli, Parameter param, String prompt,
+	protected final String getPassword(CommandLineValues cli, ParameterWrapper param, String prompt,
 		Object... promptParams) {
+		return getPassword(cli, Parameter.unwrap(param), prompt, promptParams);
+	}
+
+	protected final String getPassword(CommandLineValues cli, Parameter param, String prompt, Object... promptParams) {
 		// If the parameter is given, return its value
 		if ((cli != null) && (param != null) && cli.isPresent(param)) { return cli.getString(param); }
 

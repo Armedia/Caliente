@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class CommandLineParameter extends BaseParameter implements Comparable<CommandLineParameter> {
+public final class CommandLineParameter extends Parameter implements Comparable<CommandLineParameter> {
 	private final String cliKey;
 	private final CommandLineValues cli;
 	private final Parameter def;
@@ -13,7 +13,7 @@ public final class CommandLineParameter extends BaseParameter implements Compara
 	CommandLineParameter(CommandLineValues cli, Parameter def) {
 		this.cli = cli;
 		this.def = new ImmutableParameter(def);
-		this.cliKey = BaseParameter.calculateKey(def);
+		this.cliKey = this.def.getKey();
 	}
 
 	@Override

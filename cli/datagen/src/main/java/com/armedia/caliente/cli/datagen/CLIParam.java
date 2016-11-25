@@ -1,12 +1,10 @@
 package com.armedia.caliente.cli.datagen;
 
-import java.util.List;
-import java.util.Set;
-
 import com.armedia.caliente.cli.parser.MutableParameter;
 import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.parser.ParameterWrapper;
 
-public enum CLIParam implements Parameter {
+public enum CLIParam implements ParameterWrapper {
 	debug(new MutableParameter() //
 		.setDescription("Enable increased logging for debugging") //
 	), //
@@ -78,66 +76,11 @@ public enum CLIParam implements Parameter {
 			// Otherwise, use the name replacing underscores with dashes
 			parameter.setLongOpt(name().replace('_', '-'));
 		}
-		this.parameter = parameter.clone();
+		this.parameter = parameter.freezeCopy();
 	}
 
 	@Override
-	public final String getKey() {
-		return this.parameter.getKey();
-	}
-
-	@Override
-	public final boolean isRequired() {
-		return this.parameter.isRequired();
-	}
-
-	@Override
-	public final String getDescription() {
-		return this.parameter.getDescription();
-	}
-
-	@Override
-	public final String getLongOpt() {
-		return this.parameter.getLongOpt();
-	}
-
-	@Override
-	public final Character getShortOpt() {
-		return this.parameter.getShortOpt();
-	}
-
-	@Override
-	public final Character getValueSep() {
-		return this.parameter.getValueSep();
-	}
-
-	@Override
-	public final String getValueName() {
-		return this.parameter.getValueName();
-	}
-
-	@Override
-	public final int getMinValueCount() {
-		return this.parameter.getMinValueCount();
-	}
-
-	@Override
-	public final int getMaxValueCount() {
-		return this.parameter.getMaxValueCount();
-	}
-
-	@Override
-	public Set<String> getAllowedValues() {
-		return this.parameter.getAllowedValues();
-	}
-
-	@Override
-	public String getDefault() {
-		return this.parameter.getDefault();
-	}
-
-	@Override
-	public List<String> getDefaults() {
-		return this.parameter.getDefaults();
+	public Parameter getParameter() {
+		return this.parameter;
 	}
 }
