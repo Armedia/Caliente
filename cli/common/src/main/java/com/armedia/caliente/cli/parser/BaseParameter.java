@@ -42,6 +42,8 @@ public abstract class BaseParameter implements Parameter {
 		if (!Tools.equals(a.isRequired(), b.isRequired())) { return false; }
 		if (!Tools.equals(a.getDescription(), b.getDescription())) { return false; }
 		if (!Tools.equals(a.getValueName(), b.getValueName())) { return false; }
+		if (!Tools.equals(a.getAllowedValues(), b.getAllowedValues())) { return false; }
+		if (!Tools.equals(a.getDefaults(), b.getDefaults())) { return false; }
 		return true;
 	}
 }
