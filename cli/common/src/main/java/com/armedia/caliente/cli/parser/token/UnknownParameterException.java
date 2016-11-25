@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli.parser.token;
 
 public class UnknownParameterException extends TokenSyntaxException {
 	private static final long serialVersionUID = 1L;

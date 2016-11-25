@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli.parser.token;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -6,6 +6,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.armedia.caliente.cli.parser.BaseParameter;
+import com.armedia.caliente.cli.parser.Parameter;
 
 final class DefaultParameterData implements ParameterData {
 

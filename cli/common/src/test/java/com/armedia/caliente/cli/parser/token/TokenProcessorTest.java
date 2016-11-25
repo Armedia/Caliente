@@ -1,9 +1,17 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli.parser.token;
 
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.armedia.caliente.cli.parser.MutableParameter;
+import com.armedia.caliente.cli.parser.MutableParameterSet;
+import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.parser.token.MutableParameterCommandSet;
+import com.armedia.caliente.cli.parser.token.Token;
+import com.armedia.caliente.cli.parser.token.TokenErrorPolicy;
+import com.armedia.caliente.cli.parser.token.TokenProcessor;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;

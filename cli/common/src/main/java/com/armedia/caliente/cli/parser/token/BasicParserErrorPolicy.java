@@ -1,10 +1,12 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli.parser.token;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+
+import com.armedia.caliente.cli.parser.Parameter;
 
 public final class BasicParserErrorPolicy implements TokenErrorPolicy {
 

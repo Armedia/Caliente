@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli.parser.token;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -7,6 +7,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 
+import com.armedia.caliente.cli.parser.ParameterSchema;
 import com.armedia.commons.utilities.Tools;
 
 public class HelpGenerator {

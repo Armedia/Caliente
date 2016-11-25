@@ -1,7 +1,8 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli.parser.token;
 
 import java.util.List;
 
+import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.commons.utilities.Tools;
 
 public class TooManyParameterValuesException extends TokenProcessorException {

@@ -1,9 +1,12 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli.parser.token;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.armedia.caliente.cli.parser.ImmutableParameterSet;
+import com.armedia.caliente.cli.parser.ParameterSchema;
+import com.armedia.caliente.cli.parser.ParameterSubSchema;
 import com.armedia.commons.utilities.Tools;
 
 public final class ImmutableParameterCommandSet extends ImmutableParameterSet implements ParameterSchema, Cloneable {
