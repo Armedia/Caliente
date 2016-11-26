@@ -7,10 +7,6 @@ import org.junit.Test;
 
 import com.armedia.caliente.cli.parser.MutableParameter;
 import com.armedia.caliente.cli.parser.Parameter;
-import com.armedia.caliente.cli.parser.token.MutableParameterCommandSet;
-import com.armedia.caliente.cli.parser.token.Token;
-import com.armedia.caliente.cli.parser.token.TokenErrorPolicy;
-import com.armedia.caliente.cli.parser.token.TokenProcessor;
 
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
@@ -39,8 +35,8 @@ public class TokenProcessorTest {
 		TokenProcessor p = new TokenProcessor();
 
 		args = new String[] {
-			"-a", "--bb", "XXX", "subcommand", "asdfasdf", "@@classpath:/test-parameter-file.txt", "--",
-			"@@classpath:/test-parameter-file.txt", "--ff"
+			"-a", "--bb", "XXX", "subcommand", "asdfasdf", "--@@classpath:/test-parameter-file.txt", "--",
+			"--@@classpath:/test-parameter-file.txt", "--ff"
 		};
 
 		final TokenErrorPolicy errorPolicy = new TokenErrorPolicy() {

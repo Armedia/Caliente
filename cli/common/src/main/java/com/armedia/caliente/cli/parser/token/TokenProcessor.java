@@ -40,7 +40,8 @@ public class TokenProcessor {
 	private final String terminator;
 	private final Pattern patShort;
 	private final Pattern patLong;
-	private final Character fileMarker;
+	private final Character fileMarkerChar;
+	private final String fileMarker;
 	private final Character valueSeparator;
 
 	private TokenErrorPolicy defaultErrorPolicy = new BasicParserErrorPolicy();
@@ -63,7 +64,7 @@ public class TokenProcessor {
 
 	private TokenProcessor(char parameterMarker, Character fileMarker, Character valueSeparator) {
 		this.parameterMarker = parameterMarker;
-		this.fileMarker = fileMarker;
+		this.fileMarkerChar = fileMarker;
 		if ((fileMarker != null) && (parameterMarker == fileMarker.charValue())) { throw new IllegalArgumentException(
 			"Must provide different characters for paramter marker and file marker"); }
 		this.valueSeparator = valueSeparator;
@@ -74,6 +75,11 @@ public class TokenProcessor {
 		this.terminator = String.format(TokenProcessor.TERMINATOR_FMT, parameterMarker, parameterMarker);
 		this.patShort = Pattern.compile(String.format(TokenProcessor.SHORT_FMT, parameterMarker));
 		this.patLong = Pattern.compile(String.format(TokenProcessor.LONG_FMT, parameterMarker, parameterMarker));
+		if (fileMarker != null) {
+			this.fileMarker = String.format("--%s", fileMarker);
+		} else {
+			this.fileMarker = null;
+		}
 	}
 
 	public TokenErrorPolicy getDefaultErrorPolicy() {
@@ -94,7 +100,7 @@ public class TokenProcessor {
 	}
 
 	public final Character getFileMarker() {
-		return this.fileMarker;
+		return this.fileMarkerChar;
 	}
 
 	public final Character getValueSplitter() {
@@ -123,7 +129,12 @@ public class TokenProcessor {
 		Matcher m = null;
 		List<Token> tokens = new ArrayList<>();
 		int i = (source == null ? -1 : 0);
-		nextToken: for (final String rawArg : args) {
+		nextToken: for (String rawArg : args) {
+			// By default, skip null strings...
+			if (rawArg == null) {
+				rawArg = StringUtils.EMPTY;
+			}
+
 			final String current = (source == null ? rawArg : rawArg.trim());
 			i++;
 			if (StringUtils.isEmpty(current) && (source != null)) {
@@ -132,12 +143,19 @@ public class TokenProcessor {
 				continue;
 			}
 
-			// If the first character is the file marker, then treat it as a file
-			if ((this.fileMarker != null) && (current.charAt(0) == this.fileMarker.charValue())) {
+			if (terminated) {
+				// If we've found a terminator, all other parameters that follow will be treated
+				// as plain values, regardless
+				tokens.add(new Token(source, i, Type.STRING, current, current));
+				continue nextToken;
+			}
+
+			// If this is an include marker, treat it as such
+			if ((this.fileMarker != null) && current.startsWith(this.fileMarker)) {
 				// Remove the file marker
-				String fileName = current.substring(1);
+				String fileName = current.substring(this.fileMarker.length());
 				final TokenSource newSource;
-				if (fileName.charAt(0) == this.fileMarker.charValue()) {
+				if (fileName.charAt(0) == this.fileMarkerChar.charValue()) {
 					// It's a URL...
 					// TODO: Eventually port this to support Commons-VFS URLs?
 					final String uri = fileName.substring(1);
@@ -188,13 +206,6 @@ public class TokenProcessor {
 					recursionGuard.remove(newSource.getKey());
 				}
 
-				continue nextToken;
-			}
-
-			if (terminated) {
-				// If we've found a terminator, all other parameters that follow will be treated
-				// as plain values, regardless
-				tokens.add(new Token(source, i, Type.STRING, current, current));
 				continue nextToken;
 			}
 
