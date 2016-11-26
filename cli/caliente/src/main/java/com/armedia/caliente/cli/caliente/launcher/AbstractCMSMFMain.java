@@ -29,6 +29,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 	private static final String STORE_TYPE_PROPERTY = "cmsmf.store.type";
 
+	private static final String DEFAULT_SETTINGS_NAME = "caliente.properties";
+
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
 
 	protected static final String ALL = "ALL";
@@ -57,11 +59,11 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 		// If we have command-line parameters, these supersede all other configurations, even if
 		// we have a configuration file explicitly listed.
-		this.console.info(String.format("CMSMF v%s", CMSMFLauncher.VERSION));
+		this.console.info(String.format("Caliente CLI v%s", CMSMFLauncher.VERSION));
 		this.console.info("Configuring the properties");
 
 		// The catch-all, default configuration
-		SettingManager.addPropertySource("cmsmf.properties");
+		SettingManager.addPropertySource(AbstractCMSMFMain.DEFAULT_SETTINGS_NAME);
 		// A configuration file has been specified, so use its values ahead of the defaults
 		if (CLIParam.cfg.getString() != null) {
 			SettingManager.addPropertySource(CLIParam.cfg.getString());
