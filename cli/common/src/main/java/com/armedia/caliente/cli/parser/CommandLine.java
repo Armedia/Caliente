@@ -28,6 +28,9 @@ import com.armedia.commons.utilities.Tools;
 
 public class CommandLine implements CommandLineValues {
 
+	public static final boolean DEFAULT_HELP = true;
+	public static final boolean DEFAULT_SUPPORTS_INCLUDES = true;
+
 	private static final Parameter HELP;
 
 	static {
@@ -57,11 +60,11 @@ public class CommandLine implements CommandLineValues {
 	private String helpMessage = null;
 
 	public CommandLine() {
-		this(true, true);
+		this(CommandLine.DEFAULT_HELP, CommandLine.DEFAULT_SUPPORTS_INCLUDES);
 	}
 
 	public CommandLine(boolean defaultHelp) {
-		this(defaultHelp, true);
+		this(defaultHelp, CommandLine.DEFAULT_SUPPORTS_INCLUDES);
 	}
 
 	public CommandLine(boolean defaultHelp, boolean supportIncludes) {
