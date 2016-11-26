@@ -1,9 +1,13 @@
 package com.armedia.caliente.cli.caliente.cfg;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Properties;
 
@@ -11,6 +15,9 @@ import org.apache.commons.configuration.AbstractConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.io.IOUtils;
+
+import com.armedia.commons.utilities.Tools;
 
 /**
  * The Class SettingManager reads the properties from cmsmf properties file and makes them available
@@ -74,6 +81,7 @@ public class SettingManager {
 
 	public static void addPropertySource(File propertyFile) throws ConfigurationException {
 		if (propertyFile == null) { return; }
+		propertyFile = Tools.canonicalize(propertyFile);
 		if (!propertyFile.exists()) {
 			System.err.printf("Property file [%s] does not exist, ignoring%n", propertyFile.getAbsolutePath());
 			return;
@@ -86,11 +94,31 @@ public class SettingManager {
 			System.err.printf("Property file [%s] can't be read, ignoring%n", propertyFile.getAbsolutePath());
 			return;
 		}
-		PropertiesConfiguration cfg = new PropertiesConfiguration();
-		SettingManager.configure(cfg);
-		cfg.load(propertyFile);
-		// TODO: Support XML properties file format?
-		SettingManager.addConfiguration(cfg);
+		Properties p = new Properties();
+		try {
+			InputStream in = null;
+			try {
+				in = new FileInputStream(propertyFile);
+				try {
+					p.loadFromXML(in);
+				} finally {
+					IOUtils.closeQuietly(in);
+				}
+			} catch (InvalidPropertiesFormatException e) {
+				// If XML parsing failed, we try again...
+				p.clear();
+				in = new FileInputStream(propertyFile);
+				try {
+					p.load(in);
+				} finally {
+					IOUtils.closeQuietly(in);
+				}
+			}
+		} catch (IOException e) {
+			throw new ConfigurationException(
+				String.format("Failed to read the properties file at [%s]", propertyFile.getAbsolutePath()), e);
+		}
+		SettingManager.addPropertySource(p);
 	}
 
 	public static void addPropertySource(Properties properties) throws ConfigurationException {
