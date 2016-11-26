@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.parser;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,11 +15,15 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.CommandLineException;
+import com.armedia.caliente.cli.parser.token.Token;
+import com.armedia.caliente.cli.parser.token.TokenProcessor;
+import com.armedia.caliente.cli.parser.token.TokenSourceRecursionLoopException;
 import com.armedia.commons.utilities.Tools;
 
 public class CommandLine implements CommandLineValues {
@@ -44,6 +49,7 @@ public class CommandLine implements CommandLineValues {
 	private final Map<String, CommandLineParameter> commandLineParameters = new TreeMap<>();
 
 	private final boolean helpSupported;
+	private final boolean supportIncludes;
 
 	private final Map<String, List<String>> values = new HashMap<>();
 	private final List<String> positionalValues = new ArrayList<>();
@@ -51,10 +57,14 @@ public class CommandLine implements CommandLineValues {
 	private String helpMessage = null;
 
 	public CommandLine() {
-		this(true);
+		this(true, true);
 	}
 
 	public CommandLine(boolean defaultHelp) {
+		this(defaultHelp, true);
+	}
+
+	public CommandLine(boolean defaultHelp, boolean supportIncludes) {
 		if (defaultHelp) {
 			try {
 				define(CommandLine.HELP, true);
@@ -66,6 +76,7 @@ public class CommandLine implements CommandLineValues {
 		} else {
 			this.helpSupported = false;
 		}
+		this.supportIncludes = supportIncludes;
 	}
 
 	final void setParameterValues(Parameter p, Collection<String> values) {
@@ -102,6 +113,21 @@ public class CommandLine implements CommandLineValues {
 		parse(new CommonsCliParser(), executableName, args);
 	}
 
+	private String[] preprocess(String... args) throws CommandLineParseException {
+		List<Token> l;
+		try {
+			l = new TokenProcessor().identifyTokens(args);
+		} catch (TokenSourceRecursionLoopException | IOException e) {
+			throw new CommandLineParseException("Failed to properly resolve all the --@ recursions", e, null);
+		}
+		List<String> ret = new ArrayList<>(l.size());
+		for (Token t : l) {
+			ret.add(t.getRawString());
+		}
+
+		return ret.toArray(ArrayUtils.EMPTY_STRING_ARRAY);
+	}
+
 	public final <C extends CommandLineParserContext> void parse(CommandLineParser<C> parser, String executableName,
 		String... args) throws CommandLineParseException {
 		if (parser == null) { throw new IllegalArgumentException("Must provide a parser implementation"); }
@@ -117,6 +143,12 @@ public class CommandLine implements CommandLineValues {
 			// Clear the current state
 			this.values.clear();
 			this.positionalValues.clear();
+
+			if (this.supportIncludes) {
+				// If supported, first preprocess!
+				args = preprocess(args);
+			}
+
 			// Parse!
 			C ctx = null;
 			try {
