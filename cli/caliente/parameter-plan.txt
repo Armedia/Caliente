@@ -12,7 +12,6 @@ Pass 2 (from <action>)
 			--no-renditions
 			--no-versions
 			--skip-content
-			--direct-fs
 			--manifest ${manifest-file}
 			--threads ${threads}
 			--db ${db-dir}
@@ -35,6 +34,7 @@ Pass 2 (from <action>)
 			--job-name ${name}
 			--reset-job
 			--content-strategy ${strategy}
+			--direct-fs
 	
 		Pass 3 (from --engine)
 			DFC
