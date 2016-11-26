@@ -23,11 +23,6 @@ public class TokenUriSource extends TokenStreamSource {
 
 	private final URI sourceUri;
 
-	public TokenUriSource(String sourceUri) throws URISyntaxException {
-		if (sourceUri == null) { throw new IllegalArgumentException("Must provide a non-null String object"); }
-		this.sourceUri = new URI(sourceUri);
-	}
-
 	public TokenUriSource(URI sourceUri) {
 		if (sourceUri == null) { throw new IllegalArgumentException("Must provide a non-null URI object"); }
 		this.sourceUri = sourceUri;

@@ -1,6 +1,8 @@
 package com.armedia.caliente.cli.parser.token;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,7 +58,7 @@ public class TokenProcessor {
 	private TokenProcessor(char parameterMarker) {
 		this(parameterMarker, TokenProcessor.DEFAULT_FILE_MARKER, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
-	
+
 	private TokenProcessor(char parameterMarker, Character fileMarker) {
 		this(parameterMarker, fileMarker, TokenProcessor.DEFAULT_VALUE_SPLITTER);
 	}
@@ -154,17 +156,27 @@ public class TokenProcessor {
 			if ((this.fileMarker != null) && current.startsWith(this.fileMarker)) {
 				// Remove the file marker
 				String fileName = current.substring(this.fileMarker.length());
-				final TokenSource newSource;
+				TokenSource newSource = null;
 				if (fileName.charAt(0) == this.fileMarkerChar.charValue()) {
 					// It's a URL...
 					// TODO: Eventually port this to support Commons-VFS URLs?
-					final String uri = fileName.substring(1);
+					final String uriStr = fileName.substring(1);
+					final URI sourceUri;
 					try {
-						newSource = new TokenUriSource(uri);
+						sourceUri = new URI(uriStr);
 					} catch (URISyntaxException e) {
-						throw new IOException(String.format("Failed to properly process the URI [%s]", uri), e);
+						throw new IOException(String.format("Failed to properly process the URI [%s]", uriStr), e);
 					}
-				} else {
+					if (!sourceUri.getScheme().equals("file")) {
+						// Not a local file, use the URL source
+						newSource = new TokenUriSource(sourceUri);
+					} else {
+						// Local file... treat it as such...
+						fileName = new File(sourceUri).getAbsolutePath();
+					}
+				}
+
+				if (newSource == null) {
 					// It's a local file... if the current source is another local file,
 					// and the given path isn't absolute, take its path to be relative to that one
 					Path path = Paths.get(fileName);
