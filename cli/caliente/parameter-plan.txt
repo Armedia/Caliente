@@ -5,6 +5,7 @@ Pass 1
 	*	--engine ${dfc|cmis|shpt|local|...}
 		--lib ${libdir1,libdir2,...,libdirN}
 		--log ${log-file}
+		--log-cfg ${log-cfg-file}
 
 Pass 2 (from <action>)
 	ACTION: ( EXPORT | IMPORT )

@@ -79,17 +79,17 @@ public class CMSMFLauncher extends AbstractLauncher {
 		if (!m.matches()) { throw new IllegalArgumentException(
 			String.format("Invalid --engine parameter value [%s] - must only contain [a-zA-Z_0-9]", engine)); }
 
-		String log4j = CLIParam.log4j.getString();
-		boolean customLog4j = false;
-		if (log4j != null) {
-			final File cfg = new File(log4j);
+		String logCfg = CLIParam.log_cfg.getString();
+		boolean customLog = false;
+		if (logCfg != null) {
+			final File cfg = new File(logCfg);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
 				DOMConfigurator.configureAndWatch(cfg.getCanonicalPath());
-				customLog4j = true;
+				customLog = true;
 			}
 		}
-		if (!customLog4j) {
-			String logName = CLIParam.log_name.getString();
+		if (!customLog) {
+			String logName = CLIParam.log.getString();
 			if (logName == null) {
 				String runTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
 				logName = String.format("cmsmf-%s-%s-%s", engine.toLowerCase(), mode.toLowerCase(), runTime);
