@@ -577,111 +577,111 @@ public class CommandLine implements CommandLineValues {
 
 	@Override
 	public boolean isDefined(ParameterWrapper paramDel) {
-		return isDefined(Parameter.unwrap(paramDel));
+		return isDefined(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public CommandLineParameter getParameter(ParameterWrapper paramDel) {
-		return getParameter(Parameter.unwrap(paramDel));
+		return getParameter(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public Boolean getBoolean(ParameterWrapper paramDel) {
-		return getBoolean(Parameter.unwrap(paramDel));
+		return getBoolean(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public boolean getBoolean(ParameterWrapper paramDel, boolean def) {
-		return getBoolean(Parameter.unwrap(paramDel), def);
+		return getBoolean(ParameterTools.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Boolean> getAllBooleans(ParameterWrapper paramDel) {
-		return getAllBooleans(Parameter.unwrap(paramDel));
+		return getAllBooleans(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public Integer getInteger(ParameterWrapper paramDel) {
-		return getInteger(Parameter.unwrap(paramDel));
+		return getInteger(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public int getInteger(ParameterWrapper paramDel, int def) {
-		return getInteger(Parameter.unwrap(paramDel), def);
+		return getInteger(ParameterTools.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Integer> getAllIntegers(ParameterWrapper paramDel) {
-		return getAllIntegers(Parameter.unwrap(paramDel));
+		return getAllIntegers(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public Long getLong(ParameterWrapper paramDel) {
-		return getLong(Parameter.unwrap(paramDel));
+		return getLong(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public long getLong(ParameterWrapper paramDel, long def) {
-		return getLong(Parameter.unwrap(paramDel), def);
+		return getLong(ParameterTools.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Long> getAllLongs(ParameterWrapper paramDel) {
-		return getAllLongs(Parameter.unwrap(paramDel));
+		return getAllLongs(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public Float getFloat(ParameterWrapper paramDel) {
-		return getFloat(Parameter.unwrap(paramDel));
+		return getFloat(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public float getFloat(ParameterWrapper paramDel, float def) {
-		return getFloat(Parameter.unwrap(paramDel), def);
+		return getFloat(ParameterTools.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Float> getAllFloats(ParameterWrapper paramDel) {
-		return getAllFloats(Parameter.unwrap(paramDel));
+		return getAllFloats(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public Double getDouble(ParameterWrapper paramDel) {
-		return getDouble(Parameter.unwrap(paramDel));
+		return getDouble(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public double getDouble(ParameterWrapper paramDel, double def) {
-		return getDouble(Parameter.unwrap(paramDel), def);
+		return getDouble(ParameterTools.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Double> getAllDoubles(ParameterWrapper paramDel) {
-		return getAllDoubles(Parameter.unwrap(paramDel));
+		return getAllDoubles(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public String getString(ParameterWrapper paramDel) {
-		return getString(Parameter.unwrap(paramDel));
+		return getString(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public String getString(ParameterWrapper paramDel, String def) {
-		return getString(Parameter.unwrap(paramDel), def);
+		return getString(ParameterTools.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<String> getAllStrings(ParameterWrapper paramDel) {
-		return getAllStrings(Parameter.unwrap(paramDel));
+		return getAllStrings(ParameterTools.unwrap(paramDel));
 	}
 
 	@Override
 	public List<String> getAllStrings(ParameterWrapper paramDel, List<String> def) {
-		return getAllStrings(Parameter.unwrap(paramDel), def);
+		return getAllStrings(ParameterTools.unwrap(paramDel), def);
 	}
 
 	@Override
 	public boolean isPresent(ParameterWrapper paramDel) {
-		return isPresent(Parameter.unwrap(paramDel));
+		return isPresent(ParameterTools.unwrap(paramDel));
 	}
 }

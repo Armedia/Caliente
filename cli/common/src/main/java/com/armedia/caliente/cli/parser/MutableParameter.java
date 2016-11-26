@@ -115,7 +115,7 @@ public final class MutableParameter extends Parameter implements Cloneable {
 
 	public MutableParameter setLongOpt(String longOpt) {
 		this.longOpt = longOpt;
-		this.key = Parameter.calculateKey(this);
+		this.key = ParameterTools.calculateKey(this);
 		return this;
 	}
 
@@ -126,7 +126,7 @@ public final class MutableParameter extends Parameter implements Cloneable {
 
 	public MutableParameter setShortOpt(Character shortOpt) {
 		this.shortOpt = shortOpt;
-		this.key = Parameter.calculateKey(this);
+		this.key = ParameterTools.calculateKey(this);
 		return this;
 	}
 
