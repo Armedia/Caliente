@@ -39,7 +39,7 @@ public class CommandLine implements CommandLineValues {
 		help.setShortOpt('?');
 		help.setDescription("Show this help message");
 		help.setRequired(false);
-		HELP = help;
+		HELP = help.freezeCopy();
 	}
 
 	protected static final String[] NO_ARGS = {};
