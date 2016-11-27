@@ -33,17 +33,17 @@ import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>>
-	implements ExportEngineListener {
+public class AbstractCalienteModule_export extends
+	AbstractCalienteModule<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> implements ExportEngineListener {
 
-	protected static final String EXPORT_START = "cmsmfExportStart";
-	protected static final String EXPORT_END = "cmsmfExportEnd";
-	protected static final String BASE_SELECTOR = "cmsmfBaseSelector";
-	protected static final String FINAL_SELECTOR = "cmsmfFinalSelector";
+	protected static final String EXPORT_START = "calienteExportStart";
+	protected static final String EXPORT_END = "calienteExportEnd";
+	protected static final String BASE_SELECTOR = "calienteBaseSelector";
+	protected static final String FINAL_SELECTOR = "calienteFinalSelector";
 
 	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<>(ExportResult.class);
 
-	protected AbstractCMSMFMain_export(ExportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
+	protected AbstractCalienteModule_export(ExportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine, true, true);
 	}
 
@@ -119,9 +119,9 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 	@Override
 	public final void run() throws CalienteException {
 		Set<ExportResult> outcomes = Tools.parseEnumCSV(ExportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
-			AbstractCMSMFMain.ALL, false);
+			AbstractCalienteModule.ALL, false);
 		Set<CmfType> types = Tools.parseEnumCSV(CmfType.class, Setting.MANIFEST_TYPES.getString(),
-			AbstractCMSMFMain.ALL, false);
+			AbstractCalienteModule.ALL, false);
 		this.engine.addListener(this);
 		this.engine.addListener(new ExportManifest(outcomes, types));
 		PluggableServiceLocator<ExportEngineListener> extraListeners = new PluggableServiceLocator<>(
@@ -129,7 +129,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 			@Override
 			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				AbstractCMSMFMain_export.this.log.warn(String.format(
+				AbstractCalienteModule_export.this.log.warn(String.format(
 					"Failed to register an additional listener class [%s]", serviceClass.getCanonicalName()), t);
 			}
 		});
@@ -144,7 +144,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		Map<String, Object> settings = new HashMap<>();
 		prepareSettings(settings);
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(),
-			Setting.THREADS.getInt(AbstractCMSMFMain.DEFAULT_THREADS));
+			Setting.THREADS.getInt(AbstractCalienteModule.DEFAULT_THREADS));
 
 		Date end = null;
 		Map<CmfType, Long> summary = null;
@@ -248,9 +248,9 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		duration -= minutes * TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
 		long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS);
 		report.append(String.format("Export process start    : %s%n",
-			DateFormatUtils.format(start, AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN)));
+			DateFormatUtils.format(start, AbstractCalienteModule.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Export process end      : %s%n",
-			DateFormatUtils.format(end, AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN)));
+			DateFormatUtils.format(end, AbstractCalienteModule.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Export process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
@@ -308,7 +308,7 @@ public class AbstractCMSMFMain_export extends AbstractCMSMFMain<ExportEngineList
 		String reportString = report.toString();
 		this.log.info(String.format("Action report for export operation:%n%n%s%n", reportString));
 		try {
-			EmailUtils.postCmsmfMail(String.format("Action report for CMSMF Export"), reportString);
+			EmailUtils.postCalienteMail(String.format("Action report for Caliente Export"), reportString);
 		} catch (MessagingException e) {
 			this.log.error("Exception caught attempting to send the report e-mail", e);
 		}

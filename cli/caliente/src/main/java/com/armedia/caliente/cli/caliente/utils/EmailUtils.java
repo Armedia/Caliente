@@ -72,7 +72,7 @@ public class EmailUtils {
 		msg.setRecipients(Message.RecipientType.TO, addressTo);
 
 		// Optional : You can also set your custom headers in the Email if you Want
-		msg.addHeader("X-CMSMFHeader", "CMSMF-Related");
+		msg.addHeader("X-CalienteHeader", "Caliente-Related");
 
 		// Setting the Subject and Content Type
 		msg.setSubject(subject);
@@ -81,7 +81,7 @@ public class EmailUtils {
 	}
 
 	/**
-	 * Post cmsmf mail.
+	 * Post Caliente mail.
 	 *
 	 * @param subject
 	 *            the subject of the email message
@@ -90,7 +90,7 @@ public class EmailUtils {
 	 * @throws MessagingException
 	 *             the messaging exception
 	 */
-	public static void postCmsmfMail(String subject, String message) throws MessagingException {
+	public static void postCalienteMail(String subject, String message) throws MessagingException {
 
 		String mailRecipients = Setting.MAIL_RECIPIENTS.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(mailRecipients);

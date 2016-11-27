@@ -25,9 +25,9 @@ import com.armedia.caliente.store.CmfStoreFactory;
 import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 
-public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CMSMFMain {
+public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CalienteMain {
 
-	private static final String STORE_TYPE_PROPERTY = "cmsmf.store.type";
+	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
 
 	private static final String DEFAULT_SETTINGS_NAME = "caliente.properties";
 
@@ -36,13 +36,13 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	protected static final String ALL = "ALL";
 
 	protected static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-	protected static final String LAST_EXPORT_DATE_PATTERN = AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN;
+	protected static final String LAST_EXPORT_DATE_PATTERN = AbstractCalienteModule.JAVA_SQL_DATETIME_PATTERN;
 
 	/** The log object used for logging. */
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	protected final Logger console = LoggerFactory.getLogger("console");
 
-	private static AbstractCMSMFMain<?, ?> instance = null;
+	private static AbstractCalienteModule<?, ?> instance = null;
 
 	protected final CmfObjectStore<?, ?> cmfObjectStore;
 	protected final CmfContentStore<?, ?, ?> cmfContentStore;
@@ -53,29 +53,29 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 	protected final String password;
 	protected final String domain;
 
-	protected AbstractCMSMFMain(E engine, boolean requiresStorage, boolean clearStorage) throws Throwable {
+	protected AbstractCalienteModule(E engine, boolean requiresStorage, boolean clearStorage) throws Throwable {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to operate with"); }
 		this.engine = engine;
 
 		// If we have command-line parameters, these supersede all other configurations, even if
 		// we have a configuration file explicitly listed.
-		this.console.info(String.format("Caliente CLI v%s", CMSMFLauncher.VERSION));
+		this.console.info(String.format("Caliente CLI v%s", CalienteLauncher.VERSION));
 		this.console.info("Configuring the properties");
 
 		// The catch-all, default configuration
-		SettingManager.addPropertySource(AbstractCMSMFMain.DEFAULT_SETTINGS_NAME);
+		SettingManager.addPropertySource(AbstractCalienteModule.DEFAULT_SETTINGS_NAME);
 		// A configuration file has been specified, so use its values ahead of the defaults
 		if (CLIParam.cfg.getString() != null) {
 			SettingManager.addPropertySource(CLIParam.cfg.getString());
 		}
-		SettingManager.addPropertySource(CMSMFLauncher.getParameterProperties());
+		SettingManager.addPropertySource(CalienteLauncher.getParameterProperties());
 
 		// And we start up the configuration engine...
 		SettingManager.init();
 		this.console.info("Properties ready");
 
 		// First things first...
-		AbstractCMSMFMain.instance = this;
+		AbstractCalienteModule.instance = this;
 
 		if (requiresStorage) {
 			File databaseDirectoryLocation = new File(Setting.DB_DIRECTORY.getString()).getCanonicalFile();
@@ -131,8 +131,8 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 		this.domain = CLIParam.domain.getString();
 	}
 
-	public static AbstractCMSMFMain<?, ?> getInstance() {
-		return AbstractCMSMFMain.instance;
+	public static AbstractCalienteModule<?, ?> getInstance() {
+		return AbstractCalienteModule.instance;
 	}
 
 	@Override
@@ -203,7 +203,7 @@ public abstract class AbstractCMSMFMain<L, E extends TransferEngine<?, ?, ?, ?, 
 
 	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
 		if ((properties == null) || properties.isEmpty()) { return false; }
-		String storeType = properties.getProperty(AbstractCMSMFMain.STORE_TYPE_PROPERTY);
+		String storeType = properties.getProperty(AbstractCalienteModule.STORE_TYPE_PROPERTY);
 		if (!StringUtils.isEmpty(storeType)) {
 			cfg.setType(storeType);
 		}

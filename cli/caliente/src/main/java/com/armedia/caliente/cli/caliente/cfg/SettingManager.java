@@ -20,9 +20,9 @@ import org.apache.commons.io.IOUtils;
 import com.armedia.commons.utilities.Tools;
 
 /**
- * The Class SettingManager reads the properties from cmsmf properties file and makes them available
- * during application execution. This class implements singleton design pattern to maintain single
- * set of properties through out the execution.
+ * The Class SettingManager reads the properties from Caliente properties file and makes them
+ * available during application execution. This class implements singleton design pattern to
+ * maintain single set of properties through out the execution.
  * <p>
  * This class uses Apache commons configuration library to manage the properties.
  *

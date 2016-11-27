@@ -29,10 +29,10 @@ import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
 
-public class CMSMFLauncher extends AbstractLauncher {
+public class CalienteLauncher extends AbstractLauncher {
 
 	static final Pattern ENGINE_PARSER = Pattern.compile("^\\w+$");
-	private static final String MAIN_CLASS = "com.armedia.caliente.cli.caliente.launcher.%s.CMSMFMain_%s";
+	private static final String MAIN_CLASS = "com.armedia.caliente.cli.caliente.launcher.%s.Caliente_%s";
 	private static Properties PARAMETER_PROPERTIES = new Properties();
 
 	public static final String VERSION;
@@ -60,7 +60,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 	}
 
 	static Properties getParameterProperties() {
-		return CMSMFLauncher.PARAMETER_PROPERTIES;
+		return CalienteLauncher.PARAMETER_PROPERTIES;
 	}
 
 	public static void main(String[] args) throws Throwable {
@@ -75,7 +75,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 		final String mode = CLIParam.mode.getString();
 		final String engine = CLIParam.engine.getString();
 		if (engine == null) { throw new IllegalArgumentException(String.format("Must provide a --engine parameter")); }
-		Matcher m = CMSMFLauncher.ENGINE_PARSER.matcher(engine);
+		Matcher m = CalienteLauncher.ENGINE_PARSER.matcher(engine);
 		if (!m.matches()) { throw new IllegalArgumentException(
 			String.format("Invalid --engine parameter value [%s] - must only contain [a-zA-Z_0-9]", engine)); }
 
@@ -92,7 +92,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			String logName = CLIParam.log.getString();
 			if (logName == null) {
 				String runTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-				logName = String.format("cmsmf-%s-%s-%s", engine.toLowerCase(), mode.toLowerCase(), runTime);
+				logName = String.format("caliente-%s-%s-%s", engine.toLowerCase(), mode.toLowerCase(), runTime);
 			}
 			System.setProperty("logName", logName);
 			URL config = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
@@ -109,7 +109,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 		// Make sure log4j is configured
 		Logger.getRootLogger().info("Logging active");
 		final Logger console = Logger.getLogger("console");
-		console.info(String.format("Launching CMSMF v%s %s mode for engine %s%n", CMSMFLauncher.VERSION,
+		console.info(String.format("Launching Caliente v%s %s mode for engine %s%n", CalienteLauncher.VERSION,
 			CLIParam.mode.getString(), engine));
 		Runtime runtime = Runtime.getRuntime();
 		console.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
@@ -151,7 +151,7 @@ public class CMSMFLauncher extends AbstractLauncher {
 			if ((values != null) && !values.isEmpty() && (p.property != null)) {
 				final String key = p.property.name;
 				if ((key != null) && !values.isEmpty()) {
-					CMSMFLauncher.PARAMETER_PROPERTIES.setProperty(key, StringUtils.join(values, ','));
+					CalienteLauncher.PARAMETER_PROPERTIES.setProperty(key, StringUtils.join(values, ','));
 				}
 			}
 		}
@@ -161,27 +161,27 @@ public class CMSMFLauncher extends AbstractLauncher {
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
 		final Class<?> klass;
 		try {
-			klass = Class.forName(String.format(CMSMFLauncher.MAIN_CLASS, engine, mode));
+			klass = Class.forName(String.format(CalienteLauncher.MAIN_CLASS, engine, mode));
 		} catch (ClassNotFoundException e) {
 			System.err.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode,
 				engine);
 			return;
 		}
 
-		final CMSMFMain main;
-		if (CMSMFMain.class.isAssignableFrom(klass)) {
-			main = CMSMFMain.class.cast(klass.newInstance());
+		final CalienteMain main;
+		if (CalienteMain.class.isAssignableFrom(klass)) {
+			main = CalienteMain.class.cast(klass.newInstance());
 		} else {
-			throw new RuntimeException(String.format("Class [%s] is not a valid CMSMFMain class", klass.getName()));
+			throw new RuntimeException(String.format("Class [%s] is not a valid CalienteMain class", klass.getName()));
 		}
 
 		// Lock for single execution
 		CmfObjectStore<?, ?> store = main.getObjectStore();
 		final boolean writeProperties = (store != null);
-		final String pfx = String.format("cmsmf.%s.%s", engine, mode);
+		final String pfx = String.format("caliente.%s.%s", engine, mode);
 		try {
 			if (writeProperties) {
-				store.setProperty(String.format("%s.version", pfx), new CmfValue(CMSMFLauncher.VERSION));
+				store.setProperty(String.format("%s.version", pfx), new CmfValue(CalienteLauncher.VERSION));
 				store.setProperty(String.format("%s.start", pfx), new CmfValue(new Date()));
 			}
 			main.run();

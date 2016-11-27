@@ -6,17 +6,17 @@ import java.util.Map;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_export;
+import com.armedia.caliente.cli.caliente.launcher.AbstractCalienteModule_export;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 
-public class CMSMFMain_export extends AbstractCMSMFMain_export implements ExportEngineListener {
+public class Caliente_export extends AbstractCalienteModule_export implements ExportEngineListener {
 
 	private File source = null;
 
-	public CMSMFMain_export() throws Throwable {
+	public Caliente_export() throws Throwable {
 		super(LocalExportEngine.getExportEngine());
 		this.source = new File(CLIParam.source.getString());
 	}

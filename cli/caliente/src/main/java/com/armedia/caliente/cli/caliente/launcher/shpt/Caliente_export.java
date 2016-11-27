@@ -12,15 +12,15 @@ import org.apache.commons.lang.StringUtils;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_export;
+import com.armedia.caliente.cli.caliente.launcher.AbstractCalienteModule_export;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
 import com.armedia.caliente.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.commons.utilities.FileNameTools;
 
-public class CMSMFMain_export extends AbstractCMSMFMain_export implements ExportEngineListener {
+public class Caliente_export extends AbstractCalienteModule_export implements ExportEngineListener {
 
-	public CMSMFMain_export() throws Throwable {
+	public Caliente_export() throws Throwable {
 		super(ShptExportEngine.getExportEngine());
 	}
 

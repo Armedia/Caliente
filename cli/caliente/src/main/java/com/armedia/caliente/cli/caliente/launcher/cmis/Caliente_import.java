@@ -9,15 +9,15 @@ import java.util.Map;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_import;
+import com.armedia.caliente.cli.caliente.launcher.AbstractCalienteMain_import;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.cmis.importer.CmisImportEngine;
 import com.armedia.commons.utilities.Tools;
 
-public class CMSMFMain_import extends AbstractCMSMFMain_import {
+public class Caliente_import extends AbstractCalienteMain_import {
 
-	public CMSMFMain_import() throws Throwable {
+	public Caliente_import() throws Throwable {
 		super(CmisImportEngine.getImportEngine());
 	}
 

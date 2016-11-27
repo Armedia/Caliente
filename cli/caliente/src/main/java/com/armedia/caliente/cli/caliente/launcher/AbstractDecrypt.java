@@ -9,7 +9,7 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.store.CmfObjectStore;
 
-public abstract class AbstractDecrypt implements CMSMFMain {
+public abstract class AbstractDecrypt implements CalienteMain {
 
 	protected final CmfCrypt crypto;
 

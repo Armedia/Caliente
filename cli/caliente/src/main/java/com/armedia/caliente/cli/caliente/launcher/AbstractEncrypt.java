@@ -10,11 +10,11 @@ import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.store.CmfObjectStore;
 
 /**
- * The main method of this class is an entry point for the cmsmf application.
+ * The main method of this class is an entry point for the Caliente application.
  *
  * @author Shridev Makim 6/15/2010
  */
-public abstract class AbstractEncrypt implements CMSMFMain {
+public abstract class AbstractEncrypt implements CalienteMain {
 
 	protected final CmfCrypt crypto;
 

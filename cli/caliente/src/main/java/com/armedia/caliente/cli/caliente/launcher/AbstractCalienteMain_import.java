@@ -33,8 +33,8 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class AbstractCMSMFMain_import
-	extends AbstractCMSMFMain<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
+public abstract class AbstractCalienteMain_import extends
+	AbstractCalienteModule<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> implements ImportEngineListener {
 
 	private static final Integer PROGRESS_INTERVAL = 5;
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
@@ -45,7 +45,7 @@ public abstract class AbstractCMSMFMain_import
 	private final Map<CmfType, AtomicLong> current = new HashMap<>();
 	private final Map<CmfType, AtomicLong> previous = new HashMap<>();
 
-	public AbstractCMSMFMain_import(ImportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
+	public AbstractCalienteMain_import(ImportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine, true, false);
 	}
 
@@ -59,9 +59,9 @@ public abstract class AbstractCMSMFMain_import
 	@Override
 	public final void run() throws CalienteException {
 		Set<ImportResult> outcomes = Tools.parseEnumCSV(ImportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
-			AbstractCMSMFMain.ALL, false);
+			AbstractCalienteModule.ALL, false);
 		Set<CmfType> types = Tools.parseEnumCSV(CmfType.class, Setting.MANIFEST_TYPES.getString(),
-			AbstractCMSMFMain.ALL, false);
+			AbstractCalienteModule.ALL, false);
 		this.engine.addListener(this);
 		this.engine.addListener(new ImportManifest(outcomes, types));
 		PluggableServiceLocator<ImportEngineListener> extraListeners = new PluggableServiceLocator<>(
@@ -69,7 +69,7 @@ public abstract class AbstractCMSMFMain_import
 		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 			@Override
 			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				AbstractCMSMFMain_import.this.log.warn(String.format(
+				AbstractCalienteMain_import.this.log.warn(String.format(
 					"Failed to register an additional listener class [%s]", serviceClass.getCanonicalName()), t);
 			}
 		});
@@ -84,7 +84,7 @@ public abstract class AbstractCMSMFMain_import
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(),
-			Setting.THREADS.getInt(AbstractCMSMFMain.DEFAULT_THREADS));
+			Setting.THREADS.getInt(AbstractCalienteModule.DEFAULT_THREADS));
 		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), Setting.CMF_IMPORT_TARGET_LOCATION.getString("/"));
 		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), Setting.CMF_IMPORT_TRIM_PREFIX.getInt(0));
 		customizeSettings(settings);
@@ -118,9 +118,9 @@ public abstract class AbstractCMSMFMain_import
 		duration -= minutes * TimeUnit.MILLISECONDS.convert(1, TimeUnit.MINUTES);
 		long seconds = TimeUnit.SECONDS.convert(duration, TimeUnit.MILLISECONDS);
 		report.append(String.format("Import process start    : %s%n",
-			DateFormatUtils.format(start, AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN)));
+			DateFormatUtils.format(start, AbstractCalienteModule.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Import process end      : %s%n",
-			DateFormatUtils.format(end, AbstractCMSMFMain.JAVA_SQL_DATETIME_PATTERN)));
+			DateFormatUtils.format(end, AbstractCalienteModule.JAVA_SQL_DATETIME_PATTERN)));
 		report.append(String.format("Import process duration : %02d:%02d:%02d%n", hours, minutes, seconds));
 
 		report.append(String.format("%n%nParameters in use:%n")).append(StringUtils.repeat("=", 30));
@@ -157,7 +157,7 @@ public abstract class AbstractCMSMFMain_import
 		this.log.info(String.format("Action report for import operation:%n%n%s%n", reportString));
 		this.console.info(String.format("Action report for import operation:%n%n%s%n", reportString));
 		try {
-			EmailUtils.postCmsmfMail(String.format("Action report for CMSMF Import"), reportString);
+			EmailUtils.postCalienteMail(String.format("Action report for Caliente Import"), reportString);
 		} catch (MessagingException e) {
 			this.log.error("Exception caught attempting to send the report e-mail", e);
 			this.console.error("Exception caught attempting to send the report e-mail", e);
@@ -186,7 +186,7 @@ public abstract class AbstractCMSMFMain_import
 		long now = System.currentTimeMillis();
 		long last = this.progressReporter.get();
 		boolean shouldDisplay = (milestone || ((now - last) >= TimeUnit.MILLISECONDS
-			.convert(AbstractCMSMFMain_import.PROGRESS_INTERVAL, TimeUnit.SECONDS)));
+			.convert(AbstractCalienteMain_import.PROGRESS_INTERVAL, TimeUnit.SECONDS)));
 
 		// This avoids a race condition where we don't show successive progress reports from
 		// different threads
@@ -198,7 +198,7 @@ public abstract class AbstractCMSMFMain_import
 				itemPrev.set(current);
 				final long count = (current.longValue() - prev.longValue());
 				final Double itemPct = (current.doubleValue() / total.doubleValue()) * 100.0;
-				final Double itemRate = (count / AbstractCMSMFMain_import.PROGRESS_INTERVAL.doubleValue());
+				final Double itemRate = (count / AbstractCalienteMain_import.PROGRESS_INTERVAL.doubleValue());
 
 				objectLine = String.format("%n\tProcessed %d/%d %s objects (%.2f%%, ~%.2f/s, %d since last report)",
 					current.longValue(), total.longValue(), objectType.name(), itemPct, itemRate, count);

@@ -11,16 +11,16 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain_export;
+import com.armedia.caliente.cli.caliente.launcher.AbstractCalienteModule_export;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.cmis.CmisSetting;
 import com.armedia.caliente.engine.cmis.exporter.CmisExportEngine;
 
-public class CMSMFMain_export extends AbstractCMSMFMain_export {
+public class Caliente_export extends AbstractCalienteModule_export {
 
 	private static final String ID_PREFIX = "id:";
 
-	public CMSMFMain_export() throws Throwable {
+	public Caliente_export() throws Throwable {
 		super(CmisExportEngine.getExportEngine());
 	}
 
@@ -50,8 +50,8 @@ public class CMSMFMain_export extends AbstractCMSMFMain_export {
 			settings.put(CmisSetting.EXPORT_PATH.getLabel(), FilenameUtils.normalize(srcPath, true));
 		} else
 		// If it has a leading "id:", it's an object ID
-		if (srcPath.startsWith(CMSMFMain_export.ID_PREFIX)) {
-			srcPath = srcPath.substring(CMSMFMain_export.ID_PREFIX.length());
+		if (srcPath.startsWith(Caliente_export.ID_PREFIX)) {
+			srcPath = srcPath.substring(Caliente_export.ID_PREFIX.length());
 			if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Must provide a non-empty CMIS object ID"); }
 			settings.put(CmisSetting.EXPORT_ID.getLabel(), srcPath);
 		} else {

@@ -37,7 +37,7 @@ public enum CLIParam {
 	user(null, 1, "The username to connect with"),
 	password(null, 1, "The password to connect with"),
 	domain(null, 1, "The domain the user belongs to"),
-	log(null, 1, "The base name of the log file to use instead of the default (cmsmf-${action}-${date})"),
+	log(null, 1, "The base name of the log file to use instead of the default (caliente-${action}-${date})"),
 	log_cfg(null, 1, "The Log4j configuration (XML format) to use instead of the default (overrides --log_name)"),
 	threads(Setting.THREADS, 1, "The number of threads to use while importing or exporting"),
 	non_recursive(null, 0, "Turn off counter recursion (i.e. to count a single folder without descending)"),
@@ -300,14 +300,14 @@ public enum CLIParam {
 		try {
 			cli = parser.parse(options, args);
 		} catch (ParseException e) {
-			new HelpFormatter().printHelp("CMSMF",
+			new HelpFormatter().printHelp("Caliente",
 				String.format("%nAvailable Parameters:%n------------------------------%n"), options,
 				String.format("%nERROR: %s%n%n", e.getMessage()), true);
 			return false;
 		}
 
 		if (cli.hasOption(CLIParam.help.option.getLongOpt())) {
-			new HelpFormatter().printHelp("CMSMF",
+			new HelpFormatter().printHelp("Caliente",
 				String.format("%nAvailable Parameters:%n------------------------------%n"), options, null, true);
 			return false;
 		}

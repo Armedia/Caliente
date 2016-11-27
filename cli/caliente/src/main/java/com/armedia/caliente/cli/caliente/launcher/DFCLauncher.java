@@ -93,6 +93,6 @@ public class DFCLauncher extends AbstractLauncher {
 		// Finally, launch the main class
 		// We launch like this because we have to patch the classpath before we link into the rest
 		// of the code. If we don't do it like this, the app will refuse to launch altogether
-		ProcessFuture.execClass(CMSMFLauncher.class, classpath, environment, args);
+		ProcessFuture.execClass(CalienteLauncher.class, classpath, environment, args);
 	}
 }

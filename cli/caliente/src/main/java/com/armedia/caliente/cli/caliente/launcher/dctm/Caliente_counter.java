@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.AbstractCMSMFMain;
+import com.armedia.caliente.cli.caliente.launcher.AbstractCalienteModule;
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.exporter.DctmExportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -40,11 +40,11 @@ import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
 /**
- * The main method of this class is an entry point for the cmsmf application.
+ * The main method of this class is an entry point for the Caliente application.
  *
  * @author Shridev Makim 6/15/2010
  */
-public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
+public class Caliente_counter extends AbstractCalienteModule<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
 
 	private static final String HEADERS = "FOLDER_ID,FOLDER_PATH,CHILD_COUNT,CHILD_SIZE";
 
@@ -121,7 +121,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 		}
 	}
 
-	public CMSMFMain_counter() throws Throwable {
+	public Caliente_counter() throws Throwable {
 		super(DctmExportEngine.getExportEngine(), false, false);
 	}
 
@@ -186,7 +186,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 				private CounterResult doWork(IDfSession session, IDfId id) throws DfException, CalienteException {
 					IDfFolder folder = session.getFolderBySpecification(id.getId());
 					if (folder == null) {
-						CMSMFMain_counter.this.console.warn("Failed to locate the folder with ID [{}]", id.getId());
+						Caliente_counter.this.console.warn("Failed to locate the folder with ID [{}]", id.getId());
 						return null;
 					}
 
@@ -194,7 +194,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 					final String quotedId = DfUtils.quoteString(id.getId());
 
 					IDfCollection queryResult = null;
-					queryResult = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.COUNTER, quotedId),
+					queryResult = DfUtils.executeQuery(session, String.format(Caliente_counter.COUNTER, quotedId),
 						IDfQuery.DF_EXECREAD_QUERY);
 					final IDfValue count;
 					try {
@@ -210,7 +210,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 					long s = 0;
 					final Double cDouble = count.asDouble();
 					if (cDouble.longValue() > 0) {
-						queryResult = DfUtils.executeQuery(session, String.format(CMSMFMain_counter.SIZER, quotedId),
+						queryResult = DfUtils.executeQuery(session, String.format(Caliente_counter.SIZER, quotedId),
 							IDfQuery.DF_EXECREAD_QUERY);
 						final IDfValue size;
 						try {
@@ -233,7 +233,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 					if ((id == null) || id.isNull()) { return; }
 					CounterResult result = doWork(session, id);
 					if (result == null) { return; }
-					CMSMFMain_counter.this.console.info(result.toString());
+					Caliente_counter.this.console.info(result.toString());
 					results.add(result);
 				}
 
@@ -280,7 +280,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 						includedPaths = new ArrayList<>();
 						// No paths...we find all cabinets then
 						IDfCollection c = null;
-						String dql = CMSMFMain_counter.CABINET_ALL_LISTER;
+						String dql = Caliente_counter.CABINET_ALL_LISTER;
 						try {
 							c = DfUtils.executeQuery(session, dql);
 							while (c.next()) {
@@ -312,7 +312,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 					traversed.addAll(excludedIds);
 
 					int count = 0;
-					manifest.info(CMSMFMain_counter.HEADERS);
+					manifest.info(Caliente_counter.HEADERS);
 					for (String folderPath : includedFolders) {
 						activity = String.format("analyzing the contents of folder [%s]", folderPath);
 						IDfFolder folder = session.getFolderByPath(folderPath);
@@ -342,7 +342,7 @@ public class CMSMFMain_counter extends AbstractCMSMFMain<ExportEngineListener, E
 						workers.addWorkItem(folder.getObjectId());
 
 						if (!CLIParam.non_recursive.isPresent()) {
-							String dql = String.format(CMSMFMain_counter.FOLDER_LISTER,
+							String dql = String.format(Caliente_counter.FOLDER_LISTER,
 								DfUtils.quoteString(folder.getObjectId().getId()));
 							IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_EXECREAD_QUERY);
 							try {

@@ -19,7 +19,7 @@ import com.armedia.commons.utilities.Tools;
 public class CommonClasspathPatcher extends ClasspathPatcher {
 
 	private static final String ENV_CALIENTE_LIB = "CALIENTE_LIB";
-	private static final String DEFAULT_CALIENTE_LIB = "cmsmf.lib";
+	private static final String DEFAULT_CALIENTE_LIB = "caliente.lib";
 
 	private static final FileFilter LIB_FILTER = new FileFilter() {
 		@Override

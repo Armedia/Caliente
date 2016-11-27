@@ -3,17 +3,17 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores http://www.armedia.com/ns/caliente/stores">
 	<settings>
-		<setting name="target">${user.dir}/cmsmf</setting>
+		<setting name="target">${user.dir}/caliente</setting>
 		<setting name="dir.metadata">${target}</setting>
 		<setting name="dir.content">${target}/content</setting>
-		<setting name="dir.content.strategy">cmsmf</setting>
+		<setting name="dir.content.strategy">caliente</setting>
 	</settings>
 
 	<objectstore id="default">
 		<type>jdbc</type>
 		<settings>
 			<setting name="location.type">pooled</setting>
-			<setting name="jdbc.url">jdbc:h2:${dir.metadata}/cmsmf-data;AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
+			<setting name="jdbc.url">jdbc:h2:${dir.metadata}/caliente-data;AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
 			<setting name="jdbc.driver">org.h2.Driver</setting>
 		</settings>
 	</objectstore>
@@ -36,7 +36,7 @@
 		<type>jdbc</type>
 		<settings>
 			<setting name="location.type">pooled</setting>
-			<setting name="jdbc.url">jdbc:h2:${dir.metadata}/cmsmf-data;AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
+			<setting name="jdbc.url">jdbc:h2:${dir.metadata}/caliente-data;AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
 			<setting name="jdbc.driver">org.h2.Driver</setting>
 		</settings>
 	</contentstore>
