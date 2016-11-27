@@ -29,7 +29,7 @@ import com.armedia.commons.utilities.Tools;
 public class CommandLine implements CommandLineValues {
 
 	public static final boolean DEFAULT_HELP = true;
-	public static final boolean DEFAULT_SUPPORTS_INCLUDES = true;
+	public static final boolean DEFAULT_SUPPORTS_INCLUDES = false;
 
 	private static final Parameter HELP;
 
