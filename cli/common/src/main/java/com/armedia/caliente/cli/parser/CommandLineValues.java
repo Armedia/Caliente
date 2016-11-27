@@ -20,9 +20,9 @@ public interface CommandLineValues extends Iterable<CommandLineParameter> {
 
 	public boolean hasParameter(String longOpt);
 
-	public boolean isDefined(Parameter parameter);
+	public boolean isDefined(Parameter param);
 
-	public CommandLineParameter getParameter(Parameter parameter);
+	public CommandLineParameter getParameter(Parameter param);
 
 	public boolean hasHelpParameter();
 
@@ -70,47 +70,47 @@ public interface CommandLineValues extends Iterable<CommandLineParameter> {
 
 	public List<String> getPositionalValues();
 
-	public boolean isDefined(ParameterWrapper paramDel);
+	public boolean isDefined(ParameterWrapper wrapper);
 
-	public CommandLineParameter getParameter(ParameterWrapper paramDel);
+	public CommandLineParameter getParameter(ParameterWrapper wrapper);
 
-	public Boolean getBoolean(ParameterWrapper paramDel);
+	public Boolean getBoolean(ParameterWrapper wrapper);
 
-	public boolean getBoolean(ParameterWrapper paramDel, boolean def);
+	public boolean getBoolean(ParameterWrapper wrapper, boolean def);
 
-	public List<Boolean> getAllBooleans(ParameterWrapper paramDel);
+	public List<Boolean> getAllBooleans(ParameterWrapper wrapper);
 
-	public Integer getInteger(ParameterWrapper paramDel);
+	public Integer getInteger(ParameterWrapper wrapper);
 
-	public int getInteger(ParameterWrapper paramDel, int def);
+	public int getInteger(ParameterWrapper wrapper, int def);
 
-	public List<Integer> getAllIntegers(ParameterWrapper paramDel);
+	public List<Integer> getAllIntegers(ParameterWrapper wrapper);
 
-	public Long getLong(ParameterWrapper paramDel);
+	public Long getLong(ParameterWrapper wrapper);
 
-	public long getLong(ParameterWrapper paramDel, long def);
+	public long getLong(ParameterWrapper wrapper, long def);
 
-	public List<Long> getAllLongs(ParameterWrapper paramDel);
+	public List<Long> getAllLongs(ParameterWrapper wrapper);
 
-	public Float getFloat(ParameterWrapper paramDel);
+	public Float getFloat(ParameterWrapper wrapper);
 
-	public float getFloat(ParameterWrapper paramDel, float def);
+	public float getFloat(ParameterWrapper wrapper, float def);
 
-	public List<Float> getAllFloats(ParameterWrapper paramDel);
+	public List<Float> getAllFloats(ParameterWrapper wrapper);
 
-	public Double getDouble(ParameterWrapper paramDel);
+	public Double getDouble(ParameterWrapper wrapper);
 
-	public double getDouble(ParameterWrapper paramDel, double def);
+	public double getDouble(ParameterWrapper wrapper, double def);
 
-	public List<Double> getAllDoubles(ParameterWrapper paramDel);
+	public List<Double> getAllDoubles(ParameterWrapper wrapper);
 
-	public String getString(ParameterWrapper paramDel);
+	public String getString(ParameterWrapper wrapper);
 
-	public String getString(ParameterWrapper paramDel, String def);
+	public String getString(ParameterWrapper wrapper, String def);
 
-	public List<String> getAllStrings(ParameterWrapper paramDel);
+	public List<String> getAllStrings(ParameterWrapper wrapper);
 
-	public List<String> getAllStrings(ParameterWrapper paramDel, List<String> def);
+	public List<String> getAllStrings(ParameterWrapper wrapper, List<String> def);
 
-	public boolean isPresent(ParameterWrapper paramDel);
+	public boolean isPresent(ParameterWrapper wrapper);
 }
