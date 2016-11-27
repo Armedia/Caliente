@@ -64,34 +64,6 @@ public abstract class AbstractLauncher {
 	}
 
 	protected final int launch(boolean supportsHelp, String... args) {
-		/*
-		- find @xxxxx -> read parameters from @xxxxx and graft them into the command line at that location (i.e. insert the parameters from the file)
-			- one line = one parameter position (?)
-			- support quoting for multi-lined values (?)
-		
-		
-		
-		while (true) {
-			add new parameters/groups for this pass;
-			if (no new parameters or groups) break;
-		
-			parse what's known
-		
-			if (required params missing || parameter values missing) {
-			// Malformed = requires arguments but doesn't have any, doesn't support arguments but has one, etc...
-				store errors;
-				break;
-			}
-		
-		// Loop for the next pass
-		}
-		
-		if (has errors || help requested) {
-			// show error or help message
-			return 1
-		}
-		 */
-
 		// This loop subclasses a chance to cleanly break the parameter parsing loop, while
 		// also affording them the opportunity to modify the parameter availability based on
 		// previously parsed commandLineParameters
@@ -104,9 +76,16 @@ public abstract class AbstractLauncher {
 			Collection<? extends LaunchParameterSet> launchParameterSets = getLaunchParameterSets(cl, ++pass);
 			if (launchParameterSets != null) {
 				for (LaunchParameterSet parameterSet : launchParameterSets) {
-					final Collection<? extends Parameter> p = parameterSet.getParameters(cl);
-					if ((p != null) && !p.isEmpty()) {
-						newParameters.addAll(p);
+					if (parameterSet == null) {
+						continue;
+					}
+					final Collection<? extends Parameter> ps = parameterSet.getParameters(cl);
+					if ((ps != null) && !ps.isEmpty()) {
+						for (Parameter p : ps) {
+							if (p != null) {
+								newParameters.add(p);
+							}
+						}
 					}
 				}
 			}

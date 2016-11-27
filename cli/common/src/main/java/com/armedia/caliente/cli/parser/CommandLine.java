@@ -186,17 +186,11 @@ public class CommandLine implements CommandLineValues {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#isHelpRequested()
-	 */
 	@Override
 	public boolean isHelpRequested() {
 		return (this.helpSupported && isPresent(CommandLine.HELP));
 	}
 
-	/* (non-Javadoc)
-	 * @see com.armedia.caliente.cli.parser.CommandLineValues#getHelpMessage()
-	 */
 	@Override
 	public String getHelpMessage() {
 		if (!isHelpRequested()) { return null; }
