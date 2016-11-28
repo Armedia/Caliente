@@ -36,7 +36,7 @@ Pass 2 (from <action>)
 			--reset-job
 			--content-strategy ${strategy}
 			--direct-fs
-	
+
 		Pass 3 (from --engine)
 			DFC
 			*	--docbase ${docbase}
@@ -51,14 +51,14 @@ Pass 2 (from <action>)
 				--special-types ${type1,type2,...,typeN}
 				--batch-size ${size}
 				--owner-attributes ${att1,att2,...,attN}
-	
+
 			ALFRESCO
 			*	--url ${url}
 			*	--user ${user}
 				--domain ${domain}
 			*	--password ${password}
 			*	--source ${path|nodeRef}
-	
+
 			SHAREPOINT
 			*	--url ${url}
 			*	--user ${user}
@@ -66,7 +66,7 @@ Pass 2 (from <action>)
 			*	--password ${password}
 			*	--path ${path}
 				--source-prefix ${prefix}
-	
+
 	ACTION: ( IMPORT | IMP | IM )
 		(common)
 			--dedup
@@ -75,7 +75,7 @@ Pass 2 (from <action>)
 			--no-filename-map
 			--trim-prefix ${num}
 			--target-location ${location}
-	
+
 		Pass 3 (from --engine)
 			DFC
 			*	--docbase ${docbase}
@@ -85,7 +85,7 @@ Pass 2 (from <action>)
 				--dfc-prop ${dfc-prop-file}
 				--dctm ${dctm-dir}
 				--default-password
-	
+
 			ALFRESCO
 			*	--url ${url}
 			*	--user ${user}
@@ -105,7 +105,7 @@ Pass 2 (from <action>)
 			--count-private
 			--count-include ${folder1,folder2,...,folderN}
 			--count-exclude ${folder1,folder2,...,folderN}
-	
+
 		Pass 3 (from --engine)
 			DFC
 			*	--docbase ${docbase}
@@ -115,13 +115,13 @@ Pass 2 (from <action>)
 				--dfc-prop ${dfc-prop-file}
 				--dctm ${dctm-dir}
 			*	--predicate ${predicate}
-	
+
 			ALFRESCO
 			*	--url ${url}
 			*	--user ${user}
 				--domain ${domain}
 			*	--password ${password}
 			*	--source ${path|nodeRef}
-	
+
 	ACTION: ( ENCRYPT | ENC | DECRYPT | DEC )
 		positionals = password values to encrypt/decrypt. if none, read from console
