@@ -1283,13 +1283,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			if (this.log.isDebugEnabled()) {
 				this.log.debug(String.format("PERSISTED DEPENDENCY %s", target.getShortLabel()));
 			}
-			savePoint = commitSavepoint(c, savePoint);
+			savePoint = JdbcTools.commitSavepoint(c, savePoint);
 			return true;
 		} catch (SQLException e) {
 			if (this.dialect.isDuplicateKeyException(e)) {
 				// We're good! With the use of savepoints, the transaction will remain valid and
 				// thus we'll be OK to continue using the transaction in other connections
-				rollbackSavepoint(c, savePoint);
+				JdbcTools.rollbackSavepoint(c, savePoint);
 				if (this.log.isTraceEnabled()) {
 					this.log.trace(String.format("DUPLICATE DEPENDENCY %s", target.getShortLabel()));
 				}
@@ -1557,10 +1557,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			s = c.createStatement();
 			savePoint = c.setSavepoint();
 			s.execute(sql);
-			savePoint = commitSavepoint(c, savePoint);
+			savePoint = JdbcTools.commitSavepoint(c, savePoint);
 			return true;
 		} catch (SQLException e) {
-			rollbackSavepoint(c, savePoint);
+			JdbcTools.rollbackSavepoint(c, savePoint);
 			this.log.trace("Failed to disable the referential integrity constraints", e);
 			return false;
 		} finally {
@@ -1707,25 +1707,5 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected void closeCachedTargets(Object state) throws CmfStorageException {
 		CachedTargetState.convert(state).close();
-	}
-
-	private void rollbackSavepoint(Connection c, Savepoint savePoint) {
-		if (savePoint == null) { return; }
-		try {
-			c.rollback(savePoint);
-		} catch (SQLException e) {
-			this.log.trace("Failed to roll back to the established SavePoint", e);
-		}
-	}
-
-	private Savepoint commitSavepoint(Connection c, Savepoint savePoint) {
-		if (savePoint == null) { return null; }
-		try {
-			c.releaseSavepoint(savePoint);
-			return null;
-		} catch (SQLException e) {
-			this.log.trace("Failed to roll back to the established SavePoint", e);
-			return savePoint;
-		}
 	}
 }

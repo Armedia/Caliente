@@ -3,6 +3,7 @@ package com.armedia.caliente.store.jdbc;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -116,6 +117,26 @@ class JdbcTools {
 			c.close();
 		} catch (SQLException e) {
 			JdbcTools.handleException(e);
+		}
+	}
+
+	static void rollbackSavepoint(Connection c, Savepoint savePoint) {
+		if (savePoint == null) { return; }
+		try {
+			c.rollback(savePoint);
+		} catch (SQLException e) {
+			JdbcTools.LOG.trace("Failed to roll back to the established SavePoint", e);
+		}
+	}
+
+	static Savepoint commitSavepoint(Connection c, Savepoint savePoint) {
+		if (savePoint == null) { return null; }
+		try {
+			c.releaseSavepoint(savePoint);
+			return null;
+		} catch (SQLException e) {
+			JdbcTools.LOG.trace("Failed to roll back to the established SavePoint", e);
+			return savePoint;
 		}
 	}
 }
