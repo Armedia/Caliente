@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+	<changeSet author="cmf" id="1005">
+		<validCheckSum>any</validCheckSum>
+		<preConditions>
+			<changeSetExecuted id="1004" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.3.xml"/>
+		</preConditions>
+
+		<dropIndex tableName="cmf_export_plan" indexName="idx_cmf_export_plan"/>
+		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_type"/>
+		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_subtype_batch"/>
+		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_type_history"/>
+
+		<dropView viewName="cmf_name_collision"/>
+
+		<dropDefaultValue tableName="cmf_export_plan" columnName="traversed"/>
+		<dropColumn tableName="cmf_export_plan" columnName="traversed"/>
+
+		<renameColumn tableName="cmf_object" oldColumnName="batch_id" newColumnName="history_id" />
+		<renameColumn tableName="cmf_object" oldColumnName="batch_head" newColumnName="history_current" />
+
+		<addColumn tableName="cmf_object">
+			<column name="tier_id" type="bigint" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+
+		<sql dbms="h2">
+			update cmf_object set tier_id = CAST(CAST(history_id AS BINARY) AS BIGINT)
+			 where object_type in ( 'FOLDER', 'TYPE', 'GROUP')
+		</sql>
+		<sql dbms="postgresql">
+			update cmf_object set tier_id = ('x' || lpad(history_id, 16, '0'))::bit(64)::bigint
+			 where object_type in ( 'FOLDER', 'TYPE', 'GROUP')
+		</sql>
+
+		<dropDefaultValue tableName="cmf_object" columnName="tier_id" />
+		<sql>
+			update cmf_object set history_id = substring(object_id from 5 for 16)
+			 where object_type in ( 'FOLDER', 'TYPE', 'GROUP')
+		</sql>
+
+		<createView viewName="cmf_name_collision">
+			   select sq.parent_id, co.object_id, cn.new_name, co.object_number
+				 from cmf_object co, cmf_object_tree ct, cmf_alt_name cn, (
+							select t.parent_id, n.new_name, count(*)
+							  from cmf_object_tree t, cmf_object o, cmf_object p, cmf_alt_name n
+							 where t.object_id = o.object_id
+							   and t.object_id = n.object_id
+							   and t.parent_id = p.object_id
+							   and p.history_current = true
+							   and o.history_current = true
+						  group by t.parent_id, n.new_name
+							having count(*) > 1
+					  ) sq
+				where co.object_id = ct.object_id
+				  and ct.parent_id = sq.parent_id
+				  and co.object_id = cn.object_id
+				  and cn.new_name = sq.new_name
+			 order by sq.parent_id, cn.new_name, co.object_number
+		</createView>
+
+		<createIndex tableName="cmf_object" indexName="idx_cmf_object_tier" unique="true">
+			<column name="object_type" />
+			<column name="tier_id" />
+			<column name="history_id" />
+			<column name="object_number" />
+		</createIndex>
+		<createIndex tableName="cmf_object" indexName="idx_cmf_object_type_history" unique="true">
+			<column name="object_type" />
+			<column name="history_id" />
+			<column name="object_number" />
+		</createIndex>
+	</changeSet>
+</databaseChangeLog>
