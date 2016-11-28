@@ -40,6 +40,12 @@
 			<artifactId>liquibase-core</artifactId>
 			<scope>compile</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>com.mattbertolini</groupId>
+			<artifactId>liquibase-slf4j</artifactId>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
