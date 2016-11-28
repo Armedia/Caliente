@@ -3,27 +3,32 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-	<changeSet author="cmf" id="1005">
-		<validCheckSum>any</validCheckSum>
+	<changeSet author="cmf" id="2000">
 		<preConditions>
 			<changeSetExecuted id="1004" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.3.xml"/>
 		</preConditions>
 
+		<!-- **************************************** -->
+		<!-- Update CMF_EXPORT_PLAN                   -->
+		<!-- **************************************** -->
 		<dropIndex tableName="cmf_export_plan" indexName="idx_cmf_export_plan"/>
+		<dropDefaultValue tableName="cmf_export_plan" columnName="traversed"/>
+		<dropColumn tableName="cmf_export_plan" columnName="traversed"/>
+
+		<!-- **************************************** -->
+		<!-- Update CMF_OBJECT and CMF_NAME_COLLISION -->
+		<!-- **************************************** -->
 		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_type"/>
 		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_subtype_batch"/>
 		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_type_history"/>
 
 		<dropView viewName="cmf_name_collision"/>
 
-		<dropDefaultValue tableName="cmf_export_plan" columnName="traversed"/>
-		<dropColumn tableName="cmf_export_plan" columnName="traversed"/>
-
 		<renameColumn tableName="cmf_object" oldColumnName="batch_id" newColumnName="history_id" />
 		<renameColumn tableName="cmf_object" oldColumnName="batch_head" newColumnName="history_current" />
 
 		<addColumn tableName="cmf_object">
-			<column name="tier_id" type="bigint" defaultValueNumeric="0">
+			<column name="tier_id" type="bigint" defaultValueNumeric="0" afterColumn="object_id">
 				<constraints nullable="false" />
 			</column>
 		</addColumn>
@@ -74,5 +79,48 @@
 			<column name="history_id" />
 			<column name="object_number" />
 		</createIndex>
+
+		<!-- **************************************** -->
+		<!-- Fix CMF_CONTENT and CMF_CONTENT_PROPERTY -->
+		<!-- **************************************** -->
+		<dropForeignKeyConstraint baseTableName="cmf_content_property" constraintName="fk_cmf_content_property_content"/>
+		<dropPrimaryKey tableName="cmf_content_property" />
+		<dropForeignKeyConstraint baseTableName="cmf_content" constraintName="fk_cmf_content_object"/>
+		<dropPrimaryKey tableName="cmf_content" />
+
+		<addColumn tableName="cmf_content">
+			<column name="modifier2" type="varchar(16)" remarks="The content's rendition modifier" defaultValue="" afterColumn="rendition_page">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<sql>
+			update cmf_content
+			   set modifier2 = modifier
+		</sql>
+		<dropColumn tableName="cmf_content" columnName="modifier"/>
+		<renameColumn tableName="cmf_content" oldColumnName="modifier2" newColumnName="modifier" />
+
+		<addColumn tableName="cmf_content_property">
+			<column name="modifier2" type="varchar(16)" remarks="The content's rendition modifier" defaultValue="" afterColumn="rendition_page">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+		<sql>
+			update cmf_content_property
+			   set modifier2 = modifier
+		</sql>
+		<dropColumn tableName="cmf_content_property" columnName="modifier"/>
+		<renameColumn tableName="cmf_content_property" oldColumnName="modifier2" newColumnName="modifier" />
+
+		<addPrimaryKey tableName="cmf_content" columnNames="object_id, rendition_id, rendition_page, modifier" />
+		<addForeignKeyConstraint constraintName="fk_cmf_content_object"
+			baseTableName="cmf_content" baseColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, rendition_id, rendition_page, modifier, name" />
+		<addForeignKeyConstraint constraintName="fk_cmf_content_property_content"
+			baseTableName="cmf_content_property" baseColumnNames="object_id, rendition_id, rendition_page, modifier"
+			referencedTableName="cmf_content" referencedColumnNames="object_id, rendition_id, rendition_page, modifier"
+			onDelete="CASCADE" onUpdate="CASCADE" />
 	</changeSet>
 </databaseChangeLog>
