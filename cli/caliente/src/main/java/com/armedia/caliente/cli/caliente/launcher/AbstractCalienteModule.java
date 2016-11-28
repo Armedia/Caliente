@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Map;
 import java.util.Properties;
@@ -26,6 +27,9 @@ import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 
 public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CalienteMain {
+
+	private static final String LEGACY_DB = "cmsmf-data";
+	private static final String CURRENT_DB = "caliente";
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
 
@@ -53,6 +57,11 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 	protected final String password;
 	protected final String domain;
 
+	private static boolean isLegacyMode(File dbDir) {
+		File legacyDb = new File(dbDir, String.format("%s.mv.db", AbstractCalienteModule.LEGACY_DB));
+		return (legacyDb.exists() && legacyDb.isFile() && legacyDb.canRead() && legacyDb.canWrite());
+	}
+
 	protected AbstractCalienteModule(E engine, boolean requiresStorage, boolean clearStorage) throws Throwable {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to operate with"); }
 		this.engine = engine;
@@ -78,18 +87,27 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		AbstractCalienteModule.instance = this;
 
 		if (requiresStorage) {
-			File databaseDirectoryLocation = new File(Setting.DB_DIRECTORY.getString()).getCanonicalFile();
-			File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString()).getCanonicalFile();
+			final File databaseDirectoryLocation = new File(Setting.DB_DIRECTORY.getString()).getCanonicalFile();
+			// Identify whether to use legacy mode or not...
+			final boolean legacyMode = AbstractCalienteModule.isLegacyMode(databaseDirectoryLocation);
+			final String dbName = (legacyMode ? AbstractCalienteModule.LEGACY_DB : AbstractCalienteModule.CURRENT_DB);
+			final File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString())
+				.getCanonicalFile();
 
 			this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
+
+			Map<String, String> commonValues = new HashMap<>();
+			commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
+			commonValues.put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
+			commonValues.put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
+			commonValues.put("db.name", dbName);
+			commonValues.put("legacyMode", String.valueOf(legacyMode));
 
 			CmfStores.initializeConfigurations();
 
 			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("default");
 			applyStoreProperties(cfg, loadStoreProperties("object", CLIParam.object_store_config.getString()));
-			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
-			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
-			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
+			cfg.getSettings().putAll(commonValues);
 
 			this.cmfObjectStore = CmfStores.createObjectStore(cfg);
 
@@ -107,9 +125,7 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 				}
 				applyStoreProperties(cfg, loadStoreProperties("content", CLIParam.content_store_config.getString()));
 			}
-			cfg.getSettings().put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
-			cfg.getSettings().put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
-			cfg.getSettings().put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
+			cfg.getSettings().putAll(commonValues);
 
 			this.cmfContentStore = CmfStores.createContentStore(cfg);
 
