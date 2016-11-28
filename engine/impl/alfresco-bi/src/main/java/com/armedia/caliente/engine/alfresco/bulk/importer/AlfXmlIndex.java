@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -179,17 +180,8 @@ public class AlfXmlIndex implements Closeable {
 
 	public synchronized long marshal(Object... objects) throws JAXBException, XMLStreamException {
 		init();
-		if (objects == null) { return 0; }
-		long ret = 0;
-		for (Object o : objects) {
-			if (o == null) {
-				continue;
-			}
-			this.marshaller.marshal(o, this.xml);
-			ret++;
-		}
-		this.xml.flush();
-		return ret;
+		if ((objects == null) || (objects.length == 0)) { return 0; }
+		return marshal(Arrays.asList(objects));
 	}
 
 	public synchronized long marshal(Collection<Object> objects) throws JAXBException, XMLStreamException {
