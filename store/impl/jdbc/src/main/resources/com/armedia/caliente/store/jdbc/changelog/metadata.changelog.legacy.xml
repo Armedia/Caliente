@@ -4,23 +4,23 @@
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
 	<changeSet author="cmf" id="2000">
-		<preConditions>
-			<changeSetExecuted id="1004" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.3.xml"/>
+		<preConditions onFail="CONTINUE">
+			<and>
+				<not>
+					<changeSetExecuted id="2000" author="caliente" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.0.xml"/>
+				</not>
+				<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
+				<changeSetExecuted id="1002" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.1.xml"/>
+				<changeSetExecuted id="1003" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.2.xml"/>
+				<changeSetExecuted id="1004" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.3.xml"/>
+			</and>
 		</preConditions>
-
-		<!-- **************************************** -->
-		<!-- Update CMF_EXPORT_PLAN                   -->
-		<!-- **************************************** -->
-		<dropIndex tableName="cmf_export_plan" indexName="idx_cmf_export_plan"/>
-		<dropDefaultValue tableName="cmf_export_plan" columnName="traversed"/>
-		<dropColumn tableName="cmf_export_plan" columnName="traversed"/>
 
 		<!-- **************************************** -->
 		<!-- Update CMF_OBJECT and CMF_NAME_COLLISION -->
 		<!-- **************************************** -->
 		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_type"/>
 		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_subtype_batch"/>
-		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_type_history"/>
 
 		<dropView viewName="cmf_name_collision"/>
 

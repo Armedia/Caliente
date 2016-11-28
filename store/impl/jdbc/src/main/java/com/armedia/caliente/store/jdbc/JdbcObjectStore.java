@@ -66,7 +66,7 @@ import com.armedia.commons.utilities.Tools;
 public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private static final String PROPERTY_TABLE = "cmf_info";
-	private static final String SCHEMA_CHANGE_LOG = "db.changelog.xml";
+	private static final String SCHEMA_CHANGE_LOG = "metadata.changelog.xml";
 
 	private static final String NULL = "{NULL-VALUE}";
 

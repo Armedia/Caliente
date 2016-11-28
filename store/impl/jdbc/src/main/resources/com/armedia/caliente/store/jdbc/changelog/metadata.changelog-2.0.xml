@@ -3,8 +3,13 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-	<changeSet author="cmf" id="1001">
-		<validCheckSum>any</validCheckSum>
+	<changeSet author="caliente" id="2000">
+		<preConditions onFail="CONTINUE">
+			<not>
+				<changeSetExecuted id="2000" author="cmf" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog.legacy.xml"/>
+			</not>
+		</preConditions>
+
 		<!-- The CMF info table -->
 		<createTable tableName="cmf_info">
 			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
@@ -27,17 +32,14 @@
 			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
 				<constraints nullable="false" />
 			</column>
-			<column name="traversed" type="boolean" remarks="A flag indicating whether the object has been exported or not">
-				<constraints nullable="false" />
+			<column name="result" type="varchar(64)" remarks="The outcome of the storage operation">
+				<constraints nullable="true" />
+			</column>
+			<column name="message" type="text" remarks="Additional information about the export outcome">
+				<constraints nullable="true" />
 			</column>
 		</createTable>
 		<addPrimaryKey tableName="cmf_export_plan" columnNames="object_id" />
-		<addDefaultValue tableName="cmf_export_plan" columnName="traversed" defaultValueBoolean="false" />
-		<createIndex tableName="cmf_export_plan" indexName="idx_cmf_export_plan">
-			<column name="object_type" />
-			<column name="traversed" />
-			<column name="object_id" />
-		</createIndex>
 
 		<!-- The target cache table -->
 		<createTable tableName="cmf_target_cache" remarks="The CMS target cache">
@@ -68,10 +70,13 @@
 			<column name="object_id" type="varchar(96)" remarks="The object's ID">
 				<constraints nullable="false" />
 			</column>
-			<column name="batch_id" type="varchar(96)" remarks="The batch identifier that links multiple related objects together to be imported in order">
+			<column name="tier_id" type="bigint" remarks="The dependency tier number which indicates in which order this object should be imported">
 				<constraints nullable="false" unique="false"/>
 			</column>
-			<column name="batch_head" type="boolean" remarks="Is this object the head version?">
+			<column name="history_id" type="varchar(96)" remarks="The batch identifier that links multiple related objects together to be imported in order">
+				<constraints nullable="false" unique="false"/>
+			</column>
+			<column name="history_current" type="boolean" remarks="Is this object the head version?">
 				<constraints nullable="false" />
 			</column>
 			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
@@ -104,19 +109,16 @@
 		<createIndex tableName="cmf_object" indexName="idx_cmf_object_number" unique="true">
 			<column name="object_number" />
 		</createIndex>
-		<createIndex tableName="cmf_object" indexName="idx_cmf_object_type" unique="true">
+		<createIndex tableName="cmf_object" indexName="idx_cmf_object_tier" unique="true">
 			<column name="object_type" />
+			<column name="tier_id" />
+			<column name="history_id" />
 			<column name="object_number" />
 		</createIndex>
-		<createIndex tableName="cmf_object" indexName="idx_cmf_object_subtype_batch" unique="true">
-			<column name="object_subtype" />
-			<column name="batch_id" />
-			<column name="object_number" />
-		</createIndex>
-		<createIndex tableName="cmf_object" indexName="idx_cmf_object_search_key" unique="true">
+		<createIndex tableName="cmf_object" indexName="idx_cmf_object_type_history" unique="true">
 			<column name="object_type" />
-			<column name="object_subtype" />
-			<column name="search_key" />
+			<column name="history_id" />
+			<column name="object_number" />
 		</createIndex>
 		<addAutoIncrement tableName="cmf_object" columnName="object_number" columnDataType="bigint" startWith="1" incrementBy="1"/>
 
@@ -174,8 +176,8 @@
 							 where t.object_id = o.object_id
 							   and t.object_id = n.object_id
 							   and t.parent_id = p.object_id
-							   and p.batch_head = true
-							   and o.batch_head = true
+							   and p.history_current = true
+							   and o.history_current = true
 						  group by t.parent_id, n.new_name
 							having count(*) > 1
 					  ) sq
@@ -183,8 +185,8 @@
 				  and ct.parent_id = sq.parent_id
 				  and co.object_id = cn.object_id
 				  and cn.new_name = sq.new_name
-			 order by sq.parent_id, cn.new_name, co.object_number
-		</createView>
+ 			 order by sq.parent_id, cn.new_name, co.object_number
+ 		</createView>
 
 		<!-- The attribute descriptor table -->
 		<createTable tableName="cmf_attribute">
@@ -316,6 +318,9 @@
 			<column name="rendition_page" type="number" remarks="The content's rendition page number">
 				<constraints nullable="false" />
 			</column>
+			<column name="modifier" type="varchar(16)" remarks="The content's rendition modifier" defaultValue="">
+				<constraints nullable="false" />
+			</column>
 			<column name="extension" type="varchar(64)" remarks="The content's DOS extension, if any">
 				<constraints nullable="true" />
 			</column>
@@ -332,7 +337,7 @@
 				<constraints nullable="true" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content" columnNames="object_id, rendition_id, rendition_page" />
+		<addPrimaryKey tableName="cmf_content" columnNames="object_id, rendition_id, rendition_page, modifier" />
 		<addForeignKeyConstraint constraintName="fk_cmf_content_object"
 			baseTableName="cmf_content" baseColumnNames="object_id"
 			referencedTableName="cmf_object" referencedColumnNames="object_id"
@@ -349,6 +354,9 @@
 			<column name="rendition_page" type="number" remarks="The content's rendition page number">
 				<constraints nullable="false" />
 			</column>
+			<column name="modifier" type="varchar(16)" remarks="The content's rendition modifier" defaultValue="">
+				<constraints nullable="false" />
+			</column>
 			<column name="name" type="varchar(64)" remarks="The property's name">
 				<constraints nullable="false" />
 			</column>
@@ -356,10 +364,10 @@
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, rendition_id, rendition_page, name" />
+		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, rendition_id, rendition_page, modifier, name" />
 		<addForeignKeyConstraint constraintName="fk_cmf_content_property_content"
-			baseTableName="cmf_content_property" baseColumnNames="object_id, rendition_id, rendition_page"
-			referencedTableName="cmf_content" referencedColumnNames="object_id, rendition_id, rendition_page"
+			baseTableName="cmf_content_property" baseColumnNames="object_id, rendition_id, rendition_page, modifier"
+			referencedTableName="cmf_content" referencedColumnNames="object_id, rendition_id, rendition_page, modifier"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 	</changeSet>
 </databaseChangeLog>

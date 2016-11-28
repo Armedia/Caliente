@@ -29,7 +29,7 @@ import com.armedia.commons.dslocator.DataSourceDescriptor;
 public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connection, JdbcOperation> {
 
 	private static final String PROPERTY_TABLE = "cmf_content_info";
-	private static final String SCHEMA_CHANGE_LOG = "db.changelog.content.xml";
+	private static final String SCHEMA_CHANGE_LOG = "content.changelog.xml";
 
 	private static final ResultSetHandler<Long> HANDLER_LENGTH = new ResultSetHandler<Long>() {
 		@Override
