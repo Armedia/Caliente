@@ -6,6 +6,7 @@
 	<changeSet author="cmf" id="1003">
 		<validCheckSum>any</validCheckSum>
 		<preConditions>
+			<changeSetExecuted id="1001" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.0.xml"/>
 			<changeSetExecuted id="1002" author="cmf" changeLogFile="com/armedia/cmf/storage/jdbc/changelog/db.changelog-1.1.xml"/>
 		</preConditions>
 
