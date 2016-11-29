@@ -21,6 +21,7 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 
 	private static final Parameter LIB = new MutableParameter() //
 		.setShortOpt('l') //
+		.setLongOpt("lib") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("directory") //
