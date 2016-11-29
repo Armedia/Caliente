@@ -1,4 +1,4 @@
-package com.armedia.caliente.filenamemapper;
+package com.armedia.caliente.cli.filenamemapper;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -7,7 +7,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.cli.filenamemapper.Launcher.Fixer;
+import com.armedia.caliente.cli.filenamemapper.FilenameMapper.Fixer;
 import com.armedia.commons.utilities.Tools;
 
 public class FilenameMapperTest {
