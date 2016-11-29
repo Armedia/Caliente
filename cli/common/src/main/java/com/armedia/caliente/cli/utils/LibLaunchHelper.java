@@ -83,10 +83,10 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 
 			// We got something!! Inspect it...
 			// Next, is it a directory?
-			File f = Utils.newFileObject(var);
+			File f = CliUtils.newFileObject(var);
 			if (f.isDirectory() && f.canRead()) {
 				// Ok so we have the directory...does "classes" exist?
-				File classesDir = Utils.newFileObject(f, "classes");
+				File classesDir = CliUtils.newFileObject(f, "classes");
 				if (classesDir.exists() && classesDir.isDirectory() && classesDir.canRead()) {
 					ret.add(classesDir.toURI().toURL());
 				}

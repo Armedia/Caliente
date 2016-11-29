@@ -155,7 +155,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 			// we try to use it
 			String var = cli.getString(this.paramDfcProp, DfcLaunchHelper.DEFAULT_DFC_PROPERTIES);
 			if (var != null) {
-				File f = Utils.newFileObject(var);
+				File f = CliUtils.newFileObject(var);
 				String error = null;
 				if ((error == null) && !f.exists()) {
 					error = "does not exist";
@@ -184,14 +184,14 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 				if (!dfcFound) { throw new RuntimeException(msg); }
 				// this.log.warn("{}, integrated DFC may encounter errors", msg);
 			} else {
-				File f = Utils.newFileObject(var);
+				File f = CliUtils.newFileObject(var);
 				if (!f.exists()) {
 					FileUtils.forceMkdir(f);
 				}
 				if (!f.isDirectory()) { throw new FileNotFoundException(
 					String.format("Could not find the directory [%s]", f.getAbsolutePath())); }
 
-				ret.add(Utils.newFileObject(f, "config").toURI().toURL());
+				ret.add(CliUtils.newFileObject(f, "config").toURI().toURL());
 			}
 
 			// Next, identify the DOCUMENTUM_SHARED location, and if paramDctm.jar is in there
@@ -206,14 +206,14 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 
 			if (var != null) {
 				// Next, is it a directory?
-				File f = Utils.newFileObject(var);
+				File f = CliUtils.newFileObject(var);
 				if (!f.isDirectory()) { throw new FileNotFoundException(
 					String.format("Could not find the [%s] directory [%s]", DfcLaunchHelper.ENV_DOCUMENTUM_SHARED,
 						f.getAbsolutePath())); }
 
 				// Next, does paramDctm.jar exist in there?
 				if (!dfcFound) {
-					File tgt = Utils.newFileObject(f, DfcLaunchHelper.DCTM_JAR);
+					File tgt = CliUtils.newFileObject(f, DfcLaunchHelper.DCTM_JAR);
 					if (!tgt.isFile()) { throw new FileNotFoundException(
 						String.format("Could not find the JAR file [%s]", tgt.getAbsolutePath())); }
 

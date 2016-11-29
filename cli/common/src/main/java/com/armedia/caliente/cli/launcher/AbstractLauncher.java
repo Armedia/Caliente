@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.launcher;
 
-import java.io.Console;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,8 +13,6 @@ import com.armedia.caliente.cli.parser.CommandLine;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.Parameter;
-import com.armedia.caliente.cli.parser.ParameterTools;
-import com.armedia.caliente.cli.parser.ParameterWrapper;
 
 public abstract class AbstractLauncher {
 	protected static final Logger LOG = LoggerFactory.getLogger(AbstractLauncher.class);
@@ -185,26 +182,4 @@ public abstract class AbstractLauncher {
 	}
 
 	protected abstract int run(CommandLineValues commandLine) throws Exception;
-
-	protected final String getPassword(CommandLineValues cli, ParameterWrapper param, String prompt,
-		Object... promptParams) {
-		return getPassword(cli, ParameterTools.unwrap(param), prompt, promptParams);
-	}
-
-	protected final String getPassword(CommandLineValues cli, Parameter param, String prompt, Object... promptParams) {
-		// If the parameter is given, return its value
-		if ((cli != null) && (param != null) && cli.isPresent(param)) { return cli.getString(param); }
-
-		final Console console = System.console();
-		if (console == null) { return null; }
-
-		// If the parameter isn't given, but a console is available, ask for a password
-		// interactively
-		if (prompt == null) {
-			prompt = "Password:";
-		}
-		char[] pass = console.readPassword(prompt, promptParams);
-		if (pass != null) { return new String(pass); }
-		return null;
-	}
 }
