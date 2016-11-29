@@ -6,17 +6,19 @@
 // Generated on: 2015.02.09 at 11:48:15 AM CST
 //
 
-package com.armedia.caliente.store.local.xml;
+package com.armedia.caliente.store.local.xml.legacy;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.store.local.XmlProperty;
+import com.armedia.caliente.store.local.XmlStoreProperties;
 
+@XmlRootElement(name = "store-properties")
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "property.t", propOrder = {
-	"value"
+@XmlType(name = "storeProperties.t", propOrder = {
+	"property"
 })
-public class PropertyT extends XmlProperty {
+public class StorePropertiesT extends XmlStoreProperties<PropertyT> {
 }

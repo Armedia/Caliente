@@ -6,7 +6,7 @@
 // Generated on: 2015.02.09 at 11:48:15 AM CST
 //
 
-package com.armedia.caliente.store.local.xml;
+package com.armedia.caliente.store.local.xml.legacy;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

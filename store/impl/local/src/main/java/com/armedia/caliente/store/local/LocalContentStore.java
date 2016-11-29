@@ -41,8 +41,10 @@ import com.armedia.caliente.store.CmfOrganizationStrategy.Location;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
+import com.armedia.caliente.store.local.xml.PropertiesLoader;
 import com.armedia.caliente.store.local.xml.PropertyT;
 import com.armedia.caliente.store.local.xml.StorePropertiesT;
+import com.armedia.caliente.store.local.xml.legacy.LegacyPropertiesLoader;
 import com.armedia.caliente.store.tools.FilenameFixer;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
@@ -76,8 +78,6 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		}
 
 	}
-
-	private static final String XML_SCHEMA = "store-properties.xsd";
 
 	private final File baseDir;
 	private final CmfOrganizationStrategy strategy;
@@ -116,7 +116,24 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			clearProperties();
 			clearAllStreams();
 		} else {
-			this.propertiesLoaded = loadProperties();
+			// First, try the legacy mode...
+			boolean propertiesLoaded = false;
+			try {
+				propertiesLoaded = new PropertiesLoader().loadProperties(this.propertiesFile, this.properties);
+			} catch (CmfStorageException e) {
+				// Legacy didn't work....log a warning?
+				this.log.warn("Failed to load the store properties, will try the legacy model");
+				try {
+					propertiesLoaded = new LegacyPropertiesLoader().loadProperties(this.propertiesFile,
+						this.properties);
+				} catch (CmfStorageException e2) {
+					this.log.error("Failed to load the store properties using the legacy model", e2);
+					throw new CmfStorageException("Failed to load both the modern and legacy properties models", e);
+				}
+			}
+
+			this.propertiesLoaded = propertiesLoaded;
+
 			CmfValue currentStrategyName = getProperty("strategy");
 			if ((currentStrategyName != null) && !currentStrategyName.isNull()) {
 				CmfOrganizationStrategy currentStrategy = CmfOrganizationStrategy
@@ -406,43 +423,6 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		}
 	}
 
-	protected synchronized boolean loadProperties() throws CmfStorageException {
-		InputStream in = null;
-		this.properties.clear();
-		if (!this.propertiesFile.exists()) { return false; }
-		// Allow an empty file...
-		if (this.propertiesFile.length() == 0) { return true; }
-		try {
-			in = new FileInputStream(this.propertiesFile);
-			StorePropertiesT p = XmlTools.unmarshal(StorePropertiesT.class, LocalContentStore.XML_SCHEMA, in);
-			for (PropertyT property : p.getProperty()) {
-				CmfValueSerializer deserializer = CmfValueSerializer.get(property.getType());
-				if (deserializer == null) {
-					continue;
-				}
-				final CmfValue v;
-				try {
-					v = deserializer.deserialize(property.getValue());
-				} catch (Exception e) {
-					this.log.warn(String.format(
-						"Failed to deserialize the value for store property [%s]:  [%s] not valid as a [%s]",
-						property.getName(), property.getValue(), property.getType()));
-					continue;
-				}
-				if ((v != null) && !v.isNull()) {
-					this.properties.put(property.getName(), v);
-				}
-			}
-			return true;
-		} catch (FileNotFoundException e) {
-			return false;
-		} catch (JAXBException e) {
-			throw new CmfStorageException("Failed to parse the stored properties", e);
-		} finally {
-			IOUtils.closeQuietly(in);
-		}
-	}
-
 	protected synchronized void storeProperties() throws CmfStorageException {
 		OutputStream out = null;
 		try {
@@ -466,7 +446,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 				}
 				p.getProperty().add(property);
 			}
-			XmlTools.marshal(p, LocalContentStore.XML_SCHEMA, out, true);
+			XmlTools.marshal(p, PropertiesLoader.SCHEMA, out, true);
 			out.flush();
 		} catch (FileNotFoundException e) {
 			return;
