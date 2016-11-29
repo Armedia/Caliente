@@ -18,11 +18,17 @@ public enum CLIParam implements ParameterWrapper {
 		.setDescription("Disable case sensitivity when performing name comparisons") //
 	), //
 	fix_char(new MutableParameter() //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
+		.setValueName("character") //
 		.setDescription("Use the given character as the replacement for illegal characters (default is '_', "
 			+ "must not be a forbidden character in the target fix scheme, and the period ('.') "
 			+ "and spaces are not allowed in Windows)") //
 	), //
 	fix_mode(new MutableParameter() //
+		.setMinValueCount(1) //
+		.setMaxValueCount(1) //
+		.setValueName("WIN|UNIX") //
 		.setDescription("Filename fix mode. Valid values are WIN (Windows compatibility) or "
 			+ "UNIX (Unix compatibility) - defaults to the current platform") //
 	), //
