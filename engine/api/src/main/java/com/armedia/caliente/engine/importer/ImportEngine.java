@@ -84,7 +84,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public Map<String, Collection<ImportOutcome>> call() {
+		public Map<String, Collection<ImportOutcome>> call() throws Exception {
 			try {
 				boolean failBatch = false;
 				final Map<String, Collection<ImportOutcome>> outcomes = new LinkedHashMap<>(this.batch.contents.size());
@@ -199,6 +199,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					} finally {
 						session.close();
 					}
+				} catch (Exception e) {
+					this.log.error(String.format("Uncaught exception while processing batch [%s::%s]",
+						this.batch.type.name(), this.batch.id), e);
+					throw e;
 				} finally {
 					this.batch.markCompleted();
 					this.listenerDelegator.objectHistoryImportFinished(this.importState.jobId, this.batch.type,
