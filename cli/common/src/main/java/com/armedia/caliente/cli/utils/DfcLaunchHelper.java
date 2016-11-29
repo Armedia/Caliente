@@ -56,7 +56,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 		.setDescription("The Documentum repostory name to connect to") //
 		.freezeCopy();;
 	private static final Parameter DFC_USER = new MutableParameter() //
-		.setLongOpt("username") //
+		.setLongOpt("dctm-user") //
 		.setRequired(true) //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
@@ -64,7 +64,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 		.setDescription("The username to connect to Documentum with") //
 		.freezeCopy();
 	private static final Parameter DFC_PASSWORD = new MutableParameter() //
-		.setLongOpt("password") //
+		.setLongOpt("dctm-pass") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("password") //
