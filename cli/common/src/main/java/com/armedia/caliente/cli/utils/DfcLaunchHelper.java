@@ -30,7 +30,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 		.setLongOpt("dfc") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
-		.setValueName("paramDfc install location") //
+		.setValueName("dfc install location") //
 		.setDescription("The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)") //
 		.freezeCopy();;
 	private static final Parameter DFC_DOCUMENTUM = new MutableParameter() //
@@ -44,8 +44,8 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 		.setLongOpt("dfc-prop") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
-		.setValueName("paramDfc.properties location") //
-		.setDescription("The paramDfc.properties file to use instead of the default") //
+		.setValueName("dfc.properties location") //
+		.setDescription("The dfc.properties file to use instead of the default") //
 		.freezeCopy();;
 	private static final Parameter DFC_DOCBASE = new MutableParameter() //
 		.setLongOpt("docbase") //
