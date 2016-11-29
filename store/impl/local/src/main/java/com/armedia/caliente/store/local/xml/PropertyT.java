@@ -8,15 +8,26 @@
 
 package com.armedia.caliente.store.local.xml;
 
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.local.XmlProperty;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "property.t", propOrder = {
+@XmlType(name = "property.t", namespace = ObjectFactory.NAMESPACE, propOrder = {
 	"value"
 })
 public class PropertyT extends XmlProperty {
+
+	protected void beforeMarshal(Marshaller m) {
+		this.type = this.dataType.name();
+	}
+
+	protected void afterUnmarshal(Unmarshaller u, Object parent) {
+		this.dataType = CmfDataType.valueOf(this.type);
+	}
 }

@@ -1,7 +1,5 @@
 package com.armedia.caliente.store.local;
 
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlValue;
@@ -11,9 +9,6 @@ import com.armedia.caliente.store.CmfDataType;
 @XmlTransient
 public abstract class XmlProperty {
 
-	@XmlValue
-	protected String value;
-
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
 
@@ -21,15 +16,10 @@ public abstract class XmlProperty {
 	protected String type;
 
 	@XmlTransient
-	private CmfDataType dataType;
+	protected CmfDataType dataType;
 
-	protected void beforeMarshal(Marshaller m) {
-		this.type = this.dataType.name();
-	}
-
-	protected void afterUnmarshal(Unmarshaller u, Object parent) {
-		this.dataType = CmfDataType.valueOf(this.type);
-	}
+	@XmlValue
+	protected String value;
 
 	/**
 	 * Gets the value of the value property.

@@ -8,8 +8,12 @@
 
 package com.armedia.caliente.store.local.xml.legacy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -17,8 +21,19 @@ import com.armedia.caliente.store.local.XmlStoreProperties;
 
 @XmlRootElement(name = "store-properties")
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "storeProperties.t", propOrder = {
+@XmlType(name = "storeProperties.t", namespace = ObjectFactory.NAMESPACE, propOrder = {
 	"property"
 })
-public class StorePropertiesT extends XmlStoreProperties<PropertyT> {
+public class StorePropertiesT implements XmlStoreProperties<PropertyT> {
+
+	@XmlElement(name = "property", required = false)
+	protected List<PropertyT> property;
+
+	@Override
+	public List<PropertyT> getProperty() {
+		if (this.property == null) {
+			this.property = new ArrayList<>();
+		}
+		return this.property;
+	}
 }

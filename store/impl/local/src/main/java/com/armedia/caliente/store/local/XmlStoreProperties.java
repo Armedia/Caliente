@@ -1,11 +1,8 @@
 package com.armedia.caliente.store.local;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public abstract class XmlStoreProperties<P extends XmlProperty> {
-
-	protected List<P> property;
+public interface XmlStoreProperties<P extends XmlProperty> {
 
 	/**
 	 * Gets the value of the property property.
@@ -23,10 +20,5 @@ public abstract class XmlStoreProperties<P extends XmlProperty> {
 	 * </pre>
 	 *
 	 */
-	public List<P> getProperty() {
-		if (this.property == null) {
-			this.property = new ArrayList<>();
-		}
-		return this.property;
-	}
+	public List<P> getProperty();
 }
