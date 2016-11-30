@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.cmis.importer;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.Session;
+import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.cmis.CmisCommon;
@@ -12,8 +13,11 @@ import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -122,8 +126,10 @@ public class CmisImportEngine extends
 	}
 
 	@Override
-	protected CmisImportContextFactory newContextFactory(Session session, CfgTools cfg) throws Exception {
-		return new CmisImportContextFactory(this, session, cfg);
+	protected CmisImportContextFactory newContextFactory(Session session, CfgTools cfg,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output)
+		throws Exception {
+		return new CmisImportContextFactory(this, session, cfg, objectStore, streamStore, typeMapper, output);
 	}
 
 	@Override

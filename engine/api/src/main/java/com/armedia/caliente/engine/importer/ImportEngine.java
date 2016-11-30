@@ -66,7 +66,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		private final Batch batch;
 		private final ImportContextFactory<S, W, V, C, ?, ?> contextFactory;
 		private final ImportDelegateFactory<S, W, V, C, ?> delegateFactory;
-		private final CmfTypeMapper typeMapper;
 
 		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter, SessionFactory<S> sessionFactory,
 			ImportEngineListener listenerDelegator, ImportState importState,
@@ -78,7 +77,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			this.batch = batch;
 			this.contextFactory = contextFactory;
 			this.delegateFactory = delegateFactory;
-			this.typeMapper = typeMapper;
 			this.workerCounter = synchronizedCounter;
 			this.workerCounter.increment();
 		}
@@ -128,8 +126,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							}
 
 							final C ctx = this.contextFactory.newContext(next.getId(), next.getType(),
-								session.getWrapped(), this.importState.output, this.importState.objectStore,
-								this.importState.streamStore, this.typeMapper, i);
+								session.getWrapped(), i);
 							try {
 								initContext(ctx);
 								final CmfType storedType = next.getType();
@@ -509,20 +506,22 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			CmfTypeMapper typeMapper = null;
 			try {
 				try {
-					contextFactory = newContextFactory(baseSession.getWrapped(), configuration);
+					typeMapper = getTypeMapper(baseSession.getWrapped(), configuration);
+				} catch (Exception e) {
+					throw new ImportException("Failed to configure the required type mapper", e);
+				}
+
+				try {
+					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
+						streamStore, typeMapper, output);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}
+
 				try {
 					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the delegate factory to carry out the import", e);
-				}
-
-				try {
-					typeMapper = getTypeMapper(baseSession.getWrapped(), configuration);
-				} catch (Exception e) {
-					throw new ImportException("Failed to configure the required type mapper", e);
 				}
 
 				try {

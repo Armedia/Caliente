@@ -19,11 +19,14 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
+import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
@@ -179,7 +182,8 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
 
-	protected abstract F newContextFactory(S session, CfgTools cfg) throws Exception;
+	protected abstract F newContextFactory(S session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output) throws Exception;
 
 	protected abstract D newDelegateFactory(S session, CfgTools cfg) throws Exception;
 

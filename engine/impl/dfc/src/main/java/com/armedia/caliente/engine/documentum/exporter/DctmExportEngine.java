@@ -7,6 +7,8 @@ package com.armedia.caliente.engine.documentum.exporter;
 import java.util.Collections;
 import java.util.Set;
 
+import org.slf4j.Logger;
+
 import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.documentum.DctmCrypto;
@@ -18,7 +20,10 @@ import com.armedia.caliente.engine.documentum.common.Setting;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
@@ -63,8 +68,10 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected DctmExportContextFactory newContextFactory(IDfSession session, CfgTools config) throws Exception {
-		return new DctmExportContextFactory(this, config, session);
+	protected DctmExportContextFactory newContextFactory(IDfSession session, CfgTools cfg,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output)
+		throws Exception {
+		return new DctmExportContextFactory(this, cfg, session, objectStore, streamStore, output);
 	}
 
 	@Override

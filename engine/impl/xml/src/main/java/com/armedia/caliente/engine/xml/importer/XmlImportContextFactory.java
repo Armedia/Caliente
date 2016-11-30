@@ -17,8 +17,10 @@ import com.armedia.commons.utilities.CfgTools;
 public class XmlImportContextFactory
 	extends ImportContextFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine, File> {
 
-	protected XmlImportContextFactory(XmlImportEngine engine, CfgTools settings, XmlRoot root) throws Exception {
-		super(engine, settings, root);
+	protected XmlImportContextFactory(XmlImportEngine engine, CfgTools settings, XmlRoot root,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		Logger output) throws Exception {
+		super(engine, settings, root, objectStore, contentStore, typeMapper, output);
 	}
 
 	@Override

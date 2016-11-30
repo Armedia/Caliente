@@ -63,8 +63,13 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 	private final Set<CmfType> excludes;
 	private final String productName;
 	private final String productVersion;
+	private final CmfContentStore<?, ?, ?> contentStore;
+	private final CmfObjectStore<?, ?> objectStore;
+	private final CmfTypeMapper typeMapper;
+	private final Logger output;
 
-	protected ContextFactory(E engine, CfgTools settings, S session) throws Exception {
+	protected ContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper, Logger output) throws Exception {
 		if (engine == null) { throw new IllegalArgumentException(
 			"Must provide an engine to which this factory is tied"); }
 		this.engine = engine;
@@ -83,6 +88,26 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 		this.excludes = Tools.freezeSet(excludes);
 		this.productName = calculateProductName(session);
 		this.productVersion = calculateProductVersion(session);
+		this.objectStore = objectStore;
+		this.contentStore = contentStore;
+		this.typeMapper = typeMapper;
+		this.output = output;
+	}
+
+	protected final CmfObjectStore<?, ?> getObjectStore() {
+		return this.objectStore;
+	}
+
+	protected final CmfContentStore<?, ?, ?> getContentStore() {
+		return this.contentStore;
+	}
+
+	protected final CmfTypeMapper getTypeMapper() {
+		return this.typeMapper;
+	}
+
+	protected final Logger getOutput() {
+		return this.output;
 	}
 
 	public final boolean isSupported(CmfType type) {
@@ -130,14 +155,12 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 		return this.productVersion;
 	}
 
-	public final C newContext(String rootId, CmfType rootType, S session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		int batchPosition) {
+	public final C newContext(String rootId, CmfType rootType, S session, int batchPosition) {
 		this.lock.readLock().lock();
 		try {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
-			return constructContext(rootId, rootType, session, output, objectStore, contentStore, typeMapper,
-				batchPosition);
+			return constructContext(rootId, rootType, session, this.output, this.objectStore, this.contentStore,
+				this.typeMapper, batchPosition);
 		} finally {
 			this.lock.readLock().unlock();
 		}

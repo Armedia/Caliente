@@ -27,8 +27,10 @@ public class DctmImportContextFactory extends
 	ImportContextFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportEngine, IDfFolder> {
 	private final DctmSpecialValues specialValues;
 
-	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg, IDfSession session) throws Exception {
-		super(engine, cfg, session);
+	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg, IDfSession session,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		Logger output) throws Exception {
+		super(engine, cfg, session, objectStore, contentStore, typeMapper, output);
 		this.specialValues = new DctmSpecialValues(cfg);
 	}
 

@@ -3,8 +3,13 @@ package com.armedia.caliente.engine.importer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+
 import com.armedia.caliente.engine.ContextFactory;
 import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -16,8 +21,9 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 	private final String rootPathStr;
 	private final int pathTrunc;
 
-	protected ImportContextFactory(E engine, CfgTools settings, S session) throws Exception {
-		super(engine, settings, session);
+	protected ImportContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper, Logger output) throws Exception {
+		super(engine, settings, session, objectStore, contentStore, typeMapper, output);
 		String rootPath = settings.getString(ImportSetting.TARGET_LOCATION);
 		this.rootPath = Tools.freezeList(FileNameTools.tokenize(rootPath, '/'));
 		this.pathTrunc = Math.max(0, settings.getInteger(ImportSetting.TRIM_PREFIX));

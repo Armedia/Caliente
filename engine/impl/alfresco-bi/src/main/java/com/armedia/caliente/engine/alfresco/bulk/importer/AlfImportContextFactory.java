@@ -22,8 +22,10 @@ public class AlfImportContextFactory
 
 	private volatile Map<CmfType, Map<String, String>> renameMap = null;
 
-	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root) throws Exception {
-		super(engine, settings, root);
+	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		Logger output) throws Exception {
+		super(engine, settings, root, objectStore, contentStore, typeMapper, output);
 	}
 
 	@Override
@@ -75,11 +77,12 @@ public class AlfImportContextFactory
 		return "1.0";
 	}
 
-	private Map<CmfType, Map<String, String>> getRenameMap(CmfObjectStore<?, ?> objectStore) {
+	private Map<CmfType, Map<String, String>> getRenameMap() {
 		if (this.renameMap == null) {
 			synchronized (this) {
 				if (this.renameMap == null) {
 					Map<CmfType, Map<String, String>> m = null;
+					final CmfObjectStore<?, ?> objectStore = getObjectStore();
 					try {
 						m = objectStore.getRenameMappings();
 					} catch (CmfStorageException e) {
@@ -94,8 +97,8 @@ public class AlfImportContextFactory
 		return this.renameMap;
 	}
 
-	public final String getAlternateName(final CmfObjectStore<?, ?> objectStore, CmfType type, String id) {
-		Map<CmfType, Map<String, String>> renameMap = getRenameMap(objectStore);
+	public final String getAlternateName(CmfType type, String id) {
+		Map<CmfType, Map<String, String>> renameMap = getRenameMap();
 		if ((renameMap == null) || renameMap.isEmpty()) { return null; }
 		Map<String, String> m = renameMap.get(type);
 		if ((m == null) || m.isEmpty()) { return null; }

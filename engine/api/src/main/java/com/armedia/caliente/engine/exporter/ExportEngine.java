@@ -593,7 +593,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			DF delegateFactory = null;
 			try {
 				try {
-					contextFactory = newContextFactory(baseSession.getWrapped(), configuration);
+					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
+						contentStore, null, output);
 				} catch (Exception e) {
 					throw new ExportException("Failed to configure the context factory to carry out the export", e);
 				}
@@ -628,7 +629,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
-		final CmfContentStore<?, ?, ?> contentStore = exportState.streamStore;
 		final CfgTools settings = exportState.cfg;
 		final int threadCount;
 		final int backlogSize;
@@ -707,8 +707,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 					// The type mapper parameter is null here because it's only useful
 					// for imports
-					final C ctx = contextFactory.newContext(nextId, nextType, s, output, objectStore, contentStore,
-						null, 0);
+					final C ctx = contextFactory.newContext(nextId, nextType, s, 0);
 					try {
 						initContext(ctx);
 						Result result = exportObject(exportState, null, next, exportDelegate, ctx, listenerDelegator,

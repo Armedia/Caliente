@@ -2,6 +2,8 @@ package com.armedia.caliente.engine.local.importer;
 
 import java.util.Set;
 
+import org.slf4j.Logger;
+
 import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
@@ -11,8 +13,11 @@ import com.armedia.caliente.engine.local.common.LocalSessionFactory;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalTranslator;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -120,12 +125,14 @@ public class LocalImportEngine extends
 	}
 
 	@Override
-	protected LocalImportContextFactory newContextFactory(LocalRoot root, CfgTools cfg) throws Exception {
-		return new LocalImportContextFactory(this, cfg, root);
+	protected LocalImportContextFactory newContextFactory(LocalRoot session, CfgTools cfg,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output)
+		throws Exception {
+		return new LocalImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output);
 	}
 
 	@Override
-	protected LocalImportDelegateFactory newDelegateFactory(LocalRoot root, CfgTools cfg) throws Exception {
+	protected LocalImportDelegateFactory newDelegateFactory(LocalRoot session, CfgTools cfg) throws Exception {
 		return new LocalImportDelegateFactory(this, cfg);
 	}
 

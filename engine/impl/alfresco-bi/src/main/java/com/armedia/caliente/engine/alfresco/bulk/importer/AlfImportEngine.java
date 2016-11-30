@@ -29,11 +29,14 @@ import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
@@ -323,12 +326,13 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected AlfImportContextFactory newContextFactory(AlfRoot root, CfgTools cfg) throws Exception {
-		return new AlfImportContextFactory(this, cfg, root);
+	protected AlfImportContextFactory newContextFactory(AlfRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output) throws Exception {
+		return new AlfImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output);
 	}
 
 	@Override
-	protected AlfImportDelegateFactory newDelegateFactory(AlfRoot root, CfgTools cfg) throws Exception {
+	protected AlfImportDelegateFactory newDelegateFactory(AlfRoot session, CfgTools cfg) throws Exception {
 		return new AlfImportDelegateFactory(this, cfg);
 	}
 

@@ -17,8 +17,10 @@ import com.armedia.commons.utilities.CfgTools;
 public class LocalImportContextFactory extends
 	ImportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine, File> {
 
-	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings, LocalRoot root) throws Exception {
-		super(engine, settings, root);
+	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings, LocalRoot root,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		Logger output) throws Exception {
+		super(engine, settings, root, objectStore, contentStore, typeMapper, output);
 	}
 
 	@Override

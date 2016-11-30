@@ -15,9 +15,9 @@ import com.armedia.commons.utilities.CfgTools;
 public class LocalExportContextFactory
 	extends ExportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportEngine> {
 
-	protected LocalExportContextFactory(LocalExportEngine engine, CfgTools settings, LocalRoot session)
-		throws Exception {
-		super(engine, settings, session);
+	protected LocalExportContextFactory(LocalExportEngine engine, CfgTools settings, LocalRoot session,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Logger output) throws Exception {
+		super(engine, settings, session, objectStore, contentStore, output);
 	}
 
 	@Override

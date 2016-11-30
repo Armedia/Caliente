@@ -22,6 +22,6 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 	}
 
 	public final String getAlternateName(CmfType type, String id) {
-		return this.getFactory().getAlternateName(super.getObjectStore(), type, id);
+		return this.getFactory().getAlternateName(type, id);
 	}
 }

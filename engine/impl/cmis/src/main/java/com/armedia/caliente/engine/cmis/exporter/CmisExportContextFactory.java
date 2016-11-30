@@ -22,8 +22,9 @@ public class CmisExportContextFactory
 	private final RepositoryInfo repositoryInfo;
 	private final PermissionMapper permissionMapper;
 
-	CmisExportContextFactory(CmisExportEngine engine, Session session, CfgTools settings) throws Exception {
-		super(engine, settings, session);
+	CmisExportContextFactory(CmisExportEngine engine, Session session, CfgTools settings,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Logger output) throws Exception {
+		super(engine, settings, session, objectStore, contentStore, output);
 		this.repositoryInfo = session.getRepositoryInfo();
 		if (super.isSupported(CmfType.ACL)) {
 			this.permissionMapper = new PermissionMapper(session);

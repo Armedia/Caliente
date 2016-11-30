@@ -23,8 +23,9 @@ import com.armedia.commons.utilities.CfgTools;
 public class ShptExportContextFactory
 	extends ExportContextFactory<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportEngine> {
 
-	ShptExportContextFactory(ShptExportEngine engine, CfgTools settings, ShptSession session) throws Exception {
-		super(engine, settings, session);
+	ShptExportContextFactory(ShptExportEngine engine, CfgTools settings, ShptSession session,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Logger output) throws Exception {
+		super(engine, settings, session, objectStore, contentStore, output);
 	}
 
 	@Override
