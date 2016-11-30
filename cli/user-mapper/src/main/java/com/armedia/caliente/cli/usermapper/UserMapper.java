@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.utils.CliUtils;
+import com.armedia.caliente.cli.utils.CliValuePrompt;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -499,7 +499,7 @@ public class UserMapper {
 				}
 
 				final String bindDn = cli.getString(CLIParam.ldap_binddn);
-				final String bindPass = CliUtils.getPassword(cli, CLIParam.ldap_pass,
+				final String bindPass = CliValuePrompt.getPassword(cli, CLIParam.ldap_pass,
 					"Please enter the LDAP Password for DN [%s] at %s: ", Tools.coalesce(bindDn, ""),
 					ldapUrl.toString());
 
