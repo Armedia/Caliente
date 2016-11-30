@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.utils;
 
-import java.io.Console;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -109,16 +108,10 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	public String getDfcPassword(CommandLineValues cli) {
 		if (!this.includesConnectionInfo) { return null; }
 
-		if (cli.isPresent(this.paramPassword)) { return cli.getString(this.paramPassword); }
-
-		final Console console = System.console();
-		if (console == null) { return null; }
 		String dctmUser = getDfcDocbase(cli);
 		String docbase = getDfcDocbase(cli);
-		char[] pass = console.readPassword(String.format("Please enter the Password for user [%s] in Docbase %s: ",
-			Tools.coalesce(dctmUser, ""), docbase));
-		if (pass != null) { return new String(pass); }
-		return null;
+		return CliValuePrompt.getPasswordString(cli, this.paramPassword,
+			"Please enter the Password for user [%s] in Docbase %s: ", Tools.coalesce(dctmUser, ""), docbase);
 	}
 
 	public boolean checkForDfc() {

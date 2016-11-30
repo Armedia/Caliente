@@ -3,6 +3,7 @@ package com.armedia.caliente.cli.utils;
 import java.io.Console;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.Parameter;
@@ -12,17 +13,17 @@ import com.armedia.commons.utilities.Tools;
 
 public class CliValuePrompt {
 
-	public interface ValueCallback {
-		public String getValue();
+	public interface PromptCallback {
+		public char[] promptForValue();
 	}
 
-	public static class ConsoleReader implements ValueCallback {
-		private final boolean silent;
+	public static class ConsolePrompter implements PromptCallback {
+		private final boolean echoInput;
 		private final String prompt;
 		private final Object[] promptParams;
 
-		public ConsoleReader(boolean silent, String prompt, Object... promptParams) {
-			this.silent = silent;
+		public ConsolePrompter(boolean echoInput, String prompt, Object... promptParams) {
+			this.echoInput = echoInput;
 			this.prompt = Tools.coalesce(prompt, "Password:");
 			if (promptParams != null) {
 				this.promptParams = promptParams.clone();
@@ -32,57 +33,71 @@ public class CliValuePrompt {
 		}
 
 		@Override
-		public String getValue() {
+		public char[] promptForValue() {
 			final Console console = System.console();
 			if (console == null) { return null; }
 
-			// If the parameter isn't given, but a console is available, ask for a password
-			// interactively
-			if (!this.silent) { return console.readLine(this.prompt, this.promptParams); }
+			if (this.echoInput) { return CliValuePrompt.getChars(console.readLine(this.prompt, this.promptParams)); }
 			char[] pass = console.readPassword(this.prompt, this.promptParams);
-			if (pass != null) { return new String(pass); }
+			if (pass != null) { return pass; }
 			return null;
 		}
 	}
 
+	public static char[] getChars(String v) {
+		if (v == null) { return null; }
+		if (v.length() == 0) { return ArrayUtils.EMPTY_CHAR_ARRAY; }
+		return v.toCharArray();
+	}
+
+	public static String getString(char[] c) {
+		if (c == null) { return null; }
+		if (c.length == 0) { return StringUtils.EMPTY; }
+		return new String(c);
+	}
+
 	public static final String getUsername(CommandLineValues cli, ParameterWrapper param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getValue(cli, ParameterTools.unwrap(param), false, prompt, promptParams);
+		return CliValuePrompt.getUsername(cli, ParameterTools.unwrap(param), prompt, promptParams);
 	}
 
 	public static final String getUsername(CommandLineValues cli, Parameter param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getValue(cli, param, new ConsoleReader(false, prompt, promptParams));
+		return CliValuePrompt
+			.getString(CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(false, prompt, promptParams)));
 	}
 
-	public static final String getPassword(CommandLineValues cli, ParameterWrapper param, String prompt,
+	public static final String getPasswordString(CommandLineValues cli, ParameterWrapper param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getValue(cli, param, true, prompt, promptParams);
+		return CliValuePrompt.getPasswordString(cli, ParameterTools.unwrap(param), prompt, promptParams);
 	}
 
-	public static final String getPassword(CommandLineValues cli, Parameter param, String prompt,
+	public static final char[] getPassword(CommandLineValues cli, ParameterWrapper param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getValue(cli, param, true, prompt, promptParams);
+		return CliValuePrompt.getPassword(cli, ParameterTools.unwrap(param), prompt, promptParams);
 	}
 
-	public static final String getValue(CommandLineValues cli, ParameterWrapper param, boolean silent, String prompt,
+	public static final String getPasswordString(CommandLineValues cli, Parameter param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getValue(cli, ParameterTools.unwrap(param), silent, prompt, promptParams);
+		return CliValuePrompt.getString(CliValuePrompt.getPassword(cli, param, prompt, promptParams));
 	}
 
-	public static final String getValue(CommandLineValues cli, Parameter param, boolean silent, String prompt,
+	public static final char[] getPassword(CommandLineValues cli, Parameter param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getValue(cli, param, new ConsoleReader(silent, prompt, promptParams));
+		return CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(true, prompt, promptParams));
 	}
 
-	public static final String getValue(CommandLineValues cli, ParameterWrapper param, ValueCallback valueCallback) {
-		return CliValuePrompt.getValue(cli, ParameterTools.unwrap(param), valueCallback);
+	public static final char[] getPromptableValue(CommandLineValues cli, ParameterWrapper param,
+		PromptCallback promptCallback) {
+		return CliValuePrompt.getPromptableValue(cli, ParameterTools.unwrap(param), promptCallback);
 	}
 
-	public static final String getValue(CommandLineValues cli, Parameter param, ValueCallback valueCallback) {
+	public static final char[] getPromptableValue(CommandLineValues cli, Parameter param,
+		PromptCallback promptCallback) {
 		// If the parameter is given, return its value
-		if ((cli != null) && (param != null) && cli.isPresent(param)) { return cli.getString(param); }
-		if (valueCallback == null) { return null; }
-		return valueCallback.getValue();
+		if ((cli != null) && (param != null)
+			&& cli.isPresent(param)) { return CliValuePrompt.getChars(cli.getString(param)); }
+		if (promptCallback == null) { return null; }
+		return promptCallback.promptForValue();
 	}
 }

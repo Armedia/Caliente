@@ -499,7 +499,7 @@ public class UserMapper {
 				}
 
 				final String bindDn = cli.getString(CLIParam.ldap_binddn);
-				final String bindPass = CliValuePrompt.getPassword(cli, CLIParam.ldap_pass,
+				final String bindPass = CliValuePrompt.getPasswordString(cli, CLIParam.ldap_pass,
 					"Please enter the LDAP Password for DN [%s] at %s: ", Tools.coalesce(bindDn, ""),
 					ldapUrl.toString());
 
