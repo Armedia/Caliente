@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.datagen.data.csv.CSVDataRecordManager;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
-import com.armedia.caliente.cli.utils.ThreadsHelper;
+import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
@@ -141,10 +141,10 @@ public class DataGen {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final ThreadsHelper threadsParameter;
+	private final ThreadsLaunchHelper threadsParameter;
 	private final DfcLaunchHelper dfcLaunchHelper;
 
-	public DataGen(ThreadsHelper threadsParameter, DfcLaunchHelper dfcLaunchHelper) {
+	public DataGen(ThreadsLaunchHelper threadsParameter, DfcLaunchHelper dfcLaunchHelper) {
 		this.threadsParameter = threadsParameter;
 		this.dfcLaunchHelper = dfcLaunchHelper;
 	}

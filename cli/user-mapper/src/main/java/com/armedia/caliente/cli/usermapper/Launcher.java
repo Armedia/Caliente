@@ -11,7 +11,7 @@ import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.caliente.cli.parser.ParameterTools;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
-import com.armedia.caliente.cli.utils.ThreadsHelper;
+import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 
 public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 
@@ -19,7 +19,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 		System.exit(new Launcher().launch(args));
 	}
 
-	private final ThreadsHelper threadsParameter = new ThreadsHelper();
+	private final ThreadsLaunchHelper threadsParameter = new ThreadsLaunchHelper();
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 

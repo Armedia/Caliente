@@ -19,7 +19,7 @@ import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.caliente.cli.parser.ParameterTools;
-import com.armedia.caliente.cli.utils.ThreadsHelper;
+import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.commons.utilities.PooledWorkers;
 
 public class Launcher extends AbstractLauncher implements LaunchParameterSet {
@@ -45,7 +45,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 		return true;
 	}
 
-	private final ThreadsHelper threadsParameter = new ThreadsHelper(Launcher.MIN_THREADS,
+	private final ThreadsLaunchHelper threadsParameter = new ThreadsLaunchHelper(Launcher.MIN_THREADS,
 		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
