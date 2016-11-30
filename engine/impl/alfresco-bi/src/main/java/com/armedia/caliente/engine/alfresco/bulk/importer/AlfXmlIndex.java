@@ -11,12 +11,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
@@ -29,6 +31,25 @@ import com.armedia.commons.utilities.Tools;
 import javanet.staxutils.IndentingXMLStreamWriter;
 
 public class AlfXmlIndex implements Closeable {
+
+	private static final NamespaceContext NO_NAMESPACES = new NamespaceContext() {
+
+		@Override
+		public String getNamespaceURI(String prefix) {
+			return "";
+		}
+
+		@Override
+		public String getPrefix(String namespaceURI) {
+			return "";
+		}
+
+		@Override
+		public Iterator<?> getPrefixes(String namespaceURI) {
+			return null;
+		}
+
+	};
 
 	private static final Class<?>[] NO_CLASSES = {};
 
@@ -70,7 +91,12 @@ public class AlfXmlIndex implements Closeable {
 	}
 
 	protected XMLStreamWriter getXMLStreamWriter(XMLOutputFactory factory, OutputStream out) throws XMLStreamException {
-		return new IndentingXMLStreamWriter(factory.createXMLStreamWriter(out));
+		return new IndentingXMLStreamWriter(factory.createXMLStreamWriter(out)) {
+			@Override
+			public NamespaceContext getNamespaceContext() {
+				return AlfXmlIndex.NO_NAMESPACES;
+			}
+		};
 	}
 
 	protected final XMLStreamWriter getXMLStreamWriter() {
@@ -192,7 +218,9 @@ public class AlfXmlIndex implements Closeable {
 			if (o == null) {
 				continue;
 			}
+
 			this.marshaller.marshal(o, this.xml);
+
 			ret++;
 		}
 		this.xml.flush();
