@@ -1049,6 +1049,28 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract void cacheTargets(O operation, Collection<CmfObjectSpec> objects) throws CmfStorageException;
 
+	public final Map<CmfType, Map<String, String>> getRenameMappings() throws CmfStorageException {
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				return getRenameMappings(operation);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for clearing all cached targets", e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract Map<CmfType, Map<String, String>> getRenameMappings(O operation) throws CmfStorageException;
+
 	public final CloseableIterator<CmfObjectSpec> getCachedTargets() throws CmfStorageException {
 		boolean ok = false;
 		final O operation = beginConcurrentInvocation();

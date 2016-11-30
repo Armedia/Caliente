@@ -1708,4 +1708,49 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	protected void closeCachedTargets(Object state) throws CmfStorageException {
 		CachedTargetState.convert(state).close();
 	}
+
+	@Override
+	protected Map<CmfType, Map<String, String>> getRenameMappings(JdbcOperation operation) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		try {
+			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_RENAME_MAPPINGS),
+				new ResultSetHandler<Map<CmfType, Map<String, String>>>() {
+					@Override
+					public Map<CmfType, Map<String, String>> handle(ResultSet rs) throws SQLException {
+						Map<CmfType, Map<String, String>> ret = new EnumMap<>(CmfType.class);
+						while (rs.next()) {
+							String id = rs.getString("object_id");
+							if (rs.wasNull()) {
+								continue;
+							}
+							String name = rs.getString("new_name");
+							if (rs.wasNull()) {
+								continue;
+							}
+
+							CmfObjectRef ref = JdbcTools.decodeDatabaseId(id);
+							Map<String, String> m = ret.get(ref.getType());
+							if (m == null) {
+								m = new HashMap<>();
+								ret.put(ref.getType(), m);
+							}
+
+							m.put(ref.getId(), name);
+						}
+
+						// Freeze the maps
+						Map<CmfType, Map<String, String>> frozen = new EnumMap<>(CmfType.class);
+						for (CmfType t : ret.keySet()) {
+							Map<String, String> m = ret.get(t);
+							frozen.put(t, Tools.freezeMap(m, true));
+						}
+						ret = Tools.freezeMap(frozen);
+						return ret;
+					}
+				});
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to retrieve the next cached target in the given result set", e);
+		}
+	}
 }

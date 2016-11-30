@@ -419,6 +419,13 @@ public abstract class JdbcDialect {
 		TRUNCATE_TABLE_FMT( //
 			"     truncate table %s " //
 		),
+
+		LOAD_RENAME_MAPPINGS( //
+			"       select o.object_id, a.new_name " + //
+				"     from cmf_object o, cmf_alt_name a " + //
+				"    where o.object_id = a.object_id " + //
+				"      and o.object_name != a.new_name " //
+		),
 		//
 
 		;
