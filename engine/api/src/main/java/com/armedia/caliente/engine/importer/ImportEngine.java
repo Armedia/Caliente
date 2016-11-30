@@ -240,7 +240,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		private final Collection<CmfObject<V>> contents;
 		private final ImportStrategy strategy;
 		private BatchStatus status = BatchStatus.PENDING;
-		// private Throwable thrown = null;
 
 		private Batch() {
 			this(null, null, null, null);
@@ -256,15 +255,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		private void markCompleted() {
 			if (this.status == BatchStatus.PENDING) {
 				this.status = BatchStatus.PROCESSED;
-				notify();
 			}
 		}
 
 		private void markAborted(Throwable thrown) {
 			if (this.status == BatchStatus.PENDING) {
 				this.status = BatchStatus.ABORTED;
-				// this.thrown = thrown;
-				notify();
 			}
 		}
 
