@@ -9,7 +9,7 @@ import com.armedia.caliente.cli.parser.MutableParameter;
 import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.commons.utilities.Tools;
 
-public final class ThreadsParameterSet implements LaunchParameterSet {
+public final class ThreadsHelper implements LaunchParameterSet {
 
 	private static final Parameter THREADS = new MutableParameter() //
 		.setShortOpt('t') //
@@ -28,15 +28,15 @@ public final class ThreadsParameterSet implements LaunchParameterSet {
 	private final Integer def;
 	private final int max;
 
-	public ThreadsParameterSet() {
-		this(ThreadsParameterSet.DEFAULT_MIN_THREADS, ThreadsParameterSet.DEFAULT_MAX_THREADS);
+	public ThreadsHelper() {
+		this(ThreadsHelper.DEFAULT_MIN_THREADS, ThreadsHelper.DEFAULT_MAX_THREADS);
 	}
 
-	public ThreadsParameterSet(int max) {
-		this(ThreadsParameterSet.DEFAULT_MIN_THREADS, max);
+	public ThreadsHelper(int max) {
+		this(ThreadsHelper.DEFAULT_MIN_THREADS, max);
 	}
 
-	public ThreadsParameterSet(int min, int max) {
+	public ThreadsHelper(int min, int max) {
 		min = Math.max(1, min);
 		if (max < min) { throw new IllegalArgumentException(
 			String.format("Maximum value %d is lower than minmum value %d", max, min)); }
@@ -45,7 +45,7 @@ public final class ThreadsParameterSet implements LaunchParameterSet {
 		this.def = null;
 	}
 
-	public ThreadsParameterSet(int min, int def, int max) {
+	public ThreadsHelper(int min, int def, int max) {
 		min = Math.max(1, min);
 		if (max < min) { throw new IllegalArgumentException(
 			String.format("Maximum value %d is lower than minmum value %d", max, min)); }
@@ -72,20 +72,20 @@ public final class ThreadsParameterSet implements LaunchParameterSet {
 
 	@Override
 	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
-		return Collections.singleton(ThreadsParameterSet.THREADS);
+		return Collections.singleton(ThreadsHelper.THREADS);
 	}
 
 	public boolean hasThreads(CommandLineValues cli) {
-		return cli.isPresent(ThreadsParameterSet.THREADS);
+		return cli.isPresent(ThreadsHelper.THREADS);
 	}
 
 	public Integer getThreads(CommandLineValues cli) {
-		Integer t = cli.getInteger(ThreadsParameterSet.THREADS);
+		Integer t = cli.getInteger(ThreadsHelper.THREADS);
 		if (t == null) { return this.def; }
 		return Tools.ensureBetween(this.min, t.intValue(), this.max);
 	}
 
 	public int getThreads(CommandLineValues cli, int def) {
-		return Tools.ensureBetween(this.min, cli.getInteger(ThreadsParameterSet.THREADS, def), this.max);
+		return Tools.ensureBetween(this.min, cli.getInteger(ThreadsHelper.THREADS, def), this.max);
 	}
 }

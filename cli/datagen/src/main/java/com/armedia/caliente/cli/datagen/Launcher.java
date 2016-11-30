@@ -10,14 +10,14 @@ import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.caliente.cli.parser.ParameterTools;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
-import com.armedia.caliente.cli.utils.ThreadsParameterSet;
+import com.armedia.caliente.cli.utils.ThreadsHelper;
 
 public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 	protected static final int MIN_THREADS = 1;
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() / 2);
 	protected static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors());
 
-	private final ThreadsParameterSet threadsParameter = new ThreadsParameterSet(Launcher.MIN_THREADS,
+	private final ThreadsHelper threadsParameter = new ThreadsHelper(Launcher.MIN_THREADS,
 		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
