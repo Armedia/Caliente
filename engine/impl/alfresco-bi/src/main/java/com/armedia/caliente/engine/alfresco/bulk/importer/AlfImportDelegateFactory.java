@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
+import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfSessionFactory;
@@ -385,8 +386,38 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	protected final CacheItemMarker generateItemMarker(final CmfObject<CmfValue> cmfObject, File contentFile,
-		File metadataFile, MarkerType type) throws ImportException {
+	private final String resolveFixedNames(final AlfImportContext ctx, String cmsPath, Path idPath)
+		throws ImportException {
+		if ((idPath != null) && (idPath.getNameCount() > 0)) {
+			// First things first: tokenize each of them
+			final int nameCount = idPath.getNameCount();
+			List<String> names = new StrTokenizer(cmsPath, '/').getTokenList();
+			if (names.size() > nameCount) {
+				// WTF?!?
+				throw new ImportException(String.format(
+					"The CMS path [%s] has a more components than the ID path [%s] - this is an export error", cmsPath,
+					idPath.toString()));
+			}
+
+			// We will only resolve however many components are present in the CMS path
+			StringBuilder b = new StringBuilder();
+			for (int i = 0; i < names.size(); i++) {
+				final String folderId = idPath.getName(i).toString();
+				String folderName = names.get(i);
+				// If we're still resolving valid IDs...
+				final String altName = ctx.getAlternateName(CmfType.FOLDER, folderId);
+				if ((altName != null) && !Tools.equals(altName, folderName)) {
+					folderName = altName;
+				}
+				(i > 0 ? b.append('/') : b).append(folderName);
+			}
+			cmsPath = b.toString();
+		}
+		return cmsPath;
+	}
+
+	protected final CacheItemMarker generateItemMarker(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject,
+		File contentFile, File metadataFile, MarkerType type) throws ImportException {
 		final boolean folder = type.isFolder(contentFile);
 		final int head;
 		final int count;
@@ -472,6 +503,8 @@ public class AlfImportDelegateFactory
 			cmsPath = cmsPath.substring(1);
 		}
 
+		cmsPath = resolveFixedNames(ctx, cmsPath, relativeMetadataParent);
+
 		String append = null;
 		// This is the base name, others may change it...
 		thisMarker.setName(contentFile.getName());
@@ -549,12 +582,12 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	protected final void storeToIndex(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile,
-		MarkerType type) throws ImportException {
+	protected final void storeToIndex(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject, File contentFile,
+		File metadataFile, MarkerType type) throws ImportException {
 
 		storeIngestionIndexToScanIndex();
 
-		final CacheItemMarker thisMarker = generateItemMarker(cmfObject, contentFile, metadataFile, type);
+		final CacheItemMarker thisMarker = generateItemMarker(ctx, cmfObject, contentFile, metadataFile, type);
 		List<CacheItemMarker> markerList = null;
 		switch (type) {
 			case VDOC_ROOT:

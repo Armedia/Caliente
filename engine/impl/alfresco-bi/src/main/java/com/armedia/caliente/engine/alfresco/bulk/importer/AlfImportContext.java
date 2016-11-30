@@ -20,4 +20,8 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore,
 			batchPosition);
 	}
+
+	public final String getAlternateName(CmfType type, String id) {
+		return this.getFactory().getAlternateName(super.getObjectStore(), type, id);
+	}
 }
