@@ -51,28 +51,13 @@ public abstract class JdbcDialect {
 				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
 
-		INSERT_ALT_NAME( //
-			"       insert into " + //
-				"          cmf_alt_name (" + //
-				"              object_id, new_name " + //
-				"          ) " + //
-				"   values (?, ?)" //
-		),
-
-		UPDATE_ALT_NAME( //
-			"       update cmf_alt_name " + //
-				"      set new_name = ? " + //
-				"    where object_id = ? " + //
-				"      and new_name = ? " //
+		UPSERT_ALT_NAME( //
+			null //
 		),
 
 		RESET_ALT_NAME( //
-			"       update cmf_alt_name n " + //
-				"      set n.new_name = ( " + //
-				"              select o.object_name " + //
-				"                from cmf_object o " + //
-				"               where o.object_id = n.object_id " + //
-				"          ) " //
+			"       delete " + //
+				"     from cmf_alt_name " //
 		),
 
 		INSERT_OBJECT_PARENTS( //
@@ -277,9 +262,8 @@ public abstract class JdbcDialect {
 
 		LOAD_OBJECT_HISTORY_CURRENT_BY_HISTORY_ID( //
 			"       select o.*, n.new_name " + //
-				"     from cmf_object o, cmf_alt_name n" + //
-				"    where o.object_id = n.object_id " + //
-				"      and o.object_type = ? " + //
+				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+				"    where o.object_type = ? " + //
 				"      and o.history_id = ? " + //
 				"      and o.history_current = true " + //
 				" order by o.object_number" //
@@ -287,9 +271,8 @@ public abstract class JdbcDialect {
 
 		LOAD_OBJECTS( //
 			"       select o.*, n.new_name " + //
-				"     from cmf_object o, cmf_alt_name n" + //
-				"    where o.object_id = n.object_id " + //
-				"      and o.object_type = ? " + //
+				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+				"    where o.object_type = ? " + //
 				" order by o.tier_id, o.history_id, o.object_number" //
 		),
 
@@ -349,16 +332,6 @@ public abstract class JdbcDialect {
 				"      and rendition_page = ?" + //
 				"      and modifier = ?" + //
 				" order by name" //
-		),
-
-		CHECK_FOR_NAME_COLLISIONS( //
-			"       select o.object_number, o.object_id " + //
-				"     from cmf_object o, cmf_object_tree t, cmf_alt_name n " + //
-				"    where o.object_id = t.object_id " + //
-				"      and o.object_id = n.object_id " + //
-				"      and t.parent_id = ? " + //
-				"      and n.new_name = ? " + //
-				" order by o.object_number, o.object_id " //
 		),
 
 		DISABLE_REFERENTIAL_INTEGRITY(//
@@ -421,10 +394,8 @@ public abstract class JdbcDialect {
 		),
 
 		LOAD_RENAME_MAPPINGS( //
-			"       select o.object_id, a.new_name " + //
-				"     from cmf_object o, cmf_alt_name a " + //
-				"    where o.object_id = a.object_id " + //
-				"      and o.object_name != a.new_name " //
+			"       select * " + //
+				"     from cmf_alt_name " //
 		),
 		//
 
@@ -457,12 +428,9 @@ public abstract class JdbcDialect {
 
 	protected abstract boolean isDuplicateKeyException(SQLException e);
 
-	final String translateQuery(Query query, boolean required) {
+	final String translateQuery(Query query) {
 		if (query == null) { throw new IllegalArgumentException("Must provide a SQL query to resolve"); }
-		String sql = Tools.coalesce(doTranslate(query), query.sql);
-		if (required && (sql == null)) { throw new IllegalStateException(
-			String.format("Required query [%s] is missing", query)); }
-		return sql;
+		return Tools.coalesce(doTranslate(query), query.sql);
 	}
 
 	protected String doTranslate(Query sql) {

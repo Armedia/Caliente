@@ -1,5 +1,6 @@
 package com.armedia.caliente.store.jdbc;
 
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,6 +29,45 @@ class JdbcTools {
 		@Override
 		public Void handle(ResultSet rs) throws SQLException {
 			return null;
+		}
+	};
+
+	static final ResultSetHandler<Integer> HANDLER_INT_COUNTER = new ResultSetHandler<Integer>() {
+		@Override
+		public Integer handle(ResultSet rs) throws SQLException {
+			int c = 0;
+			while (rs.next()) {
+				c++;
+				if (c < 0) { throw new SQLException(
+					String.format("Counter wraparound after %d items", Integer.MAX_VALUE)); }
+			}
+			return c;
+		}
+	};
+
+	static final ResultSetHandler<Long> HANDLER_LONG_COUNTER = new ResultSetHandler<Long>() {
+		@Override
+		public Long handle(ResultSet rs) throws SQLException {
+			long c = 0;
+			while (rs.next()) {
+				c++;
+				if (c < 0) { throw new SQLException(
+					String.format("Counter wraparound after %d items", Long.MAX_VALUE)); }
+			}
+			return c;
+		}
+	};
+
+	static final ResultSetHandler<BigInteger> HANDLER_BIGINT_COUNTER = new ResultSetHandler<BigInteger>() {
+		@Override
+		public BigInteger handle(ResultSet rs) throws SQLException {
+			BigInteger c = BigInteger.ZERO;
+			while (rs.next()) {
+				c = c.add(BigInteger.ONE);
+				if (c.compareTo(BigInteger.ZERO) < 0) { throw new SQLException(
+					"BigInteger counter wraparound (probable Java bug!!!)"); }
+			}
+			return c;
 		}
 	};
 

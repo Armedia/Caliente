@@ -20,28 +20,19 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 
 	private static final String LOAD_OBJECTS_BY_ID = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o, cmf_alt_name n " + //
-			"    where o.object_id = n.object_id " + //
-			"      and o.object_type = ? " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"    where o.object_type = ? " + //
 			"      and o.object_id = any ( ? ) " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
 	private static final String LOAD_OBJECTS_BY_ID_CURRENT = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o, cmf_alt_name n " + //
-			"    where o.object_id = n.object_id " + //
-			"      and o.object_type = ? " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"    where o.object_type = ? " + //
 			"      and o.object_id = any ( ? ) " + //
 			"      and o.history_current = true " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
-	;
-
-	private static final String RESET_ALT_NAME = //
-		"       update cmf_alt_name " + //
-			"      set new_name = o.object_name " + //
-			"     from cmf_object o " + //
-			"    where cmf_alt_name.object_id = o.object_id " //
 	;
 
 	private static final String TRUNCATE_TABLE_FMT = //
@@ -54,6 +45,10 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 
 	private static final String ENABLE_REFERENTIAL_INTEGRITY = //
 		"     set session_replication_role = DEFAULT " //
+	;
+
+	private static final String UPSERT_ALT_NAME = //
+		"     insert into cmf_alt_name (object_id, new_name) values ( ?, ? ) on conflict do update " //
 	;
 
 	public JdbcDialectPostgreSQL(DatabaseMetaData md) throws SQLException {
@@ -78,8 +73,8 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				return JdbcDialectPostgreSQL.ENABLE_REFERENTIAL_INTEGRITY;
 			case DISABLE_REFERENTIAL_INTEGRITY:
 				return JdbcDialectPostgreSQL.DISABLE_REFERENTIAL_INTEGRITY;
-			case RESET_ALT_NAME:
-				return JdbcDialectPostgreSQL.RESET_ALT_NAME;
+			case UPSERT_ALT_NAME:
+				return JdbcDialectPostgreSQL.UPSERT_ALT_NAME;
 			default:
 				break;
 		}

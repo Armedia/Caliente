@@ -18,18 +18,18 @@ public class JdbcDialectH2 extends JdbcDialect {
 
 	private static final String LOAD_OBJECTS_BY_ID = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o, cmf_alt_name n, table(x varchar=?) t " + //
-			"    where o.object_id = n.object_id " + //
-			"      and o.object_id = t.x " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
+			"          table(x varchar=?) t " + //
+			"    where o.object_id = t.x " + //
 			"      and o.object_type = ? " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
 	private static final String LOAD_OBJECTS_BY_ID_CURRENT = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o, cmf_alt_name n, table(x varchar=?) t " + //
-			"    where o.object_id = n.object_id " + //
-			"      and o.object_id = t.x " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
+			"          table(x varchar=?) t " + //
+			"    where o.object_id = t.x " + //
 			"      and o.history_current = true " + //
 			"      and o.object_type = ? " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
@@ -41,6 +41,10 @@ public class JdbcDialectH2 extends JdbcDialect {
 
 	private static final String DISABLE_REFERENTIAL_INTEGRITY = //
 		"          set REFERENTIAL_INTEGRITY false" //
+	;
+
+	private static final String UPSERT_ALT_NAME = //
+		"     merge into cmf_alt_name (object_id, new_name) key (object_id) values ( ?, ? ) " //
 	;
 
 	public JdbcDialectH2(DatabaseMetaData md) throws SQLException {
@@ -63,6 +67,8 @@ public class JdbcDialectH2 extends JdbcDialect {
 				return JdbcDialectH2.ENABLE_REFERENTIAL_INTEGRITY;
 			case DISABLE_REFERENTIAL_INTEGRITY:
 				return JdbcDialectH2.DISABLE_REFERENTIAL_INTEGRITY;
+			case UPSERT_ALT_NAME:
+				return JdbcDialectH2.UPSERT_ALT_NAME;
 			default:
 				break;
 		}

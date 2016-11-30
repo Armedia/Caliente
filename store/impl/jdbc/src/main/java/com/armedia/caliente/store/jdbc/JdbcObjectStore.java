@@ -75,6 +75,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private final DataSource dataSource;
 	private final JdbcStorePropertyManager propertyManager;
 	private final JdbcDialect dialect;
+	private final Map<JdbcDialect.Query, String> queries;
 
 	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
 		throws CmfStorageException {
@@ -126,6 +127,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					}
 				}
 			}
+
+			Map<JdbcDialect.Query, String> queries = new EnumMap<>(JdbcDialect.Query.class);
+			for (JdbcDialect.Query q : JdbcDialect.Query.values()) {
+				String v = this.dialect.translateQuery(q);
+				if (StringUtils.isEmpty(v)) {
+					continue;
+				}
+				queries.put(q, v);
+			}
+			this.queries = Tools.freezeMap(queries);
 		} finally {
 			JdbcTools.closeQuietly(c);
 		}
@@ -278,8 +289,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
 				object.getDependencyTier(), object.getHistoryId(), object.isHistoryCurrent(), object.getProductName(),
 				object.getProductVersion());
-			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_ALT_NAME), JdbcTools.HANDLER_NULL, objectId,
-				object.getName());
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_PARENTS), JdbcTools.HANDLER_NULL,
 				parentParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
@@ -761,19 +770,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected <V> void renameObject(final JdbcOperation operation, final CmfObject<V> object, final String newName)
 		throws CmfStorageException {
-		final Connection connection = operation.getConnection();
+		final Connection c = operation.getConnection();
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		final String objectId = JdbcTools.composeDatabaseId(object);
 		try {
-			int updateCount = qr.update(connection, translateQuery(JdbcDialect.Query.UPDATE_ALT_NAME), newName,
-				objectId, object.getName());
-			if (updateCount != 1) { throw new CmfStorageException(String.format(
-				"Failed to update the name for %s [%s](%s) from [%s] to [%s] - updated %d records, expected exactly 1",
-				object.getType(), object.getLabel(), object.getId(), object.getName(), newName, updateCount)); }
+			qr.update(c, translateQuery(JdbcDialect.Query.UPSERT_ALT_NAME), objectId, newName);
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to change the name for %s [%s](%s) from [%s] to [%s]",
-				object.getType(), object.getLabel(), object.getId(), object.getName(), newName), e);
+			throw new CmfStorageException(
+				String.format("Failed to insert a rename record for the %s %s from [%s] to [%s]",
+					object.getType().name(), object.getId(), object.getName(), newName),
+				e);
 		}
+
 	}
 
 	/**
@@ -1121,11 +1129,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				for (String t : tables) {
 					s.executeUpdate(String.format(sqlFmt, t));
 				}
+				return true;
 			} finally {
 				enableReferentialIntegrity(operation);
 				DbUtils.close(s);
 			}
-			return true;
 		} catch (SQLException e) {
 			this.log.trace("Failed to truncate the tables", e);
 			return false;
@@ -1152,7 +1160,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			"Must provide a ResultSet to load the structure from"); }
 		CmfType type = CmfType.decodeString(objectRS.getString("object_type"));
 		String id = objectRS.getString("object_id");
-		String name = objectRS.getString("new_name");
+		String name = objectRS.getString("object_name");
+		String newName = objectRS.getString("new_name");
+		if (!objectRS.wasNull()) {
+			// If there's an alternate name, we use that instead
+			name = newName;
+		}
 		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
 		if (m.matches()) {
 			id = m.group(2);
@@ -1464,8 +1477,36 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
+	protected boolean optimizedResetAltNames(JdbcOperation operation) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		try {
+			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
+			if (!referentialIntegrityOff) {
+				// If we couldn't turn off referential integrity, then we couldn't perform
+				// the optimized clear
+				return false;
+			}
+			Statement s = c.createStatement();
+			try {
+				final String sqlFmt = translateQuery(JdbcDialect.Query.TRUNCATE_TABLE_FMT);
+				s.executeUpdate(String.format(sqlFmt, "CMF_ALT_NAME"));
+				return true;
+			} finally {
+				enableReferentialIntegrity(operation);
+				DbUtils.close(s);
+			}
+		} catch (SQLException e) {
+			this.log.trace("Failed to truncate the tables", e);
+			return false;
+		}
+	}
+
 	@Override
 	protected void resetAltNames(JdbcOperation operation) throws CmfStorageException {
+		// If the truncate table worked, do nothing else...
+		if (optimizedResetAltNames(operation)) { return; }
+
+		// No truncate? Ok...so...do it the hard way...
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
@@ -1584,11 +1625,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	protected String translateOptionalQuery(JdbcDialect.Query query) {
-		return this.dialect.translateQuery(query, false);
+		return this.queries.get(query);
 	}
 
 	protected String translateQuery(JdbcDialect.Query query) {
-		return this.dialect.translateQuery(query, true);
+		String q = translateOptionalQuery(query);
+		if (q == null) { throw new IllegalStateException(String.format("Required query [%s] is missing", query)); }
+		return q;
 	}
 
 	@Override

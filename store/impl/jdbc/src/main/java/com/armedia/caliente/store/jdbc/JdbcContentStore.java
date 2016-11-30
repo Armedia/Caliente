@@ -9,6 +9,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.sql.DataSource;
@@ -16,6 +18,7 @@ import javax.sql.DataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -25,6 +28,7 @@ import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
+import com.armedia.commons.utilities.Tools;
 
 public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connection, JdbcOperation> {
 
@@ -58,7 +62,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 				this.operation = beginConcurrentInvocation();
 				this.tx = this.operation.begin();
 
-				this.ps = this.operation.getConnection().prepareStatement(resolveQuery(JdbcDialect.Query.GET_STREAM));
+				this.ps = this.operation.getConnection().prepareStatement(translateQuery(JdbcDialect.Query.GET_STREAM));
 				this.ps.setString(1, this.locator.getObjectId());
 				this.ps.setString(2, this.locator.getInfo().getRenditionIdentifier());
 				this.ps.setInt(3, this.locator.getInfo().getRenditionPage());
@@ -173,6 +177,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	private final DataSource dataSource;
 	private final JdbcStorePropertyManager propertyManager;
 	private final JdbcDialect dialect;
+	private final Map<JdbcDialect.Query, String> queries;
 
 	private class JdbcHandle extends Handle {
 
@@ -229,6 +234,16 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 					}
 				}
 			}
+
+			Map<JdbcDialect.Query, String> queries = new EnumMap<>(JdbcDialect.Query.class);
+			for (JdbcDialect.Query q : JdbcDialect.Query.values()) {
+				String v = this.dialect.translateQuery(q);
+				if (StringUtils.isEmpty(v)) {
+					continue;
+				}
+				queries.put(q, v);
+			}
+			this.queries = Tools.freezeMap(queries);
 		} finally {
 			JdbcTools.closeQuietly(c);
 		}
@@ -305,9 +320,9 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 				}
 				QueryRunner qr = JdbcTools.getQueryRunner();
 				CmfContentInfo info = locator.getInfo();
-				qr.update(c, resolveQuery(JdbcDialect.Query.DELETE_STREAM), locator.getObjectId(),
+				qr.update(c, translateQuery(JdbcDialect.Query.DELETE_STREAM), locator.getObjectId(),
 					info.getRenditionIdentifier(), info.getRenditionPage());
-				qr.insert(c, resolveQuery(JdbcDialect.Query.INSERT_STREAM), JdbcTools.HANDLER_NULL,
+				qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_STREAM), JdbcTools.HANDLER_NULL,
 					locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage(), blob.length(), blob);
 				return blob.length();
 			} finally {
@@ -323,7 +338,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 		try {
 			CmfContentInfo info = locator.getInfo();
 			return JdbcTools.getQueryRunner().query(operation.getConnection(),
-				resolveQuery(JdbcDialect.Query.CHECK_IF_CONTENT_EXISTS), JdbcTools.HANDLER_EXISTS,
+				translateQuery(JdbcDialect.Query.CHECK_IF_CONTENT_EXISTS), JdbcTools.HANDLER_EXISTS,
 				locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
@@ -336,7 +351,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 		try {
 			CmfContentInfo info = locator.getInfo();
 			return JdbcTools.getQueryRunner().query(operation.getConnection(),
-				resolveQuery(JdbcDialect.Query.GET_STREAM_LENGTH), JdbcContentStore.HANDLER_LENGTH,
+				translateQuery(JdbcDialect.Query.GET_STREAM_LENGTH), JdbcContentStore.HANDLER_LENGTH,
 				locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
@@ -348,7 +363,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	protected void clearAllStreams(JdbcOperation operation) throws CmfStorageException {
 		try {
 			JdbcTools.getQueryRunner().update(operation.getConnection(),
-				resolveQuery(JdbcDialect.Query.DELETE_ALL_STREAMS));
+				translateQuery(JdbcDialect.Query.DELETE_ALL_STREAMS));
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to delete all content streams", e);
 		}
@@ -380,11 +395,13 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 		this.propertyManager.clearProperties(operation);
 	}
 
-	protected String resolveOptionalQuery(JdbcDialect.Query query) {
-		return this.dialect.translateQuery(query, false);
+	protected String translateOptionalQuery(JdbcDialect.Query query) {
+		return this.queries.get(query);
 	}
 
-	protected String resolveQuery(JdbcDialect.Query query) {
-		return this.dialect.translateQuery(query, true);
+	protected String translateQuery(JdbcDialect.Query query) {
+		String q = translateOptionalQuery(query);
+		if (q == null) { throw new IllegalStateException(String.format("Required query [%s] is missing", query)); }
+		return q;
 	}
 }
