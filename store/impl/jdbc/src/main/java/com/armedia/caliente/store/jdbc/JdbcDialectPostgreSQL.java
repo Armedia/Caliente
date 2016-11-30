@@ -48,7 +48,10 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	;
 
 	private static final String UPSERT_ALT_NAME = //
-		"     insert into cmf_alt_name (object_id, new_name) values ( ?, ? ) on conflict do update " //
+		"     insert " + //
+			"   into cmf_alt_name (object_id, new_name) values ( ?, ? ) " + //
+			"     on conflict (object_id) do " + //
+			"                 update set new_name = excluded.new_name " //
 	;
 
 	public JdbcDialectPostgreSQL(DatabaseMetaData md) throws SQLException {
