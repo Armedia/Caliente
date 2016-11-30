@@ -32,21 +32,21 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 		.setMaxValueCount(1) //
 		.setValueName("dfc install location") //
 		.setDescription("The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)") //
-		.freezeCopy();;
+		.freezeCopy();
 	private static final Parameter DFC_DOCUMENTUM = new MutableParameter() //
 		.setLongOpt("dctm") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("directory") //
 		.setDescription("The user's local Documentum path (i.e. instead of DOCUMENTUM)") //
-		.freezeCopy();;
+		.freezeCopy();
 	private static final Parameter DFC_PROPERTIES = new MutableParameter() //
 		.setLongOpt("dfc-prop") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("dfc.properties location") //
 		.setDescription("The dfc.properties file to use instead of the default") //
-		.freezeCopy();;
+		.freezeCopy();
 	private static final Parameter DFC_DOCBASE = new MutableParameter() //
 		.setLongOpt("docbase") //
 		.setRequired(true) //
@@ -54,7 +54,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 		.setMaxValueCount(1) //
 		.setValueName("docbase") //
 		.setDescription("The Documentum repostory name to connect to") //
-		.freezeCopy();;
+		.freezeCopy();
 	private static final Parameter DFC_USER = new MutableParameter() //
 		.setLongOpt("dctm-user") //
 		.setRequired(true) //
