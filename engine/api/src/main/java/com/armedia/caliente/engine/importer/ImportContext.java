@@ -63,6 +63,10 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		return this.streamStore;
 	}
 
+	protected final CmfObjectStore<?, ?> getObjectStore() {
+		return this.cmfObjectStore;
+	}
+
 	public final String getTargetPath(String sourcePath) throws ImportException {
 		return this.factory.getTargetPath(sourcePath);
 	}
