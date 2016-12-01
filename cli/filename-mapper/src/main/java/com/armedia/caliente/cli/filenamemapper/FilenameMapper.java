@@ -148,18 +148,18 @@ class FilenameMapper {
 
 	private FilenameFixer configureFilenameFixer(CommandLineValues cli) throws CliParameterException {
 		if (cli.isPresent(CLIParam.no_fix)) { return null; }
-		final FilenameFixer.FixModel fixerModel;
+		final FilenameFixer.Mode fixerModel;
 		final Character fixChar;
 		final boolean fixLength;
 		if (cli.isPresent(CLIParam.fix_mode)) {
 			String fixMode = cli.getString(CLIParam.fix_mode, "");
 			try {
-				fixerModel = FilenameFixer.FixModel.valueOf(fixMode);
+				fixerModel = FilenameFixer.Mode.valueOf(fixMode);
 			} catch (IllegalArgumentException e) {
 				throw new CliParameterException(String.format("Invalid fix mode specified: [%s]", fixMode));
 			}
 		} else {
-			fixerModel = FilenameFixer.FixModel.getDefault();
+			fixerModel = FilenameFixer.Mode.getDefault();
 		}
 
 		fixLength = !cli.isPresent(CLIParam.no_length_fix);

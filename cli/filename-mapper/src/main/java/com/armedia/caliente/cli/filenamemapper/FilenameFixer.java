@@ -11,14 +11,41 @@ import com.armedia.commons.utilities.Tools;
 
 public class FilenameFixer {
 
-	public static enum FixModel {
+	// This was modified from a string array to disable the possibility of it being modified
+	// at runtime somewhow via subterfuge or other means. Since this is now schema-bound,
+	// it cannot change unless the source code changes.
+	private static enum WinForbidden {
+		//
+		CON,
+		PRN,
+		AUX,
+		NUL,
+		COM1,
+		COM2,
+		COM3,
+		COM4,
+		COM5,
+		COM6,
+		COM7,
+		COM8,
+		COM9,
+		LPT1,
+		LPT2,
+		LPT3,
+		LPT4,
+		LPT5,
+		LPT6,
+		LPT7,
+		LPT8,
+		LPT9,
+		//
+		;
+	}
+
+	public static enum Mode {
 
 		//
 		WIN(255, "[\"*\\\\><?/:|\u0000]") {
-			private final String[] forbidden = {
-				"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-				"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
-			};
 
 			@Override
 			protected String fixLength(String name) {
@@ -55,8 +82,8 @@ public class FilenameFixer {
 				name = name.replaceAll("\\s$", fixChar.toString());
 
 				// File must also not be named any of the forbidden names (case insenstitive)
-				for (String f : this.forbidden) {
-					if (f.equalsIgnoreCase(name)) {
+				for (WinForbidden f : WinForbidden.values()) {
+					if (StringUtils.equalsIgnoreCase(f.name(), name)) {
 						name = String.format("%s%s", fixChar.toString(), name);
 						break;
 					}
@@ -74,15 +101,15 @@ public class FilenameFixer {
 		protected final int maxLength;
 		protected final String forbiddenChars;
 
-		private FixModel() {
+		private Mode() {
 			this(0, null);
 		}
 
-		private FixModel(String forbiddenChars) {
+		private Mode(String forbiddenChars) {
 			this(0, forbiddenChars);
 		}
 
-		private FixModel(int maxLength, String forbiddenChars) {
+		private Mode(int maxLength, String forbiddenChars) {
 			this.maxLength = maxLength;
 			this.forbiddenChars = forbiddenChars;
 			if (forbiddenChars != null) {
@@ -132,7 +159,7 @@ public class FilenameFixer {
 			return srcName;
 		}
 
-		public static FixModel getDefault() {
+		public static Mode getDefault() {
 			// Find the default for this platform...
 			return SystemUtils.IS_OS_WINDOWS ? WIN : UNIX;
 		}
@@ -141,7 +168,7 @@ public class FilenameFixer {
 	public static final boolean DEFAULT_FIX_LENGTH = true;
 	public static final Character DEFAULT_FIX_CHAR = '_';
 
-	private final FixModel fixModel;
+	private final Mode mode;
 	private final Character fixChar;
 	private final boolean fixLength;
 
@@ -149,8 +176,8 @@ public class FilenameFixer {
 		this(null, FilenameFixer.DEFAULT_FIX_CHAR, FilenameFixer.DEFAULT_FIX_LENGTH);
 	}
 
-	public FilenameFixer(FixModel fixModel) {
-		this(fixModel, FilenameFixer.DEFAULT_FIX_CHAR, FilenameFixer.DEFAULT_FIX_LENGTH);
+	public FilenameFixer(Mode mode) {
+		this(mode, FilenameFixer.DEFAULT_FIX_CHAR, FilenameFixer.DEFAULT_FIX_LENGTH);
 	}
 
 	public FilenameFixer(Character fixChar) {
@@ -163,24 +190,24 @@ public class FilenameFixer {
 
 	}
 
-	public FilenameFixer(FixModel fixModel, Character fixChar) {
-		this(fixModel, fixChar, FilenameFixer.DEFAULT_FIX_LENGTH);
+	public FilenameFixer(Mode mode, Character fixChar) {
+		this(mode, fixChar, FilenameFixer.DEFAULT_FIX_LENGTH);
 
 	}
 
-	public FilenameFixer(FixModel fixModel, boolean fixLength) {
-		this(fixModel, FilenameFixer.DEFAULT_FIX_CHAR, fixLength);
+	public FilenameFixer(Mode mode, boolean fixLength) {
+		this(mode, FilenameFixer.DEFAULT_FIX_CHAR, fixLength);
 
 	}
 
-	public FilenameFixer(FixModel fixModel, Character fixChar, boolean fixLength) {
-		this.fixModel = Tools.coalesce(fixModel, FixModel.getDefault());
+	public FilenameFixer(Mode mode, Character fixChar, boolean fixLength) {
+		this.mode = Tools.coalesce(mode, Mode.getDefault());
 		this.fixChar = fixChar;
 		this.fixLength = fixLength;
 	}
 
-	public FixModel getFixModel() {
-		return this.fixModel;
+	public Mode getFixModel() {
+		return this.mode;
 	}
 
 	public Character getFixChar() {
@@ -192,6 +219,6 @@ public class FilenameFixer {
 	}
 
 	public final String fixName(String srcName) {
-		return this.fixModel.fixName(srcName, this.fixChar, this.fixLength);
+		return this.mode.fixName(srcName, this.fixChar, this.fixLength);
 	}
 }

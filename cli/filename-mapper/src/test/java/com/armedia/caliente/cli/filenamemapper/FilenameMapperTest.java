@@ -160,7 +160,7 @@ public class FilenameMapperTest {
 		boolean fixLength = true;
 		char fixChar = '_';
 
-		FilenameFixer.FixModel f = FilenameFixer.FixModel.WIN;
+		FilenameFixer.Mode f = FilenameFixer.Mode.WIN;
 		for (Object[] o : data) {
 			// Bad data...
 			final String key = Tools.toString(o[0]);
@@ -300,7 +300,7 @@ public class FilenameMapperTest {
 		boolean fixLength = true;
 		char fixChar = '_';
 
-		FilenameFixer.FixModel f = FilenameFixer.FixModel.UNIX;
+		FilenameFixer.Mode f = FilenameFixer.Mode.UNIX;
 		for (Object[] o : data) {
 			// Bad data...
 			final String key = Tools.toString(o[0]);
