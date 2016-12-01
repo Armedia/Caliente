@@ -23,8 +23,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +44,6 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
-import com.armedia.commons.utilities.Tools;
 
 /**
  * @author diego
@@ -705,42 +702,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			if (!isSupportsDuplicateFileNames() && settings.getBoolean(ImportSetting.DEDUP)) {
-				// Handle deduplication globally as well, since we may have cross-type collisions
-				int pass = 0;
-				outer: for (;;) {
-					output.info("Checking for filename collisions (pass # {})", ++pass);
-					Collection<CmfObject<V>> collidingObjects = objectStore.getObjectsWithFileNameCollisions(
-						getTranslator(), settings.getBoolean(ImportSetting.DEDUP_IGNORE_CASE));
-					if (collidingObjects.isEmpty()) {
-						if (pass > 1) {
-							output.info("No name collisions left to resolve (after {} passes)", pass - 1);
-						} else {
-							output.info("No name collisions were found");
-						}
-						break;
-					}
-					output.info("Resolving the next filename collision ({} total remaining, pass # {})",
-						collidingObjects.size(), pass);
-					for (CmfObject<V> object : collidingObjects) {
-						String newName = object.getName();
-						String id = object.getId();
-						String ext = "";
-						if (object.getType() == CmfType.DOCUMENT) {
-							id = object.getHistoryId();
-							ext = Tools.coalesce(FilenameUtils.getExtension(newName), ext);
-							if (!StringUtils.isEmpty(ext)) {
-								ext = String.format(".%s", ext);
-								newName = newName.substring(0, newName.length() - ext.length());
-							}
-						}
-						newName = String.format("%s_%s%s", newName, id, ext);
-						output.info("Fixing name collisions for {} [{}]({}), from [{}] to [{}]", object.getType(),
-							object.getLabel(), object.getId(), object.getName(), newName);
-						objectStore.renameObject(object, newName);
-						continue outer;
-					}
-					break outer;
-				}
+				// For now... we're going to migrate this to use the new in-memory duplicator and
+				// the new tree scanning APIs in CmfObjectStore to do the deduplication in memory,
+				// and in real-time, for speed
+				throw new ImportException("Filename deduplication is disabled for now - use a filename map instead");
 			}
 
 			listenerDelegator.importStarted(importState, containedTypes);

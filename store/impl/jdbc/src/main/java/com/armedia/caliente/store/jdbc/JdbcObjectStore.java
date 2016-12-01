@@ -15,10 +15,8 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -49,12 +47,12 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfTreeScanner;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.caliente.store.CmfValueSerializer;
-import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.Tools;
@@ -765,6 +763,43 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 		}
 		return result.get();
+	}
+
+	@Override
+	protected void scanObjectTree(JdbcOperation operation, final CmfTreeScanner scanner) throws CmfStorageException {
+		try {
+			JdbcTools.getQueryRunner().query(operation.getConnection(),
+				translateQuery(JdbcDialect.Query.SCAN_OBJECT_TREE), new ResultSetHandler<Void>() {
+					@Override
+					public Void handle(ResultSet rs) throws SQLException {
+						while (rs.next()) {
+							String objectId = rs.getString("object_id");
+							if (rs.wasNull()) {
+								continue;
+							}
+							String parentId = rs.getString("parent_id");
+							if (rs.wasNull()) {
+								continue;
+							}
+							String name = rs.getString("name");
+							if (rs.wasNull()) {
+								continue;
+							}
+							CmfObjectRef parent = JdbcTools.decodeDatabaseId(parentId);
+							CmfObjectRef child = JdbcTools.decodeDatabaseId(objectId);
+							try {
+								scanner.scanNode(parent, child, name);
+							} catch (Exception e) {
+								throw new SQLException(
+									"Failed to scan through the object tree due to a scanner exception", e);
+							}
+						}
+						return null;
+					}
+				});
+		} catch (SQLException e) {
+			throw new CmfStorageException("Exception raised while scanning the object tree", e);
+		}
 	}
 
 	@Override
@@ -1517,77 +1552,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to reset the alt names table", e);
 		}
-	}
-
-	@Override
-	protected <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(JdbcOperation operation,
-		CmfAttributeTranslator<V> translator, boolean ignoreCase) throws CmfStorageException {
-
-		final Connection c = operation.getConnection();
-		final Map<CmfType, Collection<String>> bucket = new EnumMap<>(CmfType.class);
-		final QueryRunner qr = JdbcTools.getQueryRunner();
-		final AtomicInteger counter = new AtomicInteger(0);
-		try {
-			JdbcDialect.Query query = (ignoreCase ? JdbcDialect.Query.LOAD_NAME_COLLISIONS_CI
-				: JdbcDialect.Query.LOAD_NAME_COLLISIONS);
-			qr.query(c, translateQuery(query), new ResultSetHandler<Void>() {
-				@Override
-				public Void handle(ResultSet rs) throws SQLException {
-					while (rs.next()) {
-						final String objectId = rs.getString("object_id");
-						if (rs.wasNull()) {
-							continue;
-						}
-						CmfObjectRef ref = JdbcTools.decodeDatabaseId(objectId);
-						Collection<String> c = bucket.get(ref.getType());
-						if (c == null) {
-							c = new HashSet<>();
-							bucket.put(ref.getType(), c);
-						}
-						c.add(ref.getId());
-						counter.incrementAndGet();
-					}
-					return null;
-				}
-			});
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to load the name collision records", e);
-		}
-
-		final List<CmfObject<V>> ret = new ArrayList<>(counter.get());
-		for (CmfType type : bucket.keySet()) {
-			Collection<String> ids = bucket.get(type);
-			loadObjects(operation, translator, type, ids, new DefaultCmfObjectHandler<V>() {
-
-				@Override
-				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
-					ret.add(dataObject);
-					return super.handleObject(dataObject);
-				}
-			});
-		}
-
-		Collections.sort(ret, new Comparator<CmfObject<V>>() {
-			@Override
-			public int compare(CmfObject<V> a, CmfObject<V> b) {
-				if (a == b) { return 0; }
-				if (a == null) { return -1; }
-				if (b == null) { return 1; }
-
-				int aP = a.getParentReferences().size();
-				int bP = b.getParentReferences().size();
-				if (aP != bP) { return Tools.compare(aP, bP); }
-
-				long aN = a.getNumber();
-				long bN = b.getNumber();
-
-				// This is reverse-ordered, earliest object last
-				if (aN != bN) { return (Tools.compare(aN, bN) * -1); }
-				return 0;
-			}
-		});
-
-		return ret;
 	}
 
 	protected boolean disableReferentialIntegrity(JdbcOperation operation) throws CmfStorageException {

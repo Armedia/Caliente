@@ -167,48 +167,6 @@
 			<column name="object_id" />
 		</createIndex>
 
-		<!-- This view will let us figure out any name collisions we may be experiencing here -->
-		<createView viewName="cmf_name_collision">
-			   select sq.parent_id, co.object_id, coalesce(cn.new_name, co.object_name) as final_name, co.object_number
-			     from cmf_object co left outer join cmf_alt_name cn on (co.object_id = cn.object_id),
-			          cmf_object_tree ct, (
-							select t.parent_id, coalesce(n.new_name, o.object_name) as name, count(*)
-							  from cmf_object_tree t left outer join cmf_alt_name n on (t.object_id = n.object_id), 
-							       cmf_object o, cmf_object p
-							 where t.object_id = o.object_id
-							   and t.parent_id = p.object_id
-							   and p.history_current = true
-							   and o.history_current = true
-						  group by t.parent_id, coalesce(n.new_name, o.object_name)
-							having count(*) > 1
-					  ) sq
-				where co.object_id = ct.object_id
-				  and ct.parent_id = sq.parent_id
-				  and coalesce(cn.new_name, co.object_name) = sq.name
- 			 order by sq.parent_id, coalesce(cn.new_name, co.object_name), co.object_number
-		</createView>
-
-		<!-- This view will let us figure out any case-insensitive name collisions we may be experiencing here -->
-		<createView viewName="cmf_name_collision_ci">
-			   select sq.parent_id, co.object_id, coalesce(cn.new_name, co.object_name) as final_name, co.object_number
-			     from cmf_object co left outer join cmf_alt_name cn on (co.object_id = cn.object_id),
-			          cmf_object_tree ct, (
-							select t.parent_id, lower(coalesce(n.new_name, o.object_name)) as name, count(*)
-							  from cmf_object_tree t left outer join cmf_alt_name n on (t.object_id = n.object_id), 
-							       cmf_object o, cmf_object p
-							 where t.object_id = o.object_id
-							   and t.parent_id = p.object_id
-							   and p.history_current = true
-							   and o.history_current = true
-						  group by t.parent_id, lower(coalesce(n.new_name, o.object_name))
-							having count(*) > 1
-					  ) sq
-				where co.object_id = ct.object_id
-				  and ct.parent_id = sq.parent_id
-				  and lower(coalesce(cn.new_name, co.object_name)) = sq.name
- 			 order by sq.parent_id, coalesce(cn.new_name, co.object_name), co.object_number
-		</createView>
-
 		<!-- The attribute descriptor table -->
 		<createTable tableName="cmf_attribute">
 			<column name="object_id" type="varchar(96)" remarks="The object the attribute is for">

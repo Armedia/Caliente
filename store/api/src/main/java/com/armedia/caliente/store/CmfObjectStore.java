@@ -584,31 +584,6 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> int loadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
 		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException;
 
-	public final <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(
-		final CmfAttributeTranslator<V> translator, boolean ignoreCase) throws CmfStorageException {
-		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
-		O operation = beginConcurrentInvocation();
-		try {
-			final boolean tx = operation.begin();
-			try {
-				return getObjectsWithFileNameCollisions(operation, translator, ignoreCase);
-			} finally {
-				if (tx) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to roll back the transaction for fixing object names", e);
-					}
-				}
-			}
-		} finally {
-			endConcurrentInvocation(operation);
-		}
-	}
-
-	protected abstract <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(O operation,
-		final CmfAttributeTranslator<V> translator, boolean ignoreCase) throws CmfStorageException;
-
 	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
 		throws CmfStorageException {
 		return fixObjectNames(translator, nameFixer, null, null);
@@ -658,6 +633,29 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract <V> int fixObjectNames(O operation, CmfAttributeTranslator<V> translator,
 		CmfNameFixer<V> nameFixer, CmfType type, Set<String> ids) throws CmfStorageException;
+
+	public final void scanObjectTree(final CmfTreeScanner scanner) throws CmfStorageException {
+		if (scanner == null) { throw new IllegalArgumentException("Must provide scanner to process the object tree"); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				scanObjectTree(operation, scanner);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to roll back the transaction for scanning the object tree", e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract void scanObjectTree(final O operation, final CmfTreeScanner scanner) throws CmfStorageException;
 
 	private Mapping createMapping(CmfType type, String name, String source, String target) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
@@ -1047,7 +1045,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract void cacheTargets(O operation, Collection<CmfObjectSearchSpec> objects) throws CmfStorageException;
+	protected abstract void cacheTargets(O operation, Collection<CmfObjectSearchSpec> objects)
+		throws CmfStorageException;
 
 	public final Map<CmfType, Map<String, String>> getRenameMappings() throws CmfStorageException {
 		O operation = beginConcurrentInvocation();

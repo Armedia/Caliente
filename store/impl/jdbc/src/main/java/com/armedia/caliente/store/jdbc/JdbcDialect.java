@@ -289,16 +289,6 @@ public abstract class JdbcDialect {
 				" order by parent_pos " //
 		),
 
-		LOAD_NAME_COLLISIONS( //
-			"       select * " + //
-				"     from cmf_name_collision " //
-		),
-
-		LOAD_NAME_COLLISIONS_CI( //
-			"       select * " + //
-				"     from cmf_name_collision_ci " //
-		),
-
 		LOAD_ATTRIBUTES( //
 			"       select * " + //
 				"     from cmf_attribute " + //
@@ -401,6 +391,15 @@ public abstract class JdbcDialect {
 		LOAD_RENAME_MAPPINGS( //
 			"       select * " + //
 				"     from cmf_alt_name " //
+		),
+
+		SCAN_OBJECT_TREE( //
+			"       select t.*, coalesce(n.new_name, o.object_name) as name " + //
+				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
+				"          cmf_object_tree t " + //
+				"    where o.object_id = t.object_id " + //
+				"      and o.history_current = true " + //
+				" order by t.object_id, t.parent_pos " //
 		),
 		//
 
