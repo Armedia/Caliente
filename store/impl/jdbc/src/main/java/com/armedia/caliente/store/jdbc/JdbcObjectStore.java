@@ -44,7 +44,7 @@ import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.caliente.store.CmfObjectSpec;
+import com.armedia.caliente.store.CmfObjectSearchSpec;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfProperty;
@@ -1647,10 +1647,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void cacheTargets(JdbcOperation operation, Collection<CmfObjectSpec> targets) throws CmfStorageException {
+	protected void cacheTargets(JdbcOperation operation, Collection<CmfObjectSearchSpec> targets) throws CmfStorageException {
 		Object[] arr = new Object[3];
 		Collection<Object[]> cacheTargets = new ArrayList<>(targets.size());
-		for (CmfObjectSpec spec : targets) {
+		for (CmfObjectSearchSpec spec : targets) {
 			arr[0] = (spec.getType() != null ? spec.getType().name() : null);
 			arr[1] = spec.getId();
 			arr[2] = spec.getSearchKey();
@@ -1717,7 +1717,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected CmfObjectSpec getNextCachedTarget(Object state) throws CmfStorageException {
+	protected CmfObjectSearchSpec getNextCachedTarget(Object state) throws CmfStorageException {
 		CachedTargetState cacheState = CachedTargetState.convert(state);
 		try {
 			if (!cacheState.hasNext()) { throw new NoSuchElementException("No row to retrieve"); }
@@ -1737,7 +1737,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				searchKey = null;
 			}
 			try {
-				return new CmfObjectSpec(type != null ? CmfType.valueOf(type) : null, id, searchKey);
+				return new CmfObjectSearchSpec(type != null ? CmfType.valueOf(type) : null, id, searchKey);
 			} catch (Exception e) {
 				throw new CmfStorageException(String.format("Illegal CmfType value [%s]", type), e);
 			} finally {

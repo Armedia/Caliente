@@ -37,7 +37,7 @@ import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
-import com.armedia.caliente.store.CmfObjectSpec;
+import com.armedia.caliente.store.CmfObjectSearchSpec;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfObjectStore.LockStatus;
 import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
@@ -821,8 +821,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private final CloseableIterator<ExportTarget> cacheExportResults(final S session, final CfgTools configuration,
 		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
 
-		final List<CmfObjectSpec> end = Collections.emptyList();
-		final BlockingQueue<Collection<CmfObjectSpec>> queue = new LinkedBlockingQueue<>();
+		final List<CmfObjectSearchSpec> end = Collections.emptyList();
+		final BlockingQueue<Collection<CmfObjectSearchSpec>> queue = new LinkedBlockingQueue<>();
 		ExecutorService executor = Executors.newSingleThreadExecutor();
 		final Future<Long> cachingTask = executor.submit(new Callable<Long>() {
 			@Override
@@ -831,7 +831,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				store.clearTargetCache();
 				while (true) {
 					final long start = System.currentTimeMillis();
-					Collection<CmfObjectSpec> c = queue.take();
+					Collection<CmfObjectSearchSpec> c = queue.take();
 					if (c.isEmpty()) {
 						// We're done
 						return cached;
@@ -862,7 +862,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			CloseableIterator<ExportTarget> it = findExportResults(session, configuration, factory);
 			try {
 				final int segmentSize = 1000;
-				List<CmfObjectSpec> temp = new ArrayList<>(segmentSize);
+				List<CmfObjectSearchSpec> temp = new ArrayList<>(segmentSize);
 				// It's OK to ask if the thread is finished up front because the only way it could
 				// happen is if it ran into an error, in which case we need to fail short.
 				while (!cachingTask.isDone() && it.hasNext()) {
@@ -902,7 +902,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		return new CloseableIterator<ExportTarget>() {
 
-			private final CloseableIterator<CmfObjectSpec> it = store.getCachedTargets();
+			private final CloseableIterator<CmfObjectSearchSpec> it = store.getCachedTargets();
 
 			@Override
 			protected boolean checkNext() {

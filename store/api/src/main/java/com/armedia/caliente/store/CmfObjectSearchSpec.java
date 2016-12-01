@@ -2,26 +2,26 @@ package com.armedia.caliente.store;
 
 import com.armedia.commons.utilities.Tools;
 
-public class CmfObjectSpec extends CmfObjectRef {
+public class CmfObjectSearchSpec extends CmfObjectRef {
 	private static final long serialVersionUID = 1L;
 
 	private final String searchKey;
 
-	protected CmfObjectSpec() {
+	protected CmfObjectSearchSpec() {
 		super();
 		this.searchKey = null;
 	}
 
-	public CmfObjectSpec(CmfType type, String id) {
+	public CmfObjectSearchSpec(CmfType type, String id) {
 		this(type, id, id);
 	}
 
-	public CmfObjectSpec(CmfType type, String id, String searchKey) {
+	public CmfObjectSearchSpec(CmfType type, String id, String searchKey) {
 		super(type, id);
 		this.searchKey = Tools.coalesce(searchKey, id);
 	}
 
-	protected CmfObjectSpec(CmfObjectSpec other) {
+	protected CmfObjectSearchSpec(CmfObjectSearchSpec other) {
 		super(other);
 		this.searchKey = other.searchKey;
 	}
@@ -32,6 +32,6 @@ public class CmfObjectSpec extends CmfObjectRef {
 
 	@Override
 	public String toString() {
-		return String.format("CmfObjectSpec [type=%s, id=%s, searchKey=%s]", getType().name(), getId(), getSearchKey());
+		return String.format("CmfObjectSearchSpec [type=%s, id=%s, searchKey=%s]", getType().name(), getId(), getSearchKey());
 	}
 }

@@ -1018,11 +1018,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract void clearTargetCache(O operation) throws CmfStorageException;
 
-	public final void cacheTarget(CmfObjectSpec object) throws CmfStorageException {
+	public final void cacheTarget(CmfObjectSearchSpec object) throws CmfStorageException {
 		cacheTargets(Collections.singleton(object));
 	}
 
-	public final void cacheTargets(Collection<CmfObjectSpec> objects) throws CmfStorageException {
+	public final void cacheTargets(Collection<CmfObjectSearchSpec> objects) throws CmfStorageException {
 		O operation = beginExclusiveInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -1047,7 +1047,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract void cacheTargets(O operation, Collection<CmfObjectSpec> objects) throws CmfStorageException;
+	protected abstract void cacheTargets(O operation, Collection<CmfObjectSearchSpec> objects) throws CmfStorageException;
 
 	public final Map<CmfType, Map<String, String>> getRenameMappings() throws CmfStorageException {
 		O operation = beginConcurrentInvocation();
@@ -1071,13 +1071,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract Map<CmfType, Map<String, String>> getRenameMappings(O operation) throws CmfStorageException;
 
-	public final CloseableIterator<CmfObjectSpec> getCachedTargets() throws CmfStorageException {
+	public final CloseableIterator<CmfObjectSearchSpec> getCachedTargets() throws CmfStorageException {
 		boolean ok = false;
 		final O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				CloseableIterator<CmfObjectSpec> ret = new CloseableIterator<CmfObjectSpec>() {
+				CloseableIterator<CmfObjectSearchSpec> ret = new CloseableIterator<CmfObjectSearchSpec>() {
 					final Object iteratorState = getCachedTargets(operation);
 
 					@Override
@@ -1090,7 +1090,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					}
 
 					@Override
-					protected CmfObjectSpec getNext() throws Exception {
+					protected CmfObjectSearchSpec getNext() throws Exception {
 						return getNextCachedTarget(this.iteratorState);
 					}
 
@@ -1134,7 +1134,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract boolean hasNextCachedTarget(Object state) throws CmfStorageException;
 
-	protected abstract CmfObjectSpec getNextCachedTarget(Object state) throws CmfStorageException;
+	protected abstract CmfObjectSearchSpec getNextCachedTarget(Object state) throws CmfStorageException;
 
 	protected abstract void closeCachedTargets(Object state) throws CmfStorageException;
 }

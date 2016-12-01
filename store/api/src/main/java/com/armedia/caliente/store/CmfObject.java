@@ -16,7 +16,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmfObject<V> extends CmfObjectSpec {
+public class CmfObject<V> extends CmfObjectSearchSpec {
 	private static final long serialVersionUID = 1L;
 
 	/**
