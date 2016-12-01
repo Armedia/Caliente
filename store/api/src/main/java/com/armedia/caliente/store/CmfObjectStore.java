@@ -585,13 +585,13 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException;
 
 	public final <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(
-		final CmfAttributeTranslator<V> translator) throws CmfStorageException {
+		final CmfAttributeTranslator<V> translator, boolean ignoreCase) throws CmfStorageException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return getObjectsWithFileNameCollisions(operation, translator);
+				return getObjectsWithFileNameCollisions(operation, translator, ignoreCase);
 			} finally {
 				if (tx) {
 					try {
@@ -607,7 +607,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(O operation,
-		final CmfAttributeTranslator<V> translator) throws CmfStorageException;
+		final CmfAttributeTranslator<V> translator, boolean ignoreCase) throws CmfStorageException;
 
 	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
 		throws CmfStorageException {

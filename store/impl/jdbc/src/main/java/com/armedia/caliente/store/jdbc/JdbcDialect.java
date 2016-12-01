@@ -294,6 +294,11 @@ public abstract class JdbcDialect {
 				"     from cmf_name_collision " //
 		),
 
+		LOAD_NAME_COLLISIONS_CI( //
+			"       select * " + //
+				"     from cmf_name_collision_ci " //
+		),
+
 		LOAD_ATTRIBUTES( //
 			"       select * " + //
 				"     from cmf_attribute " + //

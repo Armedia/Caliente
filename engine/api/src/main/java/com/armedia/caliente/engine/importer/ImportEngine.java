@@ -709,8 +709,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				int pass = 0;
 				outer: for (;;) {
 					output.info("Checking for filename collisions (pass # {})", ++pass);
-					Collection<CmfObject<V>> collidingObjects = objectStore
-						.getObjectsWithFileNameCollisions(getTranslator());
+					Collection<CmfObject<V>> collidingObjects = objectStore.getObjectsWithFileNameCollisions(
+						getTranslator(), settings.getBoolean(ImportSetting.DEDUP_IGNORE_CASE));
 					if (collidingObjects.isEmpty()) {
 						if (pass > 1) {
 							output.info("No name collisions left to resolve (after {} passes)", pass - 1);

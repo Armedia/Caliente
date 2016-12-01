@@ -1521,14 +1521,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected <V> Collection<CmfObject<V>> getObjectsWithFileNameCollisions(JdbcOperation operation,
-		CmfAttributeTranslator<V> translator) throws CmfStorageException {
+		CmfAttributeTranslator<V> translator, boolean ignoreCase) throws CmfStorageException {
 
 		final Connection c = operation.getConnection();
 		final Map<CmfType, Collection<String>> bucket = new EnumMap<>(CmfType.class);
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		final AtomicInteger counter = new AtomicInteger(0);
 		try {
-			qr.query(c, translateQuery(JdbcDialect.Query.LOAD_NAME_COLLISIONS), new ResultSetHandler<Void>() {
+			JdbcDialect.Query query = (ignoreCase ? JdbcDialect.Query.LOAD_NAME_COLLISIONS_CI
+				: JdbcDialect.Query.LOAD_NAME_COLLISIONS);
+			qr.query(c, translateQuery(query), new ResultSetHandler<Void>() {
 				@Override
 				public Void handle(ResultSet rs) throws SQLException {
 					while (rs.next()) {

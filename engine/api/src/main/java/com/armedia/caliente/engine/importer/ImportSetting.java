@@ -8,6 +8,7 @@ public enum ImportSetting implements TransferEngineSetting {
 	TARGET_LOCATION(CmfDataType.STRING, "/"),
 	TRIM_PREFIX(CmfDataType.INTEGER, 0),
 	DEDUP(CmfDataType.BOOLEAN, false),
+	DEDUP_IGNORE_CASE(CmfDataType.BOOLEAN, false),
 	NAME_FIX(CmfDataType.BOOLEAN, false),
 	NO_FILENAME_MAP(CmfDataType.BOOLEAN, false),
 	FILENAME_MAP(CmfDataType.STRING),
