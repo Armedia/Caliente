@@ -35,7 +35,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.tools.FilenameFixer;
+import com.armedia.caliente.store.tools.FilenameEncoder;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -92,12 +92,12 @@ public abstract class LocalImportDelegate extends
 		}
 
 		for (String s : FileNameTools.tokenize(p, '/')) {
-			tgt = new File(tgt, FilenameFixer.safeEncode(s, windowsMode));
+			tgt = new File(tgt, FilenameEncoder.safeEncode(s, windowsMode));
 		}
 
 		// We always fix the file's name, since it's not part of the path and may also need fixing.
 		// Same dilemma as above, though - need to know "when" to use windows mode...
-		String name = FilenameFixer.safeEncode(this.cmfObject.getName(), windowsMode);
+		String name = FilenameEncoder.safeEncode(this.cmfObject.getName(), windowsMode);
 		return new File(tgt, name).getCanonicalFile();
 	}
 

@@ -45,7 +45,7 @@ import com.armedia.caliente.store.local.xml.PropertiesLoader;
 import com.armedia.caliente.store.local.xml.PropertyT;
 import com.armedia.caliente.store.local.xml.StorePropertiesT;
 import com.armedia.caliente.store.local.xml.legacy.LegacyPropertiesLoader;
-import com.armedia.caliente.store.tools.FilenameFixer;
+import com.armedia.caliente.store.tools.FilenameEncoder;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -235,7 +235,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			}
 		}
 		if (this.fixFilenames) {
-			str = FilenameFixer.safeEncode(str, this.useWindowsFix);
+			str = FilenameEncoder.safeEncode(str, this.useWindowsFix);
 		}
 		return str;
 	}

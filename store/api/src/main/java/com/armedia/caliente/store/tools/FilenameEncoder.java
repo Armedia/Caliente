@@ -8,7 +8,7 @@ import java.util.Map;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class FilenameFixer {
+public final class FilenameEncoder {
 
 	private static final String ENCODING = "UTF-8";
 
@@ -20,15 +20,15 @@ public final class FilenameFixer {
 
 	static {
 		Map<Character, String> m = new HashMap<>();
-		for (int i = 0; i < FilenameFixer.LIN_INVALID_CHARS.length(); i++) {
-			final char c = FilenameFixer.LIN_INVALID_CHARS.charAt(i);
+		for (int i = 0; i < FilenameEncoder.LIN_INVALID_CHARS.length(); i++) {
+			final char c = FilenameEncoder.LIN_INVALID_CHARS.charAt(i);
 			m.put(Character.valueOf(c), String.format("%%%02X", (int) c));
 		}
 		LIN_ENCODER = Tools.freezeMap(m);
 
 		m = new HashMap<>();
-		for (int i = 0; i < FilenameFixer.WIN_INVALID_CHARS.length(); i++) {
-			final char c = FilenameFixer.WIN_INVALID_CHARS.charAt(i);
+		for (int i = 0; i < FilenameEncoder.WIN_INVALID_CHARS.length(); i++) {
+			final char c = FilenameEncoder.WIN_INVALID_CHARS.charAt(i);
 			m.put(Character.valueOf(c), String.format("%%%02X", (int) c));
 		}
 		// 0x01, 0x02, ... 0x1F
@@ -39,10 +39,10 @@ public final class FilenameFixer {
 	}
 
 	public static String safeEncodeChar(Character c, boolean forWindows) {
-		String str = FilenameFixer.LIN_ENCODER.get(c);
+		String str = FilenameEncoder.LIN_ENCODER.get(c);
 		if (str != null) { return str; }
 		if (forWindows) {
-			str = FilenameFixer.WIN_ENCODER.get(c);
+			str = FilenameEncoder.WIN_ENCODER.get(c);
 			if (str != null) { return str; }
 		}
 		return c.toString();
@@ -51,7 +51,7 @@ public final class FilenameFixer {
 	public static String safeEncode(String str, boolean forWindows) {
 		StringBuilder b = new StringBuilder(str.length());
 		for (int i = 0; i < str.length(); i++) {
-			b.append(FilenameFixer.safeEncodeChar(str.charAt(i), forWindows));
+			b.append(FilenameEncoder.safeEncodeChar(str.charAt(i), forWindows));
 		}
 		str = b.toString();
 
@@ -66,22 +66,22 @@ public final class FilenameFixer {
 
 	public static String urlEncode(String str) {
 		try {
-			return URLEncoder.encode(str, FilenameFixer.ENCODING);
+			return URLEncoder.encode(str, FilenameEncoder.ENCODING);
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(String.format("%s encoding isn't supported in this JVM", FilenameFixer.ENCODING),
+			throw new RuntimeException(String.format("%s encoding isn't supported in this JVM", FilenameEncoder.ENCODING),
 				e);
 		}
 	}
 
 	public static String urlDecode(String str) {
 		try {
-			return URLDecoder.decode(str, FilenameFixer.ENCODING);
+			return URLDecoder.decode(str, FilenameEncoder.ENCODING);
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(String.format("%s encoding isn't supported in this JVM", FilenameFixer.ENCODING),
+			throw new RuntimeException(String.format("%s encoding isn't supported in this JVM", FilenameEncoder.ENCODING),
 				e);
 		}
 	}
 
-	private FilenameFixer() {
+	private FilenameEncoder() {
 	}
 }
