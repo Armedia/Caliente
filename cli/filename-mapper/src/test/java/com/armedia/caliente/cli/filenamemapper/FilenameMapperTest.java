@@ -7,7 +7,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.cli.filenamemapper.FilenameMapper.Fixer;
 import com.armedia.commons.utilities.Tools;
 
 public class FilenameMapperTest {
@@ -161,7 +160,7 @@ public class FilenameMapperTest {
 		boolean fixLength = true;
 		char fixChar = '_';
 
-		Fixer f = Fixer.WIN;
+		FilenameFixer.FixModel f = FilenameFixer.FixModel.WIN;
 		for (Object[] o : data) {
 			// Bad data...
 			final String key = Tools.toString(o[0]);
@@ -301,7 +300,7 @@ public class FilenameMapperTest {
 		boolean fixLength = true;
 		char fixChar = '_';
 
-		Fixer f = Fixer.UNIX;
+		FilenameFixer.FixModel f = FilenameFixer.FixModel.UNIX;
 		for (Object[] o : data) {
 			// Bad data...
 			final String key = Tools.toString(o[0]);
