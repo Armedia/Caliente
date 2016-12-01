@@ -692,22 +692,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			}
 
-			if (settings.getBoolean(ImportSetting.NAME_FIX)) {
-				CmfNameFixer<V> nameFixer = getNameFixer(output);
-				if (nameFixer != null) {
-					output.info("Fixing all object names dynamically...");
-					final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer);
-					output.info("Fixed the names of {} objects", fixes);
-				}
-			}
-
-			if (!isSupportsDuplicateFileNames() && settings.getBoolean(ImportSetting.DEDUP)) {
-				// For now... we're going to migrate this to use the new in-memory duplicator and
-				// the new tree scanning APIs in CmfObjectStore to do the deduplication in memory,
-				// and in real-time, for speed
-				throw new ImportException("Filename deduplication is disabled for now - use a filename map instead");
-			}
-
 			listenerDelegator.importStarted(importState, containedTypes);
 			final CmfAttributeTranslator<V> translator = getTranslator();
 			for (final CmfType type : CmfType.values()) {
