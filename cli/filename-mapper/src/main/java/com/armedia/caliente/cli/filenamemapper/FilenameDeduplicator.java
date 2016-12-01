@@ -69,15 +69,15 @@ public class FilenameDeduplicator {
 		public String getNewName(CmfObjectRef entryId, String currentName);
 	}
 
-	public static interface ConflictResolver {
-		public String resolveConflict(CmfObjectRef entryId, String currentName, long count);
+	public static interface FilenameCollisionResolver {
+		public String generateUniqueName(CmfObjectRef entryId, String currentName, long count);
 	}
 
-	public static interface Processor {
+	public static interface RenamedEntryProcessor {
 		public void processEntry(CmfObjectRef entryId, String entryName);
 	}
 
-	private class FSObject {
+	public class FSObject {
 		protected final ReadWriteLock mainLock = new ReentrantReadWriteLock();
 		protected final CmfObjectRef id;
 
@@ -105,7 +105,7 @@ public class FilenameDeduplicator {
 		}
 	}
 
-	private class FSEntry extends FSObject implements Comparable<FSEntry> {
+	public class FSEntry extends FSObject implements Comparable<FSEntry> {
 		private final ReadWriteLock parentsLock = new ReentrantReadWriteLock();
 		private final Map<CmfObjectRef, FSEntryContainer> parents = new HashMap<>();
 		private final String originalName;
@@ -129,13 +129,27 @@ public class FilenameDeduplicator {
 			}
 		}
 
-		private boolean setName(final String newName) {
+		public String getOriginalName() {
+			return this.originalName;
+		}
+
+		public String getCurrentName() {
+			Lock l = this.mainLock.readLock();
+			l.lock();
+			try {
+				return this.newName;
+			} finally {
+				l.unlock();
+			}
+		}
+
+		public boolean setName(final String newName) {
 			if (StringUtils.isEmpty(newName)) { return false; }
-			if (FilenameDeduplicator.this.canonicalizer.equals(this.newName, newName)) { return false; }
 			final String oldName;
 			Lock l = this.mainLock.writeLock();
 			l.lock();
 			try {
+				if (FilenameDeduplicator.this.canonicalizer.equals(this.newName, newName)) { return false; }
 				oldName = this.newName;
 				this.newName = newName;
 			} finally {
@@ -311,6 +325,16 @@ public class FilenameDeduplicator {
 			}
 		}
 
+		public Set<String> getConflicts() {
+			Lock l = this.conflictsLock.readLock();
+			l.lock();
+			try {
+				return new HashSet<>(this.conflicts);
+			} finally {
+				l.unlock();
+			}
+		}
+
 		@Override
 		public String toString() {
 			return String.format("FSEntryContainer [id=%s, childrenNames={%s}, conflicts={%s}]", this.id,
@@ -366,7 +390,7 @@ public class FilenameDeduplicator {
 			});
 	}
 
-	public synchronized long renameEntries(Renamer renamer) {
+	public synchronized long renameAllEntries(Renamer renamer) {
 		long count = 0;
 		for (FSEntry e : this.allEntries.values()) {
 			final String newName = renamer.getNewName(e.id, e.newName);
@@ -377,11 +401,11 @@ public class FilenameDeduplicator {
 		return count;
 	}
 
-	public synchronized long fixConflicts(ConflictResolver resolver) {
+	public synchronized long fixConflicts(FilenameCollisionResolver resolver) {
 		return fixConflicts(resolver, null);
 	}
 
-	public synchronized long fixConflicts(ConflictResolver resolver, Comparator<FSEntry> comparator) {
+	public synchronized long fixConflicts(FilenameCollisionResolver resolver, Comparator<FSEntry> comparator) {
 		long count = 0;
 		nextConflict: while (!this.conflictContainers.isEmpty()) {
 			int deltas = 0;
@@ -408,7 +432,7 @@ public class FilenameDeduplicator {
 					}
 					for (FSEntry e : l) {
 						final String oldName = e.newName;
-						String newName = resolver.resolveConflict(e.id, e.newName, count);
+						String newName = resolver.generateUniqueName(e.id, e.newName, count);
 						if (e.setName(newName)) {
 							count++;
 							deltas++;
@@ -442,16 +466,16 @@ public class FilenameDeduplicator {
 		}
 	}
 
-	public synchronized void processRenamedEntries(Processor p) {
+	public synchronized void processRenamedEntries(RenamedEntryProcessor p) {
 		if (p == null) { return; }
 		for (FSEntry e : this.renamedEntries.values()) {
 			p.processEntry(e.id, e.newName);
 		}
 	}
 
-	public boolean addEntry(CmfObjectRef containerId, final CmfObjectRef entryId, final String name) {
-		if (!this.idValidator.isValidId(containerId)) { return false; }
-		if (!this.idValidator.isValidId(entryId)) { return false; }
+	public FSEntry addEntry(CmfObjectRef containerId, final CmfObjectRef entryId, final String name) {
+		if (!this.idValidator.isValidId(containerId)) { return null; }
+		if (!this.idValidator.isValidId(entryId)) { return null; }
 		final FSEntryContainer container = getContainer(containerId);
 		FSEntry entry = ConcurrentUtils.createIfAbsentUnchecked(this.allEntries, entryId,
 			new ConcurrentInitializer<FSEntry>() {
@@ -462,6 +486,6 @@ public class FilenameDeduplicator {
 			});
 		entry.addParent(container);
 		container.addChild(entry);
-		return true;
+		return entry;
 	}
 }

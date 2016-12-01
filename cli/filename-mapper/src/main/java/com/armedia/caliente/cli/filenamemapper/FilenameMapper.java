@@ -9,21 +9,17 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.ConflictResolver;
+import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.IdValidator;
-import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.Processor;
+import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.RenamedEntryProcessor;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObjectRef;
@@ -61,129 +57,6 @@ class FilenameMapper {
 			"        and not folder('/Temp', DESCEND) " + //
 			"        and not folder('/Templates', DESCEND) " + //
 			"            enable (ROW_BASED) ";
-
-	public static enum Fixer {
-
-		//
-		WIN(255, "[\"*\\\\><?/:|\u0000]") {
-			private final String[] forbidden = {
-				"CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
-				"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
-			};
-
-			@Override
-			protected String fixLength(String name) {
-				// Mind the extension on the rename...
-				String ext = FilenameUtils.getExtension(name);
-				String base = FilenameUtils.getBaseName(name);
-				int maxLength = this.maxLength;
-				if (!StringUtils.isEmpty(ext)) {
-					maxLength -= (ext.length() + 1);
-				}
-				base = base.substring(0, Math.min(base.length(), maxLength));
-				if (!StringUtils.isEmpty(ext)) {
-					name = String.format("%s.%s", base, ext);
-				}
-				return name;
-			}
-
-			@Override
-			public boolean isValidFixChar(Character fixChar) {
-				if (!super.isValidFixChar(fixChar)) { return false; }
-				if (Character.isWhitespace(fixChar)) { return false; }
-				if ('.' == fixChar) { return false; }
-				return true;
-			}
-
-			@Override
-			protected String fixFinalName(String name, Character fixChar) {
-				// Windows has some extra rules as to how files shall not be named
-
-				// File names may not end in one or more dots (.)
-				name = name.replaceAll("\\.$", fixChar.toString());
-
-				// File names may not end in one or more spaces
-				name = name.replaceAll("\\s$", fixChar.toString());
-
-				// File must also not be named any of the forbidden names (case insenstitive)
-				for (String f : this.forbidden) {
-					if (f.equalsIgnoreCase(name)) {
-						name = String.format("%s%s", fixChar.toString(), name);
-						break;
-					}
-				}
-
-				// That's it - this is now a clean windows filename
-				return name;
-			}
-		},
-
-		UNIX(255, "[/\0]"),
-		//
-		;
-
-		protected final int maxLength;
-		protected final String forbiddenChars;
-
-		private Fixer() {
-			this(0, null);
-		}
-
-		private Fixer(String forbiddenChars) {
-			this(0, forbiddenChars);
-		}
-
-		private Fixer(int maxLength, String forbiddenChars) {
-			this.maxLength = maxLength;
-			this.forbiddenChars = forbiddenChars;
-			if (forbiddenChars != null) {
-				try {
-					Pattern.compile(forbiddenChars);
-				} catch (PatternSyntaxException e) {
-					throw new RuntimeException(
-						String.format("Forbidden characters must be a valid pattern for %s", name()), e);
-				}
-			}
-		}
-
-		protected String fixFinalName(String name, Character fixChar) {
-			return name;
-		}
-
-		protected String fixLength(String name) {
-			return name.substring(0, Math.min(name.length(), this.maxLength));
-		}
-
-		public boolean isValidFixChar(Character fixChar) {
-			if (this.forbiddenChars != null) { return !fixChar.toString().matches(this.forbiddenChars); }
-			return true;
-		}
-
-		public final String fixName(String srcName, Character fixChar, boolean fixLength) {
-			if (srcName == null) { throw new IllegalArgumentException("Must provide a name to fix"); }
-			// If no fix is desired, return the same value
-			if ((fixChar == null) && !fixLength) { return srcName; }
-
-			// First, fix the characters
-			if ((fixChar != null) && (this.forbiddenChars != null)) {
-				srcName = srcName.replaceAll(this.forbiddenChars, fixChar.toString());
-			}
-
-			srcName = fixFinalName(srcName, Tools.coalesce(fixChar, FilenameMapper.DEFAULT_FIX_CHAR));
-
-			// Now, fix the length
-			if ((this.maxLength > 0) && (srcName.length() >= this.maxLength) && fixLength) {
-				srcName = fixLength(srcName);
-			}
-
-			return srcName;
-		}
-
-		public static Fixer getDefault() {
-			// Find the default for this platform...
-			return SystemUtils.IS_OS_WINDOWS ? WIN : UNIX;
-		}
-	}
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final DfcLaunchHelper dfcLaunchHelper;
@@ -273,6 +146,41 @@ class FilenameMapper {
 		return String.format("%s # %s", entryId.getType().name(), entryId.getId());
 	}
 
+	private FilenameFixer configureFilenameFixer(CommandLineValues cli) throws CliParameterException {
+		if (cli.isPresent(CLIParam.no_fix)) { return null; }
+		final FilenameFixer.FixModel fixerModel;
+		final Character fixChar;
+		final boolean fixLength;
+		if (cli.isPresent(CLIParam.fix_mode)) {
+			String fixMode = cli.getString(CLIParam.fix_mode, "");
+			try {
+				fixerModel = FilenameFixer.FixModel.valueOf(fixMode);
+			} catch (IllegalArgumentException e) {
+				throw new CliParameterException(String.format("Invalid fix mode specified: [%s]", fixMode));
+			}
+		} else {
+			fixerModel = FilenameFixer.FixModel.getDefault();
+		}
+
+		fixLength = !cli.isPresent(CLIParam.no_length_fix);
+
+		if (cli.isPresent(CLIParam.no_char_fix)) {
+			fixChar = null;
+		} else {
+			if (cli.isPresent(CLIParam.fix_char)) {
+				String s = cli.getString(CLIParam.fix_char);
+				if (StringUtils.isEmpty(
+					s)) { throw new CliParameterException("The fix_char string must be at least 1 character long"); }
+				fixChar = s.charAt(0);
+				if (!fixerModel.isValidFixChar(fixChar)) { throw new CliParameterException(String.format(
+					"The character [%s] is not a valid fix character for fix mode %s", fixChar, fixerModel.name())); }
+			} else {
+				fixChar = FilenameMapper.DEFAULT_FIX_CHAR;
+			}
+		}
+		return new FilenameFixer(fixerModel, fixChar, fixLength);
+	}
+
 	protected int run(CommandLineValues cli) throws Exception {
 		final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
 		final String dctmUser = this.dfcLaunchHelper.getDfcUser(cli);
@@ -294,9 +202,6 @@ class FilenameMapper {
 			targetFile = f;
 		}
 
-		final Fixer fixer;
-		final Character fixChar;
-		final boolean fixLength;
 		final boolean dedupEnabled = !cli.isPresent(CLIParam.no_dedup);
 		final String resolverPattern;
 		if (dedupEnabled) {
@@ -309,44 +214,12 @@ class FilenameMapper {
 			resolverPattern = FilenameMapper.DEFAULT_DEDUP_PATTERN;
 		}
 
-		if (cli.isPresent(CLIParam.no_fix)) {
-			fixer = null;
-			fixChar = null;
-			fixLength = false;
-		} else {
-			if (cli.isPresent(CLIParam.fix_mode)) {
-				String fixMode = cli.getString(CLIParam.fix_mode, "");
-				try {
-					fixer = Fixer.valueOf(fixMode);
-				} catch (IllegalArgumentException e) {
-					this.log.error("Invalid fix mode specified: [{}]", fixMode);
-					return 1;
-				}
-			} else {
-				fixer = Fixer.getDefault();
-			}
-
-			fixLength = !cli.isPresent(CLIParam.no_length_fix);
-
-			if (cli.isPresent(CLIParam.no_char_fix)) {
-				fixChar = null;
-			} else {
-				if (cli.isPresent(CLIParam.fix_char)) {
-					String s = cli.getString(CLIParam.fix_char);
-					if (StringUtils.isEmpty(s)) {
-						this.log.error("The fix_char string must be at least 1 character long");
-						return 1;
-					}
-					fixChar = s.charAt(0);
-					if (!fixer.isValidFixChar(fixChar)) {
-						this.log.error("The character [{}] is not a valid fix character for fix mode {}", fixChar,
-							fixer.name());
-						return 1;
-					}
-				} else {
-					fixChar = FilenameMapper.DEFAULT_FIX_CHAR;
-				}
-			}
+		final FilenameFixer fixer;
+		try {
+			fixer = configureFilenameFixer(cli);
+		} catch (CliParameterException e) {
+			this.log.error(e.getMessage());
+			return 1;
 		}
 
 		final DfcSessionPool dfcPool;
@@ -390,7 +263,7 @@ class FilenameMapper {
 						// First things first: make sure the filename is fixed
 						if (fixer != null) {
 							final String oldName = name;
-							name = fixer.fixName(name, fixChar, fixLength);
+							name = fixer.fixName(name);
 							if (name == null) {
 								name = oldName;
 							}
@@ -441,10 +314,12 @@ class FilenameMapper {
 					this.log.info("Will resolve any conflicts using the pattern [{}]", resolverPattern);
 					final Map<String, Object> resolverMap = new HashMap<>();
 					// This is the only one that never changes...so we add it once and never again
-					resolverMap.put("fixChar", Tools.coalesce(fixChar, FilenameMapper.DEFAULT_FIX_CHAR).toString());
-					long fixes = deduplicator.fixConflicts(new ConflictResolver() {
+					resolverMap.put("fixChar",
+						Tools.coalesce(fixer != null ? fixer.getFixChar() : null, FilenameMapper.DEFAULT_FIX_CHAR)
+							.toString());
+					long fixes = deduplicator.fixConflicts(new FilenameCollisionResolver() {
 						@Override
-						public String resolveConflict(CmfObjectRef entryId, String currentName, long count) {
+						public String generateUniqueName(CmfObjectRef entryId, String currentName, long count) {
 							resolverMap.put("typeName", entryId.getType().name());
 							resolverMap.put("typeOrdinal", entryId.getType().ordinal());
 							resolverMap.put("id", entryId.getId());
@@ -453,13 +328,13 @@ class FilenameMapper {
 							String newName = StrSubstitutor.replace(resolverPattern, resolverMap);
 							if (fixer != null) {
 								// Make sure we use a clean name...
-								newName = fixer.fixName(newName, fixChar, fixLength);
+								newName = fixer.fixName(newName);
 							}
 							return newName;
 						}
 					});
 					this.log.info("Conflicts fixed: {}", fixes);
-					deduplicator.processRenamedEntries(new Processor() {
+					deduplicator.processRenamedEntries(new RenamedEntryProcessor() {
 						@Override
 						public void processEntry(CmfObjectRef entryId, String entryName) {
 							String key = generateKey(entryId);
