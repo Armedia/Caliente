@@ -51,6 +51,7 @@ public abstract class AbstractCalienteMain_import extends
 
 	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		settings.put(ImportSetting.DEDUP.getLabel(), CLIParam.dedup.isPresent());
+		settings.put(ImportSetting.DEDUP_IGNORE_CASE.getLabel(), CLIParam.dedup_ignore_case.isPresent());
 		settings.put(ImportSetting.NAME_FIX.getLabel(), CLIParam.name_fix.isPresent());
 		settings.put(ImportSetting.NO_FILENAME_MAP.getLabel(), CLIParam.no_filename_map.isPresent());
 		settings.put(ImportSetting.FILENAME_MAP.getLabel(), Setting.FILENAME_MAP.getString());
