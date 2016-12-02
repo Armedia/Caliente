@@ -98,6 +98,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				throw new CmfStorageException("Failed to initialize the query resolver", e);
 			}
 
+			Map<JdbcDialect.Query, String> queries = new EnumMap<>(JdbcDialect.Query.class);
+			for (JdbcDialect.Query q : JdbcDialect.Query.values()) {
+				String v = this.dialect.translateQuery(q);
+				if (StringUtils.isEmpty(v)) {
+					continue;
+				}
+				queries.put(q, v);
+			}
+			this.queries = Tools.freezeMap(queries);
+
 			this.propertyManager = new JdbcStorePropertyManager(JdbcObjectStore.PROPERTY_TABLE);
 
 			JdbcOperation op = new JdbcOperation(c, this.managedTransactions);
@@ -125,16 +135,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					}
 				}
 			}
-
-			Map<JdbcDialect.Query, String> queries = new EnumMap<>(JdbcDialect.Query.class);
-			for (JdbcDialect.Query q : JdbcDialect.Query.values()) {
-				String v = this.dialect.translateQuery(q);
-				if (StringUtils.isEmpty(v)) {
-					continue;
-				}
-				queries.put(q, v);
-			}
-			this.queries = Tools.freezeMap(queries);
 		} finally {
 			JdbcTools.closeQuietly(c);
 		}
