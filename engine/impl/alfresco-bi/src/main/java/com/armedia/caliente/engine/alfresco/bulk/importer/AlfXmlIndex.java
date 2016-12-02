@@ -18,6 +18,7 @@ import java.util.Map;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -25,6 +26,7 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -55,6 +57,8 @@ public class AlfXmlIndex implements Closeable {
 
 	private final File target;
 	private final Collection<Class<?>> supportedClasses;
+	private final Class<?> rootClass;
+	private final String rootElement;
 
 	private Marshaller marshaller = null;
 	private OutputStream out = null;
@@ -62,7 +66,7 @@ public class AlfXmlIndex implements Closeable {
 	private boolean initialized = false;
 	private boolean closed = false;
 
-	public AlfXmlIndex(File target, Class<?>... classes) {
+	public AlfXmlIndex(File target, Class<?>... classes) throws JAXBException {
 		this.target = target;
 		List<Class<?>> l = new ArrayList<>();
 		if (classes != null) {
@@ -72,7 +76,18 @@ public class AlfXmlIndex implements Closeable {
 				}
 			}
 		}
+		if (l
+			.isEmpty()) { throw new IllegalArgumentException("No classes provided to support the indexing operation"); }
 		this.supportedClasses = Tools.freezeList(l);
+		this.rootClass = this.supportedClasses.iterator().next();
+		final XmlRootElement rootElementDecl = this.rootClass.getAnnotation(XmlRootElement.class);
+		if (rootElementDecl == null) { throw new JAXBException(String
+			.format("The root class [%s] lacks an XmlRootElement annotation", this.rootClass.getCanonicalName())); }
+		String rootElement = rootElementDecl.name();
+		if ((rootElement == null) || "##default".equals(rootElement)) {
+			rootElement = StringUtils.uncapitalize(this.rootClass.getSimpleName());
+		}
+		this.rootElement = rootElement;
 	}
 
 	protected JAXBContext getJAXBContext(Class<?>... classes) throws JAXBException {
@@ -137,7 +152,9 @@ public class AlfXmlIndex implements Closeable {
 			this.xml = getXMLStreamWriter(factory, this.out);
 
 			this.xml.writeStartDocument(getEncoding(), getVersion());
-			this.xml.writeStartElement(getRootElement());
+			// TODO: Enable this in concert with the BI AMP, since it's not built to handle DTD
+			// this.xml.writeDTD(String.format("<!DOCTYPE %s>", this.rootElement));
+			this.xml.writeStartElement(this.rootElement);
 			Map<String, String> m = getRootAttributes();
 			if (m != null) {
 				for (String k : m.keySet()) {
@@ -171,10 +188,6 @@ public class AlfXmlIndex implements Closeable {
 
 	protected String getEncoding() {
 		return Charset.defaultCharset().name();
-	}
-
-	protected String getRootElement() {
-		return "scan";
 	}
 
 	protected Map<String, String> getRootAttributes() {

@@ -36,6 +36,7 @@ import com.armedia.caliente.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfSessionFactory;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganizationStrategy;
+import com.armedia.caliente.engine.alfresco.bulk.importer.cache.Cache;
 import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItem;
 import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItemMarker;
 import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItemMarker.MarkerType;
@@ -196,10 +197,12 @@ public class AlfImportDelegateFactory
 
 		final File biRootFile = new File(this.content, AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
 		this.biRootPath = biRootFile.toPath();
-		this.fileIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FILE_CACHE_FILE),
-			CacheItem.class, CacheItemVersion.class);
+		Class<?>[] idxClasses = {
+			Cache.class, CacheItem.class, CacheItemVersion.class
+		};
+		this.fileIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FILE_CACHE_FILE), idxClasses);
 		this.folderIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FOLDER_CACHE_FILE),
-			CacheItem.class, CacheItemVersion.class);
+			idxClasses);
 
 		String contentModels = configuration.getString(AlfSessionFactory.CONTENT_MODEL);
 		if (contentModels == null) { throw new IllegalStateException(
