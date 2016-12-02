@@ -1611,7 +1611,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void cacheTargets(JdbcOperation operation, Collection<CmfObjectSearchSpec> targets) throws CmfStorageException {
+	protected void cacheTargets(JdbcOperation operation, Collection<CmfObjectSearchSpec> targets)
+		throws CmfStorageException {
 		Object[] arr = new Object[3];
 		Collection<Object[]> cacheTargets = new ArrayList<>(targets.size());
 		for (CmfObjectSearchSpec spec : targets) {
@@ -1650,7 +1651,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		private static CachedTargetState convert(Object o) throws CmfStorageException {
 			if (o == null) { throw new CmfStorageException("No object to check against"); }
 			if (!CachedTargetState.class
-				.isInstance(o)) { throw new CmfStorageException("Invalid state - not a ResultSet"); }
+				.isInstance(o)) { throw new CmfStorageException("Invalid state - not a CachedTargetState"); }
 			return CachedTargetState.class.cast(o);
 		}
 
