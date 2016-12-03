@@ -41,6 +41,10 @@ public class CmfObjectRef implements Comparable<CmfObjectRef>, Serializable {
 		return this.id;
 	}
 
+	public boolean isNull() {
+		return (this.type == null) || (this.id == null);
+	}
+
 	@Override
 	public int hashCode() {
 		return Tools.hashTool(this, null, this.type, this.id);

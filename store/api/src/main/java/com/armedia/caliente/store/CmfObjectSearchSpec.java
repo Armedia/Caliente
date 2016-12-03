@@ -31,6 +31,11 @@ public class CmfObjectSearchSpec extends CmfObjectRef {
 	}
 
 	@Override
+	public boolean isNull() {
+		return (this.searchKey == null) || super.isNull();
+	}
+
+	@Override
 	public String toString() {
 		return String.format("CmfObjectSearchSpec [type=%s, id=%s, searchKey=%s]", getType().name(), getId(), getSearchKey());
 	}
