@@ -1613,18 +1613,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected void cacheTargets(JdbcOperation operation, Collection<CmfObjectSearchSpec> targets)
 		throws CmfStorageException {
-		Object[] arr = new Object[3];
-		Collection<Object[]> cacheTargets = new ArrayList<>(targets.size());
+		Object[][] cacheTargets = new Object[targets.size()][3];
+		int i = 0;
 		for (CmfObjectSearchSpec spec : targets) {
-			arr[0] = (spec.getType() != null ? spec.getType().name() : null);
-			arr[1] = spec.getId();
-			arr[2] = spec.getSearchKey();
-			cacheTargets.add(arr.clone());
+			cacheTargets[i][0] = (spec.getType() != null ? spec.getType().name() : null);
+			cacheTargets[i][1] = spec.getId();
+			cacheTargets[i][2] = spec.getSearchKey();
+			i++;
 		}
 		QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
 			qr.insertBatch(operation.getConnection(), translateQuery(JdbcDialect.Query.INSERT_CACHE_TARGET),
-				JdbcTools.HANDLER_NULL, cacheTargets.toArray(JdbcTools.NO_PARAMS));
+				JdbcTools.HANDLER_NULL, cacheTargets);
 		} catch (SQLException e) {
 			throw new CmfStorageException("Exception caught inserting the cache targets", e);
 		}
