@@ -21,6 +21,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
@@ -818,6 +820,130 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected void setExportProperties(CmfObjectStore<?, ?> store) {
 	}
 
+	@SuppressWarnings("unused")
+	private final CloseableIterator<ExportTarget> newCacheExportResults(final S session, final CfgTools configuration,
+		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
+
+		return new CloseableIterator<ExportTarget>() {
+			private final AtomicLong retrieved = new AtomicLong(0);
+			private final AtomicLong cached = new AtomicLong(0);
+			private final AtomicBoolean retrievalCompleted = new AtomicBoolean(false);
+			private final ExecutorService executor = Executors.newFixedThreadPool(2);
+			private final Future<Long> cachingTask;
+			private final Future<Long> findTask;
+			private Long lastLoaded = null;
+			private final CloseableIterator<CmfObjectSearchSpec> it;
+
+			{
+				final BlockingQueue<Collection<CmfObjectSearchSpec>> queue = new LinkedBlockingQueue<>();
+				this.cachingTask = this.executor.submit(new Callable<Long>() {
+					@Override
+					public Long call() throws Exception {
+						long cached = 0;
+						store.clearTargetCache();
+						while (true) {
+							final long start = System.currentTimeMillis();
+							Collection<CmfObjectSearchSpec> c = queue.take();
+							if (c.isEmpty()) {
+								// We're done
+								return cached;
+							}
+
+							try {
+								store.cacheTargets(c);
+								cached += c.size();
+								final long now = System.currentTimeMillis();
+								double perSecond = (((double) c.size() * 1000) / (now - start));
+								double msPer = ((double) (now - start)) / ((double) c.size());
+								output.info("Caching {} targets ({} total so far @ {} items/s | {} ms per item)",
+									c.size(), cached, String.format("%.2f", perSecond), String.format("%.2f", msPer));
+							} finally {
+								// Help the GC along...
+								c.clear();
+							}
+						}
+					}
+
+				});
+
+				this.findTask = this.executor.submit(new Callable<Long>() {
+					@Override
+					public Long call() throws Exception {
+						final List<CmfObjectSearchSpec> end = Collections.emptyList();
+						boolean ok = false;
+						try {
+							output.info("Retrieving the results");
+							CloseableIterator<ExportTarget> it = findExportResults(session, configuration, factory);
+							try {
+								final int segmentSize = 1000;
+								List<CmfObjectSearchSpec> temp = new ArrayList<>(segmentSize);
+								// It's OK to ask if the thread is finished up front because the
+								// only way it could
+								// happen is if it ran into an error, in which case we need to fail
+								// short.
+								while (!cachingTask.isDone() && it.hasNext()) {
+									if (temp.size() == segmentSize) {
+										try {
+											queue.put(temp);
+										} finally {
+											temp = new ArrayList<>(segmentSize);
+										}
+									}
+									temp.add(it.next());
+								}
+								queue.put(temp);
+								queue.put(end);
+
+								long ret = cachingTask.get();
+								output.info("Cached a total of {} objects", ret);
+								ok = true;
+								return ret;
+							} finally {
+								it.close();
+							}
+						} finally {
+							// If the caching thread isn't finished, then...
+							if (!ok && !cachingTask.isDone()) {
+								queue.put(end);
+								cachingTask.cancel(true);
+								try {
+									cachingTask.get();
+								} catch (CancellationException e) {
+									// Do nothing...we're OK with this
+								} catch (ExecutionException e) {
+									// Do nothing...we're OK with this
+								} catch (InterruptedException e) {
+									// Do nothing...we're OK with this
+								}
+							}
+						}
+					}
+
+				});
+				// No more tasks needed here
+				this.executor.shutdown();
+
+				// Now...
+				this.it = null;
+			}
+
+			@Override
+			protected boolean checkNext() {
+				return this.it.hasNext();
+			}
+
+			@Override
+			protected ExportTarget getNext() throws Exception {
+				return new ExportTarget(this.it.next());
+			}
+
+			@Override
+			protected void doClose() {
+				this.it.close();
+			}
+		};
+	}
+
 	private final CloseableIterator<ExportTarget> cacheExportResults(final S session, final CfgTools configuration,
 		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
 
@@ -890,12 +1016,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				cachingTask.cancel(true);
 				try {
 					cachingTask.get();
-				} catch (CancellationException e) {
+				} catch (CancellationException | ExecutionException | InterruptedException e) {
 					// Do nothing...we're OK with this
-				} catch (ExecutionException e) {
-					// Do nothing...we're OK with this
-				} catch (InterruptedException e) {
-					// Do nothing...we're OK with this
+					this.log.error("The DB caching thread encountered an exception", e);
 				}
 			}
 		}
