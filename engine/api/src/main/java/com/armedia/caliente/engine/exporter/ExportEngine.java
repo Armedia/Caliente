@@ -7,6 +7,7 @@ package com.armedia.caliente.engine.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -22,7 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
@@ -747,7 +747,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		try {
 			this.log.debug("Results will be cached");
 			output.info("Caching export results...");
-			results = cacheExportResults(baseSession.getWrapped(), settings, delegateFactory, objectStore, output);
+			results = getExportResults(baseSession.getWrapped(), settings, delegateFactory, objectStore, output);
 		} catch (Exception e) {
 			throw new ExportException(String.format("Failed to obtain the export results with settings: %s", settings),
 				e);
@@ -820,131 +820,153 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected void setExportProperties(CmfObjectStore<?, ?> store) {
 	}
 
+	private static class CacheChunk {
+		private final Collection<CmfObjectSearchSpec> objects;
+		private final Throwable thrown;
+
+		public CacheChunk(Collection<CmfObjectSearchSpec> objects, Throwable thrown) {
+			if (objects == null) {
+				objects = Collections.emptyList();
+			}
+			this.objects = objects;
+			this.thrown = thrown;
+		}
+	}
+
 	@SuppressWarnings("unused")
-	private final CloseableIterator<ExportTarget> newCacheExportResults(final S session, final CfgTools configuration,
+	private final CloseableIterator<ExportTarget> newGetExportResults(final S session, final CfgTools configuration,
 		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
 
 		return new CloseableIterator<ExportTarget>() {
-			private final AtomicLong retrieved = new AtomicLong(0);
-			private final AtomicLong cached = new AtomicLong(0);
-			private final AtomicBoolean retrievalCompleted = new AtomicBoolean(false);
-			private final ExecutorService executor = Executors.newFixedThreadPool(2);
-			private final Future<Long> cachingTask;
-			private final Future<Long> findTask;
-			private Long lastLoaded = null;
-			private final CloseableIterator<CmfObjectSearchSpec> it;
+			private final ExecutorService executor = Executors.newSingleThreadExecutor();
+			private final Future<Long> loadingTask;
+			private final BlockingQueue<CacheChunk> queue = new LinkedBlockingQueue<>();
+			private CacheChunk current = null;
+			private Iterator<CmfObjectSearchSpec> it = null;
+			private final AtomicBoolean closed = new AtomicBoolean(false);
 
 			{
-				final BlockingQueue<Collection<CmfObjectSearchSpec>> queue = new LinkedBlockingQueue<>();
-				this.cachingTask = this.executor.submit(new Callable<Long>() {
+				// Start loading the export results...
+				this.loadingTask = this.executor.submit(new Callable<Long>() {
 					@Override
-					public Long call() throws Exception {
-						long cached = 0;
-						store.clearTargetCache();
-						while (true) {
-							final long start = System.currentTimeMillis();
-							Collection<CmfObjectSearchSpec> c = queue.take();
-							if (c.isEmpty()) {
-								// We're done
-								return cached;
-							}
-
-							try {
-								store.cacheTargets(c);
-								cached += c.size();
-								final long now = System.currentTimeMillis();
-								double perSecond = (((double) c.size() * 1000) / (now - start));
-								double msPer = ((double) (now - start)) / ((double) c.size());
-								output.info("Caching {} targets ({} total so far @ {} items/s | {} ms per item)",
-									c.size(), cached, String.format("%.2f", perSecond), String.format("%.2f", msPer));
-							} finally {
-								// Help the GC along...
-								c.clear();
-							}
-						}
-					}
-
-				});
-
-				this.findTask = this.executor.submit(new Callable<Long>() {
-					@Override
-					public Long call() throws Exception {
+					public Long call() {
 						final List<CmfObjectSearchSpec> end = Collections.emptyList();
-						boolean ok = false;
+						output.info("Retrieving the results");
+						// TODO: Softcode this? Dynamically calculate?
+						final int segmentSize = 100;
+						List<CmfObjectSearchSpec> temp = new ArrayList<>(segmentSize);
+						long counter = 0;
+						CloseableIterator<ExportTarget> it = null;
+						Throwable thrown = null;
 						try {
-							output.info("Retrieving the results");
-							CloseableIterator<ExportTarget> it = findExportResults(session, configuration, factory);
-							try {
-								final int segmentSize = 1000;
-								List<CmfObjectSearchSpec> temp = new ArrayList<>(segmentSize);
-								// It's OK to ask if the thread is finished up front because the
-								// only way it could
-								// happen is if it ran into an error, in which case we need to fail
-								// short.
-								while (!cachingTask.isDone() && it.hasNext()) {
-									if (temp.size() == segmentSize) {
-										try {
-											queue.put(temp);
-										} finally {
-											temp = new ArrayList<>(segmentSize);
-										}
+							it = findExportResults(session, configuration, factory);
+							// It's OK to ask if the thread is finished up front because the
+							// only way it could
+							// happen is if it ran into an error, in which case we need to fail
+							// short.
+							while (it.hasNext() && !closed.get()) {
+								if (temp.size() == segmentSize) {
+									output.info(
+										"Retrieved the next {} objects, submitting for processing (total so far = {})",
+										segmentSize, counter);
+									try {
+										queue.put(new CacheChunk(temp, null));
+									} finally {
+										temp = new ArrayList<>(segmentSize);
 									}
-									temp.add(it.next());
 								}
-								queue.put(temp);
-								queue.put(end);
-
-								long ret = cachingTask.get();
-								output.info("Cached a total of {} objects", ret);
-								ok = true;
-								return ret;
-							} finally {
+								temp.add(it.next());
+								++counter;
+							}
+							if (!temp.isEmpty()) {
+								queue.put(new CacheChunk(temp, null));
+							}
+							temp = end;
+							output.info("Cached a total of {} objects ({})", counter,
+								closed.get() ? "retrieval aborted" : "search completed");
+						} catch (Throwable t) {
+							thrown = t;
+						} finally {
+							try {
+								queue.put(new CacheChunk(temp, thrown));
+							} catch (InterruptedException e) {
+								if (thrown != null) {
+									ExportEngine.this.log.error(
+										"Interrupted while attempting to queue the terminator with an exception",
+										thrown);
+								} else {
+									ExportEngine.this.log.error("Interrupted while attempting to queue the terminator",
+										e);
+								}
+							}
+							if (it != null) {
 								it.close();
 							}
-						} finally {
-							// If the caching thread isn't finished, then...
-							if (!ok && !cachingTask.isDone()) {
-								queue.put(end);
-								cachingTask.cancel(true);
-								try {
-									cachingTask.get();
-								} catch (CancellationException e) {
-									// Do nothing...we're OK with this
-								} catch (ExecutionException e) {
-									// Do nothing...we're OK with this
-								} catch (InterruptedException e) {
-									// Do nothing...we're OK with this
-								}
-							}
 						}
+						return counter;
 					}
-
 				});
-				// No more tasks needed here
+				// No more tasks needed here...
 				this.executor.shutdown();
+			}
 
-				// Now...
-				this.it = null;
+			private void checkException() throws ExportException {
+				if (this.current == null) { return; }
+				if (this.current.thrown == null) { return; }
+				// rethrow the exception from the other thread...
+				throw new ExportException("Exception caught while reading the exportable items from the backend",
+					this.current.thrown);
 			}
 
 			@Override
-			protected boolean checkNext() {
-				return this.it.hasNext();
+			protected boolean checkNext() throws Exception {
+				// If we have no iterator, or the current one has run out...
+				boolean hasNext = ((this.it != null) && this.it.hasNext());
+				if (hasNext) { return true; }
+				if (this.current != null) {
+					// We're done with the current collection, so we try
+					// to help the GC along, and check for any exceptions
+					// that might need bubbling up...
+					if (!this.current.objects.isEmpty()) {
+						// Help the GC along...
+						this.current.objects.clear();
+					}
+					checkException();
+				}
+
+				// Find the next chunk, and walk over it...
+				this.current = this.queue.take();
+				// Otherwise, we start iterating over the new chunk
+				this.it = this.current.objects.iterator();
+				hasNext = this.it.hasNext();
+				if (!hasNext) {
+					// If the collection is empty, we check for an exception immediately
+					checkException();
+				}
+				return hasNext;
 			}
 
 			@Override
-			protected ExportTarget getNext() throws Exception {
+			protected ExportTarget getNext() {
 				return new ExportTarget(this.it.next());
 			}
 
 			@Override
 			protected void doClose() {
-				this.it.close();
+				// Make sure we join with the loading task...
+				try {
+					this.loadingTask.get();
+				} catch (InterruptedException | ExecutionException e) {
+					ExportEngine.this.log.error("Failed to join with the background loading thread", e);
+				} finally {
+					this.closed.set(true);
+					this.it = null;
+				}
 			}
 		};
 	}
 
-	private final CloseableIterator<ExportTarget> cacheExportResults(final S session, final CfgTools configuration,
+	private final CloseableIterator<ExportTarget> getExportResults(final S session, final CfgTools configuration,
 		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
 
 		final List<CmfObjectSearchSpec> end = Collections.emptyList();
