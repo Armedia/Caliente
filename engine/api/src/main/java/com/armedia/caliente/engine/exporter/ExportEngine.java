@@ -7,7 +7,6 @@ package com.armedia.caliente.engine.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -765,6 +764,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.debug("Processing the located results...");
 				while ((results != null) && results.hasNext()) {
 					final ExportTarget target = results.next();
+					if (target == null) {
+						// Retrieval terminated...
+						break;
+					}
 					msg = String.format("Queueing item #%d: %s", c, target);
 					this.log.info(msg);
 					if (output != null) {
@@ -820,19 +823,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected void setExportProperties(CmfObjectStore<?, ?> store) {
 	}
 
-	private static class CacheChunk {
-		private final Collection<CmfObjectSearchSpec> objects;
-		private final Throwable thrown;
-
-		public CacheChunk(Collection<CmfObjectSearchSpec> objects, Throwable thrown) {
-			if (objects == null) {
-				objects = Collections.emptyList();
-			}
-			this.objects = objects;
-			this.thrown = thrown;
-		}
-	}
-
 	@SuppressWarnings("unused")
 	private final CloseableIterator<ExportTarget> newGetExportResults(final S session, final CfgTools configuration,
 		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
@@ -840,9 +830,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		return new CloseableIterator<ExportTarget>() {
 			private final ExecutorService executor = Executors.newSingleThreadExecutor();
 			private final Future<Long> loadingTask;
-			private final BlockingQueue<CacheChunk> queue = new LinkedBlockingQueue<>();
-			private CacheChunk current = null;
-			private Iterator<CmfObjectSearchSpec> it = null;
+			private final BlockingQueue<Object> queue = new LinkedBlockingQueue<>();
 			private final AtomicBoolean closed = new AtomicBoolean(false);
 
 			{
@@ -850,11 +838,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.loadingTask = this.executor.submit(new Callable<Long>() {
 					@Override
 					public Long call() {
-						final List<CmfObjectSearchSpec> end = Collections.emptyList();
 						output.info("Retrieving the results");
-						// TODO: Softcode this? Dynamically calculate?
-						final int segmentSize = 100;
-						List<CmfObjectSearchSpec> temp = new ArrayList<>(segmentSize);
+						final int reportCount = 1000;
 						long counter = 0;
 						CloseableIterator<ExportTarget> it = null;
 						Throwable thrown = null;
@@ -865,30 +850,18 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							// happen is if it ran into an error, in which case we need to fail
 							// short.
 							while (it.hasNext() && !closed.get()) {
-								if (temp.size() == segmentSize) {
-									output.info(
-										"Retrieved the next {} objects, submitting for processing (total so far = {})",
-										segmentSize, counter);
-									try {
-										queue.put(new CacheChunk(temp, null));
-									} finally {
-										temp = new ArrayList<>(segmentSize);
-									}
+								if ((++counter % reportCount) == 0) {
+									output.info("Retrieved {} object references for export", counter);
 								}
-								temp.add(it.next());
-								++counter;
+								queue.put(it.next());
 							}
-							if (!temp.isEmpty()) {
-								queue.put(new CacheChunk(temp, null));
-							}
-							temp = end;
-							output.info("Cached a total of {} objects ({})", counter,
+							output.info("Retrieved a total of {} objects ({})", counter,
 								closed.get() ? "retrieval aborted" : "search completed");
 						} catch (Throwable t) {
 							thrown = t;
 						} finally {
 							try {
-								queue.put(new CacheChunk(temp, thrown));
+								queue.put(thrown != null ? thrown : "terminator");
 							} catch (InterruptedException e) {
 								if (thrown != null) {
 									ExportEngine.this.log.error(
@@ -910,45 +883,25 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.executor.shutdown();
 			}
 
-			private void checkException() throws ExportException {
-				if (this.current == null) { return; }
-				if (this.current.thrown == null) { return; }
-				// rethrow the exception from the other thread...
-				throw new ExportException("Exception caught while reading the exportable items from the backend",
-					this.current.thrown);
-			}
-
 			@Override
 			protected boolean checkNext() throws Exception {
-				// If we have no iterator, or the current one has run out...
-				boolean hasNext = ((this.it != null) && this.it.hasNext());
-				if (hasNext) { return true; }
-				if (this.current != null) {
-					// We're done with the current collection, so we try
-					// to help the GC along, and check for any exceptions
-					// that might need bubbling up...
-					if (!this.current.objects.isEmpty()) {
-						// Help the GC along...
-						this.current.objects.clear();
-					}
-					checkException();
-				}
-
-				// Find the next chunk, and walk over it...
-				this.current = this.queue.take();
-				// Otherwise, we start iterating over the new chunk
-				this.it = this.current.objects.iterator();
-				hasNext = this.it.hasNext();
-				if (!hasNext) {
-					// If the collection is empty, we check for an exception immediately
-					checkException();
-				}
-				return hasNext;
+				// Always assume there's something in the queue, since we will be blocking
+				return true;
 			}
 
 			@Override
-			protected ExportTarget getNext() {
-				return new ExportTarget(this.it.next());
+			protected ExportTarget getNext() throws Exception {
+				Object next = this.queue.take();
+				if (String.class.isInstance(next)) {
+					// Everything closed out cleanly, so terminate cleanly
+					return null;
+				}
+				if (Throwable.class.isInstance(next)) {
+					// There was a problem, so bubble it upward
+					throw new ExportException("Exception caught while reading from the source backend",
+						Throwable.class.cast(next));
+				}
+				return ExportTarget.class.cast(next);
 			}
 
 			@Override
@@ -960,7 +913,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					ExportEngine.this.log.error("Failed to join with the background loading thread", e);
 				} finally {
 					this.closed.set(true);
-					this.it = null;
+					this.queue.clear();
 				}
 			}
 		};
