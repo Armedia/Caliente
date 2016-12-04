@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -42,7 +41,6 @@ import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.caliente.store.CmfObjectSearchSpec;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfProperty;
@@ -1598,125 +1596,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		String q = translateOptionalQuery(query);
 		if (q == null) { throw new IllegalStateException(String.format("Required query [%s] is missing", query)); }
 		return q;
-	}
-
-	@Override
-	protected void clearTargetCache(JdbcOperation operation) throws CmfStorageException {
-		Connection c = operation.getConnection();
-		try {
-			JdbcTools.getQueryRunner().update(c, translateQuery(JdbcDialect.Query.CLEAR_TARGET_CACHE));
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to clear the target cache", e);
-		}
-	}
-
-	@Override
-	protected void cacheTargets(JdbcOperation operation, Collection<CmfObjectSearchSpec> targets)
-		throws CmfStorageException {
-		Object[][] cacheTargets = new Object[targets.size()][3];
-		int i = 0;
-		for (CmfObjectSearchSpec spec : targets) {
-			cacheTargets[i][0] = (spec.getType() != null ? spec.getType().name() : null);
-			cacheTargets[i][1] = spec.getId();
-			cacheTargets[i][2] = spec.getSearchKey();
-			i++;
-		}
-		QueryRunner qr = JdbcTools.getQueryRunner();
-		try {
-			qr.insertBatch(operation.getConnection(), translateQuery(JdbcDialect.Query.INSERT_CACHE_TARGET),
-				JdbcTools.HANDLER_NULL, cacheTargets);
-		} catch (SQLException e) {
-			throw new CmfStorageException("Exception caught inserting the cache targets", e);
-		}
-	}
-
-	private static final class CachedTargetState {
-		private final Statement statement;
-		private final ResultSet results;
-		private Boolean nextAvailable = null;
-
-		private CachedTargetState(ResultSet results) throws SQLException {
-			this.results = results;
-			this.statement = results.getStatement();
-		}
-
-		private boolean hasNext() throws SQLException {
-			if (this.nextAvailable == null) {
-				// Need to fetch the next row
-				this.nextAvailable = this.results.next();
-			}
-			return this.nextAvailable.booleanValue();
-		}
-
-		private static CachedTargetState convert(Object o) throws CmfStorageException {
-			if (o == null) { throw new CmfStorageException("No object to check against"); }
-			if (!CachedTargetState.class
-				.isInstance(o)) { throw new CmfStorageException("Invalid state - not a CachedTargetState"); }
-			return CachedTargetState.class.cast(o);
-		}
-
-		private void close() {
-			JdbcTools.closeQuietly(this.results);
-			JdbcTools.closeQuietly(this.statement);
-		}
-	}
-
-	@Override
-	protected Object getCachedTargets(JdbcOperation operation) throws CmfStorageException {
-		try {
-			return new CachedTargetState(operation.getConnection()
-				.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ALL_CACHE_TARGETS)).executeQuery());
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to fetch all the cached targets", e);
-		}
-	}
-
-	@Override
-	protected boolean hasNextCachedTarget(Object state) throws CmfStorageException {
-		try {
-			return CachedTargetState.convert(state).hasNext();
-		} catch (SQLException e) {
-			throw new CmfStorageException(
-				"Failed to retrieve the statement associated with the cached targets result set", e);
-		}
-	}
-
-	@Override
-	protected CmfObjectSearchSpec getNextCachedTarget(Object state) throws CmfStorageException {
-		CachedTargetState cacheState = CachedTargetState.convert(state);
-		try {
-			if (!cacheState.hasNext()) { throw new NoSuchElementException("No row to retrieve"); }
-			// If we're here, then next() has already been called and returned true, so we can
-			// safely begin to read off the ResultSet
-			final ResultSet rs = cacheState.results;
-			String type = rs.getString("object_type");
-			if (rs.wasNull()) {
-				type = null;
-			}
-			String id = rs.getString("object_id");
-			if (rs.wasNull()) {
-				id = null;
-			}
-			String searchKey = rs.getString("search_key");
-			if (rs.wasNull()) {
-				searchKey = null;
-			}
-			try {
-				return new CmfObjectSearchSpec(type != null ? CmfType.valueOf(type) : null, id, searchKey);
-			} catch (Exception e) {
-				throw new CmfStorageException(String.format("Illegal CmfType value [%s]", type), e);
-			} finally {
-				// Mark the row as fetched so next() needs to be invoked again
-				cacheState.nextAvailable = null;
-			}
-		} catch (SQLException e) {
-			throw new CmfStorageException("Failed to retrieve the next cached target in the given result set", e);
-		}
-	}
-
-	@Override
-	protected void closeCachedTargets(Object state) throws CmfStorageException {
-		CachedTargetState.convert(state).close();
 	}
 
 	@Override

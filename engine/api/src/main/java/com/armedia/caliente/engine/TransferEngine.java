@@ -113,10 +113,6 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	private static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 	private static final int MAX_THREAD_COUNT = Runtime.getRuntime().availableProcessors() * 2;
 
-	private static final int MIN_BACKLOG_SIZE = 100;
-	private static final int DEFAULT_BACKLOG_SIZE = 1000;
-	private static final int MAX_BACKLOG_SIZE = 10000;
-
 	private final List<L> listeners = new ArrayList<>();
 
 	protected final CmfCrypt crypto;
@@ -148,19 +144,6 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 	protected final synchronized Collection<L> getListeners() {
 		return new ArrayList<>(this.listeners);
-	}
-
-	protected final int getBacklogSize(CfgTools settings) {
-		Object bl = settings.getObject(TransferSetting.BACKLOG_SIZE);
-		if (!Number.class.isInstance(bl)) {
-			if (bl == null) {
-				bl = TransferEngine.DEFAULT_BACKLOG_SIZE;
-			} else {
-				bl = Integer.valueOf(bl.toString());
-			}
-		}
-		return Tools.ensureBetween(TransferEngine.MIN_BACKLOG_SIZE, Number.class.cast(bl).intValue(),
-			TransferEngine.MAX_BACKLOG_SIZE);
 	}
 
 	protected final int getThreadCount(CfgTools settings) {

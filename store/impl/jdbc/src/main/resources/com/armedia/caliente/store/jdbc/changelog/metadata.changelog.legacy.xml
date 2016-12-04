@@ -27,6 +27,11 @@
 		</preConditions>
 
 		<!-- **************************************** -->
+		<!-- Drop the CMF_TARGET_CACHE table          -->
+		<!-- **************************************** -->
+		<dropTable tableName="cmf_target_cache" />
+
+		<!-- **************************************** -->
 		<!-- Update CMF_OBJECT and CMF_NAME_COLLISION -->
 		<!-- **************************************** -->
 		<dropIndex tableName="cmf_object" indexName="idx_cmf_object_type"/>

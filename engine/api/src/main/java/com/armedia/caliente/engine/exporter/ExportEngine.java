@@ -4,24 +4,14 @@
 
 package com.armedia.caliente.engine.exporter;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
@@ -38,7 +28,6 @@ import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
-import com.armedia.caliente.store.CmfObjectSearchSpec;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfObjectStore.LockStatus;
 import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
@@ -625,34 +614,30 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
-		CmfObjectCounter<ExportResult> counter, final SessionFactory<S> sessionFactory,
+		CmfObjectCounter<ExportResult> objectCounter, final SessionFactory<S> sessionFactory,
 		final SessionWrapper<S> baseSession, final ContextFactory<S, V, C, ?> contextFactory, final DF delegateFactory)
 		throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
 		final CfgTools settings = exportState.cfg;
 		final int threadCount;
-		final int backlogSize;
 		// Ensure nobody changes this under our feet
 		synchronized (this) {
 			threadCount = getThreadCount(settings);
-			backlogSize = getBacklogSize(settings);
 		}
-		String msg = String.format("Will pull a maximum of %d items at a time, and process them using %d threads",
-			backlogSize, threadCount);
+		String msg = String.format("Will export items using %d threads", threadCount);
 		this.log.info(msg);
 		if (output != null) {
 			output.info(msg);
 		}
 
-		if (counter == null) {
-			counter = new CmfObjectCounter<>(ExportResult.class);
+		if (objectCounter == null) {
+			objectCounter = new CmfObjectCounter<>(ExportResult.class);
 		}
-		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(counter);
+		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(objectCounter);
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<>();
 
-		PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>(
-			backlogSize) {
+		final PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>() {
 
 			@Override
 			protected SessionWrapper<S> prepare() throws Exception {
@@ -741,61 +726,45 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 		};
 
-		final CloseableIterator<ExportTarget> results;
 		this.log.debug("Locating export results...");
 		try {
-			this.log.debug("Results will be cached");
-			output.info("Caching export results...");
-			results = getExportResults(baseSession.getWrapped(), settings, delegateFactory, objectStore, output);
-		} catch (Exception e) {
-			throw new ExportException(String.format("Failed to obtain the export results with settings: %s", settings),
-				e);
-		}
-
-		try {
 			// Fire off the workers
-			worker.start(threadCount, new ExportTarget(), true);
-
-			int c = 1;
-			// 1: run the query for the given predicate
-			listenerDelegator.exportStarted(exportState);
-			// 2: iterate over the results, gathering up the object IDs
+			final ExportTarget terminator = new ExportTarget();
+			worker.start(threadCount, terminator, true);
 			try {
-				this.log.debug("Processing the located results...");
-				while ((results != null) && results.hasNext()) {
-					final ExportTarget target = results.next();
-					if (target == null) {
-						// Retrieval terminated...
-						break;
-					}
-					msg = String.format("Queueing item #%d: %s", c, target);
-					this.log.info(msg);
-					if (output != null) {
-						output.info(msg);
-					}
-					try {
-						worker.addWorkItem(target);
-						msg = String.format("Queued item #%d: %s", c, target);
-						this.log.info(msg);
-						if (output != null) {
-							output.info(msg);
-						}
-					} catch (InterruptedException e) {
-						Thread.currentThread().interrupt();
-						msg = String.format("Thread interrupted while queueing target #%d: %s", c, target);
-						if (this.log.isDebugEnabled()) {
-							this.log.warn(msg, e);
-						} else {
-							this.log.warn(msg);
-						}
-						break;
-					} finally {
-						c++;
-					}
+				output.info("Retrieving the results");
+				final CloseableIterator<ExportTarget> it;
+				try {
+					it = findExportResults(baseSession.getWrapped(), settings, delegateFactory);
+				} catch (Exception e) {
+					throw new ExportException("Failed to retrieve the objects to export", e);
 				}
-				this.log.info(String.format("Submitted the entire export workload (%d objects)", c - 1));
-				if (output != null) {
-					output.info(String.format("Submitted the entire export workload (%d objects)", c - 1));
+				output.info("Results ready, queueing the workload...");
+				final int reportCount = 1000;
+				long targetCounter = 0;
+				try {
+					// It's OK to ask if the thread is finished up front because the
+					// only way it could happen is if it ran into an error, in which
+					// case we need to stop immediately since there's no point in continuing
+					while (it.hasNext()) {
+						final ExportTarget next = it.next();
+						if (next == null) {
+							// Just in case...
+							break;
+						}
+						if ((++targetCounter % reportCount) == 0) {
+							output.info("Retrieved {} object references for export", targetCounter);
+						}
+						try {
+							worker.addWorkItem(next);
+						} catch (InterruptedException e) {
+							throw new ExportException(
+								String.format("Interrupted while trying to queue up element [%s]", next), e);
+						}
+					}
+					output.info("Retrieved a total of {} objects", targetCounter);
+				} finally {
+					it.close();
 				}
 			} finally {
 				worker.waitForCompletion();
@@ -804,7 +773,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			setExportProperties(objectStore);
 			return listenerDelegator.getStoredObjectCounter();
 		} finally {
-			results.close();
 			baseSession.close(false);
 
 			Map<CmfType, Long> summary = Collections.emptyMap();
@@ -821,202 +789,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	protected void setExportProperties(CmfObjectStore<?, ?> store) {
-	}
-
-	@SuppressWarnings("unused")
-	private final CloseableIterator<ExportTarget> newGetExportResults(final S session, final CfgTools configuration,
-		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
-
-		return new CloseableIterator<ExportTarget>() {
-			private final ExecutorService executor = Executors.newSingleThreadExecutor();
-			private final Future<Long> loadingTask;
-			private final BlockingQueue<Object> queue = new LinkedBlockingQueue<>();
-			private final AtomicBoolean closed = new AtomicBoolean(false);
-
-			{
-				// Start loading the export results...
-				this.loadingTask = this.executor.submit(new Callable<Long>() {
-					@Override
-					public Long call() {
-						output.info("Retrieving the results");
-						final int reportCount = 1000;
-						long counter = 0;
-						CloseableIterator<ExportTarget> it = null;
-						Throwable thrown = null;
-						try {
-							it = findExportResults(session, configuration, factory);
-							// It's OK to ask if the thread is finished up front because the
-							// only way it could
-							// happen is if it ran into an error, in which case we need to fail
-							// short.
-							while (it.hasNext() && !closed.get()) {
-								if ((++counter % reportCount) == 0) {
-									output.info("Retrieved {} object references for export", counter);
-								}
-								queue.put(it.next());
-							}
-							output.info("Retrieved a total of {} objects ({})", counter,
-								closed.get() ? "retrieval aborted" : "search completed");
-						} catch (Throwable t) {
-							thrown = t;
-						} finally {
-							try {
-								queue.put(thrown != null ? thrown : "terminator");
-							} catch (InterruptedException e) {
-								if (thrown != null) {
-									ExportEngine.this.log.error(
-										"Interrupted while attempting to queue the terminator with an exception",
-										thrown);
-								} else {
-									ExportEngine.this.log.error("Interrupted while attempting to queue the terminator",
-										e);
-								}
-							}
-							if (it != null) {
-								it.close();
-							}
-						}
-						return counter;
-					}
-				});
-				// No more tasks needed here...
-				this.executor.shutdown();
-			}
-
-			@Override
-			protected boolean checkNext() throws Exception {
-				// Always assume there's something in the queue, since we will be blocking
-				return true;
-			}
-
-			@Override
-			protected ExportTarget getNext() throws Exception {
-				Object next = this.queue.take();
-				if (String.class.isInstance(next)) {
-					// Everything closed out cleanly, so terminate cleanly
-					return null;
-				}
-				if (Throwable.class.isInstance(next)) {
-					// There was a problem, so bubble it upward
-					throw new ExportException("Exception caught while reading from the source backend",
-						Throwable.class.cast(next));
-				}
-				return ExportTarget.class.cast(next);
-			}
-
-			@Override
-			protected void doClose() {
-				// Make sure we join with the loading task...
-				try {
-					this.loadingTask.get();
-				} catch (InterruptedException | ExecutionException e) {
-					ExportEngine.this.log.error("Failed to join with the background loading thread", e);
-				} finally {
-					this.closed.set(true);
-					this.queue.clear();
-				}
-			}
-		};
-	}
-
-	private final CloseableIterator<ExportTarget> getExportResults(final S session, final CfgTools configuration,
-		final DF factory, final CmfObjectStore<?, ?> store, final Logger output) throws Exception {
-
-		final List<CmfObjectSearchSpec> end = Collections.emptyList();
-		final BlockingQueue<Collection<CmfObjectSearchSpec>> queue = new LinkedBlockingQueue<>();
-		ExecutorService executor = Executors.newSingleThreadExecutor();
-		final Future<Long> cachingTask = executor.submit(new Callable<Long>() {
-			@Override
-			public Long call() throws Exception {
-				long cached = 0;
-				store.clearTargetCache();
-				while (true) {
-					final long start = System.currentTimeMillis();
-					Collection<CmfObjectSearchSpec> c = queue.take();
-					if (c.isEmpty()) {
-						// We're done
-						return cached;
-					}
-
-					try {
-						store.cacheTargets(c);
-						cached += c.size();
-						final long now = System.currentTimeMillis();
-						double perSecond = (((double) c.size() * 1000) / (now - start));
-						double msPer = ((double) (now - start)) / ((double) c.size());
-						output.info("Caching {} targets ({} total so far @ {} items/s | {} ms per item)", c.size(),
-							cached, String.format("%.2f", perSecond), String.format("%.2f", msPer));
-					} finally {
-						// Help the GC along...
-						c.clear();
-					}
-				}
-			}
-
-		});
-		// No more tasks needed here
-		executor.shutdown();
-
-		boolean ok = false;
-		try {
-			output.info("Retrieving the results");
-			CloseableIterator<ExportTarget> it = findExportResults(session, configuration, factory);
-			try {
-				final int segmentSize = 1000;
-				List<CmfObjectSearchSpec> temp = new ArrayList<>(segmentSize);
-				// It's OK to ask if the thread is finished up front because the only way it could
-				// happen is if it ran into an error, in which case we need to fail short.
-				while (!cachingTask.isDone() && it.hasNext()) {
-					if (temp.size() == segmentSize) {
-						try {
-							queue.put(temp);
-						} finally {
-							temp = new ArrayList<>(segmentSize);
-						}
-					}
-					temp.add(it.next());
-				}
-				queue.put(temp);
-				queue.put(end);
-
-				output.info("Cached a total of {} objects", cachingTask.get());
-				ok = true;
-			} finally {
-				it.close();
-			}
-		} finally {
-			// If the caching thread isn't finished, then...
-			if (!ok && !cachingTask.isDone()) {
-				queue.put(end);
-				cachingTask.cancel(true);
-				try {
-					cachingTask.get();
-				} catch (CancellationException | ExecutionException | InterruptedException e) {
-					// Do nothing...we're OK with this
-					this.log.error("The DB caching thread encountered an exception", e);
-				}
-			}
-		}
-
-		return new CloseableIterator<ExportTarget>() {
-
-			private final CloseableIterator<CmfObjectSearchSpec> it = store.getCachedTargets();
-
-			@Override
-			protected boolean checkNext() {
-				return this.it.hasNext();
-			}
-
-			@Override
-			protected ExportTarget getNext() throws Exception {
-				return new ExportTarget(this.it.next());
-			}
-
-			@Override
-			protected void doClose() {
-				this.it.close();
-			}
-		};
 	}
 
 	protected abstract CloseableIterator<ExportTarget> findExportResults(S session, CfgTools configuration, DF factory)

@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.tools.CollectionObjectHandler;
-import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -989,65 +988,6 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract void clearAllObjects(O operation) throws CmfStorageException;
 
-	public final void clearTargetCache() throws CmfStorageException {
-		O operation = beginExclusiveInvocation();
-		try {
-			final boolean tx = operation.begin();
-			boolean ok = false;
-			try {
-				clearTargetCache(operation);
-				if (tx) {
-					operation.commit();
-				}
-				ok = true;
-			} finally {
-				if (tx && !ok) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for clearing all objects", e);
-					}
-				}
-			}
-		} finally {
-			endExclusiveInvocation(operation);
-		}
-	}
-
-	protected abstract void clearTargetCache(O operation) throws CmfStorageException;
-
-	public final void cacheTarget(CmfObjectSearchSpec object) throws CmfStorageException {
-		cacheTargets(Collections.singleton(object));
-	}
-
-	public final void cacheTargets(Collection<CmfObjectSearchSpec> objects) throws CmfStorageException {
-		O operation = beginExclusiveInvocation();
-		try {
-			final boolean tx = operation.begin();
-			boolean ok = false;
-			try {
-				cacheTargets(operation, objects);
-				if (tx) {
-					operation.commit();
-				}
-				ok = true;
-			} finally {
-				if (tx && !ok) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for clearing all cached targets", e);
-					}
-				}
-			}
-		} finally {
-			endExclusiveInvocation(operation);
-		}
-	}
-
-	protected abstract void cacheTargets(O operation, Collection<CmfObjectSearchSpec> objects)
-		throws CmfStorageException;
-
 	public final Map<CmfType, Map<String, String>> getRenameMappings() throws CmfStorageException {
 		O operation = beginConcurrentInvocation();
 		try {
@@ -1059,7 +999,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for clearing all cached targets", e);
+						this.log.warn("Failed to rollback the transaction for retrieving all rename mappings", e);
 					}
 				}
 			}
@@ -1069,67 +1009,4 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract Map<CmfType, Map<String, String>> getRenameMappings(O operation) throws CmfStorageException;
-
-	public final CloseableIterator<CmfObjectSearchSpec> getCachedTargets() throws CmfStorageException {
-		boolean ok = false;
-		final O operation = beginConcurrentInvocation();
-		try {
-			final boolean tx = operation.begin();
-			try {
-				CloseableIterator<CmfObjectSearchSpec> ret = new CloseableIterator<CmfObjectSearchSpec>() {
-					final Object iteratorState = getCachedTargets(operation);
-
-					@Override
-					protected boolean checkNext() throws CmfStorageException {
-						return hasNextCachedTarget(this.iteratorState);
-					}
-
-					@Override
-					protected CmfObjectSearchSpec getNext() throws CmfStorageException {
-						return getNextCachedTarget(this.iteratorState);
-					}
-
-					@Override
-					protected void doClose() {
-						try {
-							closeCachedTargets(this.iteratorState);
-						} catch (CmfStorageException e) {
-							CmfObjectStore.this.log.warn("Failed to close the cached targets state", e);
-						} finally {
-							if (tx) {
-								try {
-									operation.rollback();
-								} catch (CmfOperationException e) {
-									CmfObjectStore.this.log.warn("Failed to roll back a read-only operation", e);
-								}
-							}
-							endConcurrentInvocation(operation);
-						}
-					}
-				};
-				ok = true;
-				return ret;
-			} finally {
-				if (tx && !ok) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for fetching all cached targets", e);
-					}
-				}
-			}
-		} finally {
-			if (!ok) {
-				endConcurrentInvocation(operation);
-			}
-		}
-	}
-
-	protected abstract Object getCachedTargets(O operation) throws CmfStorageException;
-
-	protected abstract boolean hasNextCachedTarget(Object state) throws CmfStorageException;
-
-	protected abstract CmfObjectSearchSpec getNextCachedTarget(Object state) throws CmfStorageException;
-
-	protected abstract void closeCachedTargets(Object state) throws CmfStorageException;
 }
