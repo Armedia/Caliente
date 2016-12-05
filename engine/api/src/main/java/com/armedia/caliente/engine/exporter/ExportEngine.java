@@ -12,6 +12,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
@@ -34,7 +35,6 @@ import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
 
@@ -44,6 +44,10 @@ import com.armedia.commons.utilities.Tools;
  */
 public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V, CF>, CF extends ExportContextFactory<S, W, V, C, ?>, DF extends ExportDelegateFactory<S, W, V, C, ?>>
 	extends TransferEngine<S, V, C, CF, DF, ExportEngineListener> {
+
+	protected static interface TargetSubmitter {
+		public void submit(ExportTarget target) throws ExportException;
+	}
 
 	private class Result {
 		private final Long objectNumber;
@@ -733,38 +737,32 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			worker.start(threadCount, terminator, true);
 			try {
 				output.info("Retrieving the results");
-				final CloseableIterator<ExportTarget> it;
+				final int reportCount = 1000;
+				final AtomicLong targetCounter = new AtomicLong(0);
 				try {
-					it = findExportResults(baseSession.getWrapped(), settings, delegateFactory);
+					findExportResults(baseSession.getWrapped(), settings, delegateFactory, new TargetSubmitter() {
+						@Override
+						public void submit(ExportTarget target) throws ExportException {
+							if (target == null) { return; }
+							if (target.isNull()) {
+								ExportEngine.this.log.warn("Skipping a null target: {}", target);
+								return;
+							}
+							if ((targetCounter.incrementAndGet() % reportCount) == 0) {
+								output.info("Retrieved {} object references for export", targetCounter.get());
+							}
+							try {
+								worker.addWorkItem(target);
+							} catch (InterruptedException e) {
+								throw new ExportException(
+									String.format("Interrupted while trying to queue up %s", target), e);
+							}
+						}
+					});
 				} catch (Exception e) {
 					throw new ExportException("Failed to retrieve the objects to export", e);
-				}
-				output.info("Results ready, queueing the workload...");
-				final int reportCount = 1000;
-				long targetCounter = 0;
-				try {
-					// It's OK to ask if the thread is finished up front because the
-					// only way it could happen is if it ran into an error, in which
-					// case we need to stop immediately since there's no point in continuing
-					while (it.hasNext()) {
-						final ExportTarget next = it.next();
-						if (next == null) {
-							// Just in case...
-							break;
-						}
-						if ((++targetCounter % reportCount) == 0) {
-							output.info("Retrieved {} object references for export", targetCounter);
-						}
-						try {
-							worker.addWorkItem(next);
-						} catch (InterruptedException e) {
-							throw new ExportException(
-								String.format("Interrupted while trying to queue up element [%s]", next), e);
-						}
-					}
-					output.info("Retrieved a total of {} objects", targetCounter);
 				} finally {
-					it.close();
+					output.info("Retrieved a total of {} objects", targetCounter.get());
 				}
 			} finally {
 				worker.waitForCompletion();
@@ -791,7 +789,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected void setExportProperties(CmfObjectStore<?, ?> store) {
 	}
 
-	protected abstract CloseableIterator<ExportTarget> findExportResults(S session, CfgTools configuration, DF factory)
+	protected abstract void findExportResults(S session, CfgTools configuration, DF factory, TargetSubmitter handler)
 		throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine(String targetName) {
