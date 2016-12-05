@@ -4,6 +4,13 @@
 
 package com.armedia.caliente.engine.documentum.importer;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
@@ -256,9 +263,181 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		return super.skipImport(ctx);
 	}
 
+	private static class AttributeProxy implements IDfAttr {
+		private final String id;
+		private final String name;
+		private final int type;
+		private final int length;
+		private final boolean repeating;
+		private final boolean qualifiable;
+
+		private AttributeProxy(IDfAttr attr) {
+			this.id = attr.getId();
+			this.name = attr.getName();
+			this.type = attr.getDataType();
+			this.length = attr.getLength();
+			this.repeating = attr.isRepeating();
+			this.qualifiable = attr.isQualifiable();
+		}
+
+		private AttributeProxy(int pos, CmfAttribute<IDfValue> name, CmfAttribute<IDfValue> type,
+			CmfAttribute<IDfValue> length, CmfAttribute<IDfValue> repeating, CmfAttribute<IDfValue> restriction) {
+			this.id = null;
+			this.name = name.getValue(pos).asString();
+			this.type = type.getValue(pos).asInteger();
+			this.length = length.getValue(pos).asInteger();
+			this.repeating = repeating.getValue(pos).asBoolean();
+			this.qualifiable = !restriction.getValue(pos).asBoolean();
+		}
+
+		@Override
+		public int getAllowedLength(String value) {
+			return this.length;
+		}
+
+		@Override
+		public int getDataType() {
+			return this.type;
+		}
+
+		@Override
+		public String getId() {
+			return this.id;
+		}
+
+		@Override
+		public int getLength() {
+			return this.length;
+		}
+
+		@Override
+		public String getName() {
+			return this.name;
+		}
+
+		@Override
+		public boolean isQualifiable() {
+			return this.qualifiable;
+		}
+
+		@Override
+		public boolean isRepeating() {
+			return this.repeating;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj == this) { return true; }
+			if (!IDfAttr.class.isInstance(obj)) { return false; }
+			final IDfAttr other = IDfAttr.class.cast(obj);
+			// if (!Tools.equals(this.id, other.getId())) { return false; }
+			if (!Tools.equals(this.name, other.getName())) { return false; }
+			if (this.type != other.getDataType()) { return false; }
+			if (this.length != other.getLength()) { return false; }
+			if (this.repeating != other.isRepeating()) { return false; }
+			if (this.qualifiable != other.isQualifiable()) { return false; }
+			return true;
+		}
+
+		public boolean isAssignableTo(IDfAttr other) {
+			// if (!Tools.equals(this.id, other.getId())) { return false; }
+			if (!Tools.equals(this.name, other.getName())) { return false; }
+			if (this.type != other.getDataType()) { return false; }
+			if ((this.type == IDfType.DF_STRING) && (this.length > other.getLength())) { return false; }
+			if (this.repeating != other.isRepeating()) { return false; }
+			if (this.qualifiable != other.isQualifiable()) { return false; }
+			return true;
+		}
+
+		@Override
+		public String toString() {
+			return String.format("IDfAttr [name=%s, type=%s, length=%s, repeating=%s, qualifiable=%s]", this.name,
+				this.type, this.length, this.repeating, this.qualifiable);
+		}
+	}
+
 	@Override
-	protected IDfType locateInCms(DctmImportContext ctx) throws DfException {
-		return ctx.getSession().getType(this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString());
+	protected IDfType locateInCms(DctmImportContext ctx) throws ImportException, DfException {
+		// In order for a type to match an existing one, the existing type must support ALL the
+		// incoming attributes from the source type (though not necessarily in the same order), and
+		// all of them must be of the same type (and length, if applicable). Since we can't easily
+		// check allowed values and valueassist (yet), that's all we look for. This is the
+		// return logic:
+		// * If there is no same-named type, return null
+		// * If we have a compatible match, we return the existing type.
+		// ( a compatible match is one where all source attributes can be directly copied onto
+		// target attributes without any type conversion )
+		// * If we don't have a compatible match, this is an error and we raise an exception
+		final String typeName = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString();
+		final IDfType existingType = ctx.getSession().getType(typeName);
+		if (existingType == null) { return null; }
+
+		CmfAttribute<IDfValue> nameAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_NAME);
+		if (nameAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_NAME)); }
+		CmfAttribute<IDfValue> repeatingAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_REPEATING);
+		if (repeatingAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_REPEATING)); }
+		CmfAttribute<IDfValue> typeAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_TYPE);
+		if (typeAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_TYPE)); }
+		CmfAttribute<IDfValue> lengthAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_LENGTH);
+		if (lengthAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_LENGTH)); }
+		CmfAttribute<IDfValue> restrictionAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_RESTRICTION);
+		if (restrictionAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_RESTRICTION)); }
+
+		// Now, make a cache of the source attributes in play
+		Map<String, AttributeProxy> srcAttributes = new TreeMap<>();
+		final int srcCount = nameAtt.getValueCount();
+		for (int i = 0; i < srcCount; i++) {
+			AttributeProxy att = new AttributeProxy(i, nameAtt, typeAtt, lengthAtt, repeatingAtt, restrictionAtt);
+			srcAttributes.put(att.getName(), att);
+		}
+
+		// Compare the source attribute declarations with the target attribute declarations...
+		// We don't much care where the attribute was declared as long as it's available for use in
+		// the current object type...
+		List<Pair<? extends IDfAttr, ? extends IDfAttr>> mismatches = new ArrayList<>();
+		final int tgtCount = existingType.getTypeAttrCount();
+		for (int i = 0; i < tgtCount; i++) {
+			final AttributeProxy tgtAttr = new AttributeProxy(existingType.getTypeAttr(i));
+			final AttributeProxy srcAttr = srcAttributes.remove(tgtAttr.getName());
+			if (srcAttr == null) {
+				continue;
+			}
+			if (!srcAttr.isAssignableTo(tgtAttr)) {
+				mismatches.add(Pair.of(srcAttr, tgtAttr));
+			}
+		}
+
+		// No errors...we have a compatible match!
+		if (mismatches.isEmpty() && srcAttributes.isEmpty()) { return existingType; }
+
+		// The match is incompatible... we don't take the shortcut of comparing counts because
+		// we want to be able to identify mismatches completely, for easy identification and
+		// potential remediation by the operator...
+		StringBuilder sb = new StringBuilder();
+		final String nl = String.format("%n");
+		if (!srcAttributes.isEmpty()) {
+			sb.append("\t").append("Source attributes not found on the target:").append(nl);
+			sb.append("\t").append("==================================================").append(nl);
+			for (IDfAttr att : srcAttributes.values()) {
+				sb.append("\t\t").append(att.toString()).append(nl);
+			}
+			sb.append(nl);
+		}
+		if (!mismatches.isEmpty()) {
+			sb.append("\t").append("Target attributes that don't match their source:").append(nl);
+			sb.append("\t").append("==================================================").append(nl);
+			for (Pair<? extends IDfAttr, ? extends IDfAttr> mismatch : mismatches) {
+				sb.append("\t\tSOURCE: ").append(mismatch.getLeft()).append(nl);
+				sb.append("\t\tTARGET: ").append(mismatch.getRight()).append(nl);
+				sb.append(nl);
+			}
+		}
+		throw new ImportException(String.format("Type declaration mismatch for [%s]:%n%n%s%n%n", typeName, sb));
 	}
 
 	@Override

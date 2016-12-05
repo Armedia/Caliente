@@ -255,6 +255,9 @@ public class DctmAttributes {
 	/** The attr_repeating attribute of dm_type. */
 	public static final String ATTR_REPEATING = "attr_repeating";
 
+	/** The attr_restriction attribute of dm_type */
+	public static final String ATTR_RESTRICTION = "attr_restriction";
+
 	/** The attr_type attribute of dm_type. */
 	public static final String ATTR_TYPE = "attr_type";
 
