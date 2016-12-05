@@ -32,7 +32,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.target>1.7</project.build.target>
 		<dfc.version>6.7-SP1</dfc.version>
-		<build.number>SNAPSHOT-r${buildNumber}</build.number>
+		<build.number>-SNAPSHOT-r${buildNumber}</build.number>
 	</properties>
 
 	<repositories>
@@ -249,7 +249,7 @@
 	</dependencyManagement>
 
 	<build>
-		<finalName>${project.artifactId}-${project.version}-${build.number}</finalName>
+		<finalName>${project.artifactId}-${project.version}${build.number}</finalName>
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -300,7 +300,7 @@
 					<artifactId>maven-shade-plugin</artifactId>
 					<version>2.4.3</version>
 					<configuration>
-						<finalName>${project.artifactId}-${project.version}-${build.number}-exe</finalName>
+						<finalName>${project.artifactId}-${project.version}${build.number}-exe</finalName>
 						<createSourcesJar>true</createSourcesJar>
 						<shadedSourcesContent>true</shadedSourcesContent>
 						<createDependencyReducedPom>false</createDependencyReducedPom>
@@ -443,7 +443,7 @@
 		<profile>
 			<id>release</id>
 			<properties>
-				<build.number>final</build.number>
+				<build.number></build.number>
 			</properties>
 		</profile>
 	</profiles>
