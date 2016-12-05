@@ -7,6 +7,7 @@ package com.armedia.caliente.engine.documentum.exporter;
 import java.util.Collections;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.CmfCrypt;
@@ -46,15 +47,22 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected CloseableIterator<ExportTarget> findExportResults(IDfSession session, CfgTools configuration,
-		DctmExportDelegateFactory factory) throws Exception {
+	protected void findExportResults(IDfSession session, CfgTools configuration, DctmExportDelegateFactory factory,
+		TargetSubmitter submitter) throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the results"); }
 		String dql = configuration.getString(Setting.DQL);
 		if (dql == null) { throw new Exception("Must provide the DQL to query with"); }
 		final int batchSize = configuration.getInteger(Setting.EXPORT_BATCH_SIZE);
-		return new DctmExportTargetIterator(
+		CloseableIterator<ExportTarget> it = new DctmExportTargetIterator(
 			DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_EXECREAD_QUERY, batchSize));
+		try {
+			while (it.hasNext()) {
+				submitter.submit(it.next());
+			}
+		} finally {
+			IOUtils.closeQuietly(it);
+		}
 	}
 
 	@Override

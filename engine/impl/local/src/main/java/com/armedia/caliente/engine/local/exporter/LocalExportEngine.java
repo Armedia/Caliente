@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.local.exporter;
 
+import java.util.Iterator;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -19,8 +20,6 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.CloseableIterator;
-import com.armedia.commons.utilities.CloseableIteratorWrapper;
 
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory> {
@@ -30,9 +29,12 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected CloseableIterator<ExportTarget> findExportResults(LocalRoot session, CfgTools configuration,
-		LocalExportDelegateFactory factory) throws Exception {
-		return new CloseableIteratorWrapper<>(new LocalRecursiveIterator(session, true));
+	protected void findExportResults(LocalRoot session, CfgTools configuration, LocalExportDelegateFactory factory,
+		TargetSubmitter submitter) throws Exception {
+		Iterator<ExportTarget> it = new LocalRecursiveIterator(session, true);
+		while (it.hasNext()) {
+			submitter.submit(it.next());
+		}
 	}
 
 	@Override

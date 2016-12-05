@@ -5,6 +5,7 @@
 package com.armedia.caliente.engine.sharepoint.exporter;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -27,8 +28,6 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.CloseableIterator;
-import com.armedia.commons.utilities.CloseableIteratorWrapper;
 
 /**
  * @author diego
@@ -44,8 +43,8 @@ public class ShptExportEngine extends
 	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
 	@Override
-	protected CloseableIterator<ExportTarget> findExportResults(ShptSession service, CfgTools configuration,
-		ShptExportDelegateFactory factory) throws Exception {
+	protected void findExportResults(ShptSession service, CfgTools configuration, ShptExportDelegateFactory factory,
+		TargetSubmitter submitter) throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
 		if (service == null) { throw new IllegalArgumentException(
@@ -55,8 +54,11 @@ public class ShptExportEngine extends
 		final boolean excludeEmptyFolders = configuration.getBoolean(ShptSetting.EXCLUDE_EMPTY_FOLDERS);
 
 		try {
-			return new CloseableIteratorWrapper<>(
-				new ShptRecursiveIterator(service, service.getFolder(path), configuration, excludeEmptyFolders));
+			Iterator<ExportTarget> it = new ShptRecursiveIterator(service, service.getFolder(path), configuration,
+				excludeEmptyFolders);
+			while (it.hasNext()) {
+				submitter.submit(it.next());
+			}
 		} catch (ShptSessionException e) {
 			throw new ShptException("Export target search failed", e);
 		}
