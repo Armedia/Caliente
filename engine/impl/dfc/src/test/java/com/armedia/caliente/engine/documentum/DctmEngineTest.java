@@ -9,8 +9,8 @@ import com.armedia.caliente.store.CmfStores;
 
 public class DctmEngineTest {
 
-	protected final CmfObjectStore<?, ?> cmfObjectStore = CmfStores.getObjectStore("dctmTest");
-	protected final CmfContentStore<?, ?, ?> streamStore = CmfStores.getContentStore("dctmTest");
+	protected final CmfObjectStore<?, ?> cmfObjectStore = CmfStores.getObjectStore("default");
+	protected final CmfContentStore<?, ?, ?> streamStore = CmfStores.getContentStore("default");
 	protected final Logger output = LoggerFactory.getLogger("console");
 
 }
