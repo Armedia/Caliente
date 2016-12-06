@@ -44,6 +44,7 @@
 			<content>
 				<renditionId></renditionId>
 				<renditionPage>0</renditionPage>
+				<modifier></modifier>
 				<size>1234</size>
 				<hash>MA==</hash>
 				<location>/ab//c/d/e</location>

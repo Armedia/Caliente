@@ -103,6 +103,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			xml.setMimeType(info.getMimeType().getBaseType());
 			xml.setRenditionId(info.getRenditionIdentifier());
 			xml.setRenditionPage(info.getRenditionPage());
+			xml.setModifier(info.getModifier());
 			xml.setSize(info.getLength());
 			for (String k : info.getPropertyNames()) {
 				xml.setProperty(k, info.getProperty(k));
@@ -135,6 +136,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			xml.setMimeType(MimeTools.DEFAULT_MIME_TYPE.toString());
 			xml.setRenditionId(info.getRenditionIdentifier());
 			xml.setRenditionPage(info.getRenditionPage());
+			xml.setModifier(info.getModifier());
 			xml.setSize(0);
 			v.getContents().add(xml);
 		}
