@@ -18,13 +18,6 @@ public class BaseTest {
 	@Test
 	public void test() throws Exception {
 		final ExportEngine<?, ?, ?, ?, ?, ?> engine = CmisExportEngine.getExportEngine();
-		CmfObjectStore<?, ?> objectStore = CmfStores.getObjectStore("default");
-		objectStore.clearProperties();
-		objectStore.clearAllObjects();
-		objectStore.clearAttributeMappings();
-		CmfContentStore<?, ?, ?> contentStore = CmfStores.getContentStore("default");
-		contentStore.clearProperties();
-		contentStore.clearAllStreams();
 		Logger output = LoggerFactory.getLogger("console");
 
 		Map<String, String> settings = new TreeMap<>();
@@ -36,6 +29,14 @@ public class BaseTest {
 		// settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
 		settings.put(CmisSetting.EXPORT_PATH.getLabel(), "/Shared");
 		settings.put(CmisSetting.EXPORT_PAGE_SIZE.getLabel(), "5");
+
+		CmfObjectStore<?, ?> objectStore = CmfStores.getObjectStore("default");
+		objectStore.clearProperties();
+		objectStore.clearAllObjects();
+		objectStore.clearAttributeMappings();
+		CmfContentStore<?, ?, ?> contentStore = CmfStores.getContentStore("default");
+		contentStore.clearProperties();
+		contentStore.clearAllStreams();
 		engine.runExport(output, objectStore, contentStore, settings);
 	}
 }
