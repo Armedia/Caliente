@@ -704,9 +704,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							statusMap);
 						if (result != null) {
 							if (this.log.isDebugEnabled()) {
-								this.log
-									.debug(String.format("Exported %s [%s](%s) in position %d", result.object.getType(),
-										result.object.getLabel(), result.object.getId(), result.objectNumber));
+								if (result.skipReason != null) {
+									this.log.debug(String.format("Skipped %s [%s](%s) : %s", next.getType(),
+										next.getId(), next.getSearchKey(), result.skipReason));
+								} else {
+									this.log.debug(
+										String.format("Exported %s [%s](%s) in position %d", result.object.getType(),
+											result.object.getLabel(), result.object.getId(), result.objectNumber));
+								}
 							}
 						}
 						ok = true;
