@@ -42,7 +42,8 @@
 		<antecedentId>antecedentId</antecedentId>
 		<contents>
 			<content>
-				<qualifier></qualifier>
+				<renditionId></renditionId>
+				<renditionPage>0</renditionPage>
 				<size>1234</size>
 				<hash>MA==</hash>
 				<location>/ab//c/d/e</location>

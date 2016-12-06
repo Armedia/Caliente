@@ -399,7 +399,8 @@
 
 	<xsd:complexType name="contentInfo.t">
 		<xsd:sequence>
-			<xsd:element name="qualifier" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="renditionId" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+			<xsd:element name="renditionPage" type="tns:nonNegativeLong.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="size" type="tns:nonNegativeLong.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="hash" type="xsd:base64Binary" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="location" type="xsd:string" minOccurs="1" maxOccurs="1" />
