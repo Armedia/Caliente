@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores platform:/resource/caliente-store-api/src/main/resources/stores.xsd">
 	<settings>
-		<setting name="target">${user.dir}/test</setting>
+		<setting name="target">${user.dir}/target/test-db</setting>
 		<setting name="db.name">cmis-test</setting>
 		<setting name="dir.metadata">${target}</setting>
 		<setting name="dir.content">${target}/content</setting>

@@ -1,25 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <stores xmlns="http://www.armedia.com/ns/caliente/stores"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores http://www.armedia.com/ns/caliente/stores">
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores platform:/resource/caliente-store-api/src/main/resources/stores.xsd">
 	<settings>
-		<setting name="tmpdir">${user.dir}/caliente</setting>
+		<setting name="target">${user.dir}/target/test-db</setting>
+		<setting name="db.name">dfc-test</setting>
+		<setting name="dir.metadata">${target}</setting>
+		<setting name="dir.content">${target}/content</setting>
+		<setting name="dir.content.strategy">documentum</setting>
 	</settings>
 
-	<objectstore id="dctmTest">
+	<objectstore id="default">
 		<type>jdbc</type>
 		<settings>
 			<setting name="location.type">pooled</setting>
-			<setting name="jdbc.url">jdbc:h2:${tmpdir}/metadata;AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
+			<setting name="jdbc.url">jdbc:h2:${dir.metadata}/${db.name};AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
 			<setting name="jdbc.driver">org.h2.Driver</setting>
 		</settings>
 	</objectstore>
 
-	<contentstore id="dctmTest">
+	<contentstore id="default">
 		<type>local</type>
 		<settings>
-			<setting name="base.dir">${tmpdir}/content</setting>
-			<setting name="uri.strategy">documentum</setting>
+			<setting name="base.dir">${dir.content}</setting>
+			<setting name="uri.strategy">${dir.content.strategy}</setting>
+			<setting name="force.safe.filenames">false</setting>
+			<setting name="safe.filename.encoding">UTF-8</setting>
+			<setting name="fix.filenames">true</setting>
+			<setting name="fail.on.collisions">false</setting>
+			<setting name="ignore.extra.filename.info">false</setting>
+			<setting name="use.windows.fix">true</setting>
 		</settings>
 	</contentstore>
 </stores>
