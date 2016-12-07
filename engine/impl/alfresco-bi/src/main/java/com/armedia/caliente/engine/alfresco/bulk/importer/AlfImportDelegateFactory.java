@@ -514,7 +514,7 @@ public class AlfImportDelegateFactory
 		switch (type) {
 			case NORMAL:
 			case VDOC_ROOT:
-				thisMarker.setName(cmfObject.getName());
+				thisMarker.setName(getObjectName(cmfObject));
 				break;
 
 			case VDOC_RENDITION:
@@ -522,14 +522,14 @@ public class AlfImportDelegateFactory
 				// fall-through
 			case VDOC_STREAM:
 				// For the primary streams, we set the same name of the object
-				thisMarker.setName(cmfObject.getName());
+				thisMarker.setName(getObjectName(cmfObject));
 				// fall-through
 			case VDOC_REFERENCE:
 				// For the member, we have to append one more item to the cmsPath
 				append = contentFile.getParentFile().getName();
 				// fall-through
 			case VDOC_VERSION:
-				cmsPath = String.format("%s/%s", cmsPath, cmfObject.getName());
+				cmsPath = String.format("%s/%s", cmsPath, getObjectName(cmfObject));
 				if (append != null) {
 					cmsPath = String.format("%s/%s", cmsPath, append);
 				}
@@ -670,6 +670,10 @@ public class AlfImportDelegateFactory
 	protected String mapRole(String role) {
 		if (role == null) { return null; }
 		return Tools.coalesce(this.roleMap.getProperty(role), role);
+	}
+
+	protected String getObjectName(CmfObject<CmfValue> object) {
+		return this.getEngine().getObjectName(object);
 	}
 
 	@Override

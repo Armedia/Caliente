@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,7 @@ public class AlfImportEngine extends
 
 	static final String MANIFEST_NAME = "CALIENTE_INGESTION_INDEX.txt";
 
-	private static final class NameFixer implements CmfNameFixer<CmfValue> {
+	private final class NameFixer implements CmfNameFixer<CmfValue> {
 
 		private final String forbidden = "[\"*\\\\><?/:|]";
 
@@ -65,7 +66,7 @@ public class AlfImportEngine extends
 		@Override
 		public String fixName(CmfObject<CmfValue> dataObject) throws CmfStorageException {
 			this.visited++;
-			final String originalName = dataObject.getName();
+			final String originalName = getObjectName(dataObject);
 			String newName = originalName;
 
 			// File names may not contain any of the following characters: "*\><?/:|
@@ -348,5 +349,13 @@ public class AlfImportEngine extends
 	@Override
 	protected Set<String> getTargetNames() {
 		return AlfCommon.TARGETS;
+	}
+
+	protected String getObjectName(CmfObject<CmfValue> object) {
+		String finalName = object.getName();
+		if (StringUtils.isBlank(finalName)) {
+			finalName = object.getHistoryId();
+		}
+		return finalName;
 	}
 }

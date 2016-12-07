@@ -293,10 +293,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				value = null;
 			}
 		} catch (ParseException e) {
-			throw new ImportException(
-				String.format("Failed to serialize the values from source attribute [%s] for %s [%s](%s)",
-					srcAtt.getName(), this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getName()),
-				e);
+			throw new ImportException(String.format(
+				"Failed to serialize the values from source attribute [%s] for %s [%s](%s)", srcAtt.getName(),
+				this.cmfObject.getType(), this.cmfObject.getLabel(), this.factory.getObjectName(this.cmfObject)), e);
 		}
 
 		if (!StringUtils.isEmpty(value)) {
@@ -462,7 +461,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			this.log.warn(String.format("Failed to load the HEAD object for %s batch [%s]",
 				this.cmfObject.getType().name(), this.cmfObject.getHistoryId()), e);
 		}
-		p.setProperty("cm:name", head.getName());
+		p.setProperty("cm:name", this.factory.getObjectName(head));
 	}
 
 	protected final String generateAcl(final AlfImportContext ctx, final String owner, final String group)
