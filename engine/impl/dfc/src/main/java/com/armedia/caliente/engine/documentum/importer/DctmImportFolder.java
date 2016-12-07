@@ -20,7 +20,6 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -67,15 +66,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	@Override
 	protected void doFinalizeConstruction(IDfFolder folder, boolean newObject, DctmImportContext context)
 		throws DfException, ImportException {
-
-		final String folderName;
 		if (newObject && !isDfReference(folder)) {
 			CmfAttribute<IDfValue> objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
-			IDfValue newValue = objectName.getValue();
-			folderName = newValue.toString().trim();
-			setAttributeOnObject(DctmAttributes.OBJECT_NAME, DfValueFactory.newStringValue(folderName), folder);
-		} else {
-			folderName = folder.getObjectName();
+			setAttributeOnObject(DctmAttributes.OBJECT_NAME, objectName.getValue(), folder);
 		}
 	}
 
