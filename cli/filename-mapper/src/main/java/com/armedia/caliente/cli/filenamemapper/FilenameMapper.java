@@ -32,6 +32,7 @@ import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
+import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
 
 class FilenameMapper {
@@ -43,20 +44,14 @@ class FilenameMapper {
 	private static final String DEFAULT_DEDUP_PATTERN = "${name}${fixChar}${id}";
 
 	private static final String ALL_DQL = //
-		"         select r_object_id, i_folder_id, object_name " + //
+		"         select r_object_id, object_name, i_folder_id " + //
 			"       from dm_sysobject " + //
-			"      where object_name is not nullstring " + //
-			"        and r_object_id is not nullstring " + //
-			"        and r_object_id is not nullid " + //
-			"        and i_folder_id is not nullstring " + //
-			"        and i_folder_id is not nullid " + //
-			"        and not folder('/Integration', DESCEND) " + //
+			"      where not folder('/Integration', DESCEND) " + //
 			"        and not folder('/dm_bof_registry', DESCEND) " + //
 			"        and not folder('/Resources', DESCEND) " + //
 			"        and not folder('/System', DESCEND) " + //
 			"        and not folder('/Temp', DESCEND) " + //
-			"        and not folder('/Templates', DESCEND) " + //
-			"            enable (ROW_BASED) ";
+			"        and not folder('/Templates', DESCEND) ";
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final DfcLaunchHelper dfcLaunchHelper;
@@ -255,14 +250,21 @@ class FilenameMapper {
 					final long start = System.currentTimeMillis();
 					this.log.info("Query ready, iterating over the results");
 					memPre = runtime.maxMemory() - runtime.freeMemory();
+					IDfAttr attr = null;
 					while (collection.next()) {
-						String containerId = collection.getString("i_folder_id");
+						if (attr == null) {
+							attr = collection.getAttr(collection.findAttrIndex("i_folder_id"));
+						}
 						String entryId = collection.getString("r_object_id");
 						String name = collection.getString("object_name");
 
 						// First things first: make sure the filename is fixed
 						if (fixer != null) {
 							final String oldName = name;
+							// Empty names get modified into their object IDs...
+							if (StringUtils.isEmpty(name)) {
+								name = entryId;
+							}
 							name = fixer.fixName(name);
 							if (name == null) {
 								name = oldName;
@@ -279,10 +281,22 @@ class FilenameMapper {
 						}
 
 						if (dedupEnabled) {
-							CmfObjectRef containerRef = newObjectRef(CmfType.FOLDER, containerId);
 							CmfObjectRef entryRef = newObjectRef(entryId);
-							if ((containerRef != null) && (entryRef != null)) {
-								deduplicator.addEntry(containerRef, entryRef, name);
+							if (attr.isRepeating()) {
+								final int c = collection.getValueCount("i_folder_id");
+								for (int i = 0; i < c; i++) {
+									String containerId = collection.getRepeatingString("i_folder_id", i);
+									CmfObjectRef containerRef = newObjectRef(CmfType.FOLDER, containerId);
+									if ((containerRef != null) && (entryRef != null)) {
+										deduplicator.addEntry(containerRef, entryRef, name);
+									}
+								}
+							} else {
+								String containerId = collection.getString("i_folder_id");
+								CmfObjectRef containerRef = newObjectRef(CmfType.FOLDER, containerId);
+								if ((containerRef != null) && (entryRef != null)) {
+									deduplicator.addEntry(containerRef, entryRef, name);
+								}
 							}
 						}
 
@@ -320,6 +334,10 @@ class FilenameMapper {
 					long fixes = deduplicator.fixConflicts(new FilenameCollisionResolver() {
 						@Override
 						public String generateUniqueName(CmfObjectRef entryId, String currentName, long count) {
+							// Empty names get modified into their object IDs...
+							if (StringUtils.isEmpty(currentName)) {
+								currentName = entryId.getId();
+							}
 							resolverMap.put("typeName", entryId.getType().name());
 							resolverMap.put("typeOrdinal", entryId.getType().ordinal());
 							resolverMap.put("id", entryId.getId());

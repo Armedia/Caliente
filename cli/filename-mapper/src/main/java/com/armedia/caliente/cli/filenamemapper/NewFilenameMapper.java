@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
@@ -123,6 +124,10 @@ public class NewFilenameMapper {
 
 		@Override
 		public String generateUniqueName(CmfObjectRef entryId, String currentName, long count) {
+			// Empty names get modified into their object IDs...
+			if (StringUtils.isEmpty(currentName)) {
+				currentName = entryId.getId();
+			}
 			this.resolverMap.put("typeName", entryId.getType().name());
 			this.resolverMap.put("typeOrdinal", entryId.getType().ordinal());
 			this.resolverMap.put("id", entryId.getId());
@@ -155,6 +160,10 @@ public class NewFilenameMapper {
 			FSEntry fsEntry = deduplicator.addEntry(entry.getContainer(), entry.getChild(), name);
 			if (fixer != null) {
 				final String oldName = name;
+				// Empty names get modified into their object IDs...
+				if (StringUtils.isEmpty(name)) {
+					name = entry.getChild().getId();
+				}
 				name = Tools.coalesce(fixer.fixName(name), oldName);
 				if (!Tools.equals(name, oldName)) {
 					// Rename the entry so that it can be processed as a rename later on
