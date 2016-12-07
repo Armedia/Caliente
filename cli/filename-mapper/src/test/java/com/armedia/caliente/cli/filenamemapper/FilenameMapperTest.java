@@ -37,6 +37,10 @@ public class FilenameMapperTest {
 			}, {
 				" ", "_"
 			}, {
+				"  ", " _"
+			}, {
+				"   ", "  _"
+			}, {
 				".illegal.filename.", ".illegal.filename_"
 			}, {
 				".illegal.filename ", ".illegal.filename_"
