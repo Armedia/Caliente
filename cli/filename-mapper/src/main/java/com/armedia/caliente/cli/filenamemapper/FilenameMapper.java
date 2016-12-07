@@ -32,7 +32,6 @@ import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
-import com.documentum.fc.common.IDfAttr;
 import com.documentum.fc.common.IDfId;
 
 class FilenameMapper {
@@ -250,11 +249,8 @@ class FilenameMapper {
 					final long start = System.currentTimeMillis();
 					this.log.info("Query ready, iterating over the results");
 					memPre = runtime.maxMemory() - runtime.freeMemory();
-					IDfAttr attr = null;
+					final boolean folderIdRepeating = collection.isAttrRepeating("i_folder_id");
 					while (collection.next()) {
-						if (attr == null) {
-							attr = collection.getAttr(collection.findAttrIndex("i_folder_id"));
-						}
 						String entryId = collection.getString("r_object_id");
 						String name = collection.getString("object_name");
 
@@ -282,7 +278,7 @@ class FilenameMapper {
 
 						if (dedupEnabled) {
 							CmfObjectRef entryRef = newObjectRef(entryId);
-							if (attr.isRepeating()) {
+							if (folderIdRepeating) {
 								final int c = collection.getValueCount("i_folder_id");
 								for (int i = 0; i < c; i++) {
 									String containerId = collection.getRepeatingString("i_folder_id", i);
