@@ -35,6 +35,8 @@ public class FilenameMapperTest {
 			}, {
 				"    This is a legal filename under all Windows Rules 993481934 134 9             91234 91234 91243 .doc"
 			}, {
+				" ", "_"
+			}, {
 				".illegal.filename.", ".illegal.filename_"
 			}, {
 				".illegal.filename ", ".illegal.filename_"
