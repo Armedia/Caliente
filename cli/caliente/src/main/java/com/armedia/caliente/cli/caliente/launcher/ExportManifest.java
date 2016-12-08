@@ -28,12 +28,15 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 	private final Logger manifestLog = Logger.getLogger("manifest");
 
-	private static final String RECORD_FORMAT = "%s,%s,%s,%s,%s,%s,%s";
+	private static final Long NULL = Long.valueOf(-1);
+	private static final String RECORD_FORMAT = "%s,%s,%s,%s,%s,%s,%s,%s,%s";
 
 	private static final class Record {
+		private final Long number;
 		private final String date;
 		private final CmfType type;
-		private final String batchId;
+		private final Integer tier;
+		private final String historyId;
 		private final String sourceId;
 		private final String label;
 		private final ExportResult result;
@@ -57,9 +60,11 @@ public class ExportManifest extends DefaultExportEngineListener {
 		}
 
 		private Record(CmfObject<?> object, ExportResult result, Throwable thrown, String extraInfo) {
+			this.number = object.getNumber();
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = object.getType();
-			this.batchId = StringEscapeUtils.escapeCsv(object.getHistoryId());
+			this.tier = object.getDependencyTier();
+			this.historyId = StringEscapeUtils.escapeCsv(object.getHistoryId());
 			this.sourceId = StringEscapeUtils.escapeCsv(object.getId());
 			this.label = StringEscapeUtils.escapeCsv(object.getLabel());
 			this.result = result;
@@ -82,9 +87,11 @@ public class ExportManifest extends DefaultExportEngineListener {
 		}
 
 		private Record(CmfType type, String objectId, ExportResult result, Throwable thrown, String extraInfo) {
+			this.number = ExportManifest.NULL;
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = type;
-			this.batchId = "";
+			this.tier = null;
+			this.historyId = "";
 			this.sourceId = StringEscapeUtils.escapeCsv(objectId);
 			this.label = "";
 			this.result = result;
@@ -115,11 +122,13 @@ public class ExportManifest extends DefaultExportEngineListener {
 		public void log(Logger log) {
 			final String msg;
 			if (this.result != ExportResult.FAILED) {
-				msg = String.format(ExportManifest.RECORD_FORMAT, this.date, this.type.name(), this.result.name(),
-					this.batchId, this.sourceId, this.label, Tools.coalesce(this.extraInfo, ""));
+				msg = String.format(ExportManifest.RECORD_FORMAT, this.number, this.date, this.type.name(),
+					(this.tier != null ? this.tier.toString() : ""), this.result.name(), this.historyId, this.sourceId,
+					this.label, Tools.coalesce(this.extraInfo, ""));
 			} else {
-				msg = String.format(ExportManifest.RECORD_FORMAT, this.date, this.type.name(), this.result.name(),
-					this.batchId, this.sourceId, this.label, getThrownMessage());
+				msg = String.format(ExportManifest.RECORD_FORMAT, this.number, this.date, this.type.name(),
+					(this.tier != null ? this.tier.toString() : ""), this.result.name(), this.historyId, this.sourceId,
+					this.label, getThrownMessage());
 			}
 			log.info(msg);
 		}
@@ -137,8 +146,8 @@ public class ExportManifest extends DefaultExportEngineListener {
 	@Override
 	protected void exportStartedImpl(ExportState exportState) {
 		this.openBatches.clear();
-		this.manifestLog.info(String.format(ExportManifest.RECORD_FORMAT, "DATE", "TYPE", "RESULT", "BATCH_ID",
-			"SOURCE_ID", "LABEL", "ERROR_DATA"));
+		this.manifestLog.info(String.format(ExportManifest.RECORD_FORMAT, "NUMBER", "DATE", "TYPE", "TIER", "RESULT",
+			"HISTORY_ID", "SOURCE_ID", "LABEL", "ERROR_DATA"));
 	}
 
 	@Override

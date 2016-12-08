@@ -31,11 +31,13 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 	private final Logger manifestLog = Logger.getLogger("manifest");
 
-	private static final String RECORD_FORMAT = "%s,%s,%s,%s,%s,%s,%s,%s";
+	private static final String RECORD_FORMAT = "%d,%s,%s,%s,%s,%s,%s,%s,%s,%s";
 
 	private static final class Record {
+		private final Long number;
 		private final String date;
 		private final CmfType type;
+		private final int tier;
 		private final String historyId;
 		private final String sourceId;
 		private final String label;
@@ -52,8 +54,10 @@ public class ImportManifest extends DefaultImportEngineListener {
 		}
 
 		private Record(CmfObject<?> object, String targetId, ImportResult result, Throwable thrown) {
+			this.number = object.getNumber();
 			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
 			this.type = object.getType();
+			this.tier = object.getDependencyTier();
 			this.historyId = StringEscapeUtils.escapeCsv(object.getHistoryId());
 			this.sourceId = StringEscapeUtils.escapeCsv(object.getId());
 			this.label = StringEscapeUtils.escapeCsv(object.getLabel());
@@ -86,11 +90,11 @@ public class ImportManifest extends DefaultImportEngineListener {
 		public void log(Logger log) {
 			final String msg;
 			if (this.result != ImportResult.FAILED) {
-				msg = String.format(ImportManifest.RECORD_FORMAT, this.date, this.type.name(), this.result.name(),
-					this.historyId, this.sourceId, this.targetId, this.label, "");
+				msg = String.format(ImportManifest.RECORD_FORMAT, this.number, this.date, this.type.name(), this.tier,
+					this.result.name(), this.historyId, this.sourceId, this.targetId, this.label, "");
 			} else {
-				msg = String.format(ImportManifest.RECORD_FORMAT, this.date, this.type.name(), this.result.name(),
-					this.historyId, this.sourceId, this.targetId, this.label, getThrownMessage());
+				msg = String.format(ImportManifest.RECORD_FORMAT, this.number, this.date, this.type.name(), this.tier,
+					this.result.name(), this.historyId, this.sourceId, this.targetId, this.label, getThrownMessage());
 			}
 			log.info(msg);
 		}
@@ -109,8 +113,8 @@ public class ImportManifest extends DefaultImportEngineListener {
 	protected void importStartedImpl(ImportState importState, Map<CmfType, Long> summary) {
 		// Clear manifest
 		this.openBatches.clear();
-		this.manifestLog.info(String.format(ImportManifest.RECORD_FORMAT, "DATE", "TYPE", "RESULT", "BATCH_ID",
-			"SOURCE_ID", "TARGET_ID", "LABEL", "ERROR_DATA"));
+		this.manifestLog.info(String.format(ImportManifest.RECORD_FORMAT, "NUMBER", "DATE", "TYPE", "TIER", "RESULT",
+			"HISTORY_ID", "SOURCE_ID", "TARGET_ID", "LABEL", "ERROR_DATA"));
 	}
 
 	@Override
