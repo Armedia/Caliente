@@ -739,6 +739,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		try {
 			// Fire off the workers
 			final ExportTarget terminator = new ExportTarget();
+			listenerDelegator.exportStarted(exportState);
 			worker.start(threadCount, terminator, true);
 			try {
 				output.info("Retrieving the results");
