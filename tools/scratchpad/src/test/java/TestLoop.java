@@ -1,6 +1,4 @@
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.EnumSet;
@@ -11,7 +9,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -21,10 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.calienteng.DfUtils;
 import com.armedia.calienteng.EventRegistration;
-import com.armedia.cmf.generator.GenerationPlan;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.XmlTools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
@@ -73,7 +68,7 @@ public class TestLoop {
 		case CREATE:
 			addWatcher(obj);
 			break;
-	
+
 		case UPDATE:
 			boolean updateRecord = true;
 			Record existing = getExistingRecord(obj);
@@ -93,7 +88,7 @@ public class TestLoop {
 				}
 			}
 			break;
-	
+
 		case DELETE:
 			removeWatcher(obj);
 			break;
@@ -187,6 +182,7 @@ public class TestLoop {
 			"   set path_depth = ${depth} " + //
 			" where i_chronicle_id = ${chronicleId}";
 
+	@SuppressWarnings("unused")
 	private static final String DELETE_STATUS_SQL = //
 		"    delete from dm_dbo.caliente_status " + //
 			"   where i_chronicle_id = ${chronicleId}";
@@ -206,6 +202,7 @@ public class TestLoop {
 			"  from dm_dbo.caliente_version " + //
 			" where r_object_id = ${objectId}";
 
+	@SuppressWarnings("unused")
 	private static final String DELETE_VERSION_SQL = //
 		"    delete from dm_dbo.caliente_version " + //
 			"   where r_object_id = ${objectId}";
@@ -228,6 +225,7 @@ public class TestLoop {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private void deleteWatch(IDfSession session, IDfId id) throws DfException {
 		final IDfLocalTransaction tx = session.beginTransEx();
 		boolean ok = false;
@@ -491,6 +489,11 @@ public class TestLoop {
 									payloads.add(new Payload(i, so));
 								}
 								break;
+							// case dm_mark:
+							// case dm_branch:
+							// case dm_prune:
+							default:
+								break;
 						}
 					}
 
@@ -568,57 +571,6 @@ public class TestLoop {
 			}
 
 		} finally {
-			TestLoop.POOL.releaseSession(session);
-		}
-	}
-
-	// @Test
-	public void test2() throws Throwable {
-		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("test.xml");
-		GenerationPlan p = XmlTools.unmarshal(GenerationPlan.class, "data-generator.xsd", in);
-		final IDfSession session = TestLoop.POOL.acquireSession();
-		List<File> tempFiles = new ArrayList<>();
-		try {
-			session.beginTrans();
-			final IDfFolder parent = session.getFolderByPath("/CMSMFTests/Specials");
-
-			IDfDocument document = null;
-
-			document = IDfDocument.class.cast(session.newObject("dm_document"));
-			document.setObjectName("Document with multipage renditions.txt");
-			document.setContentType("text");
-
-			final int pages = 5;
-			for (int i = 0; i < pages; i++) {
-				File f = File.createTempFile("main", ".txt").getCanonicalFile();
-				tempFiles.add(f);
-				f.deleteOnExit();
-				FileUtils.writeStringToFile(f, String.format("This is page # %d of %d for document [%s](%s)", i + 1,
-					pages, document.getObjectName(), document.getObjectId().getId()));
-				document.setFileEx(f.getAbsolutePath(), "text", i, null);
-			}
-
-			// Now, renditions...binary renditions!! :D
-			for (int i = 0; i < pages; i++) {
-				File f = File.createTempFile("rendition", ".bin").getCanonicalFile();
-				tempFiles.add(f);
-				f.deleteOnExit();
-				FileUtils.writeByteArrayToFile(f, String.format("This is page # %d of %d for document [%s](%s)", i + 1,
-					pages, document.getObjectName(), document.getObjectId().getId()).getBytes());
-				document.addRenditionEx(f.getAbsolutePath(), "binary", i, null, false);
-			}
-
-			document.link(parent.getObjectId().getId());
-			document.save();
-
-			session.commitTrans();
-		} catch (Exception e) {
-			session.abortTrans();
-			throw e;
-		} finally {
-			for (File f : tempFiles) {
-				f.delete();
-			}
 			TestLoop.POOL.releaseSession(session);
 		}
 	}
