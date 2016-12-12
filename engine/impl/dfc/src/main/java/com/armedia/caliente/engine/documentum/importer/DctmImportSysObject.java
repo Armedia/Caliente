@@ -420,6 +420,18 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 	}
 
+	protected final void applyAcl(IDfACL acl, T sysObj, DctmImportContext ctx) throws DfException {
+		final String id = acl.getObjectId().getId();
+		final String domain = acl.getDomain();
+		final String name = acl.getObjectName();
+		ctx.printf("Applying ACL [%s] (%s::%s) to %s [%s](%s)", id, domain, name, this.cmfObject.getType().name(),
+			this.cmfObject.getLabel(), this.cmfObject.getId());
+		// TODO: Should we only do one? Both?
+		// sysObj.setACLDomain(domain);
+		// sysObj.setACLName(name);
+		sysObj.setACL(acl);
+	}
+
 	protected boolean restoreInheritedAcl(T sysObj, DctmImportContext ctx) throws DfException, ImportException {
 		CmfProperty<IDfValue> prop = this.cmfObject.getProperty(IntermediateProperty.ACL_INHERITANCE);
 		if ((prop == null) || !prop.hasValues()) { return false; }
@@ -474,16 +486,20 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			}
 
 			final IDfACL acl = parent.getACL();
-			if (acl != null) {
-				sysObj.setACL(acl);
-				return true;
+			if (acl == null) {
+				this.log.warn(
+					"Can't inherit an ACL from parent folder [{}] for {} [{}]({}) - the parent has no ACL to inherit from",
+					parent.getFolderPath(0), this.cmfObject.getType().name(), this.cmfObject.getLabel(),
+					this.cmfObject.getId());
+				return false;
 			}
 
-			this.log.warn(
-				"Can't inherit an ACL from parent folder [{}] for {} [{}]({}) - the parent has no ACL to inherit from",
-				parent.getFolderPath(0), this.cmfObject.getType().name(), this.cmfObject.getLabel(),
-				this.cmfObject.getId());
-			return false;
+			final String basePath = (parent.getFolderPathCount() > 0 ? parent.getFolderPath(0)
+				: String.format("(no-parent)/%s", parent.getObjectName()));
+			ctx.printf("Inheriting ACL from folder [%s](%s) for %s [%s](%s)", basePath, parent.getObjectId().getId(),
+				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
+			applyAcl(acl, sysObj, ctx);
+			return true;
 		}
 
 		if ("TYPE".equalsIgnoreCase(type)) {
@@ -511,6 +527,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 			aclDomain = typeInfo.getString(DctmAttributes.ACL_DOMAIN);
 			aclName = typeInfo.getString(DctmAttributes.ACL_NAME);
+			ctx.printf("Inheriting ACL from type [%s] for %s [%s](%s)", actualReference,
+				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
 		}
 
 		if ("USER".equalsIgnoreCase(type)) {
@@ -530,6 +548,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			actualReference = u.getUserName();
 			aclDomain = u.getACLDomain();
 			aclName = u.getACLName();
+			ctx.printf("Inheriting ACL from user [%s] for %s [%s](%s)", actualReference,
+				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
 		}
 
 		if (actualReference == null) {
@@ -558,7 +578,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			return false;
 		}
 
-		sysObj.setACL(acl);
+		applyAcl(acl, sysObj, ctx);
 		return true;
 	}
 
@@ -569,6 +589,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		// First, see if there's ACL inheritance to be applied...
 		if (restoreInheritedAcl(sysObject, ctx)) { return; }
 
+		ctx.printf("ACL for %s [%s](%s) was not inherited, applying it directly from the source value",
+			this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId());
 		// First, find the ACL_ID property - if it doesn't exist, we have no ACL to restore
 		CmfProperty<IDfValue> aclIdProp = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
 		if ((aclIdProp != null) && aclIdProp.hasValues()) {
@@ -585,7 +607,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			if (m != null) {
 				try {
 					IDfACL acl = IDfACL.class.cast(session.getObject(new DfId(m.getTargetValue())));
-					sysObject.setACL(acl);
+					applyAcl(acl, sysObject, ctx);
 					return;
 				} catch (DfObjectNotFoundException e) {
 				}
