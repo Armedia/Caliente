@@ -34,14 +34,15 @@ import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
-import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfGroup;
+import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.client.IDfVirtualDocument;
 import com.documentum.fc.client.IDfVirtualDocumentNode;
@@ -190,6 +191,38 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		});
 	}
 
+	protected final boolean isSameACL(T object, IDfTypedObject other) throws DfException {
+		if (IDfSysObject.class.isInstance(other)) { return isSameACL(object, IDfSysObject.class.cast(other)); }
+		return isSameACL(object, other, null, null);
+	}
+
+	protected final boolean isSameACL(T object, IDfTypedObject other, String aclDomainAtt, String aclNameAtt)
+		throws DfException {
+		if (object == other) { return true; }
+		if ((object == null) || (other == null)) { return false; }
+		if (StringUtils.isBlank(aclDomainAtt)) {
+			aclDomainAtt = DctmAttributes.ACL_DOMAIN;
+		}
+		if (!other.hasAttr(aclDomainAtt)) { return false; }
+		if (StringUtils.isBlank(aclNameAtt)) {
+			aclNameAtt = DctmAttributes.ACL_NAME;
+		}
+		if (!other.hasAttr(aclNameAtt)) { return false; }
+		return isSameACL(object, other.getString(aclDomainAtt), other.getString(aclNameAtt));
+	}
+
+	protected final boolean isSameACL(T object, IDfSysObject other) throws DfException {
+		if (object == other) { return true; }
+		if ((object == null) || (other == null)) { return false; }
+		return isSameACL(object, other.getACLDomain(), other.getACLName());
+	}
+
+	protected final boolean isSameACL(T object, String aclDomain, String aclName) throws DfException {
+		if (!Tools.equals(object.getACLDomain(), aclDomain)) { return false; }
+		if (!Tools.equals(object.getACLName(), aclName)) { return false; }
+		return true;
+	}
+
 	@Override
 	protected boolean getDataProperties(DctmExportContext ctx, Collection<CmfProperty<IDfValue>> properties, T object)
 		throws DfException, ExportException {
@@ -201,7 +234,6 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			DctmDataType.DF_STRING.getStoredType(), false);
 		properties.add(aclInheritedProp);
 		boolean aclInheritedSet = false;
-		final IDfACL acl = object.getACL();
 
 		CmfProperty<IDfValue> paths = new CmfProperty<>(IntermediateProperty.PATH,
 			DctmDataType.DF_STRING.getStoredType(), true);
@@ -221,14 +253,11 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 				continue;
 			}
 
-			if (!aclInheritedSet) {
-				// Is the object's ACL the same as its parent folder's?
-				IDfACL parentACL = parent.getACL();
-				if (Tools.equals(parentACL.getObjectId(), acl.getObjectId())) {
-					aclInheritedProp
-						.setValue(DfValueFactory.newStringValue(String.format("FOLDER[%s]", folderId.asString())));
-					aclInheritedSet = true;
-				}
+			// Is the object's ACL the same as its parent folder's?
+			if (!aclInheritedSet && isSameACL(object, parent)) {
+				aclInheritedProp
+					.setValue(DfValueFactory.newStringValue(String.format("FOLDER[%s]", folderId.asString())));
+				aclInheritedSet = true;
 			}
 			parents.addValue(folderId);
 			final int pathCount = parent.getFolderPathCount();
@@ -239,8 +268,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 		if (!aclInheritedSet) {
 			IDfUser creator = session.getUser(object.getCreatorName());
-			if ((creator != null) && Tools.equals(acl.getDomain(), creator.getACLDomain())
-				&& Tools.equals(acl.getObjectName(), creator.getACLName())) {
+			if ((creator != null) && isSameACL(object, creator)) {
 				// Make sure we perform all necessary mappings
 				String userName = DctmMappingUtils.substituteMappableUsers(session, creator.getUserName());
 				aclInheritedProp.setValue(DfValueFactory.newStringValue(String.format("USER[%s]", userName)));
@@ -258,9 +286,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 						DfUtils.quoteString(type.getObjectId().getId()));
 					c = DfUtils.executeQuery(session, dql);
 					if (c.next()) {
-						String aclDomain = c.getString(DctmAttributes.ACL_DOMAIN);
-						String aclName = c.getString(DctmAttributes.ACL_NAME);
-						if (Tools.equals(acl.getDomain(), aclDomain) && Tools.equals(acl.getObjectName(), aclName)) {
+						if (isSameACL(object, c)) {
 							aclInheritedProp
 								.setValue(DfValueFactory.newStringValue(String.format("TYPE[%s]", type.getName())));
 							aclInheritedSet = true;
@@ -270,7 +296,6 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 				} finally {
 					DfUtils.closeQuietly(c);
 				}
-
 				type = type.getSuperType();
 			}
 		}
@@ -310,9 +335,18 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			DctmDataType.DF_ID.getStoredType(), false);
 		properties.add(aclIdProp);
 		IDfId aclId = DfId.DF_NULLID;
-		IDfACL aclObj = object.getACL();
-		if (aclObj != null) {
-			aclId = aclObj.getObjectId();
+		String aclDomain = object.getACLDomain();
+		String aclName = object.getACLName();
+		final String dql = String.format(
+			"select distinct r_object_id from dm_acl where owner_name = %s and object_name = %s",
+			DfUtils.quoteString(aclDomain), DfUtils.quoteString(aclName));
+		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_READ_QUERY);
+		try {
+			if (c.next()) {
+				aclId = c.getId(DctmAttributes.R_OBJECT_ID);
+			}
+		} finally {
+			DfUtils.closeQuietly(c);
 		}
 		aclIdProp.setValue(DfValueFactory.newIdValue(aclId));
 		return true;
@@ -653,21 +687,25 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		Collection<DctmExportDelegate<?>> req = super.findRequirements(session, marshaled, sysObject, ctx);
 
 		// The parent folders
-		final int pathCount = sysObject.getFolderIdCount();
-		for (int i = 0; i < pathCount; i++) {
-			IDfId folderId = sysObject.getFolderId(i);
-			IDfFolder parent = session.getFolderBySpecification(folderId.getId());
-			req.add(this.factory.newExportDelegate(parent));
+		if (ctx.isSupported(CmfType.FOLDER)) {
+			final int pathCount = sysObject.getFolderIdCount();
+			for (int i = 0; i < pathCount; i++) {
+				IDfId folderId = sysObject.getFolderId(i);
+				IDfFolder parent = session.getFolderBySpecification(folderId.getId());
+				req.add(this.factory.newExportDelegate(parent));
+			}
 		}
 
 		// We export our filestore
-		String storeName = sysObject.getStorageType();
-		if (StringUtils.isNotBlank(storeName)) {
-			IDfStore store = DfUtils.getStore(session, storeName);
-			if (store != null) {
-				req.add(this.factory.newExportDelegate(store));
-			} else {
-				this.log.warn("SysObject {} refers to missing store [{}]", marshaled.getLabel(), storeName);
+		if (ctx.isSupported(CmfType.DATASTORE)) {
+			String storeName = sysObject.getStorageType();
+			if (StringUtils.isNotBlank(storeName)) {
+				IDfStore store = DfUtils.getStore(session, storeName);
+				if (store != null) {
+					req.add(this.factory.newExportDelegate(store));
+				} else {
+					this.log.warn("SysObject {} refers to missing store [{}]", marshaled.getLabel(), storeName);
+				}
 			}
 		}
 
@@ -689,28 +727,36 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// Export the format
-		IDfFormat format = sysObject.getFormat();
-		if (format != null) {
-			req.add(this.factory.newExportDelegate(format));
+		if (ctx.isSupported(CmfType.FORMAT)) {
+			IDfFormat format = sysObject.getFormat();
+			if (format != null) {
+				req.add(this.factory.newExportDelegate(format));
+			}
 		}
 
 		// Export the owner
-		String owner = DctmMappingUtils.substituteMappableUsers(session, sysObject.getOwnerName());
-		if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
-			IDfUser user = session.getUser(sysObject.getOwnerName());
-			if (user != null) {
-				req.add(this.factory.newExportDelegate(user));
+		if (ctx.isSupported(CmfType.USER)) {
+			String owner = DctmMappingUtils.substituteMappableUsers(session, sysObject.getOwnerName());
+			if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
+				IDfUser user = session.getUser(sysObject.getOwnerName());
+				if (user != null) {
+					req.add(this.factory.newExportDelegate(user));
+				}
 			}
 		}
 
 		// Export the group
-		IDfGroup group = session.getGroup(sysObject.getGroupName());
-		if (group != null) {
-			req.add(this.factory.newExportDelegate(group));
+		if (ctx.isSupported(CmfType.GROUP)) {
+			IDfGroup group = session.getGroup(sysObject.getGroupName());
+			if (group != null) {
+				req.add(this.factory.newExportDelegate(group));
+			}
 		}
 
 		// Export the ACL requirements
-		req.add(this.factory.newExportDelegate(sysObject.getACL()));
+		if (ctx.isSupported(CmfType.ACL)) {
+			req.add(this.factory.newExportDelegate(sysObject.getACL()));
+		}
 		return req;
 	}
 

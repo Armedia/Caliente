@@ -420,16 +420,54 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 	}
 
-	protected final void applyAcl(IDfACL acl, T sysObj, DctmImportContext ctx) throws DfException {
-		final String id = acl.getObjectId().getId();
-		final String domain = acl.getDomain();
-		final String name = acl.getObjectName();
-		ctx.printf("Applying ACL [%s] (%s::%s) to %s [%s](%s)", id, domain, name, this.cmfObject.getType().name(),
+	protected final boolean applyAcl(IDfPersistentObject source, T sysObj, DctmImportContext ctx)
+		throws DfException, ImportException {
+		if (IDfSysObject.class.isInstance(source)) { return applyAcl(IDfSysObject.class.cast(source), sysObj, ctx); }
+		return applyAcl(source, sysObj, null, null, ctx);
+	}
+
+	protected final boolean applyAcl(IDfPersistentObject source, T sysObj, String aclDomainAtt, String aclNameAtt,
+		DctmImportContext ctx) throws DfException, ImportException {
+		if (source == sysObj) { return true; }
+		if ((source == null) || (sysObj == null)) { return true; }
+		if (StringUtils.isEmpty(aclDomainAtt)) {
+			aclDomainAtt = DctmAttributes.ACL_DOMAIN;
+		}
+		if (StringUtils.isEmpty(aclNameAtt)) {
+			aclNameAtt = DctmAttributes.ACL_NAME;
+		}
+		if (!source.hasAttr(aclDomainAtt) || !source.hasAttr(aclNameAtt)) {
+			ctx.printf("No ACL to copy from %s [%s] for %s [%s](%s)", source.getType().getName(),
+				source.getObjectId().getId(), this.cmfObject.getType().name(), this.cmfObject.getLabel(),
+				this.cmfObject.getId());
+			return false;
+		}
+		final String aclDomain = source.getString(aclDomainAtt);
+		final String aclName = source.getString(aclNameAtt);
+		return applyAcl(sysObj, aclDomain, aclName, ctx);
+	}
+
+	protected final boolean applyAcl(IDfSysObject source, T sysObj, DctmImportContext ctx)
+		throws DfException, ImportException {
+		return applyAcl(sysObj, source.getACLDomain(), source.getACLName(), ctx);
+	}
+
+	protected final boolean applyAcl(T sysObj, String aclDomain, String aclName, DctmImportContext ctx)
+		throws DfException, ImportException {
+		if (StringUtils.isEmpty(aclName) || StringUtils.isEmpty(aclDomain)) {
+			String msg = String.format("Invalid ACL information (%s::%s) - can't inherit an ACL for %s [%s](%s)",
+				aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
+			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
+			this.log.warn(msg);
+			return false;
+		}
+
+		ctx.printf("Applying ACL (%s::%s) to %s [%s](%s)", aclDomain, aclName, this.cmfObject.getType().name(),
 			this.cmfObject.getLabel(), this.cmfObject.getId());
-		// TODO: Should we only do one? Both?
-		// sysObj.setACLDomain(domain);
-		// sysObj.setACLName(name);
-		sysObj.setACL(acl);
+
+		sysObj.setACLDomain(aclDomain);
+		sysObj.setACLName(aclName);
+		return true;
 	}
 
 	protected boolean restoreInheritedAcl(T sysObj, DctmImportContext ctx) throws DfException, ImportException {
@@ -453,10 +491,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			return false;
 		}
 
-		String actualReference = null;
-		String aclDomain = null;
-		String aclName = null;
-
+		IDfPersistentObject aclSource = null;
 		final IDfSession session = ctx.getSession();
 
 		if ("FOLDER".equalsIgnoreCase(type)) {
@@ -485,21 +520,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				return false;
 			}
 
-			final IDfACL acl = parent.getACL();
-			if (acl == null) {
-				this.log.warn(
-					"Can't inherit an ACL from parent folder [{}] for {} [{}]({}) - the parent has no ACL to inherit from",
-					parent.getFolderPath(0), this.cmfObject.getType().name(), this.cmfObject.getLabel(),
-					this.cmfObject.getId());
-				return false;
-			}
-
 			final String basePath = (parent.getFolderPathCount() > 0 ? parent.getFolderPath(0)
 				: String.format("(no-parent)/%s", parent.getObjectName()));
 			ctx.printf("Inheriting ACL from folder [%s](%s) for %s [%s](%s)", basePath, parent.getObjectId().getId(),
 				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
-			applyAcl(acl, sysObj, ctx);
-			return true;
+			aclSource = parent;
 		}
 
 		if ("TYPE".equalsIgnoreCase(type)) {
@@ -514,21 +539,18 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				return false;
 			}
 
-			actualReference = t.getName();
-
 			IDfPersistentObject typeInfo = session.getObjectByQualification(
 				String.format("dmi_type_info where r_type_id = %s", DfUtils.quoteString(t.getObjectId().getId())));
 			if (typeInfo == null) {
 				this.log.warn("Can't inherit an ACL from type [{}] for {} [{}]({}) - couldn't locate the type's info",
-					type, actualReference, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
+					type, t.getName(), this.cmfObject.getType().name(), this.cmfObject.getLabel(),
 					this.cmfObject.getId());
 				return false;
 			}
 
-			aclDomain = typeInfo.getString(DctmAttributes.ACL_DOMAIN);
-			aclName = typeInfo.getString(DctmAttributes.ACL_NAME);
-			ctx.printf("Inheriting ACL from type [%s] for %s [%s](%s)", actualReference,
-				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
+			aclSource = typeInfo;
+			ctx.printf("Inheriting ACL from type [%s] for %s [%s](%s)", t.getName(), this.cmfObject.getType().name(),
+				this.cmfObject.getLabel(), this.cmfObject.getId());
 		}
 
 		if ("USER".equalsIgnoreCase(type)) {
@@ -545,40 +567,18 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				return false;
 			}
 
-			actualReference = u.getUserName();
-			aclDomain = u.getACLDomain();
-			aclName = u.getACLName();
-			ctx.printf("Inheriting ACL from user [%s] for %s [%s](%s)", actualReference,
+			aclSource = u;
+			ctx.printf("Inheriting ACL from user [%s] for %s [%s](%s)", u.getUserName(),
 				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
 		}
 
-		if (actualReference == null) {
+		if (aclSource == null) {
 			this.log.warn("Unsupported inheritance specification [{}] for {} [{}]({})", inheritanceSpec,
 				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
 			return false;
 		}
 
-		if (StringUtils.isEmpty(aclName) || StringUtils.isEmpty(aclDomain)) {
-			String msg = String.format(
-				"The %s [%s] doesn't contain any ACL information - can't inherit an ACL for %s [%s](%s)", type,
-				actualReference, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
-			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
-			this.log.warn(msg);
-			return false;
-		}
-
-		final IDfACL acl = session.getACL(aclDomain, aclName);
-		if (acl == null) {
-			String msg = String.format(
-				"The %s [%s] references a nonexistent ACL [%s::%s] - can't inherit an ACL for %s [%s](%s)", type,
-				actualReference, aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
-				this.cmfObject.getId());
-			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
-			this.log.warn(msg);
-			return false;
-		}
-
-		applyAcl(acl, sysObj, ctx);
+		applyAcl(aclSource, sysObj, ctx);
 		return true;
 	}
 
