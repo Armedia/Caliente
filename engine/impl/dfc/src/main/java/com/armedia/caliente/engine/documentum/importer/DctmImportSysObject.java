@@ -50,6 +50,7 @@ import com.documentum.fc.client.IDfGroup;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfType;
@@ -454,12 +455,23 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected final boolean applyAcl(T sysObj, String aclDomain, String aclName, DctmImportContext ctx)
 		throws DfException, ImportException {
-		if (StringUtils.isEmpty(aclName) || StringUtils.isEmpty(aclDomain)) {
-			String msg = String.format("Invalid ACL information (%s::%s) - can't inherit an ACL for %s [%s](%s)",
-				aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
-			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
-			this.log.warn(msg);
-			return false;
+		final String dql = String.format("select r_object_id from dm_acl where owner_name = %s and object_name = %s",
+			DfUtils.quoteString(aclDomain), DfUtils.quoteString(aclName));
+		IDfSession session = ctx.getSession();
+		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_READ_QUERY);
+		try {
+			if (!c.next()) {
+				// no such ACL
+				String msg = String.format(
+					"Failed to find the ACL [domain=%s, name=%s] for %s [%s](%s) - the target ACL couldn't be found",
+					aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
+					this.cmfObject.getId());
+				if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
+				this.log.warn(msg);
+				return false;
+			}
+		} finally {
+			DfUtils.closeQuietly(c);
 		}
 
 		ctx.printf("Applying ACL (%s::%s) to %s [%s](%s)", aclDomain, aclName, this.cmfObject.getType().name(),
@@ -591,40 +603,58 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		ctx.printf("ACL for %s [%s](%s) was not inherited, applying it directly from the source value",
 			this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId());
-		// First, find the ACL_ID property - if it doesn't exist, we have no ACL to restore
-		CmfProperty<IDfValue> aclIdProp = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
-		if ((aclIdProp != null) && aclIdProp.hasValues()) {
-			IDfId aclId = aclIdProp.getValue().asId();
-			if (aclId.isNull()) {
-				// No acl...
-				return;
-			}
 
-			// Find the mapped ACL
-			Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID,
-				aclId.getId());
-			String msg = null;
-			if (m != null) {
-				try {
-					IDfACL acl = IDfACL.class.cast(session.getObject(new DfId(m.getTargetValue())));
-					applyAcl(acl, sysObject, ctx);
-					return;
-				} catch (DfObjectNotFoundException e) {
+		CmfAttribute<IDfValue> aclDomainAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_DOMAIN);
+		CmfAttribute<IDfValue> aclNameAtt = this.cmfObject.getAttribute(DctmAttributes.ACL_NAME);
+
+		String domain = null;
+		String name = null;
+		String msg = null;
+		if ((aclDomainAtt != null) && aclDomainAtt.hasValues() && (aclNameAtt != null) && aclNameAtt.hasValues()) {
+			// New format - domain+name info
+			domain = DctmMappingUtils.resolveMappableUser(session, aclDomainAtt.getValue().asString());
+			name = aclNameAtt.getValue().asString();
+		} else {
+			// No ACL attributes? Ok...find the ACL_ID property - if it doesn't exist, we have no
+			// ACL to restore...
+			CmfProperty<IDfValue> aclIdProp = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
+			if ((aclIdProp != null) && aclIdProp.hasValues()) {
+				// old format - acl ID
+				String aclId = aclIdProp.getValue().asString();
+				// Find the mapped ACL
+				Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID, aclId);
+				if (m != null) {
+					final String dql = String.format(
+						"select owner_name, object_name from dm_acl where r_object_id = %s",
+						DfUtils.quoteString(m.getTargetValue()));
+					IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_READ_QUERY);
+					try {
+						if (c.next()) {
+							domain = c.getString(DctmAttributes.OWNER_NAME);
+							name = c.getString(DctmAttributes.OBJECT_NAME);
+						} else {
+							// no such ACL
+							msg = String.format(
+								"Failed to find the ACL [%s] for %s [%s](%s) - the ACL had a mapping (to %s), but the target ACL couldn't be found",
+								aclId, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
+								sysObject.getObjectId().getId(), m.getTargetValue());
+						}
+					} finally {
+						DfUtils.closeQuietly(c);
+					}
+				} else {
+					msg = String.format("Failed to find the ACL [%s] for %s [%s](%s) - no mapping was found", aclId,
+						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId());
 				}
-
-				// ACL or not, we're done here...
-				msg = String.format(
-					"Failed to find the ACL [%s] for %s [%s](%s) - the ACL had a mapping (to %s), but the target ACL couldn't be found",
-					aclId.getId(), this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
-					m.getTargetValue());
-			} else {
-				msg = String.format("Failed to find the ACL [%s] for %s [%s](%s) - no mapping was found", aclId.getId(),
-					this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId());
 			}
+		}
 
+		if (msg != null) {
 			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
 			this.log.warn(msg);
+			return;
 		}
+		applyAcl(sysObject, domain, name, ctx);
 	}
 
 	@Override
