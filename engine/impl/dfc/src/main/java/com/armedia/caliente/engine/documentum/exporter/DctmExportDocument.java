@@ -7,8 +7,10 @@ package com.armedia.caliente.engine.documentum.exporter;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import javax.activation.MimeType;
 
@@ -250,13 +252,21 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
 		List<CmfContentInfo> cmfContentInfo = new ArrayList<>();
+		Set<String> processed = new LinkedHashSet<>();
 		for (int i = 0; i < pageCount; i++) {
 			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
 				IDfQuery.DF_EXECREAD_QUERY);
 			try {
 				while (results.next()) {
-					final IDfContent content = IDfContent.class
-						.cast(session.getObject(results.getId(DctmAttributes.R_OBJECT_ID)));
+					final IDfId contentId = results.getId(DctmAttributes.R_OBJECT_ID);
+					if (!processed.add(contentId.getId())) {
+						this.log.warn(String.format(
+							"WARNING: Duplicate content node detected for %s [%s](%s) - content ID [%s] is a duplicate",
+							marshaled.getType().name(), marshaled.getLabel(), marshaled.getId(), contentId.getId()));
+						continue;
+					}
+
+					final IDfContent content = IDfContent.class.cast(session.getObject(contentId));
 					CmfContentInfo info = storeContentStream(session, translator, marshaled, document, content,
 						streamStore, ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT));
 					cmfContentInfo.add(info);
