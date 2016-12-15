@@ -26,11 +26,9 @@ public abstract class SessionFactory<S> implements PooledObjectFactory<S> {
 		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
 		config.setLifo(true);
 		config.setMaxTotal(-1);
-		config.setMaxWaitMillis(0);
-		; // wait indefinitely
+		config.setMaxWaitMillis(0); // wait indefinitely
 		config.setBlockWhenExhausted(false);
-		config.setMinIdle(1);
-		// Make sure garbage gets collected quickly
+		config.setMinIdle(1); // Make sure garbage gets collected quickly
 		config.setTestOnBorrow(true);
 		config.setTestOnReturn(true);
 		config.setMaxIdle(Math.max(config.getMinIdle(), config.getMaxTotal() / 2));
