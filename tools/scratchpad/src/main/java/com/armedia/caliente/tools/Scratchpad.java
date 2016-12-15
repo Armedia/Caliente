@@ -1,11 +1,18 @@
 package com.armedia.caliente.tools;
 
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.caliente.cli.launcher.LaunchParameterSet;
+import com.armedia.caliente.cli.parser.CommandLineValues;
+import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.documentum.fc.client.IDfFolder;
@@ -20,50 +27,38 @@ import com.documentum.fc.common.DfTime;
  * @author diego.rivera@armedia.com
  *
  */
-public class Scratchpad {
+public class Scratchpad extends AbstractLauncher implements LaunchParameterSet {
 
-	// private final Logger log = LoggerFactory.getLogger(getClass());
-
-	public static void main(String... args) throws Exception {
-
-		Pattern FILE_COMMENT = Pattern.compile("(?<!\\\\)#");
-
-		String[] S = {
-			"asdfasdfasdf # asdfasdf", "asdfasdfasdf#asdfasdfasdf", "012345678\\#abcdef#"
-		};
-
-		for (String s : S) {
-			Matcher m = FILE_COMMENT.matcher(s);
-			if (m.find()) {
-				int p = m.start();
-				System.out.printf("%d", p);
-				continue;
-			}
-			throw new RuntimeException();
-		}
-
-		final DfcSessionPool pool;
-
-		pool = new DfcSessionPool("documentum", "dmadmin2", "ArM3D!A");
-		// pool = new DfcSessionPool("dctmvm01", "dctmadmin", "123");
-		// pool = new DfcSessionPool("armrdreponew", "dmadmin", "ArM3D!A");
-
-		try {
-			new Scratchpad(pool).run(args);
-		} finally {
-			pool.close();
-		}
+	public static final void main(String... args) {
+		System.exit(new Scratchpad().launch(args));
 	}
 
-	private final DfcSessionPool pool;
+	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
-	Scratchpad(DfcSessionPool pool) {
-		this.pool = pool;
+	@Override
+	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
+		return Collections.emptyList();
 	}
 
-	public void run(String... args) throws Exception {
+	@Override
+	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
+		return null;
+	}
 
-		final IDfSession session = this.pool.acquireSession();
+	@Override
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
+		return Arrays.asList(this.dfcLaunchHelper);
+	}
+
+	@Override
+	protected String getProgramName(int pass) {
+		return "Caliente Scratchpad";
+	}
+
+	@Override
+	protected int run(CommandLineValues cli) throws Exception {
+		final DfcSessionPool pool = new DfcSessionPool("documentum", "dmadmin2", "ArM3D!A");
+		final IDfSession session = pool.acquireSession();
 		try {
 			final IDfLocalTransaction tx = DfUtils.openTransaction(session);
 			boolean ok = false;
@@ -105,7 +100,8 @@ public class Scratchpad {
 				}
 			}
 		} finally {
-			this.pool.releaseSession(session);
+			pool.releaseSession(session);
 		}
+		return 0;
 	}
 }

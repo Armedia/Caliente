@@ -17,6 +17,13 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.armedia.caliente.cli</groupId>
+			<artifactId>common</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.armedia.commons</groupId>
 			<artifactId>dfc-session-pool</artifactId>
 			<scope>compile</scope>
