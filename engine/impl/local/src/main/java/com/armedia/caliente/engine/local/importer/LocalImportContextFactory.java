@@ -4,6 +4,7 @@ import java.io.File;
 
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
@@ -19,8 +20,8 @@ public class LocalImportContextFactory extends
 
 	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings, LocalRoot root,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		Logger output) throws Exception {
-		super(engine, settings, root, objectStore, contentStore, typeMapper, output);
+		Logger output, WarningTracker warningTracker) throws Exception {
+		super(engine, settings, root, objectStore, contentStore, typeMapper, output, warningTracker);
 	}
 
 	@Override
@@ -40,11 +41,10 @@ public class LocalImportContextFactory extends
 	}
 
 	@Override
-	protected LocalImportContext constructContext(String rootId, CmfType rootType, LocalRoot session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		int batchPosition) {
-		return new LocalImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper,
-			getEngine().getTranslator(), objectStore, contentStore, batchPosition);
+	protected LocalImportContext constructContext(String rootId, CmfType rootType, LocalRoot session,
+		int historyPosition) {
+		return new LocalImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
+			getTypeMapper(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
 	}
 
 	@Override

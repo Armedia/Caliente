@@ -5,6 +5,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.CmfCrypt;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.engine.xml.common.XmlCommon;
@@ -184,8 +185,10 @@ public class XmlImportEngine extends
 
 	@Override
 	protected XmlImportContextFactory newContextFactory(XmlRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output) throws Exception {
-		return new XmlImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output);
+		CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output, WarningTracker warningTracker)
+		throws Exception {
+		return new XmlImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output,
+			warningTracker);
 	}
 
 	@Override

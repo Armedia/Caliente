@@ -6,13 +6,13 @@ package com.armedia.caliente.engine.documentum.exporter;
 
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.documentum.DctmSessionWrapper;
 import com.armedia.caliente.engine.documentum.common.DctmSpecialValues;
 import com.armedia.caliente.engine.exporter.ExportContextFactory;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -27,16 +27,16 @@ public class DctmExportContextFactory
 	private final DctmSpecialValues specialValues;
 
 	DctmExportContextFactory(DctmExportEngine engine, CfgTools settings, IDfSession session,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Logger output) throws Exception {
-		super(engine, settings, session, objectStore, contentStore, output);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Logger output,
+		WarningTracker warningTracker) throws Exception {
+		super(engine, settings, session, objectStore, contentStore, output, warningTracker);
 		this.specialValues = new DctmSpecialValues(settings);
 	}
 
 	@Override
-	protected DctmExportContext constructContext(String rootId, CmfType rootType, IDfSession session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper,
+	protected DctmExportContext constructContext(String rootId, CmfType rootType, IDfSession session,
 		int batchPosition) {
-		return new DctmExportContext(this, rootId, rootType, session, output);
+		return new DctmExportContext(this, rootId, rootType, session, getOutput(), getWarningTracker());
 	}
 
 	public final DctmSpecialValues getSpecialValues() {

@@ -31,6 +31,7 @@ import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -464,15 +465,15 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			new LinkedBlockingQueue<Runnable>());
 	}
 
-	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings)
+	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final WarningTracker warningTracker,
+		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings)
 		throws ImportException, CmfStorageException {
-		return runImport(output, objectStore, streamStore, settings, null);
+		return runImport(output, warningTracker, objectStore, streamStore, settings, null);
 	}
 
-	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings, CmfObjectCounter<ImportResult> counter)
-		throws ImportException, CmfStorageException {
+	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final WarningTracker warningTracker,
+		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings,
+		CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -510,7 +511,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
-						streamStore, typeMapper, output);
+						streamStore, typeMapper, output, warningTracker);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}

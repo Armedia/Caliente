@@ -94,7 +94,8 @@ public abstract class AbstractCalienteMain_import extends
 		final CmfObjectCounter<ImportResult> results = new CmfObjectCounter<>(ImportResult.class);
 		try {
 			this.log.info("##### Import Process Started #####");
-			this.engine.runImport(this.console, this.cmfObjectStore, this.cmfContentStore, settings, results);
+			this.engine.runImport(this.console, this.warningTracker, this.cmfObjectStore, this.cmfContentStore,
+				settings, results);
 			// TODO: run the post-process if necessary
 			// importer.doImport(this.sessionManager, Setting.POST_PROCESS_IMPORT.getBoolean());
 			this.log.info("##### Import Process Completed #####");

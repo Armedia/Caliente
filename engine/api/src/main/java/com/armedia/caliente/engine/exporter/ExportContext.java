@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContext;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -28,8 +29,9 @@ public class ExportContext<S, V, CF extends ExportContextFactory<S, ?, V, ?, ?>>
 	 * @param output
 	 */
 	public <C extends ExportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ExportEngine<S, W, V, C, ?, ?>> ExportContext(
-		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output) {
-		super(factory, settings, rootId, rootType, session, output);
+		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
+		WarningTracker tracker) {
+		super(factory, settings, rootId, rootType, session, output, tracker);
 	}
 
 	final void pushReferrent(ExportTarget referrent) {

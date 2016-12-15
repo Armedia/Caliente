@@ -10,6 +10,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -17,7 +18,7 @@ import com.armedia.commons.utilities.CfgTools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>> {
+public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>> implements WarningTracker {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -31,9 +32,10 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 	private final Logger output;
 	private final String productName;
 	private final String productVersion;
+	private final WarningTracker warningTracker;
 
 	protected <C extends TransferContext<S, V, F>> TransferContext(F factory, CfgTools settings, String rootId,
-		CmfType rootType, S session, Logger output) {
+		CmfType rootType, S session, Logger output, WarningTracker warningTracker) {
 		this.factory = factory;
 		this.settings = settings;
 		this.rootId = rootId;
@@ -42,6 +44,7 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 		this.output = output;
 		this.productName = factory.getProductName();
 		this.productVersion = factory.getProductVersion();
+		this.warningTracker = warningTracker;
 	}
 
 	protected F getFactory() {
@@ -118,10 +121,9 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 		}
 	}
 
-	public final void consistencyWarning(String format, Object... args) {
-		if (this.output != null) {
-			String msg = String.format(format, args);
-			this.output.warn(String.format("CONSISTENCY WARNING: %s", msg));
+	public final void trackWarning(CmfObjectRef ref, String format, Object... args) {
+		if (this.warningTracker != null) {
+			this.warningTracker.trackWarning(ref, format, args);
 		}
 	}
 

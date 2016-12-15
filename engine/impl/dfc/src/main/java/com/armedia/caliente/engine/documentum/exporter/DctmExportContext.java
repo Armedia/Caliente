@@ -6,6 +6,7 @@ package com.armedia.caliente.engine.documentum.exporter;
 
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.documentum.common.DctmSpecialValues;
 import com.armedia.caliente.engine.exporter.ExportContext;
 import com.armedia.caliente.store.CmfType;
@@ -21,8 +22,8 @@ class DctmExportContext extends ExportContext<IDfSession, IDfValue, DctmExportCo
 	private final DctmSpecialValues specialValues;
 
 	DctmExportContext(DctmExportContextFactory factory, String rootId, CmfType rootType, IDfSession session,
-		Logger output) {
-		super(factory, factory.getSettings(), rootId, rootType, session, output);
+		Logger output, WarningTracker warningTracker) {
+		super(factory, factory.getSettings(), rootId, rootType, session, output, warningTracker);
 		this.specialValues = factory.getSpecialValues();
 	}
 

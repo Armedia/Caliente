@@ -75,7 +75,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	@Override
 	protected boolean skipImport(DctmImportContext ctx) throws ImportException, DfException {
 		// We can't import this document if the destination directory is "/"
-		ctx.printf("BATCH COUNTER: [%02d] from batch [%s]", ctx.getBatchPosition(), this.cmfObject.getHistoryId());
+		ctx.printf("HISTORY COUNTER: [%08x] from history [%s]", ctx.getHistoryPosition(),
+			this.cmfObject.getHistoryId());
 		CmfProperty<IDfValue> path = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		if (path == null) { return true; }
 		for (Iterator<IDfValue> it = path.iterator(); it.hasNext();) {

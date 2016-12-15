@@ -25,6 +25,7 @@ import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
@@ -159,6 +160,19 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			for (ExportEngineListener l : this.listeners) {
 				try {
 					l.exportFinished(jobId, summary);
+				} catch (Exception e) {
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", e);
+					}
+				}
+			}
+		}
+
+		@Override
+		public void consistencyWarning(UUID jobId, CmfType objectType, String objectId, String fmt, Object... args) {
+			for (ExportEngineListener l : this.listeners) {
+				try {
+					l.consistencyWarning(jobId, objectType, objectId, fmt, args);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -553,15 +567,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
+		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
 		throws ExportException, CmfStorageException {
-		return runExport(output, objectStore, contentStore, settings, null);
+		return runExport(output, warningTracker, objectStore, contentStore, settings, null);
 	}
 
-	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings, CmfObjectCounter<ExportResult> counter)
-		throws ExportException, CmfStorageException {
+	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
+		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings,
+		CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -588,7 +602,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			try {
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
-						contentStore, null, output);
+						contentStore, null, output, warningTracker);
 				} catch (Exception e) {
 					throw new ExportException("Failed to configure the context factory to carry out the export", e);
 				}

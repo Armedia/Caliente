@@ -67,9 +67,11 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 	private final CmfObjectStore<?, ?> objectStore;
 	private final CmfTypeMapper typeMapper;
 	private final Logger output;
+	private final WarningTracker warningTracker;
 
 	protected ContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper, Logger output) throws Exception {
+		CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper, Logger output, WarningTracker tracker)
+		throws Exception {
 		if (engine == null) { throw new IllegalArgumentException(
 			"Must provide an engine to which this factory is tied"); }
 		this.engine = engine;
@@ -92,6 +94,7 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 		this.contentStore = contentStore;
 		this.typeMapper = typeMapper;
 		this.output = output;
+		this.warningTracker = tracker;
 	}
 
 	protected final CmfObjectStore<?, ?> getObjectStore() {
@@ -108,6 +111,10 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 
 	protected final Logger getOutput() {
 		return this.output;
+	}
+
+	protected final WarningTracker getWarningTracker() {
+		return this.warningTracker;
 	}
 
 	public final boolean isSupported(CmfType type) {
@@ -159,14 +166,11 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 		this.lock.readLock().lock();
 		try {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
-			return constructContext(rootId, rootType, session, this.output, this.objectStore, this.contentStore,
-				this.typeMapper, batchPosition);
+			return constructContext(rootId, rootType, session, batchPosition);
 		} finally {
 			this.lock.readLock().unlock();
 		}
 	}
 
-	protected abstract C constructContext(String rootId, CmfType rootType, S session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		int batchPosition);
+	protected abstract C constructContext(String rootId, CmfType rootType, S session, int batchPosition);
 }

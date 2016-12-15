@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
@@ -24,8 +25,8 @@ public class AlfImportContextFactory
 
 	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		Logger output) throws Exception {
-		super(engine, settings, root, objectStore, contentStore, typeMapper, output);
+		Logger output, WarningTracker tracker) throws Exception {
+		super(engine, settings, root, objectStore, contentStore, typeMapper, output, tracker);
 	}
 
 	@Override
@@ -45,15 +46,14 @@ public class AlfImportContextFactory
 	}
 
 	@Override
-	protected AlfImportContext constructContext(String rootId, CmfType rootType, AlfRoot session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		int batchPosition) {
+	protected AlfImportContext constructContext(String rootId, CmfType rootType, AlfRoot session, int batchPosition) {
+		final CmfObjectStore<?, ?> store = getObjectStore();
 		if (this.renameMap == null) {
 			synchronized (this) {
 				if (this.renameMap == null) {
 					Map<CmfType, Map<String, String>> m = null;
 					try {
-						m = objectStore.getRenameMappings();
+						m = store.getRenameMappings();
 					} catch (CmfStorageException e) {
 						m = Collections.emptyMap();
 						this.log.error("Failed to load the renamer map from the object store", e);
@@ -63,8 +63,8 @@ public class AlfImportContextFactory
 				}
 			}
 		}
-		return new AlfImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper,
-			getEngine().getTranslator(), objectStore, contentStore, batchPosition);
+		return new AlfImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
+			getTypeMapper(), getEngine().getTranslator(), store, getContentStore(), batchPosition);
 	}
 
 	@Override

@@ -6,6 +6,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.CmfCrypt;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.cmis.CmisCommon;
 import com.armedia.caliente.engine.cmis.CmisSessionFactory;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
@@ -127,9 +128,10 @@ public class CmisImportEngine extends
 
 	@Override
 	protected CmisImportContextFactory newContextFactory(Session session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output)
-		throws Exception {
-		return new CmisImportContextFactory(this, session, cfg, objectStore, streamStore, typeMapper, output);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output,
+		WarningTracker warningTracker) throws Exception {
+		return new CmisImportContextFactory(this, session, cfg, objectStore, streamStore, typeMapper, output,
+			warningTracker);
 	}
 
 	@Override

@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.alfresco.bulk.importer;
 
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.caliente.engine.importer.ImportContext;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -15,10 +16,11 @@ import com.armedia.commons.utilities.CfgTools;
 public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImportContextFactory> {
 
 	public AlfImportContext(AlfImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
-		AlfRoot session, Logger output, CmfTypeMapper typeMapper, CmfAttributeTranslator<CmfValue> translator,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
-		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore,
-			batchPosition);
+		AlfRoot session, Logger output, WarningTracker tracker, CmfTypeMapper typeMapper,
+		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
+		super(factory, settings, rootId, rootType, session, output, tracker, typeMapper, translator, objectStore,
+			streamStore, batchPosition);
 	}
 
 	public final String getAlternateName(CmfType type, String id) {

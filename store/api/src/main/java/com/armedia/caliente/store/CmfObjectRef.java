@@ -15,7 +15,7 @@ public class CmfObjectRef implements Comparable<CmfObjectRef>, Serializable {
 		this.id = null;
 	}
 
-	CmfObjectRef(CmfObjectRef other) {
+	public CmfObjectRef(CmfObjectRef other) {
 		if (other == null) { throw new IllegalArgumentException("Must provide another object to build from"); }
 		this.type = other.type;
 		this.id = other.id;

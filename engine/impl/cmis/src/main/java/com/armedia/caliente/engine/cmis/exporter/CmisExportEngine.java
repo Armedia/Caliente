@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.CmfCrypt;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.cmis.CmisCommon;
 import com.armedia.caliente.engine.cmis.CmisPagingTransformerIterator;
 import com.armedia.caliente.engine.cmis.CmisRecursiveIterator;
@@ -188,9 +189,9 @@ public class CmisExportEngine extends
 
 	@Override
 	protected CmisExportContextFactory newContextFactory(Session session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output)
-		throws Exception {
-		return new CmisExportContextFactory(this, session, cfg, objectStore, streamStore, output);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output,
+		WarningTracker warningTracker) throws Exception {
+		return new CmisExportContextFactory(this, session, cfg, objectStore, streamStore, output, warningTracker);
 	}
 
 	@Override

@@ -7,6 +7,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.RepositoryInfo;
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.exporter.ExportContext;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
@@ -15,9 +16,9 @@ public class CmisExportContext extends ExportContext<Session, CmfValue, CmisExpo
 
 	private final RepositoryInfo repositoryInfo;
 
-	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfType rootType, Session session,
-		Logger output) {
-		super(factory, factory.getSettings(), rootId, rootType, session, output);
+	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfType rootType, Session session, Logger output,
+		WarningTracker warningTracker) {
+		super(factory, factory.getSettings(), rootId, rootType, session, output, warningTracker);
 		session.setDefaultContext(newOperationContext(session));
 		this.repositoryInfo = session.getRepositoryInfo();
 	}

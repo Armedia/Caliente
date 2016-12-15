@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.xml.importer;
 
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportContext;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -15,9 +16,10 @@ import com.armedia.commons.utilities.CfgTools;
 public class XmlImportContext extends ImportContext<XmlRoot, CmfValue, XmlImportContextFactory> {
 
 	public XmlImportContext(XmlImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
-		XmlRoot session, Logger output, CmfTypeMapper typeMapper, CmfAttributeTranslator<CmfValue> translator,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
-		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore,
-			batchPosition);
+		XmlRoot session, Logger output, WarningTracker warningTracker, CmfTypeMapper typeMapper,
+		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
+		super(factory, settings, rootId, rootType, session, output, warningTracker, typeMapper, translator, objectStore,
+			streamStore, batchPosition);
 	}
 }

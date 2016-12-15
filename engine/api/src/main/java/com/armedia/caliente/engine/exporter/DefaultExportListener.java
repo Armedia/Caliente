@@ -28,4 +28,8 @@ public class DefaultExportListener implements ExportListener {
 	@Override
 	public void objectExportFailed(UUID jobId, CmfType objectType, String objectId, Throwable thrown) {
 	}
+
+	@Override
+	public void consistencyWarning(UUID jobId, CmfType objectType, String objectId, String fmt, Object... args) {
+	}
 }

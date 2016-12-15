@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContext;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfAttributeMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -27,23 +28,23 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 	private final CmfAttributeTranslator<V> translator;
 	private final CmfTypeMapper typeMapper;
 	private final CmfContentStore<?, ?, ?> streamStore;
-	private final int batchPosition;
+	private final int historyPosition;
 
 	public <C extends ImportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
 		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
-		CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
-		super(factory, settings, rootId, rootType, session, output);
+		WarningTracker tracker, CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
+		super(factory, settings, rootId, rootType, session, output, tracker);
 		this.factory = factory;
 		this.translator = translator;
 		this.cmfObjectStore = objectStore;
 		this.streamStore = streamStore;
 		this.typeMapper = typeMapper;
-		this.batchPosition = batchPosition;
+		this.historyPosition = historyPosition;
 	}
 
-	public final int getBatchPosition() {
-		return this.batchPosition;
+	public final int getHistoryPosition() {
+		return this.historyPosition;
 	}
 
 	public final CmfAttributeMapper getAttributeMapper() {

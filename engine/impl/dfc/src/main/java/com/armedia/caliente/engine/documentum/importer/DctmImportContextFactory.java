@@ -6,6 +6,7 @@ package com.armedia.caliente.engine.documentum.importer;
 
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
 import com.armedia.caliente.engine.documentum.DctmSessionWrapper;
 import com.armedia.caliente.engine.documentum.common.DctmSpecialValues;
@@ -29,17 +30,16 @@ public class DctmImportContextFactory extends
 
 	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg, IDfSession session,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		Logger output) throws Exception {
-		super(engine, cfg, session, objectStore, contentStore, typeMapper, output);
+		Logger output, WarningTracker warningTracker) throws Exception {
+		super(engine, cfg, session, objectStore, contentStore, typeMapper, output, warningTracker);
 		this.specialValues = new DctmSpecialValues(cfg);
 	}
 
 	@Override
-	protected DctmImportContext constructContext(String rootId, CmfType rootType, IDfSession session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		int batchPosition) {
-		return new DctmImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper,
-			getEngine().getTranslator(), objectStore, contentStore, batchPosition);
+	protected DctmImportContext constructContext(String rootId, CmfType rootType, IDfSession session,
+		int historyPosition) {
+		return new DctmImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
+			getTypeMapper(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
 	}
 
 	public final DctmSpecialValues getSpecialValues() {

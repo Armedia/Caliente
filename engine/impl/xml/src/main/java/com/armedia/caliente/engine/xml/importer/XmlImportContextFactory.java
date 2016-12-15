@@ -4,6 +4,7 @@ import java.io.File;
 
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.engine.xml.common.XmlSessionWrapper;
@@ -19,8 +20,8 @@ public class XmlImportContextFactory
 
 	protected XmlImportContextFactory(XmlImportEngine engine, CfgTools settings, XmlRoot root,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		Logger output) throws Exception {
-		super(engine, settings, root, objectStore, contentStore, typeMapper, output);
+		Logger output, WarningTracker warningTracker) throws Exception {
+		super(engine, settings, root, objectStore, contentStore, typeMapper, output, warningTracker);
 	}
 
 	@Override
@@ -40,11 +41,9 @@ public class XmlImportContextFactory
 	}
 
 	@Override
-	protected XmlImportContext constructContext(String rootId, CmfType rootType, XmlRoot session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		int batchPosition) {
-		return new XmlImportContext(this, getSettings(), rootId, rootType, session, output, typeMapper,
-			getEngine().getTranslator(), objectStore, contentStore, batchPosition);
+	protected XmlImportContext constructContext(String rootId, CmfType rootType, XmlRoot session, int historyPosition) {
+		return new XmlImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
+			getTypeMapper(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
 	}
 
 	@Override

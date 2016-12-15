@@ -7,6 +7,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.RepositoryInfo;
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportContext;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -18,10 +19,10 @@ import com.armedia.caliente.store.CmfValue;
 public class CmisImportContext extends ImportContext<Session, CmfValue, CmisImportContextFactory> {
 
 	CmisImportContext(CmisImportContextFactory factory, String rootId, CmfType rootType, Session session, Logger output,
-		CmfTypeMapper typeMapper, CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
-		super(factory, factory.getSettings(), rootId, rootType, session, output, typeMapper, translator, objectStore,
-			streamStore, batchPosition);
+		WarningTracker warningTracker, CmfTypeMapper typeMapper, CmfAttributeTranslator<CmfValue> translator,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
+		super(factory, factory.getSettings(), rootId, rootType, session, output, warningTracker, typeMapper, translator,
+			objectStore, streamStore, batchPosition);
 	}
 
 	public Set<String> convertAllowableActionsToPermissions(Collection<String> allowableActions) {

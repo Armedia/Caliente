@@ -6,6 +6,7 @@ package com.armedia.caliente.engine.documentum.importer;
 
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.documentum.DctmMappingUtils;
 import com.armedia.caliente.engine.documentum.common.DctmSpecialValues;
 import com.armedia.caliente.engine.importer.ImportContext;
@@ -28,10 +29,11 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfValue, DctmI
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContext(DctmImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
-		IDfSession session, Logger output, CmfTypeMapper typeMapper, CmfAttributeTranslator<IDfValue> translator,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
-		super(factory, settings, rootId, rootType, session, output, typeMapper, translator, objectStore, streamStore,
-			batchPosition);
+		IDfSession session, Logger output, WarningTracker warningTracker, CmfTypeMapper typeMapper,
+		CmfAttributeTranslator<IDfValue> translator, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
+		super(factory, settings, rootId, rootType, session, output, warningTracker, typeMapper, translator, objectStore,
+			streamStore, historyPosition);
 		this.specialValues = factory.getSpecialValues();
 	}
 

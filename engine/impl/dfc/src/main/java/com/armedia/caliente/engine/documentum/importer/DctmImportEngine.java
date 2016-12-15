@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.documentum.DctmCrypto;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
 import com.armedia.caliente.engine.documentum.DctmSessionFactory;
@@ -74,9 +75,10 @@ public class DctmImportEngine extends
 
 	@Override
 	protected DctmImportContextFactory newContextFactory(IDfSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output)
-		throws Exception {
-		return new DctmImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output,
+		WarningTracker warningTracker) throws Exception {
+		return new DctmImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output,
+			warningTracker);
 	}
 
 	@Override

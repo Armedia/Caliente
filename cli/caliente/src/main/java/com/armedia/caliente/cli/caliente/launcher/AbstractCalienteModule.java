@@ -45,6 +45,7 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 	/** The log object used for logging. */
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	protected final Logger console = LoggerFactory.getLogger("console");
+	protected final CalienteWarningTracker warningTracker;
 
 	private static AbstractCalienteModule<?, ?> instance = null;
 
@@ -145,6 +146,7 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		CmfCrypt crypto = this.engine.getCrypto();
 		this.password = (pass != null ? crypto.encrypt(crypto.decrypt(pass)) : null);
 		this.domain = CLIParam.domain.getString();
+		this.warningTracker = new CalienteWarningTracker(this.console, true);
 	}
 
 	public static AbstractCalienteModule<?, ?> getInstance() {

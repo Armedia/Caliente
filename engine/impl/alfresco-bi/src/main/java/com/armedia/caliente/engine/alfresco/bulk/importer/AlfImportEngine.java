@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.CmfCrypt;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfSessionFactory;
@@ -328,8 +329,10 @@ public class AlfImportEngine extends
 
 	@Override
 	protected AlfImportContextFactory newContextFactory(AlfRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output) throws Exception {
-		return new AlfImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output);
+		CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output, WarningTracker warningTracker)
+		throws Exception {
+		return new AlfImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output,
+			warningTracker);
 	}
 
 	@Override

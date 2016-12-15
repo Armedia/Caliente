@@ -196,7 +196,8 @@ public class AbstractCalienteModule_export extends
 			try {
 				this.log.info("##### Export Process Started #####");
 				this.counter.reset();
-				this.engine.runExport(this.console, this.cmfObjectStore, this.cmfContentStore, settings);
+				this.engine.runExport(this.console, this.warningTracker, this.cmfObjectStore, this.cmfContentStore,
+					settings);
 				final Date exportEnd = new Date();
 				this.log.info("##### Export Process Finished #####");
 
@@ -287,6 +288,9 @@ public class AbstractCalienteModule_export extends
 
 		report.append(String.format("%n%n%nFull Result Report:%n")).append(StringUtils.repeat("=", 30));
 		report.append(String.format("%n%s%n", this.counter.generateFullReport(0)));
+		if (this.warningTracker.hasWarnings()) {
+			report.append(String.format("%n%s%n", this.warningTracker.generateReport()));
+		}
 
 		Map<ExportResult, Long> m = this.counter.getCummulative();
 		final Long zero = Long.valueOf(0);
@@ -361,6 +365,11 @@ public class AbstractCalienteModule_export extends
 	}
 
 	@Override
+	public void consistencyWarning(UUID jobId, CmfType objectType, String objectId, String fmt, Object... args) {
+		// TODO: Track the warning so it can be reported at the end of the export process
+	}
+
+	@Override
 	public final void exportFinished(UUID jobId, Map<CmfType, Long> summary) {
 		this.console.info("");
 		this.console.info("Export Summary");
@@ -386,6 +395,9 @@ public class AbstractCalienteModule_export extends
 			this.console.info(String.format(format, r.name(), i.longValue()));
 		}
 		this.console.info("");
+		if (this.warningTracker.hasWarnings()) {
+			this.warningTracker.generateReport(this.console);
+		}
 		this.console.info("Export process finished");
 	}
 }

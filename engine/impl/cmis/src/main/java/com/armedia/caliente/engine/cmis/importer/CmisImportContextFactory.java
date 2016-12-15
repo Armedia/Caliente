@@ -15,6 +15,7 @@ import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.slf4j.Logger;
 
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.PermissionMapper;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
@@ -33,8 +34,8 @@ public class CmisImportContextFactory
 
 	CmisImportContextFactory(CmisImportEngine engine, Session session, CfgTools settings,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		Logger output) throws Exception {
-		super(engine, settings, session, objectStore, contentStore, typeMapper, output);
+		Logger output, WarningTracker warningTracker) throws Exception {
+		super(engine, settings, session, objectStore, contentStore, typeMapper, output, warningTracker);
 		this.repositoryInfo = session.getRepositoryInfo();
 		if (super.isSupported(CmfType.ACL)) {
 			this.permissionMapper = new PermissionMapper(session);
@@ -53,11 +54,9 @@ public class CmisImportContextFactory
 	}
 
 	@Override
-	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session, Logger output,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper,
-		int batchPosition) {
-		return new CmisImportContext(this, rootId, rootType, session, output, typeMapper, getEngine().getTranslator(),
-			objectStore, streamStore, batchPosition);
+	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session, int historyPosition) {
+		return new CmisImportContext(this, rootId, rootType, session, getOutput(), getWarningTracker(), getTypeMapper(),
+			getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
 	}
 
 	private boolean isFolderType(ObjectType type) {

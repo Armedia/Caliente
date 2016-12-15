@@ -5,6 +5,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.CmfCrypt;
+import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.engine.local.common.LocalCommon;
@@ -126,9 +127,10 @@ public class LocalImportEngine extends
 
 	@Override
 	protected LocalImportContextFactory newContextFactory(LocalRoot session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output)
-		throws Exception {
-		return new LocalImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output,
+		WarningTracker warningTracker) throws Exception {
+		return new LocalImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output,
+			warningTracker);
 	}
 
 	@Override
