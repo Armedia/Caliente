@@ -118,6 +118,13 @@ public abstract class TransferContext<S, V, F extends ContextFactory<S, V, ?, ?>
 		}
 	}
 
+	public final void consistencyWarning(String format, Object... args) {
+		if (this.output != null) {
+			String msg = String.format(format, args);
+			this.output.warn(String.format("CONSISTENCY WARNING: %s", msg));
+		}
+	}
+
 	public final boolean isSupported(CmfType type) {
 		return this.factory.isSupported(type);
 	}
