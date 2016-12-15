@@ -180,8 +180,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject, final C ctx,
 		final ExportListenerDelegator listenerDelegator, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
 		throws ExportException, CmfStorageException {
-		if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
 		try {
+			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
 			listenerDelegator.objectExportStarted(exportState.jobId, target.getType(), target.getId());
 			final Result result = doExportObject(exportState, referrent, target, sourceObject, ctx, listenerDelegator,
 				statusMap);
@@ -668,11 +668,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					this.log.debug(String.format("Polled %s", next));
 				}
 
-				boolean tx = false;
+				final boolean tx = session.begin();
 				boolean ok = false;
 				try {
 					// Begin transaction
-					tx = session.begin();
+
 					final ExportDelegate<?, S, W, V, C, ?, ?> exportDelegate = delegateFactory.newExportDelegate(s,
 						nextType, nextKey);
 					if (exportDelegate == null) {
@@ -700,8 +700,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					final C ctx = contextFactory.newContext(nextId, nextType, s, 0);
 					try {
 						initContext(ctx);
-						Result result = exportObject(exportState, null, next, exportDelegate, ctx, listenerDelegator,
-							statusMap);
+						Result result = null;
+						try {
+							result = exportObject(exportState, null, next, exportDelegate, ctx, listenerDelegator,
+								statusMap);
+						} catch (Exception e) {
+							// Any and all Exceptions have already been processed in exportObject,
+							// so we safely absorb them here. We leave all other Throwables intact
+							// so they can be caught in the worker's handler
+						}
 						if (result != null) {
 							if (this.log.isDebugEnabled()) {
 								if (result.skipReason != null) {
@@ -722,7 +729,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						session.commit();
 					}
 				} catch (Throwable t) {
-					this.log.error(String.format("Failed to export %s object with ID[%s]", nextType, nextId), t);
+					// Don't let these failures go unnoticed
+					listenerDelegator.objectExportFailed(exportState.jobId, nextType, nextKey, t);
 					if (tx && !ok) {
 						session.rollback();
 					}
