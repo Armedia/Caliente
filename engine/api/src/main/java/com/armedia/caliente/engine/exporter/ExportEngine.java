@@ -657,15 +657,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			@Override
-			protected void process(SessionWrapper<S> session, ExportTarget next) throws Exception {
+			protected void process(SessionWrapper<S> session, ExportTarget target) throws Exception {
 				final S s = session.getWrapped();
 
-				CmfType nextType = next.getType();
-				final String nextId = next.getId();
-				final String nextKey = next.getSearchKey();
+				CmfType nextType = target.getType();
+				final String nextId = target.getId();
+				final String nextKey = target.getSearchKey();
 
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Polled %s", next));
+					this.log.debug(String.format("Polled %s", target));
 				}
 
 				final boolean tx = session.begin();
@@ -682,8 +682,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						return;
 					}
 					// This allows for object substitutions to take place
-					next = exportDelegate.getExportTarget();
-					nextType = next.getType();
+					target = exportDelegate.getExportTarget();
+					nextType = target.getType();
 					if (nextType == null) {
 						this.log.error(String.format(
 							"Failed to determine the object type for target with ID[%s] and searchKey[%s]", nextId,
@@ -702,18 +702,19 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						initContext(ctx);
 						Result result = null;
 						try {
-							result = exportObject(exportState, null, next, exportDelegate, ctx, listenerDelegator,
+							result = exportObject(exportState, null, target, exportDelegate, ctx, listenerDelegator,
 								statusMap);
 						} catch (Exception e) {
 							// Any and all Exceptions have already been processed in exportObject,
 							// so we safely absorb them here. We leave all other Throwables intact
 							// so they can be caught in the worker's handler
+							result = null;
 						}
 						if (result != null) {
 							if (this.log.isDebugEnabled()) {
 								if (result.skipReason != null) {
-									this.log.debug(String.format("Skipped %s [%s](%s) : %s", next.getType(),
-										next.getId(), next.getSearchKey(), result.skipReason));
+									this.log.debug(String.format("Skipped %s [%s](%s) : %s", target.getType(),
+										target.getId(), target.getSearchKey(), result.skipReason));
 								} else {
 									this.log.debug(
 										String.format("Exported %s [%s](%s) in position %d", result.object.getType(),
@@ -730,9 +731,18 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					}
 				} catch (Throwable t) {
 					// Don't let these failures go unnoticed
-					listenerDelegator.objectExportFailed(exportState.jobId, nextType, nextKey, t);
-					if (tx && !ok) {
-						session.rollback();
+					try {
+						try {
+							listenerDelegator.objectExportFailed(exportState.jobId, target.getType(), target.getId(),
+								t);
+						} finally {
+							exportState.objectStore.markStoreStatus(target, StoreStatus.FAILED,
+								Tools.dumpStackTrace(t));
+						}
+					} finally {
+						if (tx && !ok) {
+							session.rollback();
+						}
 					}
 				}
 			}

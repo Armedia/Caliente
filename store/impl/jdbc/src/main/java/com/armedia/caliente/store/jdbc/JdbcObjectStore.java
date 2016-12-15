@@ -941,6 +941,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected <V> boolean markStoreStatus(JdbcOperation operation, CmfObjectRef target, StoreStatus status,
 		String message) throws CmfStorageException {
+		// First things first, we make sure the record exists. It doesn't matter if this operation
+		// fails because we're only doing this to make sure there's something to update. This is
+		// important in order to track failures that happen outside of the scope of an object being
+		// exported - such as when preparing the session or checking for transaction availability
+		lockForStorage(operation, target, null);
+
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcTools.getQueryRunner();
 		final String dbid = JdbcTools.composeDatabaseId(target);
