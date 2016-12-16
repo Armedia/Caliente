@@ -173,8 +173,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 										session.rollback();
 									}
 									this.listenerDelegator.objectImportFailed(this.importState.jobId, next, t);
-									// Log the error, move on
-									this.log.error(String.format("Exception caught processing %s", next), t);
 									if (this.batch.strategy.isBatchFailRemainder()) {
 										// If we're supposed to kill the batch, fail all
 										// the other objects
