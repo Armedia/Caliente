@@ -6,12 +6,14 @@
 	<!-- **************************************** -->
 	<!-- Make sure one of the two was successful  -->
 	<!-- **************************************** -->
-	<preConditions>
-		<or>
-			<changeSetExecuted id="2000" author="cmf" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog.legacy.xml"/>
-			<changeSetExecuted id="2000" author="caliente" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.0.xml"/>
-		</or>
-	</preConditions>
+	<changeSet author="caliente-jdbc" id="2.0">
+		<preConditions>
+			<or>
+				<changeSetExecuted id="2000" author="cmf" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog.legacy.xml"/>
+				<changeSetExecuted id="2000" author="caliente" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.0.xml"/>
+			</or>
+		</preConditions>
+	</changeSet>
 
 	<!-- **************************************** -->
 	<!-- For future deltas, as needed...          -->

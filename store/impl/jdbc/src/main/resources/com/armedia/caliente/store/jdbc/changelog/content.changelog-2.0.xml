@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
-	<changeSet author="caliente-content" id="2000">
+	<changeSet author="caliente-jdbc-content" id="2.0">
 		<!-- The CMF content info table -->
 		<createTable tableName="cmf_content_info">
 			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
