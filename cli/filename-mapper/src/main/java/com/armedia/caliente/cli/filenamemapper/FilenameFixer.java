@@ -60,6 +60,12 @@ public class FilenameFixer {
 				if (!StringUtils.isEmpty(ext)) {
 					name = String.format("%s.%s", base, ext);
 				}
+
+				if (name.length() > maxLength) {
+					// If the length is still too long, then just use the base method
+					// because the extension was likely too long
+					name = super.fixLength(name);
+				}
 				return name;
 			}
 
