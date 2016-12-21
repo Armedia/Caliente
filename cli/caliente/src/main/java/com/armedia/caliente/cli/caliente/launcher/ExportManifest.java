@@ -17,6 +17,7 @@ import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.exporter.ExportSkipReason;
 import com.armedia.caliente.engine.exporter.ExportState;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.Tools;
 
@@ -158,18 +159,17 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason,
-		String extraInfo) {
+	public void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
 		// For the manifest, we're not really interested in Skipped objects, since
 		// they'll always be the result of duplicate serializations, so there's no
 		// problem to be reported or deduced from it
-		if (!this.types.contains(objectType)) { return; }
+		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(ExportResult.SKIPPED)) { return; }
 		switch (reason) {
 			case SKIPPED:
 			case UNSUPPORTED:
 			case DEPENDENCY_FAILED:
-				new Record(objectType, objectId, ExportResult.SKIPPED, extraInfo).log(this.manifestLog);
+				new Record(object.getType(), object.getId(), ExportResult.SKIPPED, extraInfo).log(this.manifestLog);
 				break;
 			default:
 				break;
@@ -177,9 +177,9 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectExportFailed(UUID jobId, CmfType objectType, String objectId, Throwable thrown) {
-		if (!this.types.contains(objectType)) { return; }
+	public void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
+		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(ExportResult.FAILED)) { return; }
-		new Record(objectType, objectId, thrown).log(this.manifestLog);
+		new Record(object.getType(), object.getId(), thrown).log(this.manifestLog);
 	}
 }

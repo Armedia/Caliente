@@ -28,6 +28,7 @@ import com.armedia.caliente.engine.exporter.ExportSkipReason;
 import com.armedia.caliente.engine.exporter.ExportState;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
@@ -324,8 +325,13 @@ public class AbstractCalienteModule_export extends
 	}
 
 	@Override
-	public final void objectExportStarted(UUID jobId, CmfType objectType, String objectId) {
-		this.console.info(String.format("Object export started for %s[%s]", objectType.name(), objectId));
+	public final void objectExportStarted(UUID jobId, CmfObjectRef object, CmfObjectRef referrent) {
+		if (referrent == null) {
+			this.console.info(String.format("Object export started for %s", object.getShortLabel()));
+		} else {
+			this.console.info(String.format("Object export started for %s (referenced by %s)", object.getShortLabel(),
+				referrent.getShortLabel()));
+		}
 	}
 
 	@Override
@@ -338,20 +344,19 @@ public class AbstractCalienteModule_export extends
 	}
 
 	@Override
-	public final void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason,
-		String extraInfo) {
+	public final void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
 		switch (reason) {
 			case SKIPPED:
 			case UNSUPPORTED:
 			case DEPENDENCY_FAILED:
+				this.counter.increment(object.getType(), ExportResult.SKIPPED);
 				if (extraInfo != null) {
-					this.console.info(String.format("%s object [%s] was skipped (%s: %s)", objectType.name(), objectId,
-						reason, extraInfo));
-				} else {
 					this.console
-						.info(String.format("%s object [%s] was skipped (%s)", objectType.name(), objectId, reason));
+						.info(String.format("%s was skipped (%s: %s)", object.getShortLabel(), reason, extraInfo));
+				} else {
+					this.console.info(String.format("%s was skipped (%s)", object.getShortLabel(),
+						object.getType().name(), object.getId(), reason));
 				}
-				this.counter.increment(objectType, ExportResult.SKIPPED);
 				break;
 			default:
 				break;
@@ -359,13 +364,13 @@ public class AbstractCalienteModule_export extends
 	}
 
 	@Override
-	public final void objectExportFailed(UUID jobId, CmfType objectType, String objectId, Throwable thrown) {
-		this.counter.increment(objectType, ExportResult.FAILED);
-		this.console.warn(String.format("Object export failed for %s[%s]", objectType.name(), objectId), thrown);
+	public final void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
+		this.counter.increment(object.getType(), ExportResult.FAILED);
+		this.console.warn(String.format("Object export failed for %s", object.getShortLabel()), thrown);
 	}
 
 	@Override
-	public void consistencyWarning(UUID jobId, CmfType objectType, String objectId, String fmt, Object... args) {
+	public void consistencyWarning(UUID jobId, CmfObjectRef object, String fmt, Object... args) {
 		// TODO: Track the warning so it can be reported at the end of the export process
 	}
 

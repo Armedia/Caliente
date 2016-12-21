@@ -75,6 +75,6 @@ public class CmfObjectRef implements Comparable<CmfObjectRef>, Serializable {
 	}
 
 	public final String getShortLabel() {
-		return String.format("[%s::%s]", this.type.name(), this.id);
+		return String.format("%s[%s]", this.type.name(), this.id);
 	}
 }

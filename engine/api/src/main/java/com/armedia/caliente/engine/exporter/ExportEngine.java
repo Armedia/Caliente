@@ -30,6 +30,7 @@ import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfObjectStore.LockStatus;
 import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
@@ -100,10 +101,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectExportStarted(UUID jobId, CmfType objectType, String objectId) {
+		public void objectExportStarted(UUID jobId, CmfObjectRef object, CmfObjectRef referrent) {
 			for (ExportEngineListener l : this.listeners) {
 				try {
-					l.objectExportStarted(jobId, objectType, objectId);
+					l.objectExportStarted(jobId, object, referrent);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -127,12 +128,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectSkipped(UUID jobId, CmfType objectType, String objectId, ExportSkipReason reason,
-			String extraInfo) {
-			getStoredObjectCounter().increment(objectType, ExportResult.SKIPPED);
+		public void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
+			getStoredObjectCounter().increment(object.getType(), ExportResult.SKIPPED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
-					l.objectSkipped(jobId, objectType, objectId, reason, extraInfo);
+					l.objectSkipped(jobId, object, reason, extraInfo);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -142,11 +142,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void objectExportFailed(UUID jobId, CmfType objectType, String objectId, Throwable thrown) {
-			getStoredObjectCounter().increment(objectType, ExportResult.FAILED);
+		public void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
+			getStoredObjectCounter().increment(object.getType(), ExportResult.FAILED);
 			for (ExportEngineListener l : this.listeners) {
 				try {
-					l.objectExportFailed(jobId, objectType, objectId, thrown);
+					l.objectExportFailed(jobId, object, thrown);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -169,10 +169,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		@Override
-		public void consistencyWarning(UUID jobId, CmfType objectType, String objectId, String fmt, Object... args) {
+		public void consistencyWarning(UUID jobId, CmfObjectRef object, String fmt, Object... args) {
 			for (ExportEngineListener l : this.listeners) {
 				try {
-					l.consistencyWarning(jobId, objectType, objectId, fmt, args);
+					l.consistencyWarning(jobId, object, fmt, args);
 				} catch (Exception e) {
 					if (this.log.isDebugEnabled()) {
 						this.log.error("Exception caught during listener propagation", e);
@@ -196,7 +196,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		throws ExportException, CmfStorageException {
 		try {
 			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
-			listenerDelegator.objectExportStarted(exportState.jobId, target.getType(), target.getId());
+			listenerDelegator.objectExportStarted(exportState.jobId, target, referrent);
 			final Result result = doExportObject(exportState, referrent, target, sourceObject, ctx, listenerDelegator,
 				statusMap);
 			if ((result.objectNumber != null) && (result.object != null)) {
@@ -218,8 +218,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					case DEPENDENCY_FAILED: // fall-through
 					case UNSUPPORTED:
 						if (exportState.objectStore.markStoreStatus(target, StoreStatus.SKIPPED, result.extraInfo)) {
-							listenerDelegator.objectSkipped(exportState.jobId, target.getType(), target.getId(),
-								result.skipReason, result.extraInfo);
+							listenerDelegator.objectSkipped(exportState.jobId, target, result.skipReason,
+								result.extraInfo);
 						}
 						break;
 				}
@@ -227,7 +227,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			return result;
 		} catch (Exception e) {
 			try {
-				listenerDelegator.objectExportFailed(exportState.jobId, target.getType(), target.getId(), e);
+				listenerDelegator.objectExportFailed(exportState.jobId, target, e);
 			} finally {
 				exportState.objectStore.markStoreStatus(target, StoreStatus.FAILED, Tools.dumpStackTrace(e));
 			}
@@ -747,8 +747,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					// Don't let these failures go unnoticed
 					try {
 						try {
-							listenerDelegator.objectExportFailed(exportState.jobId, target.getType(), target.getId(),
-								t);
+							listenerDelegator.objectExportFailed(exportState.jobId, target, t);
 						} finally {
 							exportState.objectStore.markStoreStatus(target, StoreStatus.FAILED,
 								Tools.dumpStackTrace(t));
