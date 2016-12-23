@@ -27,5 +27,13 @@
 			update cmf_property set name = 'cmf:groups_with_default_folder' where name = 'groupsWithDefaultFolder'
 		</sql>
 
+		<!-- **************************************** -->
+		<!-- Add the supplementary index to the tree  -->
+		<!-- **************************************** -->
+		<createIndex tableName="cmf_object_tree" indexName="idx_cmf_object_tree_parent" unique="true">
+			<column name="parent_id" />
+			<column name="object_id" />
+		</createIndex>
+
 	</changeSet>
 </databaseChangeLog>

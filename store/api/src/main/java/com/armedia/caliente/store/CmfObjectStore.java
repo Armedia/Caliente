@@ -1009,4 +1009,54 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract Map<CmfType, Map<String, String>> getRenameMappings(O operation) throws CmfStorageException;
+
+	public final Collection<CmfObjectRef> getContainers(CmfObjectRef object) throws CmfStorageException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
+		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				return getContainers(operation, object);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for retrieving all containers", e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract Collection<CmfObjectRef> getContainers(O operation, CmfObjectRef object)
+		throws CmfStorageException;
+
+	public final Collection<CmfObjectRef> getContainedObjects(CmfObjectRef object) throws CmfStorageException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
+		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				return getContainedObjects(operation, object);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for retrieving all contained objects", e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract Collection<CmfObjectRef> getContainedObjects(O operation, CmfObjectRef object)
+		throws CmfStorageException;
 }

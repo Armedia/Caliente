@@ -1648,4 +1648,41 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			throw new CmfStorageException("Failed to retrieve the next cached target in the given result set", e);
 		}
 	}
+
+	private Collection<CmfObjectRef> getTreeRelations(JdbcOperation operation, CmfObjectRef object,
+		JdbcDialect.Query query) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		try {
+			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_CONTAINERS),
+				new ResultSetHandler<Collection<CmfObjectRef>>() {
+					@Override
+					public Collection<CmfObjectRef> handle(ResultSet rs) throws SQLException {
+						Collection<CmfObjectRef> ret = new LinkedList<>();
+						while (rs.next()) {
+							String id = rs.getString(1);
+							if (rs.wasNull()) {
+								continue;
+							}
+							ret.add(JdbcTools.decodeDatabaseId(id));
+						}
+						return Tools.freezeCollection(ret);
+					}
+				});
+		} catch (SQLException e) {
+			throw new CmfStorageException(String.format("Failed to retrieve the object's %s", query.name()), e);
+		}
+	}
+
+	@Override
+	protected Collection<CmfObjectRef> getContainers(JdbcOperation operation, CmfObjectRef object)
+		throws CmfStorageException {
+		return getTreeRelations(operation, object, JdbcDialect.Query.LOAD_CONTAINERS);
+	}
+
+	@Override
+	protected Collection<CmfObjectRef> getContainedObjects(JdbcOperation operation, CmfObjectRef object)
+		throws CmfStorageException {
+		return getTreeRelations(operation, object, JdbcDialect.Query.LOAD_CONTAINED_OBJECTS);
+	}
 }

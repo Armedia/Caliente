@@ -385,6 +385,22 @@ public abstract class JdbcDialect {
 		),
 		//
 
+		LOAD_CONTAINERS( //
+			"       select parent_id " + //
+				"     from cmf_object_tree " + //
+				"    where object_id = ? " + //
+				" order by parent_pos " //
+		),
+		//
+
+		LOAD_CONTAINED_OBJECTS( //
+			"       select object_id " + //
+				"     from cmf_object_tree " + //
+				"    where parent_id = ? " + //
+				" order by object_id " //
+		),
+		//
+
 		;
 
 		private final String sql;
