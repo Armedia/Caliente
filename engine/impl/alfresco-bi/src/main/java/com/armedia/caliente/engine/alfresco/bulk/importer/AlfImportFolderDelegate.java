@@ -42,7 +42,7 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 		return type;
 	}
 
-	private int getFolderDepth() {
+	protected int getFolderDepth() {
 		CmfProperty<CmfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		if (p == null) { return 0; }
 		int min = -1;
@@ -66,15 +66,16 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 	}
 
 	@Override
-	protected boolean createStub(File target, String content) throws ImportException {
+	protected boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException {
 		if (this.cmfObject.getType() == CmfType.FOLDER) {
-			if ((getFolderDepth() == 0) && (hasPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)
-				|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER))) {
+			if ((getFolderDepth() == 0) && ctx.getContainedObjects(this.cmfObject).isEmpty()
+				&& (hasPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)
+					|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER))) {
 				// If the object is a top-level folder that is also a user's or group's
-				// home, then we don't create a stub
+				// home and is also empty (i.e. no children), then we don't create a stub
 				return false;
 			}
-			// The folder is either not top level, or not a user's or group's home, so we
+			// The folder is either not empty, or not a user's or group's home, so we
 			// include it to avoid problems with its children
 		}
 		ExportTarget referrent = this.factory.getEngine().getReferrent(this.cmfObject);

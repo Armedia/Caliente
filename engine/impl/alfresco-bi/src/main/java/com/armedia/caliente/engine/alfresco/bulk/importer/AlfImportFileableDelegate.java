@@ -303,7 +303,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 	}
 
-	protected abstract boolean createStub(File target, String content) throws ImportException;
+	protected abstract boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException;
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
 		CmfContentInfo content) throws ImportException {
@@ -652,7 +652,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			if (!main.exists()) {
 				ctx.printf("Creating a stub for %s [%s](%s)", this.cmfObject.getType(), this.cmfObject.getLabel(),
 					this.cmfObject.getId());
-				if (!createStub(main,
+				if (!createStub(ctx, main,
 					this.cmfObject.getLabel())) { return Collections.singleton(ImportOutcome.SKIPPED); }
 			}
 
@@ -739,7 +739,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 							memberData[2]);
 
 						File vdocMember = new File(vdocVersion, memberData[0]);
-						createStub(vdocMember, member.asString());
+						createStub(ctx, vdocMember, member.asString());
 						File vdocMemberMeta = generateMetadataFile(ctx, vdocMemberProperties, vdocMember);
 						this.factory.storeToIndex(ctx, this.cmfObject, vdocMember, vdocMemberMeta,
 							MarkerType.VDOC_REFERENCE);

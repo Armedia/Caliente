@@ -35,7 +35,7 @@ public class AlfImportDocumentDelegate extends AlfImportFileableDelegate {
 	}
 
 	@Override
-	protected boolean createStub(File target, String content) throws ImportException {
+	protected boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException {
 		try {
 			FileUtils.write(target, content, Charset.defaultCharset());
 			return true;
