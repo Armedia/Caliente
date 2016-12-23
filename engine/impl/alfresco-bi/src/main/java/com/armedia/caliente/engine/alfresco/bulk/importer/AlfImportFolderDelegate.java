@@ -2,18 +2,22 @@ package com.armedia.caliente.engine.alfresco.bulk.importer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoType;
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.commons.utilities.FileNameTools;
 
 public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
-
 	private static final String BASE_TYPE = "cm:folder";
 	private static final String FOLDER_ASPECT = "arm:folder";
 	private static final String[] BASE_ASPECTS = {
@@ -38,10 +42,41 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 		return type;
 	}
 
+	private int getFolderDepth() {
+		CmfProperty<CmfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
+		if (p == null) { return 0; }
+		int min = -1;
+		for (CmfValue v : p) {
+			List<String> l = FileNameTools.tokenize(v.asString(), '/');
+			if (min < 0) {
+				min = l.size();
+			} else {
+				min = Math.min(min, l.size());
+			}
+		}
+		return (min < 0 ? 0 : min);
+	}
+
+	private boolean hasPropertyValues(IntermediateProperty property) {
+		CmfProperty<CmfValue> p = this.cmfObject.getProperty(property);
+		if (p == null) { return false; }
+		if (p.isRepeating()) { return p.hasValues(); }
+		CmfValue v = p.getValue();
+		return ((v != null) && !v.isNull());
+	}
+
 	@Override
 	protected boolean createStub(File target, String content) throws ImportException {
-		// Only do this if the target is not a cabinet.
-		if ("dm_cabinet".equalsIgnoreCase(this.cmfObject.getSubtype())) { return false; }
+		if (this.cmfObject.getType() == CmfType.FOLDER) {
+			if ((getFolderDepth() == 0) && (hasPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)
+				|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER))) {
+				// If the object is a top-level folder that is also a user's or group's
+				// home, then we don't create a stub
+				return false;
+			}
+			// The folder is either not top level, or not a user's or group's home, so we
+			// include it to avoid problems with its children
+		}
 		ExportTarget referrent = this.factory.getEngine().getReferrent(this.cmfObject);
 		if (referrent != null) {
 			switch (referrent.getType()) {
