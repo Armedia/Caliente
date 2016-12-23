@@ -8,12 +8,10 @@ import org.apache.commons.io.FileUtils;
 
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.FileNameTools;
 
@@ -67,30 +65,17 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 
 	@Override
 	protected boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException {
-		if (this.cmfObject.getType() == CmfType.FOLDER) {
-			if ((getFolderDepth() == 0) && ctx.getContainedObjects(this.cmfObject).isEmpty()
-				&& (hasPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)
-					|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER))) {
-				// If the object is a top-level folder that is also a user's or group's
-				// home and is also empty (i.e. no children), then we don't create a stub
-				return false;
-			}
-			// The folder is either not empty, or not a user's or group's home, so we
-			// include it to avoid problems with its children
-		}
-		ExportTarget referrent = this.factory.getEngine().getReferrent(this.cmfObject);
-		if (referrent != null) {
-			switch (referrent.getType()) {
-				case FOLDER:
-				case DOCUMENT:
-					break;
-				default:
-					// If this folder is referenced by anything other than a folder
-					// or another document, we're not interested in creating it.
-					return false;
-			}
+		if ((getFolderDepth() == 0)
+			&& (hasPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)
+				|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER))
+			&& ctx.getContainedObjects(this.cmfObject).isEmpty()) {
+			// If the object is a top-level folder that is also a user's or group's
+			// home and is also empty (i.e. no children), then we don't create a stub
+			return false;
 		}
 
+		// The folder is either not empty, or not a user's or group's home, so we
+		// include it to avoid problems with its children
 		try {
 			FileUtils.forceMkdir(target);
 			return true;
