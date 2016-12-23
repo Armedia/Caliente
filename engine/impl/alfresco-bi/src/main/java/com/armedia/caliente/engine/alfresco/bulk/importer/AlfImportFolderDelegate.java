@@ -11,6 +11,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.FileNameTools;
@@ -55,6 +56,13 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 		return (min < 0 ? 0 : min);
 	}
 
+	protected boolean hasSupportedChildren(AlfImportContext ctx) throws ImportException {
+		for (CmfObjectRef child : ctx.getContainedObjects(this.cmfObject)) {
+			if (ctx.isSupported(child.getType())) { return true; }
+		}
+		return false;
+	}
+
 	private boolean hasPropertyValues(IntermediateProperty property) {
 		CmfProperty<CmfValue> p = this.cmfObject.getProperty(property);
 		if (p == null) { return false; }
@@ -65,10 +73,8 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 
 	@Override
 	protected boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException {
-		if ((getFolderDepth() == 0)
-			&& (hasPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)
-				|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER))
-			&& ctx.getContainedObjects(this.cmfObject).isEmpty()) {
+		if ((getFolderDepth() == 0) && (hasPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)
+			|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER)) && hasSupportedChildren(ctx)) {
 			// If the object is a top-level folder that is also a user's or group's
 			// home and is also empty (i.e. no children), then we don't create a stub
 			return false;
