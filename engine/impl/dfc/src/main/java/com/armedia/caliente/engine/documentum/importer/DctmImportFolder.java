@@ -98,9 +98,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	protected void updateReferenced(IDfFolder folder, DctmImportContext context) throws DfException, ImportException {
 		final IDfSession session = context.getSession();
 		final CmfProperty<IDfValue> usersWithDefaultFolder = this.cmfObject
-			.getProperty(DctmFolder.USERS_WITH_DEFAULT_FOLDER);
+			.getProperty(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER);
 		final CmfProperty<IDfValue> usersDefaultFolderPaths = this.cmfObject
-			.getProperty(DctmFolder.USERS_DEFAULT_FOLDER_PATHS);
+			.getProperty(IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS);
 
 		if ((usersWithDefaultFolder == null) || (usersDefaultFolderPaths == null)
 			|| (usersWithDefaultFolder.getValueCount() == 0)
@@ -164,7 +164,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		}
 
 		final CmfProperty<IDfValue> groupsWithDefaultFolder = this.cmfObject
-			.getProperty(DctmFolder.GROUPS_WITH_DEFAULT_FOLDER);
+			.getProperty(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER);
 		if ((groupsWithDefaultFolder != null) && groupsWithDefaultFolder.hasValues()) {
 			Set<String> s = new TreeSet<>();
 			for (IDfValue v : groupsWithDefaultFolder) {

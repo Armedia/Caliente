@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmDataType;
 import com.armedia.caliente.engine.documentum.DctmMappingUtils;
@@ -101,10 +102,10 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		IDfCollection resultCol = DfUtils.executeQuery(folder.getSession(),
 			String.format(DctmExportFolder.DQL_FIND_USERS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
 		try {
-			CmfProperty<IDfValue> usersWithDefaultFolder = new CmfProperty<>(DctmFolder.USERS_WITH_DEFAULT_FOLDER,
-				DctmDataType.DF_STRING.getStoredType());
-			CmfProperty<IDfValue> usersDefaultFolderPaths = new CmfProperty<>(DctmFolder.USERS_DEFAULT_FOLDER_PATHS,
-				DctmDataType.DF_STRING.getStoredType());
+			CmfProperty<IDfValue> usersWithDefaultFolder = new CmfProperty<>(
+				IntermediateProperty.USERS_WITH_DEFAULT_FOLDER, DctmDataType.DF_STRING.getStoredType());
+			CmfProperty<IDfValue> usersDefaultFolderPaths = new CmfProperty<>(
+				IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS, DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				IDfValue v = resultCol.getValueAt(0);
 				if (DctmMappingUtils.isMappableUser(ctx.getSession(), v.asString())
@@ -125,8 +126,8 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 		resultCol = DfUtils.executeQuery(folder.getSession(),
 			String.format(DctmExportFolder.DQL_FIND_GROUPS_WITH_DEFAULT_FOLDER, folderId), IDfQuery.DF_EXECREAD_QUERY);
 		try {
-			CmfProperty<IDfValue> groupsWithDefaultFolder = new CmfProperty<>(DctmFolder.GROUPS_WITH_DEFAULT_FOLDER,
-				DctmDataType.DF_STRING.getStoredType());
+			CmfProperty<IDfValue> groupsWithDefaultFolder = new CmfProperty<>(
+				IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER, DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				IDfValue v = resultCol.getValueAt(0);
 				if (ctx.isSpecialGroup(v.asString())) {

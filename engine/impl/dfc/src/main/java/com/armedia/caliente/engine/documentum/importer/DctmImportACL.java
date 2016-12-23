@@ -409,7 +409,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 	@Override
 	protected void updateReferenced(IDfACL acl, DctmImportContext context) throws DfException, ImportException {
-		final CmfProperty<IDfValue> usersWithDefaultACL = this.cmfObject.getProperty(DctmACL.USERS_WITH_DEFAULT_ACL);
+		final CmfProperty<IDfValue> usersWithDefaultACL = this.cmfObject
+			.getProperty(IntermediateProperty.USERS_WITH_DEFAULT_ACL);
 		if ((usersWithDefaultACL == null) || (usersWithDefaultACL.getValueCount() == 0)) { return; }
 
 		final IDfSession session = context.getSession();

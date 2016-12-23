@@ -10,6 +10,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmMappingUtils;
 import com.armedia.caliente.engine.documentum.DctmObjectType;
@@ -149,7 +150,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		final String groupName = group.getGroupName();
 
 		// Set this group as users' default group
-		CmfProperty<IDfValue> property = this.cmfObject.getProperty(DctmGroup.USERS_WITH_DEFAULT_GROUP);
+		CmfProperty<IDfValue> property = this.cmfObject.getProperty(IntermediateProperty.USERS_WITH_DEFAULT_GROUP);
 		if ((property == null) || (property.getValueCount() == 0)) { return; }
 		Set<String> users = new TreeSet<>();
 		for (IDfValue v : property) {

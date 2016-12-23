@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.documentum.DctmAttributes;
 import com.armedia.caliente.engine.documentum.DctmDataType;
 import com.armedia.caliente.engine.documentum.DctmMappingUtils;
@@ -105,7 +106,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		IDfGroup group) throws DfException, ExportException {
 		if (!super.getDataProperties(ctx, properties, group)) { return false; }
 		// CmfStore all the users that have this group as their default group
-		CmfProperty<IDfValue> property = new CmfProperty<>(DctmGroup.USERS_WITH_DEFAULT_GROUP,
+		CmfProperty<IDfValue> property = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_GROUP,
 			DctmDataType.DF_STRING.getStoredType());
 		IDfCollection resultCol = DfUtils.executeQuery(group.getSession(),
 			String.format(DctmExportGroup.DQL_FIND_USERS_WITH_DEFAULT_GROUP, group.getObjectId().getId()),

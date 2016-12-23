@@ -10,6 +10,4 @@ package com.armedia.caliente.engine.documentum.common;
  */
 public interface DctmGroup {
 
-	static final String USERS_WITH_DEFAULT_GROUP = "usersWithDefaultGroup";
-
 }

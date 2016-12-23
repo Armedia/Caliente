@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.documentum.DctmDataType;
 import com.armedia.caliente.engine.documentum.DctmMappingUtils;
 import com.armedia.caliente.engine.documentum.common.DctmACL;
@@ -67,7 +68,8 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		IDfCollection resultCol = DfUtils.executeQuery(acl.getSession(),
 			String.format(DctmExportACL.DQL_FIND_USERS_WITH_DEFAULT_ACL, aclId), IDfQuery.DF_EXECREAD_QUERY);
 		try {
-			property = new CmfProperty<>(DctmACL.USERS_WITH_DEFAULT_ACL, DctmDataType.DF_STRING.getStoredType());
+			property = new CmfProperty<>(IntermediateProperty.USERS_WITH_DEFAULT_ACL,
+				DctmDataType.DF_STRING.getStoredType());
 			while (resultCol.next()) {
 				property.addValue(resultCol.getValueAt(0));
 			}

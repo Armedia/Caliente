@@ -19,4 +19,5 @@
 	<!-- For future deltas, as needed...          -->
 	<!-- **************************************** -->
 	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.1.xml" />
+	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.2.xml" />
 </databaseChangeLog>
