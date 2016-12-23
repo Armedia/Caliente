@@ -1655,21 +1655,20 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
 			final String referenceId = JdbcTools.composeDatabaseId(object);
-			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_CONTAINERS),
-				new ResultSetHandler<Collection<CmfObjectRef>>() {
-					@Override
-					public Collection<CmfObjectRef> handle(ResultSet rs) throws SQLException {
-						Collection<CmfObjectRef> ret = new LinkedList<>();
-						while (rs.next()) {
-							String id = rs.getString(1);
-							if (rs.wasNull()) {
-								continue;
-							}
-							ret.add(JdbcTools.decodeDatabaseId(id));
+			return qr.query(c, translateQuery(query), new ResultSetHandler<Collection<CmfObjectRef>>() {
+				@Override
+				public Collection<CmfObjectRef> handle(ResultSet rs) throws SQLException {
+					Collection<CmfObjectRef> ret = new LinkedList<>();
+					while (rs.next()) {
+						String id = rs.getString(1);
+						if (rs.wasNull()) {
+							continue;
 						}
-						return Tools.freezeCollection(ret);
+						ret.add(JdbcTools.decodeDatabaseId(id));
 					}
-				}, referenceId);
+					return Tools.freezeCollection(ret);
+				}
+			}, referenceId);
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to retrieve the object's %s for %s", query.name(), object.getShortLabel()), e);
