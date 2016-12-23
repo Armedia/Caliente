@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.importer;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -14,6 +15,7 @@ import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
@@ -83,6 +85,24 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)", object.getType(),
 				object.getLabel(), object.getId()), e);
+		}
+	}
+
+	public Collection<CmfObjectRef> getContainers(CmfObject<V> object) throws ImportException {
+		try {
+			return this.cmfObjectStore.getContainers(object);
+		} catch (CmfStorageException e) {
+			throw new ImportException(String.format("Failed to load the containers for %s [%s](%s)", object.getType(),
+				object.getLabel(), object.getId()), e);
+		}
+	}
+
+	public Collection<CmfObjectRef> getContainedObjects(CmfObject<V> object) throws ImportException {
+		try {
+			return this.cmfObjectStore.getContainedObjects(object);
+		} catch (CmfStorageException e) {
+			throw new ImportException(String.format("Failed to load the contained objects for %s [%s](%s)",
+				object.getType(), object.getLabel(), object.getId()), e);
 		}
 	}
 }
