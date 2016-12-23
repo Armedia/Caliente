@@ -1654,6 +1654,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final Connection c = operation.getConnection();
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
+			final String referenceId = JdbcTools.composeDatabaseId(object);
 			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_CONTAINERS),
 				new ResultSetHandler<Collection<CmfObjectRef>>() {
 					@Override
@@ -1668,9 +1669,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						}
 						return Tools.freezeCollection(ret);
 					}
-				});
+				}, referenceId);
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to retrieve the object's %s", query.name()), e);
+			throw new CmfStorageException(
+				String.format("Failed to retrieve the object's %s for %s", query.name(), object.getShortLabel()), e);
 		}
 	}
 
