@@ -13,4 +13,5 @@ import com.documentum.fc.common.IDfTime;
 public interface DctmDocument extends DctmSysObject {
 
 	static final String CONTENT_SET_TIME_PATTERN = IDfTime.DF_TIME_PATTERN46;
+
 }
