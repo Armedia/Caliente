@@ -1059,4 +1059,121 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract Collection<CmfObjectRef> getContainedObjects(O operation, CmfObjectRef object)
 		throws CmfStorageException;
+
+	public final boolean addRequirement(CmfObjectRef object, CmfObjectRef requirement) throws CmfStorageException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
+		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
+		if (requirement == null) { throw new IllegalArgumentException(
+			"Must provide a requirement to associate to the base object"); }
+		if (requirement.isNull()) { throw new IllegalArgumentException("Null requirement references are not allowed"); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				final boolean ret = addRequirement(operation, object, requirement);
+				if (tx) {
+					operation.commit();
+				}
+				return ret;
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for retrieving all contained objects", e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract boolean addRequirement(O operation, CmfObjectRef object, CmfObjectRef requirement)
+		throws CmfStorageException;
+
+	public final <T extends Enum<T>> CmfRequirementInfo<T> setImportStatus(CmfObjectRef object, T status,
+		String info) throws CmfStorageException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
+		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
+		if (status == null) { throw new IllegalArgumentException("Must provide a non-null status"); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				CmfRequirementInfo<T> ret = setImportStatus(operation, object, status, info);
+				if (tx) {
+					operation.commit();
+				}
+				return ret;
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(
+							String.format("Failed to rollback the transaction for setting requirements info for %s",
+								object.getShortLabel()),
+							e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract <T extends Enum<T>> CmfRequirementInfo<T> setImportStatus(O operation, CmfObjectRef object,
+		T status, String info) throws CmfStorageException;
+
+	public final <T extends Enum<T>> Collection<CmfRequirementInfo<T>> getRequirementInfo(Class<T> statusClass,
+		CmfObjectRef object) throws CmfStorageException {
+		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
+		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				return getRequirementInfo(operation, statusClass, object);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for retrieving all contained objects", e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract <T extends Enum<T>> Collection<CmfRequirementInfo<T>> getRequirementInfo(O operation,
+		Class<T> statusClass, CmfObjectRef object) throws CmfStorageException;
+
+	public final void clearImportPlan() throws CmfStorageException {
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				clearImportPlan(operation);
+				if (tx) {
+					operation.commit();
+				}
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for clearing the requirement status", e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract void clearImportPlan(O operation) throws CmfStorageException;
 }

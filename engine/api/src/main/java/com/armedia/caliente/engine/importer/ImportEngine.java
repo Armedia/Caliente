@@ -45,6 +45,7 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
+import com.armedia.commons.utilities.Tools;
 
 /**
  * @author diego
@@ -114,19 +115,64 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						this.listenerDelegator.objectHistoryImportStarted(this.importState.jobId, this.batch.type,
 							this.batch.id, this.batch.contents.size());
 						int i = 0;
-						for (CmfObject<V> next : this.batch.contents) {
+						batch: for (CmfObject<V> next : this.batch.contents) {
 							if (failBatch) {
 								this.log.error(String.format("Batch has been failed - will not process [%s](%s) (%s)",
 									next.getLabel(), next.getId(), ImportResult.SKIPPED.name()));
+								this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
 								this.listenerDelegator.objectImportCompleted(this.importState.jobId, next,
 									ImportOutcome.SKIPPED);
-								continue;
+								continue batch;
 							}
 
 							final C ctx = this.contextFactory.newContext(next.getId(), next.getType(),
 								session.getWrapped(), i);
+							ImportResult result = ImportResult.FAILED;
+							String info = null;
 							try {
 								initContext(ctx);
+
+								// TODO: test this fully
+								/*
+								// Check if its requirements have been imported. If not, skip it
+								Collection<CmfRequirementInfo<ImportResult>> requirements = this.importState.objectStore
+									.getRequirementInfo(ImportResult.class, next);
+								if (requirements != null) {
+									for (CmfRequirementInfo<ImportResult> req : requirements) {
+										ImportResult status = req.getStatus();
+										if (status == null) {
+											failBatch = true;
+											this.log.error(String.format(
+												"The required %s for %s [%s](%s) has not been imported yet",
+												req.getShortLabel(), next.getType().name(), next.getLabel(),
+												next.getId(), req.getStatus().name(), req.getData()));
+											this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
+											this.listenerDelegator.objectImportCompleted(this.importState.jobId, next,
+												ImportOutcome.SKIPPED);
+											continue batch;
+										}
+
+										switch (req.getStatus()) {
+											case FAILED:
+											case SKIPPED:
+												// Can't continue... a requirement is missing
+												failBatch = true;
+												this.log.error(String.format(
+													"The required %s for %s [%s](%s) was %s, can't import the object (extra info = %s)",
+													req.getShortLabel(), next.getType().name(), next.getLabel(),
+													next.getId(), req.getStatus().name(), req.getData()));
+												this.listenerDelegator.objectImportStarted(this.importState.jobId,
+													next);
+												this.listenerDelegator.objectImportCompleted(this.importState.jobId,
+													next, ImportOutcome.SKIPPED);
+												continue batch;
+											default:
+												break;
+										}
+									}
+								}
+								*/
+
 								final CmfType storedType = next.getType();
 								final boolean useTx = getImportStrategy(storedType).isSupportsTransactions();
 								if (useTx) {
@@ -140,9 +186,18 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 										.newImportDelegate(next);
 									final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
 										ctx);
+									if (outcome.isEmpty()) {
+										result = ImportResult.SKIPPED;
+									} else {
+										result = null;
+									}
 									outcomes.put(next.getId(), outcome);
 									for (ImportOutcome o : outcome) {
 										this.listenerDelegator.objectImportCompleted(this.importState.jobId, next, o);
+										if (result == null) {
+											result = o.getResult();
+										}
+
 										if (this.log.isDebugEnabled()) {
 											String msg = null;
 											switch (o.getResult()) {
@@ -158,7 +213,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 													break;
 
 												default:
-													msg = String.format("Persisted (%s) %s", o.getResult(), next);
+													msg = String.format("Outcome was (%s) for %s", o.getResult(), next);
 													break;
 											}
 											this.log.debug(msg);
@@ -169,6 +224,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 									}
 									i++;
 								} catch (Throwable t) {
+									info = Tools.dumpStackTrace(t);
 									if (useTx) {
 										session.rollback();
 									}
@@ -183,6 +239,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 										this.batch.markAborted(t);
 										continue;
 									}
+								} finally {
+									ctx.getObjectStore().setImportStatus(next, result, info);
 								}
 							} finally {
 								ctx.close();
@@ -678,6 +736,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			output.info("Resetting object names to their base values...");
 			objectStore.resetAltNames();
 			output.info("Object names successfully reset");
+
+			output.info("Clearing the import plan");
+			objectStore.clearImportPlan();
+			output.info("Cleared the import plan");
 
 			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();

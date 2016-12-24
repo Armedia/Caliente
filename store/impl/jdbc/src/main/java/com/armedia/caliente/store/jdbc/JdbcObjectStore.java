@@ -13,10 +13,12 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,7 @@ import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfTreeScanner;
 import com.armedia.caliente.store.CmfType;
@@ -1146,14 +1149,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	protected boolean optimizedClearAllObjects(JdbcOperation operation) throws CmfStorageException {
-		/*
-		String[] tables = {
-			"CMF_CONTENT_PROPERTY", "CMF_PROPERTY_VALUE", "CMF_ATTRIBUTE_VALUE", "CMF_MAPPER", "CMF_CONTENT",
-			"CMF_PROPERTY", "CMF_ATTRIBUTE", "CMF_OBJECT", "CMF_EXPORT_PLAN", "CMF_INFO"
-		};
-		*/
+	protected boolean truncateTables(JdbcOperation operation, String... tables) throws CmfStorageException {
+		if ((tables == null) || (tables.length == 0)) { return false; }
+		return truncateTables(operation, Arrays.asList(tables));
+	}
+
+	protected boolean truncateTables(JdbcOperation operation, Iterable<String> tables) throws CmfStorageException {
 		final Connection c = operation.getConnection();
+		Collection<String> truncated = new LinkedHashSet<>();
+		Collection<String> remaining = new LinkedHashSet<>();
+		for (String s : tables) {
+			remaining.add(s);
+		}
 		try {
 			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
 			if (!referentialIntegrityOff) {
@@ -1161,12 +1168,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				// the optimized clear
 				return false;
 			}
-			Set<String> tables = getCmfTables(c);
 			Statement s = c.createStatement();
 			try {
 				final String sqlFmt = translateQuery(JdbcDialect.Query.TRUNCATE_TABLE_FMT);
-				for (String t : tables) {
-					s.executeUpdate(String.format(sqlFmt, t));
+				for (String table : tables) {
+					if (StringUtils.isBlank(table)) {
+						continue;
+					}
+					if (!truncated.contains(table)) {
+						s.executeUpdate(String.format(sqlFmt, table));
+						truncated.add(table);
+						remaining.remove(table);
+					}
 				}
 				return true;
 			} finally {
@@ -1174,9 +1187,24 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				DbUtils.close(s);
 			}
 		} catch (SQLException e) {
-			this.log.trace("Failed to truncate the tables", e);
+			if (this.log.isDebugEnabled()) {
+				this.log.info("Successfully truncated the tables {}", truncated);
+				this.log.error(String.format("Failed to truncate the remaining tables %s", remaining), e);
+			}
 			return false;
 		}
+	}
+
+	protected boolean optimizedClearAllObjects(JdbcOperation operation) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		Set<String> tables = null;
+		try {
+			tables = getCmfTables(c);
+		} catch (SQLException e) {
+			this.log.trace("Failed to retrieve the table list", e);
+			return false;
+		}
+		return truncateTables(operation, tables);
 	}
 
 	private void clearAllObjects(Connection c) throws SQLException {
@@ -1516,34 +1544,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	protected boolean optimizedResetAltNames(JdbcOperation operation) throws CmfStorageException {
-		final Connection c = operation.getConnection();
-		try {
-			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
-			if (!referentialIntegrityOff) {
-				// If we couldn't turn off referential integrity, then we couldn't perform
-				// the optimized clear
-				return false;
-			}
-			Statement s = c.createStatement();
-			try {
-				final String sqlFmt = translateQuery(JdbcDialect.Query.TRUNCATE_TABLE_FMT);
-				s.executeUpdate(String.format(sqlFmt, "CMF_ALT_NAME"));
-				return true;
-			} finally {
-				enableReferentialIntegrity(operation);
-				DbUtils.close(s);
-			}
-		} catch (SQLException e) {
-			this.log.trace("Failed to truncate the tables", e);
-			return false;
-		}
-	}
-
 	@Override
 	protected void resetAltNames(JdbcOperation operation) throws CmfStorageException {
 		// If the truncate table worked, do nothing else...
-		if (optimizedResetAltNames(operation)) { return; }
+		if (truncateTables(operation, "CMF_ALT_NAME")) { return; }
 
 		// No truncate? Ok...so...do it the hard way...
 		final Connection c = operation.getConnection();
@@ -1685,5 +1689,119 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	protected Collection<CmfObjectRef> getContainedObjects(JdbcOperation operation, CmfObjectRef object)
 		throws CmfStorageException {
 		return getTreeRelations(operation, object, JdbcDialect.Query.LOAD_CONTAINED_OBJECTS);
+	}
+
+	@Override
+	protected <T extends Enum<T>> Collection<CmfRequirementInfo<T>> getRequirementInfo(JdbcOperation operation,
+		final Class<T> statusClass, CmfObjectRef object) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		try {
+			final String objectId = JdbcTools.composeDatabaseId(object);
+			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_IMPORT_PLAN),
+				new ResultSetHandler<Collection<CmfRequirementInfo<T>>>() {
+					@Override
+					public Collection<CmfRequirementInfo<T>> handle(ResultSet rs) throws SQLException {
+						Collection<CmfRequirementInfo<T>> ret = new LinkedList<>();
+						while (rs.next()) {
+							String requirementId = rs.getString("requirement_id");
+							if (rs.wasNull()) {
+								continue;
+							}
+							String statusStr = rs.getString("status");
+							if (rs.wasNull()) {
+								statusStr = null;
+							}
+							String info = rs.getString("info");
+							if (rs.wasNull()) {
+								info = null;
+							}
+
+							T status = null;
+							if ((statusClass != null) && (statusStr != null)) {
+								try {
+									status = Enum.valueOf(statusClass, statusStr);
+								} catch (IllegalArgumentException e) {
+									throw new SQLException(String.format("Illegal enum value [%s] for type %s",
+										statusStr, statusClass.getCanonicalName()));
+								}
+							} else {
+								// If there is no status, or no status class, no info is returned
+								info = null;
+							}
+
+							ret.add(new CmfRequirementInfo<>(JdbcTools.decodeDatabaseId(requirementId), status, info));
+						}
+						return Tools.freezeCollection(ret);
+					}
+				}, objectId);
+		} catch (SQLException e) {
+			throw new CmfStorageException(
+				String.format("Failed to retrieve the object's requirement info for %s", object.getShortLabel()), e);
+		}
+	}
+
+	@Override
+	protected boolean addRequirement(JdbcOperation operation, CmfObjectRef object, CmfObjectRef requirement)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		Savepoint savePoint = null;
+		try {
+			final String objectId = JdbcTools.composeDatabaseId(object);
+			final String requirementId = JdbcTools.composeDatabaseId(requirement);
+			savePoint = c.setSavepoint();
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_REQUIREMENT), JdbcTools.HANDLER_NULL, objectId,
+				requirementId);
+			savePoint = JdbcTools.commitSavepoint(c, savePoint);
+			return true;
+		} catch (SQLException e) {
+			if (this.dialect.isDuplicateKeyException(e)) {
+				// We're good! With the use of savepoints, the transaction will remain valid and
+				// thus we'll be OK to continue using the transaction in other connections
+				JdbcTools.rollbackSavepoint(c, savePoint);
+				return false;
+			}
+			throw new CmfStorageException(String.format("Failed to add the %s object's requirement info for %s",
+				object.getShortLabel(), requirement.getShortLabel()), e);
+		}
+	}
+
+	@Override
+	protected <T extends Enum<T>> CmfRequirementInfo<T> setImportStatus(JdbcOperation operation, CmfObjectRef object,
+		T status, String info) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		Savepoint savePoint = null;
+		try {
+			savePoint = c.setSavepoint();
+			final String objectId = JdbcTools.composeDatabaseId(object);
+			final String statusStr = status.name();
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_IMPORT_PLAN), JdbcTools.HANDLER_NULL, objectId,
+				statusStr, info);
+			savePoint = JdbcTools.commitSavepoint(c, savePoint);
+			return new CmfRequirementInfo<>(object, status, info);
+		} catch (SQLException e) {
+			if (this.dialect.isDuplicateKeyException(e)) {
+				// We're good! With the use of savepoints, the transaction will remain valid and
+				// thus we'll be OK to continue using the transaction in other connections
+				JdbcTools.rollbackSavepoint(c, savePoint);
+				return null;
+			}
+			throw new CmfStorageException(
+				String.format("Failed to persist import plan information for %s", object.getShortLabel()), e);
+		}
+	}
+
+	@Override
+	protected void clearImportPlan(JdbcOperation operation) throws CmfStorageException {
+		if (truncateTables(operation, "CMF_IMPORT_PLAN")) { return; }
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		try {
+			qr.update(c, translateQuery(JdbcDialect.Query.CLEAR_IMPORT_PLAN));
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to clear the requirement info", e);
+		}
 	}
 }

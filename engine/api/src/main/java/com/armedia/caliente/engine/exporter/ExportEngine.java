@@ -6,8 +6,10 @@ package com.armedia.caliente.engine.exporter;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -340,14 +342,21 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			// We use a TreeSet to ensure that all our targets are always waited upon in the same
 			// order, to avoid deadlocks.
 			Collection<ExportTarget> waitTargets = new TreeSet<>();
+			Set<CmfObjectRef> requirements = new LinkedHashSet<>();
 			for (ExportDelegate<?, S, W, V, C, ?, ?> requirement : referenced) {
 				if (requirement.getExportTarget().equals(target)) {
+					// Loop - avoid it!
+					continue;
+				}
+				if (!requirements.add(requirement.getExportTarget())) {
+					// Duplicate requirement - don't export again
 					continue;
 				}
 				final Result r;
 				try {
 					r = exportObject(exportState, target, requirement.getExportTarget(), requirement, ctx,
 						listenerDelegator, statusMap);
+					exportState.objectStore.addRequirement(marshaled, requirement.getExportTarget());
 				} catch (Exception e) {
 					// This exception will already be logged...so we simply accept the failure and
 					// report it upwards, without bubbling up the exception to be reported 1000
@@ -430,18 +439,29 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					this.log.debug(String.format("%s requires %d antecedent versions for successful storage", label,
 						referenced.size()));
 				}
+				CmfObjectRef prev = null;
 				for (ExportDelegate<?, S, W, V, C, ?, ?> antecedent : referenced) {
 					try {
 						exportObject(exportState, target, antecedent.getExportTarget(), antecedent, ctx,
 							listenerDelegator, statusMap);
+						if (prev != null) {
+							exportState.objectStore.addRequirement(antecedent.getExportTarget(), prev);
+						}
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
 						// 1000 times
 						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
 							"An antecedent object [%s] failed to serialize for %s", antecedent.exportTarget, label));
+					} finally {
+						prev = antecedent.getExportTarget();
 					}
 				}
+
+				if (prev != null) {
+					exportState.objectStore.addRequirement(marshaled, prev);
+				}
+
 				try {
 					sourceObject.antecedentsExported(marshaled, ctx);
 				} catch (Exception e) {
@@ -501,16 +521,20 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					this.log.debug(String.format("%s is succeeded by %d additional versions for successful storage",
 						label, referenced.size()));
 				}
+				CmfObjectRef prev = marshaled;
 				for (ExportDelegate<?, S, W, V, C, ?, ?> successor : referenced) {
 					try {
 						exportObject(exportState, target, successor.getExportTarget(), successor, ctx,
 							listenerDelegator, statusMap);
+						exportState.objectStore.addRequirement(successor.getExportTarget(), prev);
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
 						// 1000 times
 						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
 							"A successor object [%s] failed to serialize for %s", successor.exportTarget, label));
+					} finally {
+						prev = successor.getExportTarget();
 					}
 				}
 

@@ -56,8 +56,7 @@ public abstract class JdbcDialect {
 		),
 
 		RESET_ALT_NAME( //
-			"       delete " + //
-				"     from cmf_alt_name " //
+			"       delete from cmf_alt_name " //
 		),
 
 		INSERT_OBJECT_PARENTS( //
@@ -132,9 +131,9 @@ public abstract class JdbcDialect {
 		),
 
 		UPDATE_EXPORT_RESULT( //
-			"       update cmf_export_plan " + //
-				"          set result = ?, " + //
-				"              message = ? " + //
+			"      update cmf_export_plan " + //
+				"     set result = ?, " + //
+				"         message = ? " + //
 				"   where object_type = ? " + //
 				"     and object_id = ? " + //
 				"     and result is null " //
@@ -398,6 +397,37 @@ public abstract class JdbcDialect {
 				"     from cmf_object_tree " + //
 				"    where parent_id = ? " + //
 				" order by object_id " //
+		),
+		//
+
+		INSERT_REQUIREMENT( //
+			"       insert into " + //
+				"          cmf_requirement (" + //
+				"              object_id, requirement_id " + //
+				"          ) " + //
+				"   values (?, ?)" //
+		),
+		//
+
+		INSERT_IMPORT_PLAN( //
+			"       insert into " + //
+				"          cmf_import_plan (" + //
+				"              object_id, status, info " + //
+				"          ) " + //
+				"   values (?, ?, ?)" //
+		),
+		//
+
+		LOAD_IMPORT_PLAN( //
+			"       select r.requirement_id, p.status, p.info " + //
+				"     from cmf_requirement r left outer join cmf_import_plan p on (r.requirement_id = p.object_id)" + //
+				"    where r.object_id = ? " + //
+				" order by r.requirement_id " //
+		),
+		//
+
+		CLEAR_IMPORT_PLAN( //
+			"       delete from cmf_import_plan " //
 		),
 		//
 
