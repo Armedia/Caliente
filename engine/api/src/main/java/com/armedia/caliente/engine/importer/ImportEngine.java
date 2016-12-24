@@ -40,6 +40,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
@@ -133,7 +134,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								initContext(ctx);
 
 								// TODO: test this fully
-								/*
 								// Check if its requirements have been imported. If not, skip it
 								Collection<CmfRequirementInfo<ImportResult>> requirements = this.importState.objectStore
 									.getRequirementInfo(ImportResult.class, next);
@@ -171,7 +171,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 										}
 									}
 								}
-								*/
 
 								final CmfType storedType = next.getType();
 								final boolean useTx = getImportStrategy(storedType).isSupportsTransactions();
