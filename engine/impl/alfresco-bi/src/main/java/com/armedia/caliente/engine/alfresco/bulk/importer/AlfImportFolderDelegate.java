@@ -74,7 +74,7 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 	@Override
 	protected boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException {
 		if ((getFolderDepth() == 0) && (hasPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)
-			|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER)) && hasSupportedChildren(ctx)) {
+			|| hasPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER)) && !hasSupportedChildren(ctx)) {
 			// If the object is a top-level folder that is also a user's or group's
 			// home and is also empty (i.e. no children), then we don't create a stub
 			return false;
