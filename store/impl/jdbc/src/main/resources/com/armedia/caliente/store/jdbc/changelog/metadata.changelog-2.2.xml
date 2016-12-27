@@ -93,7 +93,7 @@
 		<addPrimaryKey tableName="cmf_import_plan" columnNames="object_id" />
 		<addForeignKeyConstraint constraintName="fk_cmf_import_plan_object"
 			baseTableName="cmf_import_plan" baseColumnNames="object_id"
-			referencedTableName="cmf_export_plan" referencedColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
 			onDelete="CASCADE" onUpdate="CASCADE" />
 		<createIndex tableName="cmf_import_plan" indexName="idx_cmf_import_plan_status" unique="false">
 			<column name="status" />
