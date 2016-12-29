@@ -133,32 +133,17 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							try {
 								initContext(ctx);
 
-								// TODO: test this fully
-								// Check if its requirements have been imported. If not, skip it
-								Collection<CmfRequirementInfo<ImportResult>> requirements = this.importState.objectStore
-									.getRequirementInfo(ImportResult.class, next);
-								if (requirements != null) {
-									for (CmfRequirementInfo<ImportResult> req : requirements) {
-										ImportResult status = req.getStatus();
-										if (status == null) {
-											failBatch = true;
-											this.log.error(String.format(
-												"The required %s for %s [%s](%s) has not been imported yet",
-												req.getShortLabel(), next.getType().name(), next.getLabel(),
-												next.getId(), req.getStatus().name(), req.getData()));
-											this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-											this.listenerDelegator.objectImportCompleted(this.importState.jobId, next,
-												ImportOutcome.SKIPPED);
-											continue batch;
-										}
-
-										switch (req.getStatus()) {
-											case FAILED:
-											case SKIPPED:
-												// Can't continue... a requirement is missing
+								if (ctx.getSettings().getBoolean(ImportSetting.VALIDATE_REQUIREMENTS)) {
+									// Check if its requirements have been imported. If not, skip it
+									Collection<CmfRequirementInfo<ImportResult>> requirements = this.importState.objectStore
+										.getRequirementInfo(ImportResult.class, next);
+									if (requirements != null) {
+										for (CmfRequirementInfo<ImportResult> req : requirements) {
+											ImportResult status = req.getStatus();
+											if (status == null) {
 												failBatch = true;
 												this.log.error(String.format(
-													"The required %s for %s [%s](%s) was %s, can't import the object (extra info = %s)",
+													"The required %s for %s [%s](%s) has not been imported yet",
 													req.getShortLabel(), next.getType().name(), next.getLabel(),
 													next.getId(), req.getStatus().name(), req.getData()));
 												this.listenerDelegator.objectImportStarted(this.importState.jobId,
@@ -166,8 +151,25 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 												this.listenerDelegator.objectImportCompleted(this.importState.jobId,
 													next, ImportOutcome.SKIPPED);
 												continue batch;
-											default:
-												break;
+											}
+
+											switch (req.getStatus()) {
+												case FAILED:
+												case SKIPPED:
+													// Can't continue... a requirement is missing
+													failBatch = true;
+													this.log.error(String.format(
+														"The required %s for %s [%s](%s) was %s, can't import the object (extra info = %s)",
+														req.getShortLabel(), next.getType().name(), next.getLabel(),
+														next.getId(), req.getStatus().name(), req.getData()));
+													this.listenerDelegator.objectImportStarted(this.importState.jobId,
+														next);
+													this.listenerDelegator.objectImportCompleted(this.importState.jobId,
+														next, ImportOutcome.SKIPPED);
+													continue batch;
+												default:
+													break;
+											}
 										}
 									}
 								}

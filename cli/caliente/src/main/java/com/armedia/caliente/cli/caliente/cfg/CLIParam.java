@@ -131,6 +131,10 @@ public enum CLIParam {
 	role_map(Setting.ROLE_MAP, 1, "The Properties (XML) file that contains the role name mappings to apply"),
 	type_map(Setting.TYPE_MAP, 1, "The Properties (XML) file that contains the type mappings to apply"),
 	no_filename_map(null, 0, "Disable the use of the filename map (even if the default map exists)"),
+	validate_requirements(
+		null,
+		0,
+		"Activate the validation of an object's requirements' import success during object import (object is skipped if any of its requirements fails to import properly)"),
 	filename_map(
 		Setting.FILENAME_MAP,
 		1,
