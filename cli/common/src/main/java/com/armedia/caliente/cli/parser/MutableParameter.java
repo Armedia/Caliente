@@ -208,4 +208,19 @@ public final class MutableParameter extends Parameter implements Cloneable {
 			this.key, this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount,
 			this.maxValueCount, this.valueName, this.minValueCount, this.valueSep, this.defaults);
 	}
+
+	public static <E extends Enum<E>> MutableParameter initOptionName(E e, MutableParameter p) {
+		if (p == null) { throw new IllegalArgumentException(
+			"Must provide a MutableParameter whose option to initialize"); }
+		if (e == null) { return p; }
+		final String name = e.name();
+		if (name.length() == 1) {
+			// If we decide that the name of the option will be a single character, we use that
+			p.setShortOpt(name.charAt(0));
+		} else if (p.getLongOpt() == null) {
+			// Otherwise, use the name replacing underscores with dashes
+			p.setLongOpt(name.replace('_', '-'));
+		}
+		return p;
+	}
 }

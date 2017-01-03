@@ -62,15 +62,7 @@ public enum CLIParam implements ParameterWrapper {
 	private final Parameter parameter;
 
 	private CLIParam(MutableParameter parameter) {
-		String name = name();
-		if (name.length() == 1) {
-			// If we decide that the name of the option will be a single character, we use that
-			parameter.setShortOpt(name.charAt(0));
-		} else if (parameter.getLongOpt() == null) {
-			// Otherwise, use the name replacing underscores with dashes
-			parameter.setLongOpt(name().replace('_', '-'));
-		}
-		this.parameter = parameter.freezeCopy();
+		this.parameter = MutableParameter.initOptionName(this, parameter).freezeCopy();
 	}
 
 	@Override
