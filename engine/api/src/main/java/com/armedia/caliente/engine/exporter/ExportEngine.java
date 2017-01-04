@@ -356,7 +356,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					r = exportObject(exportState, target, requirement.getExportTarget(), requirement, ctx,
 						listenerDelegator, statusMap);
-					exportState.objectStore.addRequirement(marshaled, requirement.getExportTarget());
 				} catch (Exception e) {
 					// This exception will already be logged...so we simply accept the failure and
 					// report it upwards, without bubbling up the exception to be reported 1000
@@ -365,10 +364,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						.format("A required object [%s] failed to serialize for %s", requirement.exportTarget, label));
 				}
 
+				if (r.skipReason != ExportSkipReason.UNSUPPORTED) {
+					exportState.objectStore.addRequirement(marshaled, requirement.getExportTarget());
+				}
+
 				// If there is no message, the result is success
 				if (r.skipReason == null) {
 					continue;
 				}
+
 				switch (r.skipReason) {
 					case ALREADY_FAILED: // fall-through
 					case DEPENDENCY_FAILED:
