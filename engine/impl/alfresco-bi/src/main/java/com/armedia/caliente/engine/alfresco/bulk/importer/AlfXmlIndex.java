@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -28,32 +27,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.alfresco.bulk.common.AlfXmlTools;
 import com.armedia.commons.utilities.Tools;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
 
 public class AlfXmlIndex implements Closeable {
-
-	private static final NamespaceContext NO_NAMESPACES = new NamespaceContext() {
-
-		@Override
-		public String getNamespaceURI(String prefix) {
-			return "";
-		}
-
-		@Override
-		public String getPrefix(String namespaceURI) {
-			return "";
-		}
-
-		@Override
-		public Iterator<?> getPrefixes(String namespaceURI) {
-			return null;
-		}
-
-	};
-
-	private static final Class<?>[] NO_CLASSES = {};
 
 	private final File target;
 	private final Collection<Class<?>> supportedClasses;
@@ -109,7 +88,7 @@ public class AlfXmlIndex implements Closeable {
 		return new IndentingXMLStreamWriter(factory.createXMLStreamWriter(out)) {
 			@Override
 			public NamespaceContext getNamespaceContext() {
-				return AlfXmlIndex.NO_NAMESPACES;
+				return AlfXmlTools.NO_NAMESPACES;
 			}
 		};
 	}
@@ -143,7 +122,7 @@ public class AlfXmlIndex implements Closeable {
 		if (this.initialized) { return false; }
 		boolean ok = false;
 		try {
-			JAXBContext jaxbContext = getJAXBContext(this.supportedClasses.toArray(AlfXmlIndex.NO_CLASSES));
+			JAXBContext jaxbContext = getJAXBContext(this.supportedClasses.toArray(AlfXmlTools.NO_CLASSES));
 			this.marshaller = getMarshaller(jaxbContext);
 
 			this.out = new FileOutputStream(this.target);

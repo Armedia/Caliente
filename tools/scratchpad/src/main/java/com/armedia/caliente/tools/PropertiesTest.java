@@ -23,6 +23,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
+import com.ctc.wstx.api.WstxOutputProperties;
+import com.ctc.wstx.stax.WstxOutputFactory;
 import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
 
 public class PropertiesTest {
@@ -48,11 +50,18 @@ public class PropertiesTest {
 
 	private static final Charset CHARSET = Charset.forName("UTF-8");
 	private static final String CHARSET_NAME = PropertiesTest.CHARSET.name();
-	private static final String DTD = "<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">";
+	private static final String DTD = String
+		.format("<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">%n");
 	private static final LazyInitializer<XMLOutputFactory> FACTORY = new LazyInitializer<XMLOutputFactory>() {
 		@Override
 		protected XMLOutputFactory initialize() throws ConcurrentException {
-			return XMLOutputFactory.newInstance();
+			// return XMLOutputFactory.newInstance();
+			WstxOutputFactory factory = new WstxOutputFactory();
+			factory.setProperty(WstxOutputProperties.P_USE_DOUBLE_QUOTES_IN_XML_DECL, true);
+			factory.setProperty(WstxOutputProperties.P_OUTPUT_VALIDATE_NAMES, true);
+			factory.setProperty(WstxOutputProperties.P_ADD_SPACE_AFTER_EMPTY_ELEM, true);
+			factory.setProperty(WstxOutputProperties.P_OUTPUT_VALIDATE_ATTR, true);
+			return factory;
 		}
 	};
 
@@ -79,7 +88,7 @@ public class PropertiesTest {
 				writer.flush();
 				out.flush();
 			}
-			for (final String key : p.stringPropertyNames()) {
+			for (final String key : new TreeSet<>(p.stringPropertyNames())) {
 				String value = p.getProperty(key);
 				if (value == null) {
 					continue;
@@ -91,6 +100,7 @@ public class PropertiesTest {
 				writer.flush();
 				out.flush();
 			}
+			writer.writeEndElement();
 			writer.writeEndDocument();
 			writer.flush();
 			out.flush();
@@ -104,7 +114,9 @@ public class PropertiesTest {
 		Properties p = new Properties();
 		for (int i = 1; i <= 255; i++) {
 			char c = (char) i;
-			p.setProperty(String.format("char[%02x] == (%s)", i, c), String.format("[%s]", c));
+			String key = String.format("char[%02x]", i);
+			// String key = String.format("char[%02x] == (%s)", i, c);
+			p.setProperty(key, String.format("[%s]", c));
 		}
 
 		BinaryMemoryBuffer buf = new BinaryMemoryBuffer();
