@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
@@ -112,8 +113,13 @@ public class PropertiesTest {
 
 	public static void test() throws Exception {
 		Properties p = new Properties();
-		for (int i = 1; i <= 255; i++) {
+		Charset charset = Charset.defaultCharset();
+		CharsetEncoder encoder = charset.newEncoder();
+		for (int i = 1; i < 0xFFFE; i++) {
 			char c = (char) i;
+			if (!encoder.canEncode(c)) {
+				continue;
+			}
 			String key = String.format("char[%02x]", i);
 			// String key = String.format("char[%02x] == (%s)", i, c);
 			p.setProperty(key, String.format("[%s]", c));
@@ -127,6 +133,8 @@ public class PropertiesTest {
 		try (InputStream in = buf.getInputStream()) {
 			String s = IOUtils.toString(in, PropertiesTest.CHARSET);
 			s.hashCode();
+			System.out.println(s);
+			System.out.flush();
 			/*
 			s = s.replace("<?xml version=\"1.0\"", "<?xml version=\"1.1\"");
 			buf = new BinaryMemoryBuffer();
@@ -165,7 +173,7 @@ public class PropertiesTest {
 		}
 
 		if (!different.isEmpty()) {
-			System.out.printf("Different keys:%n");
+			System.out.printf("Different values:%n");
 			for (String s : different.keySet()) {
 				Pair<String, String> v = different.get(s);
 				System.out.printf("\t[%s]: [%s] != [%s]%n", s, v.getLeft(), v.getRight());
