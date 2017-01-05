@@ -448,18 +448,17 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					try {
 						exportObject(exportState, target, antecedent.getExportTarget(), antecedent, ctx,
 							listenerDelegator, statusMap);
-						if (prev != null) {
-							exportState.objectStore.addRequirement(antecedent.getExportTarget(), prev);
-						}
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
 						// 1000 times
 						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
 							"An antecedent object [%s] failed to serialize for %s", antecedent.exportTarget, label));
-					} finally {
-						prev = antecedent.getExportTarget();
 					}
+					if (prev != null) {
+						exportState.objectStore.addRequirement(antecedent.getExportTarget(), prev);
+					}
+					prev = antecedent.getExportTarget();
 				}
 
 				if (prev != null) {
@@ -530,16 +529,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					try {
 						exportObject(exportState, target, successor.getExportTarget(), successor, ctx,
 							listenerDelegator, statusMap);
-						exportState.objectStore.addRequirement(successor.getExportTarget(), prev);
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
 						// 1000 times
 						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
 							"A successor object [%s] failed to serialize for %s", successor.exportTarget, label));
-					} finally {
-						prev = successor.getExportTarget();
 					}
+					exportState.objectStore.addRequirement(successor.getExportTarget(), prev);
+					prev = successor.getExportTarget();
 				}
 
 				try {
