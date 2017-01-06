@@ -1,8 +1,6 @@
 package com.armedia.caliente.tools;
 
 import java.io.ByteArrayOutputStream;
-import java.util.Date;
-import java.util.UUID;
 
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -10,7 +8,6 @@ import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
-import com.documentum.fc.common.DfTime;
 
 public class DctmTest {
 
@@ -23,30 +20,20 @@ public class DctmTest {
 			try {
 				IDfFolder parent = session.getFolderByPath("/CMSMFTests/Specials");
 
-				IDfSysObject obj = IDfSysObject.class.cast(session.newObject("sysobject_child_test"));
-				obj.setObjectName("SysObject Child Test.bin");
+				IDfSysObject obj = IDfSysObject.class.cast(session.newObject("dm_document"));
+				obj.setObjectName("Weird Characters in Title.bin");
 				obj.setContentType("binary");
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				baos.write(obj.getObjectName().getBytes());
 				obj.setContent(baos);
-				for (int i = 0; i < 10; i++) {
-					obj.setRepeatingString("property_one", i, UUID.randomUUID().toString());
-				}
-				obj.setInt("property_two", 10);
-				obj.link(parent.getObjectId().getId());
-				obj.save();
 
-				obj = IDfSysObject.class.cast(session.newObject("sysobject_grandchild_test"));
-				obj.setObjectName("SysObject Grandchild Test.bin");
-				obj.setContentType("binary");
-				baos = new ByteArrayOutputStream();
-				baos.write(obj.getObjectName().getBytes());
-				obj.setContent(baos);
-				for (int i = 0; i < 10; i++) {
-					obj.setRepeatingString("property_one", i, UUID.randomUUID().toString());
+				StringBuilder buf = new StringBuilder();
+				for (int i = 1; i < 255; i++) {
+					buf.append((char) i);
 				}
-				obj.setInt("property_two", 10);
-				obj.setTime("property_three", new DfTime(new Date()));
+				String weirdTitle = buf.toString();
+
+				obj.setTitle(weirdTitle);
 				obj.link(parent.getObjectId().getId());
 				obj.save();
 
