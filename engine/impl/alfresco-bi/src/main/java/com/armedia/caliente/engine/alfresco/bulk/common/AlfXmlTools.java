@@ -43,9 +43,9 @@ public class AlfXmlTools {
 
 	};
 
-	private static final String DTD = String
+	private static final String PROPERTIES_DTD = String
 		.format("<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">%n");
-	private static final LazyInitializer<XMLOutputFactory> FACTORY = new LazyInitializer<XMLOutputFactory>() {
+	public static final LazyInitializer<XMLOutputFactory> FACTORY = new LazyInitializer<XMLOutputFactory>() {
 		@Override
 		protected XMLOutputFactory initialize() throws ConcurrentException {
 			// return XMLOutputFactory.newInstance();
@@ -57,6 +57,21 @@ public class AlfXmlTools {
 			return factory;
 		}
 	};
+
+	public static XMLStreamWriter getXMLStreamWriter(OutputStream out) throws XMLStreamException {
+		XMLOutputFactory factory;
+		try {
+			factory = AlfXmlTools.FACTORY.get();
+		} catch (ConcurrentException e) {
+			throw new XMLStreamException("Failed to initialize the XMLOutputFactory", e);
+		}
+		return new IndentingXMLStreamWriter(factory.createXMLStreamWriter(out)) {
+			@Override
+			public NamespaceContext getNamespaceContext() {
+				return AlfXmlTools.NO_NAMESPACES;
+			}
+		};
+	}
 
 	public static void savePropertiesToXML(Properties p, OutputStream out, String comment) throws IOException {
 		AlfXmlTools.savePropertiesToXML(p, out, comment, (Charset) null);
@@ -83,7 +98,7 @@ public class AlfXmlTools {
 			};
 
 			writer.writeStartDocument(charsetName, "1.1");
-			writer.writeDTD(AlfXmlTools.DTD);
+			writer.writeDTD(AlfXmlTools.PROPERTIES_DTD);
 			writer.writeStartElement("properties");
 			writer.flush();
 			out.flush();

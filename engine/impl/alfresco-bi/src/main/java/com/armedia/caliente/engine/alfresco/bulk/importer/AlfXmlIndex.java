@@ -18,8 +18,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.namespace.NamespaceContext;
-import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
@@ -29,8 +27,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfXmlTools;
 import com.armedia.commons.utilities.Tools;
-
-import javanet.staxutils.IndentingXMLStreamWriter;
 
 public class AlfXmlIndex implements Closeable {
 
@@ -84,21 +80,8 @@ public class AlfXmlIndex implements Closeable {
 		return this.marshaller;
 	}
 
-	protected XMLStreamWriter getXMLStreamWriter(XMLOutputFactory factory, OutputStream out) throws XMLStreamException {
-		return new IndentingXMLStreamWriter(factory.createXMLStreamWriter(out)) {
-			@Override
-			public NamespaceContext getNamespaceContext() {
-				return AlfXmlTools.NO_NAMESPACES;
-			}
-		};
-	}
-
 	protected final XMLStreamWriter getXMLStreamWriter() {
 		return this.xml;
-	}
-
-	protected XMLOutputFactory getXMLOutputFactory() {
-		return XMLOutputFactory.newInstance();
 	}
 
 	public synchronized boolean isClosed() {
@@ -126,10 +109,7 @@ public class AlfXmlIndex implements Closeable {
 			this.marshaller = getMarshaller(jaxbContext);
 
 			this.out = new FileOutputStream(this.target);
-
-			XMLOutputFactory factory = getXMLOutputFactory();
-			this.xml = getXMLStreamWriter(factory, this.out);
-
+			this.xml = AlfXmlTools.getXMLStreamWriter(this.out);
 			this.xml.writeStartDocument(getEncoding(), getVersion());
 			// TODO: Enable this in concert with the BI AMP, since it's not built to handle DTD
 			// this.xml.writeDTD(String.format("<!DOCTYPE %s>", this.rootElement));
@@ -162,7 +142,7 @@ public class AlfXmlIndex implements Closeable {
 	}
 
 	protected String getVersion() {
-		return "1.0";
+		return "1.1";
 	}
 
 	protected String getEncoding() {
