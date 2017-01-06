@@ -47,7 +47,7 @@ public class Scratchpad extends AbstractLauncher implements LaunchParameterSet {
 
 	@Override
 	protected int run(CommandLineValues cli) throws Exception {
-		PropertiesTest.test();
+		// PropertiesTest.test();
 		// DctmTest.test();
 		return 0;
 	}
