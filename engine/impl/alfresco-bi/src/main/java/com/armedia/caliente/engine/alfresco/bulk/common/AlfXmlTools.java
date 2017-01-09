@@ -25,7 +25,6 @@ import javax.xml.stream.XMLStreamWriter;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 
-import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxInputFactory;
 import com.ctc.wstx.stax.WstxOutputFactory;
@@ -360,32 +359,6 @@ public class AlfXmlTools {
 		} catch (XMLStreamException e) {
 			throw new IOException("An XML serialization exception was detected - failed to serialize the properties",
 				e);
-		}
-	}
-
-	public static void main(String... args) throws Exception {
-		StringBuilder w = new StringBuilder();
-		for (int i = 1; i < 255; i++) {
-			w.append((char) i);
-		}
-		final String weirdness = w.toString();
-		Properties p = new Properties();
-		Properties q = new Properties();
-		for (int i = 0; i < 1000; i++) {
-			String key = String.format("%08x", i);
-			String value = weirdness;
-			p.setProperty(key, value);
-		}
-
-		BinaryMemoryBuffer buf = new BinaryMemoryBuffer();
-		AlfXmlTools.savePropertiesToXML(p, buf, "test crap");
-		buf.close();
-
-		AlfXmlTools.loadPropertiesFromXML(q, buf.getInputStream(), Charset.defaultCharset());
-		if (!p.equals(q)) {
-			"".hashCode();
-		} else {
-			"".hashCode();
 		}
 	}
 }
