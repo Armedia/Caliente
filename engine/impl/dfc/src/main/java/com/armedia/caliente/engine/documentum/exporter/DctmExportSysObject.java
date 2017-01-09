@@ -32,6 +32,7 @@ import com.armedia.commons.dfc.util.DctmVersionNumber;
 import com.armedia.commons.dfc.util.DctmVersionTree;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfObjectNotFoundException;
@@ -270,10 +271,12 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 				aclInheritedSet = true;
 			}
 			parents.addValue(folderId);
-			final int pathCount = parent.getFolderPathCount();
-			for (int p = 0; p < pathCount; p++) {
-				paths.addValue(DfValueFactory.newStringValue(parent.getFolderPath(p)));
-			}
+		}
+
+		// Calculate the parent paths in the correct order... r_folder_path may have a different
+		// order in some documentum instances
+		for (List<String> p : calculateAllPaths(object)) {
+			paths.addValue(DfValueFactory.newStringValue(FileNameTools.reconstitute(p, true, false, '/')));
 		}
 
 		if (!aclInheritedSet) {
