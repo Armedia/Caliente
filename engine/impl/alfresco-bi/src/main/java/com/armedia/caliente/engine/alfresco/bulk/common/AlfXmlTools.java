@@ -252,8 +252,7 @@ public class AlfXmlTools {
 			xml.flush();
 			out.flush();
 		} catch (XMLStreamException e) {
-			throw new IOException("An XML serialization exception was detected - failed to serialize the properties",
-				e);
+			throw new IOException("An XML serialization exception was detected - failed to store the properties", e);
 		}
 	}
 
@@ -357,8 +356,7 @@ public class AlfXmlTools {
 				properties.setProperty(key, value);
 			}
 		} catch (XMLStreamException e) {
-			throw new IOException("An XML serialization exception was detected - failed to serialize the properties",
-				e);
+			throw new IOException("An XML deserialization exception was detected - failed to load the properties", e);
 		}
 	}
 }
