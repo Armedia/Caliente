@@ -33,6 +33,7 @@ import com.armedia.commons.dfc.util.DctmVersionTree;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
@@ -147,17 +148,21 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return ret;
 	}
 
-	protected final List<List<String>> calculateRecursions(final IDfSysObject f, final Set<String> visited,
+	private final List<List<String>> calculateRecursions(final IDfSysObject f, Set<String> visited,
 		final RecursionCalculator calc) throws DfException {
 		final String oid = f.getObjectId().getId();
-		if ((visited != null) && !visited
+		if (visited == null) {
+			visited = new LinkedHashSet<>();
+		}
+		if (!visited
 			.add(oid)) { throw new DfException(String.format("Visited node [%s] twice (history = %s)", oid, visited)); }
 		IDfSession session = f.getSession();
 		final int parentCount = f.getFolderIdCount();
 		List<List<String>> all = new ArrayList<>(parentCount);
 		for (int i = 0; i < parentCount; i++) {
 			final IDfId parentId = f.getFolderId(i);
-			final IDfSysObject parent = IDfSysObject.class.cast(session.getObject(parentId));
+			final IDfFolder parent = session.getFolderBySpecification(parentId.getId());
+			if (parent == null) { throw new DfIdNotFoundException(parentId); }
 			for (List<String> l : calculateRecursions(parent, visited, calc)) {
 				l.add(calc.getValue(parent));
 				all.add(l);
@@ -173,8 +178,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return all;
 	}
 
+	protected final List<List<String>> calculateRecursions(final IDfSysObject f, final RecursionCalculator calc)
+		throws DfException {
+		return calculateRecursions(f, calc);
+	}
+
 	protected final List<List<String>> calculateAllPaths(IDfSysObject f) throws DfException {
-		return calculateRecursions(f, new LinkedHashSet<String>(), new RecursionCalculator() {
+		return calculateRecursions(f, null, new RecursionCalculator() {
 			@Override
 			public String getValue(IDfSysObject o) throws DfException {
 				return o.getObjectName();
@@ -183,7 +193,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	protected final List<List<String>> calculateAllParentIds(IDfSysObject f) throws DfException {
-		return calculateRecursions(f, new LinkedHashSet<String>(), new RecursionCalculator() {
+		return calculateRecursions(f, null, new RecursionCalculator() {
 			@Override
 			public String getValue(IDfSysObject o) throws DfException {
 				return o.getChronicleId().getId();
