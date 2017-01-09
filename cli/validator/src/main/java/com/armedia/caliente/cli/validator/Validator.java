@@ -45,6 +45,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.alfresco.bulk.common.AlfXmlTools;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoDataType;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoType;
@@ -634,7 +635,7 @@ public class Validator {
 		InputStream in = new FileInputStream(file);
 		final Properties properties = new Properties();
 		try {
-			properties.loadFromXML(in);
+			AlfXmlTools.loadPropertiesFromXML(properties, in);
 		} catch (InvalidPropertiesFormatException x) {
 			this.log.warn(
 				String.format("Failed to load the properties at [%s] as XML, falling back to default properties", path),
