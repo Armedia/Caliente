@@ -49,6 +49,7 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.engine.tools.MappingTools.MappingValidator;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
@@ -389,6 +390,7 @@ public class AlfImportDelegateFactory
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private final String resolveFixedNames(final AlfImportContext ctx, String cmsPath, Path idPath)
 		throws ImportException {
 		if ((idPath != null) && (idPath.getNameCount() > 0)) {
@@ -417,6 +419,32 @@ public class AlfImportDelegateFactory
 			cmsPath = b.toString();
 		}
 		return cmsPath;
+	}
+
+	private final String resolveTreeIds(final AlfImportContext ctx, String cmsPath) throws ImportException {
+		List<CmfObjectRef> refs = new ArrayList<>();
+		for (String id : StringUtils.split(cmsPath, '/')) {
+			// They're all known to be folders, so...
+			refs.add(new CmfObjectRef(CmfType.FOLDER, id));
+		}
+		Map<CmfObjectRef, String> names = ctx.getObjectNames(refs);
+		StringBuilder path = new StringBuilder();
+		for (CmfObjectRef ref : refs) {
+			final String name = names.get(ref);
+			if (name == null) {
+				// WTF?!?!?
+				throw new ImportException(String.format("Failed to resolve the name for %s", ref));
+			}
+
+			if (StringUtils.isEmpty(name)) {
+				continue;
+			}
+			if (path.length() > 0) {
+				path.append('/');
+			}
+			path.append(name);
+		}
+		return path.toString();
 	}
 
 	protected final CacheItemMarker generateItemMarker(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject,
@@ -499,14 +527,9 @@ public class AlfImportDelegateFactory
 		}
 		thisMarker.setNumber(number);
 
-		CmfProperty<CmfValue> cmsPathProp = cmfObject.getProperty(IntermediateProperty.PATH);
+		CmfProperty<CmfValue> cmsPathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 		String cmsPath = ((cmsPathProp == null) || !cmsPathProp.hasValues() ? "" : cmsPathProp.getValue().asString());
-		// Remove the leading slash(es)
-		while (cmsPath.startsWith("/")) {
-			cmsPath = cmsPath.substring(1);
-		}
-
-		cmsPath = resolveFixedNames(ctx, cmsPath, relativeMetadataParent);
+		cmsPath = resolveTreeIds(ctx, cmsPath);
 
 		String append = null;
 		// This is the base name, others may change it...

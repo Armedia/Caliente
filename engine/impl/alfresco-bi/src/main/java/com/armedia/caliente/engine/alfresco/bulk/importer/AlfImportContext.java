@@ -1,12 +1,17 @@
 package com.armedia.caliente.engine.alfresco.bulk.importer;
 
+import java.util.Collection;
+import java.util.Map;
+
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.caliente.engine.importer.ImportContext;
+import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
@@ -23,7 +28,11 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 			streamStore, batchPosition);
 	}
 
-	public final String getAlternateName(CmfType type, String id) {
+	public final String getAlternateName(CmfType type, String id) throws ImportException {
 		return this.getFactory().getAlternateName(type, id);
+	}
+
+	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs) throws ImportException {
+		return this.getFactory().getObjectNames(refs);
 	}
 }

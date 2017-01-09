@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.alfresco.bulk.importer;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -10,7 +11,9 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfSessionWrapper;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
+import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
@@ -77,7 +80,7 @@ public class AlfImportContextFactory
 		return "1.0";
 	}
 
-	private Map<CmfType, Map<String, String>> getRenameMap() {
+	private Map<CmfType, Map<String, String>> getRenameMap() throws ImportException {
 		if (this.renameMap == null) {
 			synchronized (this) {
 				if (this.renameMap == null) {
@@ -88,6 +91,7 @@ public class AlfImportContextFactory
 					} catch (CmfStorageException e) {
 						m = Collections.emptyMap();
 						this.log.error("Failed to load the renamer map from the object store", e);
+						throw new ImportException("Failed to load the renamer map from the object store", e);
 					} finally {
 						this.renameMap = m;
 					}
@@ -97,11 +101,19 @@ public class AlfImportContextFactory
 		return this.renameMap;
 	}
 
-	public final String getAlternateName(CmfType type, String id) {
+	public final String getAlternateName(CmfType type, String id) throws ImportException {
 		Map<CmfType, Map<String, String>> renameMap = getRenameMap();
 		if ((renameMap == null) || renameMap.isEmpty()) { return null; }
 		Map<String, String> m = renameMap.get(type);
 		if ((m == null) || m.isEmpty()) { return null; }
 		return m.get(id);
+	}
+
+	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs) throws ImportException {
+		try {
+			return getObjectStore().getObjectNames(refs);
+		} catch (CmfStorageException e) {
+			throw new ImportException(String.format("Failed to resolve the object names for IDs %s", refs), e);
+		}
 	}
 }
