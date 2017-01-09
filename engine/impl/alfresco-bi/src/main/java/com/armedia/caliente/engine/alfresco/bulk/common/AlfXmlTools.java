@@ -1,7 +1,10 @@
 package com.armedia.caliente.engine.alfresco.bulk.common;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -11,14 +14,20 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.xml.namespace.NamespaceContext;
+import javax.xml.stream.Location;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 
+import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.ctc.wstx.api.WstxOutputProperties;
+import com.ctc.wstx.stax.WstxInputFactory;
 import com.ctc.wstx.stax.WstxOutputFactory;
 
 import javanet.staxutils.IndentingXMLStreamWriter;
@@ -33,13 +42,11 @@ public class AlfXmlTools {
 
 	public static final <T> ValueSerializer<T> getDefaultSerializer() {
 		return new ValueSerializer<T>() {
-
 			@Override
 			public String serialize(T value) {
 				if (value == null) { return null; }
 				return value.toString();
 			}
-
 		};
 	}
 
@@ -64,7 +71,7 @@ public class AlfXmlTools {
 	private static final String PROPERTIES_DTD = String
 		.format("<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">%n");
 
-	public static final LazyInitializer<XMLOutputFactory> FACTORY = new LazyInitializer<XMLOutputFactory>() {
+	private static final LazyInitializer<XMLOutputFactory> OUTPUT_FACTORY = new LazyInitializer<XMLOutputFactory>() {
 		@Override
 		protected XMLOutputFactory initialize() throws ConcurrentException {
 			WstxOutputFactory factory = new WstxOutputFactory();
@@ -76,19 +83,81 @@ public class AlfXmlTools {
 		}
 	};
 
-	public static XMLStreamWriter getXMLStreamWriter(OutputStream out) throws XMLStreamException {
-		XMLOutputFactory factory;
+	private static final LazyInitializer<XMLInputFactory> INPUT_FACTORY = new LazyInitializer<XMLInputFactory>() {
+		@Override
+		protected XMLInputFactory initialize() throws ConcurrentException {
+			return new WstxInputFactory();
+		}
+	};
+
+	public static XMLOutputFactory getXMLOutputFactory() throws XMLStreamException {
 		try {
-			factory = AlfXmlTools.FACTORY.get();
+			return AlfXmlTools.OUTPUT_FACTORY.get();
 		} catch (ConcurrentException e) {
 			throw new XMLStreamException("Failed to initialize the XMLOutputFactory", e);
 		}
-		return new IndentingXMLStreamWriter(factory.createXMLStreamWriter(out)) {
+	}
+
+	private static XMLStreamWriter getWrappedStreamWriter(XMLStreamWriter writer) throws XMLStreamException {
+		return new IndentingXMLStreamWriter(writer) {
 			@Override
 			public NamespaceContext getNamespaceContext() {
 				return AlfXmlTools.NO_NAMESPACES;
 			}
 		};
+	}
+
+	public static XMLStreamWriter getXMLStreamWriter(Writer out) throws XMLStreamException {
+		XMLOutputFactory factory = AlfXmlTools.getXMLOutputFactory();
+		return AlfXmlTools.getWrappedStreamWriter(factory.createXMLStreamWriter(out));
+	}
+
+	public static XMLStreamWriter getXMLStreamWriter(OutputStream out) throws XMLStreamException {
+		XMLOutputFactory factory = AlfXmlTools.getXMLOutputFactory();
+		XMLStreamWriter writer = factory.createXMLStreamWriter(out);
+		return AlfXmlTools.getWrappedStreamWriter(writer);
+	}
+
+	public static XMLStreamWriter getXMLStreamWriter(OutputStream out, Charset charset) throws XMLStreamException {
+		return AlfXmlTools.getXMLStreamWriter(out, charset != null ? charset.name() : null);
+	}
+
+	public static XMLStreamWriter getXMLStreamWriter(OutputStream out, String encoding) throws XMLStreamException {
+		XMLOutputFactory factory = AlfXmlTools.getXMLOutputFactory();
+		if (encoding == null) {
+			encoding = Charset.defaultCharset().name();
+		}
+		return AlfXmlTools.getWrappedStreamWriter(factory.createXMLStreamWriter(out, encoding));
+	}
+
+	public static XMLInputFactory getXMLInputFactory() throws XMLStreamException {
+		try {
+			return AlfXmlTools.INPUT_FACTORY.get();
+		} catch (ConcurrentException e) {
+			throw new XMLStreamException("Failed to initialize the XMLInputFactory", e);
+		}
+	}
+
+	public static XMLStreamReader getXMLStreamReader(Reader in) throws XMLStreamException {
+		XMLInputFactory factory = AlfXmlTools.getXMLInputFactory();
+		return factory.createXMLStreamReader(in);
+	}
+
+	public static XMLStreamReader getXMLStreamReader(InputStream in) throws XMLStreamException {
+		XMLInputFactory factory = AlfXmlTools.getXMLInputFactory();
+		return factory.createXMLStreamReader(in);
+	}
+
+	public static XMLStreamReader getXMLStreamReader(InputStream in, Charset charset) throws XMLStreamException {
+		return AlfXmlTools.getXMLStreamReader(in, charset != null ? charset.name() : null);
+	}
+
+	public static XMLStreamReader getXMLStreamReader(InputStream in, String encoding) throws XMLStreamException {
+		XMLInputFactory factory = AlfXmlTools.getXMLInputFactory();
+		if (encoding == null) {
+			encoding = Charset.defaultCharset().name();
+		}
+		return factory.createXMLStreamReader(in, encoding);
 	}
 
 	private static Map<String, String> toMap(Properties p) {
@@ -144,24 +213,18 @@ public class AlfXmlTools {
 
 		final String charsetName = charset.name();
 		try {
-			XMLOutputFactory factory = AlfXmlTools.FACTORY.get();
-			XMLStreamWriter writer = new IndentingXMLStreamWriter(factory.createXMLStreamWriter(out, charsetName)) {
-				@Override
-				public NamespaceContext getNamespaceContext() {
-					return AlfXmlTools.NO_NAMESPACES;
-				}
-			};
+			XMLStreamWriter xml = AlfXmlTools.getXMLStreamWriter(out, charsetName);
 
-			writer.writeStartDocument(charsetName, "1.1");
-			writer.writeDTD(AlfXmlTools.PROPERTIES_DTD);
-			writer.writeStartElement("properties");
-			writer.flush();
+			xml.writeStartDocument(charsetName, "1.1");
+			xml.writeDTD(AlfXmlTools.PROPERTIES_DTD);
+			xml.writeStartElement("properties");
+			xml.flush();
 			out.flush();
 			if (comment != null) {
-				writer.writeStartElement("comment");
-				writer.writeCharacters(comment);
-				writer.writeEndElement();
-				writer.flush();
+				xml.writeStartElement("comment");
+				xml.writeCharacters(comment);
+				xml.writeEndElement();
+				xml.flush();
 				out.flush();
 			}
 			Set<String> keys = new TreeSet<>();
@@ -178,20 +241,151 @@ public class AlfXmlTools {
 				if (value == null) {
 					continue;
 				}
-				writer.writeStartElement("entry");
-				writer.writeAttribute("key", key);
-				writer.writeCharacters(value);
-				writer.writeEndElement();
-				writer.flush();
+				xml.writeStartElement("entry");
+				xml.writeAttribute("key", key);
+				xml.writeCharacters(value);
+				xml.writeEndElement();
+				xml.flush();
 				out.flush();
 			}
-			writer.writeEndElement();
-			writer.writeEndDocument();
-			writer.flush();
+			xml.writeEndElement();
+			xml.writeEndDocument();
+			xml.flush();
 			out.flush();
-		} catch (XMLStreamException | ConcurrentException e) {
+		} catch (XMLStreamException e) {
 			throw new IOException("An XML serialization exception was detected - failed to serialize the properties",
 				e);
+		}
+	}
+
+	public static void loadPropertiesFromXML(Properties properties, InputStream in) throws IOException {
+		AlfXmlTools.loadPropertiesFromXML(properties, in, (Charset) null);
+	}
+
+	public static void loadPropertiesFromXML(Properties properties, InputStream in, String encoding)
+		throws IOException {
+		AlfXmlTools.loadPropertiesFromXML(properties, in, encoding != null ? Charset.forName(encoding) : null);
+	}
+
+	public static void loadPropertiesFromXML(Properties properties, InputStream in, Charset charset)
+		throws IOException {
+
+		properties.clear();
+
+		if (charset == null) {
+			charset = Charset.defaultCharset();
+		}
+
+		try {
+			XMLStreamReader xml = AlfXmlTools.getXMLStreamReader(in, charset);
+
+			// Find the <properties> element...
+			while (xml.next() != XMLStreamConstants.START_ELEMENT) {
+				continue;
+			}
+
+			// Go through the <comment> or <entry> elements
+			if (!"properties".equals(xml.getLocalName())) {
+				Location l = xml.getLocation();
+				throw new IOException(
+					String.format("Unknown XML element '%s' found at line %d, column %d (char offset %d)",
+						xml.getLocalName(), l.getLineNumber(), l.getColumnNumber(), l.getCharacterOffset()));
+			}
+
+			boolean hasComment = false;
+			outer: while (xml.hasNext()) {
+				inner: while (xml.hasNext()) {
+					switch (xml.next()) {
+						case XMLStreamConstants.START_ELEMENT:
+							break inner;
+						case XMLStreamConstants.END_DOCUMENT:
+							break outer;
+						default:
+							continue inner;
+					}
+				}
+
+				if (!xml.hasNext()) {
+					break outer;
+				}
+
+				final String element = xml.getLocalName();
+				// Not interested in the comment
+				if (!hasComment && "comment".equals(element)) {
+					hasComment = true;
+					continue outer;
+				}
+
+				if (!"entry".equals(element)) {
+					Location l = xml.getLocation();
+					throw new IOException(
+						String.format("Unknown XML element '%s' found at line %d, column %d (char offset %d)", element,
+							l.getLineNumber(), l.getColumnNumber(), l.getCharacterOffset()));
+				}
+
+				if (xml.getAttributeCount() != 1) {
+					Location l = xml.getLocation();
+					throw new IOException(
+						String.format("Too many attribute values (%d) for ENTRY at line %d, column %d (char offset %d)",
+							xml.getAttributeCount(), l.getLineNumber(), l.getColumnNumber(), l.getCharacterOffset()));
+				}
+
+				final String att = xml.getAttributeLocalName(0);
+				if (!"key".equals(att)) {
+					Location l = xml.getLocation();
+					throw new IOException(
+						String.format("Unknown attribute '%s' for ENTRY at line %d, column %d (char offset %d)", att,
+							l.getLineNumber(), l.getColumnNumber(), l.getCharacterOffset()));
+				}
+
+				final String key = xml.getAttributeValue(null, att);
+
+				String value = null;
+				text: while (xml.hasNext()) {
+					switch (xml.next()) {
+						case XMLStreamConstants.CDATA:
+						case XMLStreamConstants.CHARACTERS:
+							value = xml.getText();
+							break text;
+						default:
+							continue text;
+					}
+				}
+
+				if (value == null) {
+					value = "";
+				}
+				properties.setProperty(key, value);
+			}
+		} catch (XMLStreamException e) {
+			throw new IOException("An XML serialization exception was detected - failed to serialize the properties",
+				e);
+		}
+	}
+
+	public static void main(String... args) throws Exception {
+		StringBuilder w = new StringBuilder();
+		for (int i = 1; i < 255; i++) {
+			w.append((char) i);
+		}
+		final String weirdness = w.toString();
+		Properties p = new Properties();
+		Properties q = new Properties();
+		for (int i = 0; i < 1000; i++) {
+			String key = String.format("%08x", i);
+			String value = weirdness;
+			p.setProperty(key, value);
+		}
+
+		BinaryMemoryBuffer buf = new BinaryMemoryBuffer();
+		AlfXmlTools.savePropertiesToXML(p, buf, "test crap");
+		buf.close();
+
+		AlfXmlTools.loadPropertiesFromXML(q, buf.getInputStream(), Charset.defaultCharset());
+		if (!p.equals(q)) {
+			"".hashCode();
+		} else {
+			"".hashCode();
 		}
 	}
 }
