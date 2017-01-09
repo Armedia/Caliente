@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -1010,6 +1011,30 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract Map<CmfType, Map<String, String>> getRenameMappings(O operation) throws CmfStorageException;
 
+	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs) throws CmfStorageException {
+		if ((refs == null) || refs.isEmpty()) { return new HashMap<>(); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				return getObjectNames(operation, refs);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for retrieving all rename mappings", e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract Map<CmfObjectRef, String> getObjectNames(O operation, Collection<CmfObjectRef> refs)
+		throws CmfStorageException;
+
 	public final Collection<CmfObjectRef> getContainers(CmfObjectRef object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
 		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
@@ -1092,8 +1117,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract boolean addRequirement(O operation, CmfObjectRef object, CmfObjectRef requirement)
 		throws CmfStorageException;
 
-	public final <T extends Enum<T>> CmfRequirementInfo<T> setImportStatus(CmfObjectRef object, T status,
-		String info) throws CmfStorageException {
+	public final <T extends Enum<T>> CmfRequirementInfo<T> setImportStatus(CmfObjectRef object, T status, String info)
+		throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
 		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
 		if (status == null) { throw new IllegalArgumentException("Must provide a non-null status"); }

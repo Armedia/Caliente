@@ -35,6 +35,14 @@ public class JdbcDialectH2 extends JdbcDialect {
 			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
+	private static final String LOAD_OBJECT_NAMES_BY_ID = //
+		"       select o.object_id, o.object_name, n.new_name " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
+			"          table(x varchar=?) t " + //
+			"    where o.object_id = t.x " + //
+			" order by o.object_id " //
+	;
+
 	private static final String ENABLE_REFERENTIAL_INTEGRITY = //
 		"          set REFERENTIAL_INTEGRITY true" //
 	;
@@ -63,6 +71,8 @@ public class JdbcDialectH2 extends JdbcDialect {
 				return JdbcDialectH2.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_CURRENT:
 				return JdbcDialectH2.LOAD_OBJECTS_BY_ID_CURRENT;
+			case LOAD_OBJECT_NAMES_BY_ID:
+				return JdbcDialectH2.LOAD_OBJECT_NAMES_BY_ID;
 			case ENABLE_REFERENTIAL_INTEGRITY:
 				return JdbcDialectH2.ENABLE_REFERENTIAL_INTEGRITY;
 			case DISABLE_REFERENTIAL_INTEGRITY:

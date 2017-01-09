@@ -1653,6 +1653,64 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
+	@Override
+	protected Map<CmfObjectRef, String> getObjectNames(JdbcOperation operation, Collection<CmfObjectRef> refs)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		try {
+			PreparedStatement ps = null;
+			try {
+				ps = c.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECT_NAMES_BY_ID));
+				ResultSet rs = null;
+				try {
+					Map<CmfObjectRef, String> ret = new HashMap<>();
+					if (refs.isEmpty()) { return ret; }
+
+					// Process the IDs
+					Object[] arr = refs.toArray();
+					for (int i = 0; i < arr.length; i++) {
+						arr[i] = JdbcTools.composeDatabaseId(CmfObjectRef.class.cast(arr[i]));
+					}
+					if (this.dialect.isSupportsArrays()) {
+						ps.setArray(1, c.createArrayOf("text", arr));
+					} else {
+						ps.setObject(1, arr);
+					}
+
+					rs = ps.executeQuery();
+					while (rs.next()) {
+						String id = rs.getString("object_id");
+						if (rs.wasNull()) {
+							continue;
+						}
+						String name = rs.getString("new_name");
+						if (rs.wasNull()) {
+							name = rs.getString("object_name");
+						}
+
+						CmfObjectRef ref = JdbcTools.decodeDatabaseId(id);
+						ret.put(ref, name);
+					}
+
+					// Make sure all requested objects are referenced
+					for (CmfObjectRef ref : refs) {
+						if (!ret.containsKey(ref)) {
+							ret.put(ref, null);
+						}
+					}
+
+					return ret;
+				} finally {
+					DbUtils.closeQuietly(rs);
+				}
+			} finally {
+				DbUtils.closeQuietly(ps);
+			}
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to retrieve the next cached target in the given result set", e);
+		}
+	}
+
 	private Collection<CmfObjectRef> getTreeRelations(JdbcOperation operation, CmfObjectRef object,
 		JdbcDialect.Query query) throws CmfStorageException {
 		final Connection c = operation.getConnection();

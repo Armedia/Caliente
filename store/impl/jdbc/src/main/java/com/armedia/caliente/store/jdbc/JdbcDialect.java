@@ -263,6 +263,9 @@ public abstract class JdbcDialect {
 		LOAD_OBJECTS_BY_ID( //
 			null),
 
+		LOAD_OBJECT_NAMES_BY_ID( //
+			null),
+
 		LOAD_PARENT_IDS( //
 			"       select parent_id " + //
 				"     from cmf_object_tree " + //

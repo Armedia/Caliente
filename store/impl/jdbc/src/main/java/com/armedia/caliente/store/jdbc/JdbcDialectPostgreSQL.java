@@ -35,6 +35,13 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
+	private static final String LOAD_OBJECT_NAMES_BY_ID = //
+		"       select o.object_id, o.object_name, n.new_name " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"    where o.object_id = any ( ? ) " + //
+			" order by o.object_id " //
+	;
+
 	private static final String TRUNCATE_TABLE_FMT = //
 		"     truncate table %s cascade " //
 	;
@@ -70,6 +77,8 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_CURRENT:
 				return JdbcDialectPostgreSQL.LOAD_OBJECTS_BY_ID_CURRENT;
+			case LOAD_OBJECT_NAMES_BY_ID:
+				return JdbcDialectPostgreSQL.LOAD_OBJECT_NAMES_BY_ID;
 			case TRUNCATE_TABLE_FMT:
 				return JdbcDialectPostgreSQL.TRUNCATE_TABLE_FMT;
 			case ENABLE_REFERENTIAL_INTEGRITY:
