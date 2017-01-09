@@ -636,6 +636,9 @@ public class Validator {
 		try {
 			properties.loadFromXML(in);
 		} catch (InvalidPropertiesFormatException x) {
+			this.log.warn(
+				String.format("Failed to load the properties at [%s] as XML, falling back to default properties", path),
+				x);
 			IOUtils.closeQuietly(in);
 			properties.clear();
 			in = new FileInputStream(file);
