@@ -310,7 +310,8 @@ public class AlfXmlTools {
 				continue;
 			}
 
-			if (!xml.hasNext()) { throw new IOException("Malformed XML document - no root element"); }
+			if (!xml.hasNext()) { throw new XMLStreamException("Malformed XML document - no root element",
+				xml.getLocation()); }
 
 			// Go through the <comment> or <entry> elements
 			if (!"properties".equals(xml.getLocalName())) { throw new XMLStreamException(
