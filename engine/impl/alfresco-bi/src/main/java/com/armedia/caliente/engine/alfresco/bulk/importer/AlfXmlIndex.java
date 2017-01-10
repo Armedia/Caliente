@@ -25,7 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.alfresco.bulk.xml.AlfXmlTools;
+import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfXmlIndex implements Closeable {
@@ -105,11 +105,11 @@ public class AlfXmlIndex implements Closeable {
 		if (this.initialized) { return false; }
 		boolean ok = false;
 		try {
-			JAXBContext jaxbContext = getJAXBContext(this.supportedClasses.toArray(AlfXmlTools.NO_CLASSES));
+			JAXBContext jaxbContext = getJAXBContext(this.supportedClasses.toArray(XmlProperties.NO_CLASSES));
 			this.marshaller = getMarshaller(jaxbContext);
 
 			this.out = new FileOutputStream(this.target);
-			this.xml = AlfXmlTools.getXMLStreamWriter(this.out);
+			this.xml = XmlProperties.getXMLStreamWriter(this.out);
 			this.xml.writeStartDocument(getEncoding(), getVersion());
 			// TODO: Enable this in concert with the BI AMP, since it's not built to handle DTD
 			// this.xml.writeDTD(String.format("<!DOCTYPE %s>", this.rootElement));

@@ -61,6 +61,12 @@
 
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
+				<artifactId>xml-properties</artifactId>
+				<version>1.0.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
 				<version>1.1.2</version>
 			</dependency>
@@ -478,5 +484,6 @@
 
 		<!-- Some general-use tools -->
 		<module>tools/scratchpad</module>
+		<module>tools/xml</module>
 	</modules>
 </project>

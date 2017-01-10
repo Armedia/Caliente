@@ -50,7 +50,7 @@ import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoDataType
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.SchemaAttribute;
-import com.armedia.caliente.engine.alfresco.bulk.xml.AlfXmlTools;
+import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.BinaryEncoding;
 import com.armedia.commons.utilities.Tools;
 
@@ -634,22 +634,20 @@ public class Validator {
 	private Properties loadProperties(Path path) throws IOException {
 		final File file = path.toFile();
 		InputStream in = new FileInputStream(file);
-		final Properties properties = new Properties();
-
 		try {
-			AlfXmlTools.loadPropertiesFromXML(properties, in);
+			return XmlProperties.loadFromXML(in);
 		} catch (XMLStreamException e) {
 			this.log.warn(
 				String.format("Failed to load the properties at [%s] as XML, falling back to default properties", path),
 				e);
 			IOUtils.closeQuietly(in);
-			properties.clear();
+			final Properties properties = new Properties();
 			in = new FileInputStream(file);
 			properties.load(in);
+			return properties;
 		} finally {
 			IOUtils.closeQuietly(in);
 		}
-		return properties;
 	}
 
 	private boolean checkFiles(final Path relativePath) {

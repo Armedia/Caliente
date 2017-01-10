@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bulk.xml;
+package com.armedia.caliente.tools.xml;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

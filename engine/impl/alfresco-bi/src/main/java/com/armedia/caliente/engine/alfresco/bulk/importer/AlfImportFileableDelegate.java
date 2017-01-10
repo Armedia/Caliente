@@ -27,7 +27,6 @@ import com.armedia.caliente.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganiza
 import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.SchemaAttribute;
-import com.armedia.caliente.engine.alfresco.bulk.xml.AlfXmlTools;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
@@ -47,6 +46,7 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
+import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 
 abstract class AlfImportFileableDelegate extends AlfImportDelegate {
@@ -595,7 +595,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				String.format("Failed to open the properties file at [%s]", main.getAbsolutePath()), e);
 		}
 		try {
-			AlfXmlTools.savePropertiesToXML(p, out,
+			XmlProperties.saveToXML(p, out,
 				String.format("Properties for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId()));
 		} catch (IOException e) {
 			meta.delete();

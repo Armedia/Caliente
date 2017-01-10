@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bulk.xml;
+package com.armedia.caliente.tools.xml;
 
 import java.util.ArrayList;
 import java.util.List;
