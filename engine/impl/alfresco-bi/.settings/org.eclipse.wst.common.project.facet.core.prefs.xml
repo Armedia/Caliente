@@ -16,6 +16,9 @@
       <node name="schema-2">
         <attribute name="location" value="platform:/resource/caliente-engine-impl-alfresco-bi/src/main/resources/cache.xsd"/>
       </node>
+      <node name="schema-3">
+        <attribute name="location" value="platform:/resource/caliente-engine-impl-alfresco-bi/src/main/resources/properties.xsd"/>
+      </node>
     </node>
   </facet>
 </root>

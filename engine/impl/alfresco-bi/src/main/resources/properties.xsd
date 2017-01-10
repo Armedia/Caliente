@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://java.sun.com/dtd/properties.dtd" xmlns:tns="http://java.sun.com/dtd/properties.dtd"
+	elementFormDefault="qualified" version="0.1">
+
+	<xs:annotation>
+		<xs:documentation>Properties Files alternate schema</xs:documentation>
+	</xs:annotation>
+
+	<xs:complexType name="comment.t">
+		<xs:simpleContent>
+			<xs:extension base="xs:string" />
+		</xs:simpleContent>
+	</xs:complexType>
+
+	<xs:complexType name="entry.t">
+		<xs:simpleContent>
+			<xs:extension base="xs:string">
+				<xs:attribute name="key" type="xs:string" use="required" />
+			</xs:extension>
+		</xs:simpleContent>
+	</xs:complexType>
+
+	<xs:complexType name="properties.t">
+		<xs:sequence>
+			<xs:element name="comment" type="tns:comment.t" minOccurs="0" maxOccurs="1" />
+			<xs:element name="entry" type="tns:entry.t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+
+	<xs:element name="comment" type="tns:comment.t" />
+	<xs:element name="entry" type="tns:entry.t" />
+	<xs:element name="properties" type="tns:properties.t" />
+</xs:schema>

@@ -25,7 +25,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.alfresco.bulk.common.AlfXmlTools;
+import com.armedia.caliente.engine.alfresco.bulk.xml.AlfXmlTools;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfXmlIndex implements Closeable {

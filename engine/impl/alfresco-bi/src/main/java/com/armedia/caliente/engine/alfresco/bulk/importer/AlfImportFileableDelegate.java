@@ -24,10 +24,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfrescoBaseBulkOrganizationStrategy;
-import com.armedia.caliente.engine.alfresco.bulk.common.AlfXmlTools;
 import com.armedia.caliente.engine.alfresco.bulk.importer.cache.CacheItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.SchemaAttribute;
+import com.armedia.caliente.engine.alfresco.bulk.xml.AlfXmlTools;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;

@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bulk.common;
+package com.armedia.caliente.engine.alfresco.bulk.xml;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,6 +13,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.stream.Location;
 import javax.xml.stream.XMLInputFactory;
@@ -89,6 +94,18 @@ public class AlfXmlTools {
 		}
 	};
 
+	private static final LazyInitializer<JAXBContext> JAXB_CONTEXT = new LazyInitializer<JAXBContext>() {
+		@Override
+		protected JAXBContext initialize() throws ConcurrentException {
+			try {
+				return JAXBContext.newInstance(PropertiesRoot.class, PropertiesComment.class, PropertiesEntry.class);
+			} catch (JAXBException e) {
+				throw new ConcurrentException("Failed to initialize the JAXB Context", e);
+			}
+		}
+
+	};
+
 	public static XMLOutputFactory getXMLOutputFactory() throws XMLStreamException {
 		try {
 			return AlfXmlTools.OUTPUT_FACTORY.get();
@@ -104,6 +121,14 @@ public class AlfXmlTools {
 				return AlfXmlTools.NO_NAMESPACES;
 			}
 		};
+	}
+
+	private static JAXBContext getJAXBContext() throws JAXBException {
+		try {
+			return AlfXmlTools.JAXB_CONTEXT.get();
+		} catch (ConcurrentException e) {
+			throw new JAXBException("Failed to initialize the JAXB Context", e);
+		}
 	}
 
 	public static XMLStreamWriter getXMLStreamWriter(Writer out) throws XMLStreamException {
@@ -213,6 +238,7 @@ public class AlfXmlTools {
 		final String charsetName = charset.name();
 		try {
 			XMLStreamWriter xml = AlfXmlTools.getXMLStreamWriter(out, charsetName);
+			Marshaller marshaller = AlfXmlTools.getJAXBContext().createMarshaller();
 
 			xml.writeStartDocument(charsetName, "1.1");
 			xml.writeDTD(AlfXmlTools.PROPERTIES_DTD);
@@ -220,12 +246,13 @@ public class AlfXmlTools {
 			xml.flush();
 			out.flush();
 			if (comment != null) {
-				xml.writeStartElement("comment");
-				xml.writeCharacters(comment);
-				xml.writeEndElement();
+				PropertiesComment c = new PropertiesComment();
+				c.setValue(comment);
+				marshaller.marshal(c, xml);
 				xml.flush();
 				out.flush();
 			}
+
 			Set<String> keys = new TreeSet<>();
 			// Filter out null keys
 			for (String key : p.keySet()) {
@@ -235,15 +262,15 @@ public class AlfXmlTools {
 			}
 
 			// Output the the values...
+			PropertiesEntry entry = new PropertiesEntry();
 			for (final String key : keys) {
 				String value = serializer.serialize(p.get(key));
 				if (value == null) {
 					continue;
 				}
-				xml.writeStartElement("entry");
-				xml.writeAttribute("key", key);
-				xml.writeCharacters(value);
-				xml.writeEndElement();
+				entry.setKey(key);
+				entry.setValue(value);
+				marshaller.marshal(entry, out);
 				xml.flush();
 				out.flush();
 			}
@@ -251,22 +278,23 @@ public class AlfXmlTools {
 			xml.writeEndDocument();
 			xml.flush();
 			out.flush();
-		} catch (XMLStreamException e) {
+		} catch (XMLStreamException | JAXBException e) {
 			throw new IOException("An XML serialization exception was detected - failed to store the properties", e);
 		}
 	}
 
-	public static void loadPropertiesFromXML(Properties properties, InputStream in) throws IOException {
+	public static void loadPropertiesFromXML(Properties properties, InputStream in)
+		throws IOException, XMLStreamException {
 		AlfXmlTools.loadPropertiesFromXML(properties, in, (Charset) null);
 	}
 
 	public static void loadPropertiesFromXML(Properties properties, InputStream in, String encoding)
-		throws IOException {
+		throws IOException, XMLStreamException {
 		AlfXmlTools.loadPropertiesFromXML(properties, in, encoding != null ? Charset.forName(encoding) : null);
 	}
 
 	public static void loadPropertiesFromXML(Properties properties, InputStream in, Charset charset)
-		throws IOException {
+		throws IOException, XMLStreamException {
 
 		properties.clear();
 
@@ -278,85 +306,57 @@ public class AlfXmlTools {
 			XMLStreamReader xml = AlfXmlTools.getXMLStreamReader(in, charset);
 
 			// Find the <properties> element...
-			while (xml.next() != XMLStreamConstants.START_ELEMENT) {
+			while (xml.hasNext() && (xml.next() != XMLStreamConstants.START_ELEMENT)) {
 				continue;
 			}
 
+			if (!xml.hasNext()) { throw new IOException("Malformed XML document - no root element"); }
+
 			// Go through the <comment> or <entry> elements
-			if (!"properties".equals(xml.getLocalName())) {
-				Location l = xml.getLocation();
-				throw new IOException(
-					String.format("Unknown XML element '%s' found at line %d, column %d (char offset %d)",
-						xml.getLocalName(), l.getLineNumber(), l.getColumnNumber(), l.getCharacterOffset()));
-			}
+			if (!"properties".equals(xml.getLocalName())) { throw new XMLStreamException(
+				String.format("Unknown XML element '%s'", xml.getLocalName()), xml.getLocation()); }
+
+			Unmarshaller unmarshaller = AlfXmlTools.getJAXBContext().createUnmarshaller();
 
 			boolean hasComment = false;
-			outer: while (xml.hasNext()) {
-				inner: while (xml.hasNext()) {
-					switch (xml.next()) {
-						case XMLStreamConstants.START_ELEMENT:
-							break inner;
-						case XMLStreamConstants.END_DOCUMENT:
-							break outer;
-						default:
-							continue inner;
-					}
-				}
-
-				if (!xml.hasNext()) {
-					break outer;
-				}
-
+			while (xml.nextTag() == XMLStreamConstants.START_ELEMENT) {
 				final String element = xml.getLocalName();
+
 				// Not interested in the comment
-				if (!hasComment && "comment".equals(element)) {
-					hasComment = true;
-					continue outer;
-				}
-
-				if (!"entry".equals(element)) {
-					Location l = xml.getLocation();
-					throw new IOException(
-						String.format("Unknown XML element '%s' found at line %d, column %d (char offset %d)", element,
-							l.getLineNumber(), l.getColumnNumber(), l.getCharacterOffset()));
-				}
-
-				if (xml.getAttributeCount() != 1) {
-					Location l = xml.getLocation();
-					throw new IOException(
-						String.format("Too many attribute values (%d) for ENTRY at line %d, column %d (char offset %d)",
-							xml.getAttributeCount(), l.getLineNumber(), l.getColumnNumber(), l.getCharacterOffset()));
-				}
-
-				final String att = xml.getAttributeLocalName(0);
-				if (!"key".equals(att)) {
-					Location l = xml.getLocation();
-					throw new IOException(
-						String.format("Unknown attribute '%s' for ENTRY at line %d, column %d (char offset %d)", att,
-							l.getLineNumber(), l.getColumnNumber(), l.getCharacterOffset()));
-				}
-
-				final String key = xml.getAttributeValue(null, att);
-
-				String value = null;
-				text: while (xml.hasNext()) {
-					switch (xml.next()) {
-						case XMLStreamConstants.CDATA:
-						case XMLStreamConstants.CHARACTERS:
-							value = xml.getText();
-							break text;
-						default:
-							continue text;
+				if ("comment".equals(element)) {
+					Location location = xml.getLocation();
+					if (!hasComment) {
+						// Consume the comment
+						unmarshaller.unmarshal(xml, PropertiesComment.class);
+						hasComment = true;
+						continue;
 					}
+					throw new XMLStreamException("Multiple <comment> elements found - this is a violation", location);
 				}
 
-				if (value == null) {
-					value = "";
+				if (!"entry".equals(element)) { throw new XMLStreamException(
+					String.format("Unknown XML element '%s'", element), xml.getLocation()); }
+
+				JAXBElement<PropertiesEntry> xmlItem = unmarshaller.unmarshal(xml, PropertiesEntry.class);
+				if (xmlItem == null) {
+					continue;
 				}
-				properties.setProperty(key, value);
+				PropertiesEntry entry = xmlItem.getValue();
+				if (entry == null) {
+					continue;
+				}
+				if ((entry.getKey() == null) || (entry.getValue() == null)) {
+					continue;
+				}
+				if (properties.containsKey(entry.getKey())) {
+					// do not clobber
+					continue;
+				}
+				properties.setProperty(entry.getKey(), entry.getValue());
 			}
-		} catch (XMLStreamException e) {
-			throw new IOException("An XML deserialization exception was detected - failed to load the properties", e);
+		} catch (JAXBException e) {
+			throw new XMLStreamException(
+				"An XML deserialization exception was detected - failed to load the properties", e);
 		}
 	}
 }
