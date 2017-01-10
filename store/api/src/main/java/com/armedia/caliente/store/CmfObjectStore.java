@@ -1011,13 +1011,14 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract Map<CmfType, Map<String, String>> getRenameMappings(O operation) throws CmfStorageException;
 
-	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs) throws CmfStorageException {
+	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean latest)
+		throws CmfStorageException {
 		if ((refs == null) || refs.isEmpty()) { return new HashMap<>(); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return getObjectNames(operation, refs);
+				return getObjectNames(operation, refs, latest);
 			} finally {
 				if (tx) {
 					try {
@@ -1032,8 +1033,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract Map<CmfObjectRef, String> getObjectNames(O operation, Collection<CmfObjectRef> refs)
-		throws CmfStorageException;
+	protected abstract Map<CmfObjectRef, String> getObjectNames(O operation, Collection<CmfObjectRef> refs,
+		boolean latest) throws CmfStorageException;
 
 	public final Collection<CmfObjectRef> getContainers(CmfObjectRef object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }

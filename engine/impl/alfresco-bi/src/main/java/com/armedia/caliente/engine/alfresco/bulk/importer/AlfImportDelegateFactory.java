@@ -427,7 +427,7 @@ public class AlfImportDelegateFactory
 			// They're all known to be folders, so...
 			refs.add(new CmfObjectRef(CmfType.FOLDER, id));
 		}
-		Map<CmfObjectRef, String> names = ctx.getObjectNames(refs);
+		Map<CmfObjectRef, String> names = ctx.getObjectNames(refs, true);
 		StringBuilder path = new StringBuilder();
 		for (CmfObjectRef ref : refs) {
 			final String name = names.get(ref);

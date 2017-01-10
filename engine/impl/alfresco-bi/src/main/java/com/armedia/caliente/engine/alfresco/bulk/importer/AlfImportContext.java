@@ -32,7 +32,8 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 		return this.getFactory().getAlternateName(type, id);
 	}
 
-	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs) throws ImportException {
-		return this.getFactory().getObjectNames(refs);
+	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean current)
+		throws ImportException {
+		return this.getFactory().getObjectNames(refs, current);
 	}
 }

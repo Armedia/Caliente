@@ -109,9 +109,10 @@ public class AlfImportContextFactory
 		return m.get(id);
 	}
 
-	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs) throws ImportException {
+	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean current)
+		throws ImportException {
 		try {
-			return getObjectStore().getObjectNames(refs);
+			return getObjectStore().getObjectNames(refs, current);
 		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to resolve the object names for IDs %s", refs), e);
 		}

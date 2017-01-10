@@ -1654,13 +1654,15 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<CmfObjectRef, String> getObjectNames(JdbcOperation operation, Collection<CmfObjectRef> refs)
-		throws CmfStorageException {
+	protected Map<CmfObjectRef, String> getObjectNames(JdbcOperation operation, Collection<CmfObjectRef> refs,
+		boolean latest) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		try {
 			PreparedStatement ps = null;
 			try {
-				ps = c.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECT_NAMES_BY_ID));
+				JdbcDialect.Query query = (latest ? JdbcDialect.Query.LOAD_OBJECT_NAMES_BY_ID_CURRENT
+					: JdbcDialect.Query.LOAD_OBJECT_NAMES_BY_ID);
+				ps = c.prepareStatement(translateQuery(query));
 				ResultSet rs = null;
 				try {
 					Map<CmfObjectRef, String> ret = new HashMap<>();
@@ -1683,6 +1685,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						if (rs.wasNull()) {
 							continue;
 						}
+
 						String name = rs.getString("new_name");
 						if (rs.wasNull()) {
 							name = rs.getString("object_name");
