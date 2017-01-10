@@ -252,8 +252,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return this.cmfObject.getAttribute(target);
 	}
 
-	protected final void storeValue(CmfProperty<CmfValue> srcAtt, SchemaAttribute tgtAtt, Properties p,
-		boolean concatenateFallback) throws ImportException {
+	protected final void storeValue(AlfImportContext ctx, CmfProperty<CmfValue> srcAtt, SchemaAttribute tgtAtt,
+		Properties p, boolean concatenateFallback) throws ImportException {
 		final String value;
 		// If the source attribute is repeating, but the target isn't, we'll concatenate
 		if (!srcAtt.hasValues()) { return; }
@@ -296,7 +296,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		} catch (ParseException e) {
 			throw new ImportException(String.format(
 				"Failed to serialize the values from source attribute [%s] for %s [%s](%s)", srcAtt.getName(),
-				this.cmfObject.getType(), this.cmfObject.getLabel(), this.factory.getObjectName(this.cmfObject)), e);
+				this.cmfObject.getType(), this.cmfObject.getLabel(), ctx.getObjectName(this.cmfObject)), e);
 		}
 
 		if (!StringUtils.isEmpty(value)) {
@@ -319,7 +319,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		for (String s : common) {
 			final CmfProperty<CmfValue> src = this.cmfObject.getAttribute(s);
 			final SchemaAttribute tgt = targetType.getAttribute(s);
-			storeValue(src, tgt, p, true);
+			storeValue(ctx, src, tgt, p, true);
 		}
 
 		Set<String> tgtOnly = new HashSet<>();
@@ -354,7 +354,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 
 			// We're set, do it!!
-			storeValue(srcAtt, tgtAtt, p, true);
+			storeValue(ctx, srcAtt, tgtAtt, p, true);
 		}
 
 		// Now, do the mappings as copies of what has already been copied over, except when the
@@ -375,7 +375,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				continue;
 			}
 
-			storeValue(srcAtt, specialAtt, p, false);
+			storeValue(ctx, srcAtt, specialAtt, p, false);
 		}
 
 		// Now handle the special properties
@@ -462,7 +462,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			this.log.warn(String.format("Failed to load the HEAD object for %s batch [%s]",
 				this.cmfObject.getType().name(), this.cmfObject.getHistoryId()), e);
 		}
-		p.setProperty("cm:name", this.factory.getObjectName(head));
+		p.setProperty("cm:name", ctx.getObjectName(head));
 	}
 
 	protected final String generateAcl(final AlfImportContext ctx, final String owner, final String group)

@@ -11,8 +11,10 @@ import com.armedia.caliente.engine.importer.ImportContext;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
@@ -35,5 +37,25 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean current)
 		throws ImportException {
 		return this.getFactory().getObjectNames(refs, current);
+	}
+
+	protected String getObjectName(CmfObject<CmfValue> object) {
+		return getObjectName(object, true);
+	}
+
+	protected String getObjectName(CmfObject<CmfValue> object, boolean current) {
+		CmfObject<CmfValue> head = object;
+		if (current) {
+			try {
+				head = getHeadObject(object);
+			} catch (CmfStorageException e) {
+				this.log.warn(String.format("Failed to load the HEAD object for %s history [%s]",
+					object.getType().name(), object.getHistoryId()), e);
+			}
+			if (head == null) {
+				head = object;
+			}
+		}
+		return getFactory().getEngine().getObjectName(head);
 	}
 }
