@@ -33,6 +33,6 @@ public class PropertiesEntry {
 	}
 
 	public void setValue(String value) {
-
+		this.value = value;
 	}
 }

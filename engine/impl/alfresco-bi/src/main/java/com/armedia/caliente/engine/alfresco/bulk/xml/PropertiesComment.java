@@ -7,9 +7,12 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "comment.t")
+@XmlType(name = "comment.t", propOrder = {
+	"value"
+})
 @XmlRootElement(name = "comment")
 public class PropertiesComment {
+
 	@XmlValue
 	protected String value;
 
@@ -18,6 +21,6 @@ public class PropertiesComment {
 	}
 
 	public void setValue(String value) {
-
+		this.value = value;
 	}
 }

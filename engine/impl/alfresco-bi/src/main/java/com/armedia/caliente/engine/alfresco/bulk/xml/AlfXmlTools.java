@@ -239,6 +239,8 @@ public class AlfXmlTools {
 		try {
 			XMLStreamWriter xml = AlfXmlTools.getXMLStreamWriter(out, charsetName);
 			Marshaller marshaller = AlfXmlTools.getJAXBContext().createMarshaller();
+			marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
 			xml.writeStartDocument(charsetName, "1.1");
 			xml.writeDTD(AlfXmlTools.PROPERTIES_DTD);
@@ -270,7 +272,7 @@ public class AlfXmlTools {
 				}
 				entry.setKey(key);
 				entry.setValue(value);
-				marshaller.marshal(entry, out);
+				marshaller.marshal(entry, xml);
 				xml.flush();
 				out.flush();
 			}
