@@ -8,9 +8,12 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "entry.t")
+@XmlType(name = "entry.t", propOrder = {
+	"value"
+})
 @XmlRootElement(name = "entry")
 public class PropertiesEntry {
+
 	@XmlAttribute(name = "key", required = true)
 	protected String key;
 
