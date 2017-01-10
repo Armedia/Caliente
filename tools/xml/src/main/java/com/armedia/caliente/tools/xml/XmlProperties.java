@@ -5,6 +5,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -79,7 +81,19 @@ public final class XmlProperties {
 		@Override
 		protected XMLOutputFactory initialize() throws ConcurrentException {
 			WstxOutputFactory factory = new WstxOutputFactory();
-			factory.setProperty(WstxOutputProperties.P_USE_DOUBLE_QUOTES_IN_XML_DECL, true);
+			try {
+				// This is only supported after 5.0
+				Field f = WstxOutputProperties.class.getDeclaredField("P_USE_DOUBLE_QUOTES_IN_XML_DECL");
+				if (Modifier.isStatic(f.getModifiers()) && String.class.isAssignableFrom(f.getType())) {
+					Object v = f.get(null);
+					if (v != null) {
+						factory.setProperty(v.toString(), true);
+					}
+				}
+			} catch (NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
+				// It's ok...we're using an older version, so we simply won't have double quotes on
+				// the XML declaration
+			}
 			factory.setProperty(WstxOutputProperties.P_OUTPUT_VALIDATE_NAMES, true);
 			factory.setProperty(WstxOutputProperties.P_ADD_SPACE_AFTER_EMPTY_ELEM, true);
 			factory.setProperty(WstxOutputProperties.P_OUTPUT_VALIDATE_ATTR, true);
