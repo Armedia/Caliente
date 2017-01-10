@@ -43,7 +43,7 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	;
 
 	private static final String LOAD_OBJECT_NAMES_BY_ID_CURRENT = //
-		"       select o.object_id, o.object_label, o2.object_name, n.new_name " + //
+		"       select o.object_id, o2.object_name, n.new_name " + //
 			"     from cmf_object o, " + //
 			"          cmf_object o2 left outer join cmf_alt_name n on (o2.object_id = n.object_id) " + //
 			"    where o.object_id = any ( ? ) " + //
