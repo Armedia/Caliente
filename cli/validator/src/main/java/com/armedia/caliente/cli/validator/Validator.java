@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.InvalidPropertiesFormatException;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -36,6 +35,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.stream.XMLStreamException;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
@@ -45,11 +46,11 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.alfresco.bulk.common.AlfXmlTools;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoDataType;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bulk.importer.model.SchemaAttribute;
+import com.armedia.caliente.engine.alfresco.bulk.xml.AlfXmlTools;
 import com.armedia.commons.utilities.BinaryEncoding;
 import com.armedia.commons.utilities.Tools;
 
@@ -634,12 +635,13 @@ public class Validator {
 		final File file = path.toFile();
 		InputStream in = new FileInputStream(file);
 		final Properties properties = new Properties();
+
 		try {
 			AlfXmlTools.loadPropertiesFromXML(properties, in);
-		} catch (InvalidPropertiesFormatException x) {
+		} catch (XMLStreamException e) {
 			this.log.warn(
 				String.format("Failed to load the properties at [%s] as XML, falling back to default properties", path),
-				x);
+				e);
 			IOUtils.closeQuietly(in);
 			properties.clear();
 			in = new FileInputStream(file);
