@@ -42,7 +42,7 @@ public enum CLIParam implements ParameterWrapper {
 	document_min_size(new MutableParameter() //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
-		.setValueName("threads") //
+		.setValueName("size") //
 		.setDescription(
 			"The minimum size for the (random) content stream for each document (min = 1 byte). Suffixes such "
 				+ "as KB and MB are supported - no suffix = bytes.") //
@@ -50,7 +50,7 @@ public enum CLIParam implements ParameterWrapper {
 	document_max_size(new MutableParameter() //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
-		.setValueName("threads") //
+		.setValueName("size") //
 		.setDescription(
 			"The maximum size for the (random) content stream for each document (capped out at 16MB). Suffixes such "
 				+ "as KB and MB are supported - no suffix = bytes.") //
@@ -58,7 +58,7 @@ public enum CLIParam implements ParameterWrapper {
 	name_format(new MutableParameter() //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
-		.setValueName("threads") //
+		.setValueName("format") //
 		.setDescription(
 			"The format string to name files and folders after (supports ${type}, ${id}, ${number} and ${uuid})") //
 	), //
