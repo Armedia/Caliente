@@ -91,7 +91,7 @@ public class NodeGenerator {
 	private final Map<String, Map<String, IDfAttr>> attributes;
 	private final Set<String> folderTypes;
 	private final Set<String> documentTypes;
-	private final DataRecordManager<?, ?> recordsManager;
+	private final DataRecordManager<?> recordsManager;
 
 	private static void buildAttributeData(IDfType type, Map<String, Map<String, IDfAttr>> attributes)
 		throws DfException {
@@ -150,7 +150,7 @@ public class NodeGenerator {
 		attributes.put(typeName, a);
 	}
 
-	public NodeGenerator(IDfSession session, Collection<String> objectTypes, DataRecordManager<?, ?> recordsManager)
+	public NodeGenerator(IDfSession session, Collection<String> objectTypes, DataRecordManager<?> recordsManager)
 		throws DfException {
 		if (objectTypes == null) {
 			objectTypes = Collections.emptySet();

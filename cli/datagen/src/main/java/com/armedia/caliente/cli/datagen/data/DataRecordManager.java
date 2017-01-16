@@ -16,29 +16,37 @@ import org.slf4j.LoggerFactory;
 import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class DataRecordManager<RS extends DataRecordSet<?, ?, ?>, L extends Object> {
+public abstract class DataRecordManager<L extends Object> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private static final Set<String> REQUIRED_STREAM_COLUMNS;
+	private static final DataRecordSet<?, ?, ?> EMPTY_RECORD_SET;
 	static {
 		Set<String> s = new TreeSet<>();
 		s.add("format");
 		s.add("location");
 		REQUIRED_STREAM_COLUMNS = Tools.freezeSet(new LinkedHashSet<>(s));
+
+		try {
+			EMPTY_RECORD_SET = new EmptyDataRecordSet<>();
+		} catch (Exception e) {
+			// Won't happen...but still
+			throw new RuntimeException("Failed to initialize the empty record set", e);
+		}
 	}
 
 	private boolean streamRecordsInitialized = false;
-	private RS streamRecords = null;
+	private DataRecordSet<?, ?, ?> streamRecords = null;
 
 	private final LockDispenser<String, Object> typeLocks = LockDispenser.getBasic();
-	private final ConcurrentMap<String, RS> typeRecords = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, DataRecordSet<?, ?, ?>> typeRecords = new ConcurrentHashMap<>();
 
-	protected abstract RS buildRecordSet(L location, int loopCount) throws Exception;
+	protected abstract DataRecordSet<?, ?, ?> buildRecordSet(L location, int loopCount) throws Exception;
 
 	protected abstract String describeLocation(L location);
 
-	private RS loadDataRecordSet(L location, int loopCount) {
+	private DataRecordSet<?, ?, ?> loadDataRecordSet(L location, int loopCount) {
 		if (location == null) { return null; }
 		try {
 			return buildRecordSet(location, loopCount);
@@ -53,10 +61,10 @@ public abstract class DataRecordManager<RS extends DataRecordSet<?, ?, ?>, L ext
 
 	protected abstract L findStreamRecords() throws IOException;
 
-	public final synchronized RS getStreamRecords(int loopCount) {
+	public final synchronized DataRecordSet<?, ?, ?> getStreamRecords(int loopCount) {
 		if ((this.streamRecords == null) && !this.streamRecordsInitialized) {
 			try {
-				RS c = loadDataRecordSet(findStreamRecords(), loopCount);
+				DataRecordSet<?, ?, ?> c = loadDataRecordSet(findStreamRecords(), loopCount);
 				if (c == null) { return null; }
 				Set<String> missing = new LinkedHashSet<>(DataRecordManager.REQUIRED_STREAM_COLUMNS);
 				missing.removeAll(c.getColumnNames());
@@ -76,24 +84,29 @@ public abstract class DataRecordManager<RS extends DataRecordSet<?, ?, ?>, L ext
 
 	protected abstract L findTypeRecords(String type) throws IOException;
 
-	public final RS getTypeRecords(final String type, final int loopCount) {
+	public final DataRecordSet<?, ?, ?> getTypeRecords(final String type, final int loopCount) {
 		final Object lock = this.typeLocks.getLock(type);
 		if (!this.typeRecords.containsKey(type)) {
 			synchronized (lock) {
-				return ConcurrentUtils.createIfAbsentUnchecked(this.typeRecords, type, new ConcurrentInitializer<RS>() {
-					@Override
-					public RS get() throws ConcurrentException {
-						try {
-							return loadDataRecordSet(findTypeRecords(type), loopCount);
-						} catch (Exception e) {
-							if (DataRecordManager.this.log.isDebugEnabled()) {
-								DataRecordManager.this.log
-									.debug(String.format("Failed to locate the records for type [%s]", type), e);
+				return ConcurrentUtils.createIfAbsentUnchecked(this.typeRecords, type,
+					new ConcurrentInitializer<DataRecordSet<?, ?, ?>>() {
+						@Override
+						public DataRecordSet<?, ?, ?> get() throws ConcurrentException {
+							DataRecordSet<?, ?, ?> ret = null;
+							try {
+								ret = loadDataRecordSet(findTypeRecords(type), loopCount);
+							} catch (Exception e) {
+								if (DataRecordManager.this.log.isDebugEnabled()) {
+									DataRecordManager.this.log
+										.debug(String.format("Failed to locate the records for type [%s]", type), e);
+								}
 							}
+							if (ret == null) {
+								ret = DataRecordManager.EMPTY_RECORD_SET;
+							}
+							return ret;
 						}
-						return null;
-					}
-				});
+					});
 			}
 		}
 		return this.typeRecords.get(type);
