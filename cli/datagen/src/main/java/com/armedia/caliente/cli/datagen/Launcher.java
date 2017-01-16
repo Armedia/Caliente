@@ -13,6 +13,11 @@ import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 
 public class Launcher extends AbstractLauncher implements LaunchParameterSet {
+
+	public static final void main(String... args) {
+		System.exit(new Launcher().launch(args));
+	}
+
 	protected static final int MIN_THREADS = 1;
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() / 2);
 	protected static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors());
