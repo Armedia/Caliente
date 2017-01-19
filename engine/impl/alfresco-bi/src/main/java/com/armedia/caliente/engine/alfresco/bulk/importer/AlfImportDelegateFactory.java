@@ -508,7 +508,11 @@ public class AlfImportDelegateFactory
 		final Path relativeContentPath = this.biRootPath.relativize(contentFile.toPath());
 		final Path relativeMetadataPath = (metadataFile != null ? this.biRootPath.relativize(metadataFile.toPath())
 			: null);
-		final Path relativeMetadataParent = (metadataFile != null ? relativeMetadataPath.getParent() : null);
+		Path relativeMetadataParent = (metadataFile != null ? relativeMetadataPath.getParent() : null);
+		if (relativeMetadataParent == null) {
+			// if there's no metadata file, we fall back to the content file's parent...
+			relativeMetadataParent = (relativeContentPath != null ? relativeContentPath.getParent() : null);
+		}
 
 		CacheItemMarker thisMarker = new CacheItemMarker();
 		thisMarker.setDirectory(folder);
@@ -528,9 +532,10 @@ public class AlfImportDelegateFactory
 		}
 		thisMarker.setNumber(number);
 
-		CmfProperty<CmfValue> cmsPathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-		String cmsPath = ((cmsPathProp == null) || !cmsPathProp.hasValues() ? "" : cmsPathProp.getValue().asString());
-		cmsPath = resolveTreeIds(ctx, cmsPath);
+		CmfProperty<CmfValue> sourcePathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+		String targetPath = ((sourcePathProp == null) || !sourcePathProp.hasValues() ? ""
+			: sourcePathProp.getValue().asString());
+		targetPath = resolveTreeIds(ctx, targetPath);
 
 		String append = null;
 		// This is the base name, others may change it...
@@ -552,27 +557,27 @@ public class AlfImportDelegateFactory
 				append = contentFile.getParentFile().getName();
 				// fall-through
 			case VDOC_VERSION:
-				cmsPath = String.format("%s/%s", cmsPath, ctx.getObjectName(cmfObject));
+				targetPath = String.format("%s/%s", targetPath, ctx.getObjectName(cmfObject));
 				if (append != null) {
-					cmsPath = String.format("%s/%s", cmsPath, append);
+					targetPath = String.format("%s/%s", targetPath, append);
 				}
 				break;
 
 			case RENDITION_ENTRY:
 			case RENDITION_TYPE:
-				cmsPathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-				String specialCmsPath = ((cmsPathProp == null) || !cmsPathProp.hasValues() ? ""
-					: cmsPathProp.getValue().asString());
+				sourcePathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
+				String specialCmsPath = ((sourcePathProp == null) || !sourcePathProp.hasValues() ? ""
+					: sourcePathProp.getValue().asString());
 				Path p = Paths.get(specialCmsPath);
 				p = p.relativize(relativeContentPath);
-				cmsPath = String.format("%s/%s", cmsPath, p.getParent().toString());
+				targetPath = String.format("%s/%s", targetPath, p.getParent().toString());
 				break;
 
 			default:
 				break;
 		}
 
-		thisMarker.setTargetPath(cmsPath);
+		thisMarker.setTargetPath(targetPath);
 		thisMarker.setIndex(current);
 		thisMarker.setHeadIndex(head);
 		thisMarker.setVersionCount(count);
