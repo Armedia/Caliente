@@ -39,8 +39,6 @@ public class CacheItemMarker implements Cloneable {
 
 	private final MarkerType type;
 
-	private String name;
-
 	private boolean directory;
 
 	private int index;
@@ -49,9 +47,13 @@ public class CacheItemMarker implements Cloneable {
 
 	private int versionCount;
 
-	private Path localPath;
+	private Path sourcePath;
 
-	private String cmsPath;
+	private String sourceName;
+
+	private String targetPath;
+
+	private String targetName;
 
 	private BigDecimal number;
 
@@ -62,10 +64,11 @@ public class CacheItemMarker implements Cloneable {
 	protected CacheItemMarker(CacheItemMarker copy) {
 		if (copy == null) { throw new IllegalArgumentException("Must provide an object to base the copy off of"); }
 		this.type = copy.type;
-		this.name = copy.name;
 		this.directory = copy.directory;
-		this.localPath = copy.localPath;
-		this.cmsPath = copy.cmsPath;
+		this.sourcePath = copy.sourcePath;
+		this.sourceName = copy.sourceName;
+		this.targetPath = copy.targetPath;
+		this.targetName = copy.targetName;
 		this.number = copy.number;
 		this.content = copy.content;
 		this.metadata = copy.metadata;
@@ -127,20 +130,36 @@ public class CacheItemMarker implements Cloneable {
 		return (this.index == this.headIndex);
 	}
 
-	public Path getLocalPath() {
-		return this.localPath;
+	public Path getSourcePath() {
+		return this.sourcePath;
 	}
 
-	public void setLocalPath(Path localPath) {
-		this.localPath = localPath;
+	public void setSourcePath(Path sourcePath) {
+		this.sourcePath = sourcePath;
 	}
 
-	public String getCmsPath() {
-		return this.cmsPath;
+	public String getSourceName() {
+		return this.sourceName;
 	}
 
-	public void setCmsPath(String cmsPath) {
-		this.cmsPath = cmsPath;
+	public void setSourceName(String sourceName) {
+		this.sourceName = sourceName;
+	}
+
+	public String getTargetPath() {
+		return this.targetPath;
+	}
+
+	public void setTargetPath(String targetPath) {
+		this.targetPath = targetPath;
+	}
+
+	public String getTargetName() {
+		return this.targetName;
+	}
+
+	public void setTargetName(String targetName) {
+		this.targetName = targetName;
 	}
 
 	public BigDecimal getNumber() {
@@ -167,20 +186,12 @@ public class CacheItemMarker implements Cloneable {
 		this.metadata = metadata;
 	}
 
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	@Override
 	public String toString() {
 		return String.format(
-			"CacheItemMarker [type=%s, name=%s, directory=%s, thisIndex=%s, headIndex=%s, versionCount=%s, localPath=%s, cmsPath=%s, number=%s, content=%s, metadata=%s]",
-			this.type, this.name, this.directory, this.index, this.headIndex, this.versionCount, this.localPath,
-			this.cmsPath, this.number, this.content, this.metadata);
+			"CacheItemMarker [type=%s, targetName=%s, directory=%s, thisIndex=%s, headIndex=%s, versionCount=%s, sourcePath=%s, sourceName=%s, targetPath=%s, targetName=%s, number=%s, content=%s, metadata=%s]",
+			this.type, this.targetName, this.directory, this.index, this.headIndex, this.versionCount, this.sourcePath,
+			this.sourceName, this.targetPath, this.targetName, this.number, this.content, this.metadata);
 	}
 
 	public CacheItemVersion getVersion() {
@@ -205,10 +216,11 @@ public class CacheItemMarker implements Cloneable {
 
 	public CacheItem getItem(List<CacheItemMarker> markers) {
 		CacheItem item = new CacheItem();
-		item.setName(this.name);
 		item.setDirectory(this.directory);
-		item.setFsRelativePath(convertToSlashes(this.localPath.toString()));
-		item.setRelativePath(this.cmsPath);
+		item.setSourcePath(convertToSlashes(this.sourcePath.toString()));
+		item.setSourceName(this.sourceName);
+		item.setTargetPath(this.targetPath);
+		item.setTargetName(this.targetName);
 		List<CacheItemVersion> versions = item.getVersions();
 		for (CacheItemMarker m : markers) {
 			versions.add(m.getVersion());

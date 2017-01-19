@@ -76,10 +76,10 @@ public class AlfImportDelegateFactory
 		}
 
 		public void addVersion(CacheItemMarker version) throws ImportException {
-			if (this.versions.containsKey(version.getName())) { throw new ImportException(
-				String.format("This virtual document already has a version called [%s]", version.getName())); }
-			this.versions.put(version.getName(), version);
-			this.members.put(version.getName(), new ArrayList<CacheItemMarker>());
+			if (this.versions.containsKey(version.getTargetName())) { throw new ImportException(
+				String.format("This virtual document already has a version called [%s]", version.getTargetName())); }
+			this.versions.put(version.getTargetName(), version);
+			this.members.put(version.getTargetName(), new ArrayList<CacheItemMarker>());
 		}
 
 		public void addMember(String version, CacheItemMarker member) throws ImportException {
@@ -371,13 +371,13 @@ public class AlfImportDelegateFactory
 
 		CacheItemMarker thisMarker = new CacheItemMarker();
 		thisMarker.setDirectory(false);
-		thisMarker.setName(name);
 		thisMarker.setContent(relativeContentPath);
 		thisMarker.setMetadata(null);
-		thisMarker.setLocalPath(Paths.get(""));
-
+		thisMarker.setSourcePath(Paths.get(""));
+		thisMarker.setSourceName(name);
+		thisMarker.setTargetPath("");
+		thisMarker.setTargetName(name);
 		thisMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
-		thisMarker.setCmsPath("");
 
 		List<CacheItemMarker> markerList = new ArrayList<>(1);
 		markerList.add(thisMarker);
@@ -514,7 +514,8 @@ public class AlfImportDelegateFactory
 		thisMarker.setDirectory(folder);
 		thisMarker.setContent(relativeContentPath);
 		thisMarker.setMetadata(relativeMetadataPath);
-		thisMarker.setLocalPath(relativeMetadataParent != null ? relativeMetadataParent : Paths.get(""));
+		thisMarker.setSourcePath(relativeMetadataParent != null ? relativeMetadataParent : Paths.get(""));
+		thisMarker.setSourceName(contentFile.getName());
 
 		BigDecimal number = AlfImportDelegateFactory.LAST_INDEX;
 		if (!headVersion || !lastVersion) {
@@ -533,18 +534,18 @@ public class AlfImportDelegateFactory
 
 		String append = null;
 		// This is the base name, others may change it...
-		thisMarker.setName(contentFile.getName());
+		thisMarker.setTargetName(contentFile.getName());
 		switch (type) {
 			case NORMAL:
 			case VDOC_ROOT:
-				thisMarker.setName(ctx.getObjectName(cmfObject));
+				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
 				break;
 
 			case VDOC_RENDITION:
 				// fall-through
 			case VDOC_STREAM:
 				// For the primary streams, we set the same name of the object
-				thisMarker.setName(ctx.getObjectName(cmfObject));
+				thisMarker.setTargetName(ctx.getObjectName(cmfObject));
 				// fall-through
 			case VDOC_REFERENCE:
 				// For the member, we have to append one more item to the cmsPath
@@ -571,7 +572,7 @@ public class AlfImportDelegateFactory
 				break;
 		}
 
-		thisMarker.setCmsPath(cmsPath);
+		thisMarker.setTargetPath(cmsPath);
 		thisMarker.setIndex(current);
 		thisMarker.setHeadIndex(head);
 		thisMarker.setVersionCount(count);

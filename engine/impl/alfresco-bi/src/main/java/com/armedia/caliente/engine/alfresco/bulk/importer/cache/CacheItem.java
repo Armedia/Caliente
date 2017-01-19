@@ -12,21 +12,24 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "item.t", propOrder = {
-	"directory", "name", "fsRelativePath", "relativePath", "versions"
+	"directory", "sourceName", "sourcePath", "targetName", "targetPath", "versions"
 })
 @XmlRootElement(name = "item")
 public class CacheItem {
 	@XmlElement(name = "directory", required = true)
 	protected boolean directory;
 
-	@XmlElement(name = "name", required = true)
-	protected String name;
+	@XmlElement(name = "targetName", required = true)
+	protected String targetName;
 
-	@XmlElement(name = "fsRelativePath", required = true)
-	protected String fsRelativePath;
+	@XmlElement(name = "sourceName", required = true)
+	protected String sourceName;
 
-	@XmlElement(name = "relativePath", required = false)
-	protected String relativePath;
+	@XmlElement(name = "targetPath", required = true)
+	protected String targetPath;
+
+	@XmlElement(name = "sourcePath", required = false)
+	protected String sourcePath;
 
 	@XmlElementWrapper(name = "versions", required = true)
 	@XmlElement(name = "version", required = true)
@@ -40,28 +43,36 @@ public class CacheItem {
 		this.directory = directory;
 	}
 
-	public String getName() {
-		return this.name;
+	public String getSourceName() {
+		return this.sourceName;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setSourceName(String sourceName) {
+		this.sourceName = sourceName;
 	}
 
-	public String getFsRelativePath() {
-		return this.fsRelativePath;
+	public String getSourcePath() {
+		return this.sourcePath;
 	}
 
-	public void setFsRelativePath(String fsRelativePath) {
-		this.fsRelativePath = fsRelativePath;
+	public void setSourcePath(String sourcePath) {
+		this.sourcePath = sourcePath;
 	}
 
-	public String getRelativePath() {
-		return this.relativePath;
+	public String getTargetName() {
+		return this.targetName;
 	}
 
-	public void setRelativePath(String relativePath) {
-		this.relativePath = relativePath;
+	public void setTargetName(String targetName) {
+		this.targetName = targetName;
+	}
+
+	public String getTargetPath() {
+		return this.targetPath;
+	}
+
+	public void setTargetPath(String targetPath) {
+		this.targetPath = targetPath;
 	}
 
 	public List<CacheItemVersion> getVersions() {
@@ -73,7 +84,8 @@ public class CacheItem {
 
 	@Override
 	public String toString() {
-		return String.format("CacheItem [directory=%s, name=%s, fsRelativePath=%s, relativePath=%s, versions=%s]",
-			this.directory, this.name, this.fsRelativePath, this.relativePath, this.versions);
+		return String.format(
+			"CacheItem [directory=%s, sourceName=%s, sourcePath=%s, targetName=%s, targetPath=%s, versions=%s]",
+			this.directory, this.sourceName, this.sourcePath, this.targetName, this.targetPath, this.versions);
 	}
 }
