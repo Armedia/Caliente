@@ -31,7 +31,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 	private final Logger manifestLog = Logger.getLogger("manifest");
 
-	private static final String RECORD_FORMAT = "%d,%s,%s,%s,%s,%s,%s,%s,%s,%s";
+	private static final String RECORD_FORMAT = "%s,%s,%s,%s,%s,%s,%s,%s,%s,%s";
 
 	private static final class Record {
 		private final Long number;
