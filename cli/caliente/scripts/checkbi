@@ -1,0 +1,207 @@
+#!/bin/bash
+SCRIPT="$(readlink -f "${0}")"
+BASEDIR="$(dirname "${0}")"
+SCRIPT="$(basename "${0}")"
+
+say() {
+	echo -e "${@}"
+}
+
+err() {
+	say "${@}" 1>&2
+}
+
+fail() {
+	err "ERROR: ${@}"
+	exit 1
+}
+
+usage() {
+	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user [-p password] | -A authenticationFile] [-w [-p pollSec]] [-e] [-E]"
+	for e in "${@}" ; do
+		err "\t${e}"
+	done
+	exit 1
+}
+
+parse_raw() {
+	parse --raw-output "${@}"
+}
+
+parse() {
+	"${JQ}" "${@}"
+}
+
+get_status() {
+	"${CALL}" "${ALF_URL}/s/bulk/import/status.json"
+}
+
+curl_call() {
+	local URL="${1}"
+	local METHOD="${2:-GET}"
+	local CURL_AUTH="${ALF_USER}"
+	${ALF_PASS_SET} && CURL_AUTH="${CURL_AUTH}:${ALF_PASS}"
+	"${CURL}" -s -X "${METHOD}" -u "${CURL_AUTH}" --url "${URL}"
+}
+
+wget_call() {
+	local URL="${1}"
+	local METHOD="${2:-GET}"
+	local WGET_PASS="--ask-password"
+	${ALF_PASS_SET} && WGET_PASS="--password=${ALF_PASS}"
+	"${WGET}" --quiet --method="${METHOD}" --user="${ALF_USER}" "${WGET_PASS}" -O - "${URL}"
+}
+
+find_exe() {
+	local EXE_NAME="${1}"
+	local REQUIRED="${2}"
+	REQUIRED="${REQUIRED,,}"
+	case "${REQUIRED}" in
+		true | false ) ;;
+		* ) REQUIRED="false" ;;
+	esac
+
+	local EXE="$(which "${EXE_NAME}")"
+	[ -z "${EXE}" ] && EXE="/usr/bin/${EXE_NAME}"
+	[ -f "${EXE}" ] || { ${REQUIRED} && fail "'${EXE_NAME}' is not installed, but is required by this script" ; return 1 ; }
+	[ -x "${EXE}" ] || { ${REQUIRED} && fail "'${EXE}' is not executable, but is required by this script" ; return 2 ; }
+	echo "${EXE}"
+	return 0
+}
+
+ALF_URL=""
+ALF_USER=""
+ALF_PASS=""
+ALF_PASS_SET="false"
+PREFER_CURL="false"
+
+POLLSEC="30"
+POLLSEC_SET="false"
+WAIT_MODE="false"
+IGNORE_ERRORS="false"
+IGNORE_LOCAL_ERRORS="false"
+
+while getopts ":ch:u:p:A:s:t:D" OPT "${@}" ; do
+	case "${OPT}" in
+		c )	${PREFER_CURL} && fail "May not specify -c more than once"
+			PREFER_CURL="true"
+			;;
+		h )	[ -n "${ALF_URL}" ] && fail "May not specify more than one -h value"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty URL"
+			ALF_URL="${OPTARG}"
+			;;
+		u )	[ -n "${ALF_USER}" ] && fail "May not specify more than one -u value"
+			[ -n "${ALF_AUTH}" ] && fail "May not specify -A and -u"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty username"
+			ALF_USER="${OPTARG}"
+			;;
+		p )	${ALF_PASS_SET} && fail "May not specify more than one -p value"
+			[ -n "${ALF_AUTH}" ] && fail "May not specify -A and -p"
+			ALF_PASS="${OPTARG}"
+			ALF_PASS_SET="true"
+			;;
+		A )	[ -n "${ALF_USER}" ] && fail "May not specify -u and -A"
+			${ALF_PASS_SET} && fail "May not specify -p and -A"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty authentication file"
+			ALF_AUTH="${OPTARG}"
+			[ -e "${ALF_AUTH}" ] || fail "The authentication file [${ALF_AUTH}] does not exist"
+			[ -f "${ALF_AUTH}" ] || fail "The authentication file [${ALF_AUTH}] is not a regular file"
+			[ -r "${ALF_AUTH}" ] || fail "The authentication file [${ALF_AUTH}] can't be read"
+			;;
+		w ) ${WAIT_MODE} && fail "May not specify -w more than once"
+			WAIT_MODE="true"
+			;;
+		p ) ${POLLSEC_SET} && fail "May not specify -p more than once"
+			POLLSEC="${OPTARG}"
+			POLLSEC_SET="true"
+			[[ "${POLLSEC}" =~ ^[1-0][0-9]* ]] || fail "The value [${POLLSEC}] is not a valid number"
+			[ ${POLLSEC} -lt 5 ] && err "Polling interval may not be less than 5 seconds"
+			;;
+		e ) ${IGNORE_ERRORS} && fail "May not specify -e more than once"
+			IGNORE_ERRORS="true"
+			;;
+		E ) ${IGNORE_LOCAL_ERRORS} && fail "May not specify -E more than once"
+			IGNORE_LOCAL_ERRORS="true"
+			;;
+		? )	OI="$(( OPTIND - 1 ))"
+			usage "Parameter ${!OI} is not valid or unexpected here"
+			;;
+	esac
+done
+
+[ -z "${ALF_URL}" ] && usage "-h requires a non-empty value"
+[ -z "${ALF_USER}" -a -z "${ALF_AUTH}" ] && usage "Must provide either -u or -A"
+# If wait mode is off, but POLLSEC is set, then we enable it
+${WAIT_MODE} || WAIT_MODE=${POLLSEC_SET}
+
+JQ="$(find_exe jq true)"
+WGET="$(find_exe wget)"
+CURL="$(find_exe curl)"
+[ -z "${WGET}" -a -z "${CURL}" ] && fail "Must have either curl or wget installed - can't continue"
+
+if [ -n "${ALF_AUTH}" ] ; then
+	AUTH_DATA="$(cat "${ALF_AUTH}")"
+	parse "." <<< "${AUTH_DATA}" &>/dev/null || fail "The authentication file [${ALF_AUTH}] must have proper JSON syntax"
+	ALF_USER="$(parse ".user" <<< "${AUTH_DATA}")"
+	ALF_PASS="$(parse ".password" <<< "${AUTH_DATA}")"
+	ALF_PASS_SET="true"
+fi
+
+# Choose which getter function to use. WGET will be preferred
+[ -n "${CURL}" ] && CALL="curl_call"
+[ -n "${WGET}" ] && CALL="wget_call"
+${PREFER_CURL} && [ -n "${CURL}" ] && CALL="curl_call"
+
+FULL_STATUS_JSON="$(get_status)"
+[ ${?} -ne 0 ] && fail "Failed to retrieve the status data"
+
+STATUS="$(parse_raw ".processingState" <<< "${FULL_STATUS_JSON}")"
+SOURCE="$(parse_raw ".targetPath" <<< "${FULL_STATUS_JSON}")"
+TARGET="$(parse_raw ".sourceParameters[\"Source Directory\"]" <<< "${FULL_STATUS_JSON}")"
+DRYRUN="$(parse_raw ".dryRun" <<< "${FULL_STATUS_JSON}")"
+ERRORS="$(parse_raw ".errorInfo | length" <<< "${FULL_STATUS_JSON}")"
+case "${STATUS^^}" in
+	"SCANNING"	| \
+	"IMPORTING"	| \
+	"STOPPING"	| \
+	"PAUSED"	)
+		# Do nothing - we'll handle that below
+		;;
+
+	"STOPPED"	)
+		say "BI was stopped with ${ERRORS} errors reported"
+		say "\tSOURCE : [${SOURCE}]"
+		say "\tTARGET : [${TARGET}]"
+		say "\tDRY RUN: ${DRYRUN}"
+		;;
+
+	"NEVER RUN"	)
+		say "BI hasn't been run yet"
+		exit 0
+		;;
+
+	"SUCCEEDED" )
+		say "BI was successful with ${ERRORS} errors reported"
+		say "\tSOURCE : [${SOURCE}]"
+		say "\tTARGET : [${TARGET}]"
+		say "\tDRY RUN: ${DRYRUN}"
+		exit 0
+		;;
+
+	"FAILED"	)
+		# TODO: List out the errors
+		say "BI was run but failed with ${ERRORS} errors reported"
+		say "\tSOURCE : [${SOURCE}]"
+		say "\tTARGET : [${TARGET}]"
+		say "\tDRY RUN: [${DRYRUN}]"
+		exit 1
+		;;
+
+	* )
+		# Unknown!!
+		say "Unknown BI status [${STATUS}]"
+		exit 2
+		;;
+esac
+
+# Now go into the wait loop
