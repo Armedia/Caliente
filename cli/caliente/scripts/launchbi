@@ -24,7 +24,7 @@ usage() {
 	exit 1
 }
 
-parse_raw() {
+parse_value() {
 	parse --raw-output "${@}"
 }
 
@@ -208,8 +208,8 @@ CURL="$(find_exe curl)"
 if [ -n "${ALF_AUTH}" ] ; then
 	AUTH_DATA="$(cat "${ALF_AUTH}")"
 	parse "." <<< "${AUTH_DATA}" &>/dev/null || fail "The authentication file [${ALF_AUTH}] must have proper JSON syntax"
-	ALF_USER="$(parse_raw ".user" <<< "${AUTH_DATA}")"
-	ALF_PASS="$(parse_raw ".password" <<< "${AUTH_DATA}")"
+	ALF_USER="$(parse_value ".user" <<< "${AUTH_DATA}")"
+	ALF_PASS="$(parse_value ".password" <<< "${AUTH_DATA}")"
 	ALF_PASS_SET="true"
 fi
 
@@ -221,7 +221,7 @@ ${PREFER_CURL} && [ -n "${CURL}" ] && CALL="curl_call"
 FULL_STATUS_JSON="$(get_status)"
 [ ${?} -ne 0 ] && fail "Failed to retrieve the status data"
 
-STATUS="$(parse_raw ".processingState" <<< "${FULL_STATUS_JSON}")"
+STATUS="$(parse_value ".processingState" <<< "${FULL_STATUS_JSON}")"
 case "${STATUS^^}" in
 	"NEVER RUN"	| \
 	"SUCCEEDED"	| \
@@ -232,10 +232,10 @@ case "${STATUS^^}" in
 	"IMPORTING" | \
 	"STOPPING" | \
 	"PAUSED" )
-		SOURCE="$(parse_raw ".sourceParameters[\"Source Directory\"]" <<< "${FULL_STATUS_JSON}")"
-		TARGET="$(parse_raw ".targetPath" <<< "${FULL_STATUS_JSON}")"
-		DRYRUN="$(parse_raw ".dryRun" <<< "${FULL_STATUS_JSON}")"
-		ERRORS="$(parse_raw ".errorInfo | length" <<< "${FULL_STATUS_JSON}")"
+		SOURCE="$(parse_value ".sourceParameters[\"Source Directory\"]" <<< "${FULL_STATUS_JSON}")"
+		TARGET="$(parse_value ".targetPath" <<< "${FULL_STATUS_JSON}")"
+		DRYRUN="$(parse_value ".dryRun" <<< "${FULL_STATUS_JSON}")"
+		ERRORS="$(parse_value ".errorInfo | length" <<< "${FULL_STATUS_JSON}")"
 		err "ERROR: BI is active (${STATUS^^})"
 		err "\tSOURCE : [${SOURCE}]"
 		err "\tTARGET : [${TARGET}]"

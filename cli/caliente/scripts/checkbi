@@ -24,7 +24,7 @@ usage() {
 	exit 1
 }
 
-parse_raw() {
+parse_value() {
 	parse --raw-output "${@}"
 }
 
@@ -161,8 +161,8 @@ CURL="$(find_exe curl)"
 if [ -n "${ALF_AUTH}" ] ; then
 	AUTH_DATA="$(cat "${ALF_AUTH}")"
 	parse "." <<< "${AUTH_DATA}" &>/dev/null || fail "The authentication file [${ALF_AUTH}] must have proper JSON syntax"
-	ALF_USER="$(parse_raw ".user" <<< "${AUTH_DATA}")"
-	ALF_PASS="$(parse_raw ".password" <<< "${AUTH_DATA}")"
+	ALF_USER="$(parse_value ".user" <<< "${AUTH_DATA}")"
+	ALF_PASS="$(parse_value ".password" <<< "${AUTH_DATA}")"
 	ALF_PASS_SET="true"
 fi
 
@@ -181,10 +181,10 @@ while true ; do
 	TERMINAL="false"
 	SHOW_ERRORS="false"
 	EXIT="0"
-	STATUS="$(parse_raw ".processingState" <<< "${FULL_STATUS_JSON}")"
-	SOURCE="$(parse_raw ".targetPath" <<< "${FULL_STATUS_JSON}")"
-	TARGET="$(parse_raw ".sourceParameters[\"Source Directory\"]" <<< "${FULL_STATUS_JSON}")"
-	DRYRUN="$(parse_raw ".dryRun" <<< "${FULL_STATUS_JSON}")"
+	STATUS="$(parse_value ".processingState" <<< "${FULL_STATUS_JSON}")"
+	SOURCE="$(parse_value ".targetPath" <<< "${FULL_STATUS_JSON}")"
+	TARGET="$(parse_value ".sourceParameters[\"Source Directory\"]" <<< "${FULL_STATUS_JSON}")"
+	DRYRUN="$(parse_value ".dryRun" <<< "${FULL_STATUS_JSON}")"
 	ERROR_INFO="$(parse ".errorInfo" <<< "${FULL_STATUS_JSON}")"
 	ERRORS="$(parse ". | length" <<< "${ERROR_INFO}")"
 	case "${STATUS^^}" in
@@ -243,11 +243,11 @@ while true ; do
 		if ${SHOW_ERRORS} ; then
 			for (( i = 0 ; i < ${ERRORS} ; i++ )) ; do
 				ERR="$(parse ".[${i}]" <<< "${ERROR_INFO}")"
-				TIMESTAMP="$(parse_raw ".TimeStamp" <<< "${ERR}")"
-				ITEM="$(parse_raw ".Item" <<< "${ERR}")"
-				DIRECTORY="$(parse_raw ".Directory" <<< "${ERR}")"
-				SOURCE="$(parse_raw ".Source" <<< "${ERR}")"
-				ERROR="$(parse_raw ".Error" <<< "${ERR}")"
+				TIMESTAMP="$(parse_value ".TimeStamp" <<< "${ERR}")"
+				ITEM="$(parse_value ".Item" <<< "${ERR}")"
+				DIRECTORY="$(parse_value ".Directory" <<< "${ERR}")"
+				SOURCE="$(parse_value ".Source" <<< "${ERR}")"
+				ERROR="$(parse_value ".Error" <<< "${ERR}")"
 				[ ${i} -eq 0 ] && say "============================================================"
 				if ${SOURCE} ; then
 					# An error from the source, no item info
