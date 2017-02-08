@@ -198,8 +198,8 @@ CURL="$(find_exe curl)"
 if [ -n "${ALF_AUTH}" ] ; then
 	AUTH_DATA="$(cat "${ALF_AUTH}")"
 	parse "." <<< "${AUTH_DATA}" &>/dev/null || fail "The authentication file [${ALF_AUTH}] must have proper JSON syntax"
-	ALF_USER="$(parse ".user" <<< "${AUTH_DATA}")"
-	ALF_PASS="$(parse ".password" <<< "${AUTH_DATA}")"
+	ALF_USER="$(parse_raw ".user" <<< "${AUTH_DATA}")"
+	ALF_PASS="$(parse_raw ".password" <<< "${AUTH_DATA}")"
 	ALF_PASS_SET="true"
 fi
 
