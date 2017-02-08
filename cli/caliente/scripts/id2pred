@@ -16,14 +16,20 @@ fail() {
 	exit 1
 }
 
-do_list() {
-	local manifest="${1}"
-	[ -e "${manifest}" ] || { err "ERROR: manifest [${manifest}] does not exist" ; return 1 ; }
-	[ -f "${manifest}" ] || { err "ERROR: manifest [${manifest}] is not a regular file" ; return 1 ; }
-	"${CSVTOOL}" -u ' ' col 3,5,7 "${manifest}" | grep -v "^TYPE "
+usage() {
+    err "usage: ${SCRIPT} basetype"
+    for e in "${@}" ; do
+        err "\t${e}"
+    done
+    exit 2
 }
 
-say "dm_sysobject where r_object_id in ("
+[ ${#} -ne 1 ] && usage "Must provide the base type to generate the prediate with"
+BASETYPE="${1}"
+[ -z "${BASETYPE}" ] && usage "The base type may not be an empty string"
+[[ "${BASETYPE}" =~ ^.*[^a-zA-Z0-9_].*$ ]] && usage "The base type must be a valid documentum type name (${BASETYPE})"
+
+say "${BASETYPE} where r_object_id in ("
 COMMA=" "
 while read r_object_id rest ; do
 	say "${COMMA} '${r_object_id}'"
