@@ -210,6 +210,6 @@ for (( i = 0 ; i < ${ERRORS} ; i++ )) ; do
 		${DIRECTORY} && TYPE="Folder"
 		say "${TYPE} import error:"
 	fi
-say "${ERROR}"
+	say "${ERROR}"
 	say "============================================================"
 done
