@@ -1,0 +1,151 @@
+#!/bin/bash
+SCRIPT="$(readlink -f "${0}")"
+BASEDIR="$(dirname "${0}")"
+SCRIPT="$(basename "${0}")"
+
+say() {
+	echo -e "${@}"
+}
+
+err() {
+	say "${@}" 1>&2
+}
+
+fail() {
+	err "ERROR: ${@}"
+	exit 1
+}
+
+usage() {
+	err "usage: ${SCRIPT} [-o] [-s [-]status1,status2,...,statusN] [-t [-]type1,type2,...,typeN]"
+	for e in "${@}" ; do
+		err "\t${e}"
+	done
+	exit 1
+}
+
+SORTED="false"
+STATUS_SET="false"
+TYPE_SET="false"
+
+while getopts ":os:t:" OPT "${@}" ; do
+	case "${OPT}" in
+		o ) ${SORTED} && fail "May not specify -o more than once"
+			SORTED="true"
+			;;
+		s ) ${STATUS_SET} && fail "May not specify more than one -s list"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty status list"
+			STATUS="${OPTARG}"
+			STATUS_SET="true"
+			;;
+		t ) ${TYPE_SET} && fail "May not specify more than one -t value"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty type list"
+			TYPE="${OPTARG}"
+			TYPE_SET="true"
+			;;
+		? ) OI="$(( OPTIND - 1 ))"
+			usage "Parameter ${!OI} is not valid or unexpected here"
+			;;
+	esac
+done
+
+# Validate the status list
+T=()
+IFS="," read -r -a T <<< "${STATUS}"
+STATUS=()
+STATUS_EXCLUDE="false"
+FIRST="true"
+for E in "${T[@]}" ; do
+	e="${E^^}"
+	if [[ "${e}" =~ ^-[A-Z] ]] ; then
+		${FIRST} || fail "You can only specify the negator (-) on the first status on the list"
+		STATUS_EXCLUDE="true"
+		e="${e##*-}"
+	fi
+	case "${e}" in
+		SKIPPED		| \
+		FAILED		| \
+		EXPORTED	| \
+		CREATED		| \
+		UPDATED		| \
+		DUPLICATE	| \
+		IGNORED		)
+			STATUS+=( "${e}" )
+			;;
+		* ) fail "Invalid status value [${E}] given" ;;
+	esac
+	FIRST="false"
+done
+
+# Validate the type list
+T=()
+IFS="," read -r -a T <<< "${TYPE}"
+TYPE=()
+TYPE_EXCLUDE="false"
+FIRST="true"
+for E in "${T[@]}" ; do
+	e="${E^^}"
+	if [[ "${e}" =~ ^-[A-Z] ]] ; then
+		${FIRST} || fail "You can only specify the negator (-) on the first type on the list"
+		TYPE_EXCLUDE="true"
+		e="${e##*-}"
+	fi
+	case "${e}" in
+		DATASTORE	| \
+		USER		| \
+		GROUP		| \
+		ACL			| \
+		TYPE		| \
+		FORMAT		| \
+		FOLDER		| \
+		DOCUMENT	| \
+		WORKFLOW	)
+			TYPE+=( "${e}" )
+			;;
+		* ) fail "Invalid type name [${E}] given" ;;
+	esac
+	FIRST="false"
+done
+
+filter_types() {
+	local FILTER="("
+	local FIRST="true"
+	for e in "${TYPE[@]}" ; do
+		${FIRST} || FILTER+="|"
+		FILTER+="${e}"
+		FIRST="false"
+	done
+	FILTER+=")"
+
+	if [ "${FILTER}" = "()" ] ; then
+		cat
+	else
+		local NEGATE=""
+		${TYPE_EXCLUDE} && NEGATE="-v"
+		egrep ${NEGATE} "${FILTER}"
+	fi
+}
+
+filter_status() {
+	local FILTER="("
+	local FIRST="true"
+	for e in "${STATUS[@]}" ; do
+		${FIRST} || FILTER+="|"
+		FILTER+="${e}"
+		FIRST="false"
+	done
+	FILTER+=")"
+
+	if [ "${FILTER}" = "()" ] ; then
+		cat
+	else
+		local NEGATE=""
+		${STATUS_EXCLUDE} && NEGATE="-v"
+		egrep ${NEGATE} "${FILTER}"
+	fi
+}
+
+grep -v "^TYPE" | \
+	filter_types | \
+	filter_status | \
+	awk '{ print $NF }' | sort -u
