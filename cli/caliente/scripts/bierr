@@ -17,7 +17,7 @@ fail() {
 }
 
 usage() {
-	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user [-p password] | -A authenticationFile]"
+	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user -p password | -A authenticationFile]"
 	for e in "${@}" ; do
 		err "\t${e}"
 	done
@@ -50,17 +50,13 @@ get_status() {
 curl_call() {
 	local URL="${1}"
 	local METHOD="${2:-GET}"
-	local CURL_AUTH="${ALF_USER}"
-	${ALF_PASS_SET} && CURL_AUTH="${CURL_AUTH}:${ALF_PASS}"
-	"${CURL}" -f -X "${METHOD}" -u "${CURL_AUTH}" --url "${URL}" --retry 10 --retry-delay 10
+	"${CURL}" -f -X "${METHOD}" -u "${ALF_USER}:${ALF_PASS}" --url "${URL}" --retry 10 --retry-delay 10
 }
 
 wget_call() {
 	local URL="${1}"
 	local METHOD="${2:-GET}"
-	local WGET_PASS="--ask-password"
-	${ALF_PASS_SET} && WGET_PASS="--password=${ALF_PASS}"
-	"${WGET}" --method="${METHOD}" --tries 10 --waitretry 10 --user="${ALF_USER}" "${WGET_PASS}" -O - "${URL}"
+	"${WGET}" --method="${METHOD}" --tries 10 --waitretry 10 --user="${ALF_USER}" --password="${ALF_PASS}" -O - "${URL}"
 }
 
 find_exe() {
@@ -121,6 +117,7 @@ done
 
 [ -z "${ALF_URL}" ] && usage "-h requires a non-empty value"
 [ -z "${ALF_USER}" -a -z "${ALF_AUTH}" ] && usage "Must provide either -u or -A"
+[ -n "${ALF_USER}" ] && ! ${ALF_PASS_SET} && usage "Must provide a password using -p, or use -A"
 
 JQ="$(find_exe jq true)"
 WGET="$(find_exe wget)"
