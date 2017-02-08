@@ -225,8 +225,7 @@ public class UserMapper {
 				if (g.hasAttr(v)) {
 					v = g.getString(v);
 				} else if (v == UserMapper.GROUP_NAME) {
-					// The group name is to be folded to uppercase
-					v = g.getGroupName().toUpperCase();
+					v = convertGroupName(groupMappings, g.getGroupName());
 				} else if (v == UserMapper.USER_MEMBERS) {
 					// Encode the user members into a single value
 					IDfCollection c = g.getUsersNames();
@@ -247,7 +246,7 @@ public class UserMapper {
 					try {
 						while (c.next()) {
 							String n = c.getString("groups_names");
-							groups.add(Tools.coalesce(groupMappings.getProperty(n), n.toUpperCase()));
+							groups.add(convertGroupName(groupMappings, n));
 						}
 					} finally {
 						DfUtils.closeQuietly(c);
@@ -270,6 +269,14 @@ public class UserMapper {
 		return String.format(".%s", docbase.toLowerCase());
 	}
 
+	private String convertGroupName(Properties groupMappings, String groupName) {
+		String newName = (groupMappings != null ? groupMappings.getProperty(groupName) : null);
+		if (newName == null) {
+			newName = String.format("GROUP_%s", groupName.toUpperCase());
+		}
+		return newName;
+	}
+
 	private CSVPrinter newCSVPrinter(CommandLineValues cli, String name, String docbase, Set<String> headings,
 		String source) throws IOException {
 		if (StringUtils.isEmpty(source)) {
@@ -279,7 +286,7 @@ public class UserMapper {
 		source = source.toUpperCase();
 		source = source.replaceAll("\\s", "_");
 		CSVFormat format = CSVFormat.DEFAULT.withRecordSeparator(UserMapper.NEWLINE);
-		File f = new File(String.format("new_%s%s.%s.csv", name, docbase, source.toUpperCase())).getAbsoluteFile();
+		File f = new File(String.format("new_%s%s.%s.csv", name, docbase, source)).getAbsoluteFile();
 		try {
 			f = f.getCanonicalFile();
 		} catch (IOException e) {
@@ -699,7 +706,7 @@ public class UserMapper {
 					continue;
 				}
 
-				groupMapping.setProperty(group.getName(), group.getName().toUpperCase());
+				groupMapping.setProperty(group.getName(), convertGroupName(null, group.getName()));
 				newGroups.add(g);
 				groupSources.add(group.getSource());
 			}
