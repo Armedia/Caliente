@@ -477,24 +477,17 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 			@Override
 			public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
-				CmfProperty<CmfValue> accessors = dataObject.getProperty("accessors");
-				CmfProperty<CmfValue> accessorTypes = dataObject.getProperty("accessorTypes");
-				CmfProperty<CmfValue> permitTypes = dataObject.getProperty("permitTypes");
-				CmfProperty<CmfValue> permitValues = dataObject.getProperty("permitValues");
+				CmfProperty<CmfValue> accessors = dataObject.getAttribute("dctm:r_accessor_name");
+				CmfProperty<CmfValue> types = dataObject.getAttribute("dctm:r_is_group");
+				CmfProperty<CmfValue> permits = dataObject.getAttribute("dctm:r_accessor_permit");
 
-				final int count = Tools.min(accessors.getValueCount(), accessorTypes.getValueCount(),
-					permitTypes.getValueCount(), permitValues.getValueCount());
+				final int count = Tools.min(accessors.getValueCount(), accessors.getValueCount(), types.getValueCount(),
+					permits.getValueCount());
 
 				for (int i = 0; i < count; i++) {
 					String accessor = accessors.getValue(i).asString();
-					String accessorType = accessorTypes.getValue(i).asString();
-					int permitType = permitTypes.getValue(i).asInteger();
-					String permitValue = permitValues.getValue(i).asString();
-
-					if (permitType != 0) {
-						// We only support DF_ACCESS_PERMIT
-						continue;
-					}
+					final boolean is_group = types.getValue(i).asBoolean();
+					final int permit = permits.getValue(i).asInteger();
 
 					if (Tools.equals(accessor, "dm_owner")) {
 						accessor = owner;
@@ -507,29 +500,26 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					}
 
 					final AccessorType type;
-					if (accessorType.equals("user")) {
-						type = AccessorType.USER;
-						accessor = AlfImportFileableDelegate.this.factory.mapUser(accessor);
-					} else if (accessorType.indexOf("role") < 0) {
-						type = AccessorType.ROLE;
-						accessor = AlfImportFileableDelegate.this.factory.mapRole(accessor);
-					} else {
+					if (is_group) {
 						type = AccessorType.GROUP;
 						accessor = AlfImportFileableDelegate.this.factory.mapGroup(accessor);
+					} else {
+						type = AccessorType.USER;
+						accessor = AlfImportFileableDelegate.this.factory.mapUser(accessor);
 					}
 
-					String permit = "?";
+					String permitStr = "?";
 					try {
-						permit = PermitValue.valueOf(permitValue.toUpperCase()).name();
+						permitStr = PermitValue.values()[permit - 1].name();
 					} catch (Exception e) {
 						// Unknown value, use "?"
-						permit = "?";
+						permitStr = "?";
 					}
 
 					if (i > 0) {
 						ret.append(',');
 					}
-					ret.append(String.format("%1.1s:%s:%1.1s", type.name().toLowerCase(), accessor, permit));
+					ret.append(String.format("%1.1s:%s:%1.1s", type.name().toLowerCase(), accessor, permitStr));
 				}
 
 				return false;
