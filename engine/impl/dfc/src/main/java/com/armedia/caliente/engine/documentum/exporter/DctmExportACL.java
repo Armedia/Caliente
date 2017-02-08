@@ -118,13 +118,12 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			}
 
 			final String accessorType;
-			if (IDfUser.class.isInstance(o) || Tools.equals(DctmACL.DM_OWNER, accessor)) {
-				accessorType = "user";
+			final IDfGroup g = session.getGroup(accessor);
+			if ((g != null) || Tools.equals(DctmACL.DM_GROUP, accessor) || Tools.equals(DctmACL.DM_WORLD, accessor)) {
+				accessorType = (g != null ? g.getGroupClass() : "group");
 			} else {
-				IDfGroup g = session.getGroup(accessor);
-				if ((g != null) || Tools.equals(DctmACL.DM_GROUP, accessor)
-					|| Tools.equals(DctmACL.DM_WORLD, accessor)) {
-					accessorType = (g != null ? g.getGroupClass() : "group");
+				if (Tools.equals(DctmACL.DM_OWNER, accessor) || IDfUser.class.isInstance(o)) {
+					accessorType = "user";
 				} else {
 					// WTF is it?
 					accessorType = "?";
