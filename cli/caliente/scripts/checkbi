@@ -174,8 +174,10 @@ ${PREFER_CURL} && [ -n "${CURL}" ] && CALL="curl_call"
 while true ; do
 	FULL_STATUS_JSON="$(get_status)"
 	if [ ${?} -ne 0 ] ; then
-		${IGNORE_LOCAL_ERRORS} && { ${WAIT_MODE} && pause_for_poll ; continue ; }
-		fail "Failed to retrieve the status data"
+		# Here we output an error code of 2 to tell callers that
+		# the error was communications based, not BI-status based
+		err "ERROR: Failed to retrieve the status data"
+		exit 2
 	fi
 
 	TERMINAL="false"
@@ -205,6 +207,7 @@ while true ; do
 			say "\tDRY RUN: ${DRYRUN}"
 			TERMINAL="true"
 			SHOW_ERRORS="true"
+			EXIT="1"
 			;;
 
 		"NEVER RUN"	)
@@ -239,7 +242,7 @@ while true ; do
 			;;
 	esac
 
-	if ${TERMINAL} ; then
+	if ${TERMINAL} || ! ${WAIT_MODE} ; then
 		if ${SHOW_ERRORS} ; then
 			for (( i = 0 ; i < ${ERRORS} ; i++ )) ; do
 				ERR="$(parse ".[${i}]" <<< "${ERROR_INFO}")"
@@ -263,8 +266,6 @@ while true ; do
 		fi
 		exit ${EXIT}
 	fi
-
-	${WAIT_MODE} || exit ${EXIT}
 
 	pause_for_poll
 done
