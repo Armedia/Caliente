@@ -32,8 +32,19 @@ parse() {
 	"${JQ}" "${@}"
 }
 
+call_alfresco() {
+	local OUT=""
+	local RC=0
+	{
+		OUT="$("${CALL}" "${@}" 2>&1 1>&3-)"
+		RC=${?}
+	} 3>&1
+	[ ${RC} -ne 0 ] && err "${OUT}"
+	return ${RC}
+}
+
 get_status() {
-	"${CALL}" "${ALF_URL}/s/bulk/import/status.json"
+	call_alfresco "${ALF_URL}/s/bulk/import/status.json"
 }
 
 curl_call() {
@@ -41,7 +52,7 @@ curl_call() {
 	local METHOD="${2:-GET}"
 	local CURL_AUTH="${ALF_USER}"
 	${ALF_PASS_SET} && CURL_AUTH="${CURL_AUTH}:${ALF_PASS}"
-	"${CURL}" -s -X "${METHOD}" -u "${CURL_AUTH}" --url "${URL}"
+	"${CURL}" -s -X "${METHOD}" -u "${CURL_AUTH}" --url "${URL}" --retry 10 --retry-delay 10
 }
 
 wget_call() {
@@ -49,7 +60,7 @@ wget_call() {
 	local METHOD="${2:-GET}"
 	local WGET_PASS="--ask-password"
 	${ALF_PASS_SET} && WGET_PASS="--password=${ALF_PASS}"
-	"${WGET}" --quiet --method="${METHOD}" --user="${ALF_USER}" "${WGET_PASS}" -O - "${URL}"
+	"${WGET}" --quiet --method="${METHOD}" --tries 10 --waitretry 10 --user="${ALF_USER}" "${WGET_PASS}" -O - "${URL}"
 }
 
 find_exe() {
