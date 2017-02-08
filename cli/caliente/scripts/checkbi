@@ -13,7 +13,7 @@ err() {
 
 fail() {
 	err "ERROR: ${@}"
-	exit 1
+	exit 2
 }
 
 usage() {
@@ -21,7 +21,7 @@ usage() {
 	for e in "${@}" ; do
 		err "\t${e}"
 	done
-	exit 1
+	exit 2
 }
 
 parse_value() {
@@ -90,10 +90,9 @@ MIN_POLLSEC=3
 POLLSEC="30"
 POLLSEC_SET="false"
 WAIT_MODE="false"
-IGNORE_ERRORS="false"
-IGNORE_LOCAL_ERRORS="false"
+SHOW_ERRORS="false"
 
-while getopts ":ch:u:p:A:wW:eE" OPT "${@}" ; do
+while getopts ":ch:u:p:A:wW:e" OPT "${@}" ; do
 	case "${OPT}" in
 		c )	${PREFER_CURL} && fail "May not specify -c more than once"
 			PREFER_CURL="true"
@@ -132,11 +131,8 @@ while getopts ":ch:u:p:A:wW:eE" OPT "${@}" ; do
 			fi
 			POLLSEC_SET="true"
 			;;
-		e ) ${IGNORE_ERRORS} && fail "May not specify -e more than once"
-			IGNORE_ERRORS="true"
-			;;
-		E ) ${IGNORE_LOCAL_ERRORS} && fail "May not specify -E more than once"
-			IGNORE_LOCAL_ERRORS="true"
+		e ) ${SHOW_ERRORS} && fail "May not specify -e more than once"
+			SHOW_ERRORS="true"
 			;;
 		? )	OI="$(( OPTIND - 1 ))"
 			usage "Parameter ${!OI} is not valid or unexpected here"
@@ -178,7 +174,6 @@ while true ; do
 	fi
 
 	TERMINAL="false"
-	SHOW_ERRORS="false"
 	EXIT="0"
 	STATUS="$(parse_value ".processingState" <<< "${FULL_STATUS_JSON}")"
 	SOURCE="$(parse_value ".targetPath" <<< "${FULL_STATUS_JSON}")"
@@ -203,7 +198,6 @@ while true ; do
 			say "\tTARGET : [${TARGET}]"
 			say "\tDRY RUN: ${DRYRUN}"
 			TERMINAL="true"
-			SHOW_ERRORS="true"
 			EXIT="1"
 			;;
 
@@ -218,7 +212,6 @@ while true ; do
 			say "\tTARGET : [${TARGET}]"
 			say "\tDRY RUN: ${DRYRUN}"
 			TERMINAL="true"
-			SHOW_ERRORS="true"
 			;;
 
 		"FAILED"	)
@@ -227,7 +220,6 @@ while true ; do
 			say "\tTARGET : [${TARGET}]"
 			say "\tDRY RUN: [${DRYRUN}]"
 			TERMINAL="true"
-			SHOW_ERRORS="true"
 			EXIT="1"
 			;;
 
