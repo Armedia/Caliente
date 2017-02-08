@@ -1,0 +1,102 @@
+Here is a brief description of each of these scripts:
+
+bilaunch
+========================================
+	Launch a BI ingestion
+		-c
+			use CURL instead of WGET (the default is to prefer WGET unless it's not installed)
+		-h alfrescoBaseURL
+			The Alfresco BASE URL, not the BI URL (i.e. https://host:port/alfresco)
+		-u user
+		-p password
+		-A authFile
+			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
+		-s source
+			The source directory as it would be entered in the BI's User Interface
+		-t target
+			The target directory within Alfresco's repository
+		-D
+			Enable Dry Run mode (default off)
+		-R
+			Replace existing objects (default is to not replace)
+
+bicheck
+========================================
+	Check if a BI ingestion is running
+		-c
+			use CURL instead of WGET (the default is to prefer WGET unless it's not installed)
+		-h alfrescoBaseURL
+			The Alfresco BASE URL, not the BI URL (i.e. https://host:port/alfresco)
+		-u user
+		-p password
+		-A authFile
+			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
+		-w
+			Enable "wait" mode - poll the server until the BI job finishes
+		-W pollTime
+			Polling time in seconds (min 3, default 30)
+		-e
+			Enable showing all errors on exit
+
+bierr
+========================================
+	List the errors currently logged by BI - either for the currently-running job, or from the last-finished job
+		-c
+			use CURL instead of WGET (the default is to prefer WGET unless it's not installed)
+		-h alfrescoBaseURL
+			The Alfresco BASE URL, not the BI URL (i.e. https://host:port/alfresco)
+		-u user
+		-p password
+		-A authFile
+			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
+
+get_predicate
+========================================
+	Extracts the DQL predicate used in a (set of) export(s) from its (their) export log(s), and formats it (them) for use as a DQL query
+
+summarize_manifest
+========================================
+	Creates a 3 column summary (TYPE, RESULT, R_OBJECT_ID) from a (set of) manifest(s)
+
+extract_ids
+========================================
+	Extracts the r_object_id values from a list produced by summarize_manifest
+		-o
+			Enable sorting (and deduplicating) the output
+		-s [-]status1,status2,...,statusN
+			Only include (or exclude, if the list starts with "-") the given status values
+			Valid status values are:
+				Export: EXPORTED, SKIPPED, FAILED
+				Import: CREATED, UPDATED, DUPLICATE, SKIPPED, IGNORED, FAILED
+		-t [-]type1,type2,...,typeN
+			 Only include (or exclude, if the list starts with "-") the given type values
+			Valid object types are:
+				DATASTORE, USER, GROUP, ACL, TYPE, FORMAT, FOLDER, DOCUMENT, WORKFLOW
+
+id2pred
+========================================
+	Converts a list of r_object_id values into a Caliente-safe predicate that can be used for launching a Caliente export including just those objects, read from STDIN
+
+================================================================================
+USAGE EXAMPLES
+================================================================================
+
+#
+# Get a predicate for all documents that failed to export (sorted)
+#
+$ summarize_manifest caliente-export-1.manifest.csv caliente-export-2.manifest.csv | \
+	extract_ids -s FAILED -t DOCUMENT -o | \
+	id2pred > failed-doc.predicate
+# Launch a new Caliente export using that predicate
+$ java -jar caliente.jar [...other flags...] --source "$(cat failed-doc.predicate)"
+
+# 
+# Get a predicate for all skipped objects (unsorted)
+#
+$ summarize_manifest caliente-export-3.manifest.csv caliente-export-4.manifest.csv | \
+	extract_ids -t SKIPPED | \
+	id2pred > skipped-all.predicate
+# Launch a new Caliente export using that predicate
+$ java -jar caliente.jar [...other flags...] --source "$(cat skipped-all.predicate)"
+
+

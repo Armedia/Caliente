@@ -16,13 +16,6 @@ fail() {
 	exit 1
 }
 
-do_list() {
-	local manifest="${1}"
-	[ -e "${manifest}" ] || { err "ERROR: manifest [${manifest}] does not exist" ; return 1 ; }
-	[ -f "${manifest}" ] || { err "ERROR: manifest [${manifest}] is not a regular file" ; return 1 ; }
-	"${CSVTOOL}" -u ' ' col 3,5,7 "${manifest}" | grep -v "^TYPE "
-}
-
 for log in "${@}" ; do
 	egrep "^[[:space:]]export.predicate[[:space:]]=[[:space:]]\[.*\]$" "${log}"
 done | sed -e 's/^\sexport.predicate\s=\s\[//g' -e 's/\]$//g' -e 's/^\([^[:space:]]\+\)/\1 (ALL)/g'
