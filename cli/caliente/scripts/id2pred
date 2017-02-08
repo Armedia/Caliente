@@ -1,0 +1,32 @@
+#!/bin/bash
+SCRIPT="$(readlink -f "${0}")"
+BASEDIR="$(dirname "${0}")"
+SCRIPT="$(basename "${0}")"
+
+say() {
+	echo -e "${@}"
+}
+
+err() {
+	say "${@}" 1>&2
+}
+
+fail() {
+	err "ERROR: ${@}"
+	exit 1
+}
+
+do_list() {
+	local manifest="${1}"
+	[ -e "${manifest}" ] || { err "ERROR: manifest [${manifest}] does not exist" ; return 1 ; }
+	[ -f "${manifest}" ] || { err "ERROR: manifest [${manifest}] is not a regular file" ; return 1 ; }
+	"${CSVTOOL}" -u ' ' col 3,5,7 "${manifest}" | grep -v "^TYPE "
+}
+
+say "dm_sysobject where r_object_id in ("
+COMMA=" "
+while read r_object_id rest ; do
+	say "${COMMA} '${r_object_id}'"
+	COMMA=","
+done
+say ")"
