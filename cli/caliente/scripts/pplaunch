@@ -1,0 +1,255 @@
+#!/bin/bash
+SCRIPT="$(readlink -f "${0}")"
+BASEDIR="$(dirname "${0}")"
+SCRIPT="$(basename "${0}")"
+
+say() {
+	echo -e "${@}"
+}
+
+err() {
+	say "${@}" 1>&2
+}
+
+fail() {
+	err "ERROR: ${@}"
+	exit 1
+}
+
+usage() {
+	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] -s source -t target [-i indexName]"
+	for e in "${@}" ; do
+		err "\t${e}"
+	done
+	exit 1
+}
+
+parse_value() {
+	parse --raw-output "${@}"
+}
+
+parse() {
+	"${JQ}" "${@}"
+}
+
+call_alfresco() {
+	local OUT=""
+	local RC=0
+	{
+		OUT="$("${CALL}" "${@}" 2>&1 1>&3-)"
+		RC=${?}
+	} 3>&1
+	[ ${RC} -ne 0 ] && err "${OUT}"
+	return ${RC}
+}
+
+get_status() {
+	call_alfresco "${ALF_URL}/s/caliente/migration/status.json"
+}
+
+urlencode() {
+	local OLD_LC_COLLATE="${LC_COLLATE}"
+	LC_COLLATE="C"
+
+	local LEN="${#1}"
+	for (( i = 0; i < LEN; i++ )); do
+		local c="${1:i:1}"
+		case "${c}" in
+			[a-zA-Z0-9.~_-] ) printf "$c" ;;
+			" " ) printf "+" ;;
+			* ) printf '%%%02X' "'$c" ;;
+		esac
+	done
+
+	LC_COLLATE="${OLD_LC_COLLATE}"
+}
+
+urldecode() {
+	local STR="${1//+/ }"
+	printf '%b' "${STR//%/\\x}"
+}
+
+start_pp() {
+	local SRC="${1}"
+	SRC="$(urlencode "${SRC}/${INDEX_NAME}")"
+	call_alfresco "${ALF_URL}/s/caliente/migration/initiate?robjectid=${SRC}" POST
+}
+
+curl_call() {
+	local URL="${1}"
+	local METHOD="${2:-GET}"
+	"${CURL}" -f -X "${METHOD}" -u "${ALF_USER}:${ALF_PASS}" --url "${URL}" --retry 10 --retry-delay 10
+}
+
+wget_call() {
+	local URL="${1}"
+	local METHOD="${2:-GET}"
+	"${WGET}" --method="${METHOD}" --tries 10 --waitretry 10 --user="${ALF_USER}" --password="${ALF_PASS}" -O - "${URL}"
+}
+
+normalize_path() {
+	# Remove all . and .. sequences
+	# Returns 0 if successful, 1 if the .. recursion goes too far up
+	local SRC=()
+	local TGT=()
+	local IDX=()
+	IFS="/" read -r -a SRC <<< "${1}"
+	local LEADING=false
+	local FIRST=true
+	for e in "${SRC[@]}" ; do
+		case "${e}" in
+			.. )
+				[ ${#TGT[@]} -lt 1 ] && return 1
+				IDX=(${!TGT[@]});
+				unset TGT[${IDX[@]: -1}]
+				;;
+			"" ) ${FIRST} && LEADING=true ;;
+			. ) ;; # Do nothing - must be silently skipped
+			* ) TGT+=("${e}") ;;
+		esac
+		FIRST=false
+	done
+	${LEADING} || FIRST=true
+	for e in "${TGT[@]}" ; do
+		${FIRST} || echo -en "/"
+		echo -en "${e}"
+		FIRST=false
+	done
+	${FIRST} && echo -en "/"
+	echo ""
+	return 0
+}
+
+find_exe() {
+	local EXE_NAME="${1}"
+	local REQUIRED="${2}"
+	REQUIRED="${REQUIRED,,}"
+	case "${REQUIRED}" in
+		true | false ) ;;
+		* ) REQUIRED="false" ;;
+	esac
+
+	local EXE="$(which "${EXE_NAME}")"
+	[ -z "${EXE}" ] && EXE="/usr/bin/${EXE_NAME}"
+	[ -f "${EXE}" ] || { ${REQUIRED} && fail "'${EXE_NAME}' is not installed, but is required by this script" ; return 1 ; }
+	[ -x "${EXE}" ] || { ${REQUIRED} && fail "'${EXE}' is not executable, but is required by this script" ; return 2 ; }
+	echo "${EXE}"
+	return 0
+}
+
+ALF_URL=""
+ALF_USER=""
+ALF_PASS=""
+ALF_PASS_SET="false"
+PREFER_CURL="false"
+DRYRUN="false"
+REPLACE="false"
+
+while getopts ":ch:u:p:A:s:i:" OPT "${@}" ; do
+	case "${OPT}" in
+		c )	${PREFER_CURL} && fail "May not specify -c more than once"
+			PREFER_CURL="true"
+			;;
+		h )	[ -n "${ALF_URL}" ] && fail "May not specify more than one -h value"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty URL"
+			ALF_URL="${OPTARG}"
+			;;
+		u )	[ -n "${ALF_USER}" ] && fail "May not specify more than one -u value"
+			[ -n "${ALF_AUTH}" ] && fail "May not specify -A and -u"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty username"
+			ALF_USER="${OPTARG}"
+			;;
+		p )	${ALF_PASS_SET} && fail "May not specify more than one -p value"
+			[ -n "${ALF_AUTH}" ] && fail "May not specify -A and -p"
+			ALF_PASS="${OPTARG}"
+			ALF_PASS_SET="true"
+			;;
+		A )	[ -n "${ALF_USER}" ] && fail "May not specify -u and -A"
+			${ALF_PASS_SET} && fail "May not specify -p and -A"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty authentication file"
+			ALF_AUTH="${OPTARG}"
+			[ -e "${ALF_AUTH}" ] || fail "The authentication file [${ALF_AUTH}] does not exist"
+			[ -f "${ALF_AUTH}" ] || fail "The authentication file [${ALF_AUTH}] is not a regular file"
+			[ -r "${ALF_AUTH}" ] || fail "The authentication file [${ALF_AUTH}] can't be read"
+			;;
+		s )	[ -n "${SOURCE}" ] && fail "May not specify -s more than once"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty source path"
+			SOURCE="$(normalize_path "${OPTARG}")"
+			[ ${?} -ne 0 ] && fail "Illegal source path [${OPTARG}] - not fully normalized"
+			;;
+		s )	[ -n "${INDEX_NAME}" ] && fail "May not specify -i more than once"
+			[ -z "${OPTARG}" ] && fail "May not specify an empty index name"
+			INDEX_NAME="$(normalize_path "${OPTARG}")"
+			[ ${?} -ne 0 ] && fail "Illegal index name [${OPTARG}] - not fully normalized"
+			;;
+		? )	OI="$(( OPTIND - 1 ))"
+			usage "Parameter ${!OI} is not valid or unexpected here"
+			;;
+	esac
+done
+
+[ -z "${INDEX_NAME}" ] && INDEX_NAME="CALIENTE_INGESTION_INDEX.txt"
+INDEX_NAME="$(sed -e 's;^/\+;;g' <<< "${INDEX_NAME}")"
+
+[ -z "${SOURCE}" ] && usage "-s requires a non-empty value"
+[ -z "${ALF_URL}" ] && usage "-h requires a non-empty value"
+[ -z "${ALF_USER}" -a -z "${ALF_AUTH}" ] && usage "Must provide either -u or -A"
+[ -n "${ALF_USER}" ] && ! ${ALF_PASS_SET} && usage "Must provide a password using -p, or use -A"
+
+JQ="$(find_exe jq true)"
+WGET="$(find_exe wget)"
+CURL="$(find_exe curl)"
+[ -z "${WGET}" -a -z "${CURL}" ] && fail "Must have either curl or wget installed - can't continue"
+
+if [ -n "${ALF_AUTH}" ] ; then
+	AUTH_DATA="$(cat "${ALF_AUTH}")"
+	parse "." <<< "${AUTH_DATA}" &>/dev/null || fail "The authentication file [${ALF_AUTH}] must have proper JSON syntax"
+	ALF_USER="$(parse_value ".user" <<< "${AUTH_DATA}")"
+	ALF_PASS="$(parse_value ".password" <<< "${AUTH_DATA}")"
+	ALF_PASS_SET="true"
+fi
+
+# Choose which getter function to use. WGET will be preferred
+[ -n "${CURL}" ] && CALL="curl_call"
+[ -n "${WGET}" ] && CALL="wget_call"
+${PREFER_CURL} && [ -n "${CURL}" ] && CALL="curl_call"
+
+FULL_STATUS_JSON="$(get_status)"
+[ ${?} -ne 0 ] && fail "Failed to retrieve the status data"
+
+STATUS="$(parse_value ".processingState" <<< "${FULL_STATUS_JSON}")"
+case "${STATUS^^}" in
+	"NULL"		| \
+	"NEVER RUN"	| \
+	"SUCCEEDED"	| \
+	"FAILED"	| \
+	"STOPPED"	) ;;
+
+	"PROCESSING"	| \
+	"STOPPING"		| \
+	"PAUSED"		)
+		SOURCE="$(parse_value ".sourceName" <<< "${FULL_STATUS_JSON}")"
+		DRYRUN="$(parse_value ".dryRun" <<< "${FULL_STATUS_JSON}")"
+		ERRORS="$(parse_value ".errorInfo | length" <<< "${FULL_STATUS_JSON}")"
+		err "ERROR: PP is active (${STATUS^^})"
+		err "\tSOURCE : [${SOURCE}]"
+		exit 1
+		;;
+
+	* )
+		# Unknown!!
+		say "Unknown PP status [${STATUS}]"
+		exit 2
+		;;
+esac
+
+say "$(date): Launching PP at [${ALF_URL}] as [${ALF_USER}]..."
+say "\tSOURCE : [${SOURCE}]"
+OUT="$(start_pp "${SOURCE}")"
+RC="${?}"
+if [ ${RC} -eq 0 ] ; then
+	say "$(date): Post-Processor started"
+else
+	say "$(date): Post-Processor was not started (RC=${RC})"
+fi
+exit ${RC}
