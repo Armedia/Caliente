@@ -17,7 +17,7 @@ fail() {
 }
 
 usage() {
-	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] -s source -t target [-i indexName]"
+	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] -s source [-i indexName]"
 	for e in "${@}" ; do
 		err "\t${e}"
 	done
