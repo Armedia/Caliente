@@ -69,9 +69,22 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	private static enum PermitValue {
 		//
-		NONE, BROWSE, READ, RELATE, VERSION, WRITE, DELETE,
+		NONE, BROWSE, READ, RELATE('L'), VERSION, WRITE, DELETE,
 		//
 		;
+
+		private final char tag;
+
+		private PermitValue() {
+			this(null);
+		}
+
+		private PermitValue(Character tag) {
+			if (tag == null) {
+				tag = name().charAt(0);
+			}
+			this.tag = tag;
+		}
 	}
 
 	static {
@@ -508,18 +521,18 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						accessor = AlfImportFileableDelegate.this.factory.mapUser(accessor);
 					}
 
-					String permitStr = "?";
+					char permitChar = '?';
 					try {
-						permitStr = PermitValue.values()[permit - 1].name();
+						permitChar = PermitValue.values()[permit - 1].tag;
 					} catch (Exception e) {
 						// Unknown value, use "?"
-						permitStr = "?";
+						permitChar = '?';
 					}
 
 					if (i > 0) {
 						ret.append(',');
 					}
-					ret.append(String.format("%1.1s:%s:%1.1s", type.name().toLowerCase(), accessor, permitStr));
+					ret.append(String.format("%1.1s:%s:%s", type.name().toLowerCase(), accessor, permitChar));
 				}
 
 				return false;
