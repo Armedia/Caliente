@@ -491,16 +491,23 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			@Override
 			public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
 				CmfProperty<CmfValue> accessors = dataObject.getAttribute("dctm:r_accessor_name");
-				CmfProperty<CmfValue> types = dataObject.getAttribute("dctm:r_is_group");
+				CmfProperty<CmfValue> accessorTypes = dataObject.getAttribute("dctm:r_is_group");
 				CmfProperty<CmfValue> permits = dataObject.getAttribute("dctm:r_accessor_permit");
+				CmfProperty<CmfValue> permitTypes = dataObject.getAttribute("dctm:r_permit_type");
 
-				final int count = Tools.min(accessors.getValueCount(), accessors.getValueCount(), types.getValueCount(),
-					permits.getValueCount());
+				final int count = Tools.min(accessors.getValueCount(), accessors.getValueCount(),
+					accessorTypes.getValueCount(), permits.getValueCount());
 
 				for (int i = 0; i < count; i++) {
 					String accessor = accessors.getValue(i).asString();
-					final boolean is_group = types.getValue(i).asBoolean();
+					final boolean is_group = accessorTypes.getValue(i).asBoolean();
 					final int permit = permits.getValue(i).asInteger();
+					final int permitType = permitTypes.getValue(i).asInteger();
+
+					if (permitType != 0) {
+						// We can't handle other permit types yet...
+						continue;
+					}
 
 					if (Tools.equals(accessor, "dm_owner")) {
 						accessor = owner;
