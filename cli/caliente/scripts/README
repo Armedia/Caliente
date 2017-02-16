@@ -1,8 +1,8 @@
 Here is a brief description of each of these scripts:
 
-biall
+biscan
 ========================================
-	Launch a set of BI ingestions by searching for ingestible content within a list of directories
+	Scan for and launch a set of BI ingestions within a given list of directories
 		-c
 			use CURL instead of WGET (the default is to prefer WGET unless it's not installed)
 		-h alfrescoBaseURL
@@ -15,6 +15,10 @@ biall
 			The target directory within Alfresco's repository.  All encountered ingestible roots will be stored here
 		-W pollTime
 			Polling time in seconds (min 3, default 30)
+		-R
+			Cause BI to replace existing objects (i.e. bilaunch -R)
+		-D
+			Cause BI to perform dry runs instead of the actual work (i.e. bilaunch -D)
 		-P
 			Launch Caliente PP (by invoking pplaunch) after the BI process completes
 		-I
@@ -70,9 +74,9 @@ bierr
 		-A authFile
 			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
 
-ppindex
+ppscan
 ========================================
-	Process a "bulk index" as produced by biall when the -P flag isn't used (read from stdin)
+	Process a "postproc" index as produced by biall when the -P flag isn't used (read from stdin)
 		-c
 			use CURL instead of WGET (the default is to prefer WGET unless it's not installed)
 		-h alfrescoBaseURL
