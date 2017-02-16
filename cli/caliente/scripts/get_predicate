@@ -3,18 +3,10 @@ SCRIPT="$(readlink -f "${0}")"
 BASEDIR="$(dirname "${0}")"
 SCRIPT="$(basename "${0}")"
 
-say() {
-	echo -e "${@}"
-}
-
-err() {
-	say "${@}" 1>&2
-}
-
-fail() {
-	err "ERROR: ${@}"
-	exit 1
-}
+if ! . "${BASEDIR}/caliente.lib.sh" ; then
+	echo "Failed to load the main script library"
+	exit 99
+fi
 
 for log in "${@}" ; do
 	egrep "^[[:space:]]export.predicate[[:space:]]=[[:space:]]\[.*\]$" "${log}"

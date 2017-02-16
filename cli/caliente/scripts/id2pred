@@ -3,26 +3,12 @@ SCRIPT="$(readlink -f "${0}")"
 BASEDIR="$(dirname "${0}")"
 SCRIPT="$(basename "${0}")"
 
-say() {
-	echo -e "${@}"
-}
+if ! . "${BASEDIR}/caliente.lib.sh" ; then
+	echo "Failed to load the main script library"
+	exit 99
+fi
 
-err() {
-	say "${@}" 1>&2
-}
-
-fail() {
-	err "ERROR: ${@}"
-	exit 1
-}
-
-usage() {
-    err "usage: ${SCRIPT} basetype"
-    for e in "${@}" ; do
-        err "\t${e}"
-    done
-    exit 2
-}
+USAGE_DETAILS="basetype"
 
 [ ${#} -ne 1 ] && usage "Must provide the base type to generate the prediate with"
 BASETYPE="${1}"

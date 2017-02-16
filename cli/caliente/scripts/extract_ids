@@ -3,26 +3,12 @@ SCRIPT="$(readlink -f "${0}")"
 BASEDIR="$(dirname "${0}")"
 SCRIPT="$(basename "${0}")"
 
-say() {
-	echo -e "${@}"
-}
+if ! . "${BASEDIR}/caliente.lib.sh" ; then
+	echo "Failed to load the main script library"
+	exit 99
+fi
 
-err() {
-	say "${@}" 1>&2
-}
-
-fail() {
-	err "ERROR: ${@}"
-	exit 1
-}
-
-usage() {
-	err "usage: ${SCRIPT} [-o] [-s [-]status1,status2,...,statusN] [-t [-]type1,type2,...,typeN]"
-	for e in "${@}" ; do
-		err "\t${e}"
-	done
-	exit 1
-}
+USAGE_DETAILS="[-o] [-s [-]status1,status2,...,statusN] [-t [-]type1,type2,...,typeN]"
 
 SORTED="false"
 STATUS_SET="false"

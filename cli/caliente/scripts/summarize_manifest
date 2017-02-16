@@ -3,18 +3,10 @@ SCRIPT="$(readlink -f "${0}")"
 BASEDIR="$(dirname "${0}")"
 SCRIPT="$(basename "${0}")"
 
-say() {
-	echo -e "${@}"
-}
-
-err() {
-	say "${@}" 1>&2
-}
-
-fail() {
-	err "ERROR: ${@}"
-	exit 1
-}
+if ! . "${BASEDIR}/caliente.lib.sh" ; then
+	echo "Failed to load the main script library"
+	exit 99
+fi
 
 do_list() {
 	local manifest="${1}"
@@ -23,16 +15,13 @@ do_list() {
 	"${CSVTOOL}" -u ' ' col 3,5,7 "${manifest}" | grep -v "^TYPE "
 }
 
-CSVTOOL="$(which csvtool)"
-[ -z "${CSVTOOL}" ] && CSVTOOL="/usr/bin/csvtool"
-[ -f "${CSVTOOL}" ] || fail "csvtool is not installed, this tool is required by this script"
-[ -x "${CSVTOOL}" ] || fail "csvtool is not executable, this tool is required by this script"
-
 if [ ${#} -lt 1 ] ; then
 	err "usage: ${SCRIPT} manifest1 [manifest2 manifest3 ... manifestN]"
 	exit 1
 fi
 
+CSVTOOL=""
 for n in "${@}" ; do
+	[ -z "${CSVTOOL}" ] && CSVTOOL="$(find_exe csvtool true)"
 	do_list "${n}"
 done
