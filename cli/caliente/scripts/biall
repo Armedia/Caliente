@@ -154,30 +154,28 @@ process() {
 	[ -f "${DIR}/${IDX}" ] || return 0
 
 	# Only rename the ingestion index if we're not running PP in this same batch
-	if ! ${LAUNCH_PP} ; then
-		local SUFFIX="$(get_suffix "${DIR}")"
-		[ -z "${SUFFIX}" ] && SUFFIX="$(uuidgen -t)"
-		IDX="${INDEX}.${SUFFIX}"
+	local SUFFIX="$(get_suffix "${DIR}")"
+	[ -z "${SUFFIX}" ] && SUFFIX="$(uuidgen -t)"
+	IDX="${INDEX}.${SUFFIX}"
 
-		say "Renaming the PP index file for [${DIR}] with the suffix [${SUFFIX}]..."
-		OUT="$(
-			"${XMLSTARLET}" ed -L \
-			-u "/scan/item[sourceName=\"${INDEX}\"]/targetName" -v "${IDX}" \
-			"${DIR}/scan.files.xml" 2>&1
-		)"
-		RC="${?}"
-		if [ ${RC} -ne 0 ] ; then
-			say "${OUT}"
-			say "RC=[${RC}]"
-			return ${RC}
-		else
-			log "${OUT}"
-			log "RC=[${RC}]"
-		fi
-
-		say "Writing out the mapping for [${DIR}] to [${SUFFIX}]"
-		echo -e "${IDX}\t${TARGET}" >> "${INDEX_MAP}"
+	say "Renaming the PP index file for [${DIR}] with the suffix [${SUFFIX}]..."
+	OUT="$(
+		"${XMLSTARLET}" ed -L \
+		-u "/scan/item[sourceName=\"${INDEX}\"]/targetName" -v "${IDX}" \
+		"${DIR}/scan.files.xml" 2>&1
+	)"
+	RC="${?}"
+	if [ ${RC} -ne 0 ] ; then
+		say "${OUT}"
+		say "RC=[${RC}]"
+		return ${RC}
+	else
+		log "${OUT}"
+		log "RC=[${RC}]"
 	fi
+
+	say "Writing out the mapping for [${DIR}] to [${SUFFIX}]"
+	echo -e "${IDX}\t${TARGET}" >> "${INDEX_MAP}"
 
 	say "Launching BI for [${DIR}]..."
 	OUT="$("${BILAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${DIR}" -t "${TGT}" ${DRYRUN} ${REPLACE})"
