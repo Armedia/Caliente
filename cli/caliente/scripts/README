@@ -204,6 +204,9 @@ $ java -jar caliente.jar [...other flags...] --source "$(cat skipped-all.predica
 #
 # Launch all ingestions in /export_data/transformed/, without running PP
 #
-$ biall -h ... -u ... -p ... -W 5 -t /Alfresco/Common/Target /export_data/transformed
+$ biscan -h ... -u ... -p ... -W 5 -t /Alfresco/Common/Target /export_data/transformed
 
-
+#
+# Consume the PP index generated in the previous step, and launch all the pending PPs from it
+#
+$ ppscan -h ... -u ... -p ... -W 5 < biscan.XXXXXX.postproc
