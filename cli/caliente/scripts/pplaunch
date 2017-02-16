@@ -71,8 +71,9 @@ urldecode() {
 
 start_pp() {
 	local SRC="${1}"
+	local IDX="${2}"
 	SRC="$(sed -e 's;^/\+;;g' <<< "${SRC}")"
-	SRC="$(urlencode "${SRC}${SRC:+/}${INDEX_NAME}")"
+	SRC="$(urlencode "${SRC}${SRC:+/}${IDX}")"
 	call_alfresco "${ALF_URL}/s/caliente/migration/initiate?robjectid=${SRC}" POST
 }
 
@@ -248,7 +249,8 @@ esac
 SOURCE="$(sed -e 's;^/\+;;g' <<< "${SOURCE}")"
 say "$(date): Launching PP at [${ALF_URL}] as [${ALF_USER}]..."
 say "\tSOURCE : [${SOURCE}]"
-OUT="$(start_pp "${SOURCE}")"
+say "\tINDEX  : [${INDEX_NAME}]"
+OUT="$(start_pp "${SOURCE}" "${INDEX_NAME}")"
 RC="${?}"
 if [ ${RC} -eq 0 ] ; then
 	say "$(date): Post-Processor started"
