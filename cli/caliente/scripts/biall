@@ -20,6 +20,10 @@ say() {
 	echo -e "$(date): ${@}" | tee -a "${LOG}"
 }
 
+log() {
+	say "${@}" &>/dev/null
+}
+
 err() {
 	echo -e "${@}" 1>&2
 }
@@ -166,6 +170,9 @@ process() {
 			say "${OUT}"
 			say "RC=[${RC}]"
 			return ${RC}
+		else
+			log "${OUT}"
+			log "RC=[${RC}]"
 		fi
 
 		say "Writing out the mapping for [${DIR}] to [${SUFFIX}]"
@@ -179,6 +186,9 @@ process() {
 		say "${OUT}"
 		say "RC=[${RC}]"
 		return ${RC}
+	else
+		log "${OUT}"
+		log "RC=[${RC}]"
 	fi
 
 	say "Waiting for BI for [${DIR}]..."
@@ -187,6 +197,9 @@ process() {
 
 	if [ ${RC} -ne 0 ] ; then
 		handle_bi_error "${DIR}" "${RC}" "${OUT}" || return ${?}
+	else
+		log "${OUT}"
+		log "RC=[${RC}]"
 	fi
 
 	say "BI Completed for [${DIR}]..."
@@ -200,6 +213,9 @@ process() {
 		say "${OUT}"
 		say "RC=[${RC}]"
 		return ${RC}
+	else
+		log "${OUT}"
+		log "RC=[${RC}]"
 	fi
 
 	say "Waiting for PP for [${DIR}]..."
@@ -208,6 +224,9 @@ process() {
 
 	if [ ${RC} -ne 0 ] ; then
 		handle_pp_error "${DIR}" "${RC}" "${OUT}" || return ${?}
+	else
+		log "${OUT}"
+		log "RC=[${RC}]"
 	fi
 
 	return 0
