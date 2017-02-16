@@ -20,7 +20,7 @@ datemark() {
 }
 
 say() {
-	echo -e "$(date): ${@}" | tee -a /dev/fd/9
+	echo -e "$(datemark): ${@}" | tee -a /dev/fd/9
 }
 
 silent_log() {
