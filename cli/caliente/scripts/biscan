@@ -3,156 +3,23 @@ SCRIPT="$(readlink -f "${0}")"
 BASEDIR="$(dirname "${0}")"
 SCRIPT="$(basename "${0}")"
 
+if ! . "${BASEDIR}/caliente.lib.sh" ; then
+	echo "Failed to load the main script library"
+	exit 99
+fi
+
+USAGE_DETAILS="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-P] [-W pollSec] directories..."
+
+LOGMARK="$(date +%Y%m%d-%H%M%S)"
+# Open up the log on file descriptor 9, if it's not already open
+LOG="${BASEDIR}/${SCRIPT}.${LOGMARK}.log"
+
+INDEX_MAP="${BASEDIR}/${SCRIPT}.${LOGMARK}.postproc"
 INDEX="CALIENTE_INGESTION_INDEX.txt"
 
-DATEMARK="$(date +%Y%m%d-%H%M%S)"
-
-INDEX_MAP="${BASEDIR}/${SCRIPT}.${DATEMARK}.postproc"
-
-DEBUG="false"
-
-# Open up the log on file descriptor 9, if it's not already open
-LOG="${BASEDIR}/${SCRIPT}.${DATEMARK}.log"
-
-init_log() {
-	[ -f /dev/fd/9 ] || exec 9>"${LOG}" || {
-		echo "FAILED TO INITIALIZE THE LOG AT [${LOG}]"
-		exit 9
-	}
-}
-
-datemark() {
-	date -Iseconds
-}
-
-say() {
-	init_log
-	echo -e "$(datemark): ${@}" | tee -a /dev/fd/9
-}
-
-silent_log() {
-	init_log
-	tee -a /dev/fd/9 &>/dev/null
-}
-
-log() {
-	say "${@}" &>/dev/null
-}
-
-err() {
-	echo -e "${@}" 1>&2
-}
-
-fail() {
-	err "ERROR: ${@}"
-	exit 1
-}
-
-usage() {
-	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-P] [-W pollSec] directories..."
-	for e in "${@}" ; do
-		err "\t${e}"
-	done
-	exit 1
-}
-
-parse_value() {
-	parse --raw-output "${@}"
-}
-
-parse() {
-	"${JQ}" "${@}"
-}
-
-find_script() {
-	local EXE_NAME="${1}"
-	local REQUIRED="${2}"
-	REQUIRED="${REQUIRED,,}"
-	case "${REQUIRED}" in
-		true | false ) ;;
-		* ) REQUIRED="false" ;;
-	esac
-
-	local EXE="${BASEDIR}/${EXE_NAME}"
-	[ -f "${EXE}" ] || { ${REQUIRED} && fail "'${EXE_NAME}' is not installed, but is required by this script" ; return 1 ; }
-	[ -x "${EXE}" ] || { ${REQUIRED} && fail "'${EXE}' is not executable, but is required by this script" ; return 2 ; }
-	echo "${EXE}"
-	return 0
-}
-
-find_exe() {
-	local EXE_NAME="${1}"
-	local REQUIRED="${2}"
-	REQUIRED="${REQUIRED,,}"
-	case "${REQUIRED}" in
-		true | false ) ;;
-		* ) REQUIRED="false" ;;
-	esac
-
-	local EXE="$(which "${EXE_NAME}")"
-	[ -z "${EXE}" ] && EXE="/usr/bin/${EXE_NAME}"
-	[ -f "${EXE}" ] || { ${REQUIRED} && fail "'${EXE_NAME}' is not installed, but is required by this script" ; return 1 ; }
-	[ -x "${EXE}" ] || { ${REQUIRED} && fail "'${EXE}' is not executable, but is required by this script" ; return 2 ; }
-	echo "${EXE}"
-	return 0
-}
-
-handle_bi_error() {
-	local DIR="${1}"
-	local RC="${2}"
-	local OUT="${3}"
-
-	${IGNORE_ERRORS} && return 0
-	return ${RC}
-}
-
-handle_pp_error() {
-	local DIR="${1}"
-	local RC="${2}"
-	local OUT="${3}"
-
-	say "${OUT}"
-	say "RC=[${RC}]"
-	${IGNORE_ERRORS} && return 0
-	return ${RC}
-}
-
-get_suffix() {
+get_directory_suffix() {
 	local DIR="${1}"
 	echo ""
-}
-
-normalize_path() {
-	# Remove all . and .. sequences
-	# Returns 0 if successful, 1 if the .. recursion goes too far up
-	local SRC=()
-	local TGT=()
-	local IDX=()
-	IFS="/" read -r -a SRC <<< "${1}"
-	local LEADING=false
-	local FIRST=true
-	for e in "${SRC[@]}" ; do
-		case "${e}" in
-			.. )
-				[ ${#TGT[@]} -lt 1 ] && return 1
-				IDX=(${!TGT[@]});
-				unset TGT[${IDX[@]: -1}]
-				;;
-			"" ) ${FIRST} && LEADING=true ;;
-			. ) ;; # Do nothing - must be silently skipped
-			* ) TGT+=("${e}") ;;
-		esac
-		FIRST=false
-	done
-	${LEADING} || FIRST=true
-	for e in "${TGT[@]}" ; do
-		${FIRST} || echo -en "/"
-		echo -en "${e}"
-		FIRST=false
-	done
-	${FIRST} && echo -en "/"
-	echo ""
-	return 0
 }
 
 process() {
@@ -167,7 +34,7 @@ process() {
 	[ -f "${DIR}/${IDX}" ] || return 0
 
 	# Only rename the ingestion index if we're not running PP in this same batch
-	local SUFFIX="$(get_suffix "${DIR}")"
+	local SUFFIX="$(get_directory_suffix "${DIR}")"
 	[ -z "${SUFFIX}" ] && SUFFIX="$(uuidgen -t)"
 	IDX="${INDEX}.${SUFFIX}"
 

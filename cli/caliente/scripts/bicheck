@@ -3,86 +3,12 @@ SCRIPT="$(readlink -f "${0}")"
 BASEDIR="$(dirname "${0}")"
 SCRIPT="$(basename "${0}")"
 
-datemark() {
-    date -Iseconds
-}
+if ! . "${BASEDIR}/caliente.lib.sh" ; then
+	echo "Failed to load the main script library"
+	exit 99
+fi
 
-say() {
-	echo -e "$(datemark): ${@}"
-}
-
-err() {
-	echo -e "${@}" 1>&2
-}
-
-fail() {
-	err "ERROR: ${@}"
-	exit 2
-}
-
-usage() {
-	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-w [-W pollSec]] [-e] [-E]"
-	for e in "${@}" ; do
-		err "\t${e}"
-	done
-	exit 2
-}
-
-parse_value() {
-	parse --raw-output "${@}"
-}
-
-parse() {
-	"${JQ}" "${@}"
-}
-
-call_alfresco() {
-	local OUT=""
-	local RC=0
-	{
-		OUT="$("${CALL}" "${@}" 2>&1 1>&3-)"
-		RC=${?}
-	} 3>&1
-	[ ${RC} -ne 0 ] && err "${OUT}"
-	return ${RC}
-}
-
-get_status() {
-	call_alfresco "${ALF_URL}/s/bulk/import/status.json"
-}
-
-curl_call() {
-	local URL="${1}"
-	local METHOD="${2:-GET}"
-	"${CURL}" -k -f -X "${METHOD}" -u "${ALF_USER}:${ALF_PASS}" --url "${URL}" --retry 10 --retry-delay 10
-}
-
-wget_call() {
-	local URL="${1}"
-	local METHOD="${2:-GET}"
-	"${WGET}" --method="${METHOD}" --tries 10 --waitretry 10 --user="${ALF_USER}" --password="${ALF_PASS}" -O - "${URL}"
-}
-
-find_exe() {
-	local EXE_NAME="${1}"
-	local REQUIRED="${2}"
-	REQUIRED="${REQUIRED,,}"
-	case "${REQUIRED}" in
-		true | false ) ;;
-		* ) REQUIRED="false" ;;
-	esac
-
-	local EXE="$(which "${EXE_NAME}")"
-	[ -z "${EXE}" ] && EXE="/usr/bin/${EXE_NAME}"
-	[ -f "${EXE}" ] || { ${REQUIRED} && fail "'${EXE_NAME}' is not installed, but is required by this script" ; return 1 ; }
-	[ -x "${EXE}" ] || { ${REQUIRED} && fail "'${EXE}' is not executable, but is required by this script" ; return 2 ; }
-	echo "${EXE}"
-	return 0
-}
-
-pause_for_poll() {
-	sleep ${POLLSEC}
-}
+USAGE_DETAILS="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-w [-W pollSec]] [-e] [-E]"
 
 ALF_URL=""
 ALF_USER=""
@@ -169,7 +95,7 @@ fi
 ${PREFER_CURL} && [ -n "${CURL}" ] && CALL="curl_call"
 
 while true ; do
-	FULL_STATUS_JSON="$(get_status)"
+	FULL_STATUS_JSON="$(call_alfresco "${ALF_URL}/s/bulk/import/status.json")"
 	if [ ${?} -ne 0 ] ; then
 		# Here we output an error code of 2 to tell callers that
 		# the error was communications based, not BI-status based
@@ -260,5 +186,5 @@ while true ; do
 		exit ${EXIT}
 	fi
 
-	pause_for_poll
+	sleep ${POLLSEC}
 done

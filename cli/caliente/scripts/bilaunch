@@ -3,143 +3,17 @@ SCRIPT="$(readlink -f "${0}")"
 BASEDIR="$(dirname "${0}")"
 SCRIPT="$(basename "${0}")"
 
-datemark() {
-    date -Iseconds
-}
+if ! . "${BASEDIR}/caliente.lib.sh" ; then
+	echo "Failed to load the main script library"
+	exit 99
+fi
 
-say() {
-	echo -e "$(datemark): ${@}"
-}
-
-err() {
-	echo -e "${@}" 1>&2
-}
-
-fail() {
-	err "ERROR: ${@}"
-	exit 1
-}
-
-usage() {
-	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] -s source -t target [-D] [-R]"
-	for e in "${@}" ; do
-		err "\t${e}"
-	done
-	exit 1
-}
-
-parse_value() {
-	parse --raw-output "${@}"
-}
-
-parse() {
-	"${JQ}" "${@}"
-}
-
-call_alfresco() {
-	local OUT=""
-	local RC=0
-	{
-		OUT="$("${CALL}" "${@}" 2>&1 1>&3-)"
-		RC=${?}
-	} 3>&1
-	[ ${RC} -ne 0 ] && err "${OUT}"
-	return ${RC}
-}
-
-get_status() {
-	call_alfresco "${ALF_URL}/s/bulk/import/status.json"
-}
-
-urlencode() {
-	local OLD_LC_COLLATE="${LC_COLLATE}"
-	LC_COLLATE="C"
-
-	local LEN="${#1}"
-	for (( i = 0; i < LEN; i++ )); do
-		local c="${1:i:1}"
-		case "${c}" in
-			[a-zA-Z0-9.~_-] ) printf "$c" ;;
-			" " ) printf "+" ;;
-			* ) printf '%%%02X' "'$c" ;;
-		esac
-	done
-
-	LC_COLLATE="${OLD_LC_COLLATE}"
-}
-
-urldecode() {
-	local STR="${1//+/ }"
-	printf '%b' "${STR//%/\\x}"
-}
+USAGE_DETAILS="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] -s source -t target [-D] [-R]"
 
 start_import() {
 	local SRC="$(urlencode "${1}")"
 	local TGT="$(urlencode "${2}")"
-	local DRPARAM=""
 	call_alfresco "${ALF_URL}/s/bulk/import/initiate?sourceDirectory=${SRC}&targetPath=${TGT}&dryRun=${DRYRUN}&replaceExisting=${REPLACE}" POST
-}
-
-curl_call() {
-	local URL="${1}"
-	local METHOD="${2:-GET}"
-	"${CURL}" -k -f -X "${METHOD}" -u "${ALF_USER}:${ALF_PASS}" --url "${URL}" --retry 10 --retry-delay 10
-}
-
-wget_call() {
-	local URL="${1}"
-	local METHOD="${2:-GET}"
-	"${WGET}" --method="${METHOD}" --tries 10 --waitretry 10 --user="${ALF_USER}" --password="${ALF_PASS}" -O - "${URL}"
-}
-
-normalize_path() {
-	# Remove all . and .. sequences
-	# Returns 0 if successful, 1 if the .. recursion goes too far up
-	local SRC=()
-	local TGT=()
-	local IDX=()
-	IFS="/" read -r -a SRC <<< "${1}"
-	local LEADING=false
-	local FIRST=true
-	for e in "${SRC[@]}" ; do
-		case "${e}" in
-			.. )
-				[ ${#TGT[@]} -lt 1 ] && return 1
-				IDX=(${!TGT[@]});
-				unset TGT[${IDX[@]: -1}]
-				;;
-			"" ) ${FIRST} && LEADING=true ;;
-			. ) ;; # Do nothing - must be silently skipped
-			* ) TGT+=("${e}") ;;
-		esac
-		FIRST=false
-	done
-	${LEADING} || FIRST=true
-	for e in "${TGT[@]}" ; do
-		${FIRST} || echo -en "/"
-		echo -en "${e}"
-		FIRST=false
-	done
-	${FIRST} && echo -en "/"
-	echo ""
-	return 0
-}
-
-find_exe() {
-	local EXE_NAME="${1}"
-	local REQUIRED="${2}"
-	REQUIRED="${REQUIRED,,}"
-	case "${REQUIRED}" in
-		true | false ) ;;
-		* ) REQUIRED="false" ;;
-	esac
-
-	local EXE="$(which "${EXE_NAME}")"
-	[ -z "${EXE}" ] && EXE="/usr/bin/${EXE_NAME}"
-	[ -f "${EXE}" ] || { ${REQUIRED} && fail "'${EXE_NAME}' is not installed, but is required by this script" ; return 1 ; }
-	[ -x "${EXE}" ] || { ${REQUIRED} && fail "'${EXE}' is not executable, but is required by this script" ; return 2 ; }
-	echo "${EXE}"
-	return 0
 }
 
 ALF_URL=""
@@ -223,7 +97,7 @@ fi
 [ -n "${WGET}" ] && CALL="wget_call"
 ${PREFER_CURL} && [ -n "${CURL}" ] && CALL="curl_call"
 
-FULL_STATUS_JSON="$(get_status)"
+FULL_STATUS_JSON="$(call_alfresco "${ALF_URL}/s/bulk/import/status.json")"
 [ ${?} -ne 0 ] && fail "Failed to retrieve the status data"
 
 STATUS="$(parse_value ".processingState" <<< "${FULL_STATUS_JSON}")"

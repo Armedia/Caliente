@@ -3,96 +3,16 @@ SCRIPT="$(readlink -f "${0}")"
 BASEDIR="$(dirname "${0}")"
 SCRIPT="$(basename "${0}")"
 
-DATEMARK="$(date +%Y%m%d-%H%M%S)"
+if ! . "${BASEDIR}/caliente.lib.sh" ; then
+	echo "Failed to load the main script library"
+	exit 99
+fi
 
-LOG="${BASEDIR}/${SCRIPT}.log-${DATEMARK}"
-INDEX_MAP="${BASEDIR}/${SCRIPT}.index.${DATEMARK}"
+USAGE_DETAILS="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-W pollSec] [-I]"
 
+LOGMARK="$(date +%Y%m%d-%H%M%S)"
 # Open up the log on file descriptor 9, if it's not already open
-LOG="${BASEDIR}/${SCRIPT}.${DATEMARK}.log"
-
-init_log() {
-	[ -f /dev/fd/9 ] || exec 9>"${LOG}" || {
-		echo "FAILED TO INITIALIZE THE LOG AT [${LOG}]"
-		exit 9
-	}
-}
-
-datemark() {
-	date -Iseconds
-}
-
-say() {
-	init_log
-	echo -e "$(datemark): ${@}" | tee -a /dev/fd/9
-}
-
-silent_log() {
-	init_log
-	tee -a /dev/fd/9 &>/dev/null
-}
-
-log() {
-	say "${@}" &>/dev/null
-}
-
-err() {
-	echo -e "${@}" 1>&2
-}
-
-fail() {
-	err "ERROR: ${@}"
-	exit 1
-}
-
-usage() {
-	err "usage: ${SCRIPT} [-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-W pollSec] [-I]"
-	for e in "${@}" ; do
-		err "\t${e}"
-	done
-	exit 1
-}
-
-parse_value() {
-	parse --raw-output "${@}"
-}
-
-parse() {
-	"${JQ}" "${@}"
-}
-
-find_script() {
-	local EXE_NAME="${1}"
-	local REQUIRED="${2}"
-	REQUIRED="${REQUIRED,,}"
-	case "${REQUIRED}" in
-		true | false ) ;;
-		* ) REQUIRED="false" ;;
-	esac
-
-	local EXE="${BASEDIR}/${EXE_NAME}"
-	[ -f "${EXE}" ] || { ${REQUIRED} && fail "'${EXE_NAME}' is not installed, but is required by this script" ; return 1 ; }
-	[ -x "${EXE}" ] || { ${REQUIRED} && fail "'${EXE}' is not executable, but is required by this script" ; return 2 ; }
-	echo "${EXE}"
-	return 0
-}
-
-find_exe() {
-	local EXE_NAME="${1}"
-	local REQUIRED="${2}"
-	REQUIRED="${REQUIRED,,}"
-	case "${REQUIRED}" in
-		true | false ) ;;
-		* ) REQUIRED="false" ;;
-	esac
-
-	local EXE="$(which "${EXE_NAME}")"
-	[ -z "${EXE}" ] && EXE="/usr/bin/${EXE_NAME}"
-	[ -f "${EXE}" ] || { ${REQUIRED} && fail "'${EXE_NAME}' is not installed, but is required by this script" ; return 1 ; }
-	[ -x "${EXE}" ] || { ${REQUIRED} && fail "'${EXE}' is not executable, but is required by this script" ; return 2 ; }
-	echo "${EXE}"
-	return 0
-}
+LOG="${BASEDIR}/${SCRIPT}.${LOGMARK}.log"
 
 process() {
 	local SRC="${1}"
