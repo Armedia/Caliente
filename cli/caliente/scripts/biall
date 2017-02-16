@@ -13,17 +13,25 @@ DEBUG="false"
 
 # Open up the log on file descriptor 9, if it's not already open
 LOG="${BASEDIR}/${SCRIPT}.${DATEMARK}.log"
-exec 9>"${LOG}"
+
+init_log() {
+	[ -f /dev/fd/9 ] || exec 9>"${LOG}" || {
+		echo "FAILED TO INITIALIZE THE LOG AT [${LOG}]"
+		exit 9
+	}
+}
 
 datemark() {
 	date -Iseconds
 }
 
 say() {
+	init_log
 	echo -e "$(datemark): ${@}" | tee -a /dev/fd/9
 }
 
 silent_log() {
+	init_log
 	tee -a /dev/fd/9 &>/dev/null
 }
 
@@ -171,8 +179,10 @@ process() {
 	log "RC=[${RC}]"
 	[ ${RC} -eq 0 ] || return ${RC}
 
-	say "Writing out the mapping for [${DIR}] to [${SUFFIX}]"
-	echo -e "${IDX}\t${TARGET}" >> "${INDEX_MAP}"
+	if ! ${LAUNCH_PP} ; then
+		say "Writing out the mapping for [${DIR}] to [${SUFFIX}]"
+		echo -e "${IDX}\t${TARGET}" >> "${INDEX_MAP}"
+	fi
 
 	say "Launching BI for [${DIR}]..."
 	"${BILAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${DIR}" -t "${TGT}" ${DRYRUN} ${REPLACE} |& silent_log
@@ -260,7 +270,7 @@ while getopts ":ch:u:p:A:t:PIW:" OPT "${@}" ; do
 			[[ "${POLLSEC}" =~ ^[1-9][0-9]* ]] || fail "The value [${POLLSEC}] is not a valid number"
 			if [ ${POLLSEC} -lt ${MIN_POLLSEC} ] ; then
 				POLLSEC=${MIN_POLLSEC}
-				say "Polling interval may not be less than ${POLLSEC} seconds"
+				err "Polling interval may not be less than ${POLLSEC} seconds"
 			fi
 			POLLSEC_SET="true"
 			;;
@@ -304,6 +314,7 @@ if [ -n "${ALF_AUTH}" ] ; then
 	ALF_PASS="$(parse_value ".password" <<< "${AUTH_DATA}")"
 	ALF_PASS_SET="true"
 fi
+
 
 for dir in "${@}" ; do
 	dir="$(readlink -f "${dir}")"

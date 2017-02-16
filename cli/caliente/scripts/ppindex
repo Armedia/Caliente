@@ -10,17 +10,25 @@ INDEX_MAP="${BASEDIR}/${SCRIPT}.index.${DATEMARK}"
 
 # Open up the log on file descriptor 9, if it's not already open
 LOG="${BASEDIR}/${SCRIPT}.${DATEMARK}.log"
-exec 9>"${LOG}"
+
+init_log() {
+	[ -f /dev/fd/9 ] || exec 9>"${LOG}" || {
+		echo "FAILED TO INITIALIZE THE LOG AT [${LOG}]"
+		exit 9
+	}
+}
 
 datemark() {
 	date -Iseconds
 }
 
 say() {
+	init_log
 	echo -e "$(datemark): ${@}" | tee -a /dev/fd/9
 }
 
 silent_log() {
+	init_log
 	tee -a /dev/fd/9 &>/dev/null
 }
 
