@@ -3,12 +3,16 @@ SCRIPT="$(readlink -f "${0}")"
 BASEDIR="$(dirname "${0}")"
 SCRIPT="$(basename "${0}")"
 
+datemark() {
+    date -Iseconds
+}
+
 say() {
-	echo -e "${@}"
+	echo -e "$(datemark): ${@}"
 }
 
 err() {
-	say "${@}" 1>&2
+	echo -e "${@}" 1>&2
 }
 
 fail() {
