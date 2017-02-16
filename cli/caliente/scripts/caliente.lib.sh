@@ -1,6 +1,6 @@
 #!/bin/bash
 LIB="$(readlink -f "${0}")"
-BASEDIR="$(dirname "${LIB}")"
+LIBDIR="$(dirname "${LIB}")"
 LIB="$(basename "${LIB}")"
 
 #
@@ -207,7 +207,7 @@ find_script() {
 		* ) REQUIRED="false" ;;
 	esac
 
-	local EXE="${BASEDIR}/${EXE_NAME}"
+	local EXE="${LIBDIR}/${EXE_NAME}"
 	[ -f "${EXE}" ] || { ${REQUIRED} && fail "'${EXE_NAME}' is not installed, but is required by this script" ; return 1 ; }
 	[ -x "${EXE}" ] || { ${REQUIRED} && fail "'${EXE}' is not executable, but is required by this script" ; return 2 ; }
 	echo "${EXE}"
