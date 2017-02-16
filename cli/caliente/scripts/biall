@@ -7,17 +7,24 @@ INDEX="CALIENTE_INGESTION_INDEX.txt"
 
 DATEMARK="$(date +%Y%m%d-%H%M%S)"
 
-LOG="${BASEDIR}/${SCRIPT}.${DATEMARK}.log"
 INDEX_MAP="${BASEDIR}/${SCRIPT}.${DATEMARK}.pp-index"
 
 DEBUG="false"
+
+# Open up the log on file descriptor 9, if it's not already open
+LOG="${BASEDIR}/${SCRIPT}.${DATEMARK}.log"
+exec 9>"${LOG}"
 
 datemark() {
 	date -Iseconds
 }
 
 say() {
-	echo -e "$(date): ${@}" | tee -a "${LOG}"
+	echo -e "$(date): ${@}" | tee -a /dev/fd/9
+}
+
+silent_log() {
+	tee -a /dev/fd/9 &>/dev/null
 }
 
 log() {
@@ -87,8 +94,6 @@ handle_bi_error() {
 	local RC="${2}"
 	local OUT="${3}"
 
-	say "${OUT}"
-	say "RC=[${RC}]"
 	${IGNORE_ERRORS} && return 0
 	return ${RC}
 }
@@ -159,73 +164,43 @@ process() {
 	IDX="${INDEX}.${SUFFIX}"
 
 	say "Renaming the PP index file for [${DIR}] with the suffix [${SUFFIX}]..."
-	OUT="$(
-		"${XMLSTARLET}" ed -L \
+	"${XMLSTARLET}" ed -L \
 		-u "/scan/item[sourceName=\"${INDEX}\"]/targetName" -v "${IDX}" \
-		"${DIR}/scan.files.xml" 2>&1
-	)"
+		"${DIR}/scan.files.xml" |& silent_log
 	RC="${?}"
-	if [ ${RC} -ne 0 ] ; then
-		say "${OUT}"
-		say "RC=[${RC}]"
-		return ${RC}
-	else
-		log "${OUT}"
-		log "RC=[${RC}]"
-	fi
+	log "RC=[${RC}]"
+	[ ${RC} -eq 0 ] || return ${RC}
 
 	say "Writing out the mapping for [${DIR}] to [${SUFFIX}]"
 	echo -e "${IDX}\t${TARGET}" >> "${INDEX_MAP}"
 
 	say "Launching BI for [${DIR}]..."
-	OUT="$("${BILAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${DIR}" -t "${TGT}" ${DRYRUN} ${REPLACE})"
-	RC=${?}
-	if [ ${RC} -ne 0 ] ; then
-		say "${OUT}"
-		say "RC=[${RC}]"
-		return ${RC}
-	else
-		log "${OUT}"
-		log "RC=[${RC}]"
-	fi
+	"${BILAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${DIR}" -t "${TGT}" ${DRYRUN} ${REPLACE} |& silent_log
+	RC="${?}"
+	log "RC=[${RC}]"
+	[ ${RC} -eq 0 ] || return ${RC}
 
 	say "Waiting for BI for [${DIR}]..."
-	OUT="$("${BICHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC}) -e"
-	RC=${?}
-
-	if [ ${RC} -ne 0 ] ; then
-		handle_bi_error "${DIR}" "${RC}" "${OUT}" || return ${?}
-	else
-		log "${OUT}"
-		log "RC=[${RC}]"
-	fi
+	"${BICHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC} |& silent_log
+	RC="${?}"
+	log "RC=[${RC}]"
+	[ ${RC} -eq 0 ] || ${IGNORE_ERRORS} || return ${RC}
 
 	say "BI Completed for [${DIR}]..."
 
 	${LAUNCH_PP} || return 0
 
 	say "Launching PP for [${DIR}]..."
-	OUT="$("${PPLAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${TGT}" -i "${IDX}")"
-	RC=${?}
-	if [ ${RC} -ne 0 ] ; then
-		say "${OUT}"
-		say "RC=[${RC}]"
-		return ${RC}
-	else
-		log "${OUT}"
-		log "RC=[${RC}]"
-	fi
+	"${PPLAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${TGT}" -i "${IDX}" |& silent_log
+	RC="${?}"
+	log "RC=[${RC}]"
+	[ ${RC} -eq 0 ] || return ${RC}
 
 	say "Waiting for PP for [${DIR}]..."
-	OUT="$("${PPCHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC})"
+	"${PPCHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC} |& silent_log
 	RC=${?}
-
-	if [ ${RC} -ne 0 ] ; then
-		handle_pp_error "${DIR}" "${RC}" "${OUT}" || return ${?}
-	else
-		log "${OUT}"
-		log "RC=[${RC}]"
-	fi
+	log "RC=[${RC}]"
+	[ ${RC} -eq 0 ] || ${IGNORE_ERRORS} || return ${RC}
 
 	return 0
 }
