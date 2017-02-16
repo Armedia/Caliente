@@ -62,7 +62,7 @@ fail() {
 # Output a brief usage message and exit with status 2
 #
 usage() {
-	err "usage: ${SCRIPT}${USAGE_DETAILS:+ }${USAGE_DETAILS}"
+	err "usage: ${SCRIPT}${USAGE:+ }${USAGE}"
 	for e in "${@}" ; do
 		err "\t${e}"
 	done

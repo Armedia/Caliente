@@ -8,6 +8,8 @@ if ! . "${BASEDIR}/caliente.lib.sh" ; then
 	exit 99
 fi
 
+USAGE="manifest1 [manifest2 manifest3 ... manifestN]"
+
 do_list() {
 	local manifest="${1}"
 	[ -e "${manifest}" ] || { err "ERROR: manifest [${manifest}] does not exist" ; return 1 ; }
@@ -15,10 +17,7 @@ do_list() {
 	"${CSVTOOL}" -u ' ' col 3,5,7 "${manifest}" | grep -v "^TYPE "
 }
 
-if [ ${#} -lt 1 ] ; then
-	err "usage: ${SCRIPT} manifest1 [manifest2 manifest3 ... manifestN]"
-	exit 1
-fi
+[ ${#} -lt 1 ] && usage "Must provide at least one manifest name"
 
 CSVTOOL=""
 for n in "${@}" ; do

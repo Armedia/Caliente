@@ -8,7 +8,7 @@ if ! . "${BASEDIR}/caliente.lib.sh" ; then
 	exit 99
 fi
 
-USAGE_DETAILS="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] -s source -t target"
+USAGE="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] -s source -t target"
 
 start_export() {
 	local SRC="$(urlencode "${1}")"

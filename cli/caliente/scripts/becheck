@@ -8,7 +8,7 @@ if ! . "${BASEDIR}/caliente.lib.sh" ; then
 	exit 99
 fi
 
-USAGE_DETAILS="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-w [-W pollSec]] [-e] [-E]"
+USAGE="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-w [-W pollSec]] [-e] [-E]"
 
 ALF_URL=""
 ALF_USER=""

@@ -8,7 +8,7 @@ if ! . "${BASEDIR}/caliente.lib.sh" ; then
 	exit 99
 fi
 
-USAGE_DETAILS="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-P] [-W pollSec] directories..."
+USAGE="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-P] [-W pollSec] directories..."
 
 LOGMARK="$(date +%Y%m%d-%H%M%S)"
 # Open up the log on file descriptor 9, if it's not already open

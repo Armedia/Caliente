@@ -8,7 +8,7 @@ if ! . "${BASEDIR}/caliente.lib.sh" ; then
 	exit 99
 fi
 
-USAGE_DETAILS="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] -s source [-i indexName]"
+USAGE="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] -s source [-i indexName]"
 
 start_pp() {
 	local SRC="${1}"

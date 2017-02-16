@@ -8,7 +8,7 @@ if ! . "${BASEDIR}/caliente.lib.sh" ; then
 	exit 99
 fi
 
-USAGE_DETAILS="[-o] [-s [-]status1,status2,...,statusN] [-t [-]type1,type2,...,typeN]"
+USAGE="[-o] [-s [-]status1,status2,...,statusN] [-t [-]type1,type2,...,typeN]"
 
 SORTED="false"
 STATUS_SET="false"
