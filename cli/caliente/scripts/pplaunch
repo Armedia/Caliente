@@ -177,7 +177,7 @@ while getopts ":ch:u:p:A:s:i:" OPT "${@}" ; do
 			SOURCE="$(normalize_path "${OPTARG}")"
 			[ ${?} -ne 0 ] && fail "Illegal source path [${OPTARG}] - not fully normalized"
 			;;
-		s )	[ -n "${INDEX_NAME}" ] && fail "May not specify -i more than once"
+		i )	[ -n "${INDEX_NAME}" ] && fail "May not specify -i more than once"
 			[ -z "${OPTARG}" ] && fail "May not specify an empty index name"
 			INDEX_NAME="$(normalize_path "${OPTARG}")"
 			[ ${?} -ne 0 ] && fail "Illegal index name [${OPTARG}] - not fully normalized"
