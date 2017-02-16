@@ -40,7 +40,8 @@ process() {
 
 	say "Renaming the PP index file for [${DIR}] with the suffix [${SUFFIX}]..."
 	"${XMLSTARLET}" ed -L \
-		-u "/scan/item[sourceName=\"${INDEX}\"]/targetName" -v "${IDX}" \
+		-u "/scan/item[sourceName=\"${INDEX}\" and sourcePath=\"\" and targetPath=\"\"]/targetName" \
+		-v "${IDX}" \
 		"${DIR}/scan.files.xml" |& sed -e 's/^/\t/g' | silent_log
 	RC="${?}"
 	log "RC=[${RC}]"
