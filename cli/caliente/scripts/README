@@ -1,5 +1,25 @@
 Here is a brief description of each of these scripts:
 
+biall
+========================================
+	Launch a set of BI ingestions by searching for ingestible content within a list of directories
+		-c
+			use CURL instead of WGET (the default is to prefer WGET unless it's not installed)
+		-h alfrescoBaseURL
+			The Alfresco BASE URL, not the BI URL (i.e. https://host:port/alfresco)
+		-u user
+		-p password
+		-A authFile
+			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
+		-t target
+			The target directory within Alfresco's repository.  All encountered ingestible roots will be stored here
+		-W pollTime
+			Polling time in seconds (min 3, default 30)
+		-P
+			Launch Caliente PP (by invoking pplaunch) after the BI process completes
+		-I
+			Ignore errors on BI termination, and instead keep moving with the next ingestion
+
 bilaunch
 ========================================
 	Launch a BI ingestion
@@ -50,6 +70,52 @@ bierr
 		-A authFile
 			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
 
+ppindex
+========================================
+	Process a "bulk index" as produced by biall when the -P flag isn't used (read from stdin)
+		-c
+			use CURL instead of WGET (the default is to prefer WGET unless it's not installed)
+		-h alfrescoBaseURL
+			The Alfresco BASE URL, not the BI URL (i.e. https://host:port/alfresco)
+		-u user
+		-p password
+		-A authFile
+			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
+		-W pollTime
+			Polling time in seconds (min 3, default 30)
+
+pplaunch
+========================================
+	Launch a Post-Processor session
+		-c
+			use CURL instead of WGET (the default is to prefer WGET unless it's not installed)
+		-h alfrescoBaseURL
+			The Alfresco BASE URL, not the BI URL (i.e. https://host:port/alfresco)
+		-u user
+		-p password
+		-A authFile
+			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
+		-s source
+			The directory into which the data was ingested (which is the source for this process)
+		-i indexName
+			Use an alternate index file name (default CALIENTE_INGESTION_INDEX.txt)
+
+ppcheck
+========================================
+	Check if a Post-Processor session is running
+		-c
+			use CURL instead of WGET (the default is to prefer WGET unless it's not installed)
+		-h alfrescoBaseURL
+			The Alfresco BASE URL, not the BI URL (i.e. https://host:port/alfresco)
+		-u user
+		-p password
+		-A authFile
+			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
+		-w
+			Enable "wait" mode - poll the server until the BI job finishes
+		-W pollTime
+			Polling time in seconds (min 3, default 30)
+
 get_predicate
 ========================================
 	Extracts the DQL predicate used in a (set of) export(s) from its (their) export log(s), and formats it (them) for use as a DQL query
@@ -99,4 +165,7 @@ $ summarize_manifest caliente-export-3.manifest.csv caliente-export-4.manifest.c
 # Launch a new Caliente export using that predicate
 $ java -jar caliente.jar [...other flags...] --source "$(cat skipped-all.predicate)"
 
-
+#
+# Launch all ingestions in /export_data/transformed/
+#
+$ biall -h ... -u ... -p ... -W 5 -P -t /Alfresco/Common/Target /export_data/transformed
