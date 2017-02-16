@@ -7,11 +7,17 @@ INDEX="CALIENTE_INGESTION_INDEX.txt"
 
 DATEMARK="$(date +%Y%m%d-%H%M%S)"
 
-LOG="${BASEDIR}/${SCRIPT}.log-${DATEMARK}"
-INDEX_MAP="${BASEDIR}/${SCRIPT}.index.${DATEMARK}"
+LOG="${BASEDIR}/${SCRIPT}.${DATEMARK}.log"
+INDEX_MAP="${BASEDIR}/${SCRIPT}.${DATEMARK}.pp-index"
+
+DEBUG="false"
+
+datemark() {
+	date -Iseconds
+}
 
 say() {
-	echo -e "${@}" | tee -a "${LOG}"
+	echo -e "$(date): ${@}" | tee -a "${LOG}"
 }
 
 err() {
@@ -99,6 +105,39 @@ get_suffix() {
 	echo ""
 }
 
+normalize_path() {
+	# Remove all . and .. sequences
+	# Returns 0 if successful, 1 if the .. recursion goes too far up
+	local SRC=()
+	local TGT=()
+	local IDX=()
+	IFS="/" read -r -a SRC <<< "${1}"
+	local LEADING=false
+	local FIRST=true
+	for e in "${SRC[@]}" ; do
+		case "${e}" in
+			.. )
+				[ ${#TGT[@]} -lt 1 ] && return 1
+				IDX=(${!TGT[@]});
+				unset TGT[${IDX[@]: -1}]
+				;;
+			"" ) ${FIRST} && LEADING=true ;;
+			. ) ;; # Do nothing - must be silently skipped
+			* ) TGT+=("${e}") ;;
+		esac
+		FIRST=false
+	done
+	${LEADING} || FIRST=true
+	for e in "${TGT[@]}" ; do
+		${FIRST} || echo -en "/"
+		echo -en "${e}"
+		FIRST=false
+	done
+	${FIRST} && echo -en "/"
+	echo ""
+	return 0
+}
+
 process() {
 	local DIR="${1}"
 	local TGT="${2}"
@@ -107,6 +146,8 @@ process() {
 	local RC=0
 
 	local IDX="${INDEX}"
+
+	[ -f "${DIR}/${IDX}" ] || return 0
 
 	# Only rename the ingestion index if we're not running PP in this same batch
 	if ! ${LAUNCH_PP} ; then
@@ -118,7 +159,7 @@ process() {
 		OUT="$(
 			"${XMLSTARLET}" ed -L \
 			-u "/scan/item[sourceName=\"${INDEX}\"]/targetName" -v "${IDX}" \
-			"${DIR}/scan.files.xml"
+			"${DIR}/scan.files.xml" 2>&1
 		)"
 		RC="${?}"
 		if [ ${RC} -ne 0 ] ; then
@@ -128,7 +169,7 @@ process() {
 		fi
 
 		say "Writing out the mapping for [${DIR}] to [${SUFFIX}]"
-		echo -e "${IDX}\t${DIR}" >> "${INDEX_MAP}"
+		echo -e "${IDX}\t${TARGET}" >> "${INDEX_MAP}"
 	fi
 
 	say "Launching BI for [${DIR}]..."
@@ -147,6 +188,8 @@ process() {
 	if [ ${RC} -ne 0 ] ; then
 		handle_bi_error "${DIR}" "${RC}" "${OUT}" || return ${?}
 	fi
+
+	say "BI Completed for [${DIR}]..."
 
 	${LAUNCH_PP} || return 0
 
@@ -246,15 +289,17 @@ BILAUNCH="$(find_script bilaunch true)"
 BICHECK="$(find_script bicheck true)"
 BIERR="$(find_script bierr true)"
 
-BILAUNCH="/bin/echo"
-BICHECK="/bin/echo"
-BIERR="/bin/echo"
-
 PPLAUNCH="$(find_script pplaunch ${LAUNCH_PP})"
 PPCHECK="$(find_script ppcheck ${LAUNCH_PP})"
 
-PPLAUNCH="/bin/echo"
-PPCHECK="/bin/echo"
+if ${DEBUG} ; then
+	BILAUNCH="/bin/echo"
+	BICHECK="/bin/echo"
+	BIERR="/bin/echo"
+
+	PPLAUNCH="/bin/echo"
+	PPCHECK="/bin/echo"
+fi
 
 CURL=""
 ${PREFER_CURL} && CURL="-c"
@@ -276,11 +321,6 @@ for dir in "${@}" ; do
 	[ -x "${dir}" ] || continue
 	find "${dir}" -type d -name bulk-import-root | while read candidate ; do
 		candidate="$(readlink -f "${candidate}")"
-
-		# Check to see if this candidate is proper
-		# 1) Must contain CALIENTE_INGESTION_INDEX.txt
-		[ -f "${candidate}/${INDEX}" ] || { say "Directory [${candidate}] doesn't contain ${INDEX}, skipping" ; continue ; }
-
 		process "${candidate}" "${TARGET}" || exit ${?}
 	done
 done
