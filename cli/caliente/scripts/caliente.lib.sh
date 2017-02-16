@@ -1,5 +1,7 @@
 #!/bin/bash
-BASEDIR="$(dirname "$(readlink -f "${0}")")"
+LIB="$(readlink -f "${0}")"
+BASEDIR="$(dirname "${LIB}")"
+LIB="$(basename "${LIB}")"
 
 #
 # Initialize the log, if any
