@@ -182,7 +182,7 @@ process() {
 	fi
 
 	say "Waiting for BI for [${DIR}]..."
-	OUT="$("${BICHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC})"
+	OUT="$("${BICHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC}) -e"
 	RC=${?}
 
 	if [ ${RC} -ne 0 ] ; then

@@ -71,7 +71,8 @@ urldecode() {
 
 start_pp() {
 	local SRC="${1}"
-	SRC="$(urlencode "${SRC}/${INDEX_NAME}")"
+	SRC="$(sed -e 's;^/\+;;g' <<< "${SRC}")"
+	SRC="$(urlencode "${SRC}${SRC:+/}${INDEX_NAME}")"
 	call_alfresco "${ALF_URL}/s/caliente/migration/initiate?robjectid=${SRC}" POST
 }
 
@@ -243,6 +244,8 @@ case "${STATUS^^}" in
 		;;
 esac
 
+# Remove leading slashes
+SOURCE="$(sed -e 's;^/\+;;g' <<< "${SOURCE}")"
 say "$(date): Launching PP at [${ALF_URL}] as [${ALF_USER}]..."
 say "\tSOURCE : [${SOURCE}]"
 OUT="$(start_pp "${SOURCE}")"
