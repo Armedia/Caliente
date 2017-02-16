@@ -83,7 +83,7 @@ start_export() {
 curl_call() {
 	local URL="${1}"
 	local METHOD="${2:-GET}"
-	"${CURL}" -f -X "${METHOD}" -u "${ALF_USER}:${ALF_PASS}" --url "${URL}" --retry 10 --retry-delay 10
+	"${CURL}" -k -f -X "${METHOD}" -u "${ALF_USER}:${ALF_PASS}" --url "${URL}" --retry 10 --retry-delay 10
 }
 
 wget_call() {
