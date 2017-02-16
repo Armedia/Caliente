@@ -7,7 +7,7 @@ INDEX="CALIENTE_INGESTION_INDEX.txt"
 
 DATEMARK="$(date +%Y%m%d-%H%M%S)"
 
-INDEX_MAP="${BASEDIR}/${SCRIPT}.${DATEMARK}.pp-index"
+INDEX_MAP="${BASEDIR}/${SCRIPT}.${DATEMARK}.postproc"
 
 DEBUG="false"
 
