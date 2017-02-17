@@ -71,7 +71,7 @@ fi
 [ -n "${WGET}" ] && CALL="wget_call"
 ${PREFER_CURL} && [ -n "${CURL}" ] && CALL="curl_call"
 
-FULL_STATUS_JSON="$(call_alfresco "${ALF_URL}/s/bulk/import/status.json")"
+FULL_STATUS_JSON="$(call_alfresco GET "${ALF_URL}/s/bulk/import/status.json")"
 [ ${?} -ne 0 ] && fail "Failed to retrieve the status data"
 
 STATUS="$(parse_value ".processingState" <<< "${FULL_STATUS_JSON}")"

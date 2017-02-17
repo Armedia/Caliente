@@ -95,7 +95,7 @@ fi
 ${PREFER_CURL} && [ -n "${CURL}" ] && CALL="curl_call"
 
 while true ; do
-	FULL_STATUS_JSON="$(call_alfresco "${ALF_URL}/s/bulk/export/status.json")"
+	FULL_STATUS_JSON="$(call_alfresco GET "${ALF_URL}/s/bulk/export/status.json")"
 	if [ ${?} -ne 0 ] ; then
 		# Here we output an error code of 2 to tell callers that
 		# the error was communications based, not BE-status based

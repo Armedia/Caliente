@@ -14,8 +14,8 @@ start_pp() {
 	local SRC="${1}"
 	local IDX="${2}"
 	SRC="$(sed -e 's;^/\+;;g' <<< "${SRC}")"
-	SRC="$(urlencode "${SRC}${SRC:+/}${IDX}")"
-	call_alfresco "${ALF_URL}/s/caliente/migration/initiate?robjectid=${SRC}" POST
+	SRC="${SRC}${SRC:+/}${IDX}"
+	call_alfresco POST "${ALF_URL}/s/caliente/migration/initiate" "robjectid=${SRC}"
 }
 
 ALF_URL=""
@@ -95,7 +95,7 @@ fi
 [ -n "${WGET}" ] && CALL="wget_call"
 ${PREFER_CURL} && [ -n "${CURL}" ] && CALL="curl_call"
 
-FULL_STATUS_JSON="$(call_alfresco "${ALF_URL}/s/caliente/migration/status.json")"
+FULL_STATUS_JSON="$(call_alfresco GET "${ALF_URL}/s/caliente/migration/status.json")"
 [ ${?} -ne 0 ] && fail "Failed to retrieve the status data"
 
 STATUS="$(parse_value ".processingState" <<< "${FULL_STATUS_JSON}")"
