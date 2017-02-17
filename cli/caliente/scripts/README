@@ -14,7 +14,7 @@ biscan
 		-t target
 			The target directory within Alfresco's repository.  All encountered ingestible roots will be stored here
 		-W pollTime
-			Polling time in seconds (min 3, default 30)
+			Polling time in seconds (min 3, default 5)
 		-R
 			Cause BI to replace existing objects (i.e. bilaunch -R)
 		-D
@@ -58,7 +58,7 @@ bicheck
 		-w
 			Enable "wait" mode - poll the server until the BI job finishes
 		-W pollTime
-			Polling time in seconds (min 3, default 30)
+			Polling time in seconds (min 3, default 5)
 		-e
 			Enable showing all errors on exit
 
@@ -86,7 +86,7 @@ ppscan
 		-A authFile
 			A JSON-formatted authentication file (i.e.: { "user" : "username", "password" : "s33kr1t" } )
 		-W pollTime
-			Polling time in seconds (min 3, default 30)
+			Polling time in seconds (min 3, default 5)
 
 pplaunch
 ========================================
@@ -118,7 +118,7 @@ ppcheck
 		-w
 			Enable "wait" mode - poll the server until the BI job finishes
 		-W pollTime
-			Polling time in seconds (min 3, default 30)
+			Polling time in seconds (min 3, default 5)
 
 belaunch
 ========================================
@@ -150,7 +150,7 @@ becheck
 		-w
 			Enable "wait" mode - poll the server until the BI job finishes
 		-W pollTime
-			Polling time in seconds (min 3, default 30)
+			Polling time in seconds (min 3, default 5)
 
 get_predicate
 ========================================

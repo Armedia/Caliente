@@ -195,13 +195,23 @@ curl_call() {
 # via the CALL variable.  If not defined, it will use WGET
 #
 call_alfresco() {
-	"${CALL:-wget_call}" "${@}" |& (
-		LOGCMD="cat"
-		[ -f /dev/fd/9 ] && LOGCMD="silent_log"
-		[ -f /dev/fd/8 ] && LOGCMD="candidate_log"
-		"${LOGCMD}" &>/dev/null
-	)
-	return ${PIPESTATUS[0]}
+	local ERR=""
+	local RC=0
+	local FD=""
+	# Capture STDERR, allow STDOUT to flow freely
+	[ -f /dev/fd/9 ] && FD=9
+	[ -f /dev/fd/8 ] && FD=8
+	if [ -n "${FD}" ] ; then
+		"${CALL:-wget_call}" "${@}" 2>& >( tee -a /dev/fd/${FD} )
+		RC=${?}
+	else
+		{
+			OUT="$("${CALL:-wget_call}" "${@}" 2>&1 1>&3-)"
+			RC=${?}
+		} 3>&1
+		[ ${RC} -ne 0 ] && say "${OUT}"
+	fi
+	return ${RC}
 }
 
 #

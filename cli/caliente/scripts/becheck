@@ -17,7 +17,7 @@ ALF_PASS_SET="false"
 PREFER_CURL="false"
 
 MIN_POLLSEC=3
-POLLSEC="30"
+POLLSEC="5"
 POLLSEC_SET="false"
 WAIT_MODE="false"
 SHOW_ERRORS="false"

@@ -112,7 +112,7 @@ LAUNCH_PP="false"
 IGNORE_ERRORS="false"
 REPLACE="false"
 MIN_POLLSEC="3"
-POLLSEC="30"
+POLLSEC="5"
 POLLSEC_SET="false"
 
 while getopts ":ch:u:p:A:t:PIW:RD" OPT "${@}" ; do
