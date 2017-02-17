@@ -49,7 +49,7 @@ process() {
 		log "RC=[${RC}]"
 		[ ${RC} -eq 0 ] || return ${RC}
 	else
-		mv -vf "${DIR}/${INDEX}"* "${DIR}/${IDX}" |& silent_log
+		mv -vf "${DIR}/${INDEX}".* "${DIR}/${IDX}"
 		RC="${?}"
 		log "RC=[${RC}]"
 		[ ${RC} -eq 0 ] || return ${RC}
