@@ -126,14 +126,14 @@ esac
 
 # Remove leading slashes
 SOURCE="$(sed -e 's;^/\+;;g' <<< "${SOURCE}")"
-say "$(date): Launching PP at [${ALF_URL}] as [${ALF_USER}]..."
+say "Launching PP at [${ALF_URL}] as [${ALF_USER}]..."
 say "\tSOURCE : [${SOURCE}]"
 say "\tINDEX  : [${INDEX_NAME}]"
 OUT="$(start_pp "${SOURCE}" "${INDEX_NAME}")"
 RC="${?}"
 if [ ${RC} -eq 0 ] ; then
-	say "$(date): Post-Processor started"
+	say "Post-Processor started"
 else
-	say "$(date): Post-Processor was not started (RC=${RC})"
+	say "Post-Processor was not started (RC=${RC})"
 fi
 exit ${RC}

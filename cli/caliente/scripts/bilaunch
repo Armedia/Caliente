@@ -130,15 +130,15 @@ case "${STATUS^^}" in
 		;;
 esac
 
-say "$(date): Launching BI at [${ALF_URL}] as [${ALF_USER}]..."
+say "Launching BI at [${ALF_URL}] as [${ALF_USER}]..."
 say "\tSOURCE : [${SOURCE}]"
 say "\tTARGET : [${TARGET}]"
 say "\tDRY RUN: ${DRYRUN}"
 OUT="$(start_import "${SOURCE}" "${TARGET}")"
 RC="${?}"
 if [ ${RC} -eq 0 ] ; then
-	say "$(date): Bulk Import started"
+	say "Bulk Import started"
 else
-	say "$(date): Bulk Import was not started (RC=${RC})"
+	say "Bulk Import was not started (RC=${RC})"
 fi
 exit ${RC}

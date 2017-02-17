@@ -119,15 +119,15 @@ case "${STATUS^^}" in
 		;;
 esac
 
-say "$(date): Launching BE at [${ALF_URL}] as [${ALF_USER}]..."
+say "Launching BE at [${ALF_URL}] as [${ALF_USER}]..."
 say "\tSOURCE : [${SOURCE}]"
 say "\tTARGET : [${TARGET}]"
 OUT="$(start_export "${SOURCE}" "${TARGET}")"
 RC="${?}"
 if [ ${RC} -eq 0 ] ; then
-	say "$(date): Bulk Export started"
+	say "Bulk Export started"
 else
-	say "$(date): Bulk Export was not started (RC=${RC})"
+	say "Bulk Export was not started (RC=${RC})"
 	say "${OUT}"
 fi
 exit ${RC}
