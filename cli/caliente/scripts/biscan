@@ -22,10 +22,6 @@ get_directory_suffix() {
 	echo ""
 }
 
-candidate_log() {
-	tee -a /dev/fd/8 | silent_log
-}
-
 process() {
 	local DIR="${1}"
 	local TGT="${2}"

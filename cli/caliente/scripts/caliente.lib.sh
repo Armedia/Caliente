@@ -16,6 +16,19 @@ init_log() {
 }
 
 #
+#
+# Initialize the candidate log, if any
+#
+init_candidate_log() {
+	# If no log is defined, don't start one
+	[ -z "${CANDIDATE_LOG}" ] && CANDIDATE_LOG="/dev/null"
+	[ -f /dev/fd/8 ] || exec 8>"${CANDIDATE_LOG}" || {
+		echo "FAILED TO INITIALIZE THE CANDIDATE LOG AT [${CANDIDATE_LOG}]"
+		exit 9
+	}
+}
+
+#
 # Output the current date in ISO8601 format
 #
 datemark() {
@@ -36,6 +49,14 @@ say() {
 silent_log() {
 	init_log
 	tee -a /dev/fd/9 &>/dev/null
+}
+
+#
+# Copy stdin to the candidate log without mirroring it on output
+#
+candidate_log() {
+	init_candidate_log
+	tee -a /dev/fd/8 &>/dev/null
 }
 
 #
@@ -176,11 +197,13 @@ curl_call() {
 call_alfresco() {
 	local OUT=""
 	local RC=0
-	{
-		OUT="$("${CALL:-wget_call}" "${@}" 2>&1 1>&3-)"
-		RC=${?}
-	} 3>&1
-	[ ${RC} -ne 0 ] && say "${OUT}"
+	"${CALL:-wget_call}" "${@}" |& (
+		LOGCMD="cat"
+		[ -f /dev/fd/9 ] && LOGCMD="silent_log"
+		[ -f /dev/fd/8 ] && LOGCMD="candidate_log"
+		"${LOGCMD}" &>/dev/null
+	)
+	RC=${?}
 	return ${RC}
 }
 
