@@ -122,6 +122,39 @@ curl_call() {
 	"${CURL}" -k -f -X "${METHOD}" -u "${ALF_USER}:${ALF_PASS}" --url "${URL}" --retry 10 --retry-delay 10
 }
 
+urlencode_post_data() {
+	local URL="${1}"
+	local PARAMS="${URL#*\?}"
+	URL="${URL%%\?*}"
+
+	local P=()
+	IFS="&" read -r -a P <<< "${PARAMS}"
+	PARAMS=""
+	for p in "${P[@]}" ; do
+		case "${p}" in
+			*=*	) ;;
+			*	) PARAMS+="${PARAMS:+&}${p}" ; continue ;;
+		esac
+
+		# Name is everything until the first equals symbol
+		local name="${p%%=*}"
+		# Value is everything after that first equals symbol
+		local value="${p#*=}"
+		name="$(urlencode "${name}")"
+		value="$(urlencode "${value}")"
+		PARAMS+="${PARAMS:+&}${name}=${value}"
+	done
+	echo "${PARAMS}"
+	return 0
+}
+
+get_post_data() {
+	local URL="${1}"
+	local PARAMS="${URL#*\?}"
+	echo "${PARAMS}"
+	return 0
+}
+
 #
 # Perform a web service call using WGET
 #
@@ -129,31 +162,16 @@ wget_call() {
 	local URL="${1}"
 	local METHOD="${2:-GET}"
 	case "${METHOD}" in
-		GET ) "${WGET}" --tries 10 --waitretry 10 --user="${ALF_USER}" --password="${ALF_PASS}" -O - "${URL}" ;;
-		POST )
-			# Split out the parameters, turn it into post data
-			local PARAMS="${URL#*\?}"
-			URL="${URL%%\?*}"
-
-			local P=()
-			IFS="&" read -r -a P <<< "${PARAMS}"
-			PARAMS=""
-			for p in "${P[@]}" ; do
-				case "${p}" in
-					*=*	) ;;
-					*	) PARAMS+="${PARAMS:+&}${p}" ; continue ;;
-				esac
-
-				# Name is everything until the first equals symbol
-				local name="${p%%=*}"
-				# Value is everything after that first equals symbol
-				local value="${p#*=}"
-				name="$(urlencode "${name}")"
-				value="$(urlencode "${value}")"
-				PARAMS+="${PARAMS:+&}${name}=${value}"
-			done
-
-			"${WGET}" --tries 10 --waitretry 10 --user="${ALF_USER}" --password="${ALF_PASS}" -O --post-data="${PARAMS}" - "${URL}"
+		GET		)
+			"${WGET}" --tries 10 --waitretry 10 \
+				--user="${ALF_USER}" --password="${ALF_PASS}" \
+				-O - "${URL}"
+			;;
+		POST	)
+			"${WGET}" --tries 10 --waitretry 10 \
+				--user="${ALF_USER}" --password="${ALF_PASS}" \
+				--post-data="$(get_post_data)" \
+				-O - "${URL}"
 			;;
 		*	) err "The WGET module only supports GET and POST at this time" ; return 1 ;;
 	esac

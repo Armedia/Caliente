@@ -8,7 +8,7 @@ if ! . "${BASEDIR}/caliente.lib.sh" ; then
 	exit 99
 fi
 
-USAGE="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-P] [-W pollSec] directories..."
+USAGE="[-c] -h alfrescoUrl [-u user -p password | -A authenticationFile] [-P] [-W pollSec] [-I] [-R] [-D] directories..."
 
 LOGMARK="$(date +%Y%m%d-%H%M%S)"
 # Open up the log on file descriptor 9, if it's not already open
@@ -20,6 +20,10 @@ INDEX="CALIENTE_INGESTION_INDEX.txt"
 get_directory_suffix() {
 	local DIR="${1}"
 	echo ""
+}
+
+candidate_log() {
+	tee -a /dev/fd/8 | silent_log
 }
 
 process() {
@@ -52,37 +56,47 @@ process() {
 		echo -e "${IDX}\t${TARGET}" >> "${INDEX_MAP}"
 	fi
 
-	${REPLACE} && REPLACE="-R"
-	${REPLACE} && DRYRUN="-D"
-	say "Launching BI for [${DIR}]..."
-	"${BILAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${DIR}" -t "${TGT}" ${DRYRUN} ${REPLACE} |& silent_log
-	RC="${?}"
-	log "RC=[${RC}]"
-	[ ${RC} -eq 0 ] || return ${RC}
+	# Open up a log for the candidate
+	local CANDIDATE_LOG="$(dirname "${DIR}")/$(basename "${LOG}")"
+	exec 8>"${CANDIDATE_LOG}" || fail "Failed to initialize the candidate log at [${CANDIDATE_LOG}]"
+	(
+		say "Candidate log for [${DIR}] is [${CANDIDATE_LOG}]..."
+		${REPLACE} && REPLACE="-R"
+		${REPLACE} && DRYRUN="-D"
+		say "Launching BI for [${DIR}]..."
+		"${BILAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${DIR}" -t "${TGT}" ${DRYRUN} ${REPLACE} |& candidate_log
+		RC="${?}"
+		log "RC=[${RC}]"
+		[ ${RC} -eq 0 ] || exit ${RC}
 
-	say "Waiting for BI for [${DIR}]..."
-	"${BICHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC} |& silent_log
-	RC="${?}"
-	log "RC=[${RC}]"
-	[ ${RC} -eq 0 ] || ${IGNORE_ERRORS} || return ${RC}
+		say "Waiting for BI for [${DIR}]..."
+		"${BICHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC} -e |& candidate_log
+		RC="${?}"
+		log "RC=[${RC}]"
+		[ ${RC} -eq 0 ] || ${IGNORE_ERRORS} || exit ${RC}
 
-	say "BI Completed for [${DIR}]..."
+		say "BI Completed for [${DIR}]..."
 
-	${LAUNCH_PP} || return 0
+		${LAUNCH_PP} || exit 0
 
-	say "Launching PP for [${DIR}]..."
-	"${PPLAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${TGT}" -i "${IDX}" |& silent_log
-	RC="${?}"
-	log "RC=[${RC}]"
-	[ ${RC} -eq 0 ] || return ${RC}
+		say "Launching PP for [${DIR}]..."
+		"${PPLAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${TGT}" -i "${IDX}" |& candidate_log
+		RC="${?}"
+		log "RC=[${RC}]"
+		[ ${RC} -eq 0 ] || exit ${RC}
 
-	say "Waiting for PP for [${DIR}]..."
-	"${PPCHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC} |& silent_log
+		say "Waiting for PP for [${DIR}]..."
+		"${PPCHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC} |& candidate_log
+		RC=${?}
+		log "RC=[${RC}]"
+		[ ${RC} -eq 0 ] || ${IGNORE_ERRORS} || exit ${RC}
+	)
 	RC=${?}
-	log "RC=[${RC}]"
-	[ ${RC} -eq 0 ] || ${IGNORE_ERRORS} || return ${RC}
-
-	return 0
+	# Close out the candidate log
+	exec 8>&- || {
+		err "Failed to close the candidate log at [${CANDIDATE_LOG}]"
+	}
+	return ${RC}
 }
 
 ALF_URL=""
@@ -171,15 +185,6 @@ BIERR="$(find_script bierr true)"
 
 PPLAUNCH="$(find_script pplaunch ${LAUNCH_PP})"
 PPCHECK="$(find_script ppcheck ${LAUNCH_PP})"
-
-if ${DEBUG} ; then
-	BILAUNCH="/bin/echo"
-	BICHECK="/bin/echo"
-	BIERR="/bin/echo"
-
-	PPLAUNCH="/bin/echo"
-	PPCHECK="/bin/echo"
-fi
 
 CURL=""
 ${PREFER_CURL} && CURL="-c"
