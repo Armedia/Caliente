@@ -26,7 +26,6 @@ process() {
 	local DIR="${1}"
 	local TGT="${2}"
 
-	local OUT=""
 	local RC=0
 
 	local IDX="${INDEX}"
@@ -45,12 +44,12 @@ process() {
 			-u "/scan/item[sourceName=\"${INDEX}\" and sourcePath=\"\" and targetPath=\"\"]/targetName" \
 			-v "${IDX}" \
 			"${SCANINDEX}" |& sed -e 's/^/\t/g' | silent_log
-		RC="${?}"
+		RC="${PIPESTATUS[0]}"
 		log "RC=[${RC}]"
 		[ ${RC} -eq 0 ] || return ${RC}
 	else
-		mv -vf "${DIR}/${INDEX}".* "${DIR}/${IDX}"
-		RC="${?}"
+		mv -vf "${DIR}/${INDEX}".* "${DIR}/${IDX}" | silent_log
+		RC="${PIPESTATUS[0]}"
 		log "RC=[${RC}]"
 		[ ${RC} -eq 0 ] || return ${RC}
 	fi
@@ -69,13 +68,13 @@ process() {
 		${REPLACE} && DRYRUN="-D"
 		say "Launching BI for [${DIR}]..."
 		"${BILAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${DIR}" -t "${TGT}" ${DRYRUN} ${REPLACE} |& candidate_log
-		RC="${?}"
+		RC="${PIPESTATUS[0]}"
 		log "RC=[${RC}]"
 		[ ${RC} -eq 0 ] || exit ${RC}
 
 		say "Waiting for BI for [${DIR}]..."
 		"${BICHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC} -e |& candidate_log
-		RC="${?}"
+		RC="${PIPESTATUS[0]}"
 		log "RC=[${RC}]"
 		[ ${RC} -eq 0 ] || ${IGNORE_ERRORS} || exit ${RC}
 
@@ -85,13 +84,13 @@ process() {
 
 		say "Launching PP for [${DIR}]..."
 		"${PPLAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${TGT}" -i "${IDX}" |& candidate_log
-		RC="${?}"
+		RC="${PIPESTATUS[0]}"
 		log "RC=[${RC}]"
 		[ ${RC} -eq 0 ] || exit ${RC}
 
 		say "Waiting for PP for [${DIR}]..."
 		"${PPCHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC} |& candidate_log
-		RC=${?}
+		RC="${PIPESTATUS[0]}"
 		log "RC=[${RC}]"
 		[ ${RC} -eq 0 ] || ${IGNORE_ERRORS} || exit ${RC}
 	)

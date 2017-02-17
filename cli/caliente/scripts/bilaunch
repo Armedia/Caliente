@@ -134,7 +134,7 @@ say "Launching BI at [${ALF_URL}] as [${ALF_USER}]..."
 say "\tSOURCE : [${SOURCE}]"
 say "\tTARGET : [${TARGET}]"
 say "\tDRY RUN: ${DRYRUN}"
-OUT="$(start_import "${SOURCE}" "${TARGET}")"
+start_import "${SOURCE}" "${TARGET}"
 RC="${?}"
 if [ ${RC} -eq 0 ] ; then
 	say "Bulk Import started"

@@ -129,7 +129,7 @@ SOURCE="$(sed -e 's;^/\+;;g' <<< "${SOURCE}")"
 say "Launching PP at [${ALF_URL}] as [${ALF_USER}]..."
 say "\tSOURCE : [${SOURCE}]"
 say "\tINDEX  : [${INDEX_NAME}]"
-OUT="$(start_pp "${SOURCE}" "${INDEX_NAME}")"
+start_pp "${SOURCE}" "${INDEX_NAME}"
 RC="${?}"
 if [ ${RC} -eq 0 ] ; then
 	say "Post-Processor started"

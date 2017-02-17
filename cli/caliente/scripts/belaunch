@@ -122,7 +122,7 @@ esac
 say "Launching BE at [${ALF_URL}] as [${ALF_USER}]..."
 say "\tSOURCE : [${SOURCE}]"
 say "\tTARGET : [${TARGET}]"
-OUT="$(start_export "${SOURCE}" "${TARGET}")"
+start_export "${SOURCE}" "${TARGET}"
 RC="${?}"
 if [ ${RC} -eq 0 ] ; then
 	say "Bulk Export started"

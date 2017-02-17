@@ -18,19 +18,18 @@ process() {
 	local SRC="${1}"
 	local IDX="${2}"
 
-	local OUT=""
 	local RC=0
 
 	local FULL_IDX="${SRC}${SRC:+/}${IDX}"
 	say "Launching PP for [${FULL_IDX}]..."
 	"${PPLAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${SRC}" -i "${IDX}" |& silent_log
-	RC=${?}
+	RC="${PIPESTATUS[0]}"
 	log "RC=[${RC}]"
 	[ ${RC} -eq 0 ] || return ${RC}
 
 	say "Waiting for PP for [${FULL_IDX}]..."
 	"${PPCHECK}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -w -W ${POLLSEC} |& silent_log
-	RC=${?}
+	RC="${PIPESTATUS[0]}"
 	log "RC=[${RC}]"
 	[ ${RC} -eq 0 ] || ${IGNORE_ERRORS} || return ${RC}
 
