@@ -202,7 +202,7 @@ call_alfresco() {
 	[ -f /dev/fd/9 ] && LOG="silent_log"
 	[ -f /dev/fd/8 ] && LOG="candidate_log"
 	if [ -n "${LOG}" ] ; then
-		"${CALL:-wget_call}" "${@}" 2>& >( "${LOG}" )
+		"${CALL:-wget_call}" "${@}" 2> >( "${LOG}" )
 		RC=${?}
 	else
 		{
