@@ -179,6 +179,7 @@ shift $(( OPTIND - 1 ))
 [ -n "${ALF_USER}" ] && ! ${ALF_PASS_SET} && usage "Must provide a password using -p, or use -A"
 
 XMLSTARLET="$(find_exe xmlstarlet true)"
+JQ="$(find_exe xmlstarlet true)"
 BILAUNCH="$(find_script bilaunch true)"
 BICHECK="$(find_script bicheck true)"
 BIERR="$(find_script bierr true)"
