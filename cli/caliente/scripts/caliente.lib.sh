@@ -197,12 +197,12 @@ curl_call() {
 call_alfresco() {
 	local ERR=""
 	local RC=0
-	local FD=""
+	local LOG=""
 	# Capture STDERR, allow STDOUT to flow freely
-	[ -f /dev/fd/9 ] && FD=9
-	[ -f /dev/fd/8 ] && FD=8
-	if [ -n "${FD}" ] ; then
-		"${CALL:-wget_call}" "${@}" 2>& >( tee -a /dev/fd/${FD} )
+	[ -f /dev/fd/9 ] && LOG="silent_log"
+	[ -f /dev/fd/8 ] && LOG="candidate_log"
+	if [ -n "${LOG}" ] ; then
+		"${CALL:-wget_call}" "${@}" 2>& >( "${LOG}" )
 		RC=${?}
 	else
 		{
