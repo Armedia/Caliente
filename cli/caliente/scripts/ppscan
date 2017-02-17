@@ -99,6 +99,7 @@ shift $(( OPTIND - 1 ))
 [ -z "${ALF_USER}" -a -z "${ALF_AUTH}" ] && usage "Must provide either -u or -A"
 [ -n "${ALF_USER}" ] && ! ${ALF_PASS_SET} && usage "Must provide a password using -p, or use -A"
 
+JQ="$(find_exe jq true)"
 PPLAUNCH="$(find_script pplaunch ${LAUNCH_PP})"
 PPCHECK="$(find_script ppcheck ${LAUNCH_PP})"
 
