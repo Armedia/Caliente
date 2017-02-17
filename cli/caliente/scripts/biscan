@@ -39,13 +39,21 @@ process() {
 	IDX="${INDEX}.${SUFFIX}"
 
 	say "Renaming the PP index file for [${DIR}] with the suffix [${SUFFIX}]..."
-	"${XMLSTARLET}" ed -L \
-		-u "/scan/item[sourceName=\"${INDEX}\" and sourcePath=\"\" and targetPath=\"\"]/targetName" \
-		-v "${IDX}" \
-		"${DIR}/scan.files.xml" |& sed -e 's/^/\t/g' | silent_log
-	RC="${?}"
-	log "RC=[${RC}]"
-	[ ${RC} -eq 0 ] || return ${RC}
+	local SCANINDEX="${DIR}/scan.files.xml"
+	if [ -f "${SCANINDEX}" ] ; then
+		"${XMLSTARLET}" ed -L \
+			-u "/scan/item[sourceName=\"${INDEX}\" and sourcePath=\"\" and targetPath=\"\"]/targetName" \
+			-v "${IDX}" \
+			"${SCANINDEX}" |& sed -e 's/^/\t/g' | silent_log
+		RC="${?}"
+		log "RC=[${RC}]"
+		[ ${RC} -eq 0 ] || return ${RC}
+	else
+		mv -vi "${DIR}/${INDEX}"* "${DIR}/${IDX}" |& silent_log
+		RC="${?}"
+		log "RC=[${RC}]"
+		[ ${RC} -eq 0 ] || return ${RC}
+	fi
 
 	if ! ${LAUNCH_PP} ; then
 		say "Writing out the mapping for [${DIR}] to [${SUFFIX}]"
