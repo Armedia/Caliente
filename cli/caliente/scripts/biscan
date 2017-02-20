@@ -65,7 +65,7 @@ process() {
 	(
 		say "Candidate log for [${DIR}] is [${CANDIDATE_LOG}]..."
 		${REPLACE} && REPLACE="-R"
-		${REPLACE} && DRYRUN="-D"
+		${DRYRUN} && DRYRUN="-D"
 		say "Launching BI for [${DIR}]..."
 		"${BILAUNCH}" ${CURL} -u "${ALF_USER}" -p "${ALF_PASS}" -h "${ALF_URL}" -s "${DIR}" -t "${TGT}" ${DRYRUN} ${REPLACE} |& candidate_log
 		RC="${PIPESTATUS[0]}"
