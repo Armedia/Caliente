@@ -416,6 +416,30 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 		p.setProperty("dctm:r_parent_paths", StringUtils.join(values, ','));
 
+		values.clear();
+		for (CmfValue v : getPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER)) {
+			String s = v.asString();
+			if (StringUtils.isEmpty(s)) {
+				continue;
+			}
+			values.add(this.factory.mapUser(s));
+		}
+		if (!values.isEmpty()) {
+			p.setProperty("arm:usersWithDefaultFolder", StringUtils.join(values, ','));
+		}
+
+		values.clear();
+		for (CmfValue v : getPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)) {
+			String s = v.asString();
+			if (StringUtils.isEmpty(s)) {
+				continue;
+			}
+			values.add(this.factory.mapGroup(s));
+		}
+		if (!values.isEmpty()) {
+			p.setProperty("arm:groupsWithDefaultFolder", StringUtils.join(values, ','));
+		}
+
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
 

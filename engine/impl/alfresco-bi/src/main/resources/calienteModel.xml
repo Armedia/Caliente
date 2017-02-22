@@ -837,6 +837,20 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>true</multiple>
 				</property>
+				<property name="arm:usersWithDefaultFolder">
+					<!-- preserve -->
+					<title>Users with this folder as their Home Folder</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="arm:groupsWithDefaultFolder">
+					<!-- preserve -->
+					<title>Groups with this folder as their Home Folder</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
 			</properties>
 		</aspect>
 		<!--
