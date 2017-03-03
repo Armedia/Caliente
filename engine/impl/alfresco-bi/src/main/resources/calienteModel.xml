@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 platform:/resource/caliente-engine-impl-alfresco-bi/src/main/resources/alfresco-model.xsd">
 	<description>Armedia Caliente Object Model</description>
 	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>
-	<version>1.0</version>
+	<version>1.1</version>
 
 	<imports>
 		<!--  Import Alfresco Dictionary Definitions  -->
