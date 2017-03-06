@@ -232,10 +232,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			String newLabel = null;
 			if (isNew) {
 				// Create a new object
-				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Creating a new object for [%s](%s)", this.cmfObject.getLabel(),
-						this.cmfObject.getId()));
-				}
+				this.log.info(String.format("Creating %s [%s](%s)", this.cmfObject.getType().name(),
+					this.cmfObject.getLabel(), this.cmfObject.getId()));
 				object = newObject(context);
 				// Apply the aspects right away?
 				object = applyAspects(object, context);
@@ -249,7 +247,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			} else {
 				// Is this correct?
 				newLabel = calculateLabel(object);
-				this.log.info(String.format("Acquiring lock on %s [%s](%s)", getDctmType().name(),
+				this.log.info(String.format("Acquiring lock on existing %s [%s](%s)", getDctmType().name(),
 					this.cmfObject.getLabel(), this.cmfObject.getId()));
 				DfUtils.lockObject(this.log, object);
 				object.fetch(null);
