@@ -421,13 +421,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 	}
 
-	protected final boolean applyAcl(IDfPersistentObject source, T sysObj, DctmImportContext ctx)
+	protected final boolean copyAcl(IDfPersistentObject source, T target, DctmImportContext ctx)
 		throws DfException, ImportException {
-		if (IDfSysObject.class.isInstance(source)) { return applyAcl(IDfSysObject.class.cast(source), sysObj, ctx); }
-		return applyAcl(source, sysObj, null, null, ctx);
+		if (IDfSysObject.class.isInstance(source)) { return copyAcl(IDfSysObject.class.cast(source), target, ctx); }
+		return copyAcl(source, target, null, null, ctx);
 	}
 
-	protected final boolean applyAcl(IDfPersistentObject source, T sysObj, String aclDomainAtt, String aclNameAtt,
+	protected final boolean copyAcl(IDfPersistentObject source, T sysObj, String aclDomainAtt, String aclNameAtt,
 		DctmImportContext ctx) throws DfException, ImportException {
 		if (source == sysObj) { return true; }
 		if ((source == null) || (sysObj == null)) { return true; }
@@ -448,7 +448,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		return applyAcl(sysObj, aclDomain, aclName, ctx);
 	}
 
-	protected final boolean applyAcl(IDfSysObject source, T sysObj, DctmImportContext ctx)
+	protected final boolean copyAcl(IDfSysObject source, T sysObj, DctmImportContext ctx)
 		throws DfException, ImportException {
 		return applyAcl(sysObj, source.getACLDomain(), source.getACLName(), ctx);
 	}
@@ -459,6 +459,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			DfUtils.quoteString(aclDomain), DfUtils.quoteString(aclName));
 		IDfSession session = ctx.getSession();
 		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.DF_READ_QUERY);
+		final IDfId aclId;
 		try {
 			if (!c.next()) {
 				// no such ACL
@@ -470,15 +471,26 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.log.warn(msg);
 				return false;
 			}
+			aclId = c.getId(DctmAttributes.R_OBJECT_ID);
 		} finally {
 			DfUtils.closeQuietly(c);
 		}
 
-		ctx.printf("Applying ACL (%s::%s) to %s [%s](%s)", aclDomain, aclName, this.cmfObject.getType().name(),
-			this.cmfObject.getLabel(), this.cmfObject.getId());
+		ctx.printf("Applying ACL [%s::%s](%s) to %s [%s](%s)", aclDomain, aclName, aclId.getId(),
+			this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
 
 		sysObj.setACLDomain(aclDomain);
 		sysObj.setACLName(aclName);
+
+		/*
+		IDfACL acl = null;
+
+		acl = session.getACL(aclDomain, aclName);
+		sysObj.setACL(acl);
+
+		acl = IDfACL.class.cast(session.getObject(aclId));
+		sysObj.setACL(acl);
+		*/
 		return true;
 	}
 
@@ -590,7 +602,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			return false;
 		}
 
-		applyAcl(aclSource, sysObj, ctx);
+		copyAcl(aclSource, sysObj, ctx);
 		return true;
 	}
 
@@ -665,8 +677,19 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		// Now, link to the parent folders
 		linkToParents(object, context);
 		// We only try to restore ACLs if it's a new object, or if ACL support is enabled.
-		if (!isReference() && (newObject || context.isSupported(CmfType.ACL))) {
-			restoreAcl(object, newObject, context);
+		if (!isReference()) {
+			if (context.isSupported(CmfType.ACL)) {
+				// If ACL processing is enabled, go full tilt...
+				restoreAcl(object, newObject, context);
+			}
+			// TODO: This may need enabling...
+			/*
+			else if (newObject) {
+				// If ACL processing is disabled, but this is a new object, then
+				// we simply try to restore ACL inheritance as applicable
+				restoreInheritedAcl(object, context);
+			}
+			*/
 		}
 	}
 
