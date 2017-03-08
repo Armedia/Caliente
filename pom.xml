@@ -476,6 +476,7 @@
 
 		<!-- The command-line tools -->
 		<module>cli/common</module>
+		<module>cli/bulkdel</module>
 		<module>cli/caliente</module>
 		<module>cli/datagen</module>
 		<module>cli/filename-mapper</module>
