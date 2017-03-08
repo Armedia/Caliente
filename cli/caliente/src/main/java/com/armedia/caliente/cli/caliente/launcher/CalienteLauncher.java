@@ -6,7 +6,10 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -28,6 +31,26 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
+
+import de.flapdoodle.embed.process.config.IRuntimeConfig;
+import de.flapdoodle.embed.process.config.store.IDownloadConfig;
+import de.flapdoodle.embed.process.config.store.IPackageResolver;
+import de.flapdoodle.embed.process.io.directories.FixedPath;
+import de.flapdoodle.embed.process.store.IArtifactStore;
+import ru.yandex.qatools.embed.postgresql.Command;
+import ru.yandex.qatools.embed.postgresql.PackagePaths;
+import ru.yandex.qatools.embed.postgresql.PostgresExecutable;
+import ru.yandex.qatools.embed.postgresql.PostgresProcess;
+import ru.yandex.qatools.embed.postgresql.PostgresStarter;
+import ru.yandex.qatools.embed.postgresql.config.AbstractPostgresConfig.Credentials;
+import ru.yandex.qatools.embed.postgresql.config.AbstractPostgresConfig.Net;
+import ru.yandex.qatools.embed.postgresql.config.AbstractPostgresConfig.Storage;
+import ru.yandex.qatools.embed.postgresql.config.AbstractPostgresConfig.Timeout;
+import ru.yandex.qatools.embed.postgresql.config.DownloadConfigBuilder;
+import ru.yandex.qatools.embed.postgresql.config.PostgresConfig;
+import ru.yandex.qatools.embed.postgresql.config.RuntimeConfigBuilder;
+import ru.yandex.qatools.embed.postgresql.distribution.Version;
+import ru.yandex.qatools.embed.postgresql.ext.CachedArtifactStoreBuilder;
 
 public class CalienteLauncher extends AbstractLauncher {
 
@@ -63,7 +86,58 @@ public class CalienteLauncher extends AbstractLauncher {
 		return CalienteLauncher.PARAMETER_PROPERTIES;
 	}
 
+	static void PGTest() throws Throwable {
+		// define of retrieve db name and credentials
+		final String name = "caliente";
+		final String username = "caliente";
+		final String password = "caliente";
+
+		final Command cmd = Command.Postgres;
+		// TODO: Here is where we set where PostgreSQL will be "installed"
+		final FixedPath cachedDir = new FixedPath("/path/to/my/extracted/postgres");
+		final IPackageResolver packageResolver = new PackagePaths(cmd, cachedDir);
+		final IDownloadConfig downloadConfig = new DownloadConfigBuilder().defaultsForCommand(cmd)
+			.packageResolver(packageResolver).build();
+		final IArtifactStore artifactStore = new CachedArtifactStoreBuilder().defaults(cmd).tempDir(cachedDir)
+			.download(downloadConfig).build();
+		final IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(cmd).artifactStore(artifactStore)
+			.build();
+		final Storage storage = new Storage(name, "/home/diego/pgtest");
+		final PostgresStarter<PostgresExecutable, PostgresProcess> runtime = PostgresStarter.getInstance(runtimeConfig);
+		final PostgresConfig config = new PostgresConfig(Version.Main.PRODUCTION, new Net(), storage, new Timeout(),
+			new Credentials(username, password));
+
+		// pass info regarding encoding, locale, collate, ctype, instead of setting global
+		// environment settings
+		config.getAdditionalInitDbParams().addAll(
+			Arrays.asList("-E", "UTF-8", "--locale=en_US.UTF-8", "--lc-collate=en_US.UTF-8", "--lc-ctype=en_US.UTF-8"));
+		PostgresExecutable exec = runtime.prepare(config);
+		PostgresProcess process = exec.start();
+
+		try {
+			// connecting to a running Postgres
+			String url = String.format("jdbc:postgresql://%s:%s/%s?currentSchema=public&user=%s&password=%s",
+				config.net().host(), config.net().port(), config.storage().dbName(), config.credentials().username(),
+				config.credentials().password());
+
+			Connection conn = DriverManager.getConnection(url);
+
+			try {
+				// feeding up the database
+				conn.createStatement().execute("CREATE TABLE films (code char(5));");
+				conn.createStatement().execute("INSERT INTO films VALUES ('movie');");
+			} finally {
+				conn.close();
+			}
+		} catch (Throwable t) {
+			"".hashCode();
+		} finally {
+			process.stop();
+		}
+	}
+
 	public static void main(String[] args) throws Throwable {
+		// CalienteLauncher.PGTest();
 		// Temporary, for debugging
 		System.setProperty("h2.threadDeadlockDetector", "true");
 		if (!CLIParam.parse(args)) {
