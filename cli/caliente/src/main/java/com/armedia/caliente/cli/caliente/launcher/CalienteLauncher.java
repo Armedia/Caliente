@@ -35,6 +35,7 @@ import com.armedia.commons.utilities.Tools;
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.config.store.IDownloadConfig;
 import de.flapdoodle.embed.process.config.store.IPackageResolver;
+import de.flapdoodle.embed.process.distribution.IVersion;
 import de.flapdoodle.embed.process.io.directories.FixedPath;
 import de.flapdoodle.embed.process.store.IArtifactStore;
 import ru.yandex.qatools.embed.postgresql.Command;
@@ -93,6 +94,7 @@ public class CalienteLauncher extends AbstractLauncher {
 		final String password = "caliente";
 
 		final Command cmd = Command.Postgres;
+		final IVersion version = Version.Main.V9_6;
 		// TODO: Here is where we set where PostgreSQL will be "installed"
 		final FixedPath cachedDir = new FixedPath("/path/to/my/extracted/postgres");
 		final IPackageResolver packageResolver = new PackagePaths(cmd, cachedDir);
@@ -104,11 +106,12 @@ public class CalienteLauncher extends AbstractLauncher {
 			.build();
 		final Storage storage = new Storage(name, "/home/diego/pgtest");
 		final PostgresStarter<PostgresExecutable, PostgresProcess> runtime = PostgresStarter.getInstance(runtimeConfig);
-		final PostgresConfig config = new PostgresConfig(Version.Main.PRODUCTION, new Net(), storage, new Timeout(),
+		final PostgresConfig config = new PostgresConfig(version, new Net(), storage, new Timeout(),
 			new Credentials(username, password));
 
 		// pass info regarding encoding, locale, collate, ctype, instead of setting global
 		// environment settings
+		config.args(); // TODO: Add more arguments for memory size, etc...
 		config.getAdditionalInitDbParams().addAll(
 			Arrays.asList("-E", "UTF-8", "--locale=en_US.UTF-8", "--lc-collate=en_US.UTF-8", "--lc-ctype=en_US.UTF-8"));
 		PostgresExecutable exec = runtime.prepare(config);
