@@ -36,6 +36,7 @@ public final class CmfStores {
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 	private final Map<String, CmfStoreFactory<?>> factories;
 	private final Map<String, CmfStore<?, ?>> cmfStores = new HashMap<>();
+	private final Map<String, CmfStorePrep> cmfPreps = new HashMap<>();
 	private final Map<String, StoreConfiguration> configurations = new HashMap<>();
 
 	private final String type;
@@ -110,6 +111,50 @@ public final class CmfStores {
 		}
 	}
 
+	private final CmfStorePrep prepareStore(StoreConfiguration configuration, boolean cleanData)
+		throws CmfStorageException {
+		final String prepClassName = configuration.getPrep();
+
+		// If no preparation class is specified, do nothing
+		if (prepClassName == null) { return null; }
+
+		// Does the class exist?
+		final Class<?> prepClass;
+		try {
+			prepClass = Class.forName(prepClassName);
+		} catch (ClassNotFoundException e) {
+			throw new CmfStorageException(String.format("Failed to find store preparation class [%s] for store [%s]",
+				prepClassName, configuration.getId()), e);
+		}
+
+		// Is this the right type of class?
+		if (!CmfStorePrep.class.isAssignableFrom(prepClass)) { throw new CmfStorageException(
+			String.format("The store preparation class [%s] for store [%s] is not a valid sublcass of %s",
+				prepClassName, configuration.getId(), CmfStorePrep.class.getCanonicalName())); }
+
+		// Instantiate the preparation object...
+		final CmfStorePrep prepInstance;
+		try {
+			prepInstance = CmfStorePrep.class.cast(prepClass.newInstance());
+		} catch (Exception e) {
+			throw new CmfStorageException(
+				String.format("Failed to instantiate the store preparation class [%s] for store [%s]", prepClassName,
+					configuration.getId()),
+				e);
+		}
+
+		// Execute the actual preparation
+		try {
+			prepInstance.prepareStore(configuration, cleanData);
+		} catch (CmfStoragePreparationException e) {
+			throw new CmfStorageException(
+				String.format("Failed to execute the store preparation for store [%s] with class [%s]",
+					configuration.getId(), prepClassName),
+				e);
+		}
+		return prepInstance;
+	}
+
 	private CmfStore<?, ?> createStore(StoreConfiguration configuration)
 		throws CmfStorageException, DuplicateCmfStoreException {
 		assertOpen();
@@ -131,9 +176,14 @@ public final class CmfStores {
 			if (factory == null) { throw new CmfStorageException(
 				String.format("No factory found for object store type [%s]", type)); }
 			CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
-			CmfStore<?, ?> instance = factory.newInstance(configuration,
-				cfg.getBoolean(CmfStoreFactory.CFG_CLEAN_DATA, false));
+
+			final boolean cleanData = cfg.getBoolean(CmfStoreFactory.CFG_CLEAN_DATA, false);
+			final CmfStorePrep prep = prepareStore(configuration, cleanData);
+			CmfStore<?, ?> instance = factory.newInstance(configuration, cleanData);
 			this.cmfStores.put(id, instance);
+			if (prep != null) {
+				this.cmfPreps.put(id, prep);
+			}
 			this.configurations.put(id, configuration);
 			return instance;
 		} finally {
@@ -171,6 +221,30 @@ public final class CmfStores {
 		if (this.open.compareAndSet(true, false)) {
 			this.lock.writeLock().lock();
 			try {
+				for (Map.Entry<String, CmfStore<?, ?>> entry : this.cmfStores.entrySet()) {
+					String n = entry.getKey();
+					CmfStore<?, ?> s = entry.getValue();
+					try {
+						s.close();
+					} catch (Exception e) {
+						this.log.warn(String.format("Exception caught closing CmfObjectStore %s[%s]", n,
+							s.getClass().getCanonicalName()), e);
+					}
+
+					CmfStorePrep prep = this.cmfPreps.get(n);
+					if (prep == null) {
+						continue;
+					}
+					try {
+						prep.close();
+					} catch (Exception e) {
+						this.log.warn(
+							String.format("Exception caught cleaning up the CmfStorePrep for CmfObjectStore %s[%s]", n,
+								s.getClass().getCanonicalName()),
+							e);
+					}
+				}
+
 				for (CmfStoreFactory<?> f : this.factories.values()) {
 					try {
 						f.close();
@@ -179,17 +253,11 @@ public final class CmfStores {
 							String.format("Exception caught closing Factory [%s]", f.getClass().getCanonicalName()), e);
 					}
 				}
-				for (Map.Entry<String, CmfStore<?, ?>> e : this.cmfStores.entrySet()) {
-					String n = e.getKey();
-					CmfStore<?, ?> s = e.getValue();
-					try {
-						s.close();
-					} catch (Exception x) {
-						this.log.warn(String.format("Exception caught closing CmfObjectStore %s[%s]", n,
-							s.getClass().getCanonicalName()), x);
-					}
-				}
 			} finally {
+				this.cmfStores.clear();
+				this.cmfPreps.clear();
+				this.factories.clear();
+				this.configurations.clear();
 				this.lock.writeLock().unlock();
 			}
 		}
