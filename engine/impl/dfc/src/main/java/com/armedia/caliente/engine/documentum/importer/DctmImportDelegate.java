@@ -62,7 +62,6 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 
 	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory
 		.newStringValue(DfDocument.CURRENT_VERSION_LABEL);
-	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 
 	private final class AspectHelper implements IDfAttachAspectCallback, IDfDetachAspectCallback {
 		private final AtomicReference<T> ref;
