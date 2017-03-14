@@ -37,6 +37,7 @@ import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfDocument;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
@@ -59,7 +60,8 @@ import com.documentum.fc.common.admin.DfAdminException;
 public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	ImportDelegate<T, IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportDelegateFactory, DctmImportEngine> {
 
-	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory.newStringValue("CURRENT");
+	private static final IDfValue CURRENT_VERSION_LABEL = DfValueFactory
+		.newStringValue(DfDocument.CURRENT_VERSION_LABEL);
 	public static final String NULL_BATCH_ID = "[NO BATCHING]";
 
 	private final class AspectHelper implements IDfAttachAspectCallback, IDfDetachAspectCallback {
