@@ -55,13 +55,15 @@ process() {
 	fi
 
 	if ! ${LAUNCH_PP} ; then
+		init_index_map "${INDEX_MAP}" || fail "Could not initialize the index map [${INDEX_MAP}]"
+		say "Index map file located at [${INDEX_MAP}]"
 		say "Writing out the mapping for [${DIR}] to [${SUFFIX}]"
 		echo -e "${IDX}\t${TARGET}" >> "${INDEX_MAP}"
 	fi
 
 	# Open up a log for the candidate
 	local CANDIDATE_LOG="$(dirname "${DIR}")/$(basename "${LOG}")"
-	exec 8>"${CANDIDATE_LOG}" || fail "Failed to initialize the candidate log at [${CANDIDATE_LOG}]"
+	init_candidate_log || fail "Failed to initialize the candidate log at [${CANDIDATE_LOG}]"
 	(
 		say "Candidate log for [${DIR}] is [${CANDIDATE_LOG}]..."
 		${REPLACE} && REPLACE="-R"

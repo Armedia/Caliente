@@ -3,29 +3,109 @@ LIB="$(readlink -f "${0}")"
 LIBDIR="$(dirname "${LIB}")"
 LIB="$(basename "${LIB}")"
 
+__LOG_ALTERNATES=()
+__LOG_ALTERNATES+=("/var/tmp/caliente")
+__LOG_ALTERNATES+=("/tmp/caliente")
+__LOG_ALTERNATES+=("${LIBDIR}")
+__LOG_ALTERNATES+=("${PWD}")
+
 #
 # Initialize the log, if any
 #
+__do_init_log() {
+	local L="${1}"
+	local D="$(dirname "${L}")"
+	[ -f /dev/fd/9 ] && return 0
+	[ -d "${D}" ] || mkdir -p "${D}" &>/dev/null || return 1
+	exec 9>"${L}" || return 1
+	return 0
+}
+
 init_log() {
-	# If no log is defined, don't start one
-	[ -z "${LOG}" ] && LOG="/dev/null"
-	[ -f /dev/fd/9 ] || exec 9>"${LOG}" || {
-		echo "FAILED TO INITIALIZE THE LOG AT [${LOG}]"
-		exit 9
-	}
+	if [ -z "${LOG}" ] ; then
+		LOG="/dev/null"
+		__do_init_log "${LOG}" && return 0
+	else
+		local LOGDIR=()
+		local LOGNAME="$(basename "${LOG}")"
+		LOGDIR+=("$(dirname "${LOG}")")
+		LOGDIR+=("${__LOG_ALTERNATES[@]}")
+		for LD in "${LOGDIR[@]}" ; do
+			NEW_LOG="${LD}/${LOGNAME}"
+			if __do_init_log "${NEW_LOG}" ; then
+				LOG="${NEW_LOG}"
+				return 0
+			fi
+		done
+	fi
+	echo "FAILED TO INITIALIZE THE LOG [${LOG}]"
+	exit 9
 }
 
 #
 #
 # Initialize the candidate log, if any
 #
+__do_init_candidate_log() {
+	local L="${1}"
+	local D="$(dirname "${L}")"
+	[ -f /dev/fd/8 ] && return 0
+	[ -d "${D}" ] || mkdir -p "${D}" &>/dev/null || return 1
+	exec 8>"${L}" || return 1
+	return 0
+}
+
 init_candidate_log() {
-	# If no log is defined, don't start one
-	[ -z "${CANDIDATE_LOG}" ] && CANDIDATE_LOG="/dev/null"
-	[ -f /dev/fd/8 ] || exec 8>"${CANDIDATE_LOG}" || {
-		echo "FAILED TO INITIALIZE THE CANDIDATE LOG AT [${CANDIDATE_LOG}]"
-		exit 9
-	}
+	if [ -z "${CANDIDATE_LOG}" ] ; then
+		CANDIDATE_LOG="/dev/null"
+		__do_init_candidate_log "${CANDIDATE_LOG}" && return 0
+	else
+		local LOGDIR=()
+		local LOGNAME="$(basename "${CANDIDATE_LOG}")"
+		LOGDIR+=("$(dirname "${CANDIDATE_LOG}")")
+		LOGDIR+=("${__LOG_ALTERNATES[@]}")
+		for LD in "${LOGDIR[@]}" ; do
+			NEW_CANDIDATE_LOG="${LD}/${LOGNAME}"
+			if __do_init_candidate_log "${NEW_CANDIDATE_LOG}" ; then
+				CANDIDATE_LOG="${NEW_CANDIDATE_LOG}"
+				return 0
+			fi
+		done
+	fi
+	echo "FAILED TO INITIALIZE THE CANDIDATE LOG AT [${CANDIDATE_LOG}]"
+	exit 9
+}
+
+#
+# Initialize the index map
+#
+__do_init_index_map() {
+	local L="${1}"
+	local D="$(dirname "${L}")"
+	[ -f "${L}" ] && return 0
+	[ -d "${D}" ] || mkdir -p "${D}" &>/dev/null || return 1
+	touch "${L}" &>/dev/null
+	return ${?}
+}
+
+init_index_map() {
+	if [ -z "${INDEX_MAP}" ] ; then
+		INDEX_MAP="/dev/null"
+		__do_init_index_map "${INDEX_MAP}" && return 0
+	else
+		local MAPDIR=()
+		local MAPNAME="$(basename "${INDEX_MAP}")"
+		MAPDIR+=("$(dirname "${INDEX_MAP}")")
+		MAPDIR+=("${__LOG_ALTERNATES[@]}")
+		for LD in "${MAPDIR[@]}" ; do
+			NEW_INDEX_MAP="${LD}/${MAPNAME}"
+			if __do_init_index_map "${NEW_INDEX_MAP}" ; then
+				INDEX_MAP="${NEW_INDEX_MAP}"
+				return 0
+			fi
+		done
+	fi
+	return 1
 }
 
 #
