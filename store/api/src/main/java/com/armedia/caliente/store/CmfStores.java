@@ -26,7 +26,6 @@ import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.store.xml.StoreDefinitions;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
-import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
 public final class CmfStores {
@@ -69,7 +68,7 @@ public final class CmfStores {
 					f.getClass().getCanonicalName(), registration);
 			}
 		}
-		this.factories = Tools.freezeMap(m);
+		this.factories = m;
 	}
 
 	private void assertOpen() {
