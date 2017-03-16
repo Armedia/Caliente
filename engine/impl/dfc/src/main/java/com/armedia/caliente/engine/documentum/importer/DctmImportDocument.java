@@ -196,10 +196,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	}
 
 	@Override
-	protected boolean isSameObject(IDfSysObject object) throws DfException {
+	protected boolean isSameObject(IDfSysObject object, DctmImportContext ctx) throws DfException, ImportException {
 		// If we're a reference, and there's something there already, we don't import...
 		if (isReference()) { return true; }
-		return super.isSameObject(object);
+		return super.isSameObject(object, ctx);
 	}
 
 	protected IDfSysObject newDocument(DctmImportContext context) throws DfException, ImportException {

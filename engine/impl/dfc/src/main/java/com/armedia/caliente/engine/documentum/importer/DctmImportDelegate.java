@@ -257,7 +257,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				context.getAttributeMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
 					this.cmfObject.getId(), object.getObjectId().getId());
 
-				if (isSameObject(object)) {
+				if (isSameObject(object, context)) {
 					ok = true;
 					return new ImportOutcome(ImportResult.DUPLICATE, object.getObjectId().getId(), newLabel);
 				}
@@ -445,7 +445,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		return false;
 	}
 
-	protected boolean isSameObject(T object) throws DfException {
+	protected boolean isSameObject(T object, DctmImportContext ctx) throws DfException, ImportException {
 		CmfAttribute<IDfValue> thisDate = this.cmfObject.getAttribute(DctmAttributes.R_MODIFY_DATE);
 		if (thisDate == null) { return false; }
 		IDfValue objectDate = object.getValue(DctmAttributes.R_MODIFY_DATE);

@@ -44,6 +44,9 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmImportType extends DctmImportDelegate<IDfType> {
 
+	private final List<Pair<AttributeProxy, AttributeProxy>> attributeMismatches = new ArrayList<>();
+	private final Map<String, AttributeProxy> attributesMissing = new TreeMap<>();
+
 	DctmImportType(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, IDfType.class, DctmObjectType.TYPE, storedObject);
 	}
@@ -240,62 +243,16 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		// If it's a new type being created, we don't need to do any of this
 		if (newObject) { return; }
 
-		final String typeName = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString();
-
-		CmfAttribute<IDfValue> nameAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_NAME);
-		if (nameAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_NAME)); }
-		CmfAttribute<IDfValue> repeatingAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_REPEATING);
-		if (repeatingAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_REPEATING)); }
-		CmfAttribute<IDfValue> typeAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_TYPE);
-		if (typeAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_TYPE)); }
-		CmfAttribute<IDfValue> lengthAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_LENGTH);
-		if (lengthAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_LENGTH)); }
-		CmfAttribute<IDfValue> restrictionAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_RESTRICTION);
-		if (restrictionAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_RESTRICTION)); }
-
-		// Now, make a cache of the source attributes in play
-		Map<String, AttributeProxy> srcAttributes = new TreeMap<>();
-		final int srcCount = nameAtt.getValueCount();
-		for (int i = 0; i < srcCount; i++) {
-			AttributeProxy att = new AttributeProxy(i, nameAtt, typeAtt, lengthAtt, repeatingAtt, restrictionAtt);
-			srcAttributes.put(att.getName(), att);
-		}
-
-		// Compare the source attribute declarations with the target attribute declarations...
-		// We don't much care where the attribute was declared as long as it's available for use in
-		// the current object type...
-		List<Pair<AttributeProxy, AttributeProxy>> mismatches = new ArrayList<>();
-		final int tgtCount = existingType.getTypeAttrCount();
-		for (int i = 0; i < tgtCount; i++) {
-			final AttributeProxy tgtAttr = new AttributeProxy(existingType.getTypeAttr(i));
-			final AttributeProxy srcAttr = srcAttributes.remove(tgtAttr.getName());
-			if (srcAttr == null) {
-				continue;
-			}
-			if (!srcAttr.isAssignableTo(tgtAttr)) {
-				mismatches.add(Pair.of(srcAttr, tgtAttr));
-			}
-		}
-
-		// Nothing to change and no errors?
-		if (mismatches.isEmpty() && srcAttributes.isEmpty()) { return; }
-
-		// The match is incompatible... we don't take the shortcut of comparing counts because
-		// we want to be able to identify mismatches completely, for easy identification and
-		// potential remediation by the operator...
 		boolean ok = true;
-		StringBuilder sb = new StringBuilder();
+		final String typeName = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString();
+		final StringBuilder sb = new StringBuilder();
 		final String nl = String.format("%n");
-		if (!srcAttributes.isEmpty()) {
+		if (!this.attributesMissing.isEmpty()) {
 			final IDfSession session = context.getSession();
-			final List<Pair<AttributeProxy, ? extends Exception>> errors = new ArrayList<>(srcAttributes.size());
+			final List<Pair<AttributeProxy, ? extends Exception>> errors = new ArrayList<>(
+				this.attributesMissing.size());
 			final String template = "ALTER TYPE %s ADD %s %s PUBLISH";
-			for (AttributeProxy att : srcAttributes.values()) {
+			for (AttributeProxy att : this.attributesMissing.values()) {
 				DctmDataType dataType = DctmDataType.fromAttribute(att);
 				final String dec = dataType.getDeclaration(att);
 				try {
@@ -319,39 +276,85 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 			}
 		}
 
-		if (!mismatches.isEmpty()) {
+		if (!this.attributeMismatches.isEmpty()) {
+			int errorCount = 0;
 			final IDfSession session = context.getSession();
-			final Map<String, Exception> errors = new HashMap<>(mismatches.size());
+			final Map<String, List<String>> errors = new HashMap<>(this.attributeMismatches.size());
 			final String template = "ALTER TYPE %s MODIFY (%s %s) PUBLISH";
-			for (Pair<AttributeProxy, AttributeProxy> pair : mismatches) {
-				AttributeProxy att = pair.getLeft();
-				DctmDataType dataType = DctmDataType.fromAttribute(att);
-				final String dec = dataType.getDeclaration(att);
-				try {
-					DfUtils.executeQuery(session, String.format(template, typeName, att.getName(), dec),
-						IDfQuery.DF_QUERY);
-				} catch (Exception e) {
+			for (Pair<AttributeProxy, AttributeProxy> pair : this.attributeMismatches) {
+
+				boolean thisOk = true;
+
+				AttributeProxy srcAtt = pair.getLeft();
+				AttributeProxy tgtAtt = pair.getRight();
+
+				List<String> e = new ArrayList<>();
+				errors.put(srcAtt.getName(), e);
+
+				// If the difference is in repeatability, it's already a failure...
+				if (srcAtt.isRepeating() != tgtAtt.isRepeating()) {
+					e.add(String.format(
+						"Source is %srepeating, but target is %srepeating - we can't fix this automatically",
+						srcAtt.isRepeating() ? "" : "non-", tgtAtt.isRepeating() ? "" : "non-"));
 					ok = false;
-					errors.put(att.getName(), e);
+					thisOk = false;
+					errorCount++;
+				}
+
+				// If the difference is in qualification, it's already a failure...
+				if (srcAtt.isQualifiable() != tgtAtt.isQualifiable()) {
+					e.add(String.format(
+						"Source is %squalifiable, but target is %squalifiable - we can't fix this automatically",
+						srcAtt.isQualifiable() ? "" : "non-", tgtAtt.isQualifiable() ? "" : "non-"));
+					ok = false;
+					thisOk = false;
+					errorCount++;
+				}
+
+				// If the difference is in the base type, then it's already a failure...
+				if (srcAtt.getDataType() != tgtAtt.getDataType()) {
+					e.add("Attribute data types aren't compatible");
+					ok = false;
+					thisOk = false;
+					errorCount++;
+				}
+
+				if (!thisOk) {
+					continue;
+				}
+
+				DctmDataType dataType = DctmDataType.fromAttribute(srcAtt);
+				final String dec = dataType.getDeclaration(srcAtt);
+				try {
+					DfUtils.executeQuery(session, String.format(template, typeName, srcAtt.getName(), dec),
+						IDfQuery.DF_QUERY);
+					context.trackWarning(this.cmfObject, "Modified DM_TYPE [%s] attribute [%s] to match [%s]", typeName,
+						tgtAtt, srcAtt);
+				} catch (Exception ex) {
+					ok = false;
+					errorCount++;
+					e.add(Tools.dumpStackTrace(ex));
 				}
 			}
 
-			if (!errors.isEmpty()) {
+			if (errorCount > 0) {
 				sb.append("\t").append("Target attributes that didn't match their source and couldn't be fixed:")
 					.append(nl);
 				sb.append("\t").append(StringUtils.repeat('=', 80)).append(nl);
-				for (Pair<AttributeProxy, AttributeProxy> mismatch : mismatches) {
+				for (Pair<AttributeProxy, AttributeProxy> mismatch : this.attributeMismatches) {
 					final AttributeProxy source = mismatch.getLeft();
 					final AttributeProxy target = mismatch.getRight();
-					final Exception e = errors.get(source.getName());
-					if (e == null) {
+					final List<String> error = errors.get(source.getName());
+					if ((error == null) || error.isEmpty()) {
 						// No error, so no need to report
 						continue;
 					}
 
 					sb.append("\t\tSOURCE: ").append(source).append(nl);
 					sb.append("\t\tTARGET: ").append(target).append(nl);
-					sb.append("\t\tERROR : ").append(Tools.dumpStackTrace(e)).append(nl);
+					for (String s : error) {
+						sb.append("\t\tERROR : ").append(s).append(nl);
+					}
 					sb.append(nl);
 				}
 			}
@@ -373,10 +376,68 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 	}
 
 	@Override
-	protected boolean isSameObject(IDfType object) throws DfException {
-		// It's "impossible" to compare types...rather - it's far too complicated to do
-		// anything if the type is already there...so we just check names...
-		return Tools.equals(object.getName(), this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString());
+	protected boolean isSameObject(IDfType existingType, DctmImportContext ctx) throws DfException, ImportException {
+		if (!Tools.equals(existingType.getName(),
+			this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString())) { return false; }
+
+		this.attributesMissing.clear();
+		this.attributeMismatches.clear();
+
+		CmfAttribute<IDfValue> nameAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_NAME);
+		if (nameAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_NAME)); }
+		CmfAttribute<IDfValue> repeatingAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_REPEATING);
+		if (repeatingAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_REPEATING)); }
+		CmfAttribute<IDfValue> typeAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_TYPE);
+		if (typeAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_TYPE)); }
+		CmfAttribute<IDfValue> lengthAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_LENGTH);
+		if (lengthAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_LENGTH)); }
+		CmfAttribute<IDfValue> restrictionAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_RESTRICTION);
+		if (restrictionAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_RESTRICTION)); }
+		CmfAttribute<IDfValue> startPosAtt = this.cmfObject.getAttribute(DctmAttributes.START_POS);
+		if (startPosAtt == null) { throw new ImportException(
+			String.format("Source type is missing the attribute %s", DctmAttributes.START_POS)); }
+
+		// Now, make a cache of the source attributes in play
+		final int startPosition = startPosAtt.getValue().asInteger();
+		final int srcCount = nameAtt.getValueCount();
+		for (int i = startPosition; i < srcCount; i++) {
+			AttributeProxy att = new AttributeProxy(i, nameAtt, typeAtt, lengthAtt, repeatingAtt, restrictionAtt);
+			this.attributesMissing.put(att.getName(), att);
+		}
+
+		// Here we explicitly ignore resolving the hierarchical conflict of an inherited
+		// attribute that may or may not match what comes in the source. This is because
+		// resolving that issue is a significant challenge all its own and we can't safely
+		// do that without incurring a LOT of risk. So, we let the admins know of the mismatch
+		// and let them take care of it in their own way...
+
+		// Compare the source attribute declarations with the target attribute declarations...
+		// We don't much care where the attribute was declared as long as it's available for use in
+		// the current object type...
+		final int tgtCount = existingType.getTypeAttrCount();
+		final int tgtStart = existingType.getInt(DctmAttributes.START_POS);
+		for (int i = tgtStart; i < tgtCount; i++) {
+			final AttributeProxy tgtAttr = new AttributeProxy(existingType.getTypeAttr(i));
+			final AttributeProxy srcAttr = this.attributesMissing.remove(tgtAttr.getName());
+			if (srcAttr == null) {
+				continue;
+			}
+			if (!srcAttr.isAssignableTo(tgtAttr)) {
+				ctx.trackWarning(this.cmfObject, "DM_TYPE [%s] attribute [%s] did not match the source attribute [%s]",
+					nameAtt.getValue().asString(), tgtAttr, srcAttr);
+				this.attributeMismatches.add(Pair.of(srcAttr, tgtAttr));
+			}
+		}
+
+		// We're considered identical if there are no missing attributes and
+		// all matching attributes between source and target are "assignable".
+		// At this point we can't check anything else...
+		return this.attributesMissing.isEmpty() && this.attributeMismatches.isEmpty();
 	}
 
 	@Override

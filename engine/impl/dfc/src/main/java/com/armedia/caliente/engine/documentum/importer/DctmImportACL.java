@@ -121,7 +121,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected boolean isSameObject(IDfACL acl) throws DfException {
+	protected boolean isSameObject(IDfACL acl, DctmImportContext ctx) throws DfException {
 		// ACL's don't have a modification date, so we actually have to compare them.
 		// If this is a potential match, then it was found using domain and object name,
 		// so we don't need to check those two, but we do need to check the permissions
