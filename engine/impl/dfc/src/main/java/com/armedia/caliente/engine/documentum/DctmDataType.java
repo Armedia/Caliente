@@ -233,7 +233,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 	}
 
 	protected String generateDeclaration(IDfAttr attr) {
-		return name().toLowerCase().replaceAll("^DF_", "");
+		return name().toLowerCase().replaceAll("^df_", "");
 	}
 
 	/**
