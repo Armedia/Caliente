@@ -134,12 +134,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>ru.yandex.qatools.embed</groupId>
-			<artifactId>postgresql-embedded</artifactId>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>com.documentum.dfc</groupId>
 			<artifactId>dfc-jars</artifactId>
 			<type>pom</type>

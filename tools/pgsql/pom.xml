@@ -17,6 +17,19 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.caliente</groupId>
+			<artifactId>caliente-store-api</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>ru.yandex.qatools.embed</groupId>
 			<artifactId>postgresql-embedded</artifactId>
 			<scope>compile</scope>
