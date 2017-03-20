@@ -178,7 +178,7 @@ public final class CmfStores {
 
 			final boolean cleanData = cfg.getBoolean(CmfStoreFactory.CFG_CLEAN_DATA, false);
 			final CmfStorePrep prep = prepareStore(configuration, cleanData);
-			CmfStore<?, ?> instance = factory.newInstance(configuration, cleanData);
+			CmfStore<?, ?> instance = factory.newInstance(configuration, cleanData, prep);
 			this.cmfStores.put(id, instance);
 			if (prep != null) {
 				this.cmfPreps.put(id, prep);

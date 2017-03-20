@@ -1,12 +1,11 @@
 package com.armedia.caliente.tools.pgsql;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 
 import com.armedia.caliente.store.CmfStoragePreparationException;
 import com.armedia.caliente.store.CmfStorePrep;
 import com.armedia.caliente.store.xml.StoreConfiguration;
+import com.armedia.commons.utilities.CfgTools;
 
 import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.config.store.IDownloadConfig;
@@ -81,15 +80,6 @@ public class PostgresStorePrep implements CmfStorePrep {
 	}
 
 	@Override
-	public URI getStoreURI() {
-		try {
-			return new URI(getStoreURIString());
-		} catch (URISyntaxException e) {
-			throw new RuntimeException("URI Syntax is invalid");
-		}
-	}
-
-	@Override
 	public void close() {
 		try {
 			if (this.process != null) {
@@ -99,5 +89,10 @@ public class PostgresStorePrep implements CmfStorePrep {
 			this.process = null;
 			this.config = null;
 		}
+	}
+
+	@Override
+	public CfgTools getSettings() {
+		return null;
 	}
 }

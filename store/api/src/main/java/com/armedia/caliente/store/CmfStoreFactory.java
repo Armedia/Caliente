@@ -54,7 +54,8 @@ public abstract class CmfStoreFactory<S extends CmfStore<?, ?>> {
 		return this.aliases;
 	}
 
-	protected abstract S newInstance(StoreConfiguration cfg, boolean cleanData) throws CmfStorageException;
+	protected abstract S newInstance(StoreConfiguration cfg, boolean cleanData, CmfPrepInfo prepInfo)
+		throws CmfStorageException;
 
 	protected void close() {
 	}
