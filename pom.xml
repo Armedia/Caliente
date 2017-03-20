@@ -492,5 +492,6 @@
 		<!-- Some general-use tools -->
 		<module>tools/scratchpad</module>
 		<module>tools/xml</module>
+		<module>tools/pgsql</module>
 	</modules>
 </project>
