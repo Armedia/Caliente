@@ -1,6 +1,8 @@
 package com.armedia.caliente.tools.pgsql;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.armedia.caliente.store.CmfStoragePreparationException;
 import com.armedia.caliente.store.CmfStorePrep;
@@ -32,6 +34,7 @@ public class PostgresStorePrep implements CmfStorePrep {
 
 	private PostgresConfig config = null;
 	private PostgresProcess process = null;
+	private CfgTools settings = null;
 
 	@Override
 	public void prepareStore(StoreConfiguration cfg, boolean cleanData) throws CmfStoragePreparationException {
@@ -44,7 +47,7 @@ public class PostgresStorePrep implements CmfStorePrep {
 
 	protected void doPrepareStore(StoreConfiguration cfg, boolean cleanData) throws Exception {
 		// define of retrieve db name and credentials
-		final String name = "caliente";
+		final String dbname = "caliente";
 		final String username = "caliente";
 		final String password = "caliente";
 
@@ -59,10 +62,11 @@ public class PostgresStorePrep implements CmfStorePrep {
 			.download(downloadConfig).build();
 		final IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(cmd).artifactStore(artifactStore)
 			.build();
-		final Storage storage = new Storage(name, "/home/diego/pgtest");
+		final Storage storage = new Storage(dbname, "/home/diego/pgtest");
 		final PostgresStarter<PostgresExecutable, PostgresProcess> runtime = PostgresStarter.getInstance(runtimeConfig);
-		final PostgresConfig config = new PostgresConfig(version, new Net(), storage, new Timeout(),
-			new Credentials(username, password));
+		final Credentials credentials = new Credentials(username, password);
+		final PostgresConfig config = new PostgresConfig(version, new Net(), storage, new Timeout(), credentials);
+		final Map<String, Object> settings = new TreeMap<>();
 
 		// pass info regarding encoding, locale, collate, ctype, instead of setting global
 		// environment settings
@@ -70,13 +74,17 @@ public class PostgresStorePrep implements CmfStorePrep {
 		config.getAdditionalInitDbParams().addAll(
 			Arrays.asList("-E", "UTF-8", "--locale=en_US.UTF-8", "--lc-collate=en_US.UTF-8", "--lc-ctype=en_US.UTF-8"));
 		PostgresExecutable exec = runtime.prepare(config);
+
+		settings.put("jdbc.url", String.format("jdbc:postgresql://%s:%s/%s", this.config.net().host(),
+			this.config.net().port(), this.config.storage().dbName()));
+		settings.put("jdbc.user", credentials.username());
+		settings.put("jdbc.password", credentials.password());
+		settings.put("jdbc.driver", "org.postgresql.Driver");
+		// TODO: Add more settings such as the base folder, etc...
+
 		this.process = exec.start();
 		this.config = config;
-	}
-
-	protected String getStoreURIString() {
-		return String.format("jdbc:postgresql://%s:%s/%s", this.config.net().host(), this.config.net().port(),
-			this.config.storage().dbName());
+		this.settings = new CfgTools(settings);
 	}
 
 	@Override
@@ -88,11 +96,12 @@ public class PostgresStorePrep implements CmfStorePrep {
 		} finally {
 			this.process = null;
 			this.config = null;
+			this.settings = null;
 		}
 	}
 
 	@Override
 	public CfgTools getSettings() {
-		return null;
+		return this.settings;
 	}
 }
