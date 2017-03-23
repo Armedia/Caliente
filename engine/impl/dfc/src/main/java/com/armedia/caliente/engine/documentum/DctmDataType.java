@@ -6,6 +6,8 @@ import java.util.Date;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
+import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.DfValue;
@@ -37,6 +39,16 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		public boolean isNull(IDfValue v) {
 			return (v == null);
 		}
+
+		@Override
+		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.setBoolean(name, value.asBoolean());
+		}
+
+		@Override
+		public void appendValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.appendBoolean(name, value.asBoolean());
+		}
 	},
 	DF_INTEGER(CmfDataType.INTEGER, IDfValue.DF_INTEGER) {
 		private final String nullEncoding = String.valueOf(0);
@@ -60,6 +72,16 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		@Override
 		public boolean isNull(IDfValue v) {
 			return (v == null);
+		}
+
+		@Override
+		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.setInt(name, value.asInteger());
+		}
+
+		@Override
+		public void appendValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.appendInt(name, value.asInteger());
 		}
 	},
 	DF_STRING(CmfDataType.STRING, IDfValue.DF_STRING) {
@@ -88,6 +110,16 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 				String.format("The given attribute (%s) has an invalid length (%d)", type.getName(), length)); }
 			return String.format("string(%d)", length);
 		}
+
+		@Override
+		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.setString(name, value.asString());
+		}
+
+		@Override
+		public void appendValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.appendString(name, value.asString());
+		}
 	},
 	DF_ID(CmfDataType.ID, IDfValue.DF_ID) {
 		private final String nullEncoding = DfId.DF_NULLID_STR;
@@ -115,6 +147,16 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		@Override
 		public IDfValue getNull() {
 			return this.nullValue;
+		}
+
+		@Override
+		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.setId(name, value.asId());
+		}
+
+		@Override
+		public void appendValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.appendId(name, value.asId());
 		}
 	},
 	DF_TIME(CmfDataType.DATETIME, IDfValue.DF_TIME) {
@@ -153,6 +195,16 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		public IDfValue getNull() {
 			return this.nullValue;
 		}
+
+		@Override
+		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.setTime(name, value.asTime());
+		}
+
+		@Override
+		public void appendValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.appendTime(name, value.asTime());
+		}
 	},
 	DF_DOUBLE(CmfDataType.DOUBLE, IDfValue.DF_DOUBLE) {
 		private final String nullEncoding = Double.toHexString(0.0);
@@ -176,6 +228,16 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		@Override
 		public IDfValue getNull() {
 			return this.nullValue;
+		}
+
+		@Override
+		public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.setDouble(name, value.asDouble());
+		}
+
+		@Override
+		public void appendValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+			object.appendDouble(name, value.asDouble());
 		}
 	},
 	DF_UNDEFINED(null, IDfValue.DF_UNDEFINED) {
@@ -214,6 +276,14 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 
 	public final CmfDataType getStoredType() {
 		return this.type;
+	}
+
+	public void setValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+		object.setValue(name, value);
+	}
+
+	public void appendValue(IDfValue value, IDfPersistentObject object, String name) throws DfException {
+		object.appendValue(name, value);
 	}
 
 	public final int getDfConstant() {
