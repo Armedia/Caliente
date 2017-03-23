@@ -552,8 +552,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			attribute.isRepeating(), values, object);
 	}
 
-	private final boolean setAttributeOnObject(String attrName, DctmDataType dataType, boolean repeating,
-		Collection<IDfValue> values, T object) throws DfException {
+	private final boolean setAttributeOnObject(final String attrName, final DctmDataType dataType,
+		final boolean repeating, Collection<IDfValue> values, T object) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
 		if (attrName == null) { throw new IllegalArgumentException(
 			"Must provide an attribute name to set on the object"); }
@@ -568,6 +568,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			? object.getAttr(object.findAttrIndex(attrName)).getLength() : 0);
 		int i = 0;
 		for (IDfValue value : values) {
+			if ((i > 0) && !repeating) {
+				// Make sure we only take the first value
+				break;
+			}
+
 			if (value == null) {
 				value = dataType.getNull();
 			}
@@ -578,10 +583,9 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			boolean ok = false;
 			try {
 				if (repeating) {
-					object.appendValue(attrName, value);
+					dataType.appendValue(value, object, attrName);
 				} else {
-					// I wonder if appendValue() can also be used for non-repeating attributes...
-					object.setValue(attrName, value);
+					dataType.setValue(value, object, attrName);
 				}
 				i++;
 				ok = true;
