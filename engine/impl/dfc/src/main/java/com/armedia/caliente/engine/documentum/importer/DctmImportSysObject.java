@@ -484,10 +484,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-
+		
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-
+		
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/
@@ -981,8 +981,9 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// The target document's reference flag is different from ours...problem!
 				throw new ImportException(String.format(
 					"Reference flag mismatch between objects. The [%s] %s collides with a %sreference at [%s] (%s:%s)",
-					this.cmfObject.getLabel(), this.cmfObject.getSubtype(), (seeksReference ? "non-" : ""), currentPath,
-					current.getType().getName(), current.getObjectId().getId()));
+					this.cmfObject.getLabel(), (seeksReference ? "dm_reference" : this.cmfObject.getSubtype()),
+					(seeksReference ? "non-" : ""), currentPath, current.getType().getName(),
+					current.getObjectId().getId()));
 			}
 
 			if (existing == null) {
