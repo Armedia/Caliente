@@ -26,6 +26,7 @@ import com.armedia.caliente.engine.documentum.UnsupportedDctmObjectTypeException
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
+import com.armedia.caliente.engine.importer.ImportReplaceMode;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
@@ -39,6 +40,7 @@ import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfDocument;
 import com.documentum.fc.client.IDfCollection;
+import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
@@ -215,10 +217,39 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		}
 	}
 
+	protected final boolean deleteExisting(T object) throws DfException {
+		final IDfSession session = object.getSession();
+		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
+		this.log.debug("Deleting existing copy of {} [{}]({})", this.cmfObject.getType(), this.cmfObject.getLabel(),
+			this.cmfObject.getId());
+		try {
+			doDeleteExisting(object);
+			DfUtils.commitTransaction(session, tx);
+			this.log.debug("Existing copy of {} [{}]({}) was successfully deleted", this.cmfObject.getType(),
+				this.cmfObject.getLabel(), this.cmfObject.getId());
+			return true;
+		} catch (DfException e) {
+			this.log.warn(String.format("Failed to delete the existing copy of %s [%s](%s)", this.cmfObject.getType(),
+				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			DfUtils.abortTransaction(session, tx);
+		}
+		return false;
+	}
+
+	protected void doDeleteExisting(T object) throws DfException {
+		object.destroy();
+	}
+
+	protected ImportReplaceMode getReplaceMode(DctmImportContext context) throws ImportException {
+		// Only sysobjects should change this
+		return ImportReplaceMode.UPDATE;
+	}
+
 	protected ImportOutcome doImportObject(DctmImportContext context) throws DfException, ImportException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 
 		boolean ok = false;
+		final ImportReplaceMode replaceMode = getReplaceMode(context);
 
 		// We assume the worst, out of the gate
 		final IDfSession session = context.getSession();
@@ -260,6 +291,30 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				if (isSameObject(object, context)) {
 					ok = true;
 					return new ImportOutcome(ImportResult.DUPLICATE, object.getObjectId().getId(), newLabel);
+				}
+				switch (replaceMode) {
+					case SKIP:
+						ok = true;
+						return new ImportOutcome(ImportResult.SKIPPED, object.getObjectId().getId(), newLabel);
+
+					case REPLACE:
+						if (context.getHistoryPosition() == 0) {
+							// Delete the existing object, but only if it's the ROOT object
+							if (deleteExisting(object)) {
+								// Recurse... there should no longer be an existing object
+								doImportObject(context);
+							} else {
+								// Couldn't delete it for some reason, so we just keep going with a
+								// new one...
+								// TODO: how?? need to modify this code so it's easy to "create new"
+								// vs "update existing"
+							}
+						}
+						break;
+
+					case UPDATE:
+						// Do nothing, proceed as usual
+						break;
 				}
 				cmsImportResult = ImportResult.UPDATED;
 			}
