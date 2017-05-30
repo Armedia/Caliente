@@ -2,7 +2,17 @@ package com.armedia.caliente.store;
 
 public enum CmfType {
 	//
-	DATASTORE, USER, GROUP, ACL, TYPE, FORMAT, FOLDER, DOCUMENT, WORKFLOW;
+	DATASTORE, //
+	USER, //
+	GROUP, //
+	ACL, //
+	TYPE, //
+	FORMAT, //
+	FOLDER, //
+	DOCUMENT, //
+	// RELATION, //
+	//
+	;
 
 	public static CmfType decodeString(String str) {
 		if (str == null) { throw new NullPointerException("Must provide a valid string to decode"); }
