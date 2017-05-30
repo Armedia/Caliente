@@ -487,7 +487,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-		
+
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/

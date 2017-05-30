@@ -162,8 +162,28 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		List<List<String>> all = new ArrayList<>(parentCount);
 		for (int i = 0; i < parentCount; i++) {
 			final IDfId parentId = f.getFolderId(i);
-			final IDfFolder parent = session.getFolderBySpecification(parentId.getId());
+
+			// Validate that it's a valid ID...
+			if (parentId.isNull() || !parentId.isObjectId()) {
+				this.log.warn("Invalid parent ID [{}] read from object [{}]: [{}]", parentId.toString(), oid);
+				continue;
+			}
+
+			// Retrieve the parent...
+			final IDfFolder parent;
+			try {
+				parent = session.getFolderBySpecification(parentId.getId());
+			} catch (RuntimeException e) {
+				// This is a precaution, to catch unchecked exceptions due to DFC bugs...
+				throw new DfException(
+					String.format("DFC NPE Bug triggered by folder with ID [%s], which is a parent of object [%s]",
+						parentId.toString(), oid));
+			}
+
+			// Parent not found...?!?!?!
 			if (parent == null) { throw new DfIdNotFoundException(parentId); }
+
+			// Recurse upwards!
 			for (List<String> l : calculateRecursions(parent, visited, calc)) {
 				l.add(calc.getValue(parent));
 				all.add(l);
