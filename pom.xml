@@ -16,7 +16,7 @@
 	</organization>
 
 	<scm>
-		<connection>scm:svn:https://project.armedia.com/svn/Caliente/caliente</connection>
+		<connection>scm:git:git@gitlab.armedia.com:caliente/caliente.git</connection>
 	</scm>
 
 	<distributionManagement>
@@ -32,7 +32,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.target>1.7</project.build.target>
 		<dfc.version>6.7-SP1</dfc.version>
-		<build.number>-SNAPSHOT-r${buildNumber}</build.number>
+		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 	</properties>
 
 	<repositories>
@@ -402,9 +402,7 @@
 						<configuration>
 							<doCheck>false</doCheck>
 							<doUpdate>false</doUpdate>
-							<providerImplementations>
-								<svn>javasvn</svn>
-							</providerImplementations>
+							<shortRevisionLength>8</shortRevisionLength>
 							<getRevisionOnlyOnce>true</getRevisionOnlyOnce>
 							<revisionOnScmFailure>unknown</revisionOnScmFailure>
 							<buildNumberPropertyName>buildNumber</buildNumberPropertyName>
