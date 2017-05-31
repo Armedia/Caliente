@@ -1,0 +1,10 @@
+target
+dfc.properties
+type-map.xml
+dfc.keystore
+datagen.*.csv
+documentum
+datagen.sh
+datagen*.log
+typelist.txt
+

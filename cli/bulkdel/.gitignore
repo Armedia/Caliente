@@ -1,0 +1,6 @@
+target
+dfc.properties
+dfc.keystore
+documentum
+bulkdel*.log
+

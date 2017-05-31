@@ -1,0 +1,16 @@
+target
+.refactorings
+documentum
+dfc.properties
+dfc.keystore
+*.log
+*.manifest.csv
+*.err
+cmsmf
+caliente
+test-fs
+*Model.xml
+*map.xml
+*.properties
+*.sh
+
