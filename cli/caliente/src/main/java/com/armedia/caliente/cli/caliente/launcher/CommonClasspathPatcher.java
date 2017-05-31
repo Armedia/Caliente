@@ -32,11 +32,11 @@ public class CommonClasspathPatcher extends ClasspathPatcher {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private File createFile(String path) {
-		return createFile(null, path);
+	private File constructFile(String path) {
+		return constructFile(null, path);
 	}
 
-	private File createFile(File parent, String path) {
+	private File constructFile(File parent, String path) {
 		File f = (parent != null ? new File(parent, path) : new File(path));
 		try {
 			f = f.getCanonicalFile();
@@ -56,18 +56,18 @@ public class CommonClasspathPatcher extends ClasspathPatcher {
 	public List<URL> getPatches(String engine) {
 		List<URL> ret = new ArrayList<>(3);
 		try {
-			File f = createFile(System.getProperty("user.dir"));
-			ret.add(createFile(f, "cfg").toURI().toURL());
+			File f = constructFile(System.getProperty("user.dir"));
+			ret.add(constructFile(f, "cfg").toURI().toURL());
 
 			// Next, identify the DOCUMENTUM_EXTRA location, and all the JAR and ZIP files in there
 			// (non-recursive), including a "classes" directory
 			String var = CLIParam.lib.getString(Tools.coalesce(System.getenv(CommonClasspathPatcher.ENV_CALIENTE_LIB),
 				CommonClasspathPatcher.DEFAULT_CALIENTE_LIB));
 			// Next, is it a directory?
-			f = createFile(var);
+			f = constructFile(var);
 			if (f.isDirectory() && f.canRead()) {
 				// Ok so we have the directory...does "classes" exist?
-				File classesDir = createFile(f, "classes");
+				File classesDir = constructFile(f, "classes");
 				if (classesDir.exists() && classesDir.isDirectory() && classesDir.canRead()) {
 					ret.add(classesDir.toURI().toURL());
 				}
