@@ -229,9 +229,22 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 
 		final IDfSession session = context.getSession();
 
+		final CmfAttribute<IDfValue> antecedentAtt = this.cmfObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID);
+		// First things first: if the exact antecedent we're looking for exists, then we use that
+		// and continue normally
+		if ((antecedentAtt != null) && antecedentAtt.hasValues()) {
+			IDfId aid = antecedentAtt.getValue().asId();
+			Mapping mapping = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
+				DctmAttributes.R_OBJECT_ID, aid.getId());
+			// This mapping can only exist (i.e. be non-null) if we actually processed the
+			// antecedent during this run
+			if (mapping != null) { return createSuccessorVersion(
+				castObject(session.getObject(new DfId(mapping.getTargetValue()))), null, context); }
+		}
+
+		// Its exact antecedent isn't there, so we try for the patched one...
 		final IDfId antecedentId;
 		IDfSysObject antecedentVersion = null;
-		final CmfAttribute<IDfValue> antecedentAtt = this.cmfObject.getAttribute(DctmAttributes.I_ANTECEDENT_ID);
 		final CmfProperty<IDfValue> antecedentProperty = this.cmfObject.getProperty(DctmSysObject.PATCH_ANTECEDENT);
 		if (antecedentProperty == null) {
 			antecedentId = (antecedentAtt != null ? antecedentAtt.getValue().asId() : DfId.DF_NULLID);
