@@ -39,6 +39,54 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
+	protected boolean isSameObject(IDfGroup existingObject, DctmImportContext ctx) throws DfException, ImportException {
+		if (!super.isSameObject(existingObject, ctx)) { return false; }
+
+		// Same name?
+		if (!isAttributeEquals(existingObject, DctmAttributes.GROUP_NAME)) { return false; }
+
+		Set<String> existingMembers = new HashSet<>();
+
+		// Same group-members?
+		int c = existingObject.getValueCount(DctmAttributes.GROUPS_NAMES);
+		for (int i = 0; i < c; i++) {
+			existingMembers.add(existingObject.getRepeatingString(DctmAttributes.GROUPS_NAMES, i).toLowerCase());
+		}
+
+		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.GROUPS_NAMES);
+		if (att == null) {
+			if (existingMembers.isEmpty()) { return false; }
+		} else {
+			for (IDfValue v : att) {
+				if (!existingMembers.remove(v.asString().toLowerCase())) { return false; }
+			}
+			if (existingMembers.isEmpty()) { return false; }
+		}
+
+		if (ctx.isSupported(CmfType.USER)) {
+			// Same user-members?
+			existingMembers = new HashSet<>();
+			c = existingObject.getValueCount(DctmAttributes.USERS_NAMES);
+			for (int i = 0; i < c; i++) {
+				existingMembers.add(existingObject.getRepeatingString(DctmAttributes.USERS_NAMES, i));
+			}
+			att = this.cmfObject.getAttribute(DctmAttributes.USERS_NAMES);
+			if (att == null) {
+				if (existingMembers.isEmpty()) { return false; }
+			} else {
+				for (IDfValue v : att) {
+					final String name = DctmMappingUtils.resolveMappableUser(existingObject, v.asString());
+					if (!existingMembers.remove(name)) { return false; }
+				}
+				if (existingMembers.isEmpty()) { return false; }
+			}
+		}
+
+		// TODO: Check other things?
+		return true;
+	}
+
+	@Override
 	protected String calculateLabel(IDfGroup group) throws DfException {
 		return group.getGroupName();
 	}

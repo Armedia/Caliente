@@ -445,13 +445,38 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		return false;
 	}
 
-	protected boolean isSameObject(T object, DctmImportContext ctx) throws DfException, ImportException {
-		CmfAttribute<IDfValue> thisDate = this.cmfObject.getAttribute(DctmAttributes.R_MODIFY_DATE);
-		if (thisDate == null) { return false; }
-		IDfValue objectDate = object.getValue(DctmAttributes.R_MODIFY_DATE);
-		if (objectDate == null) { return false; }
-		DctmDataType type = DctmTranslator.translateType(thisDate.getType());
-		return Tools.equals(type.getValue(objectDate), type.getValue(thisDate.getValue()));
+	protected final boolean isAttributeEquals(final T existingObject, final String attributeName)
+		throws DfException, ImportException {
+		final CmfAttribute<IDfValue> thisAtt = this.cmfObject.getAttribute(attributeName);
+		// We don't have this attribute but the existing object does...
+		if ((thisAtt == null) && existingObject.hasAttr(attributeName)) { return false; }
+
+		// Both have the attribute, let's get the definition
+		final IDfAttr existingAtt = existingObject.getAttr(existingObject.findAttrIndex(attributeName));
+
+		// Are they the same type?
+		DctmDataType thisType = DctmTranslator.translateType(thisAtt.getType());
+		DctmDataType existingType = DctmDataType.fromAttribute(existingAtt);
+		if (thisType != existingType) { return false; }
+
+		// Do the attribute counts mismatch?
+		if (thisAtt.getValueCount() != existingObject.getValueCount(attributeName)) { return false; }
+
+		// We don't check for repeating or not because at this point we don't much care since
+		// we know they both have the same number of values
+		for (int i = 0; i < thisAtt.getValueCount(); i++) {
+			IDfValue thisValue = thisAtt.getValue(i);
+			IDfValue existingValue = existingObject.getRepeatingValue(attributeName, i);
+
+			if (!Tools.equals(thisType.getValue(thisValue), thisType.getValue(existingValue))) { return false; }
+		}
+		// At this point we know that all attribute values are equal and in the same order
+		return true;
+	}
+
+	protected boolean isSameObject(T existingObject, DctmImportContext ctx) throws DfException, ImportException {
+		// Same object type?
+		return StringUtils.equals(this.cmfObject.getSubtype(), existingObject.getType().getName());
 	}
 
 	protected T newObject(DctmImportContext ctx) throws DfException, ImportException {
