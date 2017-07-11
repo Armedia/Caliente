@@ -69,12 +69,16 @@ public class UserMapper {
 	}
 
 	private static final String NEWLINE = String.format("%n");
+	private static final String NO_FIRST_NAME = "DummyFirstName";
+	private static final String NO_LAST_NAME = "DummyLastName";
+	private static final String NO_EMAIL = "dummy@email.com";
 
 	private static final Map<String, String> USER_HEADINGS;
 	private static final Map<String, String> GROUP_HEADINGS;
 
 	private static final String FIRST_NAME = UUID.randomUUID().toString();
 	private static final String LAST_NAME = UUID.randomUUID().toString();
+	private static final String EMAIL = UUID.randomUUID().toString();
 	private static final String PASSWORD = UUID.randomUUID().toString();
 
 	private static final String GROUP_NAME = UUID.randomUUID().toString();
@@ -91,13 +95,13 @@ public class UserMapper {
 			}, {
 				"Last Name", UserMapper.LAST_NAME
 			}, {
-				"E-mail Address", "user_address"
+				"E-mail Address", UserMapper.EMAIL
 			}, {
 				""
 			}, {
 				"Password", UserMapper.PASSWORD
 			}, {
-				"Company", "JSAP"
+				"Company", "DummyCompanyName"
 			}, {
 				"Job Title",
 			}, {
@@ -125,7 +129,7 @@ public class UserMapper {
 			}, {
 				"Fax"
 			}, {
-				"Email", "user_address"
+				"Email", UserMapper.EMAIL
 			},
 		};
 		for (String[] h : userHeadings) {
@@ -177,20 +181,42 @@ public class UserMapper {
 					v = u.getString(v);
 				} else if (v == UserMapper.FIRST_NAME) {
 					// The first name is everything but the last word
-					String[] n = StringUtils.split(u.getUserName());
-					if (n.length > 1) {
-						v = StringUtils.join(n, ' ', 0, n.length - 1);
+					String userName = u.getUserName();
+					if (StringUtils.isEmpty(userName)) {
+						v = null;
 					} else {
-						v = n[0];
+						String[] n = StringUtils.split(userName);
+						if (n.length > 1) {
+							v = StringUtils.join(n, ' ', 0, n.length - 1);
+						} else {
+							v = n[0];
+						}
+					}
+					if (StringUtils.isEmpty(v)) {
+						v = UserMapper.NO_FIRST_NAME;
 					}
 				} else if (v == UserMapper.LAST_NAME) {
 					// The last name is only the last word...if it's only one word,
 					// then it's nothing
-					String[] n = StringUtils.split(u.getUserName());
-					if (n.length > 1) {
-						v = n[n.length - 1];
-					} else {
+					String userName = u.getUserName();
+					if (StringUtils.isEmpty(userName)) {
 						v = null;
+					} else {
+						String[] n = StringUtils.split(userName);
+						if (n.length > 1) {
+							v = n[n.length - 1];
+						} else {
+							v = null;
+						}
+					}
+					if (StringUtils.isEmpty(v)) {
+						v = UserMapper.NO_LAST_NAME;
+					}
+				} else if (v == UserMapper.EMAIL) {
+					// Email can't be empty...
+					v = u.getUserAddress();
+					if (StringUtils.isEmpty(v)) {
+						v = UserMapper.NO_EMAIL;
 					}
 				} else if (v == UserMapper.PASSWORD) {
 					byte[] b = new byte[24];
@@ -200,7 +226,6 @@ public class UserMapper {
 					// No attribute, and it's not a special value, so we simply leave it
 					// as-is assuming it's a constant
 				}
-
 			}
 			userRecords.print(Tools.coalesce(v, ""));
 		}
