@@ -25,6 +25,7 @@ import com.armedia.caliente.cli.datagen.data.DataRecord;
 import com.armedia.caliente.cli.datagen.data.csv.CSVDataRecordSet;
 
 public class CSVDataRecordSetTest {
+	private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 	private static File EMPTY = null;
 	private static File ONLY_HEADERS = null;
 	private static File TEN_RECORDS = null;
@@ -47,7 +48,7 @@ public class CSVDataRecordSetTest {
 		} finally {
 			IOUtils.closeQuietly(p);
 		}
-		FileUtils.write(CSVDataRecordSetTest.ONLY_HEADERS, b, Charset.defaultCharset());
+		FileUtils.write(CSVDataRecordSetTest.ONLY_HEADERS, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 		b.setLength(0);
 
 		// Create 3 headers: a,b,c, and ten records...
@@ -67,7 +68,7 @@ public class CSVDataRecordSetTest {
 		} finally {
 			IOUtils.closeQuietly(p);
 		}
-		FileUtils.write(CSVDataRecordSetTest.TEN_RECORDS, b, Charset.defaultCharset());
+		FileUtils.write(CSVDataRecordSetTest.TEN_RECORDS, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 	}
 
 	@AfterClass
@@ -349,7 +350,7 @@ public class CSVDataRecordSetTest {
 		try {
 			for (int i = 1; i < 256; i++) {
 				b.setLength(0);
-				Set<String> expected = new LinkedHashSet<String>();
+				Set<String> expected = new LinkedHashSet<>();
 				// Print out the headers
 				CSVPrinter p = new CSVPrinter(b, CSVFormat.DEFAULT);
 				try {
@@ -362,7 +363,7 @@ public class CSVDataRecordSetTest {
 				} finally {
 					p.close();
 				}
-				FileUtils.write(f, b, Charset.defaultCharset());
+				FileUtils.write(f, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 
 				CSVDataRecordSet nd = new CSVDataRecordSet(f, 1);
 				try {
@@ -396,7 +397,7 @@ public class CSVDataRecordSetTest {
 				} finally {
 					p.close();
 				}
-				FileUtils.write(f, b, Charset.defaultCharset());
+				FileUtils.write(f, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 
 				CSVDataRecordSet nd = new CSVDataRecordSet(f, 1);
 				try {
@@ -418,7 +419,7 @@ public class CSVDataRecordSetTest {
 		try {
 			for (int i = 1; i < 256; i++) {
 				b.setLength(0);
-				List<String> expected = new ArrayList<String>(i);
+				List<String> expected = new ArrayList<>(i);
 				// Print out the headers
 				CSVPrinter p = new CSVPrinter(b, CSVFormat.DEFAULT);
 				try {
@@ -431,7 +432,7 @@ public class CSVDataRecordSetTest {
 				} finally {
 					p.close();
 				}
-				FileUtils.write(f, b, Charset.defaultCharset());
+				FileUtils.write(f, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 
 				CSVDataRecordSet nd = new CSVDataRecordSet(f, 1);
 				try {

@@ -40,6 +40,7 @@ import javanet.staxutils.IndentingXMLStreamWriter;
 
 public final class XmlProperties {
 
+	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 	public static final Class<?>[] NO_CLASSES = {};
 
 	public static interface ValueSerializer<T> {
@@ -163,7 +164,7 @@ public final class XmlProperties {
 	public static XMLStreamWriter getXMLStreamWriter(OutputStream out, String encoding) throws XMLStreamException {
 		XMLOutputFactory factory = XmlProperties.getXMLOutputFactory();
 		if (encoding == null) {
-			encoding = Charset.defaultCharset().name();
+			encoding = XmlProperties.DEFAULT_CHARSET.name();
 		}
 		return XmlProperties.getWrappedStreamWriter(factory.createXMLStreamWriter(out, encoding));
 	}
@@ -193,7 +194,7 @@ public final class XmlProperties {
 	public static XMLStreamReader getXMLStreamReader(InputStream in, String encoding) throws XMLStreamException {
 		XMLInputFactory factory = XmlProperties.getXMLInputFactory();
 		if (encoding == null) {
-			encoding = Charset.defaultCharset().name();
+			encoding = XmlProperties.DEFAULT_CHARSET.name();
 		}
 		return factory.createXMLStreamReader(in, encoding);
 	}
@@ -240,7 +241,8 @@ public final class XmlProperties {
 	public static <T> void saveToXML(Map<String, T> p, OutputStream out, String comment, Charset charset,
 		ValueSerializer<T> serializer) throws IOException {
 		if (charset == null) {
-			charset = Charset.defaultCharset();
+			// Default to UTF-8
+			charset = XmlProperties.DEFAULT_CHARSET;
 		}
 
 		if (serializer == null) {
@@ -308,7 +310,7 @@ public final class XmlProperties {
 	public static Properties loadFromXML(InputStream in, Charset charset) throws IOException, XMLStreamException {
 		if (in == null) { throw new IllegalArgumentException("Must provide a stream to read from"); }
 		if (charset == null) {
-			charset = Charset.defaultCharset();
+			charset = XmlProperties.DEFAULT_CHARSET;
 		}
 		Properties properties = new Properties();
 		try {

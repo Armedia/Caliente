@@ -8,6 +8,8 @@ import org.apache.commons.csv.CSVFormat;
 import com.armedia.commons.utilities.Tools;
 
 class CSVDataRecordSetInitState {
+	private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+
 	final URL url;
 	final Charset charset;
 	final CSVFormat format;
@@ -15,7 +17,7 @@ class CSVDataRecordSetInitState {
 	CSVDataRecordSetInitState(URL url, Charset charset, CSVFormat format) {
 		if (url == null) { throw new IllegalArgumentException("Must provide a URL to read from"); }
 		this.url = url;
-		this.charset = Tools.coalesce(charset, Charset.defaultCharset());
+		this.charset = Tools.coalesce(charset, CSVDataRecordSetInitState.DEFAULT_CHARSET);
 		format = Tools.coalesce(format, CSVFormat.DEFAULT);
 		// Enforce the use of complete header records
 		format = format.withAllowMissingColumnNames(false);

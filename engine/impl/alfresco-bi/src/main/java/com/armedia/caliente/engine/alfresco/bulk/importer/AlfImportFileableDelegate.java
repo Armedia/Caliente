@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
@@ -51,6 +52,7 @@ import com.armedia.commons.utilities.Tools;
 
 abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
+	protected static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 	private static final String METADATA_SUFFIX = ".metadata.properties.xml";
 
 	public static final String REFERENCE_TYPE = "arm:reference";

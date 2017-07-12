@@ -113,7 +113,7 @@ public class PropertiesTest {
 
 	public static void test() throws Exception {
 		Properties p = new Properties();
-		Charset charset = Charset.defaultCharset();
+		Charset charset = PropertiesTest.CHARSET;
 		CharsetEncoder encoder = charset.newEncoder();
 		for (int i = 1; i < 0xFFFE; i++) {
 			char c = (char) i;
@@ -123,6 +123,7 @@ public class PropertiesTest {
 			String key = String.format("char[%02x]", i);
 			// String key = String.format("char[%02x] == (%s)", i, c);
 			p.setProperty(key, String.format("[%s]", c));
+			System.out.printf("[%02x] = [%s]%n", i, c);
 		}
 
 		BinaryMemoryBuffer buf = new BinaryMemoryBuffer();
