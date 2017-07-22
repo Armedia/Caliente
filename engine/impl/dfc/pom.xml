@@ -5,7 +5,7 @@
 	<name>Armedia Caliente Engine - Documentum (DFC)</name>
 	<description>A Caliente engine that supports reading from and writing to a Documentum instance using DFC</description>
 	<groupId>com.armedia.caliente.engine</groupId>
-	<artifactId>caliente-documentum</artifactId>
+	<artifactId>caliente-dfc</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>
