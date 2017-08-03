@@ -13,6 +13,7 @@ import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionFactory;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
+import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.common.LocalTranslator;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -32,7 +33,8 @@ public class LocalExportEngine extends
 	@Override
 	protected void findExportResults(LocalRoot session, CfgTools configuration, LocalExportDelegateFactory factory,
 		TargetSubmitter submitter) throws Exception {
-		Iterator<ExportTarget> it = new LocalRecursiveIterator(session, true);
+		Iterator<ExportTarget> it = new LocalRecursiveIterator(session,
+			configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS));
 		while (it.hasNext()) {
 			submitter.submit(it.next());
 		}
