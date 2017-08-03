@@ -122,7 +122,7 @@ public class Caliente_counter extends AbstractCalienteModule<ExportEngineListene
 	}
 
 	public Caliente_counter() throws Throwable {
-		super(DctmExportEngine.getExportEngine(), false, false);
+		super(DctmExportEngine.getExportEngine(), false, false, false);
 	}
 
 	/**

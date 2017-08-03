@@ -11,13 +11,15 @@ import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
+import com.armedia.caliente.store.local.LocalContentStoreSetting;
+import com.armedia.caliente.store.xml.StoreConfiguration;
 
 public class Caliente_export extends AbstractCalienteModule_export implements ExportEngineListener {
 
 	private File source = null;
 
 	public Caliente_export() throws Throwable {
-		super(LocalExportEngine.getExportEngine());
+		super(LocalExportEngine.getExportEngine(), true, false);
 		this.source = new File(CLIParam.source.getString());
 	}
 
@@ -49,6 +51,17 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 			}
 			this.source = f;
 		}
+	}
+
+	@Override
+	protected void customizeContentStoreProperties(StoreConfiguration cfg) {
+		super.customizeContentStoreProperties(cfg);
+		cfg.getSettings().put(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), Boolean.TRUE.toString());
+	}
+
+	@Override
+	protected File getContentFilesLocation() {
+		return new File(CLIParam.source.getString());
 	}
 
 	@Override

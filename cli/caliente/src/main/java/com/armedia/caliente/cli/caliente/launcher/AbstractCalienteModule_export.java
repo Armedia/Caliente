@@ -45,7 +45,12 @@ public class AbstractCalienteModule_export extends
 	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<>(ExportResult.class);
 
 	protected AbstractCalienteModule_export(ExportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
-		super(engine, true, true);
+		super(engine, true, true, true);
+	}
+
+	protected AbstractCalienteModule_export(ExportEngine<?, ?, ?, ?, ?, ?> engine, boolean cleanMetadata,
+		boolean cleanStorage) throws Throwable {
+		super(engine, true, cleanMetadata, cleanStorage);
 	}
 
 	protected void validateState() throws CalienteException {

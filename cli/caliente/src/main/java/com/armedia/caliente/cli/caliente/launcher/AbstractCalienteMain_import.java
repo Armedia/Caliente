@@ -46,7 +46,7 @@ public abstract class AbstractCalienteMain_import extends
 	private final Map<CmfType, AtomicLong> previous = new HashMap<>();
 
 	public AbstractCalienteMain_import(ImportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
-		super(engine, true, false);
+		super(engine, true, false, false);
 	}
 
 	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {

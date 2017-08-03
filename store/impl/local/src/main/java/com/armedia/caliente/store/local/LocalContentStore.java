@@ -93,6 +93,10 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	protected final boolean propertiesLoaded;
 	private final boolean useWindowsFix;
 
+	private static boolean fileIsAccessible(File f) {
+		return f.exists() && f.isFile() && f.canRead();
+	}
+
 	public LocalContentStore(CfgTools settings, File baseDir, CmfOrganizationStrategy strategy, boolean cleanData)
 		throws CmfStorageException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
@@ -109,7 +113,19 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			f = baseDir;
 		}
 		this.baseDir = f;
-		this.propertiesFile = new File(baseDir, "store-properties.xml");
+
+		final File newPropertiesFile = new File(baseDir, "caliente-store-properties.xml");
+		final File oldPropertiesFile = new File(baseDir, "store-properties.xml");
+		if (LocalContentStore.fileIsAccessible(newPropertiesFile)
+			|| !LocalContentStore.fileIsAccessible(oldPropertiesFile)) {
+			// If the new format existsneither exists, or neither exists,
+			// then we go with the new filename format
+			this.propertiesFile = newPropertiesFile;
+		} else {
+			// If the old format exists, then we use it as-is
+			this.propertiesFile = oldPropertiesFile;
+		}
+
 		boolean storeStrategyName = true;
 		if (cleanData) {
 			this.propertiesLoaded = false;
@@ -209,7 +225,8 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 		this.properties.put(LocalContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel(), new CmfValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
-			this.properties.put(LocalContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel(), new CmfValue(safeFilenameEncoding.name()));
+			this.properties.put(LocalContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel(),
+				new CmfValue(safeFilenameEncoding.name()));
 		}
 		this.properties.put(LocalContentStoreSetting.FIX_FILENAMES.getLabel(), new CmfValue(fixFilenames));
 		this.properties.put(LocalContentStoreSetting.FAIL_ON_COLLISIONS.getLabel(), new CmfValue(failOnCollisions));

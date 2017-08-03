@@ -63,7 +63,8 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		return (legacyDb.exists() && legacyDb.isFile() && legacyDb.canRead() && legacyDb.canWrite());
 	}
 
-	protected AbstractCalienteModule(E engine, boolean requiresStorage, boolean clearStorage) throws Throwable {
+	protected AbstractCalienteModule(E engine, boolean requiresStorage, boolean clearMetadata, boolean clearContent)
+		throws Throwable {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to operate with"); }
 		this.engine = engine;
 
@@ -88,17 +89,15 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		AbstractCalienteModule.instance = this;
 
 		if (requiresStorage) {
-			final File databaseDirectoryLocation = new File(Setting.DB_DIRECTORY.getString()).getCanonicalFile();
+			final File databaseDirectoryLocation = getMetadataFilesLocation().getCanonicalFile();
 			// Identify whether to use legacy mode or not...
 			final boolean legacyMode = AbstractCalienteModule.isLegacyMode(databaseDirectoryLocation);
 			final String dbName = (legacyMode ? AbstractCalienteModule.LEGACY_DB : AbstractCalienteModule.CURRENT_DB);
-			final File contentFilesDirectoryLocation = new File(Setting.CONTENT_DIRECTORY.getString())
-				.getCanonicalFile();
+			final File contentFilesDirectoryLocation = getContentFilesLocation().getCanonicalFile();
 
 			this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
 
 			Map<String, String> commonValues = new HashMap<>();
-			commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearStorage));
 			commonValues.put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			commonValues.put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 			commonValues.put("db.name", dbName);
@@ -107,15 +106,17 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 			CmfStores.initializeConfigurations();
 
 			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("default");
+			customizeObjectStoreProperties(cfg);
 			applyStoreProperties(cfg, loadStoreProperties("object", CLIParam.object_store_config.getString()));
+			commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearMetadata));
 			cfg.getSettings().putAll(commonValues);
-
 			this.cmfObjectStore = CmfStores.createObjectStore(cfg);
 
 			final boolean directFsExport = CLIParam.direct_fs.isPresent();
 
 			final String contentStoreName = (directFsExport ? "direct" : "default");
 			cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
+			customizeContentStoreProperties(cfg);
 			if (!directFsExport) {
 				String strategy = CLIParam.content_strategy.getString();
 				if (StringUtils.isBlank(strategy)) {
@@ -126,8 +127,8 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 				}
 				applyStoreProperties(cfg, loadStoreProperties("content", CLIParam.content_store_config.getString()));
 			}
+			commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearContent));
 			cfg.getSettings().putAll(commonValues);
-
 			this.cmfContentStore = CmfStores.createContentStore(cfg);
 
 			// Set the filesystem location where files will be created or read from
@@ -147,6 +148,22 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		this.password = (pass != null ? crypto.encrypt(crypto.decrypt(pass)) : null);
 		this.domain = CLIParam.domain.getString();
 		this.warningTracker = new CalienteWarningTracker(this.console, true);
+	}
+
+	protected void customizeObjectStoreProperties(StoreConfiguration cfg) {
+		// Do nothing by default
+	}
+
+	protected void customizeContentStoreProperties(StoreConfiguration cfg) {
+		// Do nothing by default
+	}
+
+	protected File getMetadataFilesLocation() {
+		return new File(Setting.DB_DIRECTORY.getString());
+	}
+
+	protected File getContentFilesLocation() {
+		return new File(Setting.CONTENT_DIRECTORY.getString());
 	}
 
 	public static AbstractCalienteModule<?, ?> getInstance() {
