@@ -80,6 +80,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	private final File baseDir;
+	private final boolean storeProperties;
 	private final CmfOrganizationStrategy strategy;
 	private final File propertiesFile;
 	private final AtomicBoolean modified = new AtomicBoolean(false);
@@ -113,6 +114,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			f = baseDir;
 		}
 		this.baseDir = f;
+		this.storeProperties = settings.getBoolean(LocalContentStoreSetting.STORE_PROPERTIES);
 
 		final File newPropertiesFile = new File(baseDir, "caliente-store-properties.xml");
 		final File oldPropertiesFile = new File(baseDir, "store-properties.xml");
@@ -441,6 +443,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	protected synchronized void storeProperties() throws CmfStorageException {
+		if (!this.storeProperties) { return; }
 		OutputStream out = null;
 		try {
 			out = new FileOutputStream(this.propertiesFile);
@@ -516,7 +519,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	@Override
 	protected boolean doClose(boolean cleanupIfEmpty) {
-		if (this.modified.get()) {
+		if (this.modified.get() && this.storeProperties) {
 			try {
 				storeProperties();
 			} catch (CmfStorageException e) {

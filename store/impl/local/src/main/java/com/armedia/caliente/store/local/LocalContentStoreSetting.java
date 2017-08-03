@@ -12,6 +12,7 @@ public enum LocalContentStoreSetting implements ConfigurationSetting {
 	FAIL_ON_COLLISIONS(false),
 	IGNORE_DESCRIPTOR(false),
 	USE_WINDOWS_FIX(false),
+	STORE_PROPERTIES(true),
 	//
 	;
 
