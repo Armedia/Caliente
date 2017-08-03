@@ -17,7 +17,6 @@ public class LocalExportDelegateFactory
 
 	private final LocalRoot root;
 	private final boolean copyContent;
-	private final boolean includeAllVersions;
 
 	protected LocalExportDelegateFactory(LocalExportEngine engine, CfgTools configuration) throws Exception {
 		super(engine, configuration);
@@ -25,7 +24,6 @@ public class LocalExportDelegateFactory
 		if (root == null) { throw new IllegalArgumentException("Must provide a root directory to work from"); }
 		this.root = new LocalRoot(root);
 		this.copyContent = configuration.getBoolean(LocalSetting.COPY_CONTENT);
-		this.includeAllVersions = configuration.getBoolean(LocalSetting.INCLUDE_ALL_VERSIONS);
 	}
 
 	public final LocalRoot getRoot() {
@@ -34,10 +32,6 @@ public class LocalExportDelegateFactory
 
 	public final boolean isCopyContent() {
 		return this.copyContent;
-	}
-
-	public final boolean isIncludeAllVersions() {
-		return this.includeAllVersions;
 	}
 
 	@Override
