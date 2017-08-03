@@ -68,6 +68,11 @@ public class LocalExportDelegate extends
 	}
 
 	@Override
+	protected int calculateDependencyTier(LocalFile file) throws Exception {
+		return file.getPathCount() - 1;
+	}
+
+	@Override
 	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		final File file = this.object.getAbsolute();
 		CmfAttribute<CmfValue> att = null;
