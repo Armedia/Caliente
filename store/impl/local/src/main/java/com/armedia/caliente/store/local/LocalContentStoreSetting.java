@@ -2,7 +2,7 @@ package com.armedia.caliente.store.local;
 
 import com.armedia.commons.utilities.ConfigurationSetting;
 
-public enum Setting implements ConfigurationSetting {
+public enum LocalContentStoreSetting implements ConfigurationSetting {
 	//
 	BASE_DIR,
 	URI_STRATEGY,
@@ -18,11 +18,11 @@ public enum Setting implements ConfigurationSetting {
 	private final String label;
 	private final Object defaultValue;
 
-	private Setting() {
+	private LocalContentStoreSetting() {
 		this(null);
 	}
 
-	private Setting(Object defaultValue) {
+	private LocalContentStoreSetting(Object defaultValue) {
 		String l = name();
 		l = l.toLowerCase();
 		l = l.replaceAll("_", ".");

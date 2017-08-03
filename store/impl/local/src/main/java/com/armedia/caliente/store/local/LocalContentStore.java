@@ -157,10 +157,10 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		}
 
 		CmfValue v = null;
-		v = this.properties.get(Setting.FORCE_SAFE_FILENAMES.getLabel());
+		v = this.properties.get(LocalContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel());
 		this.forceSafeFilenames = ((v != null) && v.asBoolean());
 
-		v = this.properties.get(Setting.SAFE_FILENAME_ENCODING.getLabel());
+		v = this.properties.get(LocalContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel());
 		if ((v != null) && this.forceSafeFilenames) {
 			try {
 				this.safeFilenameEncoding = Charset.forName(v.asString());
@@ -171,28 +171,28 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		} else {
 			this.safeFilenameEncoding = null;
 
-			v = this.properties.get(Setting.FIX_FILENAMES.getLabel());
+			v = this.properties.get(LocalContentStoreSetting.FIX_FILENAMES.getLabel());
 			this.fixFilenames = ((v != null) && v.asBoolean());
 		}
 
-		v = this.properties.get(Setting.FAIL_ON_COLLISIONS.getLabel());
+		v = this.properties.get(LocalContentStoreSetting.FAIL_ON_COLLISIONS.getLabel());
 		this.failOnCollisions = ((v != null) && v.asBoolean());
 
-		v = this.properties.get(Setting.IGNORE_DESCRIPTOR.getLabel());
+		v = this.properties.get(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel());
 		this.ignoreDescriptor = ((v != null) && v.asBoolean());
 
-		v = this.properties.get(Setting.USE_WINDOWS_FIX.getLabel());
+		v = this.properties.get(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel());
 		this.useWindowsFix = ((v != null) && v.asBoolean());
 		// This helps make sure the actual used value is stored
-		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(), new CmfValue(this.useWindowsFix));
+		this.properties.put(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel(), new CmfValue(this.useWindowsFix));
 	}
 
 	protected void initProperties() throws CmfStorageException {
-		final boolean forceSafeFilenames = this.settings.getBoolean(Setting.FORCE_SAFE_FILENAMES);
+		final boolean forceSafeFilenames = this.settings.getBoolean(LocalContentStoreSetting.FORCE_SAFE_FILENAMES);
 		final Charset safeFilenameEncoding;
 		final boolean fixFilenames;
 		if (forceSafeFilenames) {
-			String encoding = this.settings.getString(Setting.SAFE_FILENAME_ENCODING);
+			String encoding = this.settings.getString(LocalContentStoreSetting.SAFE_FILENAME_ENCODING);
 			try {
 				safeFilenameEncoding = Charset.forName(encoding);
 			} catch (Exception e) {
@@ -201,20 +201,20 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			fixFilenames = false;
 		} else {
 			safeFilenameEncoding = null;
-			fixFilenames = this.settings.getBoolean(Setting.FIX_FILENAMES);
+			fixFilenames = this.settings.getBoolean(LocalContentStoreSetting.FIX_FILENAMES);
 		}
-		final boolean failOnCollisions = this.settings.getBoolean(Setting.FAIL_ON_COLLISIONS);
-		final boolean ignoreFragment = this.settings.getBoolean(Setting.IGNORE_DESCRIPTOR);
-		final boolean useWindowsFix = this.settings.getBoolean(Setting.USE_WINDOWS_FIX);
+		final boolean failOnCollisions = this.settings.getBoolean(LocalContentStoreSetting.FAIL_ON_COLLISIONS);
+		final boolean ignoreFragment = this.settings.getBoolean(LocalContentStoreSetting.IGNORE_DESCRIPTOR);
+		final boolean useWindowsFix = this.settings.getBoolean(LocalContentStoreSetting.USE_WINDOWS_FIX);
 
-		this.properties.put(Setting.FORCE_SAFE_FILENAMES.getLabel(), new CmfValue(forceSafeFilenames));
+		this.properties.put(LocalContentStoreSetting.FORCE_SAFE_FILENAMES.getLabel(), new CmfValue(forceSafeFilenames));
 		if (safeFilenameEncoding != null) {
-			this.properties.put(Setting.SAFE_FILENAME_ENCODING.getLabel(), new CmfValue(safeFilenameEncoding.name()));
+			this.properties.put(LocalContentStoreSetting.SAFE_FILENAME_ENCODING.getLabel(), new CmfValue(safeFilenameEncoding.name()));
 		}
-		this.properties.put(Setting.FIX_FILENAMES.getLabel(), new CmfValue(fixFilenames));
-		this.properties.put(Setting.FAIL_ON_COLLISIONS.getLabel(), new CmfValue(failOnCollisions));
-		this.properties.put(Setting.IGNORE_DESCRIPTOR.getLabel(), new CmfValue(ignoreFragment));
-		this.properties.put(Setting.USE_WINDOWS_FIX.getLabel(),
+		this.properties.put(LocalContentStoreSetting.FIX_FILENAMES.getLabel(), new CmfValue(fixFilenames));
+		this.properties.put(LocalContentStoreSetting.FAIL_ON_COLLISIONS.getLabel(), new CmfValue(failOnCollisions));
+		this.properties.put(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), new CmfValue(ignoreFragment));
+		this.properties.put(LocalContentStoreSetting.USE_WINDOWS_FIX.getLabel(),
 			new CmfValue(useWindowsFix || SystemUtils.IS_OS_WINDOWS));
 	}
 
