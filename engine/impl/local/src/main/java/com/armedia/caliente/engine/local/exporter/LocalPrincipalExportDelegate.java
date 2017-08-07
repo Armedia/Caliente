@@ -42,6 +42,11 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfDataType.STRING, false);
 		att.setValue(new CmfValue(this.object.getName()));
 		object.setAttribute(att);
+		if (object.getType() == CmfType.USER) {
+			att = new CmfAttribute<>(IntermediateAttribute.LOGIN_NAME, CmfDataType.STRING, false);
+			att.setValue(new CmfValue(this.object.getName()));
+			object.setAttribute(att);
+		}
 		return true;
 	}
 

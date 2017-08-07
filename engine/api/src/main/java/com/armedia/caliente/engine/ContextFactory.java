@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.ArrayIterator;
@@ -87,6 +88,9 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 			this.log.debug(String.format("Excluded types for this context factory instance (%s): %s",
 				getClass().getSimpleName(), excludes));
 		}
+
+		calculateExcludes(objectStore, excludes);
+
 		this.excludes = Tools.freezeSet(excludes);
 		this.productName = calculateProductName(session);
 		this.productVersion = calculateProductVersion(session);
@@ -95,6 +99,11 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 		this.typeMapper = typeMapper;
 		this.output = output;
 		this.warningTracker = tracker;
+	}
+
+	protected void calculateExcludes(CmfObjectStore<?, ?> objectStore, Set<CmfType> excludes)
+		throws CmfStorageException {
+		// do nothing
 	}
 
 	protected final CmfObjectStore<?, ?> getObjectStore() {
