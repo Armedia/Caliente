@@ -5,15 +5,19 @@
 	<name>Armedia Caliente CLI - Alfresco BI/BE Validator</name>
 	<description>A standalone tool to validate an Alresco BE dump against a Caliente BI ingestible</description>
 	<groupId>com.armedia.caliente.cli</groupId>
-	<artifactId>caliente-validator</artifactId>
+	<artifactId>caliente-cli-validator</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
-		<artifactId>caliente-parent</artifactId>
+		<artifactId>caliente</artifactId>
 		<version>[0.0.0,99.99.99)</version>
 		<relativePath>../../../pom.xml</relativePath>
 	</parent>
+
+	<properties>
+		<executableName>caliente-validator</executableName>
+	</properties>
 
 	<dependencies>
 		<dependency>

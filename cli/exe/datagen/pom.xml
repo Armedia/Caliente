@@ -5,15 +5,19 @@
 	<name>Armedia Caliente CLI - Documentum Data Generator</name>
 	<description>A CLI executable that generates custom data and metadata in Documentum</description>
 	<groupId>com.armedia.caliente.cli</groupId>
-	<artifactId>caliente-datagen</artifactId>
+	<artifactId>caliente-cli-datagen</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
-		<artifactId>caliente-parent</artifactId>
+		<artifactId>caliente</artifactId>
 		<version>[0.0.0,99.99.99)</version>
 		<relativePath>../../../pom.xml</relativePath>
 	</parent>
+
+	<properties>
+		<executableName>caliente-datagen</executableName>
+	</properties>
 
 	<dependencies>
 		<dependency>

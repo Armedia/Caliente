@@ -6,7 +6,7 @@
 	<name>Armedia Caliente - Root Project</name>
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
-	<artifactId>caliente-parent</artifactId>
+	<artifactId>caliente</artifactId>
 	<version>3.4.17</version>
 	<packaging>pom</packaging>
 
@@ -317,7 +317,7 @@
 					<artifactId>maven-shade-plugin</artifactId>
 					<version>2.4.3.arm</version>
 					<configuration>
-						<finalName>${project.artifactId}-${project.version}${build.number}-exe</finalName>
+						<finalName>${executableName}-${project.version}${build.number}-exe</finalName>
 						<createSourcesJar>true</createSourcesJar>
 						<shadedSourcesContent>true</shadedSourcesContent>
 						<createDependencyReducedPom>false</createDependencyReducedPom>

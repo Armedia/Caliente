@@ -5,15 +5,19 @@
 	<name>Armedia Caliente CLI - Documentum Filename Mapper</name>
 	<description>A standalone tool to repair and deduplicate filenames (Documentum version)</description>
 	<groupId>com.armedia.caliente.cli</groupId>
-	<artifactId>caliente-filename-mapper</artifactId>
+	<artifactId>caliente-cli-filename-mapper</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
-		<artifactId>caliente-parent</artifactId>
+		<artifactId>caliente</artifactId>
 		<version>[0.0.0,99.99.99)</version>
 		<relativePath>../../../pom.xml</relativePath>
 	</parent>
+
+	<properties>
+		<executableName>caliente-filename-mapper</executableName>
+	</properties>
 
 	<dependencies>
 		<dependency>
