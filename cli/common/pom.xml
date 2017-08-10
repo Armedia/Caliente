@@ -5,7 +5,7 @@
 	<name>Armedia Caliente CLI - Common Classes</name>
 	<description>A set of common-use classes for Caliente command-line executables</description>
 	<groupId>com.armedia.caliente.cli</groupId>
-	<artifactId>common</artifactId>
+	<artifactId>caliente-cli-common</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>

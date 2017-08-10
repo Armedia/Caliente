@@ -5,7 +5,7 @@
 	<name>Armedia Caliente Engine - Oracle UCM</name>
 	<description>A Caliente engine that supports reading from and writing to an Oracle UCM instance</description>
 	<groupId>com.armedia.caliente.engine</groupId>
-	<artifactId>caliente-ucm</artifactId>
+	<artifactId>caliente-engine-ucm</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>

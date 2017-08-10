@@ -5,7 +5,7 @@
 	<name>Armedia Caliente Engine - Local Filesystem</name>
 	<description>A Caliente engine that supports reading from and writing to a local filesystem</description>
 	<groupId>com.armedia.caliente.engine</groupId>
-	<artifactId>caliente-local</artifactId>
+	<artifactId>caliente-engine-local</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>

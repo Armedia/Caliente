@@ -5,7 +5,7 @@
 	<name>Armedia Caliente Engine - XML</name>
 	<description>A Caliente engine that supports writing to an XML-centric filesystem hierarchy</description>
 	<groupId>com.armedia.caliente.engine</groupId>
-	<artifactId>caliente-xml</artifactId>
+	<artifactId>caliente-engine-xml</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>

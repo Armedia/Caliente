@@ -5,7 +5,7 @@
 	<name>Armedia Caliente Engine - Alfresco Bulk Import</name>
 	<description>A Caliente engine that generates data ingestable by Alfresco's Bulk Importer v2</description>
 	<groupId>com.armedia.caliente.engine</groupId>
-	<artifactId>caliente-alfresco-bi</artifactId>
+	<artifactId>caliente-engine-alfresco-bi</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>

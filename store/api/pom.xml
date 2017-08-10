@@ -4,7 +4,7 @@
 
 	<name>Armedia Caliente Storage - Base Store API</name>
 	<description>The base API for Caliente's object and content storage framework</description>
-	<artifactId>caliente-store-api</artifactId>
+	<artifactId>caliente-store</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>

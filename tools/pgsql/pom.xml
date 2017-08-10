@@ -24,7 +24,7 @@
 
 		<dependency>
 			<groupId>com.armedia.caliente</groupId>
-			<artifactId>caliente-store-api</artifactId>
+			<artifactId>caliente-store</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>

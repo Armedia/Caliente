@@ -5,7 +5,7 @@
 	<name>Armedia Caliente Engine - OpenCMIS</name>
 	<description>A Caliente engine that supports reading from and writing to a CMIS instance</description>
 	<groupId>com.armedia.caliente.engine</groupId>
-	<artifactId>caliente-cmis</artifactId>
+	<artifactId>caliente-engine-cmis</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>
