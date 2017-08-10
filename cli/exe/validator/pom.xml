@@ -42,7 +42,7 @@
 
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-alfresco-bi</artifactId>
+			<artifactId>caliente-engine-alfresco-bi</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 			<exclusions>

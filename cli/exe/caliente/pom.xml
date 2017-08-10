@@ -22,7 +22,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.armedia.caliente.cli</groupId>
-			<artifactId>common</artifactId>
+			<artifactId>caliente-cli</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
@@ -79,42 +79,42 @@
 
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-dfc</artifactId>
+			<artifactId>caliente-engine-dfc</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-sharepoint</artifactId>
+			<artifactId>caliente-engine-sharepoint</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-cmis</artifactId>
+			<artifactId>caliente-engine-cmis</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-local</artifactId>
+			<artifactId>caliente-engine-local</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-xml</artifactId>
+			<artifactId>caliente-engine-xml</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
-			<artifactId>caliente-alfresco-bi</artifactId>
+			<artifactId>caliente-engine-alfresco-bi</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>

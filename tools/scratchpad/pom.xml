@@ -18,7 +18,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.armedia.caliente.cli</groupId>
-			<artifactId>common</artifactId>
+			<artifactId>caliente-cli</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
