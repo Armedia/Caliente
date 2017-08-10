@@ -481,13 +481,13 @@
 		<module>engine/impl/xds</module>
 
 		<!-- The command-line tools -->
-		<module>cli/common</module>
-		<module>cli/bulkdel</module>
-		<module>cli/caliente</module>
-		<module>cli/datagen</module>
-		<module>cli/filename-mapper</module>
-		<module>cli/user-mapper</module>
-		<module>cli/validator</module>
+		<module>cli/api</module>
+		<module>cli/exe/bulkdel</module>
+		<module>cli/exe/caliente</module>
+		<module>cli/exe/datagen</module>
+		<module>cli/exe/filename-mapper</module>
+		<module>cli/exe/user-mapper</module>
+		<module>cli/exe/validator</module>
 
 		<!-- Some general-use tools -->
 		<module>tools/scratchpad</module>

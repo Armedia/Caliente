@@ -12,13 +12,13 @@
 		<groupId>com.armedia.caliente</groupId>
 		<artifactId>caliente-parent</artifactId>
 		<version>[0.0.0,99.99.99)</version>
-		<relativePath>../../pom.xml</relativePath>
+		<relativePath>../../../pom.xml</relativePath>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.armedia.caliente.cli</groupId>
-			<artifactId>common</artifactId>
+			<artifactId>caliente-cli</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
