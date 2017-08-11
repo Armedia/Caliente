@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.utils.CliValuePrompt;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
@@ -494,7 +496,7 @@ public class UserMapper {
 			final String dctmPass = this.dfcLaunchHelper.getDfcPassword(cli);
 
 			try {
-				dfcPool = new DfcSessionPool(docbase, dctmUser, dctmPass);
+				dfcPool = new DfcSessionPool(docbase, dctmUser, new DctmCrypto().decrypt(dctmPass));
 			} catch (DfException e) {
 				UserMapper.log.error(
 					String.format("Failed to open the session pool to docbase [%s] as [%s]", docbase, dctmUser), e);
@@ -550,12 +552,9 @@ public class UserMapper {
 					sslSocketFactory = null;
 				}
 
-				// TODO: Decrypt the LDAP password...
-
 				try {
-					ldapPool = new LDAPConnectionPool(
-						new LDAPConnection(sslSocketFactory, ldapUrl.getHost(), ldapUrl.getPort(), bindDn, bindPass),
-						2);
+					ldapPool = new LDAPConnectionPool(new LDAPConnection(sslSocketFactory, ldapUrl.getHost(),
+						ldapUrl.getPort(), bindDn, new CmfCrypt().decrypt(bindPass)), 2);
 				} catch (LDAPException e) {
 					UserMapper.log.error("Failed to connect to LDAP", e);
 					return 1;

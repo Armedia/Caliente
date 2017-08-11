@@ -24,6 +24,7 @@ import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
@@ -218,7 +219,7 @@ class FilenameMapper {
 
 		final DfcSessionPool dfcPool;
 		try {
-			dfcPool = new DfcSessionPool(docbase, dctmUser, dctmPass);
+			dfcPool = new DfcSessionPool(docbase, dctmUser, new DctmCrypto().decrypt(dctmPass));
 		} catch (DfException e) {
 			this.log.error(String.format("Failed to open the session pool to docbase [%s] as [%s]", docbase, dctmUser),
 				e);

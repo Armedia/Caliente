@@ -35,6 +35,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.armedia.caliente.tools</groupId>
+			<artifactId>caliente-tools-dfc</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<scope>compile</scope>

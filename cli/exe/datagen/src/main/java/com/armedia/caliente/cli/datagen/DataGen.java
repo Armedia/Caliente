@@ -31,6 +31,7 @@ import com.armedia.caliente.cli.datagen.data.csv.CSVDataRecordManager;
 import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
+import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
@@ -241,7 +242,7 @@ public class DataGen {
 			final String user = this.dfcLaunchHelper.getDfcUser(cli);
 			final String password = this.dfcLaunchHelper.getDfcPassword(cli);
 
-			final DfcSessionPool pool = new DfcSessionPool(docbase, user, password);
+			final DfcSessionPool pool = new DfcSessionPool(docbase, user, new DctmCrypto().decrypt(password));
 
 			try {
 				final IDfSession mainSession;
