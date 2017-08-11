@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractCalienteMain_import;
-import com.armedia.caliente.engine.documentum.importer.DctmImportEngine;
+import com.armedia.caliente.engine.dfc.importer.DctmImportEngine;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 
 /**
