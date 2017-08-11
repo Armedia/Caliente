@@ -30,6 +30,8 @@ import com.armedia.commons.utilities.Tools;
 
 public class AlfXmlIndex implements Closeable {
 
+	private static final Charset CHARSET = Charset.forName("UTF-8");
+
 	private final File target;
 	private final Collection<Class<?>> supportedClasses;
 	private final Class<?> rootClass;
@@ -71,6 +73,7 @@ public class AlfXmlIndex implements Closeable {
 
 	protected Marshaller getMarshaller(JAXBContext context) throws JAXBException {
 		Marshaller m = context.createMarshaller();
+		m.setProperty(Marshaller.JAXB_ENCODING, AlfXmlIndex.CHARSET.name());
 		m.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 		m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 		return m;
@@ -146,7 +149,7 @@ public class AlfXmlIndex implements Closeable {
 	}
 
 	protected String getEncoding() {
-		return Charset.defaultCharset().name();
+		return AlfXmlIndex.CHARSET.name();
 	}
 
 	protected Map<String, String> getRootAttributes() {

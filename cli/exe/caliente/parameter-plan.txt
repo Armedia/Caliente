@@ -1,0 +1,127 @@
+Pass 1
+	GLOBALS
+		--help
+	*	--mode <action> ${export|import|count|encrypt|decrypt|...}
+	*	--engine ${dfc|cmis|shpt|local|...}
+		--lib ${libdir1,libdir2,...,libdirN}
+		--log ${log-file} (default is ${db-dir}/blablabla.log)
+		--log-cfg ${log-cfg-file}
+
+Pass 2 (from <action>)
+	ACTION: ( EXPORT | IMPORT )
+		(common)
+			--no-renditions
+			--no-versions
+			--skip-content
+			--manifest ${manifest-file}
+			--threads ${threads}
+			--db ${db-dir}
+			--content ${content-dir}
+			--mail-from ${sender}
+			--smtp-host ${host}
+			--smtp-port ${port}
+			--smtp-auth-user ${user}
+			--smtp-auth-pass ${pass}
+			--error-count ${count}
+			--object-store-config ${config}
+			--content-store-config ${config}
+			--manifest-types ${type1,type2,...,typeN}
+			--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
+			--mail-to ${recipient1,recipient2,...,recipientN}
+			--exclude-types ${type1,type2,...,typeN}
+
+	ACTION: ( EXPORT | EXP | EX )
+		(common)
+			--job-name ${name}
+			--reset-job
+			--content-strategy ${strategy}
+			--direct-fs (change for strategy = direct?)
+
+		Pass 3 (from --engine)
+			DFC
+			*	--docbase ${docbase}
+			*	--user ${user}
+			*	--password ${password}
+			*	--predicate ${predicate}
+				--dfc ${dfc-dir}
+				--dfc-prop ${dfc-prop-file}
+				--dctm ${dctm-dir}
+				--special-users ${user1,user2,...,userN}
+				--special-groups ${group1,group2,...,groupN}
+				--special-types ${type1,type2,...,typeN}
+				--batch-size ${size}
+				--owner-attributes ${att1,att2,...,attN}
+
+			CMIS
+			*	--url ${url}
+			*	--user ${user}
+				--domain ${domain}
+			*	--password ${password}
+			*	--source ${path}
+
+			SHAREPOINT
+			*	--url ${url}
+			*	--user ${user}
+				--domain ${domain}
+			*	--password ${password}
+			*	--source ${path}
+				--source-prefix ${prefix}
+
+	ACTION: ( IMPORT | IMP | IM )
+		(common)
+			--dedup
+			--filename-map ${file}
+			--name-fix
+			--no-filename-map
+			--trim-prefix ${num}
+			--target-location ${location}
+
+		Pass 3 (from --engine)
+			DFC
+			*	--docbase ${docbase}
+			*	--user ${user}
+			*	--password ${password}
+				--dfc ${dfc-dir}
+				--dfc-prop ${dfc-prop-file}
+				--dctm ${dctm-dir}
+				--default-password
+
+			CMIS
+			*	--url ${url}
+			*	--user ${user}
+				--domain ${domain}
+			*	--password ${password}
+			*	--content-model ${model1,model2,...,modelN}
+				--user-map ${map}
+				--group-map ${map}
+				--role-map ${map}
+				--type-map ${map}
+
+	ACTION: ( COUNT | CNT | CN )
+		(common)
+			--non-recursive
+			--count-empty
+			--count-hidden
+			--count-private
+			--count-include ${folder1,folder2,...,folderN}
+			--count-exclude ${folder1,folder2,...,folderN}
+
+		Pass 3 (from --engine)
+			DFC
+			*	--docbase ${docbase}
+			*	--user ${user}
+			*	--password ${password}
+				--dfc ${dfc-dir}
+				--dfc-prop ${dfc-prop-file}
+				--dctm ${dctm-dir}
+			*	--predicate ${predicate}
+
+			CMIS
+			*	--url ${url}
+			*	--user ${user}
+				--domain ${domain}
+			*	--password ${password}
+			*	--source ${path|nodeRef}
+
+	ACTION: ( ENCRYPT | ENC | DECRYPT | DEC )
+		positionals = password values to encrypt/decrypt. if none, read from console

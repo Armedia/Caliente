@@ -1,6 +1,8 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
+import java.nio.file.FileSystems;
+import java.nio.file.attribute.UserPrincipalLookupService;
 
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.local.common.LocalCommon;
@@ -17,7 +19,7 @@ public class LocalExportDelegateFactory
 
 	private final LocalRoot root;
 	private final boolean copyContent;
-	private final boolean includeAllVersions;
+	private final UserPrincipalLookupService userDb;
 
 	protected LocalExportDelegateFactory(LocalExportEngine engine, CfgTools configuration) throws Exception {
 		super(engine, configuration);
@@ -25,7 +27,7 @@ public class LocalExportDelegateFactory
 		if (root == null) { throw new IllegalArgumentException("Must provide a root directory to work from"); }
 		this.root = new LocalRoot(root);
 		this.copyContent = configuration.getBoolean(LocalSetting.COPY_CONTENT);
-		this.includeAllVersions = configuration.getBoolean(LocalSetting.INCLUDE_ALL_VERSIONS);
+		this.userDb = FileSystems.getDefault().getUserPrincipalLookupService();
 	}
 
 	public final LocalRoot getRoot() {
@@ -36,13 +38,22 @@ public class LocalExportDelegateFactory
 		return this.copyContent;
 	}
 
-	public final boolean isIncludeAllVersions() {
-		return this.includeAllVersions;
-	}
-
 	@Override
-	protected LocalExportDelegate newExportDelegate(LocalRoot session, CmfType type, String searchKey)
+	protected LocalExportDelegate<?> newExportDelegate(LocalRoot session, CmfType type, String searchKey)
 		throws Exception {
-		return new LocalExportDelegate(this, LocalFile.newFromSafePath(session, searchKey));
+		switch (type) {
+			case FOLDER:
+			case DOCUMENT:
+				return new LocalFileExportDelegate(this, LocalFile.newFromSafePath(session, searchKey));
+			case USER:
+				return new LocalPrincipalExportDelegate(this, this.userDb.lookupPrincipalByName(searchKey));
+			case GROUP:
+				return new LocalPrincipalExportDelegate(this, this.userDb.lookupPrincipalByGroupName(searchKey));
+			default:
+				break;
+		}
+		this.log.warn(
+			String.format("Type [%s] is not supported - no delegate created for search key [%s]", type, searchKey));
+		return null;
 	}
 }

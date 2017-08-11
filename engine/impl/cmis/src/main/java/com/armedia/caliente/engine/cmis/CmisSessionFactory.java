@@ -17,9 +17,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import com.armedia.caliente.engine.CmfCrypt;
-import com.armedia.caliente.engine.CryptException;
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.caliente.tools.CryptException;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 

@@ -5,12 +5,12 @@
 	<name>Armedia Caliente Engine - Documentum (DFC)</name>
 	<description>A Caliente engine that supports reading from and writing to a Documentum instance using DFC</description>
 	<groupId>com.armedia.caliente.engine</groupId>
-	<artifactId>caliente-documentum</artifactId>
+	<artifactId>caliente-engine-dfc</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
-		<artifactId>caliente-parent</artifactId>
+		<artifactId>caliente</artifactId>
 		<version>[0.0.0,99.99.99)</version>
 		<relativePath>../../../pom.xml</relativePath>
 	</parent>
@@ -19,6 +19,13 @@
 		<dependency>
 			<groupId>com.armedia.caliente</groupId>
 			<artifactId>caliente-engine</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.caliente.tools</groupId>
+			<artifactId>caliente-tools-dfc</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>

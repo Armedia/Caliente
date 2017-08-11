@@ -6,7 +6,7 @@
 	<name>Armedia Caliente - Root Project</name>
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
-	<artifactId>caliente-parent</artifactId>
+	<artifactId>caliente</artifactId>
 	<version>3.5.0</version>
 	<packaging>pom</packaging>
 
@@ -16,7 +16,7 @@
 	</organization>
 
 	<scm>
-		<connection>scm:svn:https://project.armedia.com/svn/Caliente/caliente</connection>
+		<connection>scm:git:git@gitlab.armedia.com:caliente/caliente.git</connection>
 	</scm>
 
 	<distributionManagement>
@@ -32,7 +32,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.target>1.7</project.build.target>
 		<dfc.version>6.7-SP1</dfc.version>
-		<build.number>-SNAPSHOT-r${buildNumber}</build.number>
+		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 	</properties>
 
 	<repositories>
@@ -56,7 +56,7 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>utilities</artifactId>
-				<version>0.3.17</version>
+				<version>0.3.18</version>
 			</dependency>
 
 			<dependency>
@@ -68,7 +68,7 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
-				<version>1.1.2</version>
+				<version>1.1.3</version>
 			</dependency>
 
 			<dependency>
@@ -317,7 +317,7 @@
 					<artifactId>maven-shade-plugin</artifactId>
 					<version>2.4.3.arm</version>
 					<configuration>
-						<finalName>${project.artifactId}-${project.version}${build.number}-exe</finalName>
+						<finalName>${executableName}-${project.version}${build.number}-exe</finalName>
 						<createSourcesJar>true</createSourcesJar>
 						<shadedSourcesContent>true</shadedSourcesContent>
 						<createDependencyReducedPom>false</createDependencyReducedPom>
@@ -402,9 +402,7 @@
 						<configuration>
 							<doCheck>false</doCheck>
 							<doUpdate>false</doUpdate>
-							<providerImplementations>
-								<svn>javasvn</svn>
-							</providerImplementations>
+							<shortRevisionLength>8</shortRevisionLength>
 							<getRevisionOnlyOnce>true</getRevisionOnlyOnce>
 							<revisionOnScmFailure>unknown</revisionOnScmFailure>
 							<buildNumberPropertyName>buildNumber</buildNumberPropertyName>
@@ -478,20 +476,23 @@
 		<module>engine/impl/dfc</module>
 		<module>engine/impl/local</module>
 		<module>engine/impl/sharepoint</module>
+		<module>engine/impl/ucm</module>
+		<module>engine/impl/xds</module>
 		<module>engine/impl/xml</module>
 
 		<!-- The command-line tools -->
-		<module>cli/common</module>
-		<module>cli/bulkdel</module>
-		<module>cli/caliente</module>
-		<module>cli/datagen</module>
-		<module>cli/filename-mapper</module>
-		<module>cli/user-mapper</module>
-		<module>cli/validator</module>
+		<module>cli/api</module>
+		<module>cli/exe/bulkdel</module>
+		<module>cli/exe/caliente</module>
+		<module>cli/exe/datagen</module>
+		<module>cli/exe/filename-mapper</module>
+		<module>cli/exe/user-mapper</module>
+		<module>cli/exe/validator</module>
 
 		<!-- Some general-use tools -->
-		<module>tools/scratchpad</module>
-		<module>tools/xml</module>
+		<module>tools/common</module>
+		<module>tools/dfc</module>
 		<module>tools/pgsql</module>
+		<module>tools/scratchpad</module>
 	</modules>
 </project>

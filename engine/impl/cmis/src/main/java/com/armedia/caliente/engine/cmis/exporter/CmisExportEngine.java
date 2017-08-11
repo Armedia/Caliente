@@ -15,7 +15,6 @@ import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.cmis.CmisCommon;
 import com.armedia.caliente.engine.cmis.CmisPagingTransformerIterator;
@@ -35,6 +34,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 

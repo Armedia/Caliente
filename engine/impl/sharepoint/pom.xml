@@ -5,12 +5,12 @@
 	<name>Armedia Caliente Engine - Sharepoint (JShare)</name>
 	<description>A Caliente engine that supports reading from Sharepoint using the JShare library</description>
 	<groupId>com.armedia.caliente.engine</groupId>
-	<artifactId>caliente-sharepoint</artifactId>
+	<artifactId>caliente-engine-sharepoint</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
-		<artifactId>caliente-parent</artifactId>
+		<artifactId>caliente</artifactId>
 		<version>[0.0.0,99.99.99)</version>
 		<relativePath>../../../pom.xml</relativePath>
 	</parent>

@@ -484,10 +484,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-		
+
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-
+		
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/
@@ -1221,4 +1221,35 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		return super.doImportObject(context);
 	}
+
+	@Override
+	protected boolean isSameObject(T object, DctmImportContext ctx) throws DfException, ImportException {
+		if (!super.isSameObject(object, ctx)) { return false; }
+
+		// Same dates?
+		if (!isAttributeEquals(object, DctmAttributes.R_MODIFY_DATE)) { return false; }
+
+		// Same ACL?
+		if (!isAttributeEquals(object, DctmAttributes.ACL_NAME)) { return false; }
+		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.ACL_DOMAIN);
+		if ((att == null) || !att.hasValues()) { return false; }
+		String aclDomain = DctmMappingUtils.resolveMappableUser(object, att.getValue().asString());
+		if (!StringUtils.equals(aclDomain, object.getACLDomain())) { return false; }
+
+		// Same owner?
+		if (ctx.isSupported(CmfType.USER)) {
+			if (!isAttributeEquals(object, DctmAttributes.OWNER_NAME)) { return false; }
+		}
+
+		// Same group?
+		if (ctx.isSupported(CmfType.GROUP)) {
+			if (!isAttributeEquals(object, DctmAttributes.GROUP_NAME)) { return false; }
+		}
+
+		// Same world access?
+		if (!isAttributeEquals(object, DctmAttributes.WORLD_PERMIT)) { return false; }
+
+		return true;
+	}
+
 }

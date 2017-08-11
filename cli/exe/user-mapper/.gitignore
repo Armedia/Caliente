@@ -1,0 +1,8 @@
+target
+dfc.properties
+dfc.keystore
+documentum
+new_users.*.csv
+new_groups.*.csv
+usermap*.xml
+groupmap*.xml

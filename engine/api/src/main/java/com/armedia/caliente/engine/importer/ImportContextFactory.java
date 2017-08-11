@@ -1,7 +1,10 @@
 package com.armedia.caliente.engine.importer;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 
@@ -10,6 +13,8 @@ import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
@@ -79,5 +84,23 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 
 	public final boolean isPathAltering() {
 		return (this.pathTrunc != 0) || !this.rootPath.isEmpty();
+	}
+
+	@Override
+	protected void calculateExcludes(CmfObjectStore<?, ?> objectStore, Set<CmfType> excludes)
+		throws CmfStorageException {
+		Map<CmfType, Long> summary = objectStore.getStoredObjectTypes();
+		if ((summary != null) && !summary.isEmpty()) {
+			for (CmfType t : CmfType.values()) {
+				Long count = summary.get(t);
+				// If the object type isn't even included (null or 0-count), then
+				// we add the object to the excludes list to avoid problems.
+				if ((count == null) || (count.longValue() < 1)) {
+					excludes.add(t);
+				}
+			}
+		} else {
+			excludes = EnumSet.allOf(CmfType.class);
+		}
 	}
 }

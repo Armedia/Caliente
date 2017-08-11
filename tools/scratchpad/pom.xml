@@ -5,12 +5,12 @@
 	<name>Armedia Caliente Tools - Scratchpad</name>
 	<description>A scratchpad project with which to implement test code</description>
 	<groupId>com.armedia.caliente.tools</groupId>
-	<artifactId>caliente-scratchpad</artifactId>
+	<artifactId>caliente-tools-scratchpad</artifactId>
 	<packaging>jar</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
-		<artifactId>caliente-parent</artifactId>
+		<artifactId>caliente</artifactId>
 		<version>[0.0.0,99.99.99)</version>
 		<relativePath>../../pom.xml</relativePath>
 	</parent>
@@ -18,7 +18,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.armedia.caliente.cli</groupId>
-			<artifactId>common</artifactId>
+			<artifactId>caliente-cli</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>

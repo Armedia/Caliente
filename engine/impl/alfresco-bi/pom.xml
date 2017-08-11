@@ -5,12 +5,12 @@
 	<name>Armedia Caliente Engine - Alfresco Bulk Import</name>
 	<description>A Caliente engine that generates data ingestable by Alfresco's Bulk Importer v2</description>
 	<groupId>com.armedia.caliente.engine</groupId>
-	<artifactId>caliente-alfresco-bi</artifactId>
+	<artifactId>caliente-engine-alfresco-bi</artifactId>
 	<packaging>bundle</packaging>
 
 	<parent>
 		<groupId>com.armedia.caliente</groupId>
-		<artifactId>caliente-parent</artifactId>
+		<artifactId>caliente</artifactId>
 		<version>[0.0.0,99.99.99)</version>
 		<relativePath>../../../pom.xml</relativePath>
 	</parent>
@@ -24,8 +24,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.caliente.tools</groupId>
-			<artifactId>caliente-tools-xml</artifactId>
+			<groupId>com.armedia.caliente</groupId>
+			<artifactId>caliente-tools</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>

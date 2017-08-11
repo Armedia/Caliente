@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model name="" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 platform:/resource/caliente-engine-impl-alfresco-bi/src/main/resources/alfresco-model.xsd ">
+	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd ">
 	<description>dd:description</description>
 	<author>dd:author</author>
 	<published>2001-01-01</published>

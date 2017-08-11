@@ -1,0 +1,21 @@
+
+Collection<Pair<ParameterScheme, ParameterValues>> results = new ArrayList<>();
+ParameterValues parameters = new ParameterValues();
+CommandLine cli = new CommandLine(String... args);
+while (cli.hasRemaining()) {
+	ParameterScheme newScheme = schemeSource.getParameterScheme(parameters);
+	// If there are no new schemes pending processing, then this is as far as we
+	// can go and we need to decide what to do about the unrecognized stuff
+	if (newScheme == null) break;
+	results.add(Pair.of(scheme, cli.parseRemaining(newScheme)));
+}
+
+if (cli.hasRemaining()) {
+	// We have remaining parameters that we were unable to identify...
+	// ...check to see if they're just words (i.e. positionals), or
+	// if they're actual flags (-x or --something).  If there are
+	// flags positioned before the first instance of "--", then this
+	// is an error and must be reported as such
+} else {
+	// All parameters were consumed, so we're nice and happy
+}

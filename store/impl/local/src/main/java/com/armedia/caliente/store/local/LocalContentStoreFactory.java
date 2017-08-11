@@ -20,12 +20,12 @@ public class LocalContentStoreFactory extends CmfContentStoreFactory<LocalConten
 		CmfPrepInfo prepInfo) throws CmfStorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
-		String basePath = cfg.getString(Setting.BASE_DIR);
+		String basePath = cfg.getString(LocalContentStoreSetting.BASE_DIR);
 		if (basePath == null) { throw new CmfStorageException(
-			String.format("No setting [%s] specified", Setting.BASE_DIR.getLabel())); }
+			String.format("No setting [%s] specified", LocalContentStoreSetting.BASE_DIR.getLabel())); }
 		// Resolve system properties
 
-		CmfOrganizationStrategy strategy = CmfOrganizationStrategy.getStrategy(cfg.getString(Setting.URI_STRATEGY));
+		CmfOrganizationStrategy strategy = CmfOrganizationStrategy.getStrategy(cfg.getString(LocalContentStoreSetting.URI_STRATEGY));
 		if (this.log.isDebugEnabled()) {
 			this.log.debug(String.format("Creating a new local file store with base path [%s], and strategy [%s]",
 				basePath, strategy.getName()));

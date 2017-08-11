@@ -8,6 +8,7 @@ public enum LocalSetting implements TransferEngineSetting {
 	ROOT(CmfDataType.STRING),
 	COPY_CONTENT(CmfDataType.BOOLEAN, true),
 	INCLUDE_ALL_VERSIONS(CmfDataType.BOOLEAN, false),
+	IGNORE_EMPTY_FOLDERS(CmfDataType.BOOLEAN, false),
 	FAIL_ON_COLLISIONS(CmfDataType.BOOLEAN, true),
 	//
 	;
