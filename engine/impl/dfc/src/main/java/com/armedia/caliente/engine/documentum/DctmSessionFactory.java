@@ -7,8 +7,8 @@ package com.armedia.caliente.engine.documentum;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
-import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;

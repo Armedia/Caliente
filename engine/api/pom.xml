@@ -22,6 +22,12 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>com.armedia.caliente</groupId>
+			<artifactId>caliente-tools</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.chemistry.opencmis</groupId>
 			<artifactId>chemistry-opencmis-commons-api</artifactId>
 			<scope>compile</scope>

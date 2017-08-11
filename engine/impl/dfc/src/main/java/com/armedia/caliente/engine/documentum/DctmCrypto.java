@@ -1,6 +1,6 @@
 package com.armedia.caliente.engine.documentum;
 
-import com.armedia.caliente.engine.CmfCrypt;
+import com.armedia.caliente.tools.CmfCrypt;
 import com.documentum.fc.impl.util.RegistryPasswordUtils;
 
 public class DctmCrypto extends CmfCrypt {

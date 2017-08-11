@@ -5,7 +5,6 @@ import java.util.Set;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
@@ -20,6 +19,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
 public class CmisImportEngine extends

@@ -1,2 +1,0 @@
-@javax.xml.bind.annotation.XmlSchema(namespace = com.armedia.caliente.tools.xml.ObjectFactory.NAMESPACE, elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
-package com.armedia.caliente.tools.xml;

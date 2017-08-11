@@ -550,6 +550,8 @@ public class UserMapper {
 					sslSocketFactory = null;
 				}
 
+				// TODO: Decrypt the LDAP password...
+
 				try {
 					ldapPool = new LDAPConnectionPool(
 						new LDAPConnection(sslSocketFactory, ldapUrl.getHost(), ldapUrl.getPort(), bindDn, bindPass),

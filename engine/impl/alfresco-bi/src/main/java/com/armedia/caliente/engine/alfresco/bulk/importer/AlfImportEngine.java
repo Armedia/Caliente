@@ -15,7 +15,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bulk.common.AlfRoot;
@@ -40,6 +39,7 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
