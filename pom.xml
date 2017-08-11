@@ -476,9 +476,9 @@
 		<module>engine/impl/dfc</module>
 		<module>engine/impl/local</module>
 		<module>engine/impl/sharepoint</module>
-		<module>engine/impl/xml</module>
 		<module>engine/impl/ucm</module>
 		<module>engine/impl/xds</module>
+		<module>engine/impl/xml</module>
 
 		<!-- The command-line tools -->
 		<module>cli/api</module>
@@ -490,8 +490,9 @@
 		<module>cli/exe/validator</module>
 
 		<!-- Some general-use tools -->
+		<module>tools/common</module>
+		<module>tools/pgsql</module>
 		<module>tools/scratchpad</module>
 		<module>tools/xml</module>
-		<module>tools/pgsql</module>
 	</modules>
 </project>
