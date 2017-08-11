@@ -1,21 +1,34 @@
-
 Collection<Pair<ParameterScheme, ParameterValues>> results = new ArrayList<>();
-ParameterValues parameters = new ParameterValues();
-CommandLine cli = new CommandLine(String... args);
-while (cli.hasRemaining()) {
+
+// This will separate out the tokens into a big-ass list, ensuring that all "--" are sanitized out,
+// and that URL-based inclusions are already expanded
+
+// InclusionMode.ALL, InclusionMode.LOCAL, InclusionMode.URL, InclusionMode.NONE
+Inclusions allowedInclusions = Inclusions.ALL; 
+TokenList tokens = new TokenList(String... args, allowedInclusions);
+
+while (tokens.hasRemaining()) {
+
+	// Get the new parameter scheme based on the already-processed parameters.
+	// The parameter scheme must contain all supported parameters
 	ParameterScheme newScheme = schemeSource.getParameterScheme(parameters);
+
 	// If there are no new schemes pending processing, then this is as far as we
 	// can go and we need to decide what to do about the unrecognized stuff
 	if (newScheme == null) break;
-	results.add(Pair.of(scheme, cli.parseRemaining(newScheme)));
+
+	results.add(Pair.of(scheme, parseRemaining(scheme, tokens)));
 }
 
-if (cli.hasRemaining()) {
+if (tokens.hasFlagsRemaining()) {
 	// We have remaining parameters that we were unable to identify...
 	// ...check to see if they're just words (i.e. positionals), or
-	// if they're actual flags (-x or --something).  If there are
-	// flags positioned before the first instance of "--", then this
-	// is an error and must be reported as such
+	// if they're actual flags (-x or --something).
+	// If there are ANY flags left unprocessed, then this is an error 
 } else {
-	// All parameters were consumed, so we're nice and happy
+	// All parameters were consumed, so we're nice and happy...anything left is
+	// a positional parameter and thus should be kept as such
 }
+
+// Construct a return value from the given results
+return constructValues(results, tokens.getRemaining());
