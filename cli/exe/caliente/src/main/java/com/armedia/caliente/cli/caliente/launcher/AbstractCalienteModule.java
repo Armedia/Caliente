@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.cfg.SettingManager;
-import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfContentStore;
@@ -25,6 +24,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStoreFactory;
 import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.xml.StoreConfiguration;
+import com.armedia.caliente.tools.CmfCrypt;
 
 public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CalienteMain {
 

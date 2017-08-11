@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.engine.CmfCrypt;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.tools.CmfCrypt;
 
 /**
  * The main method of this class is an entry point for the Caliente application.
