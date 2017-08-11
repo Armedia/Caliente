@@ -6,8 +6,8 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.armedia.caliente.engine.dfc.DctmSetting;
 import com.armedia.caliente.engine.documentum.DctmEngineTest;
-import com.armedia.caliente.engine.documentum.DctmSetting;
 import com.armedia.caliente.engine.importer.ImportEngine;
 
 public class DctmImportEngineTest extends DctmEngineTest {
