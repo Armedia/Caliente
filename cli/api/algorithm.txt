@@ -1,34 +1,48 @@
-Collection<Pair<ParameterScheme, ParameterValues>> results = new ArrayList<>();
 
-// This will separate out the tokens into a big-ass list, ensuring that all "--" are sanitized out,
-// and that URL-based inclusions are already expanded
+// allowedInclusions = [InclusionMode.ALL, InclusionMode.LOCAL, InclusionMode.URL, InclusionMode.NONE]
+public CommandLineParameters parse(Inclusions allowedInclusions, String... args) throws CommandLineException {
 
-// InclusionMode.ALL, InclusionMode.LOCAL, InclusionMode.URL, InclusionMode.NONE
-Inclusions allowedInclusions = Inclusions.ALL; 
-TokenList tokens = new TokenList(String... args, allowedInclusions);
+	Collection<Pair<ParameterScheme, ParameterValues>> results = new ArrayList<>();
 
-while (tokens.hasRemaining()) {
+	// This will separate out the tokens into a big-ass list, ensuring that all "--" are sanitized out,
+	// and that URL-based inclusions are already expanded
 
-	// Get the new parameter scheme based on the already-processed parameters.
-	// The parameter scheme must contain all supported parameters
-	ParameterScheme newScheme = schemeSource.getParameterScheme(parameters);
+	TokenList tokens = new TokenList(String... args, allowedInclusions);
 
-	// If there are no new schemes pending processing, then this is as far as we
-	// can go and we need to decide what to do about the unrecognized stuff
-	if (newScheme == null) break;
+	ParameterScheme scheme = null;
+	while (tokens.hasRemaining()) {
 
-	results.add(Pair.of(scheme, parseRemaining(scheme, tokens)));
-}
+		// Get the new parameter scheme based on the already-processed parameters.
+		// The parameter scheme must contain all supported parameters
+		scheme = schemeSource.getParameterScheme(parameters);
 
-if (tokens.hasFlagsRemaining()) {
-	// We have remaining parameters that we were unable to identify...
-	// ...check to see if they're just words (i.e. positionals), or
-	// if they're actual flags (-x or --something).
-	// If there are ANY flags left unprocessed, then this is an error 
-} else {
+		// If there are no new schemes pending processing, then this is as far as we
+		// can go and we need to decide what to do about the unrecognized stuff
+		if (scheme == null) break;
+
+		results.add(Pair.of(scheme, parseRemaining(scheme, policy, tokens)));
+	}
+	
+	// If the "help" parameter has been requested, provide help for the current parameter scheme
+	
+	if (tokens.hasFlagsRemaining()) {
+		// We have remaining parameters that we were unable to identify...
+		// ...check to see if they're just words (i.e. positionals), or
+		// if they're actual flags (-x or --something).
+		// If there are ANY flags left unprocessed, then this is an error
+
+		List<String> flags = new ArrayList<>();
+		for (Token t : tokens.remaining()) {
+			if (t.type != TokenType.STRING) {
+				flags.add(t.value);
+			}
+		}
+		throw new CommandLineException(String.format("The following flag parameters are unknown %s", flags));
+	}
+
 	// All parameters were consumed, so we're nice and happy...anything left is
 	// a positional parameter and thus should be kept as such
-}
 
-// Construct a return value from the given results
-return constructValues(results, tokens.getRemaining());
+	// Construct a return value from the given results
+	return new CommandLineParameters(results, tokens.getAllRemaining());
+}
