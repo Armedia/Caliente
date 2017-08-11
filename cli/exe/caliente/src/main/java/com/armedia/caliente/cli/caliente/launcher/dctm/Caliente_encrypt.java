@@ -1,7 +1,7 @@
 package com.armedia.caliente.cli.caliente.launcher.dctm;
 
 import com.armedia.caliente.cli.caliente.launcher.AbstractEncrypt;
-import com.armedia.caliente.engine.documentum.DctmCrypto;
+import com.armedia.caliente.tools.dfc.DctmCrypto;
 
 /**
  * The main method of this class is an entry point for the Caliente application.

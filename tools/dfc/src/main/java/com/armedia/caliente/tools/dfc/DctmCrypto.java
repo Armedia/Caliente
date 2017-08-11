@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.documentum;
+package com.armedia.caliente.tools.dfc;
 
 import com.armedia.caliente.tools.CmfCrypt;
 import com.documentum.fc.impl.util.RegistryPasswordUtils;

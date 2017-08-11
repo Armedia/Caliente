@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<name>Armedia Caliente Tools - DFC</name>
+	<description>A set of DFC utility classes</description>
+	<groupId>com.armedia.caliente.tools</groupId>
+	<artifactId>caliente-tools-dfc</artifactId>
+	<packaging>jar</packaging>
+
+	<parent>
+		<groupId>com.armedia.caliente</groupId>
+		<artifactId>caliente</artifactId>
+		<version>[0.0.0,99.99.99)</version>
+		<relativePath>../../pom.xml</relativePath>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.armedia.caliente</groupId>
+			<artifactId>caliente-tools</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.documentum.dfc</groupId>
+			<artifactId>dfc-jars</artifactId>
+			<type>pom</type>
+			<scope>provided</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>
