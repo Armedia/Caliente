@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.Parameter;
 
 final class DefaultParameterData implements ParameterData {
 

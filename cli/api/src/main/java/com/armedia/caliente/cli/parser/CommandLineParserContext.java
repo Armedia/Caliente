@@ -3,6 +3,8 @@ package com.armedia.caliente.cli.parser;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.armedia.caliente.cli.Parameter;
+
 public class CommandLineParserContext {
 	protected final CommandLine cl;
 

@@ -4,11 +4,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 
 /**

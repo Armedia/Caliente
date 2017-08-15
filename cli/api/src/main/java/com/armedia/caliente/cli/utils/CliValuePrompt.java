@@ -5,9 +5,9 @@ import java.io.Console;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.Parameter;
-import com.armedia.caliente.cli.parser.ParameterTools;
 import com.armedia.caliente.cli.parser.ParameterWrapper;
 import com.armedia.commons.utilities.Tools;
 

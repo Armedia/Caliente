@@ -10,11 +10,11 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
+import com.armedia.caliente.cli.MutableParameter;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.MutableParameter;
-import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.commons.utilities.Tools;
 
 public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParameterSet {

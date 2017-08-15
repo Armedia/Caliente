@@ -1,5 +1,7 @@
 package com.armedia.caliente.cli.parser;
 
+import com.armedia.caliente.cli.Parameter;
+
 /**
  * <p>
  * This is a utility interface that helps in the use of classes (like {@link Enum Enums}, for

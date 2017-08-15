@@ -1,7 +1,7 @@
 package com.armedia.caliente.cli.usermapper;
 
-import com.armedia.caliente.cli.parser.MutableParameter;
-import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.MutableParameter;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.parser.ParameterWrapper;
 
 public enum CLIParam implements ParameterWrapper {

@@ -1,21 +1,23 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import com.armedia.caliente.cli.parser.ParameterWrapper;
+
 public class ParameterTools {
 
-	static String calculateKey(Parameter def) {
+	public static String calculateKey(Parameter def) {
 		if (def == null) { throw new IllegalArgumentException(
 			"Must provide a parameter definition to calculate a key for"); }
 		return ParameterTools.calculateKey(def.getLongOpt(), def.getShortOpt());
 	}
 
-	static String calculateKey(String longOpt, String shortOpt) {
+	public static String calculateKey(String longOpt, String shortOpt) {
 		if ((longOpt == null) && (shortOpt == null)) { throw new IllegalArgumentException(
-			"Must provide one or both short and long options"); }
+			"Must provide at least one short or long option"); }
 		String opt = (longOpt != null ? longOpt : shortOpt.toString());
 		String prefix = (longOpt != null ? "-" : "");
 		return String.format("-%s%s", prefix, opt);

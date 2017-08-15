@@ -10,6 +10,10 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Option.Builder;
+
+import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterTools;
+
 import org.apache.commons.cli.Options;
 
 class CommonsCliState extends CommandLineParserContext {

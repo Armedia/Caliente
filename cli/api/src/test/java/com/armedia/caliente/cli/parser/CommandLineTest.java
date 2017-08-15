@@ -12,6 +12,9 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.armedia.caliente.cli.MutableParameter;
+import com.armedia.caliente.cli.Parameter;
+
 public class CommandLineTest {
 
 	@Test

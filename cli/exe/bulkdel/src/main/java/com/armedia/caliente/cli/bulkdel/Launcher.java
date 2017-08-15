@@ -3,12 +3,12 @@ package com.armedia.caliente.cli.bulkdel;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.Parameter;
-import com.armedia.caliente.cli.parser.ParameterTools;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 
 public class Launcher extends AbstractLauncher implements LaunchParameterSet {

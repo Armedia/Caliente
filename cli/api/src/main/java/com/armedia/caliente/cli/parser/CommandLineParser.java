@@ -5,6 +5,8 @@ import java.util.Collection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.Parameter;
+
 public abstract class CommandLineParser<C extends CommandLineParserContext> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());

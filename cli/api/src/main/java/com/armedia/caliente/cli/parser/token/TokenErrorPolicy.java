@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.parser.token;
 
 import java.util.List;
 
-import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.Parameter;
 
 public interface TokenErrorPolicy {
 

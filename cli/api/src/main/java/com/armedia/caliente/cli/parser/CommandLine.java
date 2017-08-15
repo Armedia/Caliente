@@ -21,6 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.CommandLineException;
+import com.armedia.caliente.cli.MutableParameter;
+import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.parser.token.Token;
 import com.armedia.caliente.cli.parser.token.TokenProcessor;
 import com.armedia.caliente.cli.parser.token.TokenSourceRecursionLoopException;

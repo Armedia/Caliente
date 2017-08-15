@@ -1,6 +1,7 @@
 package com.armedia.caliente.cli.parser;
 
 import com.armedia.caliente.cli.CommandLineException;
+import com.armedia.caliente.cli.Parameter;
 
 public class DuplicateParameterException extends CommandLineException {
 	private static final long serialVersionUID = 1L;

@@ -2,6 +2,8 @@ package com.armedia.caliente.cli.parser;
 
 import java.util.List;
 
+import com.armedia.caliente.cli.Parameter;
+
 public interface CommandLineValues extends Iterable<CommandLineParameter> {
 
 	public boolean isHelpRequested();

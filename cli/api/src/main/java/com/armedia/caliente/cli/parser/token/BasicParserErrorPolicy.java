@@ -6,7 +6,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.Parameter;
 
 public final class BasicParserErrorPolicy implements TokenErrorPolicy {
 

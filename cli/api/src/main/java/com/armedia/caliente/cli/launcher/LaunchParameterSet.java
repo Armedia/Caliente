@@ -2,8 +2,8 @@ package com.armedia.caliente.cli.launcher;
 
 import java.util.Collection;
 
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.Parameter;
 
 public interface LaunchParameterSet {
 
