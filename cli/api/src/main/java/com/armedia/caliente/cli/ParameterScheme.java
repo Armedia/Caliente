@@ -96,17 +96,17 @@ public class ParameterScheme {
 		return Collections.unmodifiableCollection(Arrays.asList(a, b));
 	}
 
-	private Collection<Parameter> replace(Parameter parameter, boolean add) {
+	private Collection<Parameter> replaceParameter(Parameter parameter, boolean add) {
 		if (parameter == null) { throw new IllegalArgumentException(
 			String.format("Must provide a parameter to %s", add ? "add" : "remove")); }
 
 		// Make sure nobody can change anything on us while we work
-		parameter = new ImmutableParameter(parameter);
+		parameter = ParameterTools.ensureImmutable(parameter);
 
 		final String longOpt = parameter.getLongOpt();
-		final Parameter oldLong = remove(longOpt);
+		final Parameter oldLong = removeParameter(longOpt);
 		final Character shortOpt = parameter.getShortOpt();
-		final Parameter oldShort = remove(shortOpt);
+		final Parameter oldShort = removeParameter(shortOpt);
 
 		if (add) {
 			this.longKeys.put(longOpt, parameter);
@@ -126,8 +126,35 @@ public class ParameterScheme {
 	 *            the parameter to add
 	 * @return the parameters that were replaced.
 	 */
-	public Collection<Parameter> add(Parameter parameter) {
-		return replace(parameter, true);
+	public Collection<Parameter> addParameter(Parameter parameter) {
+		return replaceParameter(parameter, true);
+	}
+
+	/**
+	 * Adds all the given parameters, returning any which may have resulted in conflicts (i.e.
+	 * invoke {@link #addParameter(Parameter) add} for each non-{@code null} parameter in the array.
+	 *
+	 * @param parameters
+	 * @return any parameters which may have conflicted with the incoming parameters, as determined
+	 *         by {@link #addParameter(Parameter) add}
+	 */
+	public Collection<Parameter> addParameters(Parameter... parameters) {
+		if (parameters == null) { throw new IllegalArgumentException("Must provide a non-null parameter array"); }
+		Collection<Parameter> ret = new ArrayList<>();
+		for (Parameter p : parameters) {
+			if (p != null) {
+				Collection<Parameter> r = addParameter(p);
+				if (r != null) {
+					ret.addAll(r);
+				}
+			}
+		}
+		if (!ret.isEmpty()) {
+			ret = Collections.unmodifiableCollection(ret);
+		} else {
+			ret = null;
+		}
+		return ret;
 	}
 
 	/**
@@ -138,8 +165,8 @@ public class ParameterScheme {
 	 *            the parameter to check against
 	 * @return the parameters that were removed
 	 */
-	public Collection<Parameter> remove(Parameter parameter) {
-		return replace(parameter, false);
+	public Collection<Parameter> removeParameter(Parameter parameter) {
+		return replaceParameter(parameter, false);
 	}
 
 	/**
@@ -148,7 +175,7 @@ public class ParameterScheme {
 	 * @param longOpt
 	 * @return the parameter which matches the given long option, or {@code null} if none matches.
 	 */
-	public Parameter remove(String longOpt) {
+	public Parameter removeParameter(String longOpt) {
 		if (longOpt == null) { return null; }
 		Parameter old = this.longKeys.remove(longOpt);
 		if (old == null) { return null; }
@@ -160,7 +187,7 @@ public class ParameterScheme {
 		return old;
 	}
 
-	public Parameter remove(Character shortOpt) {
+	public Parameter removeParameter(Character shortOpt) {
 		if (shortOpt == null) { return null; }
 		Parameter old = this.shortKeys.remove(shortOpt);
 		if (old == null) { return null; }
@@ -189,5 +216,34 @@ public class ParameterScheme {
 	 */
 	public int getParameterCount() {
 		return this.parameters.size();
+	}
+
+	public boolean hasParameter(Character shortOpt) {
+		return ((shortOpt != null) && this.shortKeys.containsKey(shortOpt));
+	}
+
+	public boolean hasParameter(String longOpt) {
+		return ((longOpt != null) && this.longKeys.containsKey(longOpt));
+	}
+
+	public int getParameterCollisions(Parameter parameter) {
+		if (parameter == null) { throw new IllegalArgumentException("Must provide a non-null parameter"); }
+		String longOpt = parameter.getLongOpt();
+		Parameter longParam = null;
+		if (longOpt != null) {
+			longParam = this.longKeys.get(longOpt);
+		}
+		Character shortOpt = parameter.getShortOpt();
+		Parameter shortParam = null;
+		if (shortOpt != null) {
+			shortParam = this.shortKeys.get(shortOpt);
+		}
+		// If both are null, then there are no collisions
+		if ((shortParam == null) && (longParam == null)) { return 0; }
+		// If only one is null, then there is one collision
+		if ((shortParam == null) || (longParam == null)) { return 1; }
+		// If neither is null, then there can be 1 or 2 collisions depending on whether they're the
+		// same object, or different objects
+		return (shortParam == longParam ? 1 : 2);
 	}
 }

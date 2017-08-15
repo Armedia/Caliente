@@ -81,4 +81,12 @@ public class ParameterTools {
 		if (wrapper == null) { return null; }
 		return wrapper.getParameter();
 	}
+
+	static Parameter ensureImmutable(Parameter parameter) {
+		if (parameter == null) { return null; }
+		if (!ImmutableParameter.class.isInstance(parameter)) {
+			parameter = new ImmutableParameter(parameter);
+		}
+		return parameter;
+	}
 }
