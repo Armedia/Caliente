@@ -4,12 +4,12 @@ Token t = null;
 
 nextScheme: while (true) {
 	// Find the next parameter set given the parameter values gathered so far...
-	ParameterScheme scheme = getParamterScheme(currentParameters);
+	ParameterScheme scheme = getNextParamterScheme(currentParameters);
 	if (scheme == null) {
 		// No scheme? we're done, then..
 		break nextScheme;
 	}
-	
+
 	// TODO: Be careful to not leave tokens by the wayside (i.e. don't advance
 	// if we're looping back to the top!)
 
