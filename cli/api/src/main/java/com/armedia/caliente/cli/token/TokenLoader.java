@@ -25,7 +25,7 @@ import com.armedia.commons.utilities.Tools;
 
 public class TokenLoader implements Iterable<Token> {
 
-	private static final List<String> NONE = Collections.emptyList();
+	private static final List<String> NO_TOKENS = Collections.emptyList();
 
 	private class State {
 		private final TokenSource source;
@@ -41,26 +41,34 @@ public class TokenLoader implements Iterable<Token> {
 			this.source = source;
 		}
 
-		public Iterator<String> getStrings() throws Exception {
+		private Iterator<String> getStrings() throws Exception {
 			if (this.iterator == null) {
 				this.strings = TokenLoader.this.cache.get(this.source.getKey());
 				if (this.strings == null) {
-					// Nothing in the cache? Retrieve it and stash it!
+					// Nothing in the cache? Retrieve it and cache it!
 					this.strings = this.source.getTokens();
 					TokenLoader.this.cache.put(this.source.getKey(), this.strings);
 				}
 				if (this.strings == null) {
-					this.strings = TokenLoader.NONE;
+					this.strings = TokenLoader.NO_TOKENS;
+					TokenLoader.this.cache.put(this.source.getKey(), this.strings);
 				}
 				this.iterator = this.strings.iterator();
 			}
 			return this.iterator;
 		}
+
+		private void reset() {
+			this.strings = null;
+			this.iterator = null;
+			this.position = 0;
+			this.terminated = false;
+		}
 	}
 
-	private Map<String, List<String>> cache = new LinkedHashMap<>();
-	private Set<String> recursions = new LinkedHashSet<>();
-	private Stack<State> states = new Stack<>();
+	private final Map<String, List<String>> cache = new LinkedHashMap<>();
+	private final Set<String> recursions = new LinkedHashSet<>();
+	private final Stack<State> states = new Stack<>();
 	private Token next = null;
 
 	private static final String TERMINATOR_FMT = "%s%s";
@@ -259,6 +267,20 @@ public class TokenLoader implements Iterable<Token> {
 		Token ret = this.next;
 		this.next = null;
 		return ret;
+	}
+
+	public void restart() {
+		while (this.states.size() > 1) {
+			State s = this.states.pop();
+			this.recursions.remove(s.source.getKey());
+		}
+		this.states.peek().reset();
+		this.next = null;
+	}
+
+	public void reset() {
+		restart();
+		this.cache.clear();
 	}
 
 	@Override
