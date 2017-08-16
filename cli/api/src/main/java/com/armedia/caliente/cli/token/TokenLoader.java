@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.cli.token.Token.Type;
 import com.armedia.commons.utilities.Tools;
 
 public class TokenLoader implements Iterable<Token> {
@@ -152,7 +153,7 @@ public class TokenLoader implements Iterable<Token> {
 			if (state.terminated) {
 				// The state has been terminated with -- or equivalent, so all tokens that follow
 				// are strictly strings for this source
-				this.next = new Token(state.source, state.position, TokenType.STRING, current, current);
+				this.next = newToken(state, Type.STRING, current, current);
 				return true;
 			}
 
@@ -177,21 +178,25 @@ public class TokenLoader implements Iterable<Token> {
 
 			Matcher m = this.patShort.matcher(current);
 			if (m.matches()) {
-				this.next = new Token(state.source, state.position, TokenType.SHORT_OPTION, m.group(1), current);
+				this.next = newToken(state, Type.SHORT_OPTION, m.group(1), current);
 				return true;
 			}
 
 			m = this.patLong.matcher(current);
 			if (m.matches()) {
-				this.next = new Token(state.source, state.position, TokenType.LONG_OPTION, m.group(1), current);
+				this.next = newToken(state, Type.LONG_OPTION, m.group(1), current);
 				return true;
 			}
 
-			this.next = new Token(state.source, state.position, TokenType.STRING, current, current);
+			this.next = newToken(state, Type.STRING, current, current);
 			return true;
 		}
 
 		return false;
+	}
+
+	private Token newToken(State state, Type type, String value, String rawString) {
+		return new Token(state.source, state.position, type, value, rawString);
 	}
 
 	private String getRawValue(String rawArg, boolean atRoot) {
