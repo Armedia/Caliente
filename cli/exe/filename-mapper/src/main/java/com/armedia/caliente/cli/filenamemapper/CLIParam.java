@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.filenamemapper;
 
 import com.armedia.caliente.cli.MutableParameter;
 import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.parser.ParameterWrapper;
+import com.armedia.caliente.cli.ParameterWrapper;
 
 public enum CLIParam implements ParameterWrapper {
 	no_fix(new MutableParameter() //
