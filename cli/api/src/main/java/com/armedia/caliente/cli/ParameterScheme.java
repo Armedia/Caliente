@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 public class ParameterScheme {
 
+	private final Map<String, Parameter> requiredParameters = new TreeMap<>();
 	private final Map<String, Parameter> parameters = new TreeMap<>();
 	private final Map<String, Parameter> longKeys = new HashMap<>();
 	private final Map<Character, Parameter> shortKeys = new HashMap<>();
@@ -116,6 +117,9 @@ public class ParameterScheme {
 				this.shortKeys.put(shortOpt, parameter);
 			}
 			this.parameters.put(parameter.getKey(), parameter);
+			if (parameter.isRequired()) {
+				this.requiredParameters.put(parameter.getKey(), parameter);
+			}
 		}
 		return ParameterScheme.buildCollection(oldShort, oldLong);
 	}
@@ -184,6 +188,7 @@ public class ParameterScheme {
 		Parameter old = this.longKeys.remove(longOpt);
 		if (old == null) { return null; }
 		this.parameters.remove(old.getKey());
+		this.requiredParameters.remove(old.getKey());
 		Character shortOpt = old.getShortOpt();
 		if (shortOpt != null) {
 			this.shortKeys.remove(shortOpt);
@@ -196,6 +201,7 @@ public class ParameterScheme {
 		Parameter old = this.shortKeys.remove(shortOpt);
 		if (old == null) { return null; }
 		this.parameters.remove(old.getKey());
+		this.requiredParameters.remove(old.getKey());
 		String longOpt = old.getLongOpt();
 		if (longOpt != null) {
 			this.longKeys.remove(longOpt);
@@ -211,6 +217,14 @@ public class ParameterScheme {
 	 */
 	public Collection<Parameter> getParameters() {
 		return new ArrayList<>(this.parameters.values());
+	}
+
+	public Collection<Parameter> getRequiredParameters() {
+		return new ArrayList<>(this.requiredParameters.values());
+	}
+
+	public int getRequiredParameterCount() {
+		return this.requiredParameters.size();
 	}
 
 	/**
