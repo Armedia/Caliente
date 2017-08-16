@@ -41,7 +41,7 @@ public class TokenLoader implements Iterable<Token> {
 			this.source = source;
 		}
 
-		private Iterator<String> getStrings() throws Exception {
+		private Iterator<String> getStrings() throws IOException {
 			if (this.iterator == null) {
 				this.strings = TokenLoader.this.cache.get(this.source.getKey());
 				if (this.strings == null) {
@@ -129,7 +129,7 @@ public class TokenLoader implements Iterable<Token> {
 		return this.valueSeparator;
 	}
 
-	public boolean hasNext() throws Exception {
+	public boolean hasNext() throws IOException, TokenSourceRecursionLoopException {
 		// If we have a token waiting in the wings, we go with that...
 		if (this.next != null) { return true; }
 
@@ -224,7 +224,7 @@ public class TokenLoader implements Iterable<Token> {
 		return (this.fileMarker != null) && str.startsWith(this.fileMarker);
 	}
 
-	private State recurse(String current, TokenSource source) throws Exception {
+	private State recurse(String current, TokenSource source) throws IOException {
 		// Remove the file marker
 		String fileName = current.substring(this.fileMarker.length());
 		TokenSource newSource = null;
@@ -262,7 +262,7 @@ public class TokenLoader implements Iterable<Token> {
 		return new State(newSource);
 	}
 
-	public Token next() throws Exception {
+	public Token next() throws IOException, TokenSourceRecursionLoopException {
 		if (!hasNext()) { throw new NoSuchElementException(); }
 		Token ret = this.next;
 		this.next = null;
@@ -291,8 +291,10 @@ public class TokenLoader implements Iterable<Token> {
 			public boolean hasNext() {
 				try {
 					return TokenLoader.this.hasNext();
-				} catch (Exception e) {
-					throw new RuntimeException("Failed to locate the next token", e);
+				} catch (TokenSourceRecursionLoopException e) {
+					throw new RuntimeException("Token recursion loop detected", e);
+				} catch (IOException e) {
+					throw new RuntimeException("Failed to follow a token recursion request", e);
 				}
 			}
 
@@ -300,8 +302,10 @@ public class TokenLoader implements Iterable<Token> {
 			public Token next() {
 				try {
 					return TokenLoader.this.next();
-				} catch (Exception e) {
-					throw new RuntimeException("Failed to load the next token", e);
+				} catch (TokenSourceRecursionLoopException e) {
+					throw new RuntimeException("Token recursion loop detected", e);
+				} catch (IOException e) {
+					throw new RuntimeException("Failed to follow a token recursion request", e);
 				}
 			}
 

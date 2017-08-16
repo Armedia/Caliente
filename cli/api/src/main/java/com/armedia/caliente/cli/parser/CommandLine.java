@@ -24,9 +24,11 @@ import com.armedia.caliente.cli.CommandLineException;
 import com.armedia.caliente.cli.MutableParameter;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterTools;
-import com.armedia.caliente.cli.parser.token.Token;
-import com.armedia.caliente.cli.parser.token.TokenProcessor;
-import com.armedia.caliente.cli.parser.token.TokenSourceRecursionLoopException;
+import com.armedia.caliente.cli.ParameterWrapper;
+import com.armedia.caliente.cli.token.StaticTokenSource;
+import com.armedia.caliente.cli.token.Token;
+import com.armedia.caliente.cli.token.TokenLoader;
+import com.armedia.caliente.cli.token.TokenSourceRecursionLoopException;
 import com.armedia.commons.utilities.Tools;
 
 public class CommandLine implements CommandLineValues {
@@ -122,7 +124,11 @@ public class CommandLine implements CommandLineValues {
 	private String[] preprocess(String... args) throws CommandLineParseException {
 		List<Token> l;
 		try {
-			l = new TokenProcessor().identifyTokens(args);
+			TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("primary", Arrays.asList(args)));
+			l = new ArrayList<>();
+			while (tokenLoader.hasNext()) {
+				l.add(tokenLoader.next());
+			}
 		} catch (TokenSourceRecursionLoopException | IOException e) {
 			throw new CommandLineParseException("Failed to properly resolve all the --@ recursions", e, null);
 		}

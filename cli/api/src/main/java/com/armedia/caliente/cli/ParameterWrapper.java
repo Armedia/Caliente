@@ -1,6 +1,4 @@
-package com.armedia.caliente.cli.parser;
-
-import com.armedia.caliente.cli.Parameter;
+package com.armedia.caliente.cli;
 
 /**
  * <p>

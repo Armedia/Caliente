@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.token.Token;
 
 public final class BasicParserErrorPolicy implements TokenErrorPolicy {
 

@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import com.armedia.caliente.cli.parser.ParameterWrapper;
-
 public class ParameterTools {
 
 	public static String calculateKey(Parameter def) {

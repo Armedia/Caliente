@@ -3,6 +3,7 @@ package com.armedia.caliente.cli.parser;
 import java.util.List;
 
 import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterWrapper;
 
 public interface CommandLineValues extends Iterable<CommandLineParameter> {
 
