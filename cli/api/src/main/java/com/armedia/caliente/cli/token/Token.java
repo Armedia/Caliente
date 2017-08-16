@@ -5,7 +5,7 @@ import com.armedia.commons.utilities.Tools;
 /**
  * <p>
  * An object signifying a token that will be part of the parameter stream. It indicates not only the
- * {@link Type type of the token}, information about where it was read from (the main parameter
+ * {@link TokenType tokenType of the token}, information about where it was read from (the main parameter
  * stream or a parameter file), as well as its relative position within that sourceStr (index within
  * the parameter stream, or line number within the parameter file).
  *
@@ -13,26 +13,6 @@ import com.armedia.commons.utilities.Tools;
  *
  */
 public final class Token {
-
-	public static enum Type {
-		//
-		/**
-		 * A short option (i.e. -c, -x, etc.) its value is always one character long
-		 */
-		SHORT_OPTION,
-
-		/**
-		 * A long option (i.e. --long-option) - its value is always a string
-		 */
-		LONG_OPTION,
-
-		/**
-		 * A "plain" string - i.e. no prefix of any kind
-		 */
-		STRING,
-		//
-		;
-	}
 
 	/**
 	 * <p>
@@ -53,10 +33,10 @@ public final class Token {
 
 	/**
 	 * <p>
-	 * The type of the token
+	 * The tokenType of the token
 	 * </p>
 	 */
-	final Type type;
+	final TokenType tokenType;
 
 	/**
 	 * <p>
@@ -72,10 +52,10 @@ public final class Token {
 	 */
 	final String rawString;
 
-	Token(TokenSource tokenSource, int index, Type type, String value, String rawString) {
+	Token(TokenSource tokenSource, int index, TokenType tokenType, String value, String rawString) {
 		this.source = tokenSource;
 		this.index = index;
-		this.type = type;
+		this.tokenType = tokenType;
 		this.value = value;
 		this.rawString = rawString;
 	}
@@ -88,8 +68,8 @@ public final class Token {
 		return this.index;
 	}
 
-	public Type getType() {
-		return this.type;
+	public TokenType getType() {
+		return this.tokenType;
 	}
 
 	public String getValue() {
@@ -102,7 +82,7 @@ public final class Token {
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.type, this.value);
+		return Tools.hashTool(this, null, this.tokenType, this.value);
 	}
 
 	@Override
@@ -110,14 +90,14 @@ public final class Token {
 		if (this == obj) { return true; }
 		if (!Tools.baseEquals(this, obj)) { return false; }
 		Token other = Token.class.cast(obj);
-		if (this.type != other.type) { return false; }
+		if (this.tokenType != other.tokenType) { return false; }
 		if (!Tools.equals(this.value, other.value)) { return false; }
 		return true;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("Token [source=%s, index=%s, type=%s, value=%s, rawString=%s]", this.source, this.index,
-			this.type.name(), this.value, this.rawString);
+		return String.format("Token [source=%s, index=%s, tokenType=%s, value=%s, rawString=%s]", this.source, this.index,
+			this.tokenType.name(), this.value, this.rawString);
 	}
 }

@@ -1,5 +1,9 @@
 package com.armedia.caliente.cli.token;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -16,24 +20,25 @@ public class TokenProcessorTest {
 
 	@Test
 	public void testParser() {
-		TokenResolver p = new TokenResolver();
+		List<String> l = Collections.emptyList();
+		TokenLoader p = new TokenLoader(new TokenConstantSource("primary", l));
 		Assert.assertNotNull(p);
-		Assert.assertEquals(TokenResolver.DEFAULT_PARAMETER_MARKER, p.getParameterMarker());
-		Assert.assertEquals(TokenResolver.DEFAULT_FILE_MARKER, p.getFileMarker());
-		Assert.assertEquals(TokenResolver.DEFAULT_VALUE_SPLITTER, p.getValueSplitter());
+		Assert.assertEquals(TokenLoader.DEFAULT_PARAMETER_MARKER, p.getParameterMarker());
+		Assert.assertEquals(TokenLoader.DEFAULT_FILE_MARKER, p.getFileMarker());
+		Assert.assertEquals(TokenLoader.DEFAULT_VALUE_SPLITTER, p.getValueSplitter());
 	}
 
 	@Test
 	public void testParse() throws Exception {
 		String[] args = null;
 
-		TokenResolver p = new TokenResolver();
-
 		args = new String[] {
 			"-a", "--bb", "XXX", "subcommand", "asdfasdf", "--@@classpath:/test-parameter-file.txt", "--",
 			"--@@classpath:/test-parameter-file.txt", "--ff"
 		};
 
-		System.out.printf("%s%n", p.identifyTokens(args));
+		for (Token t : new TokenLoader(new TokenConstantSource("primary", Arrays.asList(args)))) {
+			System.out.printf("%s%n", t);
+		}
 	}
 }
