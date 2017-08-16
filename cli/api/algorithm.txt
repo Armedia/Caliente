@@ -1,21 +1,78 @@
 
-Collection<Pair<ParameterScheme, ParameterValues>> results = new ArrayList<>();
-ParameterValues parameters = new ParameterValues();
-CommandLine cli = new CommandLine(String... args);
-while (cli.hasRemaining()) {
-	ParameterScheme newScheme = schemeSource.getParameterScheme(parameters);
-	// If there are no new schemes pending processing, then this is as far as we
-	// can go and we need to decide what to do about the unrecognized stuff
-	if (newScheme == null) break;
-	results.add(Pair.of(scheme, cli.parseRemaining(newScheme)));
+
+Token t = null;
+
+nextScheme: while (true) {
+	// Find the next parameter set given the parameter values gathered so far...
+	ParameterScheme scheme = getParamterScheme(currentParameters);
+	if (scheme == null) {
+		// No scheme? we're done, then..
+		break nextScheme;
+	}
+	
+	// TODO: Be careful to not leave tokens by the wayside (i.e. don't advance
+	// if we're looping back to the top!)
+
+	Parameter p = null;
+	nextToken: while (true) {
+
+		if (t == null) {
+			if (!tokenLoader.hasNext()) break nextToken;
+			// Only pull the next token when needed 
+			// Remember to reassign t to null once a token has been "consumed"
+			t = tokenLoader.next();
+		}	
+
+		if (t.type == Type.STRING) {
+			if (p != null) {
+				if (p.isSupportsArgs()) {
+					// Split the string, and set the value as the arguments.  If it's a repeat
+					// within this scheme, then append the arguments. If the argument count is
+					// violated, then have a problem
+				} else {
+					// This is a standalone argument, so parameters to it are by definition
+					// unrecognized, so we have a problem...
+				}
+			} else {
+				// This is not a flag, so it must be a positional, which means this scheme
+				// is done-done
+			}
+		} else {
+			if (p != null) {
+				// TODO: Validate that the parameter count requirements for p are met,
+				// and we can move on. If they're not, then we have a "syntax" issue
+			}
+
+			p = scheme.findParameter(t);
+			if (p != null) {
+				// If this parameter has been specified before in this parameter set, then
+				// we have to mark it as the current one and keep going...
+				continue nextToken;
+			}
+		}
+	
+		// This is the first unrecognized token, so we make a note of it,
+		// and loop up to run the next set of parameters, feeding them the
+		// current values
+		continue nextScheme;
+	}
+	
+	// If there are no more tokens, we break out...
+	if (!tokenLoader.hasNext()) {
+		break nextScheme;
+	}
 }
 
-if (cli.hasRemaining()) {
-	// We have remaining parameters that we were unable to identify...
-	// ...check to see if they're just words (i.e. positionals), or
-	// if they're actual flags (-x or --something).  If there are
-	// flags positioned before the first instance of "--", then this
-	// is an error and must be reported as such
-} else {
-	// All parameters were consumed, so we're nice and happy
+// Check to see if all required parameters are present
+
+// We're done parsing, so we gather up all remaining strings and explode if there's an
+// unknown flag in play 
+List<String> positionals = new ArrayList<>();
+for (Token t : tokenLoader) {
+	if (t.type == Type.STRING) {
+		positionals.add(t.value);
+		continue;
+	}
+
+	throw new UnknownParameterException(t);
 }
