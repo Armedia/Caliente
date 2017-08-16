@@ -6,7 +6,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class TokenLocalPathSource extends TokenStreamSource {
+public class LocalPathTokenSource extends StreamTokenSource {
 
 	private static Path resolveCanonicalPath(Path p) throws IOException {
 		return p.toFile().getCanonicalFile().toPath();
@@ -14,14 +14,14 @@ public class TokenLocalPathSource extends TokenStreamSource {
 
 	private final Path sourcePath;
 
-	public TokenLocalPathSource(String sourcePath) throws IOException {
+	public LocalPathTokenSource(String sourcePath) throws IOException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a non-null path"); }
-		this.sourcePath = TokenLocalPathSource.resolveCanonicalPath(Paths.get(sourcePath));
+		this.sourcePath = LocalPathTokenSource.resolveCanonicalPath(Paths.get(sourcePath));
 	}
 
-	public TokenLocalPathSource(Path sourcePath) throws IOException {
+	public LocalPathTokenSource(Path sourcePath) throws IOException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a non-null path"); }
-		this.sourcePath = TokenLocalPathSource.resolveCanonicalPath(sourcePath);
+		this.sourcePath = LocalPathTokenSource.resolveCanonicalPath(sourcePath);
 	}
 
 	public Path getSourcePath() {

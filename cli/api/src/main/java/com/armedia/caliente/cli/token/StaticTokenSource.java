@@ -8,28 +8,28 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.armedia.commons.utilities.Tools;
 
-public class TokenConstantSource implements TokenSource {
+public class StaticTokenSource implements TokenSource {
 
 	private static final AtomicLong counter = new AtomicLong(0);
 
 	private final String key;
 	private final List<String> tokens;
 
-	public TokenConstantSource() {
+	public StaticTokenSource() {
 		this(null, null);
 	}
 
-	public TokenConstantSource(String key) {
+	public StaticTokenSource(String key) {
 		this(key, null);
 	}
 
-	public TokenConstantSource(List<String> tokens) {
+	public StaticTokenSource(List<String> tokens) {
 		this(null, tokens);
 	}
 
-	public TokenConstantSource(String key, Collection<String> tokens) {
+	public StaticTokenSource(String key, Collection<String> tokens) {
 		if (key == null) {
-			key = String.format("(constant-%016X)", TokenConstantSource.counter.getAndIncrement());
+			key = String.format("(static-%016X)", StaticTokenSource.counter.getAndIncrement());
 		}
 		this.key = key;
 		this.tokens = Tools.freezeList(new ArrayList<>(tokens), true);

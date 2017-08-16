@@ -10,7 +10,7 @@ import org.junit.Test;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 
-public class TokenProcessorTest {
+public class TokenLoaderTest {
 
 	static {
 
@@ -21,7 +21,7 @@ public class TokenProcessorTest {
 	@Test
 	public void testParser() {
 		List<String> l = Collections.emptyList();
-		TokenLoader p = new TokenLoader(new TokenConstantSource("primary", l));
+		TokenLoader p = new TokenLoader(new StaticTokenSource("primary", l));
 		Assert.assertNotNull(p);
 		Assert.assertEquals(TokenLoader.DEFAULT_PARAMETER_MARKER, p.getParameterMarker());
 		Assert.assertEquals(TokenLoader.DEFAULT_FILE_MARKER, p.getFileMarker());
@@ -37,7 +37,7 @@ public class TokenProcessorTest {
 			"--@@classpath:/test-parameter-file.txt", "--ff"
 		};
 
-		for (Token t : new TokenLoader(new TokenConstantSource("primary", Arrays.asList(args)))) {
+		for (Token t : new TokenLoader(new StaticTokenSource("primary", Arrays.asList(args)))) {
 			System.out.printf("%s%n", t);
 		}
 	}

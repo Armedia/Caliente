@@ -11,13 +11,13 @@ import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class TokenStreamSource implements TokenSource {
+public abstract class StreamTokenSource implements TokenSource {
 
 	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
 	private Throwable thrown = null;
 	private List<String> parameters = null;
-	private Charset charset = TokenStreamSource.DEFAULT_CHARSET;
+	private Charset charset = StreamTokenSource.DEFAULT_CHARSET;
 
 	public synchronized Charset getCharset() {
 		return this.charset;
@@ -41,7 +41,7 @@ public abstract class TokenStreamSource implements TokenSource {
 		// The class is reset, so we re-read...
 		InputStream in = openStream();
 		if (in == null) { throw new IOException(String.format("Failed to open the stream from [%s]", getKey())); }
-		final Charset charset = Tools.coalesce(getCharset(), TokenStreamSource.DEFAULT_CHARSET);
+		final Charset charset = Tools.coalesce(getCharset(), StreamTokenSource.DEFAULT_CHARSET);
 		try {
 			this.parameters = Tools.freezeList(retrieveTokens(new InputStreamReader(in, charset)), true);
 			this.thrown = null;
@@ -58,6 +58,6 @@ public abstract class TokenStreamSource implements TokenSource {
 	public final synchronized void reset() {
 		this.thrown = null;
 		this.parameters = null;
-		this.charset = TokenStreamSource.DEFAULT_CHARSET;
+		this.charset = StreamTokenSource.DEFAULT_CHARSET;
 	}
 }

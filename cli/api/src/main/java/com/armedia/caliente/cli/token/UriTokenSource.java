@@ -6,13 +6,13 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class TokenUriSource extends TokenStreamSource {
+public class UriTokenSource extends StreamTokenSource {
 
 	private static final String CLASSPATH = "classpath";
 
 	private static boolean supportsClasspath() {
 		try {
-			new URI(TokenUriSource.CLASSPATH, "", "").toURL();
+			new URI(UriTokenSource.CLASSPATH, "", "").toURL();
 			return true;
 		} catch (URISyntaxException e) {
 			return false;
@@ -23,7 +23,7 @@ public class TokenUriSource extends TokenStreamSource {
 
 	private final URI sourceUri;
 
-	public TokenUriSource(URI sourceUri) {
+	public UriTokenSource(URI sourceUri) {
 		if (sourceUri == null) { throw new IllegalArgumentException("Must provide a non-null URI object"); }
 		this.sourceUri = sourceUri;
 	}
@@ -36,7 +36,7 @@ public class TokenUriSource extends TokenStreamSource {
 	@Override
 	protected InputStream openStream() throws IOException {
 		final String scheme = this.sourceUri.getScheme();
-		if (TokenUriSource.CLASSPATH.equalsIgnoreCase(scheme) && !TokenUriSource.supportsClasspath()) {
+		if (UriTokenSource.CLASSPATH.equalsIgnoreCase(scheme) && !UriTokenSource.supportsClasspath()) {
 			// It's a classpath URL... let's use the rest of it as the classpath resource to get
 			String resource = this.sourceUri.getSchemeSpecificPart();
 			// Eliminate all leading slashes
@@ -50,6 +50,6 @@ public class TokenUriSource extends TokenStreamSource {
 
 	@Override
 	public String toString() {
-		return String.format("TokenUriSource [sourceUri=%s]", this.sourceUri);
+		return String.format("UriTokenSource [sourceUri=%s]", this.sourceUri);
 	}
 }

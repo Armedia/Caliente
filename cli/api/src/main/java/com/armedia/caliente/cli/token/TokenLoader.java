@@ -232,7 +232,7 @@ public class TokenLoader implements Iterable<Token> {
 			}
 			if (!sourceUri.getScheme().equals("file")) {
 				// Not a local file, use the URL source
-				newSource = new TokenUriSource(sourceUri);
+				newSource = new UriTokenSource(sourceUri);
 			} else {
 				// Local file... treat it as such...
 				fileName = new File(sourceUri).getAbsolutePath();
@@ -243,12 +243,12 @@ public class TokenLoader implements Iterable<Token> {
 			// It's a local file... if the current source is another local file,
 			// and the given path isn't absolute, take its path to be relative to that one
 			Path path = Paths.get(fileName);
-			if (!path.isAbsolute() && TokenLocalPathSource.class.isInstance(source)) {
-				TokenLocalPathSource pathSource = TokenLocalPathSource.class.cast(source);
+			if (!path.isAbsolute() && LocalPathTokenSource.class.isInstance(source)) {
+				LocalPathTokenSource pathSource = LocalPathTokenSource.class.cast(source);
 				Path relativeTo = pathSource.getSourcePath().getParent();
 				path = relativeTo.resolve(path);
 			}
-			newSource = new TokenLocalPathSource(path);
+			newSource = new LocalPathTokenSource(path);
 		}
 
 		return new State(newSource);
