@@ -109,8 +109,12 @@ public class ParameterScheme {
 		final Parameter oldShort = removeParameter(shortOpt);
 
 		if (add) {
-			this.longKeys.put(longOpt, parameter);
-			this.shortKeys.put(shortOpt, parameter);
+			if (longOpt != null) {
+				this.longKeys.put(longOpt, parameter);
+			}
+			if (shortOpt != null) {
+				this.shortKeys.put(shortOpt, parameter);
+			}
 			this.parameters.put(parameter.getKey(), parameter);
 		}
 		return ParameterScheme.buildCollection(oldShort, oldLong);
