@@ -1,15 +1,15 @@
 Pass 1
 	GLOBALS
 		--help
-	*	--mode <action> ${export|import|count|encrypt|decrypt|...}
-	*	--engine ${dfc|cmis|shpt|local|...}
 		--lib ${libdir1,libdir2,...,libdirN}
 		--log ${log-file} (default is ${db-dir}/blablabla.log)
 		--log-cfg ${log-cfg-file}
+		(export|import|count|encrypt|decrypt|...)
 
-Pass 2 (from <action>)
-	ACTION: ( EXPORT | IMPORT )
+Pass 2
+	COMMAND: ( EXPORT | IMPORT )
 		(common)
+		*	--engine ${dfc|cmis|shpt|local|...}
 			--no-renditions
 			--no-versions
 			--skip-content
@@ -30,7 +30,7 @@ Pass 2 (from <action>)
 			--mail-to ${recipient1,recipient2,...,recipientN}
 			--exclude-types ${type1,type2,...,typeN}
 
-	ACTION: ( EXPORT | EXP | EX )
+	COMMAND: ( EXPORT | EXP | EX )
 		(common)
 			--job-name ${name}
 			--reset-job
@@ -67,7 +67,7 @@ Pass 2 (from <action>)
 			*	--source ${path}
 				--source-prefix ${prefix}
 
-	ACTION: ( IMPORT | IMP | IM )
+	COMMAND: ( IMPORT | IMP | IM )
 		(common)
 			--dedup
 			--filename-map ${file}
@@ -97,7 +97,7 @@ Pass 2 (from <action>)
 				--role-map ${map}
 				--type-map ${map}
 
-	ACTION: ( COUNT | CNT | CN )
+	COMMAND: ( COUNT | CNT | CN )
 		(common)
 			--non-recursive
 			--count-empty
@@ -123,5 +123,5 @@ Pass 2 (from <action>)
 			*	--password ${password}
 			*	--source ${path|nodeRef}
 
-	ACTION: ( ENCRYPT | ENC | DECRYPT | DEC )
+	COMMAND: ( ENCRYPT | ENC | DECRYPT | DEC )
 		positionals = password values to encrypt/decrypt. if none, read from console
