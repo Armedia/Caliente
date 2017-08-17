@@ -75,11 +75,13 @@ public abstract class AbstractLauncher {
 		if (initialScheme == null) { throw new IllegalArgumentException(
 			"Must provide an initial parameter scheme to parse against"); }
 
-		CommandLineValues cl = null;
+		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
+		Token token = null;
+
 		ParameterScheme scheme = initialScheme;
 		Parameter parameter = null;
-		TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
-		Token token = null;
+
+		CommandLineValues cl = null;
 
 		nextScheme: while (true) {
 			if (scheme == null) {
