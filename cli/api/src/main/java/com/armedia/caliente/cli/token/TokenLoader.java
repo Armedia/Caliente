@@ -23,6 +23,23 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.cli.token.Token.Type;
 import com.armedia.commons.utilities.Tools;
 
+/**
+ * <p>
+ * This class takes care of loading all the tokens that will eventually conform the entire command
+ * line. It will appropriately branch out and resolve references to files (--@path) or URLs
+ * (--@@url), and load the contents seamlessly.
+ * </p>
+ * <p>
+ * Remote (i.e. files/urls) token sources are loaded with an equivalency of one token per line, and
+ * cleaned up by removing in-line comments (ignoring everything after the first non-escaped #),
+ * empty lines, and trimming each token. Fetching of remote tokens is deferred until actually
+ * required, and these will only be fetched once (i.e. results are cached). Also, care is taken to
+ * avoid recursion loops.
+ * </p>
+ *
+ * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
+ *
+ */
 public class TokenLoader implements Iterable<Token> {
 
 	private static final List<String> NO_TOKENS = Collections.emptyList();
