@@ -36,7 +36,7 @@ public class StaticTokenSource implements TokenSource {
 	}
 
 	@Override
-	public List<String> getTokens() throws IOException {
+	public List<String> getTokenStrings() throws IOException {
 		return this.tokens;
 	}
 

@@ -34,7 +34,7 @@ public abstract class StreamTokenSource implements TokenSource {
 	}
 
 	@Override
-	public final synchronized List<String> getTokens() throws IOException {
+	public final synchronized List<String> getTokenStrings() throws IOException {
 		if (this.thrown != null) { throw new IOException("An exception has already been raised", this.thrown); }
 		if (this.parameters != null) { return this.parameters; }
 

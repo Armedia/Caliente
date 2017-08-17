@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface TokenSource {
 
-	public List<String> getTokens() throws IOException;
+	public List<String> getTokenStrings() throws IOException;
 
 	public String getKey();
 }

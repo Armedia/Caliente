@@ -46,11 +46,11 @@ public class TokenLoader implements Iterable<Token> {
 				this.strings = TokenLoader.this.cache.get(this.source.getKey());
 				if (this.strings == null) {
 					// Nothing in the cache? Retrieve it and cache it!
-					this.strings = this.source.getTokens();
-					TokenLoader.this.cache.put(this.source.getKey(), this.strings);
-				}
-				if (this.strings == null) {
-					this.strings = TokenLoader.NO_TOKENS;
+					this.strings = this.source.getTokenStrings();
+					if (this.strings == null) {
+						// Nothing was returned? Then we cache an empty token list
+						this.strings = TokenLoader.NO_TOKENS;
+					}
 					TokenLoader.this.cache.put(this.source.getKey(), this.strings);
 				}
 				this.iterator = this.strings.iterator();
