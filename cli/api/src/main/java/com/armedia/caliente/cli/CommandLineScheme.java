@@ -9,6 +9,10 @@ import java.util.TreeSet;
 
 public class CommandLineScheme extends ParameterScheme {
 
+	public CommandLineScheme(String name) {
+		super(name);
+	}
+
 	private Parameter helpParameter = null;
 
 	private final Map<String, Command> commands = new TreeMap<>();

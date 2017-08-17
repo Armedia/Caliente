@@ -28,7 +28,7 @@ public class ParameterScheme {
 
 	/**
 	 * Returns this scheme's given name.
-	 * 
+	 *
 	 * @return this scheme's given name
 	 */
 	public String getName() {
