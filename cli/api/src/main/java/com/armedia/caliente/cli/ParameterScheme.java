@@ -10,12 +10,30 @@ import java.util.TreeMap;
 
 public class ParameterScheme {
 
+	private final String name;
 	private final Map<String, Parameter> requiredParameters = new TreeMap<>();
 	private final Map<String, Parameter> parameters = new TreeMap<>();
 	private final Map<String, Parameter> longKeys = new HashMap<>();
 	private final Map<Character, Parameter> shortKeys = new HashMap<>();
 	private int minArgs = 0;
 	private int maxArgs = -1;
+
+	/**
+	 * @param name
+	 */
+	public ParameterScheme(String name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a non-null name"); }
+		this.name = name;
+	}
+
+	/**
+	 * Returns this scheme's given name.
+	 * 
+	 * @return this scheme's given name
+	 */
+	public String getName() {
+		return this.name;
+	}
 
 	/**
 	 * Returns {@code true} if this parameter scheme supports positional arguments, {@code false}
