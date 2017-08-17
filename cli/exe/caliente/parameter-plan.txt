@@ -2,13 +2,16 @@ Pass 1
 	GLOBALS
 		--help
 		--lib ${libdir1,libdir2,...,libdirN}
-		--log ${log-file} (default is ${db-dir}/blablabla.log)
-		--log-cfg ${log-cfg-file}
 		(export|import|count|encrypt|decrypt|...)
 
 Pass 2
-	COMMAND: ( EXPORT | IMPORT )
+	COMMAND: ( ENCRYPT | ENC | DECRYPT | DEC )
+		positionals = password values to encrypt/decrypt. if none, read from console/stdin
+
+	COMMAND: ( EXPORT | IMPORT | COUNT )
 		(common)
+			--log ${log-file} (default is ${db-dir}/blablabla.log)
+			--log-cfg ${log-cfg-file}
 		*	--engine ${dfc|cmis|shpt|local|...}
 			--no-renditions
 			--no-versions
@@ -30,98 +33,95 @@ Pass 2
 			--mail-to ${recipient1,recipient2,...,recipientN}
 			--exclude-types ${type1,type2,...,typeN}
 
-	COMMAND: ( EXPORT | EXP | EX )
-		(common)
-			--job-name ${name}
-			--reset-job
-			--content-strategy ${strategy}
-			--direct-fs (change for strategy = direct?)
+		COMMAND: ( EXPORT | EXP | EX )
+			(common)
+				--job-name ${name}
+				--reset-job
+				--content-strategy ${strategy}
+				--direct-fs (change for strategy = direct?)
+	
+			Pass 3 (from --engine)
+				DFC
+				*	--docbase ${docbase}
+				*	--user ${user}
+				*	--password ${password}
+				*	--predicate ${predicate}
+					--dfc ${dfc-dir}
+					--dfc-prop ${dfc-prop-file}
+					--dctm ${dctm-dir}
+					--special-users ${user1,user2,...,userN}
+					--special-groups ${group1,group2,...,groupN}
+					--special-types ${type1,type2,...,typeN}
+					--batch-size ${size}
+					--owner-attributes ${att1,att2,...,attN}
+	
+				CMIS
+				*	--url ${url}
+				*	--user ${user}
+					--domain ${domain}
+				*	--password ${password}
+				*	--source ${path}
+	
+				SHAREPOINT
+				*	--url ${url}
+				*	--user ${user}
+					--domain ${domain}
+				*	--password ${password}
+				*	--source ${path}
+					--source-prefix ${prefix}
+	
+		COMMAND: ( IMPORT | IMP | IM )
+			(common)
+				--dedup
+				--filename-map ${file}
+				--name-fix
+				--no-filename-map
+				--trim-prefix ${num}
+				--target-location ${location}
 
-		Pass 3 (from --engine)
-			DFC
-			*	--docbase ${docbase}
-			*	--user ${user}
-			*	--password ${password}
-			*	--predicate ${predicate}
-				--dfc ${dfc-dir}
-				--dfc-prop ${dfc-prop-file}
-				--dctm ${dctm-dir}
-				--special-users ${user1,user2,...,userN}
-				--special-groups ${group1,group2,...,groupN}
-				--special-types ${type1,type2,...,typeN}
-				--batch-size ${size}
-				--owner-attributes ${att1,att2,...,attN}
+			Pass 3 (from --engine)
+				DFC
+				*	--docbase ${docbase}
+				*	--user ${user}
+				*	--password ${password}
+					--dfc ${dfc-dir}
+					--dfc-prop ${dfc-prop-file}
+					--dctm ${dctm-dir}
+					--default-password
+	
+				CMIS
+				*	--url ${url}
+				*	--user ${user}
+					--domain ${domain}
+				*	--password ${password}
+				*	--content-model ${model1,model2,...,modelN}
+					--user-map ${map}
+					--group-map ${map}
+					--role-map ${map}
+					--type-map ${map}
+	
+		COMMAND: ( COUNT | CNT | CN )
+			(common)
+				--non-recursive
+				--count-empty
+				--count-hidden
+				--count-private
+				--count-include ${folder1,folder2,...,folderN}
+				--count-exclude ${folder1,folder2,...,folderN}
 
-			CMIS
-			*	--url ${url}
-			*	--user ${user}
-				--domain ${domain}
-			*	--password ${password}
-			*	--source ${path}
-
-			SHAREPOINT
-			*	--url ${url}
-			*	--user ${user}
-				--domain ${domain}
-			*	--password ${password}
-			*	--source ${path}
-				--source-prefix ${prefix}
-
-	COMMAND: ( IMPORT | IMP | IM )
-		(common)
-			--dedup
-			--filename-map ${file}
-			--name-fix
-			--no-filename-map
-			--trim-prefix ${num}
-			--target-location ${location}
-
-		Pass 3 (from --engine)
-			DFC
-			*	--docbase ${docbase}
-			*	--user ${user}
-			*	--password ${password}
-				--dfc ${dfc-dir}
-				--dfc-prop ${dfc-prop-file}
-				--dctm ${dctm-dir}
-				--default-password
-
-			CMIS
-			*	--url ${url}
-			*	--user ${user}
-				--domain ${domain}
-			*	--password ${password}
-			*	--content-model ${model1,model2,...,modelN}
-				--user-map ${map}
-				--group-map ${map}
-				--role-map ${map}
-				--type-map ${map}
-
-	COMMAND: ( COUNT | CNT | CN )
-		(common)
-			--non-recursive
-			--count-empty
-			--count-hidden
-			--count-private
-			--count-include ${folder1,folder2,...,folderN}
-			--count-exclude ${folder1,folder2,...,folderN}
-
-		Pass 3 (from --engine)
-			DFC
-			*	--docbase ${docbase}
-			*	--user ${user}
-			*	--password ${password}
-				--dfc ${dfc-dir}
-				--dfc-prop ${dfc-prop-file}
-				--dctm ${dctm-dir}
-			*	--predicate ${predicate}
-
-			CMIS
-			*	--url ${url}
-			*	--user ${user}
-				--domain ${domain}
-			*	--password ${password}
-			*	--source ${path|nodeRef}
-
-	COMMAND: ( ENCRYPT | ENC | DECRYPT | DEC )
-		positionals = password values to encrypt/decrypt. if none, read from console
+			Pass 3 (from --engine)
+				DFC
+				*	--docbase ${docbase}
+				*	--user ${user}
+				*	--password ${password}
+					--dfc ${dfc-dir}
+					--dfc-prop ${dfc-prop-file}
+					--dctm ${dctm-dir}
+				*	--predicate ${predicate}
+	
+				CMIS
+				*	--url ${url}
+				*	--user ${user}
+					--domain ${domain}
+				*	--password ${password}
+				*	--source ${path|nodeRef}
