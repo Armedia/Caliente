@@ -122,7 +122,7 @@ public class ParameterScheme {
 	 *            the long option
 	 * @return the parameter in this scheme which matches the given long option
 	 */
-	protected final Parameter findParameter(String longOpt) {
+	public final Parameter getParameter(String longOpt) {
 		if (longOpt == null) { return null; }
 		return this.longKeys.get(longOpt);
 	}
@@ -134,7 +134,7 @@ public class ParameterScheme {
 	 *            the short option
 	 * @return the parameter in this scheme which matches the given short option
 	 */
-	protected final Parameter findParameter(Character shortOpt) {
+	public final Parameter getParameter(Character shortOpt) {
 		if (shortOpt == null) { return null; }
 		return this.shortKeys.get(shortOpt);
 	}
@@ -147,9 +147,9 @@ public class ParameterScheme {
 		parameter = ParameterTools.ensureImmutable(parameter);
 
 		final String longOpt = parameter.getLongOpt();
-		final Parameter oldLong = (add ? findParameter(longOpt) : removeParameter(longOpt));
+		final Parameter oldLong = (add ? getParameter(longOpt) : removeParameter(longOpt));
 		final Character shortOpt = parameter.getShortOpt();
-		final Parameter oldShort = (add ? findParameter(shortOpt) : removeParameter(shortOpt));
+		final Parameter oldShort = (add ? getParameter(shortOpt) : removeParameter(shortOpt));
 
 		if (add) {
 			if ((oldLong != null) || (oldShort != null)) {
@@ -312,7 +312,7 @@ public class ParameterScheme {
 	 *         {@code false} otherwise.
 	 */
 	public final boolean hasParameter(Character shortOpt) {
-		return (findParameter(shortOpt) != null);
+		return (getParameter(shortOpt) != null);
 	}
 
 	/**
@@ -324,7 +324,7 @@ public class ParameterScheme {
 	 *         {@code false} otherwise.
 	 */
 	public final boolean hasParameter(String longOpt) {
-		return (findParameter(longOpt) != null);
+		return (getParameter(longOpt) != null);
 	}
 
 	/**
