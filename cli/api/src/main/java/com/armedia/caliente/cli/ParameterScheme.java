@@ -26,6 +26,16 @@ public class ParameterScheme {
 		this.name = name;
 	}
 
+	public ParameterScheme(ParameterScheme pattern) {
+		this.name = pattern.getName();
+		this.requiredParameters.putAll(pattern.requiredParameters);
+		this.parameters.putAll(pattern.parameters);
+		this.longKeys.putAll(pattern.longKeys);
+		this.shortKeys.putAll(pattern.shortKeys);
+		this.minArgs = pattern.minArgs;
+		this.maxArgs = pattern.maxArgs;
+	}
+
 	/**
 	 * Returns this scheme's given name.
 	 *
@@ -174,9 +184,10 @@ public class ParameterScheme {
 				removeParameter(shortOpt);
 				this.shortKeys.put(shortOpt, parameter);
 			}
-			this.parameters.put(parameter.getKey(), parameter);
+			final String key = parameter.getKey();
+			this.parameters.put(key, parameter);
 			if (parameter.isRequired()) {
-				this.requiredParameters.put(parameter.getKey(), parameter);
+				this.requiredParameters.put(key, parameter);
 			}
 		}
 		return ParameterScheme.buildCollection(oldShort, oldLong);
@@ -234,8 +245,9 @@ public class ParameterScheme {
 		if (longOpt == null) { return null; }
 		Parameter old = this.longKeys.remove(longOpt);
 		if (old == null) { return null; }
-		this.parameters.remove(old.getKey());
-		this.requiredParameters.remove(old.getKey());
+		final String oldKey = old.getKey();
+		this.parameters.remove(oldKey);
+		this.requiredParameters.remove(oldKey);
 		Character shortOpt = old.getShortOpt();
 		if (shortOpt != null) {
 			this.shortKeys.remove(shortOpt);
@@ -254,8 +266,9 @@ public class ParameterScheme {
 		if (shortOpt == null) { return null; }
 		Parameter old = this.shortKeys.remove(shortOpt);
 		if (old == null) { return null; }
-		this.parameters.remove(old.getKey());
-		this.requiredParameters.remove(old.getKey());
+		final String oldKey = old.getKey();
+		this.parameters.remove(oldKey);
+		this.requiredParameters.remove(oldKey);
 		String longOpt = old.getLongOpt();
 		if (longOpt != null) {
 			this.longKeys.remove(longOpt);
@@ -328,6 +341,23 @@ public class ParameterScheme {
 	}
 
 	/**
+	 * Returns {@code true} if and only if this parameter scheme contains a parameter that
+	 * equivalent (as per {@link Parameter#isEquivalent(Parameter, Parameter)}) to the given
+	 * parameter, {@code false} otherwise.
+	 *
+	 * @param parameter
+	 * @return {@code true} if and only if this parameter scheme contains a parameter that exactly
+	 *         matches the given parameter in both long and short options, {@code false} otherwise.
+	 *
+	 */
+	public final boolean hasEquivalentParameter(Parameter parameter) {
+		Collection<Parameter> collisions = findCollisions(parameter);
+		if ((collisions == null) || (collisions.size() != 1)) { return false; }
+		Parameter current = collisions.iterator().next();
+		return Parameter.isEquivalent(parameter, current);
+	}
+
+	/**
 	 * Returns the number of parameters already in this scheme that would collide with the given
 	 * parameter based on short or long options. This means that only 3 values can be returned: 0,
 	 * 1, or 2.
@@ -337,6 +367,22 @@ public class ParameterScheme {
 	 *         parameter based on short or long options
 	 */
 	public final int countCollisions(Parameter parameter) {
+		Collection<Parameter> collisions = findCollisions(parameter);
+		if ((collisions == null) || collisions.isEmpty()) { return 0; }
+		return collisions.size();
+	}
+
+	/**
+	 * Returns the parameters already in this scheme that would collide with the given parameter
+	 * based on short or long options. If no collisions are found, {@code null} is returned. This
+	 * means that the collection may contain either 1 or 2 elements.
+	 *
+	 * @param parameter
+	 *            the parameter to check for
+	 * @return the parameters already in this scheme that would collide with the given parameter
+	 *         based on short or long options, or {@code null} if none collide
+	 */
+	public final Collection<Parameter> findCollisions(Parameter parameter) {
 		if (parameter == null) { throw new IllegalArgumentException("Must provide a non-null parameter"); }
 		String longOpt = parameter.getLongOpt();
 		Parameter longParam = null;
@@ -348,12 +394,6 @@ public class ParameterScheme {
 		if (shortOpt != null) {
 			shortParam = this.shortKeys.get(shortOpt);
 		}
-		// If both are null, then there are no collisions
-		if ((shortParam == null) && (longParam == null)) { return 0; }
-		// If only one is null, then there is one collision
-		if ((shortParam == null) || (longParam == null)) { return 1; }
-		// If neither is null, then there can be 1 or 2 collisions depending on whether they're the
-		// same object, or different objects
-		return (shortParam == longParam ? 1 : 2);
+		return ParameterScheme.buildCollection(longParam, shortParam);
 	}
 }

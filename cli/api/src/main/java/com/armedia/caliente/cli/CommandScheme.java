@@ -7,9 +7,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-public class CommandLineScheme extends ParameterScheme {
+public class CommandScheme extends ParameterScheme {
 
-	public CommandLineScheme(String name) {
+	public CommandScheme(String name) {
 		super(name);
 	}
 
@@ -33,10 +33,11 @@ public class CommandLineScheme extends ParameterScheme {
 	public Parameter setHelpParameter(Parameter helpParameter) {
 		helpParameter = ParameterTools.ensureImmutable(helpParameter);
 		Parameter old = this.helpParameter;
+		if (old != null) {
+			removeParameter(old);
+		}
 		if (helpParameter != null) {
 			addParameter(helpParameter);
-		} else if (old != null) {
-			removeParameter(old);
 		}
 		this.helpParameter = helpParameter;
 		return old;

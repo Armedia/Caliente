@@ -27,6 +27,8 @@ public abstract class AbstractLauncher {
 
 	private static final Logger BOOT_LOG = LogConfigurator.getBootLogger();
 
+	private static final String[] NO_ARGS = {};
+
 	protected Logger log = AbstractLauncher.BOOT_LOG;
 
 	protected static final Pattern DEFAULT_COMMAND_PATTERN = Pattern.compile("^[\\w&&[^\\d]]\\w*$");
@@ -59,7 +61,7 @@ public abstract class AbstractLauncher {
 	protected abstract String getProgramName(int pass);
 
 	protected final int launch(ParameterScheme scheme, String... args) {
-		return launch(true, scheme, args);
+		return launch(null, scheme, args);
 	}
 
 	protected boolean initLogging(CommandLineValues cl) {
@@ -92,14 +94,15 @@ public abstract class AbstractLauncher {
 	 * @param cli
 	 * @param command
 	 */
-	protected void extendParameterScheme(int pass, CommandLineScheme scheme, CommandLineValues cli, String command) {
+	protected void extendParameterScheme(int pass, LauncherParameterScheme scheme, CommandLineValues cli,
+		String command) {
 	}
 
 	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
 		return Collections.emptyList();
 	}
 
-	protected Parameter findParameter(Token token, CommandLineScheme scheme) {
+	protected Parameter findParameter(Token token, LauncherParameterScheme scheme) {
 		switch (token.getType()) {
 			case LONG_OPTION:
 				return scheme.getParameter(token.getValue());
@@ -124,12 +127,12 @@ public abstract class AbstractLauncher {
 		return (str != null) && AbstractLauncher.DEFAULT_COMMAND_PATTERN.matcher(str).matches();
 	}
 
-	private void parseArguments(CommandLineValues cli, boolean supportsHelp, final ParameterScheme parameterScheme,
+	private void parseArguments(CommandLineValues cli, Parameter helpParameter, final ParameterScheme parameterScheme,
 		String... args) throws CommandLineParsingException {
 
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
 
-		final CommandLineScheme scheme = new CommandLineScheme(parameterScheme);
+		final LauncherParameterScheme scheme = new LauncherParameterScheme(parameterScheme);
 
 		CommandLineValues cl = null;
 
@@ -146,7 +149,7 @@ public abstract class AbstractLauncher {
 				// isn't (yet) recognized (which is why we wish to extend the scheme)
 				String commandStr = null;
 				if ((token != null) && (token.getType() == Token.Type.STRING) && isCommand(token.getValue())) {
-					commandStr = token.getRawString();
+					commandStr = token.getValue();
 				}
 				// Make sure we clear out the "changed" flag in the scheme, prior to invoking the
 				// "extend" method...
@@ -231,13 +234,20 @@ public abstract class AbstractLauncher {
 		}
 	}
 
-	protected final int launch(boolean supportsHelp, final ParameterScheme parameterScheme, String... args) {
+	protected final int launch(Parameter helpParameter, final ParameterScheme parameterScheme, String... args) {
 		if (parameterScheme == null) { throw new IllegalArgumentException(
 			"Must provide an initial parameter scheme to parse against"); }
+		if (args == null) {
+			args = AbstractLauncher.NO_ARGS;
+		}
+
+		if ((helpParameter != null)
+			|| (parameterScheme.countCollisions(helpParameter) != 1)) { throw new IllegalArgumentException(
+				"The help parameter is not part of the parameter scheme"); }
 
 		CommandLineValues cl = null;
 		try {
-			parseArguments(cl, supportsHelp, parameterScheme, args);
+			parseArguments(cl, helpParameter, parameterScheme, args);
 		} catch (Throwable t) {
 			this.log.error("Failed to process the command-line arguments", t);
 			return -1;

@@ -7,24 +7,6 @@ import java.util.List;
 
 public class ParameterTools {
 
-	public static String calculateKey(Parameter def) {
-		if (def == null) { throw new IllegalArgumentException(
-			"Must provide a parameter definition to calculate a key for"); }
-		return ParameterTools.calculateKey(def.getLongOpt(), def.getShortOpt());
-	}
-
-	public static String calculateKey(String longOpt, String shortOpt) {
-		if ((longOpt == null) && (shortOpt == null)) { throw new IllegalArgumentException(
-			"Must provide at least one short or long option"); }
-		String opt = (longOpt != null ? longOpt : shortOpt.toString());
-		String prefix = (longOpt != null ? "-" : "");
-		return String.format("-%s%s", prefix, opt);
-	}
-
-	static String calculateKey(String longOpt, Character shortOpt) {
-		return ParameterTools.calculateKey(longOpt, shortOpt != null ? shortOpt.toString() : null);
-	}
-
 	/**
 	 * <p>
 	 * Produces a list of the {@link Parameter} instances wrapped by the given wrappers. All

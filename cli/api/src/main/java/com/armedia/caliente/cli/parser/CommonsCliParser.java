@@ -10,11 +10,9 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Option.Builder;
+import org.apache.commons.cli.Options;
 
 import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterTools;
-
-import org.apache.commons.cli.Options;
 
 class CommonsCliState extends CommandLineParserContext {
 	final Options options = new Options();
@@ -106,7 +104,7 @@ public class CommonsCliParser extends CommandLineParser<CommonsCliState> {
 
 	static String calculateKey(Option o) {
 		if (o == null) { throw new IllegalArgumentException("Must provide an option whose key to calculate"); }
-		return ParameterTools.calculateKey(o.getLongOpt(), o.getOpt());
+		return Parameter.calculateKey(o.getLongOpt(), o.getOpt());
 	}
 
 	@Override

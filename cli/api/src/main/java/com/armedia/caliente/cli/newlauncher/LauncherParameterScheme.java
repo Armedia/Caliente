@@ -5,13 +5,13 @@ import java.util.Collection;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterScheme;
 
-public final class CommandLineScheme {
+public final class LauncherParameterScheme {
 
 	private ParameterScheme scheme;
 	private boolean modified = false;
 
-	public CommandLineScheme(ParameterScheme scheme) {
-		this.scheme = scheme;
+	LauncherParameterScheme(ParameterScheme scheme) {
+		this.scheme = new ParameterScheme(scheme);
 	}
 
 	void markUnchanged() {
@@ -22,8 +22,16 @@ public final class CommandLineScheme {
 		return this.modified;
 	}
 
-	public ParameterScheme getScheme() {
-		return this.scheme;
+	Collection<Parameter> removeParameter(Parameter parameter) {
+		return this.scheme.removeParameter(parameter);
+	}
+
+	Parameter removeParameter(String longOpt) {
+		return this.scheme.removeParameter(longOpt);
+	}
+
+	Parameter removeParameter(Character shortOpt) {
+		return this.scheme.removeParameter(shortOpt);
 	}
 
 	public String getName() {
