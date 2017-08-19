@@ -31,7 +31,7 @@ public class CommandScheme extends ParameterScheme {
 	}
 
 	public Parameter setHelpParameter(Parameter helpParameter) {
-		helpParameter = ParameterTools.ensureImmutable(helpParameter);
+		helpParameter = Parameter.ensureImmutable(helpParameter);
 		Parameter old = this.helpParameter;
 		if (old != null) {
 			removeParameter(old);

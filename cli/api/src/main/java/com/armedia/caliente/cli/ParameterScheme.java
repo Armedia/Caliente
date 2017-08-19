@@ -154,7 +154,7 @@ public class ParameterScheme {
 			String.format("Must provide a parameter to %s", add ? "add" : "remove")); }
 
 		// Make sure nobody can change anything on us while we work
-		parameter = ParameterTools.ensureImmutable(parameter);
+		parameter = Parameter.ensureImmutable(parameter);
 
 		final String longOpt = parameter.getLongOpt();
 		final Parameter oldLong = (add ? getParameter(longOpt) : removeParameter(longOpt));

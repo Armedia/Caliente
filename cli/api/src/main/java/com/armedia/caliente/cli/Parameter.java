@@ -128,4 +128,12 @@ public abstract class Parameter {
 		String prefix = (longOpt != null ? "-" : "");
 		return String.format("-%s%s", prefix, opt);
 	}
+
+	static Parameter ensureImmutable(Parameter parameter) {
+		if (parameter == null) { return null; }
+		if (!ImmutableParameter.class.isInstance(parameter)) {
+			parameter = new ImmutableParameter(parameter);
+		}
+		return parameter;
+	}
 }
