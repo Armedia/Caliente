@@ -62,8 +62,9 @@ public abstract class AbstractLauncher {
 		return launch(true, scheme, args);
 	}
 
-	protected void initLogging(CommandLineValues cl) {
+	protected boolean initLogging(CommandLineValues cl) {
 		// By default, do nothing...
+		return false;
 	}
 
 	/**
@@ -230,15 +231,6 @@ public abstract class AbstractLauncher {
 		}
 	}
 
-	private void reportError(String message, Object... args) {
-		// TODO: Do this differently? The log may not yet be active...
-		if (this.log != null) {
-			this.log.error(message, args);
-		} else {
-
-		}
-	}
-
 	protected final int launch(boolean supportsHelp, final ParameterScheme parameterScheme, String... args) {
 		if (parameterScheme == null) { throw new IllegalArgumentException(
 			"Must provide an initial parameter scheme to parse against"); }
@@ -247,7 +239,7 @@ public abstract class AbstractLauncher {
 		try {
 			parseArguments(cl, supportsHelp, parameterScheme, args);
 		} catch (Throwable t) {
-			reportError("Failed to process the command-line arguments", t);
+			this.log.error("Failed to process the command-line arguments", t);
 			return -1;
 		}
 
@@ -255,7 +247,7 @@ public abstract class AbstractLauncher {
 		try {
 			processCommandLine(cl);
 		} catch (CommandLineProcessingException e) {
-			reportError("Failed to process the command-line values", e);
+			this.log.error("Failed to process the command-line values", e);
 			return e.getReturnValue();
 		}
 
@@ -272,7 +264,7 @@ public abstract class AbstractLauncher {
 						try {
 							ClasspathPatcher.addToClassPath(u);
 						} catch (Exception e) {
-							reportError("Failed to apply the a-priori classpath patch [{}]", u, e);
+							this.log.error("Failed to apply the a-priori classpath patch [{}]", u, e);
 							return -1;
 						}
 					}
@@ -290,7 +282,7 @@ public abstract class AbstractLauncher {
 						try {
 							ClasspathPatcher.addToClassPath(u);
 						} catch (Exception e) {
-							reportError("Failed to apply the a-posteriori classpath patch [{}]", u, e);
+							this.log.error("Failed to apply the a-posteriori classpath patch [{}]", u, e);
 							return -1;
 						}
 					}
@@ -300,10 +292,11 @@ public abstract class AbstractLauncher {
 
 		// We have a complete command line, and the final classpath. Let's initialize
 		// the logging.
-		initLogging(cl);
-
-		// Retrieve the logger...
-		this.log = LoggerFactory.getLogger(getClass());
+		if (initLogging(cl)) {
+			// Retrieve the logger post-initialization...if nothing was initialized, we stick to the
+			// same log
+			this.log = LoggerFactory.getLogger(getClass());
+		}
 
 		// The logging is initialized, we can make use of it now.
 		for (String s : ClasspathPatcher.getAdditions()) {
