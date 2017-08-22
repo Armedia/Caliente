@@ -3,7 +3,7 @@ package com.armedia.caliente.cli.launcher;
 import java.net.URL;
 import java.util.Collection;
 
-import com.armedia.caliente.cli.parser.CommandLineValues;
+import com.armedia.caliente.cli.CommandLineValues;
 
 public interface LaunchClasspathHelper {
 

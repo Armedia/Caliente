@@ -1,9 +1,8 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli;
 
 import java.util.List;
 
-import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterWrapper;
+import com.armedia.caliente.cli.parser.CommandLineParameter;
 
 public interface CommandLineValues extends Iterable<CommandLineParameter> {
 

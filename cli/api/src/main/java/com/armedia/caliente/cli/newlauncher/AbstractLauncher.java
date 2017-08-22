@@ -12,12 +12,12 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterScheme;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.log.LogConfigurator;
-import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.token.StaticTokenSource;
 import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.cli.token.TokenLoader;

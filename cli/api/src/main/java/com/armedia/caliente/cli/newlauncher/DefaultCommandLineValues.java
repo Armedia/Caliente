@@ -3,10 +3,10 @@ package com.armedia.caliente.cli.newlauncher;
 import java.util.Iterator;
 import java.util.List;
 
+import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterWrapper;
 import com.armedia.caliente.cli.parser.CommandLineParameter;
-import com.armedia.caliente.cli.parser.CommandLineValues;
 
 public class DefaultCommandLineValues implements CommandLineValues {
 

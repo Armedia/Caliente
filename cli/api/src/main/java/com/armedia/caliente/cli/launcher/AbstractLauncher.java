@@ -8,11 +8,11 @@ import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.parser.CommandLine;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
-import com.armedia.caliente.cli.parser.CommandLineValues;
 
 public abstract class AbstractLauncher {
 	protected static final Logger LOG = LoggerFactory.getLogger(AbstractLauncher.class);

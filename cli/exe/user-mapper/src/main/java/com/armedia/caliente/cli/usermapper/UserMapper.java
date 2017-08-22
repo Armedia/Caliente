@@ -36,7 +36,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.parser.CommandLineValues;
+import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.utils.CliValuePrompt;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.tools.CmfCrypt;

@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.MutableParameter;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
-import com.armedia.caliente.cli.parser.CommandLineValues;
 
 public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspathHelper {
 

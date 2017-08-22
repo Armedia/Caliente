@@ -17,10 +17,10 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.IdValidator;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.RenamedEntryProcessor;
-import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;

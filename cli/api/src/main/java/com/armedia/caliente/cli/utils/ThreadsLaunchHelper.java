@@ -3,10 +3,10 @@ package com.armedia.caliente.cli.utils;
 import java.util.Collection;
 import java.util.Collections;
 
+import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.MutableParameter;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
-import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.commons.utilities.Tools;
 
 public final class ThreadsLaunchHelper implements LaunchParameterSet {

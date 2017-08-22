@@ -5,10 +5,10 @@ import java.io.Console;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.ParameterWrapper;
-import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.commons.utilities.Tools;
 
 public class CliValuePrompt {
