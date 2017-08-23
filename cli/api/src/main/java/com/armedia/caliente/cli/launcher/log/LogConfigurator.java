@@ -39,7 +39,8 @@ public abstract class LogConfigurator {
 	}
 
 	private static LogConfigurator getBootLogInitializer() {
-
+		// We do this manually instead of via Service Discovery because we need to be VERY, VERY
+		// strict with regards to which classes are or aren't loaded...
 		for (Pair<String, String> p : LogConfigurator.INITIALIZERS) {
 			final String detector = p.getLeft();
 			final String initializer = p.getRight();
