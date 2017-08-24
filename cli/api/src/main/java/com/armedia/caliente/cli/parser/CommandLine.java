@@ -22,8 +22,8 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.CommandLineException;
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.MutableParameter;
 import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterDefinition;
 import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.ParameterWrapper;
 import com.armedia.caliente.cli.token.StaticTokenSource;
@@ -37,16 +37,11 @@ public class CommandLine implements CommandLineValues {
 	public static final boolean DEFAULT_HELP = true;
 	public static final boolean DEFAULT_SUPPORTS_INCLUDES = false;
 
-	private static final Parameter HELP;
-
-	static {
-		MutableParameter help = new MutableParameter();
-		help.setLongOpt("help");
-		help.setShortOpt('?');
-		help.setDescription("Show this help message");
-		help.setRequired(false);
-		HELP = help.freezeCopy();
-	}
+	private static final ParameterDefinition HELP = new Parameter() //
+		.setLongOpt("help") //
+		.setShortOpt('?') //
+		.setDescription("Show this help message") //
+		.setRequired(false);
 
 	protected static final String[] NO_ARGS = {};
 
@@ -88,7 +83,7 @@ public class CommandLine implements CommandLineValues {
 		this.supportIncludes = supportIncludes;
 	}
 
-	final void setParameterValues(Parameter p, Collection<String> values) {
+	final void setParameterValues(ParameterDefinition p, Collection<String> values) {
 		if ((values == null) || values.isEmpty()) {
 			values = Collections.emptyList();
 		}
@@ -215,7 +210,7 @@ public class CommandLine implements CommandLineValues {
 		return (longOpt != null);
 	}
 
-	private <P extends Parameter> void assertValid(P param) {
+	private <P extends ParameterDefinition> void assertValid(P param) {
 		Objects.requireNonNull(param, "Must provide a parameter whose presence to check for");
 		String key = param.getKey();
 		if (key == null) { throw new IllegalArgumentException(
@@ -227,7 +222,7 @@ public class CommandLine implements CommandLineValues {
 		}
 	}
 
-	private void assertValidDefinition(Parameter def) throws InvalidParameterException {
+	private void assertValidDefinition(ParameterDefinition def) throws InvalidParameterException {
 		if (def == null) { throw new InvalidParameterException("CommandLineParameter definition may not be null"); }
 
 		final Character shortOpt = def.getShortOpt();
@@ -261,12 +256,12 @@ public class CommandLine implements CommandLineValues {
 		}
 	}
 
-	public final CommandLineParameter define(Parameter def)
+	public final CommandLineParameter define(ParameterDefinition def)
 		throws DuplicateParameterException, InvalidParameterException {
 		return define(def, false);
 	}
 
-	private final CommandLineParameter define(Parameter def, boolean unchecked)
+	private final CommandLineParameter define(ParameterDefinition def, boolean unchecked)
 		throws DuplicateParameterException, InvalidParameterException {
 		if (!unchecked) {
 			assertValidDefinition(def);
@@ -280,7 +275,7 @@ public class CommandLine implements CommandLineValues {
 			if (!unchecked && (shortOpt != null)) {
 				shortParam = this.shortOptions.get(shortOpt);
 				if (shortParam != null) {
-					if (Parameter.isEquivalent(shortParam, def)) {
+					if (ParameterDefinition.isEquivalent(shortParam, def)) {
 						// It's the same parameter, so we can safely return the existing one
 						return shortParam;
 					}
@@ -296,7 +291,7 @@ public class CommandLine implements CommandLineValues {
 			if (!unchecked && (longOpt != null)) {
 				longParam = this.longOptions.get(longOpt);
 				if (longParam != null) {
-					if (Parameter.isEquivalent(longParam, def)) {
+					if (ParameterDefinition.isEquivalent(longParam, def)) {
 						// It's the same parameter, so we can safely return the existing one
 						return longParam;
 					}
@@ -400,15 +395,15 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final boolean isDefined(Parameter parameter) {
-		return (getParameter(parameter) != null);
+	public final boolean isDefined(ParameterDefinition parameterDefinition) {
+		return (getParameter(parameterDefinition) != null);
 	}
 
 	@Override
-	public final CommandLineParameter getParameter(Parameter parameter) {
-		if (parameter == null) { throw new IllegalArgumentException(
+	public final CommandLineParameter getParameter(ParameterDefinition parameterDefinition) {
+		if (parameterDefinition == null) { throw new IllegalArgumentException(
 			"Must provide a parameter definition to retrieve"); }
-		return getParameterByKey(parameter.getKey());
+		return getParameterByKey(parameterDefinition.getKey());
 	}
 
 	protected final CommandLineParameter getParameterByKey(String key) {
@@ -433,19 +428,19 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final Boolean getBoolean(Parameter param) {
+	public final Boolean getBoolean(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Tools.toBoolean(s) : null);
 	}
 
 	@Override
-	public final boolean getBoolean(Parameter param, boolean def) {
+	public final boolean getBoolean(ParameterDefinition param, boolean def) {
 		Boolean v = getBoolean(param);
 		return (v != null ? v.booleanValue() : def);
 	}
 
 	@Override
-	public final List<Boolean> getAllBooleans(Parameter param) {
+	public final List<Boolean> getAllBooleans(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -457,19 +452,19 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final Integer getInteger(Parameter param) {
+	public final Integer getInteger(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Integer.valueOf(s) : null);
 	}
 
 	@Override
-	public final int getInteger(Parameter param, int def) {
+	public final int getInteger(ParameterDefinition param, int def) {
 		Integer v = getInteger(param);
 		return (v != null ? v.intValue() : def);
 	}
 
 	@Override
-	public final List<Integer> getAllIntegers(Parameter param) {
+	public final List<Integer> getAllIntegers(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -481,19 +476,19 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final Long getLong(Parameter param) {
+	public final Long getLong(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Long.valueOf(s) : null);
 	}
 
 	@Override
-	public final long getLong(Parameter param, long def) {
+	public final long getLong(ParameterDefinition param, long def) {
 		Long v = getLong(param);
 		return (v != null ? v.longValue() : def);
 	}
 
 	@Override
-	public final List<Long> getAllLongs(Parameter param) {
+	public final List<Long> getAllLongs(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -505,19 +500,19 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final Float getFloat(Parameter param) {
+	public final Float getFloat(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Float.valueOf(s) : null);
 	}
 
 	@Override
-	public final float getFloat(Parameter param, float def) {
+	public final float getFloat(ParameterDefinition param, float def) {
 		Float v = getFloat(param);
 		return (v != null ? v.floatValue() : def);
 	}
 
 	@Override
-	public final List<Float> getAllFloats(Parameter param) {
+	public final List<Float> getAllFloats(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -529,20 +524,20 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final Double getDouble(Parameter param) {
+	public final Double getDouble(ParameterDefinition param) {
 		String s = getString(param);
 		return (s != null ? Double.valueOf(s) : null);
 	}
 
 	@Override
-	public final double getDouble(Parameter param, double def) {
+	public final double getDouble(ParameterDefinition param, double def) {
 		assertValid(param);
 		Double v = getDouble(param);
 		return (v != null ? v.doubleValue() : def);
 	}
 
 	@Override
-	public final List<Double> getAllDoubles(Parameter param) {
+	public final List<Double> getAllDoubles(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -554,21 +549,21 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final String getString(Parameter param) {
+	public final String getString(ParameterDefinition param) {
 		List<String> l = getAllStrings(param);
 		if ((l == null) || l.isEmpty()) { return param.getDefault(); }
 		return l.get(0);
 	}
 
 	@Override
-	public final String getString(Parameter param, String def) {
+	public final String getString(ParameterDefinition param, String def) {
 		assertValid(param);
 		final String v = getString(param);
 		return (v != null ? v : def);
 	}
 
 	@Override
-	public final List<String> getAllStrings(Parameter param) {
+	public final List<String> getAllStrings(ParameterDefinition param) {
 		assertValid(param);
 		final Lock l = this.rwLock.readLock();
 		l.lock();
@@ -584,7 +579,7 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final List<String> getAllStrings(Parameter param, List<String> def) {
+	public final List<String> getAllStrings(ParameterDefinition param, List<String> def) {
 		assertValid(param);
 		List<String> ret = getAllStrings(param);
 		if (ret == null) { return def; }
@@ -592,7 +587,7 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	@Override
-	public final boolean isPresent(Parameter param) {
+	public final boolean isPresent(ParameterDefinition param) {
 		assertValid(param);
 		final Lock l = this.rwLock.readLock();
 		l.lock();

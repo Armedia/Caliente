@@ -3,7 +3,7 @@ package com.armedia.caliente.cli;
 /**
  * <p>
  * This is a utility interface that helps in the use of classes (like {@link Enum Enums}, for
- * instance) that can be used as a {@link Parameter} analog because they contain a single parameter,
+ * instance) that can be used as a {@link ParameterDefinition} analog because they contain a single parameter,
  * and thus reduce the amount of code written to support a simple coding strategy.
  * </p>
  *
@@ -19,6 +19,6 @@ public interface ParameterWrapper {
 	 *
 	 * @return the parameter
 	 */
-	public Parameter getParameter();
+	public ParameterDefinition getParameter();
 
 }

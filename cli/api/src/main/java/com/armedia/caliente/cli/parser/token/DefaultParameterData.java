@@ -7,12 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterDefinition;
 
 final class DefaultParameterData implements ParameterData {
 
 	private final String name;
-	private final Map<String, Parameter> parameters = new HashMap<>();
+	private final Map<String, ParameterDefinition> parameterDefinitions = new HashMap<>();
 	private final Map<String, List<String>> namedValues = new HashMap<>();
 	private final List<String> positionals = new ArrayList<>();
 
@@ -30,14 +30,14 @@ final class DefaultParameterData implements ParameterData {
 	}
 
 	@Override
-	public Collection<Parameter> getParameters() {
-		return this.parameters.values();
+	public Collection<ParameterDefinition> getParameters() {
+		return this.parameterDefinitions.values();
 	}
 
 	@Override
-	public void addNamedValues(Parameter parameter, List<String> values) throws TooManyParameterValuesException {
-		final String key = parameter.getKey();
-		this.parameters.put(key, parameter);
+	public void addNamedValues(ParameterDefinition parameterDefinition, List<String> values) throws TooManyParameterValuesException {
+		final String key = parameterDefinition.getKey();
+		this.parameterDefinitions.put(key, parameterDefinition);
 		if (values == null) {
 			values = Collections.emptyList();
 		}
@@ -67,8 +67,8 @@ final class DefaultParameterData implements ParameterData {
 	}
 
 	@Override
-	public List<String> getValues(Parameter parameter) {
-		return this.namedValues.get(parameter.getKey());
+	public List<String> getValues(ParameterDefinition parameterDefinition) {
+		return this.namedValues.get(parameterDefinition.getKey());
 	}
 
 	@Override
@@ -78,7 +78,7 @@ final class DefaultParameterData implements ParameterData {
 
 	@Override
 	public String toString() {
-		return String.format("DefaultParameterData [name=%s, parameters=%s, namedValues=%s, positionals=%s]", this.name,
-			this.parameters, this.namedValues, this.positionals);
+		return String.format("DefaultParameterData [name=%s, parameterDefinitions=%s, namedValues=%s, positionals=%s]", this.name,
+			this.parameterDefinitions, this.namedValues, this.positionals);
 	}
 }

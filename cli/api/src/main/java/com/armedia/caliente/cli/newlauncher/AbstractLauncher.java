@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterDefinition;
 import com.armedia.caliente.cli.ParameterScheme;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
@@ -102,7 +102,7 @@ public abstract class AbstractLauncher {
 		return Collections.emptyList();
 	}
 
-	protected Parameter findParameter(Token token, LauncherParameterScheme scheme) {
+	protected ParameterDefinition findParameter(Token token, LauncherParameterScheme scheme) {
 		switch (token.getType()) {
 			case LONG_OPTION:
 				return scheme.getParameter(token.getValue());
@@ -127,7 +127,7 @@ public abstract class AbstractLauncher {
 		return (str != null) && AbstractLauncher.DEFAULT_COMMAND_PATTERN.matcher(str).matches();
 	}
 
-	private void parseArguments(CommandLineValues cli, Parameter helpParameter, final ParameterScheme parameterScheme,
+	private void parseArguments(CommandLineValues cli, ParameterDefinition helpParameter, final ParameterScheme parameterScheme,
 		String... args) throws CommandLineParsingException {
 
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
@@ -138,7 +138,7 @@ public abstract class AbstractLauncher {
 
 		boolean first = true;
 		Token token = null;
-		Parameter parameter = null;
+		ParameterDefinition parameterDefinition = null;
 		int pass = 0;
 		nextScheme: while (true) {
 
@@ -182,13 +182,13 @@ public abstract class AbstractLauncher {
 				}
 
 				if (token.getType() == Token.Type.STRING) {
-					if (parameter == null) {
+					if (parameterDefinition == null) {
 						// This is not a flag, and not a parameter to one, so this is by
 						// definition the "first unrecognized parameter"
 						continue nextScheme;
 					}
 
-					if (parameter.getMaxValueCount() != 0) {
+					if (parameterDefinition.getMaxValueCount() != 0) {
 						// TODO Split the string, and set the value as the arguments. If it's a
 						// repeat within this scheme, then append the arguments. If the argument
 						// count is violated, then have a problem
@@ -197,13 +197,13 @@ public abstract class AbstractLauncher {
 						// definition unrecognized, so we have a problem... SYNTAX ERROR!
 					}
 				} else {
-					if (parameter != null) {
+					if (parameterDefinition != null) {
 						// TODO: Validate that the parameter count requirements for p are met,
 						// and we can move on. If they're not, then we have a "syntax" issue
 					}
 
-					parameter = findParameter(token, scheme);
-					if (parameter == null) {
+					parameterDefinition = findParameter(token, scheme);
+					if (parameterDefinition == null) {
 						// First unrecognized parameter
 						continue nextScheme;
 					}
@@ -234,7 +234,7 @@ public abstract class AbstractLauncher {
 		}
 	}
 
-	protected final int launch(Parameter helpParameter, final ParameterScheme parameterScheme, String... args) {
+	protected final int launch(ParameterDefinition helpParameter, final ParameterScheme parameterScheme, String... args) {
 		if (parameterScheme == null) { throw new IllegalArgumentException(
 			"Must provide an initial parameter scheme to parse against"); }
 		if (args == null) {

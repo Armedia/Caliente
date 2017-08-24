@@ -6,7 +6,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterDefinition;
 import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.ParameterWrapper;
 import com.armedia.commons.utilities.Tools;
@@ -61,7 +61,7 @@ public class CliValuePrompt {
 		return CliValuePrompt.getUsername(cli, ParameterTools.unwrap(param), prompt, promptParams);
 	}
 
-	public static final String getUsername(CommandLineValues cli, Parameter param, String prompt,
+	public static final String getUsername(CommandLineValues cli, ParameterDefinition param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt
 			.getString(CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(false, prompt, promptParams)));
@@ -77,12 +77,12 @@ public class CliValuePrompt {
 		return CliValuePrompt.getPassword(cli, ParameterTools.unwrap(param), prompt, promptParams);
 	}
 
-	public static final String getPasswordString(CommandLineValues cli, Parameter param, String prompt,
+	public static final String getPasswordString(CommandLineValues cli, ParameterDefinition param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt.getString(CliValuePrompt.getPassword(cli, param, prompt, promptParams));
 	}
 
-	public static final char[] getPassword(CommandLineValues cli, Parameter param, String prompt,
+	public static final char[] getPassword(CommandLineValues cli, ParameterDefinition param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(true, prompt, promptParams));
 	}
@@ -92,7 +92,7 @@ public class CliValuePrompt {
 		return CliValuePrompt.getPromptableValue(cli, ParameterTools.unwrap(param), promptCallback);
 	}
 
-	public static final char[] getPromptableValue(CommandLineValues cli, Parameter param,
+	public static final char[] getPromptableValue(CommandLineValues cli, ParameterDefinition param,
 		PromptCallback promptCallback) {
 		// If the parameter is given, return its value
 		if ((cli != null) && (param != null)

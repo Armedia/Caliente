@@ -13,26 +13,25 @@ public class CommandScheme extends ParameterScheme {
 		super(name);
 	}
 
-	private Parameter helpParameter = null;
+	private ParameterDefinition helpParameter = null;
 
 	private final Map<String, Command> commands = new TreeMap<>();
 
-	public Parameter getHelpParameter() {
+	public ParameterDefinition getHelpParameter() {
 		return this.helpParameter;
 	}
 
 	/**
-	 * Identical to invoking {@link #setHelpParameter(Parameter) setHelpParameter(null)}.
+	 * Identical to invoking {@link #setHelpParameter(ParameterDefinition) setHelpParameter(null)}.
 	 *
 	 * @return the previous help parameter that was configured, or {@code null} if there was none
 	 */
-	public Parameter clearHelpParameter() {
+	public ParameterDefinition clearHelpParameter() {
 		return setHelpParameter(null);
 	}
 
-	public Parameter setHelpParameter(Parameter helpParameter) {
-		helpParameter = Parameter.ensureImmutable(helpParameter);
-		Parameter old = this.helpParameter;
+	public ParameterDefinition setHelpParameter(ParameterDefinition helpParameter) {
+		ParameterDefinition old = this.helpParameter;
 		if (old != null) {
 			removeParameter(old);
 		}

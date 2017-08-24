@@ -3,7 +3,7 @@ package com.armedia.caliente.cli.parser;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterDefinition;
 
 public class CommandLineParserContext {
 	protected final CommandLine cl;
@@ -13,11 +13,11 @@ public class CommandLineParserContext {
 		this.cl = cl;
 	}
 
-	public void setParameter(Parameter p) {
+	public void setParameter(ParameterDefinition p) {
 		setParameter(p, null);
 	}
 
-	public void setParameter(Parameter p, Collection<String> values) {
+	public void setParameter(ParameterDefinition p, Collection<String> values) {
 		if (p == null) { throw new IllegalArgumentException("Must provide a parameter to set"); }
 		if (values == null) {
 			values = Collections.emptyList();

@@ -4,18 +4,17 @@ import java.util.List;
 import java.util.Set;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.ImmutableParameter;
-import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterDefinition;
 import com.armedia.commons.utilities.Tools;
 
-public final class CommandLineParameter extends Parameter implements Comparable<CommandLineParameter> {
+public final class CommandLineParameter extends ParameterDefinition implements Comparable<CommandLineParameter> {
 	private final String cliKey;
 	private final CommandLineValues cli;
-	private final Parameter def;
+	private final ParameterDefinition def;
 
-	CommandLineParameter(CommandLineValues cli, Parameter def) {
+	CommandLineParameter(CommandLineValues cli, ParameterDefinition def) {
 		this.cli = cli;
-		this.def = new ImmutableParameter(def);
+		this.def = def;
 		this.cliKey = this.def.getKey();
 	}
 

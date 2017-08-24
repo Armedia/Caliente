@@ -11,10 +11,10 @@ import java.util.TreeMap;
 public class ParameterScheme {
 
 	private final String name;
-	private final Map<String, Parameter> requiredParameters = new TreeMap<>();
-	private final Map<String, Parameter> parameters = new TreeMap<>();
-	private final Map<String, Parameter> longKeys = new HashMap<>();
-	private final Map<Character, Parameter> shortKeys = new HashMap<>();
+	private final Map<String, ParameterDefinition> requiredParameters = new TreeMap<>();
+	private final Map<String, ParameterDefinition> parameterDefinitions = new TreeMap<>();
+	private final Map<String, ParameterDefinition> longKeys = new HashMap<>();
+	private final Map<Character, ParameterDefinition> shortKeys = new HashMap<>();
 	private int minArgs = 0;
 	private int maxArgs = -1;
 
@@ -29,7 +29,7 @@ public class ParameterScheme {
 	public ParameterScheme(ParameterScheme pattern) {
 		this.name = pattern.getName();
 		this.requiredParameters.putAll(pattern.requiredParameters);
-		this.parameters.putAll(pattern.parameters);
+		this.parameterDefinitions.putAll(pattern.parameterDefinitions);
 		this.longKeys.putAll(pattern.longKeys);
 		this.shortKeys.putAll(pattern.shortKeys);
 		this.minArgs = pattern.minArgs;
@@ -118,7 +118,7 @@ public class ParameterScheme {
 		}
 	}
 
-	private static Collection<Parameter> buildCollection(Parameter a, Parameter b) {
+	private static Collection<ParameterDefinition> buildCollection(ParameterDefinition a, ParameterDefinition b) {
 		if ((a == null) && (b == null)) { return null; }
 		if ((a == null) || (b == null)) { return Collections.unmodifiableCollection(Arrays.asList(a != null ? a : b)); }
 		if (a == b) { return Collections.unmodifiableCollection(Collections.singleton(a)); }
@@ -132,7 +132,7 @@ public class ParameterScheme {
 	 *            the long option
 	 * @return the parameter in this scheme which matches the given long option
 	 */
-	public final Parameter getParameter(String longOpt) {
+	public final ParameterDefinition getParameter(String longOpt) {
 		if (longOpt == null) { return null; }
 		return this.longKeys.get(longOpt);
 	}
@@ -144,22 +144,20 @@ public class ParameterScheme {
 	 *            the short option
 	 * @return the parameter in this scheme which matches the given short option
 	 */
-	public final Parameter getParameter(Character shortOpt) {
+	public final ParameterDefinition getParameter(Character shortOpt) {
 		if (shortOpt == null) { return null; }
 		return this.shortKeys.get(shortOpt);
 	}
 
-	private final Collection<Parameter> replaceParameter(Parameter parameter, boolean add) {
-		if (parameter == null) { throw new IllegalArgumentException(
+	private final Collection<ParameterDefinition> replaceParameter(ParameterDefinition parameterDefinition,
+		boolean add) {
+		if (parameterDefinition == null) { throw new IllegalArgumentException(
 			String.format("Must provide a parameter to %s", add ? "add" : "remove")); }
 
-		// Make sure nobody can change anything on us while we work
-		parameter = Parameter.ensureImmutable(parameter);
-
-		final String longOpt = parameter.getLongOpt();
-		final Parameter oldLong = (add ? getParameter(longOpt) : removeParameter(longOpt));
-		final Character shortOpt = parameter.getShortOpt();
-		final Parameter oldShort = (add ? getParameter(shortOpt) : removeParameter(shortOpt));
+		final String longOpt = parameterDefinition.getLongOpt();
+		final ParameterDefinition oldLong = (add ? getParameter(longOpt) : removeParameter(longOpt));
+		final Character shortOpt = parameterDefinition.getShortOpt();
+		final ParameterDefinition oldShort = (add ? getParameter(shortOpt) : removeParameter(shortOpt));
 
 		if (add) {
 			if ((oldLong != null) || (oldShort != null)) {
@@ -173,21 +171,21 @@ public class ParameterScheme {
 				}
 
 				throw new IllegalArgumentException(
-					String.format("The given parameter %s would collide with %s", parameter, msgParam));
+					String.format("The given parameter %s would collide with %s", parameterDefinition, msgParam));
 			}
 
 			if (longOpt != null) {
 				removeParameter(longOpt);
-				this.longKeys.put(longOpt, parameter);
+				this.longKeys.put(longOpt, parameterDefinition);
 			}
 			if (shortOpt != null) {
 				removeParameter(shortOpt);
-				this.shortKeys.put(shortOpt, parameter);
+				this.shortKeys.put(shortOpt, parameterDefinition);
 			}
-			final String key = parameter.getKey();
-			this.parameters.put(key, parameter);
-			if (parameter.isRequired()) {
-				this.requiredParameters.put(key, parameter);
+			final String key = parameterDefinition.getKey();
+			this.parameterDefinitions.put(key, parameterDefinition);
+			if (parameterDefinition.isRequired()) {
+				this.requiredParameters.put(key, parameterDefinition);
 			}
 		}
 		return ParameterScheme.buildCollection(oldShort, oldLong);
@@ -196,26 +194,27 @@ public class ParameterScheme {
 	/**
 	 * Adds the given parameter to this parameter scheme.
 	 *
-	 * @param parameter
+	 * @param parameterDefinition
 	 *            the parameter to add
 	 * @throws IllegalArgumentException
-	 *             if the given parameter collides with any already-existing parameters (you can
-	 *             check with {@link #hasParameter(Character)}, {@link #hasParameter(String)}, or
-	 *             {@link #countCollisions(Parameter)}
+	 *             if the given parameter collides with any already-existing parameterDefinitions
+	 *             (you can check with {@link #hasParameter(Character)},
+	 *             {@link #hasParameter(String)}, or {@link #countCollisions(ParameterDefinition)}
 	 */
-	public final void addParameter(Parameter parameter) {
-		replaceParameter(parameter, true);
+	public final void addParameter(ParameterDefinition parameterDefinition) {
+		replaceParameter(parameterDefinition, true);
 	}
 
 	/**
-	 * Adds all the given parameters (i.e. invoke {@link #addParameter(Parameter) add} for each
-	 * non-{@code null} parameter in the array).
+	 * Adds all the given parameterDefinitions (i.e. invoke
+	 * {@link #addParameter(ParameterDefinition) add} for each non-{@code null} parameter in the
+	 * array).
 	 *
 	 * @param parameters
 	 */
-	public final void addParameters(Parameter... parameters) {
+	public final void addParameters(ParameterDefinition... parameters) {
 		if (parameters == null) { throw new IllegalArgumentException("Must provide a non-null parameter array"); }
-		for (Parameter p : parameters) {
+		for (ParameterDefinition p : parameters) {
 			if (p != null) {
 				addParameter(p);
 			}
@@ -223,15 +222,16 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Remove any and all parameters (a maximum of 2) that may collide with the given parameter's
-	 * short or long option forms. If {@code null} is returned, then there was no collision.
+	 * Remove any and all parameterDefinitions (a maximum of 2) that may collide with the given
+	 * parameter's short or long option forms. If {@code null} is returned, then there was no
+	 * collision.
 	 *
-	 * @param parameter
+	 * @param parameterDefinition
 	 *            the parameter to check against
-	 * @return the parameters that were removed
+	 * @return the parameterDefinitions that were removed
 	 */
-	public final Collection<Parameter> removeParameter(Parameter parameter) {
-		return replaceParameter(parameter, false);
+	public final Collection<ParameterDefinition> removeParameter(ParameterDefinition parameterDefinition) {
+		return replaceParameter(parameterDefinition, false);
 	}
 
 	/**
@@ -241,12 +241,12 @@ public class ParameterScheme {
 	 *            the long option
 	 * @return the parameter which matches the given long option, or {@code null} if none matches.
 	 */
-	public final Parameter removeParameter(String longOpt) {
+	public final ParameterDefinition removeParameter(String longOpt) {
 		if (longOpt == null) { return null; }
-		Parameter old = this.longKeys.remove(longOpt);
+		ParameterDefinition old = this.longKeys.remove(longOpt);
 		if (old == null) { return null; }
 		final String oldKey = old.getKey();
-		this.parameters.remove(oldKey);
+		this.parameterDefinitions.remove(oldKey);
 		this.requiredParameters.remove(oldKey);
 		Character shortOpt = old.getShortOpt();
 		if (shortOpt != null) {
@@ -262,12 +262,12 @@ public class ParameterScheme {
 	 *            the short option
 	 * @return the parameter which matches the given short option, or {@code null} if none matches.
 	 */
-	public final Parameter removeParameter(Character shortOpt) {
+	public final ParameterDefinition removeParameter(Character shortOpt) {
 		if (shortOpt == null) { return null; }
-		Parameter old = this.shortKeys.remove(shortOpt);
+		ParameterDefinition old = this.shortKeys.remove(shortOpt);
 		if (old == null) { return null; }
 		final String oldKey = old.getKey();
-		this.parameters.remove(oldKey);
+		this.parameterDefinitions.remove(oldKey);
 		this.requiredParameters.remove(oldKey);
 		String longOpt = old.getLongOpt();
 		if (longOpt != null) {
@@ -277,43 +277,44 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Returns a {@link Collection} containing the parameters defined in this scheme. The collection
-	 * returned is independent and changes to it will not reflect on this ParameterScheme instance.
+	 * Returns a {@link Collection} containing the parameterDefinitions defined in this scheme. The
+	 * collection returned is independent and changes to it will not reflect on this ParameterScheme
+	 * instance.
 	 *
-	 * @return a {@link Collection} containing the parameters defined in this scheme
+	 * @return a {@link Collection} containing the parameterDefinitions defined in this scheme
 	 */
-	public final Collection<Parameter> getParameters() {
-		return new ArrayList<>(this.parameters.values());
+	public final Collection<ParameterDefinition> getParameters() {
+		return new ArrayList<>(this.parameterDefinitions.values());
 	}
 
 	/**
-	 * Returns a collection of the parameters in this scheme that have required flag set (as
-	 * determined by {@link Parameter#isRequired()}). The collection returned is a copy, and changes
-	 * to it do not affect this scheme's contents.
+	 * Returns a collection of the parameterDefinitions in this scheme that have required flag set
+	 * (as determined by {@link ParameterDefinition#isRequired()}). The collection returned is a
+	 * copy, and changes to it do not affect this scheme's contents.
 	 *
-	 * @return the parameters in this scheme that have required flag set
+	 * @return the parameterDefinitions in this scheme that have required flag set
 	 */
-	public final Collection<Parameter> getRequiredParameters() {
+	public final Collection<ParameterDefinition> getRequiredParameters() {
 		return new ArrayList<>(this.requiredParameters.values());
 	}
 
 	/**
-	 * Returns the number of parameters in this scheme that have required flag set (as determined by
-	 * {@link Parameter#isRequired()}).
+	 * Returns the number of parameterDefinitions in this scheme that have required flag set (as
+	 * determined by {@link ParameterDefinition#isRequired()}).
 	 *
-	 * @return the number of parameters in this scheme that have required flag set
+	 * @return the number of parameterDefinitions in this scheme that have required flag set
 	 */
 	public final int getRequiredParameterCount() {
 		return this.requiredParameters.size();
 	}
 
 	/**
-	 * Returns the number of parameters defined in this scheme.
+	 * Returns the number of parameterDefinitions defined in this scheme.
 	 *
-	 * @return the number of parameters defined in this scheme.
+	 * @return the number of parameterDefinitions defined in this scheme.
 	 */
 	public final int getParameterCount() {
-		return this.parameters.size();
+		return this.parameterDefinitions.size();
 	}
 
 	/**
@@ -342,55 +343,56 @@ public class ParameterScheme {
 
 	/**
 	 * Returns {@code true} if and only if this parameter scheme contains a parameter that
-	 * equivalent (as per {@link Parameter#isEquivalent(Parameter, Parameter)}) to the given
-	 * parameter, {@code false} otherwise.
+	 * equivalent (as per
+	 * {@link ParameterDefinition#isEquivalent(ParameterDefinition, ParameterDefinition)}) to the
+	 * given parameter, {@code false} otherwise.
 	 *
-	 * @param parameter
+	 * @param parameterDefinition
 	 * @return {@code true} if and only if this parameter scheme contains a parameter that exactly
 	 *         matches the given parameter in both long and short options, {@code false} otherwise.
 	 *
 	 */
-	public final boolean hasEquivalentParameter(Parameter parameter) {
-		Collection<Parameter> collisions = findCollisions(parameter);
+	public final boolean hasEquivalentParameter(ParameterDefinition parameterDefinition) {
+		Collection<ParameterDefinition> collisions = findCollisions(parameterDefinition);
 		if ((collisions == null) || (collisions.size() != 1)) { return false; }
-		Parameter current = collisions.iterator().next();
-		return Parameter.isEquivalent(parameter, current);
+		ParameterDefinition current = collisions.iterator().next();
+		return ParameterDefinition.isEquivalent(parameterDefinition, current);
 	}
 
 	/**
-	 * Returns the number of parameters already in this scheme that would collide with the given
-	 * parameter based on short or long options. This means that only 3 values can be returned: 0,
-	 * 1, or 2.
+	 * Returns the number of parameterDefinitions already in this scheme that would collide with the
+	 * given parameter based on short or long options. This means that only 3 values can be
+	 * returned: 0, 1, or 2.
 	 *
-	 * @param parameter
-	 * @return the number of parameters already in this scheme that would collide with the given
-	 *         parameter based on short or long options
+	 * @param parameterDefinition
+	 * @return the number of parameterDefinitions already in this scheme that would collide with the
+	 *         given parameter based on short or long options
 	 */
-	public final int countCollisions(Parameter parameter) {
-		Collection<Parameter> collisions = findCollisions(parameter);
+	public final int countCollisions(ParameterDefinition parameterDefinition) {
+		Collection<ParameterDefinition> collisions = findCollisions(parameterDefinition);
 		if ((collisions == null) || collisions.isEmpty()) { return 0; }
 		return collisions.size();
 	}
 
 	/**
-	 * Returns the parameters already in this scheme that would collide with the given parameter
-	 * based on short or long options. If no collisions are found, {@code null} is returned. This
-	 * means that the collection may contain either 1 or 2 elements.
+	 * Returns the parameterDefinitions already in this scheme that would collide with the given
+	 * parameter based on short or long options. If no collisions are found, {@code null} is
+	 * returned. This means that the collection may contain either 1 or 2 elements.
 	 *
-	 * @param parameter
+	 * @param parameterDefinition
 	 *            the parameter to check for
-	 * @return the parameters already in this scheme that would collide with the given parameter
-	 *         based on short or long options, or {@code null} if none collide
+	 * @return the parameterDefinitions already in this scheme that would collide with the given
+	 *         parameter based on short or long options, or {@code null} if none collide
 	 */
-	public final Collection<Parameter> findCollisions(Parameter parameter) {
-		if (parameter == null) { throw new IllegalArgumentException("Must provide a non-null parameter"); }
-		String longOpt = parameter.getLongOpt();
-		Parameter longParam = null;
+	public final Collection<ParameterDefinition> findCollisions(ParameterDefinition parameterDefinition) {
+		if (parameterDefinition == null) { throw new IllegalArgumentException("Must provide a non-null parameter"); }
+		String longOpt = parameterDefinition.getLongOpt();
+		ParameterDefinition longParam = null;
 		if (longOpt != null) {
 			longParam = this.longKeys.get(longOpt);
 		}
-		Character shortOpt = parameter.getShortOpt();
-		Parameter shortParam = null;
+		Character shortOpt = parameterDefinition.getShortOpt();
+		ParameterDefinition shortParam = null;
 		if (shortOpt != null) {
 			shortParam = this.shortKeys.get(shortOpt);
 		}

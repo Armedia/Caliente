@@ -1,11 +1,11 @@
 package com.armedia.caliente.cli.validator;
 
-import com.armedia.caliente.cli.MutableParameter;
 import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterDefinition;
 import com.armedia.caliente.cli.ParameterWrapper;
 
 public enum CLIParam implements ParameterWrapper {
-	bulk_import(new MutableParameter() //
+	bulk_import(new Parameter() //
 		.setRequired(true) //
 		.setShortOpt('i') //
 		.setMinValueCount(1) //
@@ -13,7 +13,7 @@ public enum CLIParam implements ParameterWrapper {
 		.setValueName("bulk import directory") //
 		.setDescription("The location of the Bulk Import source data") //
 	), //
-	bulk_export(new MutableParameter() //
+	bulk_export(new Parameter() //
 		.setRequired(true) //
 		.setShortOpt('e') //
 		.setMinValueCount(1) //
@@ -21,14 +21,14 @@ public enum CLIParam implements ParameterWrapper {
 		.setValueName("bulk export directory") //
 		.setDescription("The location of the Bulk Export validation data") //
 	), //
-	report_dir(new MutableParameter() //
+	report_dir(new Parameter() //
 		.setShortOpt('r') //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("directory") //
 		.setDescription("The directory where the validation reports will be output to") //
 	), //
-	model(new MutableParameter() //
+	model(new Parameter() //
 		.setRequired(true) //
 		.setShortOpt('m') //
 		.setMinValueCount(1) //
@@ -39,14 +39,14 @@ public enum CLIParam implements ParameterWrapper {
 		//
 	;
 
-	private final Parameter parameter;
+	private final ParameterDefinition parameterDefinition;
 
-	private CLIParam(MutableParameter parameter) {
-		this.parameter = MutableParameter.initOptionName(this, parameter).freezeCopy();
+	private CLIParam(Parameter parameter) {
+		this.parameterDefinition = Parameter.initOptionName(this, parameter);
 	}
 
 	@Override
-	public Parameter getParameter() {
-		return this.parameter;
+	public ParameterDefinition getParameter() {
+		return this.parameterDefinition;
 	}
 }

@@ -22,53 +22,53 @@ public interface CommandLineValues extends Iterable<CommandLineParameter> {
 
 	public boolean hasParameter(String longOpt);
 
-	public boolean isDefined(Parameter param);
+	public boolean isDefined(ParameterDefinition param);
 
-	public CommandLineParameter getParameter(Parameter param);
+	public CommandLineParameter getParameter(ParameterDefinition param);
 
 	public boolean hasHelpParameter();
 
 	public CommandLineParameter getHelpParameter();
 
-	public Boolean getBoolean(Parameter param);
+	public Boolean getBoolean(ParameterDefinition param);
 
-	public boolean getBoolean(Parameter param, boolean def);
+	public boolean getBoolean(ParameterDefinition param, boolean def);
 
-	public List<Boolean> getAllBooleans(Parameter param);
+	public List<Boolean> getAllBooleans(ParameterDefinition param);
 
-	public Integer getInteger(Parameter param);
+	public Integer getInteger(ParameterDefinition param);
 
-	public int getInteger(Parameter param, int def);
+	public int getInteger(ParameterDefinition param, int def);
 
-	public List<Integer> getAllIntegers(Parameter param);
+	public List<Integer> getAllIntegers(ParameterDefinition param);
 
-	public Long getLong(Parameter param);
+	public Long getLong(ParameterDefinition param);
 
-	public long getLong(Parameter param, long def);
+	public long getLong(ParameterDefinition param, long def);
 
-	public List<Long> getAllLongs(Parameter param);
+	public List<Long> getAllLongs(ParameterDefinition param);
 
-	public Float getFloat(Parameter param);
+	public Float getFloat(ParameterDefinition param);
 
-	public float getFloat(Parameter param, float def);
+	public float getFloat(ParameterDefinition param, float def);
 
-	public List<Float> getAllFloats(Parameter param);
+	public List<Float> getAllFloats(ParameterDefinition param);
 
-	public Double getDouble(Parameter param);
+	public Double getDouble(ParameterDefinition param);
 
-	public double getDouble(Parameter param, double def);
+	public double getDouble(ParameterDefinition param, double def);
 
-	public List<Double> getAllDoubles(Parameter param);
+	public List<Double> getAllDoubles(ParameterDefinition param);
 
-	public String getString(Parameter param);
+	public String getString(ParameterDefinition param);
 
-	public String getString(Parameter param, String def);
+	public String getString(ParameterDefinition param, String def);
 
-	public List<String> getAllStrings(Parameter param);
+	public List<String> getAllStrings(ParameterDefinition param);
 
-	public List<String> getAllStrings(Parameter param, List<String> def);
+	public List<String> getAllStrings(ParameterDefinition param, List<String> def);
 
-	public boolean isPresent(Parameter param);
+	public boolean isPresent(ParameterDefinition param);
 
 	public List<String> getPositionalValues();
 

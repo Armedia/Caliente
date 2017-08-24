@@ -1,16 +1,16 @@
 package com.armedia.caliente.cli.parser;
 
 import com.armedia.caliente.cli.CommandLineException;
-import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterDefinition;
 
 public class DuplicateParameterException extends CommandLineException {
 	private static final long serialVersionUID = 1L;
 
-	private final Parameter existing;
-	private final Parameter incoming;
+	private final ParameterDefinition existing;
+	private final ParameterDefinition incoming;
 
-	public DuplicateParameterException(String msg, Parameter existing,
-		Parameter incoming) {
+	public DuplicateParameterException(String msg, ParameterDefinition existing,
+		ParameterDefinition incoming) {
 		super(msg);
 		if (existing == null) { throw new IllegalArgumentException("Must have an existing value"); }
 		if (incoming == null) { throw new IllegalArgumentException("Must have an incoming value"); }
@@ -20,11 +20,11 @@ public class DuplicateParameterException extends CommandLineException {
 		this.incoming = incoming;
 	}
 
-	public Parameter getExisting() {
+	public ParameterDefinition getExisting() {
 		return this.existing;
 	}
 
-	public Parameter getIncoming() {
+	public ParameterDefinition getIncoming() {
 		return this.incoming;
 	}
 }

@@ -12,22 +12,21 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.MutableParameter;
 import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterDefinition;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 
 public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspathHelper {
 
-	private static final Parameter LIB = new MutableParameter() //
+	private static final ParameterDefinition LIB = new Parameter() //
 		.setShortOpt('l') //
 		.setLongOpt("lib") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("directory") //
 		.setDescription(
-			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
-		.freezeCopy();
+			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath");
 
 	private static final FileFilter LIB_FILTER = new FileFilter() {
 		@Override
@@ -58,7 +57,7 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
+	public Collection<? extends ParameterDefinition> getParameters(CommandLineValues commandLine) {
 		return Collections.singleton(LibLaunchHelper.LIB);
 	}
 
