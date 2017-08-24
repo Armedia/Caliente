@@ -81,17 +81,36 @@ for (Token t : tokenLoader) {
 
 
 
-
-StaticCommandLine {
-	ParameterScheme getGlobalScheme()
-	Collection<CommandScheme> getCommands()
-	boolean allowMultipleCommands
+/**
+  * The simplest parsing possible
+  */
+CLIResult parse(ParameterScheme scheme) {
+		// Parse based on a simple, static scheme
 }
 
-CommandLineResult parseStatic(StaticCommandLine scl) throws UnknownCommandException, UnknownParameterException {
+/**
+  * Parse commands until...
+  *     - the first flag (-x or --xxx) is found that isn't covered by the common parameter scheme
+  *         * this is an unrecoverable error (UnknownParameterException)
+  *     - the first non-flag parameter is found
+  *         - if this parameter is not a command (or an alias of one), this is an unrecoverable error (UnknownCommandException)
+  *         - if this is a command, then continue parsing the rest of the command line using only the command's parameter scheme
+  *             - any unrecognized, out-of-place, or out-of-schema tokens trigger unrecoverable errors
+  */
+CommandCLIScheme {
+	ParameterScheme getCommonParameters()
+	Collection<CommandScheme> getCommands()
+}
+
+CommandCLIResult parseCommand(CommandCLIScheme scheme) throws UnknownCommandException, UnknownParameterException {
 		// Parse based on a static scheme
 }
 
+
+
+/**
+  * 
+  */
 
 SchemeAugmentor {
 	augmentScheme(DynamicScheme dynamicScheme, Token.Type firstUnknownType, String firstUnknownValue, CommandLineValues globalValues, Map<String, CommandLineValues> commandValues) {
@@ -99,6 +118,6 @@ SchemeAugmentor {
 	}
 }
 
-CommandLineResult parseDynamic(ParameterScheme baseScheme, SchemeAugmentor augmentor) {
+DynamicCLIResult parseDynamic(ParameterScheme baseScheme, SchemeAugmentor augmentor) {
 
 }
