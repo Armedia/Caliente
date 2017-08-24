@@ -45,8 +45,7 @@ public class CommandScheme extends ParameterScheme {
 	}
 
 	public boolean hasCommand(String name) {
-		if (name == null) { throw new IllegalArgumentException("Must provide a non-null name"); }
-		return this.commands.containsKey(name);
+		return (getCommand(name) != null);
 	}
 
 	public int getCommandCount() {
