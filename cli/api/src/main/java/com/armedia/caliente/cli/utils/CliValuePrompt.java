@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.ParameterDefinition;
-import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.ParameterWrapper;
 import com.armedia.commons.utilities.Tools;
 
@@ -58,7 +57,7 @@ public class CliValuePrompt {
 
 	public static final String getUsername(CommandLineValues cli, ParameterWrapper param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getUsername(cli, ParameterTools.unwrap(param), prompt, promptParams);
+		return CliValuePrompt.getUsername(cli, ParameterDefinition.unwrap(param), prompt, promptParams);
 	}
 
 	public static final String getUsername(CommandLineValues cli, ParameterDefinition param, String prompt,
@@ -69,12 +68,12 @@ public class CliValuePrompt {
 
 	public static final String getPasswordString(CommandLineValues cli, ParameterWrapper param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getPasswordString(cli, ParameterTools.unwrap(param), prompt, promptParams);
+		return CliValuePrompt.getPasswordString(cli, ParameterDefinition.unwrap(param), prompt, promptParams);
 	}
 
 	public static final char[] getPassword(CommandLineValues cli, ParameterWrapper param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getPassword(cli, ParameterTools.unwrap(param), prompt, promptParams);
+		return CliValuePrompt.getPassword(cli, ParameterDefinition.unwrap(param), prompt, promptParams);
 	}
 
 	public static final String getPasswordString(CommandLineValues cli, ParameterDefinition param, String prompt,
@@ -89,7 +88,7 @@ public class CliValuePrompt {
 
 	public static final char[] getPromptableValue(CommandLineValues cli, ParameterWrapper param,
 		PromptCallback promptCallback) {
-		return CliValuePrompt.getPromptableValue(cli, ParameterTools.unwrap(param), promptCallback);
+		return CliValuePrompt.getPromptableValue(cli, ParameterDefinition.unwrap(param), promptCallback);
 	}
 
 	public static final char[] getPromptableValue(CommandLineValues cli, ParameterDefinition param,

@@ -9,9 +9,9 @@ public class ParameterTools {
 
 	/**
 	 * <p>
-	 * Produces a list of the {@link ParameterDefinition} instances wrapped by the given wrappers. All
-	 * {@code null} values are filtered out and not preserved. If the array given is {@code null},
-	 * the {@code null} value is returned.
+	 * Produces a list of the {@link ParameterDefinition} instances wrapped by the given wrappers.
+	 * All {@code null} values are filtered out and not preserved. If the array given is
+	 * {@code null}, the {@code null} value is returned.
 	 * </p>
 	 *
 	 * @param wrappers
@@ -24,8 +24,8 @@ public class ParameterTools {
 
 	/**
 	 * <p>
-	 * Produces a list of the {@link ParameterDefinition} instances wrapped by the given wrappers. All
-	 * {@code null} values are filtered out and not preserved. If the collection given is
+	 * Produces a list of the {@link ParameterDefinition} instances wrapped by the given wrappers.
+	 * All {@code null} values are filtered out and not preserved. If the collection given is
 	 * {@code null}, the {@code null} value is returned.
 	 * </p>
 	 *
@@ -46,19 +46,5 @@ public class ParameterTools {
 			l.add(p);
 		}
 		return l;
-	}
-
-	/**
-	 * <p>
-	 * Extracts the {@link ParameterDefinition} instance from the given wrapper. It'll return {@code null} if
-	 * either the wrapper itself is {@code null}, or if its wrapped parameter is {@code null}.
-	 * </p>
-	 *
-	 * @param wrapper
-	 * @return the {@link ParameterDefinition} instance from the given wrapper
-	 */
-	public static ParameterDefinition unwrap(ParameterWrapper wrapper) {
-		if (wrapper == null) { return null; }
-		return wrapper.getParameter();
 	}
 }

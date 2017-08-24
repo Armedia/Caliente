@@ -24,7 +24,6 @@ import com.armedia.caliente.cli.CommandLineException;
 import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterDefinition;
-import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.ParameterWrapper;
 import com.armedia.caliente.cli.token.StaticTokenSource;
 import com.armedia.caliente.cli.token.Token;
@@ -611,111 +610,111 @@ public class CommandLine implements CommandLineValues {
 
 	@Override
 	public boolean isDefined(ParameterWrapper paramDel) {
-		return isDefined(ParameterTools.unwrap(paramDel));
+		return isDefined(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public CommandLineParameter getParameter(ParameterWrapper paramDel) {
-		return getParameter(ParameterTools.unwrap(paramDel));
+		return getParameter(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public Boolean getBoolean(ParameterWrapper paramDel) {
-		return getBoolean(ParameterTools.unwrap(paramDel));
+		return getBoolean(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public boolean getBoolean(ParameterWrapper paramDel, boolean def) {
-		return getBoolean(ParameterTools.unwrap(paramDel), def);
+		return getBoolean(ParameterDefinition.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Boolean> getAllBooleans(ParameterWrapper paramDel) {
-		return getAllBooleans(ParameterTools.unwrap(paramDel));
+		return getAllBooleans(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public Integer getInteger(ParameterWrapper paramDel) {
-		return getInteger(ParameterTools.unwrap(paramDel));
+		return getInteger(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public int getInteger(ParameterWrapper paramDel, int def) {
-		return getInteger(ParameterTools.unwrap(paramDel), def);
+		return getInteger(ParameterDefinition.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Integer> getAllIntegers(ParameterWrapper paramDel) {
-		return getAllIntegers(ParameterTools.unwrap(paramDel));
+		return getAllIntegers(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public Long getLong(ParameterWrapper paramDel) {
-		return getLong(ParameterTools.unwrap(paramDel));
+		return getLong(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public long getLong(ParameterWrapper paramDel, long def) {
-		return getLong(ParameterTools.unwrap(paramDel), def);
+		return getLong(ParameterDefinition.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Long> getAllLongs(ParameterWrapper paramDel) {
-		return getAllLongs(ParameterTools.unwrap(paramDel));
+		return getAllLongs(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public Float getFloat(ParameterWrapper paramDel) {
-		return getFloat(ParameterTools.unwrap(paramDel));
+		return getFloat(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public float getFloat(ParameterWrapper paramDel, float def) {
-		return getFloat(ParameterTools.unwrap(paramDel), def);
+		return getFloat(ParameterDefinition.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Float> getAllFloats(ParameterWrapper paramDel) {
-		return getAllFloats(ParameterTools.unwrap(paramDel));
+		return getAllFloats(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public Double getDouble(ParameterWrapper paramDel) {
-		return getDouble(ParameterTools.unwrap(paramDel));
+		return getDouble(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public double getDouble(ParameterWrapper paramDel, double def) {
-		return getDouble(ParameterTools.unwrap(paramDel), def);
+		return getDouble(ParameterDefinition.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<Double> getAllDoubles(ParameterWrapper paramDel) {
-		return getAllDoubles(ParameterTools.unwrap(paramDel));
+		return getAllDoubles(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public String getString(ParameterWrapper paramDel) {
-		return getString(ParameterTools.unwrap(paramDel));
+		return getString(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public String getString(ParameterWrapper paramDel, String def) {
-		return getString(ParameterTools.unwrap(paramDel), def);
+		return getString(ParameterDefinition.unwrap(paramDel), def);
 	}
 
 	@Override
 	public List<String> getAllStrings(ParameterWrapper paramDel) {
-		return getAllStrings(ParameterTools.unwrap(paramDel));
+		return getAllStrings(ParameterDefinition.unwrap(paramDel));
 	}
 
 	@Override
 	public List<String> getAllStrings(ParameterWrapper paramDel, List<String> def) {
-		return getAllStrings(ParameterTools.unwrap(paramDel), def);
+		return getAllStrings(ParameterDefinition.unwrap(paramDel), def);
 	}
 
 	@Override
 	public boolean isPresent(ParameterWrapper paramDel) {
-		return isPresent(ParameterTools.unwrap(paramDel));
+		return isPresent(ParameterDefinition.unwrap(paramDel));
 	}
 }
