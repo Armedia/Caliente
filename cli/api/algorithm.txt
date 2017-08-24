@@ -76,3 +76,29 @@ for (Token t : tokenLoader) {
 
 	throw new UnknownParameterException(t);
 }
+
+
+
+
+
+
+StaticCommandLine {
+	ParameterScheme getGlobalScheme()
+	Collection<CommandScheme> getCommands()
+	boolean allowMultipleCommands
+}
+
+CommandLineResult parseStatic(StaticCommandLine scl) throws UnknownCommandException, UnknownParameterException {
+		// Parse based on a static scheme
+}
+
+
+SchemeAugmentor {
+	augmentScheme(DynamicScheme dynamicScheme, Token.Type firstUnknownType, String firstUnknownValue, CommandLineValues globalValues, Map<String, CommandLineValues> commandValues) {
+
+	}
+}
+
+CommandLineResult parseDynamic(ParameterScheme baseScheme, SchemeAugmentor augmentor) {
+
+}
