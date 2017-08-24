@@ -17,6 +17,7 @@ public class ParameterScheme {
 	private final Map<Character, ParameterDefinition> shortKeys = new HashMap<>();
 	private int minArgs = 0;
 	private int maxArgs = -1;
+	private boolean dynamic = false;
 
 	/**
 	 * @param name
@@ -34,6 +35,16 @@ public class ParameterScheme {
 		this.shortKeys.putAll(pattern.shortKeys);
 		this.minArgs = pattern.minArgs;
 		this.maxArgs = pattern.maxArgs;
+		this.dynamic = pattern.dynamic;
+	}
+
+	public boolean isDynamic() {
+		return this.dynamic;
+	}
+
+	public ParameterScheme setDynamic(boolean dynamic) {
+		this.dynamic = dynamic;
+		return this;
 	}
 
 	/**
@@ -79,11 +90,12 @@ public class ParameterScheme {
 	 * @param minArgs
 	 *            the minimum number of allowed positional arguments
 	 */
-	public void setMinArgs(int minArgs) {
+	public ParameterScheme setMinArgs(int minArgs) {
 		this.minArgs = Math.max(0, minArgs);
 		if ((this.minArgs > 0) && (this.maxArgs >= 0) && (this.minArgs > this.maxArgs)) {
 			this.maxArgs = this.minArgs;
 		}
+		return this;
 	}
 
 	/**
@@ -111,11 +123,12 @@ public class ParameterScheme {
 	 * @param maxArgs
 	 *            the maximum number of allowed positional arguments
 	 */
-	public void setMaxArgs(int maxArgs) {
+	public ParameterScheme setMaxArgs(int maxArgs) {
 		this.maxArgs = Math.max(-1, maxArgs);
 		if ((this.minArgs > 0) && (this.maxArgs >= 0) && (this.minArgs > this.maxArgs)) {
 			this.minArgs = this.maxArgs;
 		}
+		return this;
 	}
 
 	private static Collection<ParameterDefinition> buildCollection(ParameterDefinition a, ParameterDefinition b) {
@@ -201,8 +214,9 @@ public class ParameterScheme {
 	 *             (you can check with {@link #hasParameter(Character)},
 	 *             {@link #hasParameter(String)}, or {@link #countCollisions(ParameterDefinition)}
 	 */
-	public final void addParameter(ParameterDefinition parameterDefinition) {
+	public final ParameterScheme addParameter(ParameterDefinition parameterDefinition) {
 		replaceParameter(parameterDefinition, true);
+		return this;
 	}
 
 	/**
@@ -212,13 +226,14 @@ public class ParameterScheme {
 	 *
 	 * @param parameters
 	 */
-	public final void addParameters(ParameterDefinition... parameters) {
+	public final ParameterScheme addParameters(ParameterDefinition... parameters) {
 		if (parameters == null) { throw new IllegalArgumentException("Must provide a non-null parameter array"); }
 		for (ParameterDefinition p : parameters) {
 			if (p != null) {
 				addParameter(p);
 			}
 		}
+		return this;
 	}
 
 	/**
