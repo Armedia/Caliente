@@ -13,38 +13,12 @@ public class CommandScheme extends ParameterScheme {
 		super(name);
 	}
 
-	private ParameterDefinition helpParameter = null;
-
 	private final Map<String, Command> commands = new TreeMap<>();
 
-	public ParameterDefinition getHelpParameter() {
-		return this.helpParameter;
-	}
-
-	/**
-	 * Identical to invoking {@link #setHelpParameter(ParameterDefinition) setHelpParameter(null)}.
-	 *
-	 * @return the previous help parameter that was configured, or {@code null} if there was none
-	 */
-	public ParameterDefinition clearHelpParameter() {
-		return setHelpParameter(null);
-	}
-
-	public ParameterDefinition setHelpParameter(ParameterDefinition helpParameter) {
-		ParameterDefinition old = this.helpParameter;
-		if (old != null) {
-			removeParameter(old);
-		}
-		if (helpParameter != null) {
-			addParameter(helpParameter);
-		}
-		this.helpParameter = helpParameter;
-		return old;
-	}
-
-	public Command addCommand(Command command) {
+	public CommandScheme addCommand(Command command) {
 		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command"); }
-		return this.commands.put(command.getName(), command);
+		this.commands.put(command.getName(), command);
+		return this;
 	}
 
 	public Command removeCommand(Command command) {
@@ -63,6 +37,16 @@ public class CommandScheme extends ParameterScheme {
 
 	public Collection<Command> getCommands() {
 		return new ArrayList<>(this.commands.values());
+	}
+
+	public Command getCommand(String name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a non-null name"); }
+		return this.commands.get(name);
+	}
+
+	public boolean hasCommand(String name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a non-null name"); }
+		return this.commands.containsKey(name);
 	}
 
 	public int getCommandCount() {

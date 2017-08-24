@@ -357,6 +357,29 @@ public class ParameterScheme {
 	}
 
 	/**
+	 * Returns an integer between 0 and 3 where the low bit is the presence indicator for the short
+	 * option parameter, and the high bit is the presence indicator for the long option parameter.
+	 * This method does not take into account whether both flags are associated to the same
+	 * parameter. Use {@link #findCollisions(Character, String)} for that.
+	 *
+	 * @param shortOpt
+	 * @param longOpt
+	 * @return an integer between 0 and 3 where the low bit is the presence indicator for the short
+	 *         option parameter, and the high bit is the presence indicator for the long option
+	 *         parameter.
+	 */
+	public final int hasEitherParameter(Character shortOpt, String longOpt) {
+		int ret = 0;
+		if (hasParameter(shortOpt)) {
+			ret |= 1;
+		}
+		if (hasParameter(longOpt)) {
+			ret |= (1 << 1);
+		}
+		return ret;
+	}
+
+	/**
 	 * Returns {@code true} if and only if this parameter scheme contains a parameter that
 	 * equivalent (as per
 	 * {@link ParameterDefinition#isEquivalent(ParameterDefinition, ParameterDefinition)}) to the
@@ -401,12 +424,26 @@ public class ParameterScheme {
 	 */
 	public final Collection<ParameterDefinition> findCollisions(ParameterDefinition parameterDefinition) {
 		if (parameterDefinition == null) { throw new IllegalArgumentException("Must provide a non-null parameter"); }
-		String longOpt = parameterDefinition.getLongOpt();
+		return findCollisions(parameterDefinition.getShortOpt(), parameterDefinition.getLongOpt());
+	}
+
+	/**
+	 * Returns the ParameterDefinition already in this scheme that would collide with the given
+	 * short or long options. If no collisions are found, {@code null} is returned. This means that
+	 * the collection may contain either 1 or 2 elements.
+	 *
+	 * @param shortOpt
+	 *            the short option to check for
+	 * @param longOpt
+	 *            the long option to check for
+	 * @return the ParameterDefinition already in this scheme that would collide with the given
+	 *         short or long options, or {@code null} if none collide
+	 */
+	public final Collection<ParameterDefinition> findCollisions(Character shortOpt, String longOpt) {
 		ParameterDefinition longParam = null;
 		if (longOpt != null) {
 			longParam = this.longKeys.get(longOpt);
 		}
-		Character shortOpt = parameterDefinition.getShortOpt();
 		ParameterDefinition shortParam = null;
 		if (shortOpt != null) {
 			shortParam = this.shortKeys.get(shortOpt);
