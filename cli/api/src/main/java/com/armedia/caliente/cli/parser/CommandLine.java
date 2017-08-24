@@ -223,7 +223,7 @@ public class CommandLine implements CommandLineValues {
 	}
 
 	private void assertValidDefinition(ParameterDefinition def) throws InvalidParameterException {
-		if (def == null) { throw new InvalidParameterException("CommandLineParameter definition may not be null"); }
+		if (def == null) { throw new InvalidParameterException("ParameterValue definition may not be null"); }
 
 		final Character shortOpt = def.getShortOpt();
 		final boolean hasShortOpt = (shortOpt != null);

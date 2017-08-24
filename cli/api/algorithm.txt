@@ -1,123 +1,24 @@
+Parsing a simple line: easy peasy, we know what to do
+	- Unknown flags are unrecoverable errors
+	- Out-of-scheme flags (too many args, too few args) are errors
+	- Repeat flags add parameter values (and increase ocurrence count?)
+	- Positionals are preserved
 
+Parsing a command:
+	- First out-of-scheme non-flag (string) parameter is the name of the command.
+	- Flags are checked against both the command's scheme's flags, and the global scheme's flags
+	- Rest is same as a simple line
 
-Token t = null;
-
-nextScheme: while (true) {
-	// Find the next parameter set given the parameter values gathered so far...
-	ParameterScheme scheme = getNextParamterScheme(currentParameters);
-	if (scheme == null) {
-		// No scheme? we're done, then..
-		break nextScheme;
-	}
-
-	// TODO: Be careful to not leave tokens by the wayside (i.e. don't advance
-	// if we're looping back to the top!)
-
-	Parameter p = null;
-	nextToken: while (true) {
-
-		if (t == null) {
-			if (!tokenLoader.hasNext()) break nextToken;
-			// Only pull the next token when needed 
-			// Remember to reassign t to null once a token has been "consumed"
-			t = tokenLoader.next();
-		}	
-
-		if (t.type == Type.STRING) {
-			if (p != null) {
-				if (p.isSupportsArgs()) {
-					// Split the string, and set the value as the arguments.  If it's a repeat
-					// within this scheme, then append the arguments. If the argument count is
-					// violated, then have a problem
-				} else {
-					// This is a standalone argument, so parameters to it are by definition
-					// unrecognized, so we have a problem...
-				}
-			} else {
-				// This is not a flag, so it must be a positional, which means this scheme
-				// is done-done
-			}
-		} else {
-			if (p != null) {
-				// TODO: Validate that the parameter count requirements for p are met,
-				// and we can move on. If they're not, then we have a "syntax" issue
-			}
-
-			p = scheme.findParameter(t);
-			if (p != null) {
-				// If this parameter has been specified before in this parameter set, then
-				// we have to mark it as the current one and keep going...
-				continue nextToken;
-			}
-		}
-	
-		// This is the first unrecognized token, so we make a note of it,
-		// and loop up to run the next set of parameters, feeding them the
-		// current values
-		continue nextScheme;
-	}
-	
-	// If there are no more tokens, we break out...
-	if (!tokenLoader.hasNext()) {
-		break nextScheme;
-	}
-}
-
-// Check to see if all required parameters are present
-
-// We're done parsing, so we gather up all remaining strings and explode if there's an
-// unknown flag in play 
-List<String> positionals = new ArrayList<>();
-for (Token t : tokenLoader) {
-	if (t.type == Type.STRING) {
-		positionals.add(t.value);
-		continue;
-	}
-
-	throw new UnknownParameterException(t);
-}
-
-
-
-
-
-/**
-  * The simplest parsing possible
-  */
-CLIResult parse(ParameterScheme scheme) {
-		// Parse based on a simple, static scheme
-}
-
-/**
-  * Parse commands until...
-  *     - the first flag (-x or --xxx) is found that isn't covered by the common parameter scheme
-  *         * this is an unrecoverable error (UnknownParameterException)
-  *     - the first non-flag parameter is found
-  *         - if this parameter is not a command (or an alias of one), this is an unrecoverable error (UnknownCommandException)
-  *         - if this is a command, then continue parsing the rest of the command line using only the command's parameter scheme
-  *             - any unrecognized, out-of-place, or out-of-schema tokens trigger unrecoverable errors
-  */
-CommandCLIScheme {
-	ParameterScheme getCommonParameters()
-	Collection<CommandScheme> getCommands()
-}
-
-CommandCLIResult parseCommand(CommandCLIScheme scheme) throws UnknownCommandException, UnknownParameterException {
-		// Parse based on a static scheme
-}
-
-
-
-/**
-  * 
-  */
-
-SchemeAugmentor {
-	augmentScheme(DynamicScheme dynamicScheme, Token.Type firstUnknownType, String firstUnknownValue, CommandLineValues globalValues, Map<String, CommandLineValues> commandValues) {
-
-	}
-}
-
-DynamicCLIResult parseDynamic(ParameterScheme baseScheme, SchemeAugmentor augmentor) {
-
-}
+Parsing a dynamic with command support:
+	- Augmentations are given access to all parameter values parsed so far,
+	  to help in the decision and selection of new parameters to search for
+	- First out-of-scheme non-flag (string) is a possible name of a command (ONLY the first),
+	  and triggers a "command scheme search" (i.e. getCommandScheme(String))
+	- Flags are checked against both the command's scheme's flags (if a command is active), and
+	  the overall scheme's flags
+	    - Every unknown flag triggers a scheme augmentation on either the command scheme (if a
+	      command is active) or the global scheme (if no command is active)
+		- If the augmentation results in no changes, then this is an unrecoverable error
+	- Out-of-scheme flags (too many args, too few args) are errors
+	- Repeat flags add parameter values (and increase ocurrence count?)
+	- Positionals are preserved

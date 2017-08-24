@@ -3,9 +3,7 @@ package com.armedia.caliente.cli;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 public class CommandScheme extends ParameterScheme {
 
@@ -18,34 +16,45 @@ public class CommandScheme extends ParameterScheme {
 	public CommandScheme addCommand(Command command) {
 		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command"); }
 		this.commands.put(command.getName(), command);
+		for (String alias : command.getAliases()) {
+			this.commands.put(alias, command);
+		}
 		return this;
 	}
 
 	public Command removeCommand(Command command) {
 		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command"); }
-		return this.commands.remove(command.getName());
+		Command c = this.commands.remove(command.getName());
+		if (c != null) {
+			for (String alias : c.getAliases()) {
+				this.commands.remove(alias);
+			}
+		}
+		return c;
 	}
 
 	public Command removeCommand(String command) {
 		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command name"); }
-		return this.commands.remove(command);
-	}
-
-	public Set<String> getCommandNames() {
-		return new TreeSet<>(this.commands.keySet());
+		Command c = this.commands.remove(command);
+		if (c != null) {
+			for (String alias : c.getAliases()) {
+				this.commands.remove(alias);
+			}
+		}
+		return c;
 	}
 
 	public Collection<Command> getCommands() {
 		return new ArrayList<>(this.commands.values());
 	}
 
-	public Command getCommand(String name) {
-		if (name == null) { throw new IllegalArgumentException("Must provide a non-null name"); }
-		return this.commands.get(name);
+	public Command getCommand(String nameOrAlias) {
+		if (nameOrAlias == null) { throw new IllegalArgumentException("Must provide a non-null name or alias"); }
+		return this.commands.get(nameOrAlias);
 	}
 
-	public boolean hasCommand(String name) {
-		return (getCommand(name) != null);
+	public boolean hasCommand(String nameOrAlias) {
+		return (getCommand(nameOrAlias) != null);
 	}
 
 	public int getCommandCount() {

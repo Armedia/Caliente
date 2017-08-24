@@ -1,14 +1,42 @@
 package com.armedia.caliente.cli;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 public class Command extends ParameterScheme {
 
 	private static final Pattern NAME_PATTERN = Pattern.compile("^\\S+$");
 
-	public Command(String name) {
+	private final Set<String> aliases;
+
+	public Command(String name, Collection<String> aliases) {
 		super(name);
-		if (!Command.NAME_PATTERN.matcher(name).matches()) { throw new IllegalArgumentException(
-			String.format("The name must match the regular expression /%s/", Command.NAME_PATTERN.pattern())); }
+		if (!Command.NAME_PATTERN.matcher(name).matches()) { throw new IllegalArgumentException(String.format(
+			"The name [%s] does not match the regular expression /%s/", name, Command.NAME_PATTERN.pattern())); }
+		Set<String> A = new TreeSet<>();
+		A.add(name);
+		if (aliases != null) {
+			for (String a : aliases) {
+				if (a == null) { throw new IllegalArgumentException("aliases may not be null"); }
+				if (!Command.NAME_PATTERN.matcher(a)
+					.matches()) { throw new IllegalArgumentException(
+						String.format("The given alias [%s] does not match the regular expression /%s/", a,
+							Command.NAME_PATTERN.pattern())); }
+				A.add(a);
+			}
+		}
+		this.aliases = Collections.unmodifiableSet(A);
+	}
+
+	public Command(String name, String... aliases) {
+		this(name, aliases != null ? Arrays.asList(aliases) : null);
+	}
+
+	public Set<String> getAliases() {
+		return this.aliases;
 	}
 }
