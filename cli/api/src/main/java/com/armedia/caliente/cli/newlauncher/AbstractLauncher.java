@@ -127,8 +127,8 @@ public abstract class AbstractLauncher {
 		return (str != null) && AbstractLauncher.DEFAULT_COMMAND_PATTERN.matcher(str).matches();
 	}
 
-	private void parseArguments(CommandLineValues cli, ParameterDefinition helpParameter, final ParameterScheme parameterScheme,
-		String... args) throws CommandLineParsingException {
+	private void parseArguments(CommandLineValues cli, ParameterDefinition helpParameter,
+		final ParameterScheme parameterScheme, String... args) throws CommandLineParsingException {
 
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
 
@@ -234,7 +234,8 @@ public abstract class AbstractLauncher {
 		}
 	}
 
-	protected final int launch(ParameterDefinition helpParameter, final ParameterScheme parameterScheme, String... args) {
+	protected final int launch(ParameterDefinition helpParameter, final ParameterScheme parameterScheme,
+		String... args) {
 		if (parameterScheme == null) { throw new IllegalArgumentException(
 			"Must provide an initial parameter scheme to parse against"); }
 		if (args == null) {
