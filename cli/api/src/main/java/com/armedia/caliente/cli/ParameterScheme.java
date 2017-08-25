@@ -33,6 +33,18 @@ public class ParameterScheme {
 		this.caseSensitive = caseSensitive;
 	}
 
+	public ParameterScheme(ParameterScheme pattern) {
+		this.name = pattern.getName();
+		this.requiredParameters.putAll(pattern.requiredParameters);
+		this.parameters.putAll(pattern.parameters);
+		this.longKeys.putAll(pattern.longKeys);
+		this.shortKeys.putAll(pattern.shortKeys);
+		this.minArgs = pattern.minArgs;
+		this.maxArgs = pattern.maxArgs;
+		this.dynamic = pattern.dynamic;
+		this.caseSensitive = pattern.caseSensitive;
+	}
+
 	public boolean isCaseSensitive() {
 		return this.caseSensitive;
 	}
@@ -46,9 +58,9 @@ public class ParameterScheme {
 	}
 
 	protected final Character canonicalize(Character c) {
-		if (c == null) { return c; }
+		if (c == null) { return null; }
 		if (!this.caseSensitive) {
-			c = Character.toUpperCase(c.charValue());
+			c = Character.toLowerCase(c.charValue());
 		}
 		return c;
 	}
