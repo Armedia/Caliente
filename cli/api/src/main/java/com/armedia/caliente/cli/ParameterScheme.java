@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 public class ParameterScheme {
 
+	private final boolean caseSensitive;
 	private final String name;
 	private final Map<String, Parameter> requiredParameters = new TreeMap<>();
 	private final Map<String, Parameter> parameters = new TreeMap<>();
@@ -23,19 +24,33 @@ public class ParameterScheme {
 	 * @param name
 	 */
 	public ParameterScheme(String name) {
-		if (name == null) { throw new IllegalArgumentException("Must provide a non-null name"); }
-		this.name = name;
+		this(name, false);
 	}
 
-	public ParameterScheme(ParameterScheme pattern) {
-		this.name = pattern.getName();
-		this.requiredParameters.putAll(pattern.requiredParameters);
-		this.parameters.putAll(pattern.parameters);
-		this.longKeys.putAll(pattern.longKeys);
-		this.shortKeys.putAll(pattern.shortKeys);
-		this.minArgs = pattern.minArgs;
-		this.maxArgs = pattern.maxArgs;
-		this.dynamic = pattern.dynamic;
+	public ParameterScheme(String name, boolean caseSensitive) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a non-null name"); }
+		this.name = name;
+		this.caseSensitive = caseSensitive;
+	}
+
+	public boolean isCaseSensitive() {
+		return this.caseSensitive;
+	}
+
+	protected final String canonicalize(String str) {
+		if (str == null) { return null; }
+		if (!this.caseSensitive) {
+			str = str.toLowerCase();
+		}
+		return str;
+	}
+
+	protected final Character canonicalize(Character c) {
+		if (c == null) { return c; }
+		if (!this.caseSensitive) {
+			c = Character.toUpperCase(c.charValue());
+		}
+		return c;
 	}
 
 	public boolean isDynamic() {
@@ -147,7 +162,7 @@ public class ParameterScheme {
 	 */
 	public final Parameter getParameter(String longOpt) {
 		if (longOpt == null) { return null; }
-		return this.longKeys.get(longOpt);
+		return this.longKeys.get(canonicalize(longOpt));
 	}
 
 	/**
@@ -159,17 +174,16 @@ public class ParameterScheme {
 	 */
 	public final Parameter getParameter(Character shortOpt) {
 		if (shortOpt == null) { return null; }
-		return this.shortKeys.get(shortOpt);
+		return this.shortKeys.get(canonicalize(shortOpt));
 	}
 
-	private final Collection<Parameter> replaceParameter(Parameter parameter,
-		boolean add) {
+	private final Collection<Parameter> replaceParameter(Parameter parameter, boolean add) {
 		if (parameter == null) { throw new IllegalArgumentException(
 			String.format("Must provide a parameter to %s", add ? "add" : "remove")); }
 
-		final String longOpt = parameter.getLongOpt();
+		final String longOpt = canonicalize(parameter.getLongOpt());
 		final Parameter oldLong = (add ? getParameter(longOpt) : removeParameter(longOpt));
-		final Character shortOpt = parameter.getShortOpt();
+		final Character shortOpt = canonicalize(parameter.getShortOpt());
 		final Parameter oldShort = (add ? getParameter(shortOpt) : removeParameter(shortOpt));
 
 		if (add) {
@@ -195,7 +209,7 @@ public class ParameterScheme {
 				removeParameter(shortOpt);
 				this.shortKeys.put(shortOpt, parameter);
 			}
-			final String key = parameter.getKey();
+			final String key = canonicalize(parameter.getKey());
 			this.parameters.put(key, parameter);
 			if (parameter.isRequired()) {
 				this.requiredParameters.put(key, parameter);
@@ -210,9 +224,9 @@ public class ParameterScheme {
 	 * @param parameter
 	 *            the parameter to add
 	 * @throws IllegalArgumentException
-	 *             if the given parameter collides with any already-existing parameters
-	 *             (you can check with {@link #hasParameter(Character)},
-	 *             {@link #hasParameter(String)}, or {@link #countCollisions(Parameter)}
+	 *             if the given parameter collides with any already-existing parameters (you can
+	 *             check with {@link #hasParameter(Character)}, {@link #hasParameter(String)}, or
+	 *             {@link #countCollisions(Parameter)}
 	 */
 	public final ParameterScheme addParameter(Parameter parameter) {
 		replaceParameter(parameter, true);
@@ -220,9 +234,8 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Adds all the given parameters (i.e. invoke
-	 * {@link #addParameter(Parameter) add} for each non-{@code null} parameter in the
-	 * array).
+	 * Adds all the given parameters (i.e. invoke {@link #addParameter(Parameter) add} for each
+	 * non-{@code null} parameter in the array).
 	 *
 	 * @param parameters
 	 */
@@ -237,9 +250,8 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Remove any and all parameters (a maximum of 2) that may collide with the given
-	 * parameter's short or long option forms. If {@code null} is returned, then there was no
-	 * collision.
+	 * Remove any and all parameters (a maximum of 2) that may collide with the given parameter's
+	 * short or long option forms. If {@code null} is returned, then there was no collision.
 	 *
 	 * @param parameter
 	 *            the parameter to check against
@@ -258,12 +270,12 @@ public class ParameterScheme {
 	 */
 	public final Parameter removeParameter(String longOpt) {
 		if (longOpt == null) { return null; }
-		Parameter old = this.longKeys.remove(longOpt);
+		Parameter old = this.longKeys.remove(canonicalize(longOpt));
 		if (old == null) { return null; }
-		final String oldKey = old.getKey();
+		final String oldKey = canonicalize(old.getKey());
 		this.parameters.remove(oldKey);
 		this.requiredParameters.remove(oldKey);
-		Character shortOpt = old.getShortOpt();
+		Character shortOpt = canonicalize(old.getShortOpt());
 		if (shortOpt != null) {
 			this.shortKeys.remove(shortOpt);
 		}
@@ -279,12 +291,12 @@ public class ParameterScheme {
 	 */
 	public final Parameter removeParameter(Character shortOpt) {
 		if (shortOpt == null) { return null; }
-		Parameter old = this.shortKeys.remove(shortOpt);
+		Parameter old = this.shortKeys.remove(canonicalize(shortOpt));
 		if (old == null) { return null; }
-		final String oldKey = old.getKey();
+		final String oldKey = canonicalize(old.getKey());
 		this.parameters.remove(oldKey);
 		this.requiredParameters.remove(oldKey);
-		String longOpt = old.getLongOpt();
+		String longOpt = canonicalize(old.getLongOpt());
 		if (longOpt != null) {
 			this.longKeys.remove(longOpt);
 		}
@@ -292,9 +304,8 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Returns a {@link Collection} containing the parameters defined in this scheme. The
-	 * collection returned is independent and changes to it will not reflect on this ParameterScheme
-	 * instance.
+	 * Returns a {@link Collection} containing the parameters defined in this scheme. The collection
+	 * returned is independent and changes to it will not reflect on this ParameterScheme instance.
 	 *
 	 * @return a {@link Collection} containing the parameters defined in this scheme
 	 */
@@ -303,9 +314,9 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Returns a collection of the parameters in this scheme that have required flag set
-	 * (as determined by {@link Parameter#isRequired()}). The collection returned is a
-	 * copy, and changes to it do not affect this scheme's contents.
+	 * Returns a collection of the parameters in this scheme that have required flag set (as
+	 * determined by {@link Parameter#isRequired()}). The collection returned is a copy, and changes
+	 * to it do not affect this scheme's contents.
 	 *
 	 * @return the parameters in this scheme that have required flag set
 	 */
@@ -314,8 +325,8 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Returns the number of parameters in this scheme that have required flag set (as
-	 * determined by {@link Parameter#isRequired()}).
+	 * Returns the number of parameters in this scheme that have required flag set (as determined by
+	 * {@link Parameter#isRequired()}).
 	 *
 	 * @return the number of parameters in this scheme that have required flag set
 	 */
@@ -381,9 +392,8 @@ public class ParameterScheme {
 
 	/**
 	 * Returns {@code true} if and only if this parameter scheme contains a parameter that
-	 * equivalent (as per
-	 * {@link Parameter#isEquivalent(Parameter, Parameter)}) to the
-	 * given parameter, {@code false} otherwise.
+	 * equivalent (as per {@link Parameter#isEquivalent(Parameter, Parameter)}) to the given
+	 * parameter, {@code false} otherwise.
 	 *
 	 * @param parameter
 	 * @return {@code true} if and only if this parameter scheme contains a parameter that exactly
@@ -398,13 +408,13 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Returns the number of parameters already in this scheme that would collide with the
-	 * given parameter based on short or long options. This means that only 3 values can be
-	 * returned: 0, 1, or 2.
+	 * Returns the number of parameters already in this scheme that would collide with the given
+	 * parameter based on short or long options. This means that only 3 values can be returned: 0,
+	 * 1, or 2.
 	 *
 	 * @param parameter
-	 * @return the number of parameters already in this scheme that would collide with the
-	 *         given parameter based on short or long options
+	 * @return the number of parameters already in this scheme that would collide with the given
+	 *         parameter based on short or long options
 	 */
 	public final int countCollisions(Parameter parameter) {
 		Collection<Parameter> collisions = findCollisions(parameter);
@@ -413,14 +423,14 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Returns the parameters already in this scheme that would collide with the given
-	 * parameter based on short or long options. If no collisions are found, {@code null} is
-	 * returned. This means that the collection may contain either 1 or 2 elements.
+	 * Returns the parameters already in this scheme that would collide with the given parameter
+	 * based on short or long options. If no collisions are found, {@code null} is returned. This
+	 * means that the collection may contain either 1 or 2 elements.
 	 *
 	 * @param parameter
 	 *            the parameter to check for
-	 * @return the parameters already in this scheme that would collide with the given
-	 *         parameter based on short or long options, or {@code null} if none collide
+	 * @return the parameters already in this scheme that would collide with the given parameter
+	 *         based on short or long options, or {@code null} if none collide
 	 */
 	public final Collection<Parameter> findCollisions(Parameter parameter) {
 		if (parameter == null) { throw new IllegalArgumentException("Must provide a non-null parameter"); }
@@ -428,25 +438,25 @@ public class ParameterScheme {
 	}
 
 	/**
-	 * Returns the Parameter already in this scheme that would collide with the given
-	 * short or long options. If no collisions are found, {@code null} is returned. This means that
-	 * the collection may contain either 1 or 2 elements.
+	 * Returns the Parameter already in this scheme that would collide with the given short or long
+	 * options. If no collisions are found, {@code null} is returned. This means that the collection
+	 * may contain either 1 or 2 elements.
 	 *
 	 * @param shortOpt
 	 *            the short option to check for
 	 * @param longOpt
 	 *            the long option to check for
-	 * @return the Parameter already in this scheme that would collide with the given
-	 *         short or long options, or {@code null} if none collide
+	 * @return the Parameter already in this scheme that would collide with the given short or long
+	 *         options, or {@code null} if none collide
 	 */
 	public final Collection<Parameter> findCollisions(Character shortOpt, String longOpt) {
 		Parameter longParam = null;
 		if (longOpt != null) {
-			longParam = this.longKeys.get(longOpt);
+			longParam = this.longKeys.get(canonicalize(longOpt));
 		}
 		Parameter shortParam = null;
 		if (shortOpt != null) {
-			shortParam = this.shortKeys.get(shortOpt);
+			shortParam = this.shortKeys.get(canonicalize(shortOpt));
 		}
 		return ParameterScheme.buildCollection(longParam, shortParam);
 	}

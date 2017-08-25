@@ -7,25 +7,14 @@ import java.util.TreeMap;
 
 public class CommandScheme extends ParameterScheme {
 
-	private final boolean caseSensitive;
-
-	public CommandScheme(String name, boolean caseSensitive) {
-		super(name);
-		this.caseSensitive = caseSensitive;
-	}
-
 	private final Map<String, Command> commands = new TreeMap<>();
 
-	private String canonicalize(String str) {
-		if (str == null) { return null; }
-		if (!this.caseSensitive) {
-			str = str.toLowerCase();
-		}
-		return str;
+	public CommandScheme(String name) {
+		this(name, false);
 	}
 
-	public boolean isCaseSensitive() {
-		return this.caseSensitive;
+	public CommandScheme(String name, boolean caseSensitive) {
+		super(name, caseSensitive);
 	}
 
 	public CommandScheme addCommand(Command command) {
