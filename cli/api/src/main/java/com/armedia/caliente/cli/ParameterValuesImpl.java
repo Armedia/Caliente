@@ -68,7 +68,7 @@ public final class ParameterValuesImpl implements ParameterValues {
 			occurrences = new LinkedList<>();
 			this.occurrences.put(key, occurrences);
 		}
-		occurrences.add(Tools.freezeCollection(values, true));
+		occurrences.add(Tools.freezeCollection(new LinkedList<>(values), true));
 
 		List<String> l = this.values.get(key);
 		if (l == null) {
@@ -290,6 +290,14 @@ public final class ParameterValuesImpl implements ParameterValues {
 	}
 
 	@Override
+	public Collection<String> getOccurrenceValues(Parameter param, int o) {
+		List<Collection<String>> occurrences = this.occurrences.get(getValidKey(param));
+		if (occurrences == null) { return null; }
+		if ((o < 0) || (o >= occurrences.size())) { throw new IndexOutOfBoundsException(); }
+		return occurrences.get(o);
+	}
+
+	@Override
 	public boolean isDefined(ParameterWrapper paramDel) {
 		return isDefined(Parameter.unwrap(paramDel));
 	}
@@ -397,5 +405,10 @@ public final class ParameterValuesImpl implements ParameterValues {
 	@Override
 	public int getOccurrences(ParameterWrapper param) {
 		return getOccurrences(Parameter.unwrap(param));
+	}
+
+	@Override
+	public Collection<String> getOccurrenceValues(ParameterWrapper param, int occurrence) {
+		return getOccurrenceValues(Parameter.unwrap(param), occurrence);
 	}
 }

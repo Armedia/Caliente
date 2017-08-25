@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface ParameterValues extends Iterable<ParameterValue> {
@@ -51,6 +52,18 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	 * @return the number of times this parameter occurs in the parsed command line.
 	 */
 	public int getOccurrences(Parameter param);
+
+	/**
+	 * Returns the string paramters given with the specified occurrence (0-index) of the parameter.
+	 * It will return {@code null} if the parameter has not been given, and will raise an
+	 * {@link IndexOutOfBoundsException} if there occurrence number requested is higher than the
+	 * number of present occurrences
+	 *
+	 * @param param
+	 * @param occurrence
+	 * @return the string paramters given with the specified occurrence of the parameter
+	 */
+	public Collection<String> getOccurrenceValues(Parameter param, int occurrence);
 
 	/* Short Options */
 	public Iterable<ParameterValue> shortOptions();
@@ -118,6 +131,8 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	public ParameterValue getParameter(ParameterWrapper param);
 
 	public int getOccurrences(ParameterWrapper param);
+
+	public Collection<String> getOccurrenceValues(ParameterWrapper param, int occurrence);
 
 	/* Booleans */
 	public Boolean getBoolean(ParameterWrapper param);
