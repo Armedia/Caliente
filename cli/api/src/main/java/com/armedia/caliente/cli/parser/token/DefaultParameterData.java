@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.TooManyParameterValuesException;
 
 final class DefaultParameterData implements ParameterData {
 

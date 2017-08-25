@@ -65,6 +65,14 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	 */
 	public Collection<String> getOccurrenceValues(Parameter param, int occurrence);
 
+	/**
+	 * Returns the number of values associated with the given parameter across all occurrences.
+	 *
+	 * @param param
+	 * @return the number of values associated with the given parameter across all occurrences.
+	 */
+	public int getValueCount(Parameter param);
+
 	/* Short Options */
 	public Iterable<ParameterValue> shortOptions();
 
@@ -133,6 +141,8 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	public int getOccurrences(ParameterWrapper param);
 
 	public Collection<String> getOccurrenceValues(ParameterWrapper param, int occurrence);
+
+	public int getValueCount(ParameterWrapper param);
 
 	/* Booleans */
 	public Boolean getBoolean(ParameterWrapper param);

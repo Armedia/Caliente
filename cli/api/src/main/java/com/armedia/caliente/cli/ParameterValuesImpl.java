@@ -298,6 +298,17 @@ public final class ParameterValuesImpl implements ParameterValues {
 	}
 
 	@Override
+	public int getValueCount(Parameter param) {
+		List<Collection<String>> occurrences = this.occurrences.get(getValidKey(param));
+		if (occurrences == null) { return 0; }
+		int v = 0;
+		for (Collection<String> c : occurrences) {
+			v += c.size();
+		}
+		return v;
+	}
+
+	@Override
 	public boolean isDefined(ParameterWrapper paramDel) {
 		return isDefined(Parameter.unwrap(paramDel));
 	}
@@ -410,5 +421,10 @@ public final class ParameterValuesImpl implements ParameterValues {
 	@Override
 	public Collection<String> getOccurrenceValues(ParameterWrapper param, int occurrence) {
 		return getOccurrenceValues(Parameter.unwrap(param), occurrence);
+	}
+
+	@Override
+	public int getValueCount(ParameterWrapper param) {
+		return getValueCount(Parameter.unwrap(param));
 	}
 }
