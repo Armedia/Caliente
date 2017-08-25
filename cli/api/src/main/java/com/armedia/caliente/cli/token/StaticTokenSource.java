@@ -23,7 +23,7 @@ public class StaticTokenSource implements TokenSource {
 		this(key, null);
 	}
 
-	public StaticTokenSource(List<String> tokens) {
+	public StaticTokenSource(Collection<String> tokens) {
 		this(null, tokens);
 	}
 
