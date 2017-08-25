@@ -5,33 +5,17 @@ import java.util.Collection;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterScheme;
 
-public final class LauncherParameterScheme {
+class ExtensibleParameterScheme {
 
 	private ParameterScheme scheme;
 	private boolean modified = false;
 
-	LauncherParameterScheme(ParameterScheme scheme) {
+	ExtensibleParameterScheme(ParameterScheme scheme) {
 		this.scheme = new ParameterScheme(scheme);
-	}
-
-	void markUnchanged() {
-		this.modified = false;
 	}
 
 	boolean isModified() {
 		return this.modified;
-	}
-
-	Collection<Parameter> removeParameter(Parameter parameter) {
-		return this.scheme.removeParameter(parameter);
-	}
-
-	Parameter removeParameter(String longOpt) {
-		return this.scheme.removeParameter(longOpt);
-	}
-
-	Parameter removeParameter(Character shortOpt) {
-		return this.scheme.removeParameter(shortOpt);
 	}
 
 	public String getName() {
@@ -50,14 +34,16 @@ public final class LauncherParameterScheme {
 		return this.scheme.getMaxArgs();
 	}
 
-	public void addParameter(Parameter parameter) {
+	public ExtensibleParameterScheme addParameter(Parameter parameter) {
 		this.scheme.addParameter(parameter);
 		this.modified = true;
+		return this;
 	}
 
-	public void addParameters(Parameter... parameters) {
+	public ExtensibleParameterScheme addParameters(Parameter... parameters) {
 		this.scheme.addParameters(parameters);
 		this.modified = true;
+		return this;
 	}
 
 	public Collection<Parameter> getParameters() {

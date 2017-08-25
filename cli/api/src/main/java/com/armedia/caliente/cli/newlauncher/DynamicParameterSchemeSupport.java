@@ -32,6 +32,6 @@ public interface DynamicParameterSchemeSupport {
 	 *            {@link ParameterScheme#addParameters(com.armedia.caliente.cli.Parameter...)}
 	 */
 	public void extendDynamicScheme(int currentNumber, ParameterValues baseValues, String currentCommand,
-		ParameterValues commandValues, Token currentToken, ParameterScheme scheme);
+		ParameterValues commandValues, Token currentToken, ExtensibleParameterScheme scheme);
 
 }

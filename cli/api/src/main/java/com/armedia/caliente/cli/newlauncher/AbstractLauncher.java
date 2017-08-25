@@ -213,11 +213,17 @@ public abstract class AbstractLauncher {
 						if (dynamic && (pass == 0)) {
 							// Dynamic support enabled!! Try to expand the currently-active scheme
 							// TODO: This bit is wasteful - improve on it!
-							ParameterScheme extensibleScheme = (command != null ? command : baseScheme);
+							ExtensibleParameterScheme extensibleScheme = new ExtensibleParameterScheme(
+								command != null ? command : baseScheme);
 							dynamicSupport.extendDynamicScheme(extensions, baseValues, command.getName(), commandValues,
 								nextToken, extensibleScheme);
-							continue inner;
+
+							// If there were changes, then we can go back around...
+							if (extensibleScheme.isModified()) {
+								continue inner;
+							}
 						}
+
 						// No such parameter - neither on the command nor the base scheme, and the
 						// extension mechanism didn't fix this....so this is an error
 						throw new UnknownParameterException(nextToken);
