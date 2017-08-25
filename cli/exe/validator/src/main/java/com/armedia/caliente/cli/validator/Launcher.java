@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
@@ -50,7 +49,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 
 	@Override
 	public Collection<Parameter> getParameters(CommandLineValues commandLine) {
-		return ParameterTools.getUnwrappedList(CLIParam.values());
+		return Parameter.getUnwrappedList(CLIParam.values());
 	}
 
 	@Override

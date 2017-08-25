@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
@@ -28,7 +27,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 
 	@Override
 	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
-		return ParameterTools.getUnwrappedList(CLIParam.values());
+		return Parameter.getUnwrappedList(CLIParam.values());
 	}
 
 	@Override

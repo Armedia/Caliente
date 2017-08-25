@@ -63,8 +63,8 @@ public abstract class Parameter {
 	 * <p>
 	 * Checks for the equivalency between the parameters. Two parameters {@code a} and {@code b} are
 	 * said to be equivalent if they're conflicting (as per
-	 * {@link #isConflicting(Parameter, Parameter)}, and the following methods
-	 * return identical (as per {@link Object#equals(Object)} values:
+	 * {@link #isConflicting(Parameter, Parameter)}, and the following methods return identical (as
+	 * per {@link Object#equals(Object)} values:
 	 * </p>
 	 * <ul>
 	 * <li>{@link #getMinValueCount()}</li>
@@ -90,8 +90,8 @@ public abstract class Parameter {
 	 * <p>
 	 * Checks two parameters to see if they're identical in every respect. Two parameters {@code a}
 	 * and {@code b} are said to be identical if they're equivalent (as per
-	 * {@link #isEquivalent(Parameter, Parameter)}, and the following methods
-	 * return identical (as per {@link Object#equals(Object)} values:
+	 * {@link #isEquivalent(Parameter, Parameter)}, and the following methods return identical (as
+	 * per {@link Object#equals(Object)} values:
 	 * </p>
 	 * <ul>
 	 * <li>{@link #getMinValueCount()}</li>
@@ -134,9 +134,8 @@ public abstract class Parameter {
 
 	/**
 	 * <p>
-	 * Extracts the {@link Parameter} instance from the given wrapper. It'll return
-	 * {@code null} if either the wrapper itself is {@code null}, or if its wrapped parameter is
-	 * {@code null}.
+	 * Extracts the {@link Parameter} instance from the given wrapper. It'll return {@code null} if
+	 * either the wrapper itself is {@code null}, or if its wrapped parameter is {@code null}.
 	 * </p>
 	 *
 	 * @param wrapper
@@ -149,9 +148,9 @@ public abstract class Parameter {
 
 	/**
 	 * <p>
-	 * Produces a list of the {@link Parameter} instances wrapped by the given wrappers.
-	 * All {@code null} values are filtered out and not preserved. If the array given is
-	 * {@code null}, the {@code null} value is returned.
+	 * Produces a list of the {@link Parameter} instances wrapped by the given wrappers. All
+	 * {@code null} values are filtered out and not preserved. If the array given is {@code null},
+	 * the {@code null} value is returned.
 	 * </p>
 	 *
 	 * @param wrappers
@@ -159,13 +158,13 @@ public abstract class Parameter {
 	 */
 	public static List<Parameter> getUnwrappedList(ParameterWrapper... wrappers) {
 		if (wrappers == null) { return null; }
-		return ParameterTools.getUnwrappedList(Arrays.asList(wrappers));
+		return Parameter.getUnwrappedList(Arrays.asList(wrappers));
 	}
 
 	/**
 	 * <p>
-	 * Produces a list of the {@link Parameter} instances wrapped by the given wrappers.
-	 * All {@code null} values are filtered out and not preserved. If the collection given is
+	 * Produces a list of the {@link Parameter} instances wrapped by the given wrappers. All
+	 * {@code null} values are filtered out and not preserved. If the collection given is
 	 * {@code null}, the {@code null} value is returned.
 	 * </p>
 	 *
