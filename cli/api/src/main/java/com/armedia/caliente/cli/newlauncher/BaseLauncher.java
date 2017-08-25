@@ -23,13 +23,13 @@ import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.cli.token.TokenLoader;
 import com.armedia.caliente.cli.token.TokenSourceRecursionLoopException;
 
-public abstract class AbstractLauncher {
+public abstract class BaseLauncher {
 
 	private static final Logger BOOT_LOG = LogConfigurator.getBootLogger();
 
 	private static final String[] NO_ARGS = {};
 
-	protected Logger log = AbstractLauncher.BOOT_LOG;
+	protected Logger log = BaseLauncher.BOOT_LOG;
 
 	protected static final Pattern DEFAULT_COMMAND_PATTERN = Pattern.compile("^[\\w&&[^\\d]]\\w*$");
 
@@ -124,11 +124,11 @@ public abstract class AbstractLauncher {
 	 * @return {@code true} if the given string represents a command, {@code false} otherwise
 	 */
 	protected boolean isCommand(String str) {
-		return (str != null) && AbstractLauncher.DEFAULT_COMMAND_PATTERN.matcher(str).matches();
+		return (str != null) && BaseLauncher.DEFAULT_COMMAND_PATTERN.matcher(str).matches();
 	}
 
-	private void parseArguments(CommandLineValues cli, Parameter helpParameter,
-		final ParameterScheme parameterScheme, String... args) throws CommandLineParsingException {
+	private void parseArguments(CommandLineValues cli, Parameter helpParameter, final ParameterScheme parameterScheme,
+		String... args) throws CommandLineParsingException {
 
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
 
@@ -234,12 +234,11 @@ public abstract class AbstractLauncher {
 		}
 	}
 
-	protected final int launch(Parameter helpParameter, final ParameterScheme parameterScheme,
-		String... args) {
+	protected final int launch(Parameter helpParameter, final ParameterScheme parameterScheme, String... args) {
 		if (parameterScheme == null) { throw new IllegalArgumentException(
 			"Must provide an initial parameter scheme to parse against"); }
 		if (args == null) {
-			args = AbstractLauncher.NO_ARGS;
+			args = BaseLauncher.NO_ARGS;
 		}
 
 		if ((helpParameter != null)

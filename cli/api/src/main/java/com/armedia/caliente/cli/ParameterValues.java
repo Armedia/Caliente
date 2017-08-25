@@ -27,9 +27,8 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	/**
 	 * Returns {@code true} if the given parameter occurs in the parsed command line, {@code false}
 	 * otherwise. If this method returns {@code true}, by definition
-	 * {@link #getOccurrences(Parameter)} also returns a value greater than {@code 0}. If
-	 * it returns {@code false}, then concordantly {@link #getOccurrences(Parameter)} must
-	 * return {@code 0}.
+	 * {@link #getOccurrences(Parameter)} also returns a value greater than {@code 0}. If it returns
+	 * {@code false}, then concordantly {@link #getOccurrences(Parameter)} must return {@code 0}.
 	 *
 	 * @param param
 	 * @return {@code true} if the given parameter occurs in the parsed command line, {@code false}
@@ -54,7 +53,7 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	public int getOccurrences(Parameter param);
 
 	/* Short Options */
-	public Iterable<Character> shortOptions();
+	public Iterable<ParameterValue> shortOptions();
 
 	public ParameterValue getParameter(char shortOpt);
 
