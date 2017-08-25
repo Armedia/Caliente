@@ -89,17 +89,17 @@ public class TokenLoader implements Iterable<Token> {
 	private String multiShort = null;
 	private Token next = null;
 
-	private static final String TERMINATOR_FMT = "%s%s";
-	private static final String SHORT_FMT = "^%s(\\S+)$";
-	private static final String LONG_FMT = "^%s%s(\\S+)$";
+	private static final String TERMINATOR_FMT = "%1$s%1$s";
+	private static final String SHORT_FMT = "^%1$s(\\S+)$";
+	private static final String LONG_FMT = "^%1$s%1$s(\\S+)$";
 
 	private static final Pattern COMMENT = Pattern.compile("(?<!\\\\)#");
 
-	public static final char DEFAULT_PARAMETER_MARKER = '-';
-	public static final Character DEFAULT_FILE_MARKER = '@';
-	public static final Character DEFAULT_VALUE_SPLITTER = ',';
+	public static final Character DEFAULT_VALUE_SEPARATOR = ',';
 
-	private final char parameterMarker;
+	private static final char PARAMETER_MARKER = '-';
+	private static final Character FILE_MARKER = '@';
+
 	private final String terminator;
 	private final Pattern patShort;
 	private final Pattern patLong;
@@ -107,36 +107,66 @@ public class TokenLoader implements Iterable<Token> {
 	private final String fileMarker;
 	private final Character valueSeparator;
 
+	/**
+	 * Construct a default, recursion-capable TokenLoader instance reading tokens from the given
+	 * starting source. This is equivalent to invoking
+	 * {@link #TokenLoader(TokenSource, char, boolean) TokenLoader(start,
+	 * TokenLoader.DEFAULT_VALUE_SEPARATOR, true)}
+	 *
+	 * @param start
+	 *            the starting TokenSource from which to begin processing
+	 */
 	public TokenLoader(TokenSource start) {
-		this(start, TokenLoader.DEFAULT_PARAMETER_MARKER, TokenLoader.DEFAULT_FILE_MARKER,
-			TokenLoader.DEFAULT_VALUE_SPLITTER);
+		this(start, TokenLoader.DEFAULT_VALUE_SEPARATOR, true);
 	}
 
-	private TokenLoader(TokenSource start, char parameterMarker, Character fileMarker, Character valueSeparator) {
+	/**
+	 * Construct a default TokenLoader with the option to enable or disable token recursion. This is
+	 * equivalent to invoking {@link #TokenLoader(TokenSource, char, boolean) TokenLoader(start,
+	 * TokenLoader.DEFAULT_VALUE_SEPARATOR, false)}
+	 *
+	 * @param start
+	 *            the starting TokenSource from which to begin processing
+	 * @param allowRecursion
+	 *            enable or disable token recursion
+	 */
+	public TokenLoader(TokenSource start, boolean allowRecursion) {
+		this(start, TokenLoader.DEFAULT_VALUE_SEPARATOR, allowRecursion);
+	}
+
+	/**
+	 * Construct a TokenLoader with recursion enabled, but using the given character as a parameter
+	 * value separator instead of the default value from {@link #DEFAULT_VALUE_SEPARATOR}. This is
+	 * equivalent to invoking {@link #TokenLoader(TokenSource, char, boolean) TokenLoader(start,
+	 * valueSeparator, true)}
+	 *
+	 * @param start
+	 *            the starting TokenSource from which to begin processing
+	 * @param valueSeparator
+	 *            the character to use when separating arguments passed for parameters
+	 */
+	public TokenLoader(TokenSource start, char valueSeparator) {
+		this(start, valueSeparator, true);
+	}
+
+	public TokenLoader(TokenSource start, char valueSeparator, boolean allowRecursion) {
 		if (start == null) { throw new IllegalArgumentException("Must provide a starting token source"); }
 		this.states.push(new State(start));
 		this.recursions.add(start.getKey());
-		this.parameterMarker = parameterMarker;
-		this.fileMarkerChar = fileMarker;
-		if ((fileMarker != null) && (parameterMarker == fileMarker.charValue())) { throw new IllegalArgumentException(
-			"Must provide different characters for paramter marker and file marker"); }
-		this.valueSeparator = valueSeparator;
-		if ((valueSeparator != null)
-			&& (parameterMarker == valueSeparator.charValue())) { throw new IllegalArgumentException(
-				"Must provide different characters for paramter marker and value separator"); }
 
-		this.terminator = String.format(TokenLoader.TERMINATOR_FMT, parameterMarker, parameterMarker);
-		this.patShort = Pattern.compile(String.format(TokenLoader.SHORT_FMT, parameterMarker));
-		this.patLong = Pattern.compile(String.format(TokenLoader.LONG_FMT, parameterMarker, parameterMarker));
-		if (fileMarker != null) {
-			this.fileMarker = String.format("--%s", fileMarker);
+		if (allowRecursion) {
+			this.fileMarkerChar = TokenLoader.FILE_MARKER;
+			this.fileMarker = String.format("--%s", this.fileMarkerChar);
 		} else {
+			this.fileMarkerChar = null;
 			this.fileMarker = null;
 		}
-	}
 
-	public final char getParameterMarker() {
-		return this.parameterMarker;
+		this.valueSeparator = valueSeparator;
+
+		this.terminator = String.format(TokenLoader.TERMINATOR_FMT, TokenLoader.PARAMETER_MARKER);
+		this.patShort = Pattern.compile(String.format(TokenLoader.SHORT_FMT, TokenLoader.PARAMETER_MARKER));
+		this.patLong = Pattern.compile(String.format(TokenLoader.LONG_FMT, TokenLoader.PARAMETER_MARKER));
 	}
 
 	public final Character getFileMarker() {
@@ -151,7 +181,7 @@ public class TokenLoader implements Iterable<Token> {
 		if (this.multiShort == null) { return null; }
 		char c = this.multiShort.charAt(0);
 		Token next = newToken(state, Type.SHORT_OPTION, String.valueOf(c),
-			String.format("%s%s", this.parameterMarker, c));
+			String.format("%s%s", TokenLoader.PARAMETER_MARKER, c));
 		this.multiShort = this.multiShort.substring(1);
 		if (StringUtils.isEmpty(this.multiShort)) {
 			this.multiShort = null;
@@ -258,6 +288,10 @@ public class TokenLoader implements Iterable<Token> {
 
 	private boolean isRecursion(String str) {
 		return (this.fileMarker != null) && str.startsWith(this.fileMarker);
+	}
+
+	public boolean isRecursing() {
+		return (this.fileMarker != null);
 	}
 
 	private State recurse(String current, TokenSource source) throws IOException {
