@@ -49,22 +49,11 @@ public abstract class AbstractLauncher {
 	 *
 	 * @param commandLine
 	 * @throws CommandLineProcessingException
-	 *             if there was an error processing the command line - such as an illegal parameter,
-	 *             illegal parameter value, etc
+	 *             if there was an error processing the command line - such as an illegal parameter
+	 *             combination, illegal parameter value, etc
 	 */
 	protected void processCommandLineResult(CommandLineResult commandLine) throws CommandLineProcessingException {
 	}
-
-	/**
-	 * <p>
-	 * Returns the name to be given to this executable after the given command parsing pass. The
-	 * {@code pass} argument is guaranteed to always be increasing, starting with {@code 0}.
-	 * </p>
-	 *
-	 * @param pass
-	 * @return the name to be used for this executable
-	 */
-	protected abstract String getProgramName(int pass);
 
 	protected final int launch(ParameterScheme scheme, String... args) {
 		return launch(null, scheme, args);
@@ -79,7 +68,7 @@ public abstract class AbstractLauncher {
 		return Collections.emptyList();
 	}
 
-	protected Parameter findParameter(Token token, LauncherParameterScheme scheme) {
+	private Parameter findParameter(ParameterScheme scheme, Token token) {
 		switch (token.getType()) {
 			case LONG_OPTION:
 				return scheme.getParameter(token.getValue());
@@ -210,13 +199,13 @@ public abstract class AbstractLauncher {
 					// If we're already processing a command, then the remaining parameters belong
 					// to it
 					if (command != null) {
-						p = getParameter(commandScheme, nextToken);
+						p = findParameter(commandScheme, nextToken);
 						fromCommand = true;
 					}
 					// If we're not processing a command, then the parameters are still part of the
 					// base scheme
 					if (p == null) {
-						p = getParameter(baseScheme, nextToken);
+						p = findParameter(baseScheme, nextToken);
 						fromCommand = false;
 					}
 
@@ -255,18 +244,6 @@ public abstract class AbstractLauncher {
 
 	private Command getCommand(ParameterValues currentValues, CommandScheme commandScheme, String commandName) {
 		return commandScheme.getCommand(commandName);
-	}
-
-	private Parameter getParameter(ParameterScheme scheme, Token token) {
-		switch (token.getType()) {
-			case LONG_OPTION:
-				return scheme.getParameter(token.getValue());
-			case SHORT_OPTION:
-				return scheme.getParameter(token.getValue().charAt(0));
-			case STRING:
-			default:
-				return null;
-		}
 	}
 
 	protected DynamicParameterSchemeSupport getDynamicSchemeSupport() {
