@@ -22,3 +22,90 @@ Parsing a dynamic with command support:
 	- Out-of-scheme flags (too many args, too few args) are errors
 	- Repeat flags add parameter values (and increase ocurrence count?)
 	- Positionals are preserved
+
+
+
+ParameterScheme baseScheme = <INPUT>;
+boolean dynamic = <INPUT>;
+
+CommandScheme commandScheme = (CommandScheme.class.isInstance(baseScheme) ? CommandScheme.class.cast(baseScheme) : null);
+
+Command currentCommand = null;
+ParameterValues currentValues = baseValues;
+ParameterValues commandValues = null;
+Parameter currentParameter = null;
+List<String> positionals = new ArrayList<>();
+int extensions = 0;
+for (Token nextToken : allTokens) {
+
+	if (nextToken.type == STRING) {
+		// A plain string...
+		if (currentParameter == null) {
+			// This can either be a positional, a command, or an error
+
+			if (commandScheme != null) {
+				// If commands are supported, then the first standalone string parameter MUST be the command name
+				if (currentCommand == null) {
+					// Find the command...if not a command, then it must be a positional
+					// Give out the currently-accumulated parameter values to assist the search
+					currentCommand = getCommand(dynamic ? baseValues : null, nextToken.raw);
+					if (currentCommand != null) {
+						currentValues = commandValues = new ParameterValuesImpl();
+						continue;
+					}
+
+					// This is an unknown command, so this is an error
+					throw new UnknownCommandException(nextToken.raw);
+				}
+			}
+
+			// This can only be a positional value, as we either don't support commands, or already have one active
+			positionals.add(nextToken.raw);
+		} else {
+			// This can only be a string parameter(s) for currentParameter
+			// so add an occurrence and validate the schema limits (empty strings are allowed)
+			currentValues.add(currentParameter, splitValues(nextToken.raw));
+
+			// TODO: Validate schema limits for the parameter's value or occurrence count
+		}
+
+		// At this point, we're for sure no longer processing a parameter from before...
+		currentParameter = null;
+	} else
+	if (nextToken.type == OPTION) {
+		// Either a short or long option...
+
+		// May not have positionals yet, as these would be out-of-place strings
+		if (!positionals.empty) throw new UnknownParameterException(positionals.get(0));
+
+		int pass = -1;
+		inner: while (true) {
+			pass++;
+			Parameter p = null;
+			boolean fromCommand = false;
+			if (currentCommand != null) {
+				p = commandScheme.getParameter(nextToken);
+				fromCommand = true;
+			}
+			if (p == null) {
+				p = baseScheme.getParameter(nextToken);
+			}
+
+			if (p == null) {
+				// No such parameter - neither on the command nor the base scheme, so this is an error
+				if (dynamic && pass == 0) {
+					// Dynamic support enabled!!  Try to expand the currently-active scheme
+					extendScheme(extensions++, baseValues, currentCommand, commandValues, (currentCommand != null ? currentCommand : baseScheme));
+					continue inner;
+				}
+				throw new UnknownParameterException(nextToken.raw);
+			}
+
+			break;
+		}
+
+		if (p.maxArgs != 0) {
+			currentParameter = p;
+		}
+	}
+}
