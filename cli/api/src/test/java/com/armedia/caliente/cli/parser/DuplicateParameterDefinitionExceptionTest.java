@@ -5,14 +5,14 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.armedia.caliente.cli.ParameterImpl;
 import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterDefinition;
 
 public class DuplicateParameterDefinitionExceptionTest {
 	@Test
 	public void testConstructor() {
-		ParameterDefinition existing = new Parameter();
-		ParameterDefinition incoming = new Parameter();
+		Parameter existing = new ParameterImpl();
+		Parameter incoming = new ParameterImpl();
 
 		try {
 			new DuplicateParameterException(null, null, null);

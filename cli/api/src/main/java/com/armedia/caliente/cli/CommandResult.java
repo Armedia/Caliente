@@ -1,13 +1,13 @@
 package com.armedia.caliente.cli;
 
-public interface CommandSchemeResult extends ParameterSchemeResult {
+public interface CommandResult extends ParameterResult {
 
 	/**
 	 * Get the command given
 	 *
 	 * @return the command given, or {@code null} if none was given.
 	 */
-	public Command getCommand();
+	public String getCommand();
 
 	/**
 	 * Return the {@link ParameterValues} instance associated with the given command

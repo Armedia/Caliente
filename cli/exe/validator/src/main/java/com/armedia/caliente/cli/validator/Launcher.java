@@ -15,7 +15,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.ParameterDefinition;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterTools;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
@@ -49,7 +49,7 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
-	public Collection<ParameterDefinition> getParameters(CommandLineValues commandLine) {
+	public Collection<Parameter> getParameters(CommandLineValues commandLine) {
 		return ParameterTools.getUnwrappedList(CLIParam.values());
 	}
 

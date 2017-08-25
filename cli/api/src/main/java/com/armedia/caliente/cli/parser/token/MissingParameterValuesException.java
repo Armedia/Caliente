@@ -2,26 +2,26 @@ package com.armedia.caliente.cli.parser.token;
 
 import java.util.List;
 
-import com.armedia.caliente.cli.ParameterDefinition;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.commons.utilities.Tools;
 
 public class MissingParameterValuesException extends TokenProcessorException {
 	private static final long serialVersionUID = 1L;
 
-	private final ParameterDefinition parameterDefinition;
+	private final Parameter parameter;
 	private final List<String> values;
 
-	public MissingParameterValuesException(ParameterDefinition parameterDefinition) {
-		this(parameterDefinition, null);
+	public MissingParameterValuesException(Parameter parameter) {
+		this(parameter, null);
 	}
 
-	public MissingParameterValuesException(ParameterDefinition parameterDefinition, List<String> values) {
-		this.parameterDefinition = parameterDefinition;
+	public MissingParameterValuesException(Parameter parameter, List<String> values) {
+		this.parameter = parameter;
 		this.values = Tools.freezeCopy(values, true);
 	}
 
-	public final ParameterDefinition getParameter() {
-		return this.parameterDefinition;
+	public final Parameter getParameter() {
+		return this.parameter;
 	}
 
 	public final List<String> getValues() {

@@ -6,7 +6,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
-import com.armedia.caliente.cli.ParameterDefinition;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.token.Token;
 
 public final class BasicParserErrorPolicy implements TokenErrorPolicy {
@@ -126,12 +126,12 @@ public final class BasicParserErrorPolicy implements TokenErrorPolicy {
 	}
 
 	@Override
-	public boolean isErrorMissingValues(Token token, ParameterDefinition parameterDefinition, List<String> values) {
+	public boolean isErrorMissingValues(Token token, Parameter parameter, List<String> values) {
 		return isEnabled(Error.MISSING_VALUES);
 	}
 
 	@Override
-	public boolean isErrorTooManyValues(Token token, ParameterDefinition parameterDefinition, List<String> values) {
+	public boolean isErrorTooManyValues(Token token, Parameter parameter, List<String> values) {
 		return isEnabled(Error.TOO_MANY_VALUES);
 	}
 

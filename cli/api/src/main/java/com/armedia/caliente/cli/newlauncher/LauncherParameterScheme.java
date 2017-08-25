@@ -2,7 +2,7 @@ package com.armedia.caliente.cli.newlauncher;
 
 import java.util.Collection;
 
-import com.armedia.caliente.cli.ParameterDefinition;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterScheme;
 
 public final class LauncherParameterScheme {
@@ -22,15 +22,15 @@ public final class LauncherParameterScheme {
 		return this.modified;
 	}
 
-	Collection<ParameterDefinition> removeParameter(ParameterDefinition parameterDefinition) {
-		return this.scheme.removeParameter(parameterDefinition);
+	Collection<Parameter> removeParameter(Parameter parameter) {
+		return this.scheme.removeParameter(parameter);
 	}
 
-	ParameterDefinition removeParameter(String longOpt) {
+	Parameter removeParameter(String longOpt) {
 		return this.scheme.removeParameter(longOpt);
 	}
 
-	ParameterDefinition removeParameter(Character shortOpt) {
+	Parameter removeParameter(Character shortOpt) {
 		return this.scheme.removeParameter(shortOpt);
 	}
 
@@ -50,21 +50,21 @@ public final class LauncherParameterScheme {
 		return this.scheme.getMaxArgs();
 	}
 
-	public void addParameter(ParameterDefinition parameterDefinition) {
-		this.scheme.addParameter(parameterDefinition);
+	public void addParameter(Parameter parameter) {
+		this.scheme.addParameter(parameter);
 		this.modified = true;
 	}
 
-	public void addParameters(ParameterDefinition... parameters) {
+	public void addParameters(Parameter... parameters) {
 		this.scheme.addParameters(parameters);
 		this.modified = true;
 	}
 
-	public Collection<ParameterDefinition> getParameters() {
+	public Collection<Parameter> getParameters() {
 		return this.scheme.getParameters();
 	}
 
-	public Collection<ParameterDefinition> getRequiredParameters() {
+	public Collection<Parameter> getRequiredParameters() {
 		return this.scheme.getRequiredParameters();
 	}
 
@@ -84,15 +84,15 @@ public final class LauncherParameterScheme {
 		return this.scheme.hasParameter(longOpt);
 	}
 
-	public int countCollisions(ParameterDefinition parameterDefinition) {
-		return this.scheme.countCollisions(parameterDefinition);
+	public int countCollisions(Parameter parameter) {
+		return this.scheme.countCollisions(parameter);
 	}
 
-	public ParameterDefinition getParameter(String longOpt) {
+	public Parameter getParameter(String longOpt) {
 		return this.scheme.getParameter(longOpt);
 	}
 
-	public ParameterDefinition getParameter(Character shortOpt) {
+	public Parameter getParameter(Character shortOpt) {
 		return this.scheme.getParameter(shortOpt);
 	}
 }

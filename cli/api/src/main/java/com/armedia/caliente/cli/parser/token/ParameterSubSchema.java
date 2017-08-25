@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Set;
 
-import com.armedia.caliente.cli.ParameterDefinition;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.commons.utilities.Tools;
 
 public interface ParameterSubSchema extends Cloneable {
@@ -15,16 +15,16 @@ public interface ParameterSubSchema extends Cloneable {
 	 * alphabetically, prioritizing the short option over the long one.
 	 * </p>
 	 */
-	public static final Comparator<ParameterDefinition> DEFAULT_COMPARATOR = new Comparator<ParameterDefinition>() {
+	public static final Comparator<Parameter> DEFAULT_COMPARATOR = new Comparator<Parameter>() {
 
-		private String getValue(ParameterDefinition p) {
+		private String getValue(Parameter p) {
 			Character s = p.getShortOpt();
 			String l = p.getLongOpt();
 			return (s != null ? s.toString() : l);
 		}
 
 		@Override
-		public int compare(ParameterDefinition a, ParameterDefinition b) {
+		public int compare(Parameter a, Parameter b) {
 			if (a == b) { return 0; }
 			if (a == null) { return -1; }
 			if (b == null) { return 1; }
@@ -55,14 +55,14 @@ public interface ParameterSubSchema extends Cloneable {
 
 	/**
 	 * <p>
-	 * Returns the {@link ParameterDefinition} instance which describes the short option, or {@code null} if
+	 * Returns the {@link Parameter} instance which describes the short option, or {@code null} if
 	 * it's not defined.
 	 * </p>
 	 *
 	 * @param shortOpt
-	 * @return the {@link ParameterDefinition} instance which describes the short option
+	 * @return the {@link Parameter} instance which describes the short option
 	 */
-	public ParameterDefinition getParameter(char shortOpt);
+	public Parameter getParameter(char shortOpt);
 
 	/**
 	 * <p>
@@ -85,14 +85,14 @@ public interface ParameterSubSchema extends Cloneable {
 
 	/**
 	 * <p>
-	 * Returns the {@link ParameterDefinition} instance which describes the long option, or {@code null} if
+	 * Returns the {@link Parameter} instance which describes the long option, or {@code null} if
 	 * it's not defined.
 	 * </p>
 	 *
 	 * @param longOpt
-	 * @return the {@link ParameterDefinition} instance which describes the long option
+	 * @return the {@link Parameter} instance which describes the long option
 	 */
-	public ParameterDefinition getParameter(String longOpt);
+	public Parameter getParameter(String longOpt);
 
 	/**
 	 * <p>
@@ -111,5 +111,5 @@ public interface ParameterSubSchema extends Cloneable {
 	 *
 	 * @return a sorted {@link Collection} of the defined parameters
 	 */
-	public Collection<ParameterDefinition> getParameters(Comparator<? super ParameterDefinition> comparator);
+	public Collection<Parameter> getParameters(Comparator<? super Parameter> comparator);
 }

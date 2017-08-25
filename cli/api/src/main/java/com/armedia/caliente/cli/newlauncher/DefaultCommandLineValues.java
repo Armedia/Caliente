@@ -4,7 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.ParameterDefinition;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterWrapper;
 import com.armedia.caliente.cli.parser.CommandLineParameter;
 
@@ -69,13 +69,13 @@ public class DefaultCommandLineValues implements CommandLineValues {
 	}
 
 	@Override
-	public boolean isDefined(ParameterDefinition param) {
+	public boolean isDefined(Parameter param) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public CommandLineParameter getParameter(ParameterDefinition param) {
+	public CommandLineParameter getParameter(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -93,121 +93,121 @@ public class DefaultCommandLineValues implements CommandLineValues {
 	}
 
 	@Override
-	public Boolean getBoolean(ParameterDefinition param) {
+	public Boolean getBoolean(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean getBoolean(ParameterDefinition param, boolean def) {
+	public boolean getBoolean(Parameter param, boolean def) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public List<Boolean> getAllBooleans(ParameterDefinition param) {
+	public List<Boolean> getAllBooleans(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Integer getInteger(ParameterDefinition param) {
+	public Integer getInteger(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public int getInteger(ParameterDefinition param, int def) {
+	public int getInteger(Parameter param, int def) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public List<Integer> getAllIntegers(ParameterDefinition param) {
+	public List<Integer> getAllIntegers(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Long getLong(ParameterDefinition param) {
+	public Long getLong(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public long getLong(ParameterDefinition param, long def) {
+	public long getLong(Parameter param, long def) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public List<Long> getAllLongs(ParameterDefinition param) {
+	public List<Long> getAllLongs(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Float getFloat(ParameterDefinition param) {
+	public Float getFloat(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public float getFloat(ParameterDefinition param, float def) {
+	public float getFloat(Parameter param, float def) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public List<Float> getAllFloats(ParameterDefinition param) {
+	public List<Float> getAllFloats(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Double getDouble(ParameterDefinition param) {
+	public Double getDouble(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public double getDouble(ParameterDefinition param, double def) {
+	public double getDouble(Parameter param, double def) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
 	@Override
-	public List<Double> getAllDoubles(ParameterDefinition param) {
+	public List<Double> getAllDoubles(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public String getString(ParameterDefinition param) {
+	public String getString(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public String getString(ParameterDefinition param, String def) {
+	public String getString(Parameter param, String def) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<String> getAllStrings(ParameterDefinition param) {
+	public List<String> getAllStrings(Parameter param) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<String> getAllStrings(ParameterDefinition param, List<String> def) {
+	public List<String> getAllStrings(Parameter param, List<String> def) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean isPresent(ParameterDefinition param) {
+	public boolean isPresent(Parameter param) {
 		// TODO Auto-generated method stub
 		return false;
 	}

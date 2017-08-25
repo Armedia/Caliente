@@ -3,11 +3,11 @@ package com.armedia.caliente.cli;
 import java.util.List;
 import java.util.Set;
 
-public final class ParameterValue extends ParameterDefinition {
+public final class ParameterValue extends Parameter {
 	private final ParameterValues values;
-	private final ParameterDefinition def;
+	private final Parameter def;
 
-	ParameterValue(ParameterValues values, ParameterDefinition def) {
+	ParameterValue(ParameterValues values, Parameter def) {
 		this.values = values;
 		this.def = def;
 	}

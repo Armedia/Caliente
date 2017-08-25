@@ -1,17 +1,17 @@
 package com.armedia.caliente.cli.parser.token;
 
-import com.armedia.caliente.cli.ParameterDefinition;
+import com.armedia.caliente.cli.Parameter;
 
 public class RequiredParameterMissingException extends TokenProcessorException {
 	private static final long serialVersionUID = 1L;
 
-	private final ParameterDefinition parameterDefinition;
+	private final Parameter parameter;
 
-	public RequiredParameterMissingException(ParameterDefinition parameterDefinition) {
-		this.parameterDefinition = parameterDefinition;
+	public RequiredParameterMissingException(Parameter parameter) {
+		this.parameter = parameter;
 	}
 
-	public final ParameterDefinition getParameter() {
-		return this.parameterDefinition;
+	public final Parameter getParameter() {
+		return this.parameter;
 	}
 }

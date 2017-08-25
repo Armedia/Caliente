@@ -2,7 +2,7 @@ package com.armedia.caliente.cli;
 
 import java.util.List;
 
-public interface ParameterSchemeResult {
+public interface ParameterResult {
 
 	/**
 	 * Returns the {@link ParameterValues} instance that describes the parameters parsed

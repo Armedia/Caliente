@@ -22,20 +22,20 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	 * @return {@code true} if the given parameter is defined in the underlying parameter scheme,
 	 *         {@code false} otherwise.
 	 */
-	public boolean isDefined(ParameterDefinition param);
+	public boolean isDefined(Parameter param);
 
 	/**
 	 * Returns {@code true} if the given parameter occurs in the parsed command line, {@code false}
 	 * otherwise. If this method returns {@code true}, by definition
-	 * {@link #getOccurrences(ParameterDefinition)} also returns a value greater than {@code 0}. If
-	 * it returns {@code false}, then concordantly {@link #getOccurrences(ParameterDefinition)} must
+	 * {@link #getOccurrences(Parameter)} also returns a value greater than {@code 0}. If
+	 * it returns {@code false}, then concordantly {@link #getOccurrences(Parameter)} must
 	 * return {@code 0}.
 	 *
 	 * @param param
 	 * @return {@code true} if the given parameter occurs in the parsed command line, {@code false}
 	 *         otherwise
 	 */
-	public boolean isPresent(ParameterDefinition param);
+	public boolean isPresent(Parameter param);
 
 	/**
 	 * Returns the value(s) parsed for the given parameter in the parsed command line.
@@ -43,7 +43,7 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	 * @param param
 	 * @return the value(s) parsed for the given parameter in the parsed command line.
 	 */
-	public ParameterValue getParameter(ParameterDefinition param);
+	public ParameterValue getParameter(Parameter param);
 
 	/**
 	 * Returns the number of times this parameter occurs in the parsed command line.
@@ -51,7 +51,7 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	 * @param param
 	 * @return the number of times this parameter occurs in the parsed command line.
 	 */
-	public int getOccurrences(ParameterDefinition param);
+	public int getOccurrences(Parameter param);
 
 	/* Short Options */
 	public Iterable<Character> shortOptions();
@@ -68,46 +68,46 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 	public boolean hasParameter(String longOpt);
 
 	/* Booleans */
-	public Boolean getBoolean(ParameterDefinition param);
+	public Boolean getBoolean(Parameter param);
 
-	public Boolean getBoolean(ParameterDefinition param, Boolean def);
+	public Boolean getBoolean(Parameter param, Boolean def);
 
-	public List<Boolean> getAllBooleans(ParameterDefinition param);
+	public List<Boolean> getAllBooleans(Parameter param);
 
 	/* Integers */
-	public Integer getInteger(ParameterDefinition param);
+	public Integer getInteger(Parameter param);
 
-	public Integer getInteger(ParameterDefinition param, Integer def);
+	public Integer getInteger(Parameter param, Integer def);
 
-	public List<Integer> getAllIntegers(ParameterDefinition param);
+	public List<Integer> getAllIntegers(Parameter param);
 
 	/* Longs */
-	public Long getLong(ParameterDefinition param);
+	public Long getLong(Parameter param);
 
-	public Long getLong(ParameterDefinition param, Long def);
+	public Long getLong(Parameter param, Long def);
 
-	public List<Long> getAllLongs(ParameterDefinition param);
+	public List<Long> getAllLongs(Parameter param);
 
 	/* Floats */
-	public Float getFloat(ParameterDefinition param);
+	public Float getFloat(Parameter param);
 
-	public Float getFloat(ParameterDefinition param, Float def);
+	public Float getFloat(Parameter param, Float def);
 
-	public List<Float> getAllFloats(ParameterDefinition param);
+	public List<Float> getAllFloats(Parameter param);
 
 	/* Doubles */
-	public Double getDouble(ParameterDefinition param);
+	public Double getDouble(Parameter param);
 
-	public Double getDouble(ParameterDefinition param, Double def);
+	public Double getDouble(Parameter param, Double def);
 
-	public List<Double> getAllDoubles(ParameterDefinition param);
+	public List<Double> getAllDoubles(Parameter param);
 
 	/* Strings */
-	public String getString(ParameterDefinition param);
+	public String getString(Parameter param);
 
-	public String getString(ParameterDefinition param, String def);
+	public String getString(Parameter param, String def);
 
-	public List<String> getAllStrings(ParameterDefinition param);
+	public List<String> getAllStrings(Parameter param);
 
 	/* Same as all above, but for ParameterWrapper */
 

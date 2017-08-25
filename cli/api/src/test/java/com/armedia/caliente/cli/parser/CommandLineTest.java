@@ -12,8 +12,8 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.armedia.caliente.cli.ParameterImpl;
 import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterDefinition;
 
 public class CommandLineTest {
 
@@ -28,7 +28,7 @@ public class CommandLineTest {
 		CommandLine cl = new CommandLine();
 		Assert.assertNotNull(cl);
 
-		Parameter def = null;
+		ParameterImpl def = null;
 
 		try {
 			cl.define(def);
@@ -37,7 +37,7 @@ public class CommandLineTest {
 			// All is well
 		}
 
-		def = new Parameter();
+		def = new ParameterImpl();
 		try {
 			cl.define(def);
 			Assert.fail("Did not fail with no short or long options");
@@ -59,7 +59,7 @@ public class CommandLineTest {
 					continue;
 				}
 				char c = s.charAt(0);
-				def = new Parameter();
+				def = new ParameterImpl();
 				def.setShortOpt(c);
 				if (longOpt != null) {
 					def.setLongOpt(longOpt);
@@ -71,7 +71,7 @@ public class CommandLineTest {
 						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
 					}
 					Assert.assertSame(cl, p.getCommandLineValues());
-					Assert.assertTrue(ParameterDefinition.isIdentical(def, p));
+					Assert.assertTrue(Parameter.isIdentical(def, p));
 				} catch (InvalidParameterException e) {
 					if (Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Failed with legal character [%s]", c));
@@ -87,7 +87,7 @@ public class CommandLineTest {
 			}
 		}
 
-		def = new Parameter();
+		def = new ParameterImpl();
 		def.setLongOpt("");
 		try {
 			cl.define(def);
@@ -118,7 +118,7 @@ public class CommandLineTest {
 		Assert.assertNotEquals(p, null);
 		Assert.assertNotEquals(p, "");
 		Assert.assertSame(cl, p.getCommandLineValues());
-		Assert.assertTrue(ParameterDefinition.isIdentical(def, p));
+		Assert.assertTrue(Parameter.isIdentical(def, p));
 
 		CommandLineParameter p2 = cl.define(def);
 		Assert.assertSame(p, p2);
@@ -127,7 +127,7 @@ public class CommandLineTest {
 		p2 = cl.define(def);
 		Assert.assertSame(cl, p2.getCommandLineValues());
 		Assert.assertNotSame(p, p2);
-		Assert.assertTrue(ParameterDefinition.isIdentical(def, p2));
+		Assert.assertTrue(Parameter.isIdentical(def, p2));
 		Assert.assertNotEquals(p, p2);
 
 		def.setShortOpt('x');
@@ -144,7 +144,7 @@ public class CommandLineTest {
 		CommandLine cl = new CommandLine();
 		Assert.assertNotNull(cl);
 
-		Parameter def = new Parameter();
+		ParameterImpl def = new ParameterImpl();
 		Map<String, CommandLineParameter> m = new HashMap<>();
 		for (int i = 0; i < 100; i++) {
 			def.setLongOpt(String.format("long-%04x", i));
@@ -177,7 +177,7 @@ public class CommandLineTest {
 			"-c", //
 		};
 
-		Parameter def = new Parameter();
+		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.define(def);
@@ -231,7 +231,7 @@ public class CommandLineTest {
 			"-f", //
 		};
 
-		Parameter def = new Parameter();
+		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
@@ -285,7 +285,7 @@ public class CommandLineTest {
 			"-f", //
 		};
 
-		Parameter def = new Parameter();
+		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
@@ -343,7 +343,7 @@ public class CommandLineTest {
 			"-f", //
 		};
 
-		Parameter def = new Parameter();
+		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
@@ -401,7 +401,7 @@ public class CommandLineTest {
 			"-f", //
 		};
 
-		Parameter def = new Parameter();
+		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
@@ -458,7 +458,7 @@ public class CommandLineTest {
 			"-f", //
 		};
 
-		Parameter def = new Parameter();
+		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
@@ -515,7 +515,7 @@ public class CommandLineTest {
 			"-f",
 		};
 
-		Parameter def = new Parameter();
+		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
@@ -571,7 +571,7 @@ public class CommandLineTest {
 				"-c", "3,4", //
 			};
 
-			Parameter def = new Parameter();
+			ParameterImpl def = new ParameterImpl();
 			def.setShortOpt('a');
 			CommandLineParameter a = cl.define(def);
 
@@ -605,7 +605,7 @@ public class CommandLineTest {
 				"--long-c", "3,4", //
 			};
 
-			Parameter def = new Parameter();
+			ParameterImpl def = new ParameterImpl();
 			def.setLongOpt("long-a");
 			CommandLineParameter a = cl.define(def);
 
@@ -644,7 +644,7 @@ public class CommandLineTest {
 				"d", "5", //
 			};
 
-			Parameter def = new Parameter();
+			ParameterImpl def = new ParameterImpl();
 			def.setMaxValueCount(1);
 			def.setShortOpt('a');
 			CommandLineParameter a = cl.define(def);
@@ -666,7 +666,7 @@ public class CommandLineTest {
 				"-a", "1", //
 			};
 
-			Parameter def = new Parameter();
+			ParameterImpl def = new ParameterImpl();
 			def.setMaxValueCount(1);
 			def.setShortOpt('a');
 			CommandLineParameter a = cl.define(def);
@@ -683,7 +683,7 @@ public class CommandLineTest {
 	public void testShortOptions() {
 		CommandLine cl = new CommandLine(false);
 		final Charset charset = Charset.forName("US-ASCII");
-		Parameter def = null;
+		ParameterImpl def = null;
 		Set<CommandLineParameter> shortOptions = new HashSet<>();
 		for (int i = 0; i < 255; i++) {
 			ByteBuffer bb = ByteBuffer.allocate(4);
@@ -693,7 +693,7 @@ public class CommandLineTest {
 				continue;
 			}
 			char c = s.charAt(0);
-			def = new Parameter();
+			def = new ParameterImpl();
 			def.setShortOpt(c);
 			try {
 				CommandLineParameter p = cl.define(def);
@@ -724,10 +724,10 @@ public class CommandLineTest {
 	@Test
 	public void testLongOptions() throws Exception {
 		CommandLine cl = new CommandLine(false);
-		Parameter def = null;
+		ParameterImpl def = null;
 		Set<CommandLineParameter> longOptions = new HashSet<>();
 		for (int i = 0; i < 255; i++) {
-			def = new Parameter();
+			def = new ParameterImpl();
 			def.setLongOpt(String.format("long-%04x", i));
 			CommandLineParameter p = cl.define(def);
 			longOptions.add(p);
@@ -752,9 +752,9 @@ public class CommandLineTest {
 		CommandLine cl = new CommandLine();
 		Assert.assertNotNull(cl);
 
-		Parameter def = null;
+		ParameterImpl def = null;
 
-		def = new Parameter();
+		def = new ParameterImpl();
 
 		def.setShortOpt('a');
 		CommandLineParameter a = cl.define(def);
@@ -762,7 +762,7 @@ public class CommandLineTest {
 		def.setShortOpt('b');
 		CommandLineParameter b = cl.define(def);
 
-		def = new Parameter();
+		def = new ParameterImpl();
 
 		def.setLongOpt("ab");
 		CommandLineParameter ab = cl.define(def);

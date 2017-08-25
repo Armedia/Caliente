@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.ParameterDefinition;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
@@ -26,7 +26,7 @@ public class Scratchpad extends AbstractLauncher implements LaunchParameterSet {
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
 	@Override
-	public Collection<? extends ParameterDefinition> getParameters(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
 		return Collections.emptyList();
 	}
 

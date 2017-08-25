@@ -4,14 +4,14 @@ import java.util.Collection;
 import java.util.Collections;
 
 import com.armedia.caliente.cli.CommandLineValues;
+import com.armedia.caliente.cli.ParameterImpl;
 import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterDefinition;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.commons.utilities.Tools;
 
 public final class ThreadsLaunchHelper implements LaunchParameterSet {
 
-	private static final ParameterDefinition THREADS = new Parameter() //
+	private static final Parameter THREADS = new ParameterImpl() //
 		.setShortOpt('t') //
 		.setLongOpt("threads") //
 		.setMinValueCount(1) //
@@ -70,7 +70,7 @@ public final class ThreadsLaunchHelper implements LaunchParameterSet {
 	}
 
 	@Override
-	public Collection<? extends ParameterDefinition> getParameters(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
 		return Collections.singleton(ThreadsLaunchHelper.THREADS);
 	}
 

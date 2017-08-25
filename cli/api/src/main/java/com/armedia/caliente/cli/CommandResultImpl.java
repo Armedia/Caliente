@@ -2,12 +2,12 @@ package com.armedia.caliente.cli;
 
 import java.util.List;
 
-public class CommandSchemeResultImpl extends ParameterSchemeResultImpl implements CommandSchemeResult {
+public class CommandResultImpl extends ParameterResultImpl implements CommandResult {
 
-	private final Command command;
+	private final String command;
 	private final ParameterValues commandValues;
 
-	public CommandSchemeResultImpl(ParameterValues parameterValues, Command command, ParameterValues commandValues,
+	public CommandResultImpl(ParameterValues parameterValues, String command, ParameterValues commandValues,
 		List<String> positionals) {
 		super(parameterValues, positionals);
 		this.command = command;
@@ -15,7 +15,7 @@ public class CommandSchemeResultImpl extends ParameterSchemeResultImpl implement
 	}
 
 	@Override
-	public Command getCommand() {
+	public String getCommand() {
 		return this.command;
 	}
 

@@ -1,23 +1,23 @@
 package com.armedia.caliente.cli.filenamemapper;
 
+import com.armedia.caliente.cli.ParameterImpl;
 import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterDefinition;
 import com.armedia.caliente.cli.ParameterWrapper;
 
 public enum CLIParam implements ParameterWrapper {
-	no_fix(new Parameter() //
+	no_fix(new ParameterImpl() //
 		.setDescription("Disable filename fixes") //
 	), //
-	no_length_fix(new Parameter() //
+	no_length_fix(new ParameterImpl() //
 		.setDescription("Disable length repairs on the filename fixer") //
 	), //
-	no_char_fix(new Parameter() //
+	no_char_fix(new ParameterImpl() //
 		.setDescription("Disable invalid character repairs on the filename fixer") //
 	), //
-	ignore_case(new Parameter() //
+	ignore_case(new ParameterImpl() //
 		.setDescription("Disable case sensitivity when performing name comparisons") //
 	), //
-	fix_char(new Parameter() //
+	fix_char(new ParameterImpl() //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("character") //
@@ -25,17 +25,17 @@ public enum CLIParam implements ParameterWrapper {
 			+ "must not be a forbidden character in the target fix scheme, and the period ('.') "
 			+ "and spaces are not allowed in Windows)") //
 	), //
-	fix_mode(new Parameter() //
+	fix_mode(new ParameterImpl() //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("WIN|UNIX") //
 		.setDescription("Filename fix mode. Valid values are WIN (Windows compatibility) or "
 			+ "UNIX (Unix compatibility) - defaults to the current platform") //
 	), //
-	no_dedup(new Parameter() //
+	no_dedup(new ParameterImpl() //
 		.setDescription("Disable filename deduplication") //
 	), //
-	dedup_pattern(new Parameter() //
+	dedup_pattern(new ParameterImpl() //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("pattern") //
@@ -43,7 +43,7 @@ public enum CLIParam implements ParameterWrapper {
 			+ "${fixChar}, and ${count} (the number of conflicts resolved so far) - default is "
 			+ "\"${name}${fixChar}${id}\"") //
 	), //
-	target(new Parameter() //
+	target(new ParameterImpl() //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("file") //
@@ -52,14 +52,14 @@ public enum CLIParam implements ParameterWrapper {
 		//
 	;
 
-	private final ParameterDefinition parameterDefinition;
+	private final Parameter parameter;
 
-	private CLIParam(Parameter parameter) {
-		this.parameterDefinition = Parameter.initOptionName(this, parameter);
+	private CLIParam(ParameterImpl parameter) {
+		this.parameter = ParameterImpl.initOptionName(this, parameter);
 	}
 
 	@Override
-	public ParameterDefinition getParameter() {
-		return this.parameterDefinition;
+	public Parameter getParameter() {
+		return this.parameter;
 	}
 }

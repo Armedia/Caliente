@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.ParameterDefinition;
+import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.parser.CommandLine;
 import com.armedia.caliente.cli.parser.CommandLineParseException;
@@ -66,7 +66,7 @@ public abstract class AbstractLauncher {
 		// previously parsed commandLineParameters
 		CommandLine cl = new CommandLine(supportsHelp);
 		int pass = -1;
-		final Collection<ParameterDefinition> newParameters = new ArrayList<>();
+		final Collection<Parameter> newParameters = new ArrayList<>();
 		while (true) {
 			newParameters.clear();
 			// If there are any helpers to be applied, we do so now
@@ -76,9 +76,9 @@ public abstract class AbstractLauncher {
 					if (parameterSet == null) {
 						continue;
 					}
-					final Collection<? extends ParameterDefinition> ps = parameterSet.getParameters(cl);
+					final Collection<? extends Parameter> ps = parameterSet.getParameters(cl);
 					if ((ps != null) && !ps.isEmpty()) {
-						for (ParameterDefinition p : ps) {
+						for (Parameter p : ps) {
 							if (p != null) {
 								newParameters.add(p);
 							}
@@ -93,7 +93,7 @@ public abstract class AbstractLauncher {
 			}
 
 			// We have new parameters, so we define them...
-			for (ParameterDefinition def : newParameters) {
+			for (Parameter def : newParameters) {
 				try {
 					cl.define(def);
 				} catch (Exception e) {
