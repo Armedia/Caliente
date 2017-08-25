@@ -29,13 +29,13 @@ import com.armedia.caliente.cli.token.StaticTokenSource;
 import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.cli.token.TokenLoader;
 
-public abstract class BaseLauncher {
+public abstract class AbstractLauncher {
 
 	private static final Logger BOOT_LOG = LogConfigurator.getBootLogger();
 
 	private static final String[] NO_ARGS = {};
 
-	protected Logger log = BaseLauncher.BOOT_LOG;
+	protected Logger log = AbstractLauncher.BOOT_LOG;
 
 	protected static final Pattern DEFAULT_COMMAND_PATTERN = Pattern.compile("^[\\w&&[^\\d]]\\w*$");
 
@@ -101,7 +101,7 @@ public abstract class BaseLauncher {
 	 * @return {@code true} if the given string represents a command, {@code false} otherwise
 	 */
 	protected boolean isCommand(String str) {
-		return (str != null) && BaseLauncher.DEFAULT_COMMAND_PATTERN.matcher(str).matches();
+		return (str != null) && AbstractLauncher.DEFAULT_COMMAND_PATTERN.matcher(str).matches();
 	}
 
 	private CommandLineResult parseArguments(Parameter helpParameter, final ParameterScheme baseScheme, String... args)
@@ -278,7 +278,7 @@ public abstract class BaseLauncher {
 		if (parameterScheme == null) { throw new IllegalArgumentException(
 			"Must provide an initial parameter scheme to parse against"); }
 		if (args == null) {
-			args = BaseLauncher.NO_ARGS;
+			args = AbstractLauncher.NO_ARGS;
 		}
 
 		if ((helpParameter != null)
