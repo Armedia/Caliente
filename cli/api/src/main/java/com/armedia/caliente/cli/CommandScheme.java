@@ -7,27 +7,42 @@ import java.util.TreeMap;
 
 public class CommandScheme extends ParameterScheme {
 
-	public CommandScheme(String name) {
+	private final boolean caseSensitive;
+
+	public CommandScheme(String name, boolean caseSensitive) {
 		super(name);
+		this.caseSensitive = caseSensitive;
 	}
 
 	private final Map<String, Command> commands = new TreeMap<>();
 
+	private String canonicalize(String str) {
+		if (str == null) { return null; }
+		if (!this.caseSensitive) {
+			str = str.toLowerCase();
+		}
+		return str;
+	}
+
+	public boolean isCaseSensitive() {
+		return this.caseSensitive;
+	}
+
 	public CommandScheme addCommand(Command command) {
 		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command"); }
-		this.commands.put(command.getName(), command);
+		this.commands.put(canonicalize(command.getName()), command);
 		for (String alias : command.getAliases()) {
-			this.commands.put(alias, command);
+			this.commands.put(canonicalize(alias), command);
 		}
 		return this;
 	}
 
 	public Command removeCommand(Command command) {
 		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command"); }
-		Command c = this.commands.remove(command.getName());
+		Command c = this.commands.remove(canonicalize(command.getName()));
 		if (c != null) {
 			for (String alias : c.getAliases()) {
-				this.commands.remove(alias);
+				this.commands.remove(canonicalize(alias));
 			}
 		}
 		return c;
@@ -35,10 +50,10 @@ public class CommandScheme extends ParameterScheme {
 
 	public Command removeCommand(String command) {
 		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command name"); }
-		Command c = this.commands.remove(command);
+		Command c = this.commands.remove(canonicalize(command));
 		if (c != null) {
 			for (String alias : c.getAliases()) {
-				this.commands.remove(alias);
+				this.commands.remove(canonicalize(alias));
 			}
 		}
 		return c;
@@ -50,7 +65,7 @@ public class CommandScheme extends ParameterScheme {
 
 	public Command getCommand(String nameOrAlias) {
 		if (nameOrAlias == null) { throw new IllegalArgumentException("Must provide a non-null name or alias"); }
-		return this.commands.get(nameOrAlias);
+		return this.commands.get(canonicalize(nameOrAlias));
 	}
 
 	public boolean hasCommand(String nameOrAlias) {
