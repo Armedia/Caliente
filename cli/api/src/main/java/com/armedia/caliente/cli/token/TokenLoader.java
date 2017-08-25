@@ -86,10 +86,11 @@ public class TokenLoader implements Iterable<Token> {
 	private final Map<String, List<String>> cache = new LinkedHashMap<>();
 	private final Set<String> recursions = new LinkedHashSet<>();
 	private final Stack<State> states = new Stack<>();
+	private String multiShort = null;
 	private Token next = null;
 
 	private static final String TERMINATOR_FMT = "%s%s";
-	private static final String SHORT_FMT = "^%s(\\S)$";
+	private static final String SHORT_FMT = "^%s(\\S+)$";
 	private static final String LONG_FMT = "^%s%s(\\S+)$";
 
 	private static final Pattern COMMENT = Pattern.compile("(?<!\\\\)#");
@@ -146,6 +147,18 @@ public class TokenLoader implements Iterable<Token> {
 		return this.valueSeparator;
 	}
 
+	private Token getNextShortToken(State state) {
+		if (this.multiShort == null) { return null; }
+		char c = this.multiShort.charAt(0);
+		Token next = newToken(state, Type.SHORT_OPTION, String.valueOf(c),
+			String.format("%s%s", this.parameterMarker, c));
+		this.multiShort = this.multiShort.substring(1);
+		if (StringUtils.isEmpty(this.multiShort)) {
+			this.multiShort = null;
+		}
+		return next;
+	}
+
 	public boolean hasNext() throws IOException, TokenSourceRecursionLoopException {
 		// If we have a token waiting in the wings, we go with that...
 		if (this.next != null) { return true; }
@@ -155,6 +168,11 @@ public class TokenLoader implements Iterable<Token> {
 		while (!this.states.isEmpty()) {
 			final boolean atRoot = (this.states.size() == 1);
 			State state = this.states.peek();
+
+			// If we're processing a multishort (-aBcdEfX), process and return the next short option
+			this.next = getNextShortToken(state);
+			if (this.next != null) { return true; }
+
 			Iterator<String> it = state.getStrings();
 			if (!it.hasNext()) {
 				// This state is spent... so remove it
@@ -203,7 +221,8 @@ public class TokenLoader implements Iterable<Token> {
 
 			Matcher m = this.patShort.matcher(current);
 			if (m.matches()) {
-				this.next = newToken(state, Type.SHORT_OPTION, m.group(1), current);
+				this.multiShort = m.group(1);
+				this.next = getNextShortToken(state);
 				return true;
 			}
 
