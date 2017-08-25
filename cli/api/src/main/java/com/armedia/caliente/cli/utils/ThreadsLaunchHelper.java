@@ -3,9 +3,9 @@ package com.armedia.caliente.cli.utils;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.ParameterImpl;
 import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterImpl;
+import com.armedia.caliente.cli.ParameterValues;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.commons.utilities.Tools;
 
@@ -70,21 +70,21 @@ public final class ThreadsLaunchHelper implements LaunchParameterSet {
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameters() {
 		return Collections.singleton(ThreadsLaunchHelper.THREADS);
 	}
 
-	public boolean hasThreads(CommandLineValues cli) {
+	public boolean hasThreads(ParameterValues cli) {
 		return cli.isPresent(ThreadsLaunchHelper.THREADS);
 	}
 
-	public Integer getThreads(CommandLineValues cli) {
+	public Integer getThreads(ParameterValues cli) {
 		Integer t = cli.getInteger(ThreadsLaunchHelper.THREADS);
 		if (t == null) { return this.def; }
 		return Tools.ensureBetween(this.min, t.intValue(), this.max);
 	}
 
-	public int getThreads(CommandLineValues cli, int def) {
+	public int getThreads(ParameterValues cli, int def) {
 		return Tools.ensureBetween(this.min, cli.getInteger(ThreadsLaunchHelper.THREADS, def), this.max);
 	}
 }

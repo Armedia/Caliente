@@ -1,9 +1,8 @@
 package com.armedia.caliente.cli;
 
-import com.armedia.caliente.cli.parser.token.TokenProcessorException;
 import com.armedia.caliente.cli.token.TokenSource;
 
-public class CommandLineSyntaxException extends TokenProcessorException {
+public class CommandLineSyntaxException extends CommandLineException {
 	private static final long serialVersionUID = 1L;
 
 	private final TokenSource source;

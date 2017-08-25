@@ -11,9 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.ParameterImpl;
 import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterImpl;
+import com.armedia.caliente.cli.ParameterValues;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 
@@ -57,12 +57,12 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameters() {
 		return Collections.singleton(LibLaunchHelper.LIB);
 	}
 
 	@Override
-	public Collection<URL> getClasspathPatchesPre(CommandLineValues cli) {
+	public Collection<URL> getClasspathPatchesPre(ParameterValues cli) {
 		List<URL> ret = new ArrayList<>();
 		try {
 			// First...use the command-line parameter given, and apply any defaults
@@ -106,7 +106,7 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 	}
 
 	@Override
-	public Collection<URL> getClasspathPatchesPost(CommandLineValues commandLine) {
+	public Collection<URL> getClasspathPatchesPost(ParameterValues commandLine) {
 		return null;
 	}
 

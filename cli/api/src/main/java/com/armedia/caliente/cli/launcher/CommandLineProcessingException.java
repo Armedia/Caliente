@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.newlauncher;
+package com.armedia.caliente.cli.launcher;
 
 import com.armedia.caliente.cli.CommandLineException;
 

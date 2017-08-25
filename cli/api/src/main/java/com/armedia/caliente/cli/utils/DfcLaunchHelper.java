@@ -10,9 +10,9 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
-import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.ParameterImpl;
 import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.ParameterImpl;
+import com.armedia.caliente.cli.ParameterValues;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.launcher.LaunchParameterSet;
 import com.armedia.commons.utilities.Tools;
@@ -89,17 +89,17 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 		}
 	}
 
-	public String getDfcUser(CommandLineValues cli) {
+	public String getDfcUser(ParameterValues cli) {
 		if (!this.includesConnectionInfo) { return null; }
 		return cli.getString(this.paramUser);
 	}
 
-	public String getDfcDocbase(CommandLineValues cli) {
+	public String getDfcDocbase(ParameterValues cli) {
 		if (!this.includesConnectionInfo) { return null; }
 		return cli.getString(this.paramDocbase);
 	}
 
-	public String getDfcPassword(CommandLineValues cli) {
+	public String getDfcPassword(ParameterValues cli) {
 		if (!this.includesConnectionInfo) { return null; }
 
 		String dctmUser = getDfcDocbase(cli);
@@ -119,7 +119,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
+	public Collection<? extends Parameter> getParameters() {
 		ArrayList<Parameter> ret = new ArrayList<>();
 		ret.add(this.paramDfcProp);
 		ret.add(this.paramDfc);
@@ -133,7 +133,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	}
 
 	@Override
-	public Collection<URL> getClasspathPatchesPre(CommandLineValues cli) {
+	public Collection<URL> getClasspathPatchesPre(ParameterValues cli) {
 		final boolean dfcFound = checkForDfc();
 		List<URL> ret = new ArrayList<>(3);
 		try {
@@ -215,7 +215,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	}
 
 	@Override
-	public Collection<URL> getClasspathPatchesPost(CommandLineValues commandLine) {
+	public Collection<URL> getClasspathPatchesPost(ParameterValues commandLine) {
 		return null;
 	}
 }
