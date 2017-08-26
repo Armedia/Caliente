@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.StrTokenizer;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandLineResult;
 import com.armedia.caliente.cli.CommandScheme;
+import com.armedia.caliente.cli.InsufficientValuesException;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterScheme;
 import com.armedia.caliente.cli.ParameterValues;
@@ -95,7 +98,7 @@ public abstract class AbstractLauncher {
 
 	private CommandLineResult parseArguments(Parameter helpParameter, final ParameterScheme baseScheme, String... args)
 		throws UnknownParameterException, UnknownCommandException, TooManyValuesException,
-		TooManyParameterValuesException {
+		TooManyParameterValuesException, InsufficientValuesException {
 
 		final DynamicParameterSchemeSupport dynamicSupport = getDynamicSchemeSupport();
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
@@ -114,6 +117,11 @@ public abstract class AbstractLauncher {
 
 		Parameter currentParameter = null;
 		boolean currentParameterFromCommand = false;
+
+		Map<String, Parameter> baseWithArgs = new HashMap<>();
+		Map<String, Parameter> commandWithArgs = new HashMap<>();
+
+		ExtensibleParameterScheme extensibleScheme = (dynamic ? new ExtensibleParameterScheme(baseScheme) : null);
 
 		int extensions = 0;
 		for (Token nextToken : tokenLoader) {
@@ -134,6 +142,9 @@ public abstract class AbstractLauncher {
 								nextToken.getRawString());
 							if (command != null) {
 								commandValues = new ParameterValuesImpl(command);
+								if (dynamic) {
+									extensibleScheme = new ExtensibleParameterScheme(command);
+								}
 								continue;
 							}
 
@@ -180,6 +191,8 @@ public abstract class AbstractLauncher {
 
 					// No schema violation on the upper end, so we simply add the values
 					target.add(currentParameter, values);
+					(currentParameterFromCommand ? commandWithArgs : baseWithArgs).put(currentParameter.getKey(),
+						currentParameter);
 				}
 
 				// At this point, we're for sure no longer processing a parameter from before...
@@ -212,9 +225,6 @@ public abstract class AbstractLauncher {
 					if (p == null) {
 						if (dynamic && (pass == 0)) {
 							// Dynamic support enabled!! Try to expand the currently-active scheme
-							// TODO: This bit is wasteful - improve on it!
-							ExtensibleParameterScheme extensibleScheme = new ExtensibleParameterScheme(
-								command != null ? command : baseScheme);
 							dynamicSupport.extendDynamicScheme(extensions, baseValues, command.getName(), commandValues,
 								nextToken, extensibleScheme);
 
@@ -238,6 +248,57 @@ public abstract class AbstractLauncher {
 				}
 			}
 		}
+
+		// Do we have enough positionals to meet the schema requirements?
+		if (currentScheme.getMinArgs() > 0) {
+			if (positionals.size() < currentScheme.getMinArgs()) { throw new InsufficientValuesException(null); }
+		}
+
+		// Do we have all the required parameters for both the global and command?
+		Collection<Parameter> baseFaults = new ArrayList<>();
+		for (Parameter p : baseScheme.getRequiredParameters()) {
+			if (!baseValues.isPresent(p)) {
+				baseFaults.add(p);
+			}
+		}
+		Collection<Parameter> commandFaults = new ArrayList<>();
+		if (command != null) {
+			for (Parameter p : command.getRequiredParameters()) {
+				if (!commandValues.isPresent(p)) {
+					commandFaults.add(p);
+				}
+			}
+		}
+
+		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) {
+			// TODO: RAISE THE ERROR FOR ALL MISSING PARAMETERS ON BOTH SCHEMES!!
+		}
+
+		// Validate the minimum parameters for the parameters that have arguments
+		for (Parameter p : baseWithArgs.values()) {
+			if ((p.getMinValueCount() > 0) && (baseValues.getValueCount(p) < p.getMinValueCount())) {
+				baseFaults.add(p);
+			}
+		}
+		for (Parameter p : commandWithArgs.values()) {
+			if ((p.getMinValueCount() > 0) && (commandValues.getValueCount(p) < p.getMinValueCount())) {
+				commandFaults.add(p);
+			}
+		}
+		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) {
+			// TODO: RAISE THE ERROR FOR PARAMETERS WITH MISSING VALUES ON BOTH SCHEMES!!
+		}
+
+		// At this point, we have all the required parameters, all the parameters with minimum
+		// values have been validated to be compliant, and we know we're not breaking the maximum
+		// values limit because that's checked above as we process. Now we validate the positionals
+
+		if ((currentScheme.getMinArgs() > 0) && (positionals.size() < currentScheme.getMinArgs())) {
+			// TODO: RAISE THE ERROR THAT WE'RE MISSING REQUIRED POSITIONALS
+		}
+
+		// This appears to be a schema-correct command line, so clean everything up and return the
+		// result so it can be processed
 
 		// Unwrap the positionals...
 		List<String> positionalStrings = new ArrayList<>(positionals.size());
@@ -290,7 +351,7 @@ public abstract class AbstractLauncher {
 		}
 
 		for (LaunchClasspathHelper helper : classpathHelpers) {
-			final Collection<URL> extraPatches = helper.getClasspathPatchesPre(result);
+			final Collection<URL> extraPatches = helper.getClasspathPatchesPre(result.getParameterValues());
 			if ((extraPatches != null) && !extraPatches.isEmpty()) {
 				for (URL u : extraPatches) {
 					if (u != null) {
@@ -308,7 +369,7 @@ public abstract class AbstractLauncher {
 		ClasspathPatcher.discoverPatches(false);
 
 		for (LaunchClasspathHelper helper : classpathHelpers) {
-			final Collection<URL> extraPatches = helper.getClasspathPatchesPost(result);
+			final Collection<URL> extraPatches = helper.getClasspathPatchesPost(result.getParameterValues());
 			if ((extraPatches != null) && !extraPatches.isEmpty()) {
 				for (URL u : extraPatches) {
 					if (u != null) {

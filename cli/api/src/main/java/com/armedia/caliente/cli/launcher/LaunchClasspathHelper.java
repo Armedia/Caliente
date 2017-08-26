@@ -7,8 +7,8 @@ import com.armedia.caliente.cli.ParameterValues;
 
 public interface LaunchClasspathHelper {
 
-	public Collection<URL> getClasspathPatchesPre(ParameterValues commandLine);
+	public Collection<URL> getClasspathPatchesPre(ParameterValues values);
 
-	public Collection<URL> getClasspathPatchesPost(ParameterValues commandLine);
+	public Collection<URL> getClasspathPatchesPost(ParameterValues values);
 
 }
