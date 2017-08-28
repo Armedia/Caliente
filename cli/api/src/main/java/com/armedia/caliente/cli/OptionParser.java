@@ -168,8 +168,8 @@ public class OptionParser {
 		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
 		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
 
-		if ((args == null) || args.isEmpty()) { return new CommandLineResult(new OptionValuesImpl(), null, null,
-			OptionParser.NO_POSITIONALS); }
+		if ((args == null) || args
+			.isEmpty()) { return new CommandLineResult(new OptionValues(), null, null, OptionParser.NO_POSITIONALS); }
 
 		baseScheme = Tools.coalesce(baseScheme, OptionParser.NULL_SCHEME);
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", args), optionValueSplitter,
@@ -177,7 +177,7 @@ public class OptionParser {
 		final Pattern splitter = Pattern
 			.compile(String.format(OptionParser.SEPARATOR_PATTERN, tokenLoader.getValueSeparator()));
 
-		final OptionValuesImpl baseValues = new OptionValuesImpl();
+		final OptionValues baseValues = new OptionValues();
 		final List<Token> positionals = new ArrayList<>();
 		final CommandScheme commandScheme = (CommandScheme.class.isInstance(baseScheme)
 			? CommandScheme.class.cast(baseScheme) : null);
@@ -186,7 +186,7 @@ public class OptionParser {
 
 		Command command = null;
 		String commandName = null;
-		OptionValuesImpl commandValues = null;
+		OptionValues commandValues = null;
 
 		OptionScheme currentScheme = baseScheme;
 
@@ -217,7 +217,7 @@ public class OptionParser {
 								nextToken.getRawString());
 							if (command != null) {
 								commandName = command.getName();
-								commandValues = new OptionValuesImpl();
+								commandValues = new OptionValues();
 								if (dynamic) {
 									extensibleScheme = new ExtensibleOptionScheme(command);
 								}
@@ -252,7 +252,7 @@ public class OptionParser {
 
 					// Find how many values the option currently has, and check if they're too
 					// many
-					OptionValuesImpl target = (currentOptionFromCommand ? commandValues : baseValues);
+					OptionValues target = (currentOptionFromCommand ? commandValues : baseValues);
 					final int existing = target.getValueCount(currentOption);
 
 					// Allow for escaping the separator character with \

@@ -1,180 +1,368 @@
 package com.armedia.caliente.cli;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
-public interface OptionValues extends Iterable<OptionValue> {
+import com.armedia.commons.utilities.Tools;
 
-	/* General use */
-	/**
-	 * Returns {@code true} if the given option is defined in the underlying option scheme,
-	 * {@code false} otherwise.
-	 *
-	 * @param param
-	 * @return {@code true} if the given option is defined in the underlying option scheme,
-	 *         {@code false} otherwise.
-	 */
-	public boolean isDefined(Option param);
+public final class OptionValues implements Iterable<OptionValue> {
 
-	/**
-	 * Returns {@code true} if the given option occurs in the parsed command line, {@code false}
-	 * otherwise. If this method returns {@code true}, by definition {@link #getOccurrences(Option)}
-	 * also returns a value greater than {@code 0}. If it returns {@code false}, then concordantly
-	 * {@link #getOccurrences(Option)} must return {@code 0}.
-	 *
-	 * @param param
-	 * @return {@code true} if the given option occurs in the parsed command line, {@code false}
-	 *         otherwise
-	 */
-	public boolean isPresent(Option param);
+	private final Map<Character, OptionValue> shortOptions = new TreeMap<>();
+	private final Map<String, OptionValue> longOptions = new TreeMap<>();
+	private final Map<String, OptionValue> optionValues = new TreeMap<>();
 
-	/**
-	 * Returns the value(s) parsed for the given option in the parsed command line.
-	 *
-	 * @param param
-	 * @return the value(s) parsed for the given option in the parsed command line.
-	 */
-	public OptionValue getOptionValue(Option param);
+	private final Map<String, List<Collection<String>>> occurrences = new TreeMap<>();
+	private final Map<String, List<String>> values = new HashMap<>();
 
-	/**
-	 * Returns the number of times this option occurs in the parsed command line.
-	 *
-	 * @param param
-	 * @return the number of times this option occurs in the parsed command line.
-	 */
-	public int getOccurrences(Option param);
+	OptionValues() {
+		// Do nothing...
+	}
 
-	/**
-	 * Returns the string paramters given with the specified occurrence (0-index) of the option. It
-	 * will return {@code null} if the option has not been given, and will raise an
-	 * {@link IndexOutOfBoundsException} if there occurrence number requested is higher than the
-	 * number of present occurrences
-	 *
-	 * @param param
-	 * @param occurrence
-	 * @return the string paramters given with the specified occurrence of the option
-	 */
-	public Collection<String> getOccurrenceValues(Option param, int occurrence);
+	private String getValidKey(Option param) {
+		Objects.requireNonNull(param, "Must provide an option whose presence to check for");
+		String key = param.getKey();
+		if (key == null) { throw new IllegalArgumentException(
+			"The given option definition does not define a valid key"); }
+		if (OptionValue.class.isInstance(param)) {
+			OptionValue p = OptionValue.class.cast(param);
+			if (p.getOptionValues() != this) { throw new IllegalArgumentException(
+				"The given option is not associated to this OptionValues instance"); }
+		}
+		return key;
+	}
 
-	/**
-	 * Returns the number of values associated with the given option across all occurrences.
-	 *
-	 * @param param
-	 * @return the number of values associated with the given option across all occurrences.
-	 */
-	public int getValueCount(Option param);
+	void add(Option p, Collection<String> values) {
+		if (p == null) { throw new IllegalArgumentException("Must provide a non-null option"); }
+		if (values == null) {
+			values = Collections.emptyList();
+		}
 
-	/* Short Options */
-	public Iterable<OptionValue> shortOptions();
+		final String key = p.getKey();
+		OptionValue existing = this.optionValues.get(key);
+		if (existing == null) {
+			// This is a new option value, so we add the stuff that's needed
+			existing = new OptionValue(this, p);
+			this.optionValues.put(key, existing);
+			Character shortOpt = p.getShortOpt();
+			if (shortOpt != null) {
+				this.shortOptions.put(shortOpt, existing);
+			}
+			String longOpt = p.getLongOpt();
+			if (longOpt != null) {
+				this.longOptions.put(longOpt, existing);
+			}
+		}
 
-	public OptionValue getOption(char shortOpt);
+		List<Collection<String>> occurrences = this.occurrences.get(key);
+		if (occurrences == null) {
+			occurrences = new LinkedList<>();
+			this.occurrences.put(key, occurrences);
+		}
+		occurrences.add(Tools.freezeCollection(new LinkedList<>(values), true));
 
-	public boolean hasOption(char shortOpt);
+		List<String> l = this.values.get(key);
+		if (l == null) {
+			l = new LinkedList<>();
+			this.values.put(key, l);
+		}
+		l.addAll(values);
+	}
 
-	/* Long Options */
-	public Iterable<OptionValue> longOptions();
+	@Override
+	public Iterator<OptionValue> iterator() {
+		return new ArrayList<>(this.optionValues.values()).iterator();
+	}
 
-	public OptionValue getOption(String longOpt);
+	public final Iterable<OptionValue> shortOptions() {
+		return Tools.freezeList(new ArrayList<>(this.shortOptions.values()));
+	}
 
-	public boolean hasOption(String longOpt);
+	public final OptionValue getOption(char shortOpt) {
+		return this.shortOptions.get(shortOpt);
+	}
 
-	/* Booleans */
-	public Boolean getBoolean(Option param);
+	public final boolean hasOption(char shortOpt) {
+		return this.shortOptions.containsKey(shortOpt);
+	}
 
-	public Boolean getBoolean(Option param, Boolean def);
+	public final Iterable<OptionValue> longOptions() {
+		return Tools.freezeList(new ArrayList<>(this.longOptions.values()));
+	}
 
-	public List<Boolean> getAllBooleans(Option param);
+	public final OptionValue getOption(String longOpt) {
+		return this.longOptions.get(longOpt);
+	}
 
-	/* Integers */
-	public Integer getInteger(Option param);
+	public final boolean hasOption(String longOpt) {
+		return this.longOptions.containsKey(longOpt);
+	}
 
-	public Integer getInteger(Option param, Integer def);
+	public final boolean isDefined(Option option) {
+		return (getOptionValue(option) != null);
+	}
 
-	public List<Integer> getAllIntegers(Option param);
+	public final OptionValue getOptionValue(Option option) {
+		if (option == null) { throw new IllegalArgumentException("Must provide an option definition to retrieve"); }
+		return getOptionByKey(option.getKey());
+	}
 
-	/* Longs */
-	public Long getLong(Option param);
+	protected final OptionValue getOptionByKey(String key) {
+		if (key == null) { throw new IllegalArgumentException("Must provide a key to search for"); }
+		return this.optionValues.get(key);
+	}
 
-	public Long getLong(Option param, Long def);
+	public final Boolean getBoolean(Option param) {
+		String s = getString(param);
+		return (s != null ? Tools.toBoolean(s) : null);
+	}
 
-	public List<Long> getAllLongs(Option param);
+	public final Boolean getBoolean(Option param, Boolean def) {
+		Boolean v = getBoolean(param);
+		return (v != null ? v.booleanValue() : def);
+	}
 
-	/* Floats */
-	public Float getFloat(Option param);
+	public final List<Boolean> getAllBooleans(Option param) {
+		List<String> l = getAllStrings(param);
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
+		List<Boolean> r = new ArrayList<>(l.size());
+		for (String s : l) {
+			r.add(Tools.toBoolean(s));
+		}
+		return Tools.freezeList(r);
+	}
 
-	public Float getFloat(Option param, Float def);
+	public final Integer getInteger(Option param) {
+		String s = getString(param);
+		return (s != null ? Integer.valueOf(s) : null);
+	}
 
-	public List<Float> getAllFloats(Option param);
+	public final Integer getInteger(Option param, Integer def) {
+		Integer v = getInteger(param);
+		return (v != null ? v.intValue() : def);
+	}
 
-	/* Doubles */
-	public Double getDouble(Option param);
+	public final List<Integer> getAllIntegers(Option param) {
+		List<String> l = getAllStrings(param);
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
+		List<Integer> r = new ArrayList<>(l.size());
+		for (String s : l) {
+			r.add(Integer.valueOf(s));
+		}
+		return Tools.freezeList(r);
+	}
 
-	public Double getDouble(Option param, Double def);
+	public final Long getLong(Option param) {
+		String s = getString(param);
+		return (s != null ? Long.valueOf(s) : null);
+	}
 
-	public List<Double> getAllDoubles(Option param);
+	public final Long getLong(Option param, Long def) {
+		Long v = getLong(param);
+		return (v != null ? v.longValue() : def);
+	}
 
-	/* Strings */
-	public String getString(Option param);
+	public final List<Long> getAllLongs(Option param) {
+		List<String> l = getAllStrings(param);
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
+		List<Long> r = new ArrayList<>(l.size());
+		for (String s : l) {
+			r.add(Long.valueOf(s));
+		}
+		return Tools.freezeList(r);
+	}
 
-	public String getString(Option param, String def);
+	public final Float getFloat(Option param) {
+		String s = getString(param);
+		return (s != null ? Float.valueOf(s) : null);
+	}
 
-	public List<String> getAllStrings(Option param);
+	public final Float getFloat(Option param, Float def) {
+		Float v = getFloat(param);
+		return (v != null ? v.floatValue() : def);
+	}
 
-	/* Same as all above, but for OptionWrapper */
+	public final List<Float> getAllFloats(Option param) {
+		List<String> l = getAllStrings(param);
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
+		List<Float> r = new ArrayList<>(l.size());
+		for (String s : l) {
+			r.add(Float.valueOf(s));
+		}
+		return Tools.freezeList(r);
+	}
 
-	/* General use */
-	public boolean isDefined(OptionWrapper param);
+	public final Double getDouble(Option param) {
+		String s = getString(param);
+		return (s != null ? Double.valueOf(s) : null);
+	}
 
-	public boolean isPresent(OptionWrapper param);
+	public final Double getDouble(Option param, Double def) {
+		Double v = getDouble(param);
+		return (v != null ? v.doubleValue() : def);
+	}
 
-	public OptionValue getOption(OptionWrapper param);
+	public final List<Double> getAllDoubles(Option param) {
+		List<String> l = getAllStrings(param);
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
+		List<Double> r = new ArrayList<>(l.size());
+		for (String s : l) {
+			r.add(Double.valueOf(s));
+		}
+		return Tools.freezeList(r);
+	}
 
-	public int getOccurrences(OptionWrapper param);
+	public final String getString(Option param) {
+		List<String> l = getAllStrings(param);
+		if (l == null) { return param.getDefault(); }
+		return l.get(0);
+	}
 
-	public Collection<String> getOccurrenceValues(OptionWrapper param, int occurrence);
+	public final String getString(Option param, String def) {
+		final String v = getString(param);
+		return (v != null ? v : def);
+	}
 
-	public int getValueCount(OptionWrapper param);
+	public final List<String> getAllStrings(Option param) {
+		List<String> v = this.values.get(getValidKey(param));
+		if (v == null) {
+			v = param.getDefaults();
+		}
+		return v;
+	}
 
-	/* Booleans */
-	public Boolean getBoolean(OptionWrapper param);
+	public final boolean isPresent(Option param) {
+		return this.values.containsKey(getValidKey(param));
+	}
 
-	public Boolean getBoolean(OptionWrapper param, Boolean def);
+	public int getOccurrences(Option param) {
+		List<Collection<String>> occurrences = this.occurrences.get(getValidKey(param));
+		if (occurrences == null) { return 0; }
+		return occurrences.size();
+	}
 
-	public List<Boolean> getAllBooleans(OptionWrapper param);
+	public Collection<String> getOccurrenceValues(Option param, int o) {
+		List<Collection<String>> occurrences = this.occurrences.get(getValidKey(param));
+		if (occurrences == null) { return null; }
+		if ((o < 0) || (o >= occurrences.size())) { throw new IndexOutOfBoundsException(); }
+		return occurrences.get(o);
+	}
 
-	/* Integers */
-	public Integer getInteger(OptionWrapper param);
+	public int getValueCount(Option param) {
+		List<Collection<String>> occurrences = this.occurrences.get(getValidKey(param));
+		if (occurrences == null) { return 0; }
+		int v = 0;
+		for (Collection<String> c : occurrences) {
+			v += c.size();
+		}
+		return v;
+	}
 
-	public Integer getInteger(OptionWrapper param, Integer def);
+	public boolean isDefined(OptionWrapper paramDel) {
+		return isDefined(Option.unwrap(paramDel));
+	}
 
-	public List<Integer> getAllIntegers(OptionWrapper param);
+	public OptionValue getOption(OptionWrapper paramDel) {
+		return getOptionValue(Option.unwrap(paramDel));
+	}
 
-	/* Longs */
-	public Long getLong(OptionWrapper param);
+	public Boolean getBoolean(OptionWrapper paramDel) {
+		return getBoolean(Option.unwrap(paramDel));
+	}
 
-	public Long getLong(OptionWrapper param, Long def);
+	public Boolean getBoolean(OptionWrapper paramDel, Boolean def) {
+		return getBoolean(Option.unwrap(paramDel), def);
+	}
 
-	public List<Long> getAllLongs(OptionWrapper param);
+	public List<Boolean> getAllBooleans(OptionWrapper paramDel) {
+		return getAllBooleans(Option.unwrap(paramDel));
+	}
 
-	/* Floats */
-	public Float getFloat(OptionWrapper param);
+	public Integer getInteger(OptionWrapper paramDel) {
+		return getInteger(Option.unwrap(paramDel));
+	}
 
-	public Float getFloat(OptionWrapper param, Float def);
+	public Integer getInteger(OptionWrapper paramDel, Integer def) {
+		return getInteger(Option.unwrap(paramDel), def);
+	}
 
-	public List<Float> getAllFloats(OptionWrapper param);
+	public List<Integer> getAllIntegers(OptionWrapper paramDel) {
+		return getAllIntegers(Option.unwrap(paramDel));
+	}
 
-	/* Doubles */
-	public Double getDouble(OptionWrapper param);
+	public Long getLong(OptionWrapper paramDel) {
+		return getLong(Option.unwrap(paramDel));
+	}
 
-	public Double getDouble(OptionWrapper param, Double def);
+	public Long getLong(OptionWrapper paramDel, Long def) {
+		return getLong(Option.unwrap(paramDel), def);
+	}
 
-	public List<Double> getAllDoubles(OptionWrapper param);
+	public List<Long> getAllLongs(OptionWrapper paramDel) {
+		return getAllLongs(Option.unwrap(paramDel));
+	}
 
-	/* Strings */
-	public String getString(OptionWrapper param);
+	public Float getFloat(OptionWrapper paramDel) {
+		return getFloat(Option.unwrap(paramDel));
+	}
 
-	public String getString(OptionWrapper param, String def);
+	public Float getFloat(OptionWrapper paramDel, Float def) {
+		return getFloat(Option.unwrap(paramDel), def);
+	}
 
-	public List<String> getAllStrings(OptionWrapper param);
+	public List<Float> getAllFloats(OptionWrapper paramDel) {
+		return getAllFloats(Option.unwrap(paramDel));
+	}
 
+	public Double getDouble(OptionWrapper paramDel) {
+		return getDouble(Option.unwrap(paramDel));
+	}
+
+	public Double getDouble(OptionWrapper paramDel, Double def) {
+		return getDouble(Option.unwrap(paramDel), def);
+	}
+
+	public List<Double> getAllDoubles(OptionWrapper paramDel) {
+		return getAllDoubles(Option.unwrap(paramDel));
+	}
+
+	public String getString(OptionWrapper paramDel) {
+		return getString(Option.unwrap(paramDel));
+	}
+
+	public String getString(OptionWrapper paramDel, String def) {
+		return getString(Option.unwrap(paramDel), def);
+	}
+
+	public List<String> getAllStrings(OptionWrapper paramDel) {
+		return getAllStrings(Option.unwrap(paramDel));
+	}
+
+	public boolean isPresent(OptionWrapper paramDel) {
+		return isPresent(Option.unwrap(paramDel));
+	}
+
+	public int getOccurrences(OptionWrapper param) {
+		return getOccurrences(Option.unwrap(param));
+	}
+
+	public Collection<String> getOccurrenceValues(OptionWrapper param, int occurrence) {
+		return getOccurrenceValues(Option.unwrap(param), occurrence);
+	}
+
+	public int getValueCount(OptionWrapper param) {
+		return getValueCount(Option.unwrap(param));
+	}
 }
