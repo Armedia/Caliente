@@ -32,7 +32,7 @@ public class StaticTokenSource implements TokenSource {
 			key = String.format("(static-%016X)", StaticTokenSource.counter.getAndIncrement());
 		}
 		this.key = key;
-		this.tokens = Tools.freezeList(new ArrayList<>(tokens), true);
+		this.tokens = Tools.freezeList(new ArrayList<>(tokens));
 	}
 
 	@Override

@@ -22,6 +22,10 @@ public final class OptionValuesImpl implements OptionValues {
 	private final Map<String, List<Collection<String>>> occurrences = new TreeMap<>();
 	private final Map<String, List<String>> values = new HashMap<>();
 
+	OptionValuesImpl() {
+		// Do nothing...
+	}
+
 	private String getValidKey(Option param) {
 		Objects.requireNonNull(param, "Must provide an option whose presence to check for");
 		String key = param.getKey();

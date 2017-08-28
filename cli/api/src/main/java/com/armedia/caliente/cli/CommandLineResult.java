@@ -17,8 +17,7 @@ public final class CommandLineResult {
 	 * @param commandValues
 	 * @param positionals
 	 */
-	public CommandLineResult(OptionValues optionValues, String command, OptionValues commandValues,
-		List<String> positionals) {
+	CommandLineResult(OptionValues optionValues, String command, OptionValues commandValues, List<String> positionals) {
 		if (optionValues == null) { throw new IllegalArgumentException(
 			"Must provide the option values for the base options - even if empty"); }
 		this.optionValues = optionValues;
