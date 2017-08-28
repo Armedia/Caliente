@@ -173,7 +173,7 @@ public class TokenLoader implements Iterable<Token> {
 		return this.fileMarkerChar;
 	}
 
-	public final Character getValueSplitter() {
+	public final Character getValueSeparator() {
 		return this.valueSeparator;
 	}
 

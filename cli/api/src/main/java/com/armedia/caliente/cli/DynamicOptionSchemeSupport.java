@@ -1,7 +1,5 @@
-package com.armedia.caliente.cli.launcher;
+package com.armedia.caliente.cli;
 
-import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.token.Token;
 
 public interface DynamicOptionSchemeSupport {

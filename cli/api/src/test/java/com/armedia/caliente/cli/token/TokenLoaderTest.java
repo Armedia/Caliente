@@ -23,7 +23,7 @@ public class TokenLoaderTest {
 		List<String> l = Collections.emptyList();
 		TokenLoader p = new TokenLoader(new StaticTokenSource("primary", l));
 		Assert.assertNotNull(p);
-		Assert.assertEquals(TokenLoader.DEFAULT_VALUE_SEPARATOR, p.getValueSplitter());
+		Assert.assertEquals(TokenLoader.DEFAULT_VALUE_SEPARATOR, p.getValueSeparator());
 	}
 
 	@Test

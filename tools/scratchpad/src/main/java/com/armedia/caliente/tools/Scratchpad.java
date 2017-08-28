@@ -1,15 +1,7 @@
 package com.armedia.caliente.tools;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-
-import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.launcher.AbstractLauncher;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.launcher.LaunchOptionSet;
-import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class is used as a testbed to run quick'n'dirty DFC test programs
@@ -17,38 +9,20 @@ import com.armedia.caliente.cli.utils.DfcLaunchHelper;
  * @author diego.rivera@armedia.com
  *
  */
-public class Scratchpad extends AbstractLauncher implements LaunchOptionSet {
+public class Scratchpad {
 
-	public static final void main(String... args) {
-		System.exit(new Scratchpad().launch(args));
+	public static final void main(String... args) throws Throwable {
+		Pattern p = Pattern.compile(args[0]);
+		for (int i = 1; i < args.length; i++) {
+			final String str = args[i];
+			Matcher m = p.matcher(str);
+			int start = 0;
+			while (m.find()) {
+				String value = str.substring(start, m.start());
+				start = m.end();
+			}
+			String lastValue = str.substring(start);
+		}
 	}
 
-	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
-
-	@Override
-	public Collection<? extends Option> getParameters(CommandLineValues commandLine) {
-		return Collections.emptyList();
-	}
-
-	@Override
-	protected Collection<? extends LaunchOptionSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
-		return null;
-	}
-
-	@Override
-	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
-		return Arrays.asList(this.dfcLaunchHelper);
-	}
-
-	@Override
-	protected String getProgramName(int pass) {
-		return "Caliente Scratchpad";
-	}
-
-	@Override
-	protected int run(CommandLineValues cli) throws Exception {
-		// PropertiesTest.test();
-		// DctmTest.test();
-		return 0;
-	}
 }

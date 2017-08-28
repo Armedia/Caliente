@@ -1,11 +1,6 @@
-package com.armedia.caliente.cli.launcher;
+package com.armedia.caliente.cli;
 
 import java.util.Collection;
-
-import com.armedia.caliente.cli.DuplicateOptionException;
-import com.armedia.caliente.cli.InvalidOptionException;
-import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionScheme;
 
 class ExtensibleOptionScheme {
 
