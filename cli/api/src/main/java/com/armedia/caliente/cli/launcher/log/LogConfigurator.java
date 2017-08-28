@@ -13,7 +13,7 @@ public abstract class LogConfigurator {
 
 	protected static final String DEFAULT_LOG_NAME = "boot";
 
-	private static final String LOGBACK_DETECTOR_CLASS = "ch.qos.logback.classic.ClassicConstants";
+	private static final String LOGBACK_DETECTOR_CLASS = "ch.qos.logback.classic.joran.JoranConfigurator";
 	private static final String LOGBACK_CONFIGURATOR_CLASS = "com.armedia.caliente.cli.newlauncher.LogbackConfigurator";
 
 	private static final String LOG4J_DETECTOR_CLASS = "org.slf4j.impl.Log4jMDCAdapter";
@@ -43,11 +43,12 @@ public abstract class LogConfigurator {
 		// strict with regards to which classes are or aren't loaded...
 		for (Pair<String, String> p : LogConfigurator.INITIALIZERS) {
 			final String detector = p.getLeft();
-			final String initializer = p.getRight();
+			final String configurator = p.getRight();
 			try {
-				Class.forName(detector);
+				// Find the detector class, but don't initialize it...
+				Class.forName(detector, false, null);
 				try {
-					Class<?> c = Class.forName(initializer);
+					Class<?> c = Class.forName(configurator);
 					if (c.isAssignableFrom(LogConfigurator.class)) {
 						@SuppressWarnings("unchecked")
 						Class<LogConfigurator> i = (Class<LogConfigurator>) c;
@@ -55,7 +56,7 @@ public abstract class LogConfigurator {
 					}
 				} catch (Exception e) {
 					throw new RuntimeException(
-						String.format("Failed to initialize the boot log using [%s]", initializer), e);
+						String.format("Failed to configure the boot log using [%s]", configurator), e);
 				}
 			} catch (ClassNotFoundException e) {
 				// No this one, move on...
