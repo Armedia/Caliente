@@ -8,14 +8,10 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Pattern;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
-import com.armedia.caliente.cli.exception.InvalidOptionException;
 
 public class OptionScheme implements Iterable<Option> {
-
-	private static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");
 
 	private final boolean caseSensitive;
 	private final String name;
@@ -196,45 +192,14 @@ public class OptionScheme implements Iterable<Option> {
 		return this.shortKeys.get(canonicalize(shortOpt));
 	}
 
-	protected boolean isShortOptionValid(Character shortOpt) {
-		return (shortOpt != null);
-	}
+	private void assertValid(Option def) {
+		if (def == null) { throw new IllegalArgumentException("Option definition may not be null"); }
 
-	protected boolean isLongOptionValid(String longOpt) {
-		return (longOpt != null);
-	}
+		final boolean hasShortOpt = (def.getShortOpt() != null);
+		final boolean hasLongOpt = (def.getShortOpt() != null);
 
-	private void assertValid(Option def) throws InvalidOptionException {
-		if (def == null) { throw new InvalidOptionException("Option definition may not be null"); }
-
-		final Character shortOpt = def.getShortOpt();
-		final boolean hasShortOpt = (shortOpt != null);
-
-		final String longOpt = def.getLongOpt();
-		final boolean hasLongOpt = (longOpt != null);
-
-		if (!hasShortOpt && !hasLongOpt) { throw new InvalidOptionException(
+		if (!hasShortOpt && !hasLongOpt) { throw new IllegalArgumentException(
 			"The given option definition has neither a short or a long option"); }
-		if (hasShortOpt) {
-			boolean valid = Character.isLetterOrDigit(shortOpt.charValue()) || shortOpt.equals('?');
-			if (valid) {
-				// Custom validation
-				valid &= isShortOptionValid(shortOpt);
-			}
-			if (!valid) { throw new InvalidOptionException(
-				String.format("The short option value [%s] is not valid", shortOpt)); }
-		}
-		if (hasLongOpt) {
-			boolean valid = OptionScheme.VALID_LONG.matcher(longOpt).matches();
-			if (valid) {
-				valid &= (longOpt.length() > 1);
-			}
-			if (valid) {
-				valid &= isLongOptionValid(longOpt);
-			}
-			if (!valid) { throw new InvalidOptionException(
-				String.format("The long option value [%s] is not valid", longOpt)); }
-		}
 	}
 
 	/**
@@ -247,7 +212,7 @@ public class OptionScheme implements Iterable<Option> {
 	 *             with {@link #hasOption(Character)}, {@link #hasOption(String)}, or
 	 *             {@link #countCollisions(Option)}
 	 */
-	public final OptionScheme add(Option option) throws InvalidOptionException, DuplicateOptionException {
+	public final OptionScheme add(Option option) throws DuplicateOptionException {
 		if (option == null) { throw new IllegalArgumentException("Must provide an option to add"); }
 		assertValid(option);
 
@@ -296,7 +261,7 @@ public class OptionScheme implements Iterable<Option> {
 	 *            the option to check against
 	 * @return the options that were removed
 	 */
-	public final Collection<Option> remove(Option option) throws InvalidOptionException, DuplicateOptionException {
+	public final Collection<Option> remove(Option option) {
 		if (option == null) { throw new IllegalArgumentException("Must provide an option to remove"); }
 
 		final String longOpt = canonicalize(option.getLongOpt());

@@ -4,10 +4,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 public final class OptionImpl extends Option implements Cloneable {
+
+	public static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");
 
 	private boolean required = false;
 	private String description = null;
@@ -110,6 +114,14 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	public OptionImpl setLongOpt(String longOpt) {
+		if (longOpt != null) {
+			boolean valid = OptionImpl.VALID_LONG.matcher(longOpt).matches();
+			if (valid) {
+				valid &= (longOpt.length() > 1);
+			}
+			if (!valid) { throw new IllegalArgumentException(
+				String.format("The long option value [%s] is not valid", longOpt)); }
+		}
 		this.longOpt = longOpt;
 		this.key = Option.calculateKey(this);
 		return this;
@@ -121,6 +133,11 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	public OptionImpl setShortOpt(Character shortOpt) {
+		if (shortOpt != null) {
+			boolean valid = Character.isLetterOrDigit(shortOpt.charValue()) || shortOpt.equals('?');
+			if (!valid) { throw new IllegalArgumentException(
+				String.format("The short option value [%s] is not valid", shortOpt)); }
+		}
 		this.shortOpt = shortOpt;
 		this.key = Option.calculateKey(this);
 		return this;
@@ -206,7 +223,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	public static <E extends Enum<E>> OptionImpl initOptionName(E e, OptionImpl p) {
-		if (p == null) { throw new IllegalArgumentException("Must provide a OptionImpl whose option to initialize"); }
+		Objects.requireNonNull(p, "Must provide a OptionImpl whose option to initialize");
 		if (e == null) { return p; }
 		final String name = e.name();
 		if (name.length() == 1) {

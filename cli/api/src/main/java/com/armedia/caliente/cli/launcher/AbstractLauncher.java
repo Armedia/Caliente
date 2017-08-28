@@ -3,22 +3,19 @@ package com.armedia.caliente.cli.launcher;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.OptionParseResult;
 import com.armedia.caliente.cli.DynamicOptionSchemeSupport;
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionParseResult;
 import com.armedia.caliente.cli.OptionParser;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
-import com.armedia.caliente.cli.exception.InsufficientPositionalValuesException;
-import com.armedia.caliente.cli.exception.MissingRequiredOptionException;
-import com.armedia.caliente.cli.exception.TooManyOptionValuesException;
-import com.armedia.caliente.cli.exception.TooManyPositionalValuesException;
-import com.armedia.caliente.cli.exception.UnknownCommandException;
-import com.armedia.caliente.cli.exception.UnknownOptionException;
+import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
+import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.launcher.log.LogConfigurator;
 
 public abstract class AbstractLauncher {
@@ -59,9 +56,7 @@ public abstract class AbstractLauncher {
 	}
 
 	private OptionParseResult parseArguments(Option helpOption, final OptionScheme baseScheme, String... args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
-
+		throws CommandLineSyntaxException, HelpRequestedException {
 		return new OptionParser().parse(helpOption, baseScheme, getDynamicSchemeSupport(), args);
 	}
 
@@ -71,19 +66,19 @@ public abstract class AbstractLauncher {
 	}
 
 	protected final int launch(Option helpOption, final OptionScheme optionScheme, String... args) {
-		if (optionScheme == null) { throw new IllegalArgumentException(
-			"Must provide an initial option scheme to parse against"); }
+		Objects.requireNonNull(optionScheme, "Must provide an initial option scheme to parse against");
+
 		if (args == null) {
 			args = AbstractLauncher.NO_ARGS;
 		}
 
-		if ((helpOption != null)
-			|| (optionScheme.countCollisions(helpOption) != 1)) { throw new IllegalArgumentException(
-				"The help option is not part of the option scheme"); }
-
 		OptionParseResult result = null;
 		try {
 			result = parseArguments(helpOption, optionScheme, args);
+		} catch (HelpRequestedException e) {
+			// Help requested...print out the help message!
+			System.out.printf("Help requested, to be implemented...%n");
+			return 1;
 		} catch (Throwable t) {
 			this.log.error("Failed to process the command-line arguments", t);
 			return -1;

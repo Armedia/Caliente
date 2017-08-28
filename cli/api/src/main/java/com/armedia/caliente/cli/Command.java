@@ -3,6 +3,7 @@ package com.armedia.caliente.cli;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
@@ -21,7 +22,7 @@ public class Command extends OptionScheme {
 		A.add(name);
 		if (aliases != null) {
 			for (String a : aliases) {
-				if (a == null) { throw new IllegalArgumentException("aliases may not be null"); }
+				Objects.requireNonNull(a, "aliases may not be null");
 				if (!Command.NAME_PATTERN.matcher(a)
 					.matches()) { throw new IllegalArgumentException(
 						String.format("The given alias [%s] does not match the regular expression /%s/", a,

@@ -3,6 +3,7 @@ package com.armedia.caliente.cli;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 public class CommandScheme extends OptionScheme {
@@ -18,7 +19,7 @@ public class CommandScheme extends OptionScheme {
 	}
 
 	public CommandScheme addCommand(Command command) {
-		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command"); }
+		Objects.requireNonNull(command, "Must provide a non-null command");
 		this.commands.put(canonicalize(command.getName()), command);
 		for (String alias : command.getAliases()) {
 			this.commands.put(canonicalize(alias), command);
@@ -27,7 +28,7 @@ public class CommandScheme extends OptionScheme {
 	}
 
 	public Command removeCommand(Command command) {
-		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command"); }
+		Objects.requireNonNull(command, "Must provide a non-null command");
 		Command c = this.commands.remove(canonicalize(command.getName()));
 		if (c != null) {
 			for (String alias : c.getAliases()) {
@@ -38,7 +39,7 @@ public class CommandScheme extends OptionScheme {
 	}
 
 	public Command removeCommand(String command) {
-		if (command == null) { throw new IllegalArgumentException("Must provide a non-null command name"); }
+		Objects.requireNonNull(command, "Must provide a non-null command name");
 		Command c = this.commands.remove(canonicalize(command));
 		if (c != null) {
 			for (String alias : c.getAliases()) {
@@ -53,7 +54,7 @@ public class CommandScheme extends OptionScheme {
 	}
 
 	public Command getCommand(String nameOrAlias) {
-		if (nameOrAlias == null) { throw new IllegalArgumentException("Must provide a non-null name or alias"); }
+		Objects.requireNonNull(nameOrAlias, "Must provide a non-null command name or alias");
 		return this.commands.get(canonicalize(nameOrAlias));
 	}
 

@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
+import com.armedia.caliente.cli.exception.DuplicateOptionException;
+import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.exception.InsufficientPositionalValuesException;
 import com.armedia.caliente.cli.exception.MissingRequiredOptionException;
 import com.armedia.caliente.cli.exception.TooManyOptionValuesException;
@@ -19,7 +22,6 @@ import com.armedia.caliente.cli.exception.UnknownOptionException;
 import com.armedia.caliente.cli.token.StaticTokenSource;
 import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.cli.token.TokenLoader;
-import com.armedia.commons.utilities.Tools;
 
 public class OptionParser {
 
@@ -29,8 +31,6 @@ public class OptionParser {
 	protected static final Pattern DEFAULT_COMMAND_PATTERN = Pattern.compile("^[\\w&&[^\\d]]\\w*$");
 
 	private static final String SEPARATOR_PATTERN = "(?<!\\\\)\\Q%s\\E";
-
-	private static final OptionScheme NULL_SCHEME = new OptionScheme("(no-options)");
 
 	private static final List<String> NO_POSITIONALS = Collections.emptyList();
 
@@ -54,53 +54,44 @@ public class OptionParser {
 	}
 
 	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
-		String... args) throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		String... args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, args);
 	}
 
 	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
-		boolean allowRecursion, String... args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		boolean allowRecursion, String... args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, allowRecursion, args);
 	}
 
 	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
-		char optionValueSplitter, String... args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		char optionValueSplitter, String... args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, optionValueSplitter, args);
 
 	}
 
 	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
 		boolean allowRecursion, char optionValueSplitter, String... args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, allowRecursion, optionValueSplitter, args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
 		DynamicOptionSchemeSupport dynamicSupport, String... args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, OptionParser.DEFAULT_ALLOW_RECURSION,
 			OptionParser.DEFAULT_VALUE_SEPARATOR, args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
 		DynamicOptionSchemeSupport dynamicSupport, boolean allowRecursion, String... args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, allowRecursion, OptionParser.DEFAULT_VALUE_SEPARATOR,
 			args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
 		DynamicOptionSchemeSupport dynamicSupport, char optionValueSplitter, String... args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, OptionParser.DEFAULT_ALLOW_RECURSION, optionValueSplitter,
 			args);
 
@@ -108,61 +99,50 @@ public class OptionParser {
 
 	public final OptionParseResult parse(final Option helpOption, OptionScheme baseScheme,
 		final DynamicOptionSchemeSupport dynamicSupport, final boolean allowRecursion, final char optionValueSplitter,
-		String... args) throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		String... args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, allowRecursion, optionValueSplitter,
 			(args == null ? OptionParser.NO_POSITIONALS : Arrays.asList(args)));
 	}
 
 	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
-		Collection<String> args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, args);
 	}
 
 	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
-		boolean allowRecursion, Collection<String> args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		boolean allowRecursion, Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, allowRecursion, args);
 	}
 
 	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
-		char optionValueSplitter, Collection<String> args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		char optionValueSplitter, Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, optionValueSplitter, args);
 
 	}
 
 	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
 		boolean allowRecursion, char optionValueSplitter, Collection<String> args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, allowRecursion, optionValueSplitter, args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
 		DynamicOptionSchemeSupport dynamicSupport, Collection<String> args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, OptionParser.DEFAULT_ALLOW_RECURSION,
 			OptionParser.DEFAULT_VALUE_SEPARATOR, args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
 		DynamicOptionSchemeSupport dynamicSupport, boolean allowRecursion, Collection<String> args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, allowRecursion, OptionParser.DEFAULT_VALUE_SEPARATOR,
 			args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
 		DynamicOptionSchemeSupport dynamicSupport, char optionValueSplitter, Collection<String> args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, OptionParser.DEFAULT_ALLOW_RECURSION, optionValueSplitter,
 			args);
 
@@ -170,14 +150,25 @@ public class OptionParser {
 
 	public final OptionParseResult parse(final Option helpOption, OptionScheme baseScheme,
 		final DynamicOptionSchemeSupport dynamicSupport, final boolean allowRecursion, final char optionValueSplitter,
-		Collection<String> args)
-		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
+		Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
 
 		if ((args == null) || args
 			.isEmpty()) { return new OptionParseResult(new OptionValues(), null, null, OptionParser.NO_POSITIONALS); }
 
-		baseScheme = Tools.coalesce(baseScheme, OptionParser.NULL_SCHEME);
+		if (baseScheme == null) {
+			baseScheme = new OptionScheme("automatic");
+		}
+		if (helpOption != null) {
+			baseScheme.remove(helpOption);
+			try {
+				baseScheme.add(helpOption);
+			} catch (DuplicateOptionException e) {
+				// Not. Gonna. Happen. That's why we remove first ;)
+				throw new RuntimeException(
+					"Found a duplicate option to the help option even after removing it!! This is a bug!", e);
+			}
+		}
+
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", args), optionValueSplitter,
 			allowRecursion);
 		final Pattern splitter = Pattern
@@ -226,6 +217,10 @@ public class OptionParser {
 								commandValues = new OptionValues();
 								if (dynamic) {
 									extensibleScheme = new ExtensibleOptionScheme(command);
+								}
+								if (helpOption != null) {
+									// Make sure there is no colliding option from the command...
+									command.remove(helpOption);
 								}
 								continue;
 							}
