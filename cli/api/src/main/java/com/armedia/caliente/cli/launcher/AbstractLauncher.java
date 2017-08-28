@@ -7,18 +7,18 @@ import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.CommandLineResult;
+import com.armedia.caliente.cli.OptionParseResult;
 import com.armedia.caliente.cli.DynamicOptionSchemeSupport;
-import com.armedia.caliente.cli.InsufficientPositionalValuesException;
-import com.armedia.caliente.cli.MissingRequiredOptionException;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionParser;
 import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.TooManyOptionValuesException;
-import com.armedia.caliente.cli.TooManyPositionalValuesException;
-import com.armedia.caliente.cli.UnknownCommandException;
-import com.armedia.caliente.cli.UnknownOptionException;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
+import com.armedia.caliente.cli.exception.InsufficientPositionalValuesException;
+import com.armedia.caliente.cli.exception.MissingRequiredOptionException;
+import com.armedia.caliente.cli.exception.TooManyOptionValuesException;
+import com.armedia.caliente.cli.exception.TooManyPositionalValuesException;
+import com.armedia.caliente.cli.exception.UnknownCommandException;
+import com.armedia.caliente.cli.exception.UnknownOptionException;
 import com.armedia.caliente.cli.launcher.log.LogConfigurator;
 
 public abstract class AbstractLauncher {
@@ -31,7 +31,7 @@ public abstract class AbstractLauncher {
 
 	/**
 	 * <p>
-	 * Process the CommandLineResult. If an error occurs, a {@link CommandLineProcessingException}
+	 * Process the OptionParseResult. If an error occurs, a {@link CommandLineProcessingException}
 	 * will be raised, and the invocation to {@link #launch(OptionScheme, String...)} will return
 	 * the value obtained from that exception's
 	 * {@link CommandLineProcessingException#getReturnValue() getReturnValue()}.
@@ -42,23 +42,23 @@ public abstract class AbstractLauncher {
 	 *             if there was an error processing the command line - such as an illegal option
 	 *             combination, illegal option value, etc
 	 */
-	protected void processCommandLineResult(CommandLineResult commandLine) throws CommandLineProcessingException {
+	protected void processCommandLineResult(OptionParseResult commandLine) throws CommandLineProcessingException {
 	}
 
 	protected final int launch(OptionScheme scheme, String... args) {
 		return launch(null, scheme, args);
 	}
 
-	protected boolean initLogging(CommandLineResult cl) {
+	protected boolean initLogging(OptionParseResult cl) {
 		// By default, do nothing...
 		return false;
 	}
 
-	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineResult cli) {
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionParseResult cli) {
 		return Collections.emptyList();
 	}
 
-	private CommandLineResult parseArguments(Option helpOption, final OptionScheme baseScheme, String... args)
+	private OptionParseResult parseArguments(Option helpOption, final OptionScheme baseScheme, String... args)
 		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
 		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
 
@@ -81,7 +81,7 @@ public abstract class AbstractLauncher {
 			|| (optionScheme.countCollisions(helpOption) != 1)) { throw new IllegalArgumentException(
 				"The help option is not part of the option scheme"); }
 
-		CommandLineResult result = null;
+		OptionParseResult result = null;
 		try {
 			result = parseArguments(helpOption, optionScheme, args);
 		} catch (Throwable t) {
@@ -156,5 +156,5 @@ public abstract class AbstractLauncher {
 		}
 	}
 
-	protected abstract int run(CommandLineResult commandLine) throws Exception;
+	protected abstract int run(OptionParseResult commandLine) throws Exception;
 }

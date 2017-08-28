@@ -2,6 +2,9 @@ package com.armedia.caliente.cli;
 
 import java.util.Collection;
 
+import com.armedia.caliente.cli.exception.DuplicateOptionException;
+import com.armedia.caliente.cli.exception.InvalidOptionException;
+
 class ExtensibleOptionScheme {
 
 	private OptionScheme scheme;

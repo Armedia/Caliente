@@ -1,18 +1,18 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.exception;
 
 import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.cli.token.TokenSource;
 
-public class UnknownCommandException extends CommandLineSyntaxException {
+public class UnknownOptionException extends CommandLineSyntaxException {
 	private static final long serialVersionUID = 1L;
 
 	private final String string;
 
-	public UnknownCommandException(Token token) {
+	public UnknownOptionException(Token token) {
 		this(token.getSource(), token.getIndex(), token.getRawString());
 	}
 
-	public UnknownCommandException(TokenSource source, int index, String string) {
+	public UnknownOptionException(TokenSource source, int index, String string) {
 		super(source, index);
 		this.string = string;
 	}

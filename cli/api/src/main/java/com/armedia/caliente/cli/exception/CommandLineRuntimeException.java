@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.exception;
 
 public class CommandLineRuntimeException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

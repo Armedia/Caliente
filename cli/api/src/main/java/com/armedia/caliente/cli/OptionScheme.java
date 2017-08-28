@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import com.armedia.caliente.cli.exception.DuplicateOptionException;
+import com.armedia.caliente.cli.exception.InvalidOptionException;
+
 public class OptionScheme implements Iterable<Option> {
 
 	private static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");

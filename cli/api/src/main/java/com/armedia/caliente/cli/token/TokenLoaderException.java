@@ -1,6 +1,6 @@
 package com.armedia.caliente.cli.token;
 
-import com.armedia.caliente.cli.CommandLineException;
+import com.armedia.caliente.cli.exception.CommandLineException;
 
 public class TokenLoaderException extends CommandLineException {
 	private static final long serialVersionUID = 1L;

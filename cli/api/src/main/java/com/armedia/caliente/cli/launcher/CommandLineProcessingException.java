@@ -1,6 +1,6 @@
 package com.armedia.caliente.cli.launcher;
 
-import com.armedia.caliente.cli.CommandLineException;
+import com.armedia.caliente.cli.exception.CommandLineException;
 
 public class CommandLineProcessingException extends CommandLineException {
 	private static final long serialVersionUID = 1L;

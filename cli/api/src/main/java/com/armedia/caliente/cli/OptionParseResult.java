@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class CommandLineResult {
+public final class OptionParseResult {
 
 	private final OptionValues optionValues;
 	private final String command;
@@ -17,7 +17,7 @@ public final class CommandLineResult {
 	 * @param commandValues
 	 * @param positionals
 	 */
-	CommandLineResult(OptionValues optionValues, String command, OptionValues commandValues, List<String> positionals) {
+	OptionParseResult(OptionValues optionValues, String command, OptionValues commandValues, List<String> positionals) {
 		if (optionValues == null) { throw new IllegalArgumentException(
 			"Must provide the option values for the base options - even if empty"); }
 		this.optionValues = optionValues;

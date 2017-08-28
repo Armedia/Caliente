@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.exception;
 
 import com.armedia.caliente.cli.token.TokenSource;
 

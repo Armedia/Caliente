@@ -1,8 +1,9 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.exception;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.armedia.caliente.cli.Option;
 import com.armedia.commons.utilities.Tools;
 
 public class MissingRequiredOptionException extends CommandLineSyntaxException {

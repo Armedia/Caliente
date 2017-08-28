@@ -1,4 +1,6 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.exception;
+
+import com.armedia.caliente.cli.Option;
 
 public class DuplicateOptionException extends CommandLineException {
 	private static final long serialVersionUID = 1L;
