@@ -62,7 +62,7 @@ public abstract class AbstractLauncher {
 		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
 		TooManyOptionValuesException, InsufficientPositionalValuesException, MissingRequiredOptionException {
 
-		return new OptionParser().parseArguments(helpOption, baseScheme, getDynamicSchemeSupport(), args);
+		return new OptionParser().parse(helpOption, baseScheme, getDynamicSchemeSupport(), args);
 	}
 
 	protected DynamicOptionSchemeSupport getDynamicSchemeSupport() {
