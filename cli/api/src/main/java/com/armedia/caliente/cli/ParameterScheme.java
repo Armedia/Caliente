@@ -7,8 +7,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Pattern;
 
 public class ParameterScheme {
+
+	private static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");
 
 	private final boolean caseSensitive;
 	private final String name;
@@ -189,6 +192,47 @@ public class ParameterScheme {
 		return this.shortKeys.get(canonicalize(shortOpt));
 	}
 
+	protected boolean isShortOptionValid(Character shortOpt) {
+		return (shortOpt != null);
+	}
+
+	protected boolean isLongOptionValid(String longOpt) {
+		return (longOpt != null);
+	}
+
+	private void assertValid(Parameter def) throws InvalidParameterException {
+		if (def == null) { throw new InvalidParameterException("CommandLineParameter definition may not be null"); }
+
+		final Character shortOpt = def.getShortOpt();
+		final boolean hasShortOpt = (shortOpt != null);
+
+		final String longOpt = def.getLongOpt();
+		final boolean hasLongOpt = (longOpt != null);
+
+		if (!hasShortOpt && !hasLongOpt) { throw new InvalidParameterException(
+			"The given parameter definition has neither a short or a long option"); }
+		if (hasShortOpt) {
+			boolean valid = Character.isLetterOrDigit(shortOpt.charValue()) || shortOpt.equals('?');
+			if (valid) {
+				// Custom validation
+				valid &= isShortOptionValid(shortOpt);
+			}
+			if (!valid) { throw new InvalidParameterException(
+				String.format("The short option value [%s] is not valid", shortOpt)); }
+		}
+		if (hasLongOpt) {
+			boolean valid = ParameterScheme.VALID_LONG.matcher(longOpt).matches();
+			if (valid) {
+				valid &= (longOpt.length() > 1);
+			}
+			if (valid) {
+				valid &= isLongOptionValid(longOpt);
+			}
+			if (!valid) { throw new InvalidParameterException(
+				String.format("The long option value [%s] is not valid", longOpt)); }
+		}
+	}
+
 	/**
 	 * Adds the given parameter to this parameter scheme.
 	 *
@@ -202,6 +246,7 @@ public class ParameterScheme {
 	public final ParameterScheme addParameter(Parameter parameter)
 		throws InvalidParameterException, DuplicateParameterException {
 		if (parameter == null) { throw new IllegalArgumentException("Must provide a parameter to add"); }
+		assertValid(parameter);
 
 		final String longOpt = canonicalize(parameter.getLongOpt());
 		final Character shortOpt = canonicalize(parameter.getShortOpt());
@@ -237,25 +282,6 @@ public class ParameterScheme {
 		this.parameters.put(key, parameter);
 		if (parameter.isRequired()) {
 			this.requiredParameters.put(key, parameter);
-		}
-		return this;
-	}
-
-	/**
-	 * Adds all the given parameters (i.e. invoke {@link #addParameter(Parameter) add} for each
-	 * non-{@code null} parameter in the array).
-	 *
-	 * @param parameters
-	 */
-	public final ParameterScheme addParameters(Parameter... parameters)
-		throws InvalidParameterException, DuplicateParameterException {
-		if (parameters == null) { throw new IllegalArgumentException("Must provide a non-null parameter array"); }
-		// TODO: Change this algorithm - first check that no parameters collide or are illegal, then
-		// move on
-		for (Parameter p : parameters) {
-			if (p != null) {
-				addParameter(p);
-			}
 		}
 		return this;
 	}

@@ -2,6 +2,8 @@ package com.armedia.caliente.cli.launcher;
 
 import java.util.Collection;
 
+import com.armedia.caliente.cli.DuplicateParameterException;
+import com.armedia.caliente.cli.InvalidParameterException;
 import com.armedia.caliente.cli.Parameter;
 import com.armedia.caliente.cli.ParameterScheme;
 
@@ -34,14 +36,9 @@ class ExtensibleParameterScheme {
 		return this.scheme.getMaxArgs();
 	}
 
-	public ExtensibleParameterScheme addParameter(Parameter parameter) {
+	public ExtensibleParameterScheme addParameter(Parameter parameter)
+		throws InvalidParameterException, DuplicateParameterException {
 		this.scheme.addParameter(parameter);
-		this.modified = true;
-		return this;
-	}
-
-	public ExtensibleParameterScheme addParameters(Parameter... parameters) {
-		this.scheme.addParameters(parameters);
 		this.modified = true;
 		return this;
 	}
