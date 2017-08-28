@@ -1,50 +1,36 @@
 package com.armedia.caliente.cli.parser;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+public class ParameterSchemeTest {
 
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.armedia.caliente.cli.ParameterImpl;
-import com.armedia.caliente.cli.Parameter;
-
-public class CommandLineTest {
-
+	/*
 	@Test
 	public void testConstructor() {
-		CommandLine cl = new CommandLine();
+		ParameterScheme cl = new ParameterScheme("test");
 		Assert.assertNotNull(cl);
 	}
-
+	
 	@Test
 	public void testDefine() throws Exception {
-		CommandLine cl = new CommandLine();
+		ParameterScheme cl = new ParameterScheme("test");
 		Assert.assertNotNull(cl);
-
+	
 		ParameterImpl def = null;
-
+	
 		try {
-			cl.define(def);
+			cl.addParameter(def);
 			Assert.fail("Did not fail with a null parameter");
 		} catch (InvalidParameterException e) {
 			// All is well
 		}
-
+	
 		def = new ParameterImpl();
 		try {
-			cl.define(def);
+			cl.addParameter(def);
 			Assert.fail("Did not fail with no short or long options");
 		} catch (InvalidParameterException e) {
 			// All is well
 		}
-
+	
 		// Only test for the ASCII extended set
 		String[] longOpts = {
 			null, "%s-longOpt"
@@ -65,12 +51,11 @@ public class CommandLineTest {
 					def.setLongOpt(longOpt);
 				}
 				try {
-					CommandLineParameter p = cl.define(def);
-					Assert.assertEquals(1, p.compareTo(null));
+					cl.addParameter(def);
+					Parameter p = cl.getParameter(def);
 					if (!Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
 					}
-					Assert.assertSame(cl, p.getCommandLineValues());
 					Assert.assertTrue(Parameter.isIdentical(def, p));
 				} catch (InvalidParameterException e) {
 					if (Character.isLetterOrDigit(c)) {
@@ -86,73 +71,78 @@ public class CommandLineTest {
 				}
 			}
 		}
-
+	
 		def = new ParameterImpl();
 		def.setLongOpt("");
 		try {
-			cl.define(def);
+			cl.addParameter(def);
 			Assert.fail("Did not fail with an empty long option");
 		} catch (InvalidParameterException e) {
 			// All is well
 		}
-
+	
 		def.setLongOpt("a");
 		try {
-			cl.define(def);
+			cl.addParameter(def);
 			Assert.fail("Did not fail with a length-1 long option");
 		} catch (InvalidParameterException e) {
 			// All is well
 		}
-
+	
 		def.setLongOpt("  ");
 		try {
-			cl.define(def);
+			cl.addParameter(def);
 			Assert.fail("Did not fail with a long option with spaces");
 		} catch (InvalidParameterException e) {
 			// All is well
 		}
-
+	
 		def.setLongOpt("ab");
-		CommandLineParameter p = cl.define(def);
+		cl.addParameter(def);
+		Parameter p = cl.getParameter(def);
 		Assert.assertEquals(p, p);
 		Assert.assertNotEquals(p, null);
 		Assert.assertNotEquals(p, "");
-		Assert.assertSame(cl, p.getCommandLineValues());
+		// Assert.assertSame(cl, p.getParameterSchemeValues());
 		Assert.assertTrue(Parameter.isIdentical(def, p));
-
-		CommandLineParameter p2 = cl.define(def);
+	
+		cl.addParameter(def);
+		Parameter p2 = cl.getParameter(def);
 		Assert.assertSame(p, p2);
-
+	
 		def.setLongOpt("cd");
-		p2 = cl.define(def);
-		Assert.assertSame(cl, p2.getCommandLineValues());
+		cl.addParameter(def);
+		p2 = cl.getParameter(def);
+		// Assert.assertSame(cl, p2.getParameterSchemeValues());
 		Assert.assertNotSame(p, p2);
 		Assert.assertTrue(Parameter.isIdentical(def, p2));
 		Assert.assertNotEquals(p, p2);
-
+	
 		def.setShortOpt('x');
 		try {
-			p2 = cl.define(def);
+			cl.addParameter(def);
+			p2 = cl.getParameter(def);
 			Assert.fail(String.format("Did not fail with a duplicate option"));
 		} catch (DuplicateParameterException e) {
 			// All is well
 		}
 	}
-
+	
 	@Test
 	public void testIterator() throws Exception {
-		CommandLine cl = new CommandLine();
+		ParameterScheme cl = new ParameterScheme("test");
 		Assert.assertNotNull(cl);
-
+	
 		ParameterImpl def = new ParameterImpl();
-		Map<String, CommandLineParameter> m = new HashMap<>();
+		Map<String, Parameter> m = new HashMap<>();
 		for (int i = 0; i < 100; i++) {
 			def.setLongOpt(String.format("long-%04x", i));
-			CommandLineParameter p = cl.define(def);
+			cl.addParameter(def);
+			Parameter p = cl.getParameter(def);
 			m.put(def.getLongOpt(), p);
 		}
-
-		for (CommandLineParameter p : cl) {
+	
+		for (Parameter p : cl.getParameters()) {
 			final String longOpt = p.getLongOpt();
 			if ("help".equals(longOpt)) {
 				// We're OK here...
@@ -161,68 +151,68 @@ public class CommandLineTest {
 			Assert.assertTrue(String.format("Unexpected long option [%s]", longOpt), m.containsKey(longOpt));
 		}
 	}
-
+	
 	@Test
 	public void testHelp() throws Exception {
-		CommandLine cl = new CommandLine();
+		ParameterScheme cl = new ParameterScheme("test");
 		Assert.assertTrue(cl.hasHelpParameter());
-
-		CommandLineParameter help = cl.getHelpParameter();
+	
+		Parameter help = cl.getHelpParameter();
 		Assert.assertNotNull(help);
 		Assert.assertNotNull(help.getKey());
-
+	
 		String[] args = {
 			"-a", "true", //
 			"-b", "false", //
 			"-c", //
 		};
-
+	
 		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.define(def);
-
+	
 		cl.parse("TEST", args);
-
+	
 		def.setMaxValueCount(1);
 		def.setShortOpt('c');
 		cl.define(def);
 		cl.parse("TEST", args);
-
+	
 		args = new String[] {
 			"-a", "true", //
 			"-c", "false", //
 			"-?"
 		};
-
+	
 		cl.parse("TEST", args);
 		Assert.assertTrue(cl.isHelpRequested());
 		Assert.assertNotNull(cl.getHelpMessage());
-
-		CommandLine cl2 = new CommandLine(false);
+	
+		ParameterScheme cl2 = new ParameterScheme(false);
 		Assert.assertFalse(cl2.hasHelpParameter());
 		Assert.assertNull(cl2.getHelpParameter());
-
-		CommandLineParameter p2prev = null;
-		for (CommandLineParameter p : cl) {
-			CommandLineParameter p2 = cl2.define(p);
+	
+		Parameter p2prev = null;
+		for (Parameter p : cl) {
+			Parameter p2 = cl2.define(p);
 			Assert.assertNotEquals(p, p2);
 			Assert.assertNotEquals(p, p2prev);
 			p2prev = p2;
 		}
-
+	
 		try {
 			cl2.parse("TEST", args);
-		} catch (CommandLineParseException e) {
+		} catch (ParameterSchemeParseException e) {
 			// we're good, this is expected
 			Assert.assertNull(e.getHelp());
 		}
 	}
-
+	
 	@Test
 	public void testGetBoolean() throws Exception {
-		CommandLine cl = new CommandLine();
-
+		ParameterScheme cl = new ParameterScheme("test");
+	
 		String[] args = {
 			"-a", "true", //
 			"-b", "false", //
@@ -230,26 +220,32 @@ public class CommandLineTest {
 			"-d", "garbage", //
 			"-f", //
 		};
-
+	
 		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
-		CommandLineParameter a = cl.define(def);
+		cl.addParameter(def);
+		Parameter a = cl.getParameter(def);
 		def.setShortOpt('b');
-		CommandLineParameter b = cl.define(def);
+		cl.addParameter(def);
+		Parameter b = cl.getParameter(def);
 		def.setShortOpt('d');
-		CommandLineParameter d = cl.define(def);
+		cl.addParameter(def);
+		Parameter d = cl.getParameter(def);
 		def.setShortOpt('e');
-		CommandLineParameter e = cl.define(def);
+		cl.addParameter(def);
+		Parameter e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
-		CommandLineParameter c = cl.define(def);
+		cl.addParameter(def);
+		Parameter c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
-		CommandLineParameter f = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter f = cl.getParameter(def);
+	
 		cl.parse("TEST", args);
-
+	
 		Assert.assertTrue("a", a.getBoolean());
 		Assert.assertTrue("a-def", a.getBoolean(false));
 		Assert.assertFalse("b", b.getBoolean());
@@ -272,11 +268,11 @@ public class CommandLineTest {
 		Assert.assertNull("f", f.getBoolean());
 		Assert.assertTrue("f-all", f.getAllBooleans().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetInteger() throws Exception {
-		CommandLine cl = new CommandLine();
-
+		ParameterScheme cl = new ParameterScheme("test");
+	
 		String[] args = {
 			"-a", "1", //
 			"-b", "2", //
@@ -284,26 +280,32 @@ public class CommandLineTest {
 			"-d", "5", //
 			"-f", //
 		};
-
+	
 		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
-		CommandLineParameter a = cl.define(def);
+		cl.addParameter(def);
+		Parameter a = cl.getParameter(def);
 		def.setShortOpt('b');
-		CommandLineParameter b = cl.define(def);
+		cl.addParameter(def);
+		Parameter b = cl.getParameter(def);
 		def.setShortOpt('d');
-		CommandLineParameter d = cl.define(def);
+		cl.addParameter(def);
+		Parameter d = cl.getParameter(def);
 		def.setShortOpt('e');
-		CommandLineParameter e = cl.define(def);
+		cl.addParameter(def);
+		Parameter e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
-		CommandLineParameter c = cl.define(def);
+		cl.addParameter(def);
+		Parameter c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
-		CommandLineParameter f = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter f = cl.getParameter(def);
+	
 		cl.parse("TEST", args);
-
+	
 		Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
 		Assert.assertEquals("a-def", 1, a.getInteger(2));
 		Assert.assertEquals("a-dual", b.getInteger(), cl.getInteger(b));
@@ -330,11 +332,11 @@ public class CommandLineTest {
 		Assert.assertNull("f", f.getInteger());
 		Assert.assertTrue("f-all", f.getAllIntegers().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetLong() throws Exception {
-		CommandLine cl = new CommandLine();
-
+		ParameterScheme cl = new ParameterScheme("test");
+	
 		String[] args = {
 			"-a", "1", //
 			"-b", "2", //
@@ -342,26 +344,32 @@ public class CommandLineTest {
 			"-d", "5", //
 			"-f", //
 		};
-
+	
 		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
-		CommandLineParameter a = cl.define(def);
+		cl.addParameter(def);
+		Parameter a = cl.getParameter(def);
 		def.setShortOpt('b');
-		CommandLineParameter b = cl.define(def);
+		cl.addParameter(def);
+		Parameter b = cl.getParameter(def);
 		def.setShortOpt('d');
-		CommandLineParameter d = cl.define(def);
+		cl.addParameter(def);
+		Parameter d = cl.getParameter(def);
 		def.setShortOpt('e');
-		CommandLineParameter e = cl.define(def);
+		cl.addParameter(def);
+		Parameter e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
-		CommandLineParameter c = cl.define(def);
+		cl.addParameter(def);
+		Parameter c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
-		CommandLineParameter f = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter f = cl.getParameter(def);
+	
 		cl.parse("TEST", args);
-
+	
 		Assert.assertEquals("a", Long.valueOf(1), a.getLong());
 		Assert.assertEquals("a-def", 1, a.getLong(2));
 		Assert.assertEquals("b", Long.valueOf(2), b.getLong());
@@ -388,11 +396,11 @@ public class CommandLineTest {
 		Assert.assertNull("f", f.getLong());
 		Assert.assertTrue("f-all", f.getAllLongs().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetFloat() throws Exception {
-		CommandLine cl = new CommandLine();
-
+		ParameterScheme cl = new ParameterScheme("test");
+	
 		String[] args = {
 			"-a", "1.1", //
 			"-b", "2.2", //
@@ -400,26 +408,32 @@ public class CommandLineTest {
 			"-d", "5.5", //
 			"-f", //
 		};
-
+	
 		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
-		CommandLineParameter a = cl.define(def);
+		cl.addParameter(def);
+		Parameter a = cl.getParameter(def);
 		def.setShortOpt('b');
-		CommandLineParameter b = cl.define(def);
+		cl.addParameter(def);
+		Parameter b = cl.getParameter(def);
 		def.setShortOpt('d');
-		CommandLineParameter d = cl.define(def);
+		cl.addParameter(def);
+		Parameter d = cl.getParameter(def);
 		def.setShortOpt('e');
-		CommandLineParameter e = cl.define(def);
+		cl.addParameter(def);
+		Parameter e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
-		CommandLineParameter c = cl.define(def);
+		cl.addParameter(def);
+		Parameter c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
-		CommandLineParameter f = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter f = cl.getParameter(def);
+	
 		cl.parse("TEST", args);
-
+	
 		Assert.assertEquals("a", Float.valueOf(1.1f), a.getFloat());
 		Assert.assertEquals("a-def", Float.valueOf(1.1f), a.getFloat(2.2f), 0.0f);
 		Assert.assertEquals("b", Float.valueOf(2.2f), b.getFloat());
@@ -445,11 +459,11 @@ public class CommandLineTest {
 		Assert.assertNull("f", f.getFloat());
 		Assert.assertTrue("f-all", f.getAllFloats().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetDouble() throws Exception {
-		CommandLine cl = new CommandLine();
-
+		ParameterScheme cl = new ParameterScheme("test");
+	
 		String[] args = {
 			"-a", "1.1", //
 			"-b", "2.2", //
@@ -457,26 +471,32 @@ public class CommandLineTest {
 			"-d", "5.5", //
 			"-f", //
 		};
-
+	
 		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
-		CommandLineParameter a = cl.define(def);
+		cl.addParameter(def);
+		Parameter a = cl.getParameter(def);
 		def.setShortOpt('b');
-		CommandLineParameter b = cl.define(def);
+		cl.addParameter(def);
+		Parameter b = cl.getParameter(def);
 		def.setShortOpt('d');
-		CommandLineParameter d = cl.define(def);
+		cl.addParameter(def);
+		Parameter d = cl.getParameter(def);
 		def.setShortOpt('e');
-		CommandLineParameter e = cl.define(def);
+		cl.addParameter(def);
+		Parameter e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
-		CommandLineParameter c = cl.define(def);
+		cl.addParameter(def);
+		Parameter c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
-		CommandLineParameter f = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter f = cl.getParameter(def);
+	
 		cl.parse("TEST", args);
-
+	
 		Assert.assertEquals("a", Double.valueOf(1.1), a.getDouble());
 		Assert.assertEquals("a-def", Double.valueOf(1.1), a.getDouble(2.2), 0.0);
 		Assert.assertEquals("b", Double.valueOf(2.2), b.getDouble());
@@ -502,11 +522,11 @@ public class CommandLineTest {
 		Assert.assertNull("f", f.getDouble());
 		Assert.assertTrue("f-all", f.getAllDoubles().isEmpty());
 	}
-
+	
 	@Test
 	public void testGetString() throws Exception {
-		CommandLine cl = new CommandLine();
-
+		ParameterScheme cl = new ParameterScheme("test");
+	
 		String[] args = {
 			"-a", "1", //
 			"-b", "2", //
@@ -514,26 +534,32 @@ public class CommandLineTest {
 			"-d", "5", //
 			"-f",
 		};
-
+	
 		ParameterImpl def = new ParameterImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
-		CommandLineParameter a = cl.define(def);
+		cl.addParameter(def);
+		Parameter a = cl.getParameter(def);
 		def.setShortOpt('b');
-		CommandLineParameter b = cl.define(def);
+		cl.addParameter(def);
+		Parameter b = cl.getParameter(def);
 		def.setShortOpt('d');
-		CommandLineParameter d = cl.define(def);
+		cl.addParameter(def);
+		Parameter d = cl.getParameter(def);
 		def.setShortOpt('e');
-		CommandLineParameter e = cl.define(def);
+		cl.addParameter(def);
+		Parameter e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
-		CommandLineParameter c = cl.define(def);
+		cl.addParameter(def);
+		Parameter c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
-		CommandLineParameter f = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter f = cl.getParameter(def);
+	
 		cl.parse("TEST", args);
-
+	
 		Assert.assertEquals("a", "1", a.getString());
 		Assert.assertEquals("a-def", "1", a.getString("x"));
 		Assert.assertEquals("b", "2", b.getString());
@@ -558,36 +584,40 @@ public class CommandLineTest {
 		Assert.assertNull("f", f.getString());
 		Assert.assertTrue("f-all", f.getAllStrings().isEmpty());
 	}
-
+	
 	@Test
 	public void testIsPresent() throws Exception {
 		// Short options
 		{
-			CommandLine cl = new CommandLine();
-
+			ParameterScheme cl = new ParameterScheme("test");
+	
 			String[] args = {
 				"-a", //
 				"-b", "2", //
 				"-c", "3,4", //
 			};
-
+	
 			ParameterImpl def = new ParameterImpl();
 			def.setShortOpt('a');
-			CommandLineParameter a = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter a = cl.getParameter(def);
+	
 			def.setMaxValueCount(1);
 			def.setShortOpt('b');
-			CommandLineParameter b = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter b = cl.getParameter(def);
+	
 			def.setMaxValueCount(-1);
 			def.setShortOpt('c');
-			CommandLineParameter c = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter c = cl.getParameter(def);
+	
 			def.setShortOpt('d');
-			CommandLineParameter d = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter d = cl.getParameter(def);
+	
 			cl.parse("TEST", args);
-
+	
 			Assert.assertTrue(a.isPresent());
 			Assert.assertEquals(a.isPresent(), cl.isPresent(a));
 			Assert.assertTrue(b.isPresent());
@@ -597,31 +627,35 @@ public class CommandLineTest {
 		}
 		// Long options
 		{
-			CommandLine cl = new CommandLine();
-
+			ParameterScheme cl = new ParameterScheme("test");
+	
 			String[] args = {
 				"--long-a", //
 				"--long-b", "2", //
 				"--long-c", "3,4", //
 			};
-
+	
 			ParameterImpl def = new ParameterImpl();
 			def.setLongOpt("long-a");
-			CommandLineParameter a = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter a = cl.getParameter(def);
+	
 			def.setMaxValueCount(1);
 			def.setLongOpt("long-b");
-			CommandLineParameter b = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter b = cl.getParameter(def);
+	
 			def.setMaxValueCount(-1);
 			def.setLongOpt("long-c");
-			CommandLineParameter c = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter c = cl.getParameter(def);
+	
 			def.setLongOpt("long-d");
-			CommandLineParameter d = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter d = cl.getParameter(def);
+	
 			cl.parse("TEST", args);
-
+	
 			Assert.assertTrue(a.isPresent());
 			Assert.assertEquals(a.isPresent(), cl.isPresent(a));
 			Assert.assertTrue(b.isPresent());
@@ -630,27 +664,28 @@ public class CommandLineTest {
 			Assert.assertEquals(d.isPresent(), cl.isPresent(d));
 		}
 	}
-
+	
 	@Test
 	public void testGetRemainingParameters() throws Exception {
 		// With remaining
 		{
-			CommandLine cl = new CommandLine();
-
+			ParameterScheme cl = new ParameterScheme("test");
+	
 			String[] args = {
 				"-a", "1", //
 				"b", "2", //
 				"c", "3,4", //
 				"d", "5", //
 			};
-
+	
 			ParameterImpl def = new ParameterImpl();
 			def.setMaxValueCount(1);
 			def.setShortOpt('a');
-			CommandLineParameter a = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter a = cl.getParameter(def);
+	
 			cl.parse("TEST", args);
-
+	
 			Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
 			List<String> remaining = cl.getPositionalValues();
 			Assert.assertEquals(6, remaining.size());
@@ -660,31 +695,32 @@ public class CommandLineTest {
 		}
 		// Without remaining
 		{
-			CommandLine cl = new CommandLine();
-
+			ParameterScheme cl = new ParameterScheme("test");
+	
 			String[] args = {
 				"-a", "1", //
 			};
-
+	
 			ParameterImpl def = new ParameterImpl();
 			def.setMaxValueCount(1);
 			def.setShortOpt('a');
-			CommandLineParameter a = cl.define(def);
-
+			cl.addParameter(def);
+			Parameter a = cl.getParameter(def);
+	
 			cl.parse("TEST", args);
-
+	
 			Assert.assertEquals("a", Integer.valueOf(1), a.getInteger());
 			List<String> remaining = cl.getPositionalValues();
 			Assert.assertTrue(remaining.isEmpty());
 		}
 	}
-
+	
 	@Test
 	public void testShortOptions() {
-		CommandLine cl = new CommandLine(false);
+		ParameterScheme cl = new ParameterScheme(false);
 		final Charset charset = Charset.forName("US-ASCII");
 		ParameterImpl def = null;
-		Set<CommandLineParameter> shortOptions = new HashSet<>();
+		Set<Parameter> shortOptions = new HashSet<>();
 		for (int i = 0; i < 255; i++) {
 			ByteBuffer bb = ByteBuffer.allocate(4);
 			bb.putInt(i);
@@ -696,7 +732,8 @@ public class CommandLineTest {
 			def = new ParameterImpl();
 			def.setShortOpt(c);
 			try {
-				CommandLineParameter p = cl.define(def);
+				cl.addParameter(def);
+				Parameter p = cl.getParameter(def);
 				shortOptions.add(p);
 				Assert.assertEquals(1, p.compareTo(null));
 			} catch (InvalidParameterException e) {
@@ -707,89 +744,95 @@ public class CommandLineTest {
 				Assert.fail(String.format("Duplicate exception caught when no duplicate was in play (%s)", c));
 			}
 		}
-
-		for (CommandLineParameter expected : shortOptions) {
-			CommandLineParameter actual = cl.getParameter(expected.getShortOpt());
+	
+		for (Parameter expected : shortOptions) {
+			Parameter actual = cl.getParameter(expected.getShortOpt());
 			Assert.assertEquals(expected, actual);
 			Assert.assertTrue(cl.hasParameter(expected.getShortOpt()));
 		}
-
-		for (CommandLineParameter actual : cl.shortOptions()) {
+	
+		for (Parameter actual : cl.shortOptions()) {
 			Assert.assertNotNull(actual);
 			Assert.assertTrue(shortOptions.remove(actual));
 		}
 		Assert.assertTrue(shortOptions.isEmpty());
 	}
-
+	
 	@Test
 	public void testLongOptions() throws Exception {
-		CommandLine cl = new CommandLine(false);
+		ParameterScheme cl = new ParameterScheme(false);
 		ParameterImpl def = null;
-		Set<CommandLineParameter> longOptions = new HashSet<>();
+		Set<Parameter> longOptions = new HashSet<>();
 		for (int i = 0; i < 255; i++) {
 			def = new ParameterImpl();
 			def.setLongOpt(String.format("long-%04x", i));
-			CommandLineParameter p = cl.define(def);
+			cl.addParameter(def);
+			Parameter p = cl.getParameter(def);
 			longOptions.add(p);
 			Assert.assertEquals(1, p.compareTo(null));
 		}
-
-		for (CommandLineParameter expected : longOptions) {
-			CommandLineParameter actual = cl.getParameter(expected.getLongOpt());
+	
+		for (Parameter expected : longOptions) {
+			Parameter actual = cl.getParameter(expected.getLongOpt());
 			Assert.assertEquals(expected, actual);
 			Assert.assertTrue(cl.hasParameter(expected.getLongOpt()));
 		}
-
-		for (CommandLineParameter actual : cl.longOptions()) {
+	
+		for (Parameter actual : cl.longOptions()) {
 			Assert.assertNotNull(actual);
 			Assert.assertTrue(longOptions.remove(actual));
 		}
 		Assert.assertTrue(longOptions.isEmpty());
 	}
-
+	
 	@Test
 	public void testGetParameter() throws Exception {
-		CommandLine cl = new CommandLine();
+		ParameterScheme cl = new ParameterScheme("test");
 		Assert.assertNotNull(cl);
-
+	
 		ParameterImpl def = null;
-
+	
 		def = new ParameterImpl();
-
+	
 		def.setShortOpt('a');
-		CommandLineParameter a = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter a = cl.getParameter(def);
+	
 		def.setShortOpt('b');
-		CommandLineParameter b = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter b = cl.getParameter(def);
+	
 		def = new ParameterImpl();
-
+	
 		def.setLongOpt("ab");
-		CommandLineParameter ab = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter ab = cl.getParameter(def);
+	
 		def.setLongOpt("cd");
-		CommandLineParameter cd = cl.define(def);
-
+		cl.addParameter(def);
+		Parameter cd = cl.getParameter(def);
+	
 		String[] args = {
 			"-a", "--ab"
 		};
-
+	
 		cl.parse("TEST", args);
-
+	
 		Assert.assertTrue(cl.isDefined(a));
 		Assert.assertSame(a, cl.getParameter(a));
 		Assert.assertTrue(cl.isPresent(a));
-
+	
 		Assert.assertTrue(cl.isDefined(b));
 		Assert.assertSame(b, cl.getParameter(b));
 		Assert.assertFalse(cl.isPresent(b));
-
+	
 		Assert.assertTrue(cl.isDefined(ab));
 		Assert.assertSame(ab, cl.getParameter(ab));
 		Assert.assertTrue(cl.isPresent(ab));
-
+	
 		Assert.assertTrue(cl.isDefined(cd));
 		Assert.assertSame(cd, cl.getParameter(cd));
 		Assert.assertFalse(cl.isPresent(cd));
 	}
+	*/
 }
