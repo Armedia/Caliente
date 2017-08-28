@@ -15,18 +15,12 @@ import com.armedia.commons.utilities.Tools;
 
 public final class ParameterValuesImpl implements ParameterValues {
 
-	private final ParameterScheme scheme;
-
 	private final Map<Character, ParameterValue> shortOptions = new TreeMap<>();
 	private final Map<String, ParameterValue> longOptions = new TreeMap<>();
 	private final Map<String, ParameterValue> parameterValues = new TreeMap<>();
 
 	private final Map<String, List<Collection<String>>> occurrences = new TreeMap<>();
 	private final Map<String, List<String>> values = new HashMap<>();
-
-	public ParameterValuesImpl(ParameterScheme scheme) {
-		this.scheme = scheme;
-	}
 
 	private String getValidKey(Parameter param) {
 		Objects.requireNonNull(param, "Must provide a parameter whose presence to check for");
@@ -81,11 +75,6 @@ public final class ParameterValuesImpl implements ParameterValues {
 	@Override
 	public Iterator<ParameterValue> iterator() {
 		return new ArrayList<>(this.parameterValues.values()).iterator();
-	}
-
-	@Override
-	public ParameterScheme getParameterScheme() {
-		return this.scheme;
 	}
 
 	@Override

@@ -7,15 +7,6 @@ public interface ParameterValues extends Iterable<ParameterValue> {
 
 	/* General use */
 	/**
-	 * Returns the {@link ParameterScheme} instance which was used when parsing the values
-	 * encapsulated by this instance.
-	 *
-	 * @return the {@link ParameterScheme} instance which was used when parsing the values
-	 *         encapsulated by this instance.
-	 */
-	public ParameterScheme getParameterScheme();
-
-	/**
 	 * Returns {@code true} if the given parameter is defined in the underlying parameter scheme,
 	 * {@code false} otherwise.
 	 *

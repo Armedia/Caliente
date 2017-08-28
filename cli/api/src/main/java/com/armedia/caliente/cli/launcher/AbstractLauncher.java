@@ -103,7 +103,7 @@ public abstract class AbstractLauncher {
 		final DynamicParameterSchemeSupport dynamicSupport = getDynamicSchemeSupport();
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
 
-		final ParameterValuesImpl baseValues = new ParameterValuesImpl(baseScheme);
+		final ParameterValuesImpl baseValues = new ParameterValuesImpl();
 		final List<Token> positionals = new ArrayList<>();
 		final CommandScheme commandScheme = (CommandScheme.class.isInstance(baseScheme)
 			? CommandScheme.class.cast(baseScheme) : null);
@@ -141,7 +141,7 @@ public abstract class AbstractLauncher {
 							currentScheme = command = getCommand(dynamic ? baseValues : null, commandScheme,
 								nextToken.getRawString());
 							if (command != null) {
-								commandValues = new ParameterValuesImpl(command);
+								commandValues = new ParameterValuesImpl();
 								if (dynamic) {
 									extensibleScheme = new ExtensibleParameterScheme(command);
 								}
