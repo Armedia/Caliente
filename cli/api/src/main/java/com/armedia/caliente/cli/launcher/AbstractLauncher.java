@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandLineResult;
 import com.armedia.caliente.cli.CommandScheme;
-import com.armedia.caliente.cli.InsufficientValuesException;
+import com.armedia.caliente.cli.InsufficientPositionalValuesException;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
@@ -98,7 +98,7 @@ public abstract class AbstractLauncher {
 
 	private CommandLineResult parseArguments(Option helpOption, final OptionScheme baseScheme, String... args)
 		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyOptionValuesException, InsufficientValuesException {
+		TooManyOptionValuesException, InsufficientPositionalValuesException {
 
 		final DynamicOptionSchemeSupport dynamicSupport = getDynamicSchemeSupport();
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
@@ -252,7 +252,7 @@ public abstract class AbstractLauncher {
 
 		// Do we have enough positionals to meet the schema requirements?
 		if (currentScheme.getMinArgs() > 0) {
-			if (positionals.size() < currentScheme.getMinArgs()) { throw new InsufficientValuesException(null); }
+			if (positionals.size() < currentScheme.getMinArgs()) { throw new InsufficientPositionalValuesException(null); }
 		}
 
 		// Do we have all the required options for both the global and command?
