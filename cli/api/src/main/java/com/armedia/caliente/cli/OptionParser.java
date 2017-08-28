@@ -144,7 +144,6 @@ public class OptionParser {
 		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, OptionParser.DEFAULT_ALLOW_RECURSION, optionValueSplitter,
 			args);
-
 	}
 
 	public final OptionParseResult parse(final Option helpOption, OptionScheme baseScheme,

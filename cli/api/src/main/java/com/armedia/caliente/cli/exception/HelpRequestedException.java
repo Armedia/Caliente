@@ -21,5 +21,4 @@ public class HelpRequestedException extends CommandLineException {
 	public Command getCommand() {
 		return this.command;
 	}
-
 }
