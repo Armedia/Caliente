@@ -11,7 +11,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
-import com.armedia.caliente.cli.exception.DuplicateOptionException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.exception.InsufficientPositionalValuesException;
 import com.armedia.caliente.cli.exception.MissingRequiredOptionException;
@@ -159,14 +158,7 @@ public class OptionParser {
 			baseScheme = new OptionScheme("automatic");
 		}
 		if (helpOption != null) {
-			baseScheme.remove(helpOption);
-			try {
-				baseScheme.add(helpOption);
-			} catch (DuplicateOptionException e) {
-				// Not. Gonna. Happen. That's why we remove first ;)
-				throw new RuntimeException(
-					"Found a duplicate option to the help option even after removing it!! This is a bug!", e);
-			}
+			baseScheme.addOrReplace(helpOption);
 		}
 
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", args), optionValueSplitter,

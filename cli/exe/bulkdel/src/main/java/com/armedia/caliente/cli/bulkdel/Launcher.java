@@ -6,7 +6,6 @@ import java.util.Collection;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.exception.DuplicateOptionException;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
@@ -24,22 +23,12 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		OptionScheme optionScheme = new OptionScheme("Caliente Bulk Deleter");
+		OptionScheme optionScheme = new OptionScheme(getProgramName());
 		for (Option o : Option.getUnwrappedList(CLIParam.values())) {
-			try {
-				optionScheme.add(o);
-			} catch (DuplicateOptionException e) {
-				// Not gonna happen...
-				throw new RuntimeException("Unexpected duplicate exception adding the program-specific parameters", e);
-			}
+			optionScheme.addOrReplace(o);
 		}
 		for (Option o : new DfcLaunchHelper(true).getOptions()) {
-			try {
-				optionScheme.add(o);
-			} catch (DuplicateOptionException e) {
-				// Not gonna happen...
-				throw new RuntimeException("Unexpected duplicate exception adding DFC common parameters", e);
-			}
+			optionScheme.addOrReplace(o);
 		}
 		return optionScheme;
 	}

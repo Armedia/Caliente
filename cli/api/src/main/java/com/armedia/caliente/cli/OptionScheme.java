@@ -254,6 +254,29 @@ public class OptionScheme implements Iterable<Option> {
 	}
 
 	/**
+	 * Adds the given option to this option scheme.
+	 *
+	 * @param option
+	 *            the option to add
+	 * @throws IllegalArgumentException
+	 *             if the given option collides with any already-existing options (you can check
+	 *             with {@link #hasOption(Character)}, {@link #hasOption(String)}, or
+	 *             {@link #countCollisions(Option)}
+	 */
+	public final OptionScheme addOrReplace(Option option) {
+		if (option == null) { throw new IllegalArgumentException("Must provide an option to add"); }
+		assertValid(option);
+		remove(option);
+		try {
+			add(option);
+		} catch (DuplicateOptionException e) {
+			// This should not be possible
+			throw new RuntimeException("Unexpected DuplicateOptionException during addOrReplace()", e);
+		}
+		return this;
+	}
+
+	/**
 	 * Remove any and all options (a maximum of 2) that may collide with the given option's short or
 	 * long option forms. If {@code null} is returned, then there was no collision.
 	 *

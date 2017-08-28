@@ -3,7 +3,6 @@ package com.armedia.caliente.cli;
 import java.util.Collection;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
-import com.armedia.caliente.cli.exception.InvalidOptionException;
 
 class ExtensibleOptionScheme {
 
@@ -34,7 +33,7 @@ class ExtensibleOptionScheme {
 		return this.scheme.getMaxArgs();
 	}
 
-	public ExtensibleOptionScheme add(Option option) throws InvalidOptionException, DuplicateOptionException {
+	public ExtensibleOptionScheme add(Option option) throws DuplicateOptionException {
 		this.scheme.add(option);
 		this.modified = true;
 		return this;
