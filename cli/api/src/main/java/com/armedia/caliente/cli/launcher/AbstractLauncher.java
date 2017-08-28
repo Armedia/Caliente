@@ -3,7 +3,6 @@ package com.armedia.caliente.cli.launcher;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +12,7 @@ import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionParseResult;
 import com.armedia.caliente.cli.OptionParser;
 import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
@@ -29,9 +29,9 @@ public abstract class AbstractLauncher {
 	/**
 	 * <p>
 	 * Process the OptionParseResult. If an error occurs, a {@link CommandLineProcessingException}
-	 * will be raised, and the invocation to {@link #launch(OptionScheme, String...)} will return
-	 * the value obtained from that exception's
-	 * {@link CommandLineProcessingException#getReturnValue() getReturnValue()}.
+	 * will be raised, and the invocation to {@link #launch(String...)} will return the value
+	 * obtained from that exception's {@link CommandLineProcessingException#getReturnValue()
+	 * getReturnValue()}.
 	 * </p>
 	 *
 	 * @param commandLine
@@ -42,16 +42,20 @@ public abstract class AbstractLauncher {
 	protected void processCommandLineResult(OptionParseResult commandLine) throws CommandLineProcessingException {
 	}
 
-	protected final int launch(OptionScheme scheme, String... args) {
-		return launch(null, scheme, args);
+	protected final int launch(String... args) {
+		return launch(null, args);
 	}
 
-	protected boolean initLogging(OptionParseResult cl) {
+	protected abstract String getProgramName();
+
+	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValies,
+		Collection<String> positionals) {
 		// By default, do nothing...
 		return false;
 	}
 
-	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionParseResult cli) {
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
+		OptionValues commandValies, Collection<String> positionals) {
 		return Collections.emptyList();
 	}
 
@@ -65,8 +69,16 @@ public abstract class AbstractLauncher {
 		return null;
 	}
 
-	protected final int launch(Option helpOption, final OptionScheme optionScheme, String... args) {
-		Objects.requireNonNull(optionScheme, "Must provide an initial option scheme to parse against");
+	protected abstract OptionScheme getOptionScheme();
+
+	protected final int launch(Option helpOption, String... args) {
+		final OptionScheme optionScheme;
+		try {
+			optionScheme = getOptionScheme();
+		} catch (Exception e) {
+			this.log.error("Failed to initialize the option scheme", e);
+			return -1;
+		}
 
 		if (args == null) {
 			args = AbstractLauncher.NO_ARGS;
@@ -91,7 +103,8 @@ public abstract class AbstractLauncher {
 			return e.getReturnValue();
 		}
 
-		Collection<? extends LaunchClasspathHelper> classpathHelpers = getClasspathHelpers(result);
+		Collection<? extends LaunchClasspathHelper> classpathHelpers = getClasspathHelpers(result.getOptionValues(),
+			result.getCommand(), result.getCommandValues(), result.getPositionals());
 		if (classpathHelpers == null) {
 			Collections.emptyList();
 		}
@@ -132,7 +145,8 @@ public abstract class AbstractLauncher {
 
 		// We have a complete command line, and the final classpath. Let's initialize
 		// the logging.
-		if (initLogging(result)) {
+		if (initLogging(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
+			result.getPositionals())) {
 			// Retrieve the logger post-initialization...if nothing was initialized, we stick to the
 			// same log
 			this.log = LoggerFactory.getLogger(getClass());
@@ -144,12 +158,14 @@ public abstract class AbstractLauncher {
 		}
 
 		try {
-			return run(result);
+			return run(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
+				result.getPositionals());
 		} catch (Exception e) {
 			this.log.error("Exception caught", e);
 			return 1;
 		}
 	}
 
-	protected abstract int run(OptionParseResult commandLine) throws Exception;
+	protected abstract int run(OptionValues baseValues, String command, OptionValues commandValies,
+		Collection<String> positionals) throws Exception;
 }
