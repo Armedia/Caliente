@@ -189,47 +189,6 @@ public class ParameterScheme {
 		return this.shortKeys.get(canonicalize(shortOpt));
 	}
 
-	private final Collection<Parameter> replaceParameter(Parameter parameter, boolean add) {
-		if (parameter == null) { throw new IllegalArgumentException(
-			String.format("Must provide a parameter to %s", add ? "add" : "remove")); }
-
-		final String longOpt = canonicalize(parameter.getLongOpt());
-		final Parameter oldLong = (add ? getParameter(longOpt) : removeParameter(longOpt));
-		final Character shortOpt = canonicalize(parameter.getShortOpt());
-		final Parameter oldShort = (add ? getParameter(shortOpt) : removeParameter(shortOpt));
-
-		if (add) {
-			if ((oldLong != null) || (oldShort != null)) {
-				Object msgParam = null;
-				if ((oldLong != null) && (oldShort != null)) {
-					msgParam = ParameterScheme.buildCollection(oldShort, oldLong);
-				} else if (oldLong != null) {
-					msgParam = oldLong;
-				} else {
-					msgParam = oldShort;
-				}
-
-				throw new IllegalArgumentException(
-					String.format("The given parameter %s would collide with %s", parameter, msgParam));
-			}
-
-			if (longOpt != null) {
-				removeParameter(longOpt);
-				this.longKeys.put(longOpt, parameter);
-			}
-			if (shortOpt != null) {
-				removeParameter(shortOpt);
-				this.shortKeys.put(shortOpt, parameter);
-			}
-			final String key = canonicalize(parameter.getKey());
-			this.parameters.put(key, parameter);
-			if (parameter.isRequired()) {
-				this.requiredParameters.put(key, parameter);
-			}
-		}
-		return ParameterScheme.buildCollection(oldShort, oldLong);
-	}
-
 	/**
 	 * Adds the given parameter to this parameter scheme.
 	 *
@@ -240,8 +199,45 @@ public class ParameterScheme {
 	 *             check with {@link #hasParameter(Character)}, {@link #hasParameter(String)}, or
 	 *             {@link #countCollisions(Parameter)}
 	 */
-	public final ParameterScheme addParameter(Parameter parameter) {
-		replaceParameter(parameter, true);
+	public final ParameterScheme addParameter(Parameter parameter)
+		throws InvalidParameterException, DuplicateParameterException {
+		if (parameter == null) { throw new IllegalArgumentException("Must provide a parameter to add"); }
+
+		final String longOpt = canonicalize(parameter.getLongOpt());
+		final Character shortOpt = canonicalize(parameter.getShortOpt());
+
+		// TODO: Validate that the short and long options are valid
+
+		final Parameter oldLong = getParameter(longOpt);
+		final Parameter oldShort = getParameter(shortOpt);
+
+		if ((oldLong != null) || (oldShort != null)) {
+			Parameter existing = null;
+			if ((oldLong != null) && (oldShort != null)) {
+				existing = ParameterScheme.buildCollection(oldShort, oldLong).iterator().next();
+			} else if (oldLong != null) {
+				existing = oldLong;
+			} else {
+				existing = oldShort;
+			}
+			throw new DuplicateParameterException(
+				String.format("The given parameter %s would collide with %s", parameter, existing), existing,
+				parameter);
+		}
+
+		if (longOpt != null) {
+			removeParameter(longOpt);
+			this.longKeys.put(longOpt, parameter);
+		}
+		if (shortOpt != null) {
+			removeParameter(shortOpt);
+			this.shortKeys.put(shortOpt, parameter);
+		}
+		final String key = canonicalize(parameter.getKey());
+		this.parameters.put(key, parameter);
+		if (parameter.isRequired()) {
+			this.requiredParameters.put(key, parameter);
+		}
 		return this;
 	}
 
@@ -251,8 +247,11 @@ public class ParameterScheme {
 	 *
 	 * @param parameters
 	 */
-	public final ParameterScheme addParameters(Parameter... parameters) {
+	public final ParameterScheme addParameters(Parameter... parameters)
+		throws InvalidParameterException, DuplicateParameterException {
 		if (parameters == null) { throw new IllegalArgumentException("Must provide a non-null parameter array"); }
+		// TODO: Change this algorithm - first check that no parameters collide or are illegal, then
+		// move on
 		for (Parameter p : parameters) {
 			if (p != null) {
 				addParameter(p);
@@ -269,8 +268,16 @@ public class ParameterScheme {
 	 *            the parameter to check against
 	 * @return the parameters that were removed
 	 */
-	public final Collection<Parameter> removeParameter(Parameter parameter) {
-		return replaceParameter(parameter, false);
+	public final Collection<Parameter> removeParameter(Parameter parameter)
+		throws InvalidParameterException, DuplicateParameterException {
+		if (parameter == null) { throw new IllegalArgumentException("Must provide a parameter to remove"); }
+
+		final String longOpt = canonicalize(parameter.getLongOpt());
+		final Parameter oldLong = removeParameter(longOpt);
+		final Character shortOpt = canonicalize(parameter.getShortOpt());
+		final Parameter oldShort = removeParameter(shortOpt);
+
+		return ParameterScheme.buildCollection(oldShort, oldLong);
 	}
 
 	/**
