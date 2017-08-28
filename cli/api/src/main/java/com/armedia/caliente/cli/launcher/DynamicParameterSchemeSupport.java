@@ -28,8 +28,7 @@ public interface DynamicParameterSchemeSupport {
 	 *            if no command is active)
 	 * @param scheme
 	 *            the scheme to enhance via calls to
-	 *            {@link ParameterScheme#addParameter(com.armedia.caliente.cli.Parameter)} or
-	 *            {@link ParameterScheme#addParameters(com.armedia.caliente.cli.Parameter...)}
+	 *            {@link ParameterScheme#addParameter(com.armedia.caliente.cli.Parameter)}
 	 */
 	public void extendDynamicScheme(int currentNumber, ParameterValues baseValues, String currentCommand,
 		ParameterValues commandValues, Token currentToken, ExtensibleParameterScheme scheme);
