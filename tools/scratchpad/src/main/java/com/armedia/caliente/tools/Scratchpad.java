@@ -1,7 +1,13 @@
 package com.armedia.caliente.tools;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Arrays;
+import java.util.Collection;
+
+import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.launcher.AbstractLauncher;
+import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 
 /**
  * This class is used as a testbed to run quick'n'dirty DFC test programs
@@ -9,20 +15,35 @@ import java.util.regex.Pattern;
  * @author diego.rivera@armedia.com
  *
  */
-public class Scratchpad {
+public class Scratchpad extends AbstractLauncher {
 
-	public static final void main(String... args) throws Throwable {
-		Pattern p = Pattern.compile(args[0]);
-		for (int i = 1; i < args.length; i++) {
-			final String str = args[i];
-			Matcher m = p.matcher(str);
-			int start = 0;
-			while (m.find()) {
-				String value = str.substring(start, m.start());
-				start = m.end();
-			}
-			String lastValue = str.substring(start);
-		}
+	public static final void main(String... args) {
+		System.exit(new Scratchpad().launch(args));
 	}
 
+	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+
+	@Override
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
+		OptionValues commandValies, Collection<String> positionals) {
+		return Arrays.asList(this.dfcLaunchHelper);
+	}
+
+	@Override
+	protected String getProgramName() {
+		return "Caliente Scratchpad";
+	}
+
+	@Override
+	protected int run(OptionValues baseValues, String command, OptionValues commandValies,
+		Collection<String> positionals) throws Exception {
+		// PropertiesTest.test();
+		// DctmTest.test();
+		return 0;
+	}
+
+	@Override
+	protected OptionScheme getOptionScheme() {
+		return null;
+	}
 }
