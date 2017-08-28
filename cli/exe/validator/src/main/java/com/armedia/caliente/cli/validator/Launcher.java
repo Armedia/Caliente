@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -14,14 +13,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 
-import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
-import com.armedia.caliente.cli.launcher.LaunchOptionSet;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.commons.utilities.PooledWorkers;
 
-public class Launcher extends AbstractLauncher implements LaunchOptionSet {
+public class Launcher extends AbstractLauncher {
 	private static final int MIN_THREADS = 1;
 	private static final int DEFAULT_THREADS = Math.min(16, Runtime.getRuntime().availableProcessors() * 2);
 	private static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 3);
@@ -48,18 +47,7 @@ public class Launcher extends AbstractLauncher implements LaunchOptionSet {
 		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
-	public Collection<Option> getParameters(CommandLineValues commandLine) {
-		return Option.getUnwrappedList(CLIParam.values());
-	}
-
-	@Override
-	protected Collection<? extends LaunchOptionSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
-		if (pass > 0) { return null; }
-		return Arrays.asList(this, this.threadsParameter);
-	}
-
-	@Override
-	protected String getProgramName(int pass) {
+	protected String getProgramName() {
 		return "Caliente Validator";
 	}
 
@@ -68,7 +56,8 @@ public class Launcher extends AbstractLauncher implements LaunchOptionSet {
 	}
 
 	@Override
-	protected int run(CommandLineValues cli) throws Exception {
+	protected int run(OptionValues cli, String command, OptionValues commandValies, Collection<String> positionals)
+		throws Exception {
 		final String reportMarker = DateFormatUtils.format(new Date(), Launcher.REPORT_MARKER_FORMAT);
 		System.setProperty("logName", String.format("caliente-validator-%s", reportMarker));
 
@@ -156,5 +145,17 @@ public class Launcher extends AbstractLauncher implements LaunchOptionSet {
 		}
 
 		return 0;
+	}
+
+	@Override
+	protected OptionScheme getOptionScheme() {
+		OptionScheme optionScheme = new OptionScheme(getProgramName());
+		for (Option o : Option.getUnwrappedList(CLIParam.values())) {
+			optionScheme.addOrReplace(o);
+		}
+		for (Option o : this.threadsParameter.getOptions()) {
+			optionScheme.addOrReplace(o);
+		}
+		return optionScheme;
 	}
 }

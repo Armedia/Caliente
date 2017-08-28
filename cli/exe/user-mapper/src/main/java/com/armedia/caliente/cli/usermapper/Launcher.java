@@ -1,18 +1,16 @@
 package com.armedia.caliente.cli.usermapper;
 
-import java.util.Arrays;
 import java.util.Collection;
 
-import com.armedia.caliente.cli.CommandLineValues;
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.launcher.LaunchOptionSet;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 
-public class Launcher extends AbstractLauncher implements LaunchOptionSet {
+public class Launcher extends AbstractLauncher {
 
 	public static final void main(String... args) {
 		System.exit(new Launcher().launch(args));
@@ -23,33 +21,31 @@ public class Launcher extends AbstractLauncher implements LaunchOptionSet {
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 
 	@Override
-	protected Collection<? extends LaunchOptionSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
-		if (pass > 0) { return null; }
-		return Arrays.asList(this, this.libLaunchHelper, this.dfcLaunchHelper, this.threadsParameter);
-	}
-
-	@Override
-	public Collection<Option> getParameters(CommandLineValues commandLine) {
-		return Option.getUnwrappedList(CLIParam.values());
-	}
-
-	@Override
-	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
-		return Arrays.asList(this.libLaunchHelper, this.dfcLaunchHelper);
-	}
-
-	@Override
-	protected int processCommandLine(CommandLineValues commandLine) {
-		return super.processCommandLine(commandLine);
-	}
-
-	@Override
-	protected String getProgramName(int pass) {
+	protected String getProgramName() {
 		return "Caliente User Mapper";
 	}
 
 	@Override
-	protected int run(final CommandLineValues cli) throws Exception {
-		return new UserMapper(this.dfcLaunchHelper).run(cli);
+	protected OptionScheme getOptionScheme() {
+		OptionScheme optionScheme = new OptionScheme(getProgramName());
+		for (Option o : Option.getUnwrappedList(CLIParam.values())) {
+			optionScheme.addOrReplace(o);
+		}
+		for (Option o : this.libLaunchHelper.getOptions()) {
+			optionScheme.addOrReplace(o);
+		}
+		for (Option o : this.dfcLaunchHelper.getOptions()) {
+			optionScheme.addOrReplace(o);
+		}
+		for (Option o : this.threadsParameter.getOptions()) {
+			optionScheme.addOrReplace(o);
+		}
+		return optionScheme;
+	}
+
+	@Override
+	protected int run(OptionValues baseValues, String command, OptionValues commandValies,
+		Collection<String> positionals) throws Exception {
+		return new UserMapper(this.dfcLaunchHelper).run(commandValies, command, commandValies, positionals);
 	}
 }

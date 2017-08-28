@@ -231,15 +231,20 @@ public final class OptionValues implements Iterable<OptionValue> {
 	}
 
 	public final String getString(Option param, String def) {
-		final String v = getString(param);
-		return (v != null ? v : def);
+		List<String> l = getAllStrings(param);
+		if (l == null) { return def; }
+		return l.get(0);
 	}
 
 	public final List<String> getAllStrings(Option param) {
+		List<String> v = getAllStrings(param, null);
+		if (v == null) { return param.getDefaults(); }
+		return v;
+	}
+
+	public final List<String> getAllStrings(Option param, List<String> def) {
 		List<String> v = this.values.get(getValidKey(param));
-		if (v == null) {
-			v = param.getDefaults();
-		}
+		if (v == null) { return def; }
 		return v;
 	}
 
@@ -348,6 +353,10 @@ public final class OptionValues implements Iterable<OptionValue> {
 
 	public List<String> getAllStrings(OptionWrapper paramDel) {
 		return getAllStrings(Option.unwrap(paramDel));
+	}
+
+	public List<String> getAllStrings(OptionWrapper paramDel, List<String> def) {
+		return getAllStrings(Option.unwrap(paramDel), def);
 	}
 
 	public boolean isPresent(OptionWrapper paramDel) {

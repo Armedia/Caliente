@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +28,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.CommandLineValues;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.datagen.data.csv.CSVDataRecordManager;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
@@ -150,7 +151,8 @@ public class DataGen {
 		this.dfcLaunchHelper = dfcLaunchHelper;
 	}
 
-	protected int run(CommandLineValues cli) throws Exception {
+	protected int run(OptionValues cli, String command, OptionValues commandValies, Collection<String> positionals)
+		throws Exception {
 		final boolean debug = cli.isPresent(CLIParam.debug);
 
 		List<String> objectTypes = cli.getAllStrings(CLIParam.object_types);

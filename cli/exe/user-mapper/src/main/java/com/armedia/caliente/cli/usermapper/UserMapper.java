@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.CommandLineValues;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.utils.CliValuePrompt;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -290,7 +291,7 @@ public class UserMapper {
 		groupRecords.flush();
 	}
 
-	private String getDocbaseSuffix(CommandLineValues cli, String docbase) {
+	private String getDocbaseSuffix(OptionValues cli, String docbase) {
 		if (!cli.isPresent(CLIParam.add_docbase)) { return ""; }
 		if (StringUtils.isBlank(docbase)) { return ""; }
 		return String.format(".%s", docbase.toLowerCase());
@@ -304,8 +305,8 @@ public class UserMapper {
 		return newName;
 	}
 
-	private CSVPrinter newCSVPrinter(CommandLineValues cli, String name, String docbase, Set<String> headings,
-		String source) throws IOException {
+	private CSVPrinter newCSVPrinter(OptionValues cli, String name, String docbase, Set<String> headings, String source)
+		throws IOException {
 		if (StringUtils.isEmpty(source)) {
 			source = "INTERNAL";
 		}
@@ -329,7 +330,7 @@ public class UserMapper {
 		return ret;
 	}
 
-	private int writeMappings(CommandLineValues cli, String startMarkerString, String docbase, Properties userMapping,
+	private int writeMappings(OptionValues cli, String startMarkerString, String docbase, Properties userMapping,
 		Properties groupMapping) {
 		File mapFile = null;
 		FileOutputStream out = null;
@@ -442,7 +443,7 @@ public class UserMapper {
 		}
 	}
 
-	private Set<String> getMappingAttributes(CommandLineValues cli, DfcSessionPool pool) throws Exception {
+	private Set<String> getMappingAttributes(OptionValues cli, DfcSessionPool pool) throws Exception {
 		List<String> attributes = cli.getAllStrings(CLIParam.dctm_sam, UserMapper.DEFAULT_DCTM_SAM_ATTRIBUTES);
 		// Shortcut - if there's nothing to validate, don't bother validating...
 		if (attributes.isEmpty()) { return Collections.emptySet(); }
@@ -486,7 +487,8 @@ public class UserMapper {
 		return Tools.freezeSet(finalAttributes);
 	}
 
-	protected int run(final CommandLineValues cli) throws Exception {
+	protected int run(final OptionValues cli, String command, OptionValues commandValies,
+		Collection<String> positionals) throws Exception {
 		DfcSessionPool dfcPool = null;
 		LDAPConnectionPool ldapPool = null;
 		ExecutorService executor = null;

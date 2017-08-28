@@ -27,7 +27,7 @@ public class Launcher extends AbstractLauncher {
 		for (Option o : Option.getUnwrappedList(CLIParam.values())) {
 			optionScheme.addOrReplace(o);
 		}
-		for (Option o : new DfcLaunchHelper(true).getOptions()) {
+		for (Option o : this.dfcLaunchHelper.getOptions()) {
 			optionScheme.addOrReplace(o);
 		}
 		return optionScheme;
