@@ -23,7 +23,7 @@ import com.armedia.caliente.cli.ParameterScheme;
 import com.armedia.caliente.cli.ParameterValues;
 import com.armedia.caliente.cli.ParameterValuesImpl;
 import com.armedia.caliente.cli.TooManyParameterValuesException;
-import com.armedia.caliente.cli.TooManyValuesException;
+import com.armedia.caliente.cli.TooManyPositionalValuesException;
 import com.armedia.caliente.cli.UnknownCommandException;
 import com.armedia.caliente.cli.UnknownParameterException;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
@@ -97,7 +97,7 @@ public abstract class AbstractLauncher {
 	}
 
 	private CommandLineResult parseArguments(Parameter helpParameter, final ParameterScheme baseScheme, String... args)
-		throws UnknownParameterException, UnknownCommandException, TooManyValuesException,
+		throws UnknownParameterException, UnknownCommandException, TooManyPositionalValuesException,
 		TooManyParameterValuesException, InsufficientValuesException {
 
 		final DynamicParameterSchemeSupport dynamicSupport = getDynamicSchemeSupport();
@@ -158,11 +158,11 @@ public abstract class AbstractLauncher {
 					final int maxArgs = currentScheme.getMaxArgs();
 
 					// Are positionals allowed?
-					if (maxArgs == 0) { throw new TooManyValuesException(nextToken); }
+					if (maxArgs == 0) { throw new TooManyPositionalValuesException(nextToken); }
 
 					// If there's an upper limit, check it...
 					if ((maxArgs > 0)
-						&& (maxArgs < positionals.size())) { throw new TooManyValuesException(nextToken); }
+						&& (maxArgs < positionals.size())) { throw new TooManyPositionalValuesException(nextToken); }
 
 					// We won't know if we've met the lower limit until the end... so postpone until
 					// then
