@@ -3,15 +3,15 @@ package com.armedia.caliente.cli.utils;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterImpl;
-import com.armedia.caliente.cli.ParameterValues;
-import com.armedia.caliente.cli.launcher.LaunchParameterSet;
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.launcher.LaunchOptionSet;
 import com.armedia.commons.utilities.Tools;
 
-public final class ThreadsLaunchHelper implements LaunchParameterSet {
+public final class ThreadsLaunchHelper implements LaunchOptionSet {
 
-	private static final Parameter THREADS = new ParameterImpl() //
+	private static final Option THREADS = new OptionImpl() //
 		.setShortOpt('t') //
 		.setLongOpt("threads") //
 		.setMinValueCount(1) //
@@ -70,21 +70,21 @@ public final class ThreadsLaunchHelper implements LaunchParameterSet {
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameters() {
+	public Collection<? extends Option> getOptions() {
 		return Collections.singleton(ThreadsLaunchHelper.THREADS);
 	}
 
-	public boolean hasThreads(ParameterValues cli) {
+	public boolean hasThreads(OptionValues cli) {
 		return cli.isPresent(ThreadsLaunchHelper.THREADS);
 	}
 
-	public Integer getThreads(ParameterValues cli) {
+	public Integer getThreads(OptionValues cli) {
 		Integer t = cli.getInteger(ThreadsLaunchHelper.THREADS);
 		if (t == null) { return this.def; }
 		return Tools.ensureBetween(this.min, t.intValue(), this.max);
 	}
 
-	public int getThreads(ParameterValues cli, int def) {
+	public int getThreads(OptionValues cli, int def) {
 		return Tools.ensureBetween(this.min, cli.getInteger(ThreadsLaunchHelper.THREADS, def), this.max);
 	}
 }

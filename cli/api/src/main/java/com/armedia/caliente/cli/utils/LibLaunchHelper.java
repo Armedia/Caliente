@@ -11,15 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterImpl;
-import com.armedia.caliente.cli.ParameterValues;
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.launcher.LaunchParameterSet;
+import com.armedia.caliente.cli.launcher.LaunchOptionSet;
 
-public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspathHelper {
+public final class LibLaunchHelper implements LaunchOptionSet, LaunchClasspathHelper {
 
-	private static final Parameter LIB = new ParameterImpl() //
+	private static final Option LIB = new OptionImpl() //
 		.setShortOpt('l') //
 		.setLongOpt("lib") //
 		.setMinValueCount(1) //
@@ -57,26 +57,26 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameters() {
+	public Collection<? extends Option> getOptions() {
 		return Collections.singleton(LibLaunchHelper.LIB);
 	}
 
 	@Override
-	public Collection<URL> getClasspathPatchesPre(ParameterValues cli) {
+	public Collection<URL> getClasspathPatchesPre(OptionValues cli) {
 		List<URL> ret = new ArrayList<>();
 		try {
-			// First...use the command-line parameter given, and apply any defaults
+			// First...use the command-line option given, and apply any defaults
 			// we may be configured for
 			String var = cli.getString(LibLaunchHelper.LIB, this.defaultLib);
 			if (var == null) {
-				// No command-line parameter given...if we have an environment variable configured,
+				// No command-line option given...if we have an environment variable configured,
 				// given, we use that
 				if (this.libEnvVar != null) {
 					var = System.getenv(this.libEnvVar);
 				}
 			}
 
-			// If we had no lib parameter, nor an environment variable to fall back upon, there's
+			// If we had no lib option, nor an environment variable to fall back upon, there's
 			// nothing else to be done
 			if (var == null) { return null; }
 
@@ -106,7 +106,7 @@ public final class LibLaunchHelper implements LaunchParameterSet, LaunchClasspat
 	}
 
 	@Override
-	public Collection<URL> getClasspathPatchesPost(ParameterValues commandLine) {
+	public Collection<URL> getClasspathPatchesPost(OptionValues commandLine) {
 		return null;
 	}
 

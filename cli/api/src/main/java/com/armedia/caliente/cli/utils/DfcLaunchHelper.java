@@ -10,14 +10,14 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
-import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterImpl;
-import com.armedia.caliente.cli.ParameterValues;
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.launcher.LaunchParameterSet;
+import com.armedia.caliente.cli.launcher.LaunchOptionSet;
 import com.armedia.commons.utilities.Tools;
 
-public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParameterSet {
+public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchOptionSet {
 	private static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
 	private static final String DEFAULT_DFC_PROPERTIES = "dfc.properties";
 	private static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
@@ -25,53 +25,53 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	private static final String DCTM_JAR = "dctm.jar";
 	private static final String DFC_TEST_CLASS = "com.documentum.fc.client.IDfFolder";
 
-	private static final Parameter DFC_LOCATION = new ParameterImpl() //
+	private static final Option DFC_LOCATION = new OptionImpl() //
 		.setLongOpt("dfc") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("dfc install location") //
 		.setDescription("The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)");
-	private static final Parameter DFC_DOCUMENTUM = new ParameterImpl() //
+	private static final Option DFC_DOCUMENTUM = new OptionImpl() //
 		.setLongOpt("dctm") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("directory") //
 		.setDescription("The user's local Documentum path (i.e. instead of DOCUMENTUM)");
-	private static final Parameter DFC_PROPERTIES = new ParameterImpl() //
+	private static final Option DFC_PROPERTIES = new OptionImpl() //
 		.setLongOpt("dfc-prop") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("dfc.properties location") //
 		.setDescription("The dfc.properties file to use instead of the default");
-	private static final Parameter DFC_DOCBASE = new ParameterImpl() //
+	private static final Option DFC_DOCBASE = new OptionImpl() //
 		.setLongOpt("docbase") //
 		.setRequired(true) //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("docbase") //
 		.setDescription("The Documentum repostory name to connect to");
-	private static final Parameter DFC_USER = new ParameterImpl() //
+	private static final Option DFC_USER = new OptionImpl() //
 		.setLongOpt("dctm-user") //
 		.setRequired(true) //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("username") //
 		.setDescription("The username to connect to Documentum with");
-	private static final Parameter DFC_PASSWORD = new ParameterImpl() //
+	private static final Option DFC_PASSWORD = new OptionImpl() //
 		.setLongOpt("dctm-pass") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
 		.setValueName("password") //
 		.setDescription("The password to connect to Documentum with");
 
-	private final Parameter paramDfc;
-	private final Parameter paramDctm;
-	private final Parameter paramDfcProp;
+	private final Option paramDfc;
+	private final Option paramDctm;
+	private final Option paramDfcProp;
 
 	private final boolean includesConnectionInfo;
-	private final Parameter paramDocbase;
-	private final Parameter paramUser;
-	private final Parameter paramPassword;
+	private final Option paramDocbase;
+	private final Option paramUser;
+	private final Option paramPassword;
 
 	public DfcLaunchHelper(boolean includesConnectionInfo) {
 		this.paramDfc = DfcLaunchHelper.DFC_LOCATION;
@@ -89,17 +89,17 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 		}
 	}
 
-	public String getDfcUser(ParameterValues cli) {
+	public String getDfcUser(OptionValues cli) {
 		if (!this.includesConnectionInfo) { return null; }
 		return cli.getString(this.paramUser);
 	}
 
-	public String getDfcDocbase(ParameterValues cli) {
+	public String getDfcDocbase(OptionValues cli) {
 		if (!this.includesConnectionInfo) { return null; }
 		return cli.getString(this.paramDocbase);
 	}
 
-	public String getDfcPassword(ParameterValues cli) {
+	public String getDfcPassword(OptionValues cli) {
 		if (!this.includesConnectionInfo) { return null; }
 
 		String dctmUser = getDfcDocbase(cli);
@@ -119,8 +119,8 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameters() {
-		ArrayList<Parameter> ret = new ArrayList<>();
+	public Collection<? extends Option> getOptions() {
+		ArrayList<Option> ret = new ArrayList<>();
 		ret.add(this.paramDfcProp);
 		ret.add(this.paramDfc);
 		ret.add(this.paramDctm);
@@ -133,7 +133,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	}
 
 	@Override
-	public Collection<URL> getClasspathPatchesPre(ParameterValues cli) {
+	public Collection<URL> getClasspathPatchesPre(OptionValues cli) {
 		final boolean dfcFound = checkForDfc();
 		List<URL> ret = new ArrayList<>(3);
 		try {
@@ -215,7 +215,7 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchParam
 	}
 
 	@Override
-	public Collection<URL> getClasspathPatchesPost(ParameterValues commandLine) {
+	public Collection<URL> getClasspathPatchesPost(OptionValues commandLine) {
 		return null;
 	}
 }

@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class Parameter {
+public abstract class Option {
 
 	public static final char DEFAULT_VALUE_SEP = ',';
 
@@ -38,8 +38,8 @@ public abstract class Parameter {
 
 	/**
 	 * <p>
-	 * Checks for conflict between the parameters. Two parameters {@code a} and {@code b} are said
-	 * to be in conflict if and only if the following methods return identical (as per
+	 * Checks for conflict between the options. Two options {@code a} and {@code b} are said to be
+	 * in conflict if and only if the following methods return identical (as per
 	 * {@link Object#equals(Object)} values:
 	 * </p>
 	 * <ul>
@@ -51,7 +51,7 @@ public abstract class Parameter {
 	 * @param b
 	 * @return {@code true} if there's a conflict between a and b, {@code false} otherwise
 	 */
-	public static boolean isConflicting(Parameter a, Parameter b) {
+	public static boolean isConflicting(Option a, Option b) {
 		if (a == b) { return true; }
 		if ((a == null) || (b == null)) { return false; }
 		if (!Tools.equals(a.getShortOpt(), b.getShortOpt())) { return false; }
@@ -61,10 +61,9 @@ public abstract class Parameter {
 
 	/**
 	 * <p>
-	 * Checks for the equivalency between the parameters. Two parameters {@code a} and {@code b} are
-	 * said to be equivalent if they're conflicting (as per
-	 * {@link #isConflicting(Parameter, Parameter)}, and the following methods return identical (as
-	 * per {@link Object#equals(Object)} values:
+	 * Checks for the equivalency between the options. Two options {@code a} and {@code b} are said
+	 * to be equivalent if they're conflicting (as per {@link #isConflicting(Option, Option)}, and
+	 * the following methods return identical (as per {@link Object#equals(Object)} values:
 	 * </p>
 	 * <ul>
 	 * <li>{@link #getMinValueCount()}</li>
@@ -75,10 +74,10 @@ public abstract class Parameter {
 	 *
 	 * @param a
 	 * @param b
-	 * @return {@code true} if the parameters are equivalent, {@code false} otherwise
+	 * @return {@code true} if the options are equivalent, {@code false} otherwise
 	 */
-	public static boolean isEquivalent(Parameter a, Parameter b) {
-		if (!Parameter.isConflicting(a, b)) { return false; }
+	public static boolean isEquivalent(Option a, Option b) {
+		if (!Option.isConflicting(a, b)) { return false; }
 		if (!Tools.equals(a.getMinValueCount(), b.getMinValueCount())) { return false; }
 		if (!Tools.equals(a.getMaxValueCount(), b.getMaxValueCount())) { return false; }
 		if (!Tools.equals(a.getValueSep(), b.getValueSep())) { return false; }
@@ -88,10 +87,10 @@ public abstract class Parameter {
 
 	/**
 	 * <p>
-	 * Checks two parameters to see if they're identical in every respect. Two parameters {@code a}
-	 * and {@code b} are said to be identical if they're equivalent (as per
-	 * {@link #isEquivalent(Parameter, Parameter)}, and the following methods return identical (as
-	 * per {@link Object#equals(Object)} values:
+	 * Checks two options to see if they're identical in every respect. Two options {@code a} and
+	 * {@code b} are said to be identical if they're equivalent (as per
+	 * {@link #isEquivalent(Option, Option)}, and the following methods return identical (as per
+	 * {@link Object#equals(Object)} values:
 	 * </p>
 	 * <ul>
 	 * <li>{@link #getMinValueCount()}</li>
@@ -102,10 +101,10 @@ public abstract class Parameter {
 	 *
 	 * @param a
 	 * @param b
-	 * @return {@code true} if the parameters are identical, {@code false} otherwise
+	 * @return {@code true} if the options are identical, {@code false} otherwise
 	 */
-	public static boolean isIdentical(Parameter a, Parameter b) {
-		if (!Parameter.isEquivalent(a, b)) { return false; }
+	public static boolean isIdentical(Option a, Option b) {
+		if (!Option.isEquivalent(a, b)) { return false; }
 		if (!Tools.equals(a.isRequired(), b.isRequired())) { return false; }
 		if (!Tools.equals(a.getDescription(), b.getDescription())) { return false; }
 		if (!Tools.equals(a.getValueName(), b.getValueName())) { return false; }
@@ -114,14 +113,14 @@ public abstract class Parameter {
 		return true;
 	}
 
-	static String calculateKey(Parameter def) {
+	static String calculateKey(Option def) {
 		if (def == null) { throw new IllegalArgumentException(
-			"Must provide a parameter definition to calculate a key for"); }
-		return Parameter.calculateKey(def.getLongOpt(), def.getShortOpt());
+			"Must provide a option definition to calculate a key for"); }
+		return Option.calculateKey(def.getLongOpt(), def.getShortOpt());
 	}
 
 	static String calculateKey(String longOpt, Character shortOpt) {
-		return Parameter.calculateKey(longOpt, shortOpt != null ? shortOpt.toString() : null);
+		return Option.calculateKey(longOpt, shortOpt != null ? shortOpt.toString() : null);
 	}
 
 	public static String calculateKey(String longOpt, String shortOpt) {
@@ -134,48 +133,48 @@ public abstract class Parameter {
 
 	/**
 	 * <p>
-	 * Extracts the {@link Parameter} instance from the given wrapper. It'll return {@code null} if
-	 * either the wrapper itself is {@code null}, or if its wrapped parameter is {@code null}.
+	 * Extracts the {@link Option} instance from the given wrapper. It'll return {@code null} if
+	 * either the wrapper itself is {@code null}, or if its wrapped option is {@code null}.
 	 * </p>
 	 *
 	 * @param wrapper
-	 * @return the {@link Parameter} instance from the given wrapper
+	 * @return the {@link Option} instance from the given wrapper
 	 */
-	public static Parameter unwrap(ParameterWrapper wrapper) {
+	public static Option unwrap(OptionWrapper wrapper) {
 		if (wrapper == null) { return null; }
-		return wrapper.getParameter();
+		return wrapper.getOption();
 	}
 
 	/**
 	 * <p>
-	 * Produces a list of the {@link Parameter} instances wrapped by the given wrappers. All
+	 * Produces a list of the {@link Option} instances wrapped by the given wrappers. All
 	 * {@code null} values are filtered out and not preserved. If the array given is {@code null},
 	 * the {@code null} value is returned.
 	 * </p>
 	 *
 	 * @param wrappers
-	 * @return a list of the {@link Parameter} instances wrapped by the given wrappers
+	 * @return a list of the {@link Option} instances wrapped by the given wrappers
 	 */
-	public static List<Parameter> getUnwrappedList(ParameterWrapper... wrappers) {
+	public static List<Option> getUnwrappedList(OptionWrapper... wrappers) {
 		if (wrappers == null) { return null; }
-		return Parameter.getUnwrappedList(Arrays.asList(wrappers));
+		return Option.getUnwrappedList(Arrays.asList(wrappers));
 	}
 
 	/**
 	 * <p>
-	 * Produces a list of the {@link Parameter} instances wrapped by the given wrappers. All
+	 * Produces a list of the {@link Option} instances wrapped by the given wrappers. All
 	 * {@code null} values are filtered out and not preserved. If the collection given is
 	 * {@code null}, the {@code null} value is returned.
 	 * </p>
 	 *
 	 * @param wrappers
-	 * @return a list of the {@link Parameter} instances wrapped by the given wrappers
+	 * @return a list of the {@link Option} instances wrapped by the given wrappers
 	 */
-	public static List<Parameter> getUnwrappedList(Collection<ParameterWrapper> wrappers) {
+	public static List<Option> getUnwrappedList(Collection<OptionWrapper> wrappers) {
 		if (wrappers == null) { return null; }
-		List<Parameter> l = new ArrayList<>(wrappers.size());
-		for (ParameterWrapper d : wrappers) {
-			Parameter p = Parameter.unwrap(d);
+		List<Option> l = new ArrayList<>(wrappers.size());
+		for (OptionWrapper d : wrappers) {
+			Option p = Option.unwrap(d);
 			if (p != null) {
 				l.add(p);
 			}

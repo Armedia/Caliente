@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-public final class ParameterImpl extends Parameter implements Cloneable {
+public final class OptionImpl extends Option implements Cloneable {
 
 	private boolean required = false;
 	private String description = null;
@@ -16,17 +16,17 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 	private int minValueCount = 0;
 	private int maxValueCount = 0;
 	private String valueName = null;
-	private Character valueSep = ParameterImpl.DEFAULT_VALUE_SEP;
+	private Character valueSep = OptionImpl.DEFAULT_VALUE_SEP;
 	private final Set<String> allowedValues = new TreeSet<>();
 	private final List<String> defaults = new ArrayList<>();
 
 	private String key = null;
 
-	public ParameterImpl() {
+	public OptionImpl() {
 		this(null);
 	}
 
-	public ParameterImpl(Parameter other) {
+	public OptionImpl(Option other) {
 		if (other != null) {
 			this.required = other.isRequired();
 			this.description = other.getDescription();
@@ -45,8 +45,8 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 	}
 
 	@Override
-	public ParameterImpl clone() {
-		return new ParameterImpl(this);
+	public OptionImpl clone() {
+		return new OptionImpl(this);
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.minValueCount;
 	}
 
-	public ParameterImpl setMinValueCount(int count) {
+	public OptionImpl setMinValueCount(int count) {
 		this.minValueCount = count;
 		return this;
 	}
@@ -69,7 +69,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.maxValueCount;
 	}
 
-	public ParameterImpl setMaxValueCount(int count) {
+	public OptionImpl setMaxValueCount(int count) {
 		this.maxValueCount = count;
 		return this;
 	}
@@ -79,7 +79,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.valueName;
 	}
 
-	public ParameterImpl setValueName(String argName) {
+	public OptionImpl setValueName(String argName) {
 		this.valueName = argName;
 		return this;
 	}
@@ -89,7 +89,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.required;
 	}
 
-	public ParameterImpl setRequired(boolean required) {
+	public OptionImpl setRequired(boolean required) {
 		this.required = required;
 		return this;
 	}
@@ -99,7 +99,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.description;
 	}
 
-	public ParameterImpl setDescription(String description) {
+	public OptionImpl setDescription(String description) {
 		this.description = description;
 		return this;
 	}
@@ -109,9 +109,9 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.longOpt;
 	}
 
-	public ParameterImpl setLongOpt(String longOpt) {
+	public OptionImpl setLongOpt(String longOpt) {
 		this.longOpt = longOpt;
-		this.key = Parameter.calculateKey(this);
+		this.key = Option.calculateKey(this);
 		return this;
 	}
 
@@ -120,9 +120,9 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.shortOpt;
 	}
 
-	public ParameterImpl setShortOpt(Character shortOpt) {
+	public OptionImpl setShortOpt(Character shortOpt) {
 		this.shortOpt = shortOpt;
-		this.key = Parameter.calculateKey(this);
+		this.key = Option.calculateKey(this);
 		return this;
 	}
 
@@ -131,7 +131,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.valueSep;
 	}
 
-	public ParameterImpl setValueSep(Character valueSep) {
+	public OptionImpl setValueSep(Character valueSep) {
 		this.valueSep = valueSep;
 		return this;
 	}
@@ -141,7 +141,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.allowedValues;
 	}
 
-	public ParameterImpl setAllowedValues(Collection<String> allowedValues) {
+	public OptionImpl setAllowedValues(Collection<String> allowedValues) {
 		this.allowedValues.clear();
 		if (allowedValues != null) {
 			for (String s : allowedValues) {
@@ -153,7 +153,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this;
 	}
 
-	public ParameterImpl setAllowedValues(String... allowedValues) {
+	public OptionImpl setAllowedValues(String... allowedValues) {
 		if (allowedValues != null) {
 			setAllowedValues(Arrays.asList(allowedValues));
 		} else {
@@ -167,7 +167,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.defaults.isEmpty() ? null : this.defaults.get(0);
 	}
 
-	public ParameterImpl setDefault(String value) {
+	public OptionImpl setDefault(String value) {
 		return setDefaults(value);
 	}
 
@@ -176,7 +176,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this.defaults.isEmpty() ? null : this.defaults;
 	}
 
-	public ParameterImpl setDefaults(Collection<String> defaults) {
+	public OptionImpl setDefaults(Collection<String> defaults) {
 		this.defaults.clear();
 		if (defaults != null) {
 			for (String s : defaults) {
@@ -188,7 +188,7 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 		return this;
 	}
 
-	public ParameterImpl setDefaults(String... defaults) {
+	public OptionImpl setDefaults(String... defaults) {
 		if (defaults != null) {
 			setDefaults(Arrays.asList(defaults));
 		} else {
@@ -200,13 +200,13 @@ public final class ParameterImpl extends Parameter implements Cloneable {
 	@Override
 	public String toString() {
 		return String.format(
-			"ParameterImpl [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s, defaults=%s]",
+			"OptionImpl [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s, defaults=%s]",
 			this.key, this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount,
 			this.maxValueCount, this.valueName, this.minValueCount, this.valueSep, this.defaults);
 	}
 
-	public static <E extends Enum<E>> ParameterImpl initOptionName(E e, ParameterImpl p) {
-		if (p == null) { throw new IllegalArgumentException("Must provide a ParameterImpl whose option to initialize"); }
+	public static <E extends Enum<E>> OptionImpl initOptionName(E e, OptionImpl p) {
+		if (p == null) { throw new IllegalArgumentException("Must provide a OptionImpl whose option to initialize"); }
 		if (e == null) { return p; }
 		final String name = e.name();
 		if (name.length() == 1) {

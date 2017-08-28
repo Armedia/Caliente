@@ -1,12 +1,12 @@
 package com.armedia.caliente.cli;
 
-public class DuplicateParameterException extends CommandLineException {
+public class DuplicateOptionException extends CommandLineException {
 	private static final long serialVersionUID = 1L;
 
-	private final Parameter existing;
-	private final Parameter incoming;
+	private final Option existing;
+	private final Option incoming;
 
-	public DuplicateParameterException(String msg, Parameter existing, Parameter incoming) {
+	public DuplicateOptionException(String msg, Option existing, Option incoming) {
 		super(msg);
 		if (existing == null) { throw new IllegalArgumentException("Must have an existing value"); }
 		if (incoming == null) { throw new IllegalArgumentException("Must have an incoming value"); }
@@ -16,11 +16,11 @@ public class DuplicateParameterException extends CommandLineException {
 		this.incoming = incoming;
 	}
 
-	public Parameter getExisting() {
+	public Option getExisting() {
 		return this.existing;
 	}
 
-	public Parameter getIncoming() {
+	public Option getIncoming() {
 		return this.incoming;
 	}
 }

@@ -4,10 +4,10 @@ import com.armedia.commons.utilities.Tools;
 
 /**
  * <p>
- * An object signifying a token that will be part of the parameter stream. It indicates not only the
- * {@link Type type of the token}, information about where it was read from (the main parameter
- * stream or a parameter file), as well as its relative position within that sourceStr (index within
- * the parameter stream, or line number within the parameter file).
+ * An object signifying a token that will be part of the command line parameter stream. It indicates
+ * not only the {@link Type type of the token}, information about where it was read from (the main
+ * parameter stream or a parameter file), as well as its relative position within that sourceStr
+ * (index within the parameter stream, or line number within the parameter file).
  *
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *

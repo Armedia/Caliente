@@ -5,29 +5,29 @@ public class ParameterSchemeTest {
 	/*
 	@Test
 	public void testConstructor() {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 		Assert.assertNotNull(cl);
 	}
 	
 	@Test
 	public void testDefine() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 		Assert.assertNotNull(cl);
 	
-		ParameterImpl def = null;
+		OptionImpl def = null;
 	
 		try {
 			cl.addParameter(def);
 			Assert.fail("Did not fail with a null parameter");
-		} catch (InvalidParameterException e) {
+		} catch (InvalidOptionException e) {
 			// All is well
 		}
 	
-		def = new ParameterImpl();
+		def = new OptionImpl();
 		try {
 			cl.addParameter(def);
 			Assert.fail("Did not fail with no short or long options");
-		} catch (InvalidParameterException e) {
+		} catch (InvalidOptionException e) {
 			// All is well
 		}
 	
@@ -45,23 +45,23 @@ public class ParameterSchemeTest {
 					continue;
 				}
 				char c = s.charAt(0);
-				def = new ParameterImpl();
+				def = new OptionImpl();
 				def.setShortOpt(c);
 				if (longOpt != null) {
 					def.setLongOpt(longOpt);
 				}
 				try {
 					cl.addParameter(def);
-					Parameter p = cl.getParameter(def);
+					Option p = cl.getParameter(def);
 					if (!Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Did not fail with illegal character [%s]", c));
 					}
-					Assert.assertTrue(Parameter.isIdentical(def, p));
-				} catch (InvalidParameterException e) {
+					Assert.assertTrue(Option.isIdentical(def, p));
+				} catch (InvalidOptionException e) {
 					if (Character.isLetterOrDigit(c)) {
 						Assert.fail(String.format("Failed with legal character [%s]", c));
 					}
-				} catch (DuplicateParameterException e) {
+				} catch (DuplicateOptionException e) {
 					if (c != '?') {
 						if (longOpt == null) {
 							Assert.fail(
@@ -72,12 +72,12 @@ public class ParameterSchemeTest {
 			}
 		}
 	
-		def = new ParameterImpl();
+		def = new OptionImpl();
 		def.setLongOpt("");
 		try {
 			cl.addParameter(def);
 			Assert.fail("Did not fail with an empty long option");
-		} catch (InvalidParameterException e) {
+		} catch (InvalidOptionException e) {
 			// All is well
 		}
 	
@@ -85,7 +85,7 @@ public class ParameterSchemeTest {
 		try {
 			cl.addParameter(def);
 			Assert.fail("Did not fail with a length-1 long option");
-		} catch (InvalidParameterException e) {
+		} catch (InvalidOptionException e) {
 			// All is well
 		}
 	
@@ -93,21 +93,21 @@ public class ParameterSchemeTest {
 		try {
 			cl.addParameter(def);
 			Assert.fail("Did not fail with a long option with spaces");
-		} catch (InvalidParameterException e) {
+		} catch (InvalidOptionException e) {
 			// All is well
 		}
 	
 		def.setLongOpt("ab");
 		cl.addParameter(def);
-		Parameter p = cl.getParameter(def);
+		Option p = cl.getParameter(def);
 		Assert.assertEquals(p, p);
 		Assert.assertNotEquals(p, null);
 		Assert.assertNotEquals(p, "");
 		// Assert.assertSame(cl, p.getParameterSchemeValues());
-		Assert.assertTrue(Parameter.isIdentical(def, p));
+		Assert.assertTrue(Option.isIdentical(def, p));
 	
 		cl.addParameter(def);
-		Parameter p2 = cl.getParameter(def);
+		Option p2 = cl.getParameter(def);
 		Assert.assertSame(p, p2);
 	
 		def.setLongOpt("cd");
@@ -115,7 +115,7 @@ public class ParameterSchemeTest {
 		p2 = cl.getParameter(def);
 		// Assert.assertSame(cl, p2.getParameterSchemeValues());
 		Assert.assertNotSame(p, p2);
-		Assert.assertTrue(Parameter.isIdentical(def, p2));
+		Assert.assertTrue(Option.isIdentical(def, p2));
 		Assert.assertNotEquals(p, p2);
 	
 		def.setShortOpt('x');
@@ -123,26 +123,26 @@ public class ParameterSchemeTest {
 			cl.addParameter(def);
 			p2 = cl.getParameter(def);
 			Assert.fail(String.format("Did not fail with a duplicate option"));
-		} catch (DuplicateParameterException e) {
+		} catch (DuplicateOptionException e) {
 			// All is well
 		}
 	}
 	
 	@Test
 	public void testIterator() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 		Assert.assertNotNull(cl);
 	
-		ParameterImpl def = new ParameterImpl();
-		Map<String, Parameter> m = new HashMap<>();
+		OptionImpl def = new OptionImpl();
+		Map<String, Option> m = new HashMap<>();
 		for (int i = 0; i < 100; i++) {
 			def.setLongOpt(String.format("long-%04x", i));
 			cl.addParameter(def);
-			Parameter p = cl.getParameter(def);
+			Option p = cl.getParameter(def);
 			m.put(def.getLongOpt(), p);
 		}
 	
-		for (Parameter p : cl.getParameters()) {
+		for (Option p : cl.getParameters()) {
 			final String longOpt = p.getLongOpt();
 			if ("help".equals(longOpt)) {
 				// We're OK here...
@@ -154,10 +154,10 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testHelp() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 		Assert.assertTrue(cl.hasHelpParameter());
 	
-		Parameter help = cl.getHelpParameter();
+		Option help = cl.getHelpParameter();
 		Assert.assertNotNull(help);
 		Assert.assertNotNull(help.getKey());
 	
@@ -167,7 +167,7 @@ public class ParameterSchemeTest {
 			"-c", //
 		};
 	
-		ParameterImpl def = new ParameterImpl();
+		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.define(def);
@@ -189,13 +189,13 @@ public class ParameterSchemeTest {
 		Assert.assertTrue(cl.isHelpRequested());
 		Assert.assertNotNull(cl.getHelpMessage());
 	
-		ParameterScheme cl2 = new ParameterScheme(false);
+		OptionScheme cl2 = new OptionScheme(false);
 		Assert.assertFalse(cl2.hasHelpParameter());
 		Assert.assertNull(cl2.getHelpParameter());
 	
-		Parameter p2prev = null;
-		for (Parameter p : cl) {
-			Parameter p2 = cl2.define(p);
+		Option p2prev = null;
+		for (Option p : cl) {
+			Option p2 = cl2.define(p);
 			Assert.assertNotEquals(p, p2);
 			Assert.assertNotEquals(p, p2prev);
 			p2prev = p2;
@@ -211,7 +211,7 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testGetBoolean() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 	
 		String[] args = {
 			"-a", "true", //
@@ -221,28 +221,28 @@ public class ParameterSchemeTest {
 			"-f", //
 		};
 	
-		ParameterImpl def = new ParameterImpl();
+		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.addParameter(def);
-		Parameter a = cl.getParameter(def);
+		Option a = cl.getParameter(def);
 		def.setShortOpt('b');
 		cl.addParameter(def);
-		Parameter b = cl.getParameter(def);
+		Option b = cl.getParameter(def);
 		def.setShortOpt('d');
 		cl.addParameter(def);
-		Parameter d = cl.getParameter(def);
+		Option d = cl.getParameter(def);
 		def.setShortOpt('e');
 		cl.addParameter(def);
-		Parameter e = cl.getParameter(def);
+		Option e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
 		cl.addParameter(def);
-		Parameter c = cl.getParameter(def);
+		Option c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
 		cl.addParameter(def);
-		Parameter f = cl.getParameter(def);
+		Option f = cl.getParameter(def);
 	
 		cl.parse("TEST", args);
 	
@@ -271,7 +271,7 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testGetInteger() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 	
 		String[] args = {
 			"-a", "1", //
@@ -281,28 +281,28 @@ public class ParameterSchemeTest {
 			"-f", //
 		};
 	
-		ParameterImpl def = new ParameterImpl();
+		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.addParameter(def);
-		Parameter a = cl.getParameter(def);
+		Option a = cl.getParameter(def);
 		def.setShortOpt('b');
 		cl.addParameter(def);
-		Parameter b = cl.getParameter(def);
+		Option b = cl.getParameter(def);
 		def.setShortOpt('d');
 		cl.addParameter(def);
-		Parameter d = cl.getParameter(def);
+		Option d = cl.getParameter(def);
 		def.setShortOpt('e');
 		cl.addParameter(def);
-		Parameter e = cl.getParameter(def);
+		Option e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
 		cl.addParameter(def);
-		Parameter c = cl.getParameter(def);
+		Option c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
 		cl.addParameter(def);
-		Parameter f = cl.getParameter(def);
+		Option f = cl.getParameter(def);
 	
 		cl.parse("TEST", args);
 	
@@ -335,7 +335,7 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testGetLong() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 	
 		String[] args = {
 			"-a", "1", //
@@ -345,28 +345,28 @@ public class ParameterSchemeTest {
 			"-f", //
 		};
 	
-		ParameterImpl def = new ParameterImpl();
+		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.addParameter(def);
-		Parameter a = cl.getParameter(def);
+		Option a = cl.getParameter(def);
 		def.setShortOpt('b');
 		cl.addParameter(def);
-		Parameter b = cl.getParameter(def);
+		Option b = cl.getParameter(def);
 		def.setShortOpt('d');
 		cl.addParameter(def);
-		Parameter d = cl.getParameter(def);
+		Option d = cl.getParameter(def);
 		def.setShortOpt('e');
 		cl.addParameter(def);
-		Parameter e = cl.getParameter(def);
+		Option e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
 		cl.addParameter(def);
-		Parameter c = cl.getParameter(def);
+		Option c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
 		cl.addParameter(def);
-		Parameter f = cl.getParameter(def);
+		Option f = cl.getParameter(def);
 	
 		cl.parse("TEST", args);
 	
@@ -399,7 +399,7 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testGetFloat() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 	
 		String[] args = {
 			"-a", "1.1", //
@@ -409,28 +409,28 @@ public class ParameterSchemeTest {
 			"-f", //
 		};
 	
-		ParameterImpl def = new ParameterImpl();
+		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.addParameter(def);
-		Parameter a = cl.getParameter(def);
+		Option a = cl.getParameter(def);
 		def.setShortOpt('b');
 		cl.addParameter(def);
-		Parameter b = cl.getParameter(def);
+		Option b = cl.getParameter(def);
 		def.setShortOpt('d');
 		cl.addParameter(def);
-		Parameter d = cl.getParameter(def);
+		Option d = cl.getParameter(def);
 		def.setShortOpt('e');
 		cl.addParameter(def);
-		Parameter e = cl.getParameter(def);
+		Option e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
 		cl.addParameter(def);
-		Parameter c = cl.getParameter(def);
+		Option c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
 		cl.addParameter(def);
-		Parameter f = cl.getParameter(def);
+		Option f = cl.getParameter(def);
 	
 		cl.parse("TEST", args);
 	
@@ -462,7 +462,7 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testGetDouble() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 	
 		String[] args = {
 			"-a", "1.1", //
@@ -472,28 +472,28 @@ public class ParameterSchemeTest {
 			"-f", //
 		};
 	
-		ParameterImpl def = new ParameterImpl();
+		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.addParameter(def);
-		Parameter a = cl.getParameter(def);
+		Option a = cl.getParameter(def);
 		def.setShortOpt('b');
 		cl.addParameter(def);
-		Parameter b = cl.getParameter(def);
+		Option b = cl.getParameter(def);
 		def.setShortOpt('d');
 		cl.addParameter(def);
-		Parameter d = cl.getParameter(def);
+		Option d = cl.getParameter(def);
 		def.setShortOpt('e');
 		cl.addParameter(def);
-		Parameter e = cl.getParameter(def);
+		Option e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
 		cl.addParameter(def);
-		Parameter c = cl.getParameter(def);
+		Option c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
 		cl.addParameter(def);
-		Parameter f = cl.getParameter(def);
+		Option f = cl.getParameter(def);
 	
 		cl.parse("TEST", args);
 	
@@ -525,7 +525,7 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testGetString() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 	
 		String[] args = {
 			"-a", "1", //
@@ -535,28 +535,28 @@ public class ParameterSchemeTest {
 			"-f",
 		};
 	
-		ParameterImpl def = new ParameterImpl();
+		OptionImpl def = new OptionImpl();
 		def.setMaxValueCount(1);
 		def.setShortOpt('a');
 		cl.addParameter(def);
-		Parameter a = cl.getParameter(def);
+		Option a = cl.getParameter(def);
 		def.setShortOpt('b');
 		cl.addParameter(def);
-		Parameter b = cl.getParameter(def);
+		Option b = cl.getParameter(def);
 		def.setShortOpt('d');
 		cl.addParameter(def);
-		Parameter d = cl.getParameter(def);
+		Option d = cl.getParameter(def);
 		def.setShortOpt('e');
 		cl.addParameter(def);
-		Parameter e = cl.getParameter(def);
+		Option e = cl.getParameter(def);
 		def.setShortOpt('c');
 		def.setMaxValueCount(-1);
 		cl.addParameter(def);
-		Parameter c = cl.getParameter(def);
+		Option c = cl.getParameter(def);
 		def.setShortOpt('f');
 		def.setMaxValueCount(0);
 		cl.addParameter(def);
-		Parameter f = cl.getParameter(def);
+		Option f = cl.getParameter(def);
 	
 		cl.parse("TEST", args);
 	
@@ -589,7 +589,7 @@ public class ParameterSchemeTest {
 	public void testIsPresent() throws Exception {
 		// Short options
 		{
-			ParameterScheme cl = new ParameterScheme("test");
+			OptionScheme cl = new OptionScheme("test");
 	
 			String[] args = {
 				"-a", //
@@ -597,24 +597,24 @@ public class ParameterSchemeTest {
 				"-c", "3,4", //
 			};
 	
-			ParameterImpl def = new ParameterImpl();
+			OptionImpl def = new OptionImpl();
 			def.setShortOpt('a');
 			cl.addParameter(def);
-			Parameter a = cl.getParameter(def);
+			Option a = cl.getParameter(def);
 	
 			def.setMaxValueCount(1);
 			def.setShortOpt('b');
 			cl.addParameter(def);
-			Parameter b = cl.getParameter(def);
+			Option b = cl.getParameter(def);
 	
 			def.setMaxValueCount(-1);
 			def.setShortOpt('c');
 			cl.addParameter(def);
-			Parameter c = cl.getParameter(def);
+			Option c = cl.getParameter(def);
 	
 			def.setShortOpt('d');
 			cl.addParameter(def);
-			Parameter d = cl.getParameter(def);
+			Option d = cl.getParameter(def);
 	
 			cl.parse("TEST", args);
 	
@@ -627,7 +627,7 @@ public class ParameterSchemeTest {
 		}
 		// Long options
 		{
-			ParameterScheme cl = new ParameterScheme("test");
+			OptionScheme cl = new OptionScheme("test");
 	
 			String[] args = {
 				"--long-a", //
@@ -635,24 +635,24 @@ public class ParameterSchemeTest {
 				"--long-c", "3,4", //
 			};
 	
-			ParameterImpl def = new ParameterImpl();
+			OptionImpl def = new OptionImpl();
 			def.setLongOpt("long-a");
 			cl.addParameter(def);
-			Parameter a = cl.getParameter(def);
+			Option a = cl.getParameter(def);
 	
 			def.setMaxValueCount(1);
 			def.setLongOpt("long-b");
 			cl.addParameter(def);
-			Parameter b = cl.getParameter(def);
+			Option b = cl.getParameter(def);
 	
 			def.setMaxValueCount(-1);
 			def.setLongOpt("long-c");
 			cl.addParameter(def);
-			Parameter c = cl.getParameter(def);
+			Option c = cl.getParameter(def);
 	
 			def.setLongOpt("long-d");
 			cl.addParameter(def);
-			Parameter d = cl.getParameter(def);
+			Option d = cl.getParameter(def);
 	
 			cl.parse("TEST", args);
 	
@@ -669,7 +669,7 @@ public class ParameterSchemeTest {
 	public void testGetRemainingParameters() throws Exception {
 		// With remaining
 		{
-			ParameterScheme cl = new ParameterScheme("test");
+			OptionScheme cl = new OptionScheme("test");
 	
 			String[] args = {
 				"-a", "1", //
@@ -678,11 +678,11 @@ public class ParameterSchemeTest {
 				"d", "5", //
 			};
 	
-			ParameterImpl def = new ParameterImpl();
+			OptionImpl def = new OptionImpl();
 			def.setMaxValueCount(1);
 			def.setShortOpt('a');
 			cl.addParameter(def);
-			Parameter a = cl.getParameter(def);
+			Option a = cl.getParameter(def);
 	
 			cl.parse("TEST", args);
 	
@@ -695,17 +695,17 @@ public class ParameterSchemeTest {
 		}
 		// Without remaining
 		{
-			ParameterScheme cl = new ParameterScheme("test");
+			OptionScheme cl = new OptionScheme("test");
 	
 			String[] args = {
 				"-a", "1", //
 			};
 	
-			ParameterImpl def = new ParameterImpl();
+			OptionImpl def = new OptionImpl();
 			def.setMaxValueCount(1);
 			def.setShortOpt('a');
 			cl.addParameter(def);
-			Parameter a = cl.getParameter(def);
+			Option a = cl.getParameter(def);
 	
 			cl.parse("TEST", args);
 	
@@ -717,10 +717,10 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testShortOptions() {
-		ParameterScheme cl = new ParameterScheme(false);
+		OptionScheme cl = new OptionScheme(false);
 		final Charset charset = Charset.forName("US-ASCII");
-		ParameterImpl def = null;
-		Set<Parameter> shortOptions = new HashSet<>();
+		OptionImpl def = null;
+		Set<Option> shortOptions = new HashSet<>();
 		for (int i = 0; i < 255; i++) {
 			ByteBuffer bb = ByteBuffer.allocate(4);
 			bb.putInt(i);
@@ -729,29 +729,29 @@ public class ParameterSchemeTest {
 				continue;
 			}
 			char c = s.charAt(0);
-			def = new ParameterImpl();
+			def = new OptionImpl();
 			def.setShortOpt(c);
 			try {
 				cl.addParameter(def);
-				Parameter p = cl.getParameter(def);
+				Option p = cl.getParameter(def);
 				shortOptions.add(p);
 				Assert.assertEquals(1, p.compareTo(null));
-			} catch (InvalidParameterException e) {
+			} catch (InvalidOptionException e) {
 				if (Character.isLetterOrDigit(c)) {
 					Assert.fail(String.format("Failed with legal character [%s]", c));
 				}
-			} catch (DuplicateParameterException e) {
+			} catch (DuplicateOptionException e) {
 				Assert.fail(String.format("Duplicate exception caught when no duplicate was in play (%s)", c));
 			}
 		}
 	
-		for (Parameter expected : shortOptions) {
-			Parameter actual = cl.getParameter(expected.getShortOpt());
+		for (Option expected : shortOptions) {
+			Option actual = cl.getParameter(expected.getShortOpt());
 			Assert.assertEquals(expected, actual);
 			Assert.assertTrue(cl.hasParameter(expected.getShortOpt()));
 		}
 	
-		for (Parameter actual : cl.shortOptions()) {
+		for (Option actual : cl.shortOptions()) {
 			Assert.assertNotNull(actual);
 			Assert.assertTrue(shortOptions.remove(actual));
 		}
@@ -760,25 +760,25 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testLongOptions() throws Exception {
-		ParameterScheme cl = new ParameterScheme(false);
-		ParameterImpl def = null;
-		Set<Parameter> longOptions = new HashSet<>();
+		OptionScheme cl = new OptionScheme(false);
+		OptionImpl def = null;
+		Set<Option> longOptions = new HashSet<>();
 		for (int i = 0; i < 255; i++) {
-			def = new ParameterImpl();
+			def = new OptionImpl();
 			def.setLongOpt(String.format("long-%04x", i));
 			cl.addParameter(def);
-			Parameter p = cl.getParameter(def);
+			Option p = cl.getParameter(def);
 			longOptions.add(p);
 			Assert.assertEquals(1, p.compareTo(null));
 		}
 	
-		for (Parameter expected : longOptions) {
-			Parameter actual = cl.getParameter(expected.getLongOpt());
+		for (Option expected : longOptions) {
+			Option actual = cl.getParameter(expected.getLongOpt());
 			Assert.assertEquals(expected, actual);
 			Assert.assertTrue(cl.hasParameter(expected.getLongOpt()));
 		}
 	
-		for (Parameter actual : cl.longOptions()) {
+		for (Option actual : cl.longOptions()) {
 			Assert.assertNotNull(actual);
 			Assert.assertTrue(longOptions.remove(actual));
 		}
@@ -787,30 +787,30 @@ public class ParameterSchemeTest {
 	
 	@Test
 	public void testGetParameter() throws Exception {
-		ParameterScheme cl = new ParameterScheme("test");
+		OptionScheme cl = new OptionScheme("test");
 		Assert.assertNotNull(cl);
 	
-		ParameterImpl def = null;
+		OptionImpl def = null;
 	
-		def = new ParameterImpl();
+		def = new OptionImpl();
 	
 		def.setShortOpt('a');
 		cl.addParameter(def);
-		Parameter a = cl.getParameter(def);
+		Option a = cl.getParameter(def);
 	
 		def.setShortOpt('b');
 		cl.addParameter(def);
-		Parameter b = cl.getParameter(def);
+		Option b = cl.getParameter(def);
 	
-		def = new ParameterImpl();
+		def = new OptionImpl();
 	
 		def.setLongOpt("ab");
 		cl.addParameter(def);
-		Parameter ab = cl.getParameter(def);
+		Option ab = cl.getParameter(def);
 	
 		def.setLongOpt("cd");
 		cl.addParameter(def);
-		Parameter cd = cl.getParameter(def);
+		Option cd = cl.getParameter(def);
 	
 		String[] args = {
 			"-a", "--ab"

@@ -97,7 +97,7 @@ public class TokenLoader implements Iterable<Token> {
 
 	public static final Character DEFAULT_VALUE_SEPARATOR = ',';
 
-	private static final char PARAMETER_MARKER = '-';
+	private static final char OPTION_MARKER = '-';
 	private static final Character FILE_MARKER = '@';
 
 	private final String terminator;
@@ -135,7 +135,7 @@ public class TokenLoader implements Iterable<Token> {
 	}
 
 	/**
-	 * Construct a TokenLoader with recursion enabled, but using the given character as a parameter
+	 * Construct a TokenLoader with recursion enabled, but using the given character as an option
 	 * value separator instead of the default value from {@link #DEFAULT_VALUE_SEPARATOR}. This is
 	 * equivalent to invoking {@link #TokenLoader(TokenSource, char, boolean) TokenLoader(start,
 	 * valueSeparator, true)}
@@ -143,7 +143,7 @@ public class TokenLoader implements Iterable<Token> {
 	 * @param start
 	 *            the starting TokenSource from which to begin processing
 	 * @param valueSeparator
-	 *            the character to use when separating arguments passed for parameters
+	 *            the character to use when separating arguments passed for options
 	 */
 	public TokenLoader(TokenSource start, char valueSeparator) {
 		this(start, valueSeparator, true);
@@ -164,9 +164,9 @@ public class TokenLoader implements Iterable<Token> {
 
 		this.valueSeparator = valueSeparator;
 
-		this.terminator = String.format(TokenLoader.TERMINATOR_FMT, TokenLoader.PARAMETER_MARKER);
-		this.patShort = Pattern.compile(String.format(TokenLoader.SHORT_FMT, TokenLoader.PARAMETER_MARKER));
-		this.patLong = Pattern.compile(String.format(TokenLoader.LONG_FMT, TokenLoader.PARAMETER_MARKER));
+		this.terminator = String.format(TokenLoader.TERMINATOR_FMT, TokenLoader.OPTION_MARKER);
+		this.patShort = Pattern.compile(String.format(TokenLoader.SHORT_FMT, TokenLoader.OPTION_MARKER));
+		this.patLong = Pattern.compile(String.format(TokenLoader.LONG_FMT, TokenLoader.OPTION_MARKER));
 	}
 
 	public final Character getFileMarker() {
@@ -181,7 +181,7 @@ public class TokenLoader implements Iterable<Token> {
 		if (this.multiShort == null) { return null; }
 		char c = this.multiShort.charAt(0);
 		Token next = newToken(state, Type.SHORT_OPTION, String.valueOf(c),
-			String.format("%s%s", TokenLoader.PARAMETER_MARKER, c));
+			String.format("%s%s", TokenLoader.OPTION_MARKER, c));
 		this.multiShort = this.multiShort.substring(1);
 		if (StringUtils.isEmpty(this.multiShort)) {
 			this.multiShort = null;

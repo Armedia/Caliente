@@ -15,13 +15,13 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
-import com.armedia.caliente.cli.launcher.LaunchParameterSet;
+import com.armedia.caliente.cli.launcher.LaunchOptionSet;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.commons.utilities.PooledWorkers;
 
-public class Launcher extends AbstractLauncher implements LaunchParameterSet {
+public class Launcher extends AbstractLauncher implements LaunchOptionSet {
 	private static final int MIN_THREADS = 1;
 	private static final int DEFAULT_THREADS = Math.min(16, Runtime.getRuntime().availableProcessors() * 2);
 	private static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 3);
@@ -48,12 +48,12 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
-	public Collection<Parameter> getParameters(CommandLineValues commandLine) {
-		return Parameter.getUnwrappedList(CLIParam.values());
+	public Collection<Option> getParameters(CommandLineValues commandLine) {
+		return Option.getUnwrappedList(CLIParam.values());
 	}
 
 	@Override
-	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
+	protected Collection<? extends LaunchOptionSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
 		if (pass > 0) { return null; }
 		return Arrays.asList(this, this.threadsParameter);
 	}

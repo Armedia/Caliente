@@ -6,22 +6,22 @@ import com.armedia.commons.utilities.Tools;
 
 public final class CommandLineResult {
 
-	private final ParameterValues parameterValues;
+	private final OptionValues optionValues;
 	private final String command;
-	private final ParameterValues commandValues;
+	private final OptionValues commandValues;
 	private final List<String> positionals;
 
 	/**
-	 * @param parameterValues
+	 * @param optionValues
 	 * @param command
 	 * @param commandValues
 	 * @param positionals
 	 */
-	public CommandLineResult(ParameterValues parameterValues, String command, ParameterValues commandValues,
+	public CommandLineResult(OptionValues optionValues, String command, OptionValues commandValues,
 		List<String> positionals) {
-		if (parameterValues == null) { throw new IllegalArgumentException(
-			"Must provide the parameter values for the base parameters - even if empty"); }
-		this.parameterValues = parameterValues;
+		if (optionValues == null) { throw new IllegalArgumentException(
+			"Must provide the option values for the base options - even if empty"); }
+		this.optionValues = optionValues;
 		if ((command != null) && (commandValues != null)) {
 			this.command = command;
 			this.commandValues = commandValues;
@@ -35,12 +35,12 @@ public final class CommandLineResult {
 	}
 
 	/**
-	 * Returns the {@link ParameterValues} instance that describes the parameters parsed
+	 * Returns the {@link OptionValues} instance that describes the options parsed
 	 *
-	 * @return the {@link ParameterValues} instance that describes the parameters parsed
+	 * @return the {@link OptionValues} instance that describes the options parsed
 	 */
-	public ParameterValues getParameterValues() {
-		return this.parameterValues;
+	public OptionValues getOptionValues() {
+		return this.optionValues;
 	}
 
 	/**
@@ -64,20 +64,20 @@ public final class CommandLineResult {
 	}
 
 	/**
-	 * Return the {@link ParameterValues} instance associated with the given command
+	 * Return the {@link OptionValues} instance associated with the given command
 	 *
-	 * @return the {@link ParameterValues} instance associated with the given command, or
-	 *         {@code null} if none was given.
+	 * @return the {@link OptionValues} instance associated with the given command, or {@code null}
+	 *         if none was given.
 	 */
-	public ParameterValues getCommandValues() {
+	public OptionValues getCommandValues() {
 		return this.commandValues;
 	}
 
 	/**
-	 * Returns the list of positional parameter values (i.e. non-flags) issued at the end of the
+	 * Returns the list of positional option values (i.e. non-flags) issued at the end of the
 	 * command line.
 	 *
-	 * @return the list of positional parameter values (i.e. non-flags) issued at the end of the
+	 * @return the list of positional option values (i.e. non-flags) issued at the end of the
 	 *         command line.
 	 */
 	public List<String> getPositionals() {

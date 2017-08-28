@@ -5,9 +5,9 @@ import java.io.Console;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterValues;
-import com.armedia.caliente.cli.ParameterWrapper;
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.OptionWrapper;
 import com.armedia.commons.utilities.Tools;
 
 public class CliValuePrompt {
@@ -55,44 +55,42 @@ public class CliValuePrompt {
 		return new String(c);
 	}
 
-	public static final String getUsername(ParameterValues cli, ParameterWrapper param, String prompt,
+	public static final String getUsername(OptionValues cli, OptionWrapper param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getUsername(cli, Parameter.unwrap(param), prompt, promptParams);
+		return CliValuePrompt.getUsername(cli, Option.unwrap(param), prompt, promptParams);
 	}
 
-	public static final String getUsername(ParameterValues cli, Parameter param, String prompt,
-		Object... promptParams) {
+	public static final String getUsername(OptionValues cli, Option param, String prompt, Object... promptParams) {
 		return CliValuePrompt
 			.getString(CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(false, prompt, promptParams)));
 	}
 
-	public static final String getPasswordString(ParameterValues cli, ParameterWrapper param, String prompt,
+	public static final String getPasswordString(OptionValues cli, OptionWrapper param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getPasswordString(cli, Parameter.unwrap(param), prompt, promptParams);
+		return CliValuePrompt.getPasswordString(cli, Option.unwrap(param), prompt, promptParams);
 	}
 
-	public static final char[] getPassword(ParameterValues cli, ParameterWrapper param, String prompt,
+	public static final char[] getPassword(OptionValues cli, OptionWrapper param, String prompt,
 		Object... promptParams) {
-		return CliValuePrompt.getPassword(cli, Parameter.unwrap(param), prompt, promptParams);
+		return CliValuePrompt.getPassword(cli, Option.unwrap(param), prompt, promptParams);
 	}
 
-	public static final String getPasswordString(ParameterValues cli, Parameter param, String prompt,
+	public static final String getPasswordString(OptionValues cli, Option param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt.getString(CliValuePrompt.getPassword(cli, param, prompt, promptParams));
 	}
 
-	public static final char[] getPassword(ParameterValues cli, Parameter param, String prompt,
-		Object... promptParams) {
+	public static final char[] getPassword(OptionValues cli, Option param, String prompt, Object... promptParams) {
 		return CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(true, prompt, promptParams));
 	}
 
-	public static final char[] getPromptableValue(ParameterValues cli, ParameterWrapper param,
+	public static final char[] getPromptableValue(OptionValues cli, OptionWrapper param,
 		PromptCallback promptCallback) {
-		return CliValuePrompt.getPromptableValue(cli, Parameter.unwrap(param), promptCallback);
+		return CliValuePrompt.getPromptableValue(cli, Option.unwrap(param), promptCallback);
 	}
 
-	public static final char[] getPromptableValue(ParameterValues cli, Parameter param, PromptCallback promptCallback) {
-		// If the parameter is given, return its value
+	public static final char[] getPromptableValue(OptionValues cli, Option param, PromptCallback promptCallback) {
+		// If the option is given, return its value
 		if ((cli != null) && (param != null)
 			&& cli.isPresent(param)) { return CliValuePrompt.getChars(cli.getString(param)); }
 		if (promptCallback == null) { return null; }

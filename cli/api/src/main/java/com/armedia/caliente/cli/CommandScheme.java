@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class CommandScheme extends ParameterScheme {
+public class CommandScheme extends OptionScheme {
 
 	private final Map<String, Command> commands = new TreeMap<>();
 

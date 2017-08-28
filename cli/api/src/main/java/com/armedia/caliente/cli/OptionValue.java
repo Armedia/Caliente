@@ -3,11 +3,11 @@ package com.armedia.caliente.cli;
 import java.util.List;
 import java.util.Set;
 
-public final class ParameterValue extends Parameter {
-	private final ParameterValues values;
-	private final Parameter def;
+public final class OptionValue extends Option {
+	private final OptionValues values;
+	private final Option def;
 
-	ParameterValue(ParameterValues values, Parameter def) {
+	OptionValue(OptionValues values, Option def) {
 		this.values = values;
 		this.def = def;
 	}
@@ -72,7 +72,7 @@ public final class ParameterValue extends Parameter {
 		return this.def.getDefaults();
 	}
 
-	public ParameterValues getParameterValues() {
+	public OptionValues getOptionValues() {
 		return this.values;
 	}
 

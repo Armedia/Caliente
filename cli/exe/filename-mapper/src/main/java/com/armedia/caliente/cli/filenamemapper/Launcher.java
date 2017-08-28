@@ -4,13 +4,13 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import com.armedia.caliente.cli.CommandLineValues;
-import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.launcher.LaunchParameterSet;
+import com.armedia.caliente.cli.launcher.LaunchOptionSet;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 
-public class Launcher extends AbstractLauncher implements LaunchParameterSet {
+public class Launcher extends AbstractLauncher implements LaunchOptionSet {
 
 	public static final void main(String... args) {
 		System.exit(new Launcher().launch(args));
@@ -19,12 +19,12 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
 	@Override
-	public Collection<Parameter> getParameters(CommandLineValues commandLine) {
-		return Parameter.getUnwrappedList(CLIParam.values());
+	public Collection<Option> getParameters(CommandLineValues commandLine) {
+		return Option.getUnwrappedList(CLIParam.values());
 	}
 
 	@Override
-	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
+	protected Collection<? extends LaunchOptionSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
 		if (pass > 0) { return null; }
 		return Arrays.asList(this, this.dfcLaunchHelper);
 	}

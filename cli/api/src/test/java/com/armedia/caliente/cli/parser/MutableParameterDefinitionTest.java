@@ -5,17 +5,17 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.cli.ParameterImpl;
-import com.armedia.caliente.cli.Parameter;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.Option;
 
 public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testConstructor() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -26,7 +26,7 @@ public class MutableParameterDefinitionTest {
 		expected.setMinValueCount(0);
 		expected.setValueSep('|');
 
-		actual = new ParameterImpl(expected);
+		actual = new OptionImpl(expected);
 		Assert.assertNotNull(actual);
 		Assert.assertEquals("ValueName", expected.getValueName(), actual.getValueName());
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
@@ -36,11 +36,11 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -51,7 +51,7 @@ public class MutableParameterDefinitionTest {
 		expected.setMinValueCount(1);
 		expected.setValueSep('$');
 
-		actual = new ParameterImpl(expected);
+		actual = new OptionImpl(expected);
 		Assert.assertNotNull(actual);
 		Assert.assertEquals("ValueName", expected.getValueName(), actual.getValueName());
 		Assert.assertEquals("Description", expected.getDescription(), actual.getDescription());
@@ -61,8 +61,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		Assert.assertNotNull(expected.toString());
@@ -70,9 +70,9 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testEquals() {
-		ParameterImpl def = null;
+		OptionImpl def = null;
 
-		def = new ParameterImpl();
+		def = new OptionImpl();
 		Assert.assertNotNull(def);
 		def.setValueName(UUID.randomUUID().toString());
 		def.setDescription(UUID.randomUUID().toString());
@@ -91,10 +91,10 @@ public class MutableParameterDefinitionTest {
 
 	@Test
 	public void testClone() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -115,17 +115,17 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 	}
 
 	@Test
 	public void testSetValueCount() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -146,8 +146,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		for (int i = 1; i < 100; i++) {
@@ -161,18 +161,18 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Parameter.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Parameter.isIdentical(actual, expected));
+			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
+			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
 			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
 		}
 	}
 
 	@Test
 	public void testSetValueName() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName("test-value-name");
 		expected.setDescription(UUID.randomUUID().toString());
@@ -193,8 +193,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		for (int i = 1; i < 10; i++) {
@@ -209,18 +209,18 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Parameter.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Parameter.isIdentical(actual, expected));
+			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
+			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
 			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
 		}
 	}
 
 	@Test
 	public void testSetDescription() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription("test-description");
@@ -241,8 +241,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		for (int i = 1; i < 10; i++) {
@@ -257,18 +257,18 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Parameter.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Parameter.isIdentical(actual, expected));
+			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
+			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
 			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
 		}
 	}
 
 	@Test
 	public void testSetLongOpt() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -289,8 +289,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		for (int i = 1; i < 10; i++) {
@@ -305,18 +305,18 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Parameter.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Parameter.isIdentical(actual, expected));
+			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
+			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
 			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
 		}
 	}
 
 	@Test
 	public void testSetShortOpt() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -337,8 +337,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		for (char c : UUID.randomUUID().toString().toCharArray()) {
@@ -352,18 +352,18 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Parameter.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Parameter.isIdentical(actual, expected));
+			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
+			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
 			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
 		}
 	}
 
 	@Test
 	public void testSetValueSep() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -384,8 +384,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		for (char c : UUID.randomUUID().toString().toCharArray()) {
@@ -399,18 +399,18 @@ public class MutableParameterDefinitionTest {
 			Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 			Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 			Assert.assertNotEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-			Assert.assertFalse("equivalence test", Parameter.isIdentical(expected, actual));
-			Assert.assertFalse("inverse equivalence test", Parameter.isIdentical(actual, expected));
+			Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
+			Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
 			Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
 		}
 	}
 
 	@Test
 	public void testSetValueOptional() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -431,8 +431,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		actual.setMinValueCount(1);
@@ -444,8 +444,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertFalse("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertFalse("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
 
 		actual.setMinValueCount(0);
@@ -457,17 +457,17 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 	}
 
 	@Test
 	public void testSetRequired() {
-		ParameterImpl expected = null;
-		ParameterImpl actual = null;
+		OptionImpl expected = null;
+		OptionImpl actual = null;
 
-		expected = new ParameterImpl();
+		expected = new OptionImpl();
 		Assert.assertNotNull(expected);
 		expected.setValueName(UUID.randomUUID().toString());
 		expected.setDescription(UUID.randomUUID().toString());
@@ -488,8 +488,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("Required", expected.isRequired(), actual.isRequired());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		actual.setRequired(false);
@@ -501,8 +501,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertFalse("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertFalse("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertFalse("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertFalse("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertNotEquals(expected.hashCode(), actual.hashCode());
 
 		actual.setRequired(true);
@@ -514,8 +514,8 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("MaxValueCount", expected.getMaxValueCount(), actual.getMaxValueCount());
 		Assert.assertEquals("MinValueCount", expected.getMinValueCount(), actual.getMinValueCount());
 		Assert.assertEquals("ValueSep", expected.getValueSep(), actual.getValueSep());
-		Assert.assertTrue("equivalence test", Parameter.isIdentical(expected, actual));
-		Assert.assertTrue("inverse equivalence test", Parameter.isIdentical(actual, expected));
+		Assert.assertTrue("equivalence test", Option.isIdentical(expected, actual));
+		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 	}
 }

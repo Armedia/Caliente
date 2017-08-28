@@ -18,14 +18,14 @@ import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandLineResult;
 import com.armedia.caliente.cli.CommandScheme;
 import com.armedia.caliente.cli.InsufficientValuesException;
-import com.armedia.caliente.cli.Parameter;
-import com.armedia.caliente.cli.ParameterScheme;
-import com.armedia.caliente.cli.ParameterValues;
-import com.armedia.caliente.cli.ParameterValuesImpl;
-import com.armedia.caliente.cli.TooManyParameterValuesException;
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.OptionValuesImpl;
+import com.armedia.caliente.cli.TooManyOptionValuesException;
 import com.armedia.caliente.cli.TooManyPositionalValuesException;
 import com.armedia.caliente.cli.UnknownCommandException;
-import com.armedia.caliente.cli.UnknownParameterException;
+import com.armedia.caliente.cli.UnknownOptionException;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.launcher.log.LogConfigurator;
 import com.armedia.caliente.cli.token.StaticTokenSource;
@@ -44,21 +44,21 @@ public abstract class AbstractLauncher {
 
 	/**
 	 * <p>
-	 * Process the command-line commandLineParameters. If an error occurs, a
-	 * {@link CommandLineProcessingException} will be raised, and the invocation to
-	 * {@link #launch(ParameterScheme, String...)} will return the value obtained from that
-	 * exception's {@link CommandLineProcessingException#getReturnValue() getReturnValue()}.
+	 * Process the CommandLineResult. If an error occurs, a {@link CommandLineProcessingException}
+	 * will be raised, and the invocation to {@link #launch(OptionScheme, String...)} will return
+	 * the value obtained from that exception's
+	 * {@link CommandLineProcessingException#getReturnValue() getReturnValue()}.
 	 * </p>
 	 *
 	 * @param commandLine
 	 * @throws CommandLineProcessingException
-	 *             if there was an error processing the command line - such as an illegal parameter
-	 *             combination, illegal parameter value, etc
+	 *             if there was an error processing the command line - such as an illegal option
+	 *             combination, illegal option value, etc
 	 */
 	protected void processCommandLineResult(CommandLineResult commandLine) throws CommandLineProcessingException {
 	}
 
-	protected final int launch(ParameterScheme scheme, String... args) {
+	protected final int launch(OptionScheme scheme, String... args) {
 		return launch(null, scheme, args);
 	}
 
@@ -71,12 +71,12 @@ public abstract class AbstractLauncher {
 		return Collections.emptyList();
 	}
 
-	private Parameter findParameter(ParameterScheme scheme, Token token) {
+	private Option findOption(OptionScheme scheme, Token token) {
 		switch (token.getType()) {
 			case LONG_OPTION:
-				return scheme.getParameter(token.getValue());
+				return scheme.getOption(token.getValue());
 			case SHORT_OPTION:
-				return scheme.getParameter(token.getValue().charAt(0));
+				return scheme.getOption(token.getValue().charAt(0));
 			default:
 				return null;
 		}
@@ -96,14 +96,14 @@ public abstract class AbstractLauncher {
 		return (str != null) && AbstractLauncher.DEFAULT_COMMAND_PATTERN.matcher(str).matches();
 	}
 
-	private CommandLineResult parseArguments(Parameter helpParameter, final ParameterScheme baseScheme, String... args)
-		throws UnknownParameterException, UnknownCommandException, TooManyPositionalValuesException,
-		TooManyParameterValuesException, InsufficientValuesException {
+	private CommandLineResult parseArguments(Option helpOption, final OptionScheme baseScheme, String... args)
+		throws UnknownOptionException, UnknownCommandException, TooManyPositionalValuesException,
+		TooManyOptionValuesException, InsufficientValuesException {
 
-		final DynamicParameterSchemeSupport dynamicSupport = getDynamicSchemeSupport();
+		final DynamicOptionSchemeSupport dynamicSupport = getDynamicSchemeSupport();
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", Arrays.asList(args)));
 
-		final ParameterValuesImpl baseValues = new ParameterValuesImpl();
+		final OptionValuesImpl baseValues = new OptionValuesImpl();
 		final List<Token> positionals = new ArrayList<>();
 		final CommandScheme commandScheme = (CommandScheme.class.isInstance(baseScheme)
 			? CommandScheme.class.cast(baseScheme) : null);
@@ -111,39 +111,39 @@ public abstract class AbstractLauncher {
 		final boolean dynamic = (dynamicSupport != null);
 
 		Command command = null;
-		ParameterValuesImpl commandValues = null;
+		OptionValuesImpl commandValues = null;
 
-		ParameterScheme currentScheme = baseScheme;
+		OptionScheme currentScheme = baseScheme;
 
-		Parameter currentParameter = null;
-		boolean currentParameterFromCommand = false;
+		Option currentOption = null;
+		boolean currentOptionFromCommand = false;
 
-		Map<String, Parameter> baseWithArgs = new HashMap<>();
-		Map<String, Parameter> commandWithArgs = new HashMap<>();
+		Map<String, Option> baseWithArgs = new HashMap<>();
+		Map<String, Option> commandWithArgs = new HashMap<>();
 
-		ExtensibleParameterScheme extensibleScheme = (dynamic ? new ExtensibleParameterScheme(baseScheme) : null);
+		ExtensibleOptionScheme extensibleScheme = (dynamic ? new ExtensibleOptionScheme(baseScheme) : null);
 
 		int extensions = 0;
 		for (Token nextToken : tokenLoader) {
 
 			if (nextToken.getType() == Token.Type.STRING) {
 				// A plain string...
-				if (currentParameter == null) {
+				if (currentOption == null) {
 					// This can either be a positional, a command, or an error
 
 					if (commandScheme != null) {
-						// If commands are supported, then the first standalone string parameter
+						// If commands are supported, then the first standalone string option
 						// MUST be the command name
 						if (command == null) {
 							// Find the command...if not a command, then it must be a positional
-							// Give out the currently-accumulated parameter values to assist the
+							// Give out the currently-accumulated option values to assist the
 							// search
 							currentScheme = command = getCommand(dynamic ? baseValues : null, commandScheme,
 								nextToken.getRawString());
 							if (command != null) {
-								commandValues = new ParameterValuesImpl();
+								commandValues = new OptionValuesImpl();
 								if (dynamic) {
-									extensibleScheme = new ExtensibleParameterScheme(command);
+									extensibleScheme = new ExtensibleOptionScheme(command);
 								}
 								continue;
 							}
@@ -158,7 +158,8 @@ public abstract class AbstractLauncher {
 					final int maxArgs = currentScheme.getMaxArgs();
 
 					// Are positionals allowed?
-					if (maxArgs == 0) { throw new TooManyPositionalValuesException(nextToken); }
+					if (currentScheme
+						.isSupportsPositionals()) { throw new TooManyPositionalValuesException(nextToken); }
 
 					// If there's an upper limit, check it...
 					if ((maxArgs > 0)
@@ -168,57 +169,57 @@ public abstract class AbstractLauncher {
 					// then
 					positionals.add(nextToken);
 				} else {
-					// This can only be a string parameter(s) for currentParameter so add an
+					// This can only be a string option(s) for currentOption so add an
 					// occurrence and validate the schema limits (empty strings are allowed)
-					int maxArgs = currentParameter.getMaxValueCount();
-					if (maxArgs == 0) { throw new TooManyParameterValuesException(currentParameter, nextToken); }
+					int maxArgs = currentOption.getMaxValueCount();
+					if (maxArgs == 0) { throw new TooManyOptionValuesException(currentOption, nextToken); }
 
-					// Find how many values the parameter currently has, and check if they're too
+					// Find how many values the option currently has, and check if they're too
 					// many
-					ParameterValuesImpl target = (currentParameterFromCommand ? commandValues : baseValues);
-					final int existing = target.getValueCount(currentParameter);
+					OptionValuesImpl target = (currentOptionFromCommand ? commandValues : baseValues);
+					final int existing = target.getValueCount(currentOption);
 
 					StrTokenizer tok = new StrTokenizer(nextToken.getRawString(), tokenLoader.getValueSplitter());
 					tok.setIgnoreEmptyTokens(false);
 
 					List<String> values = tok.getTokenList();
 
-					// If this would exceed the maximum allowed of parameter values, then we have a
+					// If this would exceed the maximum allowed of option values, then we have a
 					// problem
 					if ((maxArgs > 0)
-						&& ((values.size() + existing) > maxArgs)) { throw new TooManyParameterValuesException(
-							currentParameter, nextToken); }
+						&& ((values.size() + existing) > maxArgs)) { throw new TooManyOptionValuesException(
+							currentOption, nextToken); }
 
 					// No schema violation on the upper end, so we simply add the values
-					target.add(currentParameter, values);
-					(currentParameterFromCommand ? commandWithArgs : baseWithArgs).put(currentParameter.getKey(),
-						currentParameter);
+					target.add(currentOption, values);
+					(currentOptionFromCommand ? commandWithArgs : baseWithArgs).put(currentOption.getKey(),
+						currentOption);
 				}
 
-				// At this point, we're for sure no longer processing a parameter from before...
-				currentParameter = null;
+				// At this point, we're for sure no longer processing a option from before...
+				currentOption = null;
 			} else {
 				// Either a short or long option...
 
 				// May not have positionals yet, as these would be out-of-place strings
-				if (!positionals.isEmpty()) { throw new UnknownParameterException(positionals.get(0)); }
+				if (!positionals.isEmpty()) { throw new UnknownOptionException(positionals.get(0)); }
 
-				Parameter p = null;
+				Option p = null;
 				int pass = -1;
 				boolean fromCommand = false;
 				inner: while (true) {
 					pass++;
 
-					// If we're already processing a command, then the remaining parameters belong
+					// If we're already processing a command, then the remaining options belong
 					// to it
 					if (command != null) {
-						p = findParameter(commandScheme, nextToken);
+						p = findOption(commandScheme, nextToken);
 						fromCommand = true;
 					}
-					// If we're not processing a command, then the parameters are still part of the
+					// If we're not processing a command, then the options are still part of the
 					// base scheme
 					if (p == null) {
-						p = findParameter(baseScheme, nextToken);
+						p = findOption(baseScheme, nextToken);
 						fromCommand = false;
 					}
 
@@ -234,17 +235,17 @@ public abstract class AbstractLauncher {
 							}
 						}
 
-						// No such parameter - neither on the command nor the base scheme, and the
+						// No such option - neither on the command nor the base scheme, and the
 						// extension mechanism didn't fix this....so this is an error
-						throw new UnknownParameterException(nextToken);
+						throw new UnknownOptionException(nextToken);
 					}
 
 					break;
 				}
 
 				if (p.getMaxValueCount() != 0) {
-					currentParameter = p;
-					currentParameterFromCommand = fromCommand;
+					currentOption = p;
+					currentOptionFromCommand = fromCommand;
 				}
 			}
 		}
@@ -254,16 +255,16 @@ public abstract class AbstractLauncher {
 			if (positionals.size() < currentScheme.getMinArgs()) { throw new InsufficientValuesException(null); }
 		}
 
-		// Do we have all the required parameters for both the global and command?
-		Collection<Parameter> baseFaults = new ArrayList<>();
-		for (Parameter p : baseScheme.getRequiredParameters()) {
+		// Do we have all the required options for both the global and command?
+		Collection<Option> baseFaults = new ArrayList<>();
+		for (Option p : baseScheme.getRequiredOptions()) {
 			if (!baseValues.isPresent(p)) {
 				baseFaults.add(p);
 			}
 		}
-		Collection<Parameter> commandFaults = new ArrayList<>();
+		Collection<Option> commandFaults = new ArrayList<>();
 		if (command != null) {
-			for (Parameter p : command.getRequiredParameters()) {
+			for (Option p : command.getRequiredOptions()) {
 				if (!commandValues.isPresent(p)) {
 					commandFaults.add(p);
 				}
@@ -271,25 +272,25 @@ public abstract class AbstractLauncher {
 		}
 
 		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) {
-			// TODO: RAISE THE ERROR FOR ALL MISSING PARAMETERS ON BOTH SCHEMES!!
+			// TODO: RAISE THE ERROR FOR ALL MISSING OPTIONS ON BOTH SCHEMES!!
 		}
 
-		// Validate the minimum parameters for the parameters that have arguments
-		for (Parameter p : baseWithArgs.values()) {
+		// Validate the minimum arguments for the options that have arguments
+		for (Option p : baseWithArgs.values()) {
 			if ((p.getMinValueCount() > 0) && (baseValues.getValueCount(p) < p.getMinValueCount())) {
 				baseFaults.add(p);
 			}
 		}
-		for (Parameter p : commandWithArgs.values()) {
+		for (Option p : commandWithArgs.values()) {
 			if ((p.getMinValueCount() > 0) && (commandValues.getValueCount(p) < p.getMinValueCount())) {
 				commandFaults.add(p);
 			}
 		}
 		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) {
-			// TODO: RAISE THE ERROR FOR PARAMETERS WITH MISSING VALUES ON BOTH SCHEMES!!
+			// TODO: RAISE THE ERROR FOR OPTIONS WITH MISSING VALUES ON BOTH SCHEMES!!
 		}
 
-		// At this point, we have all the required parameters, all the parameters with minimum
+		// At this point, we have all the required options, all the options with minimum
 		// values have been validated to be compliant, and we know we're not breaking the maximum
 		// values limit because that's checked above as we process. Now we validate the positionals
 
@@ -309,35 +310,34 @@ public abstract class AbstractLauncher {
 		return new CommandLineResult(baseValues, command.getName(), commandValues, positionalStrings);
 	}
 
-	private Command getCommand(ParameterValues currentValues, CommandScheme commandScheme, String commandName) {
+	private Command getCommand(OptionValues currentValues, CommandScheme commandScheme, String commandName) {
 		return commandScheme.getCommand(commandName);
 	}
 
-	protected DynamicParameterSchemeSupport getDynamicSchemeSupport() {
+	protected DynamicOptionSchemeSupport getDynamicSchemeSupport() {
 		// By default return nothing...
 		return null;
 	}
 
-	protected final int launch(Parameter helpParameter, final ParameterScheme parameterScheme, String... args) {
-		if (parameterScheme == null) { throw new IllegalArgumentException(
-			"Must provide an initial parameter scheme to parse against"); }
+	protected final int launch(Option helpOption, final OptionScheme optionScheme, String... args) {
+		if (optionScheme == null) { throw new IllegalArgumentException(
+			"Must provide an initial option scheme to parse against"); }
 		if (args == null) {
 			args = AbstractLauncher.NO_ARGS;
 		}
 
-		if ((helpParameter != null)
-			|| (parameterScheme.countCollisions(helpParameter) != 1)) { throw new IllegalArgumentException(
-				"The help parameter is not part of the parameter scheme"); }
+		if ((helpOption != null)
+			|| (optionScheme.countCollisions(helpOption) != 1)) { throw new IllegalArgumentException(
+				"The help option is not part of the option scheme"); }
 
 		CommandLineResult result = null;
 		try {
-			result = parseArguments(helpParameter, parameterScheme, args);
+			result = parseArguments(helpOption, optionScheme, args);
 		} catch (Throwable t) {
 			this.log.error("Failed to process the command-line arguments", t);
 			return -1;
 		}
 
-		// Process the commandLineParameters given...
 		try {
 			processCommandLineResult(result);
 		} catch (CommandLineProcessingException e) {
@@ -351,7 +351,7 @@ public abstract class AbstractLauncher {
 		}
 
 		for (LaunchClasspathHelper helper : classpathHelpers) {
-			final Collection<URL> extraPatches = helper.getClasspathPatchesPre(result.getParameterValues());
+			final Collection<URL> extraPatches = helper.getClasspathPatchesPre(result.getOptionValues());
 			if ((extraPatches != null) && !extraPatches.isEmpty()) {
 				for (URL u : extraPatches) {
 					if (u != null) {
@@ -369,7 +369,7 @@ public abstract class AbstractLauncher {
 		ClasspathPatcher.discoverPatches(false);
 
 		for (LaunchClasspathHelper helper : classpathHelpers) {
-			final Collection<URL> extraPatches = helper.getClasspathPatchesPost(result.getParameterValues());
+			final Collection<URL> extraPatches = helper.getClasspathPatchesPost(result.getOptionValues());
 			if ((extraPatches != null) && !extraPatches.isEmpty()) {
 				for (URL u : extraPatches) {
 					if (u != null) {

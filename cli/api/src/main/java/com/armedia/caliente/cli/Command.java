@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-public class Command extends ParameterScheme {
+public class Command extends OptionScheme {
 
 	private static final Pattern NAME_PATTERN = Pattern.compile("^\\S+$");
 
