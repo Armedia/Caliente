@@ -7,16 +7,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-
 public class TokenLoaderTest {
-
-	static {
-
-		ArgumentParser parser = ArgumentParsers.newArgumentParser("Checksum").defaultHelp(true);
-		parser.addArgument("a");
-	}
 
 	@Test
 	public void testParser() {
