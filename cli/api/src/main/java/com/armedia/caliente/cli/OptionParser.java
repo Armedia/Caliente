@@ -155,7 +155,7 @@ public class OptionParser {
 			.isEmpty()) { return new OptionParseResult(new OptionValues(), null, null, OptionParser.NO_POSITIONALS); }
 
 		if (baseScheme == null) {
-			baseScheme = new OptionScheme("automatic");
+			baseScheme = new OptionScheme("(ad-hoc)");
 		}
 		if (helpOption != null) {
 			baseScheme.addOrReplace(helpOption);
