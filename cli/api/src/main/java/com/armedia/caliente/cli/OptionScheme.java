@@ -15,6 +15,7 @@ public class OptionScheme implements Iterable<Option> {
 
 	private final boolean caseSensitive;
 	private final String name;
+	private String description = null;
 	private final Map<String, Option> required = new TreeMap<>();
 	private final Map<String, Option> options = new TreeMap<>();
 	private final Map<String, Option> longKeys = new HashMap<>();
@@ -48,7 +49,15 @@ public class OptionScheme implements Iterable<Option> {
 		this.caseSensitive = pattern.caseSensitive;
 	}
 
-	public boolean isCaseSensitive() {
+	public final String getDescription() {
+		return this.description;
+	}
+
+	public final void setDescription(String description) {
+		this.description = description;
+	}
+
+	public final boolean isCaseSensitive() {
 		return this.caseSensitive;
 	}
 
@@ -68,11 +77,11 @@ public class OptionScheme implements Iterable<Option> {
 		return c;
 	}
 
-	public boolean isDynamic() {
+	public final boolean isDynamic() {
 		return this.dynamic;
 	}
 
-	public OptionScheme setDynamic(boolean dynamic) {
+	public final OptionScheme setDynamic(boolean dynamic) {
 		this.dynamic = dynamic;
 		return this;
 	}

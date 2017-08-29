@@ -170,7 +170,7 @@ public class OptionParser {
 		final CommandScheme commandScheme = (CommandScheme.class.isInstance(baseScheme)
 			? CommandScheme.class.cast(baseScheme) : null);
 
-		final boolean dynamic = (dynamicSupport != null);
+		boolean dynamic = (baseScheme.isDynamic() && (dynamicSupport != null));
 
 		Command command = null;
 		String commandName = null;
@@ -206,6 +206,7 @@ public class OptionParser {
 							if (command != null) {
 								commandName = command.getName();
 								commandValues = new OptionValues();
+								dynamic = commandScheme.isDynamic() && (dynamicSupport != null);
 								if (dynamic) {
 									extensibleScheme = new ExtensibleOptionScheme(command);
 								}
