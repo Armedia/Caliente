@@ -216,7 +216,7 @@ public class OptionScheme implements Iterable<Option> {
 		if (def == null) { throw new IllegalArgumentException("Option definition may not be null"); }
 
 		final boolean hasShortOpt = (def.getShortOpt() != null);
-		final boolean hasLongOpt = (def.getShortOpt() != null);
+		final boolean hasLongOpt = (def.getLongOpt() != null);
 
 		if (!hasShortOpt && !hasLongOpt) { throw new IllegalArgumentException(
 			"The given option definition has neither a short or a long option"); }

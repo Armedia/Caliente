@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option.Builder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 
@@ -19,6 +20,7 @@ import com.armedia.caliente.cli.CommandScheme;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
+import com.armedia.commons.utilities.Tools;
 
 public final class HelpRenderer {
 	public static final int DEFAULT_WIDTH = 80;
@@ -122,7 +124,21 @@ public final class HelpRenderer {
 	}
 
 	private org.apache.commons.cli.Option buildOption(Option o) {
-		return null;
+		Builder b = null;
+		if (o.getShortOpt() != null) {
+			b = org.apache.commons.cli.Option.builder(o.getShortOpt().toString());
+		} else {
+			b = org.apache.commons.cli.Option.builder();
+		}
+		return b //
+			.longOpt(o.getLongOpt()) //
+			.required(o.isRequired()) //
+			.desc(o.getDescription()) //
+			.hasArg((o.getMinValueCount() > 0) || (o.getMaxValueCount() != 0)) //
+			.numberOfArgs(o.getMaxValueCount()) //
+			.optionalArg(o.getMinValueCount() == 0) //
+			.argName(o.getValueName()) //
+			.build();
 	}
 
 	private void formatScheme(HelpFormatter fmt, PrintWriter pw, int width, OptionScheme scheme) {
@@ -138,7 +154,16 @@ public final class HelpRenderer {
 		if (command == null) { return; }
 		String aliases = "";
 		if (!command.getAliases().isEmpty()) {
-			aliases = String.format(" ( aliases = %s ) ", command.getAliases());
+			aliases = "(";
+			boolean first = true;
+			for (String a : command.getAliases()) {
+				if (Tools.equals(a, command.getName())) {
+					continue;
+				}
+				aliases = String.format("%s%s%s", aliases, first ? "" : ", ", a);
+				first = false;
+			}
+			aliases = String.format("%s)", aliases);
 		}
 		fmt.printWrapped(pw, width, String.format("Parameters for '%s'%s:", command.getName(), aliases));
 		fmt.printWrapped(pw, width, StringUtils.repeat('-', width));
@@ -151,28 +176,30 @@ public final class HelpRenderer {
 		fmt.printWrapped(pw, width, StringUtils.repeat('-', width));
 
 		StringBuilder sb = new StringBuilder();
-		sb.setLength(0);
-		sb.append("\t");
 		for (Command c : commandScheme.getCommands()) {
-			sb.append(c.getName());
+			sb.setLength(0);
+			sb.append("\t").append(c.getName());
 			Set<String> aliases = c.getAliases();
 			if (!aliases.isEmpty()) {
-				sb.append(" ( aliases = ");
+				sb.append(" (");
 				boolean first = true;
 				for (String s : aliases) {
+					if (Tools.equals(s, c.getName())) {
+						continue;
+					}
 					if (!first) {
-						sb.append(" ");
+						sb.append(", ");
 					}
 					sb.append(s);
 					first = false;
 				}
-				sb.append(" )");
+				sb.append(")");
 			}
 
 			fmt.printWrapped(pw, width, sb.toString());
 			String desc = c.getDescription();
-			if (c != null) {
-				fmt.printWrapped(pw, width, String.format("\t%s%s", desc, HelpRenderer.NL));
+			if ((c != null) && (desc != null)) {
+				fmt.printWrapped(pw, width, 8, String.format("\t%s%s", desc, HelpRenderer.NL));
 			}
 		}
 	}
@@ -196,9 +223,12 @@ public final class HelpRenderer {
 		formatSyntax(fmt, pw, width, programName, baseScheme, commandScheme, command);
 		sb.setLength(0);
 
-		fmt.printWrapped(pw, width, String.format("%s Parameters", (commandScheme != null ? "Global" : "Available")));
-		fmt.printWrapped(pw, width, line);
-		formatScheme(fmt, pw, width, baseScheme);
+		if (baseScheme.getOptionCount() > 0) {
+			fmt.printWrapped(pw, width,
+				String.format("%s Parameters", (commandScheme != null ? "Global" : "Available")));
+			fmt.printWrapped(pw, width, line);
+			formatScheme(fmt, pw, width, baseScheme);
+		}
 
 		if (commandScheme != null) {
 			if (command != null) {
