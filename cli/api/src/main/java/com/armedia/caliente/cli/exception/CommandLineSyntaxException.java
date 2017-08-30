@@ -1,23 +1,31 @@
 package com.armedia.caliente.cli.exception;
 
-import com.armedia.caliente.cli.token.TokenSource;
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.token.Token;
 
 public class CommandLineSyntaxException extends CommandLineException {
 	private static final long serialVersionUID = 1L;
 
-	private final TokenSource source;
-	private final int index;
+	private final OptionScheme optionScheme;
+	private final Option option;
+	private final Token token;
 
-	protected CommandLineSyntaxException(TokenSource source, int index) {
-		this.source = source;
-		this.index = index;
+	protected CommandLineSyntaxException(OptionScheme optionScheme, Option option, Token token) {
+		this.optionScheme = optionScheme;
+		this.option = option;
+		this.token = token;
 	}
 
-	public final TokenSource getSource() {
-		return this.source;
+	public final OptionScheme getOptionScheme() {
+		return this.optionScheme;
 	}
 
-	public final int getIndex() {
-		return this.index;
+	public final Option getOption() {
+		return this.option;
+	}
+
+	public final Token getToken() {
+		return this.token;
 	}
 }

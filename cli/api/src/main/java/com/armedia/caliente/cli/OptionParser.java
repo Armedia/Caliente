@@ -12,8 +12,9 @@ import java.util.regex.Pattern;
 
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
+import com.armedia.caliente.cli.exception.InsufficientOptionValuesException;
 import com.armedia.caliente.cli.exception.InsufficientPositionalValuesException;
-import com.armedia.caliente.cli.exception.MissingRequiredOptionException;
+import com.armedia.caliente.cli.exception.MissingRequiredOptionsException;
 import com.armedia.caliente.cli.exception.TooManyOptionValuesException;
 import com.armedia.caliente.cli.exception.TooManyPositionalValuesException;
 import com.armedia.caliente.cli.exception.UnknownCommandException;
@@ -187,9 +188,9 @@ public class OptionParser {
 		ExtensibleOptionScheme extensibleScheme = (dynamic ? new ExtensibleOptionScheme(baseScheme) : null);
 
 		int extensions = 0;
-		for (Token nextToken : tokenLoader) {
+		for (Token token : tokenLoader) {
 
-			if (nextToken.getType() == Token.Type.STRING) {
+			if (token.getType() == Token.Type.STRING) {
 				// A plain string...
 				if (currentOption == null) {
 					// This can either be a positional, a command, or an error
@@ -202,7 +203,7 @@ public class OptionParser {
 							// Give out the currently-accumulated option values to assist the
 							// search
 							currentScheme = command = findCommand(dynamic ? baseValues : null, commandScheme,
-								nextToken.getRawString());
+								token.getRawString());
 							if (command != null) {
 								commandName = command.getName();
 								commandValues = new OptionValues();
@@ -218,7 +219,7 @@ public class OptionParser {
 							}
 
 							// This is an unknown command, so this is an error
-							throw new UnknownCommandException(nextToken);
+							throw new UnknownCommandException(commandScheme, token);
 						}
 					}
 
@@ -227,21 +228,22 @@ public class OptionParser {
 					final int maxArgs = currentScheme.getMaxArgs();
 
 					// Are positionals allowed?
-					if (currentScheme
-						.isSupportsPositionals()) { throw new TooManyPositionalValuesException(nextToken); }
+					if (!currentScheme
+						.isSupportsPositionals()) { throw new TooManyPositionalValuesException(currentScheme, token); }
 
 					// If there's an upper limit, check it...
 					if ((maxArgs > 0)
-						&& (maxArgs < positionals.size())) { throw new TooManyPositionalValuesException(nextToken); }
+						&& (maxArgs <= positionals.size())) { throw new TooManyPositionalValuesException(currentScheme,
+							token); }
 
 					// We won't know if we've met the lower limit until the end... so postpone until
 					// then
-					positionals.add(nextToken);
+					positionals.add(token);
 				} else {
 					// This can only be a string option(s) for currentOption so add an
 					// occurrence and validate the schema limits (empty strings are allowed)
 					final int maxArgs = currentOption.getMaxValueCount();
-					if (maxArgs == 0) { throw new TooManyOptionValuesException(currentOption, nextToken); }
+					if (maxArgs == 0) { throw new TooManyOptionValuesException(currentScheme, currentOption, token); }
 
 					// Find how many values the option currently has, and check if they're too
 					// many
@@ -251,7 +253,7 @@ public class OptionParser {
 					// Allow for escaping the separator character with \
 					// (i.e. a\,b,c -> [ "a,b", "c" ])
 					List<String> values = new ArrayList<>();
-					String str = nextToken.getRawString();
+					String str = token.getRawString();
 					Matcher m = splitter.matcher(str);
 					int start = 0;
 					while (m.find()) {
@@ -265,7 +267,7 @@ public class OptionParser {
 					// problem
 					if ((maxArgs > 0)
 						&& ((values.size() + existing) > maxArgs)) { throw new TooManyOptionValuesException(
-							currentOption, nextToken); }
+							currentScheme, currentOption, token); }
 
 					// No schema violation on the upper end, so we simply add the values
 					target.add(currentOption, values);
@@ -279,29 +281,28 @@ public class OptionParser {
 				// Either a short or long option...
 
 				// May not have positionals yet, as these would be out-of-place strings
-				if (!positionals.isEmpty()) { throw new UnknownOptionException(positionals.get(0)); }
+				if (!positionals.isEmpty()) { throw new UnknownOptionException(currentScheme, positionals.get(0)); }
 
 				Option p = null;
-				int pass = -1;
 				boolean fromCommand = false;
+				boolean mayExtend = true;
 				inner: while (true) {
-					pass++;
 
 					// If we're already processing a command, then the remaining options belong
 					// to it
 					if (command != null) {
-						p = findOption(commandScheme, nextToken);
+						p = findOption(commandScheme, token);
 						fromCommand = true;
 					}
 					// If we're not processing a command, then the options are still part of the
 					// base scheme
 					if (p == null) {
-						p = findOption(baseScheme, nextToken);
+						p = findOption(baseScheme, token);
 						fromCommand = false;
 					}
 
 					if (p == null) {
-						if (dynamic && (pass == 0)) {
+						if (dynamic && mayExtend) {
 							// Dynamic support enabled!! Try to expand the currently-active scheme
 
 							// Make sure we clear the "modified" flag...
@@ -309,17 +310,18 @@ public class OptionParser {
 
 							// Try to extend the scheme
 							dynamicSupport.extendDynamicScheme(extensions, baseValues, command.getName(), commandValues,
-								nextToken, extensibleScheme);
+								token, extensibleScheme);
 
 							// If there were changes, then we can go back around...
 							if (extensibleScheme.isModified()) {
+								mayExtend = false;
 								continue inner;
 							}
 						}
 
 						// No such option - neither on the command nor the base scheme, and the
 						// extension mechanism didn't fix this....so this is an error
-						throw new UnknownOptionException(nextToken);
+						throw new UnknownOptionException(currentScheme, token);
 					}
 
 					break;
@@ -336,7 +338,7 @@ public class OptionParser {
 		// Do we have enough positionals to meet the schema requirements?
 		if (currentScheme.getMinArgs() > 0) {
 			if (positionals.size() < currentScheme
-				.getMinArgs()) { throw new InsufficientPositionalValuesException(null); }
+				.getMinArgs()) { throw new InsufficientPositionalValuesException(currentScheme); }
 		}
 
 		// Do we have all the required options for both the global and command?
@@ -356,8 +358,9 @@ public class OptionParser {
 		}
 
 		// If we have faults from missing required options, raise the error!
-		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) { throw new MissingRequiredOptionException(baseFaults,
-			commandName, commandFaults); }
+		if (!baseFaults.isEmpty()
+			|| !commandFaults.isEmpty()) { throw new MissingRequiredOptionsException(currentScheme, baseFaults,
+				commandName, commandFaults); }
 
 		// Validate the minimum arguments for the options that have arguments
 		for (Option p : baseWithArgs.values()) {
@@ -371,16 +374,17 @@ public class OptionParser {
 			}
 		}
 		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) {
-			// TODO: RAISE THE ERROR FOR OPTIONS WITH MISSING VALUES ON BOTH SCHEMES!!
+			Option p = (!baseFaults.isEmpty() ? baseFaults.iterator().next() : commandFaults.iterator().next());
+			throw new InsufficientOptionValuesException(currentScheme, p);
 		}
 
 		// At this point, we have all the required options, all the options with minimum
 		// values have been validated to be compliant, and we know we're not breaking the maximum
 		// values limit because that's checked above as we process. Now we validate the positionals
 
-		if ((currentScheme.getMinArgs() > 0) && (positionals.size() < currentScheme.getMinArgs())) {
-			// TODO: RAISE THE ERROR THAT WE'RE MISSING REQUIRED POSITIONALS
-		}
+		if ((currentScheme.getMinArgs() > 0)
+			&& (positionals.size() < currentScheme.getMinArgs())) { throw new InsufficientPositionalValuesException(
+				currentScheme); }
 
 		// This appears to be a schema-correct command line, so clean everything up and return the
 		// result so it can be processed
