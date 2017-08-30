@@ -335,20 +335,14 @@ public class OptionParser {
 			}
 		}
 
-		// Do we have enough positionals to meet the schema requirements?
-		if (currentScheme.getMinArgs() > 0) {
-			if (positionals.size() < currentScheme
-				.getMinArgs()) { throw new InsufficientPositionalValuesException(currentScheme); }
-		}
-
 		// Do we have all the required options for both the global and command?
 		Collection<Option> baseFaults = new ArrayList<>();
+		Collection<Option> commandFaults = new ArrayList<>();
 		for (Option p : baseScheme.getRequiredOptions()) {
 			if (!baseValues.isPresent(p)) {
 				baseFaults.add(p);
 			}
 		}
-		Collection<Option> commandFaults = new ArrayList<>();
 		if (command != null) {
 			for (Option p : command.getRequiredOptions()) {
 				if (!commandValues.isPresent(p)) {
@@ -356,7 +350,6 @@ public class OptionParser {
 				}
 			}
 		}
-
 		// If we have faults from missing required options, raise the error!
 		if (!baseFaults.isEmpty()
 			|| !commandFaults.isEmpty()) { throw new MissingRequiredOptionsException(currentScheme, baseFaults,
@@ -378,13 +371,13 @@ public class OptionParser {
 			throw new InsufficientOptionValuesException(currentScheme, p);
 		}
 
+		// Validate that we have enough positionals as required
+		if (currentScheme.getMinArgs() > positionals
+			.size()) { throw new InsufficientPositionalValuesException(currentScheme); }
+
 		// At this point, we have all the required options, all the options with minimum
 		// values have been validated to be compliant, and we know we're not breaking the maximum
 		// values limit because that's checked above as we process. Now we validate the positionals
-
-		if ((currentScheme.getMinArgs() > 0)
-			&& (positionals.size() < currentScheme.getMinArgs())) { throw new InsufficientPositionalValuesException(
-				currentScheme); }
 
 		// This appears to be a schema-correct command line, so clean everything up and return the
 		// result so it can be processed
