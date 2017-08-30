@@ -112,7 +112,7 @@ public class OptionScheme implements Iterable<Option> {
 	 *
 	 * @return the minimum number of allowed positional arguments
 	 */
-	public int getMinArgs() {
+	public final int getMinArgs() {
 		return this.minArgs;
 	}
 
@@ -129,7 +129,7 @@ public class OptionScheme implements Iterable<Option> {
 	 * @param minArgs
 	 *            the minimum number of allowed positional arguments
 	 */
-	public OptionScheme setMinArgs(int minArgs) {
+	public final OptionScheme setMinArgs(int minArgs) {
 		this.minArgs = Math.max(0, minArgs);
 		if ((this.minArgs > 0) && (this.maxArgs >= 0) && (this.minArgs > this.maxArgs)) {
 			this.maxArgs = this.minArgs;
@@ -144,7 +144,7 @@ public class OptionScheme implements Iterable<Option> {
 	 *
 	 * @return the maximum number of allowed positional arguments
 	 */
-	public int getMaxArgs() {
+	public final int getMaxArgs() {
 		return this.maxArgs;
 	}
 
@@ -162,7 +162,7 @@ public class OptionScheme implements Iterable<Option> {
 	 * @param maxArgs
 	 *            the maximum number of allowed positional arguments
 	 */
-	public OptionScheme setMaxArgs(int maxArgs) {
+	public final OptionScheme setMaxArgs(int maxArgs) {
 		this.maxArgs = Math.max(-1, maxArgs);
 		if ((this.minArgs > 0) && (this.maxArgs >= 0) && (this.minArgs > this.maxArgs)) {
 			this.minArgs = this.maxArgs;
