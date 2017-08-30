@@ -303,6 +303,11 @@ public class OptionParser {
 					if (p == null) {
 						if (dynamic && (pass == 0)) {
 							// Dynamic support enabled!! Try to expand the currently-active scheme
+
+							// Make sure we clear the "modified" flag...
+							extensibleScheme.clearModified();
+
+							// Try to extend the scheme
 							dynamicSupport.extendDynamicScheme(extensions, baseValues, command.getName(), commandValues,
 								nextToken, extensibleScheme);
 
