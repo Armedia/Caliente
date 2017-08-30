@@ -146,12 +146,6 @@ public class OptionParser {
 			args);
 	}
 
-	private void checkForHelp(Option helpOption, OptionValues values, OptionScheme baseScheme, Command command)
-		throws HelpRequestedException {
-		if ((helpOption == null) || !values.isPresent(helpOption)) { return; }
-		throw new HelpRequestedException(baseScheme, command);
-	}
-
 	public final OptionParseResult parse(final Option helpOption, OptionScheme baseScheme,
 		final DynamicOptionSchemeSupport dynamicSupport, final boolean allowRecursion, final char optionValueSplitter,
 		Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
@@ -224,7 +218,6 @@ public class OptionParser {
 							}
 
 							// This is an unknown command, so this is an error
-							checkForHelp(helpOption, commandValues, baseScheme, command);
 							throw new UnknownCommandException(nextToken);
 						}
 					}
@@ -234,16 +227,12 @@ public class OptionParser {
 					final int maxArgs = currentScheme.getMaxArgs();
 
 					// Are positionals allowed?
-					if (currentScheme.isSupportsPositionals()) {
-						checkForHelp(helpOption, commandValues, baseScheme, command);
-						throw new TooManyPositionalValuesException(nextToken);
-					}
+					if (currentScheme
+						.isSupportsPositionals()) { throw new TooManyPositionalValuesException(nextToken); }
 
 					// If there's an upper limit, check it...
-					if ((maxArgs > 0) && (maxArgs < positionals.size())) {
-						checkForHelp(helpOption, commandValues, baseScheme, command);
-						throw new TooManyPositionalValuesException(nextToken);
-					}
+					if ((maxArgs > 0)
+						&& (maxArgs < positionals.size())) { throw new TooManyPositionalValuesException(nextToken); }
 
 					// We won't know if we've met the lower limit until the end... so postpone until
 					// then
@@ -252,10 +241,7 @@ public class OptionParser {
 					// This can only be a string option(s) for currentOption so add an
 					// occurrence and validate the schema limits (empty strings are allowed)
 					final int maxArgs = currentOption.getMaxValueCount();
-					if (maxArgs == 0) {
-						checkForHelp(helpOption, commandValues, baseScheme, command);
-						throw new TooManyOptionValuesException(currentOption, nextToken);
-					}
+					if (maxArgs == 0) { throw new TooManyOptionValuesException(currentOption, nextToken); }
 
 					// Find how many values the option currently has, and check if they're too
 					// many
@@ -277,10 +263,9 @@ public class OptionParser {
 
 					// If this would exceed the maximum allowed of option values, then we have a
 					// problem
-					if ((maxArgs > 0) && ((values.size() + existing) > maxArgs)) {
-						checkForHelp(helpOption, commandValues, baseScheme, command);
-						throw new TooManyOptionValuesException(currentOption, nextToken);
-					}
+					if ((maxArgs > 0)
+						&& ((values.size() + existing) > maxArgs)) { throw new TooManyOptionValuesException(
+							currentOption, nextToken); }
 
 					// No schema violation on the upper end, so we simply add the values
 					target.add(currentOption, values);
@@ -294,10 +279,7 @@ public class OptionParser {
 				// Either a short or long option...
 
 				// May not have positionals yet, as these would be out-of-place strings
-				if (!positionals.isEmpty()) {
-					checkForHelp(helpOption, commandValues, baseScheme, command);
-					throw new UnknownOptionException(positionals.get(0));
-				}
+				if (!positionals.isEmpty()) { throw new UnknownOptionException(positionals.get(0)); }
 
 				Option p = null;
 				int pass = -1;
@@ -332,7 +314,6 @@ public class OptionParser {
 
 						// No such option - neither on the command nor the base scheme, and the
 						// extension mechanism didn't fix this....so this is an error
-						checkForHelp(helpOption, commandValues, baseScheme, command);
 						throw new UnknownOptionException(nextToken);
 					}
 
@@ -343,15 +324,14 @@ public class OptionParser {
 					currentOption = p;
 					currentOptionFromCommand = fromCommand;
 				}
+				if (p.isConflicting(helpOption)) { throw new HelpRequestedException(baseScheme, command); }
 			}
 		}
 
 		// Do we have enough positionals to meet the schema requirements?
 		if (currentScheme.getMinArgs() > 0) {
-			if (positionals.size() < currentScheme.getMinArgs()) {
-				checkForHelp(helpOption, commandValues, baseScheme, command);
-				throw new InsufficientPositionalValuesException(null);
-			}
+			if (positionals.size() < currentScheme
+				.getMinArgs()) { throw new InsufficientPositionalValuesException(null); }
 		}
 
 		// Do we have all the required options for both the global and command?
@@ -371,10 +351,8 @@ public class OptionParser {
 		}
 
 		// If we have faults from missing required options, raise the error!
-		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) {
-			checkForHelp(helpOption, commandValues, baseScheme, command);
-			throw new MissingRequiredOptionException(baseFaults, commandName, commandFaults);
-		}
+		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) { throw new MissingRequiredOptionException(baseFaults,
+			commandName, commandFaults); }
 
 		// Validate the minimum arguments for the options that have arguments
 		for (Option p : baseWithArgs.values()) {

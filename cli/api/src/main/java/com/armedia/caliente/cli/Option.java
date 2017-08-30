@@ -37,6 +37,18 @@ public abstract class Option {
 
 	public abstract List<String> getDefaults();
 
+	public final boolean isConflicting(Option other) {
+		return Option.isConflicting(this, other);
+	}
+
+	public final boolean isEquivalent(Option other) {
+		return Option.isEquivalent(this, other);
+	}
+
+	public final boolean isIdentical(Option other) {
+		return Option.isIdentical(this, other);
+	}
+
 	/**
 	 * <p>
 	 * Checks for conflict between the options. Two options {@code a} and {@code b} are said to be
