@@ -17,6 +17,10 @@ class ExtensibleOptionScheme {
 		return this.modified;
 	}
 
+	void clearModified() {
+		this.modified = false;
+	}
+
 	public String getName() {
 		return this.scheme.getName();
 	}
