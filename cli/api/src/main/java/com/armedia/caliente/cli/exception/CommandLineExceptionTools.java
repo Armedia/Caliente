@@ -18,10 +18,11 @@ public class CommandLineExceptionTools {
 	 * @throws InsufficientPositionalValuesException
 	 * @throws InsufficientOptionValuesException
 	 * @throws MissingRequiredOptionsException
+	 * @throws MissingRequiredCommandException
 	 */
 	public static void unwindSyntaxException(final Throwable t) throws UnknownOptionException, UnknownCommandException,
 		TooManyPositionalValuesException, TooManyOptionValuesException, InsufficientPositionalValuesException,
-		InsufficientOptionValuesException, MissingRequiredOptionsException {
+		InsufficientOptionValuesException, MissingRequiredOptionsException, MissingRequiredCommandException {
 		if (t == null) { return; }
 		if (UnknownOptionException.class.isInstance(t)) { throw UnknownOptionException.class.cast(t); }
 		if (UnknownCommandException.class.isInstance(t)) { throw UnknownCommandException.class.cast(t); }
@@ -32,7 +33,10 @@ public class CommandLineExceptionTools {
 			.isInstance(t)) { throw InsufficientPositionalValuesException.class.cast(t); }
 		if (InsufficientOptionValuesException.class
 			.isInstance(t)) { throw InsufficientOptionValuesException.class.cast(t); }
-		if (MissingRequiredOptionsException.class.isInstance(t)) { throw MissingRequiredOptionsException.class.cast(t); }
+		if (MissingRequiredOptionsException.class
+			.isInstance(t)) { throw MissingRequiredOptionsException.class.cast(t); }
+		if (MissingRequiredCommandException.class
+			.isInstance(t)) { throw MissingRequiredCommandException.class.cast(t); }
 	}
 
 }

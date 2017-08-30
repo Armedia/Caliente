@@ -14,6 +14,7 @@ import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.exception.InsufficientOptionValuesException;
 import com.armedia.caliente.cli.exception.InsufficientPositionalValuesException;
+import com.armedia.caliente.cli.exception.MissingRequiredCommandException;
 import com.armedia.caliente.cli.exception.MissingRequiredOptionsException;
 import com.armedia.caliente.cli.exception.TooManyOptionValuesException;
 import com.armedia.caliente.cli.exception.TooManyPositionalValuesException;
@@ -334,6 +335,10 @@ public class OptionParser {
 				if (p.isConflicting(helpOption)) { throw new HelpRequestedException(baseScheme, command); }
 			}
 		}
+
+		// Do we require a command, and is it missing?
+		if ((commandScheme != null) && commandScheme.isCommandRequired()
+			&& (command == null)) { throw new MissingRequiredCommandException(commandScheme); }
 
 		// Do we have all the required options for both the global and command?
 		Collection<Option> baseFaults = new ArrayList<>();

@@ -8,14 +8,20 @@ import java.util.TreeMap;
 
 public class CommandScheme extends OptionScheme {
 
+	private final boolean commandRequired;
 	private final Map<String, Command> commands = new TreeMap<>();
 
-	public CommandScheme(String name) {
-		this(name, false);
+	public CommandScheme(String name, boolean commandRequired) {
+		this(name, commandRequired, false);
 	}
 
-	public CommandScheme(String name, boolean caseSensitive) {
+	public CommandScheme(String name, boolean commandRequired, boolean caseSensitive) {
 		super(name, caseSensitive);
+		this.commandRequired = commandRequired;
+	}
+
+	public boolean isCommandRequired() {
+		return this.commandRequired;
 	}
 
 	public CommandScheme addCommand(Command command) {
@@ -64,5 +70,9 @@ public class CommandScheme extends OptionScheme {
 
 	public int getCommandCount() {
 		return this.commands.size();
+	}
+
+	public static CommandScheme castAs(OptionScheme scheme) {
+		return (CommandScheme.class.isInstance(scheme) ? CommandScheme.class.cast(scheme) : null);
 	}
 }

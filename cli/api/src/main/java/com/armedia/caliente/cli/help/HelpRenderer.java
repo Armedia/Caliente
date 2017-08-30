@@ -3,6 +3,7 @@ package com.armedia.caliente.cli.help;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
@@ -64,33 +65,72 @@ public abstract class HelpRenderer {
 		Objects.requireNonNull(help, "Must provide a scheme to render help for");
 		Objects.requireNonNull(w, "Must provide a writer to render on");
 
+		final CommandScheme commandScheme = CommandScheme.castAs(help.getBaseScheme());
+
 		final boolean withCommands = CommandScheme.class.isInstance(help.getBaseScheme());
 
-		renderUsage(programName, withCommands, width, w);
-		renderScheme(help.getBaseScheme(), width, w);
+		final boolean withPositionals;
+		if (help.getCommand() != null) {
+			withPositionals = (help.getCommand().getMaxArgs() != 0);
+		} else {
+			withPositionals = (help.getBaseScheme().getMaxArgs() != 0);
+		}
+
+		PrintWriter W = new PrintWriter(w);
+
+		renderUsage(programName, withCommands, withPositionals, width, W);
+		renderScheme(help.getBaseScheme(), width, W);
 
 		Command command = help.getCommand();
 
 		if (withCommands && (command == null)) {
 			// This is a command scheme, but no command is given, so list them out
-			CommandScheme commandScheme = CommandScheme.class.cast(help.getBaseScheme());
-			renderCommands(commandScheme.getCommands(), width, w);
+			renderCommands(commandScheme.getCommands(), width, W);
+			w.flush();
 			return;
 		}
 
 		if (help.getCommand() != null) {
 			// This is a command, so render out the command's parameters
-			renderCommandScheme(help.getCommand(), width, w);
+			renderCommandScheme(help.getCommand(), width, W);
+			w.flush();
 			return;
 		}
+
+		w.flush();
 	}
 
-	protected abstract void renderUsage(String programName, boolean withCommands, int width, Writer w)
-		throws IOException;
+	protected void renderUsage(String programName, boolean withCommands, boolean withPositionals, int width,
+		PrintWriter w) throws IOException {
+		// With commands:
+		// usage: programName [globalOptions...] command [commandOptions...] [arguments...]
+		// Without commands:
+		// usage: programName [options...] [arguments...]
+	}
 
-	protected abstract void renderScheme(OptionScheme scheme, int width, Writer w) throws IOException;
+	protected void renderScheme(OptionScheme scheme, int width, PrintWriter w) throws IOException {
+		// Available Parameters:
+		// ------------------------------
+		// -s --long [args...] : (required) description
+		// -s --long [args...] : description
+		// -s --long [args...] : (required) description
+		// -s --long [args...] : description
+	}
 
-	protected abstract void renderCommandScheme(Command scheme, int width, Writer w) throws IOException;
+	protected void renderCommandScheme(Command scheme, int width, PrintWriter w) throws IOException {
+		// Available Commands:
+		// ------------------------------
+		// command1 (${aliases}) : description
+		// command2 (${aliases}) : description
+		// command3 (${aliases}) : description
+	}
 
-	protected abstract void renderCommands(Collection<Command> commands, int width, Writer w) throws IOException;
+	protected void renderCommands(Collection<Command> commands, int width, PrintWriter w) throws IOException {
+		// ${commandName} (${aliases})
+		// ------------------------------
+		// -s --long [args...] : (required) description
+		// -s --long [args...] : description
+		// -s --long [args...] : (required) description
+		// -s --long [args...] : description
+	}
 }
