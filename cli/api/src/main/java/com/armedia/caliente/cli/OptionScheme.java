@@ -107,6 +107,17 @@ public class OptionScheme implements Iterable<Option> {
 	}
 
 	/**
+	 * Returns {@code true} if this option scheme supports positional arguments, {@code false}
+	 * otherwise. an optionScheme supports positional arguments if {@code maxArgs != 0}.
+	 *
+	 * @return {@code true} if this option scheme supports positional arguments, {@code false}
+	 *         otherwise
+	 */
+	public boolean isRequiresPositionals() {
+		return (this.minArgs > 0);
+	}
+
+	/**
 	 * Returns the minimum number of allowed positional arguments. The number will always be a
 	 * positive integer, where 0 means there is no minimum set.
 	 *

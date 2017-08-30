@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,17 +27,6 @@ public abstract class AbstractLauncher {
 	private static final String[] NO_ARGS = {};
 
 	protected Logger log = AbstractLauncher.BOOT_LOG;
-
-	private final HelpRenderer helpRenderer;
-
-	protected AbstractLauncher() {
-		this.helpRenderer = null;
-	}
-
-	protected AbstractLauncher(HelpRenderer helpRenderer) {
-		Objects.requireNonNull(helpRenderer, "Must provide a non-null help renderer");
-		this.helpRenderer = helpRenderer;
-	}
 
 	/**
 	 * <p>
@@ -103,7 +91,7 @@ public abstract class AbstractLauncher {
 			result = parseArguments(helpOption, optionScheme, args);
 		} catch (HelpRequestedException e) {
 			try {
-				this.helpRenderer.renderHelp(getProgramName(), e, System.err);
+				new HelpRenderer().renderHelp(getProgramName(), e, System.err);
 			} catch (IOException e2) {
 				this.log.error("Failed to render the help message to System.err", e2);
 			}
