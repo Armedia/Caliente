@@ -64,12 +64,14 @@ public abstract class HelpRenderer {
 		Objects.requireNonNull(help, "Must provide a scheme to render help for");
 		Objects.requireNonNull(w, "Must provide a writer to render on");
 
-		renderUsage(programName, width, w);
+		final boolean withCommands = CommandScheme.class.isInstance(help.getBaseScheme());
+
+		renderUsage(programName, withCommands, width, w);
 		renderScheme(help.getBaseScheme(), width, w);
 
 		Command command = help.getCommand();
 
-		if (CommandScheme.class.isInstance(help.getBaseScheme()) && (command == null)) {
+		if (withCommands && (command == null)) {
 			// This is a command scheme, but no command is given, so list them out
 			CommandScheme commandScheme = CommandScheme.class.cast(help.getBaseScheme());
 			renderCommands(commandScheme.getCommands(), width, w);
@@ -83,7 +85,8 @@ public abstract class HelpRenderer {
 		}
 	}
 
-	protected abstract void renderUsage(String programName, int width, Writer w) throws IOException;
+	protected abstract void renderUsage(String programName, boolean withCommands, int width, Writer w)
+		throws IOException;
 
 	protected abstract void renderScheme(OptionScheme scheme, int width, Writer w) throws IOException;
 

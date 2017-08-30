@@ -10,7 +10,7 @@ import com.armedia.caliente.cli.OptionScheme;
 public class CommonsCLIRenderer extends HelpRenderer {
 
 	@Override
-	protected void renderUsage(String programName, int width, Writer w) throws IOException {
+	protected void renderUsage(String programName, boolean withCommands, int width, Writer w) throws IOException {
 		// TODO Auto-generated method stub
 
 	}

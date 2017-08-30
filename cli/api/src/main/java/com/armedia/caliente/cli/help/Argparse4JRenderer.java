@@ -10,7 +10,7 @@ import com.armedia.caliente.cli.OptionScheme;
 public class Argparse4JRenderer extends HelpRenderer {
 
 	@Override
-	protected void renderUsage(String programName, int width, Writer w) throws IOException {
+	protected void renderUsage(String programName, boolean withCommands, int width, Writer w) throws IOException {
 	}
 
 	@Override
