@@ -64,7 +64,10 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	public OptionImpl setMinValueCount(int count) {
-		this.minValueCount = count;
+		this.minValueCount = Math.max(0, count);
+		if ((this.minValueCount > 0) && (this.maxValueCount >= 0) && (this.minValueCount > this.maxValueCount)) {
+			this.maxValueCount = this.minValueCount;
+		}
 		return this;
 	}
 
@@ -74,7 +77,10 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	public OptionImpl setMaxValueCount(int count) {
-		this.maxValueCount = count;
+		this.maxValueCount = Math.max(Option.UNBOUNDED_MAX_VALUES, count);
+		if ((this.minValueCount > 0) && (this.maxValueCount >= 0) && (this.minValueCount > this.maxValueCount)) {
+			this.minValueCount = this.maxValueCount;
+		}
 		return this;
 	}
 
@@ -149,6 +155,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	public OptionImpl setValueSep(Character valueSep) {
+		Objects.requireNonNull(valueSep, "Must provide a non-null value separator");
 		this.valueSep = valueSep;
 		return this;
 	}

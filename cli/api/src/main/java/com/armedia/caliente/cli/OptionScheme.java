@@ -174,7 +174,7 @@ public class OptionScheme implements Iterable<Option> {
 	 *            the maximum number of allowed positional arguments
 	 */
 	public final OptionScheme setMaxArgs(int maxArgs) {
-		this.maxArgs = Math.max(-1, maxArgs);
+		this.maxArgs = Math.max(Option.UNBOUNDED_MAX_VALUES, maxArgs);
 		if ((this.minArgs > 0) && (this.maxArgs >= 0) && (this.minArgs > this.maxArgs)) {
 			this.minArgs = this.maxArgs;
 		}

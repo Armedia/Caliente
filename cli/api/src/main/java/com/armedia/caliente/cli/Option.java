@@ -13,6 +13,8 @@ public abstract class Option {
 
 	public static final char DEFAULT_VALUE_SEP = ',';
 
+	public static final int UNBOUNDED_MAX_VALUES = -1;
+
 	public abstract String getKey();
 
 	public abstract boolean isRequired();
