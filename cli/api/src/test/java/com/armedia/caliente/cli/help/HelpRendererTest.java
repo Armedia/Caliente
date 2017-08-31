@@ -14,6 +14,33 @@ public class HelpRendererTest {
 	@Test
 	public void testRenderHelp() throws Exception {
 		CommandScheme cs = new CommandScheme("Test", false);
+
+		cs.add( //
+			new OptionImpl() //
+				.setRequired(true) //
+				.setShortOpt('h') //
+				.setLongOpt("hell") //
+				.setMinValueCount(1) //
+				.setMaxValueCount(10) //
+				.setValueName("hi") //
+				.setDescription("The number is 666") //
+				.setDefaults(Arrays.asList("a", "b", "c")) //
+				.setAllowedValues("x", "y", "z"))
+			.add( //
+				new OptionImpl() //
+					.setRequired(false) //
+					.setShortOpt('i') //
+					.setLongOpt("importance") //
+					.setMaxValueCount(0) //
+					.setDescription("The important importantish") //
+			).add( //
+				new OptionImpl() //
+					.setRequired(false) //
+					.setLongOpt("joke") //
+					.setValueName("joke") //
+					.setDescription("The joke to joker with") //
+			).setDescription("THE BIG KAHUNA");
+
 		Command c = null;
 
 		c = new Command("first", Arrays.asList("primero", "premier", "1st"));

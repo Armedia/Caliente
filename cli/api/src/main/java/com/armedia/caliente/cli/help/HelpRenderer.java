@@ -11,8 +11,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StrTokenizer;
+import org.apache.commons.text.WordUtils;
 
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
@@ -126,7 +127,7 @@ public final class HelpRenderer {
 		}
 	}
 
-	private void formatSyntax(HelpFormatter fmt, PrintWriter pw, int width, String programName, OptionScheme baseScheme,
+	private void formatSyntax(PrintWriter pw, int width, String programName, OptionScheme baseScheme,
 		CommandScheme commandScheme, Command command) {
 
 		// usage: programName [globalOptions...] command [commandOptions...] [arguments...]
@@ -156,11 +157,22 @@ public final class HelpRenderer {
 		}
 
 		renderPositionals(sb, "arg", ' ', minPositionals, maxPositionals);
-		sb.append(HelpRenderer.NL);
-		fmt.printUsage(pw, width, sb.toString());
+		printWrapped(pw, width, sb.toString());
 	}
 
-	private void formatOption(HelpFormatter fmt, PrintWriter pw, int width, Option o) {
+	private void printWrapped(PrintWriter pw, int totalWidth, String msg) {
+		printWrapped(pw, totalWidth, 0, msg);
+	}
+
+	private void printWrapped(PrintWriter pw, int totalWidth, int indentWidth, String msg) {
+		msg = WordUtils.wrap(msg, totalWidth - indentWidth);
+		String lead = StringUtils.repeat(' ', indentWidth);
+		for (String s : new StrTokenizer(msg, HelpRenderer.NL).getTokenList()) {
+			pw.printf("%s%s%n", lead, s);
+		}
+	}
+
+	private void formatOption(PrintWriter pw, int width, Option o) {
 
 		String shortLabel = "  ";
 		Character shortOpt = o.getShortOpt();
@@ -185,16 +197,19 @@ public final class HelpRenderer {
 			valueDesc = sb.toString();
 		}
 
-		fmt.printWrapped(pw, width, (o.isRequired() ? 2 : 4),
-			String.format("\t%s%s%s%s", (o.isRequired() ? "* " : "  "), shortLabel, longLabel, valueDesc));
+		printWrapped(pw, width, (o.isRequired() ? 2 : 4),
+			String.format("%s%s%s%s", (o.isRequired() ? "* " : "  "), shortLabel, longLabel, valueDesc));
 
 		String desc = o.getDescription();
 		if (desc != null) {
-			fmt.printWrapped(pw, width, 8, String.format("\t%s", desc));
+			printWrapped(pw, width, 8, String.format("%s", desc));
+			pw.println();
 		}
 
+		boolean addLine = false;
 		if ((min == max) && (min != 0)) {
-			fmt.printWrapped(pw, width, 8, String.format("\tRequired values: %d", min));
+			printWrapped(pw, width, 12, String.format("Required values: %d", min));
+			addLine = true;
 		} else if ((min != 0) || (max != 0)) {
 			String minClause = "";
 			String maxClause = "";
@@ -206,15 +221,16 @@ public final class HelpRenderer {
 			}
 			String msg = null;
 			if (!StringUtils.isEmpty(minClause) && !StringUtils.isEmpty(maxClause)) {
-				msg = String.format("\t%s, %s", minClause, maxClause);
+				msg = String.format("%s, %s", minClause, maxClause);
 			} else if (!StringUtils.isEmpty(minClause)) {
-				msg = String.format("\t%s", minClause);
+				msg = String.format("%s", minClause);
 			} else if (!StringUtils.isEmpty(maxClause)) {
-				msg = String.format("\t%s", maxClause);
+				msg = String.format("%s", maxClause);
 			}
 
 			if (msg != null) {
-				fmt.printWrapped(pw, width, 8, msg);
+				printWrapped(pw, width, 12, msg);
+				addLine = true;
 			}
 		}
 
@@ -222,27 +238,32 @@ public final class HelpRenderer {
 		if ((allowed != null) && !allowed.isEmpty()) {
 			Object a = (allowed.size() == 1 ? allowed.iterator().next() : allowed);
 			String plural = (allowed.size() == 1 ? "" : "s");
-			fmt.printWrapped(pw, width, 8, String.format("\tAllowed value%s: %s", plural, a));
+			printWrapped(pw, width, 12, String.format("Allowed value%s: %s", plural, a));
+			addLine = true;
 		}
 
 		List<String> defaults = o.getDefaults();
 		if ((defaults != null) && !defaults.isEmpty()) {
 			Object def = (defaults.size() == 1 ? defaults.get(0) : defaults);
 			String plural = (defaults.size() == 1 ? "" : "s");
-			fmt.printWrapped(pw, width, 8, String.format("\tDefault value%s: %s", plural, def));
+			printWrapped(pw, width, 12, String.format("Default value%s: %s", plural, def));
+			addLine = true;
+		}
+		if (addLine) {
+			pw.println();
 		}
 	}
 
-	private void formatScheme(HelpFormatter fmt, PrintWriter pw, int width, OptionScheme scheme) {
+	private void formatScheme(PrintWriter pw, int width, OptionScheme scheme) {
 		if (scheme == null) { return; }
 		// Options options = new Options();
 		for (Option o : scheme) {
-			formatOption(fmt, pw, width, o);
+			formatOption(pw, width, o);
 		}
 		// fmt.printOptions(pw, width, options, fmt.getLeftPadding(), fmt.getDescPadding());
 	}
 
-	private void formatCommand(HelpFormatter fmt, PrintWriter pw, int width, Command command) {
+	private void formatCommand(PrintWriter pw, int width, Command command) {
 		if (command == null) { return; }
 		String aliases = "";
 		if (!command.getAliases().isEmpty()) {
@@ -257,20 +278,21 @@ public final class HelpRenderer {
 			}
 			aliases = String.format("%s)", aliases);
 		}
-		fmt.printWrapped(pw, width, String.format("Parameters for '%s'%s:", command.getName(), aliases));
-		fmt.printWrapped(pw, width, StringUtils.repeat('-', width));
-		formatScheme(fmt, pw, width, command);
+		printWrapped(pw, width,
+			String.format("Command Options for '%s'%s: (* = option is required)", command.getName(), aliases));
+		printWrapped(pw, width, StringUtils.repeat('-', width));
+		formatScheme(pw, width, command);
 	}
 
-	private void formatCommands(HelpFormatter fmt, PrintWriter pw, int width, CommandScheme commandScheme) {
+	private void formatCommands(PrintWriter pw, int width, CommandScheme commandScheme) {
 		if (commandScheme == null) { return; }
-		fmt.printWrapped(pw, width, "Available Commands:");
-		fmt.printWrapped(pw, width, StringUtils.repeat('-', width));
+		printWrapped(pw, width, "Available Commands:");
+		printWrapped(pw, width, StringUtils.repeat('-', width));
 
 		StringBuilder sb = new StringBuilder();
 		for (Command c : commandScheme.getCommands()) {
 			sb.setLength(0);
-			sb.append("\t").append(c.getName());
+			sb.append(c.getName());
 			Set<String> aliases = c.getAliases();
 			if (!aliases.isEmpty()) {
 				sb.append(" (");
@@ -288,10 +310,10 @@ public final class HelpRenderer {
 				sb.append(")");
 			}
 
-			fmt.printWrapped(pw, width, sb.toString());
+			printWrapped(pw, width, sb.toString());
 			String desc = c.getDescription();
 			if ((c != null) && (desc != null)) {
-				fmt.printWrapped(pw, width, 8, String.format("\t%s%s", desc, HelpRenderer.NL));
+				printWrapped(pw, width, 8, desc);
 			}
 		}
 	}
@@ -309,25 +331,21 @@ public final class HelpRenderer {
 		final Command command = help.getCommand();
 		final PrintWriter pw = new PrintWriter(w);
 
-		HelpFormatter fmt = new HelpFormatter();
-
-		StringBuilder sb = new StringBuilder();
-		formatSyntax(fmt, pw, width, programName, baseScheme, commandScheme, command);
+		formatSyntax(pw, width, programName, baseScheme, commandScheme, command);
 		pw.println();
-		sb.setLength(0);
 
 		if (baseScheme.getOptionCount() > 0) {
-			fmt.printWrapped(pw, width,
-				String.format("%s Parameters", (commandScheme != null ? "Global" : "Available")));
-			fmt.printWrapped(pw, width, line);
-			formatScheme(fmt, pw, width, baseScheme);
+			printWrapped(pw, width, String.format("%s Options: (* = option is required)",
+				(commandScheme != null ? "Global" : "Available")));
+			printWrapped(pw, width, line);
+			formatScheme(pw, width, baseScheme);
 		}
 
 		if (commandScheme != null) {
 			if (command != null) {
-				formatCommand(fmt, pw, width, command);
+				formatCommand(pw, width, command);
 			} else {
-				formatCommands(fmt, pw, width, commandScheme);
+				formatCommands(pw, width, commandScheme);
 			}
 		}
 
