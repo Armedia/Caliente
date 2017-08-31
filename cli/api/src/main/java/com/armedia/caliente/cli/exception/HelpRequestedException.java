@@ -9,6 +9,18 @@ public class HelpRequestedException extends CommandLineException {
 	private final OptionScheme baseScheme;
 	private final Command command;
 
+	public HelpRequestedException(OptionScheme baseScheme) {
+		this(baseScheme, null, null);
+	}
+
+	public HelpRequestedException(OptionScheme baseScheme, Command command) {
+		this(baseScheme, command, null);
+	}
+
+	public HelpRequestedException(OptionScheme baseScheme, CommandLineSyntaxException error) {
+		this(baseScheme, null, error);
+	}
+
 	public HelpRequestedException(OptionScheme baseScheme, Command command, CommandLineSyntaxException error) {
 		super(error);
 		this.baseScheme = baseScheme;
