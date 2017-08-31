@@ -90,8 +90,8 @@ public class TokenLoader implements Iterable<Token> {
 	private Token next = null;
 
 	private static final String TERMINATOR_FMT = "%1$s%1$s";
-	private static final String SHORT_FMT = "^%1$s(\\S+)$";
-	private static final String LONG_FMT = "^%1$s%1$s(\\S+)$";
+	private static final String SHORT_FMT = "^%1$s(\\S)$";
+	private static final String LONG_FMT = "^%1$s%1$s(\\S{2,})$";
 
 	private static final Pattern COMMENT = Pattern.compile("(?<!\\\\)#");
 
