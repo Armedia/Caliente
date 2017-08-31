@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 public class CommandScheme extends OptionScheme {
 
@@ -64,6 +66,10 @@ public class CommandScheme extends OptionScheme {
 
 	public Collection<Command> getCommands() {
 		return new ArrayList<>(this.commands.values());
+	}
+
+	public Set<String> getAliases() {
+		return new TreeSet<>(this.aliases.keySet());
 	}
 
 	public Command getCommand(String nameOrAlias) {

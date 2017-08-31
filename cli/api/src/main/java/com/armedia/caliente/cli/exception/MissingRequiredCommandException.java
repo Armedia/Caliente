@@ -15,4 +15,10 @@ public class MissingRequiredCommandException extends CommandLineSyntaxException 
 	public CommandScheme getCommandScheme() {
 		return this.commandScheme;
 	}
+
+	@Override
+	protected String renderMessage() {
+		return String.format("A command name is required, please use one of these: %s", getToken().getRawString(),
+			this.commandScheme.getAliases());
+	}
 }

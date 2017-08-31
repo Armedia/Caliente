@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.exception;
 
+import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.token.Token;
 
@@ -8,5 +9,15 @@ public class UnknownOptionException extends CommandLineSyntaxException {
 
 	public UnknownOptionException(OptionScheme scheme, Token token) {
 		super(scheme, null, token);
+	}
+
+	@Override
+	protected String renderMessage() {
+		String commandPart = "";
+		Command command = Command.castAs(getOptionScheme());
+		if (command != null) {
+			commandPart = String.format(" as part of the '%s' command", command.getName());
+		}
+		return String.format("The option [%s] is not recognized%s", getToken().getRawString(), commandPart);
 	}
 }

@@ -16,4 +16,10 @@ public class UnknownCommandException extends CommandLineSyntaxException {
 	public final CommandScheme getCommandScheme() {
 		return this.commandScheme;
 	}
+
+	@Override
+	protected String renderMessage() {
+		return String.format("The command [%s] is not recognized, please use one of these: %s",
+			getToken().getRawString(), this.commandScheme.getAliases());
+	}
 }

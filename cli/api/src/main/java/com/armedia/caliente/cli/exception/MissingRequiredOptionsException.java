@@ -2,6 +2,10 @@ package com.armedia.caliente.cli.exception;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
@@ -37,5 +41,37 @@ public class MissingRequiredOptionsException extends CommandLineSyntaxException 
 
 	public Collection<Option> getCommandMissing() {
 		return this.commandMissing;
+	}
+
+	@Override
+	protected String renderMessage() {
+		String globalMsg = "";
+		if ((this.baseMissing != null) && !this.baseMissing.isEmpty()) {
+			Set<String> options = new TreeSet<>();
+			for (Option o : this.baseMissing) {
+				String key = String.format("-%s", o.getKey());
+
+				if (key.length() > 2) {
+					key = String.format("-%s", key);
+				}
+				options.add(key);
+			}
+			globalMsg = String.format("The following required global options were not specified: %s", options);
+		}
+		String commandMsg = "";
+		if (this.command != null) {
+			Set<String> options = new TreeSet<>();
+			for (Option o : this.commandMissing) {
+				String key = String.format("-%s", o.getKey());
+
+				if (key.length() > 2) {
+					key = String.format("-%s", key);
+				}
+				options.add(key);
+			}
+			commandMsg = String.format("%she following options required for the '%s' command were not specified: %s",
+				(StringUtils.isEmpty(globalMsg) ? "T" : ", and t"), this.command, options);
+		}
+		return String.format("%s%s", globalMsg, commandMsg);
 	}
 }

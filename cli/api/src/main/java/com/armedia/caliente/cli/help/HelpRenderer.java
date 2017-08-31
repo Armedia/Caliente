@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.help;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -19,6 +18,7 @@ import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.commons.utilities.Tools;
 
@@ -27,48 +27,46 @@ public final class HelpRenderer {
 
 	private static final String NL = String.format("%n");
 
-	public final void renderHelp(String programName, HelpRequestedException help, OutputStream out) throws IOException {
-		renderHelp(programName, help, HelpRenderer.DEFAULT_WIDTH, out);
+	private HelpRenderer() {
+		// Ensure the class isn't instantiable
 	}
 
-	public final void renderHelp(String programName, HelpRequestedException help, int width, OutputStream out)
-		throws IOException {
-		renderHelp(programName, help, width, out, null);
+	public static void renderHelp(String programName, HelpRequestedException help, OutputStream out) {
+		HelpRenderer.renderHelp(programName, help, HelpRenderer.DEFAULT_WIDTH, out);
 	}
 
-	public final void renderHelp(String programName, HelpRequestedException help, OutputStream out, Charset encoding)
-		throws IOException {
-		renderHelp(programName, help, HelpRenderer.DEFAULT_WIDTH, out, encoding);
+	public static void renderHelp(String programName, HelpRequestedException help, int width, OutputStream out) {
+		HelpRenderer.renderHelp(programName, help, width, out, null);
 	}
 
-	public final void renderHelp(String programName, HelpRequestedException help, int width, OutputStream out,
-		Charset encoding) throws IOException {
+	public static void renderHelp(String programName, HelpRequestedException help, OutputStream out, Charset encoding) {
+		HelpRenderer.renderHelp(programName, help, HelpRenderer.DEFAULT_WIDTH, out, encoding);
+	}
+
+	public static void renderHelp(String programName, HelpRequestedException help, int width, OutputStream out,
+		Charset encoding) {
 		Objects.requireNonNull(out, "Must provide an output stream to write to");
 		if (encoding == null) {
 			encoding = Charset.defaultCharset();
 		}
-		renderHelp(programName, help, width, new OutputStreamWriter(out, encoding));
+		HelpRenderer.renderHelp(programName, help, width, new OutputStreamWriter(out, encoding));
 	}
 
-	public final String renderHelp(String programName, HelpRequestedException help) {
-		return renderHelp(programName, help, HelpRenderer.DEFAULT_WIDTH);
+	public static String renderHelp(String programName, HelpRequestedException help) {
+		return HelpRenderer.renderHelp(programName, help, HelpRenderer.DEFAULT_WIDTH);
 	}
 
-	public final String renderHelp(String programName, HelpRequestedException help, int width) {
+	public static String renderHelp(String programName, HelpRequestedException help, int width) {
 		StringWriter w = new StringWriter();
-		try {
-			renderHelp(programName, help, width, w);
-		} catch (IOException e) {
-			throw new RuntimeException("Unexpected IOException writing to memory", e);
-		}
+		HelpRenderer.renderHelp(programName, help, width, w);
 		return w.toString();
 	}
 
-	public final void renderHelp(String programName, HelpRequestedException help, Writer w) throws IOException {
-		renderHelp(programName, help, HelpRenderer.DEFAULT_WIDTH, w);
+	public static void renderHelp(String programName, HelpRequestedException help, Writer w) {
+		HelpRenderer.renderHelp(programName, help, HelpRenderer.DEFAULT_WIDTH, w);
 	}
 
-	private void renderPositionals(StringBuilder sb, String label, Character sep, int min, int max) {
+	private static void renderPositionals(StringBuilder sb, String label, Character sep, int min, int max) {
 		if (max == 0) { return; }
 
 		sb.append(" ");
@@ -127,7 +125,7 @@ public final class HelpRenderer {
 		}
 	}
 
-	private void formatSyntax(PrintWriter pw, int width, String programName, OptionScheme baseScheme,
+	private static void formatSyntax(PrintWriter pw, int width, String programName, OptionScheme baseScheme,
 		CommandScheme commandScheme, Command command) {
 
 		// usage: programName [globalOptions...] command [commandOptions...] [arguments...]
@@ -156,15 +154,15 @@ public final class HelpRenderer {
 			maxPositionals = baseScheme.getMaxArgs();
 		}
 
-		renderPositionals(sb, "arg", ' ', minPositionals, maxPositionals);
-		printWrapped(pw, width, sb.toString());
+		HelpRenderer.renderPositionals(sb, "arg", ' ', minPositionals, maxPositionals);
+		HelpRenderer.printWrapped(pw, width, sb.toString());
 	}
 
-	private void printWrapped(PrintWriter pw, int totalWidth, String msg) {
-		printWrapped(pw, totalWidth, 0, msg);
+	private static void printWrapped(PrintWriter pw, int totalWidth, String msg) {
+		HelpRenderer.printWrapped(pw, totalWidth, 0, msg);
 	}
 
-	private void printWrapped(PrintWriter pw, int totalWidth, int indentWidth, String msg) {
+	private static void printWrapped(PrintWriter pw, int totalWidth, int indentWidth, String msg) {
 		msg = WordUtils.wrap(msg, totalWidth - indentWidth);
 		String lead = StringUtils.repeat(' ', indentWidth);
 		for (String s : new StrTokenizer(msg, HelpRenderer.NL).getTokenList()) {
@@ -172,7 +170,7 @@ public final class HelpRenderer {
 		}
 	}
 
-	private void formatOption(PrintWriter pw, int width, Option o) {
+	private static void formatOption(PrintWriter pw, int width, Option o) {
 
 		String shortLabel = "  ";
 		Character shortOpt = o.getShortOpt();
@@ -193,22 +191,22 @@ public final class HelpRenderer {
 		if (max != 0) {
 			// First, render the minimums...
 			StringBuilder sb = new StringBuilder();
-			renderPositionals(sb, Tools.coalesce(o.getValueName(), "arg"), o.getValueSep(), min, max);
+			HelpRenderer.renderPositionals(sb, Tools.coalesce(o.getValueName(), "arg"), o.getValueSep(), min, max);
 			valueDesc = sb.toString();
 		}
 
-		printWrapped(pw, width, (o.isRequired() ? 2 : 4),
+		HelpRenderer.printWrapped(pw, width, (o.isRequired() ? 2 : 4),
 			String.format("%s%s%s%s", (o.isRequired() ? "* " : "  "), shortLabel, longLabel, valueDesc));
 
 		String desc = o.getDescription();
 		if (desc != null) {
-			printWrapped(pw, width, 8, String.format("%s", desc));
+			HelpRenderer.printWrapped(pw, width, 8, String.format("%s", desc));
 			pw.println();
 		}
 
 		boolean addLine = false;
 		if ((min == max) && (min != 0)) {
-			printWrapped(pw, width, 12, String.format("Required values: %d", min));
+			HelpRenderer.printWrapped(pw, width, 12, String.format("Required values: %d", min));
 			addLine = true;
 		} else if ((min != 0) || (max != 0)) {
 			String minClause = "";
@@ -229,7 +227,7 @@ public final class HelpRenderer {
 			}
 
 			if (msg != null) {
-				printWrapped(pw, width, 12, msg);
+				HelpRenderer.printWrapped(pw, width, 12, msg);
 				addLine = true;
 			}
 		}
@@ -238,7 +236,7 @@ public final class HelpRenderer {
 		if ((allowed != null) && !allowed.isEmpty()) {
 			Object a = (allowed.size() == 1 ? allowed.iterator().next() : allowed);
 			String plural = (allowed.size() == 1 ? "" : "s");
-			printWrapped(pw, width, 12, String.format("Allowed value%s: %s", plural, a));
+			HelpRenderer.printWrapped(pw, width, 12, String.format("Allowed value%s: %s", plural, a));
 			addLine = true;
 		}
 
@@ -246,7 +244,7 @@ public final class HelpRenderer {
 		if ((defaults != null) && !defaults.isEmpty()) {
 			Object def = (defaults.size() == 1 ? defaults.get(0) : defaults);
 			String plural = (defaults.size() == 1 ? "" : "s");
-			printWrapped(pw, width, 12, String.format("Default value%s: %s", plural, def));
+			HelpRenderer.printWrapped(pw, width, 12, String.format("Default value%s: %s", plural, def));
 			addLine = true;
 		}
 		if (addLine) {
@@ -254,16 +252,16 @@ public final class HelpRenderer {
 		}
 	}
 
-	private void formatScheme(PrintWriter pw, int width, OptionScheme scheme) {
+	private static void formatScheme(PrintWriter pw, int width, OptionScheme scheme) {
 		if (scheme == null) { return; }
 		// Options options = new Options();
 		for (Option o : scheme) {
-			formatOption(pw, width, o);
+			HelpRenderer.formatOption(pw, width, o);
 		}
 		// fmt.printOptions(pw, width, options, fmt.getLeftPadding(), fmt.getDescPadding());
 	}
 
-	private void formatCommand(PrintWriter pw, int width, Command command) {
+	private static void formatCommand(PrintWriter pw, int width, Command command) {
 		if (command == null) { return; }
 		String aliases = "";
 		if (!command.getAliases().isEmpty()) {
@@ -278,16 +276,16 @@ public final class HelpRenderer {
 			}
 			aliases = String.format("%s)", aliases);
 		}
-		printWrapped(pw, width,
+		HelpRenderer.printWrapped(pw, width,
 			String.format("Command Options for '%s'%s: (* = option is required)", command.getName(), aliases));
-		printWrapped(pw, width, StringUtils.repeat('-', width));
-		formatScheme(pw, width, command);
+		HelpRenderer.printWrapped(pw, width, StringUtils.repeat('-', width));
+		HelpRenderer.formatScheme(pw, width, command);
 	}
 
-	private void formatCommands(PrintWriter pw, int width, CommandScheme commandScheme) {
+	private static void formatCommands(PrintWriter pw, int width, CommandScheme commandScheme) {
 		if (commandScheme == null) { return; }
-		printWrapped(pw, width, "Available Commands:");
-		printWrapped(pw, width, StringUtils.repeat('-', width));
+		HelpRenderer.printWrapped(pw, width, "Available Commands:");
+		HelpRenderer.printWrapped(pw, width, StringUtils.repeat('-', width));
 
 		StringBuilder sb = new StringBuilder();
 		for (Command c : commandScheme.getCommands()) {
@@ -310,19 +308,19 @@ public final class HelpRenderer {
 				sb.append(")");
 			}
 
-			printWrapped(pw, width, sb.toString());
+			HelpRenderer.printWrapped(pw, width, sb.toString());
 			String desc = c.getDescription();
 			if ((c != null) && (desc != null)) {
-				printWrapped(pw, width, 8, desc);
+				HelpRenderer.printWrapped(pw, width, 8, desc);
 			}
 		}
 	}
 
-	public final void renderHelp(String programName, HelpRequestedException help, int width, Writer w)
-		throws IOException {
+	public static void renderHelp(String programName, HelpRequestedException help, int width, Writer w) {
 		Objects.requireNonNull(programName, "Must provide a program name");
 		Objects.requireNonNull(help, "Must provide a scheme to render help for");
 		Objects.requireNonNull(w, "Must provide a writer to render on");
+		width = Math.max(80, width);
 
 		final String line = StringUtils.repeat('-', width);
 
@@ -331,24 +329,91 @@ public final class HelpRenderer {
 		final Command command = help.getCommand();
 		final PrintWriter pw = new PrintWriter(w);
 
-		formatSyntax(pw, width, programName, baseScheme, commandScheme, command);
+		HelpRenderer.formatSyntax(pw, width, programName, baseScheme, commandScheme, command);
 		pw.println();
 
 		if (baseScheme.getOptionCount() > 0) {
-			printWrapped(pw, width, String.format("%s Options: (* = option is required)",
+			HelpRenderer.printWrapped(pw, width, String.format("%s Options: (* = option is required)",
 				(commandScheme != null ? "Global" : "Available")));
-			printWrapped(pw, width, line);
-			formatScheme(pw, width, baseScheme);
+			HelpRenderer.printWrapped(pw, width, line);
+			HelpRenderer.formatScheme(pw, width, baseScheme);
 		}
 
 		if (commandScheme != null) {
 			if (command != null) {
-				formatCommand(pw, width, command);
+				HelpRenderer.formatCommand(pw, width, command);
 			} else {
-				formatCommands(pw, width, commandScheme);
+				HelpRenderer.formatCommands(pw, width, commandScheme);
 			}
 		}
 
-		w.flush();
+		CommandLineSyntaxException e = help.getError();
+		if (e != null) {
+			pw.println();
+			HelpRenderer.renderError(e, width, w);
+			pw.println();
+		}
+
+		pw.flush();
+	}
+
+	public static void renderError(CommandLineSyntaxException e, OutputStream out) {
+		HelpRenderer.renderError(null, e, out);
+	}
+
+	public static void renderError(CommandLineSyntaxException e, int width, OutputStream out) {
+		HelpRenderer.renderError(null, e, width, out);
+	}
+
+	public static void renderError(CommandLineSyntaxException e, OutputStream out, Charset encoding) {
+		HelpRenderer.renderError(null, e, out, encoding);
+	}
+
+	public static void renderError(CommandLineSyntaxException e, int width, OutputStream out, Charset encoding) {
+		HelpRenderer.renderError(null, e, width, out, encoding);
+	}
+
+	public static void renderError(CommandLineSyntaxException e, Writer w) {
+		HelpRenderer.renderError(null, e, w);
+	}
+
+	public static void renderError(CommandLineSyntaxException e, int width, Writer w) {
+		HelpRenderer.renderError(null, e, width, w);
+	}
+
+	public static void renderError(String prefix, CommandLineSyntaxException e, OutputStream out) {
+		HelpRenderer.renderError(prefix, e, HelpRenderer.DEFAULT_WIDTH, out);
+	}
+
+	public static void renderError(String prefix, CommandLineSyntaxException e, int width, OutputStream out) {
+		HelpRenderer.renderError(prefix, e, width, out, null);
+	}
+
+	public static void renderError(String prefix, CommandLineSyntaxException e, OutputStream out, Charset encoding) {
+		HelpRenderer.renderError(prefix, e, HelpRenderer.DEFAULT_WIDTH, out, encoding);
+	}
+
+	public static void renderError(String prefix, CommandLineSyntaxException e, int width, OutputStream out,
+		Charset encoding) {
+		Objects.requireNonNull(out, "Must provide an output stream to write to");
+		if (encoding == null) {
+			encoding = Charset.defaultCharset();
+		}
+		HelpRenderer.renderError(prefix, e, width, new OutputStreamWriter(out, encoding));
+	}
+
+	public static void renderError(String prefix, CommandLineSyntaxException e, Writer w) {
+		HelpRenderer.renderError(prefix, e, HelpRenderer.DEFAULT_WIDTH, w);
+	}
+
+	public static void renderError(String prefix, CommandLineSyntaxException e, int width, Writer w) {
+		Objects.requireNonNull(e, "Must provide an exception to render the message for");
+		Objects.requireNonNull(w, "Must provide a writer to render on");
+		width = Math.max(80, width);
+		final PrintWriter pw = new PrintWriter(w);
+		if (!StringUtils.isEmpty(prefix)) {
+			prefix = String.format("%s: ", prefix);
+		}
+		HelpRenderer.printWrapped(pw, width, String.format("%s%s%n", prefix, e.getMessage()));
 	}
 }

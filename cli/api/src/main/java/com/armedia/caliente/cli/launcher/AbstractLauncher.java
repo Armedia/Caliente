@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.launcher;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
@@ -90,11 +89,10 @@ public abstract class AbstractLauncher {
 		try {
 			result = parseArguments(helpOption, optionScheme, args);
 		} catch (HelpRequestedException e) {
-			try {
-				new HelpRenderer().renderHelp(getProgramName(), e, System.err);
-			} catch (IOException e2) {
-				this.log.error("Failed to render the help message to System.err", e2);
-			}
+			HelpRenderer.renderHelp(getProgramName(), e, System.err);
+			return 1;
+		} catch (CommandLineSyntaxException e) {
+			HelpRenderer.renderError("ERROR", e, System.err);
 			return 1;
 		} catch (Throwable t) {
 			this.log.error("Failed to process the command-line arguments", t);

@@ -9,4 +9,20 @@ public class InsufficientOptionValuesException extends CommandLineSyntaxExceptio
 	public InsufficientOptionValuesException(OptionScheme optionScheme, Option option) {
 		super(optionScheme, option, null);
 	}
+
+	@Override
+	protected String renderMessage() {
+		Option o = getOption();
+		String longOpt = o.getLongOpt();
+		Character shortOpt = o.getShortOpt();
+		String label = "";
+		if ((longOpt != null) && (shortOpt != null)) {
+			label = String.format("-%s/--%s", shortOpt, longOpt);
+		} else if (longOpt != null) {
+			label = String.format("--%s", longOpt);
+		} else {
+			label = String.format("-%s", shortOpt);
+		}
+		return String.format("The option %s requires at least %d values", label, o.getMinValueCount());
+	}
 }
