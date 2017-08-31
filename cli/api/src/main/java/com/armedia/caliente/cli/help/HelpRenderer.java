@@ -100,7 +100,7 @@ public final class HelpRenderer {
 						break;
 				}
 			} else {
-				trailer = String.format("%s%s%s%s%s%s", sep, String.format(fmt, i), sep, "...", sep,
+				trailer = String.format("%s%s%s%s%s%s", sep, String.format(fmt, Math.max(i, 1)), sep, "...", sep,
 					String.format("%sN", label));
 			}
 			sb.append('[').append(trailer);
