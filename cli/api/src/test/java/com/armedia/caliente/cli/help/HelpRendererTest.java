@@ -59,7 +59,7 @@ public class HelpRendererTest {
 				.setShortOpt('x') //
 				.setLongOpt("xanax") //
 				.setMinValueCount(2) //
-				.setMaxValueCount(4) //
+				.setMaxValueCount(9) //
 				.setValueName("xValue") //
 				.setDescription("The xxxxx") //
 				.setDefault("XXX") //
@@ -68,6 +68,7 @@ public class HelpRendererTest {
 				.setRequired(false) //
 				.setShortOpt('y') //
 				.setLongOpt("yoke") //
+				.setMinValueCount(0) //
 				.setMaxValueCount(0) //
 				.setValueName("yyyValue") //
 				.setDescription("The yy yyy yyyy") //
@@ -77,6 +78,8 @@ public class HelpRendererTest {
 				.setRequired(false) //
 				.setLongOpt("zed") //
 				.setValueName("zette") //
+				.setMinValueCount(4) //
+				.setMaxValueCount(7) //
 				.setDescription("ZZZ ZZzz zzZZ zzz") //
 				.setDefault("ZZZZZZZZ") //
 		).setDescription("SECOND COMMAND ON THE LIST");

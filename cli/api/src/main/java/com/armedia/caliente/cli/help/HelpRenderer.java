@@ -7,12 +7,11 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option.Builder;
-import org.apache.commons.cli.Options;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.Command;
@@ -23,7 +22,7 @@ import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.commons.utilities.Tools;
 
 public final class HelpRenderer {
-	public static final int DEFAULT_WIDTH = 80;
+	public static final int DEFAULT_WIDTH = 100;
 
 	private static final String NL = String.format("%n");
 
@@ -68,24 +67,47 @@ public final class HelpRenderer {
 		renderHelp(programName, help, HelpRenderer.DEFAULT_WIDTH, w);
 	}
 
-	private void renderPositionals(StringBuilder sb, int min, int max) {
+	private void renderPositionals(StringBuilder sb, String label, Character sep, int min, int max) {
 		if (max == 0) { return; }
 
 		sb.append(" ");
 
-		int i = 0;
 		// First, render the required arguments
-		final String fmt = String.format("arg%%0%dd", String.valueOf(min).length());
-		for (i = 1; i <= min; i++) {
-			if (i > 1) {
-				sb.append(" ");
+		final String fmt = String.format("%s%%0%dd", label, String.valueOf(min).length());
+		int i = 0;
+		while (i < min) {
+			if (i > 0) {
+				sb.append(sep);
 			}
-			sb.append(String.format(fmt, i));
+			sb.append(String.format(fmt, i + 1));
+			i++;
 		}
 		// Now, render the optional ones (i.e. those between the minimum required, and the maximum
 		// allowed. If we're already past the max, then we render nothing else.
-		if ((max < 0) || (i < max)) {
-			sb.append("[ args... ]");
+		if ((i < max) || (max < 0)) {
+			String trailer = null;
+			if (max > 0) {
+				trailer = String.format("%s%s", sep, String.format(fmt, max));
+				switch (max - i) {
+					case 3: // [,argI,argI+1,argMax]
+						trailer = String.format("%s%s%s", sep, String.format(fmt, --max), trailer);
+					case 2: // [,argI,argMax]
+						trailer = String.format("%s%s%s", sep, String.format(fmt, --max), trailer);
+					case 1: // [,argMax]
+						break;
+					default: // [,argI,...,argMax]
+						trailer = String.format("%s%s%s%s%s", sep, String.format(fmt, i), sep, "...", trailer);
+						break;
+				}
+			} else {
+				trailer = String.format("%s%s%s%s%s%s", sep, String.format(fmt, i), sep, "...", sep,
+					String.format("%sN", label));
+			}
+			sb.append('[').append(trailer);
+			if (sep == ' ') {
+				sb.append(sep);
+			}
+			sb.append(']');
 		}
 	}
 
@@ -98,7 +120,7 @@ public final class HelpRenderer {
 		int minPositionals = 0;
 		int maxPositionals = -1;
 		if (commandScheme != null) {
-			sb.append(" [ global-options... ]");
+			sb.append(" [ global-options ]");
 			if (command == null) {
 				if (!commandScheme.isCommandRequired()) {
 					sb.append(" [");
@@ -118,43 +140,99 @@ public final class HelpRenderer {
 			maxPositionals = baseScheme.getMaxArgs();
 		}
 
-		renderPositionals(sb, minPositionals, maxPositionals);
+		renderPositionals(sb, "arg", ' ', minPositionals, maxPositionals);
 		sb.append(HelpRenderer.NL);
 		fmt.printUsage(pw, width, sb.toString());
 	}
 
-	private org.apache.commons.cli.Option buildOption(Option o) {
-		Builder b = null;
-		if (o.getShortOpt() != null) {
-			b = org.apache.commons.cli.Option.builder(o.getShortOpt().toString());
-		} else {
-			b = org.apache.commons.cli.Option.builder();
+	private void formatOption(HelpFormatter fmt, PrintWriter pw, int width, Option o) {
+
+		String shortLabel = "  ";
+		Character shortOpt = o.getShortOpt();
+		if (shortOpt != null) {
+			shortLabel = String.format("-%s", shortOpt);
 		}
-		return b //
-			.longOpt(o.getLongOpt()) //
-			.required(o.isRequired()) //
-			.desc(o.getDescription()) //
-			.hasArg((o.getMinValueCount() > 0) || (o.getMaxValueCount() != 0)) //
-			.numberOfArgs(o.getMaxValueCount()) //
-			.optionalArg(o.getMinValueCount() == 0) //
-			.argName(o.getValueName()) //
-			.build();
+		String longOpt = o.getLongOpt();
+		String longLabel = "";
+		if (longOpt != null) {
+			shortLabel = (shortOpt != null ? String.format("%s, ", shortLabel) : "    ");
+			longLabel = String.format("--%s", longOpt);
+		}
+
+		int min = o.getMinValueCount();
+		int max = o.getMaxValueCount();
+
+		String valueDesc = "";
+		if (max != 0) {
+			// First, render the minimums...
+			StringBuilder sb = new StringBuilder();
+			renderPositionals(sb, Tools.coalesce(o.getValueName(), "arg"), o.getValueSep(), min, max);
+			valueDesc = sb.toString();
+		}
+
+		fmt.printWrapped(pw, width, (o.isRequired() ? 2 : 4),
+			String.format("\t%s%s%s%s", (o.isRequired() ? "* " : "  "), shortLabel, longLabel, valueDesc));
+
+		String desc = o.getDescription();
+		if (desc != null) {
+			fmt.printWrapped(pw, width, 8, String.format("\t%s", desc));
+		}
+
+		if ((min == max) && (min != 0)) {
+			fmt.printWrapped(pw, width, 8, String.format("\tRequired values: %d", min));
+		} else if ((min != 0) || (max != 0)) {
+			String minClause = "";
+			String maxClause = "";
+			if (min > 0) {
+				minClause = String.format("Min values: %d", min);
+			}
+			if (max > 0) {
+				maxClause = String.format("Max values: %d", max);
+			}
+			String msg = null;
+			if (!StringUtils.isEmpty(minClause) && !StringUtils.isEmpty(maxClause)) {
+				msg = String.format("\t%s, %s", minClause, maxClause);
+			} else if (!StringUtils.isEmpty(minClause)) {
+				msg = String.format("\t%s", minClause);
+			} else if (!StringUtils.isEmpty(maxClause)) {
+				msg = String.format("\t%s", maxClause);
+			}
+
+			if (msg != null) {
+				fmt.printWrapped(pw, width, 8, msg);
+			}
+		}
+
+		Set<String> allowed = o.getAllowedValues();
+		if ((allowed != null) && !allowed.isEmpty()) {
+			Object a = (allowed.size() == 1 ? allowed.iterator().next() : allowed);
+			String plural = (allowed.size() == 1 ? "" : "s");
+			fmt.printWrapped(pw, width, 8, String.format("\tAllowed value%s: %s", plural, a));
+		}
+
+		List<String> defaults = o.getDefaults();
+		if ((defaults != null) && !defaults.isEmpty()) {
+			Object def = (defaults.size() == 1 ? defaults.get(0) : defaults);
+			String plural = (defaults.size() == 1 ? "" : "s");
+			fmt.printWrapped(pw, width, 8, String.format("\tDefault value%s: %s", plural, def));
+		}
+		pw.println();
 	}
 
 	private void formatScheme(HelpFormatter fmt, PrintWriter pw, int width, OptionScheme scheme) {
 		if (scheme == null) { return; }
-		Options options = new Options();
+		// Options options = new Options();
+		fmt.printWrapped(pw, width, "(* = the option is required)");
 		for (Option o : scheme) {
-			options.addOption(buildOption(o));
+			formatOption(fmt, pw, width, o);
 		}
-		fmt.printOptions(pw, width, options, fmt.getLeftPadding(), fmt.getDescPadding());
 	}
 
 	private void formatCommand(HelpFormatter fmt, PrintWriter pw, int width, Command command) {
 		if (command == null) { return; }
 		String aliases = "";
 		if (!command.getAliases().isEmpty()) {
-			aliases = "(";
+			aliases = " (";
 			boolean first = true;
 			for (String a : command.getAliases()) {
 				if (Tools.equals(a, command.getName())) {
@@ -165,7 +243,8 @@ public final class HelpRenderer {
 			}
 			aliases = String.format("%s)", aliases);
 		}
-		fmt.printWrapped(pw, width, String.format("Parameters for '%s'%s:", command.getName(), aliases));
+		fmt.printWrapped(pw, width,
+			String.format("Options for '%s'%s: (* = the option is required)", command.getName(), aliases));
 		fmt.printWrapped(pw, width, StringUtils.repeat('-', width));
 		formatScheme(fmt, pw, width, command);
 	}
@@ -221,11 +300,12 @@ public final class HelpRenderer {
 
 		StringBuilder sb = new StringBuilder();
 		formatSyntax(fmt, pw, width, programName, baseScheme, commandScheme, command);
+		pw.println();
 		sb.setLength(0);
 
 		if (baseScheme.getOptionCount() > 0) {
-			fmt.printWrapped(pw, width,
-				String.format("%s Parameters", (commandScheme != null ? "Global" : "Available")));
+			fmt.printWrapped(pw, width, String.format("%s Options: (* = the option is required)",
+				(commandScheme != null ? "Global" : "Available")));
 			fmt.printWrapped(pw, width, line);
 			formatScheme(fmt, pw, width, baseScheme);
 		}
