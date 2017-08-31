@@ -112,7 +112,7 @@ public final class HelpRenderer {
 				}
 			} else {
 				trailer = String.format("%s%s%s%s%s", String.format(fmt, Math.max(opt, 1)), sep, "...", sep,
-					String.format("%sN", label));
+					String.format("%s#N", label));
 			}
 			sb.append('[');
 			if ((min > 0) || (sep == ' ')) {
