@@ -148,8 +148,8 @@ public class OptionParser {
 			args);
 	}
 
-	private <T extends CommandLineSyntaxException> void raiseExceptionWithHelp(boolean helpRequested, OptionScheme baseScheme,
-		Command command, T error) throws CommandLineSyntaxException, HelpRequestedException {
+	private <T extends CommandLineSyntaxException> void raiseExceptionWithHelp(boolean helpRequested,
+		OptionScheme baseScheme, Command command, T error) throws CommandLineSyntaxException, HelpRequestedException {
 		if (helpRequested) { throw new HelpRequestedException(baseScheme, command, error); }
 		if (error != null) { throw error; }
 	}
@@ -175,8 +175,7 @@ public class OptionParser {
 
 		final OptionValues baseValues = new OptionValues();
 		final List<Token> positionals = new ArrayList<>();
-		final CommandScheme commandScheme = (CommandScheme.class.isInstance(baseScheme)
-			? CommandScheme.class.cast(baseScheme) : null);
+		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
 
 		boolean dynamic = (baseScheme.isDynamic() && (dynamicSupport != null));
 
@@ -360,7 +359,8 @@ public class OptionParser {
 
 		// Do we require a command, and is it missing?
 		if ((commandScheme != null) && commandScheme.isCommandRequired() && (command == null)) {
-			raiseExceptionWithHelp(helpRequested, baseScheme, command, new MissingRequiredCommandException(commandScheme));
+			raiseExceptionWithHelp(helpRequested, baseScheme, command,
+				new MissingRequiredCommandException(commandScheme));
 		}
 
 		// Do we have all the required options for both the global and command?
@@ -397,7 +397,8 @@ public class OptionParser {
 		}
 		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) {
 			Option p = (!baseFaults.isEmpty() ? baseFaults.iterator().next() : commandFaults.iterator().next());
-			raiseExceptionWithHelp(helpRequested, baseScheme, command, new InsufficientOptionValuesException(currentScheme, p));
+			raiseExceptionWithHelp(helpRequested, baseScheme, command,
+				new InsufficientOptionValuesException(currentScheme, p));
 		}
 
 		// Validate that we have enough positionals as required
@@ -420,6 +421,7 @@ public class OptionParser {
 		}
 
 		raiseExceptionWithHelp(helpRequested, baseScheme, command, null);
-		return new OptionParseResult(baseValues, command.getName(), commandValues, positionalStrings);
+		return new OptionParseResult(baseValues, (command != null ? command.getName() : null), commandValues,
+			positionalStrings);
 	}
 }
