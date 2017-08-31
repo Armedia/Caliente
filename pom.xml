@@ -138,12 +138,6 @@
 			</dependency>
 
 			<dependency>
-				<groupId>net.sourceforge.argparse4j</groupId>
-				<artifactId>argparse4j</artifactId>
-				<version>0.7.0</version>
-			</dependency>
-
-			<dependency>
 				<groupId>commons-codec</groupId>
 				<artifactId>commons-codec</artifactId>
 				<version>1.10</version>
