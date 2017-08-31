@@ -205,9 +205,7 @@ public final class HelpRenderer {
 
 		Set<String> allowed = o.getAllowedValues();
 		if ((allowed != null) && !allowed.isEmpty()) {
-			Object a = (allowed.size() == 1 ? allowed.iterator().next() : allowed);
-			String plural = (allowed.size() == 1 ? "" : "s");
-			fmt.printWrapped(pw, width, 8, String.format("\tAllowed value%s: %s", plural, a));
+			fmt.printWrapped(pw, width, 8, String.format("\tAllowed values: %s", allowed));
 		}
 
 		List<String> defaults = o.getDefaults();
