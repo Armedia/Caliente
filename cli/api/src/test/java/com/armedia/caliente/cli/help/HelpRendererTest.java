@@ -79,7 +79,7 @@ public class HelpRendererTest {
 				.setLongOpt("zed") //
 				.setValueName("zette") //
 				.setMinValueCount(3) //
-				.setMaxValueCount(4) //
+				.setMaxValueCount(999) //
 				.setDescription("ZZZ ZZzz zzZZ zzz") //
 				.setDefault("ZZZZZZZZ") //
 		).setDescription("SECOND COMMAND ON THE LIST");

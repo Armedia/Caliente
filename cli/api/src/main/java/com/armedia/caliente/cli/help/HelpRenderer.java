@@ -73,7 +73,7 @@ public final class HelpRenderer {
 		sb.append(" ");
 
 		// First, render the required arguments
-		final String fmt = String.format("%s%%0%dd", label, String.valueOf(min).length());
+		final String fmt = String.format("%s#%%d", label);
 
 		int opt = min + 1;
 		if (min > 0) {
