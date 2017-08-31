@@ -114,7 +114,7 @@ public class HelpRendererTest {
 		try {
 			throw new HelpRequestedException(cs, c, null);
 		} catch (HelpRequestedException e) {
-			new HelpRenderer().renderHelp("TEST PROGRAM", e, System.out);
+			HelpRenderer.renderHelp("TEST PROGRAM", e, System.out);
 		}
 	}
 }
