@@ -74,36 +74,51 @@ public final class HelpRenderer {
 
 		// First, render the required arguments
 		final String fmt = String.format("%s%%0%dd", label, String.valueOf(min).length());
-		int i = 0;
-		while (i < min) {
-			if (i > 0) {
-				sb.append(sep);
+
+		int opt = min + 1;
+		if (min > 0) {
+			// Render from 1 to min
+			String trailer = String.format(fmt, min);
+			switch (min) {
+				case 3: // arg1,arg2,arg3
+					trailer = String.format("%s%s%s", String.format(fmt, --min), sep, trailer);
+				case 2: // arg1,arg2
+					trailer = String.format("%s%s%s", String.format(fmt, --min), sep, trailer);
+				case 1: // arg1
+					break;
+				default: // arg1,...,argMin
+					trailer = String.format("%s%s%s%s%s", String.format(fmt, 1), sep, "...", sep, trailer);
+					break;
 			}
-			sb.append(String.format(fmt, i + 1));
-			i++;
+			sb.append(trailer);
 		}
+
 		// Now, render the optional ones (i.e. those between the minimum required, and the maximum
 		// allowed. If we're already past the max, then we render nothing else.
-		if ((i < max) || (max < 0)) {
+		if ((opt <= max) || (max < 0)) {
 			String trailer = null;
 			if (max > 0) {
-				trailer = String.format("%s%s", sep, String.format(fmt, max));
-				switch (max - i) {
+				trailer = String.format(fmt, max);
+				switch ((max - opt) + 1) {
 					case 3: // [,argI,argI+1,argMax]
-						trailer = String.format("%s%s%s", sep, String.format(fmt, --max), trailer);
+						trailer = String.format("%s%s%s", String.format(fmt, --max), sep, trailer);
 					case 2: // [,argI,argMax]
-						trailer = String.format("%s%s%s", sep, String.format(fmt, --max), trailer);
+						trailer = String.format("%s%s%s", String.format(fmt, --max), sep, trailer);
 					case 1: // [,argMax]
 						break;
 					default: // [,argI,...,argMax]
-						trailer = String.format("%s%s%s%s%s", sep, String.format(fmt, i), sep, "...", trailer);
+						trailer = String.format("%s%s%s%s%s", String.format(fmt, opt), sep, "...", sep, trailer);
 						break;
 				}
 			} else {
-				trailer = String.format("%s%s%s%s%s%s", sep, String.format(fmt, Math.max(i, 1)), sep, "...", sep,
+				trailer = String.format("%s%s%s%s%s", String.format(fmt, Math.max(opt, 1)), sep, "...", sep,
 					String.format("%sN", label));
 			}
-			sb.append('[').append(trailer);
+			sb.append('[');
+			if ((min > 0) || (sep == ' ')) {
+				sb.append(sep);
+			}
+			sb.append(trailer);
 			if (sep == ' ') {
 				sb.append(sep);
 			}
@@ -205,7 +220,9 @@ public final class HelpRenderer {
 
 		Set<String> allowed = o.getAllowedValues();
 		if ((allowed != null) && !allowed.isEmpty()) {
-			fmt.printWrapped(pw, width, 8, String.format("\tAllowed values: %s", allowed));
+			Object a = (allowed.size() == 1 ? allowed.iterator().next() : allowed);
+			String plural = (allowed.size() == 1 ? "" : "s");
+			fmt.printWrapped(pw, width, 8, String.format("\tAllowed value%s: %s", plural, a));
 		}
 
 		List<String> defaults = o.getDefaults();
@@ -214,16 +231,15 @@ public final class HelpRenderer {
 			String plural = (defaults.size() == 1 ? "" : "s");
 			fmt.printWrapped(pw, width, 8, String.format("\tDefault value%s: %s", plural, def));
 		}
-		pw.println();
 	}
 
 	private void formatScheme(HelpFormatter fmt, PrintWriter pw, int width, OptionScheme scheme) {
 		if (scheme == null) { return; }
 		// Options options = new Options();
-		fmt.printWrapped(pw, width, "(* = the option is required)");
 		for (Option o : scheme) {
 			formatOption(fmt, pw, width, o);
 		}
+		// fmt.printOptions(pw, width, options, fmt.getLeftPadding(), fmt.getDescPadding());
 	}
 
 	private void formatCommand(HelpFormatter fmt, PrintWriter pw, int width, Command command) {
@@ -241,8 +257,7 @@ public final class HelpRenderer {
 			}
 			aliases = String.format("%s)", aliases);
 		}
-		fmt.printWrapped(pw, width,
-			String.format("Options for '%s'%s: (* = the option is required)", command.getName(), aliases));
+		fmt.printWrapped(pw, width, String.format("Parameters for '%s'%s:", command.getName(), aliases));
 		fmt.printWrapped(pw, width, StringUtils.repeat('-', width));
 		formatScheme(fmt, pw, width, command);
 	}
@@ -302,8 +317,8 @@ public final class HelpRenderer {
 		sb.setLength(0);
 
 		if (baseScheme.getOptionCount() > 0) {
-			fmt.printWrapped(pw, width, String.format("%s Options: (* = the option is required)",
-				(commandScheme != null ? "Global" : "Available")));
+			fmt.printWrapped(pw, width,
+				String.format("%s Parameters", (commandScheme != null ? "Global" : "Available")));
 			fmt.printWrapped(pw, width, line);
 			formatScheme(fmt, pw, width, baseScheme);
 		}
