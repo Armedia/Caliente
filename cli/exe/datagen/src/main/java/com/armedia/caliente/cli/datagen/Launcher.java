@@ -54,7 +54,6 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValies,
 		Collection<String> positionals) throws Exception {
-		return new DataGen(this.threadsParameter, this.dfcLaunchHelper).run(commandValies, command, commandValies,
-			positionals);
+		return new DataGen(this.threadsParameter, this.dfcLaunchHelper).run(baseValues);
 	}
 }

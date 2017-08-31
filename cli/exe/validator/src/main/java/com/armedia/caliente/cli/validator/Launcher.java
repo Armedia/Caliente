@@ -56,7 +56,7 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	@Override
-	protected int run(OptionValues cli, String command, OptionValues commandValies, Collection<String> positionals)
+	protected int run(OptionValues cli, String command, OptionValues commandValues, Collection<String> positionals)
 		throws Exception {
 		final String reportMarker = DateFormatUtils.format(new Date(), Launcher.REPORT_MARKER_FORMAT);
 		System.setProperty("logName", String.format("caliente-validator-%s", reportMarker));

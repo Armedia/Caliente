@@ -46,6 +46,6 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValies,
 		Collection<String> positionals) throws Exception {
-		return new UserMapper(this.dfcLaunchHelper).run(commandValies, command, commandValies, positionals);
+		return new UserMapper(this.dfcLaunchHelper).run(baseValues);
 	}
 }

@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -487,8 +486,7 @@ public class UserMapper {
 		return Tools.freezeSet(finalAttributes);
 	}
 
-	protected int run(final OptionValues cli, String command, OptionValues commandValies,
-		Collection<String> positionals) throws Exception {
+	protected int run(final OptionValues cli) throws Exception {
 		DfcSessionPool dfcPool = null;
 		LDAPConnectionPool ldapPool = null;
 		ExecutorService executor = null;

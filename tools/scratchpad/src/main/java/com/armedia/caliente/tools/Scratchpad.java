@@ -35,7 +35,7 @@ public class Scratchpad extends AbstractLauncher {
 	}
 
 	@Override
-	protected int run(OptionValues baseValues, String command, OptionValues commandValies,
+	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
 		// PropertiesTest.test();
 		// DctmTest.test();
