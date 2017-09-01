@@ -39,6 +39,10 @@ public final class OptionValues implements Iterable<OptionValue> {
 		return key;
 	}
 
+	void add(Option p) {
+		add(p, null);
+	}
+
 	void add(Option p, Collection<String> values) {
 		if (p == null) { throw new IllegalArgumentException("Must provide a non-null option"); }
 		if (values == null) {
