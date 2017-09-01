@@ -39,7 +39,7 @@ Pass 2
 				-r,--reset-job
 				--content-strategy ${strategy}
 				--direct-fs (change for strategy = direct?)
-	
+
 			Pass 3 (from --engine)
 				DFC
 				*	--docbase ${docbase}
@@ -54,14 +54,14 @@ Pass 2
 					--special-types ${type1,type2,...,typeN}
 					--batch-size ${size}
 					--owner-attributes ${att1,att2,...,attN}
-	
+
 				CMIS
 				*	--url ${url}
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
 				*	--source ${path}
-	
+
 				SHAREPOINT
 				*	--url ${url}
 				*	--user ${user}
@@ -69,7 +69,7 @@ Pass 2
 				*	--password ${password}
 				*	--source ${path}
 					--source-prefix ${prefix}
-	
+
 		COMMAND: ( IMPORT | IMP | IM )
 			(common)
 				--dedup
@@ -88,7 +88,7 @@ Pass 2
 					--dfc-prop ${dfc-prop-file}
 					--dctm ${dctm-dir}
 					--default-password
-	
+
 				CMIS
 				*	--url ${url}
 				*	--user ${user}
@@ -99,7 +99,7 @@ Pass 2
 					--group-map ${map}
 					--role-map ${map}
 					--type-map ${map}
-	
+
 		COMMAND: ( COUNT | CNT | CN )
 			(common)
 				--non-recursive
@@ -118,7 +118,7 @@ Pass 2
 					--dfc-prop ${dfc-prop-file}
 					--dctm ${dctm-dir}
 				*	--predicate ${predicate}
-	
+
 				CMIS
 				*	--url ${url}
 				*	--user ${user}
