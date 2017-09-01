@@ -130,7 +130,7 @@ public final class HelpRenderer {
 
 		// usage: programName [globalOptions...] command [commandOptions...] [arguments...]
 		StringBuilder sb = new StringBuilder();
-		sb.append(programName);
+		sb.append("usage: ").append(programName);
 		int minPositionals = 0;
 		int maxPositionals = -1;
 		if (commandScheme != null) {
