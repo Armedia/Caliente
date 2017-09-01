@@ -32,7 +32,7 @@ public class OptionParser {
 
 	protected static final Pattern DEFAULT_COMMAND_PATTERN = Pattern.compile("^[\\w&&[^\\d]]\\w*$");
 
-	private static final String SEPARATOR_PATTERN = "(?<!\\\\)\\Q%s\\E";
+	private static final String VALUE_SEPARATOR_PATTERN = "(?<!\\\\)\\Q%s\\E";
 
 	private static final List<String> NO_POSITIONALS = Collections.emptyList();
 
@@ -171,8 +171,8 @@ public class OptionParser {
 
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", args), optionValueSplitter,
 			allowRecursion);
-		final Pattern splitter = Pattern
-			.compile(String.format(OptionParser.SEPARATOR_PATTERN, tokenLoader.getValueSeparator()));
+		final Pattern valueSplitter = Pattern
+			.compile(String.format(OptionParser.VALUE_SEPARATOR_PATTERN, tokenLoader.getValueSeparator()));
 
 		final OptionValues baseValues = new OptionValues();
 		final List<Token> positionals = new ArrayList<>();
@@ -198,22 +198,74 @@ public class OptionParser {
 		boolean helpRequested = false;
 
 		int extensions = 0;
-		for (Token token : tokenLoader) {
+		nextToken: for (Token token : tokenLoader) {
+			selector: switch (token.getType()) {
+				case STRING: // A plain string...
 
-			if (token.getType() == Token.Type.STRING) {
-				// A plain string...
-				if (currentOption == null) {
-					// This can either be a positional, a command, or an error
+					// Is this a parameter to an option?
+					if (currentOption != null) {
+						// This can only be a string option(s) for currentOption so add an
+						// occurrence and validate the schema limits (empty strings are allowed)
+						final int maxArgs = currentOption.getMaxValueCount();
+						if (maxArgs == 0) {
+							raiseExceptionWithHelp(helpRequested, baseScheme, command,
+								new TooManyOptionValuesException(currentScheme, currentOption, token));
+						}
 
+						// Find how many values the option currently has, and check if they're too
+						// many
+						OptionValues target = (currentOptionFromCommand ? commandValues : baseValues);
+						final int existing = target.getValueCount(currentOption);
+
+						// Allow for escaping the separator character with \
+						// (i.e. a\,b,c -> [ "a,b", "c" ])
+						List<String> values = new ArrayList<>();
+						String str = token.getRawString();
+						Matcher m = valueSplitter.matcher(str);
+						int start = 0;
+						while (m.find()) {
+							String nextValue = str.substring(start, m.start());
+							// TODO: Validate that the given value is allowed?
+							values.add(nextValue);
+							start = m.end();
+						}
+
+						// Add the last value - or total value if there were no splitters
+						String lastValue = str.substring(start);
+						// TODO: Validate that the last value is allowed?
+						values.add(lastValue);
+
+						// If this would exceed the maximum allowed of option values, then we have a
+						// problem
+						if ((maxArgs > 0) && ((values.size() + existing) > maxArgs)) {
+							raiseExceptionWithHelp(helpRequested, baseScheme, command,
+								new TooManyOptionValuesException(currentScheme, currentOption, token));
+						}
+
+						// No schema violation on the upper end, so we simply add the values
+						target.add(currentOption, values);
+						(currentOptionFromCommand ? commandWithArgs : baseWithArgs).put(currentOption.getKey(),
+							currentOption);
+
+						// At this point, we're for sure no longer processing a option from
+						// before...
+						currentOption = null;
+						continue nextToken;
+					}
+
+					// This can either be a positional, a command, or even an error b/c it's out of
+					// place
 					if (commandScheme != null) {
+
 						// If commands are supported, then the first standalone string option
-						// MUST be the command name
+						// MUST be a command name
 						if (command == null) {
 							// Find the command...if not a command, then it must be a positional
 							// Give out the currently-accumulated option values to assist the
 							// search
 							currentScheme = command = findCommand(dynamic ? baseValues : null, commandScheme,
 								token.getRawString());
+							// If there is no command
 							if (command != null) {
 								commandName = command.getName();
 								commandValues = new OptionValues();
@@ -226,7 +278,7 @@ public class OptionParser {
 									command.remove(helpOption);
 								}
 								lastOption = null;
-								continue;
+								continue nextToken;
 							}
 
 							// This is an unknown command, so this is an error
@@ -254,105 +306,71 @@ public class OptionParser {
 					// We won't know if we've met the lower limit until the end... so postpone until
 					// then
 					positionals.add(token);
-				} else {
-					// This can only be a string option(s) for currentOption so add an
-					// occurrence and validate the schema limits (empty strings are allowed)
-					final int maxArgs = currentOption.getMaxValueCount();
-					if (maxArgs == 0) {
-						raiseExceptionWithHelp(helpRequested, baseScheme, command,
-							new TooManyOptionValuesException(currentScheme, currentOption, token));
+					break selector;
+
+				case LONG_OPTION:
+				case SHORT_OPTION:
+					// Either a short or long option...
+					Option p = null;
+
+					// First things first: is this the help option?
+					if (!helpRequested && (helpOption != null)) {
+						String expected = null;
+						String actual = token.getValue();
+						switch (token.getType()) {
+							case LONG_OPTION:
+								expected = helpOption.getLongOpt();
+								break;
+							case SHORT_OPTION:
+								expected = helpOption.getShortOpt().toString();
+								break;
+							default:
+								expected = null;
+								break;
+						}
+						if (!baseScheme.isCaseSensitive()) {
+							expected = expected.toUpperCase();
+							actual = actual.toUpperCase();
+						}
+						helpRequested = Tools.equals(expected, actual);
 					}
 
-					// Find how many values the option currently has, and check if they're too
-					// many
-					OptionValues target = (currentOptionFromCommand ? commandValues : baseValues);
-					final int existing = target.getValueCount(currentOption);
-
-					// Allow for escaping the separator character with \
-					// (i.e. a\,b,c -> [ "a,b", "c" ])
-					List<String> values = new ArrayList<>();
-					String str = token.getRawString();
-					Matcher m = splitter.matcher(str);
-					int start = 0;
-					while (m.find()) {
-						values.add(str.substring(start, m.start()));
-						start = m.end();
-					}
-					// Add the last value - or total value if there were no splitters
-					values.add(str.substring(start));
-
-					// If this would exceed the maximum allowed of option values, then we have a
-					// problem
-					if ((maxArgs > 0) && ((values.size() + existing) > maxArgs)) {
-						raiseExceptionWithHelp(helpRequested, baseScheme, command,
-							new TooManyOptionValuesException(currentScheme, currentOption, token));
+					// May not have positionals yet, as these would be out-of-place strings
+					if (!positionals.isEmpty()) {
+						final CommandLineSyntaxException err;
+						if (lastOption != null) {
+							err = new TooManyOptionValuesException(currentScheme, lastOption, token);
+						} else {
+							err = new UnknownOptionException(currentScheme, positionals.get(0));
+						}
+						raiseExceptionWithHelp(helpRequested, baseScheme, command, err);
 					}
 
-					// No schema violation on the upper end, so we simply add the values
-					target.add(currentOption, values);
-					(currentOptionFromCommand ? commandWithArgs : baseWithArgs).put(currentOption.getKey(),
-						currentOption);
-				}
+					boolean fromCommand = false;
+					boolean mayExtend = true;
+					inner: while (true) {
 
-				// At this point, we're for sure no longer processing a option from before...
-				currentOption = null;
-			} else {
-				// Either a short or long option...
-				Option p = null;
+						// If we're already processing a command, then the remaining options belong
+						// to it
+						if (command != null) {
+							p = findOption(commandScheme, token);
+							fromCommand = true;
+						}
+						// If we're not processing a command, then the options are still part of the
+						// base scheme
+						if (p == null) {
+							p = findOption(baseScheme, token);
+							fromCommand = false;
+						}
 
-				// First things first: is this the help option?
-				if (!helpRequested && (helpOption != null)) {
-					String expected = null;
-					String actual = token.getValue();
-					switch (token.getType()) {
-						case LONG_OPTION:
-							expected = helpOption.getLongOpt();
-							break;
-						case SHORT_OPTION:
-							expected = helpOption.getShortOpt().toString();
-							break;
-						default:
-							expected = null;
-							break;
-					}
-					if (!baseScheme.isCaseSensitive()) {
-						expected = expected.toUpperCase();
-						actual = actual.toUpperCase();
-					}
-					helpRequested = Tools.equals(expected, actual);
-				}
+						// We found our option, so we break the dynamic loop
+						if (p != null) {
+							break inner;
+						}
 
-				// May not have positionals yet, as these would be out-of-place strings
-				if (!positionals.isEmpty()) {
-					final CommandLineSyntaxException err;
-					if (lastOption != null) {
-						err = new TooManyOptionValuesException(currentScheme, lastOption, token);
-					} else {
-						err = new UnknownOptionException(currentScheme, positionals.get(0));
-					}
-					raiseExceptionWithHelp(helpRequested, baseScheme, command, err);
-				}
-
-				boolean fromCommand = false;
-				boolean mayExtend = true;
-				inner: while (true) {
-
-					// If we're already processing a command, then the remaining options belong
-					// to it
-					if (command != null) {
-						p = findOption(commandScheme, token);
-						fromCommand = true;
-					}
-					// If we're not processing a command, then the options are still part of the
-					// base scheme
-					if (p == null) {
-						p = findOption(baseScheme, token);
-						fromCommand = false;
-					}
-
-					if (p == null) {
 						if (dynamic && mayExtend) {
-							// Dynamic support enabled!! Try to expand the currently-active scheme
+							// Dynamic support enabled!! Try to expand the currently-active
+							// scheme
 
 							// Make sure we clear the "modified" flag...
 							extensibleScheme.clearModified();
@@ -374,14 +392,18 @@ public class OptionParser {
 							new UnknownOptionException(currentScheme, token));
 					}
 
-					break;
-				}
-
-				lastOption = p;
-				if (p.getMaxValueCount() != 0) {
-					currentOption = p;
+					// Mark this as the "last" option seen
+					lastOption = p;
 					currentOptionFromCommand = fromCommand;
-				}
+					if (p.getMaxValueCount() != 0) {
+						// This option supports parameters, so track it so we can add them
+						currentOption = p;
+					} else {
+						// This option doesn't support parameters, so don't track it as such
+						currentOption = null;
+						(fromCommand ? commandValues : baseValues).add(p);
+					}
+					break selector;
 			}
 		}
 
