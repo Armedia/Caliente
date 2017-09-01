@@ -1,7 +1,7 @@
 Pass 1
 	GLOBALS
-		--help
-		--lib ${libdir1,libdir2,...,libdirN}
+		-?,--help
+		-l,--lib ${libdir1,libdir2,...,libdirN}
 		(export|import|count|encrypt|decrypt|...)
 
 Pass 2
@@ -12,14 +12,14 @@ Pass 2
 		(common)
 			--log ${log-file} (default is ${db-dir}/blablabla.log)
 			--log-cfg ${log-cfg-file}
-		*	--engine ${dfc|cmis|shpt|local|...}
+		*	-e, --engine ${dfc|cmis|shpt|local|...}
 			--no-renditions
 			--no-versions
 			--skip-content
 			--manifest ${manifest-file}
-			--threads ${threads}
-			--db ${db-dir}
-			--content ${content-dir}
+			-t,--threads ${threads}
+			-d,--db ${db-dir}
+			-c,--content ${content-dir}
 			--mail-from ${sender}
 			--smtp-host ${host}
 			--smtp-port ${port}
@@ -35,8 +35,8 @@ Pass 2
 
 		COMMAND: ( EXPORT | EXP | EX )
 			(common)
-				--job-name ${name}
-				--reset-job
+				-j,--job-name ${name}
+				-r,--reset-job
 				--content-strategy ${strategy}
 				--direct-fs (change for strategy = direct?)
 	
@@ -103,11 +103,11 @@ Pass 2
 		COMMAND: ( COUNT | CNT | CN )
 			(common)
 				--non-recursive
-				--count-empty
-				--count-hidden
-				--count-private
-				--count-include ${folder1,folder2,...,folderN}
-				--count-exclude ${folder1,folder2,...,folderN}
+				--empty
+				--hidden
+				--private
+				--include ${folder1,folder2,...,folderN}
+				--exclude ${folder1,folder2,...,folderN}
 
 			Pass 3 (from --engine)
 				DFC
