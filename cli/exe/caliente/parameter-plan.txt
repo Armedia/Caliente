@@ -2,7 +2,7 @@ Pass 1
 	GLOBALS
 		-?,--help
 		-l,--lib ${libdir1,libdir2,...,libdirN}
-		(export|import|count|encrypt|decrypt|...)
+		command
 
 Pass 2
 	COMMAND: ( ENCRYPT | ENC | DECRYPT | DEC )
