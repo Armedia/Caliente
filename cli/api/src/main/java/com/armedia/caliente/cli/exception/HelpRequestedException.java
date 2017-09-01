@@ -27,8 +27,9 @@ public class HelpRequestedException extends CommandLineException {
 		this.command = command;
 	}
 
-	public CommandLineSyntaxException getError() {
-		return CommandLineSyntaxException.class.cast(getCause());
+	@Override
+	public CommandLineSyntaxException getCause() {
+		return CommandLineSyntaxException.class.cast(super.getCause());
 	}
 
 	public OptionScheme getBaseScheme() {

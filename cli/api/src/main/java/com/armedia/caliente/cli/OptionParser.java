@@ -7,11 +7,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
+import com.armedia.caliente.cli.exception.IllegalOptionValuesException;
 import com.armedia.caliente.cli.exception.InsufficientOptionValuesException;
 import com.armedia.caliente.cli.exception.InsufficientPositionalValuesException;
 import com.armedia.caliente.cli.exception.MissingRequiredCommandException;
@@ -223,17 +226,36 @@ public class OptionParser {
 						String str = token.getRawString();
 						Matcher m = valueSplitter.matcher(str);
 						int start = 0;
-						while (m.find()) {
+						Set<String> badValues = null;
+						nextValue: while (m.find()) {
 							String nextValue = str.substring(start, m.start());
-							// TODO: Validate that the given value is allowed?
-							values.add(nextValue);
+							if (!currentOption.isValueAllowed(nextValue)) {
+								if (badValues == null) {
+									badValues = new TreeSet<>();
+								}
+								badValues.add(nextValue);
+								continue nextValue;
+							}
+
+							values.add(currentOption.canonicalizeValue(nextValue));
 							start = m.end();
 						}
 
 						// Add the last value - or total value if there were no splitters
 						String lastValue = str.substring(start);
-						// TODO: Validate that the last value is allowed?
+						if (!currentOption.isValueAllowed(lastValue)) {
+							if (badValues == null) {
+								badValues = new TreeSet<>();
+							}
+							badValues.add(lastValue);
+						}
 						values.add(lastValue);
+
+						// If there are invalid values, then we raise the exception
+						if (badValues != null) {
+							raiseExceptionWithHelp(helpRequested, baseScheme, command,
+								new IllegalOptionValuesException(currentScheme, currentOption, badValues));
+						}
 
 						// If this would exceed the maximum allowed of option values, then we have a
 						// problem
@@ -473,5 +495,81 @@ public class OptionParser {
 		raiseExceptionWithHelp(helpRequested, baseScheme, command, null);
 		return new OptionParseResult(baseValues, (command != null ? command.getName() : null), commandValues,
 			positionalStrings);
+	}
+
+	/**
+	 * <p>
+	 * This method is useful if one wishes to process each individual type of
+	 * {@link CommandLineSyntaxException} that may be raised as part of an invocation to the
+	 * {@code parse()} family of methods, when a {@link HelpRequestedException} is the result of the
+	 * invocation.
+	 * </p>
+	 * <p>
+	 * If the given exception is {@code null}, or its {@link HelpRequestedException#getCause()
+	 * getCause()} method returns {@code null}, then this method does nothing.
+	 * </p>
+	 * <p>
+	 * This method is equivalent to invoking {@link #splitException(CommandLineSyntaxException)
+	 * splitException(}{@link HelpRequestedException#getCause()
+	 * e.getCause()}{@link #splitException(CommandLineSyntaxException) )}.
+	 * </p>
+	 *
+	 *
+	 * @param e
+	 *            the help exception to respond to
+	 * @throws IllegalOptionValuesException
+	 * @throws InsufficientOptionValuesException
+	 * @throws MissingRequiredCommandException
+	 * @throws MissingRequiredOptionsException
+	 * @throws TooManyOptionValuesException
+	 * @throws TooManyPositionalValuesException
+	 * @throws UnknownCommandException
+	 * @throws UnknownOptionException
+	 */
+	public void splitException(HelpRequestedException e)
+		throws IllegalOptionValuesException, InsufficientOptionValuesException, MissingRequiredCommandException,
+		MissingRequiredOptionsException, TooManyOptionValuesException, TooManyPositionalValuesException,
+		UnknownCommandException, UnknownOptionException {
+		if (e == null) { return; }
+		splitException(e.getCause());
+	}
+
+	/**
+	 * <p>
+	 * This method is useful if one wishes to process each individual type of
+	 * {@link CommandLineSyntaxException} that may be raised as part of an invocation to the
+	 * {@code parse()} family of methods.
+	 * </p>
+	 * <p>
+	 * If the given exception is {@code null}, then this method does nothing.
+	 * </p>
+	 *
+	 * @param e
+	 * @throws IllegalOptionValuesException
+	 * @throws InsufficientOptionValuesException
+	 * @throws MissingRequiredCommandException
+	 * @throws MissingRequiredOptionsException
+	 * @throws TooManyOptionValuesException
+	 * @throws TooManyPositionalValuesException
+	 * @throws UnknownCommandException
+	 * @throws UnknownOptionException
+	 */
+	public void splitException(CommandLineSyntaxException e)
+		throws IllegalOptionValuesException, InsufficientOptionValuesException, MissingRequiredCommandException,
+		MissingRequiredOptionsException, TooManyOptionValuesException, TooManyPositionalValuesException,
+		UnknownCommandException, UnknownOptionException {
+		if (e == null) { return; }
+		if (IllegalOptionValuesException.class.isInstance(e)) { throw IllegalOptionValuesException.class.cast(e); }
+		if (InsufficientOptionValuesException.class
+			.isInstance(e)) { throw InsufficientOptionValuesException.class.cast(e); }
+		if (MissingRequiredCommandException.class
+			.isInstance(e)) { throw MissingRequiredCommandException.class.cast(e); }
+		if (MissingRequiredOptionsException.class
+			.isInstance(e)) { throw MissingRequiredOptionsException.class.cast(e); }
+		if (TooManyOptionValuesException.class.isInstance(e)) { throw TooManyOptionValuesException.class.cast(e); }
+		if (TooManyPositionalValuesException.class
+			.isInstance(e)) { throw TooManyPositionalValuesException.class.cast(e); }
+		if (UnknownCommandException.class.isInstance(e)) { throw UnknownCommandException.class.cast(e); }
+		if (UnknownOptionException.class.isInstance(e)) { throw UnknownOptionException.class.cast(e); }
 	}
 }

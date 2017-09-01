@@ -34,6 +34,12 @@ public abstract class Option {
 
 	public abstract Set<String> getAllowedValues();
 
+	public abstract boolean isValuesCaseSensitive();
+
+	public abstract boolean isValueAllowed(String value);
+
+	public abstract String canonicalizeValue(String value);
+
 	public abstract String getValueName();
 
 	public abstract int getMinValueCount();

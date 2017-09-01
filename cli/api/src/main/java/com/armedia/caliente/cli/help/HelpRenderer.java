@@ -347,7 +347,7 @@ public final class HelpRenderer {
 			}
 		}
 
-		CommandLineSyntaxException e = help.getError();
+		CommandLineSyntaxException e = help.getCause();
 		if (e != null) {
 			pw.println();
 			HelpRenderer.renderError(e, width, w);
