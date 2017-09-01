@@ -1,14 +1,11 @@
-package com.armedia.caliente.cli.parser;
+package com.armedia.caliente.cli;
 
 import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.Option;
-
-public class MutableParameterDefinitionTest {
+public class OptionImplTest {
 
 	@Test
 	public void testConstructor() {
@@ -342,6 +339,9 @@ public class MutableParameterDefinitionTest {
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 
 		for (char c : UUID.randomUUID().toString().toCharArray()) {
+			if (c == '-') {
+				continue;
+			}
 			actual.setShortOpt(c);
 			Assert.assertEquals(c, actual.getShortOpt().charValue());
 			Assert.assertEquals("ValueName", expected.getValueName(), actual.getValueName());

@@ -23,6 +23,7 @@ import com.armedia.caliente.cli.exception.UnknownOptionException;
 import com.armedia.caliente.cli.token.StaticTokenSource;
 import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.cli.token.TokenLoader;
+import com.armedia.commons.utilities.Tools;
 
 public class OptionParser {
 
@@ -186,6 +187,7 @@ public class OptionParser {
 		OptionScheme currentScheme = baseScheme;
 
 		Option currentOption = null;
+		Option lastOption = null;
 		boolean currentOptionFromCommand = false;
 
 		Map<String, Option> baseWithArgs = new HashMap<>();
@@ -223,6 +225,7 @@ public class OptionParser {
 									// Make sure there is no colliding option from the command...
 									command.remove(helpOption);
 								}
+								lastOption = null;
 								continue;
 							}
 
@@ -295,14 +298,41 @@ public class OptionParser {
 				currentOption = null;
 			} else {
 				// Either a short or long option...
+				Option p = null;
+
+				// First things first: is this the help option?
+				if (!helpRequested && (helpOption != null)) {
+					String expected = null;
+					String actual = token.getValue();
+					switch (token.getType()) {
+						case LONG_OPTION:
+							expected = helpOption.getLongOpt();
+							break;
+						case SHORT_OPTION:
+							expected = helpOption.getShortOpt().toString();
+							break;
+						default:
+							expected = null;
+							break;
+					}
+					if (!baseScheme.isCaseSensitive()) {
+						expected = expected.toUpperCase();
+						actual = actual.toUpperCase();
+					}
+					helpRequested = Tools.equals(expected, actual);
+				}
 
 				// May not have positionals yet, as these would be out-of-place strings
 				if (!positionals.isEmpty()) {
-					raiseExceptionWithHelp(helpRequested, baseScheme, command,
-						new UnknownOptionException(currentScheme, positionals.get(0)));
+					final CommandLineSyntaxException err;
+					if (lastOption != null) {
+						err = new TooManyOptionValuesException(currentScheme, lastOption, token);
+					} else {
+						err = new UnknownOptionException(currentScheme, positionals.get(0));
+					}
+					raiseExceptionWithHelp(helpRequested, baseScheme, command, err);
 				}
 
-				Option p = null;
 				boolean fromCommand = false;
 				boolean mayExtend = true;
 				inner: while (true) {
@@ -347,12 +377,10 @@ public class OptionParser {
 					break;
 				}
 
+				lastOption = p;
 				if (p.getMaxValueCount() != 0) {
 					currentOption = p;
 					currentOptionFromCommand = fromCommand;
-				}
-				if (p.isConflicting(helpOption)) {
-					helpRequested = true;
 				}
 			}
 		}

@@ -6,10 +6,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.armedia.commons.utilities.Tools;
 
 public abstract class Option {
+
+	public static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");
+
+	public static final Pattern VALID_SHORT = Pattern.compile("^[$?\\p{Alnum}]$");
 
 	public static final char DEFAULT_VALUE_SEP = ',';
 

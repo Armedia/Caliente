@@ -7,11 +7,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Pattern;
 
 public final class OptionImpl extends Option implements Cloneable {
-
-	public static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");
 
 	private boolean required = false;
 	private String description = null;
@@ -121,7 +118,7 @@ public final class OptionImpl extends Option implements Cloneable {
 
 	public OptionImpl setLongOpt(String longOpt) {
 		if (longOpt != null) {
-			boolean valid = OptionImpl.VALID_LONG.matcher(longOpt).matches();
+			boolean valid = Option.VALID_LONG.matcher(longOpt).matches();
 			if (valid) {
 				valid &= (longOpt.length() > 1);
 			}
@@ -140,7 +137,7 @@ public final class OptionImpl extends Option implements Cloneable {
 
 	public OptionImpl setShortOpt(Character shortOpt) {
 		if (shortOpt != null) {
-			boolean valid = Character.isLetterOrDigit(shortOpt.charValue()) || shortOpt.equals('?');
+			boolean valid = Option.VALID_SHORT.matcher(shortOpt.toString()).matches();
 			if (!valid) { throw new IllegalArgumentException(
 				String.format("The short option value [%s] is not valid", shortOpt)); }
 		}

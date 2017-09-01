@@ -7,11 +7,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
 
 public class OptionScheme implements Iterable<Option> {
+
+	public static final boolean DEFAULT_CASE_SENSITIVE = true;
 
 	private final boolean caseSensitive;
 	private final String name;
@@ -28,7 +31,7 @@ public class OptionScheme implements Iterable<Option> {
 	 * @param name
 	 */
 	public OptionScheme(String name) {
-		this(name, false);
+		this(name, OptionScheme.DEFAULT_CASE_SENSITIVE);
 	}
 
 	public OptionScheme(String name, boolean caseSensitive) {
@@ -213,7 +216,7 @@ public class OptionScheme implements Iterable<Option> {
 	}
 
 	private void assertValid(Option def) {
-		if (def == null) { throw new IllegalArgumentException("Option definition may not be null"); }
+		Objects.requireNonNull(def, "Must provide a non-null option");
 
 		final boolean hasShortOpt = (def.getShortOpt() != null);
 		final boolean hasLongOpt = (def.getLongOpt() != null);
@@ -233,13 +236,10 @@ public class OptionScheme implements Iterable<Option> {
 	 *             {@link #countCollisions(Option)}
 	 */
 	public final OptionScheme add(Option option) throws DuplicateOptionException {
-		if (option == null) { throw new IllegalArgumentException("Must provide an option to add"); }
 		assertValid(option);
 
 		final String longOpt = canonicalize(option.getLongOpt());
 		final Character shortOpt = canonicalize(option.getShortOpt());
-
-		// TODO: Validate that the short and long options are valid
 
 		final Option oldLong = getOption(longOpt);
 		final Option oldShort = getOption(shortOpt);
@@ -253,6 +253,7 @@ public class OptionScheme implements Iterable<Option> {
 			} else {
 				existing = oldShort;
 			}
+			if (option == existing) { return this; }
 			throw new DuplicateOptionException(
 				String.format("The given option %s would collide with %s", option, existing), existing, option);
 		}
