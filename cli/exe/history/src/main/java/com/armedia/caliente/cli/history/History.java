@@ -109,9 +109,11 @@ public class History {
 								pw.printf("\tTOTAL VERSIONS: %d%n", history.size());
 								pw.printf("\tROOT VERSION  : %s%n", formatVersion(history.getRootVersion()));
 								pw.printf("\tHEAD VERSION  : %s%n", formatVersion(history.getCurrentVersion()));
-								String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n", history.size());
+								String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n",
+									String.valueOf(history.size()).length());
+								int i = 0;
 								for (DctmVersion<IDfSysObject> v : history) {
-									pw.printf(fmt, v == history.getCurrentVersion() ? "*" : " ", formatVersion(v));
+									pw.printf(fmt, v == history.getCurrentVersion() ? "*" : " ", ++i, formatVersion(v));
 								}
 								pw.flush();
 								w.flush();
