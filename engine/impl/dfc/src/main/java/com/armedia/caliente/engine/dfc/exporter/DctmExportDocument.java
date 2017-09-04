@@ -201,7 +201,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			rootObject = (previousCount == 0);
 		} else {
 			// If we're the first object in the version history, we mark ourselves as such.
-			rootObject = Tools.equals(document.getObjectId(), getVersionHistory(ctx, document).getRootId());
+			rootObject = Tools.equals(document.getObjectId(),
+				getVersionHistory(ctx, document).getRootVersion().getId());
 		}
 		marshaled.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
 			IntermediateProperty.VERSION_TREE_ROOT.type, DfValueFactory.newBooleanValue(rootObject)));
