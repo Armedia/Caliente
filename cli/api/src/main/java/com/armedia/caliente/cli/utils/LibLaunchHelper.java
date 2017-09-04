@@ -15,9 +15,9 @@ import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.launcher.LaunchOptionSet;
+import com.armedia.caliente.cli.launcher.OptionSet;
 
-public final class LibLaunchHelper implements LaunchOptionSet, LaunchClasspathHelper {
+public final class LibLaunchHelper implements OptionSet, LaunchClasspathHelper {
 
 	private static final Option LIB = new OptionImpl() //
 		.setShortOpt('l') //

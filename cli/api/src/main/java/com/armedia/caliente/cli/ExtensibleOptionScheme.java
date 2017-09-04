@@ -7,26 +7,45 @@ import com.armedia.caliente.cli.exception.DuplicateOptionException;
 class ExtensibleOptionScheme implements PositionalValueSupport {
 
 	private OptionScheme scheme;
-	private boolean modified = false;
+	private OptionScheme changes;
+	private String name = null;
 
 	ExtensibleOptionScheme(OptionScheme scheme) {
 		this.scheme = new OptionScheme(scheme);
+		this.changes = new OptionScheme(scheme.isCaseSensitive()) //
+			.setMinArguments(scheme.getMinArguments()) //
+			.setMaxArguments(scheme.getMaxArguments()) //
+			.setDynamic(scheme.isDynamic());
+	}
+
+	OptionScheme getChanges() {
+		return this.changes;
 	}
 
 	boolean isModified() {
-		return this.modified;
+		return (this.changes.getOptionCount() != 0);
 	}
 
-	void clearModified() {
-		this.modified = false;
+	public final ExtensibleOptionScheme setName(String name) {
+		this.name = name;
+		return this;
 	}
 
 	public String getName() {
-		return this.scheme.getName();
+		return this.name;
+	}
+
+	public ExtensibleOptionScheme setDescription(String description) {
+		this.changes.setDescription(description);
+		return this;
+	}
+
+	public String getDescription() {
+		return this.changes.getDescription();
 	}
 
 	public boolean isSupportsArguments() {
-		return this.scheme.isSupportsPositionals();
+		return this.changes.isSupportsPositionals();
 	}
 
 	@Override
@@ -46,43 +65,43 @@ class ExtensibleOptionScheme implements PositionalValueSupport {
 
 	public ExtensibleOptionScheme add(Option option) throws DuplicateOptionException {
 		this.scheme.add(option);
-		this.modified = true;
+		this.changes.add(option);
 		return this;
 	}
 
 	public Collection<Option> getOptions() {
-		return this.scheme.getOptions();
+		return this.changes.getOptions();
 	}
 
 	public Collection<Option> getRequiredOptions() {
-		return this.scheme.getRequiredOptions();
+		return this.changes.getRequiredOptions();
 	}
 
 	public int getRequiredOptionCount() {
-		return this.scheme.getRequiredOptionCount();
+		return this.changes.getRequiredOptionCount();
 	}
 
 	public int getOptionCount() {
-		return this.scheme.getOptionCount();
+		return this.changes.getOptionCount();
 	}
 
 	public boolean hasOption(Character shortOpt) {
-		return this.scheme.hasOption(shortOpt);
+		return this.changes.hasOption(shortOpt);
 	}
 
 	public boolean hasOption(String longOpt) {
-		return this.scheme.hasOption(longOpt);
+		return this.changes.hasOption(longOpt);
 	}
 
 	public int countCollisions(Option option) {
-		return this.scheme.countCollisions(option);
+		return this.changes.countCollisions(option);
 	}
 
 	public Option getOption(String longOpt) {
-		return this.scheme.getOption(longOpt);
+		return this.changes.getOption(longOpt);
 	}
 
 	public Option getOption(Character shortOpt) {
-		return this.scheme.getOption(shortOpt);
+		return this.changes.getOption(shortOpt);
 	}
 }

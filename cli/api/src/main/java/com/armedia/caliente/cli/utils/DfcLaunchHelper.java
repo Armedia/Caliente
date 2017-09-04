@@ -14,10 +14,10 @@ import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.launcher.LaunchOptionSet;
+import com.armedia.caliente.cli.launcher.OptionSet;
 import com.armedia.commons.utilities.Tools;
 
-public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchOptionSet {
+public final class DfcLaunchHelper implements LaunchClasspathHelper, OptionSet {
 	private static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
 	private static final String DEFAULT_DFC_PROPERTIES = "dfc.properties";
 	private static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";

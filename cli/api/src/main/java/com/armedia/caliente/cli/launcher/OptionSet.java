@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import com.armedia.caliente.cli.Option;
 
-public interface LaunchOptionSet {
+public interface OptionSet {
 
 	/**
 	 * <p>

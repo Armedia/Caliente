@@ -18,27 +18,31 @@ public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 
 	private final boolean caseSensitive;
 	private final String name;
-	private String description = null;
 	private final Map<String, Option> required = new TreeMap<>();
 	private final Map<String, Option> options = new TreeMap<>();
 	private final Map<String, Option> longKeys = new HashMap<>();
 	private final Map<Character, Option> shortKeys = new HashMap<>();
 	private String argumentName;
+	private String description = null;
 	private int minArgs = 0;
 	private int maxArgs = -1;
 	private boolean dynamic = false;
 
-	/**
-	 * @param name
-	 */
+	public OptionScheme() {
+		this(null, OptionScheme.DEFAULT_CASE_SENSITIVE);
+	}
+
 	public OptionScheme(String name) {
 		this(name, OptionScheme.DEFAULT_CASE_SENSITIVE);
 	}
 
-	public OptionScheme(String name, boolean caseSensitive) {
-		if (name == null) { throw new IllegalArgumentException("Must provide a non-null name"); }
-		this.name = name;
+	public OptionScheme(boolean caseSensitive) {
+		this(null, caseSensitive);
+	}
+
+	protected OptionScheme(String name, boolean caseSensitive) {
 		this.caseSensitive = caseSensitive;
+		this.name = name;
 	}
 
 	public OptionScheme(OptionScheme pattern) {
@@ -57,8 +61,9 @@ public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 		return this.description;
 	}
 
-	public final void setDescription(String description) {
+	public final OptionScheme setDescription(String description) {
 		this.description = description;
+		return this;
 	}
 
 	public final boolean isCaseSensitive() {
@@ -278,6 +283,29 @@ public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 	}
 
 	/**
+	 * <p>
+	 * Adds the given options to this option scheme, by iterating over the collection and invoking
+	 * {@link #add(Option)} on each non-{@code null} element. If the
+	 * {@link DuplicateOptionException} is raised, then all the incoming options will have added
+	 * correctly up to the one first one that generated a conflict.
+	 * </p>
+	 *
+	 * @param options
+	 *            the options to add
+	 * @throws DuplicateOptionException
+	 */
+	public final <O extends Option> OptionScheme add(Collection<O> options) throws DuplicateOptionException {
+		if ((options != null) && !options.isEmpty()) {
+			for (O o : options) {
+				if (o != null) {
+					add(o);
+				}
+			}
+		}
+		return this;
+	}
+
+	/**
 	 * Adds the given option to this option scheme.
 	 *
 	 * @param option
@@ -288,7 +316,6 @@ public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 	 *             {@link #countCollisions(Option)}
 	 */
 	public final OptionScheme addOrReplace(Option option) {
-		if (option == null) { throw new IllegalArgumentException("Must provide an option to add"); }
 		assertValid(option);
 		remove(option);
 		try {
@@ -296,6 +323,24 @@ public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 		} catch (DuplicateOptionException e) {
 			// This should not be possible
 			throw new RuntimeException("Unexpected DuplicateOptionException during addOrReplace()", e);
+		}
+		return this;
+	}
+
+	/**
+	 * Adds the given options to this option scheme, by iterating over the collection and invoking
+	 * {@link #addOrReplace(Option)} on each non-{@code null} element.
+	 *
+	 * @param options
+	 *            the options to add
+	 */
+	public final <O extends Option> OptionScheme addOrReplace(Collection<O> options) {
+		if ((options != null) && !options.isEmpty()) {
+			for (O o : options) {
+				if (o != null) {
+					addOrReplace(o);
+				}
+			}
 		}
 		return this;
 	}

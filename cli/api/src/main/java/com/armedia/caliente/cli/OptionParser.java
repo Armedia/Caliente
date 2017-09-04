@@ -412,7 +412,7 @@ public class OptionParser {
 							// scheme
 
 							// Make sure we clear the "modified" flag...
-							extensibleScheme.clearModified();
+							// extensibleScheme.clearModified();
 
 							// Try to extend the scheme
 							dynamicSupport.extendDynamicScheme(extensions, baseValues, command.getName(), commandValues,
