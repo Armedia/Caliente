@@ -69,6 +69,12 @@ public final class HelpRenderer {
 	private static void renderPositionals(StringBuilder sb, String label, Character sep, int min, int max) {
 		if (max == 0) { return; }
 
+		if ((min == max) && (min == 1)) {
+			// No need to append numbers to the parameter...
+			sb.append(label);
+			return;
+		}
+
 		sb.append(" ");
 
 		// First, render the required arguments
