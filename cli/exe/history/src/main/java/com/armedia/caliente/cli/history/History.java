@@ -148,7 +148,7 @@ public class History {
 						if (debug) {
 							this.log.error(he.getMessage(), he.getCause());
 						} else {
-							this.log.error(he.getMessage());
+							this.log.error("{} (use --debug for more information)", he.getMessage());
 						}
 					} else {
 						this.log.error("An exception was caught while reading a chronicle", cause);
