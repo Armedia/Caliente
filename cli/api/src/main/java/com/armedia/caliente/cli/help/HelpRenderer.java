@@ -119,6 +119,9 @@ public final class HelpRenderer {
 				trailer = String.format("%s%s%s%s%s", String.format(fmt, Math.max(opt, 1)), sep, "...", sep,
 					String.format("%s#N", label));
 			}
+			if ((sep == ' ') && (min > 0)) {
+				sb.append(sep);
+			}
 			sb.append('[');
 			if ((min > 0) || (sep == ' ')) {
 				sb.append(sep);
@@ -201,18 +204,19 @@ public final class HelpRenderer {
 			valueDesc = sb.toString();
 		}
 
-		HelpRenderer.printWrapped(pw, width, (o.isRequired() ? 2 : 4),
+		int indent = (o.isRequired() ? 2 : (shortOpt != null ? 4 : 8));
+		HelpRenderer.printWrapped(pw, width, indent,
 			String.format("%s%s%s%s", (o.isRequired() ? "* " : "  "), shortLabel, longLabel, valueDesc));
 
 		String desc = o.getDescription();
 		if (desc != null) {
-			HelpRenderer.printWrapped(pw, width, 8, String.format("%s", desc));
+			HelpRenderer.printWrapped(pw, width, 12, String.format("%s", desc));
 			pw.println();
 		}
 
 		boolean addLine = false;
 		if ((min == max) && (min != 0)) {
-			HelpRenderer.printWrapped(pw, width, 12, String.format("Required values: %d", min));
+			HelpRenderer.printWrapped(pw, width, 14, String.format("Required values: %d", min));
 			addLine = true;
 		} else if ((min != 0) || (max != 0)) {
 			String minClause = "";
