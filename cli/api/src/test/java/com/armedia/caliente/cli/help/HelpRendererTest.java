@@ -20,9 +20,9 @@ public class HelpRendererTest {
 				.setRequired(true) //
 				.setShortOpt('h') //
 				.setLongOpt("hell") //
-				.setMinValueCount(1) //
-				.setMaxValueCount(10) //
-				.setValueName("hi") //
+				.setMinArguments(1) //
+				.setMaxArguments(10) //
+				.setArgumentName("hi") //
 				.setDescription("The number is 666") //
 				.setDefaults(Arrays.asList("a", "b", "c")) //
 				.setAllowedValues("x", "y", "z"))
@@ -31,13 +31,13 @@ public class HelpRendererTest {
 					.setRequired(false) //
 					.setShortOpt('i') //
 					.setLongOpt("importance") //
-					.setMaxValueCount(0) //
+					.setMaxArguments(0) //
 					.setDescription("The important importantish") //
 			).add( //
 				new OptionImpl() //
 					.setRequired(false) //
 					.setLongOpt("joke") //
-					.setValueName("joke") //
+					.setArgumentName("joke") //
 					.setDescription("The joke to joker with") //
 			).setDescription("THE BIG KAHUNA");
 
@@ -49,9 +49,9 @@ public class HelpRendererTest {
 				.setRequired(true) //
 				.setShortOpt('a') //
 				.setLongOpt("absolute") //
-				.setMinValueCount(1) //
-				.setMaxValueCount(10) //
-				.setValueName("absoluteValue") //
+				.setMinArguments(1) //
+				.setMaxArguments(10) //
+				.setArgumentName("absoluteValue") //
 				.setDescription("The absolute value to absolutize") //
 				.setDefault("AAA") //
 		).add( //
@@ -59,15 +59,15 @@ public class HelpRendererTest {
 				.setRequired(false) //
 				.setShortOpt('b') //
 				.setLongOpt("base") //
-				.setMaxValueCount(0) //
-				.setValueName("baseValue") //
+				.setMaxArguments(0) //
+				.setArgumentName("baseValue") //
 				.setDescription("The base value to basicate") //
 				.setDefault("BBB") //
 		).add( //
 			new OptionImpl() //
 				.setRequired(false) //
 				.setLongOpt("count") //
-				.setValueName("counter") //
+				.setArgumentName("counter") //
 				.setDescription("The count to count") //
 				.setDefault("CCC") //
 		).add( //
@@ -85,9 +85,9 @@ public class HelpRendererTest {
 				.setRequired(true) //
 				.setShortOpt('x') //
 				.setLongOpt("xanax") //
-				.setMinValueCount(2) //
-				.setMaxValueCount(9) //
-				.setValueName("xValue") //
+				.setMinArguments(2) //
+				.setMaxArguments(9) //
+				.setArgumentName("xValue") //
 				.setDescription("The xxxxx") //
 				.setDefault("XXX") //
 		).add( //
@@ -95,18 +95,18 @@ public class HelpRendererTest {
 				.setRequired(false) //
 				.setShortOpt('y') //
 				.setLongOpt("yoke") //
-				.setMinValueCount(0) //
-				.setMaxValueCount(0) //
-				.setValueName("yyyValue") //
+				.setMinArguments(0) //
+				.setMaxArguments(0) //
+				.setArgumentName("yyyValue") //
 				.setDescription("The yy yyy yyyy") //
 				.setDefault("YY") //
 		).add( //
 			new OptionImpl() //
 				.setRequired(false) //
 				.setLongOpt("zed") //
-				.setValueName("zette") //
-				.setMinValueCount(3) //
-				.setMaxValueCount(999) //
+				.setArgumentName("zette") //
+				.setMinArguments(3) //
+				.setMaxArguments(999) //
 				.setDescription("ZZZ ZZzz zzZZ zzz") //
 				.setDefault("ZZZZZZZZ") //
 		).setDescription("SECOND COMMAND ON THE LIST");

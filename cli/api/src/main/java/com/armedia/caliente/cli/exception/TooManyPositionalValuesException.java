@@ -12,8 +12,8 @@ public class TooManyPositionalValuesException extends CommandLineSyntaxException
 
 	@Override
 	protected String renderMessage() {
-		int min = getOptionScheme().getMinArgs();
-		int max = getOptionScheme().getMaxArgs();
+		int min = getOptionScheme().getMinArguments();
+		int max = getOptionScheme().getMaxArguments();
 
 		String msg = "";
 		if (min == max) {

@@ -1,7 +1,7 @@
 package com.armedia.caliente.cli.filenamemapper;
 
-import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionWrapper;
 
 public enum CLIParam implements OptionWrapper {
@@ -18,36 +18,39 @@ public enum CLIParam implements OptionWrapper {
 		.setDescription("Disable case sensitivity when performing name comparisons") //
 	), //
 	fix_char(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("character") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("character") //
 		.setDescription("Use the given character as the replacement for illegal characters (default is '_', "
 			+ "must not be a forbidden character in the target fix scheme, and the period ('.') "
 			+ "and spaces are not allowed in Windows)") //
+		.setDefault("_") //
 	), //
 	fix_mode(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("WIN|UNIX") //
-		.setDescription("Filename fix mode. Valid values are WIN (Windows compatibility) or "
-			+ "UNIX (Unix compatibility) - defaults to the current platform") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("WIN") //
+		.setAllowedValues("WIN", "LIN") //
+		.setDescription("Filename fix mode. Defaults to the current platform") //
 	), //
 	no_dedup(new OptionImpl() //
 		.setDescription("Disable filename deduplication") //
 	), //
 	dedup_pattern(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("pattern") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("pattern") //
 		.setDescription("The Deduplication pattern to apply - must contain ${id}, and can contain any of ${name}, "
 			+ "${fixChar}, and ${count} (the number of conflicts resolved so far) - default is "
 			+ "\"${name}${fixChar}${id}\"") //
+		.setDefault("${name}${fixChar}${id}") //
 	), //
 	target(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("file") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("file") //
 		.setDescription("The target file to write the properties into (default filenamemap.xml)") //
+		.setDefault("filenamemap.xml") //
 	), //
 		//
 	;

@@ -11,6 +11,6 @@ public class InsufficientPositionalValuesException extends CommandLineSyntaxExce
 
 	@Override
 	protected String renderMessage() {
-		return String.format("At least %d positional values are required", getOptionScheme().getMinArgs());
+		return String.format("At least %d positional values are required", getOptionScheme().getMinArguments());
 	}
 }

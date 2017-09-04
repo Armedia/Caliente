@@ -154,13 +154,13 @@ public final class HelpRenderer {
 				}
 			} else {
 				sb.append(String.format(" %1$s [ %1$s-options ]", command.getName()));
-				minPositionals = command.getMinArgs();
-				maxPositionals = command.getMaxArgs();
+				minPositionals = command.getMinArguments();
+				maxPositionals = command.getMaxArguments();
 			}
 		} else {
 			sb.append(" [options...]");
-			minPositionals = baseScheme.getMinArgs();
-			maxPositionals = baseScheme.getMaxArgs();
+			minPositionals = baseScheme.getMinArguments();
+			maxPositionals = baseScheme.getMaxArguments();
 		}
 
 		HelpRenderer.renderPositionals(sb, "arg", ' ', minPositionals, maxPositionals);
@@ -193,14 +193,14 @@ public final class HelpRenderer {
 			longLabel = String.format("--%s", longOpt);
 		}
 
-		int min = o.getMinValueCount();
-		int max = o.getMaxValueCount();
+		int min = o.getMinArguments();
+		int max = o.getMaxArguments();
 
 		String valueDesc = "";
 		if (max != 0) {
 			// First, render the minimums...
 			StringBuilder sb = new StringBuilder();
-			HelpRenderer.renderPositionals(sb, Tools.coalesce(o.getValueName(), "arg"), o.getValueSep(), min, max);
+			HelpRenderer.renderPositionals(sb, Tools.coalesce(o.getArgumentName(), "arg"), o.getValueSep(), min, max);
 			valueDesc = sb.toString();
 		}
 

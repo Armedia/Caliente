@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
 
-class ExtensibleOptionScheme {
+class ExtensibleOptionScheme implements PositionalValueSupport {
 
 	private OptionScheme scheme;
 	private boolean modified = false;
@@ -29,12 +29,19 @@ class ExtensibleOptionScheme {
 		return this.scheme.isSupportsPositionals();
 	}
 
-	public int getMinArgs() {
-		return this.scheme.getMinArgs();
+	@Override
+	public String getArgumentName() {
+		return this.scheme.getArgumentName();
 	}
 
-	public int getMaxArgs() {
-		return this.scheme.getMaxArgs();
+	@Override
+	public int getMinArguments() {
+		return this.scheme.getMinArguments();
+	}
+
+	@Override
+	public int getMaxArguments() {
+		return this.scheme.getMaxArguments();
 	}
 
 	public ExtensibleOptionScheme add(Option option) throws DuplicateOptionException {

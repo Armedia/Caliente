@@ -14,9 +14,9 @@ public final class OptionImpl extends Option implements Cloneable {
 	private String description = null;
 	private Character shortOpt = null;
 	private String longOpt = null;
-	private int minValueCount = 0;
-	private int maxValueCount = 0;
-	private String valueName = null;
+	private int minArguments = 0;
+	private int maxArguments = 0;
+	private String argumentName = null;
 	private Character valueSep = OptionImpl.DEFAULT_VALUE_SEP;
 	private boolean valuesCaseSensitive = false;
 	private final Set<String> allowedValues = new TreeSet<>();
@@ -34,9 +34,9 @@ public final class OptionImpl extends Option implements Cloneable {
 			this.description = other.getDescription();
 			this.shortOpt = other.getShortOpt();
 			this.longOpt = other.getLongOpt();
-			this.minValueCount = other.getMinValueCount();
-			this.maxValueCount = other.getMaxValueCount();
-			this.valueName = other.getValueName();
+			this.minArguments = other.getMinArguments();
+			this.maxArguments = other.getMaxArguments();
+			this.argumentName = other.getArgumentName();
 			this.valueSep = other.getValueSep();
 			Set<String> allowedValues = other.getAllowedValues();
 			if (allowedValues != null) {
@@ -57,38 +57,38 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	@Override
-	public int getMinValueCount() {
-		return this.minValueCount;
+	public int getMinArguments() {
+		return this.minArguments;
 	}
 
-	public OptionImpl setMinValueCount(int count) {
-		this.minValueCount = Math.max(0, count);
-		if ((this.minValueCount > 0) && (this.maxValueCount >= 0) && (this.minValueCount > this.maxValueCount)) {
-			this.maxValueCount = this.minValueCount;
+	public OptionImpl setMinArguments(int count) {
+		this.minArguments = Math.max(0, count);
+		if ((this.minArguments > 0) && (this.maxArguments >= 0) && (this.minArguments > this.maxArguments)) {
+			this.maxArguments = this.minArguments;
 		}
 		return this;
 	}
 
 	@Override
-	public int getMaxValueCount() {
-		return this.maxValueCount;
+	public int getMaxArguments() {
+		return this.maxArguments;
 	}
 
-	public OptionImpl setMaxValueCount(int count) {
-		this.maxValueCount = Math.max(Option.UNBOUNDED_MAX_VALUES, count);
-		if ((this.minValueCount > 0) && (this.maxValueCount >= 0) && (this.minValueCount > this.maxValueCount)) {
-			this.minValueCount = this.maxValueCount;
+	public OptionImpl setMaxArguments(int count) {
+		this.maxArguments = Math.max(Option.UNBOUNDED_MAX_VALUES, count);
+		if ((this.minArguments > 0) && (this.maxArguments >= 0) && (this.minArguments > this.maxArguments)) {
+			this.minArguments = this.maxArguments;
 		}
 		return this;
 	}
 
 	@Override
-	public String getValueName() {
-		return this.valueName;
+	public String getArgumentName() {
+		return this.argumentName;
 	}
 
-	public OptionImpl setValueName(String argName) {
-		this.valueName = argName;
+	public OptionImpl setArgumentName(String argName) {
+		this.argumentName = argName;
 		return this;
 	}
 
@@ -249,9 +249,9 @@ public final class OptionImpl extends Option implements Cloneable {
 	@Override
 	public String toString() {
 		return String.format(
-			"OptionImpl [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minValueCount=%d, maxValueCount=%d, valueName=%s, minValueCount=%s, valueSep=%s, defaults=%s]",
-			this.key, this.required, this.shortOpt, this.longOpt, this.description, this.minValueCount,
-			this.maxValueCount, this.valueName, this.minValueCount, this.valueSep, this.defaults);
+			"OptionImpl [key=%s, required=%s, shortOpt=%s, longOpt=%s, description=%s, minArguments=%d, maxArguments=%d, argumentName=%s, minArguments=%s, valueSep=%s, defaults=%s]",
+			this.key, this.required, this.shortOpt, this.longOpt, this.description, this.minArguments,
+			this.maxArguments, this.argumentName, this.minArguments, this.valueSep, this.defaults);
 	}
 
 	public static <E extends Enum<E>> OptionImpl initOptionName(E e, OptionImpl p) {

@@ -12,7 +12,7 @@ import java.util.TreeMap;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
 
-public class OptionScheme implements Iterable<Option> {
+public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 
 	public static final boolean DEFAULT_CASE_SENSITIVE = true;
 
@@ -23,6 +23,7 @@ public class OptionScheme implements Iterable<Option> {
 	private final Map<String, Option> options = new TreeMap<>();
 	private final Map<String, Option> longKeys = new HashMap<>();
 	private final Map<Character, Option> shortKeys = new HashMap<>();
+	private String argumentName;
 	private int minArgs = 0;
 	private int maxArgs = -1;
 	private boolean dynamic = false;
@@ -126,7 +127,8 @@ public class OptionScheme implements Iterable<Option> {
 	 *
 	 * @return the minimum number of allowed positional arguments
 	 */
-	public final int getMinArgs() {
+	@Override
+	public final int getMinArguments() {
 		return this.minArgs;
 	}
 
@@ -143,7 +145,7 @@ public class OptionScheme implements Iterable<Option> {
 	 * @param minArgs
 	 *            the minimum number of allowed positional arguments
 	 */
-	public final OptionScheme setMinArgs(int minArgs) {
+	public final OptionScheme setMinArguments(int minArgs) {
 		this.minArgs = Math.max(0, minArgs);
 		if ((this.minArgs > 0) && (this.maxArgs >= 0) && (this.minArgs > this.maxArgs)) {
 			this.maxArgs = this.minArgs;
@@ -158,7 +160,8 @@ public class OptionScheme implements Iterable<Option> {
 	 *
 	 * @return the maximum number of allowed positional arguments
 	 */
-	public final int getMaxArgs() {
+	@Override
+	public final int getMaxArguments() {
 		return this.maxArgs;
 	}
 
@@ -176,7 +179,7 @@ public class OptionScheme implements Iterable<Option> {
 	 * @param maxArgs
 	 *            the maximum number of allowed positional arguments
 	 */
-	public final OptionScheme setMaxArgs(int maxArgs) {
+	public final OptionScheme setMaxArguments(int maxArgs) {
 		this.maxArgs = Math.max(Option.UNBOUNDED_MAX_VALUES, maxArgs);
 		if ((this.minArgs > 0) && (this.maxArgs >= 0) && (this.minArgs > this.maxArgs)) {
 			this.minArgs = this.maxArgs;
@@ -517,5 +520,15 @@ public class OptionScheme implements Iterable<Option> {
 	@Override
 	public Iterator<Option> iterator() {
 		return getOptions().iterator();
+	}
+
+	@Override
+	public String getArgumentName() {
+		return this.argumentName;
+	}
+
+	public OptionScheme setArgumentName(String argumentName) {
+		this.argumentName = argumentName;
+		return this;
 	}
 }

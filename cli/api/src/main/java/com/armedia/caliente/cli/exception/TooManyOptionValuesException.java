@@ -13,8 +13,8 @@ public class TooManyOptionValuesException extends CommandLineSyntaxException {
 
 	@Override
 	protected String renderMessage() {
-		int min = getOption().getMinValueCount();
-		int max = getOption().getMaxValueCount();
+		int min = getOption().getMinArguments();
+		int max = getOption().getMaxArguments();
 
 		String msg = "";
 		if (min == max) {

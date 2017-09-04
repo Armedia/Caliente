@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class Option {
+public abstract class Option implements PositionalValueSupport {
 
 	public static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");
 
@@ -39,12 +39,6 @@ public abstract class Option {
 	public abstract boolean isValueAllowed(String value);
 
 	public abstract String canonicalizeValue(String value);
-
-	public abstract String getValueName();
-
-	public abstract int getMinValueCount();
-
-	public abstract int getMaxValueCount();
 
 	public abstract String getDefault();
 
@@ -92,8 +86,8 @@ public abstract class Option {
 	 * the following methods return identical (as per {@link Object#equals(Object)} values:
 	 * </p>
 	 * <ul>
-	 * <li>{@link #getMinValueCount()}</li>
-	 * <li>{@link #getMaxValueCount()}</li>
+	 * <li>{@link #getMinArguments()}</li>
+	 * <li>{@link #getMaxArguments()}</li>
 	 * <li>{@link #getValueSep()}</li>
 	 * <li>{@link #getAllowedValues()}</li>
 	 * </ul>
@@ -104,8 +98,8 @@ public abstract class Option {
 	 */
 	public static boolean isEquivalent(Option a, Option b) {
 		if (!Option.isConflicting(a, b)) { return false; }
-		if (!Tools.equals(a.getMinValueCount(), b.getMinValueCount())) { return false; }
-		if (!Tools.equals(a.getMaxValueCount(), b.getMaxValueCount())) { return false; }
+		if (!Tools.equals(a.getMinArguments(), b.getMinArguments())) { return false; }
+		if (!Tools.equals(a.getMaxArguments(), b.getMaxArguments())) { return false; }
 		if (!Tools.equals(a.getValueSep(), b.getValueSep())) { return false; }
 		if (!Tools.equals(a.getAllowedValues(), b.getAllowedValues())) { return false; }
 		return true;
@@ -119,8 +113,8 @@ public abstract class Option {
 	 * {@link Object#equals(Object)} values:
 	 * </p>
 	 * <ul>
-	 * <li>{@link #getMinValueCount()}</li>
-	 * <li>{@link #getMaxValueCount()}</li>
+	 * <li>{@link #getMinArguments()}</li>
+	 * <li>{@link #getMaxArguments()}</li>
 	 * <li>{@link #getValueSep()}</li>
 	 * <li>{@link #getAllowedValues()}</li>
 	 * </ul>
@@ -133,7 +127,7 @@ public abstract class Option {
 		if (!Option.isEquivalent(a, b)) { return false; }
 		if (!Tools.equals(a.isRequired(), b.isRequired())) { return false; }
 		if (!Tools.equals(a.getDescription(), b.getDescription())) { return false; }
-		if (!Tools.equals(a.getValueName(), b.getValueName())) { return false; }
+		if (!Tools.equals(a.getArgumentName(), b.getArgumentName())) { return false; }
 		if (!Tools.equals(a.getAllowedValues(), b.getAllowedValues())) { return false; }
 		if (!Tools.equals(a.getDefaults(), b.getDefaults())) { return false; }
 		return true;

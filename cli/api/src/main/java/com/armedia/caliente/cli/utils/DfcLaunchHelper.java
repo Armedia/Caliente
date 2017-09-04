@@ -27,42 +27,48 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, LaunchOptio
 
 	private static final Option DFC_LOCATION = new OptionImpl() //
 		.setLongOpt("dfc") //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("dfc install location") //
-		.setDescription("The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)");
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("dfc-install-location") //
+		.setDescription("The path where DFC is installed (i.e. instead of DOCUMENTUM_SHARED)") //
+	;
 	private static final Option DFC_DOCUMENTUM = new OptionImpl() //
 		.setLongOpt("dctm") //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("directory") //
-		.setDescription("The user's local Documentum path (i.e. instead of DOCUMENTUM)");
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("directory") //
+		.setDescription("The user's local Documentum path (i.e. instead of DOCUMENTUM)") //
+	;
 	private static final Option DFC_PROPERTIES = new OptionImpl() //
 		.setLongOpt("dfc-prop") //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("dfc.properties location") //
-		.setDescription("The dfc.properties file to use instead of the default");
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("dfc.properties-location") //
+		.setDescription("The dfc.properties file to use instead of the default") //
+	;
 	private static final Option DFC_DOCBASE = new OptionImpl() //
 		.setLongOpt("docbase") //
 		.setRequired(true) //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("docbase") //
-		.setDescription("The Documentum repostory name to connect to");
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("docbase") //
+		.setDescription("The Documentum repostory name to connect to") //
+	;
 	private static final Option DFC_USER = new OptionImpl() //
 		.setLongOpt("dctm-user") //
 		.setRequired(true) //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("username") //
-		.setDescription("The username to connect to Documentum with");
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("username") //
+		.setDescription("The username to connect to Documentum with") //
+	;
 	private static final Option DFC_PASSWORD = new OptionImpl() //
 		.setLongOpt("dctm-pass") //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("password") //
-		.setDescription("The password to connect to Documentum with");
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("password") //
+		.setDescription("The password to connect to Documentum with") //
+	;
 
 	private final Option paramDfc;
 	private final Option paramDctm;

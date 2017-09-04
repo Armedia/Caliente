@@ -174,8 +174,6 @@ public class OptionParser {
 
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", args), optionValueSplitter,
 			allowRecursion);
-		final Pattern valueSplitter = Pattern
-			.compile(String.format(OptionParser.VALUE_SEPARATOR_PATTERN, tokenLoader.getValueSeparator()));
 
 		final OptionValues baseValues = new OptionValues();
 		final List<Token> positionals = new ArrayList<>();
@@ -209,7 +207,7 @@ public class OptionParser {
 					if (currentOption != null) {
 						// This can only be a string option(s) for currentOption so add an
 						// occurrence and validate the schema limits (empty strings are allowed)
-						final int maxArgs = currentOption.getMaxValueCount();
+						final int maxArgs = currentOption.getMaxArguments();
 						if (maxArgs == 0) {
 							raiseExceptionWithHelp(helpRequested, baseScheme, command,
 								new TooManyOptionValuesException(currentScheme, currentOption, token));
@@ -224,32 +222,49 @@ public class OptionParser {
 						// (i.e. a\,b,c -> [ "a,b", "c" ])
 						List<String> values = new ArrayList<>();
 						String str = token.getRawString();
-						Matcher m = valueSplitter.matcher(str);
-						int start = 0;
+
+						final Character sep = currentOption.getValueSep();
 						Set<String> badValues = null;
-						nextValue: while (m.find()) {
-							String nextValue = str.substring(start, m.start());
+						if (sep == null) {
+							// No value separation is supported or desired, so use the whole string
+							// as a single value
+							String nextValue = str;
 							if (!currentOption.isValueAllowed(nextValue)) {
 								if (badValues == null) {
 									badValues = new TreeSet<>();
 								}
 								badValues.add(nextValue);
-								continue nextValue;
+							}
+							values.add(nextValue);
+						} else {
+							final Pattern valueSplitter = Pattern
+								.compile(String.format(OptionParser.VALUE_SEPARATOR_PATTERN, sep));
+							Matcher m = valueSplitter.matcher(str);
+							int start = 0;
+							nextValue: while (m.find()) {
+								String nextValue = str.substring(start, m.start());
+								if (!currentOption.isValueAllowed(nextValue)) {
+									if (badValues == null) {
+										badValues = new TreeSet<>();
+									}
+									badValues.add(nextValue);
+									continue nextValue;
+								}
+
+								values.add(currentOption.canonicalizeValue(nextValue));
+								start = m.end();
 							}
 
-							values.add(currentOption.canonicalizeValue(nextValue));
-							start = m.end();
-						}
-
-						// Add the last value - or total value if there were no splitters
-						String lastValue = str.substring(start);
-						if (!currentOption.isValueAllowed(lastValue)) {
-							if (badValues == null) {
-								badValues = new TreeSet<>();
+							// Add the last value - or total value if there were no splitters
+							String lastValue = str.substring(start);
+							if (!currentOption.isValueAllowed(lastValue)) {
+								if (badValues == null) {
+									badValues = new TreeSet<>();
+								}
+								badValues.add(lastValue);
 							}
-							badValues.add(lastValue);
+							values.add(lastValue);
 						}
-						values.add(lastValue);
 
 						// If there are invalid values, then we raise the exception
 						if (badValues != null) {
@@ -258,7 +273,9 @@ public class OptionParser {
 						}
 
 						// If this would exceed the maximum allowed of option values, then we have a
-						// problem
+						// problem (this should NEVER happen for options that don't support
+						// arguments, since options are only "remembered" if they support
+						// arguments...
 						if ((maxArgs > 0) && ((values.size() + existing) > maxArgs)) {
 							raiseExceptionWithHelp(helpRequested, baseScheme, command,
 								new TooManyOptionValuesException(currentScheme, currentOption, token));
@@ -311,7 +328,7 @@ public class OptionParser {
 
 					// This can only be a positional value, as we either don't support commands, or
 					// already have one active
-					final int maxArgs = currentScheme.getMaxArgs();
+					final int maxArgs = currentScheme.getMaxArguments();
 
 					// Are positionals allowed?
 					if (!currentScheme.isSupportsPositionals()) {
@@ -417,7 +434,7 @@ public class OptionParser {
 					// Mark this as the "last" option seen
 					lastOption = p;
 					currentOptionFromCommand = fromCommand;
-					if (p.getMaxValueCount() != 0) {
+					if (p.getMaxArguments() != 0) {
 						// This option supports parameters, so track it so we can add them
 						currentOption = p;
 					} else {
@@ -458,12 +475,12 @@ public class OptionParser {
 
 		// Validate the minimum arguments for the options that have arguments
 		for (Option p : baseWithArgs.values()) {
-			if ((p.getMinValueCount() > 0) && (baseValues.getValueCount(p) < p.getMinValueCount())) {
+			if ((p.getMinArguments() > 0) && (baseValues.getValueCount(p) < p.getMinArguments())) {
 				baseFaults.add(p);
 			}
 		}
 		for (Option p : commandWithArgs.values()) {
-			if ((p.getMinValueCount() > 0) && (commandValues.getValueCount(p) < p.getMinValueCount())) {
+			if ((p.getMinArguments() > 0) && (commandValues.getValueCount(p) < p.getMinArguments())) {
 				commandFaults.add(p);
 			}
 		}
@@ -474,7 +491,7 @@ public class OptionParser {
 		}
 
 		// Validate that we have enough positionals as required
-		if (currentScheme.getMinArgs() > positionals.size()) {
+		if (currentScheme.getMinArguments() > positionals.size()) {
 			raiseExceptionWithHelp(helpRequested, baseScheme, command,
 				new InsufficientPositionalValuesException(currentScheme));
 		}

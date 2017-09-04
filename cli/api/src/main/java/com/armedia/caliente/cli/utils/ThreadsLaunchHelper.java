@@ -18,11 +18,12 @@ public final class ThreadsLaunchHelper implements LaunchOptionSet {
 	private static final Option THREADS = new OptionImpl() //
 		.setShortOpt('t') //
 		.setLongOpt("threads") //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
 		.setDefault(String.valueOf(ThreadsLaunchHelper.DEFAULT_DEF_THREADS)) //
-		.setValueName("threads") //
-		.setDescription("The number of threads to use");
+		.setArgumentName("threads") //
+		.setDescription("The number of threads to use") //
+	;
 
 	private final int min;
 	private final Integer def;

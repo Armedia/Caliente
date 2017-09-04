@@ -22,11 +22,12 @@ public final class LibLaunchHelper implements LaunchOptionSet, LaunchClasspathHe
 	private static final Option LIB = new OptionImpl() //
 		.setShortOpt('l') //
 		.setLongOpt("lib") //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("directory") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("directory") //
 		.setDescription(
-			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath");
+			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
+	;
 
 	private static final FileFilter LIB_FILTER = new FileFilter() {
 		@Override

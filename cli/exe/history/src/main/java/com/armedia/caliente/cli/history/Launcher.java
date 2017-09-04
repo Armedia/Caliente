@@ -32,7 +32,7 @@ public class Launcher extends AbstractLauncher {
 		for (Option o : this.dfcLaunchHelper.getOptions()) {
 			optionScheme.addOrReplace(o);
 		}
-		optionScheme.setMinArgs(1);
+		optionScheme.setMinArguments(1);
 		return optionScheme;
 	}
 

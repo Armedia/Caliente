@@ -43,18 +43,18 @@ public final class OptionValue extends Option {
 	}
 
 	@Override
-	public String getValueName() {
-		return this.def.getValueName();
+	public String getArgumentName() {
+		return this.def.getArgumentName();
 	}
 
 	@Override
-	public int getMinValueCount() {
-		return this.def.getMinValueCount();
+	public int getMinArguments() {
+		return this.def.getMinArguments();
 	}
 
 	@Override
-	public int getMaxValueCount() {
-		return this.def.getMaxValueCount();
+	public int getMaxArguments() {
+		return this.def.getMaxArguments();
 	}
 
 	@Override

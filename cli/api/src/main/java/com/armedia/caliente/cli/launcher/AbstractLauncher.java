@@ -25,8 +25,8 @@ public abstract class AbstractLauncher {
 	private static final Option HELP_OPTION = new OptionImpl() //
 		.setShortOpt('?') //
 		.setLongOpt("help") //
-		.setMinValueCount(0) //
-		.setMaxValueCount(0) //
+		.setMinArguments(0) //
+		.setMaxArguments(0) //
 		.setDescription("Display this help message") //
 	;
 

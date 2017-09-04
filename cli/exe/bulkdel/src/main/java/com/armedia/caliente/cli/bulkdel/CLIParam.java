@@ -1,9 +1,7 @@
 package com.armedia.caliente.cli.bulkdel;
 
-import java.util.Arrays;
-
-import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionWrapper;
 
 public enum CLIParam implements OptionWrapper {
@@ -27,30 +25,32 @@ public enum CLIParam implements OptionWrapper {
 			"If any references are encountered, delete the referenced object instead of the reference itself (default is to delete just the reference)") //
 	), //
 	delete_versions(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("mode") //
-		.setAllowedValues(Arrays.asList("selected", "unused", "all"))
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("mode") //
+		.setAllowedValues("selected", "unused", "all")
 		.setDescription("Select which versions of the objects to delete (default = all)") //
+		.setDefault("all") //
 	), //
 	answer(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("answer") //
-		.setAllowedValues(Arrays.asList("yes", "no", "abort", "ask"))
-		.setDescription("How to answer any yes-no questions posed during the operation (default = abort)") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("answer") //
+		.setAllowedValues("yes", "no", "abort", "ask")
+		.setDescription("How to answer any yes-no questions posed during the operation") //
+		.setDefault("abort") //
 	), //
 	target(new OptionImpl() //
-		.setMinValueCount(0) //
-		.setMaxValueCount(-1) //
-		.setValueName("target") //
+		.setMinArguments(0) //
+		.setMaxArguments(-1) //
+		.setArgumentName("target") //
 		.setValueSep(null) // Disallow concatenated values
 		.setDescription("The path or r_object_id of each object to be deleted (can be specified multiple times)") //
 	), //
 	predicate(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("DQL-predicate") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("DQL-predicate") //
 		.setDescription(
 			"A DQL predicate that will be used to retrieve the r_object_id for all the objects that need to be deleted") //
 	), //

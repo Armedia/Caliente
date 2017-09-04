@@ -23,6 +23,6 @@ public class InsufficientOptionValuesException extends CommandLineSyntaxExceptio
 		} else {
 			label = String.format("-%s", shortOpt);
 		}
-		return String.format("The option %s requires at least %d values", label, o.getMinValueCount());
+		return String.format("The option %s requires at least %d values", label, o.getMinArguments());
 	}
 }

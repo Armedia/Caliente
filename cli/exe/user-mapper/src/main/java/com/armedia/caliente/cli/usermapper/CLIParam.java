@@ -1,52 +1,52 @@
 package com.armedia.caliente.cli.usermapper;
 
-import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionWrapper;
 
 public enum CLIParam implements OptionWrapper {
 	//
 	dctm_sam(new OptionImpl() //
-		.setMaxValueCount(-1) //
-		.setValueName("attribute name") //
+		.setMaxArguments(-1) //
+		.setArgumentName("attribute-name") //
 		.setDescription("The Documentum attribute to attempt to use for mapping directly to the sAMAccountName. "
 			+ "Multiple instances of this option may be specified and each will be tried in turn "
 			+ "(The default mode is to first try user_login_name, then try user_os_name") //
 	), //
 	ldap_url(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("ldap url") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("ldap-url") //
 		.setDescription("The LDAP URL to bind to") //
 	), //
 	ldap_binddn(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("ldap dn") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("ldap-dn") //
 		.setDescription("The DN to bind to LDAP with") //
 	), //
 	ldap_pass(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("password") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("password") //
 		.setDescription("The password to bind to LDAP with") //
 	), //
 	ldap_basedn(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("ldap dn") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("ldap-dn") //
 		.setDescription("The Base DN to search LDAP for both users and groups (SUB scope)") //
 	), //
 	ldap_user_basedn(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("ldap dn") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("ldap-dn") //
 		.setDescription("The Base DN to search LDAP for users (SUB scope)") //
 	), //
 	ldap_group_basedn(new OptionImpl() //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("ldap dn") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("ldap-dn") //
 		.setDescription("The Base DN to search LDAP for groups (SUB scope)") //
 	), //
 	ldap_on_demand(new OptionImpl() //
