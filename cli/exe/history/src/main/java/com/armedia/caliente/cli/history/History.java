@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
@@ -82,64 +81,65 @@ public class History {
 		try {
 			final List<Future<String>> futures = new ArrayList<>(chronicleIds.size());
 			final ExecutorService executors = Executors.newFixedThreadPool(Math.max(1, threads));
-			try {
-				for (String id : chronicleIds) {
-					final IDfId chronicleId = new DfId(id);
-					futures.add(executors.submit(new Callable<String>() {
-						@Override
-						public String call() throws HistoryException {
-							final IDfSession session;
-							try {
-								session = pool.acquireSession();
-							} catch (Exception e) {
-								throw new HistoryException(chronicleId,
-									String.format("Failed to acquire a Documentum session to read the chronicle [%s]",
-										chronicleId),
-									e);
-							}
-							try {
-								History.this.log.info("Scanning history with ID [{}]...", chronicleId);
-
-								DctmVersionHistory<IDfSysObject> history = new DctmVersionHistory<>(session,
-									chronicleId);
-								StringWriter w = new StringWriter();
-								PrintWriter pw = new PrintWriter(w);
-
-								pw.printf("HISTORY ID: [%s]%n", history.getChronicleId());
-								pw.printf("\tTOTAL VERSIONS: %d%n", history.size());
-								pw.printf("\tROOT VERSION  : %s%n", formatVersion(history.getRootVersion()));
-								pw.printf("\tHEAD VERSION  : %s%n", formatVersion(history.getCurrentVersion()));
-								String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n",
-									String.valueOf(history.size()).length());
-								int i = 0;
-								for (DctmVersion<IDfSysObject> v : history) {
-									pw.printf(fmt, v == history.getCurrentVersion() ? "*" : " ", ++i, formatVersion(v));
-								}
-								pw.flush();
-								w.flush();
-								return w.toString();
-							} catch (DfException e) {
-								throw new HistoryException(chronicleId,
-									String.format(
-										"DFC reported an error while retrieving the history for chronicle [%s]",
-										chronicleId),
-									e);
-							} catch (DctmException e) {
-								throw new HistoryException(chronicleId,
-									String.format("The history for chronicle [%s] is inconsistent", chronicleId), e);
-							} finally {
-								pool.releaseSession(session);
-							}
+			for (String id : chronicleIds) {
+				final IDfId chronicleId = new DfId(id);
+				futures.add(executors.submit(new Callable<String>() {
+					@Override
+					public String call() throws HistoryException {
+						final IDfSession session;
+						try {
+							session = pool.acquireSession();
+						} catch (Exception e) {
+							throw new HistoryException(chronicleId, String.format(
+								"Failed to acquire a Documentum session to read the chronicle [%s]", chronicleId), e);
 						}
-					}));
-				}
-				executors.shutdown();
-			} finally {
-				executors.awaitTermination(5, TimeUnit.MINUTES);
-			}
+						boolean ok = false;
+						try {
+							History.this.log.info("Scanning history with ID [{}]...", chronicleId);
+							DctmVersionHistory<IDfSysObject> history = new DctmVersionHistory<>(session, chronicleId);
+							History.this.log.info("History with ID [{}] scanned successfully!", chronicleId);
 
-			this.log.info("Retrieving data from the background workers...");
+							StringWriter w = new StringWriter();
+							PrintWriter pw = new PrintWriter(w);
+
+							pw.printf("HISTORY ID: [%s]%n", history.getChronicleId());
+							pw.printf("\tTOTAL VERSIONS: %d%n", history.size());
+							pw.printf("\tROOT VERSION  : %s%n", formatVersion(history.getRootVersion()));
+							pw.printf("\tHEAD VERSION  : %s%n", formatVersion(history.getCurrentVersion()));
+							String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n",
+								String.valueOf(history.size()).length());
+							int i = 0;
+							for (DctmVersion<IDfSysObject> v : history) {
+								pw.printf(fmt, v == history.getCurrentVersion() ? "*" : " ", ++i, formatVersion(v));
+							}
+							pw.flush();
+							w.flush();
+							ok = true;
+							return w.toString();
+						} catch (DfException e) {
+							throw new HistoryException(chronicleId,
+								String.format(
+									"DFC reported an error while retrieving the history for chronicle [%s]: %s",
+									chronicleId, e.getMessage()),
+								e);
+						} catch (DctmException e) {
+							throw new HistoryException(chronicleId, String.format(
+								"The history for chronicle [%s] is inconsistent: %s", chronicleId, e.getMessage()), e);
+						} finally {
+							if (!ok) {
+								History.this.log.error("An error was encountered while processing chronicle [{}]",
+									chronicleId);
+							}
+							pool.releaseSession(session);
+						}
+					}
+				}));
+			}
+			this.log.info("Submitted {} history searches...", chronicleIds.size());
+			executors.shutdown();
+
 			int ret = 0;
+			this.log.info("Retrieving data from the background workers...");
 			for (Future<String> f : futures) {
 				try {
 					this.log.info(f.get());
@@ -153,7 +153,7 @@ public class History {
 							this.log.error("{} (use --debug for more information)", he.getMessage());
 						}
 					} else {
-						this.log.error("An exception was caught while reading a chronicle", cause);
+						this.log.error("An unexpected exception was raised while reading a chronicle", cause);
 					}
 					ret = 1;
 				}
