@@ -25,6 +25,8 @@ import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DctmException;
 import com.armedia.commons.dfc.util.DctmVersion;
 import com.armedia.commons.dfc.util.DctmVersionHistory;
+import com.armedia.commons.dfc.util.DfUtils;
+import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
@@ -93,49 +95,80 @@ public class History {
 							throw new HistoryException(chronicleId, String.format(
 								"Failed to acquire a Documentum session to read the chronicle [%s]", chronicleId), e);
 						}
-						boolean ok = false;
+
 						try {
-							History.this.log.info("Scanning history with ID [{}]...", chronicleId);
-							DctmVersionHistory<IDfSysObject> history = new DctmVersionHistory<>(session, chronicleId);
-							History.this.log.info("History with ID [{}] scanned successfully!", chronicleId);
-
-							StringWriter w = new StringWriter();
-							PrintWriter pw = new PrintWriter(w);
-
-							pw.printf("HISTORY ID: [%s]%n", history.getChronicleId());
-							pw.printf("\tTOTAL VERSIONS: %d%n", history.size());
-							pw.printf("\tROOT VERSION  : %s%n", formatVersion(history.getRootVersion()));
-							pw.printf("\tHEAD VERSION  : %s%n", formatVersion(history.getCurrentVersion()));
-							String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n",
-								String.valueOf(history.size()).length());
-							int i = 0;
-							for (DctmVersion<IDfSysObject> v : history) {
-								pw.printf(fmt, v == history.getCurrentVersion() ? "*" : " ", ++i, formatVersion(v));
+							boolean ok = false;
+							final IDfLocalTransaction tx;
+							try {
+								tx = DfUtils.openTransaction(session);
+							} catch (DfException e) {
+								throw new HistoryException(chronicleId,
+									String.format(
+										"DFC reported an error while starting the read-only transaction for chronicle [%s]: %s",
+										chronicleId, e.getMessage()),
+									e);
 							}
-							pw.flush();
-							w.flush();
-							ok = true;
-							return w.toString();
-						} catch (DfException e) {
-							throw new HistoryException(chronicleId,
-								String.format(
-									"DFC reported an error while retrieving the history for chronicle [%s]: %s",
-									chronicleId, e.getMessage()),
-								e);
-						} catch (DctmException e) {
-							throw new HistoryException(chronicleId, String.format(
-								"The history for chronicle [%s] is inconsistent: %s", chronicleId, e.getMessage()), e);
+
+							try {
+								try {
+									History.this.log.info("Scanning history with ID [{}]...", chronicleId);
+									DctmVersionHistory<IDfSysObject> history = new DctmVersionHistory<>(session,
+										chronicleId);
+									History.this.log.info("History with ID [{}] scanned successfully!", chronicleId);
+
+									StringWriter w = new StringWriter();
+									PrintWriter pw = new PrintWriter(w);
+
+									pw.printf("HISTORY ID: [%s]%n", history.getChronicleId());
+									pw.printf("\tTOTAL VERSIONS: %d%n", history.size());
+									pw.printf("\tROOT VERSION  : %s%n", formatVersion(history.getRootVersion()));
+									pw.printf("\tHEAD VERSION  : %s%n", formatVersion(history.getCurrentVersion()));
+									String fmt = String.format("\t\t%%s [%%0%dd]: %%s%n",
+										String.valueOf(history.size()).length());
+									int i = 0;
+									for (DctmVersion<IDfSysObject> v : history) {
+										pw.printf(fmt, v == history.getCurrentVersion() ? "*" : " ", ++i,
+											formatVersion(v));
+									}
+									pw.flush();
+									w.flush();
+									ok = true;
+									return w.toString();
+								} catch (DfException e) {
+									throw new HistoryException(chronicleId,
+										String.format(
+											"DFC reported an error while retrieving the history for chronicle [%s]: %s",
+											chronicleId, e.getMessage()),
+										e);
+								} catch (DctmException e) {
+									throw new HistoryException(chronicleId,
+										String.format("The history for chronicle [%s] is inconsistent: %s", chronicleId,
+											e.getMessage()),
+										e);
+								} finally {
+									if (!ok) {
+										History.this.log.error(
+											"An error was encountered while processing chronicle [{}]", chronicleId);
+									}
+								}
+							} finally {
+								try {
+									DfUtils.abortTransaction(session, tx);
+								} catch (DfException e) {
+									// Here we don't raise an exception since we don't want to blot
+									// out any that are already being raised...
+									History.this.log.error(
+										"DFC reported an error while rolling back the read-only transaction for chronicle [{}]",
+										chronicleId, e);
+								}
+							}
 						} finally {
-							if (!ok) {
-								History.this.log.error("An error was encountered while processing chronicle [{}]",
-									chronicleId);
-							}
 							pool.releaseSession(session);
 						}
 					}
 				}));
 			}
-			this.log.info("Submitted {} history searches...", chronicleIds.size());
+			this.log.info("Submitted {} history search%s...", chronicleIds.size(), chronicleIds.size() > 1 ? "es" : "");
 			executors.shutdown();
 
 			int ret = 0;
