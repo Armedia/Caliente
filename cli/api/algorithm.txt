@@ -108,4 +108,3 @@ for (Token nextToken : allTokens) {
 			currentParameter = p;
 		}
 	}
-}
