@@ -11,17 +11,18 @@ import com.armedia.commons.utilities.Tools;
 
 public final class ThreadsLaunchHelper implements LaunchOptionSet {
 
+	public static final int DEFAULT_MIN_THREADS = 1;
+	public static final int DEFAULT_DEF_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
+	public static final int DEFAULT_MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 4);
+
 	private static final Option THREADS = new OptionImpl() //
 		.setShortOpt('t') //
 		.setLongOpt("threads") //
 		.setMinValueCount(1) //
 		.setMaxValueCount(1) //
+		.setDefault(String.valueOf(ThreadsLaunchHelper.DEFAULT_DEF_THREADS)) //
 		.setValueName("threads") //
 		.setDescription("The number of threads to use");
-
-	public static final int DEFAULT_MIN_THREADS = 1;
-	public static final int DEFAULT_DEF_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
-	public static final int DEFAULT_MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 4);
 
 	private final int min;
 	private final Integer def;

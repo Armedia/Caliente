@@ -69,6 +69,12 @@ public final class HelpRenderer {
 	private static void renderPositionals(StringBuilder sb, String label, Character sep, int min, int max) {
 		if (max == 0) { return; }
 
+		if ((min == max) && (min == 1)) {
+			// No need to append numbers to the parameter...
+			sb.append(label);
+			return;
+		}
+
 		sb.append(" ");
 
 		// First, render the required arguments
@@ -350,7 +356,7 @@ public final class HelpRenderer {
 		CommandLineSyntaxException e = help.getCause();
 		if (e != null) {
 			pw.println();
-			HelpRenderer.renderError(e, width, w);
+			HelpRenderer.renderError("Syntax Error: ", e, width, w);
 			pw.println();
 		}
 
@@ -413,7 +419,10 @@ public final class HelpRenderer {
 		final PrintWriter pw = new PrintWriter(w);
 		if (!StringUtils.isEmpty(prefix)) {
 			prefix = String.format("%s: ", prefix);
+		} else {
+			prefix = "";
 		}
 		HelpRenderer.printWrapped(pw, width, String.format("%s%s%n", prefix, e.getMessage()));
+		pw.flush();
 	}
 }

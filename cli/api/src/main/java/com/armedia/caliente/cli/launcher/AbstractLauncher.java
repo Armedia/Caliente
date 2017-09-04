@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.DynamicOptionSchemeSupport;
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionParseResult;
 import com.armedia.caliente.cli.OptionParser;
 import com.armedia.caliente.cli.OptionScheme;
@@ -20,6 +21,14 @@ import com.armedia.caliente.cli.help.HelpRenderer;
 import com.armedia.caliente.cli.launcher.log.LogConfigurator;
 
 public abstract class AbstractLauncher {
+
+	private static final Option HELP_OPTION = new OptionImpl() //
+		.setShortOpt('?') //
+		.setLongOpt("help") //
+		.setMinValueCount(0) //
+		.setMaxValueCount(0) //
+		.setDescription("Display this help message") //
+	;
 
 	private static final Logger BOOT_LOG = LogConfigurator.getBootLogger();
 
@@ -44,7 +53,7 @@ public abstract class AbstractLauncher {
 	}
 
 	protected final int launch(String... args) {
-		return launch(null, args);
+		return launch(AbstractLauncher.HELP_OPTION, args);
 	}
 
 	protected abstract String getProgramName();
