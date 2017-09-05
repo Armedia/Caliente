@@ -179,7 +179,7 @@ public class OptionParser {
 		final List<Token> positionals = new ArrayList<>();
 		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
 
-		boolean dynamic = (baseScheme.isDynamic() && (dynamicSupport != null));
+		boolean extensible = (baseScheme.isExtensible() && (dynamicSupport != null));
 
 		Command command = null;
 		String commandName = null;
@@ -194,7 +194,7 @@ public class OptionParser {
 		Map<String, Option> baseWithArgs = new HashMap<>();
 		Map<String, Option> commandWithArgs = new HashMap<>();
 
-		ExtensibleOptionScheme extensibleScheme = (dynamic ? new ExtensibleOptionScheme(baseScheme) : null);
+		OptionSchemeExtension extensibleScheme = (extensible ? new OptionSchemeExtension(baseScheme) : null);
 
 		boolean helpRequested = false;
 
@@ -298,15 +298,15 @@ public class OptionParser {
 							// Find the command...if not a command, then it must be a positional
 							// Give out the currently-accumulated option values to assist the
 							// search
-							currentScheme = command = findCommand(dynamic ? baseValues : null, commandScheme,
+							currentScheme = command = findCommand(extensible ? baseValues : null, commandScheme,
 								token.getRawString());
 							// If there is no command
 							if (command != null) {
 								commandName = command.getName();
 								commandValues = new OptionValues();
-								dynamic = commandScheme.isDynamic() && (dynamicSupport != null);
-								if (dynamic) {
-									extensibleScheme = new ExtensibleOptionScheme(command);
+								extensible = commandScheme.isExtensible() && (dynamicSupport != null);
+								if (extensible) {
+									extensibleScheme = new OptionSchemeExtension(command);
 								}
 								if (helpOption != null) {
 									// Make sure there is no colliding option from the command...
@@ -403,7 +403,7 @@ public class OptionParser {
 							break inner;
 						}
 
-						if (dynamic && mayExtend) {
+						if (extensible && mayExtend) {
 							// Dynamic support enabled!! Try to expand the currently-active
 							// scheme
 

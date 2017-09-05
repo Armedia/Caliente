@@ -22,11 +22,12 @@ public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 	private final Map<String, Option> options = new TreeMap<>();
 	private final Map<String, Option> longKeys = new HashMap<>();
 	private final Map<Character, Option> shortKeys = new HashMap<>();
+
 	private String argumentName;
 	private String description = null;
 	private int minArgs = 0;
 	private int maxArgs = -1;
-	private boolean dynamic = false;
+	private boolean extensible = false;
 
 	public OptionScheme() {
 		this(null, OptionScheme.DEFAULT_CASE_SENSITIVE);
@@ -46,15 +47,21 @@ public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 	}
 
 	public OptionScheme(OptionScheme pattern) {
-		this.name = pattern.getName();
+		this(pattern.getName(), pattern);
+	}
+
+	OptionScheme(String altName, OptionScheme pattern) {
+		this.caseSensitive = pattern.isCaseSensitive();
+		this.name = altName;
 		this.required.putAll(pattern.required);
 		this.options.putAll(pattern.options);
 		this.longKeys.putAll(pattern.longKeys);
 		this.shortKeys.putAll(pattern.shortKeys);
-		this.minArgs = pattern.minArgs;
-		this.maxArgs = pattern.maxArgs;
-		this.dynamic = pattern.dynamic;
-		this.caseSensitive = pattern.caseSensitive;
+		this.argumentName = pattern.getArgumentName();
+		this.description = pattern.getDescription();
+		this.minArgs = pattern.getMinArguments();
+		this.maxArgs = pattern.getMaxArguments();
+		this.extensible = pattern.isExtensible();
 	}
 
 	public final String getDescription() {
@@ -86,12 +93,12 @@ public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 		return c;
 	}
 
-	public final boolean isDynamic() {
-		return this.dynamic;
+	public final boolean isExtensible() {
+		return this.extensible;
 	}
 
-	public final OptionScheme setDynamic(boolean dynamic) {
-		this.dynamic = dynamic;
+	public final OptionScheme setExtensible(boolean extensible) {
+		this.extensible = extensible;
 		return this;
 	}
 
@@ -534,7 +541,7 @@ public class OptionScheme implements Iterable<Option>, PositionalValueSupport {
 	 *         short or long options, or {@code null} if none collide
 	 */
 	public final Collection<Option> findCollisions(Option option) {
-		if (option == null) { throw new IllegalArgumentException("Must provide a non-null option"); }
+		assertValid(option);
 		return findCollisions(option.getShortOpt(), option.getLongOpt());
 	}
 

@@ -25,6 +25,6 @@ public interface DynamicOptionSchemeSupport {
 	 *            {@link OptionScheme#add(com.armedia.caliente.cli.Option)}
 	 */
 	public void extendDynamicScheme(int currentNumber, OptionValues baseValues, String currentCommand,
-		OptionValues commandValues, Token currentToken, ExtensibleOptionScheme scheme);
+		OptionValues commandValues, Token currentToken, OptionSchemeExtension scheme);
 
 }

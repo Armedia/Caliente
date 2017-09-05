@@ -26,10 +26,10 @@ public class BasicLogger extends MarkerIgnoringBase implements Logger {
 	private final Level level;
 
 	public BasicLogger(String name) {
-		this(null, name);
+		this(name, null);
 	}
 
-	public BasicLogger(Level level, String name) {
+	public BasicLogger(String name, Level level) {
 		this.name = name;
 		if (level == null) {
 			String levelStr = System.getProperty("bootlog.level");
