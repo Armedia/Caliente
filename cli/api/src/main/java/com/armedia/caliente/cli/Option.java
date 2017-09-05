@@ -14,6 +14,9 @@ public abstract class Option implements PositionalValueSupport {
 
 	public static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");
 
+	/**
+	 * Allow letters, digits, '$' and '?' as short options
+	 */
 	public static final Pattern VALID_SHORT = Pattern.compile("^[$?\\p{Alnum}]$");
 
 	public static final char DEFAULT_VALUE_SEP = ',';
