@@ -1,6 +1,6 @@
 package com.armedia.caliente.cli.exception;
 
-public class DuplicateOptionGroupException extends CommandLineException {
+public class DuplicateOptionGroupException extends CommandLineRuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	private final String name;

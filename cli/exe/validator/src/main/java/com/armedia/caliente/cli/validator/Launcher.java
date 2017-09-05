@@ -151,10 +151,10 @@ public class Launcher extends AbstractLauncher {
 	protected OptionScheme getOptionScheme() {
 		OptionScheme optionScheme = new OptionScheme(getProgramName());
 		for (Option o : Option.getUnwrappedList(CLIParam.values())) {
-			optionScheme.addOrReplace(o);
+			optionScheme.add(o);
 		}
 		for (Option o : this.threadsParameter.getOptions()) {
-			optionScheme.addOrReplace(o);
+			optionScheme.add(o);
 		}
 		return optionScheme;
 	}
