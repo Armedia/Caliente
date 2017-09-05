@@ -228,14 +228,10 @@ public class OptionParser {
 						if (sep == null) {
 							// No value separation is supported or desired, so use the whole string
 							// as a single value
-							String nextValue = str;
-							if (!currentOption.isValueAllowed(nextValue)) {
-								if (badValues == null) {
-									badValues = new TreeSet<>();
-								}
-								badValues.add(nextValue);
+							if (!currentOption.isValueAllowed(str)) {
+								badValues = Collections.singleton(str);
 							}
-							values.add(nextValue);
+							values.add(str);
 						} else {
 							final Pattern valueSplitter = Pattern
 								.compile(String.format(OptionParser.VALUE_SEPARATOR_PATTERN, sep));
