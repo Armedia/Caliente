@@ -237,6 +237,12 @@ public class OptionParser {
 			baseScheme = new OptionScheme("(ad-hoc)");
 		}
 
+		if (helpOption != null) {
+			// Add it to the base scheme, regardless
+			baseScheme.remove(helpOption);
+			baseScheme.add(helpOption);
+		}
+
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", args), optionValueSplitter,
 			allowRecursion);
 
@@ -368,6 +374,13 @@ public class OptionParser {
 							// If there is no command
 							if (command != null) {
 								commandName = command.getName();
+
+								if (helpOption != null) {
+									// If there's a command option that conflicts with the help
+									// option, we remove it quietly.
+									command.remove(helpOption);
+								}
+
 								commandValues = new OptionValues();
 								if (extensible) {
 									extender = new Extender(baseScheme, command);
