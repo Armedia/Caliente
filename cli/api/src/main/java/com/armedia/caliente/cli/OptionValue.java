@@ -9,7 +9,16 @@ public final class OptionValue extends Option {
 
 	OptionValue(OptionValues values, Option def) {
 		this.values = values;
-		this.def = def;
+		this.def = def.clone();
+	}
+
+	public Option getDefinition() {
+		return this.def;
+	}
+
+	@Override
+	public OptionValue clone() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

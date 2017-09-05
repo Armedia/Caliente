@@ -13,6 +13,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
+import com.armedia.caliente.cli.exception.DuplicateOptionException;
+import com.armedia.caliente.cli.exception.DuplicateOptionGroupException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.exception.IllegalOptionValuesException;
 import com.armedia.caliente.cli.exception.InsufficientOptionValuesException;
@@ -159,8 +161,9 @@ public class OptionParser {
 	}
 
 	public final OptionParseResult parse(final Option helpOption, OptionScheme baseScheme,
-		final OptionSchemeExtensionSupport extensionSupport, final boolean allowRecursion, final char optionValueSplitter,
-		Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
+		final OptionSchemeExtensionSupport extensionSupport, final boolean allowRecursion,
+		final char optionValueSplitter, Collection<String> args)
+		throws CommandLineSyntaxException, HelpRequestedException {
 
 		if ((args == null) || args
 			.isEmpty()) { return new OptionParseResult(new OptionValues(), null, null, OptionParser.NO_POSITIONALS); }
@@ -179,7 +182,7 @@ public class OptionParser {
 		final List<Token> positionals = new ArrayList<>();
 		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
 
-		boolean extensible = (baseScheme.isExtensible() && (extensionSupport != null));
+		boolean extensible = (extensionSupport != null);
 
 		Command command = null;
 		String commandName = null;
@@ -194,7 +197,35 @@ public class OptionParser {
 		Map<String, Option> baseWithArgs = new HashMap<>();
 		Map<String, Option> commandWithArgs = new HashMap<>();
 
-		OptionSchemeExtension extensibleScheme = (extensible ? new OptionSchemeExtension(baseScheme) : null);
+		OptionSchemeExtender extender = (extensible ? new OptionSchemeExtender() {
+
+			@Override
+			public int hasOption(Option option) {
+				return baseScheme.hasOption(option);
+			}
+
+			@Override
+			public boolean hasOption(String option) {
+				return baseScheme.hasOption(option);
+			}
+
+			@Override
+			public boolean hasOption(Character option) {
+				return baseScheme.hasOption(option);
+			}
+
+			@Override
+			public boolean hasGroup(String name) {
+				return baseScheme.hasGroup(name);
+			}
+
+			@Override
+			public OptionSchemeExtender addGroup(OptionGroup group)
+				throws DuplicateOptionGroupException, DuplicateOptionException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		} : null);
 
 		boolean helpRequested = false;
 
@@ -408,8 +439,8 @@ public class OptionParser {
 							// scheme
 
 							// Try to extend the scheme
-							extensionSupport.extendScheme(extensionCount, baseValues, command.getName(), commandValues, token,
-								extensibleScheme);
+							extensionSupport.extendScheme(extensionCount, baseValues, command.getName(), commandValues,
+								token, extensibleScheme);
 
 							// If there were changes, then we can go back around...
 							if (extensibleScheme.isModified()) {

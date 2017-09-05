@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class Option implements PositionalValueSupport {
+public abstract class Option implements PositionalValueSupport, Cloneable {
 
 	public static final Pattern VALID_LONG = Pattern.compile("^[$\\w][-$\\w]*$");
 
@@ -46,6 +46,9 @@ public abstract class Option implements PositionalValueSupport {
 	public abstract String getDefault();
 
 	public abstract List<String> getDefaults();
+
+	@Override
+	public abstract Option clone();
 
 	public final boolean isConflicting(Option other) {
 		return Option.isConflicting(this, other);

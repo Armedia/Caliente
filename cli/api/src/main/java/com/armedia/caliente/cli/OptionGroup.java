@@ -1,128 +1,10 @@
 package com.armedia.caliente.cli;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.TreeMap;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
 
-public final class OptionGroup implements Iterable<Option>, Cloneable {
-
-	private final String key;
-	private final String name;
-	private final Map<String, Option> required = new TreeMap<>();
-	private final Map<String, Option> options = new TreeMap<>();
-	private final Map<String, Option> longKeys = new HashMap<>();
-	private final Map<Character, Option> shortKeys = new HashMap<>();
-
-	private String description = null;
-
-	public OptionGroup(String name) {
-		this.key = OptionGroup.generateKey(name);
-		this.name = name.trim();
-	}
-
-	private OptionGroup(OptionGroup other) {
-		this.name = other.getName();
-		this.key = other.getKey();
-		this.required.putAll(other.required);
-		this.options.putAll(other.options);
-		this.longKeys.putAll(other.longKeys);
-		this.shortKeys.putAll(other.shortKeys);
-	}
-
-	private static String generateKey(String name) {
-		if (StringUtils
-			.isBlank(name)) { throw new IllegalArgumentException("Must provide a non-blank, non-null name"); }
-		return name.toLowerCase().trim();
-	}
-
-	String getKey() {
-		return this.key;
-	}
-
-	@Override
-	public OptionGroup clone() {
-		return new OptionGroup(this);
-	}
-
-	public final String getDescription() {
-		return this.description;
-	}
-
-	public final OptionGroup setDescription(String description) {
-		this.description = description;
-		return this;
-	}
-
-	protected final String canonicalize(String str) {
-		if (str == null) { return null; }
-		// long options are case-insensitive
-		return str.toLowerCase();
-	}
-
-	protected final Character canonicalize(Character c) {
-		// We do nothing for characters, as they're case sensitive
-		return c;
-	}
-
-	/**
-	 * Returns this scheme's given name.
-	 *
-	 * @return this scheme's given name
-	 */
-	public String getName() {
-		return this.name;
-	}
-
-	private static Collection<Option> buildCollection(Option a, Option b) {
-		if ((a == null) && (b == null)) { return null; }
-		if ((a == null) || (b == null)) { return Collections.unmodifiableCollection(Arrays.asList(a != null ? a : b)); }
-		if (a == b) { return Collections.unmodifiableCollection(Collections.singleton(a)); }
-		return Collections.unmodifiableCollection(Arrays.asList(a, b));
-	}
-
-	/**
-	 * Find the option in this scheme which matches the given long option
-	 *
-	 * @param longOpt
-	 *            the long option
-	 * @return the option in this scheme which matches the given long option
-	 */
-	public final Option getOption(String longOpt) {
-		if (longOpt == null) { return null; }
-		return this.longKeys.get(canonicalize(longOpt));
-	}
-
-	/**
-	 * Find the option in this scheme which matches the given short option
-	 *
-	 * @param shortOpt
-	 *            the short option
-	 * @return the option in this scheme which matches the given short option
-	 */
-	public final Option getOption(Character shortOpt) {
-		if (shortOpt == null) { return null; }
-		return this.shortKeys.get(canonicalize(shortOpt));
-	}
-
-	private void assertValid(Option def) {
-		Objects.requireNonNull(def, "Must provide a non-null option");
-
-		final boolean hasShortOpt = (def.getShortOpt() != null);
-		final boolean hasLongOpt = (def.getLongOpt() != null);
-
-		if (!hasShortOpt && !hasLongOpt) { throw new IllegalArgumentException(
-			"The given option definition has neither a short or a long option"); }
-	}
+public interface OptionGroup extends OptionContainer {
 
 	/**
 	 * Adds the given option to this option scheme.
@@ -134,44 +16,7 @@ public final class OptionGroup implements Iterable<Option>, Cloneable {
 	 *             with {@link #hasOption(Character)}, {@link #hasOption(String)}, or
 	 *             {@link #countCollisions(Option)}
 	 */
-	public final OptionGroup add(Option option) throws DuplicateOptionException {
-		assertValid(option);
-
-		final String longOpt = canonicalize(option.getLongOpt());
-		final Character shortOpt = canonicalize(option.getShortOpt());
-
-		final Option oldLong = getOption(longOpt);
-		final Option oldShort = getOption(shortOpt);
-
-		if ((oldLong != null) || (oldShort != null)) {
-			Option existing = null;
-			if ((oldLong != null) && (oldShort != null)) {
-				existing = OptionGroup.buildCollection(oldShort, oldLong).iterator().next();
-			} else if (oldLong != null) {
-				existing = oldLong;
-			} else {
-				existing = oldShort;
-			}
-			if (option == existing) { return this; }
-			throw new DuplicateOptionException(
-				String.format("The given option %s would collide with %s", option, existing), existing, option);
-		}
-
-		if (longOpt != null) {
-			remove(longOpt);
-			this.longKeys.put(longOpt, option);
-		}
-		if (shortOpt != null) {
-			remove(shortOpt);
-			this.shortKeys.put(shortOpt, option);
-		}
-		final String key = canonicalize(option.getKey());
-		this.options.put(key, option);
-		if (option.isRequired()) {
-			this.required.put(key, option);
-		}
-		return this;
-	}
+	public OptionGroup add(Option option) throws DuplicateOptionException;
 
 	/**
 	 * <p>
@@ -185,56 +30,7 @@ public final class OptionGroup implements Iterable<Option>, Cloneable {
 	 *            the options to add
 	 * @throws DuplicateOptionException
 	 */
-	public final <O extends Option> OptionGroup add(Collection<O> options) throws DuplicateOptionException {
-		if ((options != null) && !options.isEmpty()) {
-			for (O o : options) {
-				if (o != null) {
-					add(o);
-				}
-			}
-		}
-		return this;
-	}
-
-	/**
-	 * Adds the given option to this option scheme.
-	 *
-	 * @param option
-	 *            the option to add
-	 * @throws IllegalArgumentException
-	 *             if the given option collides with any already-existing options (you can check
-	 *             with {@link #hasOption(Character)}, {@link #hasOption(String)}, or
-	 *             {@link #countCollisions(Option)}
-	 */
-	public final OptionGroup addOrReplace(Option option) {
-		assertValid(option);
-		remove(option);
-		try {
-			add(option);
-		} catch (DuplicateOptionException e) {
-			// This should not be possible
-			throw new RuntimeException("Unexpected DuplicateOptionException during addOrReplace()", e);
-		}
-		return this;
-	}
-
-	/**
-	 * Adds the given options to this option scheme, by iterating over the collection and invoking
-	 * {@link #addOrReplace(Option)} on each non-{@code null} element.
-	 *
-	 * @param options
-	 *            the options to add
-	 */
-	public final <O extends Option> OptionGroup addOrReplace(Collection<O> options) {
-		if ((options != null) && !options.isEmpty()) {
-			for (O o : options) {
-				if (o != null) {
-					addOrReplace(o);
-				}
-			}
-		}
-		return this;
-	}
+	public <O extends Option> OptionGroup add(Collection<O> options) throws DuplicateOptionException;
 
 	/**
 	 * Remove any and all options (a maximum of 2) that may collide with the given option's short or
@@ -244,16 +40,7 @@ public final class OptionGroup implements Iterable<Option>, Cloneable {
 	 *            the option to check against
 	 * @return the options that were removed
 	 */
-	public final Collection<Option> remove(Option option) {
-		if (option == null) { throw new IllegalArgumentException("Must provide an option to remove"); }
-
-		final String longOpt = canonicalize(option.getLongOpt());
-		final Option oldLong = remove(longOpt);
-		final Character shortOpt = canonicalize(option.getShortOpt());
-		final Option oldShort = remove(shortOpt);
-
-		return OptionGroup.buildCollection(oldShort, oldLong);
-	}
+	public Collection<Option> remove(Option option);
 
 	/**
 	 * Remove the option which matches the given long option
@@ -262,19 +49,7 @@ public final class OptionGroup implements Iterable<Option>, Cloneable {
 	 *            the long option
 	 * @return the option which matches the given long option, or {@code null} if none matches.
 	 */
-	public final Option remove(String longOpt) {
-		if (longOpt == null) { return null; }
-		Option old = this.longKeys.remove(canonicalize(longOpt));
-		if (old == null) { return null; }
-		final String oldKey = canonicalize(old.getKey());
-		this.options.remove(oldKey);
-		this.required.remove(oldKey);
-		Character shortOpt = canonicalize(old.getShortOpt());
-		if (shortOpt != null) {
-			this.shortKeys.remove(shortOpt);
-		}
-		return old;
-	}
+	public Option remove(String longOpt);
 
 	/**
 	 * Remove the option which matches the given short option
@@ -283,178 +58,13 @@ public final class OptionGroup implements Iterable<Option>, Cloneable {
 	 *            the short option
 	 * @return the option which matches the given short option, or {@code null} if none matches.
 	 */
-	public final Option remove(Character shortOpt) {
-		if (shortOpt == null) { return null; }
-		Option old = this.shortKeys.remove(canonicalize(shortOpt));
-		if (old == null) { return null; }
-		final String oldKey = canonicalize(old.getKey());
-		this.options.remove(oldKey);
-		this.required.remove(oldKey);
-		String longOpt = canonicalize(old.getLongOpt());
-		if (longOpt != null) {
-			this.longKeys.remove(longOpt);
-		}
-		return old;
-	}
+	public Option remove(Character shortOpt);
 
 	/**
-	 * Returns a {@link Collection} containing the options defined in this scheme. The collection
-	 * returned is independent and changes to it will not reflect on this OptionScheme instance.
+	 * Returns the option scheme that this group is associated to, if any. If this group is not
+	 * associated to any scheme, {@code null} is returned.
 	 *
-	 * @return a {@link Collection} containing the options defined in this scheme
+	 * @return the option scheme that this group is associated to, if any
 	 */
-	public final Collection<Option> getOptions() {
-		return new ArrayList<>(this.options.values());
-	}
-
-	/**
-	 * Returns a collection of the options in this scheme that have required flag set (as determined
-	 * by {@link Option#isRequired()}). The collection returned is a copy, and changes to it do not
-	 * affect this scheme's contents.
-	 *
-	 * @return the options in this scheme that have required flag set
-	 */
-	public final Collection<Option> getRequiredOptions() {
-		return new ArrayList<>(this.required.values());
-	}
-
-	/**
-	 * Returns the number of options in this scheme that have required flag set (as determined by
-	 * {@link Option#isRequired()}).
-	 *
-	 * @return the number of options in this scheme that have required flag set
-	 */
-	public final int getRequiredOptionCount() {
-		return this.required.size();
-	}
-
-	/**
-	 * Returns the number of options defined in this scheme.
-	 *
-	 * @return the number of options defined in this scheme.
-	 */
-	public final int getOptionCount() {
-		return this.options.size();
-	}
-
-	/**
-	 * Returns {@code true} if this scheme contains an option that uses the given short option,
-	 * {@code false} otherwise.
-	 *
-	 * @param shortOpt
-	 * @return {@code true} if this scheme contains an option that uses the given short option,
-	 *         {@code false} otherwise.
-	 */
-	public final boolean hasOption(Character shortOpt) {
-		return (getOption(shortOpt) != null);
-	}
-
-	/**
-	 * Returns {@code true} if this scheme contains an option that uses the given long option,
-	 * {@code false} otherwise.
-	 *
-	 * @param longOpt
-	 * @return {@code true} if this scheme contains an option that uses the given long option,
-	 *         {@code false} otherwise.
-	 */
-	public final boolean hasOption(String longOpt) {
-		return (getOption(longOpt) != null);
-	}
-
-	/**
-	 * Returns an integer between 0 and 3 where the low bit is the presence indicator for the short
-	 * option, and the high bit is the presence indicator for the long option. This method does not
-	 * take into account whether both flags are associated to the same option. Use
-	 * {@link #findCollisions(Character, String)} for that.
-	 *
-	 * @param shortOpt
-	 * @param longOpt
-	 * @return an integer between 0 and 3 where the low bit is the presence indicator for the short
-	 *         option, and the high bit is the presence indicator for the long option.
-	 */
-	public final int hasEitherOption(Character shortOpt, String longOpt) {
-		int ret = 0;
-		if (hasOption(shortOpt)) {
-			ret |= 1;
-		}
-		if (hasOption(longOpt)) {
-			ret |= (1 << 1);
-		}
-		return ret;
-	}
-
-	/**
-	 * Returns {@code true} if and only if this option scheme contains an option that equivalent (as
-	 * per {@link Option#isEquivalent(Option, Option)}) to the given option, {@code false}
-	 * otherwise.
-	 *
-	 * @param option
-	 * @return {@code true} if and only if this option scheme contains an option that exactly
-	 *         matches the given option in both long and short options, {@code false} otherwise.
-	 *
-	 */
-	public final boolean hasEquivalentOption(Option option) {
-		Collection<Option> collisions = findCollisions(option);
-		if ((collisions == null) || (collisions.size() != 1)) { return false; }
-		Option current = collisions.iterator().next();
-		return Option.isEquivalent(option, current);
-	}
-
-	/**
-	 * Returns the number of options already in this scheme that would collide with the given option
-	 * based on short or long options. This means that only 3 values can be returned: 0, 1, or 2.
-	 *
-	 * @param option
-	 * @return the number of options already in this scheme that would collide with the given option
-	 *         based on short or long options
-	 */
-	public final int countCollisions(Option option) {
-		Collection<Option> collisions = findCollisions(option);
-		if ((collisions == null) || collisions.isEmpty()) { return 0; }
-		return collisions.size();
-	}
-
-	/**
-	 * Returns the options already in this scheme that would collide with the given option based on
-	 * short or long options. If no collisions are found, {@code null} is returned. This means that
-	 * the collection may contain either 1 or 2 elements.
-	 *
-	 * @param option
-	 *            the option to check for
-	 * @return the options already in this scheme that would collide with the given option based on
-	 *         short or long options, or {@code null} if none collide
-	 */
-	public final Collection<Option> findCollisions(Option option) {
-		assertValid(option);
-		return findCollisions(option.getShortOpt(), option.getLongOpt());
-	}
-
-	/**
-	 * Returns the Option already in this scheme that would collide with the given short or long
-	 * options. If no collisions are found, {@code null} is returned. This means that the collection
-	 * may contain either 1 or 2 elements.
-	 *
-	 * @param shortOpt
-	 *            the short option to check for
-	 * @param longOpt
-	 *            the long option to check for
-	 * @return the Option already in this scheme that would collide with the given short or long
-	 *         options, or {@code null} if none collide
-	 */
-	public final Collection<Option> findCollisions(Character shortOpt, String longOpt) {
-		Option longParam = null;
-		if (longOpt != null) {
-			longParam = this.longKeys.get(canonicalize(longOpt));
-		}
-		Option shortParam = null;
-		if (shortOpt != null) {
-			shortParam = this.shortKeys.get(canonicalize(shortOpt));
-		}
-		return OptionGroup.buildCollection(longParam, shortParam);
-	}
-
-	@Override
-	public Iterator<Option> iterator() {
-		return getOptions().iterator();
-	}
+	public OptionScheme getScheme();
 }

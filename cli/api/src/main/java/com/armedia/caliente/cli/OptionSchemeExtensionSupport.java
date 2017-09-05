@@ -20,11 +20,11 @@ public interface OptionSchemeExtensionSupport {
 	 * @param commandValues
 	 *            the values captured so far for the command's options (immutable, {@code null} if
 	 *            no command is active)
-	 * @param scheme
-	 *            the scheme to enhance via calls to
-	 *            {@link OptionScheme#add(com.armedia.caliente.cli.Option)}
+	 * @param extender
+	 *            The object through which to extend the underlying option scheme
+	 * 
 	 */
 	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
-		OptionValues commandValues, Token currentToken, OptionSchemeExtension scheme);
+		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender);
 
 }

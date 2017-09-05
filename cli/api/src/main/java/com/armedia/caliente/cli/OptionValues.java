@@ -13,7 +13,7 @@ import java.util.TreeMap;
 
 import com.armedia.commons.utilities.Tools;
 
-public final class OptionValues implements Iterable<OptionValue> {
+public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 
 	private final Map<Character, OptionValue> shortOptions = new TreeMap<>();
 	private final Map<String, OptionValue> longOptions = new TreeMap<>();
@@ -24,6 +24,43 @@ public final class OptionValues implements Iterable<OptionValue> {
 
 	OptionValues() {
 		// Do nothing...
+	}
+
+	@Override
+	public OptionValues clone() {
+		OptionValues copy = new OptionValues();
+
+		// Copy the OptionValue objects...
+		for (String s : this.optionValues.keySet()) {
+			OptionValue old = this.optionValues.get(s);
+			OptionValue v = new OptionValue(copy, old.getDefinition());
+			Character shortOpt = v.getShortOpt();
+			if (shortOpt != null) {
+				copy.shortOptions.put(shortOpt, v);
+			}
+			String longOpt = v.getLongOpt();
+			if (longOpt != null) {
+				copy.longOptions.put(longOpt, v);
+			}
+			copy.optionValues.put(s, v);
+		}
+
+		// Copy the occurrences
+		for (String s : this.occurrences.keySet()) {
+			List<Collection<String>> l = new LinkedList<>();
+			for (Collection<String> c : this.occurrences.get(s)) {
+				c = Tools.freezeCollection(new LinkedList<>(c), true);
+				l.add(c);
+			}
+			copy.occurrences.put(s, l);
+		}
+
+		// Copy the value lists
+		for (String s : this.values.keySet()) {
+			copy.values.put(s, new LinkedList<>(this.values.get(s)));
+		}
+
+		return copy;
 	}
 
 	private String getValidKey(Option param) {
