@@ -273,7 +273,7 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 		return this.longGroups.get(option);
 	}
 
-	public Set<String> getOptionGroupNames() {
+	public Set<String> getGroupNames() {
 		return new TreeSet<>(this.groups.keySet());
 	}
 

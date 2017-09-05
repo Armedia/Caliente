@@ -17,6 +17,7 @@ import org.apache.commons.text.WordUtils;
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroup;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
@@ -264,11 +265,16 @@ public final class HelpRenderer {
 
 	private static void formatScheme(PrintWriter pw, int width, OptionScheme scheme) {
 		if (scheme == null) { return; }
-		// Options options = new Options();
-		for (Option o : scheme) {
+		for (Option o : scheme.getBaseGroup()) {
 			HelpRenderer.formatOption(pw, width, o);
 		}
-		// fmt.printOptions(pw, width, options, fmt.getLeftPadding(), fmt.getDescPadding());
+		for (String s : scheme.getGroupNames()) {
+			OptionGroup g = scheme.getGroup(s);
+			// TODO: Output the group's name and a (smaller) divider
+			for (Option o : g) {
+				HelpRenderer.formatOption(pw, width, o);
+			}
+		}
 	}
 
 	private static void formatCommand(PrintWriter pw, int width, Command command) {
