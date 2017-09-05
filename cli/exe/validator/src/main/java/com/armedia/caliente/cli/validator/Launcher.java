@@ -14,6 +14,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
@@ -43,7 +44,7 @@ public class Launcher extends AbstractLauncher {
 		return true;
 	}
 
-	private final ThreadsLaunchHelper threadsParameter = new ThreadsLaunchHelper(Launcher.MIN_THREADS,
+	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper(Launcher.MIN_THREADS,
 		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
@@ -82,7 +83,7 @@ public class Launcher extends AbstractLauncher {
 			return 1;
 		}
 
-		final int threads = this.threadsParameter.getThreads(cli);
+		final int threads = this.threadsLaunchHelper.getThreads(cli);
 
 		this.log.info("Starting validation with {} thread{}", threads, threads > 1 ? "s" : "");
 		Runtime runtime = Runtime.getRuntime();
@@ -150,8 +151,11 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
+			.addGroup( //
+				new OptionGroupImpl("Threading") //
+					.add(this.threadsLaunchHelper) //
+			) //
 			.add(Option.unwrap(CLIParam.values())) //
-			.add(this.threadsParameter) //
 		;
 	}
 }

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
@@ -24,7 +25,7 @@ public class Launcher extends AbstractLauncher {
 
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
-	private final ThreadsLaunchHelper threadsParameter = new ThreadsLaunchHelper(Launcher.MIN_THREADS,
+	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper(Launcher.MIN_THREADS,
 		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
@@ -41,9 +42,18 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
-			.add(this.libLaunchHelper) //
-			.add(this.dfcLaunchHelper) //
-			.add(this.threadsParameter) //
+			.addGroup( //
+				new OptionGroupImpl("Library") //
+					.add(this.libLaunchHelper) //
+			) //
+			.addGroup( //
+				new OptionGroupImpl("Documentum") //
+					.add(this.dfcLaunchHelper) //
+			) //
+			.addGroup( //
+				new OptionGroupImpl("Threading") //
+					.add(this.threadsLaunchHelper) //
+			) //
 			.add(Option.unwrap(CLIParam.values())) //
 		;
 	}
@@ -51,6 +61,6 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValies,
 		Collection<String> positionals) throws Exception {
-		return new DataGen(this.threadsParameter, this.dfcLaunchHelper).run(baseValues);
+		return new DataGen(this.threadsLaunchHelper, this.dfcLaunchHelper).run(baseValues);
 	}
 }

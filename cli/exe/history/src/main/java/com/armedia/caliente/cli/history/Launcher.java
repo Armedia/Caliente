@@ -30,13 +30,16 @@ public class Launcher extends AbstractLauncher {
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
 			.addGroup( //
-				new OptionGroupImpl("JAR loader").setDescription("JAR shit").add(this.libLaunchHelper) //
+				new OptionGroupImpl("Library") //
+					.add(this.libLaunchHelper) //
 			) //
 			.addGroup( //
-				new OptionGroupImpl("DFC").setDescription("Documentum Freacking Caca").add(this.dfcLaunchHelper) //
+				new OptionGroupImpl("Documentum") //
+					.add(this.dfcLaunchHelper) //
 			) //
 			.addGroup( //
-				new OptionGroupImpl("Threading").setDescription("thread crap").add(this.threadsLaunchHelper) //
+				new OptionGroupImpl("Threading") //
+					.add(this.threadsLaunchHelper) //
 			) //
 			.add(Option.unwrap(CLIParam.values())) //
 			.setMinArguments(1) //
