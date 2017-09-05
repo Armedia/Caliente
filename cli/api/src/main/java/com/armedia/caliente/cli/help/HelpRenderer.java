@@ -301,14 +301,14 @@ public final class HelpRenderer {
 			aliases = String.format("%s)", aliases);
 		}
 		HelpRenderer.printWrapped(pw, width, String.format("Command Options for '%s'%s:", command.getName(), aliases));
-		HelpRenderer.printWrapped(pw, width, StringUtils.repeat('-', width));
+		HelpRenderer.printWrapped(pw, width, StringUtils.repeat('=', width));
 		HelpRenderer.formatScheme(pw, width, command);
 	}
 
 	private static void formatCommands(PrintWriter pw, int width, CommandScheme commandScheme) {
 		if (commandScheme == null) { return; }
 		HelpRenderer.printWrapped(pw, width, "Available Commands:");
-		HelpRenderer.printWrapped(pw, width, StringUtils.repeat('-', width));
+		HelpRenderer.printWrapped(pw, width, StringUtils.repeat('=', width));
 
 		StringBuilder sb = new StringBuilder();
 		for (Command c : commandScheme.getCommands()) {
@@ -345,7 +345,7 @@ public final class HelpRenderer {
 		Objects.requireNonNull(w, "Must provide a writer to render on");
 		width = Math.max(80, width);
 
-		final String line = StringUtils.repeat('-', width);
+		final String line = StringUtils.repeat('=', width);
 
 		final OptionScheme baseScheme = help.getBaseScheme();
 		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
