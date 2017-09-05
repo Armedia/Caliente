@@ -73,12 +73,12 @@ public final class HelpRenderer {
 
 		if ((min == max) && (min == 1)) {
 			// No need to append numbers to the parameter...
-			sb.append(label);
+			sb.append('<').append(label).append('>');
 			return;
 		}
 
 		// First, render the required arguments
-		final String fmt = String.format("%s#%%d", label);
+		final String fmt = String.format("<%s#%%d>", label);
 
 		int opt = min + 1;
 		if (min > 0) {
@@ -117,7 +117,7 @@ public final class HelpRenderer {
 				}
 			} else {
 				trailer = String.format("%s%s%s%s%s", String.format(fmt, Math.max(opt, 1)), sep, "...", sep,
-					String.format("%s#N", label));
+					String.format("<%s#N>", label));
 			}
 			if ((sep == ' ') && (min > 0)) {
 				sb.append(sep);
@@ -148,7 +148,7 @@ public final class HelpRenderer {
 				if (!commandScheme.isCommandRequired()) {
 					sb.append(" [");
 				}
-				sb.append(" command [ command-options... ] ");
+				sb.append(" command [ command-options ] ");
 				if (!commandScheme.isCommandRequired()) {
 					sb.append(']');
 				}
@@ -158,7 +158,7 @@ public final class HelpRenderer {
 				maxPositionals = command.getMaxArguments();
 			}
 		} else {
-			sb.append(" [options...]");
+			sb.append(" [ options ]");
 			minPositionals = baseScheme.getMinArguments();
 			maxPositionals = baseScheme.getMaxArguments();
 		}
@@ -216,7 +216,7 @@ public final class HelpRenderer {
 
 		boolean addLine = false;
 		if ((min == max) && (min != 0)) {
-			HelpRenderer.printWrapped(pw, width, 14, String.format("Required values: %d", min));
+			HelpRenderer.printWrapped(pw, width, 12, String.format("Required values: %d", min));
 			addLine = true;
 		} else if ((min != 0) || (max != 0)) {
 			String minClause = "";
