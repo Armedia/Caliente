@@ -35,19 +35,6 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 		}
 
 		@Override
-		public <O extends Option> OptionSchemeGroup add(Collection<O> options) throws DuplicateOptionException {
-			OptionScheme.this.aggregate.add(options);
-			super.add(options);
-			return this;
-		}
-
-		@Override
-		public Collection<Option> remove(Option option) {
-			OptionScheme.this.aggregate.remove(option);
-			return super.remove(option);
-		}
-
-		@Override
 		public Option remove(String longOpt) {
 			OptionScheme.this.aggregate.remove(longOpt);
 			return super.remove(longOpt);

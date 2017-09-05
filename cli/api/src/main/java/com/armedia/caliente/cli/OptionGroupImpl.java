@@ -130,11 +130,9 @@ public class OptionGroupImpl implements OptionGroup, Cloneable {
 		}
 
 		if (longOpt != null) {
-			remove(longOpt);
 			this.longKeys.put(longOpt, option);
 		}
 		if (shortOpt != null) {
-			remove(shortOpt);
 			this.shortKeys.put(shortOpt, option);
 		}
 		final String key = OptionGroupImpl.canonicalizeOption(option.getKey());
