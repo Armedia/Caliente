@@ -6,6 +6,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -58,8 +60,8 @@ public class TokenLoader implements Iterable<Token> {
 			this.source = source;
 		}
 
-		private Iterator<String> getStrings() throws IOException {
-			if (this.iterator == null) {
+		private List<String> loadStrings() throws IOException {
+			if (this.strings == null) {
 				this.strings = TokenLoader.this.cache.get(this.source.getKey());
 				if (this.strings == null) {
 					// Nothing in the cache? Retrieve it and cache it!
@@ -70,7 +72,13 @@ public class TokenLoader implements Iterable<Token> {
 					}
 					TokenLoader.this.cache.put(this.source.getKey(), this.strings);
 				}
-				this.iterator = this.strings.iterator();
+			}
+			return this.strings;
+		}
+
+		private Iterator<String> getStrings() throws IOException {
+			if (this.iterator == null) {
+				this.iterator = loadStrings().iterator();
 			}
 			return this.iterator;
 		}
@@ -187,6 +195,61 @@ public class TokenLoader implements Iterable<Token> {
 			this.multiShort = null;
 		}
 		return next;
+	}
+
+	public Collection<Token> getBaseTokens() {
+		if (this.states.isEmpty()) { return Collections.emptyList(); }
+		State root = this.states.firstElement();
+		List<Token> ret = new ArrayList<>(root.strings.size());
+		boolean terminated = false;
+		final List<String> strings;
+		try {
+			strings = root.loadStrings();
+		} catch (IOException e) {
+			// This won't happen as there are no recursions in play
+			throw new RuntimeException("Unexpected exception while reading from memory", e);
+		}
+		for (String current : strings) {
+
+			// If we're already terminated, everything else is a string...
+			if (terminated) {
+				ret.add(newToken(root, Type.STRING, current, current));
+				continue;
+			}
+
+			// Skip recursions...
+			if (isRecursion(current)) {
+				continue;
+			}
+
+			// Is it the terminator?
+			if (this.terminator.equals(current)) {
+				terminated = true;
+				continue;
+			}
+
+			// Is it a short option?
+			Matcher m = this.patShort.matcher(current);
+			if (m.matches()) {
+				String multiShort = m.group(1);
+				for (int i = 0; i < multiShort.length(); i++) {
+					String c = multiShort.substring(i, i + 1);
+					ret.add(newToken(root, Type.SHORT_OPTION, c, String.format("%s%s", TokenLoader.OPTION_MARKER, c)));
+				}
+				continue;
+			}
+
+			// Is it a long option?
+			m = this.patLong.matcher(current);
+			if (m.matches()) {
+				ret.add(newToken(root, Type.LONG_OPTION, m.group(1), current));
+				continue;
+			}
+
+			// Must be a string...
+			ret.add(newToken(root, Type.STRING, current, current));
+		}
+		return ret;
 	}
 
 	public boolean hasNext() throws IOException, TokenSourceRecursionLoopException {
