@@ -2,7 +2,7 @@ package com.armedia.caliente.cli;
 
 import com.armedia.caliente.cli.token.Token;
 
-public interface DynamicOptionSchemeSupport {
+public interface OptionSchemeExtensionSupport {
 
 	/**
 	 * <p>
@@ -24,7 +24,7 @@ public interface DynamicOptionSchemeSupport {
 	 *            the scheme to enhance via calls to
 	 *            {@link OptionScheme#add(com.armedia.caliente.cli.Option)}
 	 */
-	public void extendDynamicScheme(int currentNumber, OptionValues baseValues, String currentCommand,
+	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
 		OptionValues commandValues, Token currentToken, OptionSchemeExtension scheme);
 
 }

@@ -7,7 +7,7 @@ import java.util.Collections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.DynamicOptionSchemeSupport;
+import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionParseResult;
@@ -74,7 +74,7 @@ public abstract class AbstractLauncher {
 		return new OptionParser().parse(helpOption, baseScheme, getDynamicSchemeSupport(), args);
 	}
 
-	protected DynamicOptionSchemeSupport getDynamicSchemeSupport() {
+	protected OptionSchemeExtensionSupport getDynamicSchemeSupport() {
 		// By default return nothing...
 		return null;
 	}

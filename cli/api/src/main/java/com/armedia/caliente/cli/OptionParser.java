@@ -58,44 +58,44 @@ public class OptionParser {
 		return (str != null) && OptionParser.DEFAULT_COMMAND_PATTERN.matcher(str).matches();
 	}
 
-	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
+	public final OptionParseResult parse(final OptionScheme baseScheme, OptionSchemeExtensionSupport dynamicSupport,
 		String... args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, args);
 	}
 
-	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
+	public final OptionParseResult parse(final OptionScheme baseScheme, OptionSchemeExtensionSupport dynamicSupport,
 		boolean allowRecursion, String... args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, allowRecursion, args);
 	}
 
-	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
+	public final OptionParseResult parse(final OptionScheme baseScheme, OptionSchemeExtensionSupport dynamicSupport,
 		char optionValueSplitter, String... args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, optionValueSplitter, args);
 
 	}
 
-	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
+	public final OptionParseResult parse(final OptionScheme baseScheme, OptionSchemeExtensionSupport dynamicSupport,
 		boolean allowRecursion, char optionValueSplitter, String... args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, allowRecursion, optionValueSplitter, args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
-		DynamicOptionSchemeSupport dynamicSupport, String... args)
+		OptionSchemeExtensionSupport dynamicSupport, String... args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, OptionParser.DEFAULT_ALLOW_RECURSION,
 			OptionParser.DEFAULT_VALUE_SEPARATOR, args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
-		DynamicOptionSchemeSupport dynamicSupport, boolean allowRecursion, String... args)
+		OptionSchemeExtensionSupport dynamicSupport, boolean allowRecursion, String... args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, allowRecursion, OptionParser.DEFAULT_VALUE_SEPARATOR,
 			args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
-		DynamicOptionSchemeSupport dynamicSupport, char optionValueSplitter, String... args)
+		OptionSchemeExtensionSupport dynamicSupport, char optionValueSplitter, String... args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, OptionParser.DEFAULT_ALLOW_RECURSION, optionValueSplitter,
 			args);
@@ -103,50 +103,50 @@ public class OptionParser {
 	}
 
 	public final OptionParseResult parse(final Option helpOption, OptionScheme baseScheme,
-		final DynamicOptionSchemeSupport dynamicSupport, final boolean allowRecursion, final char optionValueSplitter,
+		final OptionSchemeExtensionSupport dynamicSupport, final boolean allowRecursion, final char optionValueSplitter,
 		String... args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, allowRecursion, optionValueSplitter,
 			(args == null ? OptionParser.NO_POSITIONALS : Arrays.asList(args)));
 	}
 
-	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
+	public final OptionParseResult parse(final OptionScheme baseScheme, OptionSchemeExtensionSupport dynamicSupport,
 		Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, args);
 	}
 
-	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
+	public final OptionParseResult parse(final OptionScheme baseScheme, OptionSchemeExtensionSupport dynamicSupport,
 		boolean allowRecursion, Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, allowRecursion, args);
 	}
 
-	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
+	public final OptionParseResult parse(final OptionScheme baseScheme, OptionSchemeExtensionSupport dynamicSupport,
 		char optionValueSplitter, Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, optionValueSplitter, args);
 
 	}
 
-	public final OptionParseResult parse(final OptionScheme baseScheme, DynamicOptionSchemeSupport dynamicSupport,
+	public final OptionParseResult parse(final OptionScheme baseScheme, OptionSchemeExtensionSupport dynamicSupport,
 		boolean allowRecursion, char optionValueSplitter, Collection<String> args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(null, baseScheme, dynamicSupport, allowRecursion, optionValueSplitter, args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
-		DynamicOptionSchemeSupport dynamicSupport, Collection<String> args)
+		OptionSchemeExtensionSupport dynamicSupport, Collection<String> args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, OptionParser.DEFAULT_ALLOW_RECURSION,
 			OptionParser.DEFAULT_VALUE_SEPARATOR, args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
-		DynamicOptionSchemeSupport dynamicSupport, boolean allowRecursion, Collection<String> args)
+		OptionSchemeExtensionSupport dynamicSupport, boolean allowRecursion, Collection<String> args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, allowRecursion, OptionParser.DEFAULT_VALUE_SEPARATOR,
 			args);
 	}
 
 	public final OptionParseResult parse(Option helpOption, final OptionScheme baseScheme,
-		DynamicOptionSchemeSupport dynamicSupport, char optionValueSplitter, Collection<String> args)
+		OptionSchemeExtensionSupport dynamicSupport, char optionValueSplitter, Collection<String> args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 		return parse(helpOption, baseScheme, dynamicSupport, OptionParser.DEFAULT_ALLOW_RECURSION, optionValueSplitter,
 			args);
@@ -159,7 +159,7 @@ public class OptionParser {
 	}
 
 	public final OptionParseResult parse(final Option helpOption, OptionScheme baseScheme,
-		final DynamicOptionSchemeSupport dynamicSupport, final boolean allowRecursion, final char optionValueSplitter,
+		final OptionSchemeExtensionSupport extensionSupport, final boolean allowRecursion, final char optionValueSplitter,
 		Collection<String> args) throws CommandLineSyntaxException, HelpRequestedException {
 
 		if ((args == null) || args
@@ -179,7 +179,7 @@ public class OptionParser {
 		final List<Token> positionals = new ArrayList<>();
 		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
 
-		boolean extensible = (baseScheme.isExtensible() && (dynamicSupport != null));
+		boolean extensible = (baseScheme.isExtensible() && (extensionSupport != null));
 
 		Command command = null;
 		String commandName = null;
@@ -198,7 +198,7 @@ public class OptionParser {
 
 		boolean helpRequested = false;
 
-		int extensions = 0;
+		int extensionCount = 0;
 		nextToken: for (Token token : tokenLoader) {
 			selector: switch (token.getType()) {
 				case STRING: // A plain string...
@@ -304,7 +304,7 @@ public class OptionParser {
 							if (command != null) {
 								commandName = command.getName();
 								commandValues = new OptionValues();
-								extensible = commandScheme.isExtensible() && (dynamicSupport != null);
+								extensible = commandScheme.isExtensible() && (extensionSupport != null);
 								if (extensible) {
 									extensibleScheme = new OptionSchemeExtension(command);
 								}
@@ -407,12 +407,9 @@ public class OptionParser {
 							// Dynamic support enabled!! Try to expand the currently-active
 							// scheme
 
-							// Make sure we clear the "modified" flag...
-							// extensibleScheme.clearModified();
-
 							// Try to extend the scheme
-							dynamicSupport.extendDynamicScheme(extensions, baseValues, command.getName(), commandValues,
-								token, extensibleScheme);
+							extensionSupport.extendScheme(extensionCount, baseValues, command.getName(), commandValues, token,
+								extensibleScheme);
 
 							// If there were changes, then we can go back around...
 							if (extensibleScheme.isModified()) {
