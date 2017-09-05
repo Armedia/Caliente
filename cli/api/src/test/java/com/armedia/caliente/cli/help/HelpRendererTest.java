@@ -112,7 +112,7 @@ public class HelpRendererTest {
 		).setDescription("SECOND COMMAND ON THE LIST");
 		cs.addCommand(c);
 		try {
-			throw new HelpRequestedException(cs, c, null);
+			throw new HelpRequestedException(null, cs, c, null);
 		} catch (HelpRequestedException e) {
 			HelpRenderer.renderHelp("TEST PROGRAM", e, System.out);
 		}

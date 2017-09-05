@@ -15,7 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
 import com.armedia.caliente.cli.exception.DuplicateOptionGroupException;
 
-public class OptionScheme implements Iterable<Option>, OptionContainer, OptionSchemeExtender, PositionalValueSupport {
+public class OptionScheme implements Iterable<Option>, OptionGroup, OptionSchemeExtender, PositionalValueSupport {
 
 	private class OptionSchemeGroup extends OptionGroupImpl {
 
@@ -365,4 +365,33 @@ public class OptionScheme implements Iterable<Option>, OptionContainer, OptionSc
 		return this.aggregate.findCollisions(shortOpt, longOpt);
 	}
 
+	@Override
+	public OptionGroup add(Option option) throws DuplicateOptionException {
+		return this.baseGroup.add(option);
+	}
+
+	@Override
+	public <O extends Option> OptionGroup add(Collection<O> options) throws DuplicateOptionException {
+		return this.baseGroup.add(options);
+	}
+
+	@Override
+	public Collection<Option> remove(Option option) {
+		return this.baseGroup.remove(option);
+	}
+
+	@Override
+	public Option remove(String longOpt) {
+		return this.baseGroup.remove(longOpt);
+	}
+
+	@Override
+	public Option remove(Character shortOpt) {
+		return this.baseGroup.remove(shortOpt);
+	}
+
+	@Override
+	public OptionScheme getScheme() {
+		return this.baseGroup.getScheme();
+	}
 }
