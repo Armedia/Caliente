@@ -166,6 +166,7 @@ public final class HelpRenderer {
 
 		HelpRenderer.renderPositionals(sb, "arg", ' ', minPositionals, maxPositionals);
 		HelpRenderer.printWrapped(pw, width, sb.toString());
+		HelpRenderer.printWrapped(pw, width, "(* = option is required)");
 	}
 
 	private static void printWrapped(PrintWriter pw, int totalWidth, String msg) {
@@ -270,7 +271,14 @@ public final class HelpRenderer {
 		}
 		for (String s : scheme.getGroupNames()) {
 			OptionGroup g = scheme.getGroup(s);
-			// TODO: Output the group's name and a (smaller) divider
+			String desc = g.getDescription();
+			if (desc == null) {
+				desc = "";
+			} else {
+				desc = String.format(" %s", desc);
+			}
+			HelpRenderer.printWrapped(pw, width, String.format("Options for %s:%s", g.getName(), desc));
+			HelpRenderer.printWrapped(pw, width, StringUtils.repeat('-', (3 * width) / 4));
 			for (Option o : g) {
 				HelpRenderer.formatOption(pw, width, o);
 			}
@@ -292,8 +300,7 @@ public final class HelpRenderer {
 			}
 			aliases = String.format("%s)", aliases);
 		}
-		HelpRenderer.printWrapped(pw, width,
-			String.format("Command Options for '%s'%s: (* = option is required)", command.getName(), aliases));
+		HelpRenderer.printWrapped(pw, width, String.format("Command Options for '%s'%s:", command.getName(), aliases));
 		HelpRenderer.printWrapped(pw, width, StringUtils.repeat('-', width));
 		HelpRenderer.formatScheme(pw, width, command);
 	}
@@ -349,8 +356,8 @@ public final class HelpRenderer {
 		pw.println();
 
 		if (baseScheme.getOptionCount() > 0) {
-			HelpRenderer.printWrapped(pw, width, String.format("%s Options: (* = option is required)",
-				(commandScheme != null ? "Global" : "Available")));
+			HelpRenderer.printWrapped(pw, width,
+				String.format("%s Options:", (commandScheme != null ? "Global" : "Available")));
 			HelpRenderer.printWrapped(pw, width, line);
 			HelpRenderer.formatScheme(pw, width, baseScheme);
 		}

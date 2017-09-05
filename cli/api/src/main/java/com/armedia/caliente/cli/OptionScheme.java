@@ -4,11 +4,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -236,11 +236,12 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 				added.add(o);
 			}
 		} catch (final DuplicateOptionException e) {
-			// Roll back the change
+			throw e;
+		} finally {
+			// Roll back the changes, as they'll be re-done below...
 			for (Option o : added) {
 				this.aggregate.remove(o);
 			}
-			throw e;
 		}
 
 		// At this point, all the incoming options are OK, and the group name is also unique, so we
@@ -274,7 +275,7 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	public Set<String> getGroupNames() {
-		return new TreeSet<>(this.groups.keySet());
+		return new LinkedHashSet<>(this.groups.keySet());
 	}
 
 	@Override

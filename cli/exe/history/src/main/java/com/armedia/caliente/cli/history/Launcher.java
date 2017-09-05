@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
@@ -28,9 +29,15 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
-			.add(this.libLaunchHelper) //
-			.add(this.dfcLaunchHelper) //
-			.add(this.threadsLaunchHelper) //
+			.addGroup( //
+				new OptionGroupImpl("JAR loader").setDescription("JAR shit").add(this.libLaunchHelper) //
+			) //
+			.addGroup( //
+				new OptionGroupImpl("DFC").setDescription("Documentum Freacking Caca").add(this.dfcLaunchHelper) //
+			) //
+			.addGroup( //
+				new OptionGroupImpl("Threading").setDescription("thread crap").add(this.threadsLaunchHelper) //
+			) //
 			.add(Option.unwrap(CLIParam.values())) //
 			.setMinArguments(1) //
 		;
