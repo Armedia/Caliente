@@ -172,10 +172,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	public boolean isValueAllowed(String value) {
 		if (value == null) { return false; }
 		if (this.allowedValues.isEmpty()) { return true; }
-		if (this.valuesCaseSensitive) {
-			value = value.toUpperCase();
-		}
-		return this.allowedValues.contains(value);
+		return this.allowedValues.contains(canonicalizeValue(value));
 	}
 
 	@Override
@@ -194,8 +191,7 @@ public final class OptionImpl extends Option implements Cloneable {
 		if (allowedValues != null) {
 			for (String s : allowedValues) {
 				if (s != null) {
-					s = canonicalizeValue(s);
-					this.allowedValues.add(s);
+					this.allowedValues.add(canonicalizeValue(s));
 				}
 			}
 		}
