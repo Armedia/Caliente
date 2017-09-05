@@ -168,6 +168,12 @@ public class OptionGroupImpl implements OptionGroup, Cloneable {
 	}
 
 	@Override
+	public OptionGroup add(Options options) throws DuplicateOptionException {
+		if (options != null) { return add(options.getOptions()); }
+		return this;
+	}
+
+	@Override
 	public Collection<Option> remove(Option option) {
 		if (option == null) { throw new IllegalArgumentException("Must provide an option to remove"); }
 

@@ -180,9 +180,9 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 * @param wrappers
 	 * @return a list of the {@link Option} instances wrapped by the given wrappers
 	 */
-	public static List<Option> getUnwrappedList(OptionWrapper... wrappers) {
+	public static List<Option> unwrap(OptionWrapper... wrappers) {
 		if (wrappers == null) { return null; }
-		return Option.getUnwrappedList(Arrays.asList(wrappers));
+		return Option.unwrap(Arrays.asList(wrappers));
 	}
 
 	/**
@@ -195,7 +195,7 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 * @param wrappers
 	 * @return a list of the {@link Option} instances wrapped by the given wrappers
 	 */
-	public static List<Option> getUnwrappedList(Collection<OptionWrapper> wrappers) {
+	public static List<Option> unwrap(Collection<OptionWrapper> wrappers) {
 		if (wrappers == null) { return null; }
 		List<Option> l = new ArrayList<>(wrappers.size());
 		for (OptionWrapper d : wrappers) {

@@ -6,10 +6,10 @@ import java.util.Collections;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.launcher.OptionSet;
+import com.armedia.caliente.cli.Options;
 import com.armedia.commons.utilities.Tools;
 
-public final class ThreadsLaunchHelper implements OptionSet {
+public final class ThreadsLaunchHelper implements Options {
 
 	public static final int DEFAULT_MIN_THREADS = 1;
 	public static final int DEFAULT_DEF_THREADS = (Runtime.getRuntime().availableProcessors() * 2);

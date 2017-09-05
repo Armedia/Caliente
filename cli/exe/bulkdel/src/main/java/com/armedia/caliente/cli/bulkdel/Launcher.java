@@ -9,6 +9,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import com.armedia.caliente.cli.utils.LibLaunchHelper;
 
 public class Launcher extends AbstractLauncher {
 
@@ -17,26 +18,24 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 
 	private Launcher() {
 	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		OptionScheme optionScheme = new OptionScheme(getProgramName());
-		for (Option o : Option.getUnwrappedList(CLIParam.values())) {
-			optionScheme.add(o);
-		}
-		for (Option o : this.dfcLaunchHelper.getOptions()) {
-			optionScheme.add(o);
-		}
-		return optionScheme;
+		return new OptionScheme(getProgramName()) //
+			.add(this.libLaunchHelper) //
+			.add(this.dfcLaunchHelper) //
+			.add(Option.unwrap(CLIParam.values())) //
+		;
 	}
 
 	@Override
 	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
 		OptionValues commandValies, Collection<String> positionals) {
-		return Arrays.asList(this.dfcLaunchHelper);
+		return Arrays.asList(this.libLaunchHelper, this.dfcLaunchHelper);
 	}
 
 	@Override

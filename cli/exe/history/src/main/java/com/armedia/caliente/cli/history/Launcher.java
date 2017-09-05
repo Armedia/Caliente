@@ -9,6 +9,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 
 public class Launcher extends AbstractLauncher {
@@ -17,6 +18,7 @@ public class Launcher extends AbstractLauncher {
 		System.exit(new Launcher().launch(args));
 	}
 
+	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper();
 
@@ -25,21 +27,19 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		OptionScheme optionScheme = new OptionScheme(getProgramName());
-		for (Option o : Option.getUnwrappedList(CLIParam.values())) {
-			optionScheme.addOrReplace(o);
-		}
-		for (Option o : this.dfcLaunchHelper.getOptions()) {
-			optionScheme.addOrReplace(o);
-		}
-		optionScheme.setMinArguments(1);
-		return optionScheme;
+		return new OptionScheme(getProgramName()) //
+			.add(this.libLaunchHelper) //
+			.add(this.dfcLaunchHelper) //
+			.add(this.threadsLaunchHelper) //
+			.add(Option.unwrap(CLIParam.values())) //
+			.setMinArguments(1) //
+		;
 	}
 
 	@Override
 	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
 		OptionValues commandValies, Collection<String> positionals) {
-		return Arrays.asList(this.dfcLaunchHelper);
+		return Arrays.asList(this.libLaunchHelper, this.dfcLaunchHelper);
 	}
 
 	@Override

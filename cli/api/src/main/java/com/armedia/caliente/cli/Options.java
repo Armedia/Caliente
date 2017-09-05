@@ -1,10 +1,8 @@
-package com.armedia.caliente.cli.launcher;
+package com.armedia.caliente.cli;
 
 import java.util.Collection;
 
-import com.armedia.caliente.cli.Option;
-
-public interface OptionSet {
+public interface Options {
 
 	/**
 	 * <p>
