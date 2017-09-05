@@ -9,7 +9,8 @@ public interface OptionSchemeExtender {
 	 * Adds a group to the currently active option scheme. If a group with the same name already
 	 * exists, a {@link DuplicateOptionGroupException} will be raised. If any of the groups options
 	 * conflict with the active scheme's options, a {@link DuplicateOptionException} will be raised.
-	 * If the given option group is empty (i.e. contains no options), this method does nothing.
+	 * If the given option group is empty (i.e. contains no options) or {@code null}, this method
+	 * does nothing.
 	 *
 	 * @param group
 	 *            the group to add

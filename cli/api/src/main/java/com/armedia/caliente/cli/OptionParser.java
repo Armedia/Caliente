@@ -32,6 +32,71 @@ import com.armedia.commons.utilities.Tools;
 
 public class OptionParser {
 
+	private class Extender implements OptionSchemeExtender {
+		private final OptionScheme baseScheme;
+		private final OptionScheme command;
+
+		private boolean modified = false;
+
+		private Extender(OptionScheme baseScheme) {
+			this(baseScheme, null);
+		}
+
+		private Extender(OptionScheme baseScheme, OptionScheme command) {
+			this.baseScheme = baseScheme;
+			this.command = command;
+		}
+
+		private OptionScheme getScheme() {
+			return Tools.coalesce(this.command, this.baseScheme);
+		}
+
+		private void resetModified() {
+			this.modified = false;
+		}
+
+		private boolean isModified() {
+			return this.modified;
+		}
+
+		@Override
+		public Extender addGroup(OptionGroup group) throws DuplicateOptionGroupException, DuplicateOptionException {
+			if ((group == null) || (group.getOptionCount() == 0)) { return this; }
+			getScheme().addGroup(group);
+			this.modified = true;
+			return this;
+		}
+
+		@Override
+		public boolean hasOption(Character option) {
+			if (option == null) { return false; }
+			if ((this.command != null) && this.command.hasOption(option)) { return true; }
+			return this.baseScheme.hasOption(option);
+		}
+
+		@Override
+		public boolean hasOption(String option) {
+			if (option == null) { return false; }
+			if ((this.command != null) && this.command.hasOption(option)) { return true; }
+			return this.baseScheme.hasOption(option);
+		}
+
+		@Override
+		public int hasOption(Option option) {
+			if (option == null) { return 0; }
+			if (this.command != null) {
+				int ret = this.command.hasOption(option);
+				if (ret != 0) { return ret; }
+			}
+			return this.baseScheme.hasOption(option);
+		}
+
+		@Override
+		public boolean hasGroup(String name) {
+			return getScheme().hasGroup(name);
+		}
+	}
+
 	public static final boolean DEFAULT_ALLOW_RECURSION = true;
 	public static final Character DEFAULT_VALUE_SEPARATOR = TokenLoader.DEFAULT_VALUE_SEPARATOR;
 
@@ -154,9 +219,9 @@ public class OptionParser {
 			args);
 	}
 
-	private <T extends CommandLineSyntaxException> void raiseExceptionWithHelp(boolean helpRequested,
+	private <T extends CommandLineSyntaxException> void raiseExceptionWithHelp(boolean helpRequested, Option helpOption,
 		OptionScheme baseScheme, Command command, T error) throws CommandLineSyntaxException, HelpRequestedException {
-		if (helpRequested) { throw new HelpRequestedException(baseScheme, command, error); }
+		if (helpRequested) { throw new HelpRequestedException(helpOption, baseScheme, command, error); }
 		if (error != null) { throw error; }
 	}
 
@@ -171,9 +236,6 @@ public class OptionParser {
 		if (baseScheme == null) {
 			baseScheme = new OptionScheme("(ad-hoc)");
 		}
-		if (helpOption != null) {
-			baseScheme.addOrReplace(helpOption);
-		}
 
 		final TokenLoader tokenLoader = new TokenLoader(new StaticTokenSource("main", args), optionValueSplitter,
 			allowRecursion);
@@ -182,7 +244,7 @@ public class OptionParser {
 		final List<Token> positionals = new ArrayList<>();
 		final CommandScheme commandScheme = CommandScheme.castAs(baseScheme);
 
-		boolean extensible = (extensionSupport != null);
+		final boolean extensible = (extensionSupport != null);
 
 		Command command = null;
 		String commandName = null;
@@ -197,35 +259,7 @@ public class OptionParser {
 		Map<String, Option> baseWithArgs = new HashMap<>();
 		Map<String, Option> commandWithArgs = new HashMap<>();
 
-		OptionSchemeExtender extender = (extensible ? new OptionSchemeExtender() {
-
-			@Override
-			public int hasOption(Option option) {
-				return baseScheme.hasOption(option);
-			}
-
-			@Override
-			public boolean hasOption(String option) {
-				return baseScheme.hasOption(option);
-			}
-
-			@Override
-			public boolean hasOption(Character option) {
-				return baseScheme.hasOption(option);
-			}
-
-			@Override
-			public boolean hasGroup(String name) {
-				return baseScheme.hasGroup(name);
-			}
-
-			@Override
-			public OptionSchemeExtender addGroup(OptionGroup group)
-				throws DuplicateOptionGroupException, DuplicateOptionException {
-				// TODO Auto-generated method stub
-				return null;
-			}
-		} : null);
+		Extender extender = (extensible ? new Extender(baseScheme) : null);
 
 		boolean helpRequested = false;
 
@@ -240,7 +274,7 @@ public class OptionParser {
 						// occurrence and validate the schema limits (empty strings are allowed)
 						final int maxArgs = currentOption.getMaxArguments();
 						if (maxArgs == 0) {
-							raiseExceptionWithHelp(helpRequested, baseScheme, command,
+							raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 								new TooManyOptionValuesException(currentScheme, currentOption, token));
 						}
 
@@ -295,7 +329,7 @@ public class OptionParser {
 
 						// If there are invalid values, then we raise the exception
 						if (badValues != null) {
-							raiseExceptionWithHelp(helpRequested, baseScheme, command,
+							raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 								new IllegalOptionValuesException(currentScheme, currentOption, badValues));
 						}
 
@@ -304,7 +338,7 @@ public class OptionParser {
 						// arguments, since options are only "remembered" if they support
 						// arguments...
 						if ((maxArgs > 0) && ((values.size() + existing) > maxArgs)) {
-							raiseExceptionWithHelp(helpRequested, baseScheme, command,
+							raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 								new TooManyOptionValuesException(currentScheme, currentOption, token));
 						}
 
@@ -335,20 +369,15 @@ public class OptionParser {
 							if (command != null) {
 								commandName = command.getName();
 								commandValues = new OptionValues();
-								extensible = commandScheme.isExtensible() && (extensionSupport != null);
 								if (extensible) {
-									extensibleScheme = new OptionSchemeExtension(command);
-								}
-								if (helpOption != null) {
-									// Make sure there is no colliding option from the command...
-									command.remove(helpOption);
+									extender = new Extender(baseScheme, command);
 								}
 								lastOption = null;
 								continue nextToken;
 							}
 
 							// This is an unknown command, so this is an error
-							raiseExceptionWithHelp(helpRequested, baseScheme, command,
+							raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 								new UnknownCommandException(commandScheme, token));
 						}
 					}
@@ -359,13 +388,13 @@ public class OptionParser {
 
 					// Are positionals allowed?
 					if (!currentScheme.isSupportsPositionals()) {
-						raiseExceptionWithHelp(helpRequested, baseScheme, command,
+						raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 							new TooManyPositionalValuesException(currentScheme, token));
 					}
 
 					// If there's an upper limit, check it...
 					if ((maxArgs > 0) && (maxArgs <= positionals.size())) {
-						raiseExceptionWithHelp(helpRequested, baseScheme, command,
+						raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 							new TooManyPositionalValuesException(currentScheme, token));
 					}
 
@@ -385,7 +414,8 @@ public class OptionParser {
 						String actual = token.getValue();
 						switch (token.getType()) {
 							case LONG_OPTION:
-								expected = helpOption.getLongOpt();
+								expected = helpOption.getLongOpt().toUpperCase();
+								actual = actual.toUpperCase();
 								break;
 							case SHORT_OPTION:
 								expected = helpOption.getShortOpt().toString();
@@ -393,10 +423,6 @@ public class OptionParser {
 							default:
 								expected = null;
 								break;
-						}
-						if (!baseScheme.isCaseSensitive()) {
-							expected = expected.toUpperCase();
-							actual = actual.toUpperCase();
 						}
 						helpRequested = Tools.equals(expected, actual);
 					}
@@ -409,7 +435,7 @@ public class OptionParser {
 						} else {
 							err = new UnknownOptionException(currentScheme, positionals.get(0));
 						}
-						raiseExceptionWithHelp(helpRequested, baseScheme, command, err);
+						raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command, err);
 					}
 
 					boolean fromCommand = false;
@@ -439,11 +465,12 @@ public class OptionParser {
 							// scheme
 
 							// Try to extend the scheme
+							extender.resetModified();
 							extensionSupport.extendScheme(extensionCount, baseValues, command.getName(), commandValues,
-								token, extensibleScheme);
+								token, extender);
 
 							// If there were changes, then we can go back around...
-							if (extensibleScheme.isModified()) {
+							if (extender.isModified()) {
 								mayExtend = false;
 								continue inner;
 							}
@@ -451,7 +478,7 @@ public class OptionParser {
 
 						// No such option - neither on the command nor the base scheme, and the
 						// extension mechanism didn't fix this....so this is an error
-						raiseExceptionWithHelp(helpRequested, baseScheme, command,
+						raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 							new UnknownOptionException(currentScheme, token));
 					}
 
@@ -472,7 +499,7 @@ public class OptionParser {
 
 		// Do we require a command, and is it missing?
 		if ((commandScheme != null) && commandScheme.isCommandRequired() && (command == null)) {
-			raiseExceptionWithHelp(helpRequested, baseScheme, command,
+			raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 				new MissingRequiredCommandException(commandScheme));
 		}
 
@@ -493,7 +520,7 @@ public class OptionParser {
 		}
 		// If we have faults from missing required options, raise the error!
 		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) {
-			raiseExceptionWithHelp(helpRequested, baseScheme, command,
+			raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 				new MissingRequiredOptionsException(currentScheme, baseFaults, commandName, commandFaults));
 		}
 
@@ -510,13 +537,13 @@ public class OptionParser {
 		}
 		if (!baseFaults.isEmpty() || !commandFaults.isEmpty()) {
 			Option p = (!baseFaults.isEmpty() ? baseFaults.iterator().next() : commandFaults.iterator().next());
-			raiseExceptionWithHelp(helpRequested, baseScheme, command,
+			raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 				new InsufficientOptionValuesException(currentScheme, p));
 		}
 
 		// Validate that we have enough positionals as required
 		if (currentScheme.getMinArguments() > positionals.size()) {
-			raiseExceptionWithHelp(helpRequested, baseScheme, command,
+			raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command,
 				new InsufficientPositionalValuesException(currentScheme));
 		}
 
@@ -533,7 +560,7 @@ public class OptionParser {
 			positionalStrings.add(t.getRawString());
 		}
 
-		raiseExceptionWithHelp(helpRequested, baseScheme, command, null);
+		raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command, null);
 		return new OptionParseResult(baseValues, (command != null ? command.getName() : null), commandValues,
 			positionalStrings);
 	}

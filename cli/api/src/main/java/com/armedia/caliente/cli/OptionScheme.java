@@ -307,7 +307,7 @@ public class OptionScheme implements Iterable<Option>, OptionContainer, OptionSc
 
 	@Override
 	public boolean hasGroup(String name) {
-		return false;
+		return ((name != null) && this.groups.containsKey(OptionScheme.canonicalizeGroupName(name)));
 	}
 
 	@Override
