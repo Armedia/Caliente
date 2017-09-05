@@ -117,6 +117,57 @@ public class OptionParser {
 		}
 	}
 
+	protected boolean isHelpOption(Option helpOption, Token token) {
+		if ((helpOption == null) || (token == null)) { return false; }
+
+		final String shortOpt = (helpOption.getShortOpt() != null ? helpOption.getShortOpt().toString() : null);
+		final String longOpt = (helpOption.getLongOpt() != null ? helpOption.getLongOpt().toUpperCase() : null);
+
+		String expected = null;
+		String actual = token.getValue();
+		switch (token.getType()) {
+			case STRING:
+				// Do nothing...this isn't the help option
+				return false;
+
+			case LONG_OPTION:
+				expected = longOpt;
+				actual = actual.toUpperCase();
+				break;
+
+			case SHORT_OPTION:
+				expected = shortOpt;
+				break;
+		}
+		return Tools.equals(expected, actual);
+	}
+
+	protected boolean isHelpRequested(Option helpOption, Collection<Token> tokens) {
+		if ((helpOption == null) || (tokens == null) || tokens.isEmpty()) { return false; }
+
+		final String shortOpt = (helpOption.getShortOpt() != null ? helpOption.getShortOpt().toString() : null);
+		final String longOpt = (helpOption.getLongOpt() != null ? helpOption.getLongOpt().toUpperCase() : null);
+
+		String expected = null;
+		for (Token t : tokens) {
+			String actual = t.getValue();
+			switch (t.getType()) {
+				case STRING:
+					// Do nothing...this isn't the help option
+					continue;
+				case LONG_OPTION:
+					expected = longOpt;
+					actual = actual.toUpperCase();
+					break;
+				case SHORT_OPTION:
+					expected = shortOpt;
+					break;
+			}
+			if (Tools.equals(expected, actual)) { return true; }
+		}
+		return false;
+	}
+
 	protected Command findCommand(OptionValues currentValues, CommandScheme commandScheme, String commandName) {
 		return commandScheme.getCommand(commandName);
 	}
@@ -267,7 +318,7 @@ public class OptionParser {
 
 		Extender extender = (extensible ? new Extender(baseScheme) : null);
 
-		boolean helpRequested = false;
+		final boolean helpRequested = isHelpRequested(helpOption, tokenLoader.getBaseTokens());
 
 		int extensionCount = 0;
 		nextToken: for (Token token : tokenLoader) {
@@ -420,26 +471,6 @@ public class OptionParser {
 				case SHORT_OPTION:
 					// Either a short or long option...
 					Option p = null;
-
-					// First things first: is this the help option?
-					if (!helpRequested && (helpOption != null)) {
-						String expected = null;
-						String actual = token.getValue();
-						switch (token.getType()) {
-							case LONG_OPTION:
-								expected = helpOption.getLongOpt().toUpperCase();
-								actual = actual.toUpperCase();
-								break;
-							case SHORT_OPTION:
-								expected = helpOption.getShortOpt().toString();
-								break;
-							default:
-								expected = null;
-								break;
-						}
-						helpRequested = Tools.equals(expected, actual);
-					}
-
 					// May not have positionals yet, as these would be out-of-place strings
 					if (!positionals.isEmpty()) {
 						final CommandLineSyntaxException err;
