@@ -30,7 +30,7 @@ public class Launcher extends AbstractLauncher {
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
 			.addGroup( //
-				new OptionGroupImpl("Library") //
+				new OptionGroupImpl("Classpath extension") //
 					.add(this.libLaunchHelper) //
 			) //
 			.addGroup( //
@@ -54,7 +54,7 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected String getProgramName() {
-		return "Caliente History Lister";
+		return "caliente-history";
 	}
 
 	@Override
