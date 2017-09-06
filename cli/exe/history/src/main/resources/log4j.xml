@@ -8,7 +8,11 @@
 	</appender>
 
 	<logger name="com.armedia.caliente.cli.history">
-		<level value="DEBUG"/>
+		<level value="INFO"/>
+	</logger>
+	
+	<logger name="com.armedia.commons.dfc.util.DctmVersionHistory">
+		<level value="TRACE"/>
 	</logger>
 
 	<root>
