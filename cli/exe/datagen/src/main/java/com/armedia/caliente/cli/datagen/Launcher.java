@@ -36,14 +36,14 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected String getProgramName() {
-		return "Caliente Data Generator";
+		return "caliente-datagen";
 	}
 
 	@Override
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
 			.addGroup( //
-				new OptionGroupImpl("Library") //
+				new OptionGroupImpl("Classpath extension") //
 					.add(this.libLaunchHelper) //
 			) //
 			.addGroup( //

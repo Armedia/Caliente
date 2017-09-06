@@ -28,7 +28,7 @@ public class Launcher extends AbstractLauncher {
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
 			.addGroup( //
-				new OptionGroupImpl("Library") //
+				new OptionGroupImpl("Classpath Extension") //
 					.add(this.libLaunchHelper) //
 			) //
 			.addGroup( //
@@ -47,7 +47,7 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected String getProgramName() {
-		return "Caliente Bulk Deleter";
+		return "caliente-bulk-deleter";
 	}
 
 	@Override

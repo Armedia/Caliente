@@ -49,7 +49,7 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected String getProgramName() {
-		return "Caliente Validator";
+		return "caliente-validator";
 	}
 
 	public static final void main(String... args) {
