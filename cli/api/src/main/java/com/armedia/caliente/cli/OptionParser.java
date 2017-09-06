@@ -13,8 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
-import com.armedia.caliente.cli.exception.DuplicateOptionException;
-import com.armedia.caliente.cli.exception.DuplicateOptionGroupException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.exception.IllegalOptionValuesException;
 import com.armedia.caliente.cli.exception.InsufficientOptionValuesException;
@@ -60,9 +58,9 @@ public class OptionParser {
 		}
 
 		@Override
-		public Extender addGroup(OptionGroup group) throws DuplicateOptionGroupException, DuplicateOptionException {
+		public Extender add(OptionGroup group) {
 			if ((group == null) || (group.getOptionCount() == 0)) { return this; }
-			getScheme().addGroup(group);
+			getScheme().add(group);
 			this.modified = true;
 			return this;
 		}
