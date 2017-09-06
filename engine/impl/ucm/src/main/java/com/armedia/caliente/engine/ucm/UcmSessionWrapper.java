@@ -2,19 +2,17 @@ package com.armedia.caliente.engine.ucm;
 
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.chemistry.opencmis.client.api.Session;
-
 import com.armedia.caliente.engine.SessionWrapper;
 
-public class CmisSessionWrapper extends SessionWrapper<Session> {
+public class UcmSessionWrapper extends SessionWrapper<UcmSession> {
 
 	private static final AtomicLong ID = new AtomicLong(0);
 
 	private final String id;
 
-	public CmisSessionWrapper(CmisSessionFactory factory, Session session) {
+	public UcmSessionWrapper(UcmSessionFactory factory, UcmSession session) {
 		super(factory, session);
-		this.id = String.format("{%08X}", CmisSessionWrapper.ID.getAndIncrement());
+		this.id = String.format("{%08X}", UcmSessionWrapper.ID.getAndIncrement());
 	}
 
 	@Override
