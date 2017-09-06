@@ -224,7 +224,7 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	@Override
-	public OptionScheme addGroup(OptionGroup group) throws DuplicateOptionGroupException, DuplicateOptionException {
+	public OptionScheme add(OptionGroup group) {
 		if (group == null) { return this; }
 		String key = OptionScheme.canonicalizeGroupName(group.getName());
 		if (this.groups.containsKey(key)) { throw new DuplicateOptionGroupException(group.getName()); }
