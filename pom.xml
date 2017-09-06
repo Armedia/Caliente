@@ -468,6 +468,34 @@
 				<build.number></build.number>
 			</properties>
 		</profile>
+		<profile>
+			<id>beta</id>
+			<properties>
+				<build.number>-beta-${betaNumber}</build.number>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-enforcer-plugin</artifactId>
+						<version>1.4.1</version>
+						<configuration>
+							<rules>
+								<requireMavenVersion>
+									<version>${maven.min-version}</version>
+								</requireMavenVersion>
+								<requireProperty>
+									<property>betaNumber</property>
+									<message>Must provide a valid betaNumber property (-DbetaNumber=...) for this build</message>
+									<regex>^[1-9][0-9]*$</regex>
+									<regexMessage>The beta number [${betaNumber}] is not composed of all digits, or starts with a 0</regexMessage>
+								</requireProperty>
+							</rules>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 
 	<modules>
