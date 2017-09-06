@@ -33,6 +33,9 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.tools.MimeTools;
+import com.armedia.commons.dfc.util.DctmVersion;
+import com.armedia.commons.dfc.util.DctmVersionHistory;
+import com.armedia.commons.dfc.util.DctmVersionNumber;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
@@ -68,29 +71,33 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		IDfSysObject document) throws DfException, ExportException {
 		if (!super.getDataProperties(ctx, properties, document)) { return false; }
 
-		List<Version<IDfSysObject>> history = getVersionHistory(ctx, document);
+		DctmVersionHistory<IDfSysObject> history = getVersionHistory(ctx, document);
 		properties.add(new CmfProperty<>(IntermediateProperty.VERSION_COUNT, DctmDataType.DF_INTEGER.getStoredType(),
 			false, DfValueFactory.newIntValue(history.size())));
-		Integer historyIndex = getVersionIndex(document, ctx);
+		Integer historyIndex = history.getIndexFor(document.getObjectId());
 		if (historyIndex != null) {
 			properties.add(new CmfProperty<>(IntermediateProperty.VERSION_INDEX,
 				DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(historyIndex)));
-			historyIndex = getHeadIndex(document, ctx);
+			historyIndex = history.getCurrentIndex();
 			if (historyIndex != null) {
 				properties.add(new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX,
 					DctmDataType.DF_INTEGER.getStoredType(), false, DfValueFactory.newIntValue(historyIndex)));
 			}
 		}
 
-		List<IDfValue> patches = getVersionPatches(document, ctx);
+		List<DctmVersionNumber> patches = history.getPatchesFor(document.getObjectId());
 		if ((patches != null) && !patches.isEmpty()) {
+			List<IDfValue> patchValues = new ArrayList<>(patches.size());
+			for (DctmVersionNumber v : patches) {
+				patchValues.add(DfValueFactory.newStringValue(v.toString()));
+			}
 			properties.add(new CmfProperty<>(DctmSysObject.VERSION_PATCHES, DctmDataType.DF_STRING.getStoredType(),
-				true, patches));
+				true, patchValues));
 		}
-		IDfValue patchAntecedent = getPatchAntecedent(document, ctx);
+		String patchAntecedent = history.getPatchAntecedentFor(document.getObjectId());
 		if (patchAntecedent != null) {
 			properties.add(new CmfProperty<>(DctmSysObject.PATCH_ANTECEDENT, DctmDataType.DF_ID.getStoredType(), false,
-				patchAntecedent));
+				DfValueFactory.newStringValue(patchAntecedent)));
 		}
 
 		if (ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)) {
@@ -123,8 +130,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		final List<IDfSysObject> ret = new LinkedList<>();
 
 		boolean add = prior;
-		for (Version<IDfSysObject> version : getVersionHistory(ctx, document)) {
-			IDfSysObject doc = version.object;
+		for (DctmVersion<IDfSysObject> version : getVersionHistory(ctx, document)) {
+			IDfSysObject doc = version.getObject();
 			final IDfId id = doc.getObjectId();
 			if (Tools.equals(id.getId(), document.getObjectId().getId())) {
 				// Once we've found the "reference" object in the history, we skip adding it
@@ -194,10 +201,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			rootObject = (previousCount == 0);
 		} else {
 			// If we're the first object in the version history, we mark ourselves as such.
-			for (Version<IDfSysObject> v : getVersionHistory(ctx, document)) {
-				rootObject = (Tools.equals(v.object.getObjectId(), document.getObjectId()));
-				break;
-			}
+			rootObject = Tools.equals(document.getObjectId(),
+				getVersionHistory(ctx, document).getRootVersion().getId());
 		}
 		marshaled.setProperty(new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
 			IntermediateProperty.VERSION_TREE_ROOT.type, DfValueFactory.newBooleanValue(rootObject)));

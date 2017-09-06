@@ -17,10 +17,10 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.IdValidator;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.RenamedEntryProcessor;
-import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
@@ -141,7 +141,7 @@ class FilenameMapper {
 		return String.format("%s # %s", entryId.getType().name(), entryId.getId());
 	}
 
-	private FilenameFixer configureFilenameFixer(CommandLineValues cli) throws CliParameterException {
+	private FilenameFixer configureFilenameFixer(OptionValues cli) throws CliParameterException {
 		if (cli.isPresent(CLIParam.no_fix)) { return null; }
 		final FilenameFixer.Mode fixerModel;
 		final Character fixChar;
@@ -176,7 +176,7 @@ class FilenameMapper {
 		return new FilenameFixer(fixerModel, fixChar, fixLength);
 	}
 
-	protected int run(CommandLineValues cli) throws Exception {
+	protected int run(OptionValues cli) throws Exception {
 		final String docbase = this.dfcLaunchHelper.getDfcDocbase(cli);
 		final String dctmUser = this.dfcLaunchHelper.getDfcUser(cli);
 		final String dctmPass = this.dfcLaunchHelper.getDfcPassword(cli);

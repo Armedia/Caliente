@@ -27,8 +27,8 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.datagen.data.csv.CSVDataRecordManager;
-import com.armedia.caliente.cli.parser.CommandLineValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
@@ -150,7 +150,7 @@ public class DataGen {
 		this.dfcLaunchHelper = dfcLaunchHelper;
 	}
 
-	protected int run(CommandLineValues cli) throws Exception {
+	protected int run(OptionValues cli) throws Exception {
 		final boolean debug = cli.isPresent(CLIParam.debug);
 
 		List<String> objectTypes = cli.getAllStrings(CLIParam.object_types);

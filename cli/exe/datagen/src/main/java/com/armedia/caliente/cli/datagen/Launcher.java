@@ -3,16 +3,17 @@ package com.armedia.caliente.cli.datagen;
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroupImpl;
+import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.launcher.LaunchParameterSet;
-import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.Parameter;
-import com.armedia.caliente.cli.parser.ParameterTools;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 
-public class Launcher extends AbstractLauncher implements LaunchParameterSet {
+public class Launcher extends AbstractLauncher {
 
 	public static final void main(String... args) {
 		System.exit(new Launcher().launch(args));
@@ -22,33 +23,44 @@ public class Launcher extends AbstractLauncher implements LaunchParameterSet {
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() / 2);
 	protected static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors());
 
-	private final ThreadsLaunchHelper threadsParameter = new ThreadsLaunchHelper(Launcher.MIN_THREADS,
-		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
+	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
+	private final ThreadsLaunchHelper threadsLaunchHelper = new ThreadsLaunchHelper(Launcher.MIN_THREADS,
+		Launcher.DEFAULT_THREADS, Launcher.MAX_THREADS);
 
 	@Override
-	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
-		return ParameterTools.getUnwrappedList(CLIParam.values());
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
+		OptionValues commandValies, Collection<String> positionals) {
+		return Arrays.asList(this.libLaunchHelper, this.dfcLaunchHelper);
 	}
 
 	@Override
-	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
-		if (pass > 0) { return null; }
-		return Arrays.asList(this, this.dfcLaunchHelper, this.threadsParameter);
-	}
-
-	@Override
-	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
-		return Arrays.asList(this.dfcLaunchHelper);
-	}
-
-	@Override
-	protected String getProgramName(int pass) {
+	protected String getProgramName() {
 		return "Caliente Data Generator";
 	}
 
 	@Override
-	protected int run(CommandLineValues cli) throws Exception {
-		return new DataGen(this.threadsParameter, this.dfcLaunchHelper).run(cli);
+	protected OptionScheme getOptionScheme() {
+		return new OptionScheme(getProgramName()) //
+			.addGroup( //
+				new OptionGroupImpl("Library") //
+					.add(this.libLaunchHelper) //
+			) //
+			.addGroup( //
+				new OptionGroupImpl("Documentum") //
+					.add(this.dfcLaunchHelper) //
+			) //
+			.addGroup( //
+				new OptionGroupImpl("Threading") //
+					.add(this.threadsLaunchHelper) //
+			) //
+			.add(Option.unwrap(CLIParam.values())) //
+		;
+	}
+
+	@Override
+	protected int run(OptionValues baseValues, String command, OptionValues commandValies,
+		Collection<String> positionals) throws Exception {
+		return new DataGen(this.threadsLaunchHelper, this.dfcLaunchHelper).run(baseValues);
 	}
 }

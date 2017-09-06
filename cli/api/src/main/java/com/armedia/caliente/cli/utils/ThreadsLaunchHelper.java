@@ -3,26 +3,27 @@ package com.armedia.caliente.cli.utils;
 import java.util.Collection;
 import java.util.Collections;
 
-import com.armedia.caliente.cli.launcher.LaunchParameterSet;
-import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.MutableParameter;
-import com.armedia.caliente.cli.parser.Parameter;
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.Options;
 import com.armedia.commons.utilities.Tools;
 
-public final class ThreadsLaunchHelper implements LaunchParameterSet {
-
-	private static final Parameter THREADS = new MutableParameter() //
-		.setShortOpt('t') //
-		.setLongOpt("threads") //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("threads") //
-		.setDescription("The number of threads to use") //
-		.freezeCopy();
+public final class ThreadsLaunchHelper implements Options {
 
 	public static final int DEFAULT_MIN_THREADS = 1;
 	public static final int DEFAULT_DEF_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
 	public static final int DEFAULT_MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 4);
+
+	private static final Option THREADS = new OptionImpl() //
+		.setShortOpt('t') //
+		.setLongOpt("threads") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setDefault(String.valueOf(ThreadsLaunchHelper.DEFAULT_DEF_THREADS)) //
+		.setArgumentName("threads") //
+		.setDescription("The number of threads to use") //
+	;
 
 	private final int min;
 	private final Integer def;
@@ -71,21 +72,21 @@ public final class ThreadsLaunchHelper implements LaunchParameterSet {
 	}
 
 	@Override
-	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
+	public Collection<? extends Option> getOptions() {
 		return Collections.singleton(ThreadsLaunchHelper.THREADS);
 	}
 
-	public boolean hasThreads(CommandLineValues cli) {
+	public boolean hasThreads(OptionValues cli) {
 		return cli.isPresent(ThreadsLaunchHelper.THREADS);
 	}
 
-	public Integer getThreads(CommandLineValues cli) {
+	public Integer getThreads(OptionValues cli) {
 		Integer t = cli.getInteger(ThreadsLaunchHelper.THREADS);
 		if (t == null) { return this.def; }
 		return Tools.ensureBetween(this.min, t.intValue(), this.max);
 	}
 
-	public int getThreads(CommandLineValues cli, int def) {
+	public int getThreads(OptionValues cli, int def) {
 		return Tools.ensureBetween(this.min, cli.getInteger(ThreadsLaunchHelper.THREADS, def), this.max);
 	}
 }

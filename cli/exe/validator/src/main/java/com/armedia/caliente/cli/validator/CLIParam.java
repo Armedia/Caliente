@@ -1,52 +1,52 @@
 package com.armedia.caliente.cli.validator;
 
-import com.armedia.caliente.cli.parser.MutableParameter;
-import com.armedia.caliente.cli.parser.Parameter;
-import com.armedia.caliente.cli.parser.ParameterWrapper;
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionWrapper;
 
-public enum CLIParam implements ParameterWrapper {
-	bulk_import(new MutableParameter() //
+public enum CLIParam implements OptionWrapper {
+	bulk_import(new OptionImpl() //
 		.setRequired(true) //
 		.setShortOpt('i') //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("bulk import directory") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("bulk-import-directory") //
 		.setDescription("The location of the Bulk Import source data") //
 	), //
-	bulk_export(new MutableParameter() //
+	bulk_export(new OptionImpl() //
 		.setRequired(true) //
 		.setShortOpt('e') //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("bulk export directory") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("bulk-export-directory") //
 		.setDescription("The location of the Bulk Export validation data") //
 	), //
-	report_dir(new MutableParameter() //
+	report_dir(new OptionImpl() //
 		.setShortOpt('r') //
-		.setMinValueCount(1) //
-		.setMaxValueCount(1) //
-		.setValueName("directory") //
+		.setMinArguments(1) //
+		.setMaxArguments(1) //
+		.setArgumentName("directory") //
 		.setDescription("The directory where the validation reports will be output to") //
 	), //
-	model(new MutableParameter() //
+	model(new OptionImpl() //
 		.setRequired(true) //
 		.setShortOpt('m') //
-		.setMinValueCount(1) //
-		.setMaxValueCount(-1) //
-		.setValueName("model1,model2,model3,...,modelN") //
+		.setMinArguments(1) //
+		.setMaxArguments(-1) //
+		.setArgumentName("model") //
 		.setDescription("The (list of) content model(s) in XML format and proper dependency order") //
 	), //
 		//
 	;
 
-	private final Parameter parameter;
+	private final Option option;
 
-	private CLIParam(MutableParameter parameter) {
-		this.parameter = MutableParameter.initOptionName(this, parameter).freezeCopy();
+	private CLIParam(OptionImpl parameter) {
+		this.option = OptionImpl.initOptionName(this, parameter);
 	}
 
 	@Override
-	public Parameter getParameter() {
-		return this.parameter;
+	public Option getOption() {
+		return this.option;
 	}
 }

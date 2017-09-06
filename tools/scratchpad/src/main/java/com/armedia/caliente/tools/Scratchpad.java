@@ -2,13 +2,11 @@ package com.armedia.caliente.tools;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
+import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.launcher.LaunchParameterSet;
-import com.armedia.caliente.cli.parser.CommandLineValues;
-import com.armedia.caliente.cli.parser.Parameter;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 
 /**
@@ -17,7 +15,7 @@ import com.armedia.caliente.cli.utils.DfcLaunchHelper;
  * @author diego.rivera@armedia.com
  *
  */
-public class Scratchpad extends AbstractLauncher implements LaunchParameterSet {
+public class Scratchpad extends AbstractLauncher {
 
 	public static final void main(String... args) {
 		System.exit(new Scratchpad().launch(args));
@@ -26,29 +24,28 @@ public class Scratchpad extends AbstractLauncher implements LaunchParameterSet {
 	private final DfcLaunchHelper dfcLaunchHelper = new DfcLaunchHelper(true);
 
 	@Override
-	public Collection<? extends Parameter> getParameters(CommandLineValues commandLine) {
-		return Collections.emptyList();
-	}
-
-	@Override
-	protected Collection<? extends LaunchParameterSet> getLaunchParameterSets(CommandLineValues cli, int pass) {
-		return null;
-	}
-
-	@Override
-	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(CommandLineValues cli) {
+	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
+		OptionValues commandValies, Collection<String> positionals) {
 		return Arrays.asList(this.dfcLaunchHelper);
 	}
 
 	@Override
-	protected String getProgramName(int pass) {
+	protected String getProgramName() {
 		return "Caliente Scratchpad";
 	}
 
 	@Override
-	protected int run(CommandLineValues cli) throws Exception {
+	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
+		Collection<String> positionals) throws Exception {
 		// PropertiesTest.test();
 		// DctmTest.test();
 		return 0;
+	}
+
+	@Override
+	protected OptionScheme getOptionScheme() {
+		return new OptionScheme(getProgramName()) //
+			.add(this.dfcLaunchHelper) //
+		;
 	}
 }

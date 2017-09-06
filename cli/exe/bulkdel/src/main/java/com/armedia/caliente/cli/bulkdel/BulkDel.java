@@ -6,7 +6,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.parser.CommandLineValues;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
@@ -45,7 +45,7 @@ public class BulkDel {
 		return null;
 	}
 
-	private List<String> addExplicitTargets(CommandLineValues cli, IDfSession session, IDfDeleteOperation op)
+	private List<String> addExplicitTargets(OptionValues cli, IDfSession session, IDfDeleteOperation op)
 		throws DfException {
 		List<String> targets = new ArrayList<>();
 		for (String spec : cli.getAllStrings(CLIParam.target)) {
@@ -112,7 +112,7 @@ public class BulkDel {
 		return targets;
 	}
 
-	protected int run(CommandLineValues cli) throws Exception {
+	protected int run(OptionValues cli) throws Exception {
 		final boolean debug = cli.isPresent(CLIParam.debug);
 
 		final boolean hasPredicate = cli.isPresent(CLIParam.predicate);

@@ -7,15 +7,12 @@ package com.armedia.caliente.engine.dfc.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
@@ -28,8 +25,7 @@ import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.dfc.util.DctmException;
-import com.armedia.commons.dfc.util.DctmVersionNumber;
-import com.armedia.commons.dfc.util.DctmVersionTree;
+import com.armedia.commons.dfc.util.DctmVersionHistory;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.FileNameTools;
@@ -52,9 +48,7 @@ import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.client.distributed.IDfReference;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
-import com.documentum.fc.common.DfTime;
 import com.documentum.fc.common.IDfId;
-import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -63,71 +57,11 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDelegate<T> implements DctmSysObject {
 
-	protected static final class Version<T extends IDfSysObject> implements Comparable<Version<T>> {
-		public final T object;
-		private final IDfId id;
-		private final IDfTime creationDate;
-		public final DctmVersionNumber versionNumber;
-
-		private Version(DctmVersionNumber versionNumber, T object) throws DfException {
-			this.versionNumber = versionNumber;
-			this.object = object;
-			this.id = object.getObjectId();
-			this.creationDate = Tools.coalesce(object.getCreationDate(), DfTime.DF_NULLDATE);
-		}
-
-		@Override
-		public int compareTo(Version<T> o) {
-			if (o == null) { return 1; }
-			if (equals(o)) { return 0; }
-
-			// If they're siblings, resort to version numbering
-			if (this.versionNumber.isSibling(o.versionNumber)) { return this.versionNumber.compareTo(o.versionNumber); }
-
-			// First, check hierarchy
-			if (this.versionNumber.isAntecedentOf(o.versionNumber)) { return -1; }
-			if (this.versionNumber.isSuccessorOf(o.versionNumber)) { return 1; }
-			if (this.versionNumber.isAncestorOf(o.versionNumber)) { return -1; }
-			if (this.versionNumber.isDescendantOf(o.versionNumber)) { return 1; }
-
-			// if there is no familial (hierarchy or peer) relationship, so fall back to chronology
-			final int dateResult = this.creationDate.compareTo(o.creationDate);
-			if (dateResult != 0) { return dateResult; }
-
-			// No familial or temporal relationship...so can't establish an order between them...
-			// sort by whomever's version number is "earliest"
-			return this.versionNumber.compareTo(o.versionNumber);
-		}
-
-		@Override
-		public int hashCode() {
-			return Tools.hashTool(this, null, this.versionNumber);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (!Tools.baseEquals(this, obj)) { return false; }
-			@SuppressWarnings("unchecked")
-			Version<T> other = (Version<T>) obj;
-			return (Tools.compare(this.versionNumber, other.versionNumber) == 0);
-		}
-
-		@Override
-		public String toString() {
-			return String.format("Version [object=%s, creationDate=%s, versionNumber=%s]", this.id,
-				DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(this.creationDate.getDate()), this.versionNumber);
-		}
-	}
-
 	protected interface RecursionCalculator {
 		public String getValue(IDfSysObject o) throws DfException;
 	}
 
 	private static final String CTX_VERSION_HISTORY = "VERSION_HISTORY_%S";
-	private static final String CTX_VERSION_PATCHES = "VERSION_PATCHES_%S";
-	private static final String CTX_VERSION_INDEXES = "VERSION_INDEXES_%S";
-	private static final String CTX_VERSION_CURRENT = "VERSION_CURRENT_%S";
-	private static final String CTX_PATCH_ANTECEDENT = "PATCH_ANTECEDENT_%S";
 
 	private static final String HISTORY_PATH_IDS = "HISTORY_PATH_IDS_%S";
 	private static final String HISTORY_VDOC_STATUS = "HISTORY_VDOC_STATUS_%S";
@@ -491,94 +425,21 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	 * @throws DfException
 	 * @throws ExportException
 	 */
-	protected final List<Version<T>> getVersionHistory(DctmExportContext ctx, T object)
+	protected final DctmVersionHistory<T> getVersionHistory(DctmExportContext ctx, T object)
 		throws DfException, ExportException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose versions to analyze"); }
 		final IDfSession session = object.getSession();
 		final IDfId chronicleId = object.getChronicleId();
 		final String historyObject = String.format(DctmExportSysObject.CTX_VERSION_HISTORY, chronicleId.getId());
 
-		List<Version<T>> history = ctx.getObject(historyObject);
+		DctmVersionHistory<T> history = ctx.getObject(historyObject);
 		if (history != null) { return history; }
 
-		T currentObject = null;
-
-		// No existing history, we must calculate it
-		history = new LinkedList<>();
-		final DctmVersionTree tree;
 		try {
-			tree = new DctmVersionTree(session, chronicleId);
+			history = new DctmVersionHistory<>(session, chronicleId, this.objectClass);
 		} catch (DctmException e) {
 			throw new ExportException(
 				String.format("Failed to obtain the version tree for chronicle [%s]", chronicleId.getId()), e);
-		}
-		List<IDfValue> patches = new ArrayList<>();
-		for (DctmVersionNumber versionNumber : tree.allVersions) {
-			if (tree.totalPatches.contains(versionNumber)) {
-				patches.add(DfValueFactory.newStringValue(versionNumber.toString()));
-				continue;
-			}
-
-			final IDfId id = new DfId(tree.indexByVersionNumber.get(versionNumber));
-			final T obj = castObject(session.getObject(id));
-			if (obj.getHasFolder()) {
-				currentObject = obj;
-			}
-			final Version<T> entry = new Version<>(versionNumber, obj);
-			history.add(entry);
-			if (!patches.isEmpty()) {
-				patches = Tools.freezeList(patches);
-				final String patchesObject = String.format(DctmExportSysObject.CTX_VERSION_PATCHES, id.getId());
-				ctx.setObject(patchesObject, patches);
-				patches = new ArrayList<>();
-			}
-
-			DctmVersionNumber alternateAntecedent = tree.alternateAntecedent.get(versionNumber);
-			if (alternateAntecedent != null) {
-				String antecedentId = tree.indexByVersionNumber.get(alternateAntecedent);
-				if (antecedentId == null) {
-					antecedentId = alternateAntecedent.toString();
-				}
-				ctx.setValue(String.format(DctmExportSysObject.CTX_PATCH_ANTECEDENT, id.getId()),
-					DfValueFactory.newStringValue(antecedentId));
-			}
-		}
-
-		// We need to sort the version history if branches are involved, since all versions must be
-		// in proper chronological order. Relative order is not enough...this is only necessary
-		// if branches are involved because "cousins" may not be properly ordered chronologically
-		// and this needs to be the case in order to support import by other systems.
-		if (tree.isBranched()) {
-			Collections.sort(history);
-		}
-
-		if (this.log.isTraceEnabled()) {
-			// Make a list of the versions in play
-			int i = 0;
-			for (Version<T> v : history) {
-				String msg = String.format("HISTORY: %s[%02d]: %s", chronicleId, i++, v);
-				ctx.printf(msg);
-				this.log.trace(msg);
-			}
-		}
-
-		// Only put this in the context when it's needed
-		history = Tools.freezeList(history);
-		ctx.setObject(historyObject, history);
-
-		// Now, we make sure we write down the index position for each version within the history
-		String indexesName = String.format(DctmExportSysObject.CTX_VERSION_INDEXES, chronicleId.getId());
-		Map<String, Integer> m = new HashMap<>(history.size());
-		int i = 0;
-		for (Version<T> v : history) {
-			m.put(v.id.getId(), ++i);
-		}
-		m = Tools.freezeMap(m);
-		ctx.setObject(indexesName, m);
-
-		if (currentObject != null) {
-			String markerName = String.format(DctmExportSysObject.CTX_VERSION_CURRENT, chronicleId.getId());
-			ctx.setObject(markerName, currentObject.getObjectId().getId());
 		}
 
 		return history;
@@ -590,32 +451,6 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		IDfId chronicleId = currentObject.getChronicleId();
 		String markerName = String.format(DctmExportSysObject.HISTORY_PATH_IDS, chronicleId.getId());
 		ctx.setObject(markerName, calculateParentTreeIds(currentObject));
-	}
-
-	protected final List<IDfValue> getVersionPatches(T object, DctmExportContext ctx) throws DfException {
-		return ctx.getObject(String.format(DctmExportSysObject.CTX_VERSION_PATCHES, object.getObjectId().getId()));
-	}
-
-	protected final Integer getVersionIndex(T object, DctmExportContext ctx) throws DfException {
-		Map<String, Integer> m = ctx
-			.getObject(String.format(DctmExportSysObject.CTX_VERSION_INDEXES, object.getChronicleId().getId()));
-		if (m == null) { return null; }
-		return m.get(object.getObjectId().getId());
-	}
-
-	protected final Integer getHeadIndex(T object, DctmExportContext ctx) throws DfException, ExportException {
-		IDfId chronicleId = object.getChronicleId();
-		String currentId = ctx.getObject(String.format(DctmExportSysObject.CTX_VERSION_CURRENT, chronicleId.getId()));
-		if (currentId == null) { return null; }
-
-		Map<String, Integer> m = ctx
-			.getObject(String.format(DctmExportSysObject.CTX_VERSION_INDEXES, object.getChronicleId().getId()));
-		if (m == null) { return null; }
-		return m.get(currentId);
-	}
-
-	protected final IDfValue getPatchAntecedent(T object, DctmExportContext ctx) throws DfException {
-		return ctx.getValue(String.format(DctmExportSysObject.CTX_PATCH_ANTECEDENT, object.getObjectId().getId()));
 	}
 
 	@Override
