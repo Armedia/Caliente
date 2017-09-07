@@ -1,8 +1,9 @@
 package com.armedia.caliente.engine.ucm;
 
+import java.security.Key;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
-import java.security.cert.X509Certificate;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.PooledObject;
@@ -104,16 +105,31 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 				this.clientCertAlias = clientCertAlias;
 				this.clientCertPassword = clientCertPassword;
 
-				Certificate cert = clientKs.getCertificate(this.clientCertAlias);
-				if (X509Certificate.class.isInstance(cert)) {
-					X509Certificate x509 = X509Certificate.class.cast(cert);
-					x509.getSubjectDN();
+				char[] passChars = (this.clientCertPassword != null ? this.clientCertPassword.toCharArray() : null);
+				try {
+					Key key = clientKs.getKey(this.clientCertAlias, passChars);
+					if (key == null) { throw new Exception(
+						String.format("No private key with alias [%s] was found in the keystore at [%s]",
+							this.clientCertAlias, this.clientStore)); }
+				} catch (NoSuchAlgorithmException e) {
+					throw new Exception(
+						String.format("The algorithm to decode the key [%s] in the keystore at [%s] could not be found",
+							this.clientCertAlias, this.clientStore),
+						e);
+				} catch (UnrecoverableKeyException e) {
+					throw new Exception(String.format(
+						"Could not recover the [%s] key from the keystore at [%s] - maybe the password is incorrect?",
+						this.clientCertAlias, this.clientStore), e);
+				} finally {
+					// Clear out the password characters...
+					for (int i = 0; i < passChars.length; i++) {
+						passChars[i] = '\0';
+					}
 				}
-				// TODO: Decrypt the private key with the given password to check its validity
 
 				if ((trustKs != null) && (clientKs != null)) {
 					// TODO: If we have both a client store and a trust store, verify that the
-					// client certificate is trusted as per the trust store...
+					// client certificate is trusted as per the trust store...???
 				}
 
 			} else {
