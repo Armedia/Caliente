@@ -8,8 +8,8 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -102,5 +102,10 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 		} else {
 			excludes = EnumSet.allOf(CmfType.class);
 		}
+	}
+
+	@Override
+	protected String getContextLabel() {
+		return "import";
 	}
 }

@@ -22,6 +22,7 @@ public abstract class TransferContext<S, V, F extends TransferContextFactory<S, 
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
+	private final String id;
 	private final F factory;
 	private final String rootId;
 	private final CmfType rootType;
@@ -45,6 +46,11 @@ public abstract class TransferContext<S, V, F extends TransferContextFactory<S, 
 		this.productName = factory.getProductName();
 		this.productVersion = factory.getProductVersion();
 		this.warningTracker = warningTracker;
+		this.id = factory.getNextContextId();
+	}
+
+	public final String getId() {
+		return this.id;
 	}
 
 	protected F getFactory() {
@@ -121,6 +127,7 @@ public abstract class TransferContext<S, V, F extends TransferContextFactory<S, 
 		}
 	}
 
+	@Override
 	public final void trackWarning(CmfObjectRef ref, String format, Object... args) {
 		if (this.warningTracker != null) {
 			this.warningTracker.trackWarning(ref, format, args);

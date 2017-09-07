@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -59,6 +60,7 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
+	private final AtomicLong contextId = new AtomicLong(0);
 	private CfgTools settings = CfgTools.EMPTY;
 	private final E engine;
 	private final Set<CmfType> excludes;
@@ -182,4 +184,10 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 	}
 
 	protected abstract C constructContext(String rootId, CmfType rootType, S session, int batchPosition);
+
+	final String getNextContextId() {
+		return String.format("%s-%016x", getContextLabel(), this.contextId.incrementAndGet());
+	}
+
+	protected abstract String getContextLabel();
 }
