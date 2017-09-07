@@ -20,7 +20,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.ContextFactory;
+import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
@@ -623,7 +623,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				throw new ExportException("Failed to obtain the main export session", e);
 			}
 
-			ContextFactory<S, V, C, ?> contextFactory = null;
+			TransferContextFactory<S, V, C, ?> contextFactory = null;
 			DF delegateFactory = null;
 			try {
 				try {
@@ -659,7 +659,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
 		CmfObjectCounter<ExportResult> objectCounter, final SessionFactory<S> sessionFactory,
-		final SessionWrapper<S> baseSession, final ContextFactory<S, V, C, ?> contextFactory, final DF delegateFactory)
+		final SessionWrapper<S> baseSession, final TransferContextFactory<S, V, C, ?> contextFactory, final DF delegateFactory)
 		throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;

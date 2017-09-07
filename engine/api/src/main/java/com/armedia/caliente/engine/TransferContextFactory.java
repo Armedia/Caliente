@@ -20,7 +20,7 @@ import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
+public abstract class TransferContextFactory<S, V, C extends TransferContext<S, V, ?>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
 
 	private static CmfType decodeObjectType(Object o) {
 		if (o == null) { return null; }
@@ -70,7 +70,7 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 	private final Logger output;
 	private final WarningTracker warningTracker;
 
-	protected ContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
+	protected TransferContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper, Logger output, WarningTracker tracker)
 		throws Exception {
 		if (engine == null) { throw new IllegalArgumentException(
@@ -78,8 +78,8 @@ public abstract class ContextFactory<S, V, C extends TransferContext<S, V, ?>, E
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
 		Set<CmfType> excludes = EnumSet.noneOf(CmfType.class);
-		for (Object o : ContextFactory.getAsIterable(settings.getObject(TransferSetting.EXCLUDE_TYPES))) {
-			CmfType t = ContextFactory.decodeObjectType(o);
+		for (Object o : TransferContextFactory.getAsIterable(settings.getObject(TransferSetting.EXCLUDE_TYPES))) {
+			CmfType t = TransferContextFactory.decodeObjectType(o);
 			if (t != null) {
 				excludes.add(t);
 			}
