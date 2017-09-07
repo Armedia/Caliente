@@ -1,7 +1,8 @@
 package com.armedia.caliente.engine.ucm;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.X509Certificate;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.PooledObject;
@@ -9,48 +10,153 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.caliente.tools.CryptException;
+import com.armedia.caliente.tools.KeyStoreTools;
 import com.armedia.commons.utilities.CfgTools;
 
 import oracle.stellent.ridc.IdcClientManager;
 import oracle.stellent.ridc.IdcContext;
+import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
+import oracle.stellent.ridc.protocol.intradoc.IntradocClientConfig;
 
 public class UcmSessionFactory extends SessionFactory<IdcSession> {
 
+	public static enum SSLMode {
+		//
+		NONE, // No SSL support
+		SERVER, // Only server validation
+		CLIENT, // Both server and client validation
+		//
+		;
+
+		public static SSLMode decode(String str) {
+			if (str == null) { return NONE; }
+			return SSLMode.valueOf(str.toUpperCase());
+		}
+	}
+
 	private final IdcClientManager manager;
-	private final String url;
+	private final String host;
+	private final int port;
+	private final SSLMode ssl;
+	private final String trustStore;
+	private final String trustStorePassword;
+	private final String clientStore;
+	private final String clientStorePassword;
+	private final String clientCertAlias;
+	private final String clientCertPassword;
 	private final IdcContext context;
 
-	public UcmSessionFactory(CfgTools settings, CmfCrypt crypto) throws CryptException {
+	public UcmSessionFactory(CfgTools settings, CmfCrypt crypto) throws Exception {
 		super(settings, crypto);
 
 		this.manager = new IdcClientManager();
-		this.context = null;
-		this.url = null;
+		this.host = settings.getString(UcmSessionSetting.HOST);
+		this.port = settings.getInteger(UcmSessionSetting.PORT);
+		if ((this.port <= 0) || (this.port > 0xffff)) { throw new Exception(
+			String.format("Port number must be a number between 1 and 65535 (got %d)", this.port)); }
 
-		Map<String, String> parameters = new HashMap<>();
+		String userName = settings.getString(UcmSessionSetting.USER);
+		String password = settings.getString(UcmSessionSetting.PASSWORD);
 
-		for (UcmSessionSetting s : UcmSessionSetting.values()) {
-			if (!settings.hasValue(s)) {
-				continue;
-			}
-			String v = settings.getString(s);
-			switch (s) {
-				case PASSWORD:
-					v = this.crypto.decrypt(v);
-					break;
-				default:
-					break;
-			}
-			if (!StringUtils.isBlank(v)) {
-				parameters.put(s.name(), v);
-			}
+		// TODO: Support Kerberos...get a Credentials object...
+		if (password != null) {
+			// Try to decrypt the password if it's encrypted
+			this.context = new IdcContext(userName, this.crypto.decrypt(password));
+		} else {
+			this.context = new IdcContext(userName);
 		}
+
+		this.ssl = SSLMode.decode(settings.getString(UcmSessionSetting.SSL_MODE));
+		if (this.ssl != SSLMode.NONE) {
+
+			KeyStore trustKs = null;
+			String trustStore = settings.getString(UcmSessionSetting.TRUSTSTORE);
+			String trustStorePassword = settings.getString(UcmSessionSetting.TRUSTSTORE_PASSWORD);
+			if (trustStorePassword != null) {
+				trustStorePassword = crypto.decrypt(trustStorePassword);
+			}
+			this.trustStore = trustStore;
+			this.trustStorePassword = trustStorePassword;
+			if (this.trustStore != null) {
+				trustKs = KeyStoreTools.loadKeyStore(this.trustStore, this.trustStorePassword);
+			}
+
+			if (this.ssl == SSLMode.CLIENT) {
+				KeyStore clientKs = null;
+
+				String clientStore = settings.getString(UcmSessionSetting.KEYSTORE);
+				String clientStorePassword = settings.getString(UcmSessionSetting.KEYSTORE_PASSWORD);
+				if (clientStorePassword != null) {
+					clientStorePassword = crypto.decrypt(clientStorePassword);
+				}
+				this.clientStore = clientStore;
+				this.clientStorePassword = clientStorePassword;
+
+				clientKs = KeyStoreTools.loadKeyStore(this.clientStore, this.clientStorePassword);
+
+				String clientCertAlias = settings.getString(UcmSessionSetting.CLIENT_CERT_ALIAS);
+				if (StringUtils
+					.isEmpty(clientCertAlias)) { throw new Exception("The client certificate alias may not be empty"); }
+				String clientCertPassword = settings.getString(UcmSessionSetting.CLIENT_CERT_PASSWORD);
+				if (clientCertPassword != null) {
+					clientCertPassword = crypto.decrypt(clientCertPassword);
+				}
+				this.clientCertAlias = clientCertAlias;
+				this.clientCertPassword = clientCertPassword;
+
+				Certificate cert = clientKs.getCertificate(this.clientCertAlias);
+				if (X509Certificate.class.isInstance(cert)) {
+					X509Certificate x509 = X509Certificate.class.cast(cert);
+					x509.getSubjectDN();
+				}
+				// TODO: Decrypt the private key with the given password to check its validity
+
+				if ((trustKs != null) && (clientKs != null)) {
+					// TODO: If we have both a client store and a trust store, verify that the
+					// client certificate is trusted as per the trust store...
+				}
+
+			} else {
+				this.clientStore = null;
+				this.clientStorePassword = null;
+				this.clientCertAlias = null;
+				this.clientCertPassword = null;
+			}
+
+		} else {
+			// No SSL_MODE-related stuff will be checked
+			this.trustStore = null;
+			this.trustStorePassword = null;
+			this.clientStore = null;
+			this.clientStorePassword = null;
+			this.clientCertAlias = null;
+			this.clientCertPassword = null;
+		}
+
 	}
 
 	@Override
 	public PooledObject<IdcSession> makeObject() throws Exception {
-		return new DefaultPooledObject<>(new IdcSession(this.manager.createClient(this.url), this.context));
+		// If SSL_MODE, use idcs:// insteaed of idc://
+		// Always tack on the port number at the end
+
+		final String url = String.format("idc%s://%s:%d", (this.ssl != SSLMode.NONE) ? "s" : "", this.host, this.port);
+		this.log.trace("Setting the IDC connection URL to [{}]...", url);
+		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(url));
+
+		IntradocClientConfig config = client.getConfig();
+		config.setConnectionPool("simple");
+		if (this.trustStore != null) {
+			config.setTrustManagerFile(this.trustStore);
+			config.setTrustManagerPassword(this.trustStorePassword);
+		}
+		if (this.clientStore != null) {
+			config.setKeystoreFile(this.clientStore);
+			config.setKeystorePassword(this.clientStorePassword);
+			config.setKeystoreAlias(this.clientCertAlias);
+			config.setKeystoreAliasPassword(this.clientCertPassword);
+		}
+		return new DefaultPooledObject<>(new IdcSession(client, this.context));
 	}
 
 	@Override

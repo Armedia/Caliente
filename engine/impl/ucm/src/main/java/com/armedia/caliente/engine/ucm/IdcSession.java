@@ -8,14 +8,15 @@ import oracle.stellent.ridc.IdcContext;
 import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataFactory;
 import oracle.stellent.ridc.protocol.ServiceResponse;
+import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 
 @SuppressWarnings("rawtypes")
 public class IdcSession {
 
-	private final IdcClient client;
+	private final IntradocClient client;
 	private final IdcContext userContext;
 
-	public IdcSession(IdcClient client, IdcContext userContext) {
+	public IdcSession(IntradocClient client, IdcContext userContext) {
 		this.client = client;
 		this.userContext = userContext;
 	}
