@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.armedia.caliente.engine.exporter.ExportDelegate;
 import com.armedia.caliente.engine.exporter.ExportTarget;
-import com.armedia.caliente.engine.ucm.UcmSession;
+import com.armedia.caliente.engine.ucm.IdcSession;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -15,7 +15,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
 public abstract class UcmExportDelegate<T> extends
-	ExportDelegate<T, UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportDelegateFactory, UcmExportEngine> {
+	ExportDelegate<T, IdcSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportDelegateFactory, UcmExportEngine> {
 
 	protected UcmExportDelegate(UcmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
 		super(factory, objectClass, object);

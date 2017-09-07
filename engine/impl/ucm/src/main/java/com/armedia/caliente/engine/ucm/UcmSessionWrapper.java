@@ -4,13 +4,13 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.armedia.caliente.engine.SessionWrapper;
 
-public class UcmSessionWrapper extends SessionWrapper<UcmSession> {
+public class UcmSessionWrapper extends SessionWrapper<IdcSession> {
 
 	private static final AtomicLong ID = new AtomicLong(0);
 
 	private final String id;
 
-	public UcmSessionWrapper(UcmSessionFactory factory, UcmSession session) {
+	public UcmSessionWrapper(UcmSessionFactory factory, IdcSession session) {
 		super(factory, session);
 		this.id = String.format("{%08X}", UcmSessionWrapper.ID.getAndIncrement());
 	}

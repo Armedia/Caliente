@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.ucm.UcmCommon;
-import com.armedia.caliente.engine.ucm.UcmSession;
+import com.armedia.caliente.engine.ucm.IdcSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
 import com.armedia.caliente.engine.ucm.UcmTranslator;
@@ -23,7 +23,7 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
 public class UcmExportEngine extends
-	ExportEngine<UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory> {
+	ExportEngine<IdcSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory> {
 
 	public UcmExportEngine() {
 		super(new CmfCrypt());
@@ -34,7 +34,7 @@ public class UcmExportEngine extends
 	}
 
 	@Override
-	protected void findExportResults(final UcmSession session, CfgTools cfg, UcmExportDelegateFactory factory,
+	protected void findExportResults(final IdcSession session, CfgTools cfg, UcmExportDelegateFactory factory,
 		TargetSubmitter submitter) throws Exception {
 	}
 
@@ -49,14 +49,14 @@ public class UcmExportEngine extends
 	}
 
 	@Override
-	protected UcmExportContextFactory newContextFactory(UcmSession session, CfgTools cfg,
+	protected UcmExportContextFactory newContextFactory(IdcSession session, CfgTools cfg,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		return new UcmExportContextFactory(this, session, cfg, objectStore, streamStore, output, warningTracker);
 	}
 
 	@Override
-	protected UcmExportDelegateFactory newDelegateFactory(UcmSession session, CfgTools cfg) throws Exception {
+	protected UcmExportDelegateFactory newDelegateFactory(IdcSession session, CfgTools cfg) throws Exception {
 		return new UcmExportDelegateFactory(this, cfg);
 	}
 

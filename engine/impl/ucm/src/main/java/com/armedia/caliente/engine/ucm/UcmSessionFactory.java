@@ -15,7 +15,7 @@ import com.armedia.commons.utilities.CfgTools;
 import oracle.stellent.ridc.IdcClientManager;
 import oracle.stellent.ridc.IdcContext;
 
-public class UcmSessionFactory extends SessionFactory<UcmSession> {
+public class UcmSessionFactory extends SessionFactory<IdcSession> {
 
 	private final IdcClientManager manager;
 	private final String url;
@@ -49,33 +49,33 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	}
 
 	@Override
-	public PooledObject<UcmSession> makeObject() throws Exception {
-		return new DefaultPooledObject<>(new UcmSession(this.manager.createClient(this.url), this.context));
+	public PooledObject<IdcSession> makeObject() throws Exception {
+		return new DefaultPooledObject<>(new IdcSession(this.manager.createClient(this.url), this.context));
 	}
 
 	@Override
-	public void destroyObject(PooledObject<UcmSession> p) throws Exception {
+	public void destroyObject(PooledObject<IdcSession> p) throws Exception {
 		p.getObject().logout();
 	}
 
 	@Override
-	public boolean validateObject(PooledObject<UcmSession> p) {
+	public boolean validateObject(PooledObject<IdcSession> p) {
 		// TODO: Check the idle state against max idle...
 		return (p != null) && p.getObject().isInitialized();
 	}
 
 	@Override
-	public void activateObject(PooledObject<UcmSession> p) throws Exception {
+	public void activateObject(PooledObject<IdcSession> p) throws Exception {
 		// TODO: do we need to do something here?
 	}
 
 	@Override
-	public void passivateObject(PooledObject<UcmSession> p) throws Exception {
+	public void passivateObject(PooledObject<IdcSession> p) throws Exception {
 		// TODO: do we need to do something here?
 	}
 
 	@Override
-	protected UcmSessionWrapper newWrapper(UcmSession session) throws Exception {
+	protected UcmSessionWrapper newWrapper(IdcSession session) throws Exception {
 		return new UcmSessionWrapper(this, session);
 	}
 }

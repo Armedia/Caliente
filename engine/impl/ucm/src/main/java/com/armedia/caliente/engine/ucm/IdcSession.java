@@ -10,12 +10,12 @@ import oracle.stellent.ridc.model.DataFactory;
 import oracle.stellent.ridc.protocol.ServiceResponse;
 
 @SuppressWarnings("rawtypes")
-public class UcmSession {
+public class IdcSession {
 
 	private final IdcClient client;
 	private final IdcContext userContext;
 
-	public UcmSession(IdcClient client, IdcContext userContext) {
+	public IdcSession(IdcClient client, IdcContext userContext) {
 		this.client = client;
 		this.userContext = userContext;
 	}
