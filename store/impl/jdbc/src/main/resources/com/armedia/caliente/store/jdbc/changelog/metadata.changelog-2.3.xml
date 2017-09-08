@@ -35,17 +35,5 @@
 			</column>
 		</createTable>
 		<addPrimaryKey tableName="cmf_history_lock" columnNames="object_type, history_id" />
-
-		<sql>
-			insert into cmf_history_lock select distinct object_type, history_id, min(object_number), 1 from cmf_object group by object_type, history_id
-		</sql>
-
-		<!-- **************************************** -->
-		<!-- A foreign key for the objects table      -->
-		<!-- **************************************** -->
-		<addForeignKeyConstraint constraintName="fk_cmf_object_history"
-			baseTableName="cmf_object" baseColumnNames="object_type, history_id"
-			referencedTableName="cmf_history_lock" referencedColumnNames="object_type, history_id"
-			onDelete="CASCADE" onUpdate="CASCADE" />
 	</changeSet>
 </databaseChangeLog>
