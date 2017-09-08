@@ -20,9 +20,9 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
@@ -239,6 +239,27 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
+	private String getHistoryLockKey(CmfType type, String historyId) {
+		return String.format("HISTORY_LOCK_%s_%s", type.name(), historyId);
+	}
+
+	@SuppressWarnings("unused")
+	private ExportHistoryLock getHistoryLock(CmfType type, String historyId, C ctx) {
+		final String key = getHistoryLockKey(type, historyId);
+		final Object o = ctx.getObject(key);
+		if (ExportHistoryLock.class.isInstance(o)) {
+			ExportHistoryLock h = ExportHistoryLock.class.cast(o);
+			if (Tools.equals(ctx.getId(), h.getLockId())) { return h; }
+		}
+		return null;
+	}
+
+	@SuppressWarnings("unused")
+	private void setHistoryLock(ExportHistoryLock lock, C ctx) {
+		final String key = getHistoryLockKey(lock.getType(), lock.getHistoryId());
+		ctx.setObject(key, lock);
+	}
+
 	private Result doExportObject(ExportState exportState, final ExportTarget referrent, final ExportTarget target,
 		final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject, final C ctx,
 		final ExportListenerDelegator listenerDelegator, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
@@ -263,6 +284,28 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
 		final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
+
+		final String historyId = Tools.coalesce(sourceObject.getHistoryId(), sourceObject.getObjectId());
+		// For now, we simply create the history records to avoid referential integrity
+		// violations...the problem is that requirements references in the DB are dependent on
+		// per-object locks, which don't happen quickly enough, which means that we may have a race
+		// condition in our hands in some cases... maybe make the history/object lock atomic
+		// such that when an object is locked, so is its history...and thus we can do the history
+		// lock check without fear of such an integrity violation...
+		objectStore.lockHistory(type, historyId, ctx.getId());
+		/*
+		if (getHistoryLock(type, historyId, ctx) == null) {
+			// We have no existing history lock in this context, so we dont't own this history...
+			// try to own it
+			if (!objectStore.lockHistory(type, historyId, ctx.getId())) {
+				// Another context already owns this history...
+				this.log.warn(String.format("%s history %s was already locked by another worker", type, historyId));
+				return new Result(ExportSkipReason.ALREADY_LOCKED,
+					String.format("%s history %s was already locked by another worker", type, historyId));
+			}
+			setHistoryLock(new ExportHistoryLock(type, historyId, ctx), ctx);
+		}
+		*/
 
 		// First, make sure other threads don't work on this same object
 		final ExportOperation thisStatus = ConcurrentUtils.createIfAbsentUnchecked(statusMap, target,
@@ -659,8 +702,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
 		CmfObjectCounter<ExportResult> objectCounter, final SessionFactory<S> sessionFactory,
-		final SessionWrapper<S> baseSession, final TransferContextFactory<S, V, C, ?> contextFactory, final DF delegateFactory)
-		throws ExportException, CmfStorageException {
+		final SessionWrapper<S> baseSession, final TransferContextFactory<S, V, C, ?> contextFactory,
+		final DF delegateFactory) throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
 		final CfgTools settings = exportState.cfg;

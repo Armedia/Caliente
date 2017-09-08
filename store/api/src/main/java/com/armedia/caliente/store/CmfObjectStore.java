@@ -389,6 +389,42 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract boolean lockForStorage(O operation, CmfObjectRef target, CmfObjectRef referrent)
 		throws CmfStorageException;
 
+	public final boolean lockHistory(CmfType type, String historyId, String lockId) throws CmfStorageException {
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type to lock a history for"); }
+		if (historyId == null) { throw new IllegalArgumentException("Must provide history id to lock"); }
+		if (lockId == null) { throw new IllegalArgumentException("Must provide lock id for reentrancy validation"); }
+		O operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			try {
+				if (lockHistory(operation, type, historyId, lockId)) {
+					if (tx) {
+						operation.commit();
+					}
+					ok = true;
+				}
+				return ok;
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(
+							String.format("Failed to rollback the history lock transaction for %s:%s (lockId = %s)",
+								type, historyId, lockId),
+							e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract boolean lockHistory(O operation, CmfType type, String historyId, String lockId)
+		throws CmfStorageException;
+
 	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,
 		CmfAttributeTranslator<V> translator) {
 		// Ensure type mapping takes place, and ensure that translation also takes place

@@ -1344,6 +1344,58 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
+	protected boolean lockHistory(JdbcOperation operation, CmfType type, String historyId, String lockId)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		QueryRunner qr = JdbcTools.getQueryRunner();
+		Savepoint savePoint = null;
+		try {
+			savePoint = c.setSavepoint();
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(
+					String.format("ATTEMPTING TO LOCK %s HISTORY %s WITH ID %s", type.name(), historyId, lockId));
+			}
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_HISTORY_LOCK), JdbcTools.HANDLER_NULL, type.name(),
+				historyId, lockId);
+			if (this.log.isDebugEnabled()) {
+				this.log.trace(String.format("LOCKED %s HISTORY %s WITH ID %s", type.name(), historyId, lockId));
+			}
+			savePoint = JdbcTools.commitSavepoint(c, savePoint);
+			return true;
+		} catch (SQLException e) {
+			if (this.dialect.isDuplicateKeyException(e)) {
+				// We're good! With the use of savepoints, the transaction will remain valid and
+				// thus we'll be OK to continue using the transaction in other connections
+				JdbcTools.rollbackSavepoint(c, savePoint);
+
+				// Now, instead, we try to increase the counter
+				try {
+					int updated = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_HISTORY_LOCK_COUNTER),
+						type.name(), historyId, lockId);
+					if (updated == 1) {
+						if (this.log.isTraceEnabled()) {
+							this.log.trace(String.format("%s HISTORY %s IS LOCKED BY THIS SAME ID (%s)", type.name(),
+								historyId, lockId));
+						}
+						return true;
+					}
+
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(
+							String.format("%s HISTORY %s IS ALREADY LOCKED WITH ANOTHER ID", type.name(), historyId));
+					}
+					return false;
+				} catch (SQLException e2) {
+					throw new CmfStorageException(String.format(
+						"Could not verify the %s history lock for %s with ID %s", type.name(), historyId, lockId), e);
+				}
+			}
+			throw new CmfStorageException(
+				String.format("Failed to lock the %s history %s with ID %s", type.name(), historyId, lockId), e);
+		}
+	}
+
+	@Override
 	protected boolean lockForStorage(JdbcOperation operation, CmfObjectRef target, CmfObjectRef referrent)
 		throws CmfStorageException {
 		// TODO: Add support for re-entrancy by only allowing a lock to be re-obtained if the same
