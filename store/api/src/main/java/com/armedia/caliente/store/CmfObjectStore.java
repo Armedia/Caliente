@@ -344,14 +344,19 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			boolean ok = false;
 			try {
 
-				// First things first - are we able to lock the history?
-				if (!lockHistory(operation, target.getType(), historyId, lockId)) {
-					// If not, then we don't even bother with the object-level lock since by
-					// definition we can't acquire it...
-					return LockStatus.LOCK_CONCURRENT;
+				final boolean locked;
+
+				// First things first - are we able to lock the history, or do we already own the
+				// lock?
+				if (lockHistory(operation, target.getType(), historyId, lockId)) {
+					// We own the history, so try to lock the object itself!
+					locked = lockForStorage(operation, target, referrent);
+				} else {
+					// We don't own the history, so by definition we can't own the object's lock,
+					// but we still have to check its store status so we can report it upwards.
+					locked = false;
 				}
 
-				boolean locked = lockForStorage(operation, target, referrent);
 				final StoreStatus storeStatus = getStoreStatus(operation, target);
 				final LockStatus ret;
 				if (locked) {
