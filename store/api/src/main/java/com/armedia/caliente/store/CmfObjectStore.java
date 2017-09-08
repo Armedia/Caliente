@@ -335,13 +335,22 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract StoreStatus getStoreStatus(O operation, CmfObjectRef target) throws CmfStorageException;
 
-	public final LockStatus lockForStorage(CmfObjectRef target, CmfObjectRef referrent) throws CmfStorageException {
+	public final LockStatus lockForStorage(CmfObjectRef target, CmfObjectRef referrent, String historyId, String lockId)
+		throws CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide an object spec to check for"); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
+
+				// First things first - are we able to lock the history?
+				if (!lockHistory(operation, target.getType(), historyId, lockId)) {
+					// If not, then we don't even bother with the object-level lock since by
+					// definition we can't acquire it...
+					return LockStatus.LOCK_CONCURRENT;
+				}
+
 				boolean locked = lockForStorage(operation, target, referrent);
 				final StoreStatus storeStatus = getStoreStatus(operation, target);
 				final LockStatus ret;
@@ -388,39 +397,6 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract boolean lockForStorage(O operation, CmfObjectRef target, CmfObjectRef referrent)
 		throws CmfStorageException;
-
-	public final boolean lockHistory(CmfType type, String historyId, String lockId) throws CmfStorageException {
-		if (type == null) { throw new IllegalArgumentException("Must provide an object type to lock a history for"); }
-		if (historyId == null) { throw new IllegalArgumentException("Must provide history id to lock"); }
-		if (lockId == null) { throw new IllegalArgumentException("Must provide lock id for reentrancy validation"); }
-		O operation = beginConcurrentInvocation();
-		try {
-			final boolean tx = operation.begin();
-			boolean ok = false;
-			try {
-				if (lockHistory(operation, type, historyId, lockId)) {
-					if (tx) {
-						operation.commit();
-					}
-					ok = true;
-				}
-				return ok;
-			} finally {
-				if (tx && !ok) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the history lock transaction for %s:%s (lockId = %s)",
-								type, historyId, lockId),
-							e);
-					}
-				}
-			}
-		} finally {
-			endConcurrentInvocation(operation);
-		}
-	}
 
 	protected abstract boolean lockHistory(O operation, CmfType type, String historyId, String lockId)
 		throws CmfStorageException;
