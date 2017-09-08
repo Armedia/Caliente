@@ -916,21 +916,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final String dbId = JdbcTools.composeDatabaseId(target);
 		try {
 			// Get the result string from the EXPORT_PLAN
-			/*
-			boolean exists = qr.query(c, translateQuery(JdbcDialect.Query.CHECK_IF_OBJECT_EXISTS),
-				JdbcTools.HANDLER_EXISTS, dbId, type.name());
-			*/
 			// If it does exist, then this one MUST return exactly one result.
 			String result = qr.query(c, translateQuery(JdbcDialect.Query.GET_EXPORT_RESULT),
 				new ResultSetHandler<String>() {
 					@Override
 					public String handle(ResultSet rs) throws SQLException {
-						if (rs.next()) {
-							String v = rs.getString(1);
-							return (rs.wasNull() ? null : v);
-						}
-						throw new SQLException(
-							String.format("Failed to locate the export result for %s", target.getShortLabel()));
+						// If there is no record, then by definition there is no store status
+						if (!rs.next()) { return null; }
+						// If there's a record, the value may still be null...so check for it
+						String v = rs.getString(1);
+						return (rs.wasNull() ? null : v);
 					}
 				}, dbId, target.getType().name());
 			if (result == null) { return null; }
