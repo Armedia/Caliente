@@ -198,7 +198,51 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		throws ExportException, CmfStorageException {
 		try {
 			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
+
+			final CmfType type = target.getType();
+			final String id = target.getId();
+			final String objectLabel = sourceObject.getLabel();
+			final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
+			final LockStatus locked;
+			try {
+				locked = exportState.objectStore.lockForStorage(target, referrent,
+					Tools.coalesce(sourceObject.getHistoryId(), sourceObject.getObjectId()), ctx.getId());
+				switch (locked) {
+					case LOCK_ACQUIRED:
+						// We got the lock, which means we create the locker object
+						if (this.log.isTraceEnabled()) {
+							this.log.trace(String.format("Locked %s for storage", logLabel));
+						}
+						break;
+
+					case LOCK_CONCURRENT:
+						if (this.log.isTraceEnabled()) {
+							this.log.trace(String
+								.format("%s is already locked for storage by another thread, skipping it", logLabel));
+						}
+						return new Result(ExportSkipReason.ALREADY_LOCKED);
+
+					case ALREADY_FAILED:
+						String msg = String.format("%s was already failed, skipping it", logLabel);
+						if (this.log.isTraceEnabled()) {
+							this.log.trace(msg);
+						}
+						return new Result(ExportSkipReason.ALREADY_FAILED, msg);
+
+					case ALREADY_STORED:
+						if (this.log.isTraceEnabled()) {
+							this.log.trace(String.format("%s is already locked for storage, skipping it", logLabel));
+						}
+						return new Result(ExportSkipReason.ALREADY_STORED);
+				}
+			} catch (CmfStorageException e) {
+				throw new ExportException(
+					String.format("Exception caught attempting to lock a %s for storage [%s](%s)", type, logLabel, id),
+					e);
+			}
+
 			listenerDelegator.objectExportStarted(exportState.jobId, target, referrent);
+
 			final Result result = doExportObject(exportState, referrent, target, sourceObject, ctx, listenerDelegator,
 				statusMap);
 			if ((result.objectNumber != null) && (result.object != null)) {
@@ -246,19 +290,14 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
+
 		final CmfType type = target.getType();
 		final String id = target.getId();
-		String objectLabel = null;
-		try {
-			objectLabel = sourceObject.getLabel();
-		} catch (Exception e) {
-			this.log.warn(String.format("Failed to calculate object label for %s (%s)", type, id), e);
-			objectLabel = String.format("{Failed to calculate object label: %s}", e.getMessage());
-		}
-		final String label = String.format("%s [%s](%s)", type, objectLabel, id);
+		final String objectLabel = sourceObject.getLabel();
+		final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
 
 		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format("Attempting export of %s", label));
+			this.log.trace(String.format("Attempting export of %s", logLabel));
 		}
 
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
@@ -273,43 +312,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			});
 
-		final LockStatus locked;
-		try {
-			locked = objectStore.lockForStorage(target, referrent,
-				Tools.coalesce(sourceObject.getHistoryId(), sourceObject.getObjectId()), ctx.getId());
-			switch (locked) {
-				case LOCK_ACQUIRED:
-					// We got the lock, which means we create the locker object
-					if (this.log.isTraceEnabled()) {
-						this.log.trace(String.format("Locked %s for storage", label));
-					}
-					break;
-
-				case LOCK_CONCURRENT:
-					if (this.log.isTraceEnabled()) {
-						this.log.trace(
-							String.format("%s is already locked for storage by another thread, skipping it", label));
-					}
-					return new Result(ExportSkipReason.ALREADY_LOCKED);
-
-				case ALREADY_FAILED:
-					String msg = String.format("%s was already failed, skipping it", label);
-					if (this.log.isTraceEnabled()) {
-						this.log.trace(msg);
-					}
-					return new Result(ExportSkipReason.ALREADY_FAILED, msg);
-
-				case ALREADY_STORED:
-					if (this.log.isTraceEnabled()) {
-						this.log.trace(String.format("%s is already locked for storage, skipping it", label));
-					}
-					return new Result(ExportSkipReason.ALREADY_STORED);
-			}
-		} catch (CmfStorageException e) {
-			throw new ExportException(
-				String.format("Exception caught attempting to lock a %s for storage [%s](%s)", type, label, id), e);
-		}
-
 		boolean success = false;
 		if (referrent != null) {
 			ctx.pushReferrent(referrent);
@@ -317,9 +319,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		try {
 			if (this.log.isDebugEnabled()) {
 				if (referrent != null) {
-					this.log.debug(String.format("Exporting %s (referenced by %s)", label, referrent));
+					this.log.debug(String.format("Exporting %s (referenced by %s)", logLabel, referrent));
 				} else {
-					this.log.debug(String.format("Exporting %s (from the main search)", label));
+					this.log.debug(String.format("Exporting %s (from the main search)", logLabel));
 				}
 			}
 
@@ -333,12 +335,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					referenced = Collections.emptyList();
 				}
 			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to identify the requirements for %s", label), e);
+				throw new ExportException(String.format("Failed to identify the requirements for %s", logLabel), e);
 			}
 
 			if (this.log.isDebugEnabled()) {
 				this.log
-					.debug(String.format("%s requires %d objects for successful storage", label, referenced.size()));
+					.debug(String.format("%s requires %d objects for successful storage", logLabel, referenced.size()));
 			}
 			// We use a TreeSet to ensure that all our targets are always waited upon in the same
 			// order, to avoid deadlocks.
@@ -361,8 +363,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					// This exception will already be logged...so we simply accept the failure and
 					// report it upwards, without bubbling up the exception to be reported 1000
 					// times
-					return new Result(ExportSkipReason.DEPENDENCY_FAILED, String
-						.format("A required object [%s] failed to serialize for %s", requirement.exportTarget, label));
+					return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
+						"A required object [%s] failed to serialize for %s", requirement.exportTarget, logLabel));
 				}
 
 				if (r.skipReason != ExportSkipReason.UNSUPPORTED) {
@@ -379,7 +381,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					case DEPENDENCY_FAILED:
 						// A dependency has failed, we fail immediately...
 						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
-							"A required object [%s] failed to serialize for %s", requirement.exportTarget, label));
+							"A required object [%s] failed to serialize for %s", requirement.exportTarget, logLabel));
 
 					case ALREADY_LOCKED:
 						if (!ctx.isReferrentLoop(requirement.exportTarget)
@@ -402,20 +404,19 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					// and listen on it...?
 					ExportOperation status = statusMap.get(requirement);
 					if (status == null) { throw new ExportException(
-						String.format("No export status found for requirement [%s] of %s", requirement, label)); }
+						String.format("No export status found for requirement [%s] of %s", requirement, logLabel)); }
 					try {
-						ctx.printf("Waiting for [%s] from %s (#%d created by %s)", requirement, label,
+						ctx.printf("Waiting for [%s] from %s (#%d created by %s)", requirement, logLabel,
 							status.getObjectNumber(), status.getCreatorThread());
 						long waitTime = status.waitUntilCompleted();
-						ctx.printf("Waiting for [%s] from %s for %d ms", requirement, label, waitTime);
+						ctx.printf("Waiting for [%s] from %s for %d ms", requirement, logLabel, waitTime);
 					} catch (InterruptedException e) {
 						Thread.interrupted();
-						throw new ExportException(
-							String.format("Thread interrupted waiting on the export of [%s] by %s", requirement, label),
-							e);
+						throw new ExportException(String.format(
+							"Thread interrupted waiting on the export of [%s] by %s", requirement, logLabel), e);
 					}
 					if (!status.isSuccessful()) { return new Result(ExportSkipReason.DEPENDENCY_FAILED,
-						String.format("A required object [%s] failed to serialize for %s", requirement, label)); }
+						String.format("A required object [%s] failed to serialize for %s", requirement, logLabel)); }
 				}
 			} finally {
 				thisStatus.endWait();
@@ -424,8 +425,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			try {
 				sourceObject.requirementsExported(marshaled, ctx);
 			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to run the post-requirements callback for %s", label),
-					e);
+				throw new ExportException(
+					String.format("Failed to run the post-requirements callback for %s", logLabel), e);
 			}
 
 			final boolean latestOnly = ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY);
@@ -436,12 +437,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						referenced = Collections.emptyList();
 					}
 				} catch (Exception e) {
-					throw new ExportException(String.format("Failed to identify the antecedent versions for %s", label),
-						e);
+					throw new ExportException(
+						String.format("Failed to identify the antecedent versions for %s", logLabel), e);
 				}
 
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("%s requires %d antecedent versions for successful storage", label,
+					this.log.debug(String.format("%s requires %d antecedent versions for successful storage", logLabel,
 						referenced.size()));
 				}
 				CmfObjectRef prev = null;
@@ -454,7 +455,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						// and report it upwards, without bubbling up the exception to be reported
 						// 1000 times
 						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
-							"An antecedent object [%s] failed to serialize for %s", antecedent.exportTarget, label));
+							"An antecedent object [%s] failed to serialize for %s", antecedent.exportTarget, logLabel));
 					}
 					if (prev != null) {
 						exportState.objectStore.addRequirement(antecedent.getExportTarget(), prev);
@@ -470,7 +471,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					sourceObject.antecedentsExported(marshaled, ctx);
 				} catch (Exception e) {
 					throw new ExportException(
-						String.format("Failed to run the post-antecedents callback for %s", label), e);
+						String.format("Failed to run the post-antecedents callback for %s", logLabel), e);
 				}
 			}
 
@@ -479,7 +480,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			try {
 				sourceObject.prepareForStorage(ctx, marshaled);
 			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to prepare the object for storage for %s", label), e);
+				throw new ExportException(String.format("Failed to prepare the object for storage for %s", logLabel),
+					e);
 			}
 
 			final Long ret = objectStore.storeObject(marshaled, getTranslator());
@@ -487,13 +489,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			if (ret == null) {
 				// Should be impossible, but still guard against it
 				if (this.log.isTraceEnabled()) {
-					this.log.trace(String.format("%s was stored by another thread", label));
+					this.log.trace(String.format("%s was stored by another thread", logLabel));
 				}
 				return new Result(ExportSkipReason.ALREADY_STORED);
 			}
 
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Executing supplemental storage for %s", label));
+				this.log.debug(String.format("Executing supplemental storage for %s", logLabel));
 			}
 			try {
 				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
@@ -503,11 +505,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					objectStore.setContentInfo(marshaled, cmfContentInfo);
 				}
 			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to execute the content storage for %s", label), e);
+				throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel), e);
 			}
 
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Successfully stored %s as object # %d", label, ret));
+				this.log.debug(String.format("Successfully stored %s as object # %d", logLabel, ret));
 			}
 
 			if (!latestOnly) {
@@ -517,13 +519,13 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						referenced = Collections.emptyList();
 					}
 				} catch (Exception e) {
-					throw new ExportException(String.format("Failed to identify the successor versions for %s", label),
-						e);
+					throw new ExportException(
+						String.format("Failed to identify the successor versions for %s", logLabel), e);
 				}
 
 				if (this.log.isDebugEnabled()) {
 					this.log.debug(String.format("%s is succeeded by %d additional versions for successful storage",
-						label, referenced.size()));
+						logLabel, referenced.size()));
 				}
 				CmfObjectRef prev = marshaled;
 				for (ExportDelegate<?, S, W, V, C, ?, ?> successor : referenced) {
@@ -535,7 +537,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						// and report it upwards, without bubbling up the exception to be reported
 						// 1000 times
 						return new Result(ExportSkipReason.DEPENDENCY_FAILED, String.format(
-							"A successor object [%s] failed to serialize for %s", successor.exportTarget, label));
+							"A successor object [%s] failed to serialize for %s", successor.exportTarget, logLabel));
 					}
 					exportState.objectStore.addRequirement(successor.getExportTarget(), prev);
 					prev = successor.getExportTarget();
@@ -544,8 +546,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					sourceObject.successorsExported(marshaled, ctx);
 				} catch (Exception e) {
-					throw new ExportException(String.format("Failed to run the post-successors callback for %s", label),
-						e);
+					throw new ExportException(
+						String.format("Failed to run the post-successors callback for %s", logLabel), e);
 				}
 			}
 
@@ -555,11 +557,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					referenced = Collections.emptyList();
 				}
 			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to identify the dependents for %s", label), e);
+				throw new ExportException(String.format("Failed to identify the dependents for %s", logLabel), e);
 			}
 
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("%s has %d dependent objects to store", label, referenced.size()));
+				this.log.debug(String.format("%s has %d dependent objects to store", logLabel, referenced.size()));
 			}
 			int dependentsExported = 0;
 			for (ExportDelegate<?, S, W, V, C, ?, ?> dependent : referenced) {
@@ -573,14 +575,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			}
 			if (dependentsExported != referenced.size()) {
-				this.log.warn("Failed to store all dependent objects for {} - only exported {} of {}", label,
+				this.log.warn("Failed to store all dependent objects for {} - only exported {} of {}", logLabel,
 					dependentsExported, referenced.size());
 			}
 
 			try {
 				sourceObject.dependentsExported(marshaled, ctx);
 			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to run the post-dependents callback for %s", label), e);
+				throw new ExportException(String.format("Failed to run the post-dependents callback for %s", logLabel),
+					e);
 			}
 
 			Result result = new Result(ret, marshaled);
