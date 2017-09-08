@@ -24,6 +24,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.oracle.ucm</groupId>
+			<artifactId>oracle-ucm-ridc-jars</artifactId>
+			<scope>compile</scope>
+			<type>pom</type>
+		</dependency>
+
+		<dependency>
 			<groupId>org.apache.chemistry.opencmis</groupId>
 			<artifactId>chemistry-opencmis-client-impl</artifactId>
 			<scope>compile</scope>

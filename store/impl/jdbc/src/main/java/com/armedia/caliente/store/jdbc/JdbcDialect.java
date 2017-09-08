@@ -122,6 +122,22 @@ public abstract class JdbcDialect {
 				"   values (?, ?, ?, ?, ?, ?)" //
 		),
 
+		INSERT_HISTORY_LOCK( //
+			"       insert into " + //
+				"          cmf_history_lock (" + //
+				"              object_type, history_id, lock_id" + //
+				"          ) " + //
+				"   values (?, ?, ?) " //
+		),
+
+		UPDATE_HISTORY_LOCK_COUNTER( //
+			"       update cmf_history_lock " + //
+				"      set counter = counter + 1 " + //
+				"    where object_type = ? " + //
+				"      and history_id = ? " + //
+				"      and lock_id = ? " //
+		),
+
 		INSERT_EXPORT_PLAN( //
 			"       insert into " + //
 				"          cmf_export_plan (" + //

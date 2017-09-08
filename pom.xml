@@ -68,7 +68,7 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
-				<version>1.1.6</version>
+				<version>1.1.7</version>
 			</dependency>
 
 			<dependency>
@@ -219,6 +219,13 @@
 				<groupId>com.documentum.dfc</groupId>
 				<artifactId>dfc-jars</artifactId>
 				<version>${dfc.version}</version>
+				<type>pom</type>
+			</dependency>
+
+			<dependency>
+				<groupId>com.oracle.ucm</groupId>
+				<artifactId>oracle-ucm-ridc-jars</artifactId>
+				<version>11.1.1</version>
 				<type>pom</type>
 			</dependency>
 
@@ -461,6 +468,34 @@
 				<build.number></build.number>
 			</properties>
 		</profile>
+		<profile>
+			<id>beta</id>
+			<properties>
+				<build.number>-beta-${betaNumber}</build.number>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-enforcer-plugin</artifactId>
+						<version>1.4.1</version>
+						<configuration>
+							<rules>
+								<requireMavenVersion>
+									<version>${maven.min-version}</version>
+								</requireMavenVersion>
+								<requireProperty>
+									<property>betaNumber</property>
+									<message>Must provide a valid betaNumber property (-DbetaNumber=...) for this build</message>
+									<regex>^[1-9][0-9]*$</regex>
+									<regexMessage>The beta number [${betaNumber}] is not composed of all digits, or starts with a 0</regexMessage>
+								</requireProperty>
+							</rules>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
 	</profiles>
 
 	<modules>
@@ -486,7 +521,6 @@
 		<module>cli/exe/caliente</module>
 		<module>cli/exe/datagen</module>
 		<module>cli/exe/filename-mapper</module>
-		<module>cli/exe/history</module>
 		<module>cli/exe/user-mapper</module>
 		<module>cli/exe/validator</module>
 

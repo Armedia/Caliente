@@ -335,14 +335,28 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract StoreStatus getStoreStatus(O operation, CmfObjectRef target) throws CmfStorageException;
 
-	public final LockStatus lockForStorage(CmfObjectRef target, CmfObjectRef referrent) throws CmfStorageException {
+	public final LockStatus lockForStorage(CmfObjectRef target, CmfObjectRef referrent, String historyId, String lockId)
+		throws CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide an object spec to check for"); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				boolean locked = lockForStorage(operation, target, referrent);
+
+				final boolean locked;
+
+				// First things first - are we able to lock the history, or do we already own the
+				// lock?
+				if (lockHistory(operation, target.getType(), historyId, lockId)) {
+					// We own the history, so try to lock the object itself!
+					locked = lockForStorage(operation, target, referrent);
+				} else {
+					// We don't own the history, so by definition we can't own the object's lock,
+					// but we still have to check its store status so we can report it upwards.
+					locked = false;
+				}
+
 				final StoreStatus storeStatus = getStoreStatus(operation, target);
 				final LockStatus ret;
 				if (locked) {
@@ -387,6 +401,9 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract boolean lockForStorage(O operation, CmfObjectRef target, CmfObjectRef referrent)
+		throws CmfStorageException;
+
+	protected abstract boolean lockHistory(O operation, CmfType type, String historyId, String lockId)
 		throws CmfStorageException;
 
 	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,

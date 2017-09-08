@@ -916,21 +916,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final String dbId = JdbcTools.composeDatabaseId(target);
 		try {
 			// Get the result string from the EXPORT_PLAN
-			/*
-			boolean exists = qr.query(c, translateQuery(JdbcDialect.Query.CHECK_IF_OBJECT_EXISTS),
-				JdbcTools.HANDLER_EXISTS, dbId, type.name());
-			*/
 			// If it does exist, then this one MUST return exactly one result.
 			String result = qr.query(c, translateQuery(JdbcDialect.Query.GET_EXPORT_RESULT),
 				new ResultSetHandler<String>() {
 					@Override
 					public String handle(ResultSet rs) throws SQLException {
-						if (rs.next()) {
-							String v = rs.getString(1);
-							return (rs.wasNull() ? null : v);
-						}
-						throw new SQLException(
-							String.format("Failed to locate the export result for %s", target.getShortLabel()));
+						// If there is no record, then by definition there is no store status
+						if (!rs.next()) { return null; }
+						// If there's a record, the value may still be null...so check for it
+						String v = rs.getString(1);
+						return (rs.wasNull() ? null : v);
 					}
 				}, dbId, target.getType().name());
 			if (result == null) { return null; }
@@ -1340,6 +1335,58 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			return new JdbcOperation(this.dataSource.getConnection(), this.managedTransactions);
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to obtain a new connection from the datasource", e);
+		}
+	}
+
+	@Override
+	protected boolean lockHistory(JdbcOperation operation, CmfType type, String historyId, String lockId)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		QueryRunner qr = JdbcTools.getQueryRunner();
+		Savepoint savePoint = null;
+		try {
+			savePoint = c.setSavepoint();
+			if (this.log.isTraceEnabled()) {
+				this.log.trace(
+					String.format("ATTEMPTING TO LOCK %s HISTORY %s WITH ID %s", type.name(), historyId, lockId));
+			}
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_HISTORY_LOCK), JdbcTools.HANDLER_NULL, type.name(),
+				historyId, lockId);
+			if (this.log.isDebugEnabled()) {
+				this.log.trace(String.format("LOCKED %s HISTORY %s WITH ID %s", type.name(), historyId, lockId));
+			}
+			savePoint = JdbcTools.commitSavepoint(c, savePoint);
+			return true;
+		} catch (SQLException e) {
+			if (this.dialect.isDuplicateKeyException(e)) {
+				// We're good! With the use of savepoints, the transaction will remain valid and
+				// thus we'll be OK to continue using the transaction in other connections
+				JdbcTools.rollbackSavepoint(c, savePoint);
+
+				// Now, instead, we try to increase the counter
+				try {
+					int updated = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_HISTORY_LOCK_COUNTER),
+						type.name(), historyId, lockId);
+					if (updated == 1) {
+						if (this.log.isTraceEnabled()) {
+							this.log.trace(String.format("%s HISTORY %s IS LOCKED BY THIS SAME ID (%s)", type.name(),
+								historyId, lockId));
+						}
+						return true;
+					}
+
+					if (this.log.isTraceEnabled()) {
+						this.log.trace(
+							String.format("%s HISTORY %s IS ALREADY LOCKED WITH ANOTHER ID", type.name(), historyId));
+					}
+					return false;
+				} catch (SQLException e2) {
+					throw new CmfStorageException(String.format(
+						"Could not verify the %s history lock for %s with ID %s", type.name(), historyId, lockId), e);
+				}
+			}
+			throw new CmfStorageException(
+				String.format("Failed to lock the %s history %s with ID %s", type.name(), historyId, lockId), e);
 		}
 	}
 

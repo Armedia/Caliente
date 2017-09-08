@@ -32,7 +32,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F extends ContextFactory<S, V, C, ?>, D extends TransferDelegateFactory<S, V, C, ?>, L> {
+public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F extends TransferContextFactory<S, V, C, ?>, D extends TransferDelegateFactory<S, V, C, ?>, L> {
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
