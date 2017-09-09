@@ -400,9 +400,30 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
+	/**
+	 * Obtain a lock for the given object reference, returning {@code true} if the lock was
+	 * obtained, and {@code false} otherwise. The lock is non-reentrant.
+	 *
+	 * @param operation
+	 * @param target
+	 * @param referrent
+	 * @throws CmfStorageException
+	 */
 	protected abstract boolean lockForStorage(O operation, CmfObjectRef target, CmfObjectRef referrent)
 		throws CmfStorageException;
 
+	/**
+	 * Obtain a re-entrant lock for the given history and object type, for the given lock ID. This
+	 * method will return {@code true} if there was no existing lock for the given type or history
+	 * ID, or if the existing lock's ID is the same as the given lock ID. If a lock exists but is
+	 * for a different lock ID, this method returns {@code false}.
+	 *
+	 * @param operation
+	 * @param type
+	 * @param historyId
+	 * @param lockId
+	 * @throws CmfStorageException
+	 */
 	protected abstract boolean lockHistory(O operation, CmfType type, String historyId, String lockId)
 		throws CmfStorageException;
 
