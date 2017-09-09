@@ -16,13 +16,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dfc.DctmAttributeHandlers;
+import com.armedia.caliente.engine.dfc.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmDataType;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.DctmTranslator;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
-import com.armedia.caliente.engine.dfc.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
