@@ -16,13 +16,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dfc.DctmAttributeHandlers;
+import com.armedia.caliente.engine.dfc.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmDataType;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.DctmTranslator;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
-import com.armedia.caliente.engine.dfc.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
@@ -257,7 +257,40 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		try {
 			if (skipImport(context)) { return ImportOutcome.SKIPPED; }
 
+			// TODO: Make sure that in the current replace mode, we always return an existing one...
 			object = locateInCms(context);
+			if ((object != null) && (context.getHistoryPosition() == 0)) {
+				// There's an existing object, and this is the first object in its history...let's
+				// see what we're supposed to do with regards to the replacement strategy...
+				switch (replaceMode) {
+					case SKIP:
+						// The object should be skipped...so skip it!
+						ok = true;
+						return new ImportOutcome(ImportResult.SKIPPED, object.getObjectId().getId(),
+							calculateLabel(object));
+
+					case REPLACE:
+						// The object should be replaced...so delete the existing object
+						if (deleteExisting(object)) {
+							this.log.info("Deleted the existing history for {} [{}]({}) - object ID = {}",
+								this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId(),
+								object.getObjectId());
+						} else {
+							this.log.warn("Failed to delete the existing copy of {} [{}]({}) - object ID = {}",
+								this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId(),
+								object.getObjectId());
+						}
+						// Setting this to null makes the rest of the code behave as if this is a
+						// brand new object, which is exactly what we want.
+						object = null;
+						break;
+
+					case UPDATE:
+						// Do nothing, proceed as usual
+						break;
+				}
+			}
+
 			final boolean isNew = (object == null);
 			final boolean updateVersionLabels = isVersionable(object);
 			final ImportResult cmsImportResult;
@@ -291,30 +324,6 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				if (isSameObject(object, context)) {
 					ok = true;
 					return new ImportOutcome(ImportResult.DUPLICATE, object.getObjectId().getId(), newLabel);
-				}
-				switch (replaceMode) {
-					case SKIP:
-						ok = true;
-						return new ImportOutcome(ImportResult.SKIPPED, object.getObjectId().getId(), newLabel);
-
-					case REPLACE:
-						if (context.getHistoryPosition() == 0) {
-							// Delete the existing object, but only if it's the ROOT object
-							if (deleteExisting(object)) {
-								// Recurse... there should no longer be an existing object
-								doImportObject(context);
-							} else {
-								// Couldn't delete it for some reason, so we just keep going with a
-								// new one...
-								// TODO: how?? need to modify this code so it's easy to "create new"
-								// vs "update existing"
-							}
-						}
-						break;
-
-					case UPDATE:
-						// Do nothing, proceed as usual
-						break;
 				}
 				cmsImportResult = ImportResult.UPDATED;
 			}
