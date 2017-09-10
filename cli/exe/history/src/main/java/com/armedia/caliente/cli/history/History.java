@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
@@ -26,7 +27,6 @@ import com.armedia.commons.dfc.util.DctmException;
 import com.armedia.commons.dfc.util.DctmVersion;
 import com.armedia.commons.dfc.util.DctmVersionHistory;
 import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -39,6 +39,8 @@ import com.documentum.fc.common.IDfId;
 public class History {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
+	private static final Pattern ID_SCANNER = Pattern.compile("^[0-9a-f]{16}$", Pattern.CASE_INSENSITIVE);
+
 	private final DfcLaunchHelper dfcLaunchHelper;
 	private final ThreadsLaunchHelper threadHelper;
 
@@ -50,6 +52,19 @@ public class History {
 	protected Set<String> cleanChronicleIds(Collection<String> chronicleIds) {
 		Set<String> s = new LinkedHashSet<>();
 		for (String id : chronicleIds) {
+			IDfId testId = new DfId(id);
+			if (!testId.isObjectId()) {
+				// If this is not an object ID, it MUST be a path...
+				s.add(id);
+				continue;
+			}
+
+			if (testId.isNull()) {
+				// If this is the null id, we skip it...
+				continue;
+			}
+
+			// If it's an object ID, we fold it to lowercase
 			if (!s.add(id.toLowerCase())) {
 				continue;
 			}
@@ -88,17 +103,14 @@ public class History {
 			final ExecutorService executors = Executors.newFixedThreadPool(Math.max(1, threads));
 			for (final String id : chronicleIds) {
 				futures.add(executors.submit(new Callable<String>() {
-					IDfId chronicleId = new DfId(id);
-
 					@Override
 					public String call() throws HistoryException {
 						final IDfSession session;
 						try {
 							session = pool.acquireSession();
 						} catch (Exception e) {
-							throw new HistoryException(this.chronicleId,
-								String.format("Failed to acquire a Documentum session to read the chronicle [%s]",
-									this.chronicleId),
+							throw new HistoryException(id,
+								String.format("Failed to acquire a Documentum session to read the chronicle [%s]", id),
 								e);
 						}
 
@@ -108,43 +120,48 @@ public class History {
 							try {
 								tx = DfUtils.openTransaction(session);
 							} catch (DfException e) {
-								throw new HistoryException(this.chronicleId,
+								throw new HistoryException(id,
 									String.format(
 										"DFC reported an error while starting the read-only transaction for chronicle [%s]: %s",
-										this.chronicleId, e.getMessage()),
+										id, e.getMessage()),
 									e);
 							}
 
 							try {
 								try {
-									// It may be an object ID, not a chronicle ID, so make the
-									// distinction...
+									IDfId chronicleId = null;
 									IDfPersistentObject obj = null;
-									boolean changed = false;
-									try {
-										obj = session.getObject(this.chronicleId);
-										if (IDfSysObject.class.isInstance(obj)) {
-											IDfId oldId = this.chronicleId;
-											this.chronicleId = IDfSysObject.class.cast(obj).getChronicleId();
-											changed = !Tools.equals(oldId, this.chronicleId);
-										} else {
-											throw new HistoryException(this.chronicleId,
-												"The given ID is an object ID, but the object is not a dm_sysobject");
+									if (!History.ID_SCANNER.matcher(id).matches()) {
+										// It's a path...
+										obj = session.getObjectByPath(id);
+										if (obj == null) {
+											// No match...skip this one!
+											throw new HistoryException(id,
+												String.format("No object found at path [%s]", id));
 										}
-									} catch (DfIdNotFoundException e) {
-										// It's not an object ID, so it must be a chronicle ID...
+									} else {
+										// Must be an ID...
+										chronicleId = new DfId(id);
+										try {
+											obj = session.getObject(chronicleId);
+										} catch (DfIdNotFoundException e) {
+											// It's not an object ID, so assume it's a chronicle
+											// ID...
+										}
 									}
 
-									if (changed) {
-										History.this.log.info("Scanning history with ID [{}] (from object ID [{}])...",
-											this.chronicleId, id);
+									if (IDfSysObject.class.isInstance(obj)) {
+										chronicleId = IDfSysObject.class.cast(obj).getChronicleId();
 									} else {
-										History.this.log.info("Scanning history with ID [{}]...", this.chronicleId);
+										throw new HistoryException(id, String
+											.format("The given object for search spec [%s] is not a dm_sysobject", id));
 									}
+
+									History.this.log.info("Scanning history with ID [{}] (from search spec [{}])...",
+										chronicleId, id);
 									DctmVersionHistory<IDfSysObject> history = new DctmVersionHistory<>(session,
-										this.chronicleId);
-									History.this.log.info("History with ID [{}] scanned successfully!",
-										this.chronicleId);
+										chronicleId);
+									History.this.log.info("History with ID [{}] scanned successfully!", chronicleId);
 
 									StringWriter w = new StringWriter();
 									PrintWriter pw = new PrintWriter(w);
@@ -165,21 +182,18 @@ public class History {
 									ok = true;
 									return w.toString();
 								} catch (DfException e) {
-									throw new HistoryException(this.chronicleId,
-										String.format(
-											"DFC reported an error while retrieving the history for chronicle [%s]: %s",
-											this.chronicleId, e.getMessage()),
+									throw new HistoryException(id,
+										String.format("DFC reported an error while retrieving the history for [%s]: %s",
+											id, e.getMessage()),
 										e);
 								} catch (DctmException e) {
-									throw new HistoryException(this.chronicleId,
-										String.format("The history for chronicle [%s] is inconsistent: %s",
-											this.chronicleId, e.getMessage()),
+									throw new HistoryException(id,
+										String.format("The history for [%s] is inconsistent: %s", id, e.getMessage()),
 										e);
 								} finally {
 									if (!ok) {
-										History.this.log.error(
-											"An error was encountered while processing chronicle [{}]",
-											this.chronicleId);
+										History.this.log
+											.error("An error was encountered while processing chronicle [{}]", id);
 									}
 								}
 							} finally {
@@ -190,7 +204,7 @@ public class History {
 									// out any that are already being raised...
 									History.this.log.error(
 										"DFC reported an error while rolling back the read-only transaction for chronicle [{}]",
-										this.chronicleId, e);
+										id, e);
 								}
 							}
 						} finally {
