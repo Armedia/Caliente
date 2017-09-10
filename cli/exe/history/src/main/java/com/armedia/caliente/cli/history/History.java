@@ -26,7 +26,10 @@ import com.armedia.commons.dfc.util.DctmException;
 import com.armedia.commons.dfc.util.DctmVersion;
 import com.armedia.commons.dfc.util.DctmVersionHistory;
 import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.commons.utilities.Tools;
+import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfLocalTransaction;
+import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.common.DfException;
@@ -83,17 +86,20 @@ public class History {
 		try {
 			final List<Future<String>> futures = new ArrayList<>(chronicleIds.size());
 			final ExecutorService executors = Executors.newFixedThreadPool(Math.max(1, threads));
-			for (String id : chronicleIds) {
-				final IDfId chronicleId = new DfId(id);
+			for (final String id : chronicleIds) {
 				futures.add(executors.submit(new Callable<String>() {
+					IDfId chronicleId = new DfId(id);
+
 					@Override
 					public String call() throws HistoryException {
 						final IDfSession session;
 						try {
 							session = pool.acquireSession();
 						} catch (Exception e) {
-							throw new HistoryException(chronicleId, String.format(
-								"Failed to acquire a Documentum session to read the chronicle [%s]", chronicleId), e);
+							throw new HistoryException(this.chronicleId,
+								String.format("Failed to acquire a Documentum session to read the chronicle [%s]",
+									this.chronicleId),
+								e);
 						}
 
 						try {
@@ -102,19 +108,43 @@ public class History {
 							try {
 								tx = DfUtils.openTransaction(session);
 							} catch (DfException e) {
-								throw new HistoryException(chronicleId,
+								throw new HistoryException(this.chronicleId,
 									String.format(
 										"DFC reported an error while starting the read-only transaction for chronicle [%s]: %s",
-										chronicleId, e.getMessage()),
+										this.chronicleId, e.getMessage()),
 									e);
 							}
 
 							try {
 								try {
-									History.this.log.info("Scanning history with ID [{}]...", chronicleId);
+									// It may be an object ID, not a chronicle ID, so make the
+									// distinction...
+									IDfPersistentObject obj = null;
+									boolean changed = false;
+									try {
+										obj = session.getObject(this.chronicleId);
+										if (IDfSysObject.class.isInstance(obj)) {
+											IDfId oldId = this.chronicleId;
+											this.chronicleId = IDfSysObject.class.cast(obj).getChronicleId();
+											changed = !Tools.equals(oldId, this.chronicleId);
+										} else {
+											throw new HistoryException(this.chronicleId,
+												"The given ID is an object ID, but the object is not a dm_sysobject");
+										}
+									} catch (DfIdNotFoundException e) {
+										// It's not an object ID, so it must be a chronicle ID...
+									}
+
+									if (changed) {
+										History.this.log.info("Scanning history with ID [{}] (from object ID [{}])...",
+											this.chronicleId, id);
+									} else {
+										History.this.log.info("Scanning history with ID [{}]...", this.chronicleId);
+									}
 									DctmVersionHistory<IDfSysObject> history = new DctmVersionHistory<>(session,
-										chronicleId);
-									History.this.log.info("History with ID [{}] scanned successfully!", chronicleId);
+										this.chronicleId);
+									History.this.log.info("History with ID [{}] scanned successfully!",
+										this.chronicleId);
 
 									StringWriter w = new StringWriter();
 									PrintWriter pw = new PrintWriter(w);
@@ -135,20 +165,21 @@ public class History {
 									ok = true;
 									return w.toString();
 								} catch (DfException e) {
-									throw new HistoryException(chronicleId,
+									throw new HistoryException(this.chronicleId,
 										String.format(
 											"DFC reported an error while retrieving the history for chronicle [%s]: %s",
-											chronicleId, e.getMessage()),
+											this.chronicleId, e.getMessage()),
 										e);
 								} catch (DctmException e) {
-									throw new HistoryException(chronicleId,
-										String.format("The history for chronicle [%s] is inconsistent: %s", chronicleId,
-											e.getMessage()),
+									throw new HistoryException(this.chronicleId,
+										String.format("The history for chronicle [%s] is inconsistent: %s",
+											this.chronicleId, e.getMessage()),
 										e);
 								} finally {
 									if (!ok) {
 										History.this.log.error(
-											"An error was encountered while processing chronicle [{}]", chronicleId);
+											"An error was encountered while processing chronicle [{}]",
+											this.chronicleId);
 									}
 								}
 							} finally {
@@ -159,7 +190,7 @@ public class History {
 									// out any that are already being raised...
 									History.this.log.error(
 										"DFC reported an error while rolling back the read-only transaction for chronicle [{}]",
-										chronicleId, e);
+										this.chronicleId, e);
 								}
 							}
 						} finally {
