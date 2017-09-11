@@ -10,6 +10,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.ucm.UcmSessionSetting.SSLMode;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.KeyStoreTools;
 import com.armedia.commons.utilities.CfgTools;
@@ -21,24 +22,10 @@ import oracle.stellent.ridc.protocol.intradoc.IntradocClientConfig;
 
 public class UcmSessionFactory extends SessionFactory<IdcSession> {
 
-	public static enum SSLMode {
-		//
-		NONE, // No SSL support
-		SERVER, // Only server validation
-		CLIENT, // Both server and client validation
-		//
-		;
-
-		public static SSLMode decode(String str) {
-			if (str == null) { return NONE; }
-			return SSLMode.valueOf(str.toUpperCase());
-		}
-	}
-
 	private final IdcClientManager manager;
 	private final String host;
 	private final int port;
-	private final SSLMode ssl;
+	private final UcmSessionSetting.SSLMode ssl;
 	private final String url;
 	private final String trustStore;
 	private final String trustStorePassword;
