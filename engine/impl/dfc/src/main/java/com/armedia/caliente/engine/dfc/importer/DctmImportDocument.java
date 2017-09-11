@@ -199,7 +199,12 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	protected boolean isSameObject(IDfSysObject object, DctmImportContext ctx) throws DfException, ImportException {
 		// If we're a reference, and there's something there already, we don't import...
 		if (isReference()) { return true; }
-		return super.isSameObject(object, ctx);
+		// We only care about the "standard criteria" if we're the root version...
+		if (ctx.getHistoryPosition() == 0) { return super.isSameObject(object, ctx); }
+		// If we're not the root version, then we assume this is the same object since it has the
+		// same version number and is associated to the same chronicle (this has already been
+		// established during the import process)...
+		return true;
 	}
 
 	protected IDfSysObject newDocument(DctmImportContext context) throws DfException, ImportException {
