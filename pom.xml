@@ -223,12 +223,18 @@
 			</dependency>
 
 			<dependency>
-				<groupId>com.oracle.ucm</groupId>
-				<artifactId>oracle-ucm-ridc-jars</artifactId>
-				<version>11.1.1</version>
-				<type>pom</type>
+				<groupId>javax.jcr</groupId>
+				<artifactId>jcr</artifactId>
+				<version>1.0</version>
 			</dependency>
 
+			<dependency>
+				<groupId>com.oracle.jcr</groupId>
+				<artifactId>oracle-jcr-jars</artifactId>
+				<version>11.1.1.9</version>
+				<type>pom</type>
+			</dependency>
+	
 			<dependency>
 				<groupId>org.apache.chemistry.opencmis</groupId>
 				<artifactId>chemistry-opencmis-commons-api</artifactId>
