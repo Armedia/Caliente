@@ -39,6 +39,7 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 	private final String host;
 	private final int port;
 	private final SSLMode ssl;
+	private final String url;
 	private final String trustStore;
 	private final String trustStorePassword;
 	private final String clientStore;
@@ -148,17 +149,16 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 			this.clientCertAlias = null;
 			this.clientCertPassword = null;
 		}
-
+		// If SSL_MODE, use idcs:// insteaed of idc://
+		// Always tack on the port number at the end
+		this.url = String.format("idc%s://%s:%d", (this.ssl != SSLMode.NONE) ? "s" : "", this.host, this.port);
 	}
 
 	@Override
 	public PooledObject<IdcSession> makeObject() throws Exception {
-		// If SSL_MODE, use idcs:// insteaed of idc://
-		// Always tack on the port number at the end
 
-		final String url = String.format("idc%s://%s:%d", (this.ssl != SSLMode.NONE) ? "s" : "", this.host, this.port);
-		this.log.trace("Setting the IDC connection URL to [{}]...", url);
-		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(url));
+		this.log.trace("Setting the IDC connection URL to [{}]...", this.url);
+		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(this.url));
 
 		IntradocClientConfig config = client.getConfig();
 		config.setConnectionPool("simple");
@@ -182,7 +182,6 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 
 	@Override
 	public boolean validateObject(PooledObject<IdcSession> p) {
-		// TODO: Check the idle state against max idle...
 		return (p != null) && p.getObject().isInitialized();
 	}
 
