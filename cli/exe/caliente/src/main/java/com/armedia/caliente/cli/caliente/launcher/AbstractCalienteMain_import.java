@@ -86,6 +86,7 @@ public abstract class AbstractCalienteMain_import extends
 			Setting.THREADS.getInt(AbstractCalienteModule.DEFAULT_THREADS));
 		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), Setting.CMF_IMPORT_TARGET_LOCATION.getString("/"));
 		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), Setting.CMF_IMPORT_TRIM_PREFIX.getInt(0));
+		settings.put(ImportSetting.REPLACE_MODE.getLabel(), Setting.REPLACE_MODE.getString());
 		customizeSettings(settings);
 
 		final StringBuilder report = new StringBuilder();

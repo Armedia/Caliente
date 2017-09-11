@@ -34,6 +34,7 @@ public enum Setting {
 	SKIP_ACLS("skip.acls"),
 	SKIP_USERS("skip.users"),
 	SKIP_GROUPS("skip.groups"),
+	REPLACE_MODE("replace.mode"),
 	SPECIAL_USERS("special.users"),
 	SPECIAL_GROUPS("special.groups"),
 	SPECIAL_TYPES("special.types"),

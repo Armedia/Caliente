@@ -88,6 +88,7 @@ public enum CLIParam {
 		Setting.EXPORT_PREDICATE,
 		1,
 		"The DQL 'from-where' predicate, or the name of the Sharepoint site, to use for exporting"),
+	replace_mode(Setting.REPLACE_MODE, 1, "What to do when encountering existing objects (UPDATE, REPLACE, SKIP)"),
 	shpt_source_prefix(
 		Setting.SHPT_SOURCE_PREFIX,
 		1,
