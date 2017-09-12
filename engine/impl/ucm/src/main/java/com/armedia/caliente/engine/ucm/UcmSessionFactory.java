@@ -162,6 +162,7 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 			config.setKeystoreAlias(this.clientCertAlias);
 			config.setKeystoreAliasPassword(this.clientCertPassword);
 		}
+		client.initialize();
 		return new DefaultPooledObject<>(new IdcSession(client, this.context));
 	}
 
