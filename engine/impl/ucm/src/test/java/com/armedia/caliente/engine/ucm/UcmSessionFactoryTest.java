@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
@@ -22,15 +21,6 @@ public class UcmSessionFactoryTest {
 
 	@Test
 	public void test() throws Exception {
-
-		String[] tests = {
-			"", "/", "////", "////a///b/////c", "/..", "/a/../../b", "/."
-		};
-
-		for (String t : tests) {
-			System.err.printf("[%s]->[%s]%n", t, FilenameUtils.normalizeNoEndSeparator(t, true));
-		}
-
 		UcmSessionFactory factory = null;
 		CmfCrypt crypto = new CmfCrypt();
 		Map<String, String> settingsMap = new TreeMap<>();
@@ -57,20 +47,20 @@ public class UcmSessionFactoryTest {
 		binder.putLocal("path", "/");
 		binder.putLocal("doCombinedBrowse", "1");
 		binder.putLocal("foldersFirst", "1");
-		
+
 		// These two are important for paging...
 		binder.putLocal("combinedCount", "1");
 		binder.putLocal("combinedStartRow", "0");
 		binder.putLocal("doRetrieveTargetInfo", "1");
-		
+
 		// Join the binder and the user context and perform the service call
 		ServiceResponse response = s.sendRequest(binder);
 		DataBinder responseData = response.getResponseAsBinder();
-		
+
 		for (String rs : responseData.getResultSetNames()) {
 			dumpMap(rs, responseData.getResultSet(rs));
 		}
-		
+
 		System.out.printf("Local Data%n");
 		System.out.printf("%s%n", StringUtils.repeat('-', 80));
 		dumpObject(1, responseData.getLocalData());
