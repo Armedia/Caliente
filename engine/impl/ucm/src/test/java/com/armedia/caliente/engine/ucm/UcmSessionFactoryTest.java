@@ -1,0 +1,109 @@
+package com.armedia.caliente.engine.ucm;
+
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.junit.Test;
+
+import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.ucm.exporter.FolderContentsInterator;
+import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.commons.utilities.CfgTools;
+
+import oracle.stellent.ridc.model.DataObject;
+import oracle.stellent.ridc.model.DataResultSet;
+
+public class UcmSessionFactoryTest {
+
+	private static final String NULL = "<null>";
+
+	@Test
+	public void test() throws Exception {
+
+		String[] tests = {
+			"", "/", "////", "////a///b/////c", "/..", "/a/../../b", "/."
+		};
+
+		for (String t : tests) {
+			System.err.printf("[%s]->[%s]%n", t, FilenameUtils.normalizeNoEndSeparator(t, true));
+		}
+
+		UcmSessionFactory factory = null;
+		CmfCrypt crypto = new CmfCrypt();
+		Map<String, String> settingsMap = new TreeMap<>();
+		CfgTools settings = new CfgTools(settingsMap);
+
+		settingsMap.put(UcmSessionSetting.USER.getLabel(), "weblogic");
+		settingsMap.put(UcmSessionSetting.PASSWORD.getLabel(), "system01");
+		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
+
+		factory = new UcmSessionFactory(settings, crypto);
+		SessionWrapper<IdcSession> w = factory.acquireSession();
+		IdcSession s = w.getWrapped();
+
+		FolderContentsInterator it = new FolderContentsInterator(s, "/", 1);
+		while (it.hasNext()) {
+			System.out.printf("Item [%d] (p%d, c%d):%n", it.getCurrentPos(), it.getPageCount(), it.getCurrentInPage());
+			System.out.printf("%s%n", StringUtils.repeat('-', 40));
+			dumpObject(1, it.next());
+		}
+
+		/*
+		DataBinder binder = s.createBinder();
+		binder.putLocal("IdcService", "FLD_BROWSE");
+		binder.putLocal("path", "/");
+		binder.putLocal("doCombinedBrowse", "1");
+		binder.putLocal("foldersFirst", "1");
+		
+		// These two are important for paging...
+		binder.putLocal("combinedCount", "1");
+		binder.putLocal("combinedStartRow", "0");
+		binder.putLocal("doRetrieveTargetInfo", "1");
+		
+		// Join the binder and the user context and perform the service call
+		ServiceResponse response = s.sendRequest(binder);
+		DataBinder responseData = response.getResponseAsBinder();
+		
+		for (String rs : responseData.getResultSetNames()) {
+			dumpMap(rs, responseData.getResultSet(rs));
+		}
+		
+		System.out.printf("Local Data%n");
+		System.out.printf("%s%n", StringUtils.repeat('-', 80));
+		dumpObject(1, responseData.getLocalData());
+		*/
+	}
+
+	private void dumpObject(int indent, DataObject o) {
+		final String indentStr = StringUtils.repeat('\t', indent);
+		for (String s : new TreeSet<>(o.keySet())) {
+			Object v = o.get(s);
+			if (v == null) {
+				v = UcmSessionFactoryTest.NULL;
+			} else {
+				v = String.format("[%s]", v);
+			}
+			System.out.printf("%s[%s] -> %s%n", indentStr, s, v);
+		}
+	}
+
+	private void dumpMap(String label, DataResultSet map) {
+		if (map == null) {
+			System.out.printf("WARNING: Map [%s] is null", label);
+			return;
+		}
+		System.out.printf("Map contents: %s%n", label);
+		System.out.printf("%s%n", StringUtils.repeat('-', 80));
+		int i = 0;
+		for (DataObject o : map.getRows()) {
+			System.out.printf("\tItem [%d]:%n", i++);
+			System.out.printf("%s%n", StringUtils.repeat('-', 40));
+			dumpObject(2, o);
+		}
+		System.out.printf("%n");
+	}
+
+}
