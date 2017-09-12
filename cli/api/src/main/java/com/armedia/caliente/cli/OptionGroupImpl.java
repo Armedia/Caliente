@@ -11,8 +11,9 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
+import com.armedia.commons.utilities.Tools;
 
-public class OptionGroupImpl implements OptionGroup, Cloneable {
+public class OptionGroupImpl implements OptionGroup {
 
 	private String name;
 	private Map<String, Option> required = new TreeMap<>();
@@ -27,20 +28,20 @@ public class OptionGroupImpl implements OptionGroup, Cloneable {
 	}
 
 	public OptionGroupImpl(String name) {
+		Objects.requireNonNull(name, "Must provide a non-null name");
 		this.name = name.trim();
 	}
 
-	private OptionGroupImpl(OptionGroupImpl other) {
-		this.name = other.getName();
+	private OptionGroupImpl(String altName, OptionGroupImpl other) {
+		this.name = Tools.coalesce(altName, other.getName());
 		this.required.putAll(other.required);
 		this.options.putAll(other.options);
 		this.longKeys.putAll(other.longKeys);
 		this.shortKeys.putAll(other.shortKeys);
 	}
 
-	@Override
-	public OptionGroup clone() {
-		return new OptionGroupImpl(this);
+	public OptionGroupImpl getCopy(String name) {
+		return new OptionGroupImpl(name, this);
 	}
 
 	/* (non-Javadoc)
@@ -55,7 +56,7 @@ public class OptionGroupImpl implements OptionGroup, Cloneable {
 	 * @see com.armedia.caliente.cli.OptionGroup#setDescription(java.lang.String)
 	 */
 	@Override
-	public final OptionGroup setDescription(String description) {
+	public final OptionGroupImpl setDescription(String description) {
 		this.description = description;
 		return this;
 	}
@@ -106,7 +107,7 @@ public class OptionGroupImpl implements OptionGroup, Cloneable {
 	}
 
 	@Override
-	public OptionGroup add(Option option) throws DuplicateOptionException {
+	public OptionGroupImpl add(Option option) throws DuplicateOptionException {
 		assertValid(option);
 
 		final String longOpt = OptionGroupImpl.canonicalizeOption(option.getLongOpt());
@@ -144,7 +145,7 @@ public class OptionGroupImpl implements OptionGroup, Cloneable {
 	}
 
 	@Override
-	public <O extends Option> OptionGroup add(Collection<O> options) throws DuplicateOptionException {
+	public <O extends Option> OptionGroupImpl add(Collection<O> options) throws DuplicateOptionException {
 		if ((options != null) && !options.isEmpty()) {
 			Collection<O> added = new ArrayList<>();
 			try {
@@ -162,12 +163,6 @@ public class OptionGroupImpl implements OptionGroup, Cloneable {
 				throw e;
 			}
 		}
-		return this;
-	}
-
-	@Override
-	public OptionGroup add(Options options) throws DuplicateOptionException {
-		if (options != null) { return add(options.getOptions()); }
 		return this;
 	}
 

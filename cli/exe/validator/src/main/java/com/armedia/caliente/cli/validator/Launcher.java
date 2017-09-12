@@ -14,7 +14,6 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.Option;
-import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
@@ -152,10 +151,11 @@ public class Launcher extends AbstractLauncher {
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
 			.add( //
-				new OptionGroupImpl("Threading") //
-					.add(this.threadsLaunchHelper) //
+				this.threadsLaunchHelper.asGroup() //
 			) //
-			.add(Option.unwrap(CLIParam.values())) //
+			.add( //
+				Option.unwrap(CLIParam.values()) //
+		) //
 		;
 	}
 }

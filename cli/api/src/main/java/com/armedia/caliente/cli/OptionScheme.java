@@ -366,12 +366,6 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	@Override
-	public OptionScheme add(Options options) throws DuplicateOptionException {
-		this.baseGroup.add(options);
-		return this;
-	}
-
-	@Override
 	public Collection<Option> remove(Option option) {
 		return this.baseGroup.remove(option);
 	}

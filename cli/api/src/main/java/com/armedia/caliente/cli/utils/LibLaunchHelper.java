@@ -6,18 +6,19 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroup;
+import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.Options;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 
-public final class LibLaunchHelper implements Options, LaunchClasspathHelper {
+public final class LibLaunchHelper extends Options implements LaunchClasspathHelper {
 
 	private static final Option LIB = new OptionImpl() //
 		.setShortOpt('l') //
@@ -44,6 +45,8 @@ public final class LibLaunchHelper implements Options, LaunchClasspathHelper {
 	private final String defaultLib;
 	private final String libEnvVar;
 
+	private final OptionGroupImpl group;
+
 	public LibLaunchHelper() {
 		this(LibLaunchHelper.DEFAULT_LIB, LibLaunchHelper.LIB_ENV_VAR);
 	}
@@ -55,11 +58,9 @@ public final class LibLaunchHelper implements Options, LaunchClasspathHelper {
 	public LibLaunchHelper(String defaultLib, String libEnvVar) {
 		this.defaultLib = defaultLib;
 		this.libEnvVar = libEnvVar;
-	}
-
-	@Override
-	public Collection<? extends Option> getOptions() {
-		return Collections.singleton(LibLaunchHelper.LIB);
+		this.group = new OptionGroupImpl("Classpath Extension") //
+			.add(LibLaunchHelper.LIB) //
+		;
 	}
 
 	@Override
@@ -114,5 +115,10 @@ public final class LibLaunchHelper implements Options, LaunchClasspathHelper {
 	@Override
 	public String toString() {
 		return String.format("LibLaunchHelper [defaultLib=%s, libEnvVar=%s]", this.defaultLib, this.libEnvVar);
+	}
+
+	@Override
+	public OptionGroup asGroup(String name) {
+		return this.group.getCopy(name);
 	}
 }

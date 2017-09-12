@@ -45,7 +45,9 @@ public class Scratchpad extends AbstractLauncher {
 	@Override
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
-			.add(this.dfcLaunchHelper) //
+			.add( //
+				this.dfcLaunchHelper.asGroup() //
+		) //
 		;
 	}
 }

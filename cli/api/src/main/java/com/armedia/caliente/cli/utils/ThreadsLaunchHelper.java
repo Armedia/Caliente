@@ -1,15 +1,14 @@
 package com.armedia.caliente.cli.utils;
 
-import java.util.Collection;
-import java.util.Collections;
-
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroup;
+import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.Options;
 import com.armedia.commons.utilities.Tools;
 
-public final class ThreadsLaunchHelper implements Options {
+public final class ThreadsLaunchHelper extends Options {
 
 	public static final int DEFAULT_MIN_THREADS = 1;
 	public static final int DEFAULT_DEF_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
@@ -29,6 +28,8 @@ public final class ThreadsLaunchHelper implements Options {
 	private final Integer def;
 	private final int max;
 
+	private final OptionGroupImpl group;
+
 	public ThreadsLaunchHelper() {
 		this(ThreadsLaunchHelper.DEFAULT_MIN_THREADS, ThreadsLaunchHelper.DEFAULT_MAX_THREADS);
 	}
@@ -44,6 +45,9 @@ public final class ThreadsLaunchHelper implements Options {
 		this.min = min;
 		this.max = max;
 		this.def = null;
+		this.group = new OptionGroupImpl("Threading") //
+			.add(ThreadsLaunchHelper.THREADS) //
+		;
 	}
 
 	public ThreadsLaunchHelper(int min, int def, int max) {
@@ -53,6 +57,9 @@ public final class ThreadsLaunchHelper implements Options {
 		this.min = min;
 		this.max = max;
 		this.def = Tools.ensureBetween(min, def, max);
+		this.group = new OptionGroupImpl("Threading") //
+			.add(ThreadsLaunchHelper.THREADS) //
+		;
 	}
 
 	public int getMin() {
@@ -71,11 +78,6 @@ public final class ThreadsLaunchHelper implements Options {
 		return this.def;
 	}
 
-	@Override
-	public Collection<? extends Option> getOptions() {
-		return Collections.singleton(ThreadsLaunchHelper.THREADS);
-	}
-
 	public boolean hasThreads(OptionValues cli) {
 		return cli.isPresent(ThreadsLaunchHelper.THREADS);
 	}
@@ -88,5 +90,10 @@ public final class ThreadsLaunchHelper implements Options {
 
 	public int getThreads(OptionValues cli, int def) {
 		return Tools.ensureBetween(this.min, cli.getInteger(ThreadsLaunchHelper.THREADS, def), this.max);
+	}
+
+	@Override
+	public OptionGroup asGroup(String name) {
+		return this.group.getCopy(name);
 	}
 }

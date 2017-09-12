@@ -1,16 +1,10 @@
 package com.armedia.caliente.cli;
 
-import java.util.Collection;
+public abstract class Options {
 
-public interface Options {
+	public final OptionGroup asGroup() {
+		return asGroup(null);
+	}
 
-	/**
-	 * <p>
-	 * Returns the option definitions to be applied when parsing the command line.
-	 * </p>
-	 *
-	 * @return the collection of {@link Option} instances to use in parsing the command line
-	 */
-	public Collection<? extends Option> getOptions();
-
+	public abstract OptionGroup asGroup(String name);
 }

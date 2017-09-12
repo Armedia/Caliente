@@ -11,13 +11,15 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 
 import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroup;
+import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.Options;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.commons.utilities.Tools;
 
-public final class DfcLaunchHelper implements LaunchClasspathHelper, Options {
+public final class DfcLaunchHelper extends Options implements LaunchClasspathHelper {
 	private static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
 	private static final String DEFAULT_DFC_PROPERTIES = "dfc.properties";
 	private static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
@@ -79,11 +81,20 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, Options {
 	private final Option paramUser;
 	private final Option paramPassword;
 
+	private final OptionGroupImpl group;
+
 	public DfcLaunchHelper(boolean includesConnectionInfo) {
 		this.paramDfc = DfcLaunchHelper.DFC_LOCATION;
 		this.paramDctm = DfcLaunchHelper.DFC_DOCUMENTUM;
 		this.paramDfcProp = DfcLaunchHelper.DFC_PROPERTIES;
 		this.includesConnectionInfo = includesConnectionInfo;
+
+		OptionGroupImpl group = new OptionGroupImpl("Documentum DFC") //
+			.add(this.paramDfcProp) //
+			.add(this.paramDfc) //
+			.add(this.paramDctm) //
+		;
+
 		if (includesConnectionInfo) {
 			this.paramDocbase = DfcLaunchHelper.DFC_DOCBASE;
 			this.paramUser = DfcLaunchHelper.DFC_USER;
@@ -93,6 +104,15 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, Options {
 			this.paramUser = null;
 			this.paramPassword = null;
 		}
+
+		if (this.includesConnectionInfo) {
+			group //
+				.add(this.paramDocbase) //
+				.add(this.paramUser) //
+				.add(this.paramPassword) //
+			;
+		}
+		this.group = group;
 	}
 
 	public String getDfcUser(OptionValues cli) {
@@ -125,17 +145,8 @@ public final class DfcLaunchHelper implements LaunchClasspathHelper, Options {
 	}
 
 	@Override
-	public Collection<? extends Option> getOptions() {
-		ArrayList<Option> ret = new ArrayList<>();
-		ret.add(this.paramDfcProp);
-		ret.add(this.paramDfc);
-		ret.add(this.paramDctm);
-		if (this.includesConnectionInfo) {
-			ret.add(this.paramDocbase);
-			ret.add(this.paramUser);
-			ret.add(this.paramPassword);
-		}
-		return ret;
+	public OptionGroup asGroup(String name) {
+		return this.group.getCopy(name);
 	}
 
 	@Override
