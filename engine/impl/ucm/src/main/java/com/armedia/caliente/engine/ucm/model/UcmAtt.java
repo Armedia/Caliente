@@ -26,6 +26,7 @@ public enum UcmAtt {
 	dDocName, //
 	dDocTitle, //
 	dExtension, //
+	dID, //
 	dOriginalName, //
 	dPublishedRevisionID, //
 	dRevisionID, //

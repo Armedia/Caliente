@@ -12,9 +12,11 @@ import com.armedia.caliente.engine.ucm.model.FolderContentsIterator;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
+import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataObject;
 import oracle.stellent.ridc.model.DataResultSet;
+import oracle.stellent.ridc.protocol.ServiceException;
 import oracle.stellent.ridc.protocol.ServiceResponse;
 
 public class UcmSessionFactoryTest {
@@ -85,6 +87,88 @@ public class UcmSessionFactoryTest {
 		System.out.printf("Local Data%n");
 		System.out.printf("%s%n", StringUtils.repeat('-', 80));
 		dumpObject(1, responseData.getLocalData());
+	}
+
+	@Test
+	public void test3() throws Exception {
+		UcmSessionFactory factory = null;
+		CmfCrypt crypto = new CmfCrypt();
+		Map<String, String> settingsMap = new TreeMap<>();
+		CfgTools settings = new CfgTools(settingsMap);
+
+		settingsMap.put(UcmSessionSetting.USER.getLabel(), "weblogic");
+		settingsMap.put(UcmSessionSetting.PASSWORD.getLabel(), "system01");
+		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
+
+		factory = new UcmSessionFactory(settings, crypto);
+		SessionWrapper<IdcSession> w = factory.acquireSession();
+		IdcSession s = w.getWrapped();
+
+		DataBinder binder = s.createBinder();
+		binder.putLocal("IdcService", "DOC_INFO_BY_NAME");
+		binder.putLocal("dDocName", "ARMDEC6AAP9055000001");
+		binder.putLocal("includeFileRenditionsInfo", "1");
+
+		// Join the binder and the user context and perform the service call
+		ServiceResponse response = s.sendRequest(binder);
+		DataBinder responseData = response.getResponseAsBinder();
+
+		for (String rs : responseData.getResultSetNames()) {
+			dumpMap(rs, responseData.getResultSet(rs));
+		}
+
+		System.out.printf("Local Data%n");
+		System.out.printf("%s%n", StringUtils.repeat('-', 80));
+		dumpObject(1, responseData.getLocalData());
+	}
+
+	@Test
+	public void test4() throws Exception {
+		UcmSessionFactory factory = null;
+		CmfCrypt crypto = new CmfCrypt();
+		Map<String, String> settingsMap = new TreeMap<>();
+		CfgTools settings = new CfgTools(settingsMap);
+
+		settingsMap.put(UcmSessionSetting.USER.getLabel(), "weblogic");
+		settingsMap.put(UcmSessionSetting.PASSWORD.getLabel(), "system01");
+		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
+
+		factory = new UcmSessionFactory(settings, crypto);
+		SessionWrapper<IdcSession> w = factory.acquireSession();
+		IdcSession s = w.getWrapped();
+
+		DataBinder binder = s.createBinder();
+		binder.putLocal("IdcService", "FLD_INFO");
+		binder.putLocal("path", "/NOTHING THERE Caliente 3.0 Concept Document v4.0.docx");
+
+		// Join the binder and the user context and perform the service call
+		try {
+			ServiceResponse response = s.sendRequest(binder);
+			DataBinder responseData = response.getResponseAsBinder();
+
+			for (String rs : responseData.getResultSetNames()) {
+				dumpMap(rs, responseData.getResultSet(rs));
+			}
+
+			System.out.printf("Local Data%n");
+			System.out.printf("%s%n", StringUtils.repeat('-', 80));
+			dumpObject(1, responseData.getLocalData());
+		} catch (IdcClientException e) {
+			if (ServiceException.class.isInstance(e)) {
+				ServiceException se = ServiceException.class.cast(e);
+				dumpBinder(se.getBinder());
+			}
+			throw e;
+		}
+	}
+
+	private void dumpBinder(DataBinder binder) {
+		for (String rs : binder.getResultSetNames()) {
+			dumpMap(rs, binder.getResultSet(rs));
+		}
+		System.out.printf("Local Data%n");
+		System.out.printf("%s%n", StringUtils.repeat('-', 80));
+		dumpObject(1, binder.getLocalData());
 	}
 
 	private void dumpObject(int indent, DataObject o) {

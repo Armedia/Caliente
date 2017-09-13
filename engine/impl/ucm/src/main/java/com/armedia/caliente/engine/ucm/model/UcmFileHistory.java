@@ -2,8 +2,6 @@ package com.armedia.caliente.engine.ucm.model;
 
 import java.util.Iterator;
 
-import oracle.stellent.ridc.IdcClientException;
-
 public class UcmFileHistory extends UcmModelObject implements Iterable<UcmFile> {
 
 	public UcmFileHistory(UcmModel model) {
@@ -44,7 +42,7 @@ public class UcmFileHistory extends UcmModelObject implements Iterable<UcmFile> 
 	}
 
 	@Override
-	public void refresh() throws IdcClientException {
+	public void refresh() throws UcmException {
 		this.model.refresh(this);
 	}
 }

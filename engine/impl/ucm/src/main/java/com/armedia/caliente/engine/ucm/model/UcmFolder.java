@@ -26,7 +26,7 @@ public class UcmFolder extends UcmFSObject {
 	}
 
 	@Override
-	public void refresh() throws IdcClientException {
+	public void refresh() throws UcmException {
 		this.model.refresh(this);
 	}
 }

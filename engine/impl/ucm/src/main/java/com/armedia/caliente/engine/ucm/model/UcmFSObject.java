@@ -37,19 +37,63 @@ public abstract class UcmFSObject extends UcmModelObject {
 	protected final UcmAtt guidAtt;
 	protected final UcmAtt nameAtt;
 
-	private final DataObject data;
+	private final UcmTools dataObject;
 
 	private LazyInitializer<String> path = new PathInitializer();
 
 	UcmFSObject(UcmModel model, DataObject data, UcmAtt nameAtt, UcmAtt guidAtt) {
 		super(model);
-		this.data = data;
+		this.dataObject = new UcmTools(data);
 		this.nameAtt = nameAtt;
 		this.guidAtt = guidAtt;
 	}
 
 	private boolean isRootFolder() {
 		return Tools.equals(getGUID(), UcmFSObject.ROOT_GUID);
+	}
+
+	public final String getString(UcmAtt att) {
+		return this.dataObject.getString(att);
+	}
+
+	public final String getString(UcmAtt att, String def) {
+		return this.dataObject.getString(att, def);
+	}
+
+	public final Date getDate(UcmAtt att) {
+		return this.dataObject.getDate(att);
+	}
+
+	public final Date getDate(UcmAtt att, Date def) {
+		return this.dataObject.getDate(att, def);
+	}
+
+	public final Calendar getCalendar(UcmAtt att) {
+		return this.dataObject.getCalendar(att);
+	}
+
+	public final Calendar getCalendar(UcmAtt att, Calendar def) {
+		return this.dataObject.getCalendar(att, def);
+	}
+
+	public final Integer getInteger(UcmAtt att) {
+		return this.dataObject.getInteger(att);
+	}
+
+	public final int getInteger(UcmAtt att, int def) {
+		return this.dataObject.getInteger(att, def);
+	}
+
+	public final Boolean getBoolean(UcmAtt att) {
+		return this.dataObject.getBoolean(att);
+	}
+
+	public final boolean getBoolean(UcmAtt att, boolean def) {
+		return this.dataObject.getBoolean(att, def);
+	}
+
+	public final DataObject getDataObject() {
+		return this.dataObject.getDataObject();
 	}
 
 	public String getPath() throws IdcClientException {
@@ -64,48 +108,6 @@ public abstract class UcmFSObject extends UcmModelObject {
 
 	public UcmFolder getParentFolder() throws IdcClientException {
 		return this.model.getFolderByGUID(getParentGUID());
-	}
-
-	protected final String getString(UcmAtt att) {
-		return getString(att, null);
-	}
-
-	protected final String getString(UcmAtt att, String def) {
-		return Tools.coalesce(this.data.get(att.name()), def);
-	}
-
-	protected final Date getDate(UcmAtt att) {
-		return getDate(att, null);
-	}
-
-	protected final Date getDate(UcmAtt att, Date def) {
-		return Tools.coalesce(this.data.getDate(att.name()), def);
-	}
-
-	protected final Calendar getCalendar(UcmAtt att) {
-		return getCalendar(att, null);
-	}
-
-	protected final Calendar getCalendar(UcmAtt att, Calendar def) {
-		return Tools.coalesce(this.data.getCalendar(att.name()), def);
-	}
-
-	protected final Integer getInteger(UcmAtt att) {
-		return this.data.getInteger(att.name());
-	}
-
-	protected final int getInteger(UcmAtt att, int def) {
-		Integer v = getInteger(att);
-		return (v != null ? v.intValue() : def);
-	}
-
-	protected final Boolean getBoolean(UcmAtt att) {
-		return Tools.toBoolean(getString(att));
-	}
-
-	protected final boolean getBoolean(UcmAtt att, boolean def) {
-		Boolean b = getBoolean(att);
-		return (b != null ? b.booleanValue() : def);
 	}
 
 	public final String getGUID() {
@@ -150,10 +152,6 @@ public abstract class UcmFSObject extends UcmModelObject {
 
 	public final String getSecurityGroup() {
 		return getString(UcmAtt.fSecurityGroup);
-	}
-
-	public DataObject getDataObject() {
-		return this.data;
 	}
 
 	public boolean isShortcut() {

@@ -3,7 +3,6 @@ package com.armedia.caliente.engine.ucm.model;
 import java.io.InputStream;
 import java.util.Set;
 
-import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataObject;
 
 public class UcmFile extends UcmFSObject {
@@ -37,6 +36,10 @@ public class UcmFile extends UcmFSObject {
 	}
 
 	public int getRevisionId() {
+		return getInteger(UcmAtt.dID, 1);
+	}
+
+	public int getRevisionNumber() {
 		return getInteger(UcmAtt.dRevisionID, 1);
 	}
 
@@ -60,16 +63,16 @@ public class UcmFile extends UcmFSObject {
 		return null;
 	}
 
-	public InputStream getInputStream() throws IdcClientException {
+	public InputStream getInputStream() throws UcmException {
 		return getInputStream(null);
 	}
 
-	public InputStream getInputStream(String rendition) throws IdcClientException {
+	public InputStream getInputStream(String rendition) throws UcmException {
 		return this.model.getInputStream(this, rendition);
 	}
 
 	@Override
-	public void refresh() throws IdcClientException {
+	public void refresh() throws UcmException {
 		this.model.refresh(this);
 	}
 }
