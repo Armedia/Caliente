@@ -9,12 +9,8 @@ import oracle.stellent.ridc.model.DataObject;
 
 public class UcmFolder extends UcmFSObject {
 
-	public UcmFolder(DataObject data) {
-		this(null, data);
-	}
-
-	UcmFolder(UcmFolder parent, DataObject data) {
-		super(parent, data, UcmAtt.fFolderName, UcmAtt.fFolderGUID);
+	UcmFolder(UcmModel model, DataObject data) {
+		super(model, data, UcmAtt.fFolderName, UcmAtt.fFolderGUID);
 	}
 
 	public String getDisplayDescription() {
@@ -27,5 +23,10 @@ public class UcmFolder extends UcmFSObject {
 
 	public Iterator<UcmFSObject> getChildren(IdcSession session, boolean lazy) throws IdcClientException {
 		return null;
+	}
+
+	@Override
+	public void refresh() throws IdcClientException {
+		this.model.refresh(this);
 	}
 }

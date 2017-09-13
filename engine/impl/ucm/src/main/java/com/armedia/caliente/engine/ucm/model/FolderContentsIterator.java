@@ -36,7 +36,7 @@ public class FolderContentsIterator {
 	private int currentInPage = -1;
 
 	private boolean firstRequestIssued = false;
-	private UcmFolder folder = null;
+	private DataObject folder = null;
 	private DataObject localData = null;
 	private Iterator<DataObject> folders = null;
 	private Iterator<DataObject> files = null;
@@ -44,7 +44,7 @@ public class FolderContentsIterator {
 	private DataBinder requestBinder = null;
 	private DataBinder responseBinder = null;
 
-	private UcmFSObject current = null;
+	private DataObject current = null;
 	private boolean completed = false;
 
 	public FolderContentsIterator(IdcSession session, String path) {
@@ -123,7 +123,7 @@ public class FolderContentsIterator {
 		return this.session.sendRequest(this.requestBinder).getResponseAsBinder();
 	}
 
-	public UcmFolder getFolder() throws IdcClientException {
+	public DataObject getFolder() throws IdcClientException {
 		if (!this.firstRequestIssued) {
 			hasNext();
 		}
@@ -157,7 +157,7 @@ public class FolderContentsIterator {
 				if (rs != null) {
 					List<DataObject> l = rs.getRows();
 					if ((l != null) && !l.isEmpty()) {
-						this.folder = new UcmFolder(l.get(0));
+						this.folder = l.get(0);
 					}
 				}
 			}
@@ -179,13 +179,13 @@ public class FolderContentsIterator {
 		}
 
 		if (this.folders.hasNext()) {
-			this.current = new UcmFolder(this.folder, this.folders.next());
+			this.current = this.folders.next();
 			this.currentInPage++;
 			return true;
 		}
 
 		if (this.files.hasNext()) {
-			this.current = new UcmFile(this.folder, this.files.next());
+			this.current = this.files.next();
 			this.currentInPage++;
 			return true;
 		}
@@ -201,9 +201,9 @@ public class FolderContentsIterator {
 		return false;
 	}
 
-	public UcmFSObject next() throws IdcClientException {
+	public DataObject next() throws IdcClientException {
 		if (!hasNext()) { throw new NoSuchElementException(); }
-		UcmFSObject ret = this.current;
+		DataObject ret = this.current;
 		this.current = null;
 		return ret;
 	}

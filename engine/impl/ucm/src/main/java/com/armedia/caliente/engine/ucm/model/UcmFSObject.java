@@ -4,54 +4,66 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+import org.apache.commons.lang3.concurrent.LazyInitializer;
 
-import com.armedia.caliente.engine.ucm.IdcSession;
 import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataObject;
 
-public class UcmFSObject {
+public abstract class UcmFSObject extends UcmModelObject {
 
-	private static final String ROOT_GUID = "FLD_ROOT";
+	private class PathInitializer extends LazyInitializer<String> {
 
-	protected final DataObject data;
-	protected UcmFolder parent = null;
-	private final UcmAtt guidAtt;
-	private final UcmAtt nameAtt;
-	private final String path;
+		@Override
+		protected String initialize() throws ConcurrentException {
+			if (isRootFolder()) { return UcmFSObject.ROOT_PATH; }
+			try {
+				String prefix = getParentFolder().getPath();
+				String slash = (prefix.endsWith("/") ? "" : "/");
+				return String.format("%s%s%s", prefix, slash, getString(UcmFSObject.this.nameAtt));
+			} catch (IdcClientException e) {
+				throw new ConcurrentException(String.format("Failed to retrieve the parent folder for GUID [%s] (%s)"),
+					e);
+			}
+		}
 
-	public UcmFSObject(DataObject data, UcmAtt nameAtt, UcmAtt guidAtt) {
-		this(null, data, nameAtt, guidAtt);
 	}
 
-	protected UcmFSObject(UcmFolder parent, DataObject data, UcmAtt nameAtt, UcmAtt guidAtt) {
-		this.parent = parent;
+	private static final String ROOT_PATH = "/";
+	private static final String ROOT_GUID = "FLD_ROOT";
+
+	protected final UcmAtt guidAtt;
+	protected final UcmAtt nameAtt;
+
+	private final DataObject data;
+
+	private LazyInitializer<String> path = new PathInitializer();
+
+	UcmFSObject(UcmModel model, DataObject data, UcmAtt nameAtt, UcmAtt guidAtt) {
+		super(model);
 		this.data = data;
 		this.nameAtt = nameAtt;
 		this.guidAtt = guidAtt;
+	}
 
-		String guid = getString(guidAtt);
-		if (guid.equals(UcmFSObject.ROOT_GUID)) {
-			// Special case for the root folder
-			this.path = "/";
-		} else {
-			String prefix = (parent != null ? parent.getPath() : "<unknown>");
-			String slash = (prefix.endsWith("/") ? "" : "/");
-			this.path = String.format("%s%s%s", prefix, slash, getString(nameAtt));
+	private boolean isRootFolder() {
+		return Tools.equals(getGUID(), UcmFSObject.ROOT_GUID);
+	}
+
+	public String getPath() throws IdcClientException {
+		try {
+			return this.path.get();
+		} catch (ConcurrentException e) {
+			Throwable t = e.getCause();
+			if (IdcClientException.class.isInstance(t)) { throw IdcClientException.class.cast(t); }
+			throw new IdcRuntimeException(e.getMessage(), t);
 		}
 	}
 
-	public String getPath() {
-		return this.path;
-	}
-
-	public boolean isParentLoaded() {
-		return this.parent != null;
-	}
-
-	public UcmFolder getParentFolder(IdcSession session) throws IdcClientException {
-		return null;
+	public UcmFolder getParentFolder() throws IdcClientException {
+		return this.model.getFolderByGUID(getParentGUID());
 	}
 
 	protected final String getString(UcmAtt att) {
@@ -146,10 +158,5 @@ public class UcmFSObject {
 
 	public boolean isShortcut() {
 		return !StringUtils.isEmpty(getString(UcmAtt.fTargetGUID));
-	}
-
-	@Override
-	public String toString() {
-		return String.format("%s [guid=%s, path=%s]", getClass().getSimpleName(), getGUID(), this.path);
 	}
 }

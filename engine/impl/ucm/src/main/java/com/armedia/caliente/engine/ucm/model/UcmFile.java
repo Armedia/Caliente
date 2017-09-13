@@ -1,15 +1,15 @@
 package com.armedia.caliente.engine.ucm.model;
 
+import java.io.InputStream;
+import java.util.Set;
+
+import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataObject;
 
 public class UcmFile extends UcmFSObject {
 
-	public UcmFile(DataObject data) {
-		this(null, data);
-	}
-
-	UcmFile(UcmFolder parent, DataObject data) {
-		super(parent, data, UcmAtt.fFileName, UcmAtt.fFileGUID);
+	UcmFile(UcmModel model, DataObject data) {
+		super(model, data, UcmAtt.fFileName, UcmAtt.fFileGUID);
 	}
 
 	public String getPublishedFileName() {
@@ -54,5 +54,22 @@ public class UcmFile extends UcmFSObject {
 
 	public String getContentId() {
 		return getString(UcmAtt.dDocName);
+	}
+
+	public Set<String> getRenditionNames() {
+		return null;
+	}
+
+	public InputStream getInputStream() throws IdcClientException {
+		return getInputStream(null);
+	}
+
+	public InputStream getInputStream(String rendition) throws IdcClientException {
+		return this.model.getInputStream(this, rendition);
+	}
+
+	@Override
+	public void refresh() throws IdcClientException {
+		this.model.refresh(this);
 	}
 }
