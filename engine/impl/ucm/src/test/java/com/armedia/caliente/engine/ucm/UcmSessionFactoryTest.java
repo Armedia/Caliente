@@ -139,7 +139,8 @@ public class UcmSessionFactoryTest {
 
 		DataBinder binder = s.createBinder();
 		binder.putLocal("IdcService", "FLD_INFO");
-		binder.putLocal("path", "/NOTHING THERE Caliente 3.0 Concept Document v4.0.docx");
+		binder.putLocal("path", "/");
+		binder.putLocal("includeFileRenditionsInfo", "1");
 
 		// Join the binder and the user context and perform the service call
 		try {

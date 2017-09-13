@@ -24,8 +24,8 @@ public abstract class UcmFSObject extends UcmModelObject {
 				String slash = (prefix.endsWith("/") ? "" : "/");
 				return String.format("%s%s%s", prefix, slash, getString(UcmFSObject.this.nameAtt));
 			} catch (IdcClientException e) {
-				throw new ConcurrentException(String.format("Failed to retrieve the parent folder for GUID [%s] (%s)"),
-					e);
+				throw new ConcurrentException(
+					String.format("Failed to retrieve the parent folder for UcmGUID [%s] (%s)"), e);
 			}
 		}
 
@@ -49,7 +49,16 @@ public abstract class UcmFSObject extends UcmModelObject {
 	}
 
 	private boolean isRootFolder() {
-		return Tools.equals(getGUID(), UcmFSObject.ROOT_GUID);
+		return Tools.equals(getObjectGUID(), UcmFSObject.ROOT_GUID);
+	}
+
+	public final UcmGUID getGUID(UcmAtt att) {
+		return getGUID(att, null);
+	}
+
+	public final UcmGUID getGUID(UcmAtt att, UcmGUID def) {
+		String str = this.dataObject.getString(att);
+		return (str != null ? new UcmGUID(str) : def);
 	}
 
 	public final String getString(UcmAtt att) {
@@ -102,16 +111,16 @@ public abstract class UcmFSObject extends UcmModelObject {
 		} catch (ConcurrentException e) {
 			Throwable t = e.getCause();
 			if (IdcClientException.class.isInstance(t)) { throw IdcClientException.class.cast(t); }
-			throw new IdcRuntimeException(e.getMessage(), t);
+			throw new UcmRuntimeException(e.getMessage(), t);
 		}
 	}
 
 	public UcmFolder getParentFolder() throws IdcClientException {
-		return this.model.getFolderByGUID(getParentGUID());
+		return this.model.getFolder(getParentGUID());
 	}
 
-	public final String getGUID() {
-		return getString(this.guidAtt);
+	public final UcmGUID getObjectGUID() {
+		return getGUID(this.guidAtt);
 	}
 
 	public final String getName() {
@@ -146,8 +155,8 @@ public abstract class UcmFSObject extends UcmModelObject {
 		return getBoolean(UcmAtt.fIsInTrash, false);
 	}
 
-	public final String getParentGUID() {
-		return getString(UcmAtt.fParentGUID);
+	public final UcmGUID getParentGUID() {
+		return getGUID(UcmAtt.fParentGUID);
 	}
 
 	public final String getSecurityGroup() {

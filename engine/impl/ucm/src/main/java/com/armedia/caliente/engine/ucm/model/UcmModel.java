@@ -1,6 +1,8 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -28,40 +30,51 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 public class UcmModel {
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 
-	private static final String NULLID = "idcnull";
+	private static final URI NULLURI;
+	static {
+		try {
+			NULLURI = new URI("null://null");
+		} catch (URISyntaxException e) {
+			throw new RuntimeException("Unexpected URI syntax exception", e);
+		}
+	}
 
-	// GUID -> DataObject
-	private static CacheAccess<String, DataObject> OBJECTS = JCS.getInstance("ObjectsByGuid");
-	private static LockDispenser<String, Lock> OBJECTS_LOCKS = new LockDispenser<String, Lock>() {
+	// UcmGUID -> DataObject
+	private CacheAccess<UcmGUID, DataObject> objectsByGUID = JCS.getInstance("ObjectsByGuid");
+	private LockDispenser<UcmGUID, Lock> objectsByGUIDLocks = new LockDispenser<UcmGUID, Lock>() {
+		@Override
+		protected Lock newLock(UcmGUID key) {
+			return new ReentrantLock();
+		}
+	};
+
+	// Path mapping for file: path -> file://${dDocName}
+	// Path mapping for folder: path -> folder://${fFolderGUID}
+	// Null path mapping: path -> NULLID
+
+	// path -> URI
+	private CacheAccess<String, URI> uriByPaths = JCS.getInstance("GuidsByPath");
+	private LockDispenser<String, Lock> uriByPathsLocks = new LockDispenser<String, Lock>() {
 		@Override
 		protected Lock newLock(String key) {
 			return new ReentrantLock();
 		}
 	};
 
-	// PATH -> GUID
-	private static CacheAccess<String, String> PATHS = JCS.getInstance("GuidsByPath");
-	private static LockDispenser<String, Lock> PATHS_LOCKS = new LockDispenser<String, Lock>() {
+	// Child URI -> Parent URI
+	private CacheAccess<URI, URI> parentsByURI = JCS.getInstance("ParentsByGuid");
+	private LockDispenser<URI, Lock> parentsByURILocks = new LockDispenser<URI, Lock>() {
 		@Override
-		protected Lock newLock(String key) {
+		protected Lock newLock(URI key) {
 			return new ReentrantLock();
 		}
 	};
 
-	// Child GUID -> Parent GUID
-	private static CacheAccess<String, String> PARENTS = JCS.getInstance("ParentsByGuid");
-	private static LockDispenser<String, Lock> PARENTS_LOCKS = new LockDispenser<String, Lock>() {
+	// URI -> List<UcmGUID>
+	private CacheAccess<URI, List<UcmGUID>> historiesByContentID = JCS.getInstance("HistoryByContentId");
+	private LockDispenser<URI, Lock> historiesByContentIDLocks = new LockDispenser<URI, Lock>() {
 		@Override
-		protected Lock newLock(String key) {
-			return new ReentrantLock();
-		}
-	};
-
-	// dDocName -> List<GUID>
-	private static CacheAccess<String, List<String>> HISTORY = JCS.getInstance("HistoryByContentId");
-	private static LockDispenser<String, Lock> HISTORY_LOCKS = new LockDispenser<String, Lock>() {
-		@Override
-		protected Lock newLock(String key) {
+		protected Lock newLock(URI key) {
 			return new ReentrantLock();
 		}
 	};
@@ -71,6 +84,10 @@ public class UcmModel {
 	public UcmModel(UcmSessionFactory sessionFactory) {
 		Objects.requireNonNull(sessionFactory, "Must provide a non-null session factory");
 		this.sessionFactory = sessionFactory;
+	}
+
+	public UcmFile getFile(String path) throws UcmServiceException, UcmFileNotFoundException {
+		return getFile(path, false);
 	}
 
 	/**
@@ -85,13 +102,27 @@ public class UcmModel {
 	 * @throws UcmFileNotFoundException
 	 *             if there is no file at that path
 	 */
-	public UcmFile getFile(String path) throws UcmServiceException, UcmFileNotFoundException {
+	public UcmFile getFile(String path, boolean forced) throws UcmServiceException, UcmFileNotFoundException {
+		URI uri = resolvePath(path, forced);
+		DataObject object = getDataObject(uri);
+		// TODO: should we try to find a cached UcmFile instance instead, and avoid wild
+		// construction?
+		return new UcmFile(this, object);
+	}
+
+	protected URI resolvePath(String path, boolean forced) throws UcmServiceException, UcmFileNotFoundException {
 		path = UcmModel.sanitizePath(path);
-		String guid = UcmModel.PATHS.get(path);
-		if (guid == null) {
-			// Ok...we haven't retrieved this path yet, so we first find the item...
+		URI uri = this.uriByPaths.get(path);
+		UcmTools data = null;
+		// If we found no UcmGUID, or we already know it's a path not found,
+		// but the user has requested we force a search regardless...
+		if ((uri == null) || forced) {
+
+			// First things first, clear out the old URI
+			uri = null;
+
 			// We use a lock to make sure we don't retrieve the same path "twice"...
-			Lock l = UcmModel.PATHS_LOCKS.getLock(guid);
+			Lock l = this.uriByPathsLocks.getLock(path);
 			l.lock();
 			try {
 				SessionWrapper<IdcSession> w = this.sessionFactory.acquireSession();
@@ -103,9 +134,22 @@ public class UcmModel {
 				ServiceResponse response = s.sendRequest(binder);
 				DataBinder responseData = response.getResponseAsBinder();
 
-				// We found something...is it a file or a folder?
+				data = new UcmTools(responseData.getResultSet("FileInfo").getRows().get(0));
+				String guid = data.getString(UcmAtt.dDocName);
+				if (guid != null) {
+					uri = new URI("file", guid, null);
+				} else {
+					// If we found no UcmGUID, it gets cached as a NULL guid
+					guid = data.getString(UcmAtt.fFolderGUID);
+					if (guid != null) {
+						// If this was instead a folder, stash it as one...
+						uri = new URI("folder", guid, null);
+						this.uriByPaths.put(path, uri);
+						// We reset it to null so the rest of the code handles it cleanly
+						uri = null;
+					}
+				}
 
-				return null;
 			} catch (final IdcClientException e) {
 				// Is this a service exception from which we can identify that the item doesn't
 				// exist?
@@ -121,21 +165,32 @@ public class UcmModel {
 				if (!mk.startsWith("!csFldDoesNotExist,")) { throw new UcmServiceException(
 					String.format("Exception caught retrieving the file at [%s]", path), e); }
 
-				// Does not exist, so mark it as such...
-				guid = UcmModel.NULLID;
 			} catch (Exception e) {
 				throw new UcmServiceException(String.format("Exception caught retrieving the file at [%s]", path), e);
 			} finally {
-				if (guid != null) {
-					UcmModel.PATHS.put(guid, UcmModel.NULLID);
+				if (uri == null) {
+					// Make sure we always have a URI value...
+					uri = UcmModel.NULLURI;
 				}
+				this.uriByPaths.put(path, uri);
 				l.unlock();
 			}
 		}
-		if (Tools.equals(UcmModel.NULLID,
-			guid)) { throw new UcmFileNotFoundException(String.format("The file at path [%s] does not exist", path)); }
 
-		// We have the GUID...go find
+		// TODO: We could arguably also stash away the DataObject, since FLD_INFO returns
+		// a ton of extra info that we can leverage
+		if (data != null) {
+			// There was an object...should we stash it (perhaps on top of whatever's already
+			// there?)
+		}
+
+		if (Tools.equals(UcmModel.NULLURI,
+			uri)) { throw new UcmFileNotFoundException(String.format("The no object found at path [%s]", path)); }
+		return uri;
+	}
+
+	protected DataObject getDataObject(URI uri) throws UcmServiceException {
+		// Here we determine if the URI is for a file or a folder, and retrieve stuff accordingly...
 		return null;
 	}
 
@@ -151,6 +206,10 @@ public class UcmModel {
 	public UcmFile getFile(String path, int revision) throws UcmException {
 		UcmFile file = getFile(path);
 
+		return null;
+	}
+
+	UcmFile getFile(UcmGUID guid) throws IdcClientException {
 		return null;
 	}
 
@@ -170,7 +229,7 @@ public class UcmModel {
 		return null;
 	}
 
-	UcmFolder getFolderByGUID(String guid) throws IdcClientException {
+	UcmFolder getFolder(UcmGUID guid) throws IdcClientException {
 		return null;
 	}
 
