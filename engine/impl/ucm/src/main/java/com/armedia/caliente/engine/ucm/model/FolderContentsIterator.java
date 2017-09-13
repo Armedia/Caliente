@@ -1,7 +1,8 @@
-package com.armedia.caliente.engine.ucm.exporter;
+package com.armedia.caliente.engine.ucm.model;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -16,40 +17,11 @@ import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataObject;
 import oracle.stellent.ridc.model.DataResultSet;
 
-public class FolderContentsInterator {
-
-	public static enum Mode {
-		//
-		COMBINED {
-			@Override
-			protected void setParameters(DataBinder requestBinder) {
-				super.setParameters(requestBinder);
-				requestBinder.putLocal("doCombinedBrowse", "1");
-				requestBinder.putLocal("foldersFirst", "1");
-			}
-		}, //
-		FILES, //
-		FOLDERS, //
-		//
-		;
-
-		private final String count;
-		private final String startRow;
-
-		private Mode() {
-			String countLabel = name().toLowerCase();
-			this.count = String.format("%sCount", countLabel);
-			this.startRow = String.format("%sStartRow", countLabel);
-		}
-
-		protected void setParameters(DataBinder requestBinder) {
-			requestBinder.putLocal("doRetrieveTargetInfo", "1");
-		}
-	}
+public class FolderContentsIterator {
 
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 
-	public static final Mode DEFAULT_MODE = Mode.COMBINED;
+	public static final FolderIteratorMode DEFAULT_MODE = FolderIteratorMode.COMBINED;
 
 	public static final int MINIMUM_PAGE_SIZE = 1;
 	public static final int DEFAULT_PAGE_SIZE = 1000;
@@ -58,35 +30,38 @@ public class FolderContentsInterator {
 	private final IdcSession session;
 	private final String path;
 	private final int pageSize;
-	private final Mode mode;
+	private final FolderIteratorMode folderIteratorMode;
 
 	private int pageCount = -1;
 	private int currentInPage = -1;
 
+	private boolean firstRequestIssued = false;
+	private UcmFolder folder = null;
+	private DataObject localData = null;
 	private Iterator<DataObject> folders = null;
 	private Iterator<DataObject> files = null;
 
 	private DataBinder requestBinder = null;
 	private DataBinder responseBinder = null;
 
-	private DataObject current = null;
+	private UcmFSObject current = null;
 	private boolean completed = false;
 
-	public FolderContentsInterator(IdcSession session, String path) {
-		this(session, path, null, FolderContentsInterator.DEFAULT_PAGE_SIZE);
+	public FolderContentsIterator(IdcSession session, String path) {
+		this(session, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsInterator(IdcSession session, String path, Mode mode) {
-		this(session, path, null, FolderContentsInterator.DEFAULT_PAGE_SIZE);
+	public FolderContentsIterator(IdcSession session, String path, FolderIteratorMode folderIteratorMode) {
+		this(session, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsInterator(IdcSession session, String path, int pageSize) {
+	public FolderContentsIterator(IdcSession session, String path, int pageSize) {
 		this(session, path, null, pageSize);
 	}
 
-	private static String sanitizePath(String path) {
+	static String sanitizePath(String path) {
 		Objects.requireNonNull(path, "Must provide a non-null path");
-		if (!FolderContentsInterator.PATH_CHECKER.matcher(path).matches()) {
+		if (!FolderContentsIterator.PATH_CHECKER.matcher(path).matches()) {
 			// Single separators...
 			path = path.replaceAll("/+", "/");
 			// Make sure there's a leading separator
@@ -100,13 +75,14 @@ public class FolderContentsInterator {
 		return newPath;
 	}
 
-	public FolderContentsInterator(IdcSession session, String path, Mode mode, int pageSize) {
+	public FolderContentsIterator(IdcSession session, String path, FolderIteratorMode folderIteratorMode,
+		int pageSize) {
 		Objects.requireNonNull(session, "Must provide a non-null session");
-		this.path = FolderContentsInterator.sanitizePath(path);
+		this.path = FolderContentsIterator.sanitizePath(path);
 		this.session = session;
-		this.pageSize = Tools.ensureBetween(FolderContentsInterator.MINIMUM_PAGE_SIZE, pageSize,
-			FolderContentsInterator.MAXIMUM_PAGE_SIZE);
-		this.mode = Tools.coalesce(mode, FolderContentsInterator.DEFAULT_MODE);
+		this.pageSize = Tools.ensureBetween(FolderContentsIterator.MINIMUM_PAGE_SIZE, pageSize,
+			FolderContentsIterator.MAXIMUM_PAGE_SIZE);
+		this.folderIteratorMode = Tools.coalesce(folderIteratorMode, FolderContentsIterator.DEFAULT_MODE);
 	}
 
 	public int getPageSize() {
@@ -138,13 +114,27 @@ public class FolderContentsInterator {
 			this.requestBinder = this.session.createBinder();
 			this.requestBinder.putLocal("IdcService", "FLD_BROWSE");
 			this.requestBinder.putLocal("path", this.path);
-			this.mode.setParameters(this.requestBinder);
+			this.folderIteratorMode.setParameters(this.requestBinder);
 		}
 
-		this.requestBinder.putLocal(this.mode.count, String.valueOf(this.pageSize));
-		this.requestBinder.putLocal(this.mode.startRow, String.valueOf(this.pageSize * this.pageCount));
+		this.requestBinder.putLocal(this.folderIteratorMode.count, String.valueOf(this.pageSize));
+		this.requestBinder.putLocal(this.folderIteratorMode.startRow, String.valueOf(this.pageSize * this.pageCount));
 
 		return this.session.sendRequest(this.requestBinder).getResponseAsBinder();
+	}
+
+	public UcmFolder getFolder() throws IdcClientException {
+		if (!this.firstRequestIssued) {
+			hasNext();
+		}
+		return this.folder;
+	}
+
+	public DataObject getLocalData() throws IdcClientException {
+		if (!this.firstRequestIssued) {
+			hasNext();
+		}
+		return this.localData;
 	}
 
 	public boolean hasNext() throws IdcClientException {
@@ -156,6 +146,22 @@ public class FolderContentsInterator {
 			// We need to page...
 			this.pageCount++;
 			this.responseBinder = getNextBatch();
+			this.firstRequestIssued = true;
+
+			if (this.localData == null) {
+				this.localData = this.responseBinder.getLocalData();
+			}
+
+			if (this.folder == null) {
+				DataResultSet rs = this.responseBinder.getResultSet("FolderInfo");
+				if (rs != null) {
+					List<DataObject> l = rs.getRows();
+					if ((l != null) && !l.isEmpty()) {
+						this.folder = new UcmFolder(l.get(0));
+					}
+				}
+			}
+
 			this.currentInPage = -1;
 			DataResultSet rs = this.responseBinder.getResultSet("ChildFolders");
 			if (rs != null) {
@@ -173,13 +179,13 @@ public class FolderContentsInterator {
 		}
 
 		if (this.folders.hasNext()) {
-			this.current = this.folders.next();
+			this.current = new UcmFolder(this.folder, this.folders.next());
 			this.currentInPage++;
 			return true;
 		}
 
 		if (this.files.hasNext()) {
-			this.current = this.files.next();
+			this.current = new UcmFile(this.folder, this.files.next());
 			this.currentInPage++;
 			return true;
 		}
@@ -195,9 +201,9 @@ public class FolderContentsInterator {
 		return false;
 	}
 
-	public DataObject next() throws IdcClientException {
+	public UcmFSObject next() throws IdcClientException {
 		if (!hasNext()) { throw new NoSuchElementException(); }
-		DataObject ret = this.current;
+		UcmFSObject ret = this.current;
 		this.current = null;
 		return ret;
 	}

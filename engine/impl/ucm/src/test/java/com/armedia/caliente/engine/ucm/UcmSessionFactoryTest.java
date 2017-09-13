@@ -8,19 +8,21 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import com.armedia.caliente.engine.SessionWrapper;
-import com.armedia.caliente.engine.ucm.exporter.FolderContentsInterator;
+import com.armedia.caliente.engine.ucm.model.FolderContentsIterator;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
+import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataObject;
 import oracle.stellent.ridc.model.DataResultSet;
+import oracle.stellent.ridc.protocol.ServiceResponse;
 
 public class UcmSessionFactoryTest {
 
 	private static final String NULL = "<null>";
 
 	@Test
-	public void test() throws Exception {
+	public void test1() throws Exception {
 		UcmSessionFactory factory = null;
 		CmfCrypt crypto = new CmfCrypt();
 		Map<String, String> settingsMap = new TreeMap<>();
@@ -34,14 +36,33 @@ public class UcmSessionFactoryTest {
 		SessionWrapper<IdcSession> w = factory.acquireSession();
 		IdcSession s = w.getWrapped();
 
-		FolderContentsInterator it = new FolderContentsInterator(s, "/", 1);
+		FolderContentsIterator it = new FolderContentsIterator(s, "/", 3);
 		while (it.hasNext()) {
 			System.out.printf("Item [%d] (p%d, c%d):%n", it.getCurrentPos(), it.getPageCount(), it.getCurrentInPage());
 			System.out.printf("%s%n", StringUtils.repeat('-', 40));
-			dumpObject(1, it.next());
+			System.out.printf("\t%s%n", it.next());
 		}
 
-		/*
+		System.out.printf("Base Folder @ [%s]:%n", it.getPath());
+		System.out.printf("%s%n", StringUtils.repeat('-', 40));
+		System.out.printf("\t%s%n", it.getFolder());
+	}
+
+	@Test
+	public void test2() throws Exception {
+		UcmSessionFactory factory = null;
+		CmfCrypt crypto = new CmfCrypt();
+		Map<String, String> settingsMap = new TreeMap<>();
+		CfgTools settings = new CfgTools(settingsMap);
+
+		settingsMap.put(UcmSessionSetting.USER.getLabel(), "weblogic");
+		settingsMap.put(UcmSessionSetting.PASSWORD.getLabel(), "system01");
+		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
+
+		factory = new UcmSessionFactory(settings, crypto);
+		SessionWrapper<IdcSession> w = factory.acquireSession();
+		IdcSession s = w.getWrapped();
+
 		DataBinder binder = s.createBinder();
 		binder.putLocal("IdcService", "FLD_BROWSE");
 		binder.putLocal("path", "/");
@@ -49,7 +70,7 @@ public class UcmSessionFactoryTest {
 		binder.putLocal("foldersFirst", "1");
 
 		// These two are important for paging...
-		binder.putLocal("combinedCount", "1");
+		binder.putLocal("combinedCount", "100");
 		binder.putLocal("combinedStartRow", "0");
 		binder.putLocal("doRetrieveTargetInfo", "1");
 
@@ -64,7 +85,6 @@ public class UcmSessionFactoryTest {
 		System.out.printf("Local Data%n");
 		System.out.printf("%s%n", StringUtils.repeat('-', 80));
 		dumpObject(1, responseData.getLocalData());
-		*/
 	}
 
 	private void dumpObject(int indent, DataObject o) {
