@@ -24,14 +24,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.jcr</groupId>
-			<artifactId>jcr</artifactId>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.oracle.jcr</groupId>
-			<artifactId>oracle-jcr-jars</artifactId>
+			<groupId>com.oracle.ridc</groupId>
+			<artifactId>oracle-ridc-jars</artifactId>
 			<scope>compile</scope>
 			<type>pom</type>
 		</dependency>
