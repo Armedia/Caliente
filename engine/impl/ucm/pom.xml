@@ -24,6 +24,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-jcs-core</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.oracle.ridc</groupId>
 			<artifactId>oracle-ridc-jars</artifactId>
 			<scope>compile</scope>
