@@ -459,16 +459,10 @@ public class UcmModel {
 									DataObject o = it.next();
 
 									UcmTools t = new UcmTools(o);
-									URI childUri = null;
+									URI childUri = UcmModel.getURI(o);
 									String name = t.getString(UcmAtt.fFileName);
-									if (name != null) {
-										// It's a file...
-										childUri = UcmModel.newURI(UcmModel.FILE_SCHEME, t.getString(UcmAtt.dDocName));
-									} else {
-										// It's a folder...
+									if (name == null) {
 										name = t.getString(UcmAtt.fFolderName);
-										childUri = UcmModel.newURI(UcmModel.FOLDER_SCHEME,
-											t.getString(UcmAtt.fFolderGUID));
 									}
 									children.put(name, childUri);
 									dataObjects.put(name, o);
@@ -500,7 +494,6 @@ public class UcmModel {
 		}
 
 		if (data.get() != null) {
-			// We did fetch the information, so we update the cached object
 			cacheDataObject(data.get());
 		}
 
