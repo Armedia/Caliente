@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.jcs.JCS;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
@@ -24,6 +23,7 @@ import com.armedia.commons.utilities.Tools;
 import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataObject;
+import oracle.stellent.ridc.model.DataResultSet;
 import oracle.stellent.ridc.protocol.ServiceException;
 import oracle.stellent.ridc.protocol.ServiceResponse;
 
@@ -63,7 +63,6 @@ public class UcmModel {
 	public UcmModel(UcmSessionFactory sessionFactory) {
 		Objects.requireNonNull(sessionFactory, "Must provide a non-null session factory");
 		this.sessionFactory = sessionFactory;
-		JCS.getInstance(null);
 		this.uriByPaths = new KeyLockableCache<>(1000);
 		this.parentByURI = new KeyLockableCache<>(1000);
 		this.childrenByURI = new KeyLockableCache<>(1000);
@@ -140,7 +139,13 @@ public class UcmModel {
 							}
 
 							// First things first!! Stash the retrieved object...
-							data.set(new UcmTools(responseData.getResultSet("FileInfo").getRows().get(0)));
+							DataResultSet rs = responseData.getResultSet("FileInfo");
+							if (rs == null) {
+								rs = responseData.getResultSet("FolderInfo");
+							}
+							if (rs == null) { throw new UcmServiceException(String.format(
+								"Path [%s] was found, but was neither a file nor a folder?!?", sanitizedPath)); }
+							data.set(new UcmTools(rs.getRows().get(0)));
 
 							String guid = data.get().getString(UcmAtt.dDocName);
 							if (guid != null) { return UcmModel.newURI("file", guid, null); }
@@ -148,10 +153,15 @@ public class UcmModel {
 							guid = data.get().getString(UcmAtt.fFolderGUID);
 							if (guid != null) { return UcmModel.newURI("folder", guid, null); }
 
-							throw new UcmServiceException(String
-								.format("Path [%s] was found, but was neither a file nor a folder?!?", sanitizedPath));
-						} catch (Exception e) {
+							throw new UcmServiceException(String.format(
+								"Path [%s] was found, but was neither a file nor a folder (no identifier attributes)?!?",
+								sanitizedPath));
+						} catch (IdcClientException | UcmServiceException e) {
 							throw new ConcurrentException(e);
+						} catch (Exception e) {
+							// Session issue?
+							e.printStackTrace();
+							return UcmModel.NULLURI;
 						}
 					}
 				});

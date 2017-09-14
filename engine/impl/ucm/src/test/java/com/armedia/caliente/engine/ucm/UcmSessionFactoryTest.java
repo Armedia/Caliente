@@ -24,6 +24,44 @@ public class UcmSessionFactoryTest {
 
 	private static final String NULL = "<null>";
 
+	private void dumpBinder(DataBinder binder) {
+		for (String rs : binder.getResultSetNames()) {
+			dumpMap(rs, binder.getResultSet(rs));
+		}
+		System.out.printf("Local Data%n");
+		System.out.printf("%s%n", StringUtils.repeat('-', 80));
+		dumpObject(1, binder.getLocalData());
+	}
+
+	private void dumpObject(int indent, DataObject o) {
+		final String indentStr = StringUtils.repeat('\t', indent);
+		for (String s : new TreeSet<>(o.keySet())) {
+			Object v = o.get(s);
+			if (v == null) {
+				v = UcmSessionFactoryTest.NULL;
+			} else {
+				v = String.format("[%s]", v);
+			}
+			System.out.printf("%s[%s] -> %s%n", indentStr, s, v);
+		}
+	}
+
+	private void dumpMap(String label, DataResultSet map) {
+		if (map == null) {
+			System.out.printf("WARNING: Map [%s] is null", label);
+			return;
+		}
+		System.out.printf("Map contents: %s%n", label);
+		System.out.printf("%s%n", StringUtils.repeat('-', 80));
+		int i = 0;
+		for (DataObject o : map.getRows()) {
+			System.out.printf("\tItem [%d]:%n", i++);
+			System.out.printf("%s%n", StringUtils.repeat('-', 40));
+			dumpObject(2, o);
+		}
+		System.out.printf("%n");
+	}
+
 	@Test
 	public void test0() throws Exception {
 		URI uri = new URI("file", "somearbitrarygarbage", "fragmentCrap");
@@ -172,43 +210,4 @@ public class UcmSessionFactoryTest {
 			throw e;
 		}
 	}
-
-	private void dumpBinder(DataBinder binder) {
-		for (String rs : binder.getResultSetNames()) {
-			dumpMap(rs, binder.getResultSet(rs));
-		}
-		System.out.printf("Local Data%n");
-		System.out.printf("%s%n", StringUtils.repeat('-', 80));
-		dumpObject(1, binder.getLocalData());
-	}
-
-	private void dumpObject(int indent, DataObject o) {
-		final String indentStr = StringUtils.repeat('\t', indent);
-		for (String s : new TreeSet<>(o.keySet())) {
-			Object v = o.get(s);
-			if (v == null) {
-				v = UcmSessionFactoryTest.NULL;
-			} else {
-				v = String.format("[%s]", v);
-			}
-			System.out.printf("%s[%s] -> %s%n", indentStr, s, v);
-		}
-	}
-
-	private void dumpMap(String label, DataResultSet map) {
-		if (map == null) {
-			System.out.printf("WARNING: Map [%s] is null", label);
-			return;
-		}
-		System.out.printf("Map contents: %s%n", label);
-		System.out.printf("%s%n", StringUtils.repeat('-', 80));
-		int i = 0;
-		for (DataObject o : map.getRows()) {
-			System.out.printf("\tItem [%d]:%n", i++);
-			System.out.printf("%s%n", StringUtils.repeat('-', 40));
-			dumpObject(2, o);
-		}
-		System.out.printf("%n");
-	}
-
 }
