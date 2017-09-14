@@ -5,11 +5,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
 
+import org.apache.commons.collections4.map.LRUMap;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.jcs.JCS;
 import org.apache.commons.jcs.access.CacheAccess;
@@ -39,51 +42,54 @@ public class UcmModel {
 		}
 	}
 
+	private static class Locker<K> extends LockDispenser<K, ReadWriteLock> {
+		@Override
+		protected ReadWriteLock newLock(K key) {
+			return new ReentrantReadWriteLock();
+		}
+	}
+
 	// UcmGUID -> DataObject
 	private CacheAccess<UcmGUID, DataObject> objectsByGUID = JCS.getInstance("ObjectsByGuid");
-	private LockDispenser<UcmGUID, Lock> objectsByGUIDLocks = new LockDispenser<UcmGUID, Lock>() {
-		@Override
-		protected Lock newLock(UcmGUID key) {
-			return new ReentrantLock();
-		}
-	};
+	private Locker<UcmGUID> objectsByGUIDLocks = new Locker<>();
 
-	// Path mapping for file: path -> file://${dDocName}
-	// Path mapping for folder: path -> folder://${fFolderGUID}
-	// Null path mapping: path -> NULLID
+	// path -> file://${dDocName}
+	// path -> folder://${fFolderGUID}
+	// path -> NULLURI
+	private final Map<String, URI> uriByPaths;
+	private Locker<String> uriByPathsLocks = new Locker<>();
 
-	// path -> URI
-	private CacheAccess<String, URI> uriByPaths = JCS.getInstance("GuidsByPath");
-	private LockDispenser<String, Lock> uriByPathsLocks = new LockDispenser<String, Lock>() {
-		@Override
-		protected Lock newLock(String key) {
-			return new ReentrantLock();
-		}
-	};
-
-	// Child URI -> Parent URI
-	private CacheAccess<URI, URI> parentsByURI = JCS.getInstance("ParentsByGuid");
-	private LockDispenser<URI, Lock> parentsByURILocks = new LockDispenser<URI, Lock>() {
-		@Override
-		protected Lock newLock(URI key) {
-			return new ReentrantLock();
-		}
-	};
+	// childURI -> parentURI
+	private final Map<URI, URI> parentsByURI;
+	private Locker<URI> parentsByURILocks = new Locker<>();
 
 	// URI -> List<UcmGUID>
-	private CacheAccess<URI, List<UcmGUID>> historiesByContentID = JCS.getInstance("HistoryByContentId");
-	private LockDispenser<URI, Lock> historiesByContentIDLocks = new LockDispenser<URI, Lock>() {
-		@Override
-		protected Lock newLock(URI key) {
-			return new ReentrantLock();
-		}
-	};
+	private Map<URI, List<UcmGUID>> historiesByContentID;
+	private Locker<URI> historiesByContentIDLocks = new Locker<>();
+
+	// GUID -> DataObject
+	private final Map<UcmGUID, DataObject> objects;
+	private final Map<URI, Map<String, UcmGUID>> versions;
+
+	// These are so we don't construct the same objects over and over again...
+	private final Map<URI, UcmFileHistory> historyInstances;
+	private final Map<UcmGUID, UcmFile> fileInstances;
+	private final Map<UcmGUID, UcmFolder> folderInstances;
 
 	private final UcmSessionFactory sessionFactory;
 
 	public UcmModel(UcmSessionFactory sessionFactory) {
 		Objects.requireNonNull(sessionFactory, "Must provide a non-null session factory");
 		this.sessionFactory = sessionFactory;
+
+		this.uriByPaths = new LRUMap<>(1000);
+		this.parentsByURI = new LRUMap<>(1000);
+		this.historiesByContentID = new LRUMap<>(1000);
+		this.objects = new LRUMap<>(1000);
+		this.versions = new LRUMap<>(1000);
+		this.historyInstances = new LRUMap<>(1000);
+		this.fileInstances = new LRUMap<>(1000);
+		this.folderInstances = new LRUMap<>(1000);
 	}
 
 	public UcmFile getFile(String path) throws UcmServiceException, UcmFileNotFoundException {
@@ -122,8 +128,9 @@ public class UcmModel {
 			uri = null;
 
 			// We use a lock to make sure we don't retrieve the same path "twice"...
-			Lock l = this.uriByPathsLocks.getLock(path);
-			l.lock();
+			ReadWriteLock rwl = this.uriByPathsLocks.getLock(path);
+			final Lock pathLock = rwl.writeLock();
+			pathLock.lock();
 			try {
 				SessionWrapper<IdcSession> w = this.sessionFactory.acquireSession();
 				IdcSession s = w.getWrapped();
@@ -149,7 +156,6 @@ public class UcmModel {
 						uri = null;
 					}
 				}
-
 			} catch (final IdcClientException e) {
 				// Is this a service exception from which we can identify that the item doesn't
 				// exist?
@@ -173,7 +179,7 @@ public class UcmModel {
 					uri = UcmModel.NULLURI;
 				}
 				this.uriByPaths.put(path, uri);
-				l.unlock();
+				pathLock.unlock();
 			}
 		}
 
