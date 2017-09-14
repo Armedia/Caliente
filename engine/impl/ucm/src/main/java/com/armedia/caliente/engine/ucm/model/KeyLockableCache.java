@@ -20,7 +20,7 @@ import com.armedia.commons.utilities.LockDispenser;
 
 public class KeyLockableCache<K, V> {
 
-	private static final int MIN_LIMIT = 1000;
+	public static final int MIN_LIMIT = 1000;
 
 	private static class Locker<K> extends LockDispenser<K, ReentrantReadWriteLock> {
 		@Override
@@ -87,39 +87,31 @@ public class KeyLockableCache<K, V> {
 
 			// The value is absent or expired...
 			V newVal = initializer.get();
-			if (newVal == null) {
+			if (newVal != null) {
+				this.cache.put(key, newReference(newVal));
+			} else {
 				this.cache.remove(key);
-				throw new NullPointerException(
-					String.format("The initializer created a null reference for key [%s]", key));
 			}
 
-			// Stash the new object...
-			this.cache.put(key, newReference(newVal));
 			return newVal;
 		} finally {
 			l.unlock();
 		}
 	}
 
-	public final V create(K key, ConcurrentInitializer<V> initializer) throws ConcurrentException {
+	public final void putIfAbsent(K key, V value) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
-		Objects.requireNonNull(initializer, "Must provide a non-null initializer");
+		if (value == null) { return; }
+
+		V existing = get(key);
+		if (existing != null) { return; }
 
 		final Lock l = getExclusiveLock(key);
 		l.lock();
 		try {
-			V ret = null;
 			Reference<V> ref = this.cache.get(key);
-			if (ref != null) {
-				ret = ref.get();
-			}
-			V newVal = initializer.get();
-			if (newVal != null) {
-				this.cache.put(key, newReference(newVal));
-			} else {
-				this.cache.remove(key);
-			}
-			return ret;
+			if ((ref != null) && (ref.get() != null)) { return; }
+			this.cache.put(key, newReference(value));
 		} finally {
 			l.unlock();
 		}
