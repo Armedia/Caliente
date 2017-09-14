@@ -61,6 +61,7 @@ public class KeyLockableCache<K, V> {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		// This construct helps avoid deadlocks while preserving concurrency where possible
 		Lock l = getSharedLock(key);
+		l.lock();
 		try {
 			Reference<V> ref = this.cache.get(key);
 			if (ref == null) { return null; }
@@ -167,6 +168,7 @@ public class KeyLockableCache<K, V> {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		// This construct helps avoid deadlocks while preserving concurrency where possible
 		final Lock l = getSharedLock(key);
+		l.lock();
 		try {
 			Reference<V> ref = this.cache.get(key);
 			if (ref == null) { return false; }
