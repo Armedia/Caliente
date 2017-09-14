@@ -28,12 +28,20 @@ public enum UcmAtt {
 	dExtension, //
 	dID, //
 	dOriginalName, //
+	dProcessingState, //
 	dPublishedRevisionID, //
 	dRevisionID, //
 	dRevLabel, //
+	dStatus, //
 	fFileGUID, //
 	fFileName, //
 	fPublishedFilename, //
+
+	// Rendition Attributes
+	rendDescription, //
+	rendFormat, //
+	rendName, //
+	rendType, //
 	//
 	;
 }

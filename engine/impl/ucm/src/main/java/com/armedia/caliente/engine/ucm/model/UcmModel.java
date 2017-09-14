@@ -3,10 +3,14 @@ package com.armedia.caliente.engine.ucm.model;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -31,8 +35,8 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 public class UcmModel {
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 
-	private static final String FILE_SCHEME = "file";
-	private static final String FOLDER_SCHEME = "folder";
+	static final String FILE_SCHEME = "file";
+	static final String FOLDER_SCHEME = "folder";
 	private static final String NULL_SCHEME = "null";
 
 	private static final URI NULLURI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
@@ -53,7 +57,10 @@ public class UcmModel {
 	private final KeyLockableCache<URI, Map<String, URI>> childrenByURI;
 
 	// URI -> List<UcmGUID>
-	private final KeyLockableCache<URI, List<UcmGUID>> historyByContentID;
+	private final KeyLockableCache<URI, List<UcmVersionInfo>> historyByURI;
+
+	// GUID -> Map<String, UcmRenditionInfo>
+	private final KeyLockableCache<UcmGUID, Map<String, UcmRenditionInfo>> renditionsByGUID;
 
 	// URI -> GUID
 	private final KeyLockableCache<URI, UcmGUID> guidByURI;
@@ -74,13 +81,81 @@ public class UcmModel {
 		this.uriByPaths = new KeyLockableCache<>(1000);
 		this.parentByURI = new KeyLockableCache<>(1000);
 		this.childrenByURI = new KeyLockableCache<>(1000);
-		this.historyByContentID = new KeyLockableCache<>(1000);
+		this.historyByURI = new KeyLockableCache<>(1000);
 		this.objectByGUID = new KeyLockableCache<>(1000);
 		this.guidByURI = new KeyLockableCache<>(1000);
 		this.uriByGUID = new KeyLockableCache<>(1000);
 		this.historyInstances = new KeyLockableCache<>(1000);
 		this.fileInstances = new KeyLockableCache<>(1000);
 		this.folderInstances = new KeyLockableCache<>(1000);
+		this.renditionsByGUID = new KeyLockableCache<>(1000);
+	}
+
+	protected final void cacheDataObject(DataObject object) {
+		if (object == null) { return; }
+		cacheDataObject(new UcmTools(object));
+	}
+
+	protected void cacheDataObject(final UcmTools data) {
+		if (data == null) { return; }
+		// Is this a file or a folder?
+		final boolean file = data.hasAttribute(UcmAtt.dDocName);
+		UcmAtt guidAtt = (file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
+		final UcmGUID guid = new UcmGUID(data.getString(guidAtt));
+		final URI uri = (file ? UcmModel.newURI(UcmModel.FILE_SCHEME, data.getString(UcmAtt.dDocName))
+			: UcmModel.newURI(UcmModel.FOLDER_SCHEME, data.getString(UcmAtt.fFolderGUID)));
+
+		this.objectByGUID.put(guid, data.getDataObject());
+		if (data.hasAttribute(UcmAtt.fParentGUID)) {
+			this.parentByURI.put(uri, UcmModel.newURI(UcmModel.FOLDER_SCHEME, data.getString(UcmAtt.fParentGUID)));
+		}
+
+		this.guidByURI.put(uri, guid);
+		this.uriByGUID.put(guid, uri);
+	}
+
+	protected <K, V> V createIfAbsentInCache(KeyLockableCache<K, V> cache, K key,
+		ConcurrentInitializer<V> initializer) {
+		try {
+			return cache.createIfAbsent(key, initializer);
+		} catch (Exception e) {
+			// Never gonna happen...
+			throw new UcmRuntimeException("Unexpected Exception", e);
+		}
+	}
+
+	protected static final URI getURI(DataObject dataObject) {
+		return UcmModel.getURI(new UcmTools(dataObject));
+	}
+
+	protected static final URI getURI(UcmTools data) {
+		final boolean file = data.hasAttribute(UcmAtt.dDocName);
+		return (file ? UcmModel.newURI(UcmModel.FILE_SCHEME, data.getString(UcmAtt.dDocName))
+			: UcmModel.newURI(UcmModel.FOLDER_SCHEME, data.getString(UcmAtt.fFolderGUID)));
+	}
+
+	protected static final URI newURI(String scheme, String ssp) {
+		return UcmModel.newURI(scheme, ssp, null);
+	}
+
+	protected static final URI newURI(String scheme, String ssp, String fragment) {
+		if (StringUtils.isEmpty(scheme)) { throw new IllegalArgumentException("The URI scheme may not be empty"); }
+		if (StringUtils
+			.isEmpty(ssp)) { throw new IllegalArgumentException("The URI scheme-specific part may not be empty"); }
+		try {
+			return new URI(scheme, ssp, fragment);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(
+				String.format("Failed to construct a URI using ([%s], [%s], [%s])", scheme, ssp, fragment), e);
+		}
+	}
+
+	protected boolean isFile(URI uri) {
+		return UcmModel.FILE_SCHEME.equals(uri.getScheme());
+	}
+
+	protected boolean isFolder(URI uri) {
+		return UcmModel.FOLDER_SCHEME.equals(uri.getScheme());
 	}
 
 	/**
@@ -186,73 +261,6 @@ public class UcmModel {
 		return uri;
 	}
 
-	protected final void cacheDataObject(DataObject object) {
-		if (object == null) { return; }
-		cacheDataObject(new UcmTools(object));
-	}
-
-	protected void cacheDataObject(final UcmTools data) {
-		if (data == null) { return; }
-		// Is this a file or a folder?
-		final boolean file = data.hasAttribute(UcmAtt.dDocName);
-		UcmAtt guidAtt = (file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
-		final UcmGUID guid = new UcmGUID(data.getString(guidAtt));
-		final URI uri = (file ? UcmModel.newURI(UcmModel.FILE_SCHEME, data.getString(UcmAtt.dDocName))
-			: UcmModel.newURI(UcmModel.FOLDER_SCHEME, data.getString(UcmAtt.fFolderGUID)));
-
-		this.objectByGUID.put(guid, data.getDataObject());
-		if (data.hasAttribute(UcmAtt.fParentGUID)) {
-			this.parentByURI.put(uri, UcmModel.newURI(UcmModel.FOLDER_SCHEME, data.getString(UcmAtt.fParentGUID)));
-		}
-
-		this.guidByURI.put(uri, guid);
-		this.uriByGUID.put(guid, uri);
-	}
-
-	protected <K, V> V createIfAbsentInCache(KeyLockableCache<K, V> cache, K key,
-		ConcurrentInitializer<V> initializer) {
-		try {
-			return cache.createIfAbsent(key, initializer);
-		} catch (Exception e) {
-			// Never gonna happen...
-			throw new UcmRuntimeException("Unexpected Exception", e);
-		}
-	}
-
-	protected static final URI getURI(DataObject dataObject) {
-		return UcmModel.getURI(new UcmTools(dataObject));
-	}
-
-	protected static final URI getURI(UcmTools data) {
-		final boolean file = data.hasAttribute(UcmAtt.dDocName);
-		return (file ? UcmModel.newURI(UcmModel.FILE_SCHEME, data.getString(UcmAtt.dDocName))
-			: UcmModel.newURI(UcmModel.FOLDER_SCHEME, data.getString(UcmAtt.fFolderGUID)));
-	}
-
-	protected static final URI newURI(String scheme, String ssp) {
-		return UcmModel.newURI(scheme, ssp, null);
-	}
-
-	protected static final URI newURI(String scheme, String ssp, String fragment) {
-		if (StringUtils.isEmpty(scheme)) { throw new IllegalArgumentException("The URI scheme may not be empty"); }
-		if (StringUtils
-			.isEmpty(ssp)) { throw new IllegalArgumentException("The URI scheme-specific part may not be empty"); }
-		try {
-			return new URI(scheme, ssp, fragment);
-		} catch (URISyntaxException e) {
-			throw new RuntimeException(
-				String.format("Failed to construct a URI using ([%s], [%s], [%s])", scheme, ssp, fragment), e);
-		}
-	}
-
-	protected boolean isFile(URI uri) {
-		return UcmModel.FILE_SCHEME.equals(uri.getScheme());
-	}
-
-	protected boolean isFolder(URI uri) {
-		return UcmModel.FOLDER_SCHEME.equals(uri.getScheme());
-	}
-
 	protected DataObject getDataObject(final URI uri) throws UcmServiceException, UcmObjectNotFoundException {
 		final boolean file;
 		if (isFile(uri)) {
@@ -329,7 +337,7 @@ public class UcmModel {
 								DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
 								baseObj.putAll(docInfo);
 								history.set(responseData.getResultSet("REVISION_HISTORY"));
-								renditions.set(responseData.getResultSet("RENDITIONS_INFO"));
+								renditions.set(responseData.getResultSet("Renditions"));
 							}
 							data.set(baseData);
 							return new UcmGUID(baseData.getString(file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID));
@@ -358,11 +366,22 @@ public class UcmModel {
 		});
 
 		if (history.get() != null) {
-			// TODO: Stash the history...
+			DataResultSet rs = history.get();
+			LinkedList<UcmVersionInfo> list = new LinkedList<>();
+			for (DataObject o : rs.getRows()) {
+				list.addFirst(new UcmVersionInfo(o));
+			}
+			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
 		}
 
 		if (renditions.get() != null) {
-			// TODO: Stash the renditions
+			DataResultSet rs = history.get();
+			Map<String, UcmRenditionInfo> m = new TreeMap<>();
+			for (DataObject o : rs.getRows()) {
+				UcmRenditionInfo r = new UcmRenditionInfo(guid, o);
+				m.put(r.getName(), r);
+			}
+			this.renditionsByGUID.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
 		}
 
 		return ret;
