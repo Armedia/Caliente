@@ -11,55 +11,55 @@ public class UcmFile extends UcmFSObject {
 		super(model, data, UcmAtt.fFileName, UcmAtt.fFileGUID);
 	}
 
-	public String getPublishedFileName() {
+	public String getPublishedFileName() throws UcmException {
 		return getString(UcmAtt.fPublishedFilename);
 	}
 
-	public String getOriginalName() {
+	public String getOriginalName() throws UcmException {
 		return getString(UcmAtt.dOriginalName);
 	}
 
-	public String getAuthor() {
+	public String getAuthor() throws UcmException {
 		return getString(UcmAtt.dDocAuthor);
 	}
 
-	public String getTitle() {
+	public String getTitle() throws UcmException {
 		return getString(UcmAtt.dDocTitle);
 	}
 
-	public int getSize() {
+	public int getSize() throws UcmException {
 		return getInteger(UcmAtt.dFileSize, 0);
 	}
 
-	public String getFormat() {
+	public String getFormat() throws UcmException {
 		return getString(UcmAtt.dFormat);
 	}
 
-	public int getRevisionId() {
+	public int getRevisionId() throws UcmException {
 		return getInteger(UcmAtt.dID, 1);
 	}
 
-	public int getRevisionNumber() {
+	public int getRevisionNumber() throws UcmException {
 		return getInteger(UcmAtt.dRevisionID, 1);
 	}
 
-	public int getPublishedRevisionId() {
+	public int getPublishedRevisionId() throws UcmException {
 		return getInteger(UcmAtt.dPublishedRevisionID, 1);
 	}
 
-	public String getRevisionLabel() {
+	public String getRevisionLabel() throws UcmException {
 		return getString(UcmAtt.dRevLabel);
 	}
 
-	public String getExtension() {
+	public String getExtension() throws UcmException {
 		return getString(UcmAtt.dExtension);
 	}
 
-	public String getContentId() {
+	public String getContentId() throws UcmException {
 		return getString(UcmAtt.dDocName);
 	}
 
-	public Set<String> getRenditionNames() {
+	public Set<String> getRenditionNames() throws UcmException {
 		return null;
 	}
 

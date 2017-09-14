@@ -13,11 +13,11 @@ public class UcmFolder extends UcmFSObject {
 		super(model, data, UcmAtt.fFolderName, UcmAtt.fFolderGUID);
 	}
 
-	public String getDisplayDescription() {
+	public String getDisplayDescription() throws UcmException {
 		return getString(UcmAtt.fDisplayDescription);
 	}
 
-	public String getFolderDescription() {
+	public String getFolderDescription() throws UcmException {
 		return getString(UcmAtt.fFolderDescription);
 	}
 

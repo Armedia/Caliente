@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.ucm;
 
+import java.net.URI;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -22,6 +23,15 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 public class UcmSessionFactoryTest {
 
 	private static final String NULL = "<null>";
+
+	@Test
+	public void test0() throws Exception {
+		URI uri = new URI("file", "somearbitrarygarbage", "fragmentCrap");
+		System.out.printf("%s%n", uri);
+		System.out.printf("SCHEME: %s%n", uri.getScheme());
+		System.out.printf("SSP   : %s%n", uri.getSchemeSpecificPart());
+		System.out.printf("FRAG  : %s%n", uri.getFragment());
+	}
 
 	@Test
 	public void test1() throws Exception {
@@ -139,7 +149,7 @@ public class UcmSessionFactoryTest {
 
 		DataBinder binder = s.createBinder();
 		binder.putLocal("IdcService", "FLD_INFO");
-		binder.putLocal("path", "/");
+		binder.putLocal("path", "/Caliente 3.0 Concept Document v4.0.docx");
 		binder.putLocal("includeFileRenditionsInfo", "1");
 
 		// Join the binder and the user context and perform the service call
