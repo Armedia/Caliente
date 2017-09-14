@@ -17,43 +17,6 @@ import oracle.stellent.ridc.model.DataResultSet;
 
 public class FolderContentsIterator {
 
-	private static enum SearchMode {
-		//
-		BY_PATH {
-			@Override
-			protected void applySearchParameters(DataBinder binder, Object key) {
-				binder.putLocal("path", key.toString());
-			}
-
-			@Override
-			protected Object sanitizeKey(Object key) {
-				return UcmModel.sanitizePath(key != null ? key.toString() : null);
-			}
-		},
-		BY_GUID {
-			@Override
-			protected void applySearchParameters(DataBinder binder, Object key) {
-				UcmGUID guid = UcmGUID.class.cast(key);
-				binder.putLocal("fFolderGUID", guid.getString());
-			}
-		},
-		BY_URI {
-			@Override
-			protected void applySearchParameters(DataBinder binder, Object key) {
-				URI uri = URI.class.cast(key);
-				binder.putLocal("fFolderGUID", uri.getSchemeSpecificPart());
-			}
-		},
-		//
-		;
-
-		protected abstract void applySearchParameters(DataBinder binder, Object key);
-
-		protected Object sanitizeKey(Object key) {
-			return key;
-		}
-	}
-
 	public static final FolderIteratorMode DEFAULT_MODE = FolderIteratorMode.COMBINED;
 
 	public static final int MINIMUM_PAGE_SIZE = 1;
@@ -61,7 +24,7 @@ public class FolderContentsIterator {
 	public static final int MAXIMUM_PAGE_SIZE = 100000;
 
 	private final IdcSession session;
-	private final SearchMode searchMode;
+	private final FolderLocatorMode folderLocatorMode;
 	private final Object searchKey;
 	private final int pageSize;
 	private final FolderIteratorMode folderIteratorMode;
@@ -82,61 +45,61 @@ public class FolderContentsIterator {
 	private boolean completed = false;
 
 	public FolderContentsIterator(IdcSession session, String path) {
-		this(session, SearchMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(IdcSession session, String path, FolderIteratorMode folderIteratorMode) {
-		this(session, SearchMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(IdcSession session, String path, int pageSize) {
-		this(session, SearchMode.BY_PATH, path, null, pageSize);
+		this(session, FolderLocatorMode.BY_PATH, path, null, pageSize);
 	}
 
 	public FolderContentsIterator(IdcSession session, String path, FolderIteratorMode folderIteratorMode,
 		int pageSize) {
-		this(session, SearchMode.BY_PATH, path, folderIteratorMode, pageSize);
+		this(session, FolderLocatorMode.BY_PATH, path, folderIteratorMode, pageSize);
 	}
 
 	public FolderContentsIterator(IdcSession session, UcmGUID guid) {
-		this(session, SearchMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(IdcSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode) {
-		this(session, SearchMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(IdcSession session, UcmGUID guid, int pageSize) {
-		this(session, SearchMode.BY_GUID, guid, null, pageSize);
+		this(session, FolderLocatorMode.BY_GUID, guid, null, pageSize);
 	}
 
 	public FolderContentsIterator(IdcSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode,
 		int pageSize) {
-		this(session, SearchMode.BY_GUID, guid, folderIteratorMode, pageSize);
+		this(session, FolderLocatorMode.BY_GUID, guid, folderIteratorMode, pageSize);
 	}
 
 	public FolderContentsIterator(IdcSession session, URI uri) {
-		this(session, SearchMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(IdcSession session, URI uri, FolderIteratorMode folderIteratorMode) {
-		this(session, SearchMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(IdcSession session, URI uri, int pageSize) {
-		this(session, SearchMode.BY_URI, uri, null, pageSize);
+		this(session, FolderLocatorMode.BY_URI, uri, null, pageSize);
 	}
 
 	public FolderContentsIterator(IdcSession session, URI uri, FolderIteratorMode folderIteratorMode, int pageSize) {
-		this(session, SearchMode.BY_URI, uri, folderIteratorMode, pageSize);
+		this(session, FolderLocatorMode.BY_URI, uri, folderIteratorMode, pageSize);
 	}
 
-	private FolderContentsIterator(IdcSession session, SearchMode searchMode, Object searchKey,
+	FolderContentsIterator(IdcSession session, FolderLocatorMode folderLocatorMode, Object searchKey,
 		FolderIteratorMode folderIteratorMode, int pageSize) {
 		Objects.requireNonNull(session, "Must provide a non-null session");
 		Objects.requireNonNull(searchKey, "Must provide a non-null search criterion");
-		this.searchMode = searchMode;
-		this.searchKey = searchMode.sanitizeKey(searchKey);
+		this.folderLocatorMode = folderLocatorMode;
+		this.searchKey = folderLocatorMode.sanitizeKey(searchKey);
 		this.session = session;
 		this.pageSize = Tools.ensureBetween(FolderContentsIterator.MINIMUM_PAGE_SIZE, pageSize,
 			FolderContentsIterator.MAXIMUM_PAGE_SIZE);
@@ -151,8 +114,8 @@ public class FolderContentsIterator {
 		return this.session;
 	}
 
-	public SearchMode getSearchMode() {
-		return this.searchMode;
+	public FolderLocatorMode getSearchMode() {
+		return this.folderLocatorMode;
 	}
 
 	public Object getSearchKey() {
@@ -174,7 +137,7 @@ public class FolderContentsIterator {
 	private DataBinder getNextBatch() throws IdcClientException {
 		if (this.requestBinder == null) {
 			this.requestBinder = this.session.createBinder();
-			this.searchMode.applySearchParameters(this.requestBinder, this.searchKey);
+			this.folderLocatorMode.applySearchParameters(this.requestBinder, this.searchKey);
 			this.folderIteratorMode.setParameters(this.requestBinder);
 			this.requestBinder.putLocal("IdcService", "FLD_BROWSE");
 		}
