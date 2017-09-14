@@ -17,6 +17,7 @@ import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataObject;
 import oracle.stellent.ridc.model.DataResultSet;
 
+@SuppressWarnings("unused")
 public class UcmModelTest {
 
 	private static final String NULL = "<null>";
