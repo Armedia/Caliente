@@ -19,6 +19,10 @@ public class UcmTools {
 		return this.dataObject;
 	}
 
+	public final boolean hasAttribute(UcmAtt att) {
+		return UcmTools.hasAttribute(this.dataObject, att);
+	}
+
 	public final String getString(UcmAtt att) {
 		return UcmTools.getString(this.dataObject, att);
 	}
@@ -57,6 +61,10 @@ public class UcmTools {
 
 	public final boolean getBoolean(UcmAtt att, boolean def) {
 		return UcmTools.getBoolean(this.dataObject, att, def);
+	}
+
+	public static final boolean hasAttribute(DataObject data, UcmAtt att) {
+		return data.containsKey(att.name());
 	}
 
 	public static final String getString(DataObject data, UcmAtt att) {

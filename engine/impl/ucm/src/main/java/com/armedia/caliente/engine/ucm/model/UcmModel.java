@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.jcs.JCS;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 
@@ -30,14 +31,7 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 public class UcmModel {
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 
-	private static final URI NULLURI;
-	static {
-		try {
-			NULLURI = new URI("null://null");
-		} catch (URISyntaxException e) {
-			throw new RuntimeException("Unexpected URI syntax exception", e);
-		}
-	}
+	private static final URI NULLURI = UcmModel.newURI("null", "null");
 
 	// GUID -> DataObject
 	private final KeyLockableCache<UcmGUID, DataObject> objectByGUID;
@@ -57,7 +51,7 @@ public class UcmModel {
 	private final KeyLockableCache<URI, List<UcmGUID>> historyByContentID;
 
 	// GUID -> URI
-	private final KeyLockableCache<UcmGUID, URI> guidToURI;
+	private final KeyLockableCache<UcmGUID, URI> uriByGUID;
 
 	// These are so we don't construct the same objects over and over again...
 	private final KeyLockableCache<URI, UcmFileHistory> historyInstances;
@@ -75,7 +69,7 @@ public class UcmModel {
 		this.childrenByURI = new KeyLockableCache<>(1000);
 		this.historyByContentID = new KeyLockableCache<>(1000);
 		this.objectByGUID = new KeyLockableCache<>(1000);
-		this.guidToURI = new KeyLockableCache<>(1000);
+		this.uriByGUID = new KeyLockableCache<>(1000);
 		this.historyInstances = new KeyLockableCache<>(1000);
 		this.fileInstances = new KeyLockableCache<>(1000);
 		this.folderInstances = new KeyLockableCache<>(1000);
@@ -104,7 +98,6 @@ public class UcmModel {
 	protected URI resolvePath(String p) throws UcmServiceException, UcmFileNotFoundException {
 		final String sanitizedPath = UcmModel.sanitizePath(p);
 		URI uri = this.uriByPaths.get(sanitizedPath);
-
 		final AtomicReference<UcmTools> data = new AtomicReference<>(null);
 		if (uri == null) {
 			try {
@@ -150,10 +143,10 @@ public class UcmModel {
 							data.set(new UcmTools(responseData.getResultSet("FileInfo").getRows().get(0)));
 
 							String guid = data.get().getString(UcmAtt.dDocName);
-							if (guid != null) { return new URI("file", guid, null); }
+							if (guid != null) { return UcmModel.newURI("file", guid, null); }
 
 							guid = data.get().getString(UcmAtt.fFolderGUID);
-							if (guid != null) { return new URI("folder", guid, null); }
+							if (guid != null) { return UcmModel.newURI("folder", guid, null); }
 
 							throw new UcmServiceException(String
 								.format("Path [%s] was found, but was neither a file nor a folder?!?", sanitizedPath));
@@ -170,20 +163,59 @@ public class UcmModel {
 			}
 		}
 
-		if (data != null) {
-			// There's an object...so stash it
-			cacheDataObject(data.get().getDataObject());
-		}
+		// There's an object...so stash it
+		cacheDataObject(data.get());
 
 		if (Tools.equals(UcmModel.NULLURI,
 			uri)) { throw new UcmFileNotFoundException(String.format("No object found at path [%s]", sanitizedPath)); }
 		return uri;
 	}
 
-	protected void cacheDataObject(DataObject dataObject) {
-		// Is this a file or a folder?
+	protected final void cacheDataObject(DataObject object) {
+		if (object == null) { return; }
+		cacheDataObject(new UcmTools(object));
+	}
 
-		// Where shall I cache it?
+	protected void cacheDataObject(UcmTools data) {
+		if (data == null) { return; }
+		// Is this a file or a folder?
+		final boolean file = data.hasAttribute(UcmAtt.dDocName);
+		UcmAtt guidAtt = (file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
+		final UcmGUID guid = new UcmGUID(data.getString(guidAtt));
+		final URI uri = (file ? UcmModel.newURI("file", data.getString(UcmAtt.dDocName))
+			: UcmModel.newURI("folder", data.getString(UcmAtt.fFolderGUID)));
+
+		this.objectByGUID.put(guid, data.getDataObject());
+		if (data.hasAttribute(UcmAtt.fParentGUID)) {
+			this.parentByURI.put(uri, UcmModel.newURI("folder", data.getString(UcmAtt.fParentGUID), null));
+		}
+		this.uriByGUID.put(guid, uri);
+	}
+
+	protected static final URI getURI(DataObject dataObject) {
+		return UcmModel.getURI(new UcmTools(dataObject));
+	}
+
+	protected static final URI getURI(UcmTools data) {
+		final boolean file = data.hasAttribute(UcmAtt.dDocName);
+		return (file ? UcmModel.newURI("file", data.getString(UcmAtt.dDocName))
+			: UcmModel.newURI("folder", data.getString(UcmAtt.fFolderGUID)));
+	}
+
+	protected static final URI newURI(String scheme, String ssp) {
+		return UcmModel.newURI(scheme, ssp, null);
+	}
+
+	protected static final URI newURI(String scheme, String ssp, String fragment) {
+		if (StringUtils.isEmpty(scheme)) { throw new IllegalArgumentException("The URI scheme may not be empty"); }
+		if (StringUtils
+			.isEmpty(ssp)) { throw new IllegalArgumentException("The URI scheme-specific part may not be empty"); }
+		try {
+			return new URI(scheme, ssp, fragment);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException(
+				String.format("Failed to construct a URI using ([%s], [%s], [%s])", scheme, ssp, fragment), e);
+		}
 	}
 
 	protected DataObject getDataObject(URI uri) throws UcmServiceException {
