@@ -1,6 +1,6 @@
 package com.armedia.caliente.engine.ucm.model;
 
-public class UcmFolderNotFoundException extends UcmException {
+public class UcmFolderNotFoundException extends UcmObjectNotFoundException {
 	private static final long serialVersionUID = 1L;
 
 	public UcmFolderNotFoundException() {

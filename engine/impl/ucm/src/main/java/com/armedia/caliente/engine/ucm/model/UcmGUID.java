@@ -20,11 +20,11 @@ public final class UcmGUID implements Comparable<UcmGUID>, Serializable {
 		try {
 			Hex.decodeHex(guid.toCharArray());
 			if (guid.length() < 32) {
-				// Ensure the GUID is 32 characters (16 bytes) long
+				// Ensure the BY_GUID is 32 characters (16 bytes) long
 				guid = StringUtils.leftPad(guid, 32, '0');
 			}
 		} catch (DecoderException e) {
-			// Do nothing - this is a special GUID...just don't pad it
+			// Do nothing - this is a special BY_GUID...just don't pad it
 		}
 		this.string = guid.toUpperCase();
 	}

@@ -90,10 +90,10 @@ public class UcmSessionFactoryTest {
 		while (it.hasNext()) {
 			System.out.printf("Item [%d] (p%d, c%d):%n", it.getCurrentPos(), it.getPageCount(), it.getCurrentInPage());
 			System.out.printf("%s%n", StringUtils.repeat('-', 40));
-			System.out.printf("\t%s%n", it.next());
+			dumpObject(1, it.next());
 		}
 
-		System.out.printf("Base Folder @ [%s]:%n", it.getPath());
+		System.out.printf("Base Folder @ [%s]:%n", it.getSearchKey());
 		System.out.printf("%s%n", StringUtils.repeat('-', 40));
 		System.out.printf("\t%s%n", it.getFolder());
 	}
@@ -115,7 +115,7 @@ public class UcmSessionFactoryTest {
 
 		DataBinder binder = s.createBinder();
 		binder.putLocal("IdcService", "FLD_BROWSE");
-		binder.putLocal("path", "/");
+		binder.putLocal("path", "/Caliente 3.0 Concept Document v4.0.docx");
 		binder.putLocal("doCombinedBrowse", "1");
 		binder.putLocal("foldersFirst", "1");
 

@@ -1,13 +1,11 @@
 package com.armedia.caliente.engine.ucm.model;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.regex.Pattern;
-
-import org.apache.commons.io.FilenameUtils;
 
 import com.armedia.caliente.engine.ucm.IdcSession;
 import com.armedia.commons.utilities.Tools;
@@ -19,7 +17,42 @@ import oracle.stellent.ridc.model.DataResultSet;
 
 public class FolderContentsIterator {
 
-	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
+	private static enum SearchMode {
+		//
+		BY_PATH {
+			@Override
+			protected void applySearchParameters(DataBinder binder, Object key) {
+				binder.putLocal("path", key.toString());
+			}
+
+			@Override
+			protected Object sanitizeKey(Object key) {
+				return UcmModel.sanitizePath(key != null ? key.toString() : null);
+			}
+		},
+		BY_GUID {
+			@Override
+			protected void applySearchParameters(DataBinder binder, Object key) {
+				UcmGUID guid = UcmGUID.class.cast(key);
+				binder.putLocal("fFolderGUID", guid.getString());
+			}
+		},
+		BY_URI {
+			@Override
+			protected void applySearchParameters(DataBinder binder, Object key) {
+				URI uri = URI.class.cast(key);
+				binder.putLocal("fFolderGUID", uri.getSchemeSpecificPart());
+			}
+		},
+		//
+		;
+
+		protected abstract void applySearchParameters(DataBinder binder, Object key);
+
+		protected Object sanitizeKey(Object key) {
+			return key;
+		}
+	}
 
 	public static final FolderIteratorMode DEFAULT_MODE = FolderIteratorMode.COMBINED;
 
@@ -28,7 +61,8 @@ public class FolderContentsIterator {
 	public static final int MAXIMUM_PAGE_SIZE = 100000;
 
 	private final IdcSession session;
-	private final String path;
+	private final SearchMode searchMode;
+	private final Object searchKey;
 	private final int pageSize;
 	private final FolderIteratorMode folderIteratorMode;
 
@@ -48,37 +82,61 @@ public class FolderContentsIterator {
 	private boolean completed = false;
 
 	public FolderContentsIterator(IdcSession session, String path) {
-		this(session, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, SearchMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(IdcSession session, String path, FolderIteratorMode folderIteratorMode) {
-		this(session, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, SearchMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(IdcSession session, String path, int pageSize) {
-		this(session, path, null, pageSize);
-	}
-
-	static String sanitizePath(String path) {
-		Objects.requireNonNull(path, "Must provide a non-null path");
-		if (!FolderContentsIterator.PATH_CHECKER.matcher(path).matches()) {
-			// Single separators...
-			path = path.replaceAll("/+", "/");
-			// Make sure there's a leading separator
-			if (!path.startsWith("/")) {
-				path = String.format("/%s", path);
-			}
-		}
-		String newPath = FilenameUtils.normalizeNoEndSeparator(path, true);
-		if (newPath == null) { throw new IllegalArgumentException(
-			String.format("The given path [%s] is invalid - too may '..' elements", path)); }
-		return newPath;
+		this(session, SearchMode.BY_PATH, path, null, pageSize);
 	}
 
 	public FolderContentsIterator(IdcSession session, String path, FolderIteratorMode folderIteratorMode,
 		int pageSize) {
+		this(session, SearchMode.BY_PATH, path, folderIteratorMode, pageSize);
+	}
+
+	public FolderContentsIterator(IdcSession session, UcmGUID guid) {
+		this(session, SearchMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+	}
+
+	public FolderContentsIterator(IdcSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode) {
+		this(session, SearchMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+	}
+
+	public FolderContentsIterator(IdcSession session, UcmGUID guid, int pageSize) {
+		this(session, SearchMode.BY_GUID, guid, null, pageSize);
+	}
+
+	public FolderContentsIterator(IdcSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode,
+		int pageSize) {
+		this(session, SearchMode.BY_GUID, guid, folderIteratorMode, pageSize);
+	}
+
+	public FolderContentsIterator(IdcSession session, URI uri) {
+		this(session, SearchMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+	}
+
+	public FolderContentsIterator(IdcSession session, URI uri, FolderIteratorMode folderIteratorMode) {
+		this(session, SearchMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+	}
+
+	public FolderContentsIterator(IdcSession session, URI uri, int pageSize) {
+		this(session, SearchMode.BY_URI, uri, null, pageSize);
+	}
+
+	public FolderContentsIterator(IdcSession session, URI uri, FolderIteratorMode folderIteratorMode, int pageSize) {
+		this(session, SearchMode.BY_URI, uri, folderIteratorMode, pageSize);
+	}
+
+	private FolderContentsIterator(IdcSession session, SearchMode searchMode, Object searchKey,
+		FolderIteratorMode folderIteratorMode, int pageSize) {
 		Objects.requireNonNull(session, "Must provide a non-null session");
-		this.path = FolderContentsIterator.sanitizePath(path);
+		Objects.requireNonNull(searchKey, "Must provide a non-null search criterion");
+		this.searchMode = searchMode;
+		this.searchKey = searchMode.sanitizeKey(searchKey);
 		this.session = session;
 		this.pageSize = Tools.ensureBetween(FolderContentsIterator.MINIMUM_PAGE_SIZE, pageSize,
 			FolderContentsIterator.MAXIMUM_PAGE_SIZE);
@@ -93,8 +151,12 @@ public class FolderContentsIterator {
 		return this.session;
 	}
 
-	public String getPath() {
-		return this.path;
+	public SearchMode getSearchMode() {
+		return this.searchMode;
+	}
+
+	public Object getSearchKey() {
+		return this.searchKey;
 	}
 
 	public int getPageCount() {
@@ -112,9 +174,9 @@ public class FolderContentsIterator {
 	private DataBinder getNextBatch() throws IdcClientException {
 		if (this.requestBinder == null) {
 			this.requestBinder = this.session.createBinder();
-			this.requestBinder.putLocal("IdcService", "FLD_BROWSE");
-			this.requestBinder.putLocal("path", this.path);
+			this.searchMode.applySearchParameters(this.requestBinder, this.searchKey);
 			this.folderIteratorMode.setParameters(this.requestBinder);
+			this.requestBinder.putLocal("IdcService", "FLD_BROWSE");
 		}
 
 		this.requestBinder.putLocal(this.folderIteratorMode.count, String.valueOf(this.pageSize));

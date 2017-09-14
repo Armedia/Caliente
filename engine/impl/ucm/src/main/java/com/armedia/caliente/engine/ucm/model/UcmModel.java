@@ -31,7 +31,6 @@ import oracle.stellent.ridc.model.DataResultSet;
 import oracle.stellent.ridc.protocol.ServiceException;
 import oracle.stellent.ridc.protocol.ServiceResponse;
 
-@SuppressWarnings("unused")
 public class UcmModel {
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 
@@ -42,7 +41,7 @@ public class UcmModel {
 	private static final URI NULLURI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
 	private static final UcmGUID NULLGUID = new UcmGUID("<null>");
 
-	// GUID -> DataObject
+	// BY_GUID -> DataObject
 	private final KeyLockableCache<UcmGUID, DataObject> objectByGUID;
 
 	// path -> file://${dDocName}
@@ -59,13 +58,13 @@ public class UcmModel {
 	// URI -> List<UcmGUID>
 	private final KeyLockableCache<URI, List<UcmVersionInfo>> historyByURI;
 
-	// GUID -> Map<String, UcmRenditionInfo>
+	// BY_GUID -> Map<String, UcmRenditionInfo>
 	private final KeyLockableCache<UcmGUID, Map<String, UcmRenditionInfo>> renditionsByGUID;
 
-	// URI -> GUID
+	// URI -> BY_GUID
 	private final KeyLockableCache<URI, UcmGUID> guidByURI;
 
-	// GUID -> URI
+	// BY_GUID -> URI
 	private final KeyLockableCache<UcmGUID, URI> uriByGUID;
 
 	// These are so we don't construct the same objects over and over again...
@@ -167,15 +166,19 @@ public class UcmModel {
 	 * @return the file at the given path
 	 * @throws UcmServiceException
 	 *             if there's a communications problem
-	 * @throws UcmObjectNotFoundException
+	 * @throws UcmFileNotFoundException
 	 *             if there is no file at that path
 	 */
-	public UcmFile getFile(String path) throws UcmServiceException, UcmObjectNotFoundException {
-		URI uri = resolvePath(path);
-		DataObject object = getDataObject(uri);
-		// TODO: should we try to find a cached UcmFile instance instead, and avoid wild
-		// construction?
-		return new UcmFile(this, object);
+	public UcmFile getFile(String path) throws UcmServiceException, UcmFileNotFoundException {
+		try {
+			URI uri = resolvePath(path);
+			DataObject object = getDataObject(uri);
+			// TODO: should we try to find a cached UcmFile instance instead, and avoid wild
+			// construction?
+			return new UcmFile(this, object);
+		} catch (UcmObjectNotFoundException e) {
+			throw new UcmFileNotFoundException(e.getMessage(), e);
+		}
 	}
 
 	protected URI resolvePath(String p) throws UcmServiceException, UcmObjectNotFoundException {
@@ -187,8 +190,13 @@ public class UcmModel {
 				uri = this.uriByPaths.createIfAbsent(sanitizedPath, new ConcurrentInitializer<URI>() {
 					@Override
 					public URI get() throws ConcurrentException {
+						final SessionWrapper<IdcSession> w;
 						try {
-							SessionWrapper<IdcSession> w = UcmModel.this.sessionFactory.acquireSession();
+							w = UcmModel.this.sessionFactory.acquireSession();
+						} catch (Exception e) {
+							throw new ConcurrentException("Failed to acquire an RIDC session", e);
+						}
+						try {
 							IdcSession s = w.getWrapped();
 
 							DataBinder binder = s.createBinder();
@@ -242,6 +250,8 @@ public class UcmModel {
 								sanitizedPath));
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
+						} finally {
+							w.close();
 						}
 					}
 				});
@@ -267,7 +277,7 @@ public class UcmModel {
 			// The SSP is the dDocName
 			file = true;
 		} else if (isFolder(uri)) {
-			// The SSP is the GUID
+			// The SSP is the BY_GUID
 			file = false;
 		} else {
 			// WTF?? Invalid URI
@@ -283,8 +293,13 @@ public class UcmModel {
 				guid = this.guidByURI.createIfAbsent(uri, new ConcurrentInitializer<UcmGUID>() {
 					@Override
 					public UcmGUID get() throws ConcurrentException {
+						final SessionWrapper<IdcSession> w;
 						try {
-							SessionWrapper<IdcSession> w = UcmModel.this.sessionFactory.acquireSession();
+							w = UcmModel.this.sessionFactory.acquireSession();
+						} catch (Exception e) {
+							throw new ConcurrentException("Failed to acquire an RIDC session", e);
+						}
+						try {
 							IdcSession s = w.getWrapped();
 
 							DataBinder binder = s.createBinder();
@@ -343,6 +358,8 @@ public class UcmModel {
 							return new UcmGUID(baseData.getString(file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID));
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
+						} finally {
+							w.close();
 						}
 					}
 				});
@@ -357,6 +374,7 @@ public class UcmModel {
 			guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri)); }
 
 		DataObject ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<DataObject>() {
+
 			@Override
 			public DataObject get() throws ConcurrentException {
 				UcmTools ret = data.get();
@@ -366,6 +384,7 @@ public class UcmModel {
 		});
 
 		if (history.get() != null) {
+
 			DataResultSet rs = history.get();
 			LinkedList<UcmVersionInfo> list = new LinkedList<>();
 			for (DataObject o : rs.getRows()) {
@@ -385,6 +404,108 @@ public class UcmModel {
 		}
 
 		return ret;
+	}
+
+	protected Map<String, URI> getChildren(String path) throws UcmServiceException, UcmFolderNotFoundException {
+		try {
+			return getFolderContents(resolvePath(path));
+		} catch (UcmObjectNotFoundException e) {
+			throw new UcmFolderNotFoundException(e.getMessage(), e);
+		}
+	}
+
+	protected Map<String, URI> getFolderContents(final UcmGUID guid)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		Objects.requireNonNull(guid, "Must provide a BY_GUID to search for");
+		// If it's a folder URI we already know the SSP is the BY_GUID, so... go!
+		return getFolderContents(UcmModel.newURI(UcmModel.FOLDER_SCHEME, guid.getString()));
+	}
+
+	protected Map<String, URI> getFolderContents(final URI uri) throws UcmServiceException, UcmFolderNotFoundException {
+		Objects.requireNonNull(uri, "Must provide a URI to search for");
+		if (!UcmModel.FOLDER_SCHEME.equals(uri.getScheme())) { return null; }
+
+		Map<String, URI> children = this.childrenByURI.get(uri);
+		if (children != null) { return children; }
+
+		final AtomicReference<UcmTools> data = new AtomicReference<>(null);
+		final AtomicReference<Map<String, DataObject>> rawChildren = new AtomicReference<>(null);
+		if (children == null) {
+			try {
+				children = this.childrenByURI.createIfAbsent(uri, new ConcurrentInitializer<Map<String, URI>>() {
+					@Override
+					public Map<String, URI> get() throws ConcurrentException {
+						final SessionWrapper<IdcSession> w;
+						try {
+							w = UcmModel.this.sessionFactory.acquireSession();
+						} catch (Exception e) {
+							throw new ConcurrentException("Failed to acquire an RIDC session", e);
+						}
+						try {
+							IdcSession s = w.getWrapped();
+							try {
+								Map<String, URI> children = new TreeMap<>();
+								Map<String, DataObject> dataObjects = new TreeMap<>();
+								FolderContentsIterator it = new FolderContentsIterator(s, UcmModel.FILE_SCHEME);
+								while (it.hasNext()) {
+									DataObject o = it.next();
+
+									UcmTools t = new UcmTools(o);
+									URI childUri = null;
+									String name = t.getString(UcmAtt.fFileName);
+									if (name != null) {
+										// It's a file...
+										childUri = UcmModel.newURI(UcmModel.FILE_SCHEME, t.getString(UcmAtt.dDocName));
+									} else {
+										// It's a folder...
+										name = t.getString(UcmAtt.fFolderName);
+										childUri = UcmModel.newURI(UcmModel.FOLDER_SCHEME,
+											t.getString(UcmAtt.fFolderGUID));
+									}
+									children.put(name, childUri);
+									dataObjects.put(name, o);
+								}
+								rawChildren.set(dataObjects);
+								data.set(new UcmTools(it.getFolder()));
+								return children;
+							} catch (final IdcClientException e) {
+								// Is this a service exception from which we can identify that the
+								// item doesn't exist?
+								if (!ServiceException.class.isInstance(e)) {
+									// No, this isn't an exception we can analyze...
+									throw new UcmServiceException(
+										String.format("Exception caught retrieving the URI [%s]", uri), e);
+								}
+
+								// This may be an analyzable exception
+								ServiceException se = ServiceException.class.cast(e);
+								String mk = se.getBinder().getLocal("StatusMessageKey");
+								if (mk.startsWith("!csFldDoesNotExist,")) {
+									// This is an exception telling us the item doesn't exist!!
+									throw new UcmFolderNotFoundException(
+										String.format("No object found with URI [%s]", uri));
+								}
+
+								// This is a "regular" exception that we simply re-raise
+								throw e;
+							}
+						} catch (Exception e) {
+							throw new ConcurrentException(e);
+						} finally {
+							w.close();
+						}
+					}
+				});
+			} catch (ConcurrentException e) {
+				Throwable cause = e.getCause();
+				UcmModel.throwIfMatches(UcmServiceException.class, cause);
+				UcmModel.throwIfMatches(UcmFolderNotFoundException.class, cause);
+				throw new UcmServiceException(
+					String.format("Exception caught finding the folder contents for URI [%s]", uri), cause);
+			}
+		}
+
+		return children;
 	}
 
 	/**
