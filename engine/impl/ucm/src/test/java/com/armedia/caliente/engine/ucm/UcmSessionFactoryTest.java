@@ -139,35 +139,40 @@ public class UcmSessionFactoryTest {
 
 	@Test
 	public void test3() throws Exception {
-		UcmSessionFactory factory = null;
-		CmfCrypt crypto = new CmfCrypt();
-		Map<String, String> settingsMap = new TreeMap<>();
-		CfgTools settings = new CfgTools(settingsMap);
+		try {
+			UcmSessionFactory factory = null;
+			CmfCrypt crypto = new CmfCrypt();
+			Map<String, String> settingsMap = new TreeMap<>();
+			CfgTools settings = new CfgTools(settingsMap);
 
-		settingsMap.put(UcmSessionSetting.USER.getLabel(), "weblogic");
-		settingsMap.put(UcmSessionSetting.PASSWORD.getLabel(), "system01");
-		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
+			settingsMap.put(UcmSessionSetting.USER.getLabel(), "weblogic");
+			settingsMap.put(UcmSessionSetting.PASSWORD.getLabel(), "system01");
+			settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
 
-		factory = new UcmSessionFactory(settings, crypto);
-		SessionWrapper<IdcSession> w = factory.acquireSession();
-		IdcSession s = w.getWrapped();
+			factory = new UcmSessionFactory(settings, crypto);
+			SessionWrapper<IdcSession> w = factory.acquireSession();
+			IdcSession s = w.getWrapped();
 
-		DataBinder binder = s.createBinder();
-		binder.putLocal("IdcService", "DOC_INFO_BY_NAME");
-		binder.putLocal("dDocName", "ARMDEC6AAP9055000001");
-		binder.putLocal("includeFileRenditionsInfo", "1");
+			DataBinder binder = s.createBinder();
+			binder.putLocal("IdcService", "DOC_INFO_BY_NAME");
+			// binder.putLocal("dDocName", "ARMDEC6AAP9055000001");
+			binder.putLocal("dDocName", "SOME!THI,NG!WEI RD!!");
+			binder.putLocal("includeFileRenditionsInfo", "1");
 
-		// Join the binder and the user context and perform the service call
-		ServiceResponse response = s.sendRequest(binder);
-		DataBinder responseData = response.getResponseAsBinder();
+			// Join the binder and the user context and perform the service call
+			ServiceResponse response = s.sendRequest(binder);
+			DataBinder responseData = response.getResponseAsBinder();
 
-		for (String rs : responseData.getResultSetNames()) {
-			dumpMap(rs, responseData.getResultSet(rs));
+			for (String rs : responseData.getResultSetNames()) {
+				dumpMap(rs, responseData.getResultSet(rs));
+			}
+
+			System.out.printf("Local Data%n");
+			System.out.printf("%s%n", StringUtils.repeat('-', 80));
+			dumpObject(1, responseData.getLocalData());
+		} catch (Exception e) {
+			e.hashCode();
 		}
-
-		System.out.printf("Local Data%n");
-		System.out.printf("%s%n", StringUtils.repeat('-', 80));
-		dumpObject(1, responseData.getLocalData());
 	}
 
 	@Test

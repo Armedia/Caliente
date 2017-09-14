@@ -34,8 +34,8 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 public class UcmModel {
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 
-	static final String FILE_SCHEME = "file";
-	static final String FOLDER_SCHEME = "folder";
+	private static final String FILE_SCHEME = "file";
+	private static final String FOLDER_SCHEME = "folder";
 	private static final String NULL_SCHEME = "null";
 
 	private static final URI NULLURI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
@@ -129,12 +129,20 @@ public class UcmModel {
 
 	protected static final URI getURI(UcmTools data) {
 		final boolean file = data.hasAttribute(UcmAtt.dDocName);
-		return (file ? UcmModel.newURI(UcmModel.FILE_SCHEME, data.getString(UcmAtt.dDocName))
-			: UcmModel.newURI(UcmModel.FOLDER_SCHEME, data.getString(UcmAtt.fFolderGUID)));
+		return (file ? UcmModel.newFileURI(data.getString(UcmAtt.dDocName))
+			: UcmModel.newFolderURI(data.getString(UcmAtt.fFolderGUID)));
 	}
 
-	protected static final URI newURI(String scheme, String ssp) {
+	private static final URI newURI(String scheme, String ssp) {
 		return UcmModel.newURI(scheme, ssp, null);
+	}
+
+	protected static final URI newFileURI(String ssp) {
+		return UcmModel.newURI(UcmModel.FILE_SCHEME, ssp, null);
+	}
+
+	protected static final URI newFolderURI(String ssp) {
+		return UcmModel.newURI(UcmModel.FOLDER_SCHEME, ssp, null);
 	}
 
 	protected static final URI newURI(String scheme, String ssp, String fragment) {
@@ -147,6 +155,34 @@ public class UcmModel {
 			throw new RuntimeException(
 				String.format("Failed to construct a URI using ([%s], [%s], [%s])", scheme, ssp, fragment), e);
 		}
+	}
+
+	protected final boolean isNotFoundException(IdcClientException e, String fmt, Object... args)
+		throws UcmServiceException, IdcClientException {
+		if (e == null) { return false; }
+
+		// Is this a service exception from which we can identify that the
+		// item doesn't exist?
+		if (!ServiceException.class.isInstance(e)) {
+			// No, this isn't an exception we can analyze...
+			throw new UcmServiceException(String.format(fmt, args), e);
+		}
+
+		// This may be an analyzable exception
+		ServiceException se = ServiceException.class.cast(e);
+		String mk = se.getBinder().getLocal("StatusMessageKey");
+		for (List<String> l : UcmExceptionData.parseMessages(mk)) {
+			if (!l.isEmpty()) {
+				String op = l.get(0);
+				if (Tools.equals(op, "csFldDoesNotExist") || //
+					Tools.equals(op, "csUnableToGetRevInfo2") || //
+					Tools.equals(op, "csGetFileUnableToFindRevision")) {
+					// TODO: Maybe we have to index more error labels here?
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	protected boolean isFile(URI uri) {
@@ -209,23 +245,8 @@ public class UcmModel {
 								response = s.sendRequest(binder);
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
-								// Is this a service exception from which we can identify that the
-								// item doesn't exist?
-								if (!ServiceException.class.isInstance(e)) {
-									// No, this isn't an exception we can analyze...
-									throw new UcmServiceException(
-										String.format("Exception caught retrieving the file at [%s]", sanitizedPath),
-										e);
-								}
-
-								// This may be an analyzable exception
-								ServiceException se = ServiceException.class.cast(e);
-								String mk = se.getBinder().getLocal("StatusMessageKey");
-								if (mk.startsWith("!csFldDoesNotExist,")) {
-									// This is an exception telling us the item doesn't exist!!
-									return UcmModel.NULLURI;
-								}
-
+								if (isNotFoundException(e, "Exception caught retrieving the file at [%s]",
+									sanitizedPath)) { return UcmModel.NULLURI; }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -319,22 +340,8 @@ public class UcmModel {
 								response = s.sendRequest(binder);
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
-								// Is this a service exception from which we can identify that the
-								// item doesn't exist?
-								if (!ServiceException.class.isInstance(e)) {
-									// No, this isn't an exception we can analyze...
-									throw new UcmServiceException(
-										String.format("Exception caught retrieving the URI [%s]", uri), e);
-								}
-
-								// This may be an analyzable exception
-								ServiceException se = ServiceException.class.cast(e);
-								String mk = se.getBinder().getLocal("StatusMessageKey");
-								if (mk.startsWith("!csFldDoesNotExist,")) {
-									// This is an exception telling us the item doesn't exist!!
-									return UcmModel.NULLGUID;
-								}
-
+								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
+									uri)) { return UcmModel.NULLGUID; }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -423,6 +430,7 @@ public class UcmModel {
 
 	protected Map<String, URI> getFolderContents(final URI uri) throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
+		// If this isn't a folder, we don't even try it...
 		if (!UcmModel.FOLDER_SCHEME.equals(uri.getScheme())) { return null; }
 
 		Map<String, URI> children = this.childrenByURI.get(uri);
@@ -469,23 +477,9 @@ public class UcmModel {
 								data.set(new UcmTools(it.getFolder()));
 								return children;
 							} catch (final IdcClientException e) {
-								// Is this a service exception from which we can identify that the
-								// item doesn't exist?
-								if (!ServiceException.class.isInstance(e)) {
-									// No, this isn't an exception we can analyze...
-									throw new UcmServiceException(
-										String.format("Exception caught retrieving the URI [%s]", uri), e);
-								}
-
-								// This may be an analyzable exception
-								ServiceException se = ServiceException.class.cast(e);
-								String mk = se.getBinder().getLocal("StatusMessageKey");
-								if (mk.startsWith("!csFldDoesNotExist,")) {
-									// This is an exception telling us the item doesn't exist!!
-									throw new UcmFolderNotFoundException(
-										String.format("No object found with URI [%s]", uri));
-								}
-
+								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
+									uri)) { throw new UcmFolderNotFoundException(
+										String.format("No object found with URI [%s]", uri)); }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -502,6 +496,18 @@ public class UcmModel {
 				UcmModel.throwIfMatches(UcmFolderNotFoundException.class, cause);
 				throw new UcmServiceException(
 					String.format("Exception caught finding the folder contents for URI [%s]", uri), cause);
+			}
+		}
+
+		if (data.get() != null) {
+			// We did fetch the information, so we update the cached object
+			cacheDataObject(data.get());
+		}
+
+		if (rawChildren.get() != null) {
+			Map<String, DataObject> c = rawChildren.get();
+			for (String name : c.keySet()) {
+				cacheDataObject(c.get(name));
 			}
 		}
 

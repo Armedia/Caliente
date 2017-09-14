@@ -31,7 +31,7 @@ public class UcmVersionInfo {
 		this.status = Status.valueOf(data.getString(UcmAtt.dStatus).toUpperCase());
 		this.revLabel = data.getString(UcmAtt.dRevLabel);
 		this.revisionId = data.getInteger(UcmAtt.dRevisionID);
-		this.uri = UcmModel.newURI(UcmModel.FILE_SCHEME, data.getString(UcmAtt.dDocName));
+		this.uri = UcmModel.getURI(obj);
 	}
 
 	public String getAuthor() {
