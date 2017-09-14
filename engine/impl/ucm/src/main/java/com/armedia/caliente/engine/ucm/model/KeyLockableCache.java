@@ -41,11 +41,11 @@ public class KeyLockableCache<K, V> {
 		this.cache = Collections.synchronizedMap(cache);
 	}
 
-	public Lock getExclusiveLock(K key) {
+	public final Lock getExclusiveLock(K key) {
 		return this.locks.getLock(key).writeLock();
 	}
 
-	public Lock getSharedLock(K key) {
+	public final Lock getSharedLock(K key) {
 		return this.locks.getLock(key).readLock();
 	}
 
@@ -57,7 +57,7 @@ public class KeyLockableCache<K, V> {
 		return this.locks.getLock(key).isWriteLockedByCurrentThread();
 	}
 
-	public V get(K key) {
+	public final V get(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		// This construct helps avoid deadlocks while preserving concurrency where possible
 		Lock l = getSharedLock(key);
@@ -70,7 +70,7 @@ public class KeyLockableCache<K, V> {
 		}
 	}
 
-	public V createIfAbsent(K key, ConcurrentInitializer<V> initializer) throws ConcurrentException {
+	public final V createIfAbsent(K key, ConcurrentInitializer<V> initializer) throws ConcurrentException {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		Objects.requireNonNull(initializer, "Must provide a non-null initializer");
 		final Lock l = getExclusiveLock(key);
@@ -100,7 +100,7 @@ public class KeyLockableCache<K, V> {
 		}
 	}
 
-	public V create(K key, ConcurrentInitializer<V> initializer) throws ConcurrentException {
+	public final V create(K key, ConcurrentInitializer<V> initializer) throws ConcurrentException {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		Objects.requireNonNull(initializer, "Must provide a non-null initializer");
 
@@ -124,7 +124,7 @@ public class KeyLockableCache<K, V> {
 		}
 	}
 
-	public V put(K key, V value) {
+	public final V put(K key, V value) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 
 		if (value == null) { return remove(key); }
@@ -143,7 +143,7 @@ public class KeyLockableCache<K, V> {
 		}
 	}
 
-	public V remove(K key) {
+	public final V remove(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		final Lock l = getExclusiveLock(key);
 		l.lock();
@@ -155,15 +155,15 @@ public class KeyLockableCache<K, V> {
 		}
 	}
 
-	public int size() {
+	public final int size() {
 		return this.cache.size();
 	}
 
-	public boolean isEmpty() {
+	public final boolean isEmpty() {
 		return this.cache.isEmpty();
 	}
 
-	public boolean containsValueForKey(K key) {
+	public final boolean containsValueForKey(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		// This construct helps avoid deadlocks while preserving concurrency where possible
 		final Lock l = getSharedLock(key);
@@ -176,7 +176,7 @@ public class KeyLockableCache<K, V> {
 		}
 	}
 
-	public void putAll(Map<? extends K, ? extends V> m) {
+	public final void putAll(Map<? extends K, ? extends V> m) {
 		for (Map.Entry<? extends K, ? extends V> e : m.entrySet()) {
 			K key = e.getKey();
 			V value = e.getValue();
@@ -186,15 +186,15 @@ public class KeyLockableCache<K, V> {
 		}
 	}
 
-	public void clear() {
+	public final void clear() {
 		this.cache.clear();
 	}
 
-	public Set<K> getKeys() {
+	public final Set<K> getKeys() {
 		return new LinkedHashSet<>(this.cache.keySet());
 	}
 
-	public Collection<V> values() {
+	public final Collection<V> values() {
 		Collection<Reference<V>> c = new ArrayList<>(this.cache.values());
 		Collection<V> ret = new ArrayList<>();
 		for (Reference<V> r : c) {
