@@ -63,13 +63,17 @@ public class UcmModel {
 	private final Map<URI, URI> parentsByURI;
 	private Locker<URI> parentsByURILocks = new Locker<>();
 
+	// parentURI -> childURI
+	private final Map<URI, URI> childrenByURI;
+	private Locker<URI> childrenByURILocks = new Locker<>();
+
 	// URI -> List<UcmGUID>
 	private Map<URI, List<UcmGUID>> historiesByContentID;
 	private Locker<URI> historiesByContentIDLocks = new Locker<>();
 
 	// GUID -> DataObject
 	private final Map<UcmGUID, DataObject> objects;
-	private final Map<URI, Map<String, UcmGUID>> versions;
+	private final Map<UcmGUID, URI> guidToURI;
 
 	// These are so we don't construct the same objects over and over again...
 	private final Map<URI, UcmFileHistory> historyInstances;
@@ -84,9 +88,10 @@ public class UcmModel {
 
 		this.uriByPaths = new LRUMap<>(1000);
 		this.parentsByURI = new LRUMap<>(1000);
+		this.childrenByURI = new LRUMap<>(1000);
 		this.historiesByContentID = new LRUMap<>(1000);
 		this.objects = new LRUMap<>(1000);
-		this.versions = new LRUMap<>(1000);
+		this.guidToURI = new LRUMap<>(1000);
 		this.historyInstances = new LRUMap<>(1000);
 		this.fileInstances = new LRUMap<>(1000);
 		this.folderInstances = new LRUMap<>(1000);
