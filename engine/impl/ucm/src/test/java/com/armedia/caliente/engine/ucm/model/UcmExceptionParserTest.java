@@ -10,7 +10,7 @@ public class UcmExceptionParserTest {
 			"!csUnableToGetRevInfo2,SOME\\!THING\\!\\,WEIRD\\!\\!!csGetFileUnableToFindRevision,csGetFileRevMethodLabel_Latest,SOME\\!THING\\!WE\\,IRD\\!\\!"
 		};
 
-		UcmExceptionData.parseMessages(msg[0]);
+		System.out.printf("%s%n", UcmExceptionData.parseMessages(msg[0]));
 	}
 
 }
