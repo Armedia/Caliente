@@ -6,37 +6,37 @@ import java.util.List;
 
 import com.armedia.commons.utilities.Tools;
 
-public class UcmFileHistory extends UcmModelObject implements Iterable<UcmFile> {
+public class UcmFileHistory extends UcmModelObject implements Iterable<UcmRevision> {
 
-	private final List<UcmFile> files;
-	private final UcmFile firstRevision;
-	private final UcmFile lastRevision;
+	private final List<UcmRevision> versions;
+	private final UcmRevision firstRevision;
+	private final UcmRevision lastRevision;
 
-	public UcmFileHistory(UcmModel model, URI uri, List<UcmFile> files) {
+	public UcmFileHistory(UcmModel model, URI uri, List<UcmRevision> versions) {
 		super(model, uri);
-		this.files = Tools.freezeCopy(files);
-		this.firstRevision = this.files.get(0);
-		this.lastRevision = this.files.get(this.files.size() - 1);
+		this.versions = Tools.freezeCopy(versions);
+		this.firstRevision = this.versions.get(0);
+		this.lastRevision = this.versions.get(this.versions.size() - 1);
 	}
 
-	public UcmFile getFile(int revision) {
-		return this.files.get(revision);
+	public UcmRevision getVersion(int revision) {
+		return this.versions.get(revision);
 	}
 
-	public UcmFile getFirstRevision() {
+	public UcmRevision getFirstRevision() {
 		return this.firstRevision;
 	}
 
 	public int getRevisionCount() {
-		return this.files.size();
+		return this.versions.size();
 	}
 
-	public UcmFile getLastRevision() {
+	public UcmRevision getLastRevision() {
 		return this.lastRevision;
 	}
 
 	@Override
-	public Iterator<UcmFile> iterator() {
-		return this.files.iterator();
+	public Iterator<UcmRevision> iterator() {
+		return this.versions.iterator();
 	}
 }

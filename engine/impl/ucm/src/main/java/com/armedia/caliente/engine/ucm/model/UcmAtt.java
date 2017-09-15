@@ -1,6 +1,10 @@
 package com.armedia.caliente.engine.ucm.model;
 
 public enum UcmAtt {
+
+	// Custom attributes
+	$ucmParentPath,
+
 	// Common Attributes
 	fCreateDate, //
 	fCreator, //

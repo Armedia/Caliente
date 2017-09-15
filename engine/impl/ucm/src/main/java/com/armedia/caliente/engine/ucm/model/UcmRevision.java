@@ -4,7 +4,7 @@ import java.net.URI;
 
 import oracle.stellent.ridc.model.DataObject;
 
-public class UcmVersionInfo {
+public class UcmRevision {
 
 	public static enum Status {
 		//
@@ -21,7 +21,7 @@ public class UcmVersionInfo {
 	private final int revisionId;
 	private final Status status;
 
-	UcmVersionInfo(DataObject obj) {
+	UcmRevision(DataObject obj) {
 		UcmTools data = new UcmTools(obj);
 		this.uri = UcmModel.getURI(obj);
 		this.format = data.getString(UcmAtt.dFormat);

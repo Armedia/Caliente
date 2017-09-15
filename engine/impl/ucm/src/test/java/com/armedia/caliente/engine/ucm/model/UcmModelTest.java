@@ -79,6 +79,13 @@ public class UcmModelTest {
 			try {
 				URI uri = model.resolvePath(p);
 				System.out.printf("[%s] -> [%s]%n", p, uri);
+				if (model.isFileURI(uri)) {
+					UcmFile f = model.getFile(p);
+					System.out.printf("\t[%s] -> [%s]%n", p, f.getPath());
+				} else {
+					UcmFolder f = model.getFolder(p);
+					System.out.printf("\t[%s] -> [%s]%n", p, f.getPath());
+				}
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}

@@ -5,41 +5,17 @@ import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.LazyInitializer;
-
-import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.model.DataObject;
 
 public abstract class UcmFSObject extends UcmModelObject {
 
-	private class PathInitializer extends LazyInitializer<String> {
-
-		@Override
-		protected String initialize() throws ConcurrentException {
-			try {
-				if (isRootFolder()) { return UcmFSObject.ROOT_PATH; }
-				String prefix = getParentFolder().getPath();
-				String slash = (prefix.endsWith("/") ? "" : "/");
-				return String.format("%s%s%s", prefix, slash, getString(UcmFSObject.this.nameAtt));
-			} catch (UcmException e) {
-				throw new ConcurrentException(
-					String.format("Failed to retrieve the parent folder for UcmGUID [%s] (%s)"), e);
-			}
-		}
-
-	}
-
-	private static final String ROOT_PATH = "/";
-	private static final String ROOT_GUID = "FLD_ROOT";
-
 	protected final UcmAtt guidAtt;
 	protected final UcmAtt nameAtt;
 
 	private final UcmTools dataObject;
-
-	private LazyInitializer<String> path = new PathInitializer();
+	private final String path;
+	private final String parentPath;
 
 	UcmFSObject(UcmModel model, URI uri, DataObject data, UcmAtt nameAtt, UcmAtt guidAtt) {
 		super(model, uri);
@@ -49,17 +25,19 @@ public abstract class UcmFSObject extends UcmModelObject {
 		this.dataObject = new UcmTools(data, true);
 		this.nameAtt = nameAtt;
 		this.guidAtt = guidAtt;
+		this.parentPath = this.dataObject.getString(UcmAtt.$ucmParentPath);
+		if (this.parentPath.equals("/")) {
+			this.path = String.format("/%s", this.dataObject.getString(nameAtt));
+		} else {
+			this.path = String.format("%s/%s", this.parentPath, this.dataObject.getString(nameAtt));
+		}
 	}
 
-	private boolean isRootFolder() throws UcmException {
-		return Tools.equals(getObjectGUID(), UcmFSObject.ROOT_GUID);
-	}
-
-	public final UcmGUID getGUID(UcmAtt att) throws UcmException {
+	public final UcmGUID getGUID(UcmAtt att) {
 		return getGUID(att, null);
 	}
 
-	public final UcmGUID getGUID(UcmAtt att, UcmGUID def) throws UcmException {
+	public final UcmGUID getGUID(UcmAtt att, UcmGUID def) {
 		String str = this.dataObject.getString(att);
 		return (str != null ? new UcmGUID(str) : def);
 	}
@@ -108,65 +86,63 @@ public abstract class UcmFSObject extends UcmModelObject {
 		return this.dataObject.getDataObject();
 	}
 
-	public String getPath() throws UcmException {
-		try {
-			return this.path.get();
-		} catch (ConcurrentException e) {
-			Throwable t = e.getCause();
-			if (UcmException.class.isInstance(t)) { throw UcmException.class.cast(t); }
-			throw new UcmRuntimeException(e.getMessage(), t);
-		}
+	public String getPath() {
+		return this.path;
 	}
 
-	public UcmFolder getParentFolder() throws UcmException {
+	public String getParentPath() {
+		return this.parentPath;
+	}
+
+	public UcmFolder getParentFolder() throws UcmFolderNotFoundException, UcmServiceException {
 		return this.model.getFolder(getParentGUID());
 	}
 
-	public final UcmGUID getObjectGUID() throws UcmException {
+	public final UcmGUID getObjectGUID() {
 		return getGUID(this.guidAtt);
 	}
 
-	public final String getName() throws UcmException {
+	public final String getName() {
 		return getString(this.nameAtt);
 	}
 
-	public final String getDisplayName() throws UcmException {
+	public final String getDisplayName() {
 		return getString(UcmAtt.fDisplayName);
 	}
 
-	public final String getOwner() throws UcmException {
+	public final String getOwner() {
 		return getString(UcmAtt.fOwner);
 	}
 
-	public final Date getCreationDate() throws UcmException {
+	public final Date getCreationDate() {
 		return getDate(UcmAtt.fCreateDate);
 	}
 
-	public final String getCreator() throws UcmException {
+	public final String getCreator() {
 		return getString(UcmAtt.fCreator);
 	}
 
-	public final Date getLastModifiedDate() throws UcmException {
+	public final Date getLastModifiedDate() {
 		return getDate(UcmAtt.fLastModifiedDate);
 	}
 
-	public final String getLastModifier() throws UcmException {
+	public final String getLastModifier() {
 		return getString(UcmAtt.fLastModifier);
 	}
 
-	public final boolean isInTrash() throws UcmException {
+	public final boolean isInTrash() {
 		return getBoolean(UcmAtt.fIsInTrash, false);
 	}
 
-	public final UcmGUID getParentGUID() throws UcmException {
+	public final UcmGUID getParentGUID() {
 		return getGUID(UcmAtt.fParentGUID);
 	}
 
-	public final String getSecurityGroup() throws UcmException {
+	public final String getSecurityGroup() {
 		return getString(UcmAtt.fSecurityGroup);
 	}
 
-	public boolean isShortcut() throws UcmException {
+	public boolean isShortcut() {
 		return !StringUtils.isEmpty(getString(UcmAtt.fTargetGUID));
 	}
 }
