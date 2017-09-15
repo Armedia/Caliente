@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -21,6 +22,8 @@ import com.armedia.commons.utilities.LockDispenser;
 public class KeyLockableCache<K, V> {
 
 	public static final int MIN_LIMIT = 1000;
+	public static final TimeUnit DEFAULT_MAX_AGE_UNIT = TimeUnit.MINUTES;
+	public static final long DEFAULT_MAX_AGE = 5;
 
 	private static class Locker<K> extends LockDispenser<K, ReentrantReadWriteLock> {
 		@Override
@@ -29,16 +32,58 @@ public class KeyLockableCache<K, V> {
 		}
 	}
 
-	private final Map<K, Reference<V>> cache;
+	private final class CacheItem {
+		private final long creationDate;
+		private final Reference<V> value;
+
+		private CacheItem(V value) {
+			this.value = newReference(value);
+			this.creationDate = System.currentTimeMillis();
+		}
+
+		private V get() {
+			// If the age is negative, it NEVER expires unless the GC reclaims it...
+			if (KeyLockableCache.this.maxAge < 0) { return this.value.get(); }
+
+			// If the age is 0, then it expires immediately
+			if (KeyLockableCache.this.maxAge == 0) { return null; }
+
+			// Let's check if it's expired...
+			final long age = System.currentTimeMillis() - this.creationDate;
+			if (age > KeyLockableCache.this.maxAgeUnit.toMillis(KeyLockableCache.this.maxAge)) { return null; }
+
+			// It's not expired, so it's up to the GC
+			return this.value.get();
+		}
+	}
+
+	private final TimeUnit maxAgeUnit;
+	private final long maxAge;
+	private final Map<K, CacheItem> cache;
 	private final Locker<K> locks = new Locker<>();
 
 	public KeyLockableCache() {
-		this(KeyLockableCache.MIN_LIMIT);
+		this(KeyLockableCache.MIN_LIMIT, KeyLockableCache.DEFAULT_MAX_AGE_UNIT, KeyLockableCache.DEFAULT_MAX_AGE);
 	}
 
 	public KeyLockableCache(int maxCount) {
-		final Map<K, Reference<V>> cache = new LRUMap<>(Math.max(KeyLockableCache.MIN_LIMIT, maxCount));
+		this(maxCount, KeyLockableCache.DEFAULT_MAX_AGE_UNIT, KeyLockableCache.DEFAULT_MAX_AGE);
+	}
+
+	public KeyLockableCache(TimeUnit maxAgeUnit, long maxAge) {
+		this(KeyLockableCache.MIN_LIMIT, maxAgeUnit, maxAge);
+	}
+
+	public KeyLockableCache(int maxCount, TimeUnit maxAgeUnit, long maxAge) {
+		final Map<K, CacheItem> cache = new LRUMap<>(Math.max(KeyLockableCache.MIN_LIMIT, maxCount));
 		this.cache = Collections.synchronizedMap(cache);
+		if (maxAgeUnit == null) {
+			this.maxAgeUnit = KeyLockableCache.DEFAULT_MAX_AGE_UNIT;
+			this.maxAge = KeyLockableCache.DEFAULT_MAX_AGE;
+		} else {
+			this.maxAgeUnit = maxAgeUnit;
+			this.maxAge = Math.max(-1, maxAge);
+		}
 	}
 
 	public final Lock getExclusiveLock(K key) {
@@ -49,6 +94,12 @@ public class KeyLockableCache<K, V> {
 		return this.locks.getLock(key).readLock();
 	}
 
+	/**
+	 * This method is only invoked from within the CacheItem nested class
+	 *
+	 * @param value
+	 * @return a new {@link Reference} object encapsulating the given value
+	 */
 	protected Reference<V> newReference(V value) {
 		return new WeakReference<>(value);
 	}
@@ -63,9 +114,9 @@ public class KeyLockableCache<K, V> {
 		Lock l = getSharedLock(key);
 		l.lock();
 		try {
-			Reference<V> ref = this.cache.get(key);
-			if (ref == null) { return null; }
-			return ref.get();
+			CacheItem item = this.cache.get(key);
+			if (item == null) { return null; }
+			return item.get();
 		} finally {
 			l.unlock();
 		}
@@ -78,7 +129,7 @@ public class KeyLockableCache<K, V> {
 		l.lock();
 		try {
 			V ret = null;
-			Reference<V> ref = this.cache.get(key);
+			CacheItem ref = this.cache.get(key);
 			if (ref != null) {
 				ret = ref.get();
 			}
@@ -88,7 +139,7 @@ public class KeyLockableCache<K, V> {
 			// The value is absent or expired...
 			V newVal = initializer.get();
 			if (newVal != null) {
-				this.cache.put(key, newReference(newVal));
+				this.cache.put(key, new CacheItem(newVal));
 			} else {
 				this.cache.remove(key);
 			}
@@ -109,9 +160,9 @@ public class KeyLockableCache<K, V> {
 		final Lock l = getExclusiveLock(key);
 		l.lock();
 		try {
-			Reference<V> ref = this.cache.get(key);
+			CacheItem ref = this.cache.get(key);
 			if ((ref != null) && (ref.get() != null)) { return; }
-			this.cache.put(key, newReference(value));
+			this.cache.put(key, new CacheItem(value));
 		} finally {
 			l.unlock();
 		}
@@ -125,11 +176,11 @@ public class KeyLockableCache<K, V> {
 		l.lock();
 		try {
 			V ret = null;
-			Reference<V> ref = this.cache.get(key);
+			CacheItem ref = this.cache.get(key);
 			if (ref != null) {
 				ret = ref.get();
 			}
-			this.cache.put(key, newReference(value));
+			this.cache.put(key, new CacheItem(value));
 			return ret;
 		} finally {
 			l.unlock();
@@ -141,7 +192,7 @@ public class KeyLockableCache<K, V> {
 		final Lock l = getExclusiveLock(key);
 		l.lock();
 		try {
-			Reference<V> ref = this.cache.remove(key);
+			CacheItem ref = this.cache.remove(key);
 			return (ref != null ? ref.get() : null);
 		} finally {
 			l.unlock();
@@ -162,7 +213,7 @@ public class KeyLockableCache<K, V> {
 		final Lock l = getSharedLock(key);
 		l.lock();
 		try {
-			Reference<V> ref = this.cache.get(key);
+			CacheItem ref = this.cache.get(key);
 			if (ref == null) { return false; }
 			return (ref.get() != null);
 		} finally {
@@ -189,9 +240,8 @@ public class KeyLockableCache<K, V> {
 	}
 
 	public final Collection<V> values() {
-		Collection<Reference<V>> c = new ArrayList<>(this.cache.values());
 		Collection<V> ret = new ArrayList<>();
-		for (Reference<V> r : c) {
+		for (CacheItem r : new ArrayList<>(this.cache.values())) {
 			V v = r.get();
 			if (v != null) {
 				ret.add(v);
