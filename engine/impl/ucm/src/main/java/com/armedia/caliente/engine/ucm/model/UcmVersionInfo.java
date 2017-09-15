@@ -13,29 +13,23 @@ public class UcmVersionInfo {
 		;
 	}
 
-	private final String author;
 	private final URI uri;
 	private final String format;
 	private final String id;
 	private final String processingState;
-	private final Status status;
 	private final String revLabel;
 	private final int revisionId;
+	private final Status status;
 
 	UcmVersionInfo(DataObject obj) {
 		UcmTools data = new UcmTools(obj);
-		this.author = data.getString(UcmAtt.dDocAuthor);
+		this.uri = UcmModel.getURI(obj);
 		this.format = data.getString(UcmAtt.dFormat);
 		this.id = data.getString(UcmAtt.dID);
 		this.processingState = data.getString(UcmAtt.dProcessingState);
-		this.status = Status.valueOf(data.getString(UcmAtt.dStatus).toUpperCase());
 		this.revLabel = data.getString(UcmAtt.dRevLabel);
 		this.revisionId = data.getInteger(UcmAtt.dRevisionID);
-		this.uri = UcmModel.getURI(obj);
-	}
-
-	public String getAuthor() {
-		return this.author;
+		this.status = Status.valueOf(data.getString(UcmAtt.dStatus).toUpperCase());
 	}
 
 	public URI getUri() {

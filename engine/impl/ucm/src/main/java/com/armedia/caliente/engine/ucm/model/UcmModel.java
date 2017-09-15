@@ -58,6 +58,9 @@ public class UcmModel {
 	// URI -> List<UcmGUID>
 	private final KeyLockableCache<URI, List<UcmVersionInfo>> historyByURI;
 
+	// String -> UcmGUID
+	private final KeyLockableCache<String, UcmGUID> versionGuidByID;
+
 	// BY_GUID -> Map<String, UcmRenditionInfo>
 	private final KeyLockableCache<UcmGUID, Map<String, UcmRenditionInfo>> renditionsByGUID;
 
@@ -66,11 +69,6 @@ public class UcmModel {
 
 	// BY_GUID -> URI
 	private final KeyLockableCache<UcmGUID, URI> uriByGUID;
-
-	// These are so we don't construct the same objects over and over again...
-	private final KeyLockableCache<URI, UcmFileHistory> historyInstances;
-	private final KeyLockableCache<UcmGUID, UcmFile> fileInstances;
-	private final KeyLockableCache<UcmGUID, UcmFolder> folderInstances;
 
 	private final UcmSessionFactory sessionFactory;
 
@@ -84,10 +82,8 @@ public class UcmModel {
 		this.objectByGUID = new KeyLockableCache<>(1000);
 		this.guidByURI = new KeyLockableCache<>(1000);
 		this.uriByGUID = new KeyLockableCache<>(1000);
-		this.historyInstances = new KeyLockableCache<>(1000);
-		this.fileInstances = new KeyLockableCache<>(1000);
-		this.folderInstances = new KeyLockableCache<>(1000);
 		this.renditionsByGUID = new KeyLockableCache<>(1000);
+		this.versionGuidByID = new KeyLockableCache<>(1000);
 	}
 
 	protected final void cacheDataObject(DataObject object) {
@@ -100,13 +96,12 @@ public class UcmModel {
 		// Is this a file or a folder?
 		final boolean file = data.hasAttribute(UcmAtt.dDocName);
 		UcmAtt guidAtt = (file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
+		final URI uri = UcmModel.getURI(data);
 		final UcmGUID guid = new UcmGUID(data.getString(guidAtt));
-		final URI uri = (file ? UcmModel.newURI(UcmModel.FILE_SCHEME, data.getString(UcmAtt.dDocName))
-			: UcmModel.newURI(UcmModel.FOLDER_SCHEME, data.getString(UcmAtt.fFolderGUID)));
 
 		this.objectByGUID.put(guid, data.getDataObject());
 		if (data.hasAttribute(UcmAtt.fParentGUID)) {
-			this.parentByURI.put(uri, UcmModel.newURI(UcmModel.FOLDER_SCHEME, data.getString(UcmAtt.fParentGUID)));
+			this.parentByURI.put(uri, UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID)));
 		}
 
 		this.guidByURI.put(uri, guid);
@@ -207,11 +202,8 @@ public class UcmModel {
 	 */
 	public UcmFile getFile(String path) throws UcmServiceException, UcmFileNotFoundException {
 		try {
-			URI uri = resolvePath(path);
-			DataObject object = getDataObject(uri);
-			// TODO: should we try to find a cached UcmFile instance instead, and avoid wild
-			// construction?
-			return new UcmFile(this, object);
+			final URI uri = resolvePath(path);
+			return new UcmFile(this, uri, getDataObject(uri));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFileNotFoundException(e.getMessage(), e);
 		}
@@ -261,10 +253,10 @@ public class UcmModel {
 							data.set(new UcmTools(rs.getRows().get(0)));
 
 							String guid = data.get().getString(UcmAtt.dDocName);
-							if (guid != null) { return UcmModel.newURI(UcmModel.FILE_SCHEME, guid, null); }
+							if (guid != null) { return UcmModel.newFileURI(guid); }
 
 							guid = data.get().getString(UcmAtt.fFolderGUID);
-							if (guid != null) { return UcmModel.newURI(UcmModel.FOLDER_SCHEME, guid, null); }
+							if (guid != null) { return UcmModel.newFolderURI(guid); }
 
 							throw new UcmServiceException(String.format(
 								"Path [%s] was found, but was neither a file nor a folder (no identifier attributes)?!?",
@@ -381,7 +373,6 @@ public class UcmModel {
 			guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri)); }
 
 		DataObject ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<DataObject>() {
-
 			@Override
 			public DataObject get() throws ConcurrentException {
 				UcmTools ret = data.get();
@@ -391,7 +382,6 @@ public class UcmModel {
 		});
 
 		if (history.get() != null) {
-
 			DataResultSet rs = history.get();
 			LinkedList<UcmVersionInfo> list = new LinkedList<>();
 			for (DataObject o : rs.getRows()) {
@@ -425,7 +415,7 @@ public class UcmModel {
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(guid, "Must provide a BY_GUID to search for");
 		// If it's a folder URI we already know the SSP is the BY_GUID, so... go!
-		return getFolderContents(UcmModel.newURI(UcmModel.FOLDER_SCHEME, guid.getString()));
+		return getFolderContents(UcmModel.newFolderURI(guid.getString()));
 	}
 
 	public static interface ObjectHandler {
@@ -437,7 +427,7 @@ public class UcmModel {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
 		// If this isn't a folder, we don't even try it...
-		if (!UcmModel.FOLDER_SCHEME.equals(uri.getScheme())) { return -1; }
+		if (!isFolder(uri)) { return -1; }
 
 		Map<String, URI> children = this.childrenByURI.get(uri);
 		boolean reconstruct = false;
@@ -495,7 +485,7 @@ public class UcmModel {
 							try {
 								Map<String, URI> children = new TreeMap<>();
 								Map<String, DataObject> dataObjects = new TreeMap<>();
-								FolderContentsIterator it = new FolderContentsIterator(s, UcmModel.FILE_SCHEME);
+								FolderContentsIterator it = new FolderContentsIterator(s, uri);
 								while (it.hasNext()) {
 									DataObject o = it.next();
 
@@ -518,7 +508,7 @@ public class UcmModel {
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
 									uri)) { throw new UcmFolderNotFoundException(
-										String.format("No object found with URI [%s]", uri)); }
+										String.format("No folder found with URI [%s]", uri)); }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -568,33 +558,75 @@ public class UcmModel {
 		return children;
 	}
 
-	/**
-	 * Returns the given revision of the file at the given path, or {@code null} if none exists.
-	 *
-	 * @param path
-	 *            The absolute path to the file. It will be normalized (i.e. "." and ".." will be
-	 *            resolved).
-	 * @return the file at the given path, or {@code null} if none exists.
-	 * @throws UcmException
-	 */
-	public UcmFile getFile(String path, int revision) throws UcmException {
-		UcmFile file = getFile(path);
-
-		return null;
+	public UcmFolder getFolder(String path) throws UcmServiceException, UcmFolderNotFoundException {
+		try {
+			final URI uri = resolvePath(path);
+			return new UcmFolder(this, uri, getDataObject(uri));
+		} catch (UcmObjectNotFoundException e) {
+			throw new UcmFolderNotFoundException(e.getMessage(), e);
+		}
 	}
 
-	UcmFile getFile(UcmGUID guid) throws UcmException {
-		return null;
-	}
+	public UcmFileHistory getFileHistory(String path) throws UcmServiceException, UcmFileNotFoundException {
+		final UcmFile latestFile = getFile(path);
+		final URI uri = latestFile.getURI();
+		List<UcmVersionInfo> history = this.historyByURI.get(uri);
+		if (history == null) {
+			try {
+				history = this.historyByURI.createIfAbsent(uri, new ConcurrentInitializer<List<UcmVersionInfo>>() {
+					@Override
+					public List<UcmVersionInfo> get() throws ConcurrentException {
+						final SessionWrapper<IdcSession> w;
+						try {
+							w = UcmModel.this.sessionFactory.acquireSession();
+						} catch (Exception e) {
+							throw new ConcurrentException("Failed to acquire an RIDC session", e);
+						}
+						try {
+							IdcSession s = w.getWrapped();
 
-	public UcmFolder getFolder(String path) throws UcmServiceException, UcmObjectNotFoundException {
-		URI uri = resolvePath(path);
-		DataObject o = getDataObject(uri);
-		return null;
-	}
+							DataBinder binder = s.createBinder();
+							binder.putLocal("IdcService", "REV_INFO");
+							binder.putLocal("dID", String.valueOf(latestFile.getRevisionId()));
 
-	public UcmFileHistory getFileHistory(String path) throws UcmException {
-		return null;
+							ServiceResponse response = null;
+							DataBinder responseData = null;
+							try {
+								response = s.sendRequest(binder);
+								responseData = response.getResponseAsBinder();
+							} catch (final IdcClientException e) {
+								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
+									uri)) { throw new UcmFolderNotFoundException(
+										String.format("No file found with URI [%s]", uri)); }
+								// This is a "regular" exception that we simply re-raise
+								throw e;
+							}
+
+							DataResultSet revisions = responseData.getResultSet("REVISIONS");
+							LinkedList<UcmVersionInfo> info = new LinkedList<>();
+							for (DataObject o : revisions.getRows()) {
+								info.addFirst(new UcmVersionInfo(o));
+							}
+							return info;
+						} catch (Exception e) {
+							throw new ConcurrentException(e);
+						} finally {
+							w.close();
+						}
+					}
+				});
+			} catch (ConcurrentException e) {
+				Throwable cause = e.getCause();
+				UcmModel.throwIfMatches(UcmServiceException.class, cause);
+				UcmModel.throwIfMatches(UcmFileNotFoundException.class, cause);
+				throw new UcmServiceException(
+					String.format("Exception caught finding the file history for URI [%s]", uri), cause);
+			}
+		}
+
+		final List<UcmFile> files = new ArrayList<>();
+		// TODO: Convert the versionInfo in the history items to actual files
+		return new UcmFileHistory(this, uri, files);
 	}
 
 	public UcmFileHistory getFileHistory(UcmFile file) throws UcmException {

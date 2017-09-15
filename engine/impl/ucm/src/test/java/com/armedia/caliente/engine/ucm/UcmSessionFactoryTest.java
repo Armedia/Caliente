@@ -63,7 +63,7 @@ public class UcmSessionFactoryTest {
 	}
 
 	@Test
-	public void test0() throws Exception {
+	public void testURI() throws Exception {
 		URI uri = new URI("file", "somearbitrarygarbage", "fragmentCrap");
 		System.out.printf("%s%n", uri);
 		System.out.printf("SCHEME: %s%n", uri.getScheme());
@@ -72,7 +72,7 @@ public class UcmSessionFactoryTest {
 	}
 
 	@Test
-	public void test1() throws Exception {
+	public void testIterator() throws Exception {
 		UcmSessionFactory factory = null;
 		CmfCrypt crypto = new CmfCrypt();
 		Map<String, String> settingsMap = new TreeMap<>();
@@ -99,7 +99,7 @@ public class UcmSessionFactoryTest {
 	}
 
 	@Test
-	public void test2() throws Exception {
+	public void FLD_BROWSE() throws Exception {
 		UcmSessionFactory factory = null;
 		CmfCrypt crypto = new CmfCrypt();
 		Map<String, String> settingsMap = new TreeMap<>();
@@ -138,7 +138,7 @@ public class UcmSessionFactoryTest {
 	}
 
 	@Test
-	public void test3() throws Exception {
+	public void DOC_INFO_BY_NAME() throws Exception {
 		try {
 			UcmSessionFactory factory = null;
 			CmfCrypt crypto = new CmfCrypt();
@@ -155,8 +155,7 @@ public class UcmSessionFactoryTest {
 
 			DataBinder binder = s.createBinder();
 			binder.putLocal("IdcService", "DOC_INFO_BY_NAME");
-			// binder.putLocal("dDocName", "ARMDEC6AAP9055000001");
-			binder.putLocal("dDocName", "SOME!THI,NG!WEI RD!!");
+			binder.putLocal("dDocName", "ARMDEC6AAP9055000001");
 			binder.putLocal("includeFileRenditionsInfo", "1");
 
 			// Join the binder and the user context and perform the service call
@@ -176,7 +175,7 @@ public class UcmSessionFactoryTest {
 	}
 
 	@Test
-	public void test4() throws Exception {
+	public void FLD_INFO() throws Exception {
 		UcmSessionFactory factory = null;
 		CmfCrypt crypto = new CmfCrypt();
 		Map<String, String> settingsMap = new TreeMap<>();
@@ -193,6 +192,46 @@ public class UcmSessionFactoryTest {
 		DataBinder binder = s.createBinder();
 		binder.putLocal("IdcService", "FLD_INFO");
 		binder.putLocal("fFolderGUID", "12345");
+
+		// Join the binder and the user context and perform the service call
+		try {
+			ServiceResponse response = s.sendRequest(binder);
+			DataBinder responseData = response.getResponseAsBinder();
+
+			for (String rs : responseData.getResultSetNames()) {
+				dumpMap(rs, responseData.getResultSet(rs));
+			}
+
+			System.out.printf("Local Data%n");
+			System.out.printf("%s%n", StringUtils.repeat('-', 80));
+			dumpObject(1, responseData.getLocalData());
+		} catch (IdcClientException e) {
+			if (ServiceException.class.isInstance(e)) {
+				ServiceException se = ServiceException.class.cast(e);
+				dumpBinder(se.getBinder());
+			}
+			throw e;
+		}
+	}
+
+	@Test
+	public void REV_HISTORY() throws Exception {
+		UcmSessionFactory factory = null;
+		CmfCrypt crypto = new CmfCrypt();
+		Map<String, String> settingsMap = new TreeMap<>();
+		CfgTools settings = new CfgTools(settingsMap);
+
+		settingsMap.put(UcmSessionSetting.USER.getLabel(), "weblogic");
+		settingsMap.put(UcmSessionSetting.PASSWORD.getLabel(), "system01");
+		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
+
+		factory = new UcmSessionFactory(settings, crypto);
+		SessionWrapper<IdcSession> w = factory.acquireSession();
+		IdcSession s = w.getWrapped();
+
+		DataBinder binder = s.createBinder();
+		binder.putLocal("IdcService", "REV_HISTORY");
+		binder.putLocal("dID", "5");
 
 		// Join the binder and the user context and perform the service call
 		try {

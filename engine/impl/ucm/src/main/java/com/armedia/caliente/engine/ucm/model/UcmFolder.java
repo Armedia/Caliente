@@ -1,16 +1,13 @@
 package com.armedia.caliente.engine.ucm.model;
 
-import java.util.Iterator;
+import java.net.URI;
 
-import com.armedia.caliente.engine.ucm.IdcSession;
-
-import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataObject;
 
 public class UcmFolder extends UcmFSObject {
 
-	UcmFolder(UcmModel model, DataObject data) {
-		super(model, data, UcmAtt.fFolderName, UcmAtt.fFolderGUID);
+	UcmFolder(UcmModel model, URI uri, DataObject data) {
+		super(model, uri, data, UcmAtt.fFolderName, UcmAtt.fFolderGUID);
 	}
 
 	public String getDisplayDescription() throws UcmException {
@@ -19,14 +16,5 @@ public class UcmFolder extends UcmFSObject {
 
 	public String getFolderDescription() throws UcmException {
 		return getString(UcmAtt.fFolderDescription);
-	}
-
-	public Iterator<UcmFSObject> getChildren(IdcSession session, boolean lazy) throws IdcClientException {
-		return null;
-	}
-
-	@Override
-	public void refresh() throws UcmException {
-		this.model.refresh(this);
 	}
 }

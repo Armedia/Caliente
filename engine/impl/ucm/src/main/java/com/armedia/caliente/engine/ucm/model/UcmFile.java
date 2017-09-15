@@ -1,61 +1,62 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Set;
 
 import oracle.stellent.ridc.model.DataObject;
 
 public class UcmFile extends UcmFSObject {
 
-	UcmFile(UcmModel model, DataObject data) {
-		super(model, data, UcmAtt.fFileName, UcmAtt.fFileGUID);
+	UcmFile(UcmModel model, URI uri, DataObject data) {
+		super(model, uri, data, UcmAtt.fFileName, UcmAtt.fFileGUID);
 	}
 
-	public String getPublishedFileName() throws UcmException {
+	public String getPublishedFileName() {
 		return getString(UcmAtt.fPublishedFilename);
 	}
 
-	public String getOriginalName() throws UcmException {
+	public String getOriginalName() {
 		return getString(UcmAtt.dOriginalName);
 	}
 
-	public String getAuthor() throws UcmException {
+	public String getAuthor() {
 		return getString(UcmAtt.dDocAuthor);
 	}
 
-	public String getTitle() throws UcmException {
+	public String getTitle() {
 		return getString(UcmAtt.dDocTitle);
 	}
 
-	public int getSize() throws UcmException {
+	public int getSize() {
 		return getInteger(UcmAtt.dFileSize, 0);
 	}
 
-	public String getFormat() throws UcmException {
+	public String getFormat() {
 		return getString(UcmAtt.dFormat);
 	}
 
-	public int getRevisionId() throws UcmException {
+	public int getRevisionId() {
 		return getInteger(UcmAtt.dID, 1);
 	}
 
-	public int getRevisionNumber() throws UcmException {
+	public int getRevisionNumber() {
 		return getInteger(UcmAtt.dRevisionID, 1);
 	}
 
-	public int getPublishedRevisionId() throws UcmException {
+	public int getPublishedRevisionId() {
 		return getInteger(UcmAtt.dPublishedRevisionID, 1);
 	}
 
-	public String getRevisionLabel() throws UcmException {
+	public String getRevisionLabel() {
 		return getString(UcmAtt.dRevLabel);
 	}
 
-	public String getExtension() throws UcmException {
+	public String getExtension() {
 		return getString(UcmAtt.dExtension);
 	}
 
-	public String getContentId() throws UcmException {
+	public String getContentId() {
 		return getString(UcmAtt.dDocName);
 	}
 
@@ -69,10 +70,5 @@ public class UcmFile extends UcmFSObject {
 
 	public InputStream getInputStream(String rendition) throws UcmException {
 		return this.model.getInputStream(this, rendition);
-	}
-
-	@Override
-	public void refresh() throws UcmException {
-		this.model.refresh(this);
 	}
 }

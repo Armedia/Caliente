@@ -6,60 +6,70 @@ import java.util.Date;
 import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.model.DataObject;
+import oracle.stellent.ridc.model.impl.DataObjectImpl;
 
-public class UcmTools {
+public final class UcmTools {
 
 	private final DataObject dataObject;
 
 	public UcmTools(DataObject data) {
-		this.dataObject = data;
+		this(data, false);
 	}
 
-	public final DataObject getDataObject() {
+	UcmTools(DataObject data, boolean clone) {
+		if (clone) {
+			this.dataObject = new DataObjectImpl();
+			this.dataObject.putAll(data);
+		} else {
+			this.dataObject = data;
+		}
+	}
+
+	public DataObject getDataObject() {
 		return this.dataObject;
 	}
 
-	public final boolean hasAttribute(UcmAtt att) {
+	public boolean hasAttribute(UcmAtt att) {
 		return UcmTools.hasAttribute(this.dataObject, att);
 	}
 
-	public final String getString(UcmAtt att) {
+	public String getString(UcmAtt att) {
 		return UcmTools.getString(this.dataObject, att);
 	}
 
-	public final String getString(UcmAtt att, String def) {
+	public String getString(UcmAtt att, String def) {
 		return UcmTools.getString(this.dataObject, att, def);
 	}
 
-	public final Date getDate(UcmAtt att) {
+	public Date getDate(UcmAtt att) {
 		return UcmTools.getDate(this.dataObject, att);
 	}
 
-	public final Date getDate(UcmAtt att, Date def) {
+	public Date getDate(UcmAtt att, Date def) {
 		return UcmTools.getDate(this.dataObject, att, def);
 	}
 
-	public final Calendar getCalendar(UcmAtt att) {
+	public Calendar getCalendar(UcmAtt att) {
 		return UcmTools.getCalendar(this.dataObject, att);
 	}
 
-	public final Calendar getCalendar(UcmAtt att, Calendar def) {
+	public Calendar getCalendar(UcmAtt att, Calendar def) {
 		return UcmTools.getCalendar(this.dataObject, att, def);
 	}
 
-	public final Integer getInteger(UcmAtt att) {
+	public Integer getInteger(UcmAtt att) {
 		return UcmTools.getInteger(this.dataObject, att);
 	}
 
-	public final int getInteger(UcmAtt att, int def) {
+	public int getInteger(UcmAtt att, int def) {
 		return UcmTools.getInteger(this.dataObject, att, def);
 	}
 
-	public final Boolean getBoolean(UcmAtt att) {
+	public Boolean getBoolean(UcmAtt att) {
 		return UcmTools.getBoolean(this.dataObject, att);
 	}
 
-	public final boolean getBoolean(UcmAtt att, boolean def) {
+	public boolean getBoolean(UcmAtt att, boolean def) {
 		return UcmTools.getBoolean(this.dataObject, att, def);
 	}
 

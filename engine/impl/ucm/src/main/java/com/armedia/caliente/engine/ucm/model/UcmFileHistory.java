@@ -1,48 +1,42 @@
 package com.armedia.caliente.engine.ucm.model;
 
+import java.net.URI;
 import java.util.Iterator;
+import java.util.List;
+
+import com.armedia.commons.utilities.Tools;
 
 public class UcmFileHistory extends UcmModelObject implements Iterable<UcmFile> {
 
-	public UcmFileHistory(UcmModel model) {
-		super(model);
+	private final List<UcmFile> files;
+	private final UcmFile firstRevision;
+	private final UcmFile lastRevision;
+
+	public UcmFileHistory(UcmModel model, URI uri, List<UcmFile> files) {
+		super(model, uri);
+		this.files = Tools.freezeCopy(files);
+		this.firstRevision = this.files.get(0);
+		this.lastRevision = this.files.get(this.files.size() - 1);
 	}
 
 	public UcmFile getFile(int revision) {
-		return null;
+		return this.files.get(revision);
 	}
 
 	public UcmFile getFirstRevision() {
-		return null;
+		return this.firstRevision;
 	}
 
 	public int getRevisionCount() {
-		return 0;
-	}
-
-	public int getLastRevisionIndex() {
-		return 0;
+		return this.files.size();
 	}
 
 	public UcmFile getLastRevision() {
-		return null;
-	}
-
-	public int getLastReleasedRevisionIndex() {
-		return 0;
-	}
-
-	public UcmFile getLastReleasedRevision() {
-		return null;
+		return this.lastRevision;
 	}
 
 	@Override
 	public Iterator<UcmFile> iterator() {
-		return null;
-	}
-
-	@Override
-	public void refresh() throws UcmException {
-		this.model.refresh(this);
+		return this.files.iterator();
 	}
 }
