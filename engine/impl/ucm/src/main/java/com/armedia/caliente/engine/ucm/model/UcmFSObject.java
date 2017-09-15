@@ -6,30 +6,28 @@ import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
-import oracle.stellent.ridc.model.DataObject;
-
 public abstract class UcmFSObject extends UcmModelObject {
 
 	protected final UcmAtt guidAtt;
 	protected final UcmAtt nameAtt;
 
-	private final UcmTools dataObject;
+	private final UcmAttributes attributes;
 	private final String path;
 	private final String parentPath;
 
-	UcmFSObject(UcmModel model, URI uri, DataObject data, UcmAtt nameAtt, UcmAtt guidAtt) {
+	UcmFSObject(UcmModel model, URI uri, UcmAttributes data, UcmAtt nameAtt, UcmAtt guidAtt) {
 		super(model, uri);
 		// Here we use the cloning constructor so we keep a *copy* of the DataObject, to allow
 		// the caches in the model the opportunity to expire objects appropriately regardless
 		// of references held outside the model
-		this.dataObject = new UcmTools(data, true);
+		this.attributes = data;
 		this.nameAtt = nameAtt;
 		this.guidAtt = guidAtt;
-		this.parentPath = this.dataObject.getString(UcmAtt.$ucmParentPath);
+		this.parentPath = this.attributes.getString(UcmAtt.$ucmParentPath);
 		if (this.parentPath.equals("/")) {
-			this.path = String.format("/%s", this.dataObject.getString(nameAtt));
+			this.path = String.format("/%s", this.attributes.getString(nameAtt));
 		} else {
-			this.path = String.format("%s/%s", this.parentPath, this.dataObject.getString(nameAtt));
+			this.path = String.format("%s/%s", this.parentPath, this.attributes.getString(nameAtt));
 		}
 	}
 
@@ -38,52 +36,52 @@ public abstract class UcmFSObject extends UcmModelObject {
 	}
 
 	public final UcmGUID getGUID(UcmAtt att, UcmGUID def) {
-		String str = this.dataObject.getString(att);
+		String str = this.attributes.getString(att);
 		return (str != null ? new UcmGUID(str) : def);
 	}
 
 	public final String getString(UcmAtt att) {
-		return this.dataObject.getString(att);
+		return this.attributes.getString(att);
 	}
 
 	public final String getString(UcmAtt att, String def) {
-		return this.dataObject.getString(att, def);
+		return this.attributes.getString(att, def);
 	}
 
 	public final Date getDate(UcmAtt att) {
-		return this.dataObject.getDate(att);
+		return this.attributes.getDate(att);
 	}
 
 	public final Date getDate(UcmAtt att, Date def) {
-		return this.dataObject.getDate(att, def);
+		return this.attributes.getDate(att, def);
 	}
 
 	public final Calendar getCalendar(UcmAtt att) {
-		return this.dataObject.getCalendar(att);
+		return this.attributes.getCalendar(att);
 	}
 
 	public final Calendar getCalendar(UcmAtt att, Calendar def) {
-		return this.dataObject.getCalendar(att, def);
+		return this.attributes.getCalendar(att, def);
 	}
 
 	public final Integer getInteger(UcmAtt att) {
-		return this.dataObject.getInteger(att);
+		return this.attributes.getInteger(att);
 	}
 
 	public final int getInteger(UcmAtt att, int def) {
-		return this.dataObject.getInteger(att, def);
+		return this.attributes.getInteger(att, def);
 	}
 
 	public final Boolean getBoolean(UcmAtt att) {
-		return this.dataObject.getBoolean(att);
+		return this.attributes.getBoolean(att);
 	}
 
 	public final boolean getBoolean(UcmAtt att, boolean def) {
-		return this.dataObject.getBoolean(att, def);
+		return this.attributes.getBoolean(att, def);
 	}
 
-	public final DataObject getDataObject() {
-		return this.dataObject.getDataObject();
+	public final UcmAttributes getAttribites() {
+		return this.attributes;
 	}
 
 	public String getPath() {

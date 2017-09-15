@@ -22,7 +22,7 @@ public class UcmRevision {
 	private final Status status;
 
 	UcmRevision(DataObject obj) {
-		UcmTools data = new UcmTools(obj);
+		UcmAttributes data = new UcmAttributes(obj);
 		this.uri = UcmModel.getURI(obj);
 		this.format = data.getString(UcmAtt.dFormat);
 		this.id = data.getString(UcmAtt.dID);

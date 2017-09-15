@@ -115,7 +115,7 @@ public class UcmSessionFactoryTest {
 
 		DataBinder binder = s.createBinder();
 		binder.putLocal("IdcService", "FLD_BROWSE");
-		binder.putLocal("path", "/Caliente 3.0 Concept Document v4.0.docx");
+		binder.putLocal("path", "/");
 		binder.putLocal("doCombinedBrowse", "1");
 		binder.putLocal("foldersFirst", "1");
 

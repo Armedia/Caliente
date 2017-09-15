@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -43,7 +44,7 @@ public class UcmModel {
 	private static final UcmGUID NULLGUID = new UcmGUID("<null>");
 
 	// BY_GUID -> DataObject
-	private final KeyLockableCache<UcmGUID, DataObject> objectByGUID;
+	private final KeyLockableCache<UcmGUID, UcmAttributes> objectByGUID;
 
 	// path -> file://${dDocName}
 	// path -> folder://${fFolderGUID}
@@ -129,10 +130,10 @@ public class UcmModel {
 
 	protected final void cacheDataObject(DataObject object) {
 		if (object == null) { return; }
-		cacheDataObject(new UcmTools(object));
+		cacheDataObject(new UcmAttributes(object));
 	}
 
-	protected void cacheDataObject(final UcmTools data) {
+	protected void cacheDataObject(final UcmAttributes data) {
 		if (data == null) { return; }
 		// Is this a file or a folder?
 		final boolean file = data.hasAttribute(UcmAtt.dDocName);
@@ -140,7 +141,7 @@ public class UcmModel {
 		final URI uri = UcmModel.getURI(data);
 		final UcmGUID guid = new UcmGUID(data.getString(guidAtt));
 
-		this.objectByGUID.put(guid, data.getDataObject());
+		this.objectByGUID.put(guid, data);
 		if (data.hasAttribute(UcmAtt.fParentGUID)) {
 			this.parentByURI.put(uri, UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID)));
 		}
@@ -160,10 +161,10 @@ public class UcmModel {
 	}
 
 	protected static final URI getURI(DataObject dataObject) {
-		return UcmModel.getURI(new UcmTools(dataObject));
+		return UcmModel.getURI(new UcmAttributes(dataObject));
 	}
 
-	protected static final URI getURI(UcmTools data) {
+	protected static final URI getURI(UcmAttributes data) {
 		final boolean file = data.hasAttribute(UcmAtt.dDocName);
 		return (file ? UcmModel.newFileURI(data.getString(UcmAtt.dDocName))
 			: UcmModel.newFolderURI(data.getString(UcmAtt.fFolderGUID)));
@@ -253,7 +254,7 @@ public class UcmModel {
 	protected URI resolvePath(String p) throws UcmServiceException, UcmObjectNotFoundException {
 		final String sanitizedPath = UcmModel.sanitizePath(p);
 		URI uri = this.uriByPaths.get(sanitizedPath);
-		final AtomicReference<UcmTools> data = new AtomicReference<>(null);
+		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
 		if (uri == null) {
 			try {
 				uri = this.uriByPaths.createIfAbsent(sanitizedPath, new ConcurrentInitializer<URI>() {
@@ -293,14 +294,15 @@ public class UcmModel {
 							}
 							if (rs == null) { throw new UcmServiceException(String.format(
 								"Path [%s] was found, but was neither a file nor a folder?!?", sanitizedPath)); }
-							DataObject baseDataObject = rs.getRows().get(0);
+							Map<String, String> baseObj = new HashMap<>();
+							baseObj.putAll(rs.getRows().get(0));
 							// Capture the parent path - it's either LocalData.filePath or
 							// LocalData.folderPath...but it also contains the filename so we need
-							// to basename it
+							// to dirname it
 							String parentPath = responseData
 								.getLocal(String.format("%sPath", file ? "file" : "folder"));
-							baseDataObject.put(UcmAtt.$ucmParentPath.name(), FileNameTools.basename(parentPath, '/'));
-							data.set(new UcmTools(baseDataObject));
+							baseObj.put(UcmAtt.$ucmParentPath.name(), FileNameTools.dirname(parentPath, '/'));
+							data.set(new UcmAttributes(baseObj));
 
 							String guid = data.get().getString(UcmAtt.dDocName);
 							if (guid != null) { return UcmModel.newFileURI(guid); }
@@ -334,7 +336,7 @@ public class UcmModel {
 		return uri;
 	}
 
-	protected DataObject getDataObject(final URI uri) throws UcmServiceException, UcmObjectNotFoundException {
+	protected UcmAttributes getDataObject(final URI uri) throws UcmServiceException, UcmObjectNotFoundException {
 		final boolean file;
 		if (isFileURI(uri)) {
 			// The SSP is the dDocName
@@ -348,7 +350,7 @@ public class UcmModel {
 		}
 
 		UcmGUID guid = this.guidByURI.get(uri);
-		final AtomicReference<UcmTools> data = new AtomicReference<>(null);
+		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		if (guid == null) {
@@ -394,9 +396,8 @@ public class UcmModel {
 							if (rs == null) { throw new UcmServiceException(
 								String.format("URI [%s] was found, but returned incorrect results?!?", uri)); }
 
-							DataObject baseObj = rs.getRows().get(0);
-							UcmTools baseData = new UcmTools(baseObj);
-
+							Map<String, String> baseObj = new HashMap<>();
+							baseObj.putAll(rs.getRows().get(0));
 							if (file) {
 								DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
 								baseObj.putAll(docInfo);
@@ -409,11 +410,12 @@ public class UcmModel {
 							} else {
 								// Capture the parent path...from FLD_INFO, it's stored in
 								// LocalData.folderPath, but it also includes the folder's name, so
-								// we basename it
+								// we dirname it
 								String path = responseData.getLocalData().get("folderPath");
 								baseObj.put(UcmAtt.$ucmParentPath.name(), FileNameTools.dirname(path, '/'));
 							}
 
+							UcmAttributes baseData = new UcmAttributes(baseObj);
 							data.set(baseData);
 							return new UcmGUID(baseData.getString(file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID));
 						} catch (Exception e) {
@@ -433,12 +435,12 @@ public class UcmModel {
 		if (UcmModel.NULLGUID.equals(
 			guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri)); }
 
-		DataObject ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<DataObject>() {
+		UcmAttributes ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<UcmAttributes>() {
 			@Override
-			public DataObject get() throws ConcurrentException {
-				UcmTools ret = data.get();
+			public UcmAttributes get() throws ConcurrentException {
+				UcmAttributes ret = data.get();
 				cacheDataObject(ret);
-				return ret.getDataObject();
+				return ret;
 			}
 		});
 
@@ -469,10 +471,10 @@ public class UcmModel {
 		return new UcmFile(this, revision.getUri(), getFileRevision(revision.getId(), false, true));
 	}
 
-	protected DataObject getFileRevision(final String id, boolean refreshHistory, final boolean refreshRenditions)
+	protected UcmAttributes getFileRevision(final String id, boolean refreshHistory, final boolean refreshRenditions)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		UcmGUID guid = this.versionGuidByID.get(id);
-		final AtomicReference<UcmTools> data = new AtomicReference<>(null);
+		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		if (guid == null) {
@@ -513,16 +515,18 @@ public class UcmModel {
 							if (rs == null) { throw new UcmServiceException(
 								String.format("Revision ID [%s] was found, but returned incorrect results?!?", id)); }
 
-							DataObject baseObj = rs.getRows().get(0);
+							Map<String, String> baseObj = new HashMap<>();
+							baseObj.putAll(rs.getRows().get(0));
 							// Capture the parent path...from DOC_INFO, it's stored in
 							// LocalData.fParentPath
 							baseObj.put(UcmAtt.$ucmParentPath.name(), responseData.getLocalData().get("fParentPath"));
-							UcmTools baseData = new UcmTools(baseObj);
 
 							DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
 							baseObj.putAll(docInfo);
 							history.set(responseData.getResultSet("REVISION_HISTORY"));
 							renditions.set(responseData.getResultSet("Renditions"));
+
+							UcmAttributes baseData = new UcmAttributes(baseObj);
 							data.set(baseData);
 							return new UcmGUID(baseData.getString(UcmAtt.fFileGUID));
 						} catch (Exception e) {
@@ -542,12 +546,12 @@ public class UcmModel {
 		if (UcmModel.NULLGUID.equals(
 			guid)) { throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id)); }
 
-		DataObject ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<DataObject>() {
+		UcmAttributes ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<UcmAttributes>() {
 			@Override
-			public DataObject get() throws ConcurrentException {
-				UcmTools ret = data.get();
+			public UcmAttributes get() throws ConcurrentException {
+				UcmAttributes ret = data.get();
 				cacheDataObject(ret);
-				return ret.getDataObject();
+				return ret;
 			}
 		});
 
@@ -591,7 +595,7 @@ public class UcmModel {
 	}
 
 	public static interface ObjectHandler {
-		public void handleObject(IdcSession session, int pos, URI objectUri, DataObject object);
+		public void handleObject(IdcSession session, int pos, URI objectUri, UcmAttributes object);
 	}
 
 	public int iterateFolderContents(final URI uri, final ObjectHandler handler)
@@ -604,7 +608,7 @@ public class UcmModel {
 		Map<String, URI> children = this.childrenByURI.get(uri);
 		boolean reconstruct = false;
 		if (children != null) {
-			Map<URI, DataObject> objects = new LinkedHashMap<>(children.size());
+			Map<URI, UcmAttributes> objects = new LinkedHashMap<>(children.size());
 			// We'll gather the objects first, and then iterate over them, because
 			// if there's an inconsistency (i.e. a missing stale object), then we
 			// want to do the full service invocation to the server
@@ -639,8 +643,8 @@ public class UcmModel {
 			}
 		}
 
-		final AtomicReference<UcmTools> data = new AtomicReference<>(null);
-		final AtomicReference<Map<String, DataObject>> rawChildren = new AtomicReference<>(null);
+		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
+		final AtomicReference<Map<String, UcmAttributes>> rawChildren = new AtomicReference<>(null);
 		if (children == null) {
 			try {
 				children = this.childrenByURI.createIfAbsent(uri, new ConcurrentInitializer<Map<String, URI>>() {
@@ -656,26 +660,29 @@ public class UcmModel {
 							IdcSession s = w.getWrapped();
 							try {
 								Map<String, URI> children = new TreeMap<>();
-								Map<String, DataObject> dataObjects = new TreeMap<>();
+								Map<String, UcmAttributes> dataObjects = new TreeMap<>();
 								FolderContentsIterator it = new FolderContentsIterator(s, uri);
 								while (it.hasNext()) {
 									DataObject o = it.next();
 
-									UcmTools t = new UcmTools(o);
+									// TODO: Add the parent path
+									// What about FLD_BROWSE?? What does it return?
+
+									UcmAttributes t = new UcmAttributes(o);
 									URI childUri = UcmModel.getURI(o);
 									String name = t.getString(UcmAtt.fFileName);
 									if (name == null) {
 										name = t.getString(UcmAtt.fFolderName);
 									}
 									children.put(name, childUri);
-									dataObjects.put(name, o);
+									dataObjects.put(name, t);
 									// Here we check the handler's state to see if we should invoke
 									// handleObject(), but we don't break the cycle just yet because
 									// we want to cache everything we retrieved...
-									handler.handleObject(s, it.getCurrentPos(), childUri, o);
+									handler.handleObject(s, it.getCurrentPos(), childUri, t);
 								}
 								rawChildren.set(dataObjects);
-								data.set(new UcmTools(it.getFolder()));
+								data.set(new UcmAttributes(it.getFolder()));
 								return children;
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
@@ -705,7 +712,7 @@ public class UcmModel {
 		}
 
 		if (rawChildren.get() != null) {
-			Map<String, DataObject> c = rawChildren.get();
+			Map<String, UcmAttributes> c = rawChildren.get();
 			for (String name : c.keySet()) {
 				cacheDataObject(c.get(name));
 			}
@@ -718,8 +725,7 @@ public class UcmModel {
 		final Map<String, URI> children = new LinkedHashMap<>();
 		iterateFolderContents(uri, new ObjectHandler() {
 			@Override
-			public void handleObject(IdcSession session, int pos, URI uri, DataObject object) {
-				UcmTools data = new UcmTools(object);
+			public void handleObject(IdcSession session, int pos, URI uri, UcmAttributes data) {
 				String name = data.getString(UcmAtt.fFileName);
 				if (name == null) {
 					name = data.getString(UcmAtt.fFolderName);

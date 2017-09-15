@@ -11,7 +11,7 @@ public class UcmRenditionInfo {
 	private final String description;
 
 	UcmRenditionInfo(UcmGUID guid, DataObject obj) {
-		UcmTools data = new UcmTools(obj);
+		UcmAttributes data = new UcmAttributes(obj);
 		this.guid = guid;
 		this.type = data.getString(UcmAtt.rendType);
 		this.format = data.getString(UcmAtt.rendFormat);

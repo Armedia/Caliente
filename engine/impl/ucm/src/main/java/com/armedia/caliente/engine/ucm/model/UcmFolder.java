@@ -2,11 +2,9 @@ package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
 
-import oracle.stellent.ridc.model.DataObject;
-
 public class UcmFolder extends UcmFSObject {
 
-	UcmFolder(UcmModel model, URI uri, DataObject data) {
+	UcmFolder(UcmModel model, URI uri, UcmAttributes data) {
 		super(model, uri, data, UcmAtt.fFolderName, UcmAtt.fFolderGUID);
 	}
 

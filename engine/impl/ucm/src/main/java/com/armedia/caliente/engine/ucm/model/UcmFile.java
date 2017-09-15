@@ -4,11 +4,9 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Set;
 
-import oracle.stellent.ridc.model.DataObject;
-
 public class UcmFile extends UcmFSObject {
 
-	UcmFile(UcmModel model, URI uri, DataObject data) {
+	UcmFile(UcmModel model, URI uri, UcmAttributes data) {
 		super(model, uri, data, UcmAtt.fFileName, UcmAtt.fFileGUID);
 	}
 
