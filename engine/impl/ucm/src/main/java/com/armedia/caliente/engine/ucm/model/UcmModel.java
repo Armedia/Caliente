@@ -428,13 +428,54 @@ public class UcmModel {
 		return getFolderContents(UcmModel.newURI(UcmModel.FOLDER_SCHEME, guid.getString()));
 	}
 
-	protected Map<String, URI> getFolderContents(final URI uri) throws UcmServiceException, UcmFolderNotFoundException {
+	public static interface ObjectHandler {
+		public void handleObject(IdcSession session, int pos, URI objectUri, DataObject object);
+	}
+
+	public int iterateFolderContents(final URI uri, final ObjectHandler handler)
+		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
+		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
 		// If this isn't a folder, we don't even try it...
-		if (!UcmModel.FOLDER_SCHEME.equals(uri.getScheme())) { return null; }
+		if (!UcmModel.FOLDER_SCHEME.equals(uri.getScheme())) { return -1; }
 
 		Map<String, URI> children = this.childrenByURI.get(uri);
-		if (children != null) { return children; }
+		boolean reconstruct = false;
+		if (children != null) {
+			Map<URI, DataObject> objects = new LinkedHashMap<>(children.size());
+			// We'll gather the objects first, and then iterate over them, because
+			// if there's an inconsistency (i.e. a missing stale object), then we
+			// want to do the full service invocation to the server
+			for (URI childUri : children.values()) {
+				try {
+					objects.put(childUri, getDataObject(childUri));
+				} catch (UcmObjectNotFoundException e) {
+					reconstruct = true;
+					break;
+				}
+			}
+
+			// If the cache remains current, and we're not missing any child objects, then we quite
+			// simply iterate over the objects we got and call it a day
+			if (!reconstruct) {
+				final SessionWrapper<IdcSession> w;
+				try {
+					w = UcmModel.this.sessionFactory.acquireSession();
+				} catch (Exception e) {
+					throw new UcmServiceException("Failed to acquire an RIDC session", e);
+				}
+				try {
+					final IdcSession session = w.getWrapped();
+					int ret = 0;
+					for (URI childUri : objects.keySet()) {
+						handler.handleObject(session, ret++, childUri, objects.get(childUri));
+					}
+					return ret;
+				} finally {
+					w.close();
+				}
+			}
+		}
 
 		final AtomicReference<UcmTools> data = new AtomicReference<>(null);
 		final AtomicReference<Map<String, DataObject>> rawChildren = new AtomicReference<>(null);
@@ -466,6 +507,10 @@ public class UcmModel {
 									}
 									children.put(name, childUri);
 									dataObjects.put(name, o);
+									// Here we check the handler's state to see if we should invoke
+									// handleObject(), but we don't break the cycle just yet because
+									// we want to cache everything we retrieved...
+									handler.handleObject(s, it.getCurrentPos(), childUri, o);
 								}
 								rawChildren.set(dataObjects);
 								data.set(new UcmTools(it.getFolder()));
@@ -504,6 +549,22 @@ public class UcmModel {
 			}
 		}
 
+		return (children != null ? children.size() : 0);
+	}
+
+	protected Map<String, URI> getFolderContents(final URI uri) throws UcmServiceException, UcmFolderNotFoundException {
+		final Map<String, URI> children = new LinkedHashMap<>();
+		iterateFolderContents(uri, new ObjectHandler() {
+			@Override
+			public void handleObject(IdcSession session, int pos, URI uri, DataObject object) {
+				UcmTools data = new UcmTools(object);
+				String name = data.getString(UcmAtt.fFileName);
+				if (name == null) {
+					name = data.getString(UcmAtt.fFolderName);
+				}
+				children.put(name, uri);
+			}
+		});
 		return children;
 	}
 
@@ -526,7 +587,9 @@ public class UcmModel {
 		return null;
 	}
 
-	public UcmFolder getFolder(String path) throws UcmException {
+	public UcmFolder getFolder(String path) throws UcmServiceException, UcmObjectNotFoundException {
+		URI uri = resolvePath(path);
+		DataObject o = getDataObject(uri);
 		return null;
 	}
 
