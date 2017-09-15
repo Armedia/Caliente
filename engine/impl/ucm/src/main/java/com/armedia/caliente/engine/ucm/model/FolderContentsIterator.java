@@ -2,8 +2,10 @@ package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -33,15 +35,16 @@ public class FolderContentsIterator {
 	private int currentInPage = -1;
 
 	private boolean firstRequestIssued = false;
-	private DataObject folder = null;
-	private DataObject localData = null;
+	private UcmAttributes folder = null;
+	private UcmAttributes localData = null;
+	private String parentPath = null;
 	private Iterator<DataObject> folders = null;
 	private Iterator<DataObject> files = null;
 
 	private DataBinder requestBinder = null;
 	private DataBinder responseBinder = null;
 
-	private DataObject current = null;
+	private UcmAttributes current = null;
 	private boolean completed = false;
 
 	public FolderContentsIterator(IdcSession session, String path) {
@@ -148,14 +151,14 @@ public class FolderContentsIterator {
 		return this.session.sendRequest(this.requestBinder).getResponseAsBinder();
 	}
 
-	public DataObject getFolder() throws IdcClientException {
+	public UcmAttributes getFolder() throws IdcClientException {
 		if (!this.firstRequestIssued) {
 			hasNext();
 		}
 		return this.folder;
 	}
 
-	public DataObject getLocalData() throws IdcClientException {
+	public UcmAttributes getLocalData() throws IdcClientException {
 		if (!this.firstRequestIssued) {
 			hasNext();
 		}
@@ -174,7 +177,9 @@ public class FolderContentsIterator {
 			this.firstRequestIssued = true;
 
 			if (this.localData == null) {
-				this.localData = this.responseBinder.getLocalData();
+				DataObject localData = this.responseBinder.getLocalData();
+				this.localData = new UcmAttributes(localData);
+				this.parentPath = localData.get("folderPath");
 			}
 
 			if (this.folder == null) {
@@ -182,7 +187,7 @@ public class FolderContentsIterator {
 				if (rs != null) {
 					List<DataObject> l = rs.getRows();
 					if ((l != null) && !l.isEmpty()) {
-						this.folder = l.get(0);
+						this.folder = new UcmAttributes(l.get(0));
 					}
 				}
 			}
@@ -203,14 +208,11 @@ public class FolderContentsIterator {
 			}
 		}
 
-		if (this.folders.hasNext()) {
-			this.current = this.folders.next();
-			this.currentInPage++;
-			return true;
-		}
-
-		if (this.files.hasNext()) {
-			this.current = this.files.next();
+		if (this.folders.hasNext() || this.files.hasNext()) {
+			DataObject o = (this.folders.hasNext() ? this.folders.next() : this.files.next());
+			Map<String, String> m = new HashMap<>(o);
+			m.put(UcmAtt.$ucmParentPath.name(), this.parentPath);
+			this.current = new UcmAttributes(m);
 			this.currentInPage++;
 			return true;
 		}
@@ -226,9 +228,9 @@ public class FolderContentsIterator {
 		return false;
 	}
 
-	public DataObject next() throws IdcClientException {
+	public UcmAttributes next() throws IdcClientException {
 		if (!hasNext()) { throw new NoSuchElementException(); }
-		DataObject ret = this.current;
+		UcmAttributes ret = this.current;
 		this.current = null;
 		return ret;
 	}

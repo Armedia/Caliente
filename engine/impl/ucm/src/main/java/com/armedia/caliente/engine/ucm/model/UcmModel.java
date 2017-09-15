@@ -663,26 +663,21 @@ public class UcmModel {
 								Map<String, UcmAttributes> dataObjects = new TreeMap<>();
 								FolderContentsIterator it = new FolderContentsIterator(s, uri);
 								while (it.hasNext()) {
-									DataObject o = it.next();
-
-									// TODO: Add the parent path
-									// What about FLD_BROWSE?? What does it return?
-
-									UcmAttributes t = new UcmAttributes(o);
+									UcmAttributes o = it.next();
 									URI childUri = UcmModel.getURI(o);
-									String name = t.getString(UcmAtt.fFileName);
+									String name = o.getString(UcmAtt.fFileName);
 									if (name == null) {
-										name = t.getString(UcmAtt.fFolderName);
+										name = o.getString(UcmAtt.fFolderName);
 									}
 									children.put(name, childUri);
-									dataObjects.put(name, t);
+									dataObjects.put(name, o);
 									// Here we check the handler's state to see if we should invoke
 									// handleObject(), but we don't break the cycle just yet because
 									// we want to cache everything we retrieved...
-									handler.handleObject(s, it.getCurrentPos(), childUri, t);
+									handler.handleObject(s, it.getCurrentPos(), childUri, o);
 								}
 								rawChildren.set(dataObjects);
-								data.set(new UcmAttributes(it.getFolder()));
+								data.set(it.getFolder());
 								return children;
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",

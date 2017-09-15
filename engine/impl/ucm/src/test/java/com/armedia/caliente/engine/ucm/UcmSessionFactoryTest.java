@@ -10,6 +10,7 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.ucm.model.FolderContentsIterator;
+import com.armedia.caliente.engine.ucm.model.UcmAttributes;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -37,6 +38,20 @@ public class UcmSessionFactoryTest {
 		final String indentStr = StringUtils.repeat('\t', indent);
 		for (String s : new TreeSet<>(o.keySet())) {
 			Object v = o.get(s);
+			if (v == null) {
+				v = UcmSessionFactoryTest.NULL;
+			} else {
+				v = String.format("[%s]", v);
+			}
+			System.out.printf("%s[%s] -> %s%n", indentStr, s, v);
+		}
+	}
+
+	private void dumpObject(int indent, UcmAttributes o) {
+		final String indentStr = StringUtils.repeat('\t', indent);
+		Map<String, String> m = o.getData();
+		for (String s : new TreeSet<>(m.keySet())) {
+			String v = m.get(s);
 			if (v == null) {
 				v = UcmSessionFactoryTest.NULL;
 			} else {
@@ -95,7 +110,11 @@ public class UcmSessionFactoryTest {
 
 		System.out.printf("Base Folder @ [%s]:%n", it.getSearchKey());
 		System.out.printf("%s%n", StringUtils.repeat('-', 40));
-		System.out.printf("\t%s%n", it.getFolder());
+		dumpObject(1, it.getFolder());
+
+		System.out.printf("Local Data@ [%s]:%n", it.getSearchKey());
+		System.out.printf("%s%n", StringUtils.repeat('-', 40));
+		dumpObject(1, it.getLocalData());
 	}
 
 	@Test

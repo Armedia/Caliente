@@ -2,11 +2,15 @@ package com.armedia.caliente.engine.ucm.model;
 
 import java.text.ParseException;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 
-import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.model.impl.DataObjectEncodingUtils;
@@ -24,61 +28,135 @@ public final class UcmAttributes {
 		this.data = data;
 	}
 
-	public Map<String, String> getData() {
+	Map<String, String> getMutableData() {
 		return this.data;
 	}
 
-	public final boolean hasAttribute(UcmAtt att) {
-		return this.data.containsKey(att.name());
+	public Map<String, String> getData() {
+		return Collections.unmodifiableMap(this.data);
 	}
 
-	public final String getString(UcmAtt att) {
-		return getString(att, null);
+	private String getKey(UcmAtt att) {
+		Objects.requireNonNull(att, "Must provide a non-null attribute key");
+		return att.name();
 	}
 
-	public final String getString(UcmAtt att, String def) {
-		return Tools.coalesce(this.data.get(att.name()), def);
+	public boolean hasAttribute(String name) {
+		Objects.requireNonNull(name, "Must provide a non-null attribute name");
+		return this.data.containsKey(name);
 	}
 
-	public final Date getDate(UcmAtt att) {
-		return getDate(att, null);
+	public String getString(String name) {
+		return getString(name, null);
 	}
 
-	public final Date getDate(UcmAtt att, Date def) {
-		Calendar c = getCalendar(att);
+	public String getString(String name, String def) {
+		Objects.requireNonNull(name, "Must provide a non-null attribute name");
+		String ret = this.data.get(name);
+		return Tools.coalesce(ret, def);
+	}
+
+	public boolean hasAttribute(UcmAtt att) {
+		return hasAttribute(getKey(att));
+	}
+
+	public String getString(UcmAtt att) {
+		return getString(getKey(att));
+	}
+
+	public String getString(UcmAtt att, String def) {
+		return getString(getKey(att), def);
+	}
+
+	public Date getDate(String name) {
+		return getDate(name, null);
+	}
+
+	public Date getDate(String name, Date def) {
+		Calendar c = getCalendar(name);
 		if (c == null) { return def; }
 		return c.getTime();
 	}
 
-	public final Calendar getCalendar(UcmAtt att) {
-		return getCalendar(att, null);
+	public Date getDate(UcmAtt att) {
+		return getDate(getKey(att));
 	}
 
-	public final Calendar getCalendar(UcmAtt att, Calendar def) {
-		String rawDate = getString(att);
-		if (rawDate == null) { return def; }
+	public Date getDate(UcmAtt att, Date def) {
+		return getDate(getKey(att), def);
+	}
+
+	public Calendar getCalendar(String name) {
+		return getCalendar(name, null);
+	}
+
+	public Calendar getCalendar(String name, Calendar def) {
+		String v = getString(name);
+		if (v == null) { return def; }
 		try {
-			return DataObjectEncodingUtils.decodeDate(rawDate);
+			return DataObjectEncodingUtils.decodeDate(v);
 		} catch (ParseException e) {
-			throw new UcmRuntimeException(String.format("Failed to parse out the date [%s]", rawDate), e);
+			throw new UcmRuntimeException(String.format("Failed to parse out the calendar [%s]", v), e);
 		}
 	}
 
-	public final Integer getInteger(UcmAtt att) {
-		return CfgTools.decodeInteger(att.name(), this.data);
+	public Calendar getCalendar(UcmAtt att) {
+		return getCalendar(getKey(att));
 	}
 
-	public final int getInteger(UcmAtt att, int def) {
-		Integer v = getInteger(att);
+	public Calendar getCalendar(UcmAtt att, Calendar def) {
+		return getCalendar(getKey(att), def);
+	}
+
+	public Integer getInteger(String name) {
+		String str = getString(name);
+		if (str == null) { return null; }
+		return Integer.valueOf(str);
+	}
+
+	public int getInteger(String name, int def) {
+		Integer v = getInteger(name);
 		return (v != null ? v.intValue() : def);
 	}
 
-	public final Boolean getBoolean(UcmAtt att) {
-		return Tools.toBoolean(getString(att));
+	public Integer getInteger(UcmAtt att) {
+		return getInteger(getKey(att));
 	}
 
-	public final boolean getBoolean(UcmAtt att, boolean def) {
-		Boolean b = getBoolean(att);
+	public int getInteger(UcmAtt att, int def) {
+		return getInteger(getKey(att), def);
+	}
+
+	public Boolean getBoolean(String name) {
+		return Tools.toBoolean(getString(name));
+	}
+
+	public boolean getBoolean(String name, boolean def) {
+		Boolean b = getBoolean(name);
 		return (b != null ? b.booleanValue() : def);
+	}
+
+	public Boolean getBoolean(UcmAtt att) {
+		return getBoolean(getKey(att));
+	}
+
+	public boolean getBoolean(UcmAtt att, boolean def) {
+		return getBoolean(getKey(att), def);
+	}
+
+	public Set<String> getValueNames() {
+		return new TreeSet<>(this.data.keySet());
+	}
+
+	public Set<UcmAtt> getAttributes() {
+		Set<UcmAtt> ret = EnumSet.noneOf(UcmAtt.class);
+		for (String s : this.data.keySet()) {
+			try {
+				ret.add(UcmAtt.valueOf(s));
+			} catch (IllegalArgumentException e) {
+				// Do nothing...
+			}
+		}
+		return ret;
 	}
 }
