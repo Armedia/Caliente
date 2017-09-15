@@ -23,7 +23,7 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClientConfig;
 
-public class UcmSessionFactory extends SessionFactory<IdcSession> {
+public class UcmSessionFactory extends SessionFactory<UcmSession> {
 
 	private final IdcClientManager manager;
 	private final String host;
@@ -147,7 +147,7 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 	}
 
 	@Override
-	public PooledObject<IdcSession> makeObject() throws Exception {
+	public PooledObject<UcmSession> makeObject() throws Exception {
 
 		this.log.trace("Setting the IDC connection URL to [{}]...", this.url);
 		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(this.url));
@@ -165,18 +165,18 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 			config.setKeystoreAliasPassword(this.clientCertPassword);
 		}
 		client.initialize();
-		return new DefaultPooledObject<>(new IdcSession(client, this.context));
+		return new DefaultPooledObject<>(new UcmSession(client, this.context));
 	}
 
 	@Override
-	public void destroyObject(PooledObject<IdcSession> p) throws Exception {
+	public void destroyObject(PooledObject<UcmSession> p) throws Exception {
 		p.getObject().logout();
 	}
 
 	@Override
-	public boolean validateObject(PooledObject<IdcSession> p) {
+	public boolean validateObject(PooledObject<UcmSession> p) {
 		if (p == null) { return false; }
-		IdcSession session = p.getObject();
+		UcmSession session = p.getObject();
 		if (session == null) { return false; }
 		if (!session.isInitialized()) { return false; }
 
@@ -201,17 +201,17 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 	}
 
 	@Override
-	public void activateObject(PooledObject<IdcSession> p) throws Exception {
+	public void activateObject(PooledObject<UcmSession> p) throws Exception {
 		// TODO: do we need to do something here?
 	}
 
 	@Override
-	public void passivateObject(PooledObject<IdcSession> p) throws Exception {
+	public void passivateObject(PooledObject<UcmSession> p) throws Exception {
 		// TODO: do we need to do something here?
 	}
 
 	@Override
-	protected UcmSessionWrapper newWrapper(IdcSession session) throws Exception {
+	protected UcmSessionWrapper newWrapper(UcmSession session) throws Exception {
 		return new UcmSessionWrapper(this, session);
 	}
 }

@@ -98,8 +98,8 @@ public class UcmSessionFactoryTest {
 		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
 
 		factory = new UcmSessionFactory(settings, crypto);
-		SessionWrapper<IdcSession> w = factory.acquireSession();
-		IdcSession s = w.getWrapped();
+		SessionWrapper<UcmSession> w = factory.acquireSession();
+		UcmSession s = w.getWrapped();
 
 		FolderContentsIterator it = new FolderContentsIterator(s, "/", 3);
 		while (it.hasNext()) {
@@ -129,8 +129,8 @@ public class UcmSessionFactoryTest {
 		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
 
 		factory = new UcmSessionFactory(settings, crypto);
-		SessionWrapper<IdcSession> w = factory.acquireSession();
-		IdcSession s = w.getWrapped();
+		SessionWrapper<UcmSession> w = factory.acquireSession();
+		UcmSession s = w.getWrapped();
 
 		DataBinder binder = s.createBinder();
 		binder.putLocal("IdcService", "FLD_BROWSE");
@@ -169,8 +169,8 @@ public class UcmSessionFactoryTest {
 			settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
 
 			factory = new UcmSessionFactory(settings, crypto);
-			SessionWrapper<IdcSession> w = factory.acquireSession();
-			IdcSession s = w.getWrapped();
+			SessionWrapper<UcmSession> w = factory.acquireSession();
+			UcmSession s = w.getWrapped();
 
 			DataBinder binder = s.createBinder();
 			binder.putLocal("IdcService", "DOC_INFO_BY_NAME");
@@ -205,8 +205,8 @@ public class UcmSessionFactoryTest {
 		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
 
 		factory = new UcmSessionFactory(settings, crypto);
-		SessionWrapper<IdcSession> w = factory.acquireSession();
-		IdcSession s = w.getWrapped();
+		SessionWrapper<UcmSession> w = factory.acquireSession();
+		UcmSession s = w.getWrapped();
 
 		DataBinder binder = s.createBinder();
 		binder.putLocal("IdcService", "FLD_INFO");
@@ -245,8 +245,8 @@ public class UcmSessionFactoryTest {
 		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
 
 		factory = new UcmSessionFactory(settings, crypto);
-		SessionWrapper<IdcSession> w = factory.acquireSession();
-		IdcSession s = w.getWrapped();
+		SessionWrapper<UcmSession> w = factory.acquireSession();
+		UcmSession s = w.getWrapped();
 
 		DataBinder binder = s.createBinder();
 		binder.putLocal("IdcService", "REV_HISTORY");
@@ -286,8 +286,8 @@ public class UcmSessionFactoryTest {
 			settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
 
 			factory = new UcmSessionFactory(settings, crypto);
-			SessionWrapper<IdcSession> w = factory.acquireSession();
-			IdcSession s = w.getWrapped();
+			SessionWrapper<UcmSession> w = factory.acquireSession();
+			UcmSession s = w.getWrapped();
 
 			DataBinder binder = s.createBinder();
 			binder.putLocal("IdcService", "DOC_INFO");

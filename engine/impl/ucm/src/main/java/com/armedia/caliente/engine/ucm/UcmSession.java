@@ -13,13 +13,13 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 
 @SuppressWarnings("rawtypes")
-public class IdcSession implements TrackedUse {
+public class UcmSession implements TrackedUse {
 
 	private final IntradocClient client;
 	private final IdcContext userContext;
 	private long lastUsed = 0;
 
-	public IdcSession(IntradocClient client, IdcContext userContext) {
+	public UcmSession(IntradocClient client, IdcContext userContext) {
 		this.client = client;
 		this.userContext = userContext;
 	}

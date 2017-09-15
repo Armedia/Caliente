@@ -20,7 +20,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 
 import com.armedia.caliente.engine.SessionWrapper;
-import com.armedia.caliente.engine.ucm.IdcSession;
+import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -74,14 +74,14 @@ public class UcmModel {
 	private final UcmSessionFactory sessionFactory;
 
 	private static boolean isFrameworkFoldersEnabled(UcmSessionFactory sessionFactory) throws UcmServiceException {
-		final SessionWrapper<IdcSession> w;
+		final SessionWrapper<UcmSession> w;
 		try {
 			w = sessionFactory.acquireSession();
 		} catch (Exception e) {
 			throw new UcmServiceException("Failed to acquire an RIDC session", e);
 		}
 		try {
-			IdcSession s = w.getWrapped();
+			UcmSession s = w.getWrapped();
 
 			DataBinder binder = s.createBinder();
 			binder.putLocal("IdcService", "CONFIG_INFO");
@@ -259,14 +259,14 @@ public class UcmModel {
 				uri = this.uriByPaths.createIfAbsent(sanitizedPath, new ConcurrentInitializer<URI>() {
 					@Override
 					public URI get() throws ConcurrentException {
-						final SessionWrapper<IdcSession> w;
+						final SessionWrapper<UcmSession> w;
 						try {
 							w = UcmModel.this.sessionFactory.acquireSession();
 						} catch (Exception e) {
 							throw new ConcurrentException("Failed to acquire an RIDC session", e);
 						}
 						try {
-							IdcSession s = w.getWrapped();
+							UcmSession s = w.getWrapped();
 
 							DataBinder binder = s.createBinder();
 							binder.putLocal("IdcService", "FLD_INFO");
@@ -357,14 +357,14 @@ public class UcmModel {
 				guid = this.guidByURI.createIfAbsent(uri, new ConcurrentInitializer<UcmGUID>() {
 					@Override
 					public UcmGUID get() throws ConcurrentException {
-						final SessionWrapper<IdcSession> w;
+						final SessionWrapper<UcmSession> w;
 						try {
 							w = UcmModel.this.sessionFactory.acquireSession();
 						} catch (Exception e) {
 							throw new ConcurrentException("Failed to acquire an RIDC session", e);
 						}
 						try {
-							IdcSession s = w.getWrapped();
+							UcmSession s = w.getWrapped();
 
 							DataBinder binder = s.createBinder();
 							if (file) {
@@ -486,14 +486,14 @@ public class UcmModel {
 				guid = this.versionGuidByID.createIfAbsent(id, new ConcurrentInitializer<UcmGUID>() {
 					@Override
 					public UcmGUID get() throws ConcurrentException {
-						final SessionWrapper<IdcSession> w;
+						final SessionWrapper<UcmSession> w;
 						try {
 							w = UcmModel.this.sessionFactory.acquireSession();
 						} catch (Exception e) {
 							throw new ConcurrentException("Failed to acquire an RIDC session", e);
 						}
 						try {
-							IdcSession s = w.getWrapped();
+							UcmSession s = w.getWrapped();
 
 							DataBinder binder = s.createBinder();
 							binder.putLocal("IdcService", "DOC_INFO");
@@ -599,7 +599,7 @@ public class UcmModel {
 	}
 
 	public static interface ObjectHandler {
-		public void handleObject(IdcSession session, int pos, URI objectUri, UcmAttributes object);
+		public void handleObject(UcmSession session, int pos, URI objectUri, UcmAttributes object);
 	}
 
 	public int iterateFolderContents(final URI uri, final ObjectHandler handler)
@@ -628,14 +628,14 @@ public class UcmModel {
 			// If the cache remains current, and we're not missing any child objects, then we quite
 			// simply iterate over the objects we got and call it a day
 			if (!reconstruct) {
-				final SessionWrapper<IdcSession> w;
+				final SessionWrapper<UcmSession> w;
 				try {
 					w = UcmModel.this.sessionFactory.acquireSession();
 				} catch (Exception e) {
 					throw new UcmServiceException("Failed to acquire an RIDC session", e);
 				}
 				try {
-					final IdcSession session = w.getWrapped();
+					final UcmSession session = w.getWrapped();
 					int ret = 0;
 					for (URI childUri : objects.keySet()) {
 						handler.handleObject(session, ret++, childUri, objects.get(childUri));
@@ -654,14 +654,14 @@ public class UcmModel {
 				children = this.childrenByURI.createIfAbsent(uri, new ConcurrentInitializer<Map<String, URI>>() {
 					@Override
 					public Map<String, URI> get() throws ConcurrentException {
-						final SessionWrapper<IdcSession> w;
+						final SessionWrapper<UcmSession> w;
 						try {
 							w = UcmModel.this.sessionFactory.acquireSession();
 						} catch (Exception e) {
 							throw new ConcurrentException("Failed to acquire an RIDC session", e);
 						}
 						try {
-							IdcSession s = w.getWrapped();
+							UcmSession s = w.getWrapped();
 							try {
 								Map<String, URI> children = new TreeMap<>();
 								Map<String, UcmAttributes> dataObjects = new TreeMap<>();
@@ -724,7 +724,7 @@ public class UcmModel {
 		final Map<String, URI> children = new LinkedHashMap<>();
 		iterateFolderContents(uri, new ObjectHandler() {
 			@Override
-			public void handleObject(IdcSession session, int pos, URI uri, UcmAttributes data) {
+			public void handleObject(UcmSession session, int pos, URI uri, UcmAttributes data) {
 				String name = data.getString(UcmAtt.fFileName);
 				if (name == null) {
 					name = data.getString(UcmAtt.fFolderName);
@@ -740,7 +740,7 @@ public class UcmModel {
 		final Map<String, UcmFSObject> children = new LinkedHashMap<>();
 		iterateFolderContents(folder.getURI(), new ObjectHandler() {
 			@Override
-			public void handleObject(IdcSession session, int pos, URI uri, UcmAttributes data) {
+			public void handleObject(UcmSession session, int pos, URI uri, UcmAttributes data) {
 				UcmFSObject o = null;
 				String name = data.getString(UcmAtt.fFileName);
 				if (name != null) {
@@ -803,14 +803,14 @@ public class UcmModel {
 				history = this.historyByURI.createIfAbsent(uri, new ConcurrentInitializer<List<UcmRevision>>() {
 					@Override
 					public List<UcmRevision> get() throws ConcurrentException {
-						final SessionWrapper<IdcSession> w;
+						final SessionWrapper<UcmSession> w;
 						try {
 							w = UcmModel.this.sessionFactory.acquireSession();
 						} catch (Exception e) {
 							throw new ConcurrentException("Failed to acquire an RIDC session", e);
 						}
 						try {
-							IdcSession s = w.getWrapped();
+							UcmSession s = w.getWrapped();
 
 							DataBinder binder = s.createBinder();
 							binder.putLocal("IdcService", "REV_HISTORY");
@@ -856,14 +856,14 @@ public class UcmModel {
 
 	InputStream getInputStream(UcmFile file, String rendition)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
-		final SessionWrapper<IdcSession> w;
+		final SessionWrapper<UcmSession> w;
 		try {
 			w = UcmModel.this.sessionFactory.acquireSession();
 		} catch (Exception e) {
 			throw new UcmServiceException("Failed to acquire an RIDC session", e);
 		}
 		try {
-			IdcSession s = w.getWrapped();
+			UcmSession s = w.getWrapped();
 
 			DataBinder binder = s.createBinder();
 			binder.putLocal("IdcService", "GET_FILE");

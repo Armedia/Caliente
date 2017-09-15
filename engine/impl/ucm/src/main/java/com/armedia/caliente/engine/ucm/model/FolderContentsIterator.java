@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
-import com.armedia.caliente.engine.ucm.IdcSession;
+import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.IdcClientException;
@@ -25,7 +25,7 @@ public class FolderContentsIterator {
 	public static final int DEFAULT_PAGE_SIZE = 1000;
 	public static final int MAXIMUM_PAGE_SIZE = 100000;
 
-	private final IdcSession session;
+	private final UcmSession session;
 	private final FolderLocatorMode folderLocatorMode;
 	private final Object searchKey;
 	private final int pageSize;
@@ -47,57 +47,57 @@ public class FolderContentsIterator {
 	private UcmAttributes current = null;
 	private boolean completed = false;
 
-	public FolderContentsIterator(IdcSession session, String path) {
+	public FolderContentsIterator(UcmSession session, String path) {
 		this(session, FolderLocatorMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsIterator(IdcSession session, String path, FolderIteratorMode folderIteratorMode) {
+	public FolderContentsIterator(UcmSession session, String path, FolderIteratorMode folderIteratorMode) {
 		this(session, FolderLocatorMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsIterator(IdcSession session, String path, int pageSize) {
+	public FolderContentsIterator(UcmSession session, String path, int pageSize) {
 		this(session, FolderLocatorMode.BY_PATH, path, null, pageSize);
 	}
 
-	public FolderContentsIterator(IdcSession session, String path, FolderIteratorMode folderIteratorMode,
+	public FolderContentsIterator(UcmSession session, String path, FolderIteratorMode folderIteratorMode,
 		int pageSize) {
 		this(session, FolderLocatorMode.BY_PATH, path, folderIteratorMode, pageSize);
 	}
 
-	public FolderContentsIterator(IdcSession session, UcmGUID guid) {
+	public FolderContentsIterator(UcmSession session, UcmGUID guid) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsIterator(IdcSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode) {
+	public FolderContentsIterator(UcmSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsIterator(IdcSession session, UcmGUID guid, int pageSize) {
+	public FolderContentsIterator(UcmSession session, UcmGUID guid, int pageSize) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null, pageSize);
 	}
 
-	public FolderContentsIterator(IdcSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode,
+	public FolderContentsIterator(UcmSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode,
 		int pageSize) {
 		this(session, FolderLocatorMode.BY_GUID, guid, folderIteratorMode, pageSize);
 	}
 
-	public FolderContentsIterator(IdcSession session, URI uri) {
+	public FolderContentsIterator(UcmSession session, URI uri) {
 		this(session, FolderLocatorMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsIterator(IdcSession session, URI uri, FolderIteratorMode folderIteratorMode) {
+	public FolderContentsIterator(UcmSession session, URI uri, FolderIteratorMode folderIteratorMode) {
 		this(session, FolderLocatorMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsIterator(IdcSession session, URI uri, int pageSize) {
+	public FolderContentsIterator(UcmSession session, URI uri, int pageSize) {
 		this(session, FolderLocatorMode.BY_URI, uri, null, pageSize);
 	}
 
-	public FolderContentsIterator(IdcSession session, URI uri, FolderIteratorMode folderIteratorMode, int pageSize) {
+	public FolderContentsIterator(UcmSession session, URI uri, FolderIteratorMode folderIteratorMode, int pageSize) {
 		this(session, FolderLocatorMode.BY_URI, uri, folderIteratorMode, pageSize);
 	}
 
-	FolderContentsIterator(IdcSession session, FolderLocatorMode folderLocatorMode, Object searchKey,
+	FolderContentsIterator(UcmSession session, FolderLocatorMode folderLocatorMode, Object searchKey,
 		FolderIteratorMode folderIteratorMode, int pageSize) {
 		Objects.requireNonNull(session, "Must provide a non-null session");
 		Objects.requireNonNull(searchKey, "Must provide a non-null search criterion");
@@ -113,7 +113,7 @@ public class FolderContentsIterator {
 		return this.pageSize;
 	}
 
-	public IdcSession getSession() {
+	public UcmSession getSession() {
 		return this.session;
 	}
 

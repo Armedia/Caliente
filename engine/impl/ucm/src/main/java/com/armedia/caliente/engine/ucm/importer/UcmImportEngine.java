@@ -8,7 +8,7 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.engine.ucm.UcmCommon;
-import com.armedia.caliente.engine.ucm.IdcSession;
+import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
 import com.armedia.caliente.engine.ucm.UcmTranslator;
@@ -23,7 +23,7 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
 public class UcmImportEngine extends
-	ImportEngine<IdcSession, UcmSessionWrapper, CmfValue, UcmImportContext, UcmImportContextFactory, UcmImportDelegateFactory> {
+	ImportEngine<UcmSession, UcmSessionWrapper, CmfValue, UcmImportContext, UcmImportContextFactory, UcmImportDelegateFactory> {
 
 	public UcmImportEngine() {
 		super(new CmfCrypt());
@@ -50,7 +50,7 @@ public class UcmImportEngine extends
 	}
 
 	@Override
-	protected UcmImportContextFactory newContextFactory(IdcSession session, CfgTools cfg,
+	protected UcmImportContextFactory newContextFactory(UcmSession session, CfgTools cfg,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		return new UcmImportContextFactory(this, session, cfg, objectStore, streamStore, typeMapper, output,
@@ -58,7 +58,7 @@ public class UcmImportEngine extends
 	}
 
 	@Override
-	protected UcmImportDelegateFactory newDelegateFactory(IdcSession session, CfgTools cfg) throws Exception {
+	protected UcmImportDelegateFactory newDelegateFactory(UcmSession session, CfgTools cfg) throws Exception {
 		return new UcmImportDelegateFactory(this, session, cfg);
 	}
 
