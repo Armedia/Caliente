@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.ucm;
 
+import org.apache.commons.pool2.TrackedUse;
+
 import oracle.stellent.ridc.IdcClient;
 import oracle.stellent.ridc.IdcClientConfig;
 import oracle.stellent.ridc.IdcClientException;
@@ -11,10 +13,11 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 
 @SuppressWarnings("rawtypes")
-public class IdcSession {
+public class IdcSession implements TrackedUse {
 
 	private final IntradocClient client;
 	private final IdcContext userContext;
+	private long lastUsed = 0;
 
 	public IdcSession(IntradocClient client, IdcContext userContext) {
 		this.client = client;
@@ -66,7 +69,11 @@ public class IdcSession {
 	}
 
 	public ServiceResponse sendRequest(DataBinder dataBinder) throws IdcClientException {
-		return this.client.sendRequest(this.userContext, dataBinder);
+		try {
+			return this.client.sendRequest(this.userContext, dataBinder);
+		} finally {
+			this.lastUsed = System.currentTimeMillis();
+		}
 	}
 
 	public void setDataFactory(DataFactory dataFactory) {
@@ -75,5 +82,10 @@ public class IdcSession {
 
 	public void setInitialized(boolean initialized) {
 		this.client.setInitialized(initialized);
+	}
+
+	@Override
+	public long getLastUsed() {
+		return this.lastUsed;
 	}
 }

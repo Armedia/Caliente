@@ -37,11 +37,13 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 	private final String clientCertAlias;
 	private final String clientCertPassword;
 	private final IdcContext context;
+	private final long minPingTime;
 
 	public UcmSessionFactory(CfgTools settings, CmfCrypt crypto) throws Exception {
 		super(settings, crypto);
 
 		this.manager = new IdcClientManager();
+		this.minPingTime = settings.getLong(UcmSessionSetting.MIN_PING_TIME);
 		this.host = settings.getString(UcmSessionSetting.HOST);
 		this.port = settings.getInteger(UcmSessionSetting.PORT);
 		if ((this.port <= 0) || (this.port > 0xffff)) { throw new Exception(
@@ -178,6 +180,9 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 		if (session == null) { return false; }
 		if (!session.isInitialized()) { return false; }
 
+		long now = System.currentTimeMillis();
+		if ((now - p.getLastUsedTime()) <= this.minPingTime) { return true; }
+
 		DataBinder dataBinder = session.createBinder();
 		dataBinder.putLocal("IdcService", "PING_SERVER");
 
@@ -193,7 +198,6 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 			this.log.debug("Failed to ping the server", e);
 			return false;
 		}
-
 	}
 
 	@Override

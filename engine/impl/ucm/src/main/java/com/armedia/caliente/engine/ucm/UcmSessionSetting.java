@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.ucm;
 
+import java.util.concurrent.TimeUnit;
+
 import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum UcmSessionSetting implements ConfigurationSetting {
@@ -15,6 +17,7 @@ public enum UcmSessionSetting implements ConfigurationSetting {
 	KEYSTORE_PASSWORD(System.getProperty("javax.net.ssl.keyStorePassword")), //
 	CLIENT_CERT_ALIAS, //
 	CLIENT_CERT_PASSWORD, //
+	MIN_PING_TIME(TimeUnit.MINUTES.toMillis(2)), //
 	//
 	;
 

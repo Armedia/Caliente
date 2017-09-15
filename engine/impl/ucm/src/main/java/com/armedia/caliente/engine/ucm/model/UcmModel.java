@@ -567,7 +567,7 @@ public class UcmModel {
 		}
 
 		if (refreshRenditions && (renditions.get() != null)) {
-			DataResultSet rs = history.get();
+			DataResultSet rs = renditions.get();
 			Map<String, UcmRenditionInfo> m = new TreeMap<>();
 			for (DataObject o : rs.getRows()) {
 				UcmRenditionInfo r = new UcmRenditionInfo(guid, o);
@@ -751,8 +751,12 @@ public class UcmModel {
 
 	public UcmFileHistory getFileHistory(String path)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		final UcmFile latestFile = getFile(path);
-		final URI uri = latestFile.getURI();
+		return getFileHistory(getFile(path));
+	}
+
+	public UcmFileHistory getFileHistory(final UcmFile file)
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
+		final URI uri = file.getURI();
 		List<UcmRevision> history = this.historyByURI.get(uri);
 		if (history == null) {
 			try {
@@ -769,8 +773,8 @@ public class UcmModel {
 							IdcSession s = w.getWrapped();
 
 							DataBinder binder = s.createBinder();
-							binder.putLocal("IdcService", "REV_INFO");
-							binder.putLocal("dID", String.valueOf(latestFile.getRevisionId()));
+							binder.putLocal("IdcService", "REV_HISTORY");
+							binder.putLocal("dID", String.valueOf(file.getRevisionId()));
 
 							ServiceResponse response = null;
 							DataBinder responseData = null;
@@ -808,10 +812,6 @@ public class UcmModel {
 		}
 
 		return new UcmFileHistory(this, uri, history);
-	}
-
-	public UcmFileHistory getFileHistory(UcmFile file) throws UcmException {
-		return null;
 	}
 
 	Iterator<UcmFSObject> getFolderContents(UcmFolder folder) throws UcmException {

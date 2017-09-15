@@ -1,10 +1,13 @@
 package com.armedia.caliente.engine.ucm.model;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
@@ -81,10 +84,23 @@ public class UcmModelTest {
 				System.out.printf("[%s] -> [%s]%n", p, uri);
 				if (model.isFileURI(uri)) {
 					UcmFile f = model.getFile(p);
-					System.out.printf("\t[%s] -> [%s]%n", p, f.getPath());
+
+					System.out.printf("\tRevisions:%n");
+					System.out.printf("\t%s%n", StringUtils.repeat('-', 40));
+					for (UcmRevision r : model.getFileHistory(f)) {
+						System.out.printf("\t\t[%d] = %s%n", r.getRevisionId(), r.getRevLabel());
+						UcmFile R = model.getFileRevision(r);
+						System.out.printf("\t\t\tGUID = %s%n", R.getObjectGUID());
+						System.out.printf("\t\t\tNAME = %s%n", R.getName());
+						System.out.printf("\t\t\tSIZE = %d%n", R.getSize());
+						try (InputStream in = R.getInputStream()) {
+							System.out.printf("\t\t\tSUM  = %s%n", new String(Hex.encodeHex(DigestUtils.sha256(in))));
+						} catch (Exception e) {
+							e.printStackTrace(System.err);
+						}
+					}
 				} else {
 					UcmFolder f = model.getFolder(p);
-					System.out.printf("\t[%s] -> [%s]%n", p, f.getPath());
 				}
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
