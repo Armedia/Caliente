@@ -5,7 +5,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -471,6 +470,11 @@ public class UcmModel {
 		return new UcmFile(this, revision.getUri(), getFileRevision(revision.getId(), false, true));
 	}
 
+	public UcmFile getFileRevision(UcmFile file)
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
+		return new UcmFile(this, file.getURI(), getFileRevision(file.getRevisionId(), false, true));
+	}
+
 	protected UcmAttributes getFileRevision(final String id, boolean refreshHistory, final boolean refreshRenditions)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		UcmGUID guid = this.versionGuidByID.get(id);
@@ -731,6 +735,26 @@ public class UcmModel {
 		return children;
 	}
 
+	public Map<String, UcmFSObject> getFolderContents(final UcmFolder folder)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		final Map<String, UcmFSObject> children = new LinkedHashMap<>();
+		iterateFolderContents(folder.getURI(), new ObjectHandler() {
+			@Override
+			public void handleObject(IdcSession session, int pos, URI uri, UcmAttributes data) {
+				UcmFSObject o = null;
+				String name = data.getString(UcmAtt.fFileName);
+				if (name != null) {
+					o = new UcmFile(UcmModel.this, uri, data);
+				} else {
+					name = data.getString(UcmAtt.fFolderName);
+					o = new UcmFolder(UcmModel.this, uri, data);
+				}
+				children.put(name, o);
+			}
+		});
+		return children;
+	}
+
 	public UcmFolder getFolder(String path) throws UcmServiceException, UcmFolderNotFoundException {
 		try {
 			final URI uri = resolvePath(path);
@@ -749,14 +773,30 @@ public class UcmModel {
 		}
 	}
 
-	public UcmFileHistory getFileHistory(String path)
+	public UcmFileHistory getFileHistoryByPath(String path)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		return getFileHistory(getFile(path));
 	}
 
 	public UcmFileHistory getFileHistory(final UcmFile file)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		final URI uri = file.getURI();
+		return getFileHistory(file.getURI(), file.getRevisionId());
+	}
+
+	public UcmFileHistory getFileHistory(final URI uri)
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
+		final UcmAttributes att;
+		try {
+			att = getDataObject(uri);
+		} catch (UcmObjectNotFoundException e) {
+			throw new UcmFileNotFoundException(e.getMessage(), e);
+		}
+
+		return getFileHistory(uri, att.getString(UcmAtt.dID));
+	}
+
+	UcmFileHistory getFileHistory(final URI uri, final String revisionId)
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		List<UcmRevision> history = this.historyByURI.get(uri);
 		if (history == null) {
 			try {
@@ -774,7 +814,7 @@ public class UcmModel {
 
 							DataBinder binder = s.createBinder();
 							binder.putLocal("IdcService", "REV_HISTORY");
-							binder.putLocal("dID", String.valueOf(file.getRevisionId()));
+							binder.putLocal("dID", String.valueOf(revisionId));
 
 							ServiceResponse response = null;
 							DataBinder responseData = null;
@@ -812,10 +852,6 @@ public class UcmModel {
 		}
 
 		return new UcmFileHistory(this, uri, history);
-	}
-
-	Iterator<UcmFSObject> getFolderContents(UcmFolder folder) throws UcmException {
-		return null;
 	}
 
 	InputStream getInputStream(UcmFile file, String rendition)
@@ -868,5 +904,18 @@ public class UcmModel {
 	static <T extends Throwable> void throwIfMatches(Class<T> k, Throwable t) throws T {
 		Objects.requireNonNull(k, "Must provide an exception class to evaluate");
 		if (k.isInstance(t)) { throw k.cast(t); }
+	}
+
+	UcmFile refresh(UcmFile f) throws UcmFileNotFoundException, UcmServiceException, UcmFileRevisionNotFoundException {
+		return getFileRevision(f);
+	}
+
+	UcmFolder refresh(UcmFolder f) throws UcmFolderNotFoundException, UcmServiceException {
+		return getFolder(f.getObjectGUID());
+	}
+
+	UcmFileHistory refresh(UcmFileHistory h)
+		throws UcmFileNotFoundException, UcmServiceException, UcmFileRevisionNotFoundException {
+		return getFileHistory(h.getURI());
 	}
 }

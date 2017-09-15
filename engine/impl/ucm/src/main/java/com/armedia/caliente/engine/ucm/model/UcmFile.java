@@ -34,8 +34,8 @@ public class UcmFile extends UcmFSObject {
 		return getString(UcmAtt.dFormat);
 	}
 
-	public int getRevisionId() {
-		return getInteger(UcmAtt.dID, 1);
+	public String getRevisionId() {
+		return getString(UcmAtt.dID);
 	}
 
 	public int getRevisionNumber() {

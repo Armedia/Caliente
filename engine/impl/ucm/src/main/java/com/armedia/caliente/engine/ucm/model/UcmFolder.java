@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
+import java.util.Map;
 
 public class UcmFolder extends UcmFSObject {
 
@@ -14,5 +15,9 @@ public class UcmFolder extends UcmFSObject {
 
 	public String getFolderDescription() throws UcmException {
 		return getString(UcmAtt.fFolderDescription);
+	}
+
+	public Map<String, UcmFSObject> getContents() throws UcmFolderNotFoundException, UcmServiceException {
+		return this.model.getFolderContents(this);
 	}
 }
