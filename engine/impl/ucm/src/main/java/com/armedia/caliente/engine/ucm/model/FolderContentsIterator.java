@@ -137,7 +137,7 @@ public class FolderContentsIterator {
 		return Math.max(-1, (this.pageCount * this.pageSize) + this.currentInPage);
 	}
 
-	private DataBinder getNextBatch() throws IdcClientException {
+	private DataBinder getNextBatch() throws UcmServiceException {
 		if (this.requestBinder == null) {
 			this.requestBinder = this.session.createBinder();
 			this.folderLocatorMode.applySearchParameters(this.requestBinder, this.searchKey);
@@ -148,24 +148,29 @@ public class FolderContentsIterator {
 		this.requestBinder.putLocal(this.folderIteratorMode.count, String.valueOf(this.pageSize));
 		this.requestBinder.putLocal(this.folderIteratorMode.startRow, String.valueOf(this.pageSize * this.pageCount));
 
-		return this.session.sendRequest(this.requestBinder).getResponseAsBinder();
+		try {
+			return this.session.sendRequest(this.requestBinder).getResponseAsBinder();
+		} catch (IdcClientException e) {
+			throw new UcmServiceException(
+				String.format("Failed to retrieve page %d for folder [%s]", this.pageCount + 1, this.searchKey), e);
+		}
 	}
 
-	public UcmAttributes getFolder() throws IdcClientException {
+	public UcmAttributes getFolder() throws UcmServiceException {
 		if (!this.firstRequestIssued) {
 			hasNext();
 		}
 		return this.folder;
 	}
 
-	public UcmAttributes getLocalData() throws IdcClientException {
+	public UcmAttributes getLocalData() throws UcmServiceException {
 		if (!this.firstRequestIssued) {
 			hasNext();
 		}
 		return this.localData;
 	}
 
-	public boolean hasNext() throws IdcClientException {
+	public boolean hasNext() throws UcmServiceException {
 		if (this.current != null) { return true; }
 		if (this.completed) { return false; }
 
@@ -228,7 +233,7 @@ public class FolderContentsIterator {
 		return false;
 	}
 
-	public UcmAttributes next() throws IdcClientException {
+	public UcmAttributes next() throws UcmServiceException {
 		if (!hasNext()) { throw new NoSuchElementException(); }
 		UcmAttributes ret = this.current;
 		this.current = null;

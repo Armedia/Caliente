@@ -193,8 +193,7 @@ public class UcmModel {
 		}
 	}
 
-	protected final boolean isNotFoundException(IdcClientException e, String fmt, Object... args)
-		throws UcmServiceException, IdcClientException {
+	protected final boolean isNotFoundException(Throwable e, String fmt, Object... args) throws UcmServiceException {
 		if (e == null) { return false; }
 
 		// Is this a service exception from which we can identify that the
@@ -683,8 +682,9 @@ public class UcmModel {
 								rawChildren.set(dataObjects);
 								data.set(it.getFolder());
 								return children;
-							} catch (final IdcClientException e) {
-								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
+							} catch (final UcmServiceException e) {
+								Throwable cause = e.getCause();
+								if (isNotFoundException(cause, "Exception caught retrieving the URI [%s]",
 									uri)) { throw new UcmFolderNotFoundException(
 										String.format("No folder found with URI [%s]", uri)); }
 								// This is a "regular" exception that we simply re-raise

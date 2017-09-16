@@ -7,9 +7,6 @@ import java.util.Stack;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.commons.utilities.Tools;
 
-import oracle.stellent.ridc.IdcClientException;
-import oracle.stellent.ridc.model.DataObject;
-
 public class FolderTreeIterator {
 
 	public static final FolderIteratorMode DEFAULT_MODE = FolderIteratorMode.COMBINED;
@@ -74,8 +71,8 @@ public class FolderTreeIterator {
 		this(session, FolderLocatorMode.BY_GUID, guid, mode, pageSize);
 	}
 
-	private FolderTreeIterator(UcmSession session, FolderLocatorMode searchMode, Object key,
-		FolderIteratorMode mode, int pageSize) {
+	private FolderTreeIterator(UcmSession session, FolderLocatorMode searchMode, Object key, FolderIteratorMode mode,
+		int pageSize) {
 		Objects.requireNonNull(session, "Must provide a non-null session");
 		this.searchKey = searchMode.sanitizeKey(key);
 		this.searchMode = searchMode;
@@ -106,7 +103,7 @@ public class FolderTreeIterator {
 		return this.mode;
 	}
 
-	public boolean hasNext() throws IdcClientException {
+	public boolean hasNext() throws UcmServiceException {
 		while (!this.recursion.isEmpty()) {
 			final FolderContentsIterator current = this.recursion.peek();
 			if (!current.hasNext()) {
@@ -118,7 +115,7 @@ public class FolderTreeIterator {
 		return false;
 	}
 
-	public DataObject next() throws IdcClientException {
+	public UcmAttributes next() throws UcmServiceException {
 		return null;
 	}
 }
