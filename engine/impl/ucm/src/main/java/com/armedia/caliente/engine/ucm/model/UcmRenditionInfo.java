@@ -1,8 +1,13 @@
 package com.armedia.caliente.engine.ucm.model;
 
+import org.apache.commons.lang3.StringUtils;
+
 import oracle.stellent.ridc.model.DataObject;
 
-public class UcmRenditionInfo {
+public final class UcmRenditionInfo {
+
+	public static final String PRIMARY = "primary";
+	public static final String DEFAULT = UcmRenditionInfo.PRIMARY;
 
 	private final UcmGUID guid;
 	private final String type;
@@ -37,5 +42,13 @@ public class UcmRenditionInfo {
 
 	public String getDescription() {
 		return this.description;
+	}
+
+	public boolean isPrimary() {
+		return StringUtils.equalsIgnoreCase(this.name, UcmRenditionInfo.PRIMARY);
+	}
+
+	public boolean isDefault() {
+		return isPrimary();
 	}
 }
