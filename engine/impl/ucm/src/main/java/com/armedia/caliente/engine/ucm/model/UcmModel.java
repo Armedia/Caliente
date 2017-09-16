@@ -466,15 +466,15 @@ public class UcmModel {
 
 	public UcmFile getFileRevision(UcmRevision revision)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return new UcmFile(this, revision.getUri(), getFileRevision(revision.getId(), false, true));
+		return new UcmFile(this, revision.getUri(), getFileRevision(revision.getId(), true));
 	}
 
 	public UcmFile getFileRevision(UcmFile file)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return new UcmFile(this, file.getURI(), getFileRevision(file.getRevisionId(), false, true));
+		return new UcmFile(this, file.getURI(), getFileRevision(file.getRevisionId(), true));
 	}
 
-	protected UcmAttributes getFileRevision(final String id, boolean refreshHistory, final boolean refreshRenditions)
+	protected UcmAttributes getFileRevision(final String id, final boolean refreshRenditions)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		UcmGUID guid = this.versionGuidByID.get(id);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
@@ -527,7 +527,9 @@ public class UcmModel {
 							DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
 							baseObj.putAll(docInfo);
 							history.set(responseData.getResultSet("REVISION_HISTORY"));
-							renditions.set(responseData.getResultSet("Renditions"));
+							if (refreshRenditions) {
+								renditions.set(responseData.getResultSet("Renditions"));
+							}
 
 							UcmAttributes baseData = new UcmAttributes(baseObj);
 							data.set(baseData);
@@ -560,7 +562,7 @@ public class UcmModel {
 
 		URI uri = UcmModel.getURI(ret);
 
-		if (refreshHistory && (history.get() != null)) {
+		if (history.get() != null) {
 			DataResultSet rs = history.get();
 			LinkedList<UcmRevision> list = new LinkedList<>();
 			for (DataObject o : rs.getRows()) {
@@ -868,6 +870,9 @@ public class UcmModel {
 			DataBinder binder = s.createBinder();
 			binder.putLocal("IdcService", "GET_FILE");
 			binder.putLocal("dID", String.valueOf(file.getRevisionId()));
+			if (!StringUtils.isEmpty(rendition)) {
+				binder.putLocal("Rendition", rendition);
+			}
 
 			try {
 				return s.sendRequest(binder).getResponseStream();
@@ -917,5 +922,115 @@ public class UcmModel {
 	UcmFileHistory refresh(UcmFileHistory h)
 		throws UcmFileNotFoundException, UcmServiceException, UcmFileRevisionNotFoundException {
 		return getFileHistory(h.getURI());
+	}
+
+	public Map<String, UcmRenditionInfo> getRenditions(final UcmFile file)
+		throws UcmServiceException, UcmFileRevisionNotFoundException {
+		Objects.requireNonNull(file, "Must provide a file whose renditions to return");
+
+		final UcmGUID guid = file.getObjectGUID();
+		Map<String, UcmRenditionInfo> renditions = this.renditionsByGUID.get(guid);
+		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
+		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
+		if (renditions == null) {
+			final String id = file.getRevisionId();
+			try {
+				renditions = this.renditionsByGUID.createIfAbsent(guid,
+					new ConcurrentInitializer<Map<String, UcmRenditionInfo>>() {
+						@Override
+						public Map<String, UcmRenditionInfo> get() throws ConcurrentException {
+							final SessionWrapper<UcmSession> w;
+							try {
+								w = UcmModel.this.sessionFactory.acquireSession();
+							} catch (Exception e) {
+								throw new ConcurrentException("Failed to acquire an RIDC session", e);
+							}
+							try {
+								UcmSession s = w.getWrapped();
+
+								DataBinder binder = s.createBinder();
+								binder.putLocal("IdcService", "DOC_INFO");
+								binder.putLocal("dID", id);
+								binder.putLocal("includeFileRenditionsInfo", "1");
+
+								ServiceResponse response = null;
+								DataBinder responseData = null;
+								try {
+									response = s.sendRequest(binder);
+									responseData = response.getResponseAsBinder();
+								} catch (final IdcClientException e) {
+									if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]",
+										id)) { throw new UcmFileRevisionNotFoundException(); }
+									// This is a "regular" exception that we simply re-raise
+									throw e;
+								}
+
+								// First things first!! Stash the retrieved object...
+								DataResultSet rs = responseData.getResultSet("FileInfo");
+								if (rs == null) { throw new UcmServiceException(String
+									.format("Revision ID [%s] was found, but returned incorrect results?!?", id)); }
+
+								Map<String, String> baseObj = new HashMap<>();
+								baseObj.putAll(rs.getRows().get(0));
+								// Capture the parent path...from DOC_INFO, it's stored in
+								// LocalData.fParentPath
+								baseObj.put(UcmAtt.$ucmParentPath.name(),
+									responseData.getLocalData().get("fParentPath"));
+
+								DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
+								baseObj.putAll(docInfo);
+								history.set(responseData.getResultSet("REVISION_HISTORY"));
+
+								Map<String, UcmRenditionInfo> renditions = new TreeMap<>();
+								rs = responseData.getResultSet("Renditions");
+								if (rs == null) { throw new UcmServiceException(String.format(
+									"Revision ID [%s] was found, but no rendition information was returned??!", id)); }
+								for (DataObject o : rs.getRows()) {
+									UcmRenditionInfo r = new UcmRenditionInfo(guid, o);
+									renditions.put(r.getName(), r);
+								}
+
+								UcmAttributes baseData = new UcmAttributes(baseObj);
+								data.set(baseData);
+								return renditions;
+							} catch (Exception e) {
+								throw new ConcurrentException(e);
+							} finally {
+								w.close();
+							}
+						}
+					});
+			} catch (ConcurrentException e) {
+				Throwable cause = e.getCause();
+				UcmModel.throwIfMatches(UcmServiceException.class, cause);
+				UcmModel.throwIfMatches(UcmFileRevisionNotFoundException.class, cause);
+				throw new UcmServiceException(
+					String.format("Exception caught retrieving the renditions list for file [%s] (revision ID [%s]",
+						file.getURI(), file.getRevisionId()),
+					cause);
+			}
+		}
+
+		// Update the base object, since we just got it anyhow...
+		if (data.get() != null) {
+			createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<UcmAttributes>() {
+				@Override
+				public UcmAttributes get() throws ConcurrentException {
+					UcmAttributes ret = data.get();
+					cacheDataObject(ret);
+					return ret;
+				}
+			});
+		}
+
+		if (history.get() != null) {
+			DataResultSet rs = history.get();
+			LinkedList<UcmRevision> list = new LinkedList<>();
+			for (DataObject o : rs.getRows()) {
+				list.addFirst(new UcmRevision(o));
+			}
+			this.historyByURI.put(file.getURI(), Tools.freezeList(new ArrayList<>(list)));
+		}
+		return new TreeMap<>(renditions);
 	}
 }
