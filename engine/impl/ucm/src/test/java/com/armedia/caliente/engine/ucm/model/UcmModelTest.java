@@ -74,7 +74,7 @@ public class UcmModelTest {
 		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
 
 		UcmSessionFactory sf = new UcmSessionFactory(new CfgTools(settingsMap), new CmfCrypt());
-		UcmModel model = new UcmModel(sf);
+		UcmModel model = new UcmModel();
 
 		String[] paths = {
 			"/Enterprise Libraries", "/Shortcut To Test Folder", "/Test Folder", "/Users",
