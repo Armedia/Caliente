@@ -19,9 +19,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.ucm.UcmSession;
-import com.armedia.caliente.engine.ucm.UcmSessionFactory;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -71,16 +69,8 @@ public class UcmModel {
 	// BY_GUID -> URI
 	private final KeyLockableCache<UcmGUID, URI> uriByGUID;
 
-	private static boolean isFrameworkFoldersEnabled(UcmSessionFactory sessionFactory) throws UcmServiceException {
-		final SessionWrapper<UcmSession> w;
+	public static boolean isFrameworkFoldersEnabled(UcmSession s) throws UcmServiceException {
 		try {
-			w = sessionFactory.acquireSession();
-		} catch (Exception e) {
-			throw new UcmServiceException("Failed to acquire an RIDC session", e);
-		}
-		try {
-			UcmSession s = w.getWrapped();
-
 			DataBinder binder = s.createBinder();
 			binder.putLocal("IdcService", "CONFIG_INFO");
 
@@ -104,15 +94,10 @@ public class UcmModel {
 			return false;
 		} catch (Exception e) {
 			throw new UcmServiceException(e);
-		} finally {
-			w.close();
 		}
 	}
 
-	public UcmModel(UcmSessionFactory sessionFactory) throws UcmServiceException {
-		Objects.requireNonNull(sessionFactory, "Must provide a non-null session factory");
-		if (!UcmModel.isFrameworkFoldersEnabled(
-			sessionFactory)) { throw new UcmServiceException("The FrameworkFolders component is not enabled"); }
+	public UcmModel() throws UcmServiceException {
 		this.uriByPaths = new KeyLockableCache<>(1000);
 		this.parentByURI = new KeyLockableCache<>(1000);
 		this.childrenByURI = new KeyLockableCache<>(1000);

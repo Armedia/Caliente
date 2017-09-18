@@ -14,6 +14,8 @@ import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
 import com.armedia.caliente.engine.ucm.UcmTranslator;
+import com.armedia.caliente.engine.ucm.model.UcmModel;
+import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -72,5 +74,15 @@ public class UcmExportEngine extends
 	@Override
 	protected UcmTranslator getTranslator() {
 		return new UcmTranslator();
+	}
+
+	@Override
+	protected void validateEngine(UcmSession session) throws ExportException {
+		try {
+			if (!UcmModel.isFrameworkFoldersEnabled(
+				session)) { throw new ExportException("FrameworkFolders is not enabled in this UCM server instance"); }
+		} catch (UcmServiceException e) {
+			throw new ExportException("Failed to validate the UCM connectivity", e);
+		}
 	}
 }

@@ -630,6 +630,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			TransferContextFactory<S, V, C, ?> contextFactory = null;
 			DF delegateFactory = null;
 			try {
+
+				validateEngine(baseSession.getWrapped());
+
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
 						contentStore, null, output, warningTracker);
@@ -854,6 +857,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	protected void setExportProperties(CmfObjectStore<?, ?> store) {
+	}
+
+	protected void validateEngine(S session) throws ExportException {
+		// By default, do nothing...
 	}
 
 	protected abstract void findExportResults(S session, CfgTools configuration, DF factory, TargetSubmitter handler)
