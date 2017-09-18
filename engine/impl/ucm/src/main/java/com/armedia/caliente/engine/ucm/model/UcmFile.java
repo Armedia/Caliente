@@ -60,7 +60,7 @@ public class UcmFile extends UcmFSObject {
 	}
 
 	public InputStream getInputStream(UcmSession s) throws UcmServiceException, UcmFileRevisionNotFoundException {
-		return getInputStream(null);
+		return getInputStream(s, null);
 	}
 
 	public InputStream getInputStream(UcmSession s, String rendition)
