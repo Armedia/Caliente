@@ -105,7 +105,8 @@ public class UcmModelTest {
 						System.out.printf("\t\t\tACT  = [dID=%s, dRevLabel=%s, dDocName=%s]%n", R.getRevisionId(),
 							R.getRevisionLabel(), R.getContentId());
 						System.out.printf("\t\t\tGUID = %s%n", R.getObjectGUID());
-						System.out.printf("\t\t\tNAME = %s%n", R.getName());
+						System.out.printf("\t\t\tCNAME= %s%n", R.getName());
+						System.out.printf("\t\t\tRNAME= %s%n", R.getRevisionName());
 						System.out.printf("\t\t\tSIZE = %d%n", R.getSize());
 						try (InputStream in = R.getInputStream(s)) {
 							System.out.printf("\t\t\tSUM  = %s%n", new String(Hex.encodeHex(DigestUtils.sha256(in))));

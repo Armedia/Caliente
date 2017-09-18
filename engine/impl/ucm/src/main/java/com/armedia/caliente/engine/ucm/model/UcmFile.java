@@ -15,7 +15,7 @@ public class UcmFile extends UcmFSObject {
 		return getString(UcmAtt.fPublishedFilename);
 	}
 
-	public String getOriginalName() {
+	public String getRevisionName() {
 		return getString(UcmAtt.dOriginalName);
 	}
 
