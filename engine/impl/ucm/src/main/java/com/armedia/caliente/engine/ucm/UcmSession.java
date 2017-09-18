@@ -1,6 +1,22 @@
 package com.armedia.caliente.engine.ucm;
 
+import java.net.URI;
+import java.util.Map;
+
 import org.apache.commons.pool2.TrackedUse;
+
+import com.armedia.caliente.engine.ucm.model.UcmFSObject;
+import com.armedia.caliente.engine.ucm.model.UcmFile;
+import com.armedia.caliente.engine.ucm.model.UcmFileHistory;
+import com.armedia.caliente.engine.ucm.model.UcmFileNotFoundException;
+import com.armedia.caliente.engine.ucm.model.UcmFileRevisionNotFoundException;
+import com.armedia.caliente.engine.ucm.model.UcmFolder;
+import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
+import com.armedia.caliente.engine.ucm.model.UcmModel;
+import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
+import com.armedia.caliente.engine.ucm.model.UcmRenditionInfo;
+import com.armedia.caliente.engine.ucm.model.UcmRevision;
+import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 
 import oracle.stellent.ridc.IdcClient;
 import oracle.stellent.ridc.IdcClientConfig;
@@ -17,9 +33,11 @@ public class UcmSession implements TrackedUse {
 
 	private final IntradocClient client;
 	private final IdcContext userContext;
+	private final UcmModel model;
 	private long lastUsed = 0;
 
-	public UcmSession(IntradocClient client, IdcContext userContext) {
+	public UcmSession(UcmModel model, IntradocClient client, IdcContext userContext) {
+		this.model = model;
 		this.client = client;
 		this.userContext = userContext;
 	}
@@ -87,5 +105,53 @@ public class UcmSession implements TrackedUse {
 	@Override
 	public long getLastUsed() {
 		return this.lastUsed;
+	}
+
+	public UcmFile getFile(String path) throws UcmServiceException, UcmFileNotFoundException {
+		return this.model.getFile(this, path);
+	}
+
+	public UcmFile getFileRevision(UcmRevision revision)
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
+		return this.model.getFileRevision(this, revision);
+	}
+
+	public UcmFile getFileRevision(UcmFile file)
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
+		return this.model.getFileRevision(this, file);
+	}
+
+	public int iterateFolderContents(URI uri, ObjectHandler handler)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		return this.model.iterateFolderContents(this, uri, handler);
+	}
+
+	public Map<String, UcmFSObject> getFolderContents(UcmFolder folder)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		return this.model.getFolderContents(this, folder);
+	}
+
+	public UcmFolder getFolder(String path) throws UcmServiceException, UcmFolderNotFoundException {
+		return this.model.getFolder(this, path);
+	}
+
+	public UcmFileHistory getFileHistoryByPath(String path)
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
+		return this.model.getFileHistoryByPath(this, path);
+	}
+
+	public UcmFileHistory getFileHistory(UcmFile file)
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
+		return this.model.getFileHistory(this, file);
+	}
+
+	public UcmFileHistory getFileHistory(URI uri)
+		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
+		return this.model.getFileHistory(this, uri);
+	}
+
+	public Map<String, UcmRenditionInfo> getRenditions(UcmFile file)
+		throws UcmServiceException, UcmFileRevisionNotFoundException {
+		return this.model.getRenditions(this, file);
 	}
 }

@@ -11,6 +11,7 @@ import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.ucm.UcmSessionSetting.SSLMode;
+import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.KeyStoreTools;
 import com.armedia.commons.utilities.CfgTools;
@@ -38,6 +39,8 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	private final String clientCertPassword;
 	private final IdcContext context;
 	private final long minPingTime;
+
+	private final UcmModel model;
 
 	public UcmSessionFactory(CfgTools settings, CmfCrypt crypto) throws Exception {
 		super(settings, crypto);
@@ -144,6 +147,9 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		// If SSL_MODE, use idcs:// insteaed of idc://
 		// Always tack on the port number at the end
 		this.url = String.format("idc%s://%s:%d", (this.ssl != SSLMode.NONE) ? "s" : "", this.host, this.port);
+
+		// TODO: Get the cache size configuration
+		this.model = new UcmModel();
 	}
 
 	@Override
@@ -165,7 +171,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 			config.setKeystoreAliasPassword(this.clientCertPassword);
 		}
 		client.initialize();
-		return new DefaultPooledObject<>(new UcmSession(client, this.context));
+		return new DefaultPooledObject<>(new UcmSession(this.model, client, this.context));
 	}
 
 	@Override

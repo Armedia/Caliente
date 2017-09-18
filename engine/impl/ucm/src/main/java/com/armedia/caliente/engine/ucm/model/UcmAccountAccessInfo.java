@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 import com.armedia.commons.utilities.Tools;
 
-public class IdcAccountAccessInfo {
+public class UcmAccountAccessInfo {
 
 	private static final Pattern PARSER = Pattern.compile("^(account|role),(.*),(1|3|7|15)$", Pattern.CASE_INSENSITIVE);
 
@@ -85,7 +85,7 @@ public class IdcAccountAccessInfo {
 	private final String name;
 	private final Access access;
 
-	public IdcAccountAccessInfo(Type type, String name, Access access) {
+	public UcmAccountAccessInfo(Type type, String name, Access access) {
 		Objects.requireNonNull(type, "Must provide a valid account object type");
 		Objects.requireNonNull(name, "Must provide a valid name");
 		Objects.requireNonNull(access, "Must provide a valid level of access");
@@ -106,13 +106,13 @@ public class IdcAccountAccessInfo {
 		return this.access;
 	}
 
-	public static IdcAccountAccessInfo parse(String str) {
+	public static UcmAccountAccessInfo parse(String str) {
 		Objects.requireNonNull(str, "Must provide a string to parse");
-		Matcher m = IdcAccountAccessInfo.PARSER.matcher(str);
+		Matcher m = UcmAccountAccessInfo.PARSER.matcher(str);
 		if (!m.matches()) { return null; }
 		Type type = Type.valueOf(m.group(1).toUpperCase());
 		String name = m.group(2);
 		Access access = Access.decode(m.group(3));
-		return new IdcAccountAccessInfo(type, name, access);
+		return new UcmAccountAccessInfo(type, name, access);
 	}
 }
