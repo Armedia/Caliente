@@ -20,8 +20,7 @@ enum FolderLocatorMode {
 	BY_GUID {
 		@Override
 		protected void applySearchParameters(DataBinder binder, Object key) {
-			UcmUniqueURI guid = UcmUniqueURI.class.cast(key);
-			BY_URI.applySearchParameters(binder, guid.getURI());
+			BY_URI.applySearchParameters(binder, UcmUniqueURI.class.cast(key).getURI());
 		}
 	},
 	BY_URI {

@@ -226,11 +226,13 @@ public class UcmModel {
 		return false;
 	}
 
-	public final boolean isFileURI(URI uri) {
+	public static final boolean isFileURI(URI uri) {
+		Objects.requireNonNull(uri, "Must provide a non-null URI to check");
 		return UcmModel.FILE_SCHEME.equals(uri.getScheme());
 	}
 
-	public final boolean isFolderURI(URI uri) {
+	public static final boolean isFolderURI(URI uri) {
+		Objects.requireNonNull(uri, "Must provide a non-null URI to check");
 		return UcmModel.FOLDER_SCHEME.equals(uri.getScheme());
 	}
 
@@ -334,10 +336,10 @@ public class UcmModel {
 	protected UcmAttributes getDataObject(final UcmSession s, final URI uri)
 		throws UcmServiceException, UcmObjectNotFoundException {
 		final boolean file;
-		if (isFileURI(uri)) {
+		if (UcmModel.isFileURI(uri)) {
 			// The SSP is the dDocName
 			file = true;
-		} else if (isFolderURI(uri)) {
+		} else if (UcmModel.isFolderURI(uri)) {
 			// The SSP is the BY_GUID
 			file = false;
 		} else {
@@ -591,7 +593,7 @@ public class UcmModel {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
 		// If this isn't a folder, we don't even try it...
-		if (!isFolderURI(uri)) { return -1; }
+		if (!UcmModel.isFolderURI(uri)) { return -1; }
 
 		Map<String, URI> children = this.childrenByURI.get(uri);
 		boolean reconstruct = false;
