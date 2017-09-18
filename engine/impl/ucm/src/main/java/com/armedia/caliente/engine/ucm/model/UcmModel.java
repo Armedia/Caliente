@@ -32,6 +32,9 @@ import oracle.stellent.ridc.protocol.ServiceResponse;
 
 public class UcmModel {
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
+	private static final int MIN_OBJECT_COUNT = 100;
+	private static final int DEFAULT_OBJECT_COUNT = 10000;
+	private static final int MAX_OBJECT_COUNT = 1000000;
 
 	private static final String FILE_SCHEME = "file";
 	private static final String FOLDER_SCHEME = "folder";
@@ -98,15 +101,20 @@ public class UcmModel {
 	}
 
 	public UcmModel() throws UcmServiceException {
-		this.uriByPaths = new KeyLockableCache<>(1000);
-		this.parentByURI = new KeyLockableCache<>(1000);
-		this.childrenByURI = new KeyLockableCache<>(1000);
-		this.historyByURI = new KeyLockableCache<>(1000);
-		this.objectByGUID = new KeyLockableCache<>(1000);
-		this.guidByURI = new KeyLockableCache<>(1000);
-		this.uriByGUID = new KeyLockableCache<>(1000);
-		this.renditionsByGUID = new KeyLockableCache<>(1000);
-		this.versionGuidByID = new KeyLockableCache<>(1000);
+		this(UcmModel.DEFAULT_OBJECT_COUNT);
+	}
+
+	public UcmModel(int objectCount) throws UcmServiceException {
+		objectCount = Tools.ensureBetween(UcmModel.MIN_OBJECT_COUNT, objectCount, UcmModel.MAX_OBJECT_COUNT);
+		this.uriByPaths = new KeyLockableCache<>(objectCount);
+		this.parentByURI = new KeyLockableCache<>(objectCount);
+		this.childrenByURI = new KeyLockableCache<>(objectCount);
+		this.historyByURI = new KeyLockableCache<>(objectCount);
+		this.objectByGUID = new KeyLockableCache<>(objectCount);
+		this.guidByURI = new KeyLockableCache<>(objectCount);
+		this.uriByGUID = new KeyLockableCache<>(objectCount);
+		this.renditionsByGUID = new KeyLockableCache<>(objectCount);
+		this.versionGuidByID = new KeyLockableCache<>(objectCount);
 	}
 
 	protected final void cacheDataObject(DataObject object) {
