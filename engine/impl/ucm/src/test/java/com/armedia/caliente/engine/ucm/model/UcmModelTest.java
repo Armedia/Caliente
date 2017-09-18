@@ -94,7 +94,7 @@ public class UcmModelTest {
 			try {
 				URI uri = model.resolvePath(s, p);
 				System.out.printf("[%s] -> [%s]%n", p, uri);
-				if (model.isFileURI(uri)) {
+				if (UcmModel.isFileURI(uri)) {
 					UcmFile f = model.getFile(s, p);
 
 					System.out.printf("\tRevisions:%n");
