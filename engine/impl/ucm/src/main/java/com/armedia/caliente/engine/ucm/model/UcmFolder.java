@@ -8,7 +8,7 @@ import com.armedia.caliente.engine.ucm.UcmSession;
 public class UcmFolder extends UcmFSObject {
 
 	UcmFolder(UcmModel model, URI uri, UcmAttributes data) {
-		super(model, uri, data, UcmAtt.fFolderName, UcmAtt.fFolderGUID);
+		super(model, uri, data, UcmAtt.fFolderName);
 	}
 
 	public String getDisplayDescription() throws UcmException {

@@ -8,7 +8,7 @@ import com.armedia.caliente.engine.ucm.UcmSession;
 public class UcmFile extends UcmFSObject {
 
 	UcmFile(UcmModel model, URI uri, UcmAttributes data) {
-		super(model, uri, data, UcmAtt.fFileName, UcmAtt.fFileGUID);
+		super(model, uri, data, UcmAtt.fFileName);
 	}
 
 	public String getPublishedFileName() {

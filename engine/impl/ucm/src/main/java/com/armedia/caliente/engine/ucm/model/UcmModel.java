@@ -41,7 +41,6 @@ public class UcmModel {
 	private static final String NULL_SCHEME = "null";
 
 	private static final URI NULLURI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
-	private static final UcmGUID NULLGUID = new UcmGUID("<null>");
 
 	// BY_GUID -> DataObject
 	private final KeyLockableCache<UcmGUID, UcmAttributes> objectByGUID;
@@ -125,10 +124,8 @@ public class UcmModel {
 	protected void cacheDataObject(final UcmAttributes data) {
 		if (data == null) { return; }
 		// Is this a file or a folder?
-		final boolean file = data.hasAttribute(UcmAtt.dDocName);
-		UcmAtt guidAtt = (file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
 		final URI uri = UcmModel.getURI(data);
-		final UcmGUID guid = new UcmGUID(data.getString(guidAtt));
+		final UcmGUID guid = UcmModel.getGUID(data);
 
 		this.objectByGUID.put(guid, data);
 		if (data.hasAttribute(UcmAtt.fParentGUID)) {
@@ -157,6 +154,21 @@ public class UcmModel {
 		final boolean file = data.hasAttribute(UcmAtt.dDocName);
 		return (file ? UcmModel.newFileURI(data.getString(UcmAtt.dDocName))
 			: UcmModel.newFolderURI(data.getString(UcmAtt.fFolderGUID)));
+	}
+
+	protected static final UcmGUID getGUID(UcmAttributes data) {
+		final boolean file = data.hasAttribute(UcmAtt.dDocName);
+		URI uri = UcmModel.getURI(data);
+		if (file) {
+			final String dID = data.getString(UcmAtt.dID);
+			try {
+				uri = new URI(uri.getScheme(), uri.getSchemeSpecificPart(), dID);
+			} catch (URISyntaxException e) {
+				throw new UcmRuntimeException(
+					String.format("Failed to construct a file URI from [%s] and dID=[%s]", uri, dID), e);
+			}
+		}
+		return new UcmGUID(uri);
 	}
 
 	private static final URI newURI(String scheme, String ssp) {
@@ -356,7 +368,7 @@ public class UcmModel {
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
-									uri)) { return UcmModel.NULLGUID; }
+									uri)) { return UcmGUID.NULL_GUID; }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -388,7 +400,7 @@ public class UcmModel {
 
 							UcmAttributes baseData = new UcmAttributes(baseObj);
 							data.set(baseData);
-							return new UcmGUID(baseData.getString(file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID));
+							return UcmModel.getGUID(baseData);
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
 						}
@@ -401,7 +413,7 @@ public class UcmModel {
 			}
 		}
 
-		if (UcmModel.NULLGUID.equals(
+		if (UcmGUID.NULL_GUID.equals(
 			guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri)); }
 
 		UcmAttributes ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<UcmAttributes>() {
@@ -471,7 +483,7 @@ public class UcmModel {
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]",
-									id)) { return UcmModel.NULLGUID; }
+									id)) { return UcmGUID.NULL_GUID; }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -496,7 +508,7 @@ public class UcmModel {
 
 							UcmAttributes baseData = new UcmAttributes(baseObj);
 							data.set(baseData);
-							return new UcmGUID(baseData.getString(UcmAtt.fFileGUID));
+							return UcmModel.getGUID(baseData);
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
 						}
@@ -509,7 +521,7 @@ public class UcmModel {
 			}
 		}
 
-		if (UcmModel.NULLGUID.equals(
+		if (UcmGUID.NULL_GUID.equals(
 			guid)) { throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id)); }
 
 		UcmAttributes ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<UcmAttributes>() {
@@ -558,7 +570,7 @@ public class UcmModel {
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(guid, "Must provide a BY_GUID to search for");
 		// If it's a folder URI we already know the SSP is the BY_GUID, so... go!
-		return getFolderContents(s, UcmModel.newFolderURI(guid.getString()));
+		return getFolderContents(s, guid.getURI());
 	}
 
 	public static interface ObjectHandler {
@@ -711,7 +723,7 @@ public class UcmModel {
 
 	UcmFolder getFolder(UcmSession s, UcmGUID guid) throws UcmServiceException, UcmFolderNotFoundException {
 		try {
-			final URI uri = UcmModel.newFolderURI(guid.getString());
+			final URI uri = guid.getURI();
 			return new UcmFolder(this, uri, getDataObject(s, uri));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);

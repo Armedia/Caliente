@@ -10,36 +10,30 @@ import com.armedia.caliente.engine.ucm.UcmSession;
 
 public abstract class UcmFSObject extends UcmModelObject {
 
-	protected final UcmAtt guidAtt;
 	protected final UcmAtt nameAtt;
 
 	private final UcmAttributes attributes;
 	private final String path;
 	private final String parentPath;
 
-	UcmFSObject(UcmModel model, URI uri, UcmAttributes data, UcmAtt nameAtt, UcmAtt guidAtt) {
+	private final UcmGUID guid;
+	private final UcmGUID parentGUID;
+
+	UcmFSObject(UcmModel model, URI uri, UcmAttributes data, UcmAtt nameAtt) {
 		super(model, uri);
 		// Here we use the cloning constructor so we keep a *copy* of the DataObject, to allow
 		// the caches in the model the opportunity to expire objects appropriately regardless
 		// of references held outside the model
 		this.attributes = data;
 		this.nameAtt = nameAtt;
-		this.guidAtt = guidAtt;
 		this.parentPath = this.attributes.getString(UcmAtt.$ucmParentPath);
 		if (this.parentPath.equals("/")) {
 			this.path = String.format("/%s", this.attributes.getString(nameAtt));
 		} else {
 			this.path = String.format("%s/%s", this.parentPath, this.attributes.getString(nameAtt));
 		}
-	}
-
-	public final UcmGUID getGUID(UcmAtt att) {
-		return getGUID(att, null);
-	}
-
-	public final UcmGUID getGUID(UcmAtt att, UcmGUID def) {
-		String str = this.attributes.getString(att);
-		return (str != null ? new UcmGUID(str) : def);
+		this.guid = UcmModel.getGUID(data);
+		this.parentGUID = new UcmGUID(UcmModel.newFolderURI(getString(UcmAtt.fParentGUID)));
 	}
 
 	public final String getString(UcmAtt att) {
@@ -99,7 +93,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 	}
 
 	public final UcmGUID getObjectGUID() {
-		return getGUID(this.guidAtt);
+		return this.guid;
 	}
 
 	public final String getName() {
@@ -135,7 +129,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 	}
 
 	public final UcmGUID getParentGUID() {
-		return getGUID(UcmAtt.fParentGUID);
+		return this.parentGUID;
 	}
 
 	public final String getSecurityGroup() {

@@ -84,6 +84,12 @@ public class UcmModelTest {
 		SessionWrapper<UcmSession> w = sf.acquireSession();
 		UcmSession s = w.getWrapped();
 
+		processPaths(model, s, paths);
+		// This call is to verify that the caching is being done...
+		processPaths(model, s, paths);
+	}
+
+	private void processPaths(UcmModel model, UcmSession s, String... paths) throws Exception {
 		for (String p : paths) {
 			try {
 				URI uri = model.resolvePath(s, p);
@@ -94,8 +100,10 @@ public class UcmModelTest {
 					System.out.printf("\tRevisions:%n");
 					System.out.printf("\t%s%n", StringUtils.repeat('-', 40));
 					for (UcmRevision r : model.getFileHistory(s, f)) {
-						System.out.printf("\t\t[%d] = %s%n", r.getRevisionId(), r.getRevLabel());
+						System.out.printf("\t\t[%d] = %s (%s)%n", r.getRevisionId(), r.getRevLabel(), r.getId());
 						UcmFile R = model.getFileRevision(s, r);
+						System.out.printf("\t\t\tACT  = [dID=%s, dRevLabel=%s, dDocName=%s]%n", R.getRevisionId(),
+							R.getRevisionLabel(), R.getContentId());
 						System.out.printf("\t\t\tGUID = %s%n", R.getObjectGUID());
 						System.out.printf("\t\t\tNAME = %s%n", R.getName());
 						System.out.printf("\t\t\tSIZE = %d%n", R.getSize());
@@ -108,15 +116,6 @@ public class UcmModelTest {
 				} else {
 					UcmFolder f = model.getFolder(s, p);
 				}
-			} catch (Exception e) {
-				e.printStackTrace(System.err);
-			}
-		}
-
-		for (String p : paths) {
-			try {
-				URI uri = model.resolvePath(s, p);
-				System.out.printf("[%s] -> [%s]%n", p, uri);
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
 			}

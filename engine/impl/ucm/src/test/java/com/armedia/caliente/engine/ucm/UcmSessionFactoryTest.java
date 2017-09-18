@@ -289,22 +289,27 @@ public class UcmSessionFactoryTest {
 			SessionWrapper<UcmSession> w = factory.acquireSession();
 			UcmSession s = w.getWrapped();
 
-			DataBinder binder = s.createBinder();
-			binder.putLocal("IdcService", "DOC_INFO");
-			binder.putLocal("dID", "5");
-			binder.putLocal("includeFileRenditionsInfo", "1");
+			String[] ids = {
+				"1", "2", "3", "5"
+			};
+			for (String id : ids) {
+				DataBinder binder = s.createBinder();
+				binder.putLocal("IdcService", "DOC_INFO");
+				binder.putLocal("dID", id);
+				binder.putLocal("includeFileRenditionsInfo", "1");
 
-			// Join the binder and the user context and perform the service call
-			ServiceResponse response = s.sendRequest(binder);
-			DataBinder responseData = response.getResponseAsBinder();
+				// Join the binder and the user context and perform the service call
+				ServiceResponse response = s.sendRequest(binder);
+				DataBinder responseData = response.getResponseAsBinder();
 
-			for (String rs : responseData.getResultSetNames()) {
-				dumpMap(rs, responseData.getResultSet(rs));
+				for (String rs : responseData.getResultSetNames()) {
+					dumpMap(rs, responseData.getResultSet(rs));
+				}
+
+				System.out.printf("Local Data for [%s]%n", id);
+				System.out.printf("%s%n", StringUtils.repeat('-', 80));
+				dumpObject(1, responseData.getLocalData());
 			}
-
-			System.out.printf("Local Data%n");
-			System.out.printf("%s%n", StringUtils.repeat('-', 80));
-			dumpObject(1, responseData.getLocalData());
 		} catch (Exception e) {
 			e.hashCode();
 		}
