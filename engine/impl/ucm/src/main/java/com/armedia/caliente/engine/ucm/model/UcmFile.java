@@ -59,12 +59,13 @@ public class UcmFile extends UcmFSObject {
 		return getString(UcmAtt.dDocName);
 	}
 
-	public InputStream getInputStream(UcmSession s) throws UcmServiceException, UcmFileRevisionNotFoundException {
+	public InputStream getInputStream(UcmSession s)
+		throws UcmServiceException, UcmFileRevisionNotFoundException, UcmRenditionNotFoundException {
 		return getInputStream(s, null);
 	}
 
 	public InputStream getInputStream(UcmSession s, String rendition)
-		throws UcmServiceException, UcmFileRevisionNotFoundException {
+		throws UcmServiceException, UcmFileRevisionNotFoundException, UcmRenditionNotFoundException {
 		return this.model.getInputStream(s, this, rendition);
 	}
 }

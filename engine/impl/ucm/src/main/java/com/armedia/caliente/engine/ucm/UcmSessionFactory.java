@@ -16,11 +16,9 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.KeyStoreTools;
 import com.armedia.commons.utilities.CfgTools;
 
-import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.IdcClientManager;
 import oracle.stellent.ridc.IdcContext;
 import oracle.stellent.ridc.model.DataBinder;
-import oracle.stellent.ridc.protocol.ServiceResponse;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClientConfig;
 
@@ -189,18 +187,14 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		long now = System.currentTimeMillis();
 		if ((now - p.getLastUsedTime()) <= this.minPingTime) { return true; }
 
-		DataBinder dataBinder = session.createBinder();
-		dataBinder.putLocal("IdcService", "PING_SERVER");
-
 		// Join the binder and the user context and perform the service call
 		try {
-			ServiceResponse response = session.sendRequest(dataBinder);
 			// Convert the response to a dataBinder
-			DataBinder responseData = response.getResponseAsBinder();
+			DataBinder responseData = session.callService("PING_SERVER").getResponseAsBinder();
 			// Display the status of the service call
 			this.log.debug("Server pinged - status: {}", responseData.getLocal("StatusMessage"));
 			return true;
-		} catch (IdcClientException e) {
+		} catch (Exception e) {
 			this.log.debug("Failed to ping the server", e);
 			return false;
 		}

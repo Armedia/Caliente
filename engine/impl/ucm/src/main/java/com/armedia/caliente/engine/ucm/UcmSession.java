@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.ucm;
 import java.net.URI;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.TrackedUse;
 
 import com.armedia.caliente.engine.ucm.model.UcmFSObject;
@@ -30,6 +31,10 @@ import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 
 @SuppressWarnings("rawtypes")
 public class UcmSession implements TrackedUse {
+
+	public static interface RequestPreparation {
+		public void prepareRequest(DataBinder request) throws UcmServiceException;
+	}
 
 	private final IntradocClient client;
 	private final IdcContext userContext;
@@ -86,7 +91,7 @@ public class UcmSession implements TrackedUse {
 		this.client.logout(this.userContext);
 	}
 
-	public ServiceResponse sendRequest(DataBinder dataBinder) throws IdcClientException {
+	private ServiceResponse sendRequest(DataBinder dataBinder) throws IdcClientException {
 		try {
 			return this.client.sendRequest(this.userContext, dataBinder);
 		} finally {
@@ -105,6 +110,27 @@ public class UcmSession implements TrackedUse {
 	@Override
 	public long getLastUsed() {
 		return this.lastUsed;
+	}
+
+	public ServiceResponse callService(String service) throws UcmServiceException {
+		return callService(service, null);
+	}
+
+	public ServiceResponse callService(String service, RequestPreparation prep) throws UcmServiceException {
+		if (StringUtils.isEmpty(
+			service)) { throw new IllegalArgumentException(String.format("Illegal service name [%s]", service)); }
+		DataBinder binder = createBinder();
+		if (prep != null) {
+			prep.prepareRequest(binder);
+		}
+		// Do this last to override anything that prep might do
+		binder.putLocal("IdcService", service.toUpperCase());
+		try {
+			return sendRequest(binder);
+		} catch (IdcClientException e) {
+			throw new UcmServiceException(String.format("Exception caught while invoking the service [%s]", service),
+				e);
+		}
 	}
 
 	public UcmFile getFile(String path) throws UcmServiceException, UcmFileNotFoundException {

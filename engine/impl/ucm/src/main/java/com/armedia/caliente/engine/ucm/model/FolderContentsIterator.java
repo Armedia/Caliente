@@ -10,6 +10,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
+import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
 import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.IdcClientException;
@@ -41,7 +42,6 @@ public class FolderContentsIterator {
 	private Iterator<DataObject> folders = null;
 	private Iterator<DataObject> files = null;
 
-	private DataBinder requestBinder = null;
 	private DataBinder responseBinder = null;
 
 	private UcmAttributes current = null;
@@ -138,18 +138,19 @@ public class FolderContentsIterator {
 	}
 
 	private DataBinder getNextBatch() throws UcmServiceException {
-		if (this.requestBinder == null) {
-			this.requestBinder = this.session.createBinder();
-			this.folderLocatorMode.applySearchParameters(this.requestBinder, this.searchKey);
-			this.folderIteratorMode.setParameters(this.requestBinder);
-			this.requestBinder.putLocal("IdcService", "FLD_BROWSE");
-		}
-
-		this.requestBinder.putLocal(this.folderIteratorMode.count, String.valueOf(this.pageSize));
-		this.requestBinder.putLocal(this.folderIteratorMode.startRow, String.valueOf(this.pageSize * this.pageCount));
-
 		try {
-			return this.session.sendRequest(this.requestBinder).getResponseAsBinder();
+			return this.session.callService("FLD_BROWSE", new RequestPreparation() {
+				@Override
+				public void prepareRequest(DataBinder binder) {
+					FolderContentsIterator.this.folderLocatorMode.applySearchParameters(binder,
+						FolderContentsIterator.this.searchKey);
+					FolderContentsIterator.this.folderIteratorMode.setParameters(binder);
+					binder.putLocal(FolderContentsIterator.this.folderIteratorMode.count,
+						String.valueOf(FolderContentsIterator.this.pageSize));
+					binder.putLocal(FolderContentsIterator.this.folderIteratorMode.startRow,
+						String.valueOf(FolderContentsIterator.this.pageSize * FolderContentsIterator.this.pageCount));
+				}
+			}).getResponseAsBinder();
 		} catch (IdcClientException e) {
 			throw new UcmServiceException(
 				String.format("Failed to retrieve page %d for folder [%s]", this.pageCount + 1, this.searchKey), e);
@@ -225,7 +226,6 @@ public class FolderContentsIterator {
 		// There are no more elements to be retrieved, so we're done...
 		this.completed = true;
 		this.responseBinder = null;
-		this.requestBinder = null;
 		this.current = null;
 		this.folders = null;
 		this.files = null;

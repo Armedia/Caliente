@@ -20,6 +20,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
+import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -29,9 +30,11 @@ import oracle.stellent.ridc.model.DataObject;
 import oracle.stellent.ridc.model.DataResultSet;
 import oracle.stellent.ridc.protocol.ServiceException;
 import oracle.stellent.ridc.protocol.ServiceResponse;
+import oracle.stellent.ridc.protocol.ServiceResponse.ResponseType;
 
 public class UcmModel {
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
+	private static final String PRIMARY = "primary";
 	private static final int MIN_OBJECT_COUNT = 100;
 	private static final int DEFAULT_OBJECT_COUNT = 10000;
 	private static final int MAX_OBJECT_COUNT = 1000000;
@@ -71,13 +74,10 @@ public class UcmModel {
 
 	public static boolean isFrameworkFoldersEnabled(UcmSession s) throws UcmServiceException {
 		try {
-			DataBinder binder = s.createBinder();
-			binder.putLocal("IdcService", "CONFIG_INFO");
-
 			ServiceResponse response = null;
 			DataBinder responseData = null;
 			try {
-				response = s.sendRequest(binder);
+				response = s.callService("CONFIG_INFO");
 				responseData = response.getResponseAsBinder();
 			} catch (final IdcClientException e) {
 				throw new UcmServiceException(
@@ -205,7 +205,13 @@ public class UcmModel {
 
 		// This may be an analyzable exception
 		ServiceException se = ServiceException.class.cast(e);
-		String mk = se.getBinder().getLocal("StatusMessageKey");
+		DataBinder binder = se.getBinder();
+		DataObject local = binder.getLocalData();
+
+		int statusCode = local.getInteger("StatusCode");
+		if (statusCode == -16) { return true; }
+
+		String mk = local.get("StatusMessageKey");
 		for (List<String> l : UcmExceptionData.parseMessages(mk)) {
 			if (!l.isEmpty()) {
 				String op = l.get(0);
@@ -259,14 +265,15 @@ public class UcmModel {
 					@Override
 					public URI get() throws ConcurrentException {
 						try {
-							DataBinder binder = s.createBinder();
-							binder.putLocal("IdcService", "FLD_INFO");
-							binder.putLocal("path", sanitizedPath);
-
 							ServiceResponse response = null;
 							DataBinder responseData = null;
 							try {
-								response = s.sendRequest(binder);
+								response = s.callService("FLD_INFO", new RequestPreparation() {
+									@Override
+									public void prepareRequest(DataBinder binder) {
+										binder.putLocal("path", sanitizedPath);
+									}
+								});
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the file at [%s]",
@@ -348,21 +355,22 @@ public class UcmModel {
 					@Override
 					public UcmUniqueURI get() throws ConcurrentException {
 						try {
-							DataBinder binder = s.createBinder();
-							if (file) {
-								binder.putLocal("IdcService", "DOC_INFO_BY_NAME");
-								binder.putLocal("dDocName", uri.getSchemeSpecificPart());
-								binder.putLocal("RevisionSelectionMethod", "Latest");
-								binder.putLocal("includeFileRenditionsInfo", "1");
-							} else {
-								binder.putLocal("IdcService", "FLD_INFO");
-								binder.putLocal("fFolderGUID", uri.getSchemeSpecificPart());
-							}
-
 							ServiceResponse response = null;
 							DataBinder responseData = null;
 							try {
-								response = s.sendRequest(binder);
+								response = s.callService((file ? "DOC_INFO_BY_NAME" : "FLD_INFO"),
+									new RequestPreparation() {
+										@Override
+										public void prepareRequest(DataBinder binder) {
+											if (file) {
+												binder.putLocal("dDocName", uri.getSchemeSpecificPart());
+												binder.putLocal("RevisionSelectionMethod", "Latest");
+												binder.putLocal("includeFileRenditionsInfo", "1");
+											} else {
+												binder.putLocal("fFolderGUID", uri.getSchemeSpecificPart());
+											}
+										}
+									});
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
@@ -414,14 +422,15 @@ public class UcmModel {
 		if (UcmUniqueURI.NULL_GUID.equals(
 			guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri)); }
 
-		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid, new ConcurrentInitializer<UcmAttributes>() {
-			@Override
-			public UcmAttributes get() throws ConcurrentException {
-				UcmAttributes ret = data.get();
-				cacheDataObject(ret);
-				return ret;
-			}
-		});
+		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid,
+			new ConcurrentInitializer<UcmAttributes>() {
+				@Override
+				public UcmAttributes get() throws ConcurrentException {
+					UcmAttributes ret = data.get();
+					cacheDataObject(ret);
+					return ret;
+				}
+			});
 
 		if (history.get() != null) {
 			DataResultSet rs = history.get();
@@ -467,17 +476,18 @@ public class UcmModel {
 					@Override
 					public UcmUniqueURI get() throws ConcurrentException {
 						try {
-							DataBinder binder = s.createBinder();
-							binder.putLocal("IdcService", "DOC_INFO");
-							binder.putLocal("dID", id);
-							if (refreshRenditions) {
-								binder.putLocal("includeFileRenditionsInfo", "1");
-							}
-
 							ServiceResponse response = null;
 							DataBinder responseData = null;
 							try {
-								response = s.sendRequest(binder);
+								response = s.callService("DOC_INFO", new RequestPreparation() {
+									@Override
+									public void prepareRequest(DataBinder binder) {
+										binder.putLocal("dID", id);
+										if (refreshRenditions) {
+											binder.putLocal("includeFileRenditionsInfo", "1");
+										}
+									}
+								});
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]",
@@ -522,14 +532,15 @@ public class UcmModel {
 		if (UcmUniqueURI.NULL_GUID.equals(
 			guid)) { throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id)); }
 
-		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid, new ConcurrentInitializer<UcmAttributes>() {
-			@Override
-			public UcmAttributes get() throws ConcurrentException {
-				UcmAttributes ret = data.get();
-				cacheDataObject(ret);
-				return ret;
-			}
-		});
+		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid,
+			new ConcurrentInitializer<UcmAttributes>() {
+				@Override
+				public UcmAttributes get() throws ConcurrentException {
+					UcmAttributes ret = data.get();
+					cacheDataObject(ret);
+					return ret;
+				}
+			});
 
 		URI uri = UcmModel.getURI(ret);
 
@@ -764,14 +775,15 @@ public class UcmModel {
 					@Override
 					public List<UcmRevision> get() throws ConcurrentException {
 						try {
-							DataBinder binder = s.createBinder();
-							binder.putLocal("IdcService", "REV_HISTORY");
-							binder.putLocal("dID", String.valueOf(revisionId));
-
 							ServiceResponse response = null;
 							DataBinder responseData = null;
 							try {
-								response = s.sendRequest(binder);
+								response = s.callService("REV_HISTORY", new RequestPreparation() {
+									@Override
+									public void prepareRequest(DataBinder binder) {
+										binder.putLocal("dID", revisionId);
+									}
+								});
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
@@ -804,28 +816,49 @@ public class UcmModel {
 		return new UcmFileHistory(this, uri, history);
 	}
 
-	InputStream getInputStream(UcmSession s, UcmFile file, String rendition)
-		throws UcmServiceException, UcmFileRevisionNotFoundException {
-		try {
-			DataBinder binder = s.createBinder();
-			binder.putLocal("IdcService", "GET_FILE");
-			binder.putLocal("dID", String.valueOf(file.getRevisionId()));
-			if (!StringUtils.isEmpty(rendition)) {
-				binder.putLocal("Rendition", rendition);
+	InputStream getInputStream(UcmSession s, final UcmFile file, final String rendition)
+		throws UcmServiceException, UcmFileRevisionNotFoundException, UcmRenditionNotFoundException {
+		ServiceResponse response = s.callService("GET_FILE", new RequestPreparation() {
+			@Override
+			public void prepareRequest(DataBinder binder) {
+				binder.putLocal("dID", file.getRevisionId());
+				if (!StringUtils.isEmpty(rendition)) {
+					binder.putLocal("Rendition", rendition);
+				}
 			}
+		});
+		if (response.getResponseType() == ResponseType.STREAM) { return response.getResponseStream(); }
 
-			try {
-				return s.sendRequest(binder).getResponseStream();
-			} catch (final IdcClientException e) {
-				if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
-					file.getURI())) { throw new UcmFileNotFoundException(
-						String.format("No file found with URI [%s]", file.getURI())); }
-				// This is a "regular" exception that we simply re-raise
-				throw e;
-			}
-		} catch (Exception e) {
-			throw new UcmServiceException(e.getMessage(), e);
+		// Ok...there was a problem... what was the problem?
+		final DataBinder binder;
+		try {
+			binder = response.getResponseAsBinder();
+		} catch (IdcClientException e) {
+			throw new UcmServiceException(String.format(
+				"Failed to decode the service response when invoking GET_FILE for rendition [%s] from file [%s]",
+				Tools.coalesce(rendition, UcmModel.PRIMARY), file.getUniqueURI()), e);
 		}
+
+		DataObject local = binder.getLocalData();
+		int status = local.getInteger("StatusCode");
+		if (status == -16) {
+			// Resource not found...so the revision wasn't found
+			throw new UcmFileRevisionNotFoundException(
+				String.format("File revision [%s] was not found", file.getUniqueURI()));
+		}
+
+		if (status == -32) {
+			// Procedural error - so the revision was found, but not the rendition...maybe?
+			if (local.get("StatusMessageKey").indexOf("!csGetFileRenditionNotFound,") >= 0) {
+				// Rendition not found!
+				throw new UcmRenditionNotFoundException(String.format("Rendition [%s] not found for file [%s]",
+					Tools.coalesce(rendition, UcmModel.PRIMARY), file.getUniqueURI()));
+			}
+		}
+
+		// Some other error!
+		throw new UcmServiceException(String.format("Failed to load rendition [%s] from file [%s]",
+			Tools.coalesce(rendition, UcmModel.PRIMARY), file.getUniqueURI()));
 	}
 
 	static String sanitizePath(String path) {
@@ -879,15 +912,16 @@ public class UcmModel {
 						@Override
 						public Map<String, UcmRenditionInfo> get() throws ConcurrentException {
 							try {
-								DataBinder binder = s.createBinder();
-								binder.putLocal("IdcService", "DOC_INFO");
-								binder.putLocal("dID", id);
-								binder.putLocal("includeFileRenditionsInfo", "1");
-
 								ServiceResponse response = null;
 								DataBinder responseData = null;
 								try {
-									response = s.sendRequest(binder);
+									response = s.callService("DOC_INFO", new RequestPreparation() {
+										@Override
+										public void prepareRequest(DataBinder binder) {
+											binder.putLocal("dID", id);
+											binder.putLocal("includeFileRenditionsInfo", "1");
+										}
+									});
 									responseData = response.getResponseAsBinder();
 								} catch (final IdcClientException e) {
 									if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]",
