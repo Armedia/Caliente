@@ -64,19 +64,19 @@ public class FolderContentsIterator {
 		this(session, FolderLocatorMode.BY_PATH, path, folderIteratorMode, pageSize);
 	}
 
-	public FolderContentsIterator(UcmSession session, UcmGUID guid) {
+	public FolderContentsIterator(UcmSession session, UcmUniqueURI guid) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsIterator(UcmSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode) {
+	public FolderContentsIterator(UcmSession session, UcmUniqueURI guid, FolderIteratorMode folderIteratorMode) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderContentsIterator(UcmSession session, UcmGUID guid, int pageSize) {
+	public FolderContentsIterator(UcmSession session, UcmUniqueURI guid, int pageSize) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null, pageSize);
 	}
 
-	public FolderContentsIterator(UcmSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode,
+	public FolderContentsIterator(UcmSession session, UcmUniqueURI guid, FolderIteratorMode folderIteratorMode,
 		int pageSize) {
 		this(session, FolderLocatorMode.BY_GUID, guid, folderIteratorMode, pageSize);
 	}

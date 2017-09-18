@@ -16,8 +16,8 @@ public abstract class UcmFSObject extends UcmModelObject {
 	private final String path;
 	private final String parentPath;
 
-	private final UcmGUID guid;
-	private final UcmGUID parentGUID;
+	private final UcmUniqueURI uniqueUri;
+	private final UcmUniqueURI parentUri;
 
 	UcmFSObject(UcmModel model, URI uri, UcmAttributes data, UcmAtt nameAtt) {
 		super(model, uri);
@@ -32,8 +32,8 @@ public abstract class UcmFSObject extends UcmModelObject {
 		} else {
 			this.path = String.format("%s/%s", this.parentPath, this.attributes.getString(nameAtt));
 		}
-		this.guid = UcmModel.getGUID(data);
-		this.parentGUID = new UcmGUID(UcmModel.newFolderURI(getString(UcmAtt.fParentGUID)));
+		this.uniqueUri = UcmModel.getUniqueURI(data);
+		this.parentUri = new UcmUniqueURI(UcmModel.newFolderURI(getString(UcmAtt.fParentGUID)));
 	}
 
 	public final String getString(UcmAtt att) {
@@ -89,11 +89,11 @@ public abstract class UcmFSObject extends UcmModelObject {
 	}
 
 	public UcmFolder getParentFolder(UcmSession s) throws UcmFolderNotFoundException, UcmServiceException {
-		return this.model.getFolder(s, getParentGUID());
+		return this.model.getFolder(s, getParentURI());
 	}
 
-	public final UcmGUID getObjectGUID() {
-		return this.guid;
+	public final UcmUniqueURI getUniqueURI() {
+		return this.uniqueUri;
 	}
 
 	public final String getName() {
@@ -128,8 +128,8 @@ public abstract class UcmFSObject extends UcmModelObject {
 		return getBoolean(UcmAtt.fIsInTrash, false);
 	}
 
-	public final UcmGUID getParentGUID() {
-		return this.parentGUID;
+	public final URI getParentURI() {
+		return this.parentUri.getURI();
 	}
 
 	public final String getSecurityGroup() {

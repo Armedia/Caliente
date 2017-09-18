@@ -42,34 +42,32 @@ public class UcmModel {
 
 	private static final URI NULLURI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
 
-	// BY_GUID -> DataObject
-	private final KeyLockableCache<UcmGUID, UcmAttributes> objectByGUID;
+	// Unique URI -> DataObject
+	private final KeyLockableCache<UcmUniqueURI, UcmAttributes> objectByUniqueURI;
 
-	// path -> file://${dDocName}
-	// path -> folder://${fFolderGUID}
-	// path -> NULLURI
+	// path -> URI
 	private final KeyLockableCache<String, URI> uriByPaths;
 
-	// childURI -> parentURI
+	// child URI -> parent URI
 	private final KeyLockableCache<URI, URI> parentByURI;
 
-	// parentURI -> Map<childName, childURI>
+	// parent URI -> Map<childName, child URI>
 	private final KeyLockableCache<URI, Map<String, URI>> childrenByURI;
 
-	// URI -> List<UcmGUID>
+	// History URI -> List<UcmUniqueURI>
 	private final KeyLockableCache<URI, List<UcmRevision>> historyByURI;
 
-	// String -> UcmGUID
-	private final KeyLockableCache<String, UcmGUID> versionGuidByID;
+	// String -> Unique URI
+	private final KeyLockableCache<String, UcmUniqueURI> revisionUriByRevisionID;
 
-	// BY_GUID -> Map<String, UcmRenditionInfo>
-	private final KeyLockableCache<UcmGUID, Map<String, UcmRenditionInfo>> renditionsByGUID;
+	// Unique URI -> Map<String, UcmRenditionInfo>
+	private final KeyLockableCache<UcmUniqueURI, Map<String, UcmRenditionInfo>> renditionsByUniqueURI;
 
-	// URI -> BY_GUID
-	private final KeyLockableCache<URI, UcmGUID> guidByURI;
+	// History URI -> Unique URI
+	private final KeyLockableCache<URI, UcmUniqueURI> uniqueUriByHistoryUri;
 
-	// BY_GUID -> URI
-	private final KeyLockableCache<UcmGUID, URI> uriByGUID;
+	// UniqueURI -> History URI
+	private final KeyLockableCache<UcmUniqueURI, URI> historyUriByUniqueURI;
 
 	public static boolean isFrameworkFoldersEnabled(UcmSession s) throws UcmServiceException {
 		try {
@@ -109,11 +107,11 @@ public class UcmModel {
 		this.parentByURI = new KeyLockableCache<>(objectCount);
 		this.childrenByURI = new KeyLockableCache<>(objectCount);
 		this.historyByURI = new KeyLockableCache<>(objectCount);
-		this.objectByGUID = new KeyLockableCache<>(objectCount);
-		this.guidByURI = new KeyLockableCache<>(objectCount);
-		this.uriByGUID = new KeyLockableCache<>(objectCount);
-		this.renditionsByGUID = new KeyLockableCache<>(objectCount);
-		this.versionGuidByID = new KeyLockableCache<>(objectCount);
+		this.objectByUniqueURI = new KeyLockableCache<>(objectCount);
+		this.uniqueUriByHistoryUri = new KeyLockableCache<>(objectCount);
+		this.historyUriByUniqueURI = new KeyLockableCache<>(objectCount);
+		this.renditionsByUniqueURI = new KeyLockableCache<>(objectCount);
+		this.revisionUriByRevisionID = new KeyLockableCache<>(objectCount);
 	}
 
 	protected final void cacheDataObject(DataObject object) {
@@ -125,15 +123,15 @@ public class UcmModel {
 		if (data == null) { return; }
 		// Is this a file or a folder?
 		final URI uri = UcmModel.getURI(data);
-		final UcmGUID guid = UcmModel.getGUID(data);
+		final UcmUniqueURI guid = UcmModel.getUniqueURI(data);
 
-		this.objectByGUID.put(guid, data);
+		this.objectByUniqueURI.put(guid, data);
 		if (data.hasAttribute(UcmAtt.fParentGUID)) {
 			this.parentByURI.put(uri, UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID)));
 		}
 
-		this.guidByURI.put(uri, guid);
-		this.uriByGUID.put(guid, uri);
+		this.uniqueUriByHistoryUri.put(uri, guid);
+		this.historyUriByUniqueURI.put(guid, uri);
 	}
 
 	protected <K, V> V createIfAbsentInCache(KeyLockableCache<K, V> cache, K key,
@@ -156,7 +154,7 @@ public class UcmModel {
 			: UcmModel.newFolderURI(data.getString(UcmAtt.fFolderGUID)));
 	}
 
-	protected static final UcmGUID getGUID(UcmAttributes data) {
+	protected static final UcmUniqueURI getUniqueURI(UcmAttributes data) {
 		final boolean file = data.hasAttribute(UcmAtt.dDocName);
 		URI uri = UcmModel.getURI(data);
 		if (file) {
@@ -168,7 +166,7 @@ public class UcmModel {
 					String.format("Failed to construct a file URI from [%s] and dID=[%s]", uri, dID), e);
 			}
 		}
-		return new UcmGUID(uri);
+		return new UcmUniqueURI(uri);
 	}
 
 	private static final URI newURI(String scheme, String ssp) {
@@ -340,15 +338,15 @@ public class UcmModel {
 			throw new IllegalArgumentException(String.format("The URI [%s] doesn't point to a valid object", uri));
 		}
 
-		UcmGUID guid = this.guidByURI.get(uri);
+		UcmUniqueURI guid = this.uniqueUriByHistoryUri.get(uri);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		if (guid == null) {
 			try {
-				guid = this.guidByURI.createIfAbsent(uri, new ConcurrentInitializer<UcmGUID>() {
+				guid = this.uniqueUriByHistoryUri.createIfAbsent(uri, new ConcurrentInitializer<UcmUniqueURI>() {
 					@Override
-					public UcmGUID get() throws ConcurrentException {
+					public UcmUniqueURI get() throws ConcurrentException {
 						try {
 							DataBinder binder = s.createBinder();
 							if (file) {
@@ -368,7 +366,7 @@ public class UcmModel {
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
-									uri)) { return UcmGUID.NULL_GUID; }
+									uri)) { return UcmUniqueURI.NULL_GUID; }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -400,7 +398,7 @@ public class UcmModel {
 
 							UcmAttributes baseData = new UcmAttributes(baseObj);
 							data.set(baseData);
-							return UcmModel.getGUID(baseData);
+							return UcmModel.getUniqueURI(baseData);
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
 						}
@@ -413,10 +411,10 @@ public class UcmModel {
 			}
 		}
 
-		if (UcmGUID.NULL_GUID.equals(
+		if (UcmUniqueURI.NULL_GUID.equals(
 			guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri)); }
 
-		UcmAttributes ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<UcmAttributes>() {
+		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid, new ConcurrentInitializer<UcmAttributes>() {
 			@Override
 			public UcmAttributes get() throws ConcurrentException {
 				UcmAttributes ret = data.get();
@@ -441,7 +439,7 @@ public class UcmModel {
 				UcmRenditionInfo r = new UcmRenditionInfo(guid, o);
 				m.put(r.getName(), r);
 			}
-			this.renditionsByGUID.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
+			this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
 		}
 
 		return ret;
@@ -459,15 +457,15 @@ public class UcmModel {
 
 	protected UcmAttributes getFileRevision(final UcmSession s, final String id, final boolean refreshRenditions)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
-		UcmGUID guid = this.versionGuidByID.get(id);
+		UcmUniqueURI guid = this.revisionUriByRevisionID.get(id);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		if (guid == null) {
 			try {
-				guid = this.versionGuidByID.createIfAbsent(id, new ConcurrentInitializer<UcmGUID>() {
+				guid = this.revisionUriByRevisionID.createIfAbsent(id, new ConcurrentInitializer<UcmUniqueURI>() {
 					@Override
-					public UcmGUID get() throws ConcurrentException {
+					public UcmUniqueURI get() throws ConcurrentException {
 						try {
 							DataBinder binder = s.createBinder();
 							binder.putLocal("IdcService", "DOC_INFO");
@@ -483,7 +481,7 @@ public class UcmModel {
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]",
-									id)) { return UcmGUID.NULL_GUID; }
+									id)) { return UcmUniqueURI.NULL_GUID; }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -508,7 +506,7 @@ public class UcmModel {
 
 							UcmAttributes baseData = new UcmAttributes(baseObj);
 							data.set(baseData);
-							return UcmModel.getGUID(baseData);
+							return UcmModel.getUniqueURI(baseData);
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
 						}
@@ -521,10 +519,10 @@ public class UcmModel {
 			}
 		}
 
-		if (UcmGUID.NULL_GUID.equals(
+		if (UcmUniqueURI.NULL_GUID.equals(
 			guid)) { throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id)); }
 
-		UcmAttributes ret = createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<UcmAttributes>() {
+		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid, new ConcurrentInitializer<UcmAttributes>() {
 			@Override
 			public UcmAttributes get() throws ConcurrentException {
 				UcmAttributes ret = data.get();
@@ -551,7 +549,7 @@ public class UcmModel {
 				UcmRenditionInfo r = new UcmRenditionInfo(guid, o);
 				m.put(r.getName(), r);
 			}
-			this.renditionsByGUID.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
+			this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
 		}
 
 		return ret;
@@ -566,7 +564,7 @@ public class UcmModel {
 		}
 	}
 
-	protected Map<String, URI> getFolderContents(UcmSession s, UcmGUID guid)
+	protected Map<String, URI> getFolderContents(UcmSession s, UcmUniqueURI guid)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(guid, "Must provide a BY_GUID to search for");
 		// If it's a folder URI we already know the SSP is the BY_GUID, so... go!
@@ -721,9 +719,14 @@ public class UcmModel {
 		}
 	}
 
-	UcmFolder getFolder(UcmSession s, UcmGUID guid) throws UcmServiceException, UcmFolderNotFoundException {
+	UcmFolder getFolder(UcmSession s, UcmUniqueURI uri) throws UcmServiceException, UcmFolderNotFoundException {
+		Objects.requireNonNull(uri, "Must provide a unique URI to locate");
+		return getFolder(s, uri.getURI());
+	}
+
+	UcmFolder getFolder(UcmSession s, URI uri) throws UcmServiceException, UcmFolderNotFoundException {
+		Objects.requireNonNull(uri, "Must provide a URI to locate");
 		try {
-			final URI uri = guid.getURI();
 			return new UcmFolder(this, uri, getDataObject(s, uri));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
@@ -852,7 +855,7 @@ public class UcmModel {
 	}
 
 	UcmFolder refresh(UcmSession s, UcmFolder f) throws UcmFolderNotFoundException, UcmServiceException {
-		return getFolder(s, f.getObjectGUID());
+		return getFolder(s, f.getUniqueURI());
 	}
 
 	UcmFileHistory refresh(UcmSession s, UcmFileHistory h)
@@ -864,14 +867,14 @@ public class UcmModel {
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		Objects.requireNonNull(file, "Must provide a file whose renditions to return");
 
-		final UcmGUID guid = file.getObjectGUID();
-		Map<String, UcmRenditionInfo> renditions = this.renditionsByGUID.get(guid);
+		final UcmUniqueURI guid = file.getUniqueURI();
+		Map<String, UcmRenditionInfo> renditions = this.renditionsByUniqueURI.get(guid);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		if (renditions == null) {
 			final String id = file.getRevisionId();
 			try {
-				renditions = this.renditionsByGUID.createIfAbsent(guid,
+				renditions = this.renditionsByUniqueURI.createIfAbsent(guid,
 					new ConcurrentInitializer<Map<String, UcmRenditionInfo>>() {
 						@Override
 						public Map<String, UcmRenditionInfo> get() throws ConcurrentException {
@@ -939,7 +942,7 @@ public class UcmModel {
 
 		// Update the base object, since we just got it anyhow...
 		if (data.get() != null) {
-			createIfAbsentInCache(this.objectByGUID, guid, new ConcurrentInitializer<UcmAttributes>() {
+			createIfAbsentInCache(this.objectByUniqueURI, guid, new ConcurrentInitializer<UcmAttributes>() {
 				@Override
 				public UcmAttributes get() throws ConcurrentException {
 					UcmAttributes ret = data.get();

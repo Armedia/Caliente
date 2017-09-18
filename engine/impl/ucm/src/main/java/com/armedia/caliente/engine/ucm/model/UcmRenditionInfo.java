@@ -9,13 +9,13 @@ public final class UcmRenditionInfo {
 	public static final String PRIMARY = "primary";
 	public static final String DEFAULT = UcmRenditionInfo.PRIMARY;
 
-	private final UcmGUID guid;
+	private final UcmUniqueURI guid;
 	private final String type;
 	private final String format;
 	private final String name;
 	private final String description;
 
-	UcmRenditionInfo(UcmGUID guid, DataObject obj) {
+	UcmRenditionInfo(UcmUniqueURI guid, DataObject obj) {
 		UcmAttributes data = new UcmAttributes(obj);
 		this.guid = guid;
 		this.type = data.getString(UcmAtt.rendType);
@@ -24,7 +24,7 @@ public final class UcmRenditionInfo {
 		this.description = data.getString(UcmAtt.rendDescription);
 	}
 
-	public UcmGUID getGuid() {
+	public UcmUniqueURI getGuid() {
 		return this.guid;
 	}
 

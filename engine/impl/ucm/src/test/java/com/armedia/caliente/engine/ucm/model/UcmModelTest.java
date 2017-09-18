@@ -104,7 +104,7 @@ public class UcmModelTest {
 						UcmFile R = model.getFileRevision(s, r);
 						System.out.printf("\t\t\tACT  = [dID=%s, dRevLabel=%s, dDocName=%s]%n", R.getRevisionId(),
 							R.getRevisionLabel(), R.getContentId());
-						System.out.printf("\t\t\tGUID = %s%n", R.getObjectGUID());
+						System.out.printf("\t\t\tGUID = %s%n", R.getUniqueURI());
 						System.out.printf("\t\t\tCNAME= %s%n", R.getName());
 						System.out.printf("\t\t\tRNAME= %s%n", R.getRevisionName());
 						System.out.printf("\t\t\tSIZE = %d%n", R.getSize());

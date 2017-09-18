@@ -55,19 +55,19 @@ public class FolderTreeIterator {
 		this(session, FolderLocatorMode.BY_URI, uri, mode, pageSize);
 	}
 
-	public FolderTreeIterator(UcmSession session, UcmGUID guid) {
+	public FolderTreeIterator(UcmSession session, UcmUniqueURI guid) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderTreeIterator(UcmSession session, UcmGUID guid, FolderIteratorMode folderIteratorMode) {
+	public FolderTreeIterator(UcmSession session, UcmUniqueURI guid, FolderIteratorMode folderIteratorMode) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
 	}
 
-	public FolderTreeIterator(UcmSession session, UcmGUID guid, int pageSize) {
+	public FolderTreeIterator(UcmSession session, UcmUniqueURI guid, int pageSize) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null, pageSize);
 	}
 
-	public FolderTreeIterator(UcmSession session, UcmGUID guid, FolderIteratorMode mode, int pageSize) {
+	public FolderTreeIterator(UcmSession session, UcmUniqueURI guid, FolderIteratorMode mode, int pageSize) {
 		this(session, FolderLocatorMode.BY_GUID, guid, mode, pageSize);
 	}
 
