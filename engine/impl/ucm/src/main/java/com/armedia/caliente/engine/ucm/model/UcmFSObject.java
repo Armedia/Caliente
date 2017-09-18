@@ -6,6 +6,8 @@ import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.ucm.UcmSession;
+
 public abstract class UcmFSObject extends UcmModelObject {
 
 	protected final UcmAtt guidAtt;
@@ -92,8 +94,8 @@ public abstract class UcmFSObject extends UcmModelObject {
 		return this.parentPath;
 	}
 
-	public UcmFolder getParentFolder() throws UcmFolderNotFoundException, UcmServiceException {
-		return this.model.getFolder(getParentGUID());
+	public UcmFolder getParentFolder(UcmSession s) throws UcmFolderNotFoundException, UcmServiceException {
+		return this.model.getFolder(s, getParentGUID());
 	}
 
 	public final UcmGUID getObjectGUID() {

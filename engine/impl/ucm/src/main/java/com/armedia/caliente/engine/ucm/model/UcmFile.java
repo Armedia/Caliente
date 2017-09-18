@@ -3,6 +3,8 @@ package com.armedia.caliente.engine.ucm.model;
 import java.io.InputStream;
 import java.net.URI;
 
+import com.armedia.caliente.engine.ucm.UcmSession;
+
 public class UcmFile extends UcmFSObject {
 
 	UcmFile(UcmModel model, URI uri, UcmAttributes data) {
@@ -57,11 +59,12 @@ public class UcmFile extends UcmFSObject {
 		return getString(UcmAtt.dDocName);
 	}
 
-	public InputStream getInputStream() throws UcmServiceException, UcmFileRevisionNotFoundException {
+	public InputStream getInputStream(UcmSession s) throws UcmServiceException, UcmFileRevisionNotFoundException {
 		return getInputStream(null);
 	}
 
-	public InputStream getInputStream(String rendition) throws UcmServiceException, UcmFileRevisionNotFoundException {
-		return this.model.getInputStream(this, rendition);
+	public InputStream getInputStream(UcmSession s, String rendition)
+		throws UcmServiceException, UcmFileRevisionNotFoundException {
+		return this.model.getInputStream(s, this, rendition);
 	}
 }

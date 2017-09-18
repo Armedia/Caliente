@@ -71,8 +71,6 @@ public class UcmModel {
 	// BY_GUID -> URI
 	private final KeyLockableCache<UcmGUID, URI> uriByGUID;
 
-	private final UcmSessionFactory sessionFactory;
-
 	private static boolean isFrameworkFoldersEnabled(UcmSessionFactory sessionFactory) throws UcmServiceException {
 		final SessionWrapper<UcmSession> w;
 		try {
@@ -115,7 +113,6 @@ public class UcmModel {
 		Objects.requireNonNull(sessionFactory, "Must provide a non-null session factory");
 		if (!UcmModel.isFrameworkFoldersEnabled(
 			sessionFactory)) { throw new UcmServiceException("The FrameworkFolders component is not enabled"); }
-		this.sessionFactory = sessionFactory;
 		this.uriByPaths = new KeyLockableCache<>(1000);
 		this.parentByURI = new KeyLockableCache<>(1000);
 		this.childrenByURI = new KeyLockableCache<>(1000);
@@ -240,16 +237,16 @@ public class UcmModel {
 	 * @throws UcmFileNotFoundException
 	 *             if there is no file at that path
 	 */
-	public UcmFile getFile(String path) throws UcmServiceException, UcmFileNotFoundException {
+	public UcmFile getFile(UcmSession s, String path) throws UcmServiceException, UcmFileNotFoundException {
 		try {
-			final URI uri = resolvePath(path);
-			return new UcmFile(this, uri, getDataObject(uri));
+			final URI uri = resolvePath(s, path);
+			return new UcmFile(this, uri, getDataObject(s, uri));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFileNotFoundException(e.getMessage(), e);
 		}
 	}
 
-	protected URI resolvePath(String p) throws UcmServiceException, UcmObjectNotFoundException {
+	protected URI resolvePath(final UcmSession s, String p) throws UcmServiceException, UcmObjectNotFoundException {
 		final String sanitizedPath = UcmModel.sanitizePath(p);
 		URI uri = this.uriByPaths.get(sanitizedPath);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
@@ -258,15 +255,7 @@ public class UcmModel {
 				uri = this.uriByPaths.createIfAbsent(sanitizedPath, new ConcurrentInitializer<URI>() {
 					@Override
 					public URI get() throws ConcurrentException {
-						final SessionWrapper<UcmSession> w;
 						try {
-							w = UcmModel.this.sessionFactory.acquireSession();
-						} catch (Exception e) {
-							throw new ConcurrentException("Failed to acquire an RIDC session", e);
-						}
-						try {
-							UcmSession s = w.getWrapped();
-
 							DataBinder binder = s.createBinder();
 							binder.putLocal("IdcService", "FLD_INFO");
 							binder.putLocal("path", sanitizedPath);
@@ -313,8 +302,6 @@ public class UcmModel {
 								sanitizedPath));
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
-						} finally {
-							w.close();
 						}
 					}
 				});
@@ -334,7 +321,8 @@ public class UcmModel {
 		return uri;
 	}
 
-	protected UcmAttributes getDataObject(final URI uri) throws UcmServiceException, UcmObjectNotFoundException {
+	protected UcmAttributes getDataObject(final UcmSession s, final URI uri)
+		throws UcmServiceException, UcmObjectNotFoundException {
 		final boolean file;
 		if (isFileURI(uri)) {
 			// The SSP is the dDocName
@@ -356,15 +344,7 @@ public class UcmModel {
 				guid = this.guidByURI.createIfAbsent(uri, new ConcurrentInitializer<UcmGUID>() {
 					@Override
 					public UcmGUID get() throws ConcurrentException {
-						final SessionWrapper<UcmSession> w;
 						try {
-							w = UcmModel.this.sessionFactory.acquireSession();
-						} catch (Exception e) {
-							throw new ConcurrentException("Failed to acquire an RIDC session", e);
-						}
-						try {
-							UcmSession s = w.getWrapped();
-
 							DataBinder binder = s.createBinder();
 							if (file) {
 								binder.putLocal("IdcService", "DOC_INFO_BY_NAME");
@@ -418,8 +398,6 @@ public class UcmModel {
 							return new UcmGUID(baseData.getString(file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID));
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
-						} finally {
-							w.close();
 						}
 					}
 				});
@@ -464,17 +442,17 @@ public class UcmModel {
 		return ret;
 	}
 
-	public UcmFile getFileRevision(UcmRevision revision)
+	public UcmFile getFileRevision(UcmSession s, UcmRevision revision)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return new UcmFile(this, revision.getUri(), getFileRevision(revision.getId(), true));
+		return new UcmFile(this, revision.getUri(), getFileRevision(s, revision.getId(), true));
 	}
 
-	public UcmFile getFileRevision(UcmFile file)
+	public UcmFile getFileRevision(UcmSession s, UcmFile file)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return new UcmFile(this, file.getURI(), getFileRevision(file.getRevisionId(), true));
+		return new UcmFile(this, file.getURI(), getFileRevision(s, file.getRevisionId(), true));
 	}
 
-	protected UcmAttributes getFileRevision(final String id, final boolean refreshRenditions)
+	protected UcmAttributes getFileRevision(final UcmSession s, final String id, final boolean refreshRenditions)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		UcmGUID guid = this.versionGuidByID.get(id);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
@@ -485,15 +463,7 @@ public class UcmModel {
 				guid = this.versionGuidByID.createIfAbsent(id, new ConcurrentInitializer<UcmGUID>() {
 					@Override
 					public UcmGUID get() throws ConcurrentException {
-						final SessionWrapper<UcmSession> w;
 						try {
-							w = UcmModel.this.sessionFactory.acquireSession();
-						} catch (Exception e) {
-							throw new ConcurrentException("Failed to acquire an RIDC session", e);
-						}
-						try {
-							UcmSession s = w.getWrapped();
-
 							DataBinder binder = s.createBinder();
 							binder.putLocal("IdcService", "DOC_INFO");
 							binder.putLocal("dID", id);
@@ -536,8 +506,6 @@ public class UcmModel {
 							return new UcmGUID(baseData.getString(UcmAtt.fFileGUID));
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
-						} finally {
-							w.close();
 						}
 					}
 				});
@@ -584,26 +552,27 @@ public class UcmModel {
 		return ret;
 	}
 
-	protected Map<String, URI> getChildren(String path) throws UcmServiceException, UcmFolderNotFoundException {
+	protected Map<String, URI> getChildren(UcmSession s, String path)
+		throws UcmServiceException, UcmFolderNotFoundException {
 		try {
-			return getFolderContents(resolvePath(path));
+			return getFolderContents(s, resolvePath(s, path));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
 		}
 	}
 
-	protected Map<String, URI> getFolderContents(final UcmGUID guid)
+	protected Map<String, URI> getFolderContents(UcmSession s, UcmGUID guid)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(guid, "Must provide a BY_GUID to search for");
 		// If it's a folder URI we already know the SSP is the BY_GUID, so... go!
-		return getFolderContents(UcmModel.newFolderURI(guid.getString()));
+		return getFolderContents(s, UcmModel.newFolderURI(guid.getString()));
 	}
 
 	public static interface ObjectHandler {
 		public void handleObject(UcmSession session, int pos, URI objectUri, UcmAttributes object);
 	}
 
-	public int iterateFolderContents(final URI uri, final ObjectHandler handler)
+	public int iterateFolderContents(final UcmSession s, final URI uri, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
@@ -619,7 +588,7 @@ public class UcmModel {
 			// want to do the full service invocation to the server
 			for (URI childUri : children.values()) {
 				try {
-					objects.put(childUri, getDataObject(childUri));
+					objects.put(childUri, getDataObject(s, childUri));
 				} catch (UcmObjectNotFoundException e) {
 					reconstruct = true;
 					break;
@@ -629,22 +598,11 @@ public class UcmModel {
 			// If the cache remains current, and we're not missing any child objects, then we quite
 			// simply iterate over the objects we got and call it a day
 			if (!reconstruct) {
-				final SessionWrapper<UcmSession> w;
-				try {
-					w = UcmModel.this.sessionFactory.acquireSession();
-				} catch (Exception e) {
-					throw new UcmServiceException("Failed to acquire an RIDC session", e);
+				int ret = 0;
+				for (URI childUri : objects.keySet()) {
+					handler.handleObject(s, ret++, childUri, objects.get(childUri));
 				}
-				try {
-					final UcmSession session = w.getWrapped();
-					int ret = 0;
-					for (URI childUri : objects.keySet()) {
-						handler.handleObject(session, ret++, childUri, objects.get(childUri));
-					}
-					return ret;
-				} finally {
-					w.close();
-				}
+				return ret;
 			}
 		}
 
@@ -655,14 +613,7 @@ public class UcmModel {
 				children = this.childrenByURI.createIfAbsent(uri, new ConcurrentInitializer<Map<String, URI>>() {
 					@Override
 					public Map<String, URI> get() throws ConcurrentException {
-						final SessionWrapper<UcmSession> w;
 						try {
-							w = UcmModel.this.sessionFactory.acquireSession();
-						} catch (Exception e) {
-							throw new ConcurrentException("Failed to acquire an RIDC session", e);
-						}
-						try {
-							UcmSession s = w.getWrapped();
 							try {
 								Map<String, URI> children = new TreeMap<>();
 								Map<String, UcmAttributes> dataObjects = new TreeMap<>();
@@ -694,8 +645,6 @@ public class UcmModel {
 							}
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
-						} finally {
-							w.close();
 						}
 					}
 				});
@@ -722,9 +671,10 @@ public class UcmModel {
 		return (children != null ? children.size() : 0);
 	}
 
-	protected Map<String, URI> getFolderContents(final URI uri) throws UcmServiceException, UcmFolderNotFoundException {
+	protected Map<String, URI> getFolderContents(UcmSession s, final URI uri)
+		throws UcmServiceException, UcmFolderNotFoundException {
 		final Map<String, URI> children = new LinkedHashMap<>();
-		iterateFolderContents(uri, new ObjectHandler() {
+		iterateFolderContents(s, uri, new ObjectHandler() {
 			@Override
 			public void handleObject(UcmSession session, int pos, URI uri, UcmAttributes data) {
 				String name = data.getString(UcmAtt.fFileName);
@@ -737,10 +687,10 @@ public class UcmModel {
 		return children;
 	}
 
-	public Map<String, UcmFSObject> getFolderContents(final UcmFolder folder)
+	public Map<String, UcmFSObject> getFolderContents(UcmSession s, final UcmFolder folder)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		final Map<String, UcmFSObject> children = new LinkedHashMap<>();
-		iterateFolderContents(folder.getURI(), new ObjectHandler() {
+		iterateFolderContents(s, folder.getURI(), new ObjectHandler() {
 			@Override
 			public void handleObject(UcmSession session, int pos, URI uri, UcmAttributes data) {
 				UcmFSObject o = null;
@@ -757,47 +707,47 @@ public class UcmModel {
 		return children;
 	}
 
-	public UcmFolder getFolder(String path) throws UcmServiceException, UcmFolderNotFoundException {
+	public UcmFolder getFolder(UcmSession s, String path) throws UcmServiceException, UcmFolderNotFoundException {
 		try {
-			final URI uri = resolvePath(path);
-			return new UcmFolder(this, uri, getDataObject(uri));
+			final URI uri = resolvePath(s, path);
+			return new UcmFolder(this, uri, getDataObject(s, uri));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
 		}
 	}
 
-	UcmFolder getFolder(UcmGUID guid) throws UcmServiceException, UcmFolderNotFoundException {
+	UcmFolder getFolder(UcmSession s, UcmGUID guid) throws UcmServiceException, UcmFolderNotFoundException {
 		try {
 			final URI uri = UcmModel.newFolderURI(guid.getString());
-			return new UcmFolder(this, uri, getDataObject(uri));
+			return new UcmFolder(this, uri, getDataObject(s, uri));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
 		}
 	}
 
-	public UcmFileHistory getFileHistoryByPath(String path)
+	public UcmFileHistory getFileHistoryByPath(UcmSession s, String path)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return getFileHistory(getFile(path));
+		return getFileHistory(s, getFile(s, path));
 	}
 
-	public UcmFileHistory getFileHistory(final UcmFile file)
+	public UcmFileHistory getFileHistory(UcmSession s, UcmFile file)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return getFileHistory(file.getURI(), file.getRevisionId());
+		return getFileHistory(s, file.getURI(), file.getRevisionId());
 	}
 
-	public UcmFileHistory getFileHistory(final URI uri)
+	public UcmFileHistory getFileHistory(UcmSession s, URI uri)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		final UcmAttributes att;
 		try {
-			att = getDataObject(uri);
+			att = getDataObject(s, uri);
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFileNotFoundException(e.getMessage(), e);
 		}
 
-		return getFileHistory(uri, att.getString(UcmAtt.dID));
+		return getFileHistory(s, uri, att.getString(UcmAtt.dID));
 	}
 
-	UcmFileHistory getFileHistory(final URI uri, final String revisionId)
+	UcmFileHistory getFileHistory(final UcmSession s, final URI uri, final String revisionId)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		List<UcmRevision> history = this.historyByURI.get(uri);
 		if (history == null) {
@@ -805,15 +755,7 @@ public class UcmModel {
 				history = this.historyByURI.createIfAbsent(uri, new ConcurrentInitializer<List<UcmRevision>>() {
 					@Override
 					public List<UcmRevision> get() throws ConcurrentException {
-						final SessionWrapper<UcmSession> w;
 						try {
-							w = UcmModel.this.sessionFactory.acquireSession();
-						} catch (Exception e) {
-							throw new ConcurrentException("Failed to acquire an RIDC session", e);
-						}
-						try {
-							UcmSession s = w.getWrapped();
-
 							DataBinder binder = s.createBinder();
 							binder.putLocal("IdcService", "REV_HISTORY");
 							binder.putLocal("dID", String.valueOf(revisionId));
@@ -839,8 +781,6 @@ public class UcmModel {
 							return info;
 						} catch (Exception e) {
 							throw new ConcurrentException(e);
-						} finally {
-							w.close();
 						}
 					}
 				});
@@ -856,17 +796,9 @@ public class UcmModel {
 		return new UcmFileHistory(this, uri, history);
 	}
 
-	InputStream getInputStream(UcmFile file, String rendition)
+	InputStream getInputStream(UcmSession s, UcmFile file, String rendition)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
-		final SessionWrapper<UcmSession> w;
 		try {
-			w = UcmModel.this.sessionFactory.acquireSession();
-		} catch (Exception e) {
-			throw new UcmServiceException("Failed to acquire an RIDC session", e);
-		}
-		try {
-			UcmSession s = w.getWrapped();
-
 			DataBinder binder = s.createBinder();
 			binder.putLocal("IdcService", "GET_FILE");
 			binder.putLocal("dID", String.valueOf(file.getRevisionId()));
@@ -885,8 +817,6 @@ public class UcmModel {
 			}
 		} catch (Exception e) {
 			throw new UcmServiceException(e.getMessage(), e);
-		} finally {
-			w.close();
 		}
 	}
 
@@ -911,20 +841,21 @@ public class UcmModel {
 		if (k.isInstance(t)) { throw k.cast(t); }
 	}
 
-	UcmFile refresh(UcmFile f) throws UcmFileNotFoundException, UcmServiceException, UcmFileRevisionNotFoundException {
-		return getFileRevision(f);
-	}
-
-	UcmFolder refresh(UcmFolder f) throws UcmFolderNotFoundException, UcmServiceException {
-		return getFolder(f.getObjectGUID());
-	}
-
-	UcmFileHistory refresh(UcmFileHistory h)
+	UcmFile refresh(UcmSession s, UcmFile f)
 		throws UcmFileNotFoundException, UcmServiceException, UcmFileRevisionNotFoundException {
-		return getFileHistory(h.getURI());
+		return getFileRevision(s, f);
 	}
 
-	public Map<String, UcmRenditionInfo> getRenditions(final UcmFile file)
+	UcmFolder refresh(UcmSession s, UcmFolder f) throws UcmFolderNotFoundException, UcmServiceException {
+		return getFolder(s, f.getObjectGUID());
+	}
+
+	UcmFileHistory refresh(UcmSession s, UcmFileHistory h)
+		throws UcmFileNotFoundException, UcmServiceException, UcmFileRevisionNotFoundException {
+		return getFileHistory(s, h.getURI());
+	}
+
+	public Map<String, UcmRenditionInfo> getRenditions(final UcmSession s, final UcmFile file)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		Objects.requireNonNull(file, "Must provide a file whose renditions to return");
 
@@ -939,15 +870,7 @@ public class UcmModel {
 					new ConcurrentInitializer<Map<String, UcmRenditionInfo>>() {
 						@Override
 						public Map<String, UcmRenditionInfo> get() throws ConcurrentException {
-							final SessionWrapper<UcmSession> w;
 							try {
-								w = UcmModel.this.sessionFactory.acquireSession();
-							} catch (Exception e) {
-								throw new ConcurrentException("Failed to acquire an RIDC session", e);
-							}
-							try {
-								UcmSession s = w.getWrapped();
-
 								DataBinder binder = s.createBinder();
 								binder.putLocal("IdcService", "DOC_INFO");
 								binder.putLocal("dID", id);
@@ -995,8 +918,6 @@ public class UcmModel {
 								return renditions;
 							} catch (Exception e) {
 								throw new ConcurrentException(e);
-							} finally {
-								w.close();
 							}
 						}
 					});

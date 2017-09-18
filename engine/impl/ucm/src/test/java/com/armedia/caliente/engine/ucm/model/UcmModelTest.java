@@ -11,6 +11,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
+import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
 import com.armedia.caliente.engine.ucm.UcmSessionSetting;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -71,36 +73,40 @@ public class UcmModelTest {
 		settingsMap.put(UcmSessionSetting.PASSWORD.getLabel(), "system01");
 		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
 
-		UcmModel model = new UcmModel(new UcmSessionFactory(new CfgTools(settingsMap), new CmfCrypt()));
+		UcmSessionFactory sf = new UcmSessionFactory(new CfgTools(settingsMap), new CmfCrypt());
+		UcmModel model = new UcmModel(sf);
 
 		String[] paths = {
 			"/Enterprise Libraries", "/Shortcut To Test Folder", "/Test Folder", "/Users",
 			"/Caliente 3.0 Concept Document v4.0.docx", "/non-existent-path"
 		};
 
+		SessionWrapper<UcmSession> w = sf.acquireSession();
+		UcmSession s = w.getWrapped();
+
 		for (String p : paths) {
 			try {
-				URI uri = model.resolvePath(p);
+				URI uri = model.resolvePath(s, p);
 				System.out.printf("[%s] -> [%s]%n", p, uri);
 				if (model.isFileURI(uri)) {
-					UcmFile f = model.getFile(p);
+					UcmFile f = model.getFile(s, p);
 
 					System.out.printf("\tRevisions:%n");
 					System.out.printf("\t%s%n", StringUtils.repeat('-', 40));
-					for (UcmRevision r : model.getFileHistory(f)) {
+					for (UcmRevision r : model.getFileHistory(s, f)) {
 						System.out.printf("\t\t[%d] = %s%n", r.getRevisionId(), r.getRevLabel());
-						UcmFile R = model.getFileRevision(r);
+						UcmFile R = model.getFileRevision(s, r);
 						System.out.printf("\t\t\tGUID = %s%n", R.getObjectGUID());
 						System.out.printf("\t\t\tNAME = %s%n", R.getName());
 						System.out.printf("\t\t\tSIZE = %d%n", R.getSize());
-						try (InputStream in = R.getInputStream()) {
+						try (InputStream in = R.getInputStream(s)) {
 							System.out.printf("\t\t\tSUM  = %s%n", new String(Hex.encodeHex(DigestUtils.sha256(in))));
 						} catch (Exception e) {
 							e.printStackTrace(System.err);
 						}
 					}
 				} else {
-					UcmFolder f = model.getFolder(p);
+					UcmFolder f = model.getFolder(s, p);
 				}
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
@@ -109,7 +115,7 @@ public class UcmModelTest {
 
 		for (String p : paths) {
 			try {
-				URI uri = model.resolvePath(p);
+				URI uri = model.resolvePath(s, p);
 				System.out.printf("[%s] -> [%s]%n", p, uri);
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
