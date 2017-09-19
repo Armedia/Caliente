@@ -721,7 +721,8 @@ public class UcmModel {
 	}
 
 	private int iterateFolderTreeContents(final Set<URI> recursions, final UcmSession s, final URI uri,
-		final ObjectHandler handler) throws UcmServiceException, UcmFolderNotFoundException {
+		final boolean recurseShortcuts, final ObjectHandler handler)
+		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
 		// If this isn't a folder, we don't even try it...
@@ -745,9 +746,9 @@ public class UcmModel {
 						.format("Folder recursion detected when descending into [%s] : %s", objectUri, recursions)); }
 					try {
 						handler.handleObject(session, pos + outerPos.get(), objectUri, object);
-						if (UcmModel.isFolderURI(uri)) {
+						if (UcmModel.isFolderURI(uri) && (recurseShortcuts || !object.isShortcut())) {
 							try {
-								iterateFolderTreeContents(recursions, s, objectUri, handler);
+								iterateFolderTreeContents(recursions, s, objectUri, recurseShortcuts, handler);
 							} catch (UcmFolderNotFoundException e) {
 								throw new UcmRuntimeException(String.format(
 									"Unexpected condition: can't find a folder that has just been found?? URI=[%s]",
@@ -771,15 +772,15 @@ public class UcmModel {
 		}
 	}
 
-	public int iterateFolderTreeContents(final UcmSession s, final URI uri, final ObjectHandler handler)
-		throws UcmServiceException, UcmFolderNotFoundException {
-		return iterateFolderTreeContents(new LinkedHashSet<URI>(), s, uri, handler);
+	public int iterateFolderTreeContents(final UcmSession s, final URI uri, boolean recurseShortcuts,
+		final ObjectHandler handler) throws UcmServiceException, UcmFolderNotFoundException {
+		return iterateFolderTreeContents(new LinkedHashSet<URI>(), s, uri, recurseShortcuts, handler);
 	}
 
-	protected Collection<URI> getFolderTreeContents(UcmSession s, final URI uri)
+	protected Collection<URI> getFolderTreeContents(UcmSession s, boolean recurseShortcuts, final URI uri)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		final Collection<URI> children = new ArrayList<>();
-		iterateFolderTreeContents(s, uri, new ObjectHandler() {
+		iterateFolderTreeContents(s, uri, recurseShortcuts, new ObjectHandler() {
 			@Override
 			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject obj) {
 				children.add(uri);
@@ -788,10 +789,10 @@ public class UcmModel {
 		return children;
 	}
 
-	public Collection<UcmFSObject> getFolderTreeContents(UcmSession s, final UcmFolder folder)
+	public Collection<UcmFSObject> getFolderTreeContents(UcmSession s, final UcmFolder folder, boolean recurseShortcuts)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		final Collection<UcmFSObject> children = new ArrayList<>();
-		iterateFolderTreeContents(s, folder.getURI(), new ObjectHandler() {
+		iterateFolderTreeContents(s, folder.getURI(), recurseShortcuts, new ObjectHandler() {
 			@Override
 			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject o) {
 				children.add(o);
