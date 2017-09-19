@@ -235,6 +235,11 @@ public class UcmModel {
 		return UcmModel.FOLDER_SCHEME.equals(uri.getScheme());
 	}
 
+	public static final boolean isShortcut(UcmAttributes att) {
+		Objects.requireNonNull(att, "Must provide a non-null attribute set to check");
+		return !StringUtils.isEmpty(att.getString(UcmAtt.fTargetGUID));
+	}
+
 	/**
 	 * Returns the latest revision of the file at the given path.
 	 *
