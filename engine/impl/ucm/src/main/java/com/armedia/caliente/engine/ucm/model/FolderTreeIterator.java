@@ -25,7 +25,8 @@ public class FolderTreeIterator {
 		}
 
 		public void setPageSize(int pageSize) {
-			this.pageSize = pageSize;
+			this.pageSize = Tools.ensureBetween(FolderTreeIterator.MINIMUM_PAGE_SIZE, pageSize,
+				FolderTreeIterator.MAXIMUM_PAGE_SIZE);
 		}
 
 		public FolderIteratorMode getMode() {
@@ -64,6 +65,7 @@ public class FolderTreeIterator {
 
 	private boolean rootExamined = false;
 	private UcmAttributes current = null;
+	private int pos = -1;
 
 	private Stack<FolderContentsIterator> recursion = new Stack<>();
 	private Set<URI> loopDetector = new LinkedHashSet<>();
@@ -141,6 +143,7 @@ public class FolderTreeIterator {
 				UcmAttributes att = currentRecursion.getFolder();
 				this.loopDetector.add(UcmModel.getURI(att));
 				if (this.mode != FolderIteratorMode.FILES) {
+					++this.pos;
 					this.current = att;
 				}
 				this.rootExamined = true;
@@ -154,7 +157,9 @@ public class FolderTreeIterator {
 
 			if (!currentRecursion.hasNext()) {
 				// If this level is exhausted, we move to the next level...
-				this.recursion.pop();
+				FolderContentsIterator it = this.recursion.pop();
+				URI uri = UcmModel.getURI(it.getFolder());
+				this.loopDetector.remove(uri);
 				continue;
 			}
 
@@ -185,10 +190,19 @@ public class FolderTreeIterator {
 					continue nextLevel;
 				}
 			}
+			++this.pos;
 			this.current = att;
 			return true;
 		}
 		return false;
+	}
+
+	public int getCurrentPos() {
+		return this.pos;
+	}
+
+	public int getCurrentDept() {
+		return (this.recursion.size() - 1);
 	}
 
 	public UcmAttributes next() throws UcmServiceException {
