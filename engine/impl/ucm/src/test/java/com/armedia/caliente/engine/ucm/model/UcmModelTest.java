@@ -2,9 +2,6 @@ package com.armedia.caliente.engine.ucm.model;
 
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -12,81 +9,101 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 import com.armedia.caliente.engine.SessionWrapper;
+import com.armedia.caliente.engine.ucm.BaseTest;
 import com.armedia.caliente.engine.ucm.UcmSession;
-import com.armedia.caliente.engine.ucm.UcmSessionFactory;
-import com.armedia.caliente.engine.ucm.UcmSessionSetting;
-import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.commons.utilities.CfgTools;
 
-import oracle.stellent.ridc.model.DataBinder;
-import oracle.stellent.ridc.model.DataObject;
-import oracle.stellent.ridc.model.DataResultSet;
+public class UcmModelTest extends BaseTest {
 
-@SuppressWarnings("unused")
-public class UcmModelTest {
+	@Test
+	public void testIterator() throws Throwable {
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
 
-	private static final String NULL = "<null>";
-
-	private void dumpBinder(DataBinder binder) {
-		for (String rs : binder.getResultSetNames()) {
-			dumpMap(rs, binder.getResultSet(rs));
-		}
-		System.out.printf("Local Data%n");
-		System.out.printf("%s%n", StringUtils.repeat('-', 80));
-		dumpObject(1, binder.getLocalData());
-	}
-
-	private void dumpObject(int indent, DataObject o) {
-		final String indentStr = StringUtils.repeat('\t', indent);
-		for (String s : new TreeSet<>(o.keySet())) {
-			Object v = o.get(s);
-			if (v == null) {
-				v = UcmModelTest.NULL;
-			} else {
-				v = String.format("[%s]", v);
+			FolderContentsIterator it = new FolderContentsIterator(s, "/", 3);
+			while (it.hasNext()) {
+				System.out.printf("Item [%d] (p%d, c%d):%n", it.getCurrentPos(), it.getPageCount(),
+					it.getCurrentInPage());
+				System.out.printf("%s%n", StringUtils.repeat('-', 40));
+				dumpObject(1, it.next());
 			}
-			System.out.printf("%s[%s] -> %s%n", indentStr, s, v);
+
+			System.out.printf("Base Folder @ [%s]:%n", it.getSearchKey());
+			System.out.printf("%s%n", StringUtils.repeat('-', 40));
+			dumpObject(1, it.getFolder());
+
+			System.out.printf("Local Data@ [%s]:%n", it.getSearchKey());
+			System.out.printf("%s%n", StringUtils.repeat('-', 40));
+			dumpObject(1, it.getLocalData());
+		} catch (UcmServiceException e) {
+			handleException(e.getCause());
+		} finally {
+			w.close();
 		}
 	}
 
-	private void dumpMap(String label, DataResultSet map) {
-		if (map == null) {
-			System.out.printf("WARNING: Map [%s] is null", label);
-			return;
+	@Test
+	public void testRecursiveIterator() throws Throwable {
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
+
+			FolderTreeIterator.Config cfg = new FolderTreeIterator.Config();
+			cfg.setPageSize(100);
+			cfg.setRecurseShortcuts(true);
+			FolderTreeIterator it = new FolderTreeIterator(s, "/", cfg);
+			while (it.hasNext()) {
+				UcmAttributes att = it.next();
+				UcmAtt nameAtt = UcmAtt.fFileName;
+				String type = "FILE";
+				if (!att.hasAttribute(nameAtt)) {
+					type = "FLDR";
+					nameAtt = UcmAtt.fFolderName;
+				}
+				if (UcmModel.isShortcut(att)) {
+					type = String.format(">%s", type);
+				} else {
+					type = String.format(" %s", type);
+				}
+				String path = att.getString(UcmAtt.$ucmParentPath);
+				String name = att.getString(nameAtt);
+				if (path == null) {
+					path = "";
+					name = "";
+				} else if (path.equals("/")) {
+					path = "";
+				}
+				name = String.format("%s/%s", path, name);
+				System.out.printf("Item [%03d] (depth %d): %s %s%n", it.getCurrentPos(), it.getCurrentDept(), type,
+					name);
+				// System.out.printf("%s%n", StringUtils.repeat('-', 40));
+				// dumpObject(1, att);
+			}
+		} catch (UcmServiceException e) {
+			handleException(e.getCause());
+		} finally {
+			w.close();
 		}
-		System.out.printf("Map contents: %s%n", label);
-		System.out.printf("%s%n", StringUtils.repeat('-', 80));
-		int i = 0;
-		for (DataObject o : map.getRows()) {
-			System.out.printf("\tItem [%d]:%n", i++);
-			System.out.printf("%s%n", StringUtils.repeat('-', 40));
-			dumpObject(2, o);
-		}
-		System.out.printf("%n");
 	}
 
 	@Test
 	public void testResolvePath() throws Exception {
-		Map<String, String> settingsMap = new TreeMap<>();
-
-		settingsMap.put(UcmSessionSetting.USER.getLabel(), "weblogic");
-		settingsMap.put(UcmSessionSetting.PASSWORD.getLabel(), "system01");
-		settingsMap.put(UcmSessionSetting.HOST.getLabel(), "armdec6aapp06.dev.armedia.com");
-
-		UcmSessionFactory sf = new UcmSessionFactory(new CfgTools(settingsMap), new CmfCrypt());
-		UcmModel model = new UcmModel();
-
 		String[] paths = {
 			"/Enterprise Libraries", "/Shortcut To Test Folder", "/Test Folder", "/Users",
 			"/Caliente 3.0 Concept Document v4.0.docx", "/non-existent-path"
 		};
 
-		SessionWrapper<UcmSession> w = sf.acquireSession();
-		UcmSession s = w.getWrapped();
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
+			UcmModel model = new UcmModel();
 
-		processPaths(model, s, paths);
-		// This call is to verify that the caching is being done...
-		processPaths(model, s, paths);
+			processPaths(model, s, paths);
+			// This call is to verify that the caching is being done...
+			processPaths(model, s, paths);
+		} finally {
+			w.close();
+		}
 	}
 
 	private void processPaths(UcmModel model, UcmSession s, String... paths) throws Exception {
@@ -115,7 +132,7 @@ public class UcmModelTest {
 						}
 					}
 				} else {
-					UcmFolder f = model.getFolder(s, p);
+					model.getFolder(s, p);
 				}
 			} catch (Exception e) {
 				e.printStackTrace(System.err);
