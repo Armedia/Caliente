@@ -2,8 +2,10 @@ package com.armedia.caliente.engine.ucm.model;
 
 import java.io.Serializable;
 import java.net.URI;
+import java.util.LinkedHashSet;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Stack;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
@@ -64,6 +66,7 @@ public class FolderTreeIterator {
 	private UcmAttributes current = null;
 
 	private Stack<FolderContentsIterator> recursion = new Stack<>();
+	private Set<URI> loopDetector = new LinkedHashSet<>();
 
 	public FolderTreeIterator(UcmSession session, String path) {
 		this(session, FolderLocatorMode.BY_PATH, path, null);
@@ -135,8 +138,10 @@ public class FolderTreeIterator {
 				// This only needs to be done for the root folder of the entire
 				// tree, since all child folders will be iterated over as a matter
 				// of course during the normal algorithm.
+				UcmAttributes att = currentRecursion.getFolder();
+				this.loopDetector.add(UcmModel.getURI(att));
 				if (this.mode != FolderIteratorMode.FILES) {
-					this.current = currentRecursion.getFolder();
+					this.current = att;
 				}
 				this.rootExamined = true;
 				if (this.current != null) { return true; }
@@ -161,6 +166,12 @@ public class FolderTreeIterator {
 				// call to hasNext()
 				if (!UcmModel.isShortcut(att) || this.recurseShortcuts) {
 					// We only recurse if it's not a shortcut
+					if (!this.loopDetector.add(uri)) {
+						// We have a loop!!
+						throw new IllegalStateException(
+							String.format("Found a recursion loop back to [%s]: %s", uri, this.loopDetector));
+					}
+
 					this.recursion.push(new FolderContentsIterator(this.session, FolderLocatorMode.BY_URI, uri,
 						FolderIteratorMode.COMBINED, this.pageSize));
 				}
