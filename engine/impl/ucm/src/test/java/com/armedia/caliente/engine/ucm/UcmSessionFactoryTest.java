@@ -54,7 +54,11 @@ public class UcmSessionFactoryTest {
 	public ServiceResponse callService(String service, RequestPreparation prep) throws Exception {
 		final SessionWrapper<UcmSession> w = UcmSessionFactoryTest.factory.acquireSession();
 		try {
-			return w.getWrapped().callService(service, prep);
+			ServiceResponse r = w.getWrapped().callService(service, prep);
+			if (r.getResponseType() == ResponseType.BINDER) {
+				dumpBinder(service, r.getResponseAsBinder());
+			}
+			return r;
 		} catch (final Exception e) {
 			handleException(e);
 			throw e;
@@ -65,9 +69,17 @@ public class UcmSessionFactoryTest {
 
 	private final <E extends Throwable> void handleException(E e) throws E {
 		if (e == null) { return; }
-		if (ServiceException.class.isInstance(e)) {
-			ServiceException se = ServiceException.class.cast(e);
-			dumpBinder(se.getBinder());
+		Throwable t = e;
+		while (t != null) {
+			if (ServiceException.class.isInstance(t)) {
+				ServiceException se = ServiceException.class.cast(t);
+				dumpBinder(se.getClass().getSimpleName(), se.getBinder());
+				break;
+			}
+			t = t.getCause();
+			if (t == e) {
+				break;
+			}
 		}
 		throw e;
 	}
@@ -83,13 +95,17 @@ public class UcmSessionFactoryTest {
 		}
 	}
 
-	private void dumpBinder(DataBinder binder) {
+	private void dumpBinder(String label, DataBinder binder) {
+		System.out.printf("Binder %s%n", label);
+		System.out.printf("%s%n", StringUtils.repeat('-', 80));
+		System.out.printf("Local Data%n");
+		System.out.printf("%s%n", StringUtils.repeat('-', 60));
+		dumpObject(1, binder.getLocalData());
+		System.out.printf("Result Sets%n");
+		System.out.printf("%s%n", StringUtils.repeat('-', 60));
 		for (String rs : binder.getResultSetNames()) {
 			dumpMap(rs, binder.getResultSet(rs));
 		}
-		System.out.printf("Local Data%n");
-		System.out.printf("%s%n", StringUtils.repeat('-', 80));
-		dumpObject(1, binder.getLocalData());
 	}
 
 	private void dumpObject(int indent, DataObject o) {
@@ -124,13 +140,13 @@ public class UcmSessionFactoryTest {
 			System.out.printf("WARNING: Map [%s] is null", label);
 			return;
 		}
-		System.out.printf("Map contents: %s%n", label);
-		System.out.printf("%s%n", StringUtils.repeat('-', 80));
+		System.out.printf("\tMap contents: %s%n", label);
+		System.out.printf("\t%s%n", StringUtils.repeat('-', 50));
 		int i = 0;
 		for (DataObject o : map.getRows()) {
-			System.out.printf("\tItem [%d]:%n", i++);
-			System.out.printf("%s%n", StringUtils.repeat('-', 40));
-			dumpObject(2, o);
+			System.out.printf("\t\tItem [%d]:%n", i++);
+			System.out.printf("\t\t%s%n", StringUtils.repeat('-', 40));
+			dumpObject(3, o);
 		}
 		System.out.printf("%n");
 	}
@@ -174,102 +190,49 @@ public class UcmSessionFactoryTest {
 
 	@Test
 	public void FLD_BROWSE() throws Exception {
-		try {
-			ServiceResponse response = callService("FLD_BROWSE", new RequestPreparation() {
-				@Override
-				public void prepareRequest(DataBinder binder) {
-					binder.putLocal("path", "/");
-					binder.putLocal("doCombinedBrowse", "1");
-					binder.putLocal("foldersFirst", "1");
-					binder.putLocal("combinedCount", "100");
-					binder.putLocal("combinedStartRow", "0");
-					binder.putLocal("doRetrieveTargetInfo", "1");
-				}
-			});
-			DataBinder responseData = response.getResponseAsBinder();
-
-			for (String rs : responseData.getResultSetNames()) {
-				dumpMap(rs, responseData.getResultSet(rs));
+		callService("FLD_BROWSE", new RequestPreparation() {
+			@Override
+			public void prepareRequest(DataBinder binder) {
+				binder.putLocal("path", "/");
+				binder.putLocal("doCombinedBrowse", "1");
+				binder.putLocal("foldersFirst", "1");
+				binder.putLocal("combinedCount", "100");
+				binder.putLocal("combinedStartRow", "0");
+				binder.putLocal("doRetrieveTargetInfo", "1");
 			}
-
-			System.out.printf("Local Data%n");
-			System.out.printf("%s%n", StringUtils.repeat('-', 80));
-			dumpObject(1, responseData.getLocalData());
-		} catch (Exception e) {
-			handleException(e);
-		}
+		});
 	}
 
 	@Test
 	public void DOC_INFO_BY_NAME() throws Exception {
-		try {
-			ServiceResponse response = callService("DOC_INFO_BY_NAME", new RequestPreparation() {
-				@Override
-				public void prepareRequest(DataBinder binder) {
-					binder.putLocal("dDocName", "ARMDEC6AAP9055000001");
-					binder.putLocal("includeFileRenditionsInfo", "1");
-				}
-			});
-			DataBinder responseData = response.getResponseAsBinder();
-
-			for (String rs : responseData.getResultSetNames()) {
-				dumpMap(rs, responseData.getResultSet(rs));
+		callService("DOC_INFO_BY_NAME", new RequestPreparation() {
+			@Override
+			public void prepareRequest(DataBinder binder) {
+				binder.putLocal("dDocName", "ARMDEC6AAP9055000001");
+				binder.putLocal("includeFileRenditionsInfo", "1");
 			}
-
-			System.out.printf("Local Data%n");
-			System.out.printf("%s%n", StringUtils.repeat('-', 80));
-			dumpObject(1, responseData.getLocalData());
-		} catch (IdcClientException e) {
-			handleException(e);
-		}
+		});
 	}
 
 	@Test
 	public void FLD_INFO() throws Exception {
-		// Join the binder and the user context and perform the service call
-		try {
-			ServiceResponse response = callService("FLD_INFO", new RequestPreparation() {
-				@Override
-				public void prepareRequest(DataBinder binder) {
-					binder.putLocal("path", "/Caliente 3.0 Concept Document v4.0.docx");
-				}
-			});
-			DataBinder responseData = response.getResponseAsBinder();
-
-			for (String rs : responseData.getResultSetNames()) {
-				dumpMap(rs, responseData.getResultSet(rs));
+		callService("FLD_INFO", new RequestPreparation() {
+			@Override
+			public void prepareRequest(DataBinder binder) {
+				binder.putLocal("path", "/");
 			}
-
-			System.out.printf("Local Data%n");
-			System.out.printf("%s%n", StringUtils.repeat('-', 80));
-			dumpObject(1, responseData.getLocalData());
-		} catch (IdcClientException e) {
-			handleException(e);
-		}
+		});
 	}
 
 	@Test
 	public void REV_HISTORY() throws Exception {
-		try {
-			ServiceResponse response = callService("REV_HISTORY", new RequestPreparation() {
-				@Override
-				public void prepareRequest(DataBinder binder) {
-					binder.putLocal("dID", "5");
-					binder.putLocal("includeFileRenditionsInfo", "1");
-				}
-			});
-			DataBinder responseData = response.getResponseAsBinder();
-
-			for (String rs : responseData.getResultSetNames()) {
-				dumpMap(rs, responseData.getResultSet(rs));
+		callService("REV_HISTORY", new RequestPreparation() {
+			@Override
+			public void prepareRequest(DataBinder binder) {
+				binder.putLocal("dID", "5");
+				binder.putLocal("includeFileRenditionsInfo", "1");
 			}
-
-			System.out.printf("Local Data%n");
-			System.out.printf("%s%n", StringUtils.repeat('-', 80));
-			dumpObject(1, responseData.getLocalData());
-		} catch (IdcClientException e) {
-			handleException(e);
-		}
+		});
 	}
 
 	@Test
@@ -277,49 +240,21 @@ public class UcmSessionFactoryTest {
 		String[] ids = {
 			"1", "2", "3", "5"
 		};
-		try {
-			for (final String id : ids) {
-				ServiceResponse response = callService("DOC_INFO", new RequestPreparation() {
-					@Override
-					public void prepareRequest(DataBinder binder) {
-						binder.putLocal("dID", id);
-						binder.putLocal("includeFileRenditionsInfo", "1");
-					}
-				});
-				DataBinder responseData = response.getResponseAsBinder();
-
-				for (String rs : responseData.getResultSetNames()) {
-					dumpMap(rs, responseData.getResultSet(rs));
+		for (final String id : ids) {
+			callService("DOC_INFO", new RequestPreparation() {
+				@Override
+				public void prepareRequest(DataBinder binder) {
+					binder.putLocal("dID", id);
+					binder.putLocal("includeFileRenditionsInfo", "1");
 				}
-
-				System.out.printf("Local Data for [%s]%n", id);
-				System.out.printf("%s%n", StringUtils.repeat('-', 80));
-				dumpObject(1, responseData.getLocalData());
-			}
-		} catch (IdcClientException e) {
-			handleException(e);
+			});
 		}
-
 	}
 
 	@Test
 	public void GET_USERS() throws Exception {
 		try {
-			ServiceResponse response = callService("GET_USERS", new RequestPreparation() {
-				@Override
-				public void prepareRequest(DataBinder binder) {
-					// binder.putLocal("dGroupName", "Public");
-				}
-			});
-			DataBinder responseData = response.getResponseAsBinder();
-
-			for (String rs : responseData.getResultSetNames()) {
-				dumpMap(rs, responseData.getResultSet(rs));
-			}
-
-			System.out.printf("Local Data%n");
-			System.out.printf("%s%n", StringUtils.repeat('-', 80));
-			dumpObject(1, responseData.getLocalData());
+			callService("GET_USERS");
 		} catch (IdcClientException e) {
 			handleException(e);
 		}
@@ -327,24 +262,27 @@ public class UcmSessionFactoryTest {
 
 	@Test
 	public void GET_FILE() throws Exception {
-		try {
-			ServiceResponse response = callService("GET_FILE", new RequestPreparation() {
-				@Override
-				public void prepareRequest(DataBinder binder) {
-					binder.putLocal("dID", "5");
-					binder.putLocal("Rendition", "primary");
-				}
-			});
-			if (response.getResponseType() == ResponseType.STREAM) {
-				byte[] sha = DigestUtils.sha256(response.getResponseStream());
-				int reportedSize = Integer.parseInt(response.getHeader("Content-Length"));
-				System.out.printf("SIZE   = %d%n", reportedSize);
-				System.out.printf("SHA256 = %s%n", Hex.encodeHexString(sha));
-			} else {
-				dumpBinder(response.getResponseAsBinder());
+		ServiceResponse response = callService("GET_FILE", new RequestPreparation() {
+			@Override
+			public void prepareRequest(DataBinder binder) {
+				binder.putLocal("dID", "5");
+				binder.putLocal("Rendition", "primary");
 			}
-		} catch (IdcClientException e) {
-			handleException(e);
+		});
+		if (response.getResponseType() == ResponseType.STREAM) {
+			byte[] sha = DigestUtils.sha256(response.getResponseStream());
+			System.out.printf("SIZE   = %d%n", Integer.parseInt(response.getHeader("Content-Length")));
+			System.out.printf("SHA256 = %s%n", Hex.encodeHexString(sha));
 		}
+	}
+
+	@Test
+	public void QUERY_GROUP() throws Exception {
+		callService("QUERY_GROUP", new RequestPreparation() {
+			@Override
+			public void prepareRequest(DataBinder binder) {
+				binder.putLocal("dGroupName", "Public");
+			}
+		});
 	}
 }
