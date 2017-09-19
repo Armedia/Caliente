@@ -11,6 +11,7 @@ import org.junit.Test;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.ucm.BaseTest;
 import com.armedia.caliente.engine.ucm.UcmSession;
+import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
 
 public class UcmModelTest extends BaseTest {
 
@@ -79,6 +80,27 @@ public class UcmModelTest extends BaseTest {
 				// System.out.printf("%s%n", StringUtils.repeat('-', 40));
 				// dumpObject(1, att);
 			}
+		} catch (UcmServiceException e) {
+			handleException(e.getCause());
+		} finally {
+			w.close();
+		}
+	}
+
+	@Test
+	public void testModelRecursiveIteration() throws Throwable {
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
+
+			UcmModel m = new UcmModel();
+			UcmFolder f = s.getFolder("/");
+			m.iterateFolderTreeContents(s, f.getURI(), new ObjectHandler() {
+				@Override
+				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+					System.out.printf("Item [%03d] = [%s]%n", pos, object.getPath());
+				}
+			});
 		} catch (UcmServiceException e) {
 			handleException(e.getCause());
 		} finally {
