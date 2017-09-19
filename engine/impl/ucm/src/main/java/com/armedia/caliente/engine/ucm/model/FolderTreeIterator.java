@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Stack;
 
@@ -20,6 +21,9 @@ public class FolderTreeIterator {
 	private final Object searchKey;
 	private final int pageSize;
 	private final FolderIteratorMode mode;
+
+	private boolean rootExamined = false;
+	private UcmAttributes current = null;
 
 	private Stack<FolderContentsIterator> recursion = new Stack<>();
 
@@ -80,7 +84,8 @@ public class FolderTreeIterator {
 		this.pageSize = Tools.ensureBetween(FolderContentsIterator.MINIMUM_PAGE_SIZE, pageSize,
 			FolderContentsIterator.MAXIMUM_PAGE_SIZE);
 		this.mode = Tools.coalesce(mode, FolderContentsIterator.DEFAULT_MODE);
-		this.recursion.push(new FolderContentsIterator(session, searchMode, this.searchKey, mode, pageSize));
+		this.recursion.push(
+			new FolderContentsIterator(session, searchMode, this.searchKey, FolderIteratorMode.COMBINED, pageSize));
 	}
 
 	public UcmSession getSession() {
@@ -104,18 +109,56 @@ public class FolderTreeIterator {
 	}
 
 	public boolean hasNext() throws UcmServiceException {
-		while (!this.recursion.isEmpty()) {
-			final FolderContentsIterator current = this.recursion.peek();
-			if (!current.hasNext()) {
+		if (this.current != null) { return true; }
+
+		nextLevel: while (!this.recursion.isEmpty()) {
+			final FolderContentsIterator currentRecursion = this.recursion.peek();
+
+			if (!this.rootExamined) {
+				// This only needs to be done for the root folder of the entire
+				// tree, since all child folders will be iterated over as a matter
+				// of course during the normal algorithm.
+				if (this.mode != FolderIteratorMode.FILES) {
+					this.current = currentRecursion.getFolder();
+				}
+				this.rootExamined = true;
+				if (this.current != null) { return true; }
+			}
+
+			if (!currentRecursion.hasNext()) {
+				// If this level is exhausted, we move to the next level...
 				this.recursion.pop();
 				continue;
 			}
+
+			UcmAttributes att = currentRecursion.next();
+
+			URI uri = UcmModel.getURI(att);
+			if (UcmModel.isFolderURI(uri)) {
+				// If this is a folder, we return it, but we store the recursion for the next
+				// call to hasNext()
+				this.recursion.push(new FolderContentsIterator(this.session, FolderLocatorMode.BY_URI, uri,
+					FolderIteratorMode.COMBINED, this.pageSize));
+				if (this.mode == FolderIteratorMode.FILES) {
+					// We're not supposed to iterate over folders, so we simply loop back up
+					continue nextLevel;
+				}
+			} else {
+				if (this.mode == FolderIteratorMode.FOLDERS) {
+					// We're not supposed to iterate over files, so we simply loop back up
+					continue nextLevel;
+				}
+			}
+			this.current = att;
 			return true;
 		}
 		return false;
 	}
 
 	public UcmAttributes next() throws UcmServiceException {
-		return null;
+		if (!hasNext()) { throw new NoSuchElementException(); }
+		UcmAttributes ret = this.current;
+		this.current = null;
+		return ret;
 	}
 }
