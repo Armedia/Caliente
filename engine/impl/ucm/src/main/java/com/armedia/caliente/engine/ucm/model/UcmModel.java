@@ -4,13 +4,17 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -259,6 +263,10 @@ public class UcmModel {
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFileNotFoundException(e.getMessage(), e);
 		}
+	}
+
+	protected UcmFSObject newFSObject(URI uri, UcmAttributes att) {
+		return UcmModel.isFileURI(uri) ? new UcmFile(this, uri, att) : new UcmFolder(this, uri, att);
 	}
 
 	protected URI resolvePath(final UcmSession s, String p) throws UcmServiceException, UcmObjectNotFoundException {
@@ -589,7 +597,7 @@ public class UcmModel {
 	}
 
 	public static interface ObjectHandler {
-		public void handleObject(UcmSession session, int pos, URI objectUri, UcmAttributes object);
+		public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object);
 	}
 
 	public int iterateFolderContents(final UcmSession s, final URI uri, final ObjectHandler handler)
@@ -602,10 +610,10 @@ public class UcmModel {
 		Map<String, URI> children = this.childrenByURI.get(uri);
 		boolean reconstruct = false;
 		if (children != null) {
-			Map<URI, UcmAttributes> objects = new LinkedHashMap<>(children.size());
 			// We'll gather the objects first, and then iterate over them, because
 			// if there's an inconsistency (i.e. a missing stale object), then we
 			// want to do the full service invocation to the server
+			Map<URI, UcmAttributes> objects = new LinkedHashMap<>(children.size());
 			for (URI childUri : children.values()) {
 				try {
 					objects.put(childUri, getDataObject(s, childUri));
@@ -620,7 +628,7 @@ public class UcmModel {
 			if (!reconstruct) {
 				int ret = 0;
 				for (URI childUri : objects.keySet()) {
-					handler.handleObject(s, ret++, childUri, objects.get(childUri));
+					handler.handleObject(s, ret++, childUri, newFSObject(childUri, objects.get(childUri)));
 				}
 				return ret;
 			}
@@ -647,10 +655,7 @@ public class UcmModel {
 									}
 									children.put(name, childUri);
 									dataObjects.put(name, o);
-									// Here we check the handler's state to see if we should invoke
-									// handleObject(), but we don't break the cycle just yet because
-									// we want to cache everything we retrieved...
-									handler.handleObject(s, it.getCurrentPos(), childUri, o);
+									handler.handleObject(s, it.getCurrentPos(), childUri, newFSObject(childUri, o));
 								}
 								rawChildren.set(dataObjects);
 								data.set(it.getFolder());
@@ -696,12 +701,8 @@ public class UcmModel {
 		final Map<String, URI> children = new LinkedHashMap<>();
 		iterateFolderContents(s, uri, new ObjectHandler() {
 			@Override
-			public void handleObject(UcmSession session, int pos, URI uri, UcmAttributes data) {
-				String name = data.getString(UcmAtt.fFileName);
-				if (name == null) {
-					name = data.getString(UcmAtt.fFolderName);
-				}
-				children.put(name, uri);
+			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject object) {
+				children.put(object.getName(), uri);
 			}
 		});
 		return children;
@@ -712,10 +713,88 @@ public class UcmModel {
 		final Map<String, UcmFSObject> children = new LinkedHashMap<>();
 		iterateFolderContents(s, folder.getURI(), new ObjectHandler() {
 			@Override
-			public void handleObject(UcmSession session, int pos, URI uri, UcmAttributes data) {
-				UcmFSObject o = (UcmModel.isFileURI(uri) ? new UcmFile(UcmModel.this, uri, data)
-					: new UcmFolder(UcmModel.this, uri, data));
-				children.put(o.getName(), o);
+			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject data) {
+				children.put(data.getName(), data);
+			}
+		});
+		return children;
+	}
+
+	private int iterateFolderTreeContents(final Set<URI> recursions, final UcmSession s, final URI uri,
+		final ObjectHandler handler) throws UcmServiceException, UcmFolderNotFoundException {
+		Objects.requireNonNull(uri, "Must provide a URI to search for");
+		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
+		// If this isn't a folder, we don't even try it...
+		if (!UcmModel.isFolderURI(uri)) { return -1; }
+
+		int start = 0;
+		boolean removeRecursion = false;
+		if (recursions.isEmpty()) {
+			UcmFolder f = getFolder(s, uri);
+			handler.handleObject(s, start++, uri, f);
+			recursions.add(uri);
+			removeRecursion = true;
+		}
+
+		try {
+			final AtomicInteger outerPos = new AtomicInteger(start);
+			int delta = iterateFolderContents(s, uri, new ObjectHandler() {
+				@Override
+				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+					if (!recursions.add(objectUri)) { throw new IllegalStateException(String
+						.format("Folder recursion detected when descending into [%s] : %s", objectUri, recursions)); }
+					try {
+						handler.handleObject(session, pos + outerPos.get(), objectUri, object);
+						if (UcmModel.isFolderURI(uri)) {
+							try {
+								iterateFolderTreeContents(recursions, s, objectUri, handler);
+							} catch (UcmFolderNotFoundException e) {
+								throw new UcmRuntimeException(String.format(
+									"Unexpected condition: can't find a folder that has just been found?? URI=[%s]",
+									objectUri), e);
+							} catch (UcmServiceException e) {
+								// This is 100% possible...
+								// TODO: Raise this as an identifiable exception...
+							}
+						}
+					} finally {
+						recursions.remove(objectUri);
+					}
+				}
+			});
+			outerPos.getAndAdd(delta);
+			return outerPos.get();
+		} finally {
+			if (removeRecursion) {
+				recursions.remove(uri);
+			}
+		}
+	}
+
+	public int iterateFolderTreeContents(final UcmSession s, final URI uri, final ObjectHandler handler)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		return iterateFolderTreeContents(new LinkedHashSet<URI>(), s, uri, handler);
+	}
+
+	protected Collection<URI> getFolderTreeContents(UcmSession s, final URI uri)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		final Collection<URI> children = new ArrayList<>();
+		iterateFolderTreeContents(s, uri, new ObjectHandler() {
+			@Override
+			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject obj) {
+				children.add(uri);
+			}
+		});
+		return children;
+	}
+
+	public Collection<UcmFSObject> getFolderTreeContents(UcmSession s, final UcmFolder folder)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		final Collection<UcmFSObject> children = new ArrayList<>();
+		iterateFolderTreeContents(s, folder.getURI(), new ObjectHandler() {
+			@Override
+			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject o) {
+				children.add(o);
 			}
 		});
 		return children;
