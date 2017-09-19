@@ -25,13 +25,6 @@ public class KeyLockableCache<K, V> {
 	public static final TimeUnit DEFAULT_MAX_AGE_UNIT = TimeUnit.MINUTES;
 	public static final long DEFAULT_MAX_AGE = 5;
 
-	private static class Locker<K> extends LockDispenser<K, ReentrantReadWriteLock> {
-		@Override
-		protected ReentrantReadWriteLock newLock(K key) {
-			return new ReentrantReadWriteLock();
-		}
-	}
-
 	private final class CacheItem {
 		private final long creationDate;
 		private final Reference<V> value;
@@ -60,7 +53,12 @@ public class KeyLockableCache<K, V> {
 	private final TimeUnit maxAgeUnit;
 	private final long maxAge;
 	private final Map<K, CacheItem> cache;
-	private final Locker<K> locks = new Locker<>();
+	private final LockDispenser<K, ReentrantReadWriteLock> locks = new LockDispenser<K, ReentrantReadWriteLock>() {
+		@Override
+		protected ReentrantReadWriteLock newLock(K key) {
+			return new ReentrantReadWriteLock();
+		}
+	};
 
 	public KeyLockableCache() {
 		this(KeyLockableCache.MIN_LIMIT, KeyLockableCache.DEFAULT_MAX_AGE_UNIT, KeyLockableCache.DEFAULT_MAX_AGE);
