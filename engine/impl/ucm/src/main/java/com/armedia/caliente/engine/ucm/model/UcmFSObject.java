@@ -27,10 +27,14 @@ public abstract class UcmFSObject extends UcmModelObject {
 		this.attributes = data;
 		this.nameAtt = nameAtt;
 		this.parentPath = this.attributes.getString(UcmAtt.$ucmParentPath);
+		String name = this.attributes.getString(nameAtt);
 		if (this.parentPath.equals("/")) {
-			this.path = String.format("/%s", this.attributes.getString(nameAtt));
+			if (name.equals("/")) {
+				name = "";
+			}
+			this.path = String.format("/%s", name);
 		} else {
-			this.path = String.format("%s/%s", this.parentPath, this.attributes.getString(nameAtt));
+			this.path = String.format("%s/%s", this.parentPath, name);
 		}
 		this.uniqueUri = UcmModel.getUniqueURI(data);
 		this.parentUri = new UcmUniqueURI(UcmModel.newFolderURI(getString(UcmAtt.fParentGUID)));
