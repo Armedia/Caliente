@@ -708,15 +708,9 @@ public class UcmModel {
 		iterateFolderContents(s, folder.getURI(), new ObjectHandler() {
 			@Override
 			public void handleObject(UcmSession session, int pos, URI uri, UcmAttributes data) {
-				UcmFSObject o = null;
-				String name = data.getString(UcmAtt.fFileName);
-				if (name != null) {
-					o = new UcmFile(UcmModel.this, uri, data);
-				} else {
-					name = data.getString(UcmAtt.fFolderName);
-					o = new UcmFolder(UcmModel.this, uri, data);
-				}
-				children.put(name, o);
+				UcmFSObject o = (UcmModel.isFileURI(uri) ? new UcmFile(UcmModel.this, uri, data)
+					: new UcmFolder(UcmModel.this, uri, data));
+				children.put(o.getName(), o);
 			}
 		});
 		return children;
