@@ -720,8 +720,8 @@ public class UcmModel {
 		return children;
 	}
 
-	private int iterateFolderTreeContents(final Set<URI> recursions, final UcmSession s, final URI uri,
-		final boolean recurseShortcuts, final ObjectHandler handler)
+	private int iterateFolderTreeContents(final Set<URI> recursions, final AtomicInteger outerPos, final UcmSession s,
+		final URI uri, final boolean followShortcuts, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
@@ -734,28 +734,29 @@ public class UcmModel {
 			UcmFolder f = getFolder(s, uri);
 			handler.handleObject(s, start++, uri, f);
 			recursions.add(uri);
+			outerPos.getAndIncrement();
 			removeRecursion = true;
 		}
 
 		try {
-			final AtomicInteger outerPos = new AtomicInteger(start);
-			int delta = iterateFolderContents(s, uri, new ObjectHandler() {
+			iterateFolderContents(s, uri, new ObjectHandler() {
 				@Override
 				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
 					if (!recursions.add(objectUri)) { throw new IllegalStateException(String
 						.format("Folder recursion detected when descending into [%s] : %s", objectUri, recursions)); }
 					try {
-						handler.handleObject(session, pos + outerPos.get(), objectUri, object);
-						if (UcmModel.isFolderURI(uri) && (recurseShortcuts || !object.isShortcut())) {
+						handler.handleObject(session, outerPos.getAndIncrement(), objectUri, object);
+						if (UcmModel.isFolderURI(uri) && (followShortcuts || !object.isShortcut())) {
 							try {
-								iterateFolderTreeContents(recursions, s, objectUri, recurseShortcuts, handler);
+								iterateFolderTreeContents(recursions, outerPos, s, objectUri, followShortcuts, handler);
 							} catch (UcmFolderNotFoundException e) {
 								throw new UcmRuntimeException(String.format(
 									"Unexpected condition: can't find a folder that has just been found?? URI=[%s]",
 									objectUri), e);
 							} catch (UcmServiceException e) {
-								// This is 100% possible...
-								// TODO: Raise this as an identifiable exception...
+								throw new UcmRuntimeServiceException(String.format(
+									"Service exception caught while attempting to recurse through [%s] : %s", objectUri,
+									recursions), e);
 							}
 						}
 					} finally {
@@ -763,8 +764,10 @@ public class UcmModel {
 					}
 				}
 			});
-			outerPos.getAndAdd(delta);
 			return outerPos.get();
+		} catch (UcmRuntimeServiceException e) {
+			throw new UcmServiceException(String.format("Service exception caught while recursing through [%s]", uri),
+				e);
 		} finally {
 			if (removeRecursion) {
 				recursions.remove(uri);
@@ -774,7 +777,8 @@ public class UcmModel {
 
 	public int iterateFolderTreeContents(final UcmSession s, final URI uri, boolean recurseShortcuts,
 		final ObjectHandler handler) throws UcmServiceException, UcmFolderNotFoundException {
-		return iterateFolderTreeContents(new LinkedHashSet<URI>(), s, uri, recurseShortcuts, handler);
+		return iterateFolderTreeContents(new LinkedHashSet<URI>(), new AtomicInteger(0), s, uri, recurseShortcuts,
+			handler);
 	}
 
 	protected Collection<URI> getFolderTreeContents(UcmSession s, boolean recurseShortcuts, final URI uri)

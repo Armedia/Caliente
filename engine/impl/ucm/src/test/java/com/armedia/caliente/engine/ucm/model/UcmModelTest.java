@@ -95,7 +95,7 @@ public class UcmModelTest extends BaseTest {
 
 			UcmModel m = new UcmModel();
 			UcmFolder f = s.getFolder("/");
-			m.iterateFolderTreeContents(s, f.getURI(), false, new ObjectHandler() {
+			m.iterateFolderTreeContents(s, f.getURI(), true, new ObjectHandler() {
 				@Override
 				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
 					System.out.printf("Item [%03d] = [%s]%n", pos, object.getPath());

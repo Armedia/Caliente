@@ -185,7 +185,7 @@ public class FolderContentsIterator {
 			if (this.localData == null) {
 				DataObject localData = this.responseBinder.getLocalData();
 				this.localData = new UcmAttributes(localData);
-				this.parentPath = localData.get("folderPath");
+				this.parentPath = Tools.coalesce(localData.get("targetPath"), localData.get("folderPath"));
 			}
 
 			if (this.folder == null) {
