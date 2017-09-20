@@ -247,6 +247,11 @@ public class UcmModel {
 		return !StringUtils.isEmpty(att.getString(UcmAtt.fTargetGUID));
 	}
 
+	public UcmFSObject getObject(UcmSession s, String path) throws UcmServiceException, UcmObjectNotFoundException {
+		final URI uri = resolvePath(s, path);
+		return newFSObject(uri, getDataObject(s, uri));
+	}
+
 	/**
 	 * Returns the latest revision of the file at the given path.
 	 *

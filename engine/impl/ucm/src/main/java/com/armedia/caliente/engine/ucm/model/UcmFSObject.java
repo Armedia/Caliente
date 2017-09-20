@@ -3,12 +3,46 @@ package com.armedia.caliente.engine.ucm.model;
 import java.net.URI;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.EnumMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
+import com.armedia.caliente.store.CmfType;
+import com.armedia.commons.utilities.Tools;
 
 public abstract class UcmFSObject extends UcmModelObject {
+
+	public static enum UcmObjectType {
+		//
+		FILE(CmfType.DOCUMENT), //
+		FOLDER(CmfType.FOLDER), //
+		//
+		;
+
+		private static final Map<CmfType, UcmObjectType> REVERSE;
+
+		static {
+			Map<CmfType, UcmObjectType> reverse = new EnumMap<>(CmfType.class);
+			for (UcmObjectType t : UcmObjectType.values()) {
+				UcmObjectType old = reverse.put(t.cmfType, t);
+				if (old != null) { throw new RuntimeException(
+					String.format("UcmTypes %s and %s have identical CMF mappings to %s", t, old, t.cmfType)); }
+			}
+			REVERSE = Tools.freezeMap(reverse);
+		}
+
+		public final CmfType cmfType;
+
+		private UcmObjectType(CmfType cmfType) {
+			this.cmfType = cmfType;
+		}
+
+		public static UcmObjectType resolve(CmfType type) {
+			return UcmObjectType.REVERSE.get(type);
+		}
+	}
 
 	protected final UcmAtt nameAtt;
 
@@ -18,6 +52,8 @@ public abstract class UcmFSObject extends UcmModelObject {
 
 	private final UcmUniqueURI uniqueUri;
 	private final UcmUniqueURI parentUri;
+
+	private final UcmObjectType ucmObjectType;
 
 	UcmFSObject(UcmModel model, URI uri, UcmAttributes data, UcmAtt nameAtt) {
 		super(model, uri);
@@ -38,6 +74,12 @@ public abstract class UcmFSObject extends UcmModelObject {
 		}
 		this.uniqueUri = UcmModel.getUniqueURI(data);
 		this.parentUri = new UcmUniqueURI(UcmModel.newFolderURI(getString(UcmAtt.fParentGUID)));
+
+		this.ucmObjectType = (UcmModel.isFileURI(uri) ? UcmObjectType.FILE : UcmObjectType.FOLDER);
+	}
+
+	public final UcmObjectType getType() {
+		return this.ucmObjectType;
 	}
 
 	public final String getString(UcmAtt att) {

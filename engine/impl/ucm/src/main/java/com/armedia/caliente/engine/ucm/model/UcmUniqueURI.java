@@ -52,6 +52,6 @@ public final class UcmUniqueURI implements Comparable<UcmUniqueURI>, Serializabl
 
 	@Override
 	public String toString() {
-		return String.format("UcmUniqueURI[%s]", this.uri);
+		return this.uri.toString();
 	}
 }

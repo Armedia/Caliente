@@ -16,6 +16,7 @@ import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
+import com.armedia.caliente.engine.ucm.model.UcmObjectNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmRenditionInfo;
 import com.armedia.caliente.engine.ucm.model.UcmRenditionNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmRevision;
@@ -131,6 +132,10 @@ public class UcmSession implements TrackedUse {
 			throw new UcmServiceException(String.format("Exception caught while invoking the service [%s]", service),
 				e);
 		}
+	}
+
+	public UcmFSObject getObject(String path) throws UcmServiceException, UcmObjectNotFoundException {
+		return this.model.getObject(this, path);
 	}
 
 	public UcmFolder getParentFolder(UcmFSObject object) throws UcmFolderNotFoundException, UcmServiceException {

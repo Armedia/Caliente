@@ -1,8 +1,17 @@
 package com.armedia.caliente.engine.ucm.exporter;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.chemistry.opencmis.client.api.QueryResult;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
@@ -14,11 +23,17 @@ import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
 import com.armedia.caliente.engine.ucm.UcmTranslator;
+import com.armedia.caliente.engine.ucm.common.Setting;
+import com.armedia.caliente.engine.ucm.model.UcmFSObject;
+import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
+import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
+import com.armedia.caliente.engine.ucm.model.UcmRuntimeException;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -26,6 +41,8 @@ import com.armedia.commons.utilities.CfgTools;
 
 public class UcmExportEngine extends
 	ExportEngine<UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory> {
+
+	private static final Pattern UNESCAPED_COMMA = Pattern.compile("(?<!\\\\),");
 
 	public UcmExportEngine() {
 		super(new CmfCrypt());
@@ -37,7 +54,42 @@ public class UcmExportEngine extends
 
 	@Override
 	protected void findExportResults(final UcmSession session, CfgTools cfg, UcmExportDelegateFactory factory,
-		TargetSubmitter submitter) throws Exception {
+		final TargetSubmitter submitter) throws Exception {
+		// Get the list of files/folders to be exported.
+		List<String> paths = UcmExportEngine.decodePathList(cfg.getString(Setting.PATHS));
+		if (paths.isEmpty()) { throw new ExportException("No paths given to export - cannot continue"); }
+
+		for (String path : paths) {
+			UcmFSObject object = session.getObject(path);
+			switch (object.getType()) {
+				case FILE:
+					submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
+						object.getURI().toString()));
+					break;
+				case FOLDER:
+					if (object.isShortcut()) {
+						submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
+							object.getURI().toString()));
+						break;
+					}
+					UcmFolder folder = UcmFolder.class.cast(object);
+					// Not a shortcut, so we'll recurse into it and submit each and every one of its
+					// contents, but we won't be recursing into shortcuts
+					session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
+						@Override
+						public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+							try {
+								submitter.submit(new ExportTarget(object.getType().cmfType,
+									object.getUniqueURI().toString(), object.getURI().toString()));
+							} catch (ExportException e) {
+								throw new UcmRuntimeException(String.format(
+									"ExportException caught while submitting item [%s] to the workload", objectUri), e);
+							}
+						}
+					});
+					break;
+			}
+		}
 	}
 
 	@Override
@@ -84,5 +136,45 @@ public class UcmExportEngine extends
 		} catch (UcmServiceException e) {
 			throw new ExportException("Failed to validate the UCM connectivity", e);
 		}
+	}
+
+	public static List<String> decodePathList(String paths) {
+		if (StringUtils.isEmpty(paths)) { return Collections.emptyList(); }
+		Matcher m = UcmExportEngine.UNESCAPED_COMMA.matcher(paths);
+		int prev = 0;
+		List<String> ret = new ArrayList<>();
+		while (m.find()) {
+			String str = paths.substring(prev, m.start());
+			if (!StringUtils.isEmpty(str)) {
+				ret.add(str.replaceAll("\\\\,", ","));
+			}
+			prev = m.end();
+		}
+		if (prev < paths.length()) {
+			String str = paths.substring(prev);
+			if (!StringUtils.isEmpty(str)) {
+				ret.add(str.replaceAll("\\\\,", ","));
+			}
+		}
+		return ret;
+	}
+
+	public static String encodePathList(Collection<String> paths) {
+		if ((paths == null) || paths.isEmpty()) { return ""; }
+		StringBuilder sb = new StringBuilder();
+		for (String s : paths) {
+			if (sb.length() > 0) {
+				sb.append(',');
+			}
+			if (!StringUtils.isEmpty(s)) {
+				sb.append(s.replaceAll(",", "\\\\,"));
+			}
+		}
+		return sb.toString();
+	}
+
+	public static String encodePathList(String... paths) {
+		if (paths == null) { return null; }
+		return UcmExportEngine.encodePathList(Arrays.asList(paths));
 	}
 }
