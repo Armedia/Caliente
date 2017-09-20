@@ -209,13 +209,18 @@ public class UcmModelTest extends BaseTest {
 			UcmSession s = w.getWrapped();
 			UcmModel model = new UcmModel();
 			UcmFolder root = model.getRootFolder(s);
-			model.iterateFolderContentsRecursive(s, root, true, new ObjectHandler() {
+			model.iterateFolderContentsRecursive(s, root, false, new ObjectHandler() {
 				@Override
 				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
-					System.out.printf("[%s] -> [%s]%n", object.getPath(), objectUri);
+					UcmAtt guidAtt = (object.getType() == UcmObjectType.FILE ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
+					System.out.printf("[%s] -> [%s] (GUID:%s)%n", object.getPath(), objectUri,
+						object.getString(guidAtt));
 					try {
 						UcmFolder parent = object.getParentFolder(session);
 						System.out.printf("\tparent = [%s] -> [%s]%n", parent.getPath(), parent.getURI());
+						if (object.isShortcut()) {
+							System.out.printf("\t---> [%s]%n", object.getTargetGUID());
+						}
 					} catch (UcmObjectNotFoundException e) {
 						// There is no parent!!
 						System.out.printf("\tno parent%n");

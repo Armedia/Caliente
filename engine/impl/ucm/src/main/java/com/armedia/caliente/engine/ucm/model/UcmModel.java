@@ -59,6 +59,9 @@ public class UcmModel {
 	// path -> URI
 	private final KeyLockableCache<String, URI> uriByPaths;
 
+	// GUID -> URI
+	private final KeyLockableCache<String, URI> uriByGUID;
+
 	// child URI -> parent URI
 	private final KeyLockableCache<URI, URI> parentByURI;
 
@@ -112,6 +115,7 @@ public class UcmModel {
 	public UcmModel(int objectCount) throws UcmServiceException {
 		objectCount = Tools.ensureBetween(UcmModel.MIN_OBJECT_COUNT, objectCount, UcmModel.MAX_OBJECT_COUNT);
 		this.uriByPaths = new KeyLockableCache<>(objectCount);
+		this.uriByGUID = new KeyLockableCache<>(objectCount);
 		this.parentByURI = new KeyLockableCache<>(objectCount);
 		this.childrenByURI = new KeyLockableCache<>(objectCount);
 		this.historyByURI = new KeyLockableCache<>(objectCount);
@@ -252,18 +256,6 @@ public class UcmModel {
 		return newFSObject(uri, getDataObject(s, uri));
 	}
 
-	/**
-	 * Returns the latest revision of the file at the given path.
-	 *
-	 * @param path
-	 *            The absolute path to the file. It will be normalized (i.e. "." and ".." will be
-	 *            resolved).
-	 * @return the file at the given path
-	 * @throws UcmServiceException
-	 *             if there's a communications problem
-	 * @throws UcmFileNotFoundException
-	 *             if there is no file at that path
-	 */
 	public UcmFile getFile(UcmSession s, String path) throws UcmServiceException, UcmFileNotFoundException {
 		URI uri = null;
 		try {
@@ -280,6 +272,24 @@ public class UcmModel {
 			return new UcmFile(this, uri, getDataObject(s, uri));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFileNotFoundException(e.getMessage(), e);
+		}
+	}
+
+	public UcmFile getFileByGUID(UcmSession s, String guid) throws UcmServiceException, UcmFileNotFoundException {
+		try {
+			URI uri = resolveGuid(s, guid, UcmObjectType.FILE);
+			return new UcmFile(this, uri, getDataObject(s, uri));
+		} catch (UcmObjectNotFoundException e) {
+			throw new UcmFileNotFoundException(e.getMessage(), e);
+		}
+	}
+
+	public UcmFolder getFolderByGUID(UcmSession s, String guid) throws UcmServiceException, UcmFolderNotFoundException {
+		try {
+			URI uri = resolveGuid(s, guid, UcmObjectType.FOLDER);
+			return new UcmFolder(this, uri, getDataObject(s, uri));
+		} catch (UcmObjectNotFoundException e) {
+			throw new UcmFolderNotFoundException(e.getMessage(), e);
 		}
 	}
 
@@ -360,6 +370,90 @@ public class UcmModel {
 
 		if (Tools.equals(UcmModel.NULL_URI, uri)) { throw new UcmObjectNotFoundException(
 			String.format("No object found at path [%s]", sanitizedPath)); }
+		return uri;
+	}
+
+	protected URI resolveGuid(final UcmSession s, final String guid, final UcmObjectType type)
+		throws UcmServiceException, UcmObjectNotFoundException {
+		URI uri = this.uriByGUID.get(guid);
+		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
+		if (uri == null) {
+			try {
+				uri = this.uriByPaths.createIfAbsent(guid, new ConcurrentInitializer<URI>() {
+					@Override
+					public URI get() throws ConcurrentException {
+						try {
+							ServiceResponse response = null;
+							DataBinder responseData = null;
+							final UcmAtt uriIdentifierAtt;
+							switch (type) {
+								case FILE:
+									uriIdentifierAtt = UcmAtt.dDocName;
+									break;
+								case FOLDER:
+									uriIdentifierAtt = UcmAtt.fFolderGUID;
+									break;
+
+								default:
+									throw new UcmServiceException(
+										String.format("Unsupported object type %s", type.name()));
+							}
+							final String searchAtt = String.format("f%sGUID", StringUtils.capitalize(type.name()));
+							final String resultSet = String.format("%sInfo", StringUtils.capitalize(type.name()));
+
+							try {
+								response = s.callService("FLD_INFO", new RequestPreparation() {
+									@Override
+									public void prepareRequest(DataBinder binder) {
+										binder.putLocal(searchAtt, guid);
+									}
+								});
+								responseData = response.getResponseAsBinder();
+							} catch (final IdcClientException e) {
+								if (isNotFoundException(e, "Exception caught retrieving the %s with GUID [%s]",
+									type.name(), guid)) { return UcmModel.NULL_URI; }
+								// This is a "regular" exception that we simply re-raise
+								throw e;
+							}
+
+							// First things first!! Stash the retrieved object...
+							DataResultSet rs = responseData.getResultSet(resultSet);
+							if (rs == null) { throw new UcmServiceException(String
+								.format("%s GUID [%s] was found, didn't contain any data?!?", type.name(), guid)); }
+							Map<String, String> baseObj = new HashMap<>();
+							baseObj.putAll(rs.getRows().get(0));
+							// Capture the parent path - it's either LocalData.filePath or
+							// LocalData.folderPath...but it also contains the filename so we need
+							// to dirname it
+							String parentPath = responseData
+								.getLocal(String.format("%sPath", type.name().toLowerCase()));
+							baseObj.put(UcmAtt.$ucmParentPath.name(), FileNameTools.dirname(parentPath, '/'));
+							data.set(new UcmAttributes(baseObj));
+
+							String uriIdentifier = data.get().getString(uriIdentifierAtt);
+							if (uriIdentifier != null) { return UcmModel.newFileURI(uriIdentifier); }
+
+							throw new UcmServiceException(
+								String.format("%s GUID [%s] was found, returned no results (no value for %s)?!?",
+									type.name(), guid, uriIdentifierAtt.name()));
+						} catch (Exception e) {
+							throw new ConcurrentException(e);
+						}
+					}
+				});
+			} catch (ConcurrentException e) {
+				Throwable cause = e.getCause();
+				UcmModel.throwIfMatches(UcmServiceException.class, cause);
+				throw new UcmServiceException(
+					String.format("Exception caught searching for %s GUID [%s]", type.name(), guid), cause);
+			}
+		}
+
+		// There's an object...so stash it
+		cacheDataObject(data.get());
+
+		if (Tools.equals(UcmModel.NULL_URI, uri)) { throw new UcmObjectNotFoundException(
+			String.format("No %s found with GUID [%s]", type.name(), guid)); }
 		return uri;
 	}
 
@@ -964,7 +1058,7 @@ public class UcmModel {
 			public void prepareRequest(DataBinder binder) {
 				binder.putLocal("dID", file.getRevisionId());
 				if (!StringUtils.isEmpty(rendition)) {
-					binder.putLocal("Rendition", rendition);
+					binder.putLocal("Rendition", rendition.toUpperCase());
 				}
 			}
 		});
@@ -1093,7 +1187,7 @@ public class UcmModel {
 									"Revision ID [%s] was found, but no rendition information was returned??!", id)); }
 								for (DataObject o : rs.getRows()) {
 									UcmRenditionInfo r = new UcmRenditionInfo(guid, o);
-									renditions.put(r.getName(), r);
+									renditions.put(r.getName().toUpperCase(), r);
 								}
 
 								UcmAttributes baseData = new UcmAttributes(baseObj);

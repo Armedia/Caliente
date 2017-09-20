@@ -204,4 +204,12 @@ public class UcmSession implements TrackedUse {
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		return this.model.getRenditions(this, file);
 	}
+
+	public UcmFile getFileByGUID(String guid) throws UcmServiceException, UcmFileNotFoundException {
+		return this.model.getFileByGUID(this, guid);
+	}
+
+	public UcmFolder getFolderByGUID(String guid) throws UcmServiceException, UcmFolderNotFoundException {
+		return this.model.getFolderByGUID(this, guid);
+	}
 }
