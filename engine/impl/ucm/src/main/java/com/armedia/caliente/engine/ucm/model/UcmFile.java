@@ -2,6 +2,9 @@ package com.armedia.caliente.engine.ucm.model;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
 
@@ -67,5 +70,10 @@ public class UcmFile extends UcmFSObject {
 	public InputStream getInputStream(UcmSession s, String rendition)
 		throws UcmServiceException, UcmFileRevisionNotFoundException, UcmRenditionNotFoundException {
 		return this.model.getInputStream(s, this, rendition);
+	}
+
+	public Set<String> getRenditionNames(UcmSession s) throws UcmServiceException, UcmFileRevisionNotFoundException {
+		Map<String, UcmRenditionInfo> renditions = this.model.getRenditions(s, this);
+		return new TreeSet<>(renditions.keySet());
 	}
 }

@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.Map;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
+import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
 
 public class UcmFolder extends UcmFSObject {
 
@@ -21,5 +22,20 @@ public class UcmFolder extends UcmFSObject {
 
 	public Map<String, UcmFSObject> getContents(UcmSession s) throws UcmFolderNotFoundException, UcmServiceException {
 		return this.model.getFolderContents(s, this);
+	}
+
+	public int iterateFolderContents(final UcmSession s, final ObjectHandler handler)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		return this.model.iterateFolderContents(s, getURI(), handler);
+	}
+
+	public int iterateFolderContentsRecursive(final UcmSession s, final ObjectHandler handler)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		return iterateFolderContentsRecursive(s, false, handler);
+	}
+
+	public int iterateFolderContentsRecursive(final UcmSession s, boolean recurseShortcuts, final ObjectHandler handler)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		return this.model.iterateFolderContentsRecursive(s, getURI(), recurseShortcuts, handler);
 	}
 }

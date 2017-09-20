@@ -1,12 +1,8 @@
 package com.armedia.caliente.engine.ucm;
 
-import java.net.URI;
-import java.util.Map;
-
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.TrackedUse;
 
-import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFile;
 import com.armedia.caliente.engine.ucm.model.UcmFileHistory;
 import com.armedia.caliente.engine.ucm.model.UcmFileNotFoundException;
@@ -14,8 +10,6 @@ import com.armedia.caliente.engine.ucm.model.UcmFileRevisionNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
-import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
-import com.armedia.caliente.engine.ucm.model.UcmRenditionInfo;
 import com.armedia.caliente.engine.ucm.model.UcmRevision;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 
@@ -147,37 +141,17 @@ public class UcmSession implements TrackedUse {
 		return this.model.getFileRevision(this, file);
 	}
 
-	public int iterateFolderContents(URI uri, ObjectHandler handler)
-		throws UcmServiceException, UcmFolderNotFoundException {
-		return this.model.iterateFolderContents(this, uri, handler);
-	}
-
-	public Map<String, UcmFSObject> getFolderContents(UcmFolder folder)
-		throws UcmServiceException, UcmFolderNotFoundException {
-		return this.model.getFolderContents(this, folder);
-	}
-
 	public UcmFolder getFolder(String path) throws UcmServiceException, UcmFolderNotFoundException {
 		return this.model.getFolder(this, path);
 	}
 
-	public UcmFileHistory getFileHistoryByPath(String path)
+	public UcmFileHistory getFileHistory(String path)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return this.model.getFileHistoryByPath(this, path);
+		return this.model.getFileHistory(this, path);
 	}
 
 	public UcmFileHistory getFileHistory(UcmFile file)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		return this.model.getFileHistory(this, file);
-	}
-
-	public UcmFileHistory getFileHistory(URI uri)
-		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return this.model.getFileHistory(this, uri);
-	}
-
-	public Map<String, UcmRenditionInfo> getRenditions(UcmFile file)
-		throws UcmServiceException, UcmFileRevisionNotFoundException {
-		return this.model.getRenditions(this, file);
 	}
 }

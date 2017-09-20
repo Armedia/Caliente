@@ -775,16 +775,16 @@ public class UcmModel {
 		}
 	}
 
-	public int iterateFolderTreeContents(final UcmSession s, final URI uri, boolean recurseShortcuts,
+	public int iterateFolderContentsRecursive(final UcmSession s, final URI uri, boolean recurseShortcuts,
 		final ObjectHandler handler) throws UcmServiceException, UcmFolderNotFoundException {
 		return iterateFolderTreeContents(new LinkedHashSet<URI>(), new AtomicInteger(0), s, uri, recurseShortcuts,
 			handler);
 	}
 
-	protected Collection<URI> getFolderTreeContents(UcmSession s, boolean recurseShortcuts, final URI uri)
+	protected Collection<URI> getFolderContentsRecursive(UcmSession s, boolean recurseShortcuts, final URI uri)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		final Collection<URI> children = new ArrayList<>();
-		iterateFolderTreeContents(s, uri, recurseShortcuts, new ObjectHandler() {
+		iterateFolderContentsRecursive(s, uri, recurseShortcuts, new ObjectHandler() {
 			@Override
 			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject obj) {
 				children.add(uri);
@@ -793,10 +793,10 @@ public class UcmModel {
 		return children;
 	}
 
-	public Collection<UcmFSObject> getFolderTreeContents(UcmSession s, final UcmFolder folder, boolean recurseShortcuts)
-		throws UcmServiceException, UcmFolderNotFoundException {
+	public Collection<UcmFSObject> getFolderContentsRecursive(UcmSession s, final UcmFolder folder,
+		boolean recurseShortcuts) throws UcmServiceException, UcmFolderNotFoundException {
 		final Collection<UcmFSObject> children = new ArrayList<>();
-		iterateFolderTreeContents(s, folder.getURI(), recurseShortcuts, new ObjectHandler() {
+		iterateFolderContentsRecursive(s, folder.getURI(), recurseShortcuts, new ObjectHandler() {
 			@Override
 			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject o) {
 				children.add(o);
@@ -828,7 +828,7 @@ public class UcmModel {
 		}
 	}
 
-	public UcmFileHistory getFileHistoryByPath(UcmSession s, String path)
+	public UcmFileHistory getFileHistory(UcmSession s, String path)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		return getFileHistory(s, getFile(s, path));
 	}
@@ -838,7 +838,7 @@ public class UcmModel {
 		return getFileHistory(s, file.getURI(), file.getRevisionId());
 	}
 
-	public UcmFileHistory getFileHistory(UcmSession s, URI uri)
+	UcmFileHistory getFileHistory(UcmSession s, URI uri)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		final UcmAttributes att;
 		try {
@@ -980,7 +980,7 @@ public class UcmModel {
 		return getFileHistory(s, h.getURI());
 	}
 
-	public Map<String, UcmRenditionInfo> getRenditions(final UcmSession s, final UcmFile file)
+	Map<String, UcmRenditionInfo> getRenditions(final UcmSession s, final UcmFile file)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		Objects.requireNonNull(file, "Must provide a file whose renditions to return");
 
