@@ -52,6 +52,10 @@ public class UcmModel {
 
 	static final URI ROOT_URI = UcmModel.newFolderURI("FLD_ROOT");
 
+	// Unique URI:
+	// * FILE -> file:${fFileGUID}#${dID}
+	// * FOLDER -> folder:${fFolderGUID}
+
 	// Unique URI -> DataObject
 	private final KeyLockableCache<UcmUniqueURI, UcmAttributes> objectByUniqueURI;
 
