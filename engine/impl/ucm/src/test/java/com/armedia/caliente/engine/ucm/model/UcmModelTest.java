@@ -76,8 +76,12 @@ public class UcmModelTest extends BaseTest {
 					path = "";
 				}
 				name = String.format("%s/%s", path, name);
-				System.out.printf("Item [%03d] (depth %d): %s %s%n", it.getCurrentPos(), it.getCurrentDept(), type,
-					name);
+				String shortcut = UcmModel.isShortcut(att)
+					? String.format(" | target=%s ", att.getString(UcmAtt.fTargetGUID)) : "";
+				URI uri = UcmModel.getURI(att);
+				String data = String.format("{ uri=%s | guid=%s%s }", uri,
+					att.getString(UcmModel.isFileURI(uri) ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID), shortcut);
+				System.out.printf("%s %s : %s%n", type, name, data);
 				// System.out.printf("%s%n", StringUtils.repeat('-', 40));
 				// dumpObject(1, att);
 			}
@@ -99,7 +103,16 @@ public class UcmModelTest extends BaseTest {
 			m.iterateFolderContentsRecursive(s, f.getURI(), true, new ObjectHandler() {
 				@Override
 				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
-					System.out.printf("Item [%03d] = [%s]%n", pos, object.getPath());
+					String type = (object.getType() == UcmObjectType.FILE ? "FILE" : "FLDR");
+					if (object.isShortcut()) {
+						type = String.format(">%s", type);
+					} else {
+						type = String.format(" %s", type);
+					}
+					String shortcut = object.isShortcut() ? String.format(" | target=%s ", object.getTargetGUID()) : "";
+					String data = String.format("{ uri=%s | guid=%s%s }", object.getURI(), object.getString(
+						object.getType() == UcmObjectType.FILE ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID), shortcut);
+					System.out.printf("%s %s : %s%n", type, object.getPath(), data);
 				}
 			});
 		} catch (UcmServiceException e) {
