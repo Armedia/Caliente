@@ -13,7 +13,6 @@ import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmRevision;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 
-import oracle.stellent.ridc.IdcClient;
 import oracle.stellent.ridc.IdcClientConfig;
 import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.IdcClientManager;
@@ -23,7 +22,6 @@ import oracle.stellent.ridc.model.DataFactory;
 import oracle.stellent.ridc.protocol.ServiceResponse;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 
-@SuppressWarnings("rawtypes")
 public class UcmSession implements TrackedUse {
 
 	public static interface RequestPreparation {
@@ -41,7 +39,7 @@ public class UcmSession implements TrackedUse {
 		this.userContext = userContext;
 	}
 
-	public IdcClient getClient() {
+	public IntradocClient getClient() {
 		return this.client;
 	}
 
