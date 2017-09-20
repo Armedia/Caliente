@@ -25,7 +25,6 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
-import com.armedia.caliente.engine.ucm.model.UcmExceptionData.ExceptionEntry;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -224,7 +223,7 @@ public class UcmModel {
 		if (statusCode == -16) { return true; }
 
 		String mk = local.get("StatusMessageKey");
-		for (ExceptionEntry entry : UcmExceptionData.parseMessageKey(mk)) {
+		for (UcmExceptionData.Entry entry : UcmExceptionData.parseMessageKey(mk)) {
 			String op = entry.getTag();
 			if (Tools.equals(op, "csFldDoesNotExist") || //
 				Tools.equals(op, "csUnableToGetRevInfo2") || //

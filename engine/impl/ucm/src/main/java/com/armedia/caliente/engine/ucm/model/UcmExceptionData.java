@@ -12,12 +12,12 @@ import com.armedia.commons.utilities.Tools;
 
 public class UcmExceptionData {
 
-	public static final class ExceptionEntry {
+	public static final class Entry {
 		private final String tag;
 		private final List<String> parameters;
 		private volatile String string = null;
 
-		private ExceptionEntry(String tag, List<String> parameters) {
+		private Entry(String tag, List<String> parameters) {
 			this.tag = tag;
 			this.parameters = Tools.freezeList(parameters);
 		}
@@ -79,10 +79,10 @@ public class UcmExceptionData {
 		return ret;
 	}
 
-	public static List<ExceptionEntry> parseMessageKey(String msg) {
+	public static List<Entry> parseMessageKey(String msg) {
 		if (msg == null) { return Collections.emptyList(); }
 		int prev = 0;
-		List<ExceptionEntry> data = new ArrayList<>();
+		List<Entry> data = new ArrayList<>();
 		Matcher m = UcmExceptionData.MSGKEY_EXCL.matcher(msg);
 		while (m.find()) {
 			String part = msg.substring(prev, m.start());
@@ -90,7 +90,7 @@ public class UcmExceptionData {
 				List<String> parameters = UcmExceptionData.parseParameters(part);
 				if (!parameters.isEmpty()) {
 					String tag = parameters.remove(0);
-					data.add(new ExceptionEntry(tag, parameters));
+					data.add(new Entry(tag, parameters));
 				}
 			}
 			prev = m.end();
@@ -101,16 +101,16 @@ public class UcmExceptionData {
 				List<String> parameters = UcmExceptionData.parseParameters(part);
 				if (!parameters.isEmpty()) {
 					String tag = parameters.remove(0);
-					data.add(new ExceptionEntry(tag, parameters));
+					data.add(new Entry(tag, parameters));
 				}
 			}
 		}
 		return data;
 	}
 
-	public static String generateMessageKey(List<ExceptionEntry> entries) {
+	public static String generateMessageKey(List<Entry> entries) {
 		StringBuilder sb = new StringBuilder();
-		for (ExceptionEntry e : entries) {
+		for (Entry e : entries) {
 			sb.append(e.toString());
 		}
 		return sb.toString();

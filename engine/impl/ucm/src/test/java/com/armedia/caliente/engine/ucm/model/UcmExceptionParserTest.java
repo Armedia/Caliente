@@ -5,7 +5,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.ucm.model.UcmExceptionData.ExceptionEntry;
+import com.armedia.caliente.engine.ucm.model.UcmExceptionData.Entry;
 
 public class UcmExceptionParserTest {
 
@@ -15,9 +15,9 @@ public class UcmExceptionParserTest {
 			"!csUnableToGetRevInfo2,SOME\\!THING\\!\\,WEIRD\\!\\!!csGetFileUnableToFindRevision,csGetFileRevMethodLabel_Latest,SOME\\!THING\\!WE\\,IRD\\!\\!"
 		};
 
-		List<ExceptionEntry> l = UcmExceptionData.parseMessageKey(msg[0]);
+		List<Entry> l = UcmExceptionData.parseMessageKey(msg[0]);
 
-		ExceptionEntry e = l.get(0);
+		Entry e = l.get(0);
 		Assert.assertEquals("csUnableToGetRevInfo2", e.getTag());
 		Assert.assertEquals(1, e.getParameters().size());
 		Assert.assertEquals("SOME!THING!,WEIRD!!", e.getParameters().get(0));
