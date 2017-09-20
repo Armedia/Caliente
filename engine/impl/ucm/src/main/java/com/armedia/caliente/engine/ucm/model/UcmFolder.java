@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.Map;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
@@ -8,8 +9,14 @@ import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
 
 public class UcmFolder extends UcmFSObject {
 
+	private static final URI ROOT_URI = UcmModel.newFolderURI("FLD_ROOT");
+
 	UcmFolder(UcmModel model, URI uri, UcmAttributes data) {
 		super(model, uri, data, UcmAtt.fFolderName);
+	}
+
+	public boolean isRoot() {
+		return UcmFolder.ROOT_URI.equals(getURI());
 	}
 
 	public String getDisplayDescription() throws UcmException {
@@ -21,12 +28,12 @@ public class UcmFolder extends UcmFSObject {
 	}
 
 	public Map<String, UcmFSObject> getContents(UcmSession s) throws UcmFolderNotFoundException, UcmServiceException {
-		return this.model.getFolderContents(s, this);
+		return s.getFolderContents(this);
 	}
 
 	public int iterateFolderContents(final UcmSession s, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
-		return this.model.iterateFolderContents(s, getURI(), handler);
+		return s.iterateFolderContents(this, handler);
 	}
 
 	public int iterateFolderContentsRecursive(final UcmSession s, final ObjectHandler handler)
@@ -36,6 +43,11 @@ public class UcmFolder extends UcmFSObject {
 
 	public int iterateFolderContentsRecursive(final UcmSession s, boolean recurseShortcuts, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
-		return this.model.iterateFolderContentsRecursive(s, getURI(), recurseShortcuts, handler);
+		return s.iterateFolderContentsRecursive(this, recurseShortcuts, handler);
+	}
+
+	public Collection<UcmFSObject> getFolderContentsRecursive(final UcmSession s, boolean followShortCuts)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		return s.getFolderContentsRecursive(this, followShortCuts);
 	}
 }

@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.ucm;
 
 import java.io.InputStream;
-import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 
@@ -166,9 +165,9 @@ public class UcmSession implements TrackedUse {
 		return this.model.getFileHistory(this, file);
 	}
 
-	public int iterateFolderContents(URI uri, ObjectHandler handler)
+	public int iterateFolderContents(UcmFolder folder, ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
-		return this.model.iterateFolderContents(this, uri, handler);
+		return this.model.iterateFolderContents(this, folder, handler);
 	}
 
 	public Map<String, UcmFSObject> getFolderContents(UcmFolder folder)
@@ -176,14 +175,14 @@ public class UcmSession implements TrackedUse {
 		return this.model.getFolderContents(this, folder);
 	}
 
-	public int iterateFolderContentsRecursive(URI uri, boolean recurseShortcuts, ObjectHandler handler)
+	public int iterateFolderContentsRecursive(UcmFolder folder, boolean recurseShortcuts, ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
-		return this.model.iterateFolderContentsRecursive(this, uri, recurseShortcuts, handler);
+		return this.model.iterateFolderContentsRecursive(this, folder, recurseShortcuts, handler);
 	}
 
-	public Collection<UcmFSObject> getFolderContentsRecursive(UcmFolder folder, boolean recurseShortcuts)
+	public Collection<UcmFSObject> getFolderContentsRecursive(UcmFolder folder, boolean followShortCuts)
 		throws UcmServiceException, UcmFolderNotFoundException {
-		return this.model.getFolderContentsRecursive(this, folder, recurseShortcuts);
+		return this.model.getFolderContentsRecursive(this, folder, followShortCuts);
 	}
 
 	public InputStream getInputStream(UcmFile file)

@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class UcmModelObject {
 
-	protected final UcmModel model;
+	private final UcmModel model;
 	protected final URI uri;
 
 	protected final AtomicLong revision = new AtomicLong(0);

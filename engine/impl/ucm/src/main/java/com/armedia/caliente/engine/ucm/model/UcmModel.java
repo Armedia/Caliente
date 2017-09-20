@@ -258,8 +258,18 @@ public class UcmModel {
 	 *             if there is no file at that path
 	 */
 	public UcmFile getFile(UcmSession s, String path) throws UcmServiceException, UcmFileNotFoundException {
+		URI uri = null;
 		try {
-			final URI uri = resolvePath(s, path);
+			uri = resolvePath(s, path);
+		} catch (UcmObjectNotFoundException e) {
+			throw new UcmFileNotFoundException(e.getMessage(), e);
+		}
+
+		// Ensure the target is a file...
+		if (!UcmModel.isFileURI(uri)) { throw new UcmFileNotFoundException(
+			String.format("The object at [%s] (with URI [%s]) is not a file", path, uri)); }
+
+		try {
 			return new UcmFile(this, uri, getDataObject(s, uri));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFileNotFoundException(e.getMessage(), e);
@@ -608,7 +618,13 @@ public class UcmModel {
 		public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object);
 	}
 
-	public int iterateFolderContents(final UcmSession s, final URI uri, final ObjectHandler handler)
+	public int iterateFolderContents(final UcmSession s, final UcmFolder folder, final ObjectHandler handler)
+		throws UcmServiceException, UcmFolderNotFoundException {
+		Objects.requireNonNull(folder, "Must provide a folder object to iterate over");
+		return iterateFolderContents(s, folder.getURI(), handler);
+	}
+
+	int iterateFolderContents(final UcmSession s, final URI uri, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
@@ -728,8 +744,8 @@ public class UcmModel {
 		return children;
 	}
 
-	private int iterateFolderTreeContents(final Set<URI> recursions, final AtomicInteger outerPos, final UcmSession s,
-		final URI uri, final boolean followShortcuts, final ObjectHandler handler)
+	private int iterateFolderContentsRecursive(final Set<URI> recursions, final AtomicInteger outerPos,
+		final UcmSession s, final URI uri, final boolean followShortcuts, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
@@ -756,7 +772,8 @@ public class UcmModel {
 						handler.handleObject(session, outerPos.getAndIncrement(), objectUri, object);
 						if (UcmModel.isFolderURI(uri) && (followShortcuts || !object.isShortcut())) {
 							try {
-								iterateFolderTreeContents(recursions, outerPos, s, objectUri, followShortcuts, handler);
+								iterateFolderContentsRecursive(recursions, outerPos, s, objectUri, followShortcuts,
+									handler);
 							} catch (UcmFolderNotFoundException e) {
 								throw new UcmRuntimeException(String.format(
 									"Unexpected condition: can't find a folder that has just been found?? URI=[%s]",
@@ -783,16 +800,21 @@ public class UcmModel {
 		}
 	}
 
-	public int iterateFolderContentsRecursive(final UcmSession s, final URI uri, boolean recurseShortcuts,
+	public int iterateFolderContentsRecursive(final UcmSession s, final UcmFolder folder, boolean followShortCuts,
 		final ObjectHandler handler) throws UcmServiceException, UcmFolderNotFoundException {
-		return iterateFolderTreeContents(new LinkedHashSet<URI>(), new AtomicInteger(0), s, uri, recurseShortcuts,
+		return iterateFolderContentsRecursive(s, folder.getURI(), followShortCuts, handler);
+	}
+
+	int iterateFolderContentsRecursive(final UcmSession s, final URI uri, boolean followShortCuts,
+		final ObjectHandler handler) throws UcmServiceException, UcmFolderNotFoundException {
+		return iterateFolderContentsRecursive(new LinkedHashSet<URI>(), new AtomicInteger(0), s, uri, followShortCuts,
 			handler);
 	}
 
-	protected Collection<URI> getFolderContentsRecursive(UcmSession s, boolean recurseShortcuts, final URI uri)
+	Collection<URI> getFolderContentsRecursive(UcmSession s, boolean followShortCuts, final URI uri)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		final Collection<URI> children = new ArrayList<>();
-		iterateFolderContentsRecursive(s, uri, recurseShortcuts, new ObjectHandler() {
+		iterateFolderContentsRecursive(s, uri, followShortCuts, new ObjectHandler() {
 			@Override
 			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject obj) {
 				children.add(uri);
@@ -802,9 +824,9 @@ public class UcmModel {
 	}
 
 	public Collection<UcmFSObject> getFolderContentsRecursive(UcmSession s, final UcmFolder folder,
-		boolean recurseShortcuts) throws UcmServiceException, UcmFolderNotFoundException {
+		boolean followShortCuts) throws UcmServiceException, UcmFolderNotFoundException {
 		final Collection<UcmFSObject> children = new ArrayList<>();
-		iterateFolderContentsRecursive(s, folder.getURI(), recurseShortcuts, new ObjectHandler() {
+		iterateFolderContentsRecursive(s, folder.getURI(), followShortCuts, new ObjectHandler() {
 			@Override
 			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject o) {
 				children.add(o);
@@ -814,8 +836,18 @@ public class UcmModel {
 	}
 
 	public UcmFolder getFolder(UcmSession s, String path) throws UcmServiceException, UcmFolderNotFoundException {
+		URI uri = null;
 		try {
-			final URI uri = resolvePath(s, path);
+			uri = resolvePath(s, path);
+		} catch (UcmObjectNotFoundException e) {
+			throw new UcmFolderNotFoundException(e.getMessage(), e);
+		}
+
+		// Ensure the target is a folder...
+		if (!UcmModel.isFolderURI(uri)) { throw new UcmFolderNotFoundException(
+			String.format("The object at [%s] (with URI [%s]) is not a folder", path, uri)); }
+
+		try {
 			return new UcmFolder(this, uri, getDataObject(s, uri));
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
@@ -829,6 +861,8 @@ public class UcmModel {
 
 	public UcmFolder getFolder(UcmSession s, URI uri) throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to locate");
+		if (!UcmModel.isFolderURI(uri)) { throw new UcmFolderNotFoundException(
+			String.format("The object URI [%s] is not a folder URI", uri)); }
 		try {
 			return new UcmFolder(this, uri, getDataObject(s, uri));
 		} catch (UcmObjectNotFoundException e) {

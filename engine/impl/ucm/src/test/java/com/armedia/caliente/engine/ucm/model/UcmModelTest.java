@@ -6,6 +6,7 @@ import java.net.URI;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.armedia.caliente.engine.SessionWrapper;
@@ -194,6 +195,48 @@ public class UcmModelTest extends BaseTest {
 					e.printStackTrace(System.err);
 					System.err.flush();
 				}
+			}
+		} finally {
+			w.close();
+		}
+
+	}
+
+	@Test
+	public void testFile() throws Exception {
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
+			UcmModel model = new UcmModel();
+
+			try {
+				model.getFile(s, "/");
+				Assert.fail("Did not fail seeking a folder");
+			} catch (Exception e) {
+				e.printStackTrace(System.err);
+			}
+
+			model.getFile(s, "/Caliente 3.0 Concept Document v4.0.docx");
+		} finally {
+			w.close();
+		}
+
+	}
+
+	@Test
+	public void testFolder() throws Exception {
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
+			UcmModel model = new UcmModel();
+
+			model.getFolder(s, "/");
+
+			try {
+				model.getFolder(s, "/Caliente 3.0 Concept Document v4.0.docx");
+				Assert.fail("Did not fail seeking a file");
+			} catch (Exception e) {
+				e.printStackTrace(System.err);
 			}
 		} finally {
 			w.close();
