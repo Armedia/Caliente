@@ -203,6 +203,34 @@ public class UcmModelTest extends BaseTest {
 	}
 
 	@Test
+	public void testFullRecursion() throws Exception {
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
+			UcmModel model = new UcmModel();
+			UcmFolder root = model.getRootFolder(s);
+			model.iterateFolderContentsRecursive(s, root, true, new ObjectHandler() {
+				@Override
+				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+					System.out.printf("[%s] -> [%s]%n", object.getPath(), objectUri);
+					try {
+						UcmFolder parent = object.getParentFolder(session);
+						System.out.printf("\tparent = [%s] -> [%s]%n", parent.getPath(), parent.getURI());
+					} catch (UcmObjectNotFoundException e) {
+						// There is no parent!!
+						System.out.printf("\tno parent%n");
+					} catch (UcmServiceException e) {
+						e.printStackTrace(System.err);
+					}
+				}
+			});
+		} finally {
+			w.close();
+		}
+
+	}
+
+	@Test
 	public void testFile() throws Exception {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {

@@ -51,6 +51,8 @@ public class UcmModel {
 	private static final URI NULL_URI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
 	private static final URI NULL_FOLDER_URI = UcmModel.newFolderURI("idcnull");
 
+	static final URI ROOT_URI = UcmModel.newFolderURI("FLD_ROOT");
+
 	// Unique URI -> DataObject
 	private final KeyLockableCache<UcmUniqueURI, UcmAttributes> objectByUniqueURI;
 
@@ -833,6 +835,14 @@ public class UcmModel {
 			}
 		});
 		return children;
+	}
+
+	public UcmFolder getRootFolder(UcmSession s) throws UcmServiceException {
+		try {
+			return getFolder(s, UcmModel.ROOT_URI);
+		} catch (UcmFolderNotFoundException e) {
+			throw new UcmServiceException("Could not find the root folder - this appears to be a server problem", e);
+		}
 	}
 
 	public UcmFolder getFolder(UcmSession s, String path) throws UcmServiceException, UcmFolderNotFoundException {

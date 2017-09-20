@@ -9,14 +9,12 @@ import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
 
 public class UcmFolder extends UcmFSObject {
 
-	private static final URI ROOT_URI = UcmModel.newFolderURI("FLD_ROOT");
-
 	UcmFolder(UcmModel model, URI uri, UcmAttributes data) {
 		super(model, uri, data, UcmAtt.fFolderName);
 	}
 
 	public boolean isRoot() {
-		return UcmFolder.ROOT_URI.equals(getURI());
+		return UcmModel.ROOT_URI.equals(getURI());
 	}
 
 	public String getDisplayDescription() throws UcmException {
