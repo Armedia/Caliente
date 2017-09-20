@@ -93,7 +93,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 	}
 
 	public UcmFolder getParentFolder(UcmSession s) throws UcmFolderNotFoundException, UcmServiceException {
-		return this.model.getFolder(s, getParentURI());
+		return s.getParentFolder(this);
 	}
 
 	public final UcmUniqueURI getUniqueURI() {

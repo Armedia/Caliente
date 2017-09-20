@@ -48,7 +48,8 @@ public class UcmModel {
 	private static final String FOLDER_SCHEME = "folder";
 	private static final String NULL_SCHEME = "null";
 
-	private static final URI NULLURI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
+	private static final URI NULL_URI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
+	private static final URI NULL_FOLDER_URI = UcmModel.newFolderURI("idcnull");
 
 	// Unique URI -> DataObject
 	private final KeyLockableCache<UcmUniqueURI, UcmAttributes> objectByUniqueURI;
@@ -291,7 +292,7 @@ public class UcmModel {
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the file at [%s]",
-									sanitizedPath)) { return UcmModel.NULLURI; }
+									sanitizedPath)) { return UcmModel.NULL_URI; }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -340,19 +341,26 @@ public class UcmModel {
 		// There's an object...so stash it
 		cacheDataObject(data.get());
 
-		if (Tools.equals(UcmModel.NULLURI, uri)) { throw new UcmObjectNotFoundException(
+		if (Tools.equals(UcmModel.NULL_URI, uri)) { throw new UcmObjectNotFoundException(
 			String.format("No object found at path [%s]", sanitizedPath)); }
 		return uri;
 	}
 
 	protected UcmAttributes getDataObject(final UcmSession s, final URI uri)
 		throws UcmServiceException, UcmObjectNotFoundException {
+		Objects.requireNonNull(uri, "Must provide a URI to retrieve");
+		if (UcmModel.NULL_FOLDER_URI.equals(uri)) {
+			// Take a quick shortcut to avoid unnecessary calls
+			throw new UcmObjectNotFoundException(
+				String.format("The folder [%s] is not a valid folder URI - it's a null pointer", uri));
+		}
+
 		final boolean file;
 		if (UcmModel.isFileURI(uri)) {
 			// The SSP is the dDocName
 			file = true;
 		} else if (UcmModel.isFolderURI(uri)) {
-			// The SSP is the BY_GUID
+			// The SSP is the fFolderGUID
 			file = false;
 		} else {
 			// WTF?? Invalid URI
@@ -814,12 +822,12 @@ public class UcmModel {
 		}
 	}
 
-	UcmFolder getFolder(UcmSession s, UcmUniqueURI uri) throws UcmServiceException, UcmFolderNotFoundException {
+	public UcmFolder getFolder(UcmSession s, UcmUniqueURI uri) throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a unique URI to locate");
 		return getFolder(s, uri.getURI());
 	}
 
-	UcmFolder getFolder(UcmSession s, URI uri) throws UcmServiceException, UcmFolderNotFoundException {
+	public UcmFolder getFolder(UcmSession s, URI uri) throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to locate");
 		try {
 			return new UcmFolder(this, uri, getDataObject(s, uri));
@@ -900,7 +908,7 @@ public class UcmModel {
 		return new UcmFileHistory(this, uri, history);
 	}
 
-	InputStream getInputStream(UcmSession s, final UcmFile file, final String rendition)
+	public InputStream getInputStream(UcmSession s, final UcmFile file, final String rendition)
 		throws UcmServiceException, UcmFileRevisionNotFoundException, UcmRenditionNotFoundException {
 		ServiceResponse response = s.callService("GET_FILE", new RequestPreparation() {
 			@Override
@@ -980,7 +988,7 @@ public class UcmModel {
 		return getFileHistory(s, h.getURI());
 	}
 
-	Map<String, UcmRenditionInfo> getRenditions(final UcmSession s, final UcmFile file)
+	public Map<String, UcmRenditionInfo> getRenditions(final UcmSession s, final UcmFile file)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		Objects.requireNonNull(file, "Must provide a file whose renditions to return");
 

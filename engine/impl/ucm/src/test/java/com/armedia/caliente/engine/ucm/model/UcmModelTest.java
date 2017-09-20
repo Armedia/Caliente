@@ -157,9 +157,47 @@ public class UcmModelTest extends BaseTest {
 					model.getFolder(s, p);
 				}
 			} catch (Exception e) {
-				e.printStackTrace(System.err);
+				handleException(e);
 			}
 		}
 	}
 
+	@Test
+	public void testFsObject() throws Exception {
+		String[] paths = {
+			"/", "/Enterprise Libraries", "/Shortcut To Test Folder", "/Test Folder", "/Users",
+			"/Caliente 3.0 Concept Document v4.0.docx"
+		};
+
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
+			UcmModel model = new UcmModel();
+			for (String p : paths) {
+				try {
+					URI uri = model.resolvePath(s, p);
+					System.out.printf("[%s] -> [%s]%n", p, uri);
+					UcmFSObject o = null;
+					if (UcmModel.isFileURI(uri)) {
+						o = model.getFile(s, p);
+					} else {
+						o = model.getFolder(s, p);
+					}
+					try {
+						UcmFolder parent = o.getParentFolder(s);
+						System.out.printf("\tparent = [%s] -> [%s]%n", parent.getPath(), parent.getURI());
+					} catch (UcmObjectNotFoundException e) {
+						// There is no parent!!
+						System.out.printf("\tno parent%n");
+					}
+				} catch (Exception e) {
+					e.printStackTrace(System.err);
+					System.err.flush();
+				}
+			}
+		} finally {
+			w.close();
+		}
+
+	}
 }
