@@ -351,7 +351,7 @@ public class UcmModel {
 							throw new UcmServiceException(String.format(
 								"Path [%s] was found, but was neither a file nor a folder (no identifier attributes)?!?",
 								sanitizedPath));
-						} catch (Exception e) {
+						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
 					}
@@ -435,7 +435,7 @@ public class UcmModel {
 							throw new UcmServiceException(
 								String.format("%s GUID [%s] was found, returned no results (no value for %s)?!?",
 									type.name(), guid, uriIdentifierAtt.name()));
-						} catch (Exception e) {
+						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
 					}
@@ -539,7 +539,7 @@ public class UcmModel {
 							UcmAttributes baseData = new UcmAttributes(baseObj);
 							data.set(baseData);
 							return UcmModel.getUniqueURI(baseData);
-						} catch (Exception e) {
+						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
 					}
@@ -649,7 +649,7 @@ public class UcmModel {
 							UcmAttributes baseData = new UcmAttributes(baseObj);
 							data.set(baseData);
 							return UcmModel.getUniqueURI(baseData);
-						} catch (Exception e) {
+						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
 					}
@@ -792,7 +792,7 @@ public class UcmModel {
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
-						} catch (Exception e) {
+						} catch (UcmException e) {
 							throw new ConcurrentException(e);
 						}
 					}
@@ -852,40 +852,33 @@ public class UcmModel {
 		// If this isn't a folder, we don't even try it...
 		if (!UcmModel.isFolderURI(uri)) { return -1; }
 
-		int start = 0;
-		boolean removeRecursion = false;
 		if (recursions.isEmpty()) {
-			UcmFolder f = getFolder(s, uri);
-			handler.handleObject(s, start++, uri, f);
-			recursions.add(uri);
-			outerPos.getAndIncrement();
-			removeRecursion = true;
+			// If this is the root of the invocation, we handle it!
+			handler.handleObject(s, outerPos.getAndIncrement(), uri, getFolder(s, uri));
 		}
+
+		if (!recursions.add(uri)) { throw new IllegalStateException(
+			String.format("Folder recursion detected when descending into [%s] : %s", uri, recursions)); }
 
 		try {
 			iterateFolderContents(s, uri, new ObjectHandler() {
 				@Override
 				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
-					if (!recursions.add(objectUri)) { throw new IllegalStateException(String
-						.format("Folder recursion detected when descending into [%s] : %s", objectUri, recursions)); }
-					try {
-						handler.handleObject(session, outerPos.getAndIncrement(), objectUri, object);
-						if (UcmModel.isFolderURI(uri) && (followShortcuts || !object.isShortcut())) {
-							try {
-								iterateFolderContentsRecursive(recursions, outerPos, s, objectUri, followShortcuts,
-									handler);
-							} catch (UcmFolderNotFoundException e) {
-								throw new UcmRuntimeException(String.format(
-									"Unexpected condition: can't find a folder that has just been found?? URI=[%s]",
-									objectUri), e);
-							} catch (UcmServiceException e) {
-								throw new UcmRuntimeServiceException(String.format(
-									"Service exception caught while attempting to recurse through [%s] : %s", objectUri,
-									recursions), e);
-							}
+					handler.handleObject(session, outerPos.getAndIncrement(), objectUri, object);
+					if (UcmModel.isFolderURI(uri) && (followShortcuts || !object.isShortcut())) {
+						try {
+							iterateFolderContentsRecursive(recursions, outerPos, s, objectUri, followShortcuts,
+								handler);
+						} catch (UcmFolderNotFoundException e) {
+							throw new UcmRuntimeException(String.format(
+								"Unexpected condition: can't find a folder that has just been found?? URI=[%s]",
+								objectUri), e);
+						} catch (UcmServiceException e) {
+							throw new UcmRuntimeServiceException(
+								String.format("Service exception caught while attempting to recurse through [%s] : %s",
+									objectUri, recursions),
+								e);
 						}
-					} finally {
-						recursions.remove(objectUri);
 					}
 				}
 			});
@@ -894,9 +887,7 @@ public class UcmModel {
 			throw new UcmServiceException(String.format("Service exception caught while recursing through [%s]", uri),
 				e);
 		} finally {
-			if (removeRecursion) {
-				recursions.remove(uri);
-			}
+			recursions.remove(uri);
 		}
 	}
 
@@ -1033,7 +1024,7 @@ public class UcmModel {
 								info.addFirst(new UcmRevision(o));
 							}
 							return info;
-						} catch (Exception e) {
+						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
 					}
@@ -1192,7 +1183,7 @@ public class UcmModel {
 								UcmAttributes baseData = new UcmAttributes(baseObj);
 								data.set(baseData);
 								return renditions;
-							} catch (Exception e) {
+							} catch (IdcClientException | UcmException e) {
 								throw new ConcurrentException(e);
 							}
 						}
