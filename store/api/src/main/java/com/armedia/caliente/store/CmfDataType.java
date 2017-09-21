@@ -68,6 +68,12 @@ public enum CmfDataType {
 			return value.asString();
 		}
 	},
+	BASE64_BINARY {
+		@Override
+		protected Object doGetValue(CmfValue value) {
+			return value.asBinary();
+		}
+	},
 	OTHER {
 		@Override
 		protected Object doGetValue(CmfValue value) {

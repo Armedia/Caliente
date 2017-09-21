@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.EnumMap;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
+
 import com.armedia.commons.utilities.Tools;
 
 public final class CmfValue {
@@ -24,6 +26,12 @@ public final class CmfValue {
 			}
 		}
 		NULL = Tools.freezeMap(nvl);
+	}
+
+	public static Date parseDate(String str) throws ParseException {
+		if (str == null) { return null; }
+		// TODO: Support other date formats?
+		return DateFormat.getDateInstance().parse(str);
 	}
 
 	private final CmfDataType type;
@@ -102,7 +110,7 @@ public final class CmfValue {
 					} else if (value instanceof Calendar) {
 						this.value = Calendar.class.cast(value).getTime();
 					} else {
-						this.value = DateFormat.getDateInstance().parse(value.toString());
+						this.value = CmfValue.parseDate(value.toString());
 					}
 					break;
 				default:
@@ -142,7 +150,13 @@ public final class CmfValue {
 	public Date asTime() throws ParseException {
 		if (this.nullValue) { return null; }
 		if (this.value instanceof Date) { return Date.class.cast(this.value); }
-		return DateFormat.getDateInstance().parse(this.value.toString());
+		return CmfValue.parseDate(this.value.toString());
+	}
+
+	public byte[] asBinary() {
+		if (this.nullValue) { return null; }
+		if (this.value instanceof byte[]) { return (byte[]) this.value; }
+		return Base64.decodeBase64(this.value.toString());
 	}
 
 	public Object asObject() {
