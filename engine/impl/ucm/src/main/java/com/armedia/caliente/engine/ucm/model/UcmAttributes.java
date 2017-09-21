@@ -5,10 +5,10 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.armedia.commons.utilities.Tools;
@@ -21,9 +21,9 @@ public final class UcmAttributes {
 
 	UcmAttributes(Map<String, String> data) {
 		if (data == null) {
-			data = new LinkedHashMap<>();
+			data = new TreeMap<>();
 		} else {
-			data = new LinkedHashMap<>(data);
+			data = new TreeMap<>(data);
 		}
 		this.data = data;
 	}
