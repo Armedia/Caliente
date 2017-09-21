@@ -24,6 +24,21 @@ import oracle.stellent.ridc.protocol.intradoc.IntradocClientConfig;
 
 public class UcmSessionFactory extends SessionFactory<UcmSession> {
 
+	private class IdcContextSeed {
+		private final String user;
+		private final String password;
+
+		public IdcContextSeed(String user, String password) {
+			this.user = user;
+			this.password = password;
+		}
+
+		public IdcContext newInstance() {
+			if (this.password == null) { return new IdcContext(this.user); }
+			return new IdcContext(this.user, UcmSessionFactory.this.crypto.decrypt(this.password));
+		}
+	}
+
 	private final IdcClientManager manager;
 	private final String host;
 	private final int port;
@@ -35,7 +50,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	private final String clientStorePassword;
 	private final String clientCertAlias;
 	private final String clientCertPassword;
-	private final IdcContext context;
+	private final IdcContextSeed context;
 	private final long minPingTime;
 
 	private final UcmModel model;
@@ -53,13 +68,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		String userName = settings.getString(UcmSessionSetting.USER);
 		String password = settings.getString(UcmSessionSetting.PASSWORD);
 
-		// TODO: Support Kerberos...get a Credentials object...
-		if (password != null) {
-			// Try to decrypt the password if it's encrypted
-			this.context = new IdcContext(userName, this.crypto.decrypt(password));
-		} else {
-			this.context = new IdcContext(userName);
-		}
+		this.context = new IdcContextSeed(userName, password);
 
 		this.ssl = SSLMode.decode(settings.getString(UcmSessionSetting.SSL_MODE));
 		if (this.ssl != SSLMode.NONE) {
@@ -153,7 +162,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	@Override
 	public PooledObject<UcmSession> makeObject() throws Exception {
 
-		this.log.trace("Setting the IDC connection URL to [{}]...", this.url);
+		this.log.trace("UcmSetting the IDC connection URL to [{}]...", this.url);
 		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(this.url));
 
 		IntradocClientConfig config = client.getConfig();
@@ -169,7 +178,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 			config.setKeystoreAliasPassword(this.clientCertPassword);
 		}
 		client.initialize();
-		return new DefaultPooledObject<>(new UcmSession(this.model, client, this.context));
+		return new DefaultPooledObject<>(new UcmSession(this.model, client, this.context.newInstance()));
 	}
 
 	@Override

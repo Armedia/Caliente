@@ -108,6 +108,13 @@
 
 		<dependency>
 			<groupId>com.armedia.caliente.engine</groupId>
+			<artifactId>caliente-engine-ucm</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.caliente.engine</groupId>
 			<artifactId>caliente-engine-xml</artifactId>
 			<version>${project.version}</version>
 			<scope>compile</scope>

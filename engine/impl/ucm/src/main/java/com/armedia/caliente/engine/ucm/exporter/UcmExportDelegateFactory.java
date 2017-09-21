@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.ucm.exporter;
 
+import java.net.URI;
+
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
@@ -17,6 +19,14 @@ public class UcmExportDelegateFactory
 	@Override
 	protected UcmExportDelegate<?> newExportDelegate(UcmSession session, CmfType type, String searchKey)
 		throws Exception {
-		return null;
+		URI uri = URI.create(searchKey);
+		switch (type) {
+			case DOCUMENT:
+				return new UcmFileExportDelegate(this, session.getFile(uri));
+			case FOLDER:
+				return new UcmFolderExportDelegate(this, session.getFolder(uri));
+			default:
+				return null;
+		}
 	}
 }

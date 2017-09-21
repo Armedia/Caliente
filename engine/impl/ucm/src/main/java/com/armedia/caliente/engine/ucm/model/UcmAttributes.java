@@ -1,10 +1,12 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -17,6 +19,7 @@ import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
+import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataResultSet.Field;
 import oracle.stellent.ridc.model.DataResultSet.Field.Type;
 import oracle.stellent.ridc.model.impl.DataObjectEncodingUtils;
@@ -37,7 +40,31 @@ public final class UcmAttributes {
 
 	private final Map<String, CmfValue> data;
 
-	UcmAttributes(Map<String, String> data, Collection<Field> structure) {
+	private static Collection<Field> calculateStructure(DataBinder binder) {
+		List<Field> ret = new ArrayList<>(binder.getFieldTypeNames().size());
+		for (String field : binder.getFieldTypeNames()) {
+			String type = binder.getFieldType(field);
+			if (type != null) {
+				Type t = null;
+				try {
+					t = Type.valueOf(type.toUpperCase());
+				} catch (IllegalArgumentException e) {
+					// Default to string...
+					t = Type.STRING;
+				}
+				Field f = new Field(field);
+				f.setType(t);
+				ret.add(f);
+			}
+		}
+		return ret;
+	}
+
+	public UcmAttributes(Map<String, String> data, DataBinder binder) {
+		this(data, UcmAttributes.calculateStructure(binder));
+	}
+
+	public UcmAttributes(Map<String, String> data, Collection<Field> structure) {
 		if (data == null) {
 			data = new TreeMap<>();
 		} else {

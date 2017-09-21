@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.chemistry.opencmis.client.api.QueryResult;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -22,8 +21,8 @@ import com.armedia.caliente.engine.ucm.UcmCommon;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
+import com.armedia.caliente.engine.ucm.UcmSetting;
 import com.armedia.caliente.engine.ucm.UcmTranslator;
-import com.armedia.caliente.engine.ucm.common.Setting;
 import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
@@ -48,15 +47,11 @@ public class UcmExportEngine extends
 		super(new CmfCrypt());
 	}
 
-	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {
-		return null;
-	}
-
 	@Override
 	protected void findExportResults(final UcmSession session, CfgTools cfg, UcmExportDelegateFactory factory,
 		final TargetSubmitter submitter) throws Exception {
 		// Get the list of files/folders to be exported.
-		List<String> paths = UcmExportEngine.decodePathList(cfg.getString(Setting.PATHS));
+		List<String> paths = UcmExportEngine.decodePathList(cfg.getString(UcmSetting.PATHS));
 		if (paths.isEmpty()) { throw new ExportException("No paths given to export - cannot continue"); }
 
 		for (String path : paths) {
@@ -68,7 +63,7 @@ public class UcmExportEngine extends
 					break;
 				case FOLDER:
 					if (object.isShortcut()) {
-						submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
+						submitter.submit(new ExportTarget(CmfType.FOLDER, object.getUniqueURI().toString(),
 							object.getURI().toString()));
 						break;
 					}

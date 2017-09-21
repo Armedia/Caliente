@@ -1,8 +1,6 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -13,6 +11,8 @@ import java.util.Objects;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
+import com.armedia.caliente.store.CmfValue;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.IdcClientException;
@@ -20,7 +20,6 @@ import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataObject;
 import oracle.stellent.ridc.model.DataResultSet;
 import oracle.stellent.ridc.model.DataResultSet.Field;
-import oracle.stellent.ridc.model.DataResultSet.Field.Type;
 
 public class FolderContentsIterator {
 
@@ -177,26 +176,6 @@ public class FolderContentsIterator {
 		return this.localData;
 	}
 
-	private Collection<Field> calculateStructure(DataBinder binder) {
-		List<Field> ret = new ArrayList<>(binder.getFieldTypeNames().size());
-		for (String field : binder.getFieldTypeNames()) {
-			String type = binder.getFieldType(field);
-			if (type != null) {
-				Type t = null;
-				try {
-					t = Type.valueOf(type.toUpperCase());
-				} catch (IllegalArgumentException e) {
-					// Default to string...
-					t = Type.STRING;
-				}
-				Field f = new Field(field);
-				f.setType(t);
-				ret.add(f);
-			}
-		}
-		return ret;
-	}
-
 	public boolean hasNext() throws UcmServiceException {
 		if (this.current != null) { return true; }
 		if (this.completed) { return false; }
@@ -210,7 +189,7 @@ public class FolderContentsIterator {
 
 			if (this.localData == null) {
 				DataObject localData = this.responseBinder.getLocalData();
-				this.localData = new UcmAttributes(localData, calculateStructure(this.responseBinder));
+				this.localData = new UcmAttributes(localData, this.responseBinder);
 				this.parentPath = Tools.coalesce(localData.get("targetPath"), localData.get("folderPath"));
 			}
 
@@ -220,6 +199,8 @@ public class FolderContentsIterator {
 					List<DataObject> l = rs.getRows();
 					if ((l != null) && !l.isEmpty()) {
 						this.folder = new UcmAttributes(l.get(0), rs.getFields());
+						this.folder.getMutableData().put(UcmAtt.$ucmParentPath.name(),
+							new CmfValue(FileNameTools.dirname(this.parentPath)));
 					}
 				}
 			}

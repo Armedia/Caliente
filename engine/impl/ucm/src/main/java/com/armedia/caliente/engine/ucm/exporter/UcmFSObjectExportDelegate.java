@@ -5,11 +5,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
@@ -117,6 +119,12 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 
 	protected boolean getDataProperties(UcmExportContext ctx, Collection<CmfProperty<CmfValue>> properties, T object)
 		throws ExportException {
+		CmfProperty<CmfValue> paths = new CmfProperty<>(IntermediateProperty.PATH, CmfDataType.STRING, false);
+		properties.add(paths);
+		paths.setValue(new CmfValue(object.getParentPath()));
+		CmfProperty<CmfValue> parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, false);
+		paths.setValue(new CmfValue(object.getParentURI().toString()));
+		properties.add(parents);
 		return true;
 	}
 }

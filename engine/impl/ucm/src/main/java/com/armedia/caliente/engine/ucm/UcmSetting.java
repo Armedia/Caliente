@@ -1,21 +1,21 @@
-package com.armedia.caliente.engine.ucm.common;
+package com.armedia.caliente.engine.ucm;
 
 import com.armedia.commons.utilities.ConfigurationSetting;
 
-public enum Setting implements ConfigurationSetting {
+public enum UcmSetting implements ConfigurationSetting {
 	//
-	PATHS("paths"),
+	PATHS("paths"), //
 	//
 	;
 
 	public final String name;
 	private final Object defaultValue;
 
-	private Setting(String name) {
+	private UcmSetting(String name) {
 		this(name, null);
 	}
 
-	private Setting(String name, Object defaultValue) {
+	private UcmSetting(String name, Object defaultValue) {
 		this.name = name;
 		this.defaultValue = defaultValue;
 	}

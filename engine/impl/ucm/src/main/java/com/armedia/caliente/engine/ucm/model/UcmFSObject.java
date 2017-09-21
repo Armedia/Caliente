@@ -37,7 +37,11 @@ public abstract class UcmFSObject extends UcmModelObject {
 
 		this.attributes = data;
 		this.nameAtt = nameAtt;
+
 		this.parentPath = this.attributes.getString(UcmAtt.$ucmParentPath);
+		if (this.parentPath == null) {
+			"".hashCode();
+		}
 		String name = this.attributes.getString(nameAtt);
 		if (this.parentPath.equals("/")) {
 			if (name.equals("/")) {

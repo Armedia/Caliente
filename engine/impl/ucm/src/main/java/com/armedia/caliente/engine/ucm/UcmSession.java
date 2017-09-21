@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.ucm;
 
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
 
@@ -146,8 +147,16 @@ public class UcmSession implements TrackedUse {
 		return this.model.getFolder(this, path);
 	}
 
+	public UcmFolder getFolder(URI uri) throws UcmServiceException, UcmFolderNotFoundException {
+		return this.model.getFolder(this, uri);
+	}
+
 	public UcmFile getFile(String path) throws UcmServiceException, UcmFileNotFoundException {
 		return this.model.getFile(this, path);
+	}
+
+	public UcmFile getFile(URI uri) throws UcmServiceException, UcmFileNotFoundException {
+		return this.model.getFile(this, uri);
 	}
 
 	public UcmFile getFileRevision(UcmRevision revision)

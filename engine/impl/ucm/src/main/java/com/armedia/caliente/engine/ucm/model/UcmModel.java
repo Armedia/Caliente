@@ -136,6 +136,7 @@ public class UcmModel {
 		final UcmUniqueURI guid = UcmModel.getUniqueURI(data);
 
 		this.objectByUniqueURI.put(guid, data);
+
 		if (data.hasAttribute(UcmAtt.fParentGUID)) {
 			this.parentByURI.put(uri, UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID)));
 		}
@@ -155,7 +156,7 @@ public class UcmModel {
 	}
 
 	protected static final URI getURI(UcmAttributes data) {
-		final boolean file = data.hasAttribute(UcmAtt.fFileGUID);
+		final boolean file = data.hasAttribute(UcmAtt.fFileGUID) || data.hasAttribute(UcmAtt.dDocName);
 		return (file ? UcmModel.newFileURI(data.getString(UcmAtt.fFileGUID))
 			: UcmModel.newFolderURI(data.getString(UcmAtt.fFolderGUID)));
 	}
@@ -257,9 +258,13 @@ public class UcmModel {
 			throw new UcmFileNotFoundException(e.getMessage(), e);
 		}
 
+		return getFile(s, uri);
+	}
+
+	public UcmFile getFile(UcmSession s, URI uri) throws UcmServiceException, UcmFileNotFoundException {
 		// Ensure the target is a file...
-		if (!UcmModel.isFileURI(uri)) { throw new UcmFileNotFoundException(
-			String.format("The object at [%s] (with URI [%s]) is not a file", path, uri)); }
+		if (!UcmModel.isFileURI(
+			uri)) { throw new UcmFileNotFoundException(String.format("The object with URI [%s] is not a file", uri)); }
 
 		try {
 			return new UcmFile(this, uri, getDataObject(s, uri));
@@ -391,7 +396,8 @@ public class UcmModel {
 									throw new UcmServiceException(
 										String.format("Unsupported object type %s", type.name()));
 							}
-							final String resultSet = String.format("%sInfo", StringUtils.capitalize(type.name()));
+							final String resultSet = String.format("%sInfo",
+								StringUtils.capitalize(type.name().toLowerCase()));
 
 							try {
 								response = s.callService("FLD_INFO", new RequestPreparation() {
@@ -410,8 +416,11 @@ public class UcmModel {
 
 							// First things first!! Stash the retrieved object...
 							DataResultSet rs = responseData.getResultSet(resultSet);
-							if (rs == null) { throw new UcmServiceException(String
-								.format("%s GUID [%s] was found, didn't contain any data?!?", type.name(), guid)); }
+							if (rs == null) {
+								"".hashCode();
+								throw new UcmServiceException(String
+									.format("%s GUID [%s] was found, didn't contain any data?!?", type.name(), guid));
+							}
 							Map<String, String> baseObj = new HashMap<>();
 							baseObj.putAll(rs.getRows().get(0));
 							// Capture the parent path - it's either LocalData.filePath or
@@ -632,7 +641,7 @@ public class UcmModel {
 			DataResultSet rs = history.get();
 			LinkedList<UcmRevision> list = new LinkedList<>();
 			for (DataObject o : rs.getRows()) {
-				list.addFirst(new UcmRevision(o, rs.getFields()));
+				list.addFirst(new UcmRevision(uri, o, rs.getFields()));
 			}
 			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
 		}
@@ -886,6 +895,11 @@ public class UcmModel {
 		}
 	}
 
+	public UcmFolder getFolder(UcmSession s, UcmUniqueURI uri) throws UcmServiceException, UcmFolderNotFoundException {
+		Objects.requireNonNull(uri, "Must provide a unique URI to locate");
+		return getFolder(s, uri.getURI());
+	}
+
 	public UcmFolder getFolder(UcmSession s, String path) throws UcmServiceException, UcmFolderNotFoundException {
 		URI uri = null;
 		try {
@@ -893,21 +907,7 @@ public class UcmModel {
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
 		}
-
-		// Ensure the target is a folder...
-		if (!UcmModel.isFolderURI(uri)) { throw new UcmFolderNotFoundException(
-			String.format("The object at [%s] (with URI [%s]) is not a folder", path, uri)); }
-
-		try {
-			return new UcmFolder(this, uri, getDataObject(s, uri));
-		} catch (UcmObjectNotFoundException e) {
-			throw new UcmFolderNotFoundException(e.getMessage(), e);
-		}
-	}
-
-	public UcmFolder getFolder(UcmSession s, UcmUniqueURI uri) throws UcmServiceException, UcmFolderNotFoundException {
-		Objects.requireNonNull(uri, "Must provide a unique URI to locate");
-		return getFolder(s, uri.getURI());
+		return getFolder(s, uri);
 	}
 
 	public UcmFolder getFolder(UcmSession s, URI uri) throws UcmServiceException, UcmFolderNotFoundException {
@@ -973,7 +973,7 @@ public class UcmModel {
 							DataResultSet revisions = responseData.getResultSet("REVISIONS");
 							LinkedList<UcmRevision> info = new LinkedList<>();
 							for (DataObject o : revisions.getRows()) {
-								info.addFirst(new UcmRevision(o, revisions.getFields()));
+								info.addFirst(new UcmRevision(uri, o, revisions.getFields()));
 							}
 							return info;
 						} catch (IdcClientException | UcmException e) {
@@ -1168,7 +1168,7 @@ public class UcmModel {
 			DataResultSet rs = history.get();
 			LinkedList<UcmRevision> list = new LinkedList<>();
 			for (DataObject o : rs.getRows()) {
-				list.addFirst(new UcmRevision(o, rs.getFields()));
+				list.addFirst(new UcmRevision(file.getURI(), o, rs.getFields()));
 			}
 			this.historyByURI.put(file.getURI(), Tools.freezeList(new ArrayList<>(list)));
 		}

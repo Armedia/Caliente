@@ -8,6 +8,9 @@ public enum UcmAtt {
 	$ucmParentURI,
 	$ucmUniqueURI,
 
+	// System attributes
+	ProductBuildInfo, //
+
 	// Common Attributes
 	fCreateDate, //
 	fCreator, //

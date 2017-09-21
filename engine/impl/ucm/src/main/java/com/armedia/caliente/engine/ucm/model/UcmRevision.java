@@ -23,9 +23,9 @@ public class UcmRevision {
 	private final int revisionId;
 	private final Status status;
 
-	UcmRevision(DataObject obj, Collection<Field> structure) {
+	UcmRevision(URI fileUri, DataObject obj, Collection<Field> structure) {
 		UcmAttributes data = new UcmAttributes(obj, structure);
-		this.uri = UcmModel.getURI(data);
+		this.uri = fileUri;
 		this.format = data.getString(UcmAtt.dFormat);
 		this.id = data.getString(UcmAtt.dID);
 		this.processingState = data.getString(UcmAtt.dProcessingState);

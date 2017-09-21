@@ -17,11 +17,20 @@ public class UcmSessionFactoryTest extends BaseTest {
 
 	@Test
 	public void testURI() throws Exception {
-		URI uri = new URI("file", "somearbitrarygarbage", "fragmentCrap");
+		URI uri = new URI("idcs://www.nacion.com"); // new URI("file",
+													// "somearbitrarygarbage",
+													// "fragmentCrap");
 		System.out.printf("%s%n", uri);
+		System.out.printf("OPAQUE: %s%n", uri.isOpaque());
+		System.out.printf("ABSOL : %s%n", uri.isAbsolute());
 		System.out.printf("SCHEME: %s%n", uri.getScheme());
 		System.out.printf("SSP   : %s%n", uri.getSchemeSpecificPart());
+		System.out.printf("AUTH  : %s%n", uri.getAuthority());
+		System.out.printf("HOST  : %s%n", uri.getHost());
+		System.out.printf("PORT  : %d%n", uri.getPort());
+		System.out.printf("PATH  : %s%n", uri.getPath());
 		System.out.printf("FRAG  : %s%n", uri.getFragment());
+		System.out.printf("QUERY : %s%n", uri.getQuery());
 	}
 
 	@Test
@@ -91,6 +100,15 @@ public class UcmSessionFactoryTest extends BaseTest {
 	public void GET_USERS() throws Exception {
 		try {
 			callService("GET_USERS");
+		} catch (IdcClientException e) {
+			handleException(e);
+		}
+	}
+
+	@Test
+	public void CONFIG_INFO() throws Exception {
+		try {
+			callService("CONFIG_INFO");
 		} catch (IdcClientException e) {
 			handleException(e);
 		}
