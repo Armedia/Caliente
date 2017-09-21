@@ -5,7 +5,7 @@ import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -21,9 +21,9 @@ public final class UcmAttributes {
 
 	UcmAttributes(Map<String, String> data) {
 		if (data == null) {
-			data = new HashMap<>();
+			data = new LinkedHashMap<>();
 		} else {
-			data = new HashMap<>(data);
+			data = new LinkedHashMap<>(data);
 		}
 		this.data = data;
 	}
