@@ -11,9 +11,9 @@ import java.util.Stack;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.commons.utilities.Tools;
 
-public class FolderTreeIterator {
+class FolderTreeIterator {
 
-	public static final class Config implements Serializable {
+	static final class Config implements Serializable {
 		private static final long serialVersionUID = 1L;
 
 		private int pageSize = FolderTreeIterator.DEFAULT_PAGE_SIZE;
@@ -70,27 +70,27 @@ public class FolderTreeIterator {
 	private Stack<FolderContentsIterator> recursion = new Stack<>();
 	private Set<URI> loopDetector = new LinkedHashSet<>();
 
-	public FolderTreeIterator(UcmSession session, String path) {
+	FolderTreeIterator(UcmSession session, String path) {
 		this(session, FolderLocatorMode.BY_PATH, path, null);
 	}
 
-	public FolderTreeIterator(UcmSession session, URI uri) {
+	FolderTreeIterator(UcmSession session, URI uri) {
 		this(session, FolderLocatorMode.BY_URI, uri, null);
 	}
 
-	public FolderTreeIterator(UcmSession session, UcmUniqueURI guid) {
+	FolderTreeIterator(UcmSession session, UcmUniqueURI guid) {
 		this(session, FolderLocatorMode.BY_GUID, guid, null);
 	}
 
-	public FolderTreeIterator(UcmSession session, String path, Config config) {
+	FolderTreeIterator(UcmSession session, String path, Config config) {
 		this(session, FolderLocatorMode.BY_PATH, path, config);
 	}
 
-	public FolderTreeIterator(UcmSession session, URI uri, Config config) {
+	FolderTreeIterator(UcmSession session, URI uri, Config config) {
 		this(session, FolderLocatorMode.BY_URI, uri, config);
 	}
 
-	public FolderTreeIterator(UcmSession session, UcmUniqueURI guid, Config config) {
+	FolderTreeIterator(UcmSession session, UcmUniqueURI guid, Config config) {
 		this(session, FolderLocatorMode.BY_GUID, guid, config);
 	}
 
