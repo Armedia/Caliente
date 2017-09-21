@@ -3,7 +3,10 @@ package com.armedia.caliente.engine.ucm.model;
 public enum UcmAtt {
 
 	// Custom attributes
+	$ucmPath,
 	$ucmParentPath,
+	$ucmParentURI,
+	$ucmUniqueURI,
 
 	// Common Attributes
 	fCreateDate, //
@@ -24,11 +27,13 @@ public enum UcmAtt {
 	fFolderName, //
 
 	// Document Attributes
+	dCheckoutUser, //
 	dFileSize, //
 	dFormat, //
 	dDocAuthor, //
 	dDocName, //
 	dDocTitle, //
+	dDocType, //
 	dExtension, //
 	dID, //
 	dOriginalName, //
@@ -40,6 +45,7 @@ public enum UcmAtt {
 	fFileGUID, //
 	fFileName, //
 	fPublishedFilename, //
+	xComments, //
 
 	// Rendition Attributes
 	rendDescription, //

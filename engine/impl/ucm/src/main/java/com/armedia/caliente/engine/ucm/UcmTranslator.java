@@ -4,12 +4,12 @@ import java.text.ParseException;
 import java.util.EnumMap;
 import java.util.Map;
 
-import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
+import com.armedia.caliente.engine.ucm.model.UcmAtt;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -20,16 +20,49 @@ import com.armedia.commons.utilities.Tools;
 
 public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 
+	private static final String UCM_PREFIX = "ucm:";
 	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
 		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfType.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
+
 		am = new DualHashBidiMap<>();
 		// BASE_TYPE_ID (DOCUMENT)
-		// OBJECT_TYPE_ID (cmis:document|...)
+		// OBJECT_TYPE_ID (Document|...)
+		am.put(UcmAtt.$ucmUniqueURI.name(), IntermediateAttribute.OBJECT_ID);
+		am.put(UcmAtt.$ucmParentURI.name(), IntermediateAttribute.PARENT_ID);
+		am.put(UcmAtt.$ucmPath.name(), IntermediateAttribute.PATH);
+		am.put(UcmAtt.dDocType.name(), IntermediateAttribute.OBJECT_TYPE_ID);
+		am.put(UcmAtt.fFileName.name(), IntermediateAttribute.NAME);
+		am.put(UcmAtt.fDisplayDescription.name(), IntermediateAttribute.DESCRIPTION);
+		am.put(UcmAtt.dFormat.name(), IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
+		am.put(UcmAtt.dFileSize.name(), IntermediateAttribute.CONTENT_STREAM_LENGTH);
+		am.put(UcmAtt.fFileGUID.name(), IntermediateAttribute.VERSION_SERIES_ID);
+		am.put(UcmAtt.dRevLabel.name(), IntermediateAttribute.VERSION_LABEL);
+		am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.CHANGE_TOKEN);
+		am.put(UcmAtt.fCreator.name(), IntermediateAttribute.CREATED_BY);
+		am.put(UcmAtt.fCreateDate.name(), IntermediateAttribute.CREATION_DATE);
+		am.put(UcmAtt.fLastModifier.name(), IntermediateAttribute.LAST_MODIFIED_BY);
+		am.put(UcmAtt.fLastModifiedDate.name(), IntermediateAttribute.LAST_MODIFICATION_DATE);
+		am.put(UcmAtt.dCheckoutUser.name(), IntermediateAttribute.VERSION_SERIES_CHECKED_OUT_BY);
+		am.put(UcmAtt.xComments.name(), IntermediateAttribute.CHECKIN_COMMENT);
 		attributeMappings.put(CmfType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+
+		am = new DualHashBidiMap<>();
+		// BASE_TYPE_ID (FOLDER)
+		// OBJECT_TYPE_ID (Folder|...)
+		am.put(UcmAtt.$ucmUniqueURI.name(), IntermediateAttribute.OBJECT_ID);
+		am.put(UcmAtt.$ucmParentURI.name(), IntermediateAttribute.PARENT_ID);
+		am.put(UcmAtt.$ucmPath.name(), IntermediateAttribute.PATH);
+		am.put(UcmAtt.fFolderName.name(), IntermediateAttribute.NAME);
+		am.put(UcmAtt.fFolderDescription.name(), IntermediateAttribute.DESCRIPTION);
+		am.put(UcmAtt.fCreator.name(), IntermediateAttribute.CREATED_BY);
+		am.put(UcmAtt.fCreateDate.name(), IntermediateAttribute.CREATION_DATE);
+		am.put(UcmAtt.fLastModifier.name(), IntermediateAttribute.LAST_MODIFIED_BY);
+		am.put(UcmAtt.fLastModifiedDate.name(), IntermediateAttribute.LAST_MODIFICATION_DATE);
+		attributeMappings.put(CmfType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
 	}
@@ -56,7 +89,7 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 			IntermediateAttribute att = mappings.get(attributeName);
 			if (att != null) { return att.encode(); }
 		}
-		return super.encodeAttributeName(type, attributeName);
+		return String.format("%s%s", UcmTranslator.UCM_PREFIX, attributeName.toLowerCase());
 	}
 
 	@Override
@@ -72,6 +105,8 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 			}
 			if (att != null) { return att; }
 		}
+		if (attributeName.startsWith(
+			UcmTranslator.UCM_PREFIX)) { return attributeName.substring(UcmTranslator.UCM_PREFIX.length()); }
 		return super.decodeAttributeName(type, attributeName);
 	}
 
@@ -89,10 +124,10 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 	public String getDefaultSubtype(CmfType baseType) {
 		switch (baseType) {
 			case DOCUMENT:
-				return BaseTypeId.CMIS_DOCUMENT.value();
+				return "Document";
 
 			case FOLDER:
-				return BaseTypeId.CMIS_FOLDER.value();
+				return "Folder";
 
 			default:
 				break;

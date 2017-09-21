@@ -3,10 +3,13 @@ package com.armedia.caliente.engine.ucm.model;
 import java.net.URI;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
+import com.armedia.caliente.store.CmfValue;
 
 public abstract class UcmFSObject extends UcmModelObject {
 
@@ -26,6 +29,12 @@ public abstract class UcmFSObject extends UcmModelObject {
 		// Here we use the cloning constructor so we keep a *copy* of the DataObject, to allow
 		// the caches in the model the opportunity to expire objects appropriately regardless
 		// of references held outside the model
+		this.uniqueUri = UcmModel.getUniqueURI(data);
+		this.parentUri = new UcmUniqueURI(UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID)));
+		final Map<String, CmfValue> mutableData = data.getMutableData();
+		mutableData.put(UcmAtt.$ucmUniqueURI.name(), new CmfValue(this.uniqueUri.toString()));
+		mutableData.put(UcmAtt.$ucmParentURI.name(), new CmfValue(this.parentUri.toString()));
+
 		this.attributes = data;
 		this.nameAtt = nameAtt;
 		this.parentPath = this.attributes.getString(UcmAtt.$ucmParentPath);
@@ -38,8 +47,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 		} else {
 			this.path = String.format("%s/%s", this.parentPath, name);
 		}
-		this.uniqueUri = UcmModel.getUniqueURI(data);
-		this.parentUri = new UcmUniqueURI(UcmModel.newFolderURI(getString(UcmAtt.fParentGUID)));
+		mutableData.put(UcmAtt.$ucmPath.name(), new CmfValue(this.path));
 
 		this.ucmObjectType = (UcmModel.isFileURI(uri) ? UcmObjectType.FILE : UcmObjectType.FOLDER);
 	}
@@ -80,8 +88,20 @@ public abstract class UcmFSObject extends UcmModelObject {
 		return this.attributes.getBoolean(att, def);
 	}
 
-	public final UcmAttributes getAttribites() {
+	public final UcmAttributes getAttributes() {
 		return this.attributes;
+	}
+
+	public final Set<String> getAttributeNames() {
+		return this.attributes.getValueNames();
+	}
+
+	public final CmfValue getValue(String name) {
+		return this.attributes.getValue(name);
+	}
+
+	public final CmfValue getValue(UcmAtt att) {
+		return this.attributes.getValue(att);
 	}
 
 	public String getPath() {

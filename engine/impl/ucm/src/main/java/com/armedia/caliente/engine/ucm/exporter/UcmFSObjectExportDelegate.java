@@ -1,12 +1,17 @@
 package com.armedia.caliente.engine.ucm.exporter;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
+import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 
@@ -85,35 +90,33 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 
 	@Override
 	protected boolean marshal(UcmExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		/*
-		// First, the attributes
-		for (String value : this.object.getAttribites().getValueNames()) {
-
-		}
-		final int attCount = this.object.getAttrCount();
-		for (int i = 0; i < attCount; i++) {
-			final IDfAttr attr = this.object.getAttr(i);
-			final AttributeHandler handler = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
-			// Get the attribute handler
-			if (handler.includeInExport(this.object, attr)) {
-				CmfAttribute<IDfValue> attribute = new CmfAttribute<>(attr.getName(),
-					DctmDataType.fromAttribute(attr).getStoredType(), attr.isRepeating(),
-					handler.getExportableValues(this.object, attr));
-				object.setAttribute(attribute);
+		T typedObject = castObject(this.object);
+		for (String att : this.object.getAttributeNames()) {
+			CmfValue v = this.object.getValue(att);
+			if ((v == null) || v.isNull()) {
+				// Skip null-values
+				continue;
 			}
+
+			CmfAttribute<CmfValue> attribute = new CmfAttribute<>(att, v.getDataType(), false,
+				Collections.singleton(v));
+			object.setAttribute(attribute);
 		}
 
 		// Properties are different from attributes in that they require special handling. For
 		// instance, a property would only be settable via direct SQL, or via an explicit method
 		// call, etc., because setting it directly as an attribute would cmsImportResult in an
 		// error from DFC, and therefore specialized code is required to handle it
-		List<CmfProperty<IDfValue>> properties = new ArrayList<>();
+		List<CmfProperty<CmfValue>> properties = new ArrayList<>();
 		getDataProperties(ctx, properties, typedObject);
-		for (CmfProperty<IDfValue> property : properties) {
-			// This mechanism overwrites properties, and intentionally so
+		for (CmfProperty<CmfValue> property : properties) {
 			object.setProperty(property);
 		}
-		 */
+		return true;
+	}
+
+	protected boolean getDataProperties(UcmExportContext ctx, Collection<CmfProperty<CmfValue>> properties, T object)
+		throws ExportException {
 		return true;
 	}
 }
