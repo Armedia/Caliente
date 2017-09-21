@@ -1,8 +1,10 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
+import java.util.Collection;
 
 import oracle.stellent.ridc.model.DataObject;
+import oracle.stellent.ridc.model.DataResultSet.Field;
 
 public class UcmRevision {
 
@@ -21,9 +23,9 @@ public class UcmRevision {
 	private final int revisionId;
 	private final Status status;
 
-	UcmRevision(DataObject obj) {
-		UcmAttributes data = new UcmAttributes(obj);
-		this.uri = UcmModel.getURI(obj);
+	UcmRevision(DataObject obj, Collection<Field> structure) {
+		UcmAttributes data = new UcmAttributes(obj, structure);
+		this.uri = UcmModel.getURI(data);
 		this.format = data.getString(UcmAtt.dFormat);
 		this.id = data.getString(UcmAtt.dID);
 		this.processingState = data.getString(UcmAtt.dProcessingState);

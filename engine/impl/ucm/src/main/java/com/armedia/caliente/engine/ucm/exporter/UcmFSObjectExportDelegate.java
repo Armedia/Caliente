@@ -85,7 +85,35 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 
 	@Override
 	protected boolean marshal(UcmExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		// TODO Auto-generated method stub
-		return false;
+		/*
+		// First, the attributes
+		for (String value : this.object.getAttribites().getValueNames()) {
+
+		}
+		final int attCount = this.object.getAttrCount();
+		for (int i = 0; i < attCount; i++) {
+			final IDfAttr attr = this.object.getAttr(i);
+			final AttributeHandler handler = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
+			// Get the attribute handler
+			if (handler.includeInExport(this.object, attr)) {
+				CmfAttribute<IDfValue> attribute = new CmfAttribute<>(attr.getName(),
+					DctmDataType.fromAttribute(attr).getStoredType(), attr.isRepeating(),
+					handler.getExportableValues(this.object, attr));
+				object.setAttribute(attribute);
+			}
+		}
+
+		// Properties are different from attributes in that they require special handling. For
+		// instance, a property would only be settable via direct SQL, or via an explicit method
+		// call, etc., because setting it directly as an attribute would cmsImportResult in an
+		// error from DFC, and therefore specialized code is required to handle it
+		List<CmfProperty<IDfValue>> properties = new ArrayList<>();
+		getDataProperties(ctx, properties, typedObject);
+		for (CmfProperty<IDfValue> property : properties) {
+			// This mechanism overwrites properties, and intentionally so
+			object.setProperty(property);
+		}
+		 */
+		return true;
 	}
 }

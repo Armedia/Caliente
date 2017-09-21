@@ -1,7 +1,7 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
-import java.util.Calendar;
+import java.text.ParseException;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
@@ -56,20 +56,12 @@ public abstract class UcmFSObject extends UcmModelObject {
 		return this.attributes.getString(att, def);
 	}
 
-	public final Date getDate(UcmAtt att) {
+	public final Date getDate(UcmAtt att) throws ParseException {
 		return this.attributes.getDate(att);
 	}
 
-	public final Date getDate(UcmAtt att, Date def) {
+	public final Date getDate(UcmAtt att, Date def) throws ParseException {
 		return this.attributes.getDate(att, def);
-	}
-
-	public final Calendar getCalendar(UcmAtt att) {
-		return this.attributes.getCalendar(att);
-	}
-
-	public final Calendar getCalendar(UcmAtt att, Calendar def) {
-		return this.attributes.getCalendar(att, def);
 	}
 
 	public final Integer getInteger(UcmAtt att) {
@@ -120,7 +112,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 		return getString(UcmAtt.fOwner);
 	}
 
-	public final Date getCreationDate() {
+	public final Date getCreationDate() throws ParseException {
 		return getDate(UcmAtt.fCreateDate);
 	}
 
@@ -128,7 +120,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 		return getString(UcmAtt.fCreator);
 	}
 
-	public final Date getLastModifiedDate() {
+	public final Date getLastModifiedDate() throws ParseException {
 		return getDate(UcmAtt.fLastModifiedDate);
 	}
 

@@ -1,8 +1,11 @@
 package com.armedia.caliente.engine.ucm.model;
 
+import java.util.Collection;
+
 import org.apache.commons.lang3.StringUtils;
 
 import oracle.stellent.ridc.model.DataObject;
+import oracle.stellent.ridc.model.DataResultSet.Field;
 
 public final class UcmRenditionInfo {
 
@@ -15,8 +18,8 @@ public final class UcmRenditionInfo {
 	private final String name;
 	private final String description;
 
-	UcmRenditionInfo(UcmUniqueURI guid, DataObject obj) {
-		UcmAttributes data = new UcmAttributes(obj);
+	UcmRenditionInfo(UcmUniqueURI guid, DataObject obj, Collection<Field> structure) {
+		UcmAttributes data = new UcmAttributes(obj, structure);
 		this.guid = guid;
 		this.type = data.getString(UcmAtt.rendType);
 		this.format = data.getString(UcmAtt.rendFormat);

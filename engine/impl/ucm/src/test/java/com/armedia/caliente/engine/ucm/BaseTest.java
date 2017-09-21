@@ -1,4 +1,5 @@
 package com.armedia.caliente.engine.ucm;
+
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -8,11 +9,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import com.armedia.caliente.engine.SessionWrapper;
-import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
-import com.armedia.caliente.engine.ucm.UcmSessionFactory;
-import com.armedia.caliente.engine.ucm.UcmSessionSetting;
 import com.armedia.caliente.engine.ucm.model.UcmAttributes;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -118,15 +117,16 @@ public class BaseTest {
 
 	protected final void dumpObject(int indent, UcmAttributes o) {
 		final String indentStr = StringUtils.repeat('\t', indent);
-		Map<String, String> m = o.getData();
+		Map<String, CmfValue> m = o.getData();
 		for (String s : new TreeSet<>(m.keySet())) {
-			String v = m.get(s);
+			CmfValue v = m.get(s);
+			String V = null;
 			if (v == null) {
-				v = BaseTest.NULL;
+				V = BaseTest.NULL;
 			} else {
-				v = String.format("[%s]", v);
+				V = String.format("[%s]", v.asString());
 			}
-			System.out.printf("%s[%s] -> %s%n", indentStr, s, v);
+			System.out.printf("%s[%s] -> %s%n", indentStr, s, V);
 		}
 	}
 
@@ -151,7 +151,7 @@ public class BaseTest {
 	public void test() throws Exception {
 		final ExportEngine<?, ?, ?, ?, ?, ?> engine = UcmExportEngine.getExportEngine();
 		Logger output = LoggerFactory.getLogger("console");
-
+	
 		Map<String, String> settings = new TreeMap<>();
 		settings.put(UcmSessionSetting.ATOMPUB_URL.getLabel(),
 			"http://armedia-vm.rivera.prv/alfresco/api/-default-/public/cmis/versions/1.0/atom");
@@ -161,7 +161,7 @@ public class BaseTest {
 		// settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
 		settings.put(CmisSetting.EXPORT_PATH.getLabel(), "/Shared");
 		settings.put(CmisSetting.EXPORT_PAGE_SIZE.getLabel(), "5");
-
+	
 		CmfObjectStore<?, ?> objectStore = CmfStores.getObjectStore("default");
 		objectStore.clearProperties();
 		objectStore.clearAllObjects();

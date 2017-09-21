@@ -1,7 +1,7 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.text.ParseException;
-import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
@@ -11,28 +11,119 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.StringUtils;
+
+import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
+import oracle.stellent.ridc.model.DataResultSet.Field;
+import oracle.stellent.ridc.model.DataResultSet.Field.Type;
 import oracle.stellent.ridc.model.impl.DataObjectEncodingUtils;
 
 public final class UcmAttributes {
 
-	private final Map<String, String> data;
+	private static final Set<String> TRUE_VALUES;
+	static {
+		Set<String> s = new TreeSet<>();
+		String[] v = {
+			"1", "yes", "true", "on"
+		};
+		for (String str : v) {
+			s.add(str);
+		}
+		TRUE_VALUES = Tools.freezeSet(s);
+	}
 
-	UcmAttributes(Map<String, String> data) {
+	private final Map<String, CmfValue> data;
+
+	UcmAttributes(Map<String, String> data, Collection<Field> structure) {
 		if (data == null) {
 			data = new TreeMap<>();
 		} else {
 			data = new TreeMap<>(data);
 		}
-		this.data = data;
+		Map<String, CmfValue> tgt = new TreeMap<>();
+		for (Field f : structure) {
+			String v = data.get(f.getName());
+
+			Type t = f.getType();
+			// Map that type to a CmfDataType
+			CmfValue value = null;
+			CmfDataType T = null;
+			switch (t) {
+				case BOOLEAN:
+					if (!StringUtils.isEmpty(v)) {
+						value = new CmfValue(UcmAttributes.TRUE_VALUES.contains(v.toString().toUpperCase()));
+					} else {
+						T = CmfDataType.BOOLEAN;
+					}
+					break;
+				case CHAR:
+				case STRING:
+				case MEMO:
+				case CLOB:
+					if (v != null) {
+						value = new CmfValue(v.toString());
+					} else {
+						T = CmfDataType.STRING;
+					}
+					break;
+				case DECIMAL:
+				case FLOAT:
+					// Parse as a double...
+					if (!StringUtils.isEmpty(v)) {
+						value = new CmfValue(Double.valueOf(v.toString()));
+					} else {
+						T = CmfDataType.DOUBLE;
+					}
+					break;
+				case DATE:
+					if (!StringUtils.isEmpty(v)) {
+						try {
+							value = new CmfValue(DataObjectEncodingUtils.decodeDate(v.toString()));
+						} catch (ParseException e) {
+							throw new UcmRuntimeException(String.format("Failed to parse the value [%s] as a date", v),
+								e);
+						}
+					} else {
+						T = CmfDataType.DATETIME;
+					}
+					break;
+				case INT:
+					if (!StringUtils.isEmpty(v)) {
+						value = new CmfValue(Integer.valueOf(v.toString()));
+					} else {
+						T = CmfDataType.INTEGER;
+					}
+					break;
+				case BINARY:
+				case BLOB:
+					// Can't support this...no way to retrieve the data, and even if I got it as a
+					// string, I don't know how it's encoded and thus how to turn it into a binary
+					// stream of octets...so we simply keep a null value in its place
+					T = CmfDataType.BASE64_BINARY;
+					break;
+			}
+			if (value == null) {
+				value = CmfValue.NULL.get(T);
+			}
+			tgt.put(f.getName(), value);
+		}
+		// Now, all the other custom fields are string-typed
+		for (String s : data.keySet()) {
+			if (!tgt.containsKey(s)) {
+				tgt.put(s, new CmfValue(data.get(s)));
+			}
+		}
+		this.data = tgt;
 	}
 
-	Map<String, String> getMutableData() {
+	Map<String, CmfValue> getMutableData() {
 		return this.data;
 	}
 
-	public Map<String, String> getData() {
+	public Map<String, CmfValue> getData() {
 		return Collections.unmodifiableMap(this.data);
 	}
 
@@ -41,77 +132,69 @@ public final class UcmAttributes {
 		return att.name();
 	}
 
+	public CmfDataType getAttributeType(String name) {
+		Objects.requireNonNull(name, "Must provide a non-null attribute name");
+		CmfValue v = this.data.get(name);
+		if (v == null) { return null; }
+		return v.getDataType();
+	}
+
+	public CmfDataType getAttributeType(UcmAtt att) {
+		return getAttributeType(getKey(att));
+	}
+
 	public boolean hasAttribute(String name) {
 		Objects.requireNonNull(name, "Must provide a non-null attribute name");
 		return this.data.containsKey(name);
-	}
-
-	public String getString(String name) {
-		return getString(name, null);
-	}
-
-	public String getString(String name, String def) {
-		Objects.requireNonNull(name, "Must provide a non-null attribute name");
-		String ret = this.data.get(name);
-		return Tools.coalesce(ret, def);
 	}
 
 	public boolean hasAttribute(UcmAtt att) {
 		return hasAttribute(getKey(att));
 	}
 
-	public String getString(UcmAtt att) {
-		return getString(getKey(att));
+	public CmfValue getValue(String name) {
+		Objects.requireNonNull(name, "Must provide a non-null attribute name");
+		return this.data.get(name);
+	}
+
+	public CmfValue getValue(UcmAtt att) {
+		return getValue(getKey(att));
+	}
+
+	public String getString(String name, String def) {
+		CmfValue v = getValue(name);
+		if ((v == null) || v.isNull()) { return def; }
+		return Tools.coalesce(v.asString(), def);
+	}
+
+	public String getString(String name) {
+		return getString(name, null);
 	}
 
 	public String getString(UcmAtt att, String def) {
 		return getString(getKey(att), def);
 	}
 
-	public Date getDate(String name) {
+	public String getString(UcmAtt att) {
+		return getString(getKey(att), null);
+	}
+
+	public Date getDate(String name, Date def) throws ParseException {
+		CmfValue v = this.getValue(name);
+		if ((v == null) || v.isNull()) { return def; }
+		return v.asTime();
+	}
+
+	public Date getDate(String name) throws ParseException {
 		return getDate(name, null);
 	}
 
-	public Date getDate(String name, Date def) {
-		Calendar c = getCalendar(name);
-		if (c == null) { return def; }
-		return c.getTime();
-	}
-
-	public Date getDate(UcmAtt att) {
-		return getDate(getKey(att));
-	}
-
-	public Date getDate(UcmAtt att, Date def) {
+	public Date getDate(UcmAtt att, Date def) throws ParseException {
 		return getDate(getKey(att), def);
 	}
 
-	public Calendar getCalendar(String name) {
-		return getCalendar(name, null);
-	}
-
-	public Calendar getCalendar(String name, Calendar def) {
-		String v = getString(name);
-		if (v == null) { return def; }
-		try {
-			return DataObjectEncodingUtils.decodeDate(v);
-		} catch (ParseException e) {
-			throw new UcmRuntimeException(String.format("Failed to parse out the calendar [%s]", v), e);
-		}
-	}
-
-	public Calendar getCalendar(UcmAtt att) {
-		return getCalendar(getKey(att));
-	}
-
-	public Calendar getCalendar(UcmAtt att, Calendar def) {
-		return getCalendar(getKey(att), def);
-	}
-
-	public Integer getInteger(String name) {
-		String str = getString(name);
-		if (str == null) { return null; }
-		return Integer.valueOf(str);
+	public Date getDate(UcmAtt att) throws ParseException {
+		return getDate(getKey(att), null);
 	}
 
 	public int getInteger(String name, int def) {
@@ -119,16 +202,37 @@ public final class UcmAttributes {
 		return (v != null ? v.intValue() : def);
 	}
 
-	public Integer getInteger(UcmAtt att) {
-		return getInteger(getKey(att));
+	public Integer getInteger(String name) {
+		CmfValue v = getValue(name);
+		if ((v == null) || v.isNull()) { return null; }
+		return v.asInteger();
 	}
 
 	public int getInteger(UcmAtt att, int def) {
 		return getInteger(getKey(att), def);
 	}
 
-	public Boolean getBoolean(String name) {
-		return Tools.toBoolean(getString(name));
+	public Integer getInteger(UcmAtt att) {
+		return getInteger(getKey(att));
+	}
+
+	public double getDouble(String name, double def) {
+		Double v = getDouble(name);
+		return (v != null ? v.doubleValue() : def);
+	}
+
+	public Double getDouble(String name) {
+		CmfValue v = getValue(name);
+		if ((v == null) || v.isNull()) { return null; }
+		return v.asDouble();
+	}
+
+	public double getDouble(UcmAtt att, double def) {
+		return getDouble(getKey(att), def);
+	}
+
+	public Double getDouble(UcmAtt att) {
+		return getDouble(getKey(att));
 	}
 
 	public boolean getBoolean(String name, boolean def) {
@@ -136,12 +240,18 @@ public final class UcmAttributes {
 		return (b != null ? b.booleanValue() : def);
 	}
 
-	public Boolean getBoolean(UcmAtt att) {
-		return getBoolean(getKey(att));
+	public Boolean getBoolean(String name) {
+		CmfValue v = getValue(name);
+		if ((v == null) || v.isNull()) { return null; }
+		return v.asBoolean();
 	}
 
 	public boolean getBoolean(UcmAtt att, boolean def) {
 		return getBoolean(getKey(att), def);
+	}
+
+	public Boolean getBoolean(UcmAtt att) {
+		return getBoolean(getKey(att));
 	}
 
 	public Set<String> getValueNames() {

@@ -154,10 +154,6 @@ public class UcmModel {
 		}
 	}
 
-	protected static final URI getURI(DataObject dataObject) {
-		return UcmModel.getURI(new UcmAttributes(dataObject));
-	}
-
 	protected static final URI getURI(UcmAttributes data) {
 		final boolean file = data.hasAttribute(UcmAtt.fFileGUID);
 		return (file ? UcmModel.newFileURI(data.getString(UcmAtt.fFileGUID))
@@ -338,7 +334,7 @@ public class UcmModel {
 							String parentPath = responseData
 								.getLocal(String.format("%sPath", file ? "file" : "folder"));
 							baseObj.put(UcmAtt.$ucmParentPath.name(), FileNameTools.dirname(parentPath, '/'));
-							data.set(new UcmAttributes(baseObj));
+							data.set(new UcmAttributes(baseObj, rs.getFields()));
 
 							String guid = data.get().getString(UcmAtt.fFileGUID);
 							if (guid != null) { return UcmModel.newFileURI(guid); }
@@ -424,7 +420,7 @@ public class UcmModel {
 							String parentPath = responseData
 								.getLocal(String.format("%sPath", type.name().toLowerCase()));
 							baseObj.put(UcmAtt.$ucmParentPath.name(), FileNameTools.dirname(parentPath, '/'));
-							data.set(new UcmAttributes(baseObj));
+							data.set(new UcmAttributes(baseObj, rs.getFields()));
 
 							String uriIdentifier = data.get().getString(uriIdentifierAtt);
 							if (uriIdentifier != null) { return UcmModel.getURI(data.get()); }
@@ -511,7 +507,7 @@ public class UcmModel {
 								.getLocal(String.format("%sPath", file ? "file" : "folder"));
 							baseObj.put(UcmAtt.$ucmParentPath.name(), FileNameTools.dirname(parentPath, '/'));
 
-							UcmAttributes baseData = new UcmAttributes(baseObj);
+							UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
 							data.set(baseData);
 							return UcmModel.getUniqueURI(baseData);
 						} catch (IdcClientException | UcmException e) {
@@ -602,7 +598,7 @@ public class UcmModel {
 								renditions.set(responseData.getResultSet("Renditions"));
 							}
 
-							UcmAttributes baseData = new UcmAttributes(baseObj);
+							UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
 							data.set(baseData);
 							return UcmModel.getUniqueURI(baseData);
 						} catch (IdcClientException | UcmException e) {
@@ -636,7 +632,7 @@ public class UcmModel {
 			DataResultSet rs = history.get();
 			LinkedList<UcmRevision> list = new LinkedList<>();
 			for (DataObject o : rs.getRows()) {
-				list.addFirst(new UcmRevision(o));
+				list.addFirst(new UcmRevision(o, rs.getFields()));
 			}
 			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
 		}
@@ -645,7 +641,7 @@ public class UcmModel {
 			DataResultSet rs = renditions.get();
 			Map<String, UcmRenditionInfo> m = new TreeMap<>();
 			for (DataObject o : rs.getRows()) {
-				UcmRenditionInfo r = new UcmRenditionInfo(guid, o);
+				UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
 				m.put(r.getName(), r);
 			}
 			this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
@@ -977,7 +973,7 @@ public class UcmModel {
 							DataResultSet revisions = responseData.getResultSet("REVISIONS");
 							LinkedList<UcmRevision> info = new LinkedList<>();
 							for (DataObject o : revisions.getRows()) {
-								info.addFirst(new UcmRevision(o));
+								info.addFirst(new UcmRevision(o, revisions.getFields()));
 							}
 							return info;
 						} catch (IdcClientException | UcmException e) {
@@ -1123,7 +1119,8 @@ public class UcmModel {
 								baseObj.put(UcmAtt.$ucmParentPath.name(),
 									responseData.getLocalData().get("fParentPath"));
 
-								DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
+								DataResultSet DOC_INFO = responseData.getResultSet("DOC_INFO");
+								DataObject docInfo = DOC_INFO.getRows().get(0);
 								baseObj.putAll(docInfo);
 								history.set(responseData.getResultSet("REVISION_HISTORY"));
 
@@ -1132,11 +1129,11 @@ public class UcmModel {
 								if (rs == null) { throw new UcmServiceException(String.format(
 									"Revision ID [%s] was found, but no rendition information was returned??!", id)); }
 								for (DataObject o : rs.getRows()) {
-									UcmRenditionInfo r = new UcmRenditionInfo(guid, o);
+									UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
 									renditions.put(r.getName().toUpperCase(), r);
 								}
 
-								UcmAttributes baseData = new UcmAttributes(baseObj);
+								UcmAttributes baseData = new UcmAttributes(baseObj, DOC_INFO.getFields());
 								data.set(baseData);
 								return renditions;
 							} catch (IdcClientException | UcmException e) {
@@ -1171,7 +1168,7 @@ public class UcmModel {
 			DataResultSet rs = history.get();
 			LinkedList<UcmRevision> list = new LinkedList<>();
 			for (DataObject o : rs.getRows()) {
-				list.addFirst(new UcmRevision(o));
+				list.addFirst(new UcmRevision(o, rs.getFields()));
 			}
 			this.historyByURI.put(file.getURI(), Tools.freezeList(new ArrayList<>(list)));
 		}

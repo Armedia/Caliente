@@ -1,6 +1,8 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -17,6 +19,8 @@ import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataObject;
 import oracle.stellent.ridc.model.DataResultSet;
+import oracle.stellent.ridc.model.DataResultSet.Field;
+import oracle.stellent.ridc.model.DataResultSet.Field.Type;
 
 public class FolderContentsIterator {
 
@@ -39,10 +43,12 @@ public class FolderContentsIterator {
 	private UcmAttributes folder = null;
 	private UcmAttributes localData = null;
 	private String parentPath = null;
-	private Iterator<DataObject> folders = null;
-	private Iterator<DataObject> files = null;
 
 	private DataBinder responseBinder = null;
+	private Iterator<DataObject> folders = null;
+	private List<Field> folderFields = null;
+	private Iterator<DataObject> files = null;
+	private List<Field> fileFields = null;
 
 	private UcmAttributes current = null;
 	private boolean completed = false;
@@ -171,6 +177,26 @@ public class FolderContentsIterator {
 		return this.localData;
 	}
 
+	private Collection<Field> calculateStructure(DataBinder binder) {
+		List<Field> ret = new ArrayList<>(binder.getFieldTypeNames().size());
+		for (String field : binder.getFieldTypeNames()) {
+			String type = binder.getFieldType(field);
+			if (type != null) {
+				Type t = null;
+				try {
+					t = Type.valueOf(type.toUpperCase());
+				} catch (IllegalArgumentException e) {
+					// Default to string...
+					t = Type.STRING;
+				}
+				Field f = new Field(field);
+				f.setType(t);
+				ret.add(f);
+			}
+		}
+		return ret;
+	}
+
 	public boolean hasNext() throws UcmServiceException {
 		if (this.current != null) { return true; }
 		if (this.completed) { return false; }
@@ -184,7 +210,7 @@ public class FolderContentsIterator {
 
 			if (this.localData == null) {
 				DataObject localData = this.responseBinder.getLocalData();
-				this.localData = new UcmAttributes(localData);
+				this.localData = new UcmAttributes(localData, calculateStructure(this.responseBinder));
 				this.parentPath = Tools.coalesce(localData.get("targetPath"), localData.get("folderPath"));
 			}
 
@@ -193,7 +219,7 @@ public class FolderContentsIterator {
 				if (rs != null) {
 					List<DataObject> l = rs.getRows();
 					if ((l != null) && !l.isEmpty()) {
-						this.folder = new UcmAttributes(l.get(0));
+						this.folder = new UcmAttributes(l.get(0), rs.getFields());
 					}
 				}
 			}
@@ -202,23 +228,28 @@ public class FolderContentsIterator {
 			DataResultSet rs = this.responseBinder.getResultSet("ChildFolders");
 			if (rs != null) {
 				this.folders = rs.getRows().iterator();
+				this.folderFields = rs.getFields();
 			} else {
 				this.folders = Collections.emptyIterator();
+				this.folderFields = Collections.emptyList();
 			}
 
 			rs = this.responseBinder.getResultSet("ChildFiles");
 			if (rs != null) {
 				this.files = rs.getRows().iterator();
+				this.fileFields = rs.getFields();
 			} else {
 				this.files = Collections.emptyIterator();
+				this.fileFields = Collections.emptyList();
 			}
 		}
 
 		if (this.folders.hasNext() || this.files.hasNext()) {
-			DataObject o = (this.folders.hasNext() ? this.folders.next() : this.files.next());
+			final boolean folder = this.folders.hasNext();
+			DataObject o = (folder ? this.folders.next() : this.files.next());
 			Map<String, String> m = new HashMap<>(o);
 			m.put(UcmAtt.$ucmParentPath.name(), this.parentPath);
-			this.current = new UcmAttributes(m);
+			this.current = new UcmAttributes(m, folder ? this.folderFields : this.fileFields);
 			this.currentInPage++;
 			return true;
 		}
