@@ -124,7 +124,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 * @param values
 	 *            the values to set.
 	 */
-	public final void setValues(Collection<V> values) {
+	public CmfProperty<V> setValues(Collection<V> values) {
 		this.values.clear();
 		if (values == null) {
 			values = Collections.emptyList();
@@ -140,6 +140,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 			}
 			this.singleValue = value;
 		}
+		return this;
 	}
 
 	/**
@@ -166,12 +167,12 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 *
 	 * @param value
 	 */
-	public final void addValue(V value) {
+	public CmfProperty<V> addValue(V value) {
 		if (isRepeating()) {
 			this.values.add(value);
-		} else {
-			throw new UnsupportedOperationException("This is a single-valued property, cannot add another value");
+			return this;
 		}
+		throw new UnsupportedOperationException("This is a single-valued property, cannot add another value");
 	}
 
 	/**
@@ -182,10 +183,11 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 *
 	 * @param values
 	 */
-	public final void addValues(Collection<V> values) {
+	public CmfProperty<V> addValues(Collection<V> values) {
 		for (V v : values) {
 			addValue(v);
 		}
+		return this;
 	}
 
 	/**
@@ -196,13 +198,14 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 * {@link #clearValue()} instead.
 	 * </p>
 	 */
-	public final void setValue(V value) {
+	public CmfProperty<V> setValue(V value) {
 		if (isRepeating()) {
 			this.values.clear();
 			this.values.add(value);
 		} else {
 			this.singleValue = value;
 		}
+		return this;
 	}
 
 	/**
