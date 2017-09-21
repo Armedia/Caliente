@@ -24,6 +24,10 @@ public final class UcmUniqueURI implements Comparable<UcmUniqueURI>, Serializabl
 
 	public UcmUniqueURI(URI uri) {
 		Objects.requireNonNull(uri, "Must provide a non-null URI");
+		if (UcmModel.isFileURI(uri)) {
+			Objects.requireNonNull(uri.getFragment(),
+				"A file's unique URI must also contain a revision ID in the fragment");
+		}
 		this.uri = uri;
 	}
 
