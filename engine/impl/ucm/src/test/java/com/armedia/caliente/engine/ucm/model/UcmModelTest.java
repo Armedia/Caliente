@@ -287,6 +287,25 @@ public class UcmModelTest extends BaseTest {
 		} finally {
 			w.close();
 		}
+	}
 
+	@Test
+	public void testGetFile() throws Exception {
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
+			UcmModel model = new UcmModel();
+
+			model.getFile(s, "/Test Folder/Second Level Folder/Good Idea.jpg");
+
+			try {
+				model.getFile(s, "/");
+				Assert.fail("Did not fail seeking a folder");
+			} catch (Exception e) {
+				e.printStackTrace(System.err);
+			}
+		} finally {
+			w.close();
+		}
 	}
 }
