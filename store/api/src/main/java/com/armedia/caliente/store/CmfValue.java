@@ -62,6 +62,12 @@ public final class CmfValue {
 		this.nullValue = (value == null);
 	}
 
+	public CmfValue(byte[] data) {
+		this.type = CmfDataType.BASE64_BINARY;
+		this.value = Base64.encodeBase64(data);
+		this.nullValue = (this.value == null);
+	}
+
 	public CmfValue(Date value) {
 		this.type = CmfDataType.DATETIME;
 		this.value = value;
@@ -98,6 +104,13 @@ public final class CmfValue {
 						this.value = Number.class.cast(value);
 					} else {
 						this.value = Double.valueOf(value.toString());
+					}
+					break;
+				case BASE64_BINARY:
+					if (value instanceof byte[]) {
+						this.value = ((byte[]) value).clone();
+					} else {
+						this.value = Base64.decodeBase64(value.toString());
 					}
 					break;
 				case STRING:
