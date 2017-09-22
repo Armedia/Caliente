@@ -21,8 +21,8 @@ import com.independentsoft.share.Folder;
 
 public class ShptFolder extends ShptFSObject<Folder> {
 
-	public ShptFolder(ShptExportDelegateFactory factory, Folder object) throws Exception {
-		super(factory, Folder.class, object);
+	public ShptFolder(ShptExportDelegateFactory factory, ShptSession session, Folder object) throws Exception {
+		super(factory, session, Folder.class, object);
 	}
 
 	public List<String> getContentTypeOrders() {
@@ -99,7 +99,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 			files = Collections.emptyList();
 		}
 		for (File f : files) {
-			ret.add(new ShptFile(this.factory, f));
+			ret.add(new ShptFile(this.factory, service, f));
 		}
 		List<Folder> folders = Collections.emptyList();
 		try {
@@ -108,7 +108,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 			folders = Collections.emptyList();
 		}
 		for (Folder f : folders) {
-			ret.add(new ShptFolder(this.factory, f));
+			ret.add(new ShptFolder(this.factory, service, f));
 		}
 		return ret;
 	}

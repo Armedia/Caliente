@@ -6,6 +6,7 @@ package com.armedia.caliente.engine.dfc.exporter;
 
 import com.documentum.fc.client.IDfFormat;
 import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfSession;
 
 /**
  * @author diego
@@ -13,12 +14,14 @@ import com.documentum.fc.client.IDfPersistentObject;
  */
 public class DctmExportFormat extends DctmExportDelegate<IDfFormat> {
 
-	protected DctmExportFormat(DctmExportDelegateFactory factory, IDfFormat format) throws Exception {
-		super(factory, IDfFormat.class, format);
+	protected DctmExportFormat(DctmExportDelegateFactory factory, IDfSession session, IDfFormat format)
+		throws Exception {
+		super(factory, session, IDfFormat.class, format);
 	}
 
-	DctmExportFormat(DctmExportDelegateFactory factory, IDfPersistentObject format) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfFormat.class, format));
+	DctmExportFormat(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject format)
+		throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfFormat.class, format));
 	}
 
 	@Override

@@ -66,8 +66,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	private static final String HISTORY_PATH_IDS = "HISTORY_PATH_IDS_%S";
 	private static final String HISTORY_VDOC_STATUS = "HISTORY_VDOC_STATUS_%S";
 
-	protected DctmExportSysObject(DctmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected DctmExportSysObject(DctmExportDelegateFactory factory, IDfSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	protected List<String> calculateFullPath(IDfSysObject f) throws DfException {

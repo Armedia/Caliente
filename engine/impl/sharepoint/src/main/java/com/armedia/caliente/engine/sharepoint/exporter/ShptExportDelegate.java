@@ -35,8 +35,9 @@ public abstract class ShptExportDelegate<T> extends
 		TYPE_MAP = Tools.freezeMap(m);
 	}
 
-	protected ShptExportDelegate(ShptExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected ShptExportDelegate(ShptExportDelegateFactory factory, ShptSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	@Override

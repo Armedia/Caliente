@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.xds.exporter;
 
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
+import org.apache.chemistry.opencmis.client.api.Session;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -12,8 +13,9 @@ import com.armedia.caliente.store.CmfValue;
 
 public class CmisUserDelegate extends CmisExportDelegate<FileableCmisObject> {
 
-	protected CmisUserDelegate(CmisExportDelegateFactory factory, FileableCmisObject object) throws Exception {
-		super(factory, FileableCmisObject.class, object);
+	protected CmisUserDelegate(CmisExportDelegateFactory factory, Session session, FileableCmisObject object)
+		throws Exception {
+		super(factory, session, FileableCmisObject.class, object);
 	}
 
 	@Override

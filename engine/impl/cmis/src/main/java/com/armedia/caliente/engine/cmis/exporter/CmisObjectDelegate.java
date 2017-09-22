@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Property;
+import org.apache.chemistry.opencmis.client.api.Session;
 
 import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -16,8 +17,9 @@ import com.armedia.caliente.store.CmfValue;
 
 public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExportDelegate<T> {
 
-	protected CmisObjectDelegate(CmisExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected CmisObjectDelegate(CmisExportDelegateFactory factory, Session session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	@Override

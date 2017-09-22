@@ -22,9 +22,9 @@ public class UcmExportDelegateFactory
 		URI uri = URI.create(searchKey);
 		switch (type) {
 			case DOCUMENT:
-				return new UcmFileExportDelegate(this, session.getFile(uri));
+				return new UcmFileExportDelegate(this, session, session.getFile(uri));
 			case FOLDER:
-				return new UcmFolderExportDelegate(this, session.getFolder(uri));
+				return new UcmFolderExportDelegate(this, session, session.getFolder(uri));
 			default:
 				return null;
 		}

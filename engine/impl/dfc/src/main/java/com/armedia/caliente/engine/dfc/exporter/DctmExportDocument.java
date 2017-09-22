@@ -58,12 +58,14 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implements DctmDocument {
 
-	protected DctmExportDocument(DctmExportDelegateFactory factory, IDfSysObject document) throws Exception {
-		super(factory, IDfSysObject.class, document);
+	protected DctmExportDocument(DctmExportDelegateFactory factory, IDfSession session, IDfSysObject document)
+		throws Exception {
+		super(factory, session, IDfSysObject.class, document);
 	}
 
-	DctmExportDocument(DctmExportDelegateFactory factory, IDfPersistentObject document) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfSysObject.class, document));
+	DctmExportDocument(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject document)
+		throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfSysObject.class, document));
 	}
 
 	@Override

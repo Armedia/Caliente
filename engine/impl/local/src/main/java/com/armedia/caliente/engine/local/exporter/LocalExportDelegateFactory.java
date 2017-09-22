@@ -44,11 +44,12 @@ public class LocalExportDelegateFactory
 		switch (type) {
 			case FOLDER:
 			case DOCUMENT:
-				return new LocalFileExportDelegate(this, LocalFile.newFromSafePath(session, searchKey));
+				return new LocalFileExportDelegate(this, session, LocalFile.newFromSafePath(session, searchKey));
 			case USER:
-				return new LocalPrincipalExportDelegate(this, this.userDb.lookupPrincipalByName(searchKey));
+				return new LocalPrincipalExportDelegate(this, session, this.userDb.lookupPrincipalByName(searchKey));
 			case GROUP:
-				return new LocalPrincipalExportDelegate(this, this.userDb.lookupPrincipalByGroupName(searchKey));
+				return new LocalPrincipalExportDelegate(this, session,
+					this.userDb.lookupPrincipalByGroupName(searchKey));
 			default:
 				break;
 		}

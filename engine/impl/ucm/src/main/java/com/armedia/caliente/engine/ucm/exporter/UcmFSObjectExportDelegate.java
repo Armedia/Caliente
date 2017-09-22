@@ -8,6 +8,7 @@ import java.util.List;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.model.UcmException;
 import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
@@ -21,9 +22,9 @@ import com.armedia.commons.utilities.FileNameTools;
 
 public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends UcmExportDelegate<T> {
 
-	protected UcmFSObjectExportDelegate(UcmExportDelegateFactory factory, Class<T> objectClass, T object)
-		throws Exception {
-		super(factory, objectClass, object);
+	protected UcmFSObjectExportDelegate(UcmExportDelegateFactory factory, UcmSession session, Class<T> objectClass,
+		T object) throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	@Override
@@ -52,6 +53,11 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 	}
 
 	@Override
+	protected String calculateHistoryId(T object) throws Exception {
+		return object.getURI().getSchemeSpecificPart();
+	}
+
+	@Override
 	protected Collection<UcmExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshalled,
 		UcmExportContext ctx) throws Exception {
 		Collection<UcmExportDelegate<?>> requirements = super.identifyRequirements(marshalled, ctx);
@@ -59,20 +65,20 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		// First things first - add the parent folder
 		UcmFolder parent = this.object.getParentFolder(ctx.getSession());
 		if (parent != null) {
-			requirements.add(new UcmFolderExportDelegate(this.factory, parent));
+			requirements.add(new UcmFolderExportDelegate(this.factory, ctx.getSession(), parent));
 		}
 
 		if (this.object.isShortcut()) {
 			final String targetGuid = this.object.getTargetGUID();
 			switch (this.object.getType()) {
 				case FILE:
-					requirements
-						.add(new UcmFileExportDelegate(this.factory, ctx.getSession().getFileByGUID(targetGuid)));
+					requirements.add(new UcmFileExportDelegate(this.factory, ctx.getSession(),
+						ctx.getSession().getFileByGUID(targetGuid)));
 					break;
 
 				case FOLDER:
-					requirements
-						.add(new UcmFolderExportDelegate(this.factory, ctx.getSession().getFolderByGUID(targetGuid)));
+					requirements.add(new UcmFolderExportDelegate(this.factory, ctx.getSession(),
+						ctx.getSession().getFolderByGUID(targetGuid)));
 					break;
 				default:
 					break;

@@ -28,8 +28,8 @@ public class ShptUser extends ShptSecurityObject<User> {
 	private final String userName;
 	private final String userDomain;
 
-	public ShptUser(ShptExportDelegateFactory factory, User user) throws Exception {
-		super(factory, User.class, user);
+	public ShptUser(ShptExportDelegateFactory factory, ShptSession session, User user) throws Exception {
+		super(factory, session, User.class, user);
 		/*
 		List<Integer> roles = this.service.getRoleAssignments(this.object.getId());
 		if ((roles == null) || roles.isEmpty()) {
@@ -188,7 +188,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 		List<Group> l = service.getUserGroups(this.object.getId());
 		if ((l != null) && !l.isEmpty()) {
 			for (Group g : l) {
-				ret.add(new ShptGroup(this.factory, g));
+				ret.add(new ShptGroup(this.factory, service, g));
 			}
 		}
 

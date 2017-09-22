@@ -18,8 +18,9 @@ import com.armedia.caliente.store.CmfValue;
 public abstract class UcmExportDelegate<T extends UcmModelObject> extends
 	ExportDelegate<T, UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportDelegateFactory, UcmExportEngine> {
 
-	protected UcmExportDelegate(UcmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected UcmExportDelegate(UcmExportDelegateFactory factory, UcmSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	@Override

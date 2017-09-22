@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
+import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.Ace;
 import org.apache.chemistry.opencmis.commons.data.Acl;
 import org.apache.chemistry.opencmis.commons.data.Principal;
@@ -22,8 +23,9 @@ import com.armedia.caliente.store.CmfValue;
 
 public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 
-	protected CmisAclDelegate(CmisExportDelegateFactory factory, FileableCmisObject object) throws Exception {
-		super(factory, FileableCmisObject.class, object);
+	protected CmisAclDelegate(CmisExportDelegateFactory factory, Session session, FileableCmisObject object)
+		throws Exception {
+		super(factory, session, FileableCmisObject.class, object);
 	}
 
 	@Override

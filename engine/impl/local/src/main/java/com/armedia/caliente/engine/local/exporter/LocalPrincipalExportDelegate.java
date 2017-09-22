@@ -10,6 +10,7 @@ import java.util.List;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -21,8 +22,9 @@ import com.armedia.caliente.store.CmfValue;
 
 public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal> {
 
-	protected LocalPrincipalExportDelegate(LocalExportDelegateFactory factory, Principal object) throws Exception {
-		super(factory, Principal.class, object);
+	protected LocalPrincipalExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, Principal object)
+		throws Exception {
+		super(factory, root, Principal.class, object);
 	}
 
 	@Override

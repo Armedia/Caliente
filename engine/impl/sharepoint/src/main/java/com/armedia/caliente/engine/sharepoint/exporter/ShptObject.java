@@ -35,8 +35,9 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	 * @param object
 	 * @throws Exception
 	 */
-	protected ShptObject(ShptExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected ShptObject(ShptExportDelegateFactory factory, ShptSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	@Override

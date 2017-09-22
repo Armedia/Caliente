@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.ObjectType;
+import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -14,8 +15,9 @@ import com.armedia.caliente.store.CmfValue;
 
 public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 
-	protected CmisObjectTypeDelegate(CmisExportDelegateFactory factory, ObjectType folder) throws Exception {
-		super(factory, ObjectType.class, folder);
+	protected CmisObjectTypeDelegate(CmisExportDelegateFactory factory, Session session, ObjectType folder)
+		throws Exception {
+		super(factory, session, ObjectType.class, folder);
 	}
 
 	@Override
@@ -57,7 +59,7 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		ObjectType objectType = this.object.getParentType();
 		if (!objectType.isBaseType()) {
-			ret.add(new CmisObjectTypeDelegate(this.factory, objectType));
+			ret.add(new CmisObjectTypeDelegate(this.factory, ctx.getSession(), objectType));
 		}
 		return ret;
 	}

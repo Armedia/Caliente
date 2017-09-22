@@ -54,20 +54,22 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	private List<ShptFile> predecessors = Collections.emptyList();
 	private List<ShptFile> successors = Collections.emptyList();
 
-	public ShptFile(ShptExportDelegateFactory factory, File file) throws Exception {
-		this(factory, new ShptVersion(file), null);
+	public ShptFile(ShptExportDelegateFactory factory, ShptSession session, File file) throws Exception {
+		this(factory, session, new ShptVersion(file), null);
 	}
 
-	protected ShptFile(ShptExportDelegateFactory factory, File file, FileVersion version) throws Exception {
-		this(factory, new ShptVersion(file, version), null);
+	protected ShptFile(ShptExportDelegateFactory factory, ShptSession session, File file, FileVersion version)
+		throws Exception {
+		this(factory, session, new ShptVersion(file, version), null);
 	}
 
-	protected ShptFile(ShptExportDelegateFactory factory, ShptVersion object) throws Exception {
-		this(factory, object, null);
+	protected ShptFile(ShptExportDelegateFactory factory, ShptSession session, ShptVersion object) throws Exception {
+		this(factory, session, object, null);
 	}
 
-	protected ShptFile(ShptExportDelegateFactory factory, ShptVersion object, ShptFile antecedent) throws Exception {
-		super(factory, ShptVersion.class, object);
+	protected ShptFile(ShptExportDelegateFactory factory, ShptSession session, ShptVersion object, ShptFile antecedent)
+		throws Exception {
+		super(factory, session, ShptVersion.class, object);
 		this.version = object.getVersion();
 		this.versionNumber = object.getVersionNumber();
 		this.antecedentId = (antecedent != null ? antecedent.getObjectId() : null);
@@ -247,7 +249,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 					}
 					ShptFile f;
 					try {
-						f = new ShptFile(this.factory, new ShptVersion(this.object.getFile(), v), antecedent);
+						f = new ShptFile(this.factory, service, new ShptVersion(this.object.getFile(), v), antecedent);
 					} catch (Exception ex) {
 						throw new ExportException(String.format(
 							"Failed to construct a new ShptVersion instance for [%s](%s)", getLabel(), v.getId()), ex);
@@ -296,7 +298,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		Collection<ShptObject<?>> ret = super.findRequirements(service, marshaled, ctx);
 		ShptUser author = null;
 		try {
-			author = new ShptUser(this.factory, service.getFileAuthor(this.object.getServerRelativeUrl()));
+			author = new ShptUser(this.factory, service, service.getFileAuthor(this.object.getServerRelativeUrl()));
 			ret.add(author);
 			marshaled.setAttribute(new CmfAttribute<>(ShptAttributes.OWNER.name, CmfDataType.STRING, false,
 				Collections.singleton(new CmfValue(author.getName()))));
@@ -308,10 +310,12 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		ShptUser creator = author;
 		try {
 			if (this.version == null) {
-				modifier = new ShptUser(this.factory, service.getModifiedByUser(this.object.getServerRelativeUrl()));
+				modifier = new ShptUser(this.factory, service,
+					service.getModifiedByUser(this.object.getServerRelativeUrl()));
 			} else {
 				// TODO: How in the hell can we get the version's creator via JShare?
-				modifier = new ShptUser(this.factory, service.getModifiedByUser(this.object.getServerRelativeUrl()));
+				modifier = new ShptUser(this.factory, service,
+					service.getModifiedByUser(this.object.getServerRelativeUrl()));
 				// creator = modifier;
 			}
 		} catch (IncompleteDataException e) {
@@ -359,17 +363,17 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		Matcher m = ShptFile.SEARCH_KEY_PARSER.matcher(searchKey);
 		if (!m.matches()) {
 			File f = service.getFile(searchKey);
-			if (f != null) { return new ShptFile(factory, f); }
+			if (f != null) { return new ShptFile(factory, service, f); }
 			return null;
 		}
 		final String url = m.group(1);
 		File f = service.getFile(url);
 		if (f == null) { return null; }
 		String version = m.group(2);
-		if (Tools.equals(version,
-			String.format("%d.%d", f.getMajorVersion(), f.getMinorVersion()))) { return new ShptFile(factory, f); }
+		if (Tools.equals(version, String.format("%d.%d", f.getMajorVersion(),
+			f.getMinorVersion()))) { return new ShptFile(factory, service, f); }
 		for (FileVersion v : service.getFileVersions(url)) {
-			if (Tools.equals(version, v.getLabel())) { return new ShptFile(factory, f, v); }
+			if (Tools.equals(version, v.getLabel())) { return new ShptFile(factory, service, f, v); }
 		}
 		// Nothing found...
 		return null;

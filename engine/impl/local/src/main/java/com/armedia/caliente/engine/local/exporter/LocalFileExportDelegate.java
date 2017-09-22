@@ -29,6 +29,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalFile;
+import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -42,8 +43,9 @@ import com.armedia.caliente.store.tools.MimeTools;
 
 public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
-	protected LocalFileExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
-		super(factory, LocalFile.class, object);
+	protected LocalFileExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, LocalFile object)
+		throws Exception {
+		super(factory, root, LocalFile.class, object);
 	}
 
 	@Override
@@ -57,7 +59,8 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		if (p != null) {
 			File parent = new File(p);
 			if (!parent.equals(this.factory.getRoot().getFile())) {
-				ret.add(new LocalFileExportDelegate(this.factory, new LocalFile(this.factory.getRoot(), p)));
+				ret.add(new LocalFileExportDelegate(this.factory, ctx.getSession(),
+					new LocalFile(this.factory.getRoot(), p)));
 			}
 		}
 
@@ -69,7 +72,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		}
 
 		if (owner != null) {
-			ret.add(new LocalPrincipalExportDelegate(this.factory, owner.getOwner()));
+			ret.add(new LocalPrincipalExportDelegate(this.factory, ctx.getSession(), owner.getOwner()));
 		}
 
 		if (posix != null) {

@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Rendition;
+import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -36,16 +37,17 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	private final List<Document> previous;
 	private final List<Document> successors;
 
-	protected CmisDocumentDelegate(CmisDocumentDelegate rootElement, Document object, String antecedentId)
-		throws Exception {
-		super(rootElement.factory, Document.class, object);
+	protected CmisDocumentDelegate(CmisDocumentDelegate rootElement, Session session, Document object,
+		String antecedentId) throws Exception {
+		super(rootElement.factory, session, Document.class, object);
 		this.previous = Collections.emptyList();
 		this.successors = Collections.emptyList();
 		this.antecedentId = antecedentId;
 	}
 
-	protected CmisDocumentDelegate(CmisExportDelegateFactory factory, Document object) throws Exception {
-		super(factory, Document.class, object);
+	protected CmisDocumentDelegate(CmisExportDelegateFactory factory, Session session, Document object)
+		throws Exception {
+		super(factory, session, Document.class, object);
 		List<Document> all = object.getAllVersions();
 		List<Document> prev = new ArrayList<>(all.size());
 		List<Document> succ = new ArrayList<>(all.size());
@@ -93,7 +95,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		Collection<CmisExportDelegate<?>> ret = super.identifyAntecedents(marshalled, ctx);
 		String prev = null;
 		for (Document d : this.previous) {
-			ret.add(new CmisDocumentDelegate(this, d, prev));
+			ret.add(new CmisDocumentDelegate(this, ctx.getSession(), d, prev));
 			prev = d.getId();
 		}
 		return ret;
@@ -184,7 +186,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		Collection<CmisExportDelegate<?>> ret = super.identifySuccessors(marshalled, ctx);
 		String prev = this.object.getId();
 		for (Document d : this.successors) {
-			ret.add(new CmisDocumentDelegate(this, d, prev));
+			ret.add(new CmisDocumentDelegate(this, ctx.getSession(), d, prev));
 			prev = d.getId();
 		}
 		return ret;

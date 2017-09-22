@@ -5,10 +5,10 @@ import java.util.Collection;
 import java.util.List;
 
 import com.armedia.caliente.engine.dfc.DctmAttributeHandlers;
+import com.armedia.caliente.engine.dfc.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.dfc.DctmDataType;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
-import com.armedia.caliente.engine.dfc.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.exporter.ExportDelegate;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
@@ -30,8 +30,9 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 	private final DctmObjectType dctmType;
 
-	protected DctmExportDelegate(DctmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected DctmExportDelegate(DctmExportDelegateFactory factory, IDfSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 		this.dctmType = DctmObjectType.decodeType(object);
 	}
 

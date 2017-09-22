@@ -38,12 +38,12 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportType extends DctmExportDelegate<IDfType> {
 
-	protected DctmExportType(DctmExportDelegateFactory factory, IDfType type) throws Exception {
-		super(factory, IDfType.class, type);
+	protected DctmExportType(DctmExportDelegateFactory factory, IDfSession session, IDfType type) throws Exception {
+		super(factory, session, IDfType.class, type);
 	}
 
-	DctmExportType(DctmExportDelegateFactory factory, IDfPersistentObject type) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfType.class, type));
+	DctmExportType(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject type) throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfType.class, type));
 	}
 
 	@Override

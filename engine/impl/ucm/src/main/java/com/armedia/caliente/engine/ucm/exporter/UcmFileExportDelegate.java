@@ -15,6 +15,7 @@ import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.model.UcmAtt;
 import com.armedia.caliente.engine.ucm.model.UcmException;
 import com.armedia.caliente.engine.ucm.model.UcmFile;
@@ -32,13 +33,20 @@ import com.armedia.caliente.store.CmfValue;
 
 public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 
-	protected UcmFileExportDelegate(UcmExportDelegateFactory factory, UcmFile object) throws Exception {
-		super(factory, UcmFile.class, object);
+	protected UcmFileExportDelegate(UcmExportDelegateFactory factory, UcmSession session, UcmFile object)
+		throws Exception {
+		super(factory, session, UcmFile.class, object);
 	}
 
 	@Override
 	protected String calculateLabel(UcmFile object) throws Exception {
 		return String.format("%s (rev.%s)", super.calculateLabel(object), object.getRevisionLabel());
+	}
+
+	@Override
+	protected boolean calculateHistoryCurrent(UcmFile object) throws Exception {
+		// TODO: Fix this calculation
+		return true;
 	}
 
 	@Override
@@ -110,7 +118,8 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			if (r.getRevisionId() == this.object.getRevisionNumber()) {
 				break;
 			}
-			antecedents.add(new UcmFileExportDelegate(this.factory, ctx.getSession().getFileRevision(r)));
+			antecedents
+				.add(new UcmFileExportDelegate(this.factory, ctx.getSession(), ctx.getSession().getFileRevision(r)));
 		}
 		return antecedents;
 	}
@@ -127,7 +136,8 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 				continue;
 			}
 			if (harvest) {
-				successors.add(new UcmFileExportDelegate(this.factory, ctx.getSession().getFileRevision(r)));
+				successors.add(
+					new UcmFileExportDelegate(this.factory, ctx.getSession(), ctx.getSession().getFileRevision(r)));
 			}
 		}
 		return successors;

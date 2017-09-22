@@ -27,7 +27,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected final Collection<CmfObjectRef> parentIds;
 	protected final String subType;
 
-	protected ExportDelegate(DF factory, Class<T> objectClass, T object) throws Exception {
+	protected ExportDelegate(DF factory, S session, Class<T> objectClass, T object) throws Exception {
 		super(factory, objectClass);
 		if (object == null) { throw new IllegalArgumentException("Must provide a source object to export"); }
 		this.object = object;

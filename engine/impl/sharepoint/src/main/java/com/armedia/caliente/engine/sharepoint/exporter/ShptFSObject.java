@@ -30,8 +30,9 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 
 	private final String url;
 
-	protected ShptFSObject(ShptExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected ShptFSObject(ShptExportDelegateFactory factory, ShptSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 		this.url = calculateServerRelativeUrl(object);
 	}
 
@@ -110,7 +111,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 		if (!StringUtils.isEmpty(getName())) {
 			String parentPath = getServerRelativeUrl();
 			parentPath = FileNameTools.dirname(parentPath, '/');
-			ShptFolder parent = new ShptFolder(this.factory, session.getFolder(parentPath));
+			ShptFolder parent = new ShptFolder(this.factory, session, session.getFolder(parentPath));
 			marshaled.setProperty(new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true,
 				Collections.singleton(new CmfValue(CmfDataType.ID, parent.getObjectId()))));
 			ret.add(parent);

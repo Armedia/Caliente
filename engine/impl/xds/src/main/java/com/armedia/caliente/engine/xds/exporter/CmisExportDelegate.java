@@ -18,8 +18,9 @@ import com.armedia.caliente.store.CmfValue;
 public abstract class CmisExportDelegate<T> extends
 	ExportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportDelegateFactory, CmisExportEngine> {
 
-	protected CmisExportDelegate(CmisExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected CmisExportDelegate(CmisExportDelegateFactory factory, Session session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	@Override

@@ -43,12 +43,12 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_GROUP = "SELECT u.user_name FROM dm_user u, dm_group g WHERE u.user_group_name = g.group_name AND g.r_object_id = '%s'";
 
-	protected DctmExportGroup(DctmExportDelegateFactory factory, IDfGroup group) throws Exception {
-		super(factory, IDfGroup.class, group);
+	protected DctmExportGroup(DctmExportDelegateFactory factory, IDfSession session, IDfGroup group) throws Exception {
+		super(factory, session, IDfGroup.class, group);
 	}
 
-	DctmExportGroup(DctmExportDelegateFactory factory, IDfPersistentObject group) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfGroup.class, group));
+	DctmExportGroup(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject group) throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfGroup.class, group));
 	}
 
 	private int calculateDepth(IDfGroup group, Set<String> visited) throws DfException {

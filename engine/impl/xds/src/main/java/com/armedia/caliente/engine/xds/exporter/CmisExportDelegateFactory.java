@@ -27,7 +27,7 @@ public class CmisExportDelegateFactory
 		CmisObject obj = session.getObject(searchKey);
 		switch (type) {
 			case FOLDER:
-				if (obj instanceof Folder) { return new CmisFolderDelegate(this, Folder.class.cast(obj)); }
+				if (obj instanceof Folder) { return new CmisFolderDelegate(this, session, Folder.class.cast(obj)); }
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Folder-type",
 					searchKey, obj.getClass().getCanonicalName()));
 			case DOCUMENT:
@@ -39,7 +39,7 @@ public class CmisExportDelegateFactory
 						doc = doc.getObjectOfLatestVersion(false);
 						if (doc == null) { return null; }
 					}
-					return new CmisDocumentDelegate(this, doc);
+					return new CmisDocumentDelegate(this, session, doc);
 				}
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Document-type",
 					searchKey, obj.getClass().getCanonicalName()));
@@ -47,7 +47,7 @@ public class CmisExportDelegateFactory
 				if (obj instanceof ObjectType) {
 					ObjectType objectType = ObjectType.class.cast(obj);
 					if (objectType.isBaseType()) { return null; }
-					return new CmisObjectTypeDelegate(this, objectType);
+					return new CmisObjectTypeDelegate(this, session, objectType);
 				}
 				throw new ExportException(String.format("Object with ID [%s] (class %s) is not an ObjectType-type",
 					searchKey, obj.getClass().getCanonicalName()));
