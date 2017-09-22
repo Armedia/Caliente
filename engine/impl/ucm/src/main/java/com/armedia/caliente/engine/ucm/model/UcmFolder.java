@@ -13,6 +13,12 @@ public class UcmFolder extends UcmFSObject {
 		super(model, uri, data, UcmAtt.fFolderName);
 	}
 
+	@Override
+	public UcmFolder getParentFolder(UcmSession s) throws UcmFolderNotFoundException, UcmServiceException {
+		if (isRoot()) { return null; }
+		return super.getParentFolder(s);
+	}
+
 	public boolean isRoot() {
 		return UcmModel.ROOT_URI.equals(getURI());
 	}

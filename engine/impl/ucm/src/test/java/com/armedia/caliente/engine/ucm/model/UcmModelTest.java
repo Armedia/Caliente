@@ -197,12 +197,11 @@ public class UcmModelTest extends BaseTest {
 					} else {
 						o = model.getFolder(s, p);
 					}
-					try {
-						UcmFolder parent = o.getParentFolder(s);
-						System.out.printf("\tparent = [%s] -> [%s]%n", parent.getPath(), parent.getURI());
-					} catch (UcmObjectNotFoundException e) {
-						// There is no parent!!
+					UcmFolder parent = o.getParentFolder(s);
+					if (parent == null) {
 						System.out.printf("\tno parent%n");
+					} else {
+						System.out.printf("\tparent = [%s] -> [%s]%n", parent.getPath(), parent.getURI());
 					}
 				} catch (Exception e) {
 					e.printStackTrace(System.err);
@@ -230,14 +229,15 @@ public class UcmModelTest extends BaseTest {
 						object.getString(guidAtt));
 					try {
 						UcmFolder parent = object.getParentFolder(session);
-						System.out.printf("\tparent = [%s] -> [%s]%n", parent.getPath(), parent.getURI());
-						if (object.isShortcut()) {
-							System.out.printf("\t---> [%s]%n", object.getTargetGUID());
+						if (parent == null) {
+							System.out.printf("\tno parent%n");
+						} else {
+							System.out.printf("\tparent = [%s] -> [%s]%n", parent.getPath(), parent.getURI());
+							if (object.isShortcut()) {
+								System.out.printf("\t---> [%s]%n", object.getTargetGUID());
+							}
 						}
-					} catch (UcmObjectNotFoundException e) {
-						// There is no parent!!
-						System.out.printf("\tno parent%n");
-					} catch (UcmServiceException e) {
+					} catch (Exception e) {
 						e.printStackTrace(System.err);
 					}
 				}
@@ -245,7 +245,6 @@ public class UcmModelTest extends BaseTest {
 		} finally {
 			w.close();
 		}
-
 	}
 
 	@Test

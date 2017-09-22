@@ -3,13 +3,14 @@ package com.armedia.caliente.engine.ucm.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.ucm.model.UcmException;
 import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
-import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -55,20 +56,9 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		Collection<UcmExportDelegate<?>> requirements = super.identifyRequirements(marshalled, ctx);
 
 		// First things first - add the parent folder
-		try {
-			UcmFolder parent = this.object.getParentFolder(ctx.getSession());
+		UcmFolder parent = this.object.getParentFolder(ctx.getSession());
+		if (parent != null) {
 			requirements.add(new UcmFolderExportDelegate(this.factory, parent));
-		} catch (final UcmFolderNotFoundException e) {
-			switch (this.object.getType()) {
-				case FOLDER:
-					UcmFolder folder = UcmFolder.class.cast(this.object);
-					if (!folder.isRoot()) { throw e; }
-					// This is the root folder, so this isn't a problem...
-					break;
-				case FILE:
-				default:
-					throw e;
-			}
 		}
 
 		if (this.object.isShortcut()) {
@@ -122,9 +112,29 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		CmfProperty<CmfValue> paths = new CmfProperty<>(IntermediateProperty.PATH, CmfDataType.STRING, false);
 		properties.add(paths);
 		paths.setValue(new CmfValue(object.getParentPath()));
+
 		CmfProperty<CmfValue> parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, false);
 		paths.setValue(new CmfValue(object.getParentURI().toString()));
 		properties.add(parents);
+
+		CmfProperty<CmfValue> idtree = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfDataType.STRING,
+			true);
+		properties.add(idtree);
+		LinkedList<CmfValue> l = new LinkedList<>();
+		UcmFolder parent = null;
+		while (true) {
+			try {
+				parent = (parent == null ? object : parent).getParentFolder(ctx.getSession());
+				if (parent == null) {
+					// If this object has no parent, then there's no parent IDs to generate
+					break;
+				}
+			} catch (UcmException e) {
+				throw new ExportException(e.getMessage(), e);
+			}
+			l.addFirst(new CmfValue(parent.getURI().getSchemeSpecificPart()));
+		}
+		idtree.setValues(l);
 		return true;
 	}
 }
