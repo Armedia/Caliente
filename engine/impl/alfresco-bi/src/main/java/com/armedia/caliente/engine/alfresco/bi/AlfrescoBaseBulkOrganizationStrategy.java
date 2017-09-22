@@ -67,14 +67,14 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 			appendix = "";
 		}
 
+		String baseName = object.getId();
 		if (!primaryContent) {
 			// Ok...so this isn't the default rendition, so we have to add the object ID
 			// at the end of the path
-			paths.add(String.format("%s-renditions", object.getId()));
+			paths.add(String.format("%s-renditions", baseName));
 			paths.add(String.format("rendition-[%s]", info.getRenditionIdentifier()));
 		}
 
-		String baseName = object.getId();
 		switch (object.getType()) {
 			case DOCUMENT:
 				if (primaryContent) {
