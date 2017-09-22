@@ -45,6 +45,7 @@ public enum UcmAtt {
 	dPublishedRevisionID, //
 	dRevisionID, //
 	dRevLabel, //
+	dRevRank, //
 	dStatus, //
 	fFileGUID, //
 	fFileName, //

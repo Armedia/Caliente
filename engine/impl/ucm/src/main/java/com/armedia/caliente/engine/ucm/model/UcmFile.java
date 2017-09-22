@@ -16,6 +16,14 @@ public class UcmFile extends UcmFSObject {
 		return getString(UcmAtt.fPublishedFilename);
 	}
 
+	public int getRevisionRank() {
+		return getInteger(UcmAtt.dRevRank);
+	}
+
+	public boolean isLatestRevision() {
+		return (getRevisionRank() == 0);
+	}
+
 	public String getRevisionName() {
 		return getString(UcmAtt.dOriginalName);
 	}
