@@ -45,8 +45,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 
 	@Override
 	protected boolean calculateHistoryCurrent(UcmSession session, UcmFile object) throws Exception {
-		UcmFileHistory history = session.getFileHistory(object);
-		return (history.getLastRevision().getRevisionId() == object.getRevisionNumber());
+		return object.isLatestRevision();
 	}
 
 	@Override
