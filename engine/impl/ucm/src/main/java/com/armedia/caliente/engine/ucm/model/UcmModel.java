@@ -651,7 +651,7 @@ public class UcmModel {
 			Map<String, UcmRenditionInfo> m = new TreeMap<>();
 			for (DataObject o : rs.getRows()) {
 				UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
-				m.put(r.getName(), r);
+				m.put(r.getType().toUpperCase(), r);
 			}
 			this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
 		}
@@ -1130,7 +1130,7 @@ public class UcmModel {
 									"Revision ID [%s] was found, but no rendition information was returned??!", id)); }
 								for (DataObject o : rs.getRows()) {
 									UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
-									renditions.put(r.getName().toUpperCase(), r);
+									renditions.put(r.getType().toUpperCase(), r);
 								}
 
 								UcmAttributes baseData = new UcmAttributes(baseObj, DOC_INFO.getFields());

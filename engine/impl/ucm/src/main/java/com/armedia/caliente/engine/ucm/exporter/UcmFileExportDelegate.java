@@ -86,6 +86,11 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			}
 			UcmRenditionInfo rendition = renditions.get(r);
 			r = r.toUpperCase();
+
+			if (UcmRenditionInfo.PRIMARY.equalsIgnoreCase(r)) {
+				r = CmfContentInfo.DEFAULT_RENDITION;
+			}
+
 			CmfContentInfo info = new CmfContentInfo(r, 0);
 			try {
 				info.setMimeType(new MimeType(rendition.getFormat()));

@@ -17,6 +17,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.commons.utilities.FileNameTools;
 
 public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends UcmExportDelegate<T> {
 
@@ -118,9 +119,9 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		properties.add(parents);
 
 		CmfProperty<CmfValue> idtree = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfDataType.STRING,
-			true);
+			false);
 		properties.add(idtree);
-		LinkedList<CmfValue> l = new LinkedList<>();
+		LinkedList<String> l = new LinkedList<>();
 		UcmFolder parent = null;
 		while (true) {
 			try {
@@ -132,9 +133,9 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 			} catch (UcmException e) {
 				throw new ExportException(e.getMessage(), e);
 			}
-			l.addFirst(new CmfValue(parent.getURI().getSchemeSpecificPart()));
+			l.addFirst(parent.getURI().getSchemeSpecificPart());
 		}
-		idtree.setValues(l);
+		idtree.setValue(new CmfValue(FileNameTools.reconstitute(l, false, false)));
 		return true;
 	}
 }
