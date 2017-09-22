@@ -40,8 +40,9 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(UcmAtt.dFormat.name(), IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
 		am.put(UcmAtt.dFileSize.name(), IntermediateAttribute.CONTENT_STREAM_LENGTH);
 		am.put(UcmAtt.fFileGUID.name(), IntermediateAttribute.VERSION_SERIES_ID);
-		am.put(UcmAtt.dRevLabel.name(), IntermediateAttribute.VERSION_LABEL);
-		am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.CHANGE_TOKEN);
+		am.put(UcmAtt.$latestVersion.name(), IntermediateAttribute.IS_LATEST_VERSION);
+		am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.VERSION_LABEL);
+		// am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.CHANGE_TOKEN);
 		am.put(UcmAtt.fCreator.name(), IntermediateAttribute.CREATED_BY);
 		am.put(UcmAtt.fCreateDate.name(), IntermediateAttribute.CREATION_DATE);
 		am.put(UcmAtt.fLastModifier.name(), IntermediateAttribute.LAST_MODIFIED_BY);

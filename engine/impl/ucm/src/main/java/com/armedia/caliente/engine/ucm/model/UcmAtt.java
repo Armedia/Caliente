@@ -7,6 +7,7 @@ public enum UcmAtt {
 	$ucmParentPath,
 	$ucmParentURI,
 	$ucmUniqueURI,
+	$latestVersion,
 
 	// System attributes
 	ProductBuildInfo, //

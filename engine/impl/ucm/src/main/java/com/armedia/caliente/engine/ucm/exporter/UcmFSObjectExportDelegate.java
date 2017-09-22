@@ -118,6 +118,10 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		paths.setValue(new CmfValue(object.getParentURI().toString()));
 		properties.add(parents);
 
+		CmfProperty<CmfValue> latestVersion = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION,
+			CmfDataType.BOOLEAN, false);
+		properties.add(latestVersion);
+
 		CmfProperty<CmfValue> idtree = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfDataType.STRING,
 			false);
 		properties.add(idtree);
