@@ -1,7 +1,8 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <!DOCTYPE type-mapper>
 <type-mapper>
-	<mapping>
+
+	<attribute-mapping name="xxxxx" extends=".....">
 		<condition>
 			<and>
 				<!-- Compare the source object's archetype -->
@@ -73,6 +74,139 @@
 			<not>
 			</not>
 		</condition>
+		<attribute>
+			<targetName expression="(constant|copy|bsf|beanshell|js|...)">
+				<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+				<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+				<!-- source object type is available via ${object.type} -->
+				<!-- source object subtype is available via ${object.subtype} -->
+				<!-- source object decorators are available via the array ${object.decorator} -->
+				<![CDATA[
+				a > b < c ....
+				]]>
+			</targetName>
+			<!-- for calculation -->
+			<value expression="(constant|copy|bsf|beanshell|js|...)">
+				<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+				<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+				<!-- source object type is available via ${object.type} -->
+				<!-- source object subtype is available via ${object.subtype} -->
+				<!-- source object decorators are available via the array ${object.decorator} -->
+				<![CDATA[
+				a > b < c ....
+				]]>
+			</value>
+		</attribute>
+	</attribute-mapping>
+
+	<type-mapping>
+		<condition>
+			<and>
+				<!-- Compare the source object's archetype -->
+				<type>DOCUMENT|FOLDER|USER|GROUP|ACL|....</type>
+
+				<!-- Compare the source object's subtype -->
+				<subtype>dm_document|cmis:document|....</subtype>
+				
+				<!-- Only evaluates to true if the source object is a reference -->
+				<isReference/>
+
+				<!-- Check for the existence of a decorator (i.e. aspect) on the source object -->
+				<decorator expression="(constant|copy|bsf|beanshell|js|...)">
+					<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+					<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+					<!-- source object type is available via ${object.type} -->
+					<!-- source object subtype is available via ${object.subtype} -->
+					<!-- source object decorators are available via the array ${object.decorator} -->
+					<![CDATA[
+					a > b < c ....
+					]]>
+				</decorator>
+
+				<!--
+					Check for the value in an attribute (or any, in the case of repeating attribute-set)
+
+					name = the name of the attribute to check against
+					value = the value to use for the comparison
+					comparison = the comparison to execute (default = "eq"):
+						eq : equals
+						gt : greater than
+						ge : greater than or equal
+						lt : less than
+						le : less than or equal
+						sw : starts with
+						ew : ends with
+						re : regular expression match
+
+						i = case insensitive (default is case sensitive)
+				-->
+				<attribute>
+					<name>xxxx</name>
+					<comparison>(eq|gt|lt|ge|le|sw|ew|cn|re)(i)?</comparison>
+					<expression expression="(constant|copy|bsf|beanshell|js|...)">
+						<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+						<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+						<!-- source object type is available via ${object.type} -->
+						<!-- source object subtype is available via ${object.subtype} -->
+						<!-- source object decorators are available via the array ${object.decorator} -->
+						<![CDATA[
+						a > b < c ....
+						]]>
+					</expression>
+				</attribute>
+				<supplementaryProperty>
+					<name>xxxx</name>
+					<comparison>(eq|gt|lt|ge|le|sw|ew|cn|re)(i)?</comparison>
+					<expression expression="(constant|copy|bsf|beanshell|js|...)">
+						<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+						<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+						<!-- source object type is available via ${object.type} -->
+						<!-- source object subtype is available via ${object.subtype} -->
+						<!-- source object decorators are available via the array ${object.decorator} -->
+						<![CDATA[
+						a > b < c ....
+						]]>
+					</expression>
+				</supplementaryProperty>
+
+				<expression lang="(bsf|beanshell|js|...)">
+					<source expression="(constant|copy|bsf|beanshell|js|...)">
+						<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+						<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+						<!-- source object type is available via ${object.type} -->
+						<!-- source object subtype is available via ${object.subtype} -->
+						<!-- source object decorators are available via the array ${object.decorator} -->
+						<![CDATA[
+						a > b < c ....
+						]]>
+					</source>
+					<comparison>(eq|gt|lt|ge|le|sw|ew|cn|re)(i)?</comparison>
+					<expression expression="(constant|copy|bsf|beanshell|js|...)">
+						<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+						<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+						<!-- source object type is available via ${object.type} -->
+						<!-- source object subtype is available via ${object.subtype} -->
+						<!-- source object decorators are available via the array ${object.decorator} -->
+						<![CDATA[
+						a > b < c ....
+						]]>
+					</expression>
+				</expression>
+
+				<or>
+					<and></and>
+					<or></or>
+					<xor></xor>
+					<not>
+						....
+					</not>
+				</or>
+			</and>
+			<or></or>
+			<xor></xor>
+			<not>
+			</not>
+		</condition>
 
 		<!--
 			Override the "default" type mapping, above.  Must declare at least one of "type" or "decorators".
@@ -80,27 +214,51 @@
 		<target>
 			<type>...</type>
 			<subtype></subtype>
-			<decorators>
-					<decorator>static-name</decorator>
-					<decorator>
-						<expression lang="(bsf|beanshell|js|...)">
-							<!-- source object attributes are available via ${object.attribute[attributeName]} -->
-							<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
-							<!-- source object type is available via ${object.type} -->
-							<!-- source object subtype is available via ${object.subtype} -->
-							<!-- source object decorators are available via the array ${object.decorator} -->
-							<![CDATA[
-							a > b < c ....
-							]]>
-						</expression>
-					</decorator>
-					<decorator></decorator>
-					<decorator></decorator>
-			</decorators>
-		</target>
-	</mapping>
+			<decorators existing="keep|clear">
+					<remove-decorator expression="(constant|bsf|beanshell|js|...)">
+						<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+						<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+						<!-- source object type is available via ${object.type} -->
+						<!-- source object subtype is available via ${object.subtype} -->
+						<!-- source object decorators are available via the array ${object.decorator} -->
+						<![CDATA[
+						a > b < c ....
+						]]>
+					</remove-decorator>
 
-	<mapping>
+					<add-decorator expression="(constant|bsf|beanshell|js|...)">
+						<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+						<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+						<!-- source object type is available via ${object.type} -->
+						<!-- source object subtype is available via ${object.subtype} -->
+						<!-- source object decorators are available via the array ${object.decorator} -->
+						<![CDATA[
+						a > b < c ....
+						]]>
+					</add-decorator>
+			</decorators>
+			<attribute-mapping extends="attribute-mapping-name,another-mapping-name">
+				<attribute>
+					<targetName></targetName>
+					<sourceName></sourceName> <!-- for direct value copy -->
+
+					<!-- for calculation -->
+					<value expression="(constant|copy|bsf|beanshell|js|...)">
+						<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+						<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+						<!-- source object type is available via ${object.type} -->
+						<!-- source object subtype is available via ${object.subtype} -->
+						<!-- source object decorators are available via the array ${object.decorator} -->
+						<![CDATA[
+						a > b < c ....
+						]]>
+					</value>
+				</attribute>
+			</attribute-mapping>
+		</target>
+	</type-mapping>
+
+	<type-mapping>
 		...
-	</mapping>
+	</type-mapping>
 </type-mapper>
