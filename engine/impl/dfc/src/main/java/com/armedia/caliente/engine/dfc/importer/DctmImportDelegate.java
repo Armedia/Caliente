@@ -27,6 +27,7 @@ import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
+import com.armedia.caliente.engine.importer.TypeDescriptor;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -182,8 +183,9 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<IDfValue> translator,
-		DctmImportContext context) throws ImportException, CmfStorageException {
+	protected final Collection<ImportOutcome> importObject(TypeDescriptor targetType,
+		CmfAttributeTranslator<IDfValue> translator, DctmImportContext context)
+		throws ImportException, CmfStorageException {
 		if (context == null) { throw new IllegalArgumentException("Must provide a context to save the object"); }
 		try {
 			List<ImportOutcome> ret = new ArrayList<>(1);

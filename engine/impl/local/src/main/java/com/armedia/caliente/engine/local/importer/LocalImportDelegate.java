@@ -27,6 +27,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
+import com.armedia.caliente.engine.importer.TypeDescriptor;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.store.CmfAttribute;
@@ -52,8 +53,9 @@ public abstract class LocalImportDelegate extends
 	}
 
 	@Override
-	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
-		LocalImportContext ctx) throws ImportException, CmfStorageException {
+	protected final Collection<ImportOutcome> importObject(TypeDescriptor targetType,
+		CmfAttributeTranslator<CmfValue> translator, LocalImportContext ctx)
+		throws ImportException, CmfStorageException {
 
 		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(IntermediateAttribute.IS_LATEST_VERSION);
 		if ((att != null) && att.hasValues()) {
