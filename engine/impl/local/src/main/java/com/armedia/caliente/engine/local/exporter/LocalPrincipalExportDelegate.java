@@ -34,7 +34,7 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	}
 
 	@Override
-	protected int calculateDependencyTier(Principal p) throws Exception {
+	protected int calculateDependencyTier(LocalRoot root, Principal p) throws Exception {
 		return 0;
 	}
 
@@ -59,34 +59,34 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	}
 
 	@Override
-	protected CmfType calculateType(Principal p) throws Exception {
+	protected CmfType calculateType(LocalRoot root, Principal p) throws Exception {
 		if (GroupPrincipal.class.isInstance(p)) { return CmfType.GROUP; }
 		if (UserPrincipal.class.isInstance(p)) { return CmfType.USER; }
 		throw new ExportException(String.format("Principal object [%s] is of an unknown type or doesn't exist", p));
 	}
 
 	@Override
-	protected String calculateLabel(Principal object) throws Exception {
+	protected String calculateLabel(LocalRoot root, Principal object) throws Exception {
 		return object.getName();
 	}
 
 	@Override
-	protected String calculateObjectId(Principal object) throws Exception {
+	protected String calculateObjectId(LocalRoot root, Principal object) throws Exception {
 		return String.format("%08x", object.hashCode());
 	}
 
 	@Override
-	protected String calculateSearchKey(Principal object) throws Exception {
+	protected String calculateSearchKey(LocalRoot root, Principal object) throws Exception {
 		return object.getName();
 	}
 
 	@Override
-	protected String calculateName(Principal object) throws Exception {
+	protected String calculateName(LocalRoot root, Principal object) throws Exception {
 		return object.getName();
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(Principal object) throws Exception {
+	protected boolean calculateHistoryCurrent(LocalRoot root, Principal object) throws Exception {
 		// Always true
 		return true;
 	}

@@ -19,22 +19,22 @@ public class CmisUserDelegate extends CmisExportDelegate<FileableCmisObject> {
 	}
 
 	@Override
-	protected CmfType calculateType(FileableCmisObject object) throws Exception {
+	protected CmfType calculateType(Session session, FileableCmisObject object) throws Exception {
 		return CmfType.USER;
 	}
 
 	@Override
-	protected String calculateLabel(FileableCmisObject object) throws Exception {
+	protected String calculateLabel(Session session, FileableCmisObject object) throws Exception {
 		return object.getCreatedBy();
 	}
 
 	@Override
-	protected String calculateObjectId(FileableCmisObject object) throws Exception {
+	protected String calculateObjectId(Session session, FileableCmisObject object) throws Exception {
 		return String.format("%s", object.getCreatedBy());
 	}
 
 	@Override
-	protected String calculateSearchKey(FileableCmisObject object) throws Exception {
+	protected String calculateSearchKey(Session session, FileableCmisObject object) throws Exception {
 		return object.getCreatedBy();
 	}
 
@@ -48,7 +48,7 @@ public class CmisUserDelegate extends CmisExportDelegate<FileableCmisObject> {
 	}
 
 	@Override
-	protected String calculateName(FileableCmisObject object) throws Exception {
+	protected String calculateName(Session session, FileableCmisObject object) throws Exception {
 		return object.getCreatedBy();
 	}
 }

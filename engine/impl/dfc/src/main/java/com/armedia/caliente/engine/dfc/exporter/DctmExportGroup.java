@@ -90,14 +90,14 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected int calculateDependencyTier(IDfGroup group) throws Exception {
+	protected int calculateDependencyTier(IDfSession session, IDfGroup group) throws Exception {
 		// Calculate the maximum depth that this group resides in, from the other groups
 		// it references.
 		return calculateDepth(group, new LinkedHashSet<String>());
 	}
 
 	@Override
-	protected String calculateLabel(IDfGroup group) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfGroup group) throws Exception {
 		return group.getGroupName();
 	}
 
@@ -215,7 +215,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 	}
 
 	@Override
-	protected String calculateName(IDfGroup group) throws Exception {
+	protected String calculateName(IDfSession session, IDfGroup group) throws Exception {
 		return group.getGroupName();
 	}
 }

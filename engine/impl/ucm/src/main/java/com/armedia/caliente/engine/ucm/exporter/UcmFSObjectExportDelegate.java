@@ -28,32 +28,32 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 	}
 
 	@Override
-	protected final CmfType calculateType(T object) throws Exception {
+	protected final CmfType calculateType(UcmSession session, T object) throws Exception {
 		return object.getType().cmfType;
 	}
 
 	@Override
-	protected String calculateLabel(T object) throws Exception {
+	protected String calculateLabel(UcmSession session, T object) throws Exception {
 		return object.getPath();
 	}
 
 	@Override
-	protected final String calculateObjectId(T object) throws Exception {
+	protected final String calculateObjectId(UcmSession session, T object) throws Exception {
 		return object.getUniqueURI().toString();
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object) throws Exception {
+	protected final String calculateSearchKey(UcmSession session, T object) throws Exception {
 		return object.getUniqueURI().toString();
 	}
 
 	@Override
-	protected final String calculateName(T object) throws Exception {
+	protected final String calculateName(UcmSession session, T object) throws Exception {
 		return object.getName();
 	}
 
 	@Override
-	protected String calculateHistoryId(T object) throws Exception {
+	protected String calculateHistoryId(UcmSession session, T object) throws Exception {
 		return object.getURI().getSchemeSpecificPart();
 	}
 

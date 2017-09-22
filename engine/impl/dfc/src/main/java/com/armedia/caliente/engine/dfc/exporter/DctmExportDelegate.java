@@ -52,32 +52,32 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected final CmfType calculateType(T object) throws Exception {
+	protected final CmfType calculateType(IDfSession session, T object) throws Exception {
 		return DctmObjectType.decodeType(object).getStoredObjectType();
 	}
 
 	@Override
-	protected final String calculateObjectId(T object) throws Exception {
+	protected final String calculateObjectId(IDfSession session, T object) throws Exception {
 		return object.getObjectId().getId();
 	}
 
 	@Override
-	protected String calculateLabel(T object) throws Exception {
+	protected String calculateLabel(IDfSession session, T object) throws Exception {
 		return String.format("%s[%s]", getDctmType().name(), getObjectId());
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object) throws Exception {
-		return calculateObjectId(object);
+	protected final String calculateSearchKey(IDfSession session, T object) throws Exception {
+		return calculateObjectId(session, object);
 	}
 
 	@Override
-	protected String calculateHistoryId(T object) throws Exception {
+	protected String calculateHistoryId(IDfSession session, T object) throws Exception {
 		return object.getObjectId().getId();
 	}
 
 	@Override
-	protected final String calculateSubType(CmfType type, T object) throws Exception {
+	protected final String calculateSubType(IDfSession session, CmfType type, T object) throws Exception {
 		return object.getType().getName();
 	}
 

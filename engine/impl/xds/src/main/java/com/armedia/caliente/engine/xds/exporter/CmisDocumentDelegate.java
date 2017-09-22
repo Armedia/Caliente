@@ -80,7 +80,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected String calculateHistoryId(Document object) throws Exception {
+	protected String calculateHistoryId(Session session, Document object) throws Exception {
 		return object.getVersionSeriesId();
 	}
 
@@ -193,12 +193,12 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected String calculateName(Document document) throws Exception {
+	protected String calculateName(Session session, Document document) throws Exception {
 		return document.getName();
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(Document document) throws Exception {
+	protected boolean calculateHistoryCurrent(Session session, Document document) throws Exception {
 		return document.isLatestVersion();
 	}
 }

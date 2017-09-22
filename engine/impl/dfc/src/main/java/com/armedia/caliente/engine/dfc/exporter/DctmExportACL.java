@@ -52,7 +52,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected String calculateLabel(IDfACL acl) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfACL acl) throws Exception {
 		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
 	}
 
@@ -202,7 +202,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected String calculateName(IDfACL acl) throws Exception {
+	protected String calculateName(IDfSession session, IDfACL acl) throws Exception {
 		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
 	}
 }

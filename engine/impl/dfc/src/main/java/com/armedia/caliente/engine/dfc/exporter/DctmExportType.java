@@ -47,7 +47,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected String calculateLabel(IDfType type) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfType type) throws Exception {
 		String superName = type.getSuperName();
 		if ((superName != null) && (superName.length() > 0)) {
 			superName = String.format(" (extends %s)", superName);
@@ -58,7 +58,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected int calculateDependencyTier(IDfType type) throws Exception {
+	protected int calculateDependencyTier(IDfSession session, IDfType type) throws Exception {
 		return calculateDepth(type.getSession(), type);
 	}
 
@@ -197,7 +197,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected String calculateName(IDfType type) throws Exception {
+	protected String calculateName(IDfSession session, IDfType type) throws Exception {
 		return type.getName();
 	}
 }

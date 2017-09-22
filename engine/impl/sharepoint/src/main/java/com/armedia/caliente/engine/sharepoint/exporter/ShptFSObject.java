@@ -33,26 +33,26 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 	protected ShptFSObject(ShptExportDelegateFactory factory, ShptSession session, Class<T> objectClass, T object)
 		throws Exception {
 		super(factory, session, objectClass, object);
-		this.url = calculateServerRelativeUrl(object);
+		this.url = calculateServerRelativeUrl(session, object);
 	}
 
 	@Override
-	protected String calculateObjectId(T object) {
-		String searchKey = calculateServerRelativeUrl(object);
+	protected String calculateObjectId(ShptSession session, T object) {
+		String searchKey = calculateServerRelativeUrl(session, object);
 		return String.format("%08X", Tools.hashTool(searchKey, null, searchKey));
 	}
 
 	@Override
-	public String calculateHistoryId(T object) {
-		return calculateObjectId(object);
+	public String calculateHistoryId(ShptSession session, T object) {
+		return calculateObjectId(session, object);
 	}
 
 	@Override
-	protected String calculateSearchKey(T object) {
-		return calculateServerRelativeUrl(object);
+	protected String calculateSearchKey(ShptSession session, T object) {
+		return calculateServerRelativeUrl(session, object);
 	}
 
-	protected abstract String calculateServerRelativeUrl(T object);
+	protected abstract String calculateServerRelativeUrl(ShptSession session, T object);
 
 	public final String getServerRelativeUrl() {
 		return this.url;

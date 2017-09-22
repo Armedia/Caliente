@@ -23,12 +23,12 @@ public class DctmExportStore extends DctmExportDelegate<IDfStore> {
 	}
 
 	@Override
-	protected String calculateLabel(IDfStore store) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfStore store) throws Exception {
 		return store.getName();
 	}
 
 	@Override
-	protected String calculateName(IDfStore store) throws Exception {
+	protected String calculateName(IDfSession session, IDfStore store) throws Exception {
 		return store.getName();
 	}
 }

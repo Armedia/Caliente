@@ -39,14 +39,19 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 	}
 
 	@Override
-	protected String calculateLabel(UcmFile object) throws Exception {
-		return String.format("%s (rev.%s)", super.calculateLabel(object), object.getRevisionLabel());
+	protected String calculateLabel(UcmSession session, UcmFile object) throws Exception {
+		return String.format("%s (rev.%s)", super.calculateLabel(session, object), object.getRevisionLabel());
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(UcmFile object) throws Exception {
-		// TODO: Fix this calculation
-		return true;
+	protected boolean calculateHistoryCurrent(UcmSession session, UcmFile object) throws Exception {
+		UcmFileHistory history = session.getFileHistory(object);
+		return (history.getLastRevision().getRevisionId() == object.getRevisionNumber());
+	}
+
+	@Override
+	protected int calculateDependencyTier(UcmSession session, UcmFile object) throws Exception {
+		return object.isShortcut() ? 1 : 0;
 	}
 
 	@Override

@@ -25,12 +25,12 @@ public class DctmExportFormat extends DctmExportDelegate<IDfFormat> {
 	}
 
 	@Override
-	protected String calculateLabel(IDfFormat format) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfFormat format) throws Exception {
 		return format.getName();
 	}
 
 	@Override
-	protected String calculateName(IDfFormat format) throws Exception {
+	protected String calculateName(IDfSession session, IDfFormat format) throws Exception {
 		return format.getName();
 	}
 }

@@ -54,7 +54,7 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	}
 
 	@Override
-	protected String calculateLabel(IDfFolder folder) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfFolder folder) throws Exception {
 		return folder.getFolderPath(0);
 	}
 

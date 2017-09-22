@@ -76,30 +76,30 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	public String calculateObjectId(ShptVersion object) {
-		return String.format("%s-%s", super.calculateObjectId(object), object.getVersionNumber().toString());
+	public String calculateObjectId(ShptSession session, ShptVersion object) {
+		return String.format("%s-%s", super.calculateObjectId(session, object), object.getVersionNumber().toString());
 	}
 
 	@Override
-	public String calculateHistoryId(ShptVersion file) {
+	public String calculateHistoryId(ShptSession session, ShptVersion file) {
 		// This only takes into account the path, so it'll be shared by all versions of the file
-		return super.calculateObjectId(file);
+		return super.calculateObjectId(session, file);
 	}
 
 	@Override
-	public String calculateLabel(ShptVersion file) {
+	public String calculateLabel(ShptSession session, ShptVersion file) {
 		return String.format("%s#%s", this.factory.getRelativePath(file.getServerRelativeUrl()),
 			file.getVersionNumber().toString());
 	}
 
 	@Override
-	public String calculateSearchKey(ShptVersion object) {
+	public String calculateSearchKey(ShptSession session, ShptVersion object) {
 		return String.format(
 			String.format("%s#%s", object.getFile().getServerRelativeUrl(), object.getVersionNumber().toString()));
 	}
 
 	@Override
-	public String calculateServerRelativeUrl(ShptVersion file) {
+	public String calculateServerRelativeUrl(ShptSession session, ShptVersion file) {
 		return file.getFile().getServerRelativeUrl();
 	}
 
@@ -432,12 +432,12 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	protected String calculateName(ShptVersion version) throws Exception {
+	protected String calculateName(ShptSession session, ShptVersion version) throws Exception {
 		return version.getName();
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(ShptVersion version) throws Exception {
+	protected boolean calculateHistoryCurrent(ShptSession session, ShptVersion version) throws Exception {
 		return version.isCurrentVersion();
 	}
 }

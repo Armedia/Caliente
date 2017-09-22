@@ -30,7 +30,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	public String calculateServerRelativeUrl(Folder f) {
+	public String calculateServerRelativeUrl(ShptSession session, Folder f) {
 		return f.getServerRelativeUrl();
 	}
 
@@ -61,12 +61,12 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	public int calculateDependencyTier(Folder f) {
+	public int calculateDependencyTier(ShptSession session, Folder f) {
 		return FileNameTools.tokenize(f.getServerRelativeUrl(), '/').size();
 	}
 
 	@Override
-	public String calculateLabel(Folder f) {
+	public String calculateLabel(ShptSession session, Folder f) {
 		return this.factory.getRelativePath(f.getServerRelativeUrl());
 	}
 
@@ -123,7 +123,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	protected String calculateName(Folder folder) throws Exception {
+	protected String calculateName(ShptSession session, Folder folder) throws Exception {
 		return folder.getName();
 	}
 }

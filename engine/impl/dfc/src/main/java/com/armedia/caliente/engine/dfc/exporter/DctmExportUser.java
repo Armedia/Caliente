@@ -27,7 +27,7 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 	}
 
 	@Override
-	protected String calculateLabel(IDfUser user) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfUser user) throws Exception {
 		return user.getUserName();
 	}
 
@@ -63,7 +63,7 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 	}
 
 	@Override
-	protected String calculateName(IDfUser user) throws Exception {
+	protected String calculateName(IDfSession session, IDfUser user) throws Exception {
 		return user.getUserLoginName();
 	}
 }

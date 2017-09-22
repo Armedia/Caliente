@@ -455,8 +455,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected String calculateLabel(T sysObject) throws Exception {
-		final IDfSession session = sysObject.getSession();
+	protected String calculateLabel(IDfSession session, T sysObject) throws Exception {
 		final int folderCount = sysObject.getFolderIdCount();
 		final String objectName = sysObject.getObjectName();
 		for (int i = 0; i < folderCount; i++) {
@@ -533,7 +532,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected final int calculateDependencyTier(T object) throws Exception {
+	protected final int calculateDependencyTier(IDfSession session, T object) throws Exception {
 		int depth = calculateDepth(object, null);
 		if (isDfReference(object)) {
 			depth++;
@@ -542,7 +541,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected final String calculateHistoryId(T object) throws Exception {
+	protected final String calculateHistoryId(IDfSession session, T object) throws Exception {
 		return object.getChronicleId().getId();
 	}
 
@@ -645,12 +644,12 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected String calculateName(T sysObject) throws Exception {
+	protected String calculateName(IDfSession session, T sysObject) throws Exception {
 		return sysObject.getObjectName();
 	}
 
 	@Override
-	protected Collection<CmfObjectRef> calculateParentIds(T sysObject) throws Exception {
+	protected Collection<CmfObjectRef> calculateParentIds(IDfSession session, T sysObject) throws Exception {
 		List<CmfObjectRef> ret = new ArrayList<>();
 		for (IDfValue v : DfValueFactory.getAllRepeatingValues(DctmAttributes.I_FOLDER_ID, sysObject)) {
 			ret.add(new CmfObjectRef(CmfType.FOLDER, v.asId().getId()));
@@ -659,7 +658,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(T sysObject) throws Exception {
+	protected boolean calculateHistoryCurrent(IDfSession session, T sysObject) throws Exception {
 		return sysObject.getHasFolder();
 	}
 }

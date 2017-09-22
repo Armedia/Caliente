@@ -32,7 +32,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected final String calculateLabel(T f) throws Exception {
+	protected final String calculateLabel(Session session, T f) throws Exception {
 		String path = calculatePath(f);
 		if (path == null) {
 			path = String.format("${unfiled}:%s:%s", f.getName(), f.getId());
@@ -47,7 +47,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected String calculateSubType(CmfType type, T obj) throws Exception {
+	protected String calculateSubType(Session session, CmfType type, T obj) throws Exception {
 		return obj.getType().getId();
 	}
 
@@ -93,7 +93,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected final CmfType calculateType(T object) throws Exception {
+	protected final CmfType calculateType(Session session, T object) throws Exception {
 		if (Document.class.isInstance(object)) { return CmfType.DOCUMENT; }
 		if (Folder.class.isInstance(object)) { return CmfType.FOLDER; }
 		throw new Exception(String.format("Can't identify the type for object with ID [%s] of class [%s] and type [%s]",

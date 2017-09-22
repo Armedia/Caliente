@@ -14,7 +14,7 @@ abstract class LocalExportDelegate<T> extends
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(T object) throws Exception {
+	protected boolean calculateHistoryCurrent(LocalRoot root, T object) throws Exception {
 		// Always true
 		return true;
 	}

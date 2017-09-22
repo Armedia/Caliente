@@ -24,18 +24,18 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	protected String calculateLabel(Group object) throws Exception {
+	protected String calculateLabel(ShptSession session, Group object) throws Exception {
 		return object.getLoginName();
 	}
 
 	@Override
-	protected int calculateNumericId(Group object) {
+	protected int calculateNumericId(ShptSession session, Group object) {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateHistoryId(Group object) throws Exception {
-		return calculateObjectId(object);
+	protected String calculateHistoryId(ShptSession session, Group object) throws Exception {
+		return calculateObjectId(session, object);
 	}
 
 	@Override
@@ -167,7 +167,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	protected String calculateName(Group group) throws Exception {
+	protected String calculateName(ShptSession session, Group group) throws Exception {
 		return group.getLoginName();
 	}
 }

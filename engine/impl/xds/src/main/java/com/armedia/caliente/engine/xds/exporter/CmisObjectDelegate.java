@@ -49,28 +49,28 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 	}
 
 	@Override
-	protected String calculateLabel(T obj) throws Exception {
+	protected String calculateLabel(Session session, T obj) throws Exception {
 		CmisObject o = CmisObject.class.cast(obj);
 		return String.format("[%s|%s]", o.getType().getId(), o.getName());
 	}
 
 	@Override
-	protected String calculateHistoryId(T object) throws Exception {
+	protected String calculateHistoryId(Session session, T object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected final String calculateObjectId(T object) throws Exception {
+	protected final String calculateObjectId(Session session, T object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object) throws Exception {
+	protected final String calculateSearchKey(Session session, T object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected int calculateDependencyTier(T object) throws Exception {
+	protected int calculateDependencyTier(Session session, T object) throws Exception {
 		return 0;
 	}
 }

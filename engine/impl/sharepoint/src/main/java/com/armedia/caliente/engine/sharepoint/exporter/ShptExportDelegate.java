@@ -65,7 +65,7 @@ public abstract class ShptExportDelegate<T> extends
 	}
 
 	@Override
-	protected final CmfType calculateType(T object) throws Exception {
+	protected final CmfType calculateType(ShptSession session, T object) throws Exception {
 		for (Map.Entry<Class<?>, CmfType> e : ShptExportDelegate.TYPE_MAP.entrySet()) {
 			if (e.getKey().isInstance(object)) { return e.getValue(); }
 		}

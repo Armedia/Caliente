@@ -18,14 +18,14 @@ public abstract class ShptSecurityObject<T> extends ShptObject<T> {
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object) {
-		return String.valueOf(calculateNumericId(object));
+	protected final String calculateSearchKey(ShptSession session, T object) {
+		return String.valueOf(calculateNumericId(session, object));
 	}
 
 	@Override
-	public String calculateObjectId(T object) throws Exception {
-		return String.format("%04x", calculateNumericId(object));
+	public String calculateObjectId(ShptSession session, T object) throws Exception {
+		return String.format("%04x", calculateNumericId(session, object));
 	}
 
-	protected abstract int calculateNumericId(T object);
+	protected abstract int calculateNumericId(ShptSession session, T object);
 }

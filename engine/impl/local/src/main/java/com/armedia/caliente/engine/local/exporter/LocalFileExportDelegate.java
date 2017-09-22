@@ -91,7 +91,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected int calculateDependencyTier(LocalFile file) throws Exception {
+	protected int calculateDependencyTier(LocalRoot root, LocalFile file) throws Exception {
 		return file.getPathCount() - 1;
 	}
 
@@ -262,7 +262,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected CmfType calculateType(LocalFile f) throws Exception {
+	protected CmfType calculateType(LocalRoot root, LocalFile f) throws Exception {
 		File F = f.getAbsolute();
 		if (F.isFile()) { return CmfType.DOCUMENT; }
 		if (F.isDirectory()) { return CmfType.FOLDER; }
@@ -270,33 +270,33 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected String calculateLabel(LocalFile object) throws Exception {
+	protected String calculateLabel(LocalRoot root, LocalFile object) throws Exception {
 		return object.getPortableFullPath();
 	}
 
 	@Override
-	protected String calculateObjectId(LocalFile object) throws Exception {
+	protected String calculateObjectId(LocalRoot root, LocalFile object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateHistoryId(LocalFile object) throws Exception {
+	protected String calculateHistoryId(LocalRoot root, LocalFile object) throws Exception {
 		if (object.getAbsolute().isDirectory()) { return String.format("%08X", object.getPathCount()); }
-		return super.calculateHistoryId(object);
+		return super.calculateHistoryId(root, object);
 	}
 
 	@Override
-	protected String calculateSearchKey(LocalFile object) throws Exception {
+	protected String calculateSearchKey(LocalRoot root, LocalFile object) throws Exception {
 		return object.getSafePath();
 	}
 
 	@Override
-	protected String calculateName(LocalFile object) throws Exception {
+	protected String calculateName(LocalRoot root, LocalFile object) throws Exception {
 		return object.getName();
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(LocalFile object) throws Exception {
+	protected boolean calculateHistoryCurrent(LocalRoot root, LocalFile object) throws Exception {
 		// Always true
 		return true;
 	}

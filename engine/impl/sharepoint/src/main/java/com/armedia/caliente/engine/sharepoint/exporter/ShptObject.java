@@ -41,12 +41,12 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	}
 
 	@Override
-	protected String calculateSearchKey(T object) throws Exception {
-		return calculateObjectId(object);
+	protected String calculateSearchKey(ShptSession session, T object) throws Exception {
+		return calculateObjectId(session, object);
 	}
 
 	@Override
-	public int calculateDependencyTier(T object) {
+	public int calculateDependencyTier(ShptSession session, T object) {
 		return 0;
 	}
 

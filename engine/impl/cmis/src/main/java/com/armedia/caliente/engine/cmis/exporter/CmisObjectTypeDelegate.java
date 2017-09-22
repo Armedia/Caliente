@@ -49,7 +49,7 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 	}
 
 	@Override
-	protected int calculateDependencyTier(ObjectType objectType) throws Exception {
+	protected int calculateDependencyTier(Session session, ObjectType objectType) throws Exception {
 		return calculateDepth(objectType, new LinkedHashSet<String>());
 	}
 
@@ -65,27 +65,27 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 	}
 
 	@Override
-	protected CmfType calculateType(ObjectType object) throws Exception {
+	protected CmfType calculateType(Session session, ObjectType object) throws Exception {
 		return CmfType.TYPE;
 	}
 
 	@Override
-	protected String calculateLabel(ObjectType object) throws Exception {
+	protected String calculateLabel(Session session, ObjectType object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateObjectId(ObjectType object) throws Exception {
+	protected String calculateObjectId(Session session, ObjectType object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateSearchKey(ObjectType object) throws Exception {
+	protected String calculateSearchKey(Session session, ObjectType object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateName(ObjectType object) throws Exception {
+	protected String calculateName(Session session, ObjectType object) throws Exception {
 		return object.getId();
 	}
 }

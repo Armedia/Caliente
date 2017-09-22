@@ -47,7 +47,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected int calculateDependencyTier(Folder object) throws Exception {
+	protected int calculateDependencyTier(Session session, Folder object) throws Exception {
 		return calculateDepth(object, new LinkedHashSet<String>());
 	}
 
@@ -84,7 +84,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected String calculateName(Folder folder) throws Exception {
+	protected String calculateName(Session session, Folder folder) throws Exception {
 		return folder.getName();
 	}
 }
