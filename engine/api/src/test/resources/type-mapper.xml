@@ -2,78 +2,7 @@
 <!DOCTYPE type-mapper>
 <type-mapper>
 
-	<attribute-mapping name="xxxxx" extends=".....">
-		<condition>
-			<and>
-				<!-- Compare the source object's archetype -->
-				<type>DOCUMENT|FOLDER|USER|GROUP|ACL|....</type>
-
-				<!-- Compare the source object's subtype -->
-				<subtype>dm_document|cmis:document|....</subtype>
-				
-				<!-- Only evaluates to true if the source object is a reference -->
-				<isReference/>
-
-				<!-- Check for the existence of a decorator (i.e. aspect) on the source object -->
-				<decorator></decorator>
-
-				<!--
-					Check for the value in an attribute (or any, in the case of repeating attribute-set)
-
-					name = the name of the attribute to check against
-					value = the value to use for the comparison
-					comparison = the comparison to execute (default = "eq"):
-						eq : equals
-						gt : greater than
-						ge : greater than or equal
-						lt : less than
-						le : less than or equal
-						sw : starts with
-						ew : ends with
-						re : regular expression match
-
-						i = case insensitive (default is case sensitive)
-				-->
-				<attribute>
-					<name>xxxx</name>
-					<comparison>(eq|gt|lt|ge|le|sw|ew|cn|re)(i)?</comparison>
-					<value>ZZZZZ</value>
-				</attribute>
-				<supplementaryProperty>
-					<name>xxxx</name>
-					<comparison>(eq|gt|lt|ge|le|sw|ew|cn|re)(i)?</comparison>
-					<value>ZZZZZ</value>
-				</supplementaryProperty>
-
-				<expression lang="(bsf|beanshell|js|...)">
-					<source>
-						<!-- source object attributes are available via ${object.attribute[attributeName]} -->
-						<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
-						<!-- source object type is available via ${object.type} -->
-						<!-- source object subtype is available via ${object.subtype} -->
-						<!-- source object decorators are available via the array ${object.decorator} -->
-						<![CDATA[
-						a > b < c ....
-						]]>
-					</source>
-					<comparison>(eq|gt|lt|ge|le|sw|ew|cn|re)(i)?</comparison>
-					<value>ZZZZZ</value>
-				</expression>
-
-				<or>
-					<and></and>
-					<or></or>
-					<xor></xor>
-					<not>
-						....
-					</not>
-				</or>
-			</and>
-			<or></or>
-			<xor></xor>
-			<not>
-			</not>
-		</condition>
+	<attribute-mapping-set id="xxxxx" includes="ams-1, ams-2, ams-3, ... , ams-X">
 		<attribute>
 			<targetName expression="(constant|copy|bsf|beanshell|js|...)">
 				<!-- source object attributes are available via ${object.attribute[attributeName]} -->
@@ -97,7 +26,7 @@
 				]]>
 			</value>
 		</attribute>
-	</attribute-mapping>
+	</attribute-mapping-set>
 
 	<type-mapping>
 		<condition>
@@ -237,25 +166,23 @@
 						]]>
 					</add-decorator>
 			</decorators>
-			<attribute-mapping extends="attribute-mapping-name,another-mapping-name">
-				<attribute>
-					<targetName></targetName>
-					<sourceName></sourceName> <!-- for direct value copy -->
-
-					<!-- for calculation -->
-					<value expression="(constant|copy|bsf|beanshell|js|...)">
-						<!-- source object attributes are available via ${object.attribute[attributeName]} -->
-						<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
-						<!-- source object type is available via ${object.type} -->
-						<!-- source object subtype is available via ${object.subtype} -->
-						<!-- source object decorators are available via the array ${object.decorator} -->
-						<![CDATA[
-						a > b < c ....
-						]]>
-					</value>
-				</attribute>
-			</attribute-mapping>
 		</target>
+		<attribute-mapping includes="....">
+			<attribute>
+				<targetName></targetName>
+				<!-- for calculation -->
+				<value expression="(constant|copy|bsf|beanshell|js|...)">
+					<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+					<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+					<!-- source object type is available via ${object.type} -->
+					<!-- source object subtype is available via ${object.subtype} -->
+					<!-- source object decorators are available via the array ${object.decorator} -->
+					<![CDATA[
+					a > b < c ....
+					]]>
+				</value>
+			</attribute>
+		</attribute-mapping>
 	</type-mapping>
 
 	<type-mapping>
