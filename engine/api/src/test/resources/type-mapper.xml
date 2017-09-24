@@ -2,7 +2,38 @@
 <!DOCTYPE type-mapper>
 <type-mapper>
 
-	<attribute-mapping-set id="xxxxx" includes="ams-1, ams-2, ams-3, ... , ams-X">
+	<include>xml-resource-url-or-path</include>
+
+	<type-mapping name="xxxx" extends="zzzz">
+		<!-- TODO: Should we allow archetype changes? What about VDocs, then? -->
+		<type>...</type>
+		<subtype></subtype>
+		<decorators existing="keep|clear">
+				<remove-decorator expression="(constant|bsf|beanshell|js|...)">
+					<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+					<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+					<!-- source object type is available via ${object.type} -->
+					<!-- source object subtype is available via ${object.subtype} -->
+					<!-- source object decorators are available via the array ${object.decorator} -->
+					<![CDATA[
+					a > b < c ....
+					]]>
+				</remove-decorator>
+
+				<add-decorator expression="(constant|bsf|beanshell|js|...)">
+					<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+					<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+					<!-- source object type is available via ${object.type} -->
+					<!-- source object subtype is available via ${object.subtype} -->
+					<!-- source object decorators are available via the array ${object.decorator} -->
+					<![CDATA[
+					a > b < c ....
+					]]>
+				</add-decorator>
+		</decorators>
+	</type-mapping>
+
+	<attribute-mapping name="xxxxx" includes="am-1 am-2 am-3 ... am-X">
 		<attribute>
 			<targetName expression="(constant|copy|bsf|beanshell|js|...)">
 				<!-- source object attributes are available via ${object.attribute[attributeName]} -->
@@ -26,9 +57,11 @@
 				]]>
 			</value>
 		</attribute>
-	</attribute-mapping-set>
+	</attribute-mapping>
 
-	<type-mapping>
+	<include>xml-resource-url-or-path</include>
+
+	<transformation>
 		<condition>
 			<and>
 				<!-- Compare the source object's archetype -->
@@ -140,7 +173,8 @@
 		<!--
 			Override the "default" type mapping, above.  Must declare at least one of "type" or "decorators".
 		-->
-		<target>
+		<type-mapping extends=".....">
+			<!-- TODO: Should we allow archetype changes? What about VDocs, then? -->
 			<type>...</type>
 			<subtype></subtype>
 			<decorators existing="keep|clear">
@@ -166,7 +200,8 @@
 						]]>
 					</add-decorator>
 			</decorators>
-		</target>
+		</type-mapping>
+		
 		<attribute-mapping includes="....">
 			<attribute>
 				<targetName></targetName>
@@ -183,9 +218,9 @@
 				</value>
 			</attribute>
 		</attribute-mapping>
-	</type-mapping>
+	</transformation>
 
-	<type-mapping>
+	<transformation>
 		...
-	</type-mapping>
+	</transformation>
 </type-mapper>
