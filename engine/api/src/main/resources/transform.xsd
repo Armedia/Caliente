@@ -234,7 +234,7 @@
 	</xsd:group>
 
 	<xsd:complexType name="condition.t">
-		<xsd:choice minOccurs="0" maxOccurs="unbounded">
+		<xsd:choice minOccurs="0" maxOccurs="1">
 			<xsd:group ref="tns:groupingConditions" />
 		</xsd:choice>
 	</xsd:complexType>
@@ -248,7 +248,7 @@
 
 	<xsd:complexType name="transformation.t">
 		<xsd:sequence>
-			<xsd:element name="condition" type="tns:condition.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="condition" type="tns:condition.t" minOccurs="1" maxOccurs="1" />
 			<xsd:choice minOccurs="1" maxOccurs="unbounded">
 				<xsd:element name="attribute-mapping" type="tns:attributeMapping.t" />
 				<xsd:element name="type-mapping" type="tns:typeMapping.t" />
