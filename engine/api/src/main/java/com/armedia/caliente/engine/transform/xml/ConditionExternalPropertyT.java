@@ -9,6 +9,8 @@ import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueCodec;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionExternalProperty.t", propOrder = {
@@ -51,16 +53,16 @@ public class ConditionExternalPropertyT implements Condition {
 	}
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		String name = getName();
-		CmfProperty<?> att = ctx.getObject().getProperty(name);
+		CmfProperty<V> prop = ctx.getObject().getProperty(name);
 		ExpressionT valueExp = getValue();
 		String value = (valueExp != null ? valueExp.evaluate(ctx) : "");
-		// TODO: What if there is no attribute?
 		Comparison comparison = getComparison();
-		for (Object attVal : att) {
-			String attStr = attVal.toString(); // TODO: Fix to use a codec
-			if (comparison.eval(value, attStr)) { return true; }
+		CmfValueCodec<V> codec = ctx.getCodec(prop.getType());
+		for (V propVal : prop) {
+			CmfValue v = codec.encodeValue(propVal);
+			if (comparison.eval(value, v.asString())) { return true; }
 		}
 
 		return false;

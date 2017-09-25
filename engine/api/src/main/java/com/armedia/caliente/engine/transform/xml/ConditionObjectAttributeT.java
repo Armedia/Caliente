@@ -51,7 +51,7 @@ public class ConditionObjectAttributeT implements Condition {
 	}
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		String name = getName();
 		CmfAttribute<?> att = ctx.getObject().getAttribute(name);
 		ExpressionT valueExp = getValue();

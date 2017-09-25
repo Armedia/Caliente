@@ -49,7 +49,7 @@ public class ConditionExpressionT implements Condition {
 	}
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		ExpressionT sourceExp = getSource();
 		String source = (sourceExp != null ? sourceExp.evaluate(ctx) : "");
 		ExpressionT valueExp = getValue();

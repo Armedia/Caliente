@@ -43,7 +43,7 @@ public class ConditionNotT implements Condition {
 	}
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		Objects.requireNonNull(this.element, "Must set a non-null element");
 		return !this.element.evaluate(ctx);
 	}

@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.XmlType;
 public class ConditionIsReferenceT implements Condition {
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		return true; // ctx.getObject().isReference();
 	}
 

@@ -29,7 +29,7 @@ public class ConditionSubtypeT extends SimpleConditionT {
 	}
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		String value = Tools.coalesce(getValue(), "");
 		Comparison comparison = getComparison();
 		return comparison.eval(value, ctx.getObject().getSubtype());

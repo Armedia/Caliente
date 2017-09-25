@@ -6,85 +6,59 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueCodec;
 
-/**
- * <p>Java class for mapValue.t complex type.
- * 
- * <p>The following schema fragment specifies the expected content contained within this class.
- * 
- * <pre>
- * &lt;complexType name="mapValue.t">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="target" type="{http://www.armedia.com/ns/caliente/engine/transform}expression.t"/>
- *         &lt;element name="switch" type="{http://www.armedia.com/ns/caliente/engine/transform}switchValue.t"/>
- *       &lt;/sequence>
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
- * </pre>
- * 
- * 
- */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mapValue.t", propOrder = {
-    "target",
-    "_switch"
+	"target", "selector"
 })
-public class MapValueT {
+public class MapValueT implements Transformation {
 
-    @XmlElement(required = true)
-    protected ExpressionT target;
-    @XmlElement(name = "switch", required = true)
-    protected SwitchValueT _switch;
+	@XmlElement(required = true)
+	protected ExpressionT target;
 
-    /**
-     * Gets the value of the target property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link ExpressionT }
-     *     
-     */
-    public ExpressionT getTarget() {
-        return target;
-    }
+	@XmlElement(name = "switch", required = true)
+	protected SwitchValueT selector;
 
-    /**
-     * Sets the value of the target property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link ExpressionT }
-     *     
-     */
-    public void setTarget(ExpressionT value) {
-        this.target = value;
-    }
+	public ExpressionT getTarget() {
+		return this.target;
+	}
 
-    /**
-     * Gets the value of the switch property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link SwitchValueT }
-     *     
-     */
-    public SwitchValueT getSwitch() {
-        return _switch;
-    }
+	public void setTarget(ExpressionT value) {
+		this.target = value;
+	}
 
-    /**
-     * Sets the value of the switch property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link SwitchValueT }
-     *     
-     */
-    public void setSwitch(SwitchValueT value) {
-        this._switch = value;
-    }
+	public SwitchValueT getSwitch() {
+		return this.selector;
+	}
+
+	public void setSwitch(SwitchValueT value) {
+		this.selector = value;
+	}
+
+	@Override
+	public <V> void apply(TransformationContext<V> ctx) {
+		// First things first: get the attribute to be mapped
+		String attName = this.target.evaluate(ctx);
+		CmfAttribute<V> att = ctx.getObject().getAttribute(attName);
+		// No transformation to apply
+		if (att == null) { return; }
+
+		CmfAttribute<V> newAtt = new CmfAttribute<>(att);
+		CmfValueCodec<V> codec = ctx.getCodec(newAtt.getType());
+		for (V v : att) {
+			CmfValue cv = codec.encodeValue(v);
+			String newVal = this.selector.selectValue(ctx, cv.asString());
+			v = codec.decodeValue(new CmfValue(newVal));
+			if (newAtt.isRepeating()) {
+				newAtt.addValue(v);
+			} else {
+				newAtt.setValue(v);
+			}
+		}
+		ctx.getObject().setAttribute(newAtt);
+	}
 
 }

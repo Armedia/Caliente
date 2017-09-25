@@ -35,7 +35,7 @@ public class ConditionT implements Condition {
 	}
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		Objects.requireNonNull(this.condition, "Must set a non-null condition");
 		return this.condition.evaluate(ctx);
 	}

@@ -14,7 +14,7 @@ import com.armedia.caliente.store.CmfType;
 public class ConditionTypeT extends SimpleConditionT {
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		String value = getValue();
 		if (value == null) {
 			value = "";

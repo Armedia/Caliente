@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlType;
 public class ConditionXorT extends ConditionGroupT {
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		int count = 0;
 		for (Condition c : getMembers()) {
 			Objects.requireNonNull(c, "May not include null conditions in the group");

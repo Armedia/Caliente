@@ -39,7 +39,7 @@ public class ConditionDecoratorCheckT implements Condition {
 	}
 
 	@Override
-	public boolean evaluate(TransformationContext ctx) {
+	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		Comparison comparison = getComparison();
 		// TODO: How to get the decorators for the object?
 		return (comparison != null);
