@@ -23,7 +23,36 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="attribute.t">
+	<xsd:complexType name="switchCaseMatch.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:expression.t">
+				<xsd:attribute name="comparison" type="tns:comparison.t" use="required" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="switchCase.t">
+		<xsd:sequence>
+			<xsd:element name="match" type="tns:switchCaseMatch.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="value" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="switchValue.t">
+		<xsd:sequence>
+			<xsd:element name="case" type="tns:switchCase.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="default" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="mapValue.t">
+		<xsd:sequence>
+			<xsd:element name="target" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="switch" type="tns:switchValue.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="setValue.t">
 		<xsd:sequence>
 			<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
@@ -31,9 +60,10 @@
 	</xsd:complexType>
 
 	<xsd:complexType name="attributeMapping.t">
-		<xsd:sequence>
-			<xsd:element name="attribute" type="tns:attribute.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
+		<xsd:choice minOccurs="0" maxOccurs="unbounded">
+			<xsd:element name="set-value" type="tns:setValue.t" />
+			<xsd:element name="map-value" type="tns:mapValue.t" />
+		</xsd:choice>
 		<xsd:attribute name="includes" type="xsd:string" use="optional" />
 	</xsd:complexType>
 	

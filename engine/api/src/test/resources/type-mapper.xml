@@ -9,7 +9,7 @@
 		<type>ssss</type>
 		<subtype>ssss</subtype>
 		<decorators clear-existing="true">
-			<remove-decorator></remove-decorator>
+			<remove-decorator lang="(constant|bsf|beanshell|js|...)"></remove-decorator>
 
 			<add-decorator lang="(constant|bsf|beanshell|js|...)">
 				<!-- source object attributes are available via ${object.attribute[attributeName]} -->
@@ -25,7 +25,7 @@
 	</type-mapping>
 
 	<attribute-mapping name="xxxxx" includes="am-1 am-2 am-3 ... am-X">
-		<attribute>
+		<set-value>
 			<name lang="(constant|copy|bsf|beanshell|js|...)">
 				<!-- source object attributes are available via ${object.attribute[attributeName]} -->
 				<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
@@ -47,7 +47,7 @@
 				a > b < c ....
 				]]>
 			</value>
-		</attribute>
+		</set-value>
 	</attribute-mapping>
 
 	<include>xml-resource-url-or-path</include>
@@ -64,7 +64,7 @@
 				<!-- Only evaluates to true if the source object is a reference -->
 				<is-reference />
 
-				<!-- Check for the existence of a decorator (i.e. aspect) on the source object -->
+				<!-- Check for the presence of a decorator (i.e. aspect) on the source object -->
 				<check-decorator comparison="globi">xxx</check-decorator>
 
 				<!-- Check for the value in an attribute (or any, in the case of repeating attribute-set) name = the name of the attribute to check 
@@ -171,8 +171,17 @@
 		</type-mapping>
  
 		<attribute-mapping includes="....">
-			<attribute>
-				<name></name>
+			<set-value>
+				<name lang="(constant|copy|bsf|beanshell|js|...)">
+					<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+					<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+					<!-- source object type is available via ${object.type} -->
+					<!-- source object subtype is available via ${object.subtype} -->
+					<!-- source object decorators are available via the array ${object.decorator} -->
+					<![CDATA[
+					a > b < c ....
+					]]>
+				</name>
 				<!-- for calculation -->
 				<value lang="(constant|copy|bsf|beanshell|js|...)">
 					<!-- source object attributes are available via ${object.attribute[attributeName]} -->
@@ -184,7 +193,26 @@
 					a > b < c ....
 					]]>
 				</value>
-			</attribute>
+			</set-value>
+			<map-value>
+				<target lang="(constant|copy|bsf|beanshell|js|...)">
+					<!-- source object attributes are available via ${object.attribute[attributeName]} -->
+					<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
+					<!-- source object type is available via ${object.type} -->
+					<!-- source object subtype is available via ${object.subtype} -->
+					<!-- source object decorators are available via the array ${object.decorator} -->
+					<![CDATA[
+					a > b < c ....
+					]]>
+				</target>
+				<switch>
+					<case>
+						<match comparison="eq" lang="...">....</match>
+						<value lang="(...)">....</value>
+					</case>
+					<default lang="(...)">....</default>
+				</switch>
+			</map-value>
 		</attribute-mapping>
 	</transformation>
 </type-mapper>
