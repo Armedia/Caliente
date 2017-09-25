@@ -217,14 +217,14 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:complexType name="typeMapper.t">
-		<xsd:choice minOccurs="0" maxOccurs="unbounded">
-			<xsd:element name="include" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
-			<xsd:element name="attribute-mapping" type="tns:namedAttributeMapping.t" minOccurs="0" maxOccurs="unbounded" />
-			<xsd:element name="type-mapping" type="tns:namedTypeMapping.t" minOccurs="0" maxOccurs="unbounded" />
-			<xsd:element name="transformation" type="tns:transformation.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:choice>
-	</xsd:complexType>
-
-	<xsd:element name="type-mapper" type="tns:typeMapper.t" />
+	<xsd:element name="transformations">
+		<xsd:complexType>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element name="include" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+				<xsd:element name="attribute-mapping" type="tns:namedAttributeMapping.t" minOccurs="0" maxOccurs="unbounded" />
+				<xsd:element name="type-mapping" type="tns:namedTypeMapping.t" minOccurs="0" maxOccurs="unbounded" />
+				<xsd:element name="transformation" type="tns:transformation.t" minOccurs="0" maxOccurs="unbounded" />
+			</xsd:choice>
+		</xsd:complexType>
+	</xsd:element>
 </xsd:schema>

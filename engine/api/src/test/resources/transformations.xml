@@ -1,12 +1,10 @@
 <?xml version="1.1" encoding="UTF-8"?>
-<type-mapper xmlns="http://www.armedia.com/ns/caliente/engine/transform" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<transformations xmlns="http://www.armedia.com/ns/caliente/engine/transform" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/transform platform:/resource/caliente-engine/src/main/resources/transform.xsd">
 
 	<include>xml-resource-url-or-path</include>
 
 	<type-mapping name="xxx" extends="zzzz">
-		<!-- TODO: Should we allow archetype changes? What about VDocs, then? -->
-		<type>ssss</type>
 		<subtype>ssss</subtype>
 		<decorators clear-existing="true">
 			<remove-decorator lang="(constant|bsf|beanshell|js|...)"></remove-decorator>
@@ -142,8 +140,6 @@
 
 		<!-- Override the "default" type mapping, above. Must declare at least one of "type" or "decorators". -->
 		<type-mapping extends=".....">
-			<!-- TODO: Should we allow archetype changes? What about VDocs, then? -->
-			<type>ddd</type>
 			<subtype>xxx</subtype>
 			<decorators clear-existing="false">
 				<remove-decorator lang="(constant|bsf|beanshell|js|...)">
@@ -215,4 +211,4 @@
 			</map-value>
 		</attribute-mapping>
 	</transformation>
-</type-mapper>
+</transformations>
