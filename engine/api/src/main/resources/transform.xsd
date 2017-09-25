@@ -113,7 +113,19 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="conditionNand.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionGroup.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="conditionOr.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionGroup.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionNor.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
@@ -128,10 +140,32 @@
 
 	<xsd:complexType name="conditionXor.t">
 		<xsd:complexContent>
-			<xsd:extension base="tns:conditionGroup.t">
-				<xsd:attribute name="mutex" type="xsd:boolean" use="optional" default="false" />
-			</xsd:extension>
+			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionXnor.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionGroup.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionMux.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionGroup.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionType.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:typeName.t"/>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionSubtype.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:typeName.t"/>
+		</xsd:simpleContent>
 	</xsd:complexType>
 
 	<xsd:complexType name="conditionIsReference.t">
@@ -177,13 +211,18 @@
 			<xsd:element name="and" type="tns:conditionAnd.t" />
 			<xsd:element name="or" type="tns:conditionOr.t" />
 			<xsd:element name="xor" type="tns:conditionXor.t" />
+			<xsd:element name="not" type="tns:conditionNot.t" />
+			<xsd:element name="nand" type="tns:conditionNand.t" />
+			<xsd:element name="nor" type="tns:conditionNor.t" />
+			<xsd:element name="xnor" type="tns:conditionXnor.t" />
+			<xsd:element name="mux" type="tns:conditionMux.t" />
 		</xsd:choice>
 	</xsd:group>
 
 	<xsd:group name="checkConditions">
 		<xsd:choice>
-			<xsd:element name="type" type="tns:typeName.t" />
-			<xsd:element name="subtype" type="tns:typeName.t" />
+			<xsd:element name="type" type="tns:conditionType.t" />
+			<xsd:element name="subtype" type="tns:conditionSubtype.t" />
 			<xsd:element name="is-reference" type="tns:conditionIsReference.t" />
 			<xsd:element name="check-decorator" type="tns:conditionDecoratorCheck.t" />
 			<xsd:element name="check-object-attribute" type="tns:conditionObjectAttribute.t" />
@@ -195,14 +234,12 @@
 	<xsd:complexType name="condition.t">
 		<xsd:choice minOccurs="0" maxOccurs="unbounded">
 			<xsd:group ref="tns:groupingConditions" />
-			<xsd:element name="not" type="tns:conditionNot.t" />
 		</xsd:choice>
 	</xsd:complexType>
 
 	<xsd:complexType name="conditionGroup.t">
-		<xsd:choice minOccurs="0" maxOccurs="unbounded">
+		<xsd:choice minOccurs="1" maxOccurs="unbounded">
 			<xsd:group ref="tns:groupingConditions" />
-			<xsd:element name="not" type="tns:conditionNot.t" />
 			<xsd:group ref="tns:checkConditions" />
 		</xsd:choice>
 	</xsd:complexType>

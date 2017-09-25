@@ -124,14 +124,14 @@
 
 				<or>
 					<not>
-						<and>
+						<and><not><not><type>xx</type></not></not>
 						</and>
 					</not>
-					<and></and>
-					<or></or>
-					<xor></xor>
+					<and><type>xx</type></and>
+					<or><type>xx</type></or>
+					<xor><type>xx</type></xor>
 					<not>
-						<and>
+						<and><type>xx</type>
 						</and>
 					</not>
 				</or>
