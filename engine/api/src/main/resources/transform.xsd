@@ -103,7 +103,7 @@
 	<xsd:simpleType name="comparison.t" final="restriction">
 		<xsd:restriction base="xsd:token">
 			<!-- (eq|ne|ge|gt|le|lt|cn|nc|re|nre|glob|nglob)(i)? -->
-			<xsd:pattern value="[eE][qQ]|[gGlL][tTeE]|[sSeE][wW]|[cC][nN]|[nN][cC]|([nN]|[rR]|[nN][rR])[eE]|[nN]?[gG][lL][oO][bB][iI]?" />
+			<xsd:pattern value="([eE][qQ]|[gGlL][tTeE]|[sSeE][wW]|[cC][nN]|[nN][cC]|([nN]|[rR]|[nN][rR])[eE]|[nN]?[gG][lL][oO][bB])[iI]?" />
 		</xsd:restriction>
 	</xsd:simpleType>
 
