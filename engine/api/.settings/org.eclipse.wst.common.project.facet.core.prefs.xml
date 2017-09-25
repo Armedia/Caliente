@@ -1,7 +1,7 @@
 <root>
   <facet id="jpt.jaxb">
     <node name="classgen">
-      <attribute name="package" value="com.armedia.caliente.engine.mapper.xml"/>
+      <attribute name="package" value="com.armedia.caliente.engine.transform.xml"/>
     </node>
     <node name="libprov">
       <attribute name="provider-id" value="jaxb-jre-library-provider"/>
@@ -12,6 +12,9 @@
     <node name="schemas">
       <node name="schema-1">
         <attribute name="location" value="platform:/resource/caliente-engine/src/main/resources/type-mappings.xsd"/>
+      </node>
+      <node name="schema-2">
+        <attribute name="location" value="platform:/resource/caliente-engine/src/main/resources/transform.xsd"/>
       </node>
     </node>
   </facet>

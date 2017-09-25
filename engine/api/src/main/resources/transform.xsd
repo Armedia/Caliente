@@ -102,8 +102,8 @@
 
 	<xsd:simpleType name="comparison.t" final="restriction">
 		<xsd:restriction base="xsd:token">
-			<!-- (eq|(g|l)(t|e)|(s|e)w|cn|re|glob)(i)? -->
-			<xsd:pattern value="(([eE][qQ])|(([gG]|[lL])([tT]|[eE]))|(([sS]|[eE])[wW])|([cC][nN])|([rR][eE])|([gG][lL][oO][bB]))([iI])?" />
+			<!-- (eq|ne|ge|gt|le|lt|cn|nc|re|nre|glob|nglob)(i)? -->
+			<xsd:pattern value="[eE][qQ]|[gGlL][tTeE]|[sSeE][wW]|[cC][nN]|[nN][cC]|([nN]|[rR]|[nN][rR])[eE]|[nN]?[gG][lL][oO][bB][iI]?" />
 		</xsd:restriction>
 	</xsd:simpleType>
 
@@ -164,7 +164,9 @@
 
 	<xsd:complexType name="conditionSubtype.t">
 		<xsd:simpleContent>
-			<xsd:extension base="tns:typeName.t"/>
+			<xsd:extension base="tns:typeName.t">
+				<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
+			</xsd:extension>
 		</xsd:simpleContent>
 	</xsd:complexType>
 
