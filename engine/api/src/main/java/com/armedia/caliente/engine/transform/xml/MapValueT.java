@@ -12,22 +12,22 @@ import com.armedia.caliente.store.CmfValueCodec;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mapValue.t", propOrder = {
-	"target", "selector"
+	"name", "selector"
 })
 public class MapValueT implements Transformation {
 
 	@XmlElement(required = true)
-	protected ExpressionT target;
+	protected ExpressionT name;
 
 	@XmlElement(name = "switch", required = true)
 	protected SwitchValueT selector;
 
-	public ExpressionT getTarget() {
-		return this.target;
+	public ExpressionT getName() {
+		return this.name;
 	}
 
-	public void setTarget(ExpressionT value) {
-		this.target = value;
+	public void setName(ExpressionT name) {
+		this.name = name;
 	}
 
 	public SwitchValueT getSwitch() {
@@ -40,8 +40,7 @@ public class MapValueT implements Transformation {
 
 	@Override
 	public <V> void apply(TransformationContext<V> ctx) {
-		// First things first: get the attribute to be mapped
-		String attName = this.target.evaluate(ctx);
+		String attName = getName().evaluate(ctx);
 		CmfAttribute<V> att = ctx.getObject().getAttribute(attName);
 		// No transformation to apply
 		if (att == null) { return; }

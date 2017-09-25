@@ -47,7 +47,7 @@
 
 	<xsd:complexType name="mapValue.t">
 		<xsd:sequence>
-			<xsd:element name="target" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="switch" type="tns:switchValue.t" minOccurs="1" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
@@ -59,9 +59,16 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
+	<xsd:complexType name="removeValue.t">
+		<xsd:sequence>
+			<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
 	<xsd:complexType name="attributeMapping.t">
 		<xsd:choice minOccurs="0" maxOccurs="unbounded">
 			<xsd:element name="set-value" type="tns:setValue.t" />
+			<xsd:element name="remove-value" type="tns:removeValue.t" />
 			<xsd:element name="map-value" type="tns:mapValue.t" />
 		</xsd:choice>
 		<xsd:attribute name="includes" type="xsd:string" use="optional" />

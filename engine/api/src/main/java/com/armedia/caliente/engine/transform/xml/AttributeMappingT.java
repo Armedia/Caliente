@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "attributeMapping.t", propOrder = {
-	"setValueOrMapValue"
+	"transformations"
 })
 @XmlSeeAlso({
 	NamedAttributeMappingT.class
@@ -21,14 +21,16 @@ import javax.xml.bind.annotation.XmlType;
 public class AttributeMappingT {
 
 	@XmlElements({
-		@XmlElement(name = "set-value", type = SetValueT.class), @XmlElement(name = "map-value", type = MapValueT.class)
+		@XmlElement(name = "set-value", type = SetValueT.class), //
+		@XmlElement(name = "remove-value", type = RemoveValueT.class), //
+		@XmlElement(name = "map-value", type = MapValueT.class), //
 	})
-	protected List<Transformation> setValueOrMapValue;
+	protected List<Transformation> transformations;
 
-	public List<Transformation> getSetValueOrMapValue() {
-		if (this.setValueOrMapValue == null) {
-			this.setValueOrMapValue = new ArrayList<>();
+	public List<Transformation> getTransformations() {
+		if (this.transformations == null) {
+			this.transformations = new ArrayList<>();
 		}
-		return this.setValueOrMapValue;
+		return this.transformations;
 	}
 }
