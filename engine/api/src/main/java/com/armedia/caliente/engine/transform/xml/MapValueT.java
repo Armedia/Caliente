@@ -7,27 +7,28 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mapValue.t", propOrder = {
-	"name", "selector"
+	"target", "selector"
 })
 public class MapValueT implements Transformation {
 
 	@XmlElement(required = true)
-	protected ExpressionT name;
+	protected ExpressionT target;
 
 	@XmlElement(name = "switch", required = true)
 	protected SwitchValueT selector;
 
-	public ExpressionT getName() {
-		return this.name;
+	public ExpressionT getTarget() {
+		return this.target;
 	}
 
-	public void setName(ExpressionT name) {
-		this.name = name;
+	public void setTarget(ExpressionT target) {
+		this.target = target;
 	}
 
 	public SwitchValueT getSwitch() {
@@ -40,13 +41,14 @@ public class MapValueT implements Transformation {
 
 	@Override
 	public <V> void apply(TransformationContext<V> ctx) {
-		String attName = getName().evaluate(ctx);
+		String attName = getTarget().evaluate(ctx);
 		CmfAttribute<V> att = ctx.getObject().getAttribute(attName);
 		// No transformation to apply
 		if (att == null) { return; }
 
 		CmfAttribute<V> newAtt = new CmfAttribute<>(att);
-		CmfValueCodec<V> codec = ctx.getCodec(newAtt.getType());
+		CmfObject<V> object = ctx.getObject();
+		CmfValueCodec<V> codec = object.getTranslator().getCodec(newAtt.getType());
 		for (V v : att) {
 			CmfValue cv = codec.encodeValue(v);
 			String newVal = this.selector.selectValue(ctx, cv.asString());
@@ -57,7 +59,7 @@ public class MapValueT implements Transformation {
 				newAtt.setValue(v);
 			}
 		}
-		ctx.getObject().setAttribute(newAtt);
+		object.setAttribute(newAtt);
 	}
 
 }

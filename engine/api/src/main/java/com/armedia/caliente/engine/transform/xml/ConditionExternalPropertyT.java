@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
@@ -55,11 +56,12 @@ public class ConditionExternalPropertyT implements Condition {
 	@Override
 	public <V> boolean evaluate(TransformationContext<V> ctx) {
 		String name = getName();
-		CmfProperty<V> prop = ctx.getObject().getProperty(name);
+		CmfObject<V> object = ctx.getObject();
+		CmfProperty<V> prop = object.getProperty(name);
 		ExpressionT valueExp = getValue();
 		String value = (valueExp != null ? valueExp.evaluate(ctx) : "");
 		Comparison comparison = getComparison();
-		CmfValueCodec<V> codec = ctx.getCodec(prop.getType());
+		CmfValueCodec<V> codec = object.getTranslator().getCodec(prop.getType());
 		for (V propVal : prop) {
 			CmfValue v = codec.encodeValue(propVal);
 			if (comparison.eval(value, v.asString())) { return true; }

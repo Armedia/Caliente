@@ -47,7 +47,7 @@
 
 	<xsd:complexType name="mapValue.t">
 		<xsd:sequence>
-			<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="target" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="switch" type="tns:switchValue.t" minOccurs="1" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>

@@ -128,6 +128,10 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		this.translator = translator;
 	}
 
+	public final CmfAttributeTranslator<V> getTranslator() {
+		return this.translator;
+	}
+
 	final void setNumber(Long number) {
 		if (number == null) { throw new IllegalArgumentException("Must provide a number to set"); }
 		if (this.number != null) { throw new IllegalStateException("A number has already been set, can't change it"); }
