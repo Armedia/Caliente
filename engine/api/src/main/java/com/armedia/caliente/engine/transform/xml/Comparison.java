@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.transform.xml;
 
+import java.util.Objects;
+
 import com.armedia.commons.utilities.Tools;
 
 public enum Comparison {
@@ -129,14 +131,12 @@ public enum Comparison {
 		// Case-insensitive, find my counterpart!
 		Comparison comp = Comparison.valueOf(name.substring(0, name.length() - 1));
 		comparand = comparand.toUpperCase();
-		candidate = candidate.toUpperCase();
+		candidate = (candidate != null ? candidate.toUpperCase() : null);
 		return comp.eval(comparand, candidate);
 	}
 
-	public final boolean evaluate(String comparand, String candidate) {
-		comparand = Tools.coalesce(comparand, "");
-		candidate = Tools.coalesce(candidate, "");
-
+	public final boolean check(String comparand, String candidate) {
+		Objects.requireNonNull(comparand, "Must provide a non-null comparand value to check the candidate against");
 		return eval(comparand, candidate);
 	}
 
