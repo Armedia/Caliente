@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd"
+	targetNamespace="http://www.armedia.com/ns/caliente/engine/transform"
+	xmlns:tns="http://www.armedia.com/ns/caliente/engine/transform" elementFormDefault="qualified" attributeFormDefault="unqualified"
+	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
+
+	<xsd:simpleType name="typeName.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:whiteSpace value="collapse" />
+			<xsd:pattern value="[^\s]+" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:complexType name="expression.t">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="lang" type="tns:typeName.t" use="optional" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="attribute.t">
+		<xsd:sequence>
+			<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="attributeMapping.t">
+		<xsd:sequence>
+			<xsd:element name="attribute" type="tns:attribute.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="includes" type="xsd:string" use="optional" />
+	</xsd:complexType>
+	
+	<xsd:complexType name="namedAttributeMapping.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:attributeMapping.t">
+				<xsd:attribute name="name" type="tns:typeName.t" use="required" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:complexType name="decorators.t">
+		<xsd:sequence>
+			<xsd:element name="remove-decorator" type="tns:expression.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="add-decorator" type="tns:expression.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="clear-existing" type="xsd:boolean" use="optional" default="false" />
+	</xsd:complexType>
+
+	<xsd:complexType name="typeMapping.t">
+		<xsd:sequence>
+			<xsd:element name="type" type="tns:typeName.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="subtype" type="tns:typeName.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="decorators" type="tns:decorators.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="extends" type="tns:typeName.t" use="optional" />
+	</xsd:complexType>
+
+	<xsd:complexType name="namedTypeMapping.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:typeMapping.t">
+				<xsd:attribute name="name" type="tns:typeName.t" use="required" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:simpleType name="comparison.t" final="restriction">
+		<xsd:restriction base="xsd:token">
+			<!-- (eq|(g|l)(t|e)|(s|e)w|cn|re|glob)(i)? -->
+			<xsd:pattern value="(([eE][qQ])|(([gG]|[lL])([tT]|[eE]))|(([sS]|[eE])[wW])|([cC][nN])|([rR][eE])|([gG][lL][oO][bB]))([iI])?" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:complexType name="conditionAnd.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionGroup.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionOr.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionGroup.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionNot.t">
+		<xsd:choice minOccurs="1" maxOccurs="1">
+			<xsd:group ref="tns:groupingConditions" />
+			<xsd:group ref="tns:checkConditions" />
+		</xsd:choice>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionXor.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionGroup.t">
+				<xsd:attribute name="mutex" type="xsd:boolean" use="optional" default="false" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionIsReference.t">
+		<xsd:complexContent>
+			<xsd:restriction base="xsd:anyType" /> 
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionDecoratorCheck.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:typeName.t">
+				<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionObjectAttribute.t">
+		<xsd:sequence>
+			<xsd:element name="name" type="tns:typeName.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="comparison" type="tns:comparison.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionExternalProperty.t">
+		<xsd:sequence>
+			<xsd:element name="name" type="tns:typeName.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="comparison" type="tns:comparison.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionExpression.t">
+		<xsd:sequence>
+			<xsd:element name="source" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="comparison" type="tns:comparison.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:group name="groupingConditions">
+		<xsd:choice>
+			<xsd:element name="and" type="tns:conditionAnd.t" />
+			<xsd:element name="or" type="tns:conditionOr.t" />
+			<xsd:element name="xor" type="tns:conditionXor.t" />
+		</xsd:choice>
+	</xsd:group>
+
+	<xsd:group name="checkConditions">
+		<xsd:choice>
+			<xsd:element name="type" type="tns:typeName.t" />
+			<xsd:element name="subtype" type="tns:typeName.t" />
+			<xsd:element name="is-reference" type="tns:conditionIsReference.t" />
+			<xsd:element name="check-decorator" type="tns:conditionDecoratorCheck.t" />
+			<xsd:element name="check-object-attribute" type="tns:conditionObjectAttribute.t" />
+			<xsd:element name="check-caliente-property" type="tns:conditionExternalProperty.t" />
+			<xsd:element name="check-expression" type="tns:conditionExpression.t" />
+		</xsd:choice>
+	</xsd:group>
+
+	<xsd:complexType name="condition.t">
+		<xsd:choice minOccurs="0" maxOccurs="unbounded">
+			<xsd:group ref="tns:groupingConditions" />
+			<xsd:element name="not" type="tns:conditionNot.t" />
+		</xsd:choice>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionGroup.t">
+		<xsd:choice minOccurs="0" maxOccurs="unbounded">
+			<xsd:group ref="tns:groupingConditions" />
+			<xsd:element name="not" type="tns:conditionNot.t" />
+			<xsd:group ref="tns:checkConditions" />
+		</xsd:choice>
+	</xsd:complexType>
+
+	<xsd:complexType name="transformation.t">
+		<xsd:sequence>
+			<xsd:element name="condition" type="tns:condition.t" minOccurs="0" maxOccurs="1" />
+			<xsd:choice minOccurs="1" maxOccurs="unbounded">
+				<xsd:element name="attribute-mapping" type="tns:attributeMapping.t" />
+				<xsd:element name="type-mapping" type="tns:typeMapping.t" />
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="typeMapper.t">
+		<xsd:choice minOccurs="0" maxOccurs="unbounded">
+			<xsd:element name="include" type="xsd:string" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="attribute-mapping" type="tns:namedAttributeMapping.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="type-mapping" type="tns:namedTypeMapping.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="transformation" type="tns:transformation.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:choice>
+	</xsd:complexType>
+
+	<xsd:element name="type-mapper" type="tns:typeMapper.t" />
+</xsd:schema>
