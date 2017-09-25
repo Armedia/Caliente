@@ -262,6 +262,32 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		}
 	}
 
+	public final CmfAttribute<V> getOrCreateAttribute(CmfEncodeableName name, CmfDataType type, boolean repeating) {
+		return getOrCreateAttribute(name.encode(), type, repeating);
+	}
+
+	public final CmfAttribute<V> getOrCreateAttribute(String name, CmfDataType type, boolean repeating) {
+		CmfAttribute<V> att = getAttribute(name);
+		if (att == null) {
+			att = new CmfAttribute<>(name, type, repeating);
+			setAttribute(att);
+		}
+		return att;
+	}
+
+	public final CmfProperty<V> getOrCreateProperty(CmfEncodeableName name, CmfDataType type, boolean repeating) {
+		return getOrCreateProperty(name.encode(), type, repeating);
+	}
+
+	public final CmfProperty<V> getOrCreateProperty(String name, CmfDataType type, boolean repeating) {
+		CmfProperty<V> prop = getProperty(name);
+		if (prop == null) {
+			prop = new CmfProperty<>(name, type, repeating);
+			setProperty(prop);
+		}
+		return prop;
+	}
+
 	protected String toStringTrailer() {
 		return "";
 	}
