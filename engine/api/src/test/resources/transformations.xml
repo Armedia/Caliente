@@ -191,7 +191,7 @@
 				</value>
 			</set-value>
 			<map-value>
-				<target lang="(constant|copy|bsf|beanshell|js|...)">
+				<name lang="(constant|copy|bsf|beanshell|js|...)">
 					<!-- source object attributes are available via ${object.attribute[attributeName]} -->
 					<!-- source object supplementary properties are available via ${object.property[propertyName]} -->
 					<!-- source object type is available via ${object.type} -->
@@ -200,7 +200,7 @@
 					<![CDATA[
 					a > b < c ....
 					]]>
-				</target>
+				</name>
 				<switch>
 					<case>
 						<match comparison="eq" lang="...">....</match>
