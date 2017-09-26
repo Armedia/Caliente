@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/transformations platform:/resource/caliente-engine/src/main/resources/transformations.xsd">
 
 	<transformation>
-		<condition>
+		<if>
 			<and>
 				<or>
 					<is-type>asdfasdfe</is-type>
@@ -21,13 +21,13 @@
 						</name>
 						<value lang="...">
 							<!-- expression -->
-						</value> 
+						</value>
 					</is-attribute-value>
 
 					<has-caliente-property comparison="eq" lang="...">
 						<!-- expression -->
 					</has-caliente-property>
-					<is-caliente-property-value comparison="eq" cardinality="first">
+					<is-caliente-property-value comparison="EQ" cardinality="first">
 						<name lang="...">
 							<!-- expression -->
 						</name>
@@ -37,17 +37,18 @@
 					</is-caliente-property-value>
 
 					<not>
-						<is-reference/>
+						<is-reference />
 					</not>
 
-					<is-first-version/>
-
-					<is-latest-version/>
+					<mux>
+						<is-first-version />
+						<is-latest-version />
+					</mux>
 
 					<has-decorator comparison="eq" lang="...">
 						<!-- expression -->
 					</has-decorator>
-					
+
 					<check-expression comparison="eq">
 						<left lang="...">
 							<!-- expression -->
@@ -56,7 +57,7 @@
 							<!-- expression -->
 						</right>
 					</check-expression>
-					
+
 					<is-variable-set lang="...">
 						<!-- expression -->
 					</is-variable-set>
@@ -71,15 +72,15 @@
 					</is-variable-value>
 				</or>
 			</and>
-		</condition>
-		
+		</if>
+
 
 		<set-subtype>
-			<condition>
+			<if>
 				<and>
-					<is-latest-version/>
+					<is-latest-version />
 				</and>
-			</condition>
+			</if>
 
 			<subtype lang="asdfasdf">
 				<!-- expression -->
@@ -96,8 +97,8 @@
 		</replace-subtype>
 
 		<add-decorator>
-			<condition>
-			</condition>
+			<if>
+			</if>
 			<decorator lang="...">
 				<!-- expression -->
 			</decorator>
@@ -143,10 +144,11 @@
 				<!-- expression -->
 			</replacement>
 		</replace-attribute>
-		
+
 		<map-attribute-value>
-			<condition>
-			</condition>
+			<if>
+				<is-reference/>
+			</if>
 			<attribute-name lang="...">
 				<!-- expression -->
 			</attribute-name>
@@ -164,5 +166,5 @@
 		</map-attribute-value>
 
 	</transformation>
-	
+
 </transformations>

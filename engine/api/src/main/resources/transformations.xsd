@@ -259,6 +259,7 @@
 	<xsd:complexType name="condition.t">
 		<xsd:choice minOccurs="0" maxOccurs="1">
 			<xsd:group ref="tns:groupingConditions" />
+			<xsd:group ref="tns:checkConditions" />
 		</xsd:choice>
 	</xsd:complexType>
 
@@ -271,7 +272,7 @@
 
 	<xsd:complexType name="conditional.t">
 		<xsd:sequence>
-			<xsd:element name="condition" type="tns:condition.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="if" type="tns:condition.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 
