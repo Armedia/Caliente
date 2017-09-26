@@ -333,6 +333,7 @@
 			<xsd:extension base="tns:conditional.t">
 				<xsd:sequence>
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
@@ -391,6 +392,7 @@
 			<xsd:extension base="tns:conditional.t">
 				<xsd:sequence>
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
