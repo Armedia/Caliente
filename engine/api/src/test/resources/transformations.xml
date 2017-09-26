@@ -145,6 +145,8 @@
 		</replace-attribute>
 		
 		<map-attribute-value>
+			<condition>
+			</condition>
 			<attribute-name lang="...">
 				<!-- expression -->
 			</attribute-name>
