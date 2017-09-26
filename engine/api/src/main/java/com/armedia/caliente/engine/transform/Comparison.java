@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.transform.xml;
+package com.armedia.caliente.engine.transform;
 
 import java.util.Objects;
 
