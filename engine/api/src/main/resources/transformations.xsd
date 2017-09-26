@@ -233,6 +233,7 @@
 			<xsd:element name="is-caliente-property-repeating" type="tns:conditionIsCalientePropertyRepeating.t" />
 			<xsd:element name="is-caliente-property-value" type="tns:conditionIsCalientePropertyValue.t" />
 			<xsd:element name="check-expression" type="tns:conditionCheckExpression.t" />
+			<xsd:element name="custom-check" type="tns:expression.t" />
 		</xsd:choice>
 	</xsd:group>
 
@@ -387,6 +388,16 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionCustomAction.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditional.t">
+				<xsd:sequence>
+					<xsd:element name="class-name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:group name="actions">
 		<xsd:choice>
 			<xsd:element name="set-subtype" type="tns:actionSetSubtype.t" />
@@ -400,6 +411,7 @@
 			<xsd:element name="map-attribute-value" type="tns:actionMapAttributeValue.t" />
 			<xsd:element name="set-variable" type="tns:actionSetVariable.t" />
 			<xsd:element name="clear-variable" type="tns:actionClearVariable.t" />
+			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
 		</xsd:choice>
 	</xsd:group>
 
