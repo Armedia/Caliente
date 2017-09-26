@@ -233,6 +233,7 @@
 			<xsd:element name="is-caliente-property-repeating" type="tns:conditionIsCalientePropertyRepeating.t" />
 			<xsd:element name="is-caliente-property-value" type="tns:conditionIsCalientePropertyValue.t" />
 			<xsd:element name="check-expression" type="tns:conditionCheckExpression.t" />
+			<xsd:element name="custom-script" type="tns:expression.t" />
 			<xsd:element name="custom-check" type="tns:expression.t" />
 		</xsd:choice>
 	</xsd:group>
