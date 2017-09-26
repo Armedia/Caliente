@@ -8,24 +8,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-/**
- * <p>
- * Java class for conditionGroupXnor.t complex type.
- *
- * <p>
- * The following schema fragment specifies the expected content contained within this class.
- *
- * <pre>
- * &lt;complexType name="conditionGroupXnor.t">
- *   &lt;complexContent>
- *     &lt;extension base="{http://www.armedia.com/ns/caliente/engine/transformations}conditionGroup.t">
- *     &lt;/extension>
- *   &lt;/complexContent>
- * &lt;/complexType>
- * </pre>
- *
- *
- */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionGroupXnor.t")
 public class ConditionGroupXnorT extends ConditionGroupT {

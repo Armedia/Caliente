@@ -1,0 +1,185 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<transformations xmlns="http://www.armedia.com/ns/caliente/engine/transformations" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/transformations platform:/resource/caliente-engine/src/main/resources/transformations.xsd">
+
+	<transformation>
+		<if>
+			<and>
+				<or>
+					<is-type>asdfasdfe</is-type>
+
+					<is-subtype comparison="eq" lang="...">
+						<!-- expression -->
+					</is-subtype>
+
+					<has-attribute comparison="eq" lang="...">
+						<!-- expression -->
+					</has-attribute>
+					<is-attribute-value comparison="eq" cardinality="any">
+						<name lang="...">
+							<!-- expression -->
+						</name>
+						<value lang="...">
+							<!-- expression -->
+						</value>
+					</is-attribute-value>
+
+					<has-caliente-property comparison="eq" lang="...">
+						<!-- expression -->
+					</has-caliente-property>
+					<is-caliente-property-value comparison="EQ" cardinality="first">
+						<name lang="...">
+							<!-- expression -->
+						</name>
+						<value lang="...">
+							<!-- expression -->
+						</value>
+					</is-caliente-property-value>
+
+					<not>
+						<is-reference />
+					</not>
+
+					<mux>
+						<is-first-version />
+						<is-latest-version />
+					</mux>
+
+					<has-decorator comparison="eq" lang="...">
+						<!-- expression -->
+					</has-decorator>
+
+					<check-expression comparison="eq">
+						<left lang="...">
+							<!-- expression -->
+						</left>
+						<right lang="...">
+							<!-- expression -->
+						</right>
+					</check-expression>
+
+					<is-variable-set lang="...">
+						<!-- expression -->
+					</is-variable-set>
+
+					<is-variable-value comparison="eq" cardinality="any">
+						<name lang="...">
+							<!-- expression -->
+						</name>
+						<value lang="...">
+							<!-- expression -->
+						</value>
+					</is-variable-value>
+				</or>
+			</and>
+		</if>
+
+
+		<set-subtype>
+			<if>
+				<and>
+					<is-latest-version />
+				</and>
+			</if>
+
+			<subtype lang="asdfasdf">
+				<!-- expression -->
+			</subtype>
+		</set-subtype>
+
+		<replace-subtype>
+			<regex lang="...">
+				<!-- expression -->
+			</regex>
+			<replacement lang="...">
+				<!-- expression -->
+			</replacement>
+		</replace-subtype>
+
+		<add-decorator>
+			<if>
+			</if>
+			<decorator lang="...">
+				<!-- expression -->
+			</decorator>
+		</add-decorator>
+		<remove-decorator>
+			<comparison>eq</comparison>
+			<decorator lang="...">
+				<!-- expression -->
+			</decorator>
+		</remove-decorator>
+		<replace-decorator>
+			<regex lang="...">
+				<!-- expression -->
+			</regex>
+			<replacement lang="...">
+				<!-- expression -->
+			</replacement>
+		</replace-decorator>
+
+		<set-attribute>
+			<name lang="...">
+				<!-- expression -->
+			</name>
+			<value lang="...">
+				<!-- expression -->
+			</value>
+		</set-attribute>
+		<remove-attribute>
+			<comparison>eq</comparison>
+			<attribute-name lang="...">
+				<!-- expression -->
+			</attribute-name>
+		</remove-attribute>
+		<replace-attribute>
+			<attribute-name lang="...">
+				<!-- expression -->
+				replace-attribute-name
+			</attribute-name>
+			<cardinality>all</cardinality>
+			<regex lang="...">
+				<!-- expression -->
+				replace-attribute-regex
+			</regex>
+			<replacement lang="...">
+				<!-- expression -->
+				replace-attribute-replacement
+			</replacement>
+		</replace-attribute>
+
+		<map-attribute-value>
+			<if>
+				<is-reference />
+			</if>
+			<attribute-name lang="...">
+				<!-- expression -->
+				map-attribute-name
+			</attribute-name>
+			<cardinality>all</cardinality>
+			<map>
+				<case comparison="eq">
+					<value lang="...">
+					case-value-1
+					</value>
+					<replacement lang="...">
+					case-replacement-1
+					</replacement>
+				</case>
+				<case comparison="eq">
+					<value lang="...">
+					case-value-2
+					</value>
+					<replacement lang="...">
+					case-replacement-2
+					</replacement>
+				</case>
+				<default lang="...">
+					case-default-value
+				</default>
+			</map>
+		</map-attribute-value>
+
+	</transformation>
+
+</transformations>

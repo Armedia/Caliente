@@ -9,29 +9,6 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-/**
- * <p>
- * Java class for mapValueCase.t complex type.
- *
- * <p>
- * The following schema fragment specifies the expected content contained within this class.
- *
- * <pre>
- * &lt;complexType name="mapValueCase.t">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="value" type="{http://www.armedia.com/ns/caliente/engine/transformations}expression.t"/>
- *         &lt;element name="replacement" type="{http://www.armedia.com/ns/caliente/engine/transformations}expression.t"/>
- *       &lt;/sequence>
- *       &lt;attribute name="comparison" use="required" type="{http://www.armedia.com/ns/caliente/engine/transformations}comparison.t" />
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
- * </pre>
- *
- *
- */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mapValueCase.t", propOrder = {
 	"value", "replacement"
