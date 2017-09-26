@@ -25,7 +25,7 @@ public class ConditionIsTypeT implements Condition {
 
 	@Override
 	public <V> boolean check(TransformationContext<V> ctx) {
-		// TODO Auto-generated method stub
+		// TODO implement this condition
 		return false;
 	}
 
