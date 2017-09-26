@@ -31,9 +31,10 @@
 	</xsd:simpleType>
 
 	<xsd:simpleType name="cardinality.t" final="restriction">
-	    <xsd:restriction base="xsd:string">
+	    <xsd:restriction base="xsd:NMTOKEN">
 	        <xsd:enumeration value="first" />
-	        <xsd:enumeration value="*" />
+	        <xsd:enumeration value="any" />
+	        <xsd:enumeration value="all" />
 	        <xsd:enumeration value="last" />
 	    </xsd:restriction>
 	</xsd:simpleType>
@@ -149,7 +150,7 @@
 			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1"/>
 		</xsd:sequence>
 		<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
-		<xsd:attribute name="cardinality" type="tns:cardinality.t" use="optional" default="*" />
+		<xsd:attribute name="cardinality" type="tns:cardinality.t" use="optional" default="any" />
 	</xsd:complexType>
 
 	<xsd:complexType name="conditionHasCalienteProperty.t">
@@ -174,7 +175,7 @@
 			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1"/>
 		</xsd:sequence>
 		<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
-		<xsd:attribute name="cardinality" type="tns:cardinality.t" use="optional" default="*" />
+		<xsd:attribute name="cardinality" type="tns:cardinality.t" use="optional" default="any" />
 	</xsd:complexType>
 
 	<xsd:complexType name="conditionCheckExpression.t">
@@ -199,7 +200,7 @@
 			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1"/>
 		</xsd:sequence>
 		<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
-		<xsd:attribute name="cardinality" type="tns:cardinality.t" use="optional" default="*" />
+		<xsd:attribute name="cardinality" type="tns:cardinality.t" use="optional" default="any" />
 	</xsd:complexType>
 
 	<xsd:group name="groupingConditions">
