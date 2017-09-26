@@ -31,11 +31,12 @@
 	</xsd:simpleType>
 
 	<xsd:simpleType name="cardinality.t" final="restriction">
-	    <xsd:restriction base="xsd:NMTOKEN">
+	    <xsd:restriction base="xsd:string">
 	        <xsd:enumeration value="first" />
+	        <xsd:enumeration value="last" />
 	        <xsd:enumeration value="any" />
 	        <xsd:enumeration value="all" />
-	        <xsd:enumeration value="last" />
+	        <xsd:enumeration value="*" />
 	    </xsd:restriction>
 	</xsd:simpleType>
 

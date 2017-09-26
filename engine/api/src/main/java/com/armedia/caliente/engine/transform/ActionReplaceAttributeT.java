@@ -5,6 +5,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionReplaceAttribute.t", propOrder = {
@@ -16,7 +19,8 @@ public class ActionReplaceAttributeT extends ConditionalActionT {
 	protected ExpressionT attributeName;
 
 	@XmlElement(name = "cardinality", required = false)
-	protected CardinalityT cardinality;
+	@XmlJavaTypeAdapter(CardinalityAdapter.class)
+	protected Cardinality cardinality;
 
 	@XmlElement(name = "regex", required = true)
 	protected ExpressionT regex;
@@ -32,11 +36,11 @@ public class ActionReplaceAttributeT extends ConditionalActionT {
 		this.attributeName = value;
 	}
 
-	public CardinalityT getCardinality() {
-		return this.cardinality;
+	public Cardinality getCardinality() {
+		return Tools.coalesce(this.cardinality, Cardinality.ALL);
 	}
 
-	public void setCardinality(CardinalityT value) {
+	public void setCardinality(Cardinality value) {
 		this.cardinality = value;
 	}
 

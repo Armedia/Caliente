@@ -5,8 +5,9 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionRemoveDecorator.t", propOrder = {
@@ -15,17 +16,17 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 public class ActionRemoveDecoratorT extends ConditionalActionT {
 
 	@XmlElement(name = "comparison", required = true)
-	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-	protected String comparison;
+	@XmlJavaTypeAdapter(ComparisonAdapter.class)
+	protected Comparison comparison;
 
 	@XmlElement(name = "decorator", required = true)
 	protected ExpressionT decorator;
 
-	public String getComparison() {
-		return this.comparison;
+	public Comparison getComparison() {
+		return Tools.coalesce(this.comparison, Comparison.EQ);
 	}
 
-	public void setComparison(String value) {
+	public void setComparison(Comparison value) {
 		this.comparison = value;
 	}
 

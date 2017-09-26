@@ -6,7 +6,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.store.CmfProperty;
@@ -27,11 +26,12 @@ public class ConditionIsCalientePropertyValueT implements Condition {
 	protected ExpressionT value;
 
 	@XmlAttribute(name = "comparison")
-	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-	protected String comparison;
+	@XmlJavaTypeAdapter(ComparisonAdapter.class)
+	protected Comparison comparison;
 
 	@XmlAttribute(name = "cardinality")
-	protected CardinalityT cardinality;
+	@XmlJavaTypeAdapter(CardinalityAdapter.class)
+	protected Cardinality cardinality;
 
 	public ExpressionT getName() {
 		return this.name;
@@ -50,22 +50,18 @@ public class ConditionIsCalientePropertyValueT implements Condition {
 	}
 
 	public Comparison getComparison() {
-		return Comparison.get(this.comparison, Comparison.EQ);
+		return Tools.coalesce(this.comparison, Comparison.EQ);
 	}
 
 	public void setComparison(Comparison value) {
-		this.comparison = (value != null ? value.name() : null);
+		this.comparison = value;
 	}
 
-	public CardinalityT getCardinality() {
-		if (this.cardinality == null) {
-			return CardinalityT.ANY;
-		} else {
-			return this.cardinality;
-		}
+	public Cardinality getCardinality() {
+		return Tools.coalesce(this.cardinality, Cardinality.ALL);
 	}
 
-	public void setCardinality(CardinalityT value) {
+	public void setCardinality(Cardinality value) {
 		this.cardinality = value;
 	}
 
@@ -98,7 +94,6 @@ public class ConditionIsCalientePropertyValueT implements Condition {
 
 		switch (getCardinality()) {
 			case ALL:
-			case ANY:
 				// Check against all attribute values, until one succeeds
 				break;
 			case FIRST:

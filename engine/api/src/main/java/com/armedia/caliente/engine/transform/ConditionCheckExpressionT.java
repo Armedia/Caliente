@@ -6,7 +6,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.commons.utilities.Tools;
@@ -24,8 +23,8 @@ public class ConditionCheckExpressionT implements Condition {
 	protected ExpressionT right;
 
 	@XmlAttribute(name = "comparison")
-	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-	protected String comparison;
+	@XmlJavaTypeAdapter(ComparisonAdapter.class)
+	protected Comparison comparison;
 
 	public ExpressionT getLeft() {
 		return this.left;
@@ -44,11 +43,11 @@ public class ConditionCheckExpressionT implements Condition {
 	}
 
 	public Comparison getComparison() {
-		return Comparison.get(this.comparison, Comparison.EQ);
+		return Tools.coalesce(this.comparison, Comparison.EQ);
 	}
 
 	public void setComparison(Comparison value) {
-		this.comparison = (value != null ? value.name() : null);
+		this.comparison = value;
 	}
 
 	@Override

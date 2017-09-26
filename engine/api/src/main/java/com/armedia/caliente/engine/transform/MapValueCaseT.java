@@ -6,8 +6,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mapValueCase.t", propOrder = {
@@ -22,8 +23,8 @@ public class MapValueCaseT {
 	protected ExpressionT replacement;
 
 	@XmlAttribute(name = "comparison", required = true)
-	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-	protected String comparison;
+	@XmlJavaTypeAdapter(ComparisonAdapter.class)
+	protected Comparison comparison;
 
 	public ExpressionT getValue() {
 		return this.value;
@@ -41,11 +42,11 @@ public class MapValueCaseT {
 		this.replacement = value;
 	}
 
-	public String getComparison() {
-		return this.comparison;
+	public Comparison getComparison() {
+		return Tools.coalesce(this.comparison, Comparison.EQ);
 	}
 
-	public void setComparison(String value) {
+	public void setComparison(Comparison value) {
 		this.comparison = value;
 	}
 

@@ -3,22 +3,23 @@ package com.armedia.caliente.engine.transform;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
 public abstract class ConditionExpressionComparisonT extends ExpressionT implements Condition {
 
 	@XmlAttribute(name = "comparison")
-	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)
-	protected String comparison;
+	@XmlJavaTypeAdapter(ComparisonAdapter.class)
+	protected Comparison comparison;
 
 	public Comparison getComparison() {
-		return Comparison.get(this.comparison, Comparison.EQ);
+		return Tools.coalesce(this.comparison, Comparison.EQ);
 	}
 
 	public void setComparison(Comparison value) {
-		this.comparison = (value != null ? value.name() : null);
+		this.comparison = value;
 	}
 
 }
