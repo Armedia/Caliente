@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 })
 public class ActionRemoveAttributeT extends ConditionalActionT {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "comparison", required = true)
 	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)
 	protected String comparison;
 

@@ -12,13 +12,13 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class ActionSetAttributeT extends ConditionalActionT {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "name", required = true)
 	protected ExpressionT name;
 
-	@XmlElement(required = false)
+	@XmlElement(name = "type", required = false)
 	protected String type;
 
-	@XmlElement(required = true)
+	@XmlElement(name = "value", required = true)
 	protected ExpressionT value;
 
 	public ExpressionT getName() {

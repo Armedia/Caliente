@@ -12,26 +12,13 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class ActionAddDecoratorT extends ConditionalActionT {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "decorator", required = true)
 	protected ExpressionT decorator;
 
-	/**
-	 * Gets the value of the decorator property.
-	 *
-	 * @return possible object is {@link ExpressionT }
-	 *
-	 */
 	public ExpressionT getDecorator() {
 		return this.decorator;
 	}
 
-	/**
-	 * Sets the value of the decorator property.
-	 *
-	 * @param value
-	 *            allowed object is {@link ExpressionT }
-	 *
-	 */
 	public void setDecorator(ExpressionT value) {
 		this.decorator = value;
 	}

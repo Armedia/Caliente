@@ -38,10 +38,10 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 })
 public class MapValueCaseT {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "value", required = true)
 	protected ExpressionT value;
 
-	@XmlElement(required = true)
+	@XmlElement(name = "replacement", required = true)
 	protected ExpressionT replacement;
 
 	@XmlAttribute(name = "comparison", required = true)

@@ -7,25 +7,6 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
-/**
- * <p>
- * Java class for expression.t complex type.
- *
- * <p>
- * The following schema fragment specifies the expected content contained within this class.
- *
- * <pre>
- * &lt;complexType name="expression.t">
- *   &lt;simpleContent>
- *     &lt;extension base="&lt;http://www.w3.org/2001/XMLSchema>string">
- *       &lt;attribute name="lang" type="{http://www.armedia.com/ns/caliente/engine/transformations}noSpaces.t" />
- *     &lt;/extension>
- *   &lt;/simpleContent>
- * &lt;/complexType>
- * </pre>
- *
- *
- */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "expression.t", propOrder = {
 	"value"

@@ -9,19 +9,27 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueCodec;
+import com.armedia.commons.utilities.Tools;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsCalientePropertyValue.t", propOrder = {
 	"name", "value"
 })
 public class ConditionIsCalientePropertyValueT implements Condition {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "name", required = true)
 	protected ExpressionT name;
-	@XmlElement(required = true)
+
+	@XmlElement(name = "value", required = true)
 	protected ExpressionT value;
+
 	@XmlAttribute(name = "comparison")
 	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)
 	protected String comparison;
+
 	@XmlAttribute(name = "cardinality")
 	protected CardinalityT cardinality;
 
@@ -41,16 +49,12 @@ public class ConditionIsCalientePropertyValueT implements Condition {
 		this.value = value;
 	}
 
-	public String getComparison() {
-		if (this.comparison == null) {
-			return "eq";
-		} else {
-			return this.comparison;
-		}
+	public Comparison getComparison() {
+		return Comparison.get(this.comparison, Comparison.EQ);
 	}
 
-	public void setComparison(String value) {
-		this.comparison = value;
+	public void setComparison(Comparison value) {
+		this.comparison = (value != null ? value.name() : null);
 	}
 
 	public CardinalityT getCardinality() {
@@ -67,7 +71,43 @@ public class ConditionIsCalientePropertyValueT implements Condition {
 
 	@Override
 	public <V> boolean check(TransformationContext<V> ctx) {
-		// TODO Auto-generated method stub
+		ExpressionT nameExp = getName();
+		Object name = (nameExp != null ? nameExp.evaluate(ctx) : null);
+		if (name == null) { throw new IllegalStateException("No name was given for the property value check"); }
+
+		CmfProperty<V> property = ctx.getObject().getProperty(name.toString());
+		if (property == null) { return false; }
+
+		Comparison comparison = getComparison();
+		ExpressionT valueExp = getValue();
+		Object value = (valueExp != null ? valueExp.evaluate(ctx) : null);
+		if (!property.isRepeating()) {
+			// Check the one and only value
+			CmfValueCodec<V> codec = ctx.getObject().getTranslator().getCodec(property.getType());
+			V v = property.getValue();
+			if (v == null) {
+				v = codec.getNull();
+			}
+			CmfValue cv = codec.encodeValue(v);
+			if ((cv == null) || cv.isNull()) {
+				return comparison.check(null, Tools.toString(value));
+			} else {
+				return comparison.check(cv.asString(), Tools.toString(value));
+			}
+		}
+
+		switch (getCardinality()) {
+			case ALL:
+			case ANY:
+				// Check against all attribute values, until one succeeds
+				break;
+			case FIRST:
+				// Only check the first attribute value
+				break;
+			case LAST:
+				// Only check the last attribute value
+				break;
+		}
 		return false;
 	}
 

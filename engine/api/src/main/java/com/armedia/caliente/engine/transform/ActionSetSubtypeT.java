@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class ActionSetSubtypeT extends ConditionalActionT {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "subtype", required = true)
 	protected ExpressionT subtype;
 
 	public ExpressionT getSubtype() {

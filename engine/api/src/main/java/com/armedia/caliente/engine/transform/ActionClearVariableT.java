@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class ActionClearVariableT extends ConditionalActionT {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "name", required = true)
 	protected ExpressionT name;
 
 	public ExpressionT getName() {

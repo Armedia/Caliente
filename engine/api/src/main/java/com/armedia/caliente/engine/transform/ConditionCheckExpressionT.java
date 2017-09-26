@@ -9,6 +9,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.CollapsedStringAdapter;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.commons.utilities.Tools;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionCheckExpression.t", propOrder = {
 	"left", "right"
@@ -41,22 +43,21 @@ public class ConditionCheckExpressionT implements Condition {
 		this.right = value;
 	}
 
-	public String getComparison() {
-		if (this.comparison == null) {
-			return "eq";
-		} else {
-			return this.comparison;
-		}
+	public Comparison getComparison() {
+		return Comparison.get(this.comparison, Comparison.EQ);
 	}
 
-	public void setComparison(String value) {
-		this.comparison = value;
+	public void setComparison(Comparison value) {
+		this.comparison = (value != null ? value.name() : null);
 	}
 
 	@Override
 	public <V> boolean check(TransformationContext<V> ctx) {
-		// TODO Auto-generated method stub
-		return false;
+		ExpressionT leftExp = getLeft();
+		Object leftVal = (leftExp != null ? leftExp.evaluate(ctx) : null);
+		ExpressionT rightExp = getRight();
+		Object rightVal = (rightExp != null ? rightExp.evaluate(ctx) : null);
+		return getComparison().check(Tools.toString(leftVal), Tools.toString(rightVal));
 	}
 
 }

@@ -15,13 +15,16 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 })
 public class ConditionIsAttributeValueT implements Condition {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "name", required = true)
 	protected ExpressionT name;
-	@XmlElement(required = true)
+
+	@XmlElement(name = "value", required = true)
 	protected ExpressionT value;
+
 	@XmlAttribute(name = "comparison")
 	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)
 	protected String comparison;
+
 	@XmlAttribute(name = "cardinality")
 	protected CardinalityT cardinality;
 
@@ -41,16 +44,12 @@ public class ConditionIsAttributeValueT implements Condition {
 		this.value = value;
 	}
 
-	public String getComparison() {
-		if (this.comparison == null) {
-			return "eq";
-		} else {
-			return this.comparison;
-		}
+	public Comparison getComparison() {
+		return Comparison.get(this.comparison, Comparison.EQ);
 	}
 
-	public void setComparison(String value) {
-		this.comparison = value;
+	public void setComparison(Comparison value) {
+		this.comparison = (value != null ? value.name() : null);
 	}
 
 	public CardinalityT getCardinality() {

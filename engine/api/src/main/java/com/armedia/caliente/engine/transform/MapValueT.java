@@ -37,10 +37,10 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class MapValueT {
 
-	@XmlElement(name = "case")
+	@XmlElement(name = "case", required = false)
 	protected List<MapValueCaseT> cases;
 
-	@XmlElement(name = "default")
+	@XmlElement(name = "default", required = false)
 	protected ExpressionT defaultValue;
 
 	public List<MapValueCaseT> getCases() {

@@ -15,13 +15,13 @@ public class ActionReplaceAttributeT extends ConditionalActionT {
 	@XmlElement(name = "attribute-name", required = true)
 	protected ExpressionT attributeName;
 
-	@XmlElement(required = false)
+	@XmlElement(name = "cardinality", required = false)
 	protected CardinalityT cardinality;
 
-	@XmlElement(required = true)
+	@XmlElement(name = "regex", required = true)
 	protected ExpressionT regex;
 
-	@XmlElement(required = true)
+	@XmlElement(name = "replacement", required = true)
 	protected ExpressionT replacement;
 
 	public ExpressionT getAttributeName() {

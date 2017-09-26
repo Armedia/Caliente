@@ -12,10 +12,10 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class ActionReplaceDecoratorT extends ConditionalActionT {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "regex", required = true)
 	protected ExpressionT regex;
 
-	@XmlElement(required = true)
+	@XmlElement(name = "replacement", required = true)
 	protected ExpressionT replacement;
 
 	public ExpressionT getRegex() {

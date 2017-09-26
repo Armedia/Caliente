@@ -14,11 +14,11 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 })
 public class ActionRemoveDecoratorT extends ConditionalActionT {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "comparison", required = true)
 	@XmlJavaTypeAdapter(CollapsedStringAdapter.class)
 	protected String comparison;
 
-	@XmlElement(required = true)
+	@XmlElement(name = "decorator", required = true)
 	protected ExpressionT decorator;
 
 	public String getComparison() {
