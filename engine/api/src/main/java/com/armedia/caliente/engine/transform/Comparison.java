@@ -8,86 +8,86 @@ public enum Comparison {
 	//
 	EQ() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return Tools.equals(comparand, candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return Tools.equals(candidate, comparand);
 		}
 	},
 	NE() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return !EQ.eval(comparand, candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return !EQ.eval(candidate, comparand);
 		}
 	},
 	GT() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return Tools.compare(comparand, candidate) > 0;
+		protected boolean eval(String candidate, String comparand) {
+			return Tools.compare(candidate, comparand) > 0;
 		}
 	},
 	GE() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return Tools.compare(comparand, candidate) >= 0;
+		protected boolean eval(String candidate, String comparand) {
+			return Tools.compare(candidate, comparand) >= 0;
 		}
 	},
 	LT() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return !GE.eval(comparand, candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return !GE.eval(candidate, comparand);
 		}
 	},
 	LE() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return !GT.eval(comparand, candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return !GT.eval(candidate, comparand);
 		}
 	},
 	SW() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return comparand.startsWith(candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return candidate.startsWith(comparand);
 		}
 	},
 	EW() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return comparand.endsWith(candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return candidate.endsWith(comparand);
 		}
 	},
 	CN() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return (comparand.indexOf(candidate) >= 0);
+		protected boolean eval(String candidate, String comparand) {
+			return (candidate.indexOf(comparand) >= 0);
 		}
 	},
 	NC() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return !CN.eval(comparand, candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return !CN.eval(candidate, comparand);
 		}
 	},
 	RE() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return candidate.matches(comparand);
+		protected boolean eval(String candidate, String comparand) {
+			return comparand.matches(candidate);
 		}
 	},
 	NRE() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return !RE.eval(comparand, candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return !RE.eval(candidate, comparand);
 		}
 	},
 	GLOB() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return RE.eval(Tools.globToRegex(comparand), candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return RE.eval(candidate, Tools.globToRegex(comparand));
 		}
 	},
 	NGLOB() {
 		@Override
-		protected boolean eval(String comparand, String candidate) {
-			return !GLOB.eval(comparand, candidate);
+		protected boolean eval(String candidate, String comparand) {
+			return !GLOB.eval(candidate, comparand);
 		}
 	},
 
@@ -120,24 +120,24 @@ public enum Comparison {
 		}
 	}
 
-	protected boolean eval(String comparand, String candidate) {
+	protected boolean eval(String candidate, String comparand) {
 		// The default implementation only looks for the case-insensitive counterpart.
 		// This way we only have to provide the comparison implementation assuming case
 		// sensitivity.
 		String name = name().toLowerCase();
-		if (!name.endsWith(
-			"i")) { throw new AbstractMethodError("Must provide a concrete implementation for the comparison check"); }
+		if (!name.endsWith("i")) { throw new AbstractMethodError(
+			String.format("Must provide a concrete implementation for the %s comparison check", name())); }
 
 		// Case-insensitive, find my counterpart!
 		Comparison comp = Comparison.valueOf(name.substring(0, name.length() - 1));
 		comparand = comparand.toUpperCase();
 		candidate = (candidate != null ? candidate.toUpperCase() : null);
-		return comp.eval(comparand, candidate);
+		return comp.eval(candidate, comparand);
 	}
 
-	public final boolean check(String comparand, String candidate) {
+	public final boolean check(String candidate, String comparand) {
 		Objects.requireNonNull(comparand, "Must provide a non-null comparand value to check the candidate against");
-		return eval(comparand, candidate);
+		return eval(candidate, comparand);
 	}
 
 	public static Comparison get(String value) {
