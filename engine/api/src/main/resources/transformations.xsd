@@ -39,50 +39,50 @@
 	    </xsd:restriction>
 	</xsd:simpleType>
 
-	<xsd:complexType name="conditionAnd.t">
+	<xsd:complexType name="conditionGroupAnd.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionNand.t">
+	<xsd:complexType name="conditionGroupNand.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionOr.t">
+	<xsd:complexType name="conditionGroupOr.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionNor.t">
+	<xsd:complexType name="conditionGroupNor.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionNot.t">
+	<xsd:complexType name="conditionGroupNot.t">
 		<xsd:choice minOccurs="1" maxOccurs="1">
 			<xsd:group ref="tns:groupingConditions" />
 			<xsd:group ref="tns:checkConditions" />
 		</xsd:choice>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionXor.t">
+	<xsd:complexType name="conditionGroupXor.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionXnor.t">
+	<xsd:complexType name="conditionGroupXnor.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionMux.t">
+	<xsd:complexType name="conditionGroupMux.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
@@ -221,14 +221,14 @@
 
 	<xsd:group name="groupingConditions">
 		<xsd:choice>
-			<xsd:element name="and" type="tns:conditionAnd.t" />
-			<xsd:element name="or" type="tns:conditionOr.t" />
-			<xsd:element name="xor" type="tns:conditionXor.t" />
-			<xsd:element name="not" type="tns:conditionNot.t" />
-			<xsd:element name="nand" type="tns:conditionNand.t" />
-			<xsd:element name="nor" type="tns:conditionNor.t" />
-			<xsd:element name="xnor" type="tns:conditionXnor.t" />
-			<xsd:element name="mux" type="tns:conditionMux.t" />
+			<xsd:element name="and" type="tns:conditionGroupAnd.t" />
+			<xsd:element name="or" type="tns:conditionGroupOr.t" />
+			<xsd:element name="xor" type="tns:conditionGroupXor.t" />
+			<xsd:element name="not" type="tns:conditionGroupNot.t" />
+			<xsd:element name="nand" type="tns:conditionGroupNand.t" />
+			<xsd:element name="nor" type="tns:conditionGroupNor.t" />
+			<xsd:element name="xnor" type="tns:conditionGroupXnor.t" />
+			<xsd:element name="mux" type="tns:conditionGroupMux.t" />
 		</xsd:choice>
 	</xsd:group>
 
