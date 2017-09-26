@@ -380,11 +380,15 @@
 	</xsd:complexType>
 
 	<xsd:complexType name="actionMapAttributeValue.t">
-		<xsd:sequence>
-			<xsd:element name="attribute-name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
-			<xsd:element name="map" type="tns:mapValue.t" minOccurs="1" maxOccurs="1" />
-		</xsd:sequence>
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditional.t">
+				<xsd:sequence>
+					<xsd:element name="attribute-name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="map" type="tns:mapValue.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
 	</xsd:complexType>
 
 	<xsd:complexType name="actionSetVariable.t">
