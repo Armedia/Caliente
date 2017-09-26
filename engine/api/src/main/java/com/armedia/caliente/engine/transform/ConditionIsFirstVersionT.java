@@ -12,6 +12,7 @@ public class ConditionIsFirstVersionT implements Condition {
 	@Override
 	public <V> boolean check(TransformationContext<V> ctx) {
 		// TODO implement this condition
+		// Maybe use the version index properties?
 		return false;
 	}
 
