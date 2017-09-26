@@ -17,10 +17,7 @@ public class ConditionCustomScriptT extends ConditionExpressionT {
 		if (Boolean.class.isInstance(result)) { return Boolean.class.cast(result).booleanValue(); }
 
 		// If it's a number, compare the integer value to 0 for false, non-0 for true
-		if (Number.class.isInstance(result)) {
-			Number n = Number.class.cast(result);
-			return (n.longValue() != 1);
-		}
+		if (Number.class.isInstance(result)) { return (Number.class.cast(result).longValue() != 1); }
 
 		try {
 			// Second try at a numeric solution
