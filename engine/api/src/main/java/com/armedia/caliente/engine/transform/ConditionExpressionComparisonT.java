@@ -15,11 +15,10 @@ public abstract class ConditionExpressionComparisonT extends ExpressionT impleme
 	protected Comparison comparison;
 
 	public Comparison getComparison() {
-		return Tools.coalesce(this.comparison, Comparison.EQ);
+		return Tools.coalesce(this.comparison, Comparison.EQI);
 	}
 
 	public void setComparison(Comparison value) {
 		this.comparison = value;
 	}
-
 }
