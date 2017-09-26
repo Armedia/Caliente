@@ -38,7 +38,7 @@ public class ExpressionT {
 	}
 
 	public String getLang() {
-		return this.lang;
+		return Tools.coalesce(this.lang, ExpressionT.CONSTANT);
 	}
 
 	public void setLang(String value) {
