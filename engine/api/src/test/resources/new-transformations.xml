@@ -15,7 +15,7 @@
 					<has-attribute comparison="eq" lang="...">
 						<!-- expression -->
 					</has-attribute>
-					<is-attribute-value comparison="eq" cardinality="*">
+					<is-attribute-value comparison="eq" cardinality="any">
 						<name lang="...">
 							<!-- expression -->
 						</name>
@@ -61,7 +61,7 @@
 						<!-- expression -->
 					</is-variable-set>
 
-					<is-variable-value comparison="eq" cardinality="*">
+					<is-variable-value comparison="eq" cardinality="any">
 						<name lang="...">
 							<!-- expression -->
 						</name>
@@ -135,7 +135,7 @@
 			<attribute-name lang="...">
 				<!-- expression -->
 			</attribute-name>
-			<cardinality>*</cardinality>
+			<cardinality>all</cardinality>
 			<regex lang="...">
 				<!-- expression -->
 			</regex>
@@ -148,7 +148,7 @@
 			<attribute-name lang="...">
 				<!-- expression -->
 			</attribute-name>
-			<cardinality>*</cardinality>
+			<cardinality>all</cardinality>
 			<map>
 				<case comparison="eq">
 					<value lang="...">
