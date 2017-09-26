@@ -88,6 +88,9 @@
 		</set-subtype>
 
 		<replace-subtype>
+			<if>
+				<has-attribute>xGsaWeirdAttribute</has-attribute>
+			</if>
 			<regex lang="...">
 				<!-- expression -->
 			</regex>
