@@ -472,7 +472,7 @@
 	<xsd:element name="transformations">
 		<xsd:complexType>
 			<xsd:choice minOccurs="0" maxOccurs="unbounded">
-				<xsd:element name="include" type="xsd:string" />
+				<!-- <xsd:element name="include" type="xsd:string" /> -->
 				<xsd:element name="transformation" type="tns:transformation.t" />
 			</xsd:choice>
 		</xsd:complexType>
