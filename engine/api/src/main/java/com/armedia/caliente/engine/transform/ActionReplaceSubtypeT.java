@@ -36,7 +36,7 @@ public class ActionReplaceSubtypeT extends ConditionalActionT {
 
 	@Override
 	protected <V> void applyTransformation(TransformationContext<V> ctx) {
-		// TODO Auto-generated method stub
+		// TODO implement this transformation
 	}
 
 }
