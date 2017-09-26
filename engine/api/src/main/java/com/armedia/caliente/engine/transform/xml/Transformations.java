@@ -24,7 +24,7 @@ public class Transformations {
 	})
 	protected List<Object> elements;
 
-	public List<Object> getIncludeOrTransformation() {
+	public List<Object> getElements() {
 		if (this.elements == null) {
 			this.elements = new ArrayList<>();
 		}
