@@ -136,6 +136,14 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="conditionIsAttributeEmpty.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:expression.t">
+				<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="conditionIsAttributeRepeating.t">
 		<xsd:simpleContent>
 			<xsd:extension base="tns:expression.t">
@@ -154,6 +162,14 @@
 	</xsd:complexType>
 
 	<xsd:complexType name="conditionHasCalienteProperty.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:expression.t">
+				<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="conditionIsCalientePropertyEmpty.t">
 		<xsd:simpleContent>
 			<xsd:extension base="tns:expression.t">
 				<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
@@ -229,9 +245,11 @@
 			<xsd:element name="has-attribute" type="tns:conditionHasAttribute.t" />
 			<xsd:element name="is-attribute-repeating" type="tns:conditionIsAttributeRepeating.t" />
 			<xsd:element name="is-attribute-value" type="tns:conditionHasAttributeValue.t" />
+			<xsd:element name="is-attribute-empty" type="tns:conditionIsAttributeEmpty.t" />
 			<xsd:element name="has-caliente-property" type="tns:conditionHasCalienteProperty.t" />
 			<xsd:element name="is-caliente-property-repeating" type="tns:conditionIsCalientePropertyRepeating.t" />
 			<xsd:element name="is-caliente-property-value" type="tns:conditionIsCalientePropertyValue.t" />
+			<xsd:element name="is-caliente-property-empty" type="tns:conditionIsCalientePropertyEmpty.t" />
 			<xsd:element name="check-expression" type="tns:conditionCheckExpression.t" />
 			<xsd:element name="custom-script" type="tns:expression.t" />
 			<xsd:element name="custom-check" type="tns:expression.t" />
