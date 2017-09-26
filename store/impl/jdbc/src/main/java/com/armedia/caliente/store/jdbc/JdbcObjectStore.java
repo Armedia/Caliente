@@ -50,7 +50,7 @@ import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfTreeScanner;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.caliente.store.CmfValueSerializer;
@@ -325,7 +325,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> CmfObject<V> loadHeadObject(JdbcOperation operation, CmfTypeMapper typeMapper,
+	protected <V> CmfObject<V> loadHeadObject(JdbcOperation operation, CmfTransformer typeMapper,
 		CmfAttributeTranslator<V> translator, CmfObject<V> sample) throws CmfStorageException {
 		final Connection connection = operation.getConnection();
 		final CmfType type = sample.getType();

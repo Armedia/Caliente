@@ -11,7 +11,7 @@ import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -19,7 +19,7 @@ public class LocalImportContextFactory extends
 	ImportContextFactory<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportEngine, File> {
 
 	protected LocalImportContextFactory(LocalImportEngine engine, CfgTools settings, LocalRoot root,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer typeMapper,
 		Logger output, WarningTracker warningTracker) throws Exception {
 		super(engine, settings, root, objectStore, contentStore, typeMapper, output, warningTracker);
 	}

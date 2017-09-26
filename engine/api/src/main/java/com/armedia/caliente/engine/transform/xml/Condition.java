@@ -6,4 +6,5 @@ import javax.xml.bind.annotation.XmlTransient;
 public interface Condition {
 
 	public <V> boolean evaluate(TransformationContext<V> ctx);
+
 }

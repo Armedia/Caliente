@@ -15,7 +15,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -28,7 +28,7 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 	private final int pathTrunc;
 
 	protected ImportContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper, Logger output, WarningTracker tracker)
+		CmfContentStore<?, ?, ?> contentStore, CmfTransformer typeMapper, Logger output, WarningTracker tracker)
 		throws Exception {
 		super(engine, settings, session, objectStore, contentStore, typeMapper, output, tracker);
 		String rootPath = settings.getString(ImportSetting.TARGET_LOCATION);

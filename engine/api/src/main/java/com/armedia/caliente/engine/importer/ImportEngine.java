@@ -42,8 +42,8 @@ import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
@@ -71,7 +71,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter, SessionFactory<S> sessionFactory,
 			ImportEngineListener listenerDelegator, ImportState importState,
 			final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-			final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper) {
+			final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTransformer typeMapper) {
 			this.sessionFactory = sessionFactory;
 			this.listenerDelegator = listenerDelegator;
 			this.importState = importState;
@@ -280,19 +280,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
-	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
+	public static final String TRANSFORMER_SETTING_PREFIX = "cmf.transformer.";
+	public static final String TRANSFORMER_SELECTOR = "cmf.transformer.name";
 
 	private static final Pattern MAP_KEY_PARSER = Pattern.compile("^\\s*([^#\\s]+)\\s*#\\s*(.+)\\s*$");
-
-	private static final CmfTypeMapper DEFAULT_TYPE_MAPPER = new CmfTypeMapper() {
-
-		@Override
-		protected String getMapping(String sourceType) {
-			return null;
-		}
-
-	};
 
 	private static enum BatchStatus {
 		//
@@ -512,22 +503,23 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
 
-	protected final CmfTypeMapper getTypeMapper(S session, CfgTools cfg) throws Exception {
-		final String typeMapperName = cfg.getString(ImportEngine.TYPE_MAPPER_SELECTOR);
+	protected final CmfTransformer getTransformer(S session, CfgTools cfg) throws Exception {
+		final String typeMapperName = cfg.getString(ImportEngine.TRANSFORMER_SELECTOR);
+		if (typeMapperName != null) {
+			typeMapperName.hashCode();
+		}
 
 		Map<String, Object> m = new HashMap<>();
 		for (String str : cfg.getSettings()) {
-			if (str.startsWith(ImportEngine.TYPE_MAPPER_PREFIX)) {
-				str = str.substring(ImportEngine.TYPE_MAPPER_PREFIX.length());
+			if (str.startsWith(ImportEngine.TRANSFORMER_SETTING_PREFIX)) {
+				str = str.substring(ImportEngine.TRANSFORMER_SETTING_PREFIX.length());
 				m.put(str, cfg.getObject(str));
 			}
 		}
 		cfg = new CfgTools(m);
-		CmfTypeMapper mapper = CmfTypeMapper.getTypeMapper(typeMapperName, cfg);
-		if (mapper == null) {
-			mapper = ImportEngine.DEFAULT_TYPE_MAPPER;
-		}
-		return mapper;
+
+		// TODO: Construct the object transformer
+		return null;
 	}
 
 	protected final ExecutorService newExecutor(int threadCount) {
@@ -571,10 +563,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			ImportContextFactory<S, W, V, C, ?, ?> contextFactory = null;
 			ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
-			CmfTypeMapper typeMapper = null;
+			CmfTransformer typeMapper = null;
 			try {
 				try {
-					typeMapper = getTypeMapper(baseSession.getWrapped(), configuration);
+					typeMapper = getTransformer(baseSession.getWrapped(), configuration);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the required type mapper", e);
 				}
@@ -689,7 +681,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private final CmfObjectCounter<ImportResult> runImportImpl(final ImportState importState,
 		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper)
+		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTransformer typeMapper)
 		throws ImportException, CmfStorageException {
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;

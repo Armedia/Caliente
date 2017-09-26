@@ -19,7 +19,7 @@ import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.commons.utilities.CfgTools;
 
 public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>>
@@ -28,13 +28,13 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final CmfObjectStore<?, ?> cmfObjectStore;
 	private final CmfAttributeTranslator<V> translator;
-	private final CmfTypeMapper typeMapper;
+	private final CmfTransformer typeMapper;
 	private final CmfContentStore<?, ?, ?> streamStore;
 	private final int historyPosition;
 
 	public <C extends ImportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
 		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
-		WarningTracker tracker, CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
+		WarningTracker tracker, CmfTransformer typeMapper, CmfAttributeTranslator<V> translator,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
 		this.factory = factory;

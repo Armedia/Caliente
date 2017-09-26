@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -29,7 +29,7 @@ public class DctmImportContextFactory extends
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg, IDfSession session,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer typeMapper,
 		Logger output, WarningTracker warningTracker) throws Exception {
 		super(engine, cfg, session, objectStore, contentStore, typeMapper, output, warningTracker);
 		this.specialValues = new DctmSpecialValues(cfg);

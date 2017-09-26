@@ -33,7 +33,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -99,7 +99,7 @@ public class UcmExportEngine extends
 
 	@Override
 	protected UcmExportContextFactory newContextFactory(UcmSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		return new UcmExportContextFactory(this, session, cfg, objectStore, streamStore, output, warningTracker);
 	}

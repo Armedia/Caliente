@@ -427,19 +427,17 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract boolean lockHistory(O operation, CmfType type, String historyId, String lockId)
 		throws CmfStorageException;
 
-	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,
+	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTransformer transformer,
 		CmfAttributeTranslator<V> translator) {
-		// Ensure type mapping takes place, and ensure that translation also takes place
-		// TODO: This should only happen if "necessary" (i.e. target CMS is different from the
-		// source)
-		String altType = typeMapper.mapType(dataObject.getSubtype());
-		if (altType != null) {
-			dataObject = new CmfObject<>(dataObject, altType);
-		}
-		return translator.decodeObject(dataObject);
+		// If there is no transformer, then don't even bother
+		if (transformer == null) { return dataObject; }
+
+		// TODO: Is this the right way to do it?
+		CmfObject<V> transformed = translator.decodeObject(dataObject);
+		return transformer.transformObject(transformed);
 	}
 
-	public final <V> CmfObject<V> loadHeadObject(final CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
+	public final <V> CmfObject<V> loadHeadObject(final CmfTransformer typeMapper, CmfAttributeTranslator<V> translator,
 		CmfObject<V> sample) throws CmfStorageException {
 		if (typeMapper == null) { throw new IllegalArgumentException("Must provde a type mapper"); }
 		if (translator == null) { throw new IllegalArgumentException(
@@ -467,15 +465,15 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> CmfObject<V> loadHeadObject(O operation, CmfTypeMapper typeMapper,
+	protected abstract <V> CmfObject<V> loadHeadObject(O operation, CmfTransformer typeMapper,
 		CmfAttributeTranslator<V> translator, CmfObject<V> sample) throws CmfStorageException;
 
-	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
+	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTransformer typeMapper,
 		CmfAttributeTranslator<V> translator, CmfType type, String... ids) throws CmfStorageException {
 		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null));
 	}
 
-	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
+	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTransformer typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
 		throws CmfStorageException {
 		O operation = beginConcurrentInvocation();
@@ -498,7 +496,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTypeMapper typeMapper,
+	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTransformer typeMapper,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
 		throws CmfStorageException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
@@ -558,12 +556,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	public final <V> int loadObjects(final CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
+	public final <V> int loadObjects(final CmfTransformer typeMapper, CmfAttributeTranslator<V> translator,
 		final CmfType type, CmfObjectHandler<V> handler) throws CmfStorageException {
 		return loadObjects(typeMapper, translator, type, null, handler);
 	}
 
-	public final <V> int loadObjects(final CmfTypeMapper typeMapper, final CmfAttributeTranslator<V> translator,
+	public final <V> int loadObjects(final CmfTransformer typeMapper, final CmfAttributeTranslator<V> translator,
 		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler) throws CmfStorageException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }

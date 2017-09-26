@@ -26,7 +26,7 @@ import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
@@ -167,7 +167,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
 
 	protected abstract F newContextFactory(S session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output, WarningTracker warningTracker)
+		CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output, WarningTracker warningTracker)
 		throws Exception;
 
 	protected abstract D newDelegateFactory(S session, CfgTools cfg) throws Exception;

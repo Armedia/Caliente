@@ -22,7 +22,7 @@ import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -33,7 +33,7 @@ public class CmisImportContextFactory
 	private final RepositoryInfo repositoryInfo;
 
 	CmisImportContextFactory(CmisImportEngine engine, Session session, CfgTools settings,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer typeMapper,
 		Logger output, WarningTracker warningTracker) throws Exception {
 		super(engine, settings, session, objectStore, contentStore, typeMapper, output, warningTracker);
 		this.repositoryInfo = session.getRepositoryInfo();

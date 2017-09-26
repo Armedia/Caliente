@@ -9,13 +9,6 @@
     <node name="platform">
       <attribute name="platform-id" value="generic_2_1"/>
     </node>
-    <node name="schemas">
-      <node name="schema-1">
-        <attribute name="location" value="platform:/resource/caliente-engine/src/main/resources/type-mappings.xsd"/>
-      </node>
-      <node name="schema-2">
-        <attribute name="location" value="platform:/resource/caliente-engine/src/main/resources/transform.xsd"/>
-      </node>
-    </node>
+    <node name="schemas"/>
   </facet>
 </root>

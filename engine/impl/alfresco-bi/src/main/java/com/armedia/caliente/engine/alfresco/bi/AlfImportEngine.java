@@ -31,7 +31,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -323,7 +323,7 @@ public class AlfImportEngine extends
 
 	@Override
 	protected AlfImportContextFactory newContextFactory(AlfRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output, WarningTracker warningTracker)
+		CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output, WarningTracker warningTracker)
 		throws Exception {
 		return new AlfImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output,
 			warningTracker);
