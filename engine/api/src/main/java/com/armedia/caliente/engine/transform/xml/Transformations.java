@@ -14,6 +14,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
@@ -64,6 +65,10 @@ public final class Transformations implements Action {
 	}
 
 	public static Transformations loadFromXML(Reader in) throws JAXBException {
+		return XmlTools.unmarshal(Transformations.class, Transformations.SCHEMA, in);
+	}
+
+	public static Transformations loadFromXML(XMLStreamReader in) throws JAXBException {
 		return XmlTools.unmarshal(Transformations.class, Transformations.SCHEMA, in);
 	}
 }
