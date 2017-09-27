@@ -6,8 +6,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.DynamicElementFactory;
-import com.armedia.caliente.engine.transform.DynamicElementRegistry;
+import com.armedia.caliente.engine.transform.ActionFactory;
+import com.armedia.caliente.engine.transform.DynamicTransformationElements;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.commons.utilities.Tools;
 
@@ -16,8 +16,6 @@ import com.armedia.commons.utilities.Tools;
 	"className"
 })
 public class ActionCustomActionT extends ConditionalActionT {
-
-	private static final DynamicElementRegistry<Action> ACTIONS = new DynamicElementRegistry<>(Action.class);
 
 	@XmlElement(name = "class-name", required = true)
 	protected ExpressionT className;
@@ -39,8 +37,12 @@ public class ActionCustomActionT extends ConditionalActionT {
 			String.format("The given %s expression did not return a string value: %s", classNameExpr.getLang(),
 				classNameExpr.getValue())); }
 
+		final ActionFactory factory = DynamicTransformationElements.getActionFactory(className);
+		if (factory == null) {
+			// TODO: Log the missing factory...
+			return;
+		}
 		try {
-			DynamicElementFactory<Action> factory = ActionCustomActionT.ACTIONS.getFactory(className);
 			Action action = factory.acquireInstance();
 			try {
 				action.apply(ctx);

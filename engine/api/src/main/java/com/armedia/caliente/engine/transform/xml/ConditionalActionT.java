@@ -4,7 +4,11 @@ package com.armedia.caliente.engine.transform.xml;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
 
@@ -13,6 +17,9 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 	"condition"
 })
 public abstract class ConditionalActionT implements Action {
+
+	@XmlTransient
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElement(name = "if", required = false)
 	protected ConditionT condition;
