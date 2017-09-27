@@ -19,6 +19,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import com.armedia.caliente.engine.transform.xml.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.xml.Transformations;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfValue;
 
 public class Transformer {
 
@@ -36,15 +37,15 @@ public class Transformer {
 		this.transformations = Transformations.loadFromXML(in);
 	}
 
-	private <V> TransformationContext<V> createContext(CmfObject<V> object) {
+	private TransformationContext createContext(CmfObject<CmfValue> object) {
 		// Do nothing, for now... but:
 		// * create and initialize the context
 		// * invoke the transformation
 		return null;
 	}
 
-	public <V> CmfObject<V> transform(CmfObject<V> object) throws RuntimeTransformationException {
-		TransformationContext<V> ctx = createContext(object);
+	public CmfObject<CmfValue> transform(CmfObject<CmfValue> object) throws RuntimeTransformationException {
+		TransformationContext ctx = createContext(object);
 		try {
 			this.transformations.apply(ctx);
 			// * harvest the transformations, and turn them into a new object
@@ -54,7 +55,7 @@ public class Transformer {
 		}
 	}
 
-	private <V> void destroyContext(TransformationContext<V> ctx) {
+	private void destroyContext(TransformationContext ctx) {
 		// Clean things out...
 	}
 

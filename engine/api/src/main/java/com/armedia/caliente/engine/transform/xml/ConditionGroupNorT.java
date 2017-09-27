@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class ConditionGroupNorT extends ConditionGroupT {
 
 	@Override
-	protected <V> boolean doEvaluate(List<Condition> elements, TransformationContext<V> ctx) {
+	protected boolean doEvaluate(List<Condition> elements, TransformationContext ctx) {
 		for (Condition c : elements) {
 			Objects.requireNonNull(c, "Null conditional elements are not allowed");
 			if (c.check(ctx)) { return false; }

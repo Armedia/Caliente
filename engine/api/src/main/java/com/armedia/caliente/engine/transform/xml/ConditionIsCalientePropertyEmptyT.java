@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -17,21 +17,20 @@ import com.armedia.commons.utilities.Tools;
 public class ConditionIsCalientePropertyEmptyT extends ConditionExpressionComparisonT {
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
-		final CmfObject<V> object = ctx.getObject();
+	public boolean check(TransformationContext ctx) {
 		final String comparand = Tools.toString(evaluate(ctx));
 		final Comparison comparison = getComparison();
 
-		Set<String> names = object.getAttributeNames();
+		Set<String> names = ctx.getPropertyNames();
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one!
-			CmfProperty<V> prop = object.getProperty(comparand);
+			CmfProperty<CmfValue> prop = ctx.getProperty(comparand);
 			return ((prop == null) || !prop.hasValues());
 		}
 		for (String s : names) {
 			if (comparison.check(comparand, s)) {
 				// This property matches...if this one is empty, we're done!
-				if (!object.getProperty(s).hasValues()) { return true; }
+				if (!ctx.getProperty(s).hasValues()) { return true; }
 			}
 		}
 		// None of the matching properties was empty...so this is false

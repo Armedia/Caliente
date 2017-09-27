@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class ConditionCustomScriptT extends ConditionExpressionT {
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
+	public boolean check(TransformationContext ctx) {
 		Object result = evaluate(ctx);
 		if (result == null) { throw new RuntimeTransformationException(
 			String.format("The given %s expression did not return a boolean value: %s", getLang(), getValue())); }

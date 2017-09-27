@@ -12,8 +12,8 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class ConditionIsLatestVersionT implements Condition {
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
-		return ctx.getObject().isHistoryCurrent();
+	public boolean check(TransformationContext ctx) {
+		return ctx.isHistoryCurrent();
 	}
 
 }

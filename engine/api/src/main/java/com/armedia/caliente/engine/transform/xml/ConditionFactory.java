@@ -4,6 +4,6 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 
 public interface ConditionFactory {
 
-	public <V> Condition getConditionInstance(TransformationContext<V> ctx);
+	public Condition getConditionInstance(TransformationContext ctx);
 
 }

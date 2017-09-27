@@ -16,7 +16,7 @@ public class ConditionCustomCheckT extends ConditionExpressionT {
 		Condition.class);
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
+	public boolean check(TransformationContext ctx) {
 		String className = Tools.toString(evaluate(ctx));
 		if (className == null) { throw new RuntimeTransformationException(
 			String.format("The given %s expression did not return a string value: %s", getLang(), getValue())); }

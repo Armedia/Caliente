@@ -27,11 +27,11 @@ public class ConditionIsTypeT implements Condition {
 	}
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
+	public boolean check(TransformationContext ctx) {
 		String value = getValue();
 		if (value == null) { throw new RuntimeTransformationException("No type value to check against"); }
 		CmfType type = CmfType.decodeString(value.toUpperCase());
-		return (ctx.getObject().getType() == type);
+		return (ctx.getType() == type);
 	}
 
 }

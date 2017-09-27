@@ -11,7 +11,6 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -55,12 +54,12 @@ public class ConditionIsCalientePropertyValueT extends ConditionCheckBaseT {
 	}
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
+	public boolean check(TransformationContext ctx) {
 		ExpressionT nameExp = getName();
 		Object name = (nameExp != null ? nameExp.evaluate(ctx) : null);
 		if (name == null) { throw new IllegalStateException("No name was given for the property value check"); }
 
-		CmfProperty<V> property = ctx.getObject().getProperty(name.toString());
+		CmfProperty<CmfValue> property = ctx.getProperty(name.toString());
 		if (property == null) { return false; }
 
 		Comparison comparison = getComparison();
@@ -68,12 +67,7 @@ public class ConditionIsCalientePropertyValueT extends ConditionCheckBaseT {
 		Object value = (valueExp != null ? valueExp.evaluate(ctx) : null);
 		if (!property.isRepeating()) {
 			// Check the one and only value
-			CmfValueCodec<V> codec = ctx.getObject().getTranslator().getCodec(property.getType());
-			V v = property.getValue();
-			if (v == null) {
-				v = codec.getNull();
-			}
-			CmfValue cv = codec.encodeValue(v);
+			CmfValue cv = property.getValue();
 			if ((cv == null) || cv.isNull()) {
 				return comparison.check(null, Tools.toString(value));
 			} else {

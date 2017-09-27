@@ -29,7 +29,7 @@ public class ActionCustomActionT extends ConditionalActionT {
 	}
 
 	@Override
-	protected <V> void applyTransformation(TransformationContext<V> ctx) {
+	protected void applyTransformation(TransformationContext ctx) {
 		ExpressionT classNameExpr = getClassName();
 
 		String className = Tools.toString(classNameExpr.evaluate(ctx));

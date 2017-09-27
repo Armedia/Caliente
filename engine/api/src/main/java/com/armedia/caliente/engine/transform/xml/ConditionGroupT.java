@@ -33,6 +33,7 @@ public abstract class ConditionGroupT implements Condition {
 		// Now, the non-grouping conditions
 		@XmlElement(name = "is-type", type = ConditionIsTypeT.class),
 		@XmlElement(name = "is-subtype", type = ConditionIsSubtypeT.class),
+		@XmlElement(name = "is-original-subtype", type = ConditionIsOriginalSubtypeT.class),
 		@XmlElement(name = "has-decorator", type = ConditionHasDecoratorT.class),
 
 		@XmlElement(name = "is-reference", type = ConditionIsReferenceT.class),
@@ -80,12 +81,12 @@ public abstract class ConditionGroupT implements Condition {
 	}
 
 	@Override
-	public final <V> boolean check(TransformationContext<V> ctx) {
+	public final boolean check(TransformationContext ctx) {
 		// If there are no elements, then we simply return true
 		List<Condition> elements = sanitizeElements(getElements());
 		if ((elements == null) || elements.isEmpty()) { return true; }
 		return doEvaluate(elements, ctx);
 	}
 
-	protected abstract <V> boolean doEvaluate(List<Condition> elements, TransformationContext<V> ctx);
+	protected abstract boolean doEvaluate(List<Condition> elements, TransformationContext ctx);
 }

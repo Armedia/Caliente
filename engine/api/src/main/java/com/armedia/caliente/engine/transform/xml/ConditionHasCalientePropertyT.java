@@ -8,7 +8,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -16,12 +15,11 @@ import com.armedia.commons.utilities.Tools;
 public class ConditionHasCalientePropertyT extends ConditionExpressionComparisonT {
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
-		final CmfObject<V> object = ctx.getObject();
+	public boolean check(TransformationContext ctx) {
 		final String comparand = Tools.toString(evaluate(ctx));
 		final Comparison comparison = getComparison();
 
-		Set<String> names = object.getPropertyNames();
+		Set<String> names = ctx.getPropertyNames();
 		if (comparison == Comparison.EQ) {
 			// Shortcut - look for the property explicitly
 			return names.contains(comparand);

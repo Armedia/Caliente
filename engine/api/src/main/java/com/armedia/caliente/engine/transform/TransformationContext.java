@@ -5,14 +5,11 @@ import java.util.Set;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfEncodeableName;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 
-public interface TransformationContext<V> {
-
-	public CmfObject<V> getObject();
+public interface TransformationContext {
 
 	public String getObjectId();
 

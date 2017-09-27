@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class ConditionIsVariableSetT extends ConditionExpressionComparisonT {
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
+	public boolean check(TransformationContext ctx) {
 		// TODO implement this condition
 		return false;
 	}

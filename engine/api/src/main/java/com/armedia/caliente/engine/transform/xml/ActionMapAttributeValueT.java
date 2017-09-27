@@ -51,7 +51,7 @@ public class ActionMapAttributeValueT extends ConditionalActionT {
 	}
 
 	@Override
-	protected <V> void applyTransformation(TransformationContext<V> ctx) {
+	protected void applyTransformation(TransformationContext ctx) {
 		// TODO implement this transformation
 
 	}

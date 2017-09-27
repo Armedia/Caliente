@@ -7,6 +7,6 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 @XmlTransient
 public interface Condition {
 
-	public <V> boolean check(TransformationContext<V> ctx);
+	public boolean check(TransformationContext ctx);
 
 }

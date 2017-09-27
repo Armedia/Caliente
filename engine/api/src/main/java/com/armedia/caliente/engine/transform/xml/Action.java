@@ -7,6 +7,6 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 @XmlTransient
 public interface Action {
 
-	public <V> void apply(TransformationContext<V> ctx);
+	public void apply(TransformationContext ctx);
 
 }

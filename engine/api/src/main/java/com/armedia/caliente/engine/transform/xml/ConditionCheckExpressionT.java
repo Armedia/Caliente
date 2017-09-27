@@ -38,7 +38,7 @@ public class ConditionCheckExpressionT extends ConditionCheckBaseT {
 	}
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
+	public boolean check(TransformationContext ctx) {
 		ExpressionT leftExp = getLeft();
 		Object leftVal = (leftExp != null ? leftExp.evaluate(ctx) : null);
 		ExpressionT rightExp = getRight();

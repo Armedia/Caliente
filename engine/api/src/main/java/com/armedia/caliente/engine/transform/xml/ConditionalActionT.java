@@ -26,7 +26,7 @@ public abstract class ConditionalActionT implements Action {
 	}
 
 	@Override
-	public final <V> void apply(TransformationContext<V> ctx) {
+	public final void apply(TransformationContext ctx) {
 		final ConditionT wrapper = getCondition();
 		final Condition condition = (wrapper != null ? wrapper.getCondition() : null);
 		if ((wrapper == null) || (condition == null) || condition.check(ctx)) {
@@ -34,5 +34,5 @@ public abstract class ConditionalActionT implements Action {
 		}
 	}
 
-	protected abstract <V> void applyTransformation(TransformationContext<V> ctx);
+	protected abstract <V> void applyTransformation(TransformationContext ctx);
 }

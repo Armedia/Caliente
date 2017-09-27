@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class ConditionGroupNotT extends ConditionWrapperT implements Condition {
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
+	public boolean check(TransformationContext ctx) {
 		final Condition condition = getCondition();
 		if (condition == null) { return true; }
 		return !condition.check(ctx);

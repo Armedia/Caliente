@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class ConditionGroupMuxT extends ConditionGroupT {
 
 	@Override
-	protected <V> boolean doEvaluate(List<Condition> elements, TransformationContext<V> ctx) {
+	protected boolean doEvaluate(List<Condition> elements, TransformationContext ctx) {
 		int trueCount = 0;
 		for (Condition c : elements) {
 			Objects.requireNonNull(c, "Null conditional elements are not allowed");

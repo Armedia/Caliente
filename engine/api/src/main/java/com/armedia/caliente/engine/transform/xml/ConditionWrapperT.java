@@ -22,6 +22,7 @@ public class ConditionWrapperT {
 		// Now, the non-grouping conditions
 		@XmlElement(name = "is-type", type = ConditionIsTypeT.class),
 		@XmlElement(name = "is-subtype", type = ConditionIsSubtypeT.class),
+		@XmlElement(name = "is-original-subtype", type = ConditionIsOriginalSubtypeT.class),
 		@XmlElement(name = "has-decorator", type = ConditionHasDecoratorT.class),
 
 		@XmlElement(name = "is-reference", type = ConditionIsReferenceT.class),

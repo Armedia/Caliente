@@ -42,7 +42,7 @@ public class TransformationT extends ConditionalActionT {
 	}
 
 	@Override
-	protected final <V> void applyTransformation(TransformationContext<V> ctx) {
+	protected final void applyTransformation(TransformationContext ctx) {
 		for (ConditionalActionT action : getTransformations()) {
 			if (action != null) {
 				action.applyTransformation(ctx);

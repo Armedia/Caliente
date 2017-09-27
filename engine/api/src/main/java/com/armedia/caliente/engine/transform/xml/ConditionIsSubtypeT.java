@@ -13,8 +13,8 @@ import com.armedia.commons.utilities.Tools;
 public class ConditionIsSubtypeT extends ConditionExpressionComparisonT {
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
-		return getComparison().check(Tools.toString(evaluate(ctx)), ctx.getObject().getSubtype());
+	public boolean check(TransformationContext ctx) {
+		return getComparison().check(Tools.toString(evaluate(ctx)), ctx.getSubtype());
 	}
 
 }

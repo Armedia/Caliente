@@ -6,16 +6,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionIsFirstVersion.t")
-public class ConditionIsFirstVersionT implements Condition {
+@XmlType(name = "conditionIsOriginalSubtype.t")
+public class ConditionIsOriginalSubtypeT extends ConditionExpressionComparisonT {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		// TODO implement this condition
-		// Maybe use the version index properties?
-		return false;
+		return getComparison().check(Tools.toString(evaluate(ctx)), ctx.getOriginalSubtype());
 	}
 
 }

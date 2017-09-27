@@ -46,7 +46,7 @@ public class ExpressionT {
 		this.lang = value;
 	}
 
-	public <V> Object evaluate(TransformationContext<V> ctx) {
+	public Object evaluate(TransformationContext ctx) {
 		// First: if the language is "constant" or null, we return the literal string value
 		String language = Tools.coalesce(getLang(), ExpressionT.CONSTANT);
 		if (ExpressionT.CONSTANT.equalsIgnoreCase(language)) { return this.value; }

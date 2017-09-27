@@ -52,7 +52,7 @@ public class ConditionIsAttributeValueT extends ConditionCheckBaseT {
 	}
 
 	@Override
-	public <V> boolean check(TransformationContext<V> ctx) {
+	public boolean check(TransformationContext ctx) {
 		// TODO implement this condition
 		return false;
 	}

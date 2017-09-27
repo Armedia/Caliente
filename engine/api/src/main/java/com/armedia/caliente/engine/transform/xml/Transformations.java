@@ -40,7 +40,7 @@ public final class Transformations implements Action {
 	}
 
 	@Override
-	public <V> void apply(TransformationContext<V> ctx) {
+	public void apply(TransformationContext ctx) {
 		for (Action t : getElements()) {
 			if (t != null) {
 				t.apply(ctx);
