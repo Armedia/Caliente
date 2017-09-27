@@ -3,10 +3,8 @@ package com.armedia.caliente.engine.transform;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -14,17 +12,13 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "conditionCheckExpression.t", propOrder = {
 	"left", "right"
 })
-public class ConditionCheckExpressionT implements Condition {
+public class ConditionCheckExpressionT extends ConditionCheckBaseT {
 
 	@XmlElement(required = true)
 	protected ExpressionT left;
 
 	@XmlElement(required = true)
 	protected ExpressionT right;
-
-	@XmlAttribute(name = "comparison")
-	@XmlJavaTypeAdapter(ComparisonAdapter.class)
-	protected Comparison comparison;
 
 	public ExpressionT getLeft() {
 		return this.left;
@@ -40,14 +34,6 @@ public class ConditionCheckExpressionT implements Condition {
 
 	public void setRight(ExpressionT value) {
 		this.right = value;
-	}
-
-	public Comparison getComparison() {
-		return Tools.coalesce(this.comparison, Comparison.EQ);
-	}
-
-	public void setComparison(Comparison value) {
-		this.comparison = value;
 	}
 
 	@Override

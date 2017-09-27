@@ -43,7 +43,7 @@ public class MapValueCaseT {
 	}
 
 	public Comparison getComparison() {
-		return Tools.coalesce(this.comparison, Comparison.EQ);
+		return Tools.coalesce(this.comparison, Comparison.DEFAULT);
 	}
 
 	public void setComparison(Comparison value) {

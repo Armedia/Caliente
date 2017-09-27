@@ -109,6 +109,8 @@ public enum Comparison {
 	//
 	;
 
+	public static Comparison DEFAULT = Comparison.EQI;
+
 	static {
 		for (Comparison c : Comparison.values()) {
 			String name = c.name();

@@ -8,17 +8,18 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public abstract class ConditionExpressionComparisonT extends ExpressionT implements Condition {
+public abstract class ConditionCheckBaseT implements Condition {
 
 	@XmlAttribute(name = "comparison")
 	@XmlJavaTypeAdapter(ComparisonAdapter.class)
 	protected Comparison comparison;
 
-	public Comparison getComparison() {
+	public final Comparison getComparison() {
 		return Tools.coalesce(this.comparison, Comparison.DEFAULT);
 	}
 
-	public void setComparison(Comparison value) {
+	public final void setComparison(Comparison value) {
 		this.comparison = value;
 	}
+
 }

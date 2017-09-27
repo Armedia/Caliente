@@ -17,17 +17,13 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "conditionIsCalientePropertyValue.t", propOrder = {
 	"name", "value"
 })
-public class ConditionIsCalientePropertyValueT implements Condition {
+public class ConditionIsCalientePropertyValueT extends ConditionCheckBaseT {
 
 	@XmlElement(name = "name", required = true)
 	protected ExpressionT name;
 
 	@XmlElement(name = "value", required = true)
 	protected ExpressionT value;
-
-	@XmlAttribute(name = "comparison")
-	@XmlJavaTypeAdapter(ComparisonAdapter.class)
-	protected Comparison comparison;
 
 	@XmlAttribute(name = "cardinality")
 	@XmlJavaTypeAdapter(CardinalityAdapter.class)
@@ -47,14 +43,6 @@ public class ConditionIsCalientePropertyValueT implements Condition {
 
 	public void setValue(ExpressionT value) {
 		this.value = value;
-	}
-
-	public Comparison getComparison() {
-		return Tools.coalesce(this.comparison, Comparison.EQ);
-	}
-
-	public void setComparison(Comparison value) {
-		this.comparison = value;
 	}
 
 	public Cardinality getCardinality() {
