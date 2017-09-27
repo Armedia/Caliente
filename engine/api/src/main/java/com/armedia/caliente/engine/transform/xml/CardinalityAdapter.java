@@ -35,7 +35,7 @@ public class CardinalityAdapter extends XmlAdapter<String, Cardinality> {
 			case ALL:
 				return CardinalityAdapter.STAR;
 			default:
-				return v.name();
+				return v.name().toLowerCase();
 		}
 	}
 

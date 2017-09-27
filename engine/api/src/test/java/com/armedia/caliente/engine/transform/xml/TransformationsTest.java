@@ -7,7 +7,6 @@ import javax.xml.bind.JAXBException;
 
 import org.junit.Test;
 
-import com.armedia.caliente.engine.transform.xml.Transformations;
 import com.armedia.commons.utilities.XmlTools;
 
 public class TransformationsTest {
@@ -19,8 +18,8 @@ public class TransformationsTest {
 	@Test
 	public void testUnmarshall() throws IOException, JAXBException {
 		try (InputStream in = getXml("transformations-test-1.xml")) {
-			Transformations xform = XmlTools.unmarshal(Transformations.class, in);
-			XmlTools.marshal(xform, System.out);
+			Transformations xform = XmlTools.unmarshal(Transformations.class, "transformations.xsd", in);
+			XmlTools.marshal(xform, "transformations.xsd", System.out);
 		}
 	}
 
