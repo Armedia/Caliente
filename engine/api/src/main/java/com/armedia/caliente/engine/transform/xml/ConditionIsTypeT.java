@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
+import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.store.CmfType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -28,7 +29,7 @@ public class ConditionIsTypeT implements Condition {
 	@Override
 	public <V> boolean check(TransformationContext<V> ctx) {
 		String value = getValue();
-		if (value == null) { throw new TransformationException("No type value to check against"); }
+		if (value == null) { throw new RuntimeTransformationException("No type value to check against"); }
 		CmfType type = CmfType.decodeString(value.toUpperCase());
 		return (ctx.getObject().getType() == type);
 	}

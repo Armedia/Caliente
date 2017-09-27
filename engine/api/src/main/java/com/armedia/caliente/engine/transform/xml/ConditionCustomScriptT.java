@@ -5,6 +5,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.transform.TransformationContext;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionCustomScript.t")
 public class ConditionCustomScriptT extends ConditionExpressionT {
@@ -12,7 +14,7 @@ public class ConditionCustomScriptT extends ConditionExpressionT {
 	@Override
 	public <V> boolean check(TransformationContext<V> ctx) {
 		Object result = evaluate(ctx);
-		if (result == null) { throw new TransformationException(
+		if (result == null) { throw new RuntimeTransformationException(
 			String.format("The given %s expression did not return a boolean value: %s", getLang(), getValue())); }
 		if (Boolean.class.isInstance(result)) { return Boolean.class.cast(result).booleanValue(); }
 

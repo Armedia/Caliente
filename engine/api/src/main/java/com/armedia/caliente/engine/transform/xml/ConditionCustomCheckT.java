@@ -12,6 +12,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
+import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -30,7 +31,7 @@ public class ConditionCustomCheckT extends ConditionExpressionT {
 			try {
 				return Condition.class.cast(this.klass.newInstance());
 			} catch (InstantiationException | IllegalAccessException e) {
-				throw new TransformationException(
+				throw new RuntimeTransformationException(
 					String.format("Failed to instantiate a condition of class [%s]", this.klass.getCanonicalName()), e);
 			}
 		}
@@ -68,21 +69,21 @@ public class ConditionCustomCheckT extends ConditionExpressionT {
 		}
 
 		// If it's not a factory nor a condition, we don't know what to do with it...
-		throw new TransformationException(
+		throw new RuntimeTransformationException(
 			String.format("The class [%s] is neither a Condition nor a ConditionFactory", className));
 	}
 
 	@Override
 	public <V> boolean check(TransformationContext<V> ctx) {
 		String className = Tools.toString(evaluate(ctx));
-		if (className == null) { throw new TransformationException(
+		if (className == null) { throw new RuntimeTransformationException(
 			String.format("The given %s expression did not return a string value: %s", getLang(), getValue())); }
 
 		try {
 			ConditionFactory factory = ConditionCustomCheckT.getFactory(className);
 			return factory.getConditionInstance(ctx).check(ctx);
 		} catch (Exception e) {
-			throw new TransformationException(e);
+			throw new RuntimeTransformationException(e);
 		}
 	}
 

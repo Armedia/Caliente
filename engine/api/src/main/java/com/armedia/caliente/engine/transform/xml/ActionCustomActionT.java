@@ -13,6 +13,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
+import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -33,7 +34,7 @@ public class ActionCustomActionT extends ConditionalActionT {
 			try {
 				return Transformation.class.cast(this.klass.newInstance());
 			} catch (InstantiationException | IllegalAccessException e) {
-				throw new TransformationException(String.format("Failed to instantiate a transformation of class [%s]",
+				throw new RuntimeTransformationException(String.format("Failed to instantiate a transformation of class [%s]",
 					this.klass.getCanonicalName()), e);
 			}
 		}
@@ -71,7 +72,7 @@ public class ActionCustomActionT extends ConditionalActionT {
 		}
 
 		// If it's not a factory nor a condition, we don't know what to do with it...
-		throw new TransformationException(
+		throw new RuntimeTransformationException(
 			String.format("The class [%s] is neither a Transformation nor a TransformationFactory", className));
 	}
 
@@ -89,16 +90,16 @@ public class ActionCustomActionT extends ConditionalActionT {
 	@Override
 	protected <V> void applyTransformation(TransformationContext<V> ctx) {
 		ExpressionT classNameExp = getClassName();
-		if (classNameExp == null) { throw new TransformationException("No classname expression given to evaluate"); }
+		if (classNameExp == null) { throw new RuntimeTransformationException("No classname expression given to evaluate"); }
 		String className = Tools.toString(classNameExp.evaluate(ctx));
-		if (className == null) { throw new TransformationException(
+		if (className == null) { throw new RuntimeTransformationException(
 			String.format("The given %s expression did not return a string value: %s", classNameExp.getLang(),
 				classNameExp.getValue())); }
 
 		try {
 			ActionCustomActionT.getFactory(className).getTransformationInstance(ctx).apply(ctx);
 		} catch (Exception e) {
-			throw new TransformationException(e);
+			throw new RuntimeTransformationException(e);
 		}
 	}
 }

@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlValue;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -51,12 +52,12 @@ public class ExpressionT {
 		if (ExpressionT.CONSTANT.equalsIgnoreCase(language)) { return this.value; }
 
 		ScriptEngine engine = ExpressionT.ENGINE_FACTORY.getEngineByName(this.lang);
-		if (engine == null) { throw new TransformationException(
+		if (engine == null) { throw new RuntimeTransformationException(
 			String.format("No script engine [%s] is available", language)); }
 		try {
 			return engine.eval(StringUtils.strip(this.value));
 		} catch (ScriptException e) {
-			throw new TransformationException(e);
+			throw new RuntimeTransformationException(e);
 		}
 	}
 }
