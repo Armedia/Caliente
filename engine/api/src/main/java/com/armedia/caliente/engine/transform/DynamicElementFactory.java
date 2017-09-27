@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.transform.xml;
+package com.armedia.caliente.engine.transform;
 
 public interface DynamicElementFactory<E> {
 

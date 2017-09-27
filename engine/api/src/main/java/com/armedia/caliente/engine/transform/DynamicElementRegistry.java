@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.transform.xml;
+package com.armedia.caliente.engine.transform;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -6,6 +6,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
+
+import com.armedia.caliente.engine.transform.xml.RuntimeTransformationException;
 
 public class DynamicElementRegistry<E> {
 
