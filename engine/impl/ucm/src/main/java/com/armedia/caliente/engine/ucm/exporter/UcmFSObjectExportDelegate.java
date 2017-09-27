@@ -145,7 +145,7 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 			}
 			l.addFirst(parent.getURI().getSchemeSpecificPart());
 		}
-		idtree.setValue(new CmfValue(FileNameTools.reconstitute(l, false, false)));
+		idtree.setValue(new CmfValue(FileNameTools.reconstitute(l, false, false, '/')));
 		return true;
 	}
 }
