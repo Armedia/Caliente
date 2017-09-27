@@ -18,7 +18,7 @@ public class DynamicElementRegistry<E> {
 		}
 
 		@Override
-		public <V> E acquireInstance() {
+		public E acquireInstance() {
 			try {
 				return this.klass.newInstance();
 			} catch (InstantiationException | IllegalAccessException e) {
@@ -37,7 +37,7 @@ public class DynamicElementRegistry<E> {
 
 	private final Class<E> elementClass;
 
-	protected DynamicElementRegistry(Class<E> elementClass) {
+	public DynamicElementRegistry(Class<E> elementClass) {
 		this.elementClass = elementClass;
 	}
 
