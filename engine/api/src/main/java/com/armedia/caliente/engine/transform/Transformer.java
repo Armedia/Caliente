@@ -36,21 +36,32 @@ public class Transformer {
 		this.transformations = Transformations.loadFromXML(in);
 	}
 
-	public <V> CmfObject<V> transform(CmfObject<V> object, TransformationContext<V> ctx)
-		throws RuntimeTransformationException {
+	private <V> TransformationContext<V> createContext(CmfObject<V> object) {
 		// Do nothing, for now... but:
 		// * create and initialize the context
 		// * invoke the transformation
-		this.transformations.apply(ctx);
-		// * harvest the transformations, and turn them into a new object
-		return object;
+		return null;
+	}
+
+	public <V> CmfObject<V> transform(CmfObject<V> object) throws RuntimeTransformationException {
+		TransformationContext<V> ctx = createContext(object);
+		try {
+			this.transformations.apply(ctx);
+			// * harvest the transformations, and turn them into a new object
+			return object;
+		} finally {
+			destroyContext(ctx);
+		}
+	}
+
+	private <V> void destroyContext(TransformationContext<V> ctx) {
+		// Clean things out...
 	}
 
 	private static ConcurrentMap<URI, Transformer> INSTANCES = new ConcurrentHashMap<>();
 
 	public static Transformer getCachedInstance(final URL resource) throws Exception {
 		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
-		// TODO: Support classpath:/-style resources?
 		return ConcurrentUtils.createIfAbsent(Transformer.INSTANCES, resource.toURI(),
 			new ConcurrentInitializer<Transformer>() {
 				@Override
