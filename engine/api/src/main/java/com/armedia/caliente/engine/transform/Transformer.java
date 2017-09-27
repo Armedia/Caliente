@@ -79,7 +79,7 @@ public class Transformer {
 			});
 	}
 
-	public static Transformer getNewInstance(final URL resource) throws Exception {
+	public static Transformer forceNewInstance(final URL resource) throws Exception {
 		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
 		Transformer.INSTANCES.remove(resource.toURI());
 		return Transformer.getCachedInstance(resource);
