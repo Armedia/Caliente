@@ -13,7 +13,7 @@ public class ComparisonAdapter extends XmlAdapter<String, Comparison> {
 	@Override
 	public String marshal(Comparison v) throws Exception {
 		if (v == null) { return null; }
-		return v.name();
+		return v.name().toLowerCase();
 	}
 
 }
