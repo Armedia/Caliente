@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.ActionFactory;
 import com.armedia.caliente.engine.transform.DynamicTransformationElements;
+import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.commons.utilities.Tools;
 

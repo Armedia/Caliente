@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.transform.xml;
+package com.armedia.caliente.engine.transform;
 
 public class RuntimeTransformationException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

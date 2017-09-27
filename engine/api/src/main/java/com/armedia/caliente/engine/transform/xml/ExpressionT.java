@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlValue;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.commons.utilities.Tools;
 
