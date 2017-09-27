@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 @XmlType(name = "conditionalAction.t", propOrder = {
 	"condition"
 })
-public abstract class ConditionalActionT implements Transformation {
+public abstract class ConditionalActionT implements Action {
 
 	@XmlElement(name = "if", required = false)
 	protected ConditionT condition;

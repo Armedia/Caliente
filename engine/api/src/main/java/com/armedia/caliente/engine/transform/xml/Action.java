@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.armedia.caliente.engine.transform.TransformationContext;
 
 @XmlTransient
-public interface Transformation {
+public interface Action {
 
 	public <V> void apply(TransformationContext<V> ctx);
 
