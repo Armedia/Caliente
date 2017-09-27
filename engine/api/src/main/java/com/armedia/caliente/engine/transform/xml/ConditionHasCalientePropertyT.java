@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -27,7 +28,7 @@ public class ConditionHasCalientePropertyT extends ConditionExpressionComparison
 
 		// Bad news...we have to go through all names and apply the comparison
 		for (String s : names) {
-			if (comparison.check(comparand, s)) { return true; }
+			if (comparison.check(CmfDataType.STRING, comparand, s)) { return true; }
 		}
 		// No successful match...
 		return false;

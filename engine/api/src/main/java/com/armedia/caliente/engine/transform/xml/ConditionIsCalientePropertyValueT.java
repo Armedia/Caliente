@@ -69,9 +69,9 @@ public class ConditionIsCalientePropertyValueT extends ConditionCheckBaseT {
 			// Check the one and only value
 			CmfValue cv = property.getValue();
 			if ((cv == null) || cv.isNull()) {
-				return comparison.check(null, Tools.toString(value));
+				return comparison.check(property.getType(), null, value);
 			} else {
-				return comparison.check(cv.asString(), Tools.toString(value));
+				return comparison.check(property.getType(), cv, value);
 			}
 		}
 

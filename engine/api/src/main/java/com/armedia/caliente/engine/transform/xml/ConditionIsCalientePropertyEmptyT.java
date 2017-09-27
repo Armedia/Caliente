@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
@@ -28,7 +29,7 @@ public class ConditionIsCalientePropertyEmptyT extends ConditionExpressionCompar
 			return ((prop == null) || !prop.hasValues());
 		}
 		for (String s : names) {
-			if (comparison.check(comparand, s)) {
+			if (comparison.check(CmfDataType.STRING, comparand, s)) {
 				// This property matches...if this one is empty, we're done!
 				if (!ctx.getProperty(s).hasValues()) { return true; }
 			}

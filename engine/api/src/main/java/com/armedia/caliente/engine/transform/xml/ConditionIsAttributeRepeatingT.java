@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -28,7 +29,7 @@ public class ConditionIsAttributeRepeatingT extends ConditionExpressionCompariso
 			return ((att != null) && att.isRepeating());
 		}
 		for (String s : names) {
-			if (comparison.check(comparand, s)) {
+			if (comparison.check(CmfDataType.STRING, comparand, s)) {
 				// This attribute matches...if this one is repeating, we're done!
 				if (ctx.getAttribute(s).isRepeating()) { return true; }
 			}

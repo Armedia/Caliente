@@ -7,7 +7,6 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionCheckExpression.t", propOrder = {
@@ -43,7 +42,9 @@ public class ConditionCheckExpressionT extends ConditionCheckBaseT {
 		Object leftVal = (leftExp != null ? leftExp.evaluate(ctx) : null);
 		ExpressionT rightExp = getRight();
 		Object rightVal = (rightExp != null ? rightExp.evaluate(ctx) : null);
-		return getComparison().check(Tools.toString(leftVal), Tools.toString(rightVal));
+		// TODO: What data types are expected for the expressions? Should we add an
+		// element/attribute to specify?
+		return getComparison().check(null, leftVal, rightVal);
 	}
 
 }
