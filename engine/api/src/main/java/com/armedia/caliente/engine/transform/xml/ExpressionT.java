@@ -9,7 +9,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -23,7 +24,6 @@ public class ExpressionT {
 	protected static final String CONSTANT = "const";
 
 	@XmlValue
-	@XmlJavaTypeAdapter(ExpressionStringAdapter.class)
 	protected String value;
 
 	@XmlAttribute(name = "lang")
@@ -54,7 +54,7 @@ public class ExpressionT {
 		if (engine == null) { throw new TransformationException(
 			String.format("No script engine [%s] is available", language)); }
 		try {
-			return engine.eval(this.value);
+			return engine.eval(StringUtils.strip(this.value));
 		} catch (ScriptException e) {
 			throw new TransformationException(e);
 		}
