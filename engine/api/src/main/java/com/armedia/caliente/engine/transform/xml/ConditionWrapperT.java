@@ -17,7 +17,7 @@ public class ConditionWrapperT {
 		@XmlElement(name = "nand", type = ConditionGroupNandT.class),
 		@XmlElement(name = "nor", type = ConditionGroupNorT.class),
 		@XmlElement(name = "xnor", type = ConditionGroupXnorT.class),
-		@XmlElement(name = "mux", type = ConditionGroupMuxT.class),
+		@XmlElement(name = "oneof", type = ConditionGroupOneofT.class),
 
 		// Now, the non-grouping conditions
 		@XmlElement(name = "is-type", type = ConditionIsTypeT.class),

@@ -34,10 +34,10 @@
 					<not>
 						<is-reference />
 					</not>
-					<mux>
+					<oneof>
 						<is-first-version />
 						<is-latest-version />
-					</mux>
+					</oneof>
 					<has-decorator comparison="eq" lang="...">
 						
 					</has-decorator>

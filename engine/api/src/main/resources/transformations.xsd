@@ -96,7 +96,7 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionGroupMux.t">
+	<xsd:complexType name="conditionGroupOneof.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
 		</xsd:complexContent>
@@ -279,7 +279,7 @@
 			<xsd:element name="nand" type="tns:conditionGroupNand.t" />
 			<xsd:element name="nor" type="tns:conditionGroupNor.t" />
 			<xsd:element name="xnor" type="tns:conditionGroupXnor.t" />
-			<xsd:element name="mux" type="tns:conditionGroupMux.t" />
+			<xsd:element name="oneof" type="tns:conditionGroupOneof.t" />
 		</xsd:choice>
 	</xsd:group>
 

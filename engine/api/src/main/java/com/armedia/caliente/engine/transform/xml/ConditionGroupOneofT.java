@@ -11,8 +11,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.engine.transform.TransformationContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionGroupMux.t")
-public class ConditionGroupMuxT extends ConditionGroupT {
+@XmlType(name = "conditionGroupOneof.t")
+public class ConditionGroupOneofT extends ConditionGroupT {
 
 	@Override
 	protected boolean doEvaluate(List<Condition> elements, TransformationContext ctx) {
