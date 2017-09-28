@@ -13,7 +13,7 @@ import com.armedia.caliente.engine.transform.xml.ExpressionT;
 @XmlType(name = "conditionCheckExpression.t", propOrder = {
 	"left", "right"
 })
-public class ConditionCheckExpressionT extends ConditionCheckBaseT {
+public class ConditionCheckExpressionT extends AbstractComparisonCheck {
 
 	@XmlElement(required = true)
 	protected ExpressionT left;

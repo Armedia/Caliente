@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public abstract class ConditionCheckBaseT implements Condition {
+public abstract class AbstractComparisonCheck implements Condition {
 
 	@XmlAttribute(name = "comparison")
 	@XmlJavaTypeAdapter(ComparisonAdapter.class)

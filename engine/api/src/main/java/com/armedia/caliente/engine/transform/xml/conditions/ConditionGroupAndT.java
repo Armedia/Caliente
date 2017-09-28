@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionGroupAnd.t")
-public class ConditionGroupAndT extends ConditionGroupT {
+public class ConditionGroupAndT extends AbstractGroupingCondition {
 
 	@Override
 	protected boolean doEvaluate(List<Condition> elements, TransformationContext ctx) {

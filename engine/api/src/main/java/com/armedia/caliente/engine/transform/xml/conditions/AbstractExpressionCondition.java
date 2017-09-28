@@ -9,5 +9,5 @@ import com.armedia.caliente.engine.transform.xml.ExpressionT;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionExpression.t")
-public abstract class ConditionExpressionT extends ExpressionT implements Condition {
+public abstract class AbstractExpressionCondition extends ExpressionT implements Condition {
 }

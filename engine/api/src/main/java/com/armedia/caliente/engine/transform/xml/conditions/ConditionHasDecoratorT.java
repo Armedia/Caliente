@@ -9,7 +9,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionHasDecorator.t")
-public class ConditionHasDecoratorT extends ConditionExpressionComparisonT {
+public class ConditionHasDecoratorT extends AbstractExpressionComparison {
 
 	@Override
 	public boolean check(TransformationContext ctx) {

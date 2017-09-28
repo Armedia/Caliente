@@ -10,7 +10,7 @@ import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionHasAttribute.t")
-public class ConditionHasAttributeT extends ConditionAttributeCheckT {
+public class ConditionHasAttributeT extends AbstractAttributeCheck {
 
 	@Override
 	protected boolean check(CmfAttribute<CmfValue> candidate) {

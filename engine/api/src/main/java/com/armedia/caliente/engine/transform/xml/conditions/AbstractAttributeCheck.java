@@ -6,11 +6,11 @@ import java.util.Set;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfValue;
 
 @XmlTransient
-public abstract class ConditionCalientePropertyCheckT extends ConditionAttributeCalientePropertyVariableCheckT<CmfProperty<CmfValue>> {
+public abstract class AbstractAttributeCheck extends AbstractAttributeCalientePropertyVariableCheck<CmfAttribute<CmfValue>> {
 
 	@Override
 	protected final Set<String> getCandidateNames(TransformationContext ctx) {
@@ -18,8 +18,8 @@ public abstract class ConditionCalientePropertyCheckT extends ConditionAttribute
 	}
 
 	@Override
-	protected final CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name) {
-		return ctx.getProperty(name);
+	protected final CmfAttribute<CmfValue> getCandidate(TransformationContext ctx, String name) {
+		return ctx.getAttribute(name);
 	}
 
 }

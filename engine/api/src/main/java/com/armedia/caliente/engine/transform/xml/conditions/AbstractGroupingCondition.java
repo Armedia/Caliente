@@ -17,7 +17,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 @XmlType(name = "conditionGroup.t", propOrder = {
 	"elements"
 })
-public abstract class ConditionGroupT implements Condition {
+public abstract class AbstractGroupingCondition implements Condition {
 
 	@XmlElements({
 		// First, the groups

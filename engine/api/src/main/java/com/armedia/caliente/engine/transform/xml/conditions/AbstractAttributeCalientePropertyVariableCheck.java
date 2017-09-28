@@ -13,8 +13,8 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public abstract class ConditionAttributeCalientePropertyVariableCheckT<T extends CmfProperty<CmfValue>>
-	extends ConditionExpressionComparisonT {
+public abstract class AbstractAttributeCalientePropertyVariableCheck<T extends CmfProperty<CmfValue>>
+	extends AbstractExpressionComparison {
 
 	protected abstract Set<String> getCandidateNames(TransformationContext ctx);
 

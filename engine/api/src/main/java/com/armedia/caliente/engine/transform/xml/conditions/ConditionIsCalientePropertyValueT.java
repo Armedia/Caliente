@@ -13,7 +13,7 @@ import com.armedia.caliente.store.CmfValue;
 @XmlType(name = "conditionIsCalientePropertyValue.t", propOrder = {
 	"name", "value"
 })
-public class ConditionIsCalientePropertyValueT extends ConditionAttributeCalientePropertyVariableValueCheckT<CmfProperty<CmfValue>> {
+public class ConditionIsCalientePropertyValueT extends AbstractAttributeCalientePropertyVariableValueCheck<CmfProperty<CmfValue>> {
 
 	@Override
 	protected CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name) {

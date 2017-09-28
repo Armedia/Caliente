@@ -16,8 +16,8 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public abstract class ConditionAttributeCalientePropertyVariableValueCheckT<T extends CmfProperty<CmfValue>>
-	extends ConditionCheckBaseT {
+public abstract class AbstractAttributeCalientePropertyVariableValueCheck<T extends CmfProperty<CmfValue>>
+	extends AbstractComparisonCheck {
 
 	@XmlElement(name = "name", required = true)
 	protected ExpressionT name;
