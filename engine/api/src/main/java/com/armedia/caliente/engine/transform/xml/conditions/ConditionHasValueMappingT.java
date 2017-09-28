@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.xml.Condition;
 import com.armedia.caliente.engine.transform.xml.ExpressionT;
 
 @XmlAccessorType(XmlAccessType.FIELD)

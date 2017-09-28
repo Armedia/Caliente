@@ -18,7 +18,6 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.actions.Action;
 import com.armedia.commons.utilities.XmlTools;
 
 @XmlAccessorType(XmlAccessType.FIELD)

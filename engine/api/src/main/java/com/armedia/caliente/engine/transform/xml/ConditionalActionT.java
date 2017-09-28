@@ -11,9 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.actions.Action;
 import com.armedia.caliente.engine.transform.xml.actions.ActionConditionT;
-import com.armedia.caliente.engine.transform.xml.conditions.Condition;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionalAction.t", propOrder = {

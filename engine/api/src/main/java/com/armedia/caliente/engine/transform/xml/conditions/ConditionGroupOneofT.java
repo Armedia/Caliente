@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.xml.Condition;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionGroupOneof.t")

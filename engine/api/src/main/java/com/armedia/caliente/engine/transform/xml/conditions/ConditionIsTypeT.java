@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.xml.Condition;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeAdapter;
 

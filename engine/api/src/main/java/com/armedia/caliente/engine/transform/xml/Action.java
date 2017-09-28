@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.transform.xml.actions;
+package com.armedia.caliente.engine.transform.xml;
 
 import javax.xml.bind.annotation.XmlTransient;
 

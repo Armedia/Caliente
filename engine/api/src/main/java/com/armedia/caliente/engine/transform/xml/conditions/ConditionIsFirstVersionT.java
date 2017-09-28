@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.xml.Condition;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 

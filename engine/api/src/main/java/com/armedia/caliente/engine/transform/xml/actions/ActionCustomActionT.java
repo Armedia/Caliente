@@ -10,6 +10,7 @@ import com.armedia.caliente.engine.transform.ActionFactory;
 import com.armedia.caliente.engine.transform.DynamicTransformationElements;
 import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.xml.Action;
 import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
 import com.armedia.caliente.engine.transform.xml.ExpressionT;
 import com.armedia.commons.utilities.Tools;

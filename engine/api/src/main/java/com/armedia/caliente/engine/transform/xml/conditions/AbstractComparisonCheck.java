@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
+import com.armedia.caliente.engine.transform.xml.Condition;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient

@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.xml.Condition;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionGroup.t", propOrder = {
