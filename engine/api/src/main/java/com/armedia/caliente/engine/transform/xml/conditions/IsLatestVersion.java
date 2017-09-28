@@ -6,15 +6,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.engine.transform.xml.Condition;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionIsSubtype.t")
-public class ConditionIsSubtypeT extends AbstractExpressionComparison {
+@XmlType(name = "conditionIsLatestVersion.t")
+public class IsLatestVersion implements Condition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		return getComparison().check(CmfDataType.STRING, evaluate(ctx), ctx.getSubtype());
+		return ctx.isHistoryCurrent();
 	}
 
 }

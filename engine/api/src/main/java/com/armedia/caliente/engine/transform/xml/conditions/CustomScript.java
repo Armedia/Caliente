@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionCustomScript.t")
-public class ConditionCustomScriptT extends AbstractExpressionCondition {
+public class CustomScript extends AbstractExpressionCondition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {

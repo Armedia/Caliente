@@ -13,7 +13,7 @@ import com.armedia.caliente.engine.transform.xml.Condition;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionGroupOneof.t")
-public class ConditionGroupOneofT extends AbstractGroupingCondition {
+public class GroupOneof extends AbstractGroupingCondition {
 
 	@Override
 	protected boolean doEvaluate(List<Condition> elements, TransformationContext ctx) {

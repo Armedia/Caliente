@@ -14,7 +14,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionCustomCheck.t")
-public class ConditionCustomCheckT extends AbstractExpressionCondition {
+public class CustomCheck extends AbstractExpressionCondition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {

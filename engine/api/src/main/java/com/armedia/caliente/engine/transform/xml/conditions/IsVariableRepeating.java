@@ -9,12 +9,12 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionHasCalienteProperty.t")
-public class ConditionHasCalientePropertyT extends AbstractCalientePropertyCheck {
+@XmlType(name = "conditionIsVariableRepeating.t")
+public class IsVariableRepeating extends AbstractVariableCheck {
 
 	@Override
 	protected boolean check(CmfProperty<CmfValue> candidate) {
-		return (candidate != null);
+		return (candidate != null) && candidate.isRepeating();
 	}
 
 }

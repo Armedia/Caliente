@@ -10,14 +10,14 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionIsCalientePropertyValue.t", propOrder = {
+@XmlType(name = "conditionIsVariableValue.t", propOrder = {
 	"name", "value"
 })
-public class ConditionIsCalientePropertyValueT extends AbstractAttributeCalientePropertyVariableValueCheck<CmfProperty<CmfValue>> {
+public class IsVariableValue extends AbstractAttributeCalientePropertyVariableValueCheck<CmfProperty<CmfValue>> {
 
 	@Override
 	protected CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name) {
-		return ctx.getProperty(name);
+		return ctx.getVariable(name);
 	}
 
 }

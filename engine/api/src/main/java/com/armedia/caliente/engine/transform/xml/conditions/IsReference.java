@@ -7,19 +7,15 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Condition;
-import com.armedia.caliente.engine.transform.xml.ConditionWrapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionGroupNot.t", propOrder = {
-	"condition"
-})
-public class ConditionGroupNotT extends ConditionWrapper implements Condition {
+@XmlType(name = "conditionIsReference.t")
+public class IsReference implements Condition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		final Condition condition = getCondition();
-		if (condition == null) { return true; }
-		return !condition.check(ctx);
+		// TODO implement this condition
+		return false;
 	}
 
 }

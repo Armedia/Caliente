@@ -10,7 +10,7 @@ import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsVariableSet.t")
-public class ConditionIsVariableSetT extends AbstractCalientePropertyCheck {
+public class IsVariableSet extends AbstractCalientePropertyCheck {
 
 	@Override
 	protected boolean check(CmfProperty<CmfValue> candidate) {

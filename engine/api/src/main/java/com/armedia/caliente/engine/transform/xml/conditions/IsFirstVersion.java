@@ -13,7 +13,7 @@ import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsFirstVersion.t")
-public class ConditionIsFirstVersionT implements Condition {
+public class IsFirstVersion implements Condition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {

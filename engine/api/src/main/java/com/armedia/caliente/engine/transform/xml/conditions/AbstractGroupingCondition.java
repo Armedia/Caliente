@@ -22,43 +22,43 @@ public abstract class AbstractGroupingCondition implements Condition {
 
 	@XmlElements({
 		// First, the groups
-		@XmlElement(name = "and", type = ConditionGroupAndT.class),
-		@XmlElement(name = "or", type = ConditionGroupOrT.class),
-		@XmlElement(name = "not", type = ConditionGroupNotT.class),
-		@XmlElement(name = "xor", type = ConditionGroupXorT.class),
-		@XmlElement(name = "nand", type = ConditionGroupNandT.class),
-		@XmlElement(name = "nor", type = ConditionGroupNorT.class),
-		@XmlElement(name = "xnor", type = ConditionGroupXnorT.class),
-		@XmlElement(name = "oneof", type = ConditionGroupOneofT.class),
+		@XmlElement(name = "and", type = GroupAnd.class),
+		@XmlElement(name = "or", type = GroupOr.class),
+		@XmlElement(name = "not", type = GroupNot.class),
+		@XmlElement(name = "xor", type = GroupXor.class),
+		@XmlElement(name = "nand", type = GroupNand.class),
+		@XmlElement(name = "nor", type = GroupNor.class),
+		@XmlElement(name = "xnor", type = GroupXnor.class),
+		@XmlElement(name = "oneof", type = GroupOneof.class),
 
 		// Now, the non-grouping conditions
-		@XmlElement(name = "is-type", type = ConditionIsTypeT.class),
-		@XmlElement(name = "is-subtype", type = ConditionIsSubtypeT.class),
-		@XmlElement(name = "is-original-subtype", type = ConditionIsOriginalSubtypeT.class),
-		@XmlElement(name = "has-decorator", type = ConditionHasDecoratorT.class),
+		@XmlElement(name = "is-type", type = IsType.class),
+		@XmlElement(name = "is-subtype", type = IsSubtype.class),
+		@XmlElement(name = "is-original-subtype", type = IsOriginalSubtype.class),
+		@XmlElement(name = "has-decorator", type = HasDecorator.class),
 
-		@XmlElement(name = "is-reference", type = ConditionIsReferenceT.class),
-		@XmlElement(name = "is-first-version", type = ConditionIsFirstVersionT.class),
-		@XmlElement(name = "is-latest-version", type = ConditionIsLatestVersionT.class),
+		@XmlElement(name = "is-reference", type = IsReference.class),
+		@XmlElement(name = "is-first-version", type = IsFirstVersion.class),
+		@XmlElement(name = "is-latest-version", type = IsLatestVersion.class),
 
-		@XmlElement(name = "is-variable-set", type = ConditionIsVariableSetT.class),
-		@XmlElement(name = "is-variable-value", type = ConditionIsVariableValueT.class),
+		@XmlElement(name = "is-variable-set", type = IsVariableSet.class),
+		@XmlElement(name = "is-variable-value", type = IsVariableValue.class),
 
-		@XmlElement(name = "has-attribute", type = ConditionHasAttributeT.class),
-		@XmlElement(name = "is-attribute-value", type = ConditionIsAttributeValueT.class),
-		@XmlElement(name = "is-attribute-repeating", type = ConditionIsAttributeRepeatingT.class),
-		@XmlElement(name = "is-attribute-empty", type = ConditionIsAttributeEmptyT.class),
+		@XmlElement(name = "has-attribute", type = HasAttribute.class),
+		@XmlElement(name = "is-attribute-value", type = IsAttributeValue.class),
+		@XmlElement(name = "is-attribute-repeating", type = IsAttributeRepeating.class),
+		@XmlElement(name = "is-attribute-empty", type = IsAttributeEmpty.class),
 
-		@XmlElement(name = "has-caliente-property", type = ConditionHasCalientePropertyT.class),
-		@XmlElement(name = "is-caliente-property-value", type = ConditionIsCalientePropertyValueT.class),
-		@XmlElement(name = "is-caliente-property-repeating", type = ConditionIsCalientePropertyRepeatingT.class),
-		@XmlElement(name = "is-caliente-property-empty", type = ConditionIsCalientePropertyEmptyT.class),
+		@XmlElement(name = "has-caliente-property", type = HasCalienteProperty.class),
+		@XmlElement(name = "is-caliente-property-value", type = IsCalientePropertyValue.class),
+		@XmlElement(name = "is-caliente-property-repeating", type = IsCalientePropertyRepeating.class),
+		@XmlElement(name = "is-caliente-property-empty", type = IsCalientePropertyEmpty.class),
 
-		@XmlElement(name = "has-value-mapping", type = ConditionHasValueMappingT.class),
+		@XmlElement(name = "has-value-mapping", type = HasValueMapping.class),
 
-		@XmlElement(name = "check-expression", type = ConditionCheckExpressionT.class),
-		@XmlElement(name = "custom-script", type = ConditionCustomScriptT.class),
-		@XmlElement(name = "custom-check", type = ConditionCustomCheckT.class),
+		@XmlElement(name = "check-expression", type = CheckExpression.class),
+		@XmlElement(name = "custom-script", type = CustomScript.class),
+		@XmlElement(name = "custom-check", type = CustomCheck.class),
 
 	})
 	protected List<Condition> elements;

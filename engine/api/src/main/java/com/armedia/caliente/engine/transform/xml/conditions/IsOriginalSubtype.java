@@ -10,7 +10,7 @@ import com.armedia.caliente.store.CmfDataType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsOriginalSubtype.t")
-public class ConditionIsOriginalSubtypeT extends AbstractExpressionComparison {
+public class IsOriginalSubtype extends AbstractExpressionComparison {
 
 	@Override
 	public boolean check(TransformationContext ctx) {

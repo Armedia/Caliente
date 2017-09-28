@@ -12,19 +12,15 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Condition;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionGroupXnor.t")
-public class ConditionGroupXnorT extends AbstractGroupingCondition {
+@XmlType(name = "conditionGroupOr.t")
+public class GroupOr extends AbstractGroupingCondition {
 
 	@Override
 	protected boolean doEvaluate(List<Condition> elements, TransformationContext ctx) {
-		int trueCount = 0;
 		for (Condition c : elements) {
 			Objects.requireNonNull(c, "Null conditional elements are not allowed");
-			if (c.check(ctx)) {
-				trueCount++;
-			}
+			if (c.check(ctx)) { return true; }
 		}
-		return ((trueCount % 2) == 0);
+		return false;
 	}
-
 }

@@ -6,18 +6,18 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionIsVariableValue.t", propOrder = {
+@XmlType(name = "conditionHasAttributeValue.t", propOrder = {
 	"name", "value"
 })
-public class ConditionIsVariableValueT extends AbstractAttributeCalientePropertyVariableValueCheck<CmfProperty<CmfValue>> {
+public class IsAttributeValue extends AbstractAttributeCalientePropertyVariableValueCheck<CmfAttribute<CmfValue>> {
 
 	@Override
-	protected CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name) {
-		return ctx.getVariable(name);
+	protected CmfAttribute<CmfValue> getCandidate(TransformationContext ctx, String name) {
+		return ctx.getAttribute(name);
 	}
 
 }

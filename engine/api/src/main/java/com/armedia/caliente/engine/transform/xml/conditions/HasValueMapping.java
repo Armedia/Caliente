@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.transform.xml.ExpressionT;
 @XmlType(name = "conditionHasValueMapping.t", propOrder = {
 	"type", "name", "from", "to"
 })
-public class ConditionHasValueMappingT implements Condition {
+public class HasValueMapping implements Condition {
 
 	@XmlElement(name = "type", required = false)
 	protected String type;

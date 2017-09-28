@@ -17,7 +17,7 @@ import com.armedia.caliente.store.CmfTypeAdapter;
 @XmlType(name = "conditionIsType.t", propOrder = {
 	"value"
 })
-public class ConditionIsTypeT implements Condition {
+public class IsType implements Condition {
 
 	@XmlValue
 	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
