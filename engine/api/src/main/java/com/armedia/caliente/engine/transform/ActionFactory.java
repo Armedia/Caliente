@@ -1,6 +1,6 @@
 package com.armedia.caliente.engine.transform;
 
-import com.armedia.caliente.engine.transform.xml.Action;
+import com.armedia.caliente.engine.transform.xml.actions.Action;
 
 public interface ActionFactory extends DynamicElementFactory<Action> {
 

@@ -11,6 +11,21 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.xml.actions.ActionAddDecoratorT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionApplyValueMappingT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionClearValueMappingT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionClearVariableT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionCustomActionT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionMapAttributeValueT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionRemoveAttributeT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionRemoveDecoratorT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionReplaceAttributeT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionReplaceDecoratorT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionReplaceSubtypeT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionSetAttributeT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionSetSubtypeT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionSetValueMappingT;
+import com.armedia.caliente.engine.transform.xml.actions.ActionSetVariableT;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "transformation.t", propOrder = {
