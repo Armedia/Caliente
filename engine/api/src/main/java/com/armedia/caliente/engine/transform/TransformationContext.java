@@ -96,4 +96,19 @@ public interface TransformationContext {
 	public CmfProperty<CmfValue> getVariable(String name);
 
 	public CmfProperty<CmfValue> removeVariable(String name);
+
+	public void setMapping(CmfType objectType, String mappingName, String sourceValue, String targetValue);
+
+	public boolean hasTargetMapping(CmfType objectType, String mappingName, String sourceValue);
+
+	public void clearTargetMapping(CmfType objectType, String mappingName, String sourceValue);
+
+	public String getTargetMapping(CmfType objectType, String mappingName, String sourceValue);
+
+	public boolean hasSourceMapping(CmfType objectType, String mappingName, String targetValue);
+
+	public void clearSourceMapping(CmfType objectType, String mappingName, String targetValue);
+
+	public String getSourceMapping(CmfType objectType, String mappingName, String targetValue);
+
 }
