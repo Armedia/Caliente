@@ -53,6 +53,8 @@ public abstract class ConditionGroupT implements Condition {
 		@XmlElement(name = "is-caliente-property-repeating", type = ConditionIsCalientePropertyRepeatingT.class),
 		@XmlElement(name = "is-caliente-property-empty", type = ConditionIsCalientePropertyEmptyT.class),
 
+		@XmlElement(name = "has-value-mapping", type = ConditionHasValueMappingT.class),
+
 		@XmlElement(name = "check-expression", type = ConditionCheckExpressionT.class),
 		@XmlElement(name = "custom-script", type = ConditionCustomScriptT.class),
 		@XmlElement(name = "custom-check", type = ConditionCustomCheckT.class),
