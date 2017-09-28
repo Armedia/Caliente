@@ -10,10 +10,11 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Condition;
+import com.armedia.caliente.engine.transform.xml.ConditionGroup;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionGroupOneof.t")
-public class GroupOneof extends AbstractGroupingCondition {
+public class GroupOneof extends ConditionGroup {
 
 	@Override
 	protected boolean doEvaluate(List<Condition> elements, TransformationContext ctx) {

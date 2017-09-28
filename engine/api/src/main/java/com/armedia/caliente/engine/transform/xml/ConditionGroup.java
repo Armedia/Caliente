@@ -1,5 +1,5 @@
 
-package com.armedia.caliente.engine.transform.xml.conditions;
+package com.armedia.caliente.engine.transform.xml;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,13 +12,41 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.Condition;
+import com.armedia.caliente.engine.transform.xml.conditions.CheckExpression;
+import com.armedia.caliente.engine.transform.xml.conditions.CustomCheck;
+import com.armedia.caliente.engine.transform.xml.conditions.CustomScript;
+import com.armedia.caliente.engine.transform.xml.conditions.GroupAnd;
+import com.armedia.caliente.engine.transform.xml.conditions.GroupNand;
+import com.armedia.caliente.engine.transform.xml.conditions.GroupNor;
+import com.armedia.caliente.engine.transform.xml.conditions.GroupNot;
+import com.armedia.caliente.engine.transform.xml.conditions.GroupOneof;
+import com.armedia.caliente.engine.transform.xml.conditions.GroupOr;
+import com.armedia.caliente.engine.transform.xml.conditions.GroupXnor;
+import com.armedia.caliente.engine.transform.xml.conditions.GroupXor;
+import com.armedia.caliente.engine.transform.xml.conditions.HasAttribute;
+import com.armedia.caliente.engine.transform.xml.conditions.HasCalienteProperty;
+import com.armedia.caliente.engine.transform.xml.conditions.HasDecorator;
+import com.armedia.caliente.engine.transform.xml.conditions.HasValueMapping;
+import com.armedia.caliente.engine.transform.xml.conditions.IsAttributeEmpty;
+import com.armedia.caliente.engine.transform.xml.conditions.IsAttributeRepeating;
+import com.armedia.caliente.engine.transform.xml.conditions.IsAttributeValue;
+import com.armedia.caliente.engine.transform.xml.conditions.IsCalientePropertyEmpty;
+import com.armedia.caliente.engine.transform.xml.conditions.IsCalientePropertyRepeating;
+import com.armedia.caliente.engine.transform.xml.conditions.IsCalientePropertyValue;
+import com.armedia.caliente.engine.transform.xml.conditions.IsFirstVersion;
+import com.armedia.caliente.engine.transform.xml.conditions.IsLatestVersion;
+import com.armedia.caliente.engine.transform.xml.conditions.IsOriginalSubtype;
+import com.armedia.caliente.engine.transform.xml.conditions.IsReference;
+import com.armedia.caliente.engine.transform.xml.conditions.IsSubtype;
+import com.armedia.caliente.engine.transform.xml.conditions.IsType;
+import com.armedia.caliente.engine.transform.xml.conditions.IsVariableSet;
+import com.armedia.caliente.engine.transform.xml.conditions.IsVariableValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionGroup.t", propOrder = {
 	"elements"
 })
-public abstract class AbstractGroupingCondition implements Condition {
+public abstract class ConditionGroup implements Condition {
 
 	@XmlElements({
 		// First, the groups
