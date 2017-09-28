@@ -19,7 +19,7 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "actionCustomAction.t", propOrder = {
 	"className"
 })
-public class ActionCustomActionT extends ConditionalActionT {
+public class CustomAction extends ConditionalActionT {
 
 	@XmlElement(name = "class-name", required = true)
 	protected ExpressionT className;

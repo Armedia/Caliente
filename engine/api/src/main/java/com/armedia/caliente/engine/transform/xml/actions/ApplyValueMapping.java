@@ -19,7 +19,7 @@ import com.armedia.caliente.store.CmfTypeAdapter;
 @XmlType(name = "actionApplyValueMapping.t", propOrder = {
 	"type", "name", "attribute", "cardinality"
 })
-public class ActionApplyValueMappingT extends ConditionalActionT {
+public class ApplyValueMapping extends ConditionalActionT {
 
 	@XmlElement(name = "type", required = false)
 	@XmlJavaTypeAdapter(CmfTypeAdapter.class)

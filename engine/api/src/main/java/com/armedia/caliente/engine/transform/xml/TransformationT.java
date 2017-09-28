@@ -11,21 +11,21 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.actions.ActionAddDecoratorT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionApplyValueMappingT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionClearValueMappingT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionClearVariableT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionCustomActionT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionMapAttributeValueT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionRemoveAttributeT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionRemoveDecoratorT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionReplaceAttributeT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionReplaceDecoratorT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionReplaceSubtypeT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionSetAttributeT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionSetSubtypeT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionSetValueMappingT;
-import com.armedia.caliente.engine.transform.xml.actions.ActionSetVariableT;
+import com.armedia.caliente.engine.transform.xml.actions.AddDecorator;
+import com.armedia.caliente.engine.transform.xml.actions.ApplyValueMapping;
+import com.armedia.caliente.engine.transform.xml.actions.ClearValueMapping;
+import com.armedia.caliente.engine.transform.xml.actions.ClearVariable;
+import com.armedia.caliente.engine.transform.xml.actions.CustomAction;
+import com.armedia.caliente.engine.transform.xml.actions.MapAttributeValue;
+import com.armedia.caliente.engine.transform.xml.actions.RemoveAttribute;
+import com.armedia.caliente.engine.transform.xml.actions.RemoveDecorator;
+import com.armedia.caliente.engine.transform.xml.actions.ReplaceAttribute;
+import com.armedia.caliente.engine.transform.xml.actions.ReplaceDecorator;
+import com.armedia.caliente.engine.transform.xml.actions.ReplaceSubtype;
+import com.armedia.caliente.engine.transform.xml.actions.SetAttribute;
+import com.armedia.caliente.engine.transform.xml.actions.SetSubtype;
+import com.armedia.caliente.engine.transform.xml.actions.SetValueMapping;
+import com.armedia.caliente.engine.transform.xml.actions.SetVariable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "transformation.t", propOrder = {
@@ -34,21 +34,21 @@ import com.armedia.caliente.engine.transform.xml.actions.ActionSetVariableT;
 public class TransformationT extends ConditionalActionT {
 
 	@XmlElements({
-		@XmlElement(name = "set-subtype", type = ActionSetSubtypeT.class),
-		@XmlElement(name = "replace-subtype", type = ActionReplaceSubtypeT.class),
-		@XmlElement(name = "add-decorator", type = ActionAddDecoratorT.class),
-		@XmlElement(name = "remove-decorator", type = ActionRemoveDecoratorT.class),
-		@XmlElement(name = "replace-decorator", type = ActionReplaceDecoratorT.class),
-		@XmlElement(name = "set-attribute", type = ActionSetAttributeT.class),
-		@XmlElement(name = "remove-attribute", type = ActionRemoveAttributeT.class),
-		@XmlElement(name = "replace-attribute", type = ActionReplaceAttributeT.class),
-		@XmlElement(name = "map-attribute-value", type = ActionMapAttributeValueT.class),
-		@XmlElement(name = "set-variable", type = ActionSetVariableT.class),
-		@XmlElement(name = "clear-variable", type = ActionClearVariableT.class),
-		@XmlElement(name = "set-value-mapping", type = ActionSetValueMappingT.class),
-		@XmlElement(name = "clear-value-mapping", type = ActionClearValueMappingT.class),
-		@XmlElement(name = "apply-value-mapping", type = ActionApplyValueMappingT.class),
-		@XmlElement(name = "custom-action", type = ActionCustomActionT.class)
+		@XmlElement(name = "set-subtype", type = SetSubtype.class),
+		@XmlElement(name = "replace-subtype", type = ReplaceSubtype.class),
+		@XmlElement(name = "add-decorator", type = AddDecorator.class),
+		@XmlElement(name = "remove-decorator", type = RemoveDecorator.class),
+		@XmlElement(name = "replace-decorator", type = ReplaceDecorator.class),
+		@XmlElement(name = "set-attribute", type = SetAttribute.class),
+		@XmlElement(name = "remove-attribute", type = RemoveAttribute.class),
+		@XmlElement(name = "replace-attribute", type = ReplaceAttribute.class),
+		@XmlElement(name = "map-attribute-value", type = MapAttributeValue.class),
+		@XmlElement(name = "set-variable", type = SetVariable.class),
+		@XmlElement(name = "clear-variable", type = ClearVariable.class),
+		@XmlElement(name = "set-value-mapping", type = SetValueMapping.class),
+		@XmlElement(name = "clear-value-mapping", type = ClearValueMapping.class),
+		@XmlElement(name = "apply-value-mapping", type = ApplyValueMapping.class),
+		@XmlElement(name = "custom-action", type = CustomAction.class)
 	})
 	protected List<ConditionalActionT> transformations;
 

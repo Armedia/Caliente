@@ -11,20 +11,20 @@ import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
 import com.armedia.caliente.engine.transform.xml.ExpressionT;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionAddDecorator.t", propOrder = {
-	"decorator"
+@XmlType(name = "actionSetSubtype.t", propOrder = {
+	"subtype"
 })
-public class ActionAddDecoratorT extends ConditionalActionT {
+public class SetSubtype extends ConditionalActionT {
 
-	@XmlElement(name = "decorator", required = true)
-	protected ExpressionT decorator;
+	@XmlElement(name = "subtype", required = true)
+	protected ExpressionT subtype;
 
-	public ExpressionT getDecorator() {
-		return this.decorator;
+	public ExpressionT getSubtype() {
+		return this.subtype;
 	}
 
-	public void setDecorator(ExpressionT value) {
-		this.decorator = value;
+	public void setSubtype(ExpressionT value) {
+		this.subtype = value;
 	}
 
 	@Override

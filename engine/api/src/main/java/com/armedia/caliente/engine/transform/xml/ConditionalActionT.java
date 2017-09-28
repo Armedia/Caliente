@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.actions.ActionConditionT;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionalAction.t", propOrder = {
@@ -23,19 +22,19 @@ public abstract class ConditionalActionT implements Action {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElement(name = "if", required = false)
-	protected ActionConditionT condition;
+	protected ActionCondition condition;
 
-	public ActionConditionT getCondition() {
+	public ActionCondition getCondition() {
 		return this.condition;
 	}
 
-	public void setCondition(ActionConditionT condition) {
+	public void setCondition(ActionCondition condition) {
 		this.condition = condition;
 	}
 
 	@Override
 	public final void apply(TransformationContext ctx) {
-		final ActionConditionT wrapper = getCondition();
+		final ActionCondition wrapper = getCondition();
 		final Condition condition = (wrapper != null ? wrapper.getCondition() : null);
 		// Basically, execute this action if there is no condition given, or if the given condition
 		// evaluates to true

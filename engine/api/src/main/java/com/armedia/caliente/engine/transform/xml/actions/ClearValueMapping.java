@@ -14,10 +14,10 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionSetValueMapping.t", propOrder = {
+@XmlType(name = "actionClearValueMapping.t", propOrder = {
 	"type", "name", "from", "to"
 })
-public class ActionSetValueMappingT extends ConditionalActionT {
+public class ClearValueMapping extends ConditionalActionT {
 
 	@XmlElement(name = "type", required = false)
 	@XmlJavaTypeAdapter(CmfTypeAdapter.class)

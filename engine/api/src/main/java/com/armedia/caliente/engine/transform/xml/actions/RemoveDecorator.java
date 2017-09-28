@@ -18,7 +18,7 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "actionRemoveDecorator.t", propOrder = {
 	"comparison", "decorator"
 })
-public class ActionRemoveDecoratorT extends ConditionalActionT {
+public class RemoveDecorator extends ConditionalActionT {
 
 	@XmlElement(name = "comparison", required = true)
 	@XmlJavaTypeAdapter(ComparisonAdapter.class)

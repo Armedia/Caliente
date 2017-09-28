@@ -11,31 +11,20 @@ import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
 import com.armedia.caliente.engine.transform.xml.ExpressionT;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionReplaceSubtype.t", propOrder = {
-	"regex", "replacement"
+@XmlType(name = "actionAddDecorator.t", propOrder = {
+	"decorator"
 })
-public class ActionReplaceSubtypeT extends ConditionalActionT {
+public class AddDecorator extends ConditionalActionT {
 
-	@XmlElement(name = "regex", required = true)
-	protected ExpressionT regex;
+	@XmlElement(name = "decorator", required = true)
+	protected ExpressionT decorator;
 
-	@XmlElement(name = "replacement", required = true)
-	protected ExpressionT replacement;
-
-	public ExpressionT getRegex() {
-		return this.regex;
+	public ExpressionT getDecorator() {
+		return this.decorator;
 	}
 
-	public void setRegex(ExpressionT value) {
-		this.regex = value;
-	}
-
-	public ExpressionT getReplacement() {
-		return this.replacement;
-	}
-
-	public void setReplacement(ExpressionT value) {
-		this.replacement = value;
+	public void setDecorator(ExpressionT value) {
+		this.decorator = value;
 	}
 
 	@Override

@@ -18,7 +18,7 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "actionReplaceAttribute.t", propOrder = {
 	"attributeName", "cardinality", "regex", "replacement"
 })
-public class ActionReplaceAttributeT extends ConditionalActionT {
+public class ReplaceAttribute extends ConditionalActionT {
 
 	@XmlElement(name = "attribute-name", required = true)
 	protected ExpressionT attributeName;

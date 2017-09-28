@@ -1,14 +1,42 @@
 
-package com.armedia.caliente.engine.transform.xml.conditions;
+package com.armedia.caliente.engine.transform.xml;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.armedia.caliente.engine.transform.xml.Condition;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionCheckExpressionT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionCustomCheckT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionCustomScriptT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionGroupAndT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionGroupNandT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionGroupNorT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionGroupNotT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionGroupOneofT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionGroupOrT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionGroupXnorT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionGroupXorT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionHasAttributeT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionHasCalientePropertyT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionHasDecoratorT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionHasValueMappingT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsAttributeEmptyT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsAttributeRepeatingT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsAttributeValueT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsCalientePropertyEmptyT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsCalientePropertyRepeatingT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsCalientePropertyValueT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsFirstVersionT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsLatestVersionT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsOriginalSubtypeT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsReferenceT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsSubtypeT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsTypeT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsVariableSetT;
+import com.armedia.caliente.engine.transform.xml.conditions.ConditionIsVariableValueT;
 
 @XmlTransient
-public class ConditionWrapperT {
+public class ConditionWrapper {
 
 	@XmlElements({
 		// First, the groups

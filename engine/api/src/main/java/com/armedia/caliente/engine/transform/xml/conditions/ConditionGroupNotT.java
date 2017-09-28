@@ -7,12 +7,13 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Condition;
+import com.armedia.caliente.engine.transform.xml.ConditionWrapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionGroupNot.t", propOrder = {
 	"condition"
 })
-public class ConditionGroupNotT extends ConditionWrapperT implements Condition {
+public class ConditionGroupNotT extends ConditionWrapper implements Condition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {

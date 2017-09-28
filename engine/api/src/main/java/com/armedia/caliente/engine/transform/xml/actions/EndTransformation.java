@@ -11,7 +11,7 @@ import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionEndTransformation.t")
-public class ActionEndTransformationT extends ConditionalActionT {
+public class EndTransformation extends ConditionalActionT {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) {

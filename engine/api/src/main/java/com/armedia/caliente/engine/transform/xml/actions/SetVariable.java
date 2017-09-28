@@ -14,10 +14,10 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionSetAttribute.t", propOrder = {
+@XmlType(name = "actionSetVariable.t", propOrder = {
 	"name", "type", "value"
 })
-public class ActionSetAttributeT extends ConditionalActionT {
+public class SetVariable extends ConditionalActionT {
 
 	@XmlElement(name = "name", required = true)
 	protected ExpressionT name;
