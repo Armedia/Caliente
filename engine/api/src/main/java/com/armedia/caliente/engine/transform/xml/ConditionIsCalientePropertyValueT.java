@@ -64,27 +64,35 @@ public class ConditionIsCalientePropertyValueT extends ConditionCheckBaseT {
 
 		Comparison comparison = getComparison();
 		ExpressionT valueExp = getValue();
-		Object value = (valueExp != null ? valueExp.evaluate(ctx) : null);
+		Object comparand = (valueExp != null ? valueExp.evaluate(ctx) : null);
 		if (!property.isRepeating()) {
 			// Check the one and only value
 			CmfValue cv = property.getValue();
 			if ((cv == null) || cv.isNull()) {
-				return comparison.check(property.getType(), null, value);
+				return comparison.check(property.getType(), null, comparand);
 			} else {
-				return comparison.check(property.getType(), cv, value);
+				return comparison.check(property.getType(), cv, comparand);
 			}
 		}
 
-		switch (getCardinality()) {
-			case ALL:
-				// Check against all attribute values, until one succeeds
-				break;
-			case FIRST:
-				// Only check the first attribute value
-				break;
-			case LAST:
-				// Only check the last attribute value
-				break;
+		if (property.hasValues()) {
+			final int valueCount = property.getValueCount();
+			switch (getCardinality()) {
+				case ALL:
+					// Check against all attribute values, until one succeeds
+					for (CmfValue v : property) {
+						if (comparison.check(property.getType(), v, comparand)) { return true; }
+					}
+					break;
+
+				case FIRST:
+					// Only check the first attribute value
+					return comparison.check(property.getType(), property.getValue(), comparand);
+
+				case LAST:
+					// Only check the last attribute value
+					return comparison.check(property.getType(), property.getValue(valueCount - 1), comparand);
+			}
 		}
 		return false;
 	}

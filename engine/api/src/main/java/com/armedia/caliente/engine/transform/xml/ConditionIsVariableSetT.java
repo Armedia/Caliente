@@ -13,8 +13,9 @@ public class ConditionIsVariableSetT extends ConditionExpressionComparisonT {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		// TODO implement this condition
-		return false;
+		String variableName = String.valueOf(evaluate(ctx));
+		if (variableName == null) { return false; }
+		return ((variableName == null) || ctx.hasVariable(variableName));
 	}
 
 }

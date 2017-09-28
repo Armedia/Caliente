@@ -9,6 +9,6 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "condition.t", propOrder = {
 	"condition"
 })
-public class ConditionT extends ConditionWrapperT {
+public abstract class ConditionT extends ConditionWrapperT {
 
 }

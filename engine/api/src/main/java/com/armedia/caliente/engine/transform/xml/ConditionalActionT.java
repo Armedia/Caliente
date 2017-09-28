@@ -36,7 +36,9 @@ public abstract class ConditionalActionT implements Action {
 	public final void apply(TransformationContext ctx) {
 		final ConditionT wrapper = getCondition();
 		final Condition condition = (wrapper != null ? wrapper.getCondition() : null);
-		if ((wrapper == null) || (condition == null) || condition.check(ctx)) {
+		// Basically, execute this action if there is no condition given, or if the given condition
+		// evaluates to true
+		if ((condition == null) || condition.check(ctx)) {
 			applyTransformation(ctx);
 		}
 	}
