@@ -6,7 +6,7 @@
 		<if>
 			<and>
 				<or>
-					<is-type>asdfasdfe</is-type>
+					<is-type>DOCUMENT</is-type>
 
 					<is-subtype comparison="eq" lang="...">
 						<!-- expression -->

@@ -22,19 +22,19 @@ public abstract class ConditionalActionT implements Action {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElement(name = "if", required = false)
-	protected ConditionT condition;
+	protected ActionConditionT condition;
 
-	public ConditionT getCondition() {
+	public ActionConditionT getCondition() {
 		return this.condition;
 	}
 
-	public void setCondition(ConditionT condition) {
+	public void setCondition(ActionConditionT condition) {
 		this.condition = condition;
 	}
 
 	@Override
 	public final void apply(TransformationContext ctx) {
-		final ConditionT wrapper = getCondition();
+		final ActionConditionT wrapper = getCondition();
 		final Condition condition = (wrapper != null ? wrapper.getCondition() : null);
 		// Basically, execute this action if there is no condition given, or if the given condition
 		// evaluates to true

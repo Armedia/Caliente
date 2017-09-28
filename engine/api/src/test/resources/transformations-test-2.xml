@@ -5,7 +5,7 @@
 		<if>
 			<and>
 				<or>
-					<is-type>asdfasdfe</is-type>
+					<is-type>FOLDER</is-type>
 					<is-subtype comparison="eq" lang="...">
 						
 					</is-subtype>

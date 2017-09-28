@@ -40,6 +40,19 @@
 	    </xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="cmftype.t" final="restriction">
+	    <xsd:restriction base="xsd:string">
+			<xsd:enumeration value="DATASTORE" />
+			<xsd:enumeration value="USER" />
+			<xsd:enumeration value="GROUP" />
+			<xsd:enumeration value="ACL" />
+			<xsd:enumeration value="TYPE" />
+			<xsd:enumeration value="FORMAT" />
+			<xsd:enumeration value="FOLDER" />
+			<xsd:enumeration value="DOCUMENT" />
+	    </xsd:restriction>
+	</xsd:simpleType>
+
 	<xsd:complexType name="conditionGroupAnd.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionGroup.t" />
@@ -91,7 +104,7 @@
 
 	<xsd:complexType name="conditionIsType.t">
 		<xsd:simpleContent>
-			<xsd:extension base="tns:noSpaces.t"/>
+			<xsd:extension base="tns:cmftype.t"/>
 		</xsd:simpleContent>
 	</xsd:complexType>
 
@@ -248,7 +261,7 @@
 
 	<xsd:complexType name="conditionHasValueMapping.t">
 		<xsd:sequence>
-			<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="type" type="tns:cmftype.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 			<xsd:choice minOccurs="1" maxOccurs="1">
 				<xsd:element name="from" type="tns:expression.t" />
@@ -380,7 +393,7 @@
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmftype.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
@@ -443,7 +456,7 @@
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmftype.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
@@ -464,7 +477,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmftype.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="from" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="to" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
@@ -477,7 +490,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmftype.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:choice minOccurs="1" maxOccurs="1">
 						<xsd:element name="from" type="tns:expression.t" />
@@ -492,7 +505,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmftype.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="name" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="attribute" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
