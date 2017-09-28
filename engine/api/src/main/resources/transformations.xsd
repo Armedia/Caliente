@@ -246,6 +246,17 @@
 		<xsd:attribute name="cardinality" type="tns:cardinality.t" use="optional" default="any" />
 	</xsd:complexType>
 
+	<xsd:complexType name="conditionHasValueMapping.t">
+		<xsd:sequence>
+			<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+			<xsd:choice minOccurs="1" maxOccurs="1">
+				<xsd:element name="from" type="tns:expression.t" />
+				<xsd:element name="to" type="tns:expression.t" />
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+
 	<xsd:group name="groupingConditions">
 		<xsd:choice>
 			<xsd:element name="and" type="tns:conditionGroupAnd.t" />
@@ -278,6 +289,7 @@
 			<xsd:element name="is-caliente-property-repeating" type="tns:conditionIsCalientePropertyRepeating.t" />
 			<xsd:element name="is-caliente-property-value" type="tns:conditionIsCalientePropertyValue.t" />
 			<xsd:element name="is-caliente-property-empty" type="tns:conditionIsCalientePropertyEmpty.t" />
+			<xsd:element name="has-value-mapping" type="tns:conditionHasValueMapping.t" />
 			<xsd:element name="check-expression" type="tns:conditionCheckExpression.t" />
 			<xsd:element name="custom-script" type="tns:conditionCustomScript.t" />
 			<xsd:element name="custom-check" type="tns:conditionCustomCheck.t" />
@@ -302,6 +314,12 @@
 		<xsd:sequence>
 			<xsd:element name="if" type="tns:condition.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionEndTransformation.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t" />
+		</xsd:complexContent>
 	</xsd:complexType>
 
 	<xsd:complexType name="actionSetSubtype.t">
@@ -442,6 +460,47 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionSetValueMapping.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="from" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="to" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionClearValueMapping.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:choice minOccurs="1" maxOccurs="1">
+						<xsd:element name="from" type="tns:expression.t" />
+						<xsd:element name="to" type="tns:expression.t" />
+					</xsd:choice>
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:complexType name="actionApplyValueMapping.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="type" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="attribute" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionCustomAction.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
@@ -465,7 +524,11 @@
 			<xsd:element name="map-attribute-value" type="tns:actionMapAttributeValue.t" />
 			<xsd:element name="set-variable" type="tns:actionSetVariable.t" />
 			<xsd:element name="clear-variable" type="tns:actionClearVariable.t" />
+			<xsd:element name="set-value-mapping" type="tns:actionSetValueMapping.t" />
+			<xsd:element name="clear-value-mapping" type="tns:actionClearValueMapping.t" />
+			<xsd:element name="apply-value-mapping" type="tns:actionApplyValueMapping.t" />
 			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
+			<xsd:element name="end-transformation" type="tns:actionEndTransformation.t" />
 		</xsd:choice>
 	</xsd:group>
 

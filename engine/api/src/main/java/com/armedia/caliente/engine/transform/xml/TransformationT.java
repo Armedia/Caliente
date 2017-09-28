@@ -30,6 +30,9 @@ public class TransformationT extends ConditionalActionT {
 		@XmlElement(name = "map-attribute-value", type = ActionMapAttributeValueT.class),
 		@XmlElement(name = "set-variable", type = ActionSetVariableT.class),
 		@XmlElement(name = "clear-variable", type = ActionClearVariableT.class),
+		@XmlElement(name = "set-value-mapping", type = ActionSetValueMappingT.class),
+		@XmlElement(name = "clear-value-mapping", type = ActionClearValueMappingT.class),
+		@XmlElement(name = "apply-value-mapping", type = ActionApplyValueMappingT.class),
 		@XmlElement(name = "custom-action", type = ActionCustomActionT.class)
 	})
 	protected List<ConditionalActionT> transformations;

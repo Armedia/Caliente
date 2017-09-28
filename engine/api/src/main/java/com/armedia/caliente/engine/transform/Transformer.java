@@ -17,6 +17,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
 import com.armedia.caliente.engine.transform.xml.Transformations;
+import com.armedia.caliente.store.CmfAttributeMapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
@@ -36,17 +37,23 @@ public class Transformer {
 		this.transformations = Transformations.loadFromXML(in);
 	}
 
-	private TransformationContext createContext(CmfObject<CmfValue> object) {
+	private TransformationContext createContext(CmfAttributeMapper mapper, CmfObject<CmfValue> object) {
 		// Do nothing, for now... but:
 		// * create and initialize the context
 		// * invoke the transformation
 		return null;
 	}
 
-	public CmfObject<CmfValue> transform(CmfObject<CmfValue> object) throws RuntimeTransformationException {
-		TransformationContext ctx = createContext(object);
+	public CmfObject<CmfValue> transform(CmfAttributeMapper mapper, CmfObject<CmfValue> object)
+		throws RuntimeTransformationException {
+		TransformationContext ctx = createContext(mapper, object);
 		try {
-			this.transformations.apply(ctx);
+			try {
+				this.transformations.apply(ctx);
+			} catch (TransformationCompletedException e) {
+				// Do nothing - this is simply our shortcut for stopping the transformation work in
+				// its tracks
+			}
 			// * harvest the transformations, and turn them into a new object
 			return object;
 		} finally {

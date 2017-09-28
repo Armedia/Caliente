@@ -5,8 +5,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfTypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionSetAttribute.t", propOrder = {
@@ -18,7 +21,8 @@ public class ActionSetAttributeT extends ConditionalActionT {
 	protected ExpressionT name;
 
 	@XmlElement(name = "type", required = false)
-	protected String type;
+	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
+	protected CmfType type;
 
 	@XmlElement(name = "value", required = true)
 	protected ExpressionT value;
@@ -31,11 +35,11 @@ public class ActionSetAttributeT extends ConditionalActionT {
 		this.name = value;
 	}
 
-	public String getType() {
+	public CmfType getType() {
 		return this.type;
 	}
 
-	public void setType(String value) {
+	public void setType(CmfType value) {
 		this.type = value;
 	}
 
