@@ -5,17 +5,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsVariableSet.t")
-public class ConditionIsVariableSetT extends ConditionExpressionComparisonT {
+public class ConditionIsVariableSetT extends ConditionCalientePropertyCheckT {
 
 	@Override
-	public boolean check(TransformationContext ctx) {
-		String variableName = String.valueOf(evaluate(ctx));
-		if (variableName == null) { return false; }
-		return ((variableName == null) || ctx.hasVariable(variableName));
+	protected boolean check(CmfProperty<CmfValue> candidate) {
+		return (candidate != null) && candidate.hasValues();
 	}
 
 }

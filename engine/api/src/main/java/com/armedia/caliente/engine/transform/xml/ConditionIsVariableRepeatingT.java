@@ -5,16 +5,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionHasAttribute.t")
-public class ConditionHasAttributeT extends ConditionAttributeCheckT {
+@XmlType(name = "conditionIsVariableRepeating.t")
+public class ConditionIsVariableRepeatingT extends ConditionVariableCheckT {
 
 	@Override
-	protected boolean check(CmfAttribute<CmfValue> candidate) {
-		return (candidate != null);
+	protected boolean check(CmfProperty<CmfValue> candidate) {
+		return (candidate != null) && candidate.isRepeating();
 	}
 
 }

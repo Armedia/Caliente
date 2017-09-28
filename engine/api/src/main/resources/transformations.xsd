@@ -250,6 +250,14 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="conditionIsVariableRepeating.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:expression.t">
+				<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="conditionIsVariableValue.t">
 		<xsd:sequence>
 			<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1"/>
@@ -286,6 +294,7 @@
 	<xsd:group name="checkConditions">
 		<xsd:choice>
 			<xsd:element name="is-variable-set" type="tns:conditionIsVariableSet.t" />
+			<xsd:element name="is-variable-repeating" type="tns:conditionIsVariableRepeating.t" />
 			<xsd:element name="is-variable-value" type="tns:conditionIsVariableValue.t" />
 			<xsd:element name="is-type" type="tns:conditionIsType.t" />
 			<xsd:element name="is-subtype" type="tns:conditionIsSubtype.t" />
