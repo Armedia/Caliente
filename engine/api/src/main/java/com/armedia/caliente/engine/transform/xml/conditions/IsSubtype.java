@@ -5,8 +5,11 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsSubtype.t")
@@ -14,7 +17,9 @@ public class IsSubtype extends AbstractExpressionComparison {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		return getComparison().check(CmfDataType.STRING, evaluate(ctx), ctx.getSubtype());
+		String subtype = Tools.toString(Expression.eval(this, ctx));
+		if (subtype == null) { throw new RuntimeTransformationException("No value given to compare against"); }
+		return getComparison().check(CmfDataType.STRING, ctx.getSubtype(), subtype);
 	}
 
 }

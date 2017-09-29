@@ -59,10 +59,10 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 
 	@Override
 	protected final void applyTransformation(TransformationContext ctx, CmfProperty<CmfValue> candidate) {
-		final String regex = Tools.toString(this.regex != null ? this.regex.evaluate(ctx) : null);
-		if (regex == null) { throw new RuntimeTransformationException("No regular expression given for search"); }
-		final String replacement = Tools.toString(this.replacement != null ? this.replacement.evaluate(ctx) : null);
-		if (replacement == null) { throw new RuntimeTransformationException("No replacement value given"); }
+		final String regex = Tools.toString(Expression.eval(getRegex(), ctx));
+		if (regex == null) { throw new RuntimeTransformationException("No regular expression given to check against"); }
+		final String replacement = Tools.toString(Expression.eval(getReplacement(), ctx));
+		if (replacement == null) { throw new RuntimeTransformationException("No replacement given to apply"); }
 
 		if (candidate.isRepeating()) {
 			// Cardinality is irrelevant...

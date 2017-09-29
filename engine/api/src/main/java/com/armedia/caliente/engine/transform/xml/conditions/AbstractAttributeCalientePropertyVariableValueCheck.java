@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
@@ -16,8 +17,7 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public abstract class AbstractAttributeCalientePropertyVariableValueCheck<T extends CmfProperty<CmfValue>>
-	extends AbstractComparisonCheck {
+public abstract class AbstractAttributeCalientePropertyVariableValueCheck extends AbstractComparisonCheck {
 
 	@XmlElement(name = "name", required = true)
 	protected Expression name;
@@ -53,20 +53,23 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck<T exte
 		this.cardinality = value;
 	}
 
-	protected abstract T getCandidate(TransformationContext ctx, String name);
+	protected abstract CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name);
 
 	@Override
 	public boolean check(TransformationContext ctx) {
 		Expression nameExp = getName();
-		Object name = (nameExp != null ? nameExp.evaluate(ctx) : null);
-		if (name == null) { throw new IllegalStateException("No name was given for the candidate value check"); }
+		Object name = Expression.eval(nameExp, ctx);
+		if (name == null) { throw new RuntimeTransformationException(
+			"No name was given for the candidate value check"); }
 
-		T candidate = getCandidate(ctx, name.toString());
+		CmfProperty<CmfValue> candidate = getCandidate(ctx, name.toString());
 		if (candidate == null) { return false; }
 
 		Comparison comparison = getComparison();
 		Expression valueExp = getValue();
-		Object comparand = (valueExp != null ? valueExp.evaluate(ctx) : null);
+		Object comparand = Expression.eval(valueExp, ctx);
+		if (comparand == null) { throw new RuntimeTransformationException(
+			"No comparand value given to check the name against"); }
 		if (!candidate.isRepeating()) {
 			// Check the one and only value
 			CmfValue cv = candidate.getValue();

@@ -34,12 +34,8 @@ public class CustomAction extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) {
-		Expression classNameExpr = getClassName();
-
-		String className = Tools.toString(classNameExpr.evaluate(ctx));
-		if (className == null) { throw new RuntimeTransformationException(
-			String.format("The given %s expression did not return a string value: %s", classNameExpr.getLang(),
-				classNameExpr.getValue())); }
+		String className = Tools.toString(Expression.eval(getClassName(), ctx));
+		if (className == null) { throw new RuntimeTransformationException("No classname given to insantiate"); }
 
 		final ActionFactory factory = DynamicTransformationElements.getActionFactory(className);
 		if (factory == null) { throw new RuntimeTransformationException(

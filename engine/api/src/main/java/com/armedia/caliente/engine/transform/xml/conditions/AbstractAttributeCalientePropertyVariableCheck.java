@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Comparison;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
@@ -24,7 +25,7 @@ public abstract class AbstractAttributeCalientePropertyVariableCheck<T extends C
 
 	@Override
 	public final boolean check(TransformationContext ctx) {
-		final String comparand = Tools.toString(evaluate(ctx));
+		final String comparand = Tools.toString(Expression.eval(this, ctx));
 		final Comparison comparison = getComparison();
 
 		Set<String> names = getCandidateNames(ctx);

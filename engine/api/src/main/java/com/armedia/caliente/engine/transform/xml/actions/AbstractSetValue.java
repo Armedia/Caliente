@@ -59,12 +59,12 @@ public abstract class AbstractSetValue extends ConditionalAction {
 
 	@Override
 	protected final void applyTransformation(TransformationContext ctx) {
-		Object name = (this.name != null ? this.name.evaluate(ctx) : null);
+		Object name = Tools.toString(Expression.eval(getName(), ctx));
 		if (name == null) { throw new RuntimeTransformationException(
 			"No name expression given for variable definition"); }
 
 		final CmfDataType type = getType();
-		final Object value = (this.value != null ? this.value.evaluate(ctx) : null);
+		final Object value = Expression.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
 		final CmfProperty<CmfValue> variable = createValue(ctx, String.valueOf(name), type, repeating);
 		Object currentValue = value;

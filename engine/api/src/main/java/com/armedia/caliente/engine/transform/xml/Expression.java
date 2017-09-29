@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.transform.xml;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 import javax.script.Bindings;
@@ -103,7 +104,7 @@ public class Expression {
 		return this.engine;
 	}
 
-	public Object evaluate(TransformationContext ctx) {
+	private Object evaluate(TransformationContext ctx) {
 		// First: if the language is "constant" or null, we return the literal string value
 		final String script = StringUtils.strip(this.value);
 		final ScriptEngine engine = getEngine();
@@ -144,5 +145,11 @@ public class Expression {
 				Expression.NL, e);
 			throw new RuntimeTransformationException(e);
 		}
+	}
+
+	public static Object eval(Expression e, TransformationContext ctx) {
+		Objects.requireNonNull(ctx, "No transformation context given for expression evaluation");
+		if (e == null) { return null; }
+		return e.evaluate(ctx);
 	}
 }

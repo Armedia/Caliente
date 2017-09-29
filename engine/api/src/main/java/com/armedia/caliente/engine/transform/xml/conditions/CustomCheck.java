@@ -10,6 +10,7 @@ import com.armedia.caliente.engine.transform.DynamicTransformationElements;
 import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Condition;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -18,7 +19,7 @@ public class CustomCheck extends AbstractExpressionCondition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		String className = Tools.toString(evaluate(ctx));
+		String className = Tools.toString(Expression.eval(this, ctx));
 		if (className == null) { throw new RuntimeTransformationException(
 			String.format("The given %s expression did not return a string value: %s", getLang(), getValue())); }
 
