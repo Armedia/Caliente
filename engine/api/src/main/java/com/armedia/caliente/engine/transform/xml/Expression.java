@@ -1,9 +1,14 @@
 
 package com.armedia.caliente.engine.transform.xml;
 
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.xml.bind.Marshaller;
@@ -51,8 +56,14 @@ public class Expression {
 		this.lang = StringUtils.strip(this.lang);
 		if (this.lang != null) {
 			this.engine = Expression.ENGINE_FACTORY.getEngineByName(this.lang);
-			if (this.engine == null) { throw new RuntimeTransformationException(
-				String.format("Unknown script language [%s]", this.lang)); }
+			if (this.engine == null) {
+				Map<String, List<String>> m = new TreeMap<>();
+				for (ScriptEngineFactory f : Expression.ENGINE_FACTORY.getEngineFactories()) {
+					m.put(String.format("%s %s", f.getLanguageName(), f.getLanguageVersion()), f.getNames());
+				}
+				throw new RuntimeTransformationException(
+					String.format("Unknown script language [%s] - supported languages: %s", this.lang, m));
+			}
 		}
 	}
 
