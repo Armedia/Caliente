@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.transform;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.slf4j.Logger;
@@ -27,13 +28,21 @@ public class DynamicTransformationElements {
 		locator.setHideErrors(false);
 		Map<String, F> map = new TreeMap<>();
 		for (F f : locator) {
-			Class<? extends I> instanceClass = f.getInstanceClass();
-			F oldF = map.put(instanceClass.getCanonicalName(), f);
-			if (oldF != null) {
+			Set<String> aliases = f.getClassNamesOrAliases();
+			if ((aliases == null) || aliases.isEmpty()) {
 				DynamicTransformationElements.LOG.warn(
-					"Factory conflict detected for custom type {}: {} and {} - only the latter will be used",
-					instanceClass.getCanonicalName(), oldF.getClass().getCanonicalName(),
+					"Factory class [{}] does not define any class names or aliases - it will not be used",
 					f.getClass().getCanonicalName());
+				continue;
+			}
+
+			for (String alias : aliases) {
+				F oldF = map.put(alias, f);
+				if (oldF != null) {
+					DynamicTransformationElements.LOG.warn(
+						"Factory conflict detected for alias [{}]: {} and {} - only the latter will be used", alias,
+						oldF.getClass().getCanonicalName(), f.getClass().getCanonicalName());
+				}
 			}
 		}
 		return Tools.freezeMap(new LinkedHashMap<>(map));

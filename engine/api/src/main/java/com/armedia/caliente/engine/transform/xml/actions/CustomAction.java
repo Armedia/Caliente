@@ -42,12 +42,10 @@ public class CustomAction extends ConditionalAction {
 				classNameExpr.getValue())); }
 
 		final ActionFactory factory = DynamicTransformationElements.getActionFactory(className);
-		if (factory == null) {
-			// TODO: Log the missing factory...
-			return;
-		}
+		if (factory == null) { throw new RuntimeTransformationException(
+			String.format("Failed to locate an action factory for class [%s]", className)); }
 		try {
-			Action action = factory.acquireInstance();
+			Action action = factory.acquireInstance(className);
 			try {
 				action.apply(ctx);
 			} finally {

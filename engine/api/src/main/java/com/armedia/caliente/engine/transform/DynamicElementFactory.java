@@ -1,10 +1,12 @@
 package com.armedia.caliente.engine.transform;
 
+import java.util.Set;
+
 public interface DynamicElementFactory<E> {
 
-	public E acquireInstance() throws Exception;
+	public E acquireInstance(String classNameOrAlias) throws Exception;
 
-	public Class<? extends E> getInstanceClass();
+	public Set<String> getClassNamesOrAliases();
 
 	public void releaseInstance(E e);
 
