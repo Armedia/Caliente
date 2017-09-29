@@ -19,7 +19,7 @@ public class TransformationsTest {
 	public void testUnmarshall() throws IOException, JAXBException {
 		try (InputStream in = getXml("transformations-test-1.xml")) {
 			Transformations xform = XmlTools.unmarshal(Transformations.class, "transformations.xsd", in);
-			XmlTools.marshal(xform, "transformations.xsd", System.out);
+			XmlTools.marshal(xform, "transformations.xsd", System.out, true);
 		}
 	}
 
