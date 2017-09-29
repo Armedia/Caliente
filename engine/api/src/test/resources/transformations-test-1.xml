@@ -103,7 +103,7 @@
 			<if>
 			</if>
 			<decorator lang="rhino">
-				<!-- expression -->
+				<![CDATA[sdjflk > < DS FASDF SD F<>F ASDF <>ASDF A>SD F<AD FA! & &  && A >  AD>]]>
 			</decorator>
 		</add-decorator>
 		<remove-decorator>
