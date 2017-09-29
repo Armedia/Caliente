@@ -1,6 +1,8 @@
 
 package com.armedia.caliente.engine.transform.xml;
 
+import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
@@ -40,7 +42,7 @@ public class Expression {
 	}
 
 	public String getLang() {
-		return Tools.coalesce(this.lang, Expression.CONSTANT);
+		return StringUtils.strip(Tools.coalesce(this.lang, Expression.CONSTANT));
 	}
 
 	public void setLang(String value) {
@@ -49,12 +51,18 @@ public class Expression {
 
 	public Object evaluate(TransformationContext ctx) {
 		// First: if the language is "constant" or null, we return the literal string value
-		String language = Tools.coalesce(getLang(), Expression.CONSTANT);
+		String language = getLang();
 		if (Expression.CONSTANT.equalsIgnoreCase(language)) { return this.value; }
 
-		ScriptEngine engine = Expression.ENGINE_FACTORY.getEngineByName(this.lang);
+		ScriptEngine engine = Expression.ENGINE_FACTORY.getEngineByName(language);
 		if (engine == null) { throw new RuntimeTransformationException(
 			String.format("No script engine [%s] is available", language)); }
+
+		Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+		// TODO: Set the bindings and context for this engine instance based on the transformation
+		// context...need to define "how" things will be accessible within the script
+		engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+
 		try {
 			return engine.eval(StringUtils.strip(this.value));
 		} catch (ScriptException e) {
