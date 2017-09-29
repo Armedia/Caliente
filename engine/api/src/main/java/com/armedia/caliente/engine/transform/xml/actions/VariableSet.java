@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.ConditionalAction;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeAdapter;
 
@@ -17,23 +17,23 @@ import com.armedia.caliente.store.CmfTypeAdapter;
 @XmlType(name = "actionSetVariable.t", propOrder = {
 	"name", "type", "value"
 })
-public class SetVariable extends ConditionalActionT {
+public class VariableSet extends ConditionalAction {
 
 	@XmlElement(name = "name", required = true)
-	protected ExpressionT name;
+	protected Expression name;
 
 	@XmlElement(name = "type", required = false)
 	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
 	protected CmfType type;
 
 	@XmlElement(name = "value", required = true)
-	protected ExpressionT value;
+	protected Expression value;
 
-	public ExpressionT getName() {
+	public Expression getName() {
 		return this.name;
 	}
 
-	public void setName(ExpressionT value) {
+	public void setName(Expression value) {
 		this.name = value;
 	}
 
@@ -45,11 +45,11 @@ public class SetVariable extends ConditionalActionT {
 		this.type = value;
 	}
 
-	public ExpressionT getValue() {
+	public Expression getValue() {
 		return this.value;
 	}
 
-	public void setValue(ExpressionT value) {
+	public void setValue(Expression value) {
 		this.value = value;
 	}
 

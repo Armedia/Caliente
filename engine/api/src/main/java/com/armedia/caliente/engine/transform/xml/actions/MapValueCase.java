@@ -1,5 +1,5 @@
 
-package com.armedia.caliente.engine.transform.xml;
+package com.armedia.caliente.engine.transform.xml.actions;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -8,37 +8,40 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.engine.transform.xml.Comparison;
+import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mapValueCase.t", propOrder = {
 	"value", "replacement"
 })
-public class MapValueCaseT {
+public class MapValueCase {
 
 	@XmlElement(name = "value", required = true)
-	protected ExpressionT value;
+	protected Expression value;
 
 	@XmlElement(name = "replacement", required = true)
-	protected ExpressionT replacement;
+	protected Expression replacement;
 
 	@XmlAttribute(name = "comparison", required = true)
 	@XmlJavaTypeAdapter(ComparisonAdapter.class)
 	protected Comparison comparison;
 
-	public ExpressionT getValue() {
+	public Expression getValue() {
 		return this.value;
 	}
 
-	public void setValue(ExpressionT value) {
+	public void setValue(Expression value) {
 		this.value = value;
 	}
 
-	public ExpressionT getReplacement() {
+	public Expression getReplacement() {
 		return this.replacement;
 	}
 
-	public void setReplacement(ExpressionT value) {
+	public void setReplacement(Expression value) {
 		this.replacement = value;
 	}
 

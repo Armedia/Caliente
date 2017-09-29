@@ -20,7 +20,7 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "expression.t", propOrder = {
 	"value"
 })
-public class ExpressionT {
+public class Expression {
 	private static final ScriptEngineManager ENGINE_FACTORY = new ScriptEngineManager();
 
 	protected static final String CONSTANT = "const";
@@ -40,7 +40,7 @@ public class ExpressionT {
 	}
 
 	public String getLang() {
-		return Tools.coalesce(this.lang, ExpressionT.CONSTANT);
+		return Tools.coalesce(this.lang, Expression.CONSTANT);
 	}
 
 	public void setLang(String value) {
@@ -49,10 +49,10 @@ public class ExpressionT {
 
 	public Object evaluate(TransformationContext ctx) {
 		// First: if the language is "constant" or null, we return the literal string value
-		String language = Tools.coalesce(getLang(), ExpressionT.CONSTANT);
-		if (ExpressionT.CONSTANT.equalsIgnoreCase(language)) { return this.value; }
+		String language = Tools.coalesce(getLang(), Expression.CONSTANT);
+		if (Expression.CONSTANT.equalsIgnoreCase(language)) { return this.value; }
 
-		ScriptEngine engine = ExpressionT.ENGINE_FACTORY.getEngineByName(this.lang);
+		ScriptEngine engine = Expression.ENGINE_FACTORY.getEngineByName(this.lang);
 		if (engine == null) { throw new RuntimeTransformationException(
 			String.format("No script engine [%s] is available", language)); }
 		try {

@@ -6,9 +6,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.xml.Condition;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.Expression;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionExpression.t")
-public abstract class AbstractExpressionCondition extends ExpressionT implements Condition {
+public abstract class AbstractExpressionCondition extends Expression implements Condition {
 }

@@ -29,7 +29,7 @@ public final class Transformations implements Action {
 
 	private static String SCHEMA = "transformations.xsd";
 
-	@XmlElement(name = "transformation", type = TransformationT.class)
+	@XmlElement(name = "transformation", type = Transformation.class)
 	protected List<Action> elements;
 
 	public List<Action> getElements() {

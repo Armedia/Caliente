@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.ConditionalAction;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTypeAdapter;
 
@@ -17,20 +17,20 @@ import com.armedia.caliente.store.CmfTypeAdapter;
 @XmlType(name = "actionSetValueMapping.t", propOrder = {
 	"type", "name", "from", "to"
 })
-public class SetValueMapping extends ConditionalActionT {
+public class ValueMappingSet extends ConditionalAction {
 
 	@XmlElement(name = "type", required = false)
 	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
 	protected CmfType type;
 
 	@XmlElement(name = "name", required = true)
-	protected ExpressionT name;
+	protected Expression name;
 
 	@XmlElement(name = "from", required = false)
-	protected ExpressionT from;
+	protected Expression from;
 
 	@XmlElement(name = "to", required = false)
-	protected ExpressionT to;
+	protected Expression to;
 
 	public void setType(CmfType type) {
 		this.type = type;
@@ -40,27 +40,27 @@ public class SetValueMapping extends ConditionalActionT {
 		return this.type;
 	}
 
-	public ExpressionT getName() {
+	public Expression getName() {
 		return this.name;
 	}
 
-	public void setName(ExpressionT name) {
+	public void setName(Expression name) {
 		this.name = name;
 	}
 
-	public ExpressionT getFrom() {
+	public Expression getFrom() {
 		return this.from;
 	}
 
-	public void setFrom(ExpressionT from) {
+	public void setFrom(Expression from) {
 		this.from = from;
 	}
 
-	public ExpressionT getTo() {
+	public Expression getTo() {
 		return this.to;
 	}
 
-	public void setTo(ExpressionT to) {
+	public void setTo(Expression to) {
 		this.to = to;
 	}
 

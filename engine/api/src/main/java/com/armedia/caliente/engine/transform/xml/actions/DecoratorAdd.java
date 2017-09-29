@@ -7,24 +7,24 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.ConditionalAction;
+import com.armedia.caliente.engine.transform.xml.Expression;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionSetSubtype.t", propOrder = {
-	"subtype"
+@XmlType(name = "actionAddDecorator.t", propOrder = {
+	"decorator"
 })
-public class SetSubtype extends ConditionalActionT {
+public class DecoratorAdd extends ConditionalAction {
 
-	@XmlElement(name = "subtype", required = true)
-	protected ExpressionT subtype;
+	@XmlElement(name = "decorator", required = true)
+	protected Expression decorator;
 
-	public ExpressionT getSubtype() {
-		return this.subtype;
+	public Expression getDecorator() {
+		return this.decorator;
 	}
 
-	public void setSubtype(ExpressionT value) {
-		this.subtype = value;
+	public void setDecorator(Expression value) {
+		this.decorator = value;
 	}
 
 	@Override

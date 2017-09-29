@@ -1,5 +1,5 @@
 
-package com.armedia.caliente.engine.transform.xml;
+package com.armedia.caliente.engine.transform.xml.actions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,30 +9,32 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.transform.xml.Expression;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mapValue.t", propOrder = {
 	"cases", "defaultValue"
 })
-public class MapValueT {
+public class MapValue {
 
 	@XmlElement(name = "case", required = false)
-	protected List<MapValueCaseT> cases;
+	protected List<MapValueCase> cases;
 
 	@XmlElement(name = "default", required = false)
-	protected ExpressionT defaultValue;
+	protected Expression defaultValue;
 
-	public List<MapValueCaseT> getCases() {
+	public List<MapValueCase> getCases() {
 		if (this.cases == null) {
 			this.cases = new ArrayList<>();
 		}
 		return this.cases;
 	}
 
-	public ExpressionT getDefaultValue() {
+	public Expression getDefaultValue() {
 		return this.defaultValue;
 	}
 
-	public void setDefaultValue(ExpressionT defaultValue) {
+	public void setDefaultValue(Expression defaultValue) {
 		this.defaultValue = defaultValue;
 	}
 

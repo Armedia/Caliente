@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.transform.xml.Comparison;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
@@ -20,28 +20,28 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck<T exte
 	extends AbstractComparisonCheck {
 
 	@XmlElement(name = "name", required = true)
-	protected ExpressionT name;
+	protected Expression name;
 
 	@XmlElement(name = "value", required = true)
-	protected ExpressionT value;
+	protected Expression value;
 
 	@XmlAttribute(name = "cardinality")
 	@XmlJavaTypeAdapter(CardinalityAdapter.class)
 	protected Cardinality cardinality;
 
-	public ExpressionT getName() {
+	public Expression getName() {
 		return this.name;
 	}
 
-	public void setName(ExpressionT value) {
+	public void setName(Expression value) {
 		this.name = value;
 	}
 
-	public ExpressionT getValue() {
+	public Expression getValue() {
 		return this.value;
 	}
 
-	public void setValue(ExpressionT value) {
+	public void setValue(Expression value) {
 		this.value = value;
 	}
 
@@ -57,7 +57,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck<T exte
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		ExpressionT nameExp = getName();
+		Expression nameExp = getName();
 		Object name = (nameExp != null ? nameExp.evaluate(ctx) : null);
 		if (name == null) { throw new IllegalStateException("No name was given for the candidate value check"); }
 
@@ -65,7 +65,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck<T exte
 		if (candidate == null) { return false; }
 
 		Comparison comparison = getComparison();
-		ExpressionT valueExp = getValue();
+		Expression valueExp = getValue();
 		Object comparand = (valueExp != null ? valueExp.evaluate(ctx) : null);
 		if (!candidate.isRepeating()) {
 			// Check the one and only value

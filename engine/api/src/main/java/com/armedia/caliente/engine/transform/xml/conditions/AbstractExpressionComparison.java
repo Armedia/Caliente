@@ -8,11 +8,11 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.transform.xml.Condition;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public abstract class AbstractExpressionComparison extends ExpressionT implements Condition {
+public abstract class AbstractExpressionComparison extends Expression implements Condition {
 
 	@XmlAttribute(name = "comparison")
 	@XmlJavaTypeAdapter(ComparisonAdapter.class)

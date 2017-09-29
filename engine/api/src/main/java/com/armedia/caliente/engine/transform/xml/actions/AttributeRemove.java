@@ -10,22 +10,22 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
-import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.ConditionalAction;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionRemoveDecorator.t", propOrder = {
-	"comparison", "decorator"
+@XmlType(name = "actionRemoveAttribute.t", propOrder = {
+	"comparison", "attributeName"
 })
-public class RemoveDecorator extends ConditionalActionT {
+public class AttributeRemove extends ConditionalAction {
 
 	@XmlElement(name = "comparison", required = true)
 	@XmlJavaTypeAdapter(ComparisonAdapter.class)
 	protected Comparison comparison;
 
-	@XmlElement(name = "decorator", required = true)
-	protected ExpressionT decorator;
+	@XmlElement(name = "attribute-name", required = true)
+	protected Expression attributeName;
 
 	public Comparison getComparison() {
 		return Tools.coalesce(this.comparison, Comparison.DEFAULT);
@@ -35,12 +35,12 @@ public class RemoveDecorator extends ConditionalActionT {
 		this.comparison = value;
 	}
 
-	public ExpressionT getDecorator() {
-		return this.decorator;
+	public Expression getAttributeName() {
+		return this.attributeName;
 	}
 
-	public void setDecorator(ExpressionT value) {
-		this.decorator = value;
+	public void setAttributeName(Expression value) {
+		this.attributeName = value;
 	}
 
 	@Override

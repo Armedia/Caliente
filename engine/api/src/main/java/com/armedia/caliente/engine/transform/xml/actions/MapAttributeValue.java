@@ -10,32 +10,31 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
-import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
-import com.armedia.caliente.engine.transform.xml.MapValueT;
+import com.armedia.caliente.engine.transform.xml.ConditionalAction;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionMapAttributeValue.t", propOrder = {
 	"attributeName", "cardinality", "map"
 })
-public class MapAttributeValue extends ConditionalActionT {
+public class MapAttributeValue extends ConditionalAction {
 
 	@XmlElement(name = "attribute-name", required = true)
-	protected ExpressionT attributeName;
+	protected Expression attributeName;
 
 	@XmlElement(name = "cardinality", required = false)
 	@XmlJavaTypeAdapter(CardinalityAdapter.class)
 	protected Cardinality cardinality;
 
 	@XmlElement(name = "map", required = true)
-	protected MapValueT map;
+	protected MapValue map;
 
-	public ExpressionT getAttributeName() {
+	public Expression getAttributeName() {
 		return this.attributeName;
 	}
 
-	public void setAttributeName(ExpressionT value) {
+	public void setAttributeName(Expression value) {
 		this.attributeName = value;
 	}
 
@@ -47,11 +46,11 @@ public class MapAttributeValue extends ConditionalActionT {
 		this.cardinality = value;
 	}
 
-	public MapValueT getMap() {
+	public MapValue getMap() {
 		return this.map;
 	}
 
-	public void setMap(MapValueT value) {
+	public void setMap(MapValue value) {
 		this.map = value;
 	}
 

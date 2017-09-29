@@ -7,23 +7,23 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.ConditionalAction;
+import com.armedia.caliente.engine.transform.xml.Expression;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionClearVariable.t", propOrder = {
 	"name"
 })
-public class ClearVariable extends ConditionalActionT {
+public class VariableClear extends ConditionalAction {
 
 	@XmlElement(name = "name", required = true)
-	protected ExpressionT name;
+	protected Expression name;
 
-	public ExpressionT getName() {
+	public Expression getName() {
 		return this.name;
 	}
 
-	public void setName(ExpressionT value) {
+	public void setName(Expression value) {
 		this.name = value;
 	}
 

@@ -16,7 +16,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 @XmlType(name = "conditionalAction.t", propOrder = {
 	"condition"
 })
-public abstract class ConditionalActionT implements Action {
+public abstract class ConditionalAction implements Action {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());

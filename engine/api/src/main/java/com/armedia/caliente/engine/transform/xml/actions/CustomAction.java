@@ -11,30 +11,30 @@ import com.armedia.caliente.engine.transform.DynamicTransformationElements;
 import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Action;
-import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.ConditionalAction;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionCustomAction.t", propOrder = {
 	"className"
 })
-public class CustomAction extends ConditionalActionT {
+public class CustomAction extends ConditionalAction {
 
 	@XmlElement(name = "class-name", required = true)
-	protected ExpressionT className;
+	protected Expression className;
 
-	public ExpressionT getClassName() {
+	public Expression getClassName() {
 		return this.className;
 	}
 
-	public void setClassName(ExpressionT value) {
+	public void setClassName(Expression value) {
 		this.className = value;
 	}
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) {
-		ExpressionT classNameExpr = getClassName();
+		Expression classNameExpr = getClassName();
 
 		String className = Tools.toString(classNameExpr.evaluate(ctx));
 		if (className == null) { throw new RuntimeTransformationException(

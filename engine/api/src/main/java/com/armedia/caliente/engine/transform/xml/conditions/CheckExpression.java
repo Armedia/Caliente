@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.Expression;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionCheckExpression.t", propOrder = {
@@ -16,32 +16,32 @@ import com.armedia.caliente.engine.transform.xml.ExpressionT;
 public class CheckExpression extends AbstractComparisonCheck {
 
 	@XmlElement(required = true)
-	protected ExpressionT left;
+	protected Expression left;
 
 	@XmlElement(required = true)
-	protected ExpressionT right;
+	protected Expression right;
 
-	public ExpressionT getLeft() {
+	public Expression getLeft() {
 		return this.left;
 	}
 
-	public void setLeft(ExpressionT value) {
+	public void setLeft(Expression value) {
 		this.left = value;
 	}
 
-	public ExpressionT getRight() {
+	public Expression getRight() {
 		return this.right;
 	}
 
-	public void setRight(ExpressionT value) {
+	public void setRight(Expression value) {
 		this.right = value;
 	}
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		ExpressionT leftExp = getLeft();
+		Expression leftExp = getLeft();
 		Object leftVal = (leftExp != null ? leftExp.evaluate(ctx) : null);
-		ExpressionT rightExp = getRight();
+		Expression rightExp = getRight();
 		Object rightVal = (rightExp != null ? rightExp.evaluate(ctx) : null);
 		// TODO: What data types are expected for the expressions? Should we add an
 		// element/attribute to specify?

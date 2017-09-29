@@ -10,34 +10,34 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
-import com.armedia.caliente.engine.transform.xml.ConditionalActionT;
-import com.armedia.caliente.engine.transform.xml.ExpressionT;
+import com.armedia.caliente.engine.transform.xml.ConditionalAction;
+import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionReplaceAttribute.t", propOrder = {
 	"attributeName", "cardinality", "regex", "replacement"
 })
-public class ReplaceAttribute extends ConditionalActionT {
+public class AttributeReplace extends ConditionalAction {
 
 	@XmlElement(name = "attribute-name", required = true)
-	protected ExpressionT attributeName;
+	protected Expression attributeName;
 
 	@XmlElement(name = "cardinality", required = false)
 	@XmlJavaTypeAdapter(CardinalityAdapter.class)
 	protected Cardinality cardinality;
 
 	@XmlElement(name = "regex", required = true)
-	protected ExpressionT regex;
+	protected Expression regex;
 
 	@XmlElement(name = "replacement", required = true)
-	protected ExpressionT replacement;
+	protected Expression replacement;
 
-	public ExpressionT getAttributeName() {
+	public Expression getAttributeName() {
 		return this.attributeName;
 	}
 
-	public void setAttributeName(ExpressionT value) {
+	public void setAttributeName(Expression value) {
 		this.attributeName = value;
 	}
 
@@ -49,19 +49,19 @@ public class ReplaceAttribute extends ConditionalActionT {
 		this.cardinality = value;
 	}
 
-	public ExpressionT getRegex() {
+	public Expression getRegex() {
 		return this.regex;
 	}
 
-	public void setRegex(ExpressionT value) {
+	public void setRegex(Expression value) {
 		this.regex = value;
 	}
 
-	public ExpressionT getReplacement() {
+	public Expression getReplacement() {
 		return this.replacement;
 	}
 
-	public void setReplacement(ExpressionT value) {
+	public void setReplacement(Expression value) {
 		this.replacement = value;
 	}
 
