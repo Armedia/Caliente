@@ -11,20 +11,20 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.xml.actions.AttributeRemove;
+import com.armedia.caliente.engine.transform.xml.actions.AttributeReplace;
+import com.armedia.caliente.engine.transform.xml.actions.AttributeSet;
+import com.armedia.caliente.engine.transform.xml.actions.CustomAction;
 import com.armedia.caliente.engine.transform.xml.actions.DecoratorAdd;
+import com.armedia.caliente.engine.transform.xml.actions.DecoratorRemove;
+import com.armedia.caliente.engine.transform.xml.actions.DecoratorReplace;
+import com.armedia.caliente.engine.transform.xml.actions.MapAttributeValue;
+import com.armedia.caliente.engine.transform.xml.actions.SubtypeReplace;
+import com.armedia.caliente.engine.transform.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.transform.xml.actions.ValueMappingApply;
 import com.armedia.caliente.engine.transform.xml.actions.ValueMappingClear;
-import com.armedia.caliente.engine.transform.xml.actions.VariableClear;
-import com.armedia.caliente.engine.transform.xml.actions.CustomAction;
-import com.armedia.caliente.engine.transform.xml.actions.MapAttributeValue;
-import com.armedia.caliente.engine.transform.xml.actions.AttributeRemove;
-import com.armedia.caliente.engine.transform.xml.actions.DecoratorRemove;
-import com.armedia.caliente.engine.transform.xml.actions.AttributeReplace;
-import com.armedia.caliente.engine.transform.xml.actions.DecoratorReplace;
-import com.armedia.caliente.engine.transform.xml.actions.SubtypeReplace;
-import com.armedia.caliente.engine.transform.xml.actions.AttributeSet;
-import com.armedia.caliente.engine.transform.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.transform.xml.actions.ValueMappingSet;
+import com.armedia.caliente.engine.transform.xml.actions.VariableClear;
 import com.armedia.caliente.engine.transform.xml.actions.VariableSet;
 
 @XmlAccessorType(XmlAccessType.FIELD)

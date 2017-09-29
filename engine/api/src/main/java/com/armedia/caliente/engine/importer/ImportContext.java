@@ -18,8 +18,8 @@ import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTransformer;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
 public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>>
