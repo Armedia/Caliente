@@ -10,14 +10,14 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionRemoveAttribute.t", propOrder = {
+@XmlType(name = "actionRemoveVariable.t", propOrder = {
 	"comparison", "name"
 })
-public class AttributeRemove extends AbstractTransformValueAttribute {
+public class VariableRemove extends AbstractTransformValueVariable {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx, CmfProperty<CmfValue> candidate) {
-		ctx.removeAttribute(candidate.getName());
+		ctx.removeVariable(candidate.getName());
 	}
 
 }

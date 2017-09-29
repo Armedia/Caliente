@@ -65,7 +65,7 @@ public class ValueMappingClear extends ConditionalAction {
 	}
 
 	@Override
-	protected <V> void applyTransformation(TransformationContext ctx) {
+	protected void applyTransformation(TransformationContext ctx) {
 		// TODO Implement this transformation
 	}
 }

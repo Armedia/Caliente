@@ -24,7 +24,8 @@ import com.armedia.caliente.engine.transform.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.transform.xml.actions.ValueMappingApply;
 import com.armedia.caliente.engine.transform.xml.actions.ValueMappingClear;
 import com.armedia.caliente.engine.transform.xml.actions.ValueMappingSet;
-import com.armedia.caliente.engine.transform.xml.actions.VariableClear;
+import com.armedia.caliente.engine.transform.xml.actions.VariableRemove;
+import com.armedia.caliente.engine.transform.xml.actions.VariableReplace;
 import com.armedia.caliente.engine.transform.xml.actions.VariableSet;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -44,7 +45,8 @@ public class Transformation extends ConditionalAction {
 		@XmlElement(name = "replace-attribute", type = AttributeReplace.class),
 		@XmlElement(name = "map-attribute-value", type = MapAttributeValue.class),
 		@XmlElement(name = "set-variable", type = VariableSet.class),
-		@XmlElement(name = "clear-variable", type = VariableClear.class),
+		@XmlElement(name = "remove-variable", type = VariableRemove.class),
+		@XmlElement(name = "replace-variable", type = VariableReplace.class),
 		@XmlElement(name = "set-value-mapping", type = ValueMappingSet.class),
 		@XmlElement(name = "clear-value-mapping", type = ValueMappingClear.class),
 		@XmlElement(name = "apply-value-mapping", type = ValueMappingApply.class),

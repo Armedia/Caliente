@@ -415,7 +415,7 @@
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="type" type="tns:cmfType.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmfDataType.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
@@ -426,8 +426,8 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="attribute-name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -437,7 +437,8 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="attribute-name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="regex" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="replacement" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
@@ -465,7 +466,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="attribute-name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="map" type="tns:mapValue.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
@@ -478,18 +479,33 @@
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="type" type="tns:cmfType.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmfDataType.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionClearVariable.t">
+	<xsd:complexType name="actionRemoveVariable.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionReplaceVariable.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="regex" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="replacement" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -558,7 +574,8 @@
 			<xsd:element name="replace-attribute" type="tns:actionReplaceAttribute.t" />
 			<xsd:element name="map-attribute-value" type="tns:actionMapAttributeValue.t" />
 			<xsd:element name="set-variable" type="tns:actionSetVariable.t" />
-			<xsd:element name="clear-variable" type="tns:actionClearVariable.t" />
+			<xsd:element name="remove-variable" type="tns:actionRemoveVariable.t" />
+			<xsd:element name="replace-variable" type="tns:actionReplaceVariable.t" />
 			<xsd:element name="set-value-mapping" type="tns:actionSetValueMapping.t" />
 			<xsd:element name="clear-value-mapping" type="tns:actionClearValueMapping.t" />
 			<xsd:element name="apply-value-mapping" type="tns:actionApplyValueMapping.t" />

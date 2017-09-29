@@ -131,15 +131,15 @@
 		</set-attribute>
 		<remove-attribute>
 			<comparison>eq</comparison>
-			<attribute-name lang="jexl">
+			<name lang="jexl">
 				<!-- expression -->
-			</attribute-name>
+			</name>
 		</remove-attribute>
 		<replace-attribute>
-			<attribute-name lang="jexl">
+			<name lang="jexl">
 				<!-- expression -->
-				replace-attribute-name
-			</attribute-name>
+				replace-name
+			</name>
 			<cardinality>all</cardinality>
 			<regex lang="jexl">
 				<!-- expression -->
@@ -155,10 +155,10 @@
 			<if>
 				<is-reference />
 			</if>
-			<attribute-name lang="jexl">
+			<name lang="jexl">
 				<!-- expression -->
-				map-attribute-name
-			</attribute-name>
+				map-name
+			</name>
 			<cardinality>all</cardinality>
 			<map>
 				<case comparison="eq">

@@ -85,13 +85,13 @@ public interface TransformationContext {
 
 	public boolean hasVariable(String name);
 
-	public CmfProperty<CmfValue> createVariable(CmfEncodeableName name, CmfDataType type);
+	public CmfProperty<CmfValue> setVariable(CmfEncodeableName name, CmfDataType type);
 
-	public CmfProperty<CmfValue> createVariable(String name, CmfDataType type);
+	public CmfProperty<CmfValue> setVariable(String name, CmfDataType type);
 
-	public CmfProperty<CmfValue> createVariable(CmfEncodeableName name, CmfDataType type, boolean repeating);
+	public CmfProperty<CmfValue> setVariable(CmfEncodeableName name, CmfDataType type, boolean repeating);
 
-	public CmfProperty<CmfValue> createVariable(String name, CmfDataType type, boolean repeating);
+	public CmfProperty<CmfValue> setVariable(String name, CmfDataType type, boolean repeating);
 
 	public CmfProperty<CmfValue> getVariable(String name);
 

@@ -16,12 +16,12 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionMapAttributeValue.t", propOrder = {
-	"attributeName", "cardinality", "map"
+	"name", "cardinality", "map"
 })
 public class MapAttributeValue extends ConditionalAction {
 
-	@XmlElement(name = "attribute-name", required = true)
-	protected Expression attributeName;
+	@XmlElement(name = "name", required = true)
+	protected Expression name;
 
 	@XmlElement(name = "cardinality", required = false)
 	@XmlJavaTypeAdapter(CardinalityAdapter.class)
@@ -30,12 +30,12 @@ public class MapAttributeValue extends ConditionalAction {
 	@XmlElement(name = "map", required = true)
 	protected MapValue map;
 
-	public Expression getAttributeName() {
-		return this.attributeName;
+	public Expression getName() {
+		return this.name;
 	}
 
-	public void setAttributeName(Expression value) {
-		this.attributeName = value;
+	public void setName(Expression value) {
+		this.name = value;
 	}
 
 	public Cardinality getCardinality() {

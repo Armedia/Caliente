@@ -43,5 +43,5 @@ public abstract class ConditionalAction implements Action {
 		}
 	}
 
-	protected abstract <V> void applyTransformation(TransformationContext ctx);
+	protected abstract void applyTransformation(TransformationContext ctx);
 }

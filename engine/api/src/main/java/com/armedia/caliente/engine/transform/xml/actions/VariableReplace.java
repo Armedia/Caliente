@@ -12,18 +12,19 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionReplaceAttribute.t", propOrder = {
+@XmlType(name = "actionReplaceVariable.t", propOrder = {
 	"comparison", "name", "cardinality", "regex", "replacement"
 })
-public class AttributeReplace extends AbstractReplaceValue {
+public class VariableReplace extends AbstractReplaceValue {
 
 	@Override
 	protected Set<String> getCandidateNames(TransformationContext ctx) {
-		return ctx.getAttributeNames();
+		return ctx.getVariableNames();
 	}
 
 	@Override
 	protected CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name) {
-		return ctx.getAttribute(name);
+		return ctx.getVariable(name);
 	}
+
 }
