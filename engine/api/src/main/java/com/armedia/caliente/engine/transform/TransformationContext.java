@@ -59,27 +59,27 @@ public interface TransformationContext {
 
 	public CmfAttribute<CmfValue> removeAttribute(String name);
 
-	public Set<String> getPropertyNames();
+	public Set<String> getCalientePropertyNames();
 
-	public boolean hasProperty(CmfEncodeableName name);
+	public boolean hasCalienteProperty(CmfEncodeableName name);
 
-	public boolean hasProperty(String name);
+	public boolean hasCalienteProperty(String name);
 
-	public CmfProperty<CmfValue> getProperty(CmfEncodeableName name);
+	public CmfProperty<CmfValue> getCalienteProperty(CmfEncodeableName name);
 
-	public CmfProperty<CmfValue> getProperty(String name);
+	public CmfProperty<CmfValue> getCalienteProperty(String name);
 
-	public CmfProperty<CmfValue> setProperty(CmfEncodeableName name, CmfDataType type);
+	public CmfProperty<CmfValue> setCalienteProperty(CmfEncodeableName name, CmfDataType type);
 
-	public CmfProperty<CmfValue> setProperty(String name, CmfDataType type);
+	public CmfProperty<CmfValue> setCalienteProperty(String name, CmfDataType type);
 
-	public CmfProperty<CmfValue> setProperty(CmfEncodeableName name, CmfDataType type, boolean multivalue);
+	public CmfProperty<CmfValue> setCalienteProperty(CmfEncodeableName name, CmfDataType type, boolean multivalue);
 
-	public CmfProperty<CmfValue> setProperty(String name, CmfDataType type, boolean multivalue);
+	public CmfProperty<CmfValue> setCalienteProperty(String name, CmfDataType type, boolean multivalue);
 
-	public CmfProperty<CmfValue> removeProperty(CmfEncodeableName name);
+	public CmfProperty<CmfValue> removeCalienteProperty(CmfEncodeableName name);
 
-	public CmfProperty<CmfValue> removeProperty(String name);
+	public CmfProperty<CmfValue> removeCalienteProperty(String name);
 
 	public Set<String> getVariableNames();
 

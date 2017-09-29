@@ -14,12 +14,12 @@ public abstract class AbstractCalientePropertyCheck extends AbstractAttributeCal
 
 	@Override
 	protected final Set<String> getCandidateNames(TransformationContext ctx) {
-		return ctx.getPropertyNames();
+		return ctx.getCalientePropertyNames();
 	}
 
 	@Override
 	protected final CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name) {
-		return ctx.getProperty(name);
+		return ctx.getCalienteProperty(name);
 	}
 
 }

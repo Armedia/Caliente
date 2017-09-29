@@ -17,7 +17,7 @@ public class IsCalientePropertyValue extends AbstractAttributeCalientePropertyVa
 
 	@Override
 	protected CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name) {
-		return ctx.getProperty(name);
+		return ctx.getCalienteProperty(name);
 	}
 
 }

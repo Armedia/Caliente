@@ -17,7 +17,7 @@ public class IsFirstVersion implements Condition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		CmfProperty<CmfValue> index = ctx.getProperty(IntermediateProperty.VERSION_INDEX);
+		CmfProperty<CmfValue> index = ctx.getCalienteProperty(IntermediateProperty.VERSION_INDEX);
 		CmfValue v = ((index != null) && index.hasValues() ? index.getValue() : null);
 		return ((v == null) || v.isNull() || (v.asInteger() == 1));
 	}

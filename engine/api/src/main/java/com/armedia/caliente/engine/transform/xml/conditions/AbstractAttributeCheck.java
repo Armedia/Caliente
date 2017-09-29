@@ -14,7 +14,7 @@ public abstract class AbstractAttributeCheck extends AbstractAttributeCalientePr
 
 	@Override
 	protected final Set<String> getCandidateNames(TransformationContext ctx) {
-		return ctx.getPropertyNames();
+		return ctx.getCalientePropertyNames();
 	}
 
 	@Override
