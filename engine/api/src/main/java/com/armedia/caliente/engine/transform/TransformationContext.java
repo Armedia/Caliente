@@ -23,7 +23,7 @@ public interface TransformationContext {
 
 	public String getSubtype();
 
-	public void setSubtype();
+	public void setSubtype(String subtype);
 
 	public Set<String> getCurrentDecorators();
 

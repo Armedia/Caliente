@@ -6,9 +6,11 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionSetSubtype.t", propOrder = {
@@ -29,7 +31,9 @@ public class SubtypeSet extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) {
-		// TODO implement this transformation
+		String subtype = Tools.toString(Expression.eval(getSubtype(), ctx));
+		if (subtype == null) { throw new RuntimeTransformationException("No subtype given to set to"); }
+		ctx.setSubtype(subtype);
 	}
 
 }

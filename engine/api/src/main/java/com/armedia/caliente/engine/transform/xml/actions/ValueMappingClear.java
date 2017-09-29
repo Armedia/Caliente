@@ -7,11 +7,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionClearValueMapping.t", propOrder = {
@@ -66,6 +68,23 @@ public class ValueMappingClear extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) {
-		// TODO Implement this transformation
+		CmfType type = getType();
+		if (type == null) { throw new RuntimeTransformationException(
+			"Must provide a type name to associate the mapping with"); }
+		String name = Tools.toString(Expression.eval(getName(), ctx));
+		if (name == null) { throw new RuntimeTransformationException("Must provide a mapping name"); }
+
+		String from = Tools.toString(Expression.eval(getFrom(), ctx));
+		String to = Tools.toString(Expression.eval(getTo(), ctx));
+		if ((from == null) && (to == null)) { throw new RuntimeTransformationException(
+			"Must provide either a sorce or target value to identify the mapping to remove"); }
+		if ((from != null) && (to != null)) { throw new RuntimeTransformationException(
+			"Must provide only one of either a sorce or target value to identify the mapping to remove (both provided)"); }
+
+		if (from != null) {
+			ctx.clearSourceMapping(type, name, from);
+		} else {
+			ctx.clearTargetMapping(type, name, to);
+		}
 	}
 }
