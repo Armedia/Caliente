@@ -11,7 +11,7 @@ import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Condition;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeAdapter;
+import com.armedia.caliente.store.xml.CmfTypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsType.t", propOrder = {

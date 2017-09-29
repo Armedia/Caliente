@@ -13,7 +13,7 @@ import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeAdapter;
+import com.armedia.caliente.store.xml.CmfTypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionApplyValueMapping.t", propOrder = {
