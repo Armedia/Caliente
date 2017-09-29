@@ -18,6 +18,7 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.commons.utilities.XmlTools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -40,7 +41,7 @@ public final class Transformations implements Action {
 	}
 
 	@Override
-	public void apply(TransformationContext ctx) {
+	public void apply(TransformationContext ctx) throws TransformationException {
 		for (Action t : getElements()) {
 			if (t != null) {
 				t.apply(ctx);

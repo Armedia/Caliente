@@ -6,8 +6,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.transform.xml.Comparison;
@@ -56,11 +56,10 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 	protected abstract CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name);
 
 	@Override
-	public boolean check(TransformationContext ctx) {
+	public boolean check(TransformationContext ctx) throws TransformationException {
 		Expression nameExp = getName();
 		Object name = Expression.eval(nameExp, ctx);
-		if (name == null) { throw new RuntimeTransformationException(
-			"No name was given for the candidate value check"); }
+		if (name == null) { throw new TransformationException("No name was given for the candidate value check"); }
 
 		CmfProperty<CmfValue> candidate = getCandidate(ctx, name.toString());
 		if (candidate == null) { return false; }
@@ -68,7 +67,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		Comparison comparison = getComparison();
 		Expression valueExp = getValue();
 		Object comparand = Expression.eval(valueExp, ctx);
-		if (comparand == null) { throw new RuntimeTransformationException(
+		if (comparand == null) { throw new TransformationException(
 			"No comparand value given to check the name against"); }
 		if (!candidate.isRepeating()) {
 			// Check the one and only value

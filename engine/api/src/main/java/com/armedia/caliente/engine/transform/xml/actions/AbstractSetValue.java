@@ -7,8 +7,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
@@ -58,10 +58,9 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		boolean multivalue);
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx) {
+	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
 		Object name = Tools.toString(Expression.eval(getName(), ctx));
-		if (name == null) { throw new RuntimeTransformationException(
-			"No name expression given for variable definition"); }
+		if (name == null) { throw new TransformationException("No name expression given for variable definition"); }
 
 		final CmfDataType type = getType();
 		final Object value = Expression.eval(getValue(), ctx);
@@ -83,8 +82,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 				variable.setValue(new CmfValue(type, currentValue));
 			}
 		} catch (ParseException e) {
-			throw new RuntimeTransformationException(String.format("Failed to convert value [%s] as a %s", value, type),
-				e);
+			throw new TransformationException(String.format("Failed to convert value [%s] as a %s", value, type), e);
 		}
 	}
 

@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
@@ -55,7 +56,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 	}
 
 	@Override
-	public boolean check(TransformationContext ctx) {
+	public boolean check(TransformationContext ctx) throws TransformationException {
 		Expression leftExp = getLeft();
 		Object leftVal = Expression.eval(leftExp, ctx);
 		Expression rightExp = getRight();

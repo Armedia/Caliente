@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.conditions.CheckExpression;
 import com.armedia.caliente.engine.transform.xml.conditions.CustomCheck;
 import com.armedia.caliente.engine.transform.xml.conditions.CustomScript;
@@ -50,18 +51,13 @@ public abstract class ConditionGroup implements Condition {
 
 	@XmlElements({
 		// First, the groups
-		@XmlElement(name = "and", type = GroupAnd.class),
-		@XmlElement(name = "or", type = GroupOr.class),
-		@XmlElement(name = "not", type = GroupNot.class),
-		@XmlElement(name = "xor", type = GroupXor.class),
-		@XmlElement(name = "nand", type = GroupNand.class),
-		@XmlElement(name = "nor", type = GroupNor.class),
-		@XmlElement(name = "xnor", type = GroupXnor.class),
-		@XmlElement(name = "oneof", type = GroupOneof.class),
+		@XmlElement(name = "and", type = GroupAnd.class), @XmlElement(name = "or", type = GroupOr.class),
+		@XmlElement(name = "not", type = GroupNot.class), @XmlElement(name = "xor", type = GroupXor.class),
+		@XmlElement(name = "nand", type = GroupNand.class), @XmlElement(name = "nor", type = GroupNor.class),
+		@XmlElement(name = "xnor", type = GroupXnor.class), @XmlElement(name = "oneof", type = GroupOneof.class),
 
 		// Now, the non-grouping conditions
-		@XmlElement(name = "is-type", type = IsType.class),
-		@XmlElement(name = "is-subtype", type = IsSubtype.class),
+		@XmlElement(name = "is-type", type = IsType.class), @XmlElement(name = "is-subtype", type = IsSubtype.class),
 		@XmlElement(name = "is-original-subtype", type = IsOriginalSubtype.class),
 		@XmlElement(name = "has-decorator", type = HasDecorator.class),
 
@@ -112,12 +108,13 @@ public abstract class ConditionGroup implements Condition {
 	}
 
 	@Override
-	public final boolean check(TransformationContext ctx) {
+	public final boolean check(TransformationContext ctx) throws TransformationException {
 		// If there are no elements, then we simply return true
 		List<Condition> elements = sanitizeElements(getElements());
 		if ((elements == null) || elements.isEmpty()) { return true; }
-		return doEvaluate(elements, ctx);
+		return check(elements, ctx);
 	}
 
-	protected abstract boolean doEvaluate(List<Condition> elements, TransformationContext ctx);
+	protected abstract boolean check(List<Condition> elements, TransformationContext ctx)
+		throws TransformationException;
 }

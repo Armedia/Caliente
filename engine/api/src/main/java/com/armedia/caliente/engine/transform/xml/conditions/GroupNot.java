@@ -6,6 +6,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Condition;
 import com.armedia.caliente.engine.transform.xml.ConditionWrapper;
 
@@ -16,7 +17,7 @@ import com.armedia.caliente.engine.transform.xml.ConditionWrapper;
 public class GroupNot extends ConditionWrapper implements Condition {
 
 	@Override
-	public boolean check(TransformationContext ctx) {
+	public boolean check(TransformationContext ctx) throws TransformationException {
 		final Condition condition = getCondition();
 		if (condition == null) { return true; }
 		return !condition.check(ctx);

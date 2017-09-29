@@ -7,8 +7,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfType;
@@ -67,16 +67,16 @@ public class ValueMappingSet extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx) {
+	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
 		CmfType type = getType();
-		if (type == null) { throw new RuntimeTransformationException(
+		if (type == null) { throw new TransformationException(
 			"Must provide a type name to associate the mapping with"); }
 		String name = Tools.toString(Expression.eval(getName(), ctx));
-		if (name == null) { throw new RuntimeTransformationException("Must provide a mapping name"); }
+		if (name == null) { throw new TransformationException("Must provide a mapping name"); }
 		String from = Tools.toString(Expression.eval(getFrom(), ctx));
-		if (from == null) { throw new RuntimeTransformationException("Must provide a source value to map from"); }
+		if (from == null) { throw new TransformationException("Must provide a source value to map from"); }
 		String to = Tools.toString(Expression.eval(getTo(), ctx));
-		if (to == null) { throw new RuntimeTransformationException("Must provide a target value map into"); }
+		if (to == null) { throw new TransformationException("Must provide a target value map into"); }
 
 		ctx.setMapping(type, name, from, to);
 	}

@@ -5,8 +5,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Expression;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -14,9 +14,9 @@ import com.armedia.caliente.engine.transform.xml.Expression;
 public class CustomScript extends AbstractExpressionCondition {
 
 	@Override
-	public boolean check(TransformationContext ctx) {
+	public boolean check(TransformationContext ctx) throws TransformationException {
 		Object result = Expression.eval(this, ctx);
-		if (result == null) { throw new RuntimeTransformationException(
+		if (result == null) { throw new TransformationException(
 			String.format("The given %s expression did not return a boolean value: %s", getLang(), getValue())); }
 		if (Boolean.class.isInstance(result)) { return Boolean.class.cast(result).booleanValue(); }
 

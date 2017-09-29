@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.transform.xml.Expression;
@@ -58,11 +58,12 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx, CmfProperty<CmfValue> candidate) {
+	protected final void applyTransformation(TransformationContext ctx, CmfProperty<CmfValue> candidate)
+		throws TransformationException {
 		final String regex = Tools.toString(Expression.eval(getRegex(), ctx));
-		if (regex == null) { throw new RuntimeTransformationException("No regular expression given to check against"); }
+		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
 		final String replacement = Tools.toString(Expression.eval(getReplacement(), ctx));
-		if (replacement == null) { throw new RuntimeTransformationException("No replacement given to apply"); }
+		if (replacement == null) { throw new TransformationException("No replacement given to apply"); }
 
 		if (candidate.isRepeating()) {
 			// Cardinality is irrelevant...

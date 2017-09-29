@@ -6,8 +6,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.commons.utilities.Tools;
@@ -30,9 +30,9 @@ public class SubtypeSet extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx) {
+	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
 		String subtype = Tools.toString(Expression.eval(getSubtype(), ctx));
-		if (subtype == null) { throw new RuntimeTransformationException("No subtype given to set to"); }
+		if (subtype == null) { throw new TransformationException("No subtype given to set to"); }
 		ctx.setSubtype(subtype);
 	}
 

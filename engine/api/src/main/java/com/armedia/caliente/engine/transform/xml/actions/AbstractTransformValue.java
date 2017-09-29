@@ -7,8 +7,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
@@ -48,13 +48,13 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 
 	protected abstract CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name);
 
-	protected abstract void applyTransformation(TransformationContext ctx, CmfProperty<CmfValue> candidate);
+	protected abstract void applyTransformation(TransformationContext ctx, CmfProperty<CmfValue> candidate)
+		throws TransformationException;
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx) {
+	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
 		final String comparand = Tools.toString(Expression.eval(getName(), ctx));
-		if (comparand == null) { throw new RuntimeTransformationException(
-			"No comparand given to check the name against"); }
+		if (comparand == null) { throw new TransformationException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();
 
 		if (comparison == Comparison.EQ) {

@@ -236,7 +236,7 @@ public enum Comparison {
 		// sensitivity.
 		String name = name().toLowerCase();
 		if (!name.endsWith("i")) { throw new AbstractMethodError(
-			String.format("Must provide a concrete implementation for the %s comparison check", name())); }
+			String.format("Must provide a concrete implementation of eval() for the %s comparison check", name())); }
 
 		// Case-insensitive, find my counterpart!
 		Comparison comp = Comparison.valueOf(name.substring(0, name.length() - 1));

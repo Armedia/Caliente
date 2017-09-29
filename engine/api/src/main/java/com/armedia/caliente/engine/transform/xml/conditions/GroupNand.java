@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Condition;
 import com.armedia.caliente.engine.transform.xml.ConditionGroup;
 
@@ -17,7 +18,7 @@ import com.armedia.caliente.engine.transform.xml.ConditionGroup;
 public class GroupNand extends ConditionGroup {
 
 	@Override
-	protected boolean doEvaluate(List<Condition> elements, TransformationContext ctx) {
+	protected boolean check(List<Condition> elements, TransformationContext ctx) throws TransformationException {
 		for (Condition c : elements) {
 			Objects.requireNonNull(c, "Null conditional elements are not allowed");
 			if (!c.check(ctx)) { return true; }

@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "expression.t", propOrder = {
@@ -104,7 +105,7 @@ public class Expression {
 		return this.engine;
 	}
 
-	private Object evaluate(TransformationContext ctx) {
+	private Object evaluate(TransformationContext ctx) throws TransformationException {
 		// First: if the language is "constant" or null, we return the literal string value
 		final String script = StringUtils.strip(this.value);
 		final ScriptEngine engine = getEngine();
@@ -141,13 +142,13 @@ public class Expression {
 			}
 			return ret;
 		} catch (ScriptException e) {
-			this.log.debug("Exception caught while evaluating {} expression script:{}{}{}", lang, Expression.NL, script,
-				Expression.NL, e);
-			throw new RuntimeTransformationException(e);
+			String msg = String.format("Exception caught while evaluating %s expression script:%n%s%n", lang, script);
+			this.log.debug(msg, e);
+			throw new TransformationException(msg, e);
 		}
 	}
 
-	public static Object eval(Expression e, TransformationContext ctx) {
+	public static Object eval(Expression e, TransformationContext ctx) throws TransformationException {
 		Objects.requireNonNull(ctx, "No transformation context given for expression evaluation");
 		if (e == null) { return null; }
 		return e.evaluate(ctx);

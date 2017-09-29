@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.ActionFactory;
 import com.armedia.caliente.engine.transform.DynamicTransformationElements;
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Action;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
@@ -33,12 +33,12 @@ public class CustomAction extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx) {
+	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
 		String className = Tools.toString(Expression.eval(getClassName(), ctx));
-		if (className == null) { throw new RuntimeTransformationException("No classname given to insantiate"); }
+		if (className == null) { throw new TransformationException("No classname given to insantiate"); }
 
 		final ActionFactory factory = DynamicTransformationElements.getActionFactory(className);
-		if (factory == null) { throw new RuntimeTransformationException(
+		if (factory == null) { throw new TransformationException(
 			String.format("Failed to locate an action factory for class [%s]", className)); }
 		try {
 			Action action = factory.acquireInstance(className);
@@ -48,7 +48,7 @@ public class CustomAction extends ConditionalAction {
 				factory.releaseInstance(action);
 			}
 		} catch (Exception e) {
-			throw new RuntimeTransformationException(e);
+			throw new TransformationException(e);
 		}
 	}
 }

@@ -45,7 +45,7 @@ public class Transformer {
 	}
 
 	public CmfObject<CmfValue> transform(CmfAttributeMapper mapper, CmfObject<CmfValue> object)
-		throws RuntimeTransformationException {
+		throws TransformationException {
 		TransformationContext ctx = createContext(mapper, object);
 		try {
 			try {

@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionalAction.t", propOrder = {
@@ -33,7 +34,7 @@ public abstract class ConditionalAction implements Action {
 	}
 
 	@Override
-	public final void apply(TransformationContext ctx) {
+	public final void apply(TransformationContext ctx) throws TransformationException {
 		final ActionCondition wrapper = getCondition();
 		final Condition condition = (wrapper != null ? wrapper.getCondition() : null);
 		// Basically, execute this action if there is no condition given, or if the given condition
@@ -43,5 +44,5 @@ public abstract class ConditionalAction implements Action {
 		}
 	}
 
-	protected abstract void applyTransformation(TransformationContext ctx);
+	protected abstract void applyTransformation(TransformationContext ctx) throws TransformationException;
 }

@@ -11,6 +11,7 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeRemove;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeReplace;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeSet;
@@ -62,7 +63,7 @@ public class Transformation extends ConditionalAction {
 	}
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx) {
+	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
 		for (ConditionalAction action : getTransformations()) {
 			if (action != null) {
 				action.applyTransformation(ctx);
