@@ -91,14 +91,18 @@ public class ValueMappingApply extends ConditionalAction {
 		this.cardinality = cardinality;
 	}
 
-	private CmfValue convertValue(CmfDataType targetType, String stringValue) throws TransformationException {
-		if (stringValue == null) { return CmfValue.NULL.get(targetType); }
+	private CmfValue mapValue(TransformationContext ctx, CmfType mappingType, String mappingName, String sourceValue,
+		CmfDataType targetType) throws TransformationException {
+		Mapping m = ctx.getTargetMapping(mappingType, mappingName, sourceValue);
+		if (m == null) { return null; }
+		String newValue = m.getTargetValue();
+		if (newValue == null) { return CmfValue.NULL.get(targetType); }
 		try {
 			// TODO: Is this the proper way to do the conversion? Should we even try?
-			return new CmfValue(targetType, stringValue);
+			return new CmfValue(targetType, newValue);
 		} catch (ParseException e) {
 			throw new TransformationException(
-				String.format("Failed to convert the value [%s] as a %s", stringValue, targetType.name()), e);
+				String.format("Failed to convert the value [%s] as a %s", newValue, targetType.name()), e);
 		}
 	}
 
@@ -108,10 +112,10 @@ public class ValueMappingApply extends ConditionalAction {
 		if (!candidate.isRepeating()) {
 			// Cardinality is irrelevant...
 			CmfValue oldValue = candidate.getValue();
-			String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
-			Mapping mapping = ctx.getTargetMapping(type, mappingName, oldString);
-			if (mapping != null) {
-				candidate.setValue(convertValue(candidate.getType(), mapping.getTargetValue()));
+			String oldString = (oldValue != null ? oldValue.asString() : null);
+			CmfValue newValue = mapValue(ctx, type, mappingName, oldString, candidate.getType());
+			if (newValue != null) {
+				candidate.setValue(newValue);
 			}
 			return;
 		}
@@ -123,13 +127,9 @@ public class ValueMappingApply extends ConditionalAction {
 			switch (cardinality) {
 				case ALL:
 					for (CmfValue oldValue : candidate) {
-						String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
-						Mapping mapping = ctx.getTargetMapping(type, mappingName, oldString);
-						if (mapping != null) {
-							newValues.add(convertValue(candidate.getType(), mapping.getTargetValue()));
-						} else {
-							newValues.add(oldValue);
-						}
+						String oldString = (oldValue != null ? oldValue.asString() : null);
+						CmfValue newValue = mapValue(ctx, type, mappingName, oldString, candidate.getType());
+						newValues.add(Tools.coalesce(newValue, oldValue));
 					}
 					break;
 
@@ -140,13 +140,9 @@ public class ValueMappingApply extends ConditionalAction {
 					}
 					int targetIndex = (cardinality == Cardinality.FIRST ? 0 : valueCount - 1);
 					CmfValue oldValue = newValues.remove(targetIndex);
-					String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
-					Mapping mapping = ctx.getTargetMapping(type, mappingName, oldString);
-					if (mapping != null) {
-						newValues.add(targetIndex, convertValue(candidate.getType(), mapping.getTargetValue()));
-					} else {
-						newValues.add(targetIndex, oldValue);
-					}
+					String oldString = (oldValue != null ? oldValue.asString() : null);
+					CmfValue newValue = mapValue(ctx, type, mappingName, oldString, candidate.getType());
+					newValues.add(targetIndex, Tools.coalesce(newValue, oldValue));
 					break;
 			}
 			candidate.setValues(newValues);
