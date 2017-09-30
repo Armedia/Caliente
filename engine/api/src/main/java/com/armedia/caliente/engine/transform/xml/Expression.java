@@ -38,6 +38,24 @@ public class Expression {
 
 	private static final String NL = String.format("%n");
 
+	public static final Expression NULL = new Expression() {
+
+		{
+			this.lang = null;
+			this.value = null;
+		}
+
+		@Override
+		public void setValue(String value) {
+			// Do nothing...
+		}
+
+		@Override
+		public void setLang(String lang) {
+			// Do nothing...
+		}
+	};
+
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -48,7 +66,7 @@ public class Expression {
 	protected String lang;
 
 	@XmlTransient
-	private ScriptEngine engine = null;
+	private volatile ScriptEngine engine = null;
 
 	protected void beforeMarshal(Marshaller m) {
 		this.lang = StringUtils.strip(this.lang);
@@ -94,12 +112,15 @@ public class Expression {
 	}
 
 	private ScriptEngine getEngine() {
+		final String language = getLang();
+		if (language == null) { return null; }
 		if (this.engine == null) {
-			final String language = getLang();
-			if (language != null) {
-				this.engine = Expression.ENGINE_FACTORY.getEngineByName(language);
-				if (this.engine == null) { throw new RuntimeTransformationException(
-					String.format("Unknown script language [%s]", language)); }
+			synchronized (this) {
+				if (this.engine == null) {
+					this.engine = Expression.ENGINE_FACTORY.getEngineByName(language);
+					if (this.engine == null) { throw new RuntimeTransformationException(
+						String.format("Unknown script language [%s]", language)); }
+				}
 			}
 		}
 		return this.engine;
@@ -107,7 +128,7 @@ public class Expression {
 
 	private Object evaluate(TransformationContext ctx) throws TransformationException {
 		// First: if the language is "constant" or null, we return the literal string value
-		final String script = StringUtils.strip(this.value);
+		final String script = StringUtils.strip(getValue());
 		final ScriptEngine engine = getEngine();
 
 		// If there is no engine needed, then we simply return the contents of the script as a
