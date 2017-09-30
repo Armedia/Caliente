@@ -31,7 +31,7 @@ import com.armedia.caliente.engine.transform.TransformationException;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "expression.t", propOrder = {
-	"value"
+	"script"
 })
 public class Expression {
 	private static final ScriptEngineManager ENGINE_FACTORY = new ScriptEngineManager();
@@ -42,11 +42,11 @@ public class Expression {
 
 		{
 			this.lang = null;
-			this.value = null;
+			this.script = null;
 		}
 
 		@Override
-		public void setValue(String value) {
+		public void setScript(String script) {
 			// Do nothing...
 		}
 
@@ -60,7 +60,7 @@ public class Expression {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlValue
-	protected String value;
+	protected String script;
 
 	@XmlAttribute(name = "lang")
 	protected String lang;
@@ -87,12 +87,12 @@ public class Expression {
 		}
 	}
 
-	public String getValue() {
-		return this.value;
+	public String getScript() {
+		return this.script;
 	}
 
-	public void setValue(String value) {
-		this.value = value;
+	public void setScript(String script) {
+		this.script = script;
 	}
 
 	public String getLang() {
@@ -127,12 +127,12 @@ public class Expression {
 	}
 
 	private Object evaluate(TransformationContext ctx) throws TransformationException {
-		// First: if the language is "constant" or null, we return the literal string value
-		final String script = StringUtils.strip(getValue());
+		// First: if the language is "constant" or null, we return the literal string script
+		final String script = StringUtils.strip(getScript());
 		final ScriptEngine engine = getEngine();
 
 		// If there is no engine needed, then we simply return the contents of the script as a
-		// literal string value
+		// literal string script
 		if (engine == null) { return script; }
 
 		// We have an engine...so use it!!
@@ -142,11 +142,11 @@ public class Expression {
 		// context...need to define "how" things will be accessible within the script
 		// * An object called "object" which contains:
 		// ** a map called "attributes"
-		// *** each element will either be a single value or a list
+		// *** each element will either be a single script or a list
 		// ** a map called "calienteProperties"
-		// *** each element will either be a single value or a list
+		// *** each element will either be a single script or a list
 		// * A map called "variables"
-		// ** each element will either be a single value or a list
+		// ** each element will either be a single script or a list
 		// * A string called "subtype"
 		// * A list (set?) called "decorators"
 		engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);

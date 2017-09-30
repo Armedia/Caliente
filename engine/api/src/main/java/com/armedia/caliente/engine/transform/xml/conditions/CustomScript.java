@@ -17,7 +17,7 @@ public class CustomScript extends AbstractExpressionCondition {
 	public boolean check(TransformationContext ctx) throws TransformationException {
 		Object result = Expression.eval(this, ctx);
 		if (result == null) { throw new TransformationException(
-			String.format("The given %s expression did not return a boolean value: %s", getLang(), getValue())); }
+			String.format("The given %s expression did not return a boolean value: %s", getLang(), getScript())); }
 		if (Boolean.class.isInstance(result)) { return Boolean.class.cast(result).booleanValue(); }
 
 		// If it's a number, compare the integer value to 0 for false, non-0 for true

@@ -21,7 +21,7 @@ public class CustomCheck extends AbstractExpressionCondition {
 	public boolean check(TransformationContext ctx) throws TransformationException {
 		String className = Tools.toString(Expression.eval(this, ctx));
 		if (className == null) { throw new TransformationException(
-			String.format("The given %s expression did not return a string value: %s", getLang(), getValue())); }
+			String.format("The given %s expression did not return a string value: %s", getLang(), getScript())); }
 
 		ConditionFactory factory = DynamicTransformationElements.getConditionFactory(className);
 		if (factory == null) { throw new TransformationException(
