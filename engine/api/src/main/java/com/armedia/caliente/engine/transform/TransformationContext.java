@@ -26,7 +26,9 @@ public interface TransformationContext {
 
 	public void setSubtype(String subtype);
 
-	public Set<String> getCurrentDecorators();
+	public Set<String> getOriginalDecorators();
+
+	public Set<String> getDecorators();
 
 	public int getDependencyTier();
 
