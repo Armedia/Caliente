@@ -1,6 +1,7 @@
 
 package com.armedia.caliente.engine.transform.xml.actions;
 
+import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -90,6 +91,17 @@ public class ValueMappingApply extends ConditionalAction {
 		this.cardinality = cardinality;
 	}
 
+	private CmfValue convertValue(CmfDataType targetType, String stringValue) throws TransformationException {
+		if (stringValue == null) { return CmfValue.NULL.get(targetType); }
+		try {
+			// TODO: Is this the proper way to do the conversion? Should we even try?
+			return new CmfValue(targetType, stringValue);
+		} catch (ParseException e) {
+			throw new TransformationException(
+				String.format("Failed to convert the value [%s] as a %s", stringValue, targetType.name()), e);
+		}
+	}
+
 	private void applyMapping(TransformationContext ctx, CmfType type, String mappingName,
 		CmfProperty<CmfValue> candidate) throws TransformationException {
 
@@ -99,10 +111,7 @@ public class ValueMappingApply extends ConditionalAction {
 			String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
 			Mapping mapping = ctx.getTargetMapping(type, mappingName, oldString);
 			if (mapping != null) {
-				String targetValue = mapping.getTargetValue();
-				// TODO: Convert the mapping to the correct value type
-				CmfValue newValue = new CmfValue(targetValue);
-				candidate.setValue(newValue);
+				candidate.setValue(convertValue(candidate.getType(), mapping.getTargetValue()));
 			}
 			return;
 		}
@@ -117,10 +126,7 @@ public class ValueMappingApply extends ConditionalAction {
 						String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
 						Mapping mapping = ctx.getTargetMapping(type, mappingName, oldString);
 						if (mapping != null) {
-							String targetValue = mapping.getTargetValue();
-							// TODO: Convert the mapping to the correct value type
-							CmfValue newValue = new CmfValue(targetValue);
-							newValues.add(newValue);
+							newValues.add(convertValue(candidate.getType(), mapping.getTargetValue()));
 						} else {
 							newValues.add(oldValue);
 						}
@@ -137,10 +143,7 @@ public class ValueMappingApply extends ConditionalAction {
 					String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
 					Mapping mapping = ctx.getTargetMapping(type, mappingName, oldString);
 					if (mapping != null) {
-						String targetValue = mapping.getTargetValue();
-						// TODO: Convert the mapping to the correct value type
-						CmfValue newValue = new CmfValue(targetValue);
-						newValues.add(targetIndex, newValue);
+						newValues.add(targetIndex, convertValue(candidate.getType(), mapping.getTargetValue()));
 					} else {
 						newValues.add(targetIndex, oldValue);
 					}
