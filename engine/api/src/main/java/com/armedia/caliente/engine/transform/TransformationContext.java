@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.transform;
 import java.util.Set;
 
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfProperty;
@@ -103,12 +104,12 @@ public interface TransformationContext {
 
 	public void clearTargetMapping(CmfType objectType, String mappingName, String sourceValue);
 
-	public String getTargetMapping(CmfType objectType, String mappingName, String sourceValue);
+	public Mapping getTargetMapping(CmfType objectType, String mappingName, String sourceValue);
 
 	public boolean hasSourceMapping(CmfType objectType, String mappingName, String targetValue);
 
 	public void clearSourceMapping(CmfType objectType, String mappingName, String targetValue);
 
-	public String getSourceMapping(CmfType objectType, String mappingName, String targetValue);
+	public Mapping getSourceMapping(CmfType objectType, String mappingName, String targetValue);
 
 }

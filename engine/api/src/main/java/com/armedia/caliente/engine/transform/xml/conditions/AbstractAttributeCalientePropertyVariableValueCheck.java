@@ -79,8 +79,8 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 			}
 		}
 
-		if (candidate.hasValues()) {
-			final int valueCount = candidate.getValueCount();
+		final int valueCount = candidate.getValueCount();
+		if (valueCount > 0) {
 			switch (getCardinality()) {
 				case ALL:
 					// Check against all attribute values, until one succeeds

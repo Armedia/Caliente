@@ -65,7 +65,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 		final String replacement = Tools.toString(Expression.eval(getReplacement(), ctx));
 		if (replacement == null) { throw new TransformationException("No replacement given to apply"); }
 
-		if (candidate.isRepeating()) {
+		if (!candidate.isRepeating()) {
 			// Cardinality is irrelevant...
 			CmfValue oldValue = candidate.getValue();
 			String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
@@ -74,40 +74,42 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 				newValue = new CmfValue(oldString.replaceAll(regex, replacement));
 			}
 			candidate.setValue(newValue);
-		} else {
-			final int valueCount = candidate.getValueCount();
-			if (valueCount > 0) {
-				final List<CmfValue> newValues = new LinkedList<>();
-				final Cardinality cardinality = getCardinality();
-				switch (cardinality) {
-					case ALL:
-						for (CmfValue oldValue : candidate) {
-							String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
-							CmfValue newValue = AbstractReplaceValue.NULL_STRING;
-							if (oldString != null) {
-								newValue = new CmfValue(oldString.replaceAll(regex, replacement));
-							}
-							newValues.add(newValue);
-						}
-						break;
+			return;
+		}
 
-					case FIRST:
-					case LAST:
-						for (CmfValue oldValue : candidate) {
-							newValues.add(oldValue);
-						}
-						int targetIndex = (cardinality == Cardinality.FIRST ? 0 : valueCount - 1);
-						CmfValue oldValue = newValues.remove(targetIndex);
+		final int valueCount = candidate.getValueCount();
+		if (valueCount > 0) {
+			final List<CmfValue> newValues = new LinkedList<>();
+			final Cardinality cardinality = getCardinality();
+			switch (cardinality) {
+				case ALL:
+					for (CmfValue oldValue : candidate) {
 						String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
 						CmfValue newValue = AbstractReplaceValue.NULL_STRING;
 						if (oldString != null) {
 							newValue = new CmfValue(oldString.replaceAll(regex, replacement));
 						}
-						newValues.add(targetIndex, newValue);
-						break;
-				}
-				candidate.setValues(newValues);
+						newValues.add(newValue);
+					}
+					break;
+
+				case FIRST:
+				case LAST:
+					for (CmfValue oldValue : candidate) {
+						newValues.add(oldValue);
+					}
+					int targetIndex = (cardinality == Cardinality.FIRST ? 0 : valueCount - 1);
+					CmfValue oldValue = newValues.remove(targetIndex);
+					String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
+					CmfValue newValue = AbstractReplaceValue.NULL_STRING;
+					if (oldString != null) {
+						newValue = new CmfValue(oldString.replaceAll(regex, replacement));
+					}
+					newValues.add(targetIndex, newValue);
+					break;
 			}
+			candidate.setValues(newValues);
+
 		}
 	}
 }
