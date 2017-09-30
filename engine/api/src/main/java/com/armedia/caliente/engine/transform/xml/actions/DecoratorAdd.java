@@ -6,9 +6,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionAddDecorator.t", propOrder = {
@@ -28,8 +32,11 @@ public class DecoratorAdd extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx) {
-		// TODO implement this transformation
+	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
+		String decorator = StringUtils.strip(Tools.toString(Expression.eval(getDecorator(), ctx)));
+		if (!StringUtils.isEmpty(decorator)) {
+			ctx.getDecorators().add(decorator);
+		}
 	}
 
 }

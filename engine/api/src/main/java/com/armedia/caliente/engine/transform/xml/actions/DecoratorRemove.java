@@ -7,7 +7,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
@@ -44,9 +47,11 @@ public class DecoratorRemove extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx) {
-		// TODO implement this transformation
-
+	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
+		String decorator = StringUtils.strip(Tools.toString(Expression.eval(getDecorator(), ctx)));
+		if (!StringUtils.isEmpty(decorator)) {
+			ctx.getDecorators().remove(decorator);
+		}
 	}
 
 }
