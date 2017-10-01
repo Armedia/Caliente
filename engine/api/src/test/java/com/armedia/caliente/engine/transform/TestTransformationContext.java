@@ -17,7 +17,7 @@ public class TestTransformationContext implements TransformationContext {
 
 	private final TestObjectData object = new TestObjectData();
 
-	private final Map<String, ObjectDataMember> variables = new TreeMap<>();
+	private final Map<String, TypedValue> variables = new TreeMap<>();
 
 	private final CmfAttributeMapper mapper = new CmfAttributeMapper() {
 
@@ -113,7 +113,7 @@ public class TestTransformationContext implements TransformationContext {
 	}
 
 	@Override
-	public Map<String, ObjectDataMember> getVariables() {
+	public Map<String, TypedValue> getVariables() {
 		return this.variables;
 	}
 

@@ -5,7 +5,7 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.armedia.caliente.engine.transform.ObjectDataMember;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 
 @XmlTransient
@@ -17,7 +17,7 @@ public abstract class AbstractAttributeCheck extends AbstractAttributeCalientePr
 	}
 
 	@Override
-	protected final ObjectDataMember getCandidate(TransformationContext ctx, String name) {
+	protected final TypedValue getCandidate(TransformationContext ctx, String name) {
 		return ctx.getObject().getAtt().get(name);
 	}
 

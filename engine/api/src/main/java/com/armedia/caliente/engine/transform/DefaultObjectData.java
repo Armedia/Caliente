@@ -20,11 +20,11 @@ public class DefaultObjectData extends ObjectData {
 		Objects.requireNonNull(object, "Must provide a CmfObject to pattern this instance on");
 		this.object = object;
 		for (CmfAttribute<CmfValue> att : object.getAttributes()) {
-			this.attributes.put(att.getName(), new ObjectDataMember(att));
+			this.attributes.put(att.getName(), new TypedValue(att));
 		}
 
 		for (CmfProperty<CmfValue> prop : object.getProperties()) {
-			this.privateProperties.put(prop.getName(), new ObjectDataMember(prop));
+			this.privateProperties.put(prop.getName(), new TypedValue(prop));
 		}
 
 		// TODO: Calculate the actual decorators associated with the object...

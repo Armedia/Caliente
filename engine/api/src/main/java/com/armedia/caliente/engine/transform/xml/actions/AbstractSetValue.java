@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.ObjectDataMember;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
@@ -53,7 +53,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		this.value = value;
 	}
 
-	protected abstract ObjectDataMember createValue(TransformationContext ctx, String name, CmfDataType type,
+	protected abstract TypedValue createValue(TransformationContext ctx, String name, CmfDataType type,
 		boolean multivalue);
 
 	@Override
@@ -64,7 +64,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		final CmfDataType type = getType();
 		final Object value = Expression.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
-		final ObjectDataMember variable = createValue(ctx, String.valueOf(name), type, repeating);
+		final TypedValue variable = createValue(ctx, String.valueOf(name), type, repeating);
 		if (repeating) {
 			if (Iterable.class.isInstance(value)) {
 				variable.setValues(Iterable.class.cast(value));

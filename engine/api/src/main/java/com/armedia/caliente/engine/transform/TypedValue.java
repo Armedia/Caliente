@@ -14,12 +14,12 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
-public class ObjectDataMember extends CmfBaseSetting {
+public class TypedValue extends CmfBaseSetting {
 
 	private final List<Object> values = new ArrayList<>();
 	private Object value = null;
 
-	public ObjectDataMember(ObjectDataMember member) {
+	public TypedValue(TypedValue member) {
 		super(member);
 		if (member.isRepeating()) {
 			this.values.addAll(member.values);
@@ -28,11 +28,11 @@ public class ObjectDataMember extends CmfBaseSetting {
 		}
 	}
 
-	public ObjectDataMember(String name, CmfDataType type, boolean multivalue) {
+	public TypedValue(String name, CmfDataType type, boolean multivalue) {
 		super(name, type, multivalue);
 	}
 
-	public ObjectDataMember(CmfProperty<CmfValue> property) {
+	public TypedValue(CmfProperty<CmfValue> property) {
 		super(property);
 		// Copy the values over
 		if (isRepeating()) {
@@ -53,7 +53,7 @@ public class ObjectDataMember extends CmfBaseSetting {
 		}
 	}
 
-	public <V> ObjectDataMember(CmfProperty<V> property, CmfAttributeTranslator<V> translator) {
+	public <V> TypedValue(CmfProperty<V> property, CmfAttributeTranslator<V> translator) {
 		super(property);
 		// Copy the values over
 		CmfValueCodec<V> codec = translator.getCodec(property.getType());
@@ -87,7 +87,7 @@ public class ObjectDataMember extends CmfBaseSetting {
 		return values.get(0);
 	}
 
-	public ObjectDataMember setValue(Object value) {
+	public TypedValue setValue(Object value) {
 		if (!isRepeating()) {
 			this.value = value;
 		} else {
@@ -97,7 +97,7 @@ public class ObjectDataMember extends CmfBaseSetting {
 		return this;
 	}
 
-	public ObjectDataMember setValues(Iterator<?> values) {
+	public TypedValue setValues(Iterator<?> values) {
 		if (!isRepeating()) {
 			this.value = null;
 			if ((values != null) && values.hasNext()) {
@@ -117,7 +117,7 @@ public class ObjectDataMember extends CmfBaseSetting {
 		return this;
 	}
 
-	public ObjectDataMember setValues(Iterable<?> values) {
+	public TypedValue setValues(Iterable<?> values) {
 		if (values != null) {
 			values = Collections.emptyList();
 		}
@@ -125,7 +125,7 @@ public class ObjectDataMember extends CmfBaseSetting {
 		return this;
 	}
 
-	public ObjectDataMember setValues(Collection<?> values) {
+	public TypedValue setValues(Collection<?> values) {
 		if (values == null) {
 			values = Collections.emptyList();
 		}

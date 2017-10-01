@@ -13,9 +13,9 @@ import com.armedia.caliente.store.CmfType;
 
 public class ImmutableTransformationContext implements TransformationContext {
 
-	private static class ImmutableObjectDataMember extends ObjectDataMember {
+	private static class ImmutableObjectDataMember extends TypedValue {
 
-		public ImmutableObjectDataMember(ObjectDataMember pattern) {
+		public ImmutableObjectDataMember(TypedValue pattern) {
 			super(pattern);
 		}
 
@@ -25,12 +25,12 @@ public class ImmutableTransformationContext implements TransformationContext {
 		}
 
 		@Override
-		public ObjectDataMember setValue(Object value) {
+		public TypedValue setValue(Object value) {
 			throw ImmutableTransformationContext.fail();
 		}
 
 		@Override
-		public ObjectDataMember setValues(Iterator<?> values) {
+		public TypedValue setValues(Iterator<?> values) {
 			throw ImmutableTransformationContext.fail();
 		}
 
@@ -39,8 +39,8 @@ public class ImmutableTransformationContext implements TransformationContext {
 	private static class ImmutableObjectData extends ObjectData {
 
 		private final ObjectData object;
-		private final Map<String, ObjectDataMember> att;
-		private final Map<String, ObjectDataMember> priv;
+		private final Map<String, TypedValue> att;
+		private final Map<String, TypedValue> priv;
 		private final Set<String> originalDecorators;
 		private final Set<String> decorators;
 
@@ -49,8 +49,8 @@ public class ImmutableTransformationContext implements TransformationContext {
 			this.originalDecorators = Collections.unmodifiableSet(object.getOriginalDecorators());
 			this.decorators = Collections.unmodifiableSet(object.getDecorators());
 
-			Map<String, ObjectDataMember> orig = null;
-			Map<String, ObjectDataMember> copy = null;
+			Map<String, TypedValue> orig = null;
+			Map<String, TypedValue> copy = null;
 
 			orig = object.getAtt();
 			copy = new TreeMap<>();
@@ -133,12 +133,12 @@ public class ImmutableTransformationContext implements TransformationContext {
 		}
 
 		@Override
-		public Map<String, ObjectDataMember> getAtt() {
+		public Map<String, TypedValue> getAtt() {
 			return this.att;
 		}
 
 		@Override
-		public Map<String, ObjectDataMember> getPriv() {
+		public Map<String, TypedValue> getPriv() {
 			return this.priv;
 		}
 
@@ -190,7 +190,7 @@ public class ImmutableTransformationContext implements TransformationContext {
 	}
 
 	private final ObjectData objectData;
-	private final Map<String, ObjectDataMember> variables;
+	private final Map<String, TypedValue> variables;
 	private final CmfAttributeMapper attributeMapper;
 
 	public ImmutableTransformationContext(TransformationContext context) {
@@ -209,7 +209,7 @@ public class ImmutableTransformationContext implements TransformationContext {
 	}
 
 	@Override
-	public Map<String, ObjectDataMember> getVariables() {
+	public Map<String, TypedValue> getVariables() {
 		return this.variables;
 	}
 

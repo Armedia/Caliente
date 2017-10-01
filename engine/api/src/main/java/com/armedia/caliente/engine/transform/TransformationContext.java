@@ -8,7 +8,7 @@ public interface TransformationContext {
 
 	public ObjectData getObject();
 
-	public Map<String, ObjectDataMember> getVariables();
+	public Map<String, TypedValue> getVariables();
 
 	public CmfAttributeMapper getAttributeMapper();
 

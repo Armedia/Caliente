@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.ObjectDataMember;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
@@ -53,9 +53,9 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		this.cardinality = value;
 	}
 
-	protected abstract ObjectDataMember getCandidate(TransformationContext ctx, String name);
+	protected abstract TypedValue getCandidate(TransformationContext ctx, String name);
 
-	protected abstract Object getCandidateValue(ObjectDataMember candidate, int pos);
+	protected abstract Object getCandidateValue(TypedValue candidate, int pos);
 
 	@Override
 	public boolean check(TransformationContext ctx) throws TransformationException {
@@ -63,7 +63,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		Object name = Expression.eval(nameExp, ctx);
 		if (name == null) { throw new TransformationException("No name was given for the candidate value check"); }
 
-		ObjectDataMember candidate = getCandidate(ctx, name.toString());
+		TypedValue candidate = getCandidate(ctx, name.toString());
 		if (candidate == null) { return false; }
 
 		Comparison comparison = getComparison();

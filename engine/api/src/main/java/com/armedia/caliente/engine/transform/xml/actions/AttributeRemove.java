@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.ObjectDataMember;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class AttributeRemove extends AbstractTransformValueAttribute {
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx, ObjectDataMember candidate) {
+	protected void applyTransformation(TransformationContext ctx, TypedValue candidate) {
 		ctx.getObject().getAtt().remove(candidate.getName());
 	}
 

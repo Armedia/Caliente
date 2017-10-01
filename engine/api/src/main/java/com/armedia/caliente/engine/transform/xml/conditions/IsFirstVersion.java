@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
-import com.armedia.caliente.engine.transform.ObjectDataMember;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.xml.Condition;
 
@@ -16,7 +16,7 @@ public class IsFirstVersion implements Condition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		ObjectDataMember index = ctx.getObject().getPriv().get(IntermediateProperty.VERSION_INDEX.encode());
+		TypedValue index = ctx.getObject().getPriv().get(IntermediateProperty.VERSION_INDEX.encode());
 		Object v = ((index != null) && !index.isEmpty() ? index.getValue() : null);
 		if (v == null) { return true; }
 		// Is it the number 1?

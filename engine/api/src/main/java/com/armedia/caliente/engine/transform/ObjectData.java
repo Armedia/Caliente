@@ -9,8 +9,8 @@ import com.armedia.commons.utilities.Tools;
 
 public abstract class ObjectData {
 
-	protected final Map<String, ObjectDataMember> attributes = new TreeMap<>();
-	protected final Map<String, ObjectDataMember> privateProperties = new TreeMap<>();
+	protected final Map<String, TypedValue> attributes = new TreeMap<>();
+	protected final Map<String, TypedValue> privateProperties = new TreeMap<>();
 
 	private String subtype = null;
 	private String name = null;
@@ -55,11 +55,11 @@ public abstract class ObjectData {
 
 	public abstract String getProductVersion();
 
-	public Map<String, ObjectDataMember> getAtt() {
+	public Map<String, TypedValue> getAtt() {
 		return this.attributes;
 	}
 
-	public Map<String, ObjectDataMember> getPriv() {
+	public Map<String, TypedValue> getPriv() {
 		return this.privateProperties;
 	}
 }

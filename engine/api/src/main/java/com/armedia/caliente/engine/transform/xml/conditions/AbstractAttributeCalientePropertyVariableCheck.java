@@ -5,7 +5,7 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.armedia.caliente.engine.transform.ObjectDataMember;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Comparison;
@@ -18,9 +18,9 @@ public abstract class AbstractAttributeCalientePropertyVariableCheck extends Abs
 
 	protected abstract Set<String> getCandidateNames(TransformationContext ctx);
 
-	protected abstract ObjectDataMember getCandidate(TransformationContext ctx, String name);
+	protected abstract TypedValue getCandidate(TransformationContext ctx, String name);
 
-	protected abstract boolean check(ObjectDataMember candidate);
+	protected abstract boolean check(TypedValue candidate);
 
 	@Override
 	public final boolean check(TransformationContext ctx) throws TransformationException {

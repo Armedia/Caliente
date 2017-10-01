@@ -10,7 +10,7 @@ public class DefaultTransformationContext implements TransformationContext {
 	private final ObjectData objectData;
 	private final CmfAttributeMapper mapper;
 
-	private final Map<String, ObjectDataMember> variables = new TreeMap<>();
+	private final Map<String, TypedValue> variables = new TreeMap<>();
 
 	public DefaultTransformationContext(ObjectData objectData, CmfAttributeMapper mapper) {
 		this.objectData = objectData;
@@ -23,7 +23,7 @@ public class DefaultTransformationContext implements TransformationContext {
 	}
 
 	@Override
-	public Map<String, ObjectDataMember> getVariables() {
+	public Map<String, TypedValue> getVariables() {
 		return this.variables;
 	}
 

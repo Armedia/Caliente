@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.ObjectDataMember;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
@@ -95,7 +95,7 @@ public class ValueMappingApply extends ConditionalAction {
 		return (m != null ? m.getTargetValue() : null);
 	}
 
-	private void applyMapping(TransformationContext ctx, CmfType type, String mappingName, ObjectDataMember candidate)
+	private void applyMapping(TransformationContext ctx, CmfType type, String mappingName, TypedValue candidate)
 		throws TransformationException {
 
 		if (!candidate.isRepeating()) {
@@ -148,7 +148,7 @@ public class ValueMappingApply extends ConditionalAction {
 
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!
-			ObjectDataMember candidate = ctx.getObject().getAtt().get(comparand);
+			TypedValue candidate = ctx.getObject().getAtt().get(comparand);
 			if (candidate != null) {
 				applyMapping(ctx, type, mappingName, candidate);
 			}

@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.ObjectDataMember;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Comparison;
@@ -45,9 +45,9 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 
 	protected abstract Set<String> getCandidateNames(TransformationContext ctx);
 
-	protected abstract ObjectDataMember getCandidate(TransformationContext ctx, String name);
+	protected abstract TypedValue getCandidate(TransformationContext ctx, String name);
 
-	protected abstract void applyTransformation(TransformationContext ctx, ObjectDataMember candidate)
+	protected abstract void applyTransformation(TransformationContext ctx, TypedValue candidate)
 		throws TransformationException;
 
 	@Override
@@ -58,7 +58,7 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!
-			ObjectDataMember candidate = getCandidate(ctx, comparand);
+			TypedValue candidate = getCandidate(ctx, comparand);
 			if (candidate != null) {
 				applyTransformation(ctx, candidate);
 			}
