@@ -54,7 +54,7 @@ public class Transformer {
 				// Do nothing - this is simply our shortcut for stopping the transformation work in
 				// its tracks
 			}
-			// * harvest the transformations, and turn them into a new object
+			// TODO harvest the transformations, and turn them into a new object
 			return object;
 		} finally {
 			destroyContext(ctx);
