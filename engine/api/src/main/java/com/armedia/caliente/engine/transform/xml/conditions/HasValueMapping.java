@@ -5,10 +5,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Condition;
 import com.armedia.caliente.engine.transform.xml.Expression;
+import com.armedia.caliente.store.CmfAttributeMapper;
+import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.xml.CmfTypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionHasValueMapping.t", propOrder = {
@@ -17,7 +22,8 @@ import com.armedia.caliente.engine.transform.xml.Expression;
 public class HasValueMapping implements Condition {
 
 	@XmlElement(name = "type", required = false)
-	protected String type;
+	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
+	protected CmfType type;
 
 	@XmlElement(name = "name", required = true)
 	protected Expression name;
@@ -28,11 +34,11 @@ public class HasValueMapping implements Condition {
 	@XmlElement(name = "name", required = false)
 	protected Expression to;
 
-	public void setType(String type) {
+	public void setType(CmfType type) {
 		this.type = type;
 	}
 
-	public String getType() {
+	public CmfType getType() {
 		return this.type;
 	}
 
@@ -61,8 +67,30 @@ public class HasValueMapping implements Condition {
 	}
 
 	@Override
-	public boolean check(TransformationContext ctx) {
-		// TODO Implement this condition
-		return false;
+	public boolean check(TransformationContext ctx) throws TransformationException {
+		CmfType type = getType();
+		if (type == null) { throw new TransformationException("No type given to find the mappings with"); }
+
+		Object name = Expression.eval(getName(), ctx);
+		if (name == null) { throw new TransformationException("No name given to check for"); }
+
+		CmfAttributeMapper mapper = ctx.getAttributeMapper();
+		Expression key = null;
+
+		key = getFrom();
+		if (key != null) {
+			Object sourceValue = Expression.eval(key, ctx);
+			if (sourceValue == null) { throw new TransformationException("No source value given to search with"); }
+			return (mapper.getTargetMapping(getType(), name.toString(), sourceValue.toString()) != null);
+		}
+
+		key = getTo();
+		if (key != null) {
+			Object targetValue = Expression.eval(key, ctx);
+			if (targetValue == null) { throw new TransformationException("No target value given to search with"); }
+			return (mapper.getSourceMapping(getType(), name.toString(), targetValue.toString()) != null);
+		}
+
+		throw new TransformationException("No source or target value given to search with");
 	}
 }
