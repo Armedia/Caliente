@@ -40,7 +40,6 @@ public abstract class ConditionalAction implements Action {
 		final Condition condition = (wrapper != null ? wrapper.getCondition() : null);
 		// Basically, execute this action if there is no condition given, or if the given condition
 		// evaluates to true
-		// TODO: Make the context immutable for the condition check, and ONLY for that
 		if ((condition == null) || condition.check(new ImmutableTransformationContext(ctx))) {
 			applyTransformation(ctx);
 		}
