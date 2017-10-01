@@ -33,7 +33,7 @@ public class SubtypeSet extends ConditionalAction {
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
 		String subtype = Tools.toString(Expression.eval(getSubtype(), ctx));
 		if (subtype == null) { throw new TransformationException("No subtype given to set to"); }
-		ctx.setSubtype(subtype);
+		ctx.getObject().setSubtype(subtype);
 	}
 
 }

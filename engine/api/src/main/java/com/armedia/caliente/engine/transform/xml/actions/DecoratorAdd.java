@@ -35,7 +35,7 @@ public class DecoratorAdd extends ConditionalAction {
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
 		String decorator = StringUtils.strip(Tools.toString(Expression.eval(getDecorator(), ctx)));
 		if (!StringUtils.isEmpty(decorator)) {
-			ctx.getDecorators().add(decorator);
+			ctx.getObject().getDecorators().add(decorator);
 		}
 	}
 

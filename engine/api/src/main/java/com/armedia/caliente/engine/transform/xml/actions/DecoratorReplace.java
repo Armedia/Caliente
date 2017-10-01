@@ -47,7 +47,7 @@ public class DecoratorReplace extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		Set<String> originalDecorators = ctx.getDecorators();
+		Set<String> originalDecorators = ctx.getObject().getDecorators();
 		if (originalDecorators.isEmpty()) { return; }
 
 		final String regex = Tools.toString(Expression.eval(getRegex(), ctx));

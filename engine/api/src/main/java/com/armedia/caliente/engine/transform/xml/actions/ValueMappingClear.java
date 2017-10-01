@@ -82,9 +82,9 @@ public class ValueMappingClear extends ConditionalAction {
 			"Must provide only one of either a sorce or target value to identify the mapping to remove (both provided)"); }
 
 		if (from != null) {
-			ctx.clearSourceMapping(type, name, from);
+			ctx.getAttributeMapper().clearSourceMapping(type, name, from);
 		} else {
-			ctx.clearTargetMapping(type, name, to);
+			ctx.getAttributeMapper().clearTargetMapping(type, name, to);
 		}
 	}
 }

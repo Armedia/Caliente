@@ -5,21 +5,20 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.armedia.caliente.engine.transform.ObjectDataMember;
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 
 @XmlTransient
-public abstract class AbstractCalientePropertyCheck extends AbstractAttributeCalientePropertyVariableCheck<CmfProperty<CmfValue>> {
+public abstract class AbstractCalientePropertyCheck extends AbstractAttributeCalientePropertyVariableCheck {
 
 	@Override
 	protected final Set<String> getCandidateNames(TransformationContext ctx) {
-		return ctx.getCalientePropertyNames();
+		return ctx.getObject().getPriv().keySet();
 	}
 
 	@Override
-	protected final CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name) {
-		return ctx.getCalienteProperty(name);
+	protected final ObjectDataMember getCandidate(TransformationContext ctx, String name) {
+		return ctx.getObject().getPriv().get(name);
 	}
 
 }

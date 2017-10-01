@@ -78,6 +78,6 @@ public class ValueMappingSet extends ConditionalAction {
 		String to = Tools.toString(Expression.eval(getTo(), ctx));
 		if (to == null) { throw new TransformationException("Must provide a target value map into"); }
 
-		ctx.setMapping(type, name, from, to);
+		ctx.getAttributeMapper().setMapping(type, name, from, to);
 	}
 }

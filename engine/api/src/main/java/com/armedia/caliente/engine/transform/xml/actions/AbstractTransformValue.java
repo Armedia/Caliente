@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.engine.transform.ObjectDataMember;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Comparison;
@@ -14,8 +15,6 @@ import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -46,9 +45,9 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 
 	protected abstract Set<String> getCandidateNames(TransformationContext ctx);
 
-	protected abstract CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name);
+	protected abstract ObjectDataMember getCandidate(TransformationContext ctx, String name);
 
-	protected abstract void applyTransformation(TransformationContext ctx, CmfProperty<CmfValue> candidate)
+	protected abstract void applyTransformation(TransformationContext ctx, ObjectDataMember candidate)
 		throws TransformationException;
 
 	@Override
@@ -59,7 +58,7 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!
-			CmfProperty<CmfValue> candidate = getCandidate(ctx, comparand);
+			ObjectDataMember candidate = getCandidate(ctx, comparand);
 			if (candidate != null) {
 				applyTransformation(ctx, candidate);
 			}

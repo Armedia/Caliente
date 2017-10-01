@@ -8,20 +8,16 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.engine.transform.ObjectDataMember;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.transform.xml.Expression;
-import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
 public abstract class AbstractReplaceValue extends AbstractTransformValue {
-
-	private static final CmfValue NULL_STRING = CmfValue.NULL.get(CmfDataType.STRING);
 
 	@XmlElement(name = "cardinality", required = false)
 	@XmlJavaTypeAdapter(CardinalityAdapter.class)
@@ -58,7 +54,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx, CmfProperty<CmfValue> candidate)
+	protected final void applyTransformation(TransformationContext ctx, ObjectDataMember candidate)
 		throws TransformationException {
 		final String regex = Tools.toString(Expression.eval(getRegex(), ctx));
 		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
@@ -67,45 +63,44 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 
 		if (!candidate.isRepeating()) {
 			// Cardinality is irrelevant...
-			CmfValue oldValue = candidate.getValue();
-			String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
-			CmfValue newValue = AbstractReplaceValue.NULL_STRING;
+			Object oldValue = candidate.getValue();
+			String oldString = ((oldValue != null) ? Tools.toString(oldValue) : null);
+			Object newValue = null;
 			if (oldString != null) {
-				newValue = new CmfValue(oldString.replaceAll(regex, replacement));
+				newValue = oldString.replaceAll(regex, replacement);
 			}
 			candidate.setValue(newValue);
 			return;
 		}
 
-		final int valueCount = candidate.getValueCount();
+		final int valueCount = candidate.getSize();
 		if (valueCount > 0) {
-			final List<CmfValue> newValues = new LinkedList<>();
+			final List<Object> newValues = new LinkedList<>();
 			final Cardinality cardinality = getCardinality();
 			switch (cardinality) {
 				case ALL:
-					for (CmfValue oldValue : candidate) {
-						String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
-						CmfValue newValue = AbstractReplaceValue.NULL_STRING;
+					for (Object oldValue : candidate.getValues()) {
+						String oldString = Tools.toString(oldValue);
+						String newString = null;
 						if (oldString != null) {
-							newValue = new CmfValue(oldString.replaceAll(regex, replacement));
+							newString = oldString.replaceAll(regex, replacement);
 						}
-						newValues.add(newValue);
+						newValues.add(newString);
 					}
 					break;
 
 				case FIRST:
 				case LAST:
-					for (CmfValue oldValue : candidate) {
+					for (Object oldValue : candidate.getValues()) {
 						newValues.add(oldValue);
 					}
 					int targetIndex = (cardinality == Cardinality.FIRST ? 0 : valueCount - 1);
-					CmfValue oldValue = newValues.remove(targetIndex);
-					String oldString = ((oldValue != null) && !oldValue.isNull() ? oldValue.asString() : null);
-					CmfValue newValue = AbstractReplaceValue.NULL_STRING;
+					String oldString = Tools.toString(newValues.remove(targetIndex));
+					String newString = null;
 					if (oldString != null) {
-						newValue = new CmfValue(oldString.replaceAll(regex, replacement));
+						newString = oldString.replaceAll(regex, replacement);
 					}
-					newValues.add(targetIndex, newValue);
+					newValues.add(targetIndex, newString);
 					break;
 			}
 			candidate.setValues(newValues);

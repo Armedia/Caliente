@@ -46,9 +46,9 @@ public class SubtypeReplace extends ConditionalAction {
 		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
 		final String replacement = Tools.toString(Expression.eval(getReplacement(), ctx));
 		if (replacement == null) { throw new TransformationException("No replacement given to apply"); }
-		String oldSubtype = ctx.getSubtype();
+		String oldSubtype = ctx.getObject().getSubtype();
 		String newSubtype = oldSubtype.replaceAll(regex, replacement);
-		ctx.setSubtype(newSubtype);
+		ctx.getObject().setSubtype(newSubtype);
 	}
 
 }

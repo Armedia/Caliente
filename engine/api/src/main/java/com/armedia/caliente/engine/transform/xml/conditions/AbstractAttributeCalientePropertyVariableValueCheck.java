@@ -6,14 +6,14 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.engine.transform.ObjectDataMember;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.Expression;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -53,7 +53,9 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		this.cardinality = value;
 	}
 
-	protected abstract CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name);
+	protected abstract ObjectDataMember getCandidate(TransformationContext ctx, String name);
+
+	protected abstract Object getCandidateValue(ObjectDataMember candidate, int pos);
 
 	@Override
 	public boolean check(TransformationContext ctx) throws TransformationException {
@@ -61,7 +63,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		Object name = Expression.eval(nameExp, ctx);
 		if (name == null) { throw new TransformationException("No name was given for the candidate value check"); }
 
-		CmfProperty<CmfValue> candidate = getCandidate(ctx, name.toString());
+		ObjectDataMember candidate = getCandidate(ctx, name.toString());
 		if (candidate == null) { return false; }
 
 		Comparison comparison = getComparison();
@@ -71,31 +73,32 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 			"No comparand value given to check the name against"); }
 		if (!candidate.isRepeating()) {
 			// Check the one and only value
-			CmfValue cv = candidate.getValue();
-			if ((cv == null) || cv.isNull()) {
+			Object cv = getCandidateValue(candidate, 0);
+			if (cv == null) {
 				return comparison.check(candidate.getType(), null, comparand);
 			} else {
 				return comparison.check(candidate.getType(), cv, comparand);
 			}
 		}
 
-		final int valueCount = candidate.getValueCount();
+		final int valueCount = candidate.getSize();
 		if (valueCount > 0) {
+			final CmfDataType type = candidate.getType();
 			switch (getCardinality()) {
 				case ALL:
 					// Check against all attribute values, until one succeeds
-					for (CmfValue v : candidate) {
-						if (comparison.check(candidate.getType(), v, comparand)) { return true; }
+					for (int i = 0; i < valueCount; i++) {
+						if (comparison.check(type, getCandidateValue(candidate, i), comparand)) { return true; }
 					}
 					break;
 
 				case FIRST:
 					// Only check the first attribute value
-					return comparison.check(candidate.getType(), candidate.getValue(), comparand);
+					return comparison.check(type, getCandidateValue(candidate, 0), comparand);
 
 				case LAST:
 					// Only check the last attribute value
-					return comparison.check(candidate.getType(), candidate.getValue(valueCount - 1), comparand);
+					return comparison.check(type, getCandidateValue(candidate, valueCount - 1), comparand);
 			}
 		}
 		return false;

@@ -14,7 +14,7 @@ public class IsLatestVersion implements Condition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		return ctx.isHistoryCurrent();
+		return ctx.getObject().isHistoryCurrent();
 	}
 
 }

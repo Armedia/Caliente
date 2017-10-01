@@ -1,7 +1,6 @@
 
 package com.armedia.caliente.engine.transform.xml.actions;
 
-import java.text.ParseException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,6 +10,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.engine.transform.ObjectDataMember;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
@@ -21,9 +21,7 @@ import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
@@ -91,58 +89,47 @@ public class ValueMappingApply extends ConditionalAction {
 		this.cardinality = cardinality;
 	}
 
-	private CmfValue mapValue(TransformationContext ctx, CmfType mappingType, String mappingName, String sourceValue,
+	private String mapValue(TransformationContext ctx, CmfType mappingType, String mappingName, String sourceValue,
 		CmfDataType targetType) throws TransformationException {
-		Mapping m = ctx.getTargetMapping(mappingType, mappingName, sourceValue);
-		if (m == null) { return null; }
-		String newValue = m.getTargetValue();
-		if (newValue == null) { return CmfValue.NULL.get(targetType); }
-		try {
-			// TODO: Is this the proper way to do the conversion? Should we even try?
-			return new CmfValue(targetType, newValue);
-		} catch (ParseException e) {
-			throw new TransformationException(
-				String.format("Failed to convert the value [%s] as a %s", newValue, targetType.name()), e);
-		}
+		Mapping m = ctx.getAttributeMapper().getTargetMapping(mappingType, mappingName, sourceValue);
+		return (m != null ? m.getTargetValue() : null);
 	}
 
-	private void applyMapping(TransformationContext ctx, CmfType type, String mappingName,
-		CmfProperty<CmfValue> candidate) throws TransformationException {
+	private void applyMapping(TransformationContext ctx, CmfType type, String mappingName, ObjectDataMember candidate)
+		throws TransformationException {
 
 		if (!candidate.isRepeating()) {
 			// Cardinality is irrelevant...
-			CmfValue oldValue = candidate.getValue();
-			String oldString = (oldValue != null ? oldValue.asString() : null);
-			CmfValue newValue = mapValue(ctx, type, mappingName, oldString, candidate.getType());
-			if (newValue != null) {
-				candidate.setValue(newValue);
+			String oldString = Tools.toString(candidate.getValue());
+			String newString = mapValue(ctx, type, mappingName, oldString, candidate.getType());
+			if (newString != null) {
+				candidate.setValue(newString);
 			}
 			return;
 		}
 
-		final int valueCount = candidate.getValueCount();
+		final int valueCount = candidate.getSize();
 		if (valueCount > 0) {
-			final List<CmfValue> newValues = new LinkedList<>();
+			final List<Object> newValues = new LinkedList<>();
 			final Cardinality cardinality = getCardinality();
 			switch (cardinality) {
 				case ALL:
-					for (CmfValue oldValue : candidate) {
-						String oldString = (oldValue != null ? oldValue.asString() : null);
-						CmfValue newValue = mapValue(ctx, type, mappingName, oldString, candidate.getType());
+					for (Object oldValue : candidate.getValues()) {
+						String oldString = Tools.toString(oldValue);
+						String newValue = mapValue(ctx, type, mappingName, oldString, candidate.getType());
 						newValues.add(Tools.coalesce(newValue, oldValue));
 					}
 					break;
 
 				case FIRST:
 				case LAST:
-					for (CmfValue oldValue : candidate) {
+					for (Object oldValue : candidate.getValues()) {
 						newValues.add(oldValue);
 					}
 					int targetIndex = (cardinality == Cardinality.FIRST ? 0 : valueCount - 1);
-					CmfValue oldValue = newValues.remove(targetIndex);
-					String oldString = (oldValue != null ? oldValue.asString() : null);
-					CmfValue newValue = mapValue(ctx, type, mappingName, oldString, candidate.getType());
-					newValues.add(targetIndex, Tools.coalesce(newValue, oldValue));
+					String oldString = Tools.toString(newValues.remove(targetIndex));
+					String newValue = mapValue(ctx, type, mappingName, oldString, candidate.getType());
+					newValues.add(targetIndex, Tools.coalesce(newValue, oldString));
 					break;
 			}
 			candidate.setValues(newValues);
@@ -161,7 +148,7 @@ public class ValueMappingApply extends ConditionalAction {
 
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!
-			CmfProperty<CmfValue> candidate = ctx.getAttribute(comparand);
+			ObjectDataMember candidate = ctx.getObject().getAtt().get(comparand);
 			if (candidate != null) {
 				applyMapping(ctx, type, mappingName, candidate);
 			}
@@ -169,9 +156,9 @@ public class ValueMappingApply extends ConditionalAction {
 		}
 
 		// Need to find a matching candidate...
-		for (String s : ctx.getAttributeNames()) {
+		for (String s : ctx.getObject().getAtt().keySet()) {
 			if (comparison.check(CmfDataType.STRING, s, comparand)) {
-				applyMapping(ctx, type, mappingName, ctx.getAttribute(s));
+				applyMapping(ctx, type, mappingName, ctx.getObject().getAtt().get(s));
 			}
 		}
 	}

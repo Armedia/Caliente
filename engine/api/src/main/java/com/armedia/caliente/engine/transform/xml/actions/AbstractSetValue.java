@@ -1,19 +1,18 @@
 
 package com.armedia.caliente.engine.transform.xml.actions;
 
-import java.text.ParseException;
+import java.util.Arrays;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.engine.transform.ObjectDataMember;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
@@ -54,7 +53,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		this.value = value;
 	}
 
-	protected abstract CmfProperty<CmfValue> createValue(TransformationContext ctx, String name, CmfDataType type,
+	protected abstract ObjectDataMember createValue(TransformationContext ctx, String name, CmfDataType type,
 		boolean multivalue);
 
 	@Override
@@ -65,24 +64,15 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		final CmfDataType type = getType();
 		final Object value = Expression.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
-		final CmfProperty<CmfValue> variable = createValue(ctx, String.valueOf(name), type, repeating);
-		Object currentValue = value;
-		try {
-			if (repeating) {
-				if (Iterable.class.isInstance(value)) {
-					for (Object o : Iterable.class.cast(value)) {
-						variable.addValue(new CmfValue(type, currentValue = o));
-					}
-				} else {
-					for (Object o : (Object[]) value) {
-						variable.addValue(new CmfValue(type, currentValue = o));
-					}
-				}
+		final ObjectDataMember variable = createValue(ctx, String.valueOf(name), type, repeating);
+		if (repeating) {
+			if (Iterable.class.isInstance(value)) {
+				variable.setValues(Iterable.class.cast(value));
 			} else {
-				variable.setValue(new CmfValue(type, currentValue));
+				variable.setValues(Arrays.asList((Object[]) value));
 			}
-		} catch (ParseException e) {
-			throw new TransformationException(String.format("Failed to convert value [%s] as a %s", value, type), e);
+		} else {
+			variable.setValue(value);
 		}
 	}
 

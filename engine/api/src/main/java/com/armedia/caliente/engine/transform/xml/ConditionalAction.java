@@ -10,6 +10,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.transform.ImmutableTransformationContext;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 
@@ -39,7 +40,8 @@ public abstract class ConditionalAction implements Action {
 		final Condition condition = (wrapper != null ? wrapper.getCondition() : null);
 		// Basically, execute this action if there is no condition given, or if the given condition
 		// evaluates to true
-		if ((condition == null) || condition.check(ctx)) {
+		// TODO: Make the context immutable for the condition check, and ONLY for that
+		if ((condition == null) || condition.check(new ImmutableTransformationContext(ctx))) {
 			applyTransformation(ctx);
 		}
 	}

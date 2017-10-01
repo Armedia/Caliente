@@ -5,9 +5,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.transform.ObjectDataMember;
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionRemoveAttribute.t", propOrder = {
@@ -16,8 +15,8 @@ import com.armedia.caliente.store.CmfValue;
 public class AttributeRemove extends AbstractTransformValueAttribute {
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx, CmfProperty<CmfValue> candidate) {
-		ctx.removeAttribute(candidate.getName());
+	protected void applyTransformation(TransformationContext ctx, ObjectDataMember candidate) {
+		ctx.getObject().getAtt().remove(candidate.getName());
 	}
 
 }

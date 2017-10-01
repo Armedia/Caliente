@@ -19,7 +19,7 @@ public class IsOriginalSubtype extends AbstractExpressionComparison {
 	public boolean check(TransformationContext ctx) throws TransformationException {
 		String subtype = Tools.toString(Expression.eval(this, ctx));
 		if (subtype == null) { throw new TransformationException("No value given to compare against"); }
-		return getComparison().check(CmfDataType.STRING, ctx.getOriginalSubtype(), subtype);
+		return getComparison().check(CmfDataType.STRING, ctx.getObject().getOriginalSubtype(), subtype);
 	}
 
 }

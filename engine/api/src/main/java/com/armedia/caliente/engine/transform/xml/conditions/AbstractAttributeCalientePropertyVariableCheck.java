@@ -5,24 +5,22 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.armedia.caliente.engine.transform.ObjectDataMember;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public abstract class AbstractAttributeCalientePropertyVariableCheck<T extends CmfProperty<CmfValue>>
-	extends AbstractExpressionComparison {
+public abstract class AbstractAttributeCalientePropertyVariableCheck extends AbstractExpressionComparison {
 
 	protected abstract Set<String> getCandidateNames(TransformationContext ctx);
 
-	protected abstract T getCandidate(TransformationContext ctx, String name);
+	protected abstract ObjectDataMember getCandidate(TransformationContext ctx, String name);
 
-	protected abstract boolean check(T candidate);
+	protected abstract boolean check(ObjectDataMember candidate);
 
 	@Override
 	public final boolean check(TransformationContext ctx) throws TransformationException {

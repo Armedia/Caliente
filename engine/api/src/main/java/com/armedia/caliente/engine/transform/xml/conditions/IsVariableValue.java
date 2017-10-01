@@ -5,9 +5,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.transform.ObjectDataMember;
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsVariableValue.t", propOrder = {
@@ -16,8 +15,13 @@ import com.armedia.caliente.store.CmfValue;
 public class IsVariableValue extends AbstractAttributeCalientePropertyVariableValueCheck {
 
 	@Override
-	protected CmfProperty<CmfValue> getCandidate(TransformationContext ctx, String name) {
-		return ctx.getVariable(name);
+	protected ObjectDataMember getCandidate(TransformationContext ctx, String name) {
+		return ctx.getVariables().get(name);
+	}
+
+	@Override
+	protected Object getCandidateValue(ObjectDataMember candidate, int pos) {
+		return candidate.getValues().get(pos);
 	}
 
 }
