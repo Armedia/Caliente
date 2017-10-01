@@ -10,12 +10,13 @@ import java.util.TreeMap;
 
 import com.armedia.caliente.store.CmfAttributeMapper;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.commons.utilities.Tools;
 
-public class ImmutableTransformationContext implements TransformationContext {
+public class ImmutableTransformationContext extends TransformationContext {
 
-	private static class ImmutableObjectDataMember extends TypedValue {
+	private static class ImmutableTypedValue extends TypedValue {
 
-		public ImmutableObjectDataMember(TypedValue pattern) {
+		public ImmutableTypedValue(TypedValue pattern) {
 			super(pattern);
 		}
 
@@ -48,23 +49,8 @@ public class ImmutableTransformationContext implements TransformationContext {
 			this.object = object;
 			this.originalDecorators = Collections.unmodifiableSet(object.getOriginalDecorators());
 			this.decorators = Collections.unmodifiableSet(object.getDecorators());
-
-			Map<String, TypedValue> orig = null;
-			Map<String, TypedValue> copy = null;
-
-			orig = object.getAtt();
-			copy = new TreeMap<>();
-			for (String s : orig.keySet()) {
-				copy.put(s, new ImmutableObjectDataMember(orig.get(s)));
-			}
-			this.att = Collections.unmodifiableMap(new LinkedHashMap<>(copy));
-
-			orig = object.getPriv();
-			copy = new TreeMap<>();
-			for (String s : orig.keySet()) {
-				copy.put(s, new ImmutableObjectDataMember(orig.get(s)));
-			}
-			this.priv = Collections.unmodifiableMap(new LinkedHashMap<>(copy));
+			this.att = ImmutableTransformationContext.makeImmutable(object.getAtt());
+			this.priv = ImmutableTransformationContext.makeImmutable(object.getPriv());
 		}
 
 		@Override
@@ -144,8 +130,7 @@ public class ImmutableTransformationContext implements TransformationContext {
 
 		@Override
 		public String getOriginalName() {
-			// TODO Auto-generated method stub
-			return null;
+			return this.object.getOriginalName();
 		}
 
 	}
@@ -189,32 +174,22 @@ public class ImmutableTransformationContext implements TransformationContext {
 		}
 	}
 
-	private final ObjectData objectData;
-	private final Map<String, TypedValue> variables;
-	private final CmfAttributeMapper attributeMapper;
-
 	public ImmutableTransformationContext(TransformationContext context) {
-		this.objectData = new ImmutableObjectData(context.getObject());
-		this.variables = Collections.unmodifiableMap(context.getVariables());
-		this.attributeMapper = new ImmutableAttributeMapper(context.getAttributeMapper());
+		super(new ImmutableObjectData(context.getObject()), new ImmutableAttributeMapper(context.getAttributeMapper()),
+			ImmutableTransformationContext.makeImmutable(context.getVariables()));
+	}
+
+	private static Map<String, TypedValue> makeImmutable(Map<String, TypedValue> orig) {
+		if ((orig == null) || orig.isEmpty()) { return Collections.emptyMap(); }
+		Map<String, TypedValue> copy = new TreeMap<>();
+		for (String s : orig.keySet()) {
+			copy.put(s, new ImmutableTypedValue(orig.get(s)));
+		}
+		return Tools.freezeMap(new LinkedHashMap<>(copy));
+
 	}
 
 	private static UnsupportedOperationException fail() {
 		return new UnsupportedOperationException("This view of the transformation context is immutable");
-	}
-
-	@Override
-	public ObjectData getObject() {
-		return this.objectData;
-	}
-
-	@Override
-	public Map<String, TypedValue> getVariables() {
-		return this.variables;
-	}
-
-	@Override
-	public CmfAttributeMapper getAttributeMapper() {
-		return this.attributeMapper;
 	}
 }
