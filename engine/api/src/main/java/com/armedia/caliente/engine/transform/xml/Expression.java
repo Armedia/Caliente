@@ -1,6 +1,7 @@
 
 package com.armedia.caliente.engine.transform.xml;
 
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -137,18 +138,15 @@ public class Expression {
 
 		// We have an engine...so use it!!
 		final String lang = getLang();
-		final Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
-		// TODO: Set the bindings and context for this engine instance based on the transformation
-		// context...need to define "how" things will be accessible within the script
-		// * An object called "object" which contains:
-		// ** a map called "attributes"
-		// *** each element will either be a single script or a list
-		// ** a map called "calienteProperties"
-		// *** each element will either be a single script or a list
-		// * A map called "variables"
-		// ** each element will either be a single script or a list
-		// * A string called "subtype"
-		// * A list (set?) called "decorators"
+
+		final ScriptContext scriptCtx = engine.getContext();
+		scriptCtx.setWriter(new PrintWriter(System.out));
+		scriptCtx.setErrorWriter(new PrintWriter(System.err));
+
+		final Bindings bindings = engine.createBindings();
+		bindings.put("obj", ctx.getObject());
+		bindings.put("var", ctx.getVariables());
+		bindings.put("mapper", ctx.getAttributeMapper());
 		engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
 
 		try {
