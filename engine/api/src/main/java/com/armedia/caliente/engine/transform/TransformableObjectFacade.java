@@ -7,7 +7,7 @@ import java.util.TreeMap;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class ObjectData {
+public abstract class TransformableObjectFacade {
 
 	protected final Map<String, TypedValue> attributes = new TreeMap<>();
 	protected final Map<String, TypedValue> privateProperties = new TreeMap<>();
@@ -29,7 +29,7 @@ public abstract class ObjectData {
 		return Tools.coalesce(this.subtype, getOriginalSubtype());
 	}
 
-	public ObjectData setSubtype(String subtype) {
+	public TransformableObjectFacade setSubtype(String subtype) {
 		this.subtype = subtype;
 		return this;
 	}
@@ -38,7 +38,7 @@ public abstract class ObjectData {
 		return Tools.coalesce(this.name, getOriginalName());
 	}
 
-	public ObjectData setName(String name) {
+	public TransformableObjectFacade setName(String name) {
 		this.name = name;
 		return this;
 	}

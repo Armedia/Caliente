@@ -10,13 +10,13 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 
-public class DefaultObjectData extends ObjectData {
+public class DefaultTransformableObjectFacade extends TransformableObjectFacade {
 
 	private final CmfObject<CmfValue> object;
 	private final Set<String> originalDecorators;
 	private final Set<String> decorators;
 
-	public DefaultObjectData(CmfObject<CmfValue> object) {
+	public DefaultTransformableObjectFacade(CmfObject<CmfValue> object) {
 		Objects.requireNonNull(object, "Must provide a CmfObject to pattern this instance on");
 		this.object = object;
 		for (CmfAttribute<CmfValue> att : object.getAttributes()) {

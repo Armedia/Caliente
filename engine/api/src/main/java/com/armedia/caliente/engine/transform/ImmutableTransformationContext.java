@@ -37,15 +37,15 @@ public class ImmutableTransformationContext extends TransformationContext {
 
 	}
 
-	private static class ImmutableObjectData extends ObjectData {
+	private static class ImmutableObjectData extends TransformableObjectFacade {
 
-		private final ObjectData object;
+		private final TransformableObjectFacade object;
 		private final Map<String, TypedValue> att;
 		private final Map<String, TypedValue> priv;
 		private final Set<String> originalDecorators;
 		private final Set<String> decorators;
 
-		private ImmutableObjectData(ObjectData object) {
+		private ImmutableObjectData(TransformableObjectFacade object) {
 			this.object = object;
 			this.originalDecorators = Collections.unmodifiableSet(object.getOriginalDecorators());
 			this.decorators = Collections.unmodifiableSet(object.getDecorators());
