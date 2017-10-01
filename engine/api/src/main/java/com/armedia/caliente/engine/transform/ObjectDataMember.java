@@ -12,6 +12,7 @@ import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
+import com.armedia.commons.utilities.Tools;
 
 public class ObjectDataMember extends CmfBaseSetting {
 
@@ -139,5 +140,10 @@ public class ObjectDataMember extends CmfBaseSetting {
 
 	public int getSize() {
 		return (!isRepeating() ? 1 : this.values.size());
+	}
+
+	@Override
+	public String toString() {
+		return Tools.toString(isRepeating() ? this.values : this.value);
 	}
 }
