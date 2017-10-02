@@ -578,7 +578,7 @@ public class ActionsTest {
 		action.apply(ctx);
 
 		Set<String> decorators = object.getDecorators();
-		Set<String> values = new TreeSet<>(Arrays.asList("abc123hij", "123def789", "1b3d5f7h9k"));
+		Set<String> values = new TreeSet<>(Arrays.asList("abc123hij", "123def789", "1b3d5f7h9j"));
 		decorators.addAll(values);
 
 		try {
@@ -593,22 +593,37 @@ public class ActionsTest {
 		regex.setLang(null);
 		regex.setScript("\\d");
 
+		decorators.clear();
 		decorators.addAll(values);
 		action.apply(ctx);
 		Assert.assertTrue(decorators.contains("abchij"));
 		Assert.assertTrue(decorators.contains("def"));
-		Assert.assertTrue(decorators.contains("bdfhk"));
+		Assert.assertTrue(decorators.contains("bdfhj"));
 
 		Expression replacement = new Expression();
 		action.setReplacement(replacement);
 		replacement.setLang(null);
 		replacement.setScript("X");
 
+		decorators.clear();
 		decorators.addAll(values);
 		action.apply(ctx);
 		Assert.assertTrue(decorators.contains("abcXXXhij"));
 		Assert.assertTrue(decorators.contains("XXXdefXXX"));
-		Assert.assertTrue(decorators.contains("XbXdXfXhXk"));
+		Assert.assertTrue(decorators.contains("XbXdXfXhXj"));
 
+		decorators.clear();
+
+		regex.setCaseSensitive(true);
+		regex.setScript("[ABCDEFGHIJ]");
+		decorators.addAll(values);
+		action.apply(ctx);
+		Assert.assertEquals(values, decorators);
+
+		regex.setCaseSensitive(false);
+		action.apply(ctx);
+		Assert.assertTrue(decorators.contains("XXX123XXX"));
+		Assert.assertTrue(decorators.contains("123XXX789"));
+		Assert.assertTrue(decorators.contains("1X3X5X7X9X"));
 	}
 }
