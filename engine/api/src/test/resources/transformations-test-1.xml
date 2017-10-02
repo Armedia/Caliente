@@ -8,7 +8,7 @@
 				<or>
 					<is-type>GROUP</is-type>
 
-					<is-subtype comparison="eq" lang="jexl">
+					<is-subtype comparison="ncn" lang="jexl">
 						<!-- expression -->
 					</is-subtype>
 

@@ -121,13 +121,6 @@ public class ComparisonTest {
 	}
 
 	@Test
-	public void testNE() {
-		// Test two known-equal values for equality
-		// Test two known-different values for inequality
-		// Make sure it's case-sensitive
-	}
-
-	@Test
 	public void testGT() {
 	}
 
