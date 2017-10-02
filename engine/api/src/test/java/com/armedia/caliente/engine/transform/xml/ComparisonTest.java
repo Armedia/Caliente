@@ -15,6 +15,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.armedia.caliente.store.CmfDataType;
+import com.armedia.commons.utilities.Tools;
 
 public class ComparisonTest {
 
@@ -69,6 +70,25 @@ public class ComparisonTest {
 				Assert.assertTrue(
 					String.format("Equality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
 					Comparison.EQ.check(t, p.getLeft(), p.getRight()));
+				Assert.assertFalse(
+					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
+					Comparison.NEQ.check(t, p.getLeft(), p.getRight()));
+
+				Assert.assertFalse(String.format("Equality test failed between [%s] and [%s]", null, p.getRight()),
+					Comparison.EQ.check(t, null, p.getRight()));
+				Assert.assertTrue(String.format("Inequality test failed between [%s] and [%s]", null, p.getRight()),
+					Comparison.NEQ.check(t, null, p.getRight()));
+
+				if (t == CmfDataType.STRING) {
+					// Also try the case-insensitive variants
+					String left = Tools.toString(p.getLeft()).toLowerCase();
+					String right = Tools.toString(p.getRight()).toUpperCase();
+
+					Assert.assertTrue(String.format("Equality (CI) test failed between [%s] and [%s]", left, right),
+						Comparison.EQI.check(t, p.getLeft(), p.getRight()));
+					Assert.assertFalse(String.format("Inequality (CI) test failed between [%s] and [%s]", left, right),
+						Comparison.NEQI.check(t, p.getLeft(), p.getRight()));
+				}
 			}
 		}
 
@@ -117,7 +137,6 @@ public class ComparisonTest {
 					Comparison.EQ.check(t, p.getLeft(), p.getRight()));
 			}
 		}
-
 	}
 
 	@Test
@@ -149,78 +168,10 @@ public class ComparisonTest {
 	}
 
 	@Test
-	public void testNC() {
-	}
-
-	@Test
 	public void testRE() {
 	}
 
 	@Test
-	public void testNRE() {
-	}
-
-	@Test
 	public void testGLOB() {
-	}
-
-	@Test
-	public void testNGLOB() {
-	}
-
-	@Test
-	public void testEQI() {
-	}
-
-	@Test
-	public void testNEI() {
-	}
-
-	@Test
-	public void testGTI() {
-	}
-
-	@Test
-	public void testGEI() {
-	}
-
-	@Test
-	public void testLTI() {
-	}
-
-	@Test
-	public void testLEI() {
-	}
-
-	@Test
-	public void testSWI() {
-	}
-
-	@Test
-	public void testEWI() {
-	}
-
-	@Test
-	public void testCNI() {
-	}
-
-	@Test
-	public void testNCI() {
-	}
-
-	@Test
-	public void testREI() {
-	}
-
-	@Test
-	public void testNREI() {
-	}
-
-	@Test
-	public void testGLOBI() {
-	}
-
-	@Test
-	public void testNGLOBI() {
 	}
 }

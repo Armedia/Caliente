@@ -228,18 +228,18 @@ public enum Comparison {
 		// The default implementation only looks for the case-insensitive counterpart.
 		// This way we only have to provide the comparison implementation assuming case
 		// sensitivity.
-		String name = name().toLowerCase();
-		if (!name.startsWith("n") && !name.endsWith("i")) { throw new AbstractMethodError(
+		String name = name().toUpperCase();
+		if (!name.startsWith("N") && !name.endsWith("I")) { throw new AbstractMethodError(
 			String.format("Must provide a concrete implementation of eval() for the %s comparison check", name())); }
 
 		// Case-insensitive, find my counterpart!
 		boolean negated = false;
 		boolean caseInsensitive = false;
-		if (name.startsWith("n")) {
+		if (name.startsWith("N")) {
 			negated = true;
 			name = name.substring(1);
 		}
-		if (name.endsWith("i")) {
+		if (name.endsWith("I")) {
 			name = name.substring(0, name.length() - 1);
 			caseInsensitive = true;
 		}
