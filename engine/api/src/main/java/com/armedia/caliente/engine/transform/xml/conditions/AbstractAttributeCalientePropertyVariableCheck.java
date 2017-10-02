@@ -1,13 +1,13 @@
 
 package com.armedia.caliente.engine.transform.xml.conditions;
 
-import java.util.Set;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
@@ -16,9 +16,7 @@ import com.armedia.commons.utilities.Tools;
 @XmlTransient
 public abstract class AbstractAttributeCalientePropertyVariableCheck extends AbstractExpressionComparison {
 
-	protected abstract Set<String> getCandidateNames(TransformationContext ctx);
-
-	protected abstract TypedValue getCandidate(TransformationContext ctx, String name);
+	protected abstract Map<String, TypedValue> getCandidateValues(TransformationContext ctx);
 
 	protected abstract boolean check(TypedValue candidate);
 
@@ -26,18 +24,18 @@ public abstract class AbstractAttributeCalientePropertyVariableCheck extends Abs
 	public final boolean check(TransformationContext ctx) throws TransformationException {
 		final String comparand = Tools.toString(Expression.eval(this, ctx));
 		final Comparison comparison = getComparison();
+		final Map<String, TypedValue> values = getCandidateValues(ctx);
 
-		Set<String> names = getCandidateNames(ctx);
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!
-			return check(getCandidate(ctx, comparand));
+			return check(values.get(comparand));
 		}
 
 		// Need to find a matching candidate...
-		for (String s : names) {
+		for (String s : values.keySet()) {
 			if (comparison.check(CmfDataType.STRING, s, comparand)) {
 				// This candidate matches...if this one is empty, we're done!
-				if (check(getCandidate(ctx, s))) { return true; }
+				if (check(values.get(s))) { return true; }
 			}
 		}
 

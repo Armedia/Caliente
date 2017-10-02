@@ -1,7 +1,7 @@
 
 package com.armedia.caliente.engine.transform.xml.actions;
 
-import java.util.Set;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -17,13 +17,8 @@ import com.armedia.caliente.engine.transform.TypedValue;
 public class MapVariableValue extends AbstractMapValue {
 
 	@Override
-	protected Set<String> getCandidateNames(TransformationContext ctx) {
-		return ctx.getVariables().keySet();
-	}
-
-	@Override
-	protected TypedValue getCandidate(TransformationContext ctx, String name) {
-		return ctx.getVariables().get(name);
+	protected final Map<String, TypedValue> getCandidateValues(TransformationContext ctx) {
+		return ctx.getVariables();
 	}
 
 }

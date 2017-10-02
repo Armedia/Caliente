@@ -1,7 +1,7 @@
 
 package com.armedia.caliente.engine.transform.xml.actions;
 
-import java.util.Set;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -43,9 +43,7 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 		this.name = value;
 	}
 
-	protected abstract Set<String> getCandidateNames(TransformationContext ctx);
-
-	protected abstract TypedValue getCandidate(TransformationContext ctx, String name);
+	protected abstract Map<String, TypedValue> getCandidateValues(TransformationContext ctx);
 
 	protected abstract void applyTransformation(TransformationContext ctx, TypedValue candidate)
 		throws TransformationException;
@@ -61,9 +59,11 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 		if (comparand == null) { throw new TransformationException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();
 
+		final Map<String, TypedValue> values = getCandidateValues(ctx);
+
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!
-			TypedValue candidate = getCandidate(ctx, comparand);
+			TypedValue candidate = values.get(comparand);
 			if (candidate != null) {
 				applyTransformation(ctx, candidate);
 			}
@@ -71,9 +71,9 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 		}
 
 		// Need to find a matching candidate...
-		for (String s : getCandidateNames(ctx)) {
+		for (String s : values.keySet()) {
 			if (comparison.check(CmfDataType.STRING, s, comparand)) {
-				applyTransformation(ctx, getCandidate(ctx, s));
+				applyTransformation(ctx, values.get(s));
 			}
 		}
 	}
