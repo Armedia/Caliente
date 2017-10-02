@@ -7,18 +7,18 @@ import com.armedia.caliente.store.CmfAttributeMapper;
 
 public class TransformationContext {
 
-	private final TransformableObjectFacade transformableObjectFacade;
+	private final TransformableObjectFacade object;
 	private final CmfAttributeMapper mapper;
 
 	private final Map<String, TypedValue> variables;
 
-	public TransformationContext(TransformableObjectFacade transformableObjectFacade, CmfAttributeMapper mapper) {
-		this(transformableObjectFacade, mapper, null);
+	public TransformationContext(TransformableObjectFacade object, CmfAttributeMapper mapper) {
+		this(object, mapper, null);
 	}
 
-	protected TransformationContext(TransformableObjectFacade transformableObjectFacade, CmfAttributeMapper mapper,
+	protected TransformationContext(TransformableObjectFacade object, CmfAttributeMapper mapper,
 		Map<String, TypedValue> variables) {
-		this.transformableObjectFacade = transformableObjectFacade;
+		this.object = object;
 		this.mapper = mapper;
 		if (variables == null) {
 			variables = new TreeMap<>();
@@ -27,7 +27,7 @@ public class TransformationContext {
 	}
 
 	public TransformableObjectFacade getObject() {
-		return this.transformableObjectFacade;
+		return this.object;
 	}
 
 	public Map<String, TypedValue> getVariables() {
