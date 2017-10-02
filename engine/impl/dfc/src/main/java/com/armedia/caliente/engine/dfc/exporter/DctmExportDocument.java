@@ -214,7 +214,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 	@Override
 	protected Collection<DctmExportDelegate<?>> findSuccessors(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfSysObject document, DctmExportContext ctx) throws Exception {
-		// TODO Auto-generated method stub
 		Collection<DctmExportDelegate<?>> ret = super.findSuccessors(session, marshaled, document, ctx);
 
 		// References need only the ACL as a dependent
