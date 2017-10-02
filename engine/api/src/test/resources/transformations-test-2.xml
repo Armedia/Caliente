@@ -135,16 +135,14 @@
 				
 			</name>
 			<cardinality>all</cardinality>
-			<map>
-				<case comparison="eq">
-					<value lang="...">
-					</value>
-					<replacement lang="...">
-					</replacement>
-				</case>
-				<default lang="...">
-				</default>
-			</map>
+			<case comparison="eq">
+				<value lang="...">
+				</value>
+				<replacement lang="...">
+				</replacement>
+			</case>
+			<default lang="...">
+			</default>
 		</map-attribute-value>
 	</transformation>
 </transformations>

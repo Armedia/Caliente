@@ -147,23 +147,39 @@
 
 		<map-attribute-value>
 			<if>
-				<is-reference/>
+				<is-reference />
 			</if>
 			<name lang="...">
 				<!-- expression -->
 			</name>
 			<cardinality>all</cardinality>
-			<map>
-				<case comparison="eq">
-					<value lang="...">
+			<case comparison="eq">
+				<value lang="...">
 					</value>
-					<replacement lang="...">
+				<replacement lang="...">
 					</replacement>
-				</case>
-				<default lang="...">
+			</case>
+			<default lang="...">
 				</default>
-			</map>
 		</map-attribute-value>
+
+		<map-variable-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="...">
+				<!-- expression -->
+			</name>
+			<cardinality>all</cardinality>
+			<case comparison="eq">
+				<value lang="...">
+					</value>
+				<replacement lang="...">
+					</replacement>
+			</case>
+			<default lang="...">
+				</default>
+		</map-variable-value>
 
 	</transformation>
 
