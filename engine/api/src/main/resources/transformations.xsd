@@ -579,7 +579,6 @@
 	<xsd:group name="actions">
 		<xsd:choice>
 			<xsd:element name="set-subtype" type="tns:actionSetSubtype.t" />
-			<xsd:element name="set-subtype" type="tns:actionSetSubtype.t" />
 			<xsd:element name="replace-subtype" type="tns:actionReplaceSubtype.t" />
 			<xsd:element name="add-decorator" type="tns:actionAddDecorator.t" />
 			<xsd:element name="remove-decorator" type="tns:actionRemoveDecorator.t" />
