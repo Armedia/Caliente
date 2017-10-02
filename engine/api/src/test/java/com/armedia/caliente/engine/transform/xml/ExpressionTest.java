@@ -158,6 +158,22 @@ public class ExpressionTest {
 				actual = Expression.eval(e, ctx);
 				Assert.assertEquals(expected, actual);
 			}
+
+			script = "def tester = vars.get('testValue').value\ntester";
+			e.setScript(script);
+			for (int i = 0; i < 99; i++) {
+				int expectedInt = (random.nextInt(10000) * 1000) + i;
+				TypedValue value = new TypedValue("testValue", CmfDataType.INTEGER, false);
+				value.setValue(expectedInt);
+				ctx.getVariables().put("testValue", value);
+				actual = Expression.eval(e, ctx);
+				if (Number.class.isInstance(actual)) {
+					Number n = Number.class.cast(actual);
+					Assert.assertEquals(expectedInt, n.intValue());
+				} else {
+					Assert.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+				}
+			}
 		}
 
 		if (languages.contains("bsh")) {
@@ -182,6 +198,22 @@ public class ExpressionTest {
 				e.setScript(script);
 				actual = Expression.eval(e, ctx);
 				Assert.assertEquals(number >> 1, actual);
+			}
+
+			script = "return vars.get('testValue').value";
+			e.setScript(script);
+			for (int i = 0; i < 99; i++) {
+				int expectedInt = (random.nextInt(10000) * 1000) + i;
+				TypedValue value = new TypedValue("testValue", CmfDataType.INTEGER, false);
+				value.setValue(expectedInt);
+				ctx.getVariables().put("testValue", value);
+				actual = Expression.eval(e, ctx);
+				if (Number.class.isInstance(actual)) {
+					Number n = Number.class.cast(actual);
+					Assert.assertEquals(expectedInt, n.intValue());
+				} else {
+					Assert.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+				}
 			}
 		}
 
