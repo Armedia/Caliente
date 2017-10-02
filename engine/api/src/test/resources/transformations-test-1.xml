@@ -243,6 +243,8 @@
 			</name>
 			<cardinality>all</cardinality>
 		</map-attribute-value>
+		<end-transformation/>
+		<abort-transformation/>
 	</transformation>
 
 </transformations>
