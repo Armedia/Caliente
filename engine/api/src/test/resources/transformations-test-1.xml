@@ -160,29 +160,70 @@
 				map-name
 			</name>
 			<cardinality>all</cardinality>
-			<map>
-				<case comparison="eq">
-					<value lang="jexl">
-					case-value-1
-					</value>
-					<replacement lang="jexl">
-					case-replacement-1
-					</replacement>
-				</case>
-				<case comparison="eq">
-					<value lang="jexl">
-					case-value-2
-					</value>
-					<replacement lang="jexl">
-					case-replacement-2
-					</replacement>
-				</case>
-				<default lang="jexl">
-					case-default-value
-				</default>
-			</map>
+			<case comparison="eq">
+				<value lang="jexl">
+				case-value-1
+				</value>
+				<replacement lang="jexl">
+				case-replacement-1
+				</replacement>
+			</case>
+			<case comparison="eq">
+				<value lang="jexl">
+				case-value-2
+				</value>
+				<replacement lang="jexl">
+				case-replacement-2
+				</replacement>
+			</case>
+			<default lang="jexl">
+				case-default-value
+			</default>
 		</map-attribute-value>
 
+		<map-attribute-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="jexl">
+				<!-- expression -->
+				map-name
+			</name>
+			<cardinality>all</cardinality>
+			<default lang="jexl">
+				case-default-value
+			</default>
+		</map-attribute-value>
+
+		<map-attribute-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="jexl">
+				<!-- expression -->
+				map-name
+			</name>
+			<cardinality>all</cardinality>
+			<case comparison="eq">
+				<value lang="jexl">
+				case-value-1
+				</value>
+				<replacement lang="jexl">
+				case-replacement-1
+				</replacement>
+			</case>
+		</map-attribute-value>
+
+		<map-attribute-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="jexl">
+				<!-- expression -->
+				map-name
+			</name>
+			<cardinality>all</cardinality>
+		</map-attribute-value>
 	</transformation>
 
 </transformations>

@@ -455,20 +455,15 @@
 		<xsd:attribute name="comparison" type="tns:comparison.t" use="required" />
 	</xsd:complexType>
 
-	<xsd:complexType name="mapValue.t">
-		<xsd:sequence minOccurs="1" maxOccurs="unbounded">
-			<xsd:element name="case" type="tns:mapValueCase.t" minOccurs="0" maxOccurs="unbounded" />
-			<xsd:element name="default" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
-		</xsd:sequence>
-	</xsd:complexType>
-
 	<xsd:complexType name="actionMapAttributeValue.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="map" type="tns:mapValue.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="case" type="tns:mapValueCase.t"  minOccurs="0" maxOccurs="unbounded" />
+					<xsd:element name="default" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
