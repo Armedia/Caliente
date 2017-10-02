@@ -14,6 +14,8 @@ import org.junit.Test;
 import com.armedia.caliente.engine.transform.TestTransformationContext;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.TypedValue;
+import com.armedia.caliente.store.CmfDataType;
 
 public class ExpressionTest {
 
@@ -116,16 +118,19 @@ public class ExpressionTest {
 			actual = Expression.eval(e, ctx);
 			Assert.assertEquals(expected, actual);
 
-			for (int i = 0; i < 100; i++) {
-				expected = random.nextInt(Integer.MAX_VALUE);
-				script = String.format("%d", expected);
-				e.setScript(script);
+			script = "vars.get('testValue').value";
+			e.setScript(script);
+			for (int i = 0; i < 99; i++) {
+				int expectedInt = (random.nextInt(10000) * 1000) + i;
+				TypedValue value = new TypedValue("testValue", CmfDataType.INTEGER, false);
+				value.setValue(expectedInt);
+				ctx.getVariables().put("testValue", value);
 				actual = Expression.eval(e, ctx);
 				if (Number.class.isInstance(actual)) {
 					Number n = Number.class.cast(actual);
-					Assert.assertEquals(expected, n.intValue());
+					Assert.assertEquals(expectedInt, n.intValue());
 				} else {
-					Assert.fail(String.format("Expected the integer number [%s] but got [%s]", expected, actual));
+					Assert.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
 				}
 			}
 		}
