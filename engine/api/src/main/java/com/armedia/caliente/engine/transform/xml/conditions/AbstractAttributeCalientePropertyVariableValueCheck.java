@@ -1,14 +1,16 @@
 
 package com.armedia.caliente.engine.transform.xml.conditions;
 
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.transform.xml.Comparison;
@@ -53,9 +55,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		this.cardinality = value;
 	}
 
-	protected abstract TypedValue getCandidate(TransformationContext ctx, String name);
-
-	protected abstract Object getCandidateValue(TypedValue candidate, int pos);
+	protected abstract Map<String, TypedValue> getCandidateValues(TransformationContext ctx);
 
 	@Override
 	public boolean check(TransformationContext ctx) throws TransformationException {
@@ -63,7 +63,9 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		Object name = Expression.eval(nameExp, ctx);
 		if (name == null) { throw new TransformationException("No name was given for the candidate value check"); }
 
-		TypedValue candidate = getCandidate(ctx, name.toString());
+		final Map<String, TypedValue> values = getCandidateValues(ctx);
+
+		TypedValue candidate = values.get(name.toString());
 		if (candidate == null) { return false; }
 
 		Comparison comparison = getComparison();
@@ -73,7 +75,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 			"No comparand value given to check the name against"); }
 		if (!candidate.isRepeating()) {
 			// Check the one and only value
-			Object cv = getCandidateValue(candidate, 0);
+			Object cv = candidate.getValue();
 			if (cv == null) {
 				return comparison.check(candidate.getType(), null, comparand);
 			} else {
@@ -88,17 +90,17 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 				case ALL:
 					// Check against all attribute values, until one succeeds
 					for (int i = 0; i < valueCount; i++) {
-						if (comparison.check(type, getCandidateValue(candidate, i), comparand)) { return true; }
+						if (comparison.check(type, candidate.getValues().get(i), comparand)) { return true; }
 					}
 					break;
 
 				case FIRST:
 					// Only check the first attribute value
-					return comparison.check(type, getCandidateValue(candidate, 0), comparand);
+					return comparison.check(type, candidate.getValues().get(0), comparand);
 
 				case LAST:
 					// Only check the last attribute value
-					return comparison.check(type, getCandidateValue(candidate, valueCount - 1), comparand);
+					return comparison.check(type, candidate.getValues().get(valueCount - 1), comparand);
 			}
 		}
 		return false;

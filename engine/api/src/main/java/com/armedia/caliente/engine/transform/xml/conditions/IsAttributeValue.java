@@ -1,12 +1,14 @@
 
 package com.armedia.caliente.engine.transform.xml.conditions;
 
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TypedValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionHasAttributeValue.t", propOrder = {
@@ -15,13 +17,8 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class IsAttributeValue extends AbstractAttributeCalientePropertyVariableValueCheck {
 
 	@Override
-	protected TypedValue getCandidate(TransformationContext ctx, String name) {
-		return ctx.getObject().getAtt().get(name);
-	}
-
-	@Override
-	protected Object getCandidateValue(TypedValue candidate, int pos) {
-		return candidate.getValues().get(pos);
+	protected Map<String, TypedValue> getCandidateValues(TransformationContext ctx) {
+		return ctx.getObject().getAtt();
 	}
 
 }
