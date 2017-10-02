@@ -159,7 +159,7 @@ public class ExpressionTest {
 				Assert.assertEquals(expected, actual);
 			}
 
-			script = "def tester = vars.get('testValue').value\ntester";
+			script = "def tester = vars['testValue'].value\ntester";
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
@@ -200,7 +200,7 @@ public class ExpressionTest {
 				Assert.assertEquals(number >> 1, actual);
 			}
 
-			script = "return vars.get('testValue').value";
+			script = "return vars.testValue.value";
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
