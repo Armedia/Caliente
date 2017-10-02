@@ -4,7 +4,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class TransformableObjectFacade {
@@ -63,5 +65,24 @@ public abstract class TransformableObjectFacade {
 
 	public Map<String, TypedValue> getPriv() {
 		return this.privateProperties;
+	}
+
+	public CmfObject<CmfValue> applyChanges(CmfObject<CmfValue> object) {
+		// TODO: The aspects (decorators).... need a mechanism to set these...
+		return new CmfObject<>(//
+			object.getTranslator(), //
+			getType(), //
+			getObjectId(), //
+			getName(), //
+			object.getParentReferences(), //
+			getDependencyTier(), //
+			getHistoryId(), //
+			isHistoryCurrent(), //
+			getLabel(), //
+			getSubtype(), //
+			getProductName(), //
+			getProductVersion(), //
+			object.getNumber() //
+		);
 	}
 }
