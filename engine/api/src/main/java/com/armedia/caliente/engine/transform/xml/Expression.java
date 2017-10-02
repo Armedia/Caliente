@@ -187,7 +187,7 @@ public class Expression {
 
 		final Bindings bindings = engine.createBindings();
 		bindings.put("obj", ctx.getObject());
-		bindings.put("var", ctx.getVariables());
+		bindings.put("vars", ctx.getVariables());
 		bindings.put("mapper", ctx.getAttributeMapper());
 		engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
 
