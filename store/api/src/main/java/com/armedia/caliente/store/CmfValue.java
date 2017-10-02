@@ -5,15 +5,21 @@ import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 
 import com.armedia.commons.utilities.Tools;
 
 public final class CmfValue {
 
 	public static final Map<CmfDataType, CmfValue> NULL;
+
+	private static final List<FastDateFormat> DATE_FORMATS;
 
 	static {
 		Map<CmfDataType, CmfValue> nvl = new EnumMap<>(CmfDataType.class);
@@ -26,11 +32,30 @@ public final class CmfValue {
 			}
 		}
 		NULL = Tools.freezeMap(nvl);
+
+		List<FastDateFormat> dateFormats = new LinkedList<>();
+		dateFormats.add(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_DATETIME_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_DATE_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_DATE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_TIME_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_TIME_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_TIME_NO_T_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_TIME_NO_T_FORMAT);
+		dateFormats.add(DateFormatUtils.SMTP_DATETIME_FORMAT);
+		DATE_FORMATS = Tools.freezeList(dateFormats);
 	}
 
 	public static Date parseDate(String str) throws ParseException {
 		if (str == null) { return null; }
-		// TODO: Support other date formats?
+		for (FastDateFormat fmt : CmfValue.DATE_FORMATS) {
+			try {
+				return fmt.parse(str);
+			} catch (ParseException e) {
+				// Not in this format...
+				continue;
+			}
+		}
 		return DateFormat.getDateInstance().parse(str);
 	}
 
