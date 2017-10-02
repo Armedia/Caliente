@@ -113,7 +113,7 @@
 			</decorator>
 		</remove-decorator>
 		<replace-decorator>
-			<regex lang="jexl">
+			<regex lang="jexl" caseSensitive="false">
 				<!-- expression -->
 			</regex>
 			<replacement lang="jexl">
