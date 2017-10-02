@@ -134,7 +134,11 @@ public class TypedValue extends CmfBaseSetting {
 	}
 
 	public List<Object> getValues() {
-		if (!isRepeating()) { return Collections.singletonList(this.value); }
+		if (!isRepeating()) {
+			List<Object> ret = new ArrayList<>(1);
+			ret.add(this.value);
+			return ret;
+		}
 		return this.values;
 	}
 
