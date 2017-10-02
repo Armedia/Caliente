@@ -38,10 +38,7 @@ public class Transformer {
 	}
 
 	private TransformationContext createContext(CmfAttributeMapper mapper, CmfObject<CmfValue> object) {
-		// Do nothing, for now... but:
-		// * create and initialize the context
-		// * invoke the transformation
-		return null;
+		return new TransformationContext(new DefaultTransformableObjectFacade(object), mapper);
 	}
 
 	public CmfObject<CmfValue> transform(CmfAttributeMapper mapper, CmfObject<CmfValue> object)
@@ -62,7 +59,10 @@ public class Transformer {
 	}
 
 	private void destroyContext(TransformationContext ctx) {
-		// Clean things out...
+		// Clean things out... to help the GC...
+		ctx.getObject().getAtt().clear();
+		ctx.getObject().getPriv().clear();
+		ctx.getVariables().clear();
 	}
 
 	private static ConcurrentMap<URI, Transformer> INSTANCES = new ConcurrentHashMap<>();
