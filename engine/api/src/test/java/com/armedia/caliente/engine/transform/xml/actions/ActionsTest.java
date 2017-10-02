@@ -1,5 +1,8 @@
 package com.armedia.caliente.engine.transform.xml.actions;
 
+import java.util.Arrays;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import org.junit.Assert;
@@ -9,6 +12,7 @@ import com.armedia.caliente.engine.transform.TestObjectFacade;
 import com.armedia.caliente.engine.transform.TestTransformationContext;
 import com.armedia.caliente.engine.transform.TransformationCompletedException;
 import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.Expression;
 
 public class ActionsTest {
@@ -125,4 +129,321 @@ public class ActionsTest {
 		Assert.assertTrue(object.getDecorators().contains(testValue));
 	}
 
+	@Test
+	public void testDecoratorRemove() throws TransformationException {
+		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectFacade object = ctx.getObject();
+
+		DecoratorRemove action = new DecoratorRemove();
+		Expression e = new Expression();
+		action.setDecorator(e);
+
+		// First things first: remove by equals
+		Set<String> values = new TreeSet<>();
+		values.addAll(Arrays.asList("a", "b", "c"));
+
+		action.setComparison(Comparison.EQ);
+		object.getDecorators().addAll(values);
+		for (String s : values) {
+			e.setLang(null);
+			e.setScript(s);
+			Assert.assertTrue(object.getDecorators().contains(s));
+			action.apply(ctx);
+			Assert.assertFalse(object.getDecorators().contains(s));
+		}
+
+		action.setComparison(Comparison.EQI);
+		object.getDecorators().addAll(values);
+		for (String s : values) {
+			e.setLang(null);
+			e.setScript(s.toUpperCase());
+			Assert.assertTrue(s, object.getDecorators().contains(s));
+			action.apply(ctx);
+			Assert.assertFalse(s, object.getDecorators().contains(s));
+		}
+
+		action.setComparison(Comparison.NEQ);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("a");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.NEQI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("B");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertTrue(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.LT);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("b");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertTrue(object.getDecorators().contains("b"));
+		Assert.assertTrue(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.LTI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("C");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertTrue(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.GT);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("a");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.GTI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("A");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.NGE);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("b");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertTrue(object.getDecorators().contains("b"));
+		Assert.assertTrue(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.NGEI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("C");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertTrue(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.NLE);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("a");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.NLEI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("A");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.LE);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("b");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertTrue(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.LEI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("A");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertTrue(object.getDecorators().contains("b"));
+		Assert.assertTrue(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.GE);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("a");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.GEI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("b");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.NGT);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("b");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertTrue(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.NGTI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("C");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.NLT);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("a");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		action.setComparison(Comparison.NLTI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("B");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("a"));
+		Assert.assertFalse(object.getDecorators().contains("b"));
+		Assert.assertFalse(object.getDecorators().contains("c"));
+
+		values.clear();
+		object.getDecorators().clear();
+
+		values.addAll(Arrays.asList("first_value", "second_decorator", "first_decorator", "last_value"));
+
+		action.setComparison(Comparison.SW);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("first_");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("first_value"));
+		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
+		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
+		Assert.assertTrue(object.getDecorators().contains("last_value"));
+
+		action.setComparison(Comparison.SWI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("SeCoNd_");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("first_value"));
+		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
+		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
+		Assert.assertTrue(object.getDecorators().contains("last_value"));
+
+		action.setComparison(Comparison.NSW);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("first_");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("first_value"));
+		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
+		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
+		Assert.assertFalse(object.getDecorators().contains("last_value"));
+
+		action.setComparison(Comparison.NSWI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("SeCoNd_");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("first_value"));
+		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
+		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
+		Assert.assertFalse(object.getDecorators().contains("last_value"));
+
+		action.setComparison(Comparison.EW);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("_value");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("first_value"));
+		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
+		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
+		Assert.assertFalse(object.getDecorators().contains("last_value"));
+
+		action.setComparison(Comparison.EWI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("_DeCoRaToR");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("first_value"));
+		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
+		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
+		Assert.assertTrue(object.getDecorators().contains("last_value"));
+
+		action.setComparison(Comparison.NEW);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("_decorator");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertFalse(object.getDecorators().contains("first_value"));
+		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
+		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
+		Assert.assertFalse(object.getDecorators().contains("last_value"));
+
+		action.setComparison(Comparison.NEWI);
+		object.getDecorators().addAll(values);
+		e.setLang(null);
+		e.setScript("_vAlUe");
+		Assert.assertEquals(values, object.getDecorators());
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().contains("first_value"));
+		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
+		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
+		Assert.assertTrue(object.getDecorators().contains("last_value"));
+	}
+
+	@Test
+	public void testDecoratorReplace() throws TransformationException {
+		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectFacade object = ctx.getObject();
+
+		DecoratorReplace action = new DecoratorReplace();
+		action.apply(ctx);
+		Assert.assertTrue(object.getDecorators().isEmpty());
+
+	}
 }
