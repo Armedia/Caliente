@@ -27,7 +27,7 @@ public class CustomCheck extends AbstractExpressionCondition {
 		if (factory == null) { throw new TransformationException(
 			String.format("No factory found for custom condition type [%s]", className)); }
 		try {
-			Condition condition = factory.acquireInstance(className);
+			final Condition condition = factory.acquireInstance(className);
 			try {
 				return condition.check(ctx);
 			} finally {
