@@ -40,18 +40,13 @@ public class ConditionWrapper {
 
 	@XmlElements({
 		// First, the groups
-		@XmlElement(name = "and", type = GroupAnd.class),
-		@XmlElement(name = "or", type = GroupOr.class),
-		@XmlElement(name = "not", type = GroupNot.class),
-		@XmlElement(name = "xor", type = GroupXor.class),
-		@XmlElement(name = "nand", type = GroupNand.class),
-		@XmlElement(name = "nor", type = GroupNor.class),
-		@XmlElement(name = "xnor", type = GroupXnor.class),
-		@XmlElement(name = "oneof", type = GroupOneof.class),
+		@XmlElement(name = "and", type = GroupAnd.class), @XmlElement(name = "or", type = GroupOr.class),
+		@XmlElement(name = "not", type = GroupNot.class), @XmlElement(name = "xor", type = GroupXor.class),
+		@XmlElement(name = "nand", type = GroupNand.class), @XmlElement(name = "nor", type = GroupNor.class),
+		@XmlElement(name = "xnor", type = GroupXnor.class), @XmlElement(name = "oneof", type = GroupOneof.class),
 
 		// Now, the non-grouping conditions
-		@XmlElement(name = "is-type", type = IsType.class),
-		@XmlElement(name = "is-subtype", type = IsSubtype.class),
+		@XmlElement(name = "is-type", type = IsType.class), @XmlElement(name = "is-subtype", type = IsSubtype.class),
 		@XmlElement(name = "is-original-subtype", type = IsOriginalSubtype.class),
 		@XmlElement(name = "has-decorator", type = HasDecorator.class),
 
@@ -81,11 +76,20 @@ public class ConditionWrapper {
 	})
 	protected Condition condition;
 
+	protected ConditionWrapper() {
+		this(null);
+	}
+
+	public ConditionWrapper(Condition condition) {
+		this.condition = condition;
+	}
+
 	public Condition getCondition() {
 		return this.condition;
 	}
 
-	public void setCondition(Condition child) {
+	public ConditionWrapper setCondition(Condition child) {
 		this.condition = child;
+		return this;
 	}
 }

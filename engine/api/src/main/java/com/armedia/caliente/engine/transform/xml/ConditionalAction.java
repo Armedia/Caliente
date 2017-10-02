@@ -26,18 +26,23 @@ public abstract class ConditionalAction implements Action {
 	@XmlElement(name = "if", required = false)
 	protected ActionCondition condition;
 
-	public ActionCondition getCondition() {
-		return this.condition;
+	public Condition getCondition() {
+		if (this.condition == null) { return null; }
+		return this.condition.getCondition();
 	}
 
-	public void setCondition(ActionCondition condition) {
-		this.condition = condition;
+	public ConditionalAction setCondition(Condition condition) {
+		if (condition == null) {
+			this.condition = null;
+		} else {
+			this.condition = new ActionCondition(condition);
+		}
+		return this;
 	}
 
 	@Override
 	public final void apply(TransformationContext ctx) throws TransformationException {
-		final ActionCondition wrapper = getCondition();
-		final Condition condition = (wrapper != null ? wrapper.getCondition() : null);
+		final Condition condition = getCondition();
 		// Basically, execute this action if there is no condition given, or if the given condition
 		// evaluates to true
 		if ((condition == null) || condition.check(new ImmutableTransformationContext(ctx))) {

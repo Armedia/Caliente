@@ -11,4 +11,11 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class ActionCondition extends ConditionWrapper {
 
+	public ActionCondition() {
+		super();
+	}
+
+	public ActionCondition(Condition condition) {
+		super(condition);
+	}
 }
