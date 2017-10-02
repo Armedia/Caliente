@@ -16,9 +16,11 @@ public class CustomScript extends AbstractExpressionCondition {
 	@Override
 	public boolean check(TransformationContext ctx) throws TransformationException {
 		Object result = Expression.eval(this, ctx);
-		if (result == null) { throw new TransformationException(
-			String.format("The given %s expression did not return a boolean value: %s", getLang(), getScript())); }
-		if (Boolean.class.isInstance(result)) { return Boolean.class.cast(result).booleanValue(); }
+		// No result? No problem! It's a "false"!
+		if (result == null) { return false; }
+
+		// If it's a boolean cast it!
+		if (Boolean.class.isInstance(result)) { return Boolean.class.cast(result); }
 
 		// If it's a number, compare the integer value to 0 for false, non-0 for true
 		if (Number.class.isInstance(result)) { return (Number.class.cast(result).longValue() != 1); }
@@ -31,7 +33,7 @@ public class CustomScript extends AbstractExpressionCondition {
 		}
 
 		// If it's a string, then it must be either "true" or "false" - numbers would have been
-		// caught by now, and we won't be supporting other results
+		// caught by now, and we won't be supporting other types of results
 		return Boolean.valueOf(result.toString());
 	}
 
