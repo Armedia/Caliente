@@ -28,20 +28,25 @@ public class ExpressionTest {
 	}
 
 	@Test
-	public void testValue() {
+	public void testValue() throws TransformationException {
+		TransformationContext ctx = new TestTransformationContext();
 		Expression e = null;
 
 		e = new Expression();
+		Assert.assertNull(e.getLang());
 		Assert.assertNull(e.getScript());
+		Assert.assertNull(Expression.eval(e, ctx));
 
 		String value = "               test script # 1            ";
 		e.setScript(value);
 		Assert.assertEquals(value, e.getScript());
+		Assert.assertEquals(value, Expression.eval(e, ctx));
 
 		for (int i = 0; i < 10; i++) {
 			value = UUID.randomUUID().toString();
 			e.setScript(value);
 			Assert.assertEquals(value, e.getScript());
+			Assert.assertEquals(value, Expression.eval(e, ctx));
 		}
 	}
 

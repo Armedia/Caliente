@@ -6,8 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import javax.script.Bindings;
+import javax.script.Compilable;
+import javax.script.CompiledScript;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
@@ -22,7 +26,11 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
+import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +44,8 @@ import com.armedia.caliente.engine.transform.TransformationException;
 })
 public class Expression {
 	private static final ScriptEngineManager ENGINE_FACTORY = new ScriptEngineManager();
+
+	private static final ConcurrentMap<String, ConcurrentMap<String, CompiledScript>> COMPILER_CACHE = new ConcurrentHashMap<>();
 
 	private static final String NL = String.format("%n");
 
@@ -56,6 +66,57 @@ public class Expression {
 			// Do nothing...
 		}
 	};
+
+	private static final ConcurrentMap<String, CompiledScript> getCompilerCache(String lang) {
+		Objects.requireNonNull(lang, "Must provide a language to scan the cache for");
+		return ConcurrentUtils.createIfAbsentUnchecked(Expression.COMPILER_CACHE, lang,
+			new ConcurrentInitializer<ConcurrentMap<String, CompiledScript>>() {
+				@Override
+				public ConcurrentMap<String, CompiledScript> get() throws ConcurrentException {
+					return new ConcurrentHashMap<>();
+				}
+			});
+	}
+
+	private static final ScriptEngine getEngine(String language) {
+		if (language == null) { return null; }
+		language = StringUtils.strip(language);
+		ScriptEngine engine = null;
+		if (language != null) {
+			engine = Expression.ENGINE_FACTORY.getEngineByName(language);
+			if (engine == null) { throw new IllegalArgumentException(
+				String.format("Unknown script language [%s]", language)); }
+		}
+		return engine;
+	}
+
+	private static final CompiledScript compileScript(String language, final String source)
+		throws ScriptException, TransformationException {
+		final ScriptEngine engine = Expression.getEngine(language);
+		if (!Compilable.class.isInstance(engine)) { return null; }
+
+		final ConcurrentMap<String, CompiledScript> cache = Expression.getCompilerCache(language);
+		final Compilable compiler = Compilable.class.cast(engine);
+		// The key will be the source's SHA256 checksum
+		final String key = DigestUtils.sha256Hex(source);
+		try {
+			return ConcurrentUtils.createIfAbsent(cache, key, new ConcurrentInitializer<CompiledScript>() {
+				@Override
+				public CompiledScript get() throws ConcurrentException {
+					try {
+						return compiler.compile(source);
+					} catch (ScriptException e) {
+						throw new ConcurrentException(e);
+					}
+				}
+			});
+		} catch (ConcurrentException e) {
+			final Throwable cause = e.getCause();
+			if (ScriptException.class.isInstance(cause)) { throw ScriptException.class.cast(cause); }
+			throw new TransformationException(
+				String.format("Failed to pre-compile the %s script:%n%s%n", language, source), cause);
+		}
+	}
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -102,44 +163,25 @@ public class Expression {
 
 	public void setLang(String lang) {
 		lang = StringUtils.strip(lang);
-		ScriptEngine engine = null;
-		if (lang != null) {
-			engine = Expression.ENGINE_FACTORY.getEngineByName(lang);
-			if (engine == null) { throw new IllegalArgumentException(
-				String.format("Unknown script language [%s]", lang)); }
-		}
+		this.engine = Expression.getEngine(lang);
 		this.lang = lang;
-		this.engine = engine;
 	}
 
 	private ScriptEngine getEngine() {
-		final String language = getLang();
-		if (language == null) { return null; }
-		if (this.engine == null) {
-			synchronized (this) {
-				if (this.engine == null) {
-					this.engine = Expression.ENGINE_FACTORY.getEngineByName(language);
-					if (this.engine == null) { throw new RuntimeTransformationException(
-						String.format("Unknown script language [%s]", language)); }
-				}
-			}
-		}
-		return this.engine;
+		return this.engine = Expression.getEngine(getLang());
 	}
 
 	private Object evaluate(TransformationContext ctx) throws TransformationException {
-		// First: if the language is "constant" or null, we return the literal string script
-		final String script = StringUtils.strip(getScript());
-		final ScriptEngine engine = getEngine();
-
 		// If there is no engine needed, then we simply return the contents of the script as a
 		// literal string script
-		if (engine == null) { return script; }
+		final ScriptEngine engine = getEngine();
+		if (engine == null) { return getScript(); }
 
-		// We have an engine...so use it!!
+		// We have an engine, so strip out the script for (slightly) faster parsing
+		final String script = StringUtils.strip(getScript());
 		final String lang = getLang();
-
 		final ScriptContext scriptCtx = engine.getContext();
+
 		scriptCtx.setWriter(new PrintWriter(System.out));
 		scriptCtx.setErrorWriter(new PrintWriter(System.err));
 
@@ -148,6 +190,29 @@ public class Expression {
 		bindings.put("var", ctx.getVariables());
 		bindings.put("mapper", ctx.getAttributeMapper());
 		engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+
+		final CompiledScript compiled;
+		try {
+			this.log.trace("Compiling {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
+			compiled = Expression.compileScript(lang, script);
+		} catch (ScriptException e) {
+			// Compilation failed...
+			String msg = String.format("Script compilation failed for %s script:%n%s%n", lang, script);
+			this.log.debug(msg, e);
+			throw new TransformationException(msg, e);
+		}
+
+		if (compiled != null) {
+			this.log.trace("The {} script was compiled - will use the precompiled version", lang);
+			try {
+				return compiled.eval(bindings);
+			} catch (ScriptException e) {
+				String msg = String.format("Exception caught while executing the compiled %s script:%n%s%n", lang,
+					script);
+				this.log.debug(msg, e);
+				throw new TransformationException(msg, e);
+			}
+		}
 
 		try {
 			this.log.trace("Evaluating {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
