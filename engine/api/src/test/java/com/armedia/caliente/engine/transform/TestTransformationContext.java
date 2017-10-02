@@ -12,7 +12,7 @@ public class TestTransformationContext extends TransformationContext {
 
 	public TestTransformationContext(CmfAttributeMapper mapper) {
 		super(new TestObjectFacade(), mapper);
-		this.object = TestObjectFacade.class.cast(getObject());
+		this.object = TestObjectFacade.class.cast(super.getObject());
 	}
 
 	@Override
