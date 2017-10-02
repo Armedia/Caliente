@@ -6,15 +6,11 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.FastDateFormat;
 
 import com.armedia.caliente.engine.transform.RuntimeTransformationException;
 import com.armedia.caliente.store.CmfDataType;
@@ -136,29 +132,7 @@ public enum Comparison {
 
 	public static Comparison DEFAULT = Comparison.EQI;
 
-	private static final Collection<FastDateFormat> DATE_FORMATS;
-	static {
-		// First, make sure valueOf() works for every comparison
-		for (Comparison c : Comparison.values()) {
-			String name = c.name();
-			if (name.endsWith("I")) {
-				Comparison.valueOf(name.substring(0, name.length() - 1));
-			} else {
-				Comparison.valueOf(String.format("%sI", name));
-			}
-		}
-
-		String[] dateFormats = {
-			"yyyy-MM-dd'T'HH:mm:ss.SSSZZ"
-		};
-		List<FastDateFormat> l = new ArrayList<>();
-		for (String fmt : dateFormats) {
-			l.add(FastDateFormat.getInstance(fmt));
-		}
-		DATE_FORMATS = Tools.freezeList(l);
-	}
-
-	private static int compare(CmfDataType type, Object candidate, Object comparand) {
+	public static int compare(CmfDataType type, Object candidate, Object comparand) {
 		switch (type) {
 			case BOOLEAN:
 				return Tools.compare(Comparison.toBoolean(candidate), Comparison.toBoolean(comparand));
@@ -228,14 +202,11 @@ public enum Comparison {
 		String str = StringUtils.strip(Tools.toString(obj));
 		if (str == null) { return null; }
 
-		for (FastDateFormat fmt : Comparison.DATE_FORMATS) {
-			try {
-				return fmt.parse(str);
-			} catch (ParseException e) {
-				// Ignore this...we have more formats to try...
-			}
+		try {
+			return new CmfValue(CmfDataType.DATETIME, str).asTime();
+		} catch (ParseException e) {
+			throw new RuntimeTransformationException(String.format("Could not parse the date string [%s]", str));
 		}
-		throw new RuntimeTransformationException(String.format("Could not parse the date string [%s]", str));
 	}
 
 	private static URI toURI(Object obj) {

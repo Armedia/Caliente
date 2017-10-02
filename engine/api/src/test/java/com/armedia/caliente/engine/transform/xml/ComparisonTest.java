@@ -9,6 +9,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
@@ -47,6 +48,12 @@ public class ComparisonTest {
 		pairs.add(Pair.of(new Date(c.getTimeInMillis()), new Date(c.getTimeInMillis())));
 		pairs.add(Pair.of(c, c.clone()));
 		pairs.add(Pair.of(c, new Date(c.getTimeInMillis())));
+		// Remove the milliseconds or this won't work...
+		Calendar c2 = Calendar.getInstance();
+		c2.setTimeInMillis(c.getTimeInMillis());
+		int millis = c2.get(Calendar.MILLISECOND);
+		c2.add(Calendar.MILLISECOND, -millis);
+		pairs.add(Pair.of(c2, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(c2.getTime())));
 
 		pairs = new ArrayList<>();
 		data.put(CmfDataType.URI, pairs);
@@ -91,6 +98,8 @@ public class ComparisonTest {
 		pairs.add(Pair.of(new Date(System.currentTimeMillis()), new Date(c.getTimeInMillis())));
 		pairs.add(Pair.of(c, Calendar.getInstance()));
 		pairs.add(Pair.of(c, new Date(System.currentTimeMillis())));
+		pairs.add(Pair.of(new Date(System.currentTimeMillis()),
+			DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(c.getTime())));
 
 		pairs = new ArrayList<>();
 		data.put(CmfDataType.URI, pairs);
