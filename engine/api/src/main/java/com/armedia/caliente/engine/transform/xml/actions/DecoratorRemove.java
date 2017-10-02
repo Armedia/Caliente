@@ -1,6 +1,8 @@
 
 package com.armedia.caliente.engine.transform.xml.actions;
 
+import java.util.Iterator;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -15,6 +17,7 @@ import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
+import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -48,9 +51,22 @@ public class DecoratorRemove extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		String decorator = StringUtils.strip(Tools.toString(Expression.eval(getDecorator(), ctx)));
-		if (!StringUtils.isEmpty(decorator)) {
-			ctx.getObject().getDecorators().remove(decorator);
+		String comparand = StringUtils.strip(Tools.toString(Expression.eval(getDecorator(), ctx)));
+		if (StringUtils.isEmpty(comparand)) { return; }
+
+		Comparison comparison = getComparison();
+		if (comparison == Comparison.EQ) {
+			// Shortcut
+			ctx.getObject().getDecorators().remove(comparand);
+			return;
+		}
+
+		Iterator<String> it = ctx.getObject().getDecorators().iterator();
+		while (it.hasNext()) {
+			String current = it.next();
+			if (comparison.check(CmfDataType.STRING, current, comparand)) {
+				it.remove();
+			}
 		}
 	}
 
