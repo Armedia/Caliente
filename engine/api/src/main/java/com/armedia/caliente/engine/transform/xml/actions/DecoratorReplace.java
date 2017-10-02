@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.transform.xml.actions;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -15,6 +16,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
+import com.armedia.caliente.engine.transform.xml.RegularExpression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -24,16 +26,16 @@ import com.armedia.commons.utilities.Tools;
 public class DecoratorReplace extends ConditionalAction {
 
 	@XmlElement(name = "regex", required = true)
-	protected Expression regex;
+	protected RegularExpression regex;
 
 	@XmlElement(name = "replacement", required = true)
 	protected Expression replacement;
 
-	public Expression getRegex() {
+	public RegularExpression getRegex() {
 		return this.regex;
 	}
 
-	public void setRegex(Expression value) {
+	public void setRegex(RegularExpression value) {
 		this.regex = value;
 	}
 
@@ -50,15 +52,21 @@ public class DecoratorReplace extends ConditionalAction {
 		Set<String> originalDecorators = ctx.getObject().getDecorators();
 		if (originalDecorators.isEmpty()) { return; }
 
-		final String regex = Tools.toString(Expression.eval(getRegex(), ctx));
+		RegularExpression regexBase = getRegex();
+		final String regex = Tools.toString(Expression.eval(regexBase, ctx));
 		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
 		final String replacement = Tools.coalesce(Tools.toString(Expression.eval(getReplacement(), ctx)), "");
+
+		int flags = 0;
+		if (!regexBase.isCaseSensitive()) {
+			flags |= Pattern.CASE_INSENSITIVE;
+		}
 
 		Set<String> decorators = new LinkedHashSet<>(originalDecorators);
 		Set<String> newDecorators = new LinkedHashSet<>();
 		originalDecorators.clear();
 		for (String d : decorators) {
-			d = d.replaceAll(regex, replacement);
+			d = Pattern.compile(regex, flags).matcher(d).replaceAll(replacement);
 			d = StringUtils.strip(d);
 			if (!StringUtils.isEmpty(d)) {
 				newDecorators.add(d);

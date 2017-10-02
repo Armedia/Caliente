@@ -14,6 +14,7 @@ import com.armedia.caliente.engine.transform.TransformationCompletedException;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.Expression;
+import com.armedia.caliente.engine.transform.xml.RegularExpression;
 
 public class ActionsTest {
 
@@ -81,7 +82,7 @@ public class ActionsTest {
 			// All is well
 		}
 
-		Expression regex = new Expression();
+		RegularExpression regex = new RegularExpression();
 		action.setRegex(regex);
 		regex.setLang(null);
 		regex.setScript("^dctm:");
@@ -587,7 +588,7 @@ public class ActionsTest {
 			// All is well
 		}
 
-		Expression regex = new Expression();
+		RegularExpression regex = new RegularExpression();
 		action.setRegex(regex);
 		regex.setLang(null);
 		regex.setScript("\\d");

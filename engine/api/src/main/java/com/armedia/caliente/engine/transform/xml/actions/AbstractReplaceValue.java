@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.transform.xml.actions;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -14,6 +15,7 @@ import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.xml.Cardinality;
 import com.armedia.caliente.engine.transform.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.transform.xml.Expression;
+import com.armedia.caliente.engine.transform.xml.RegularExpression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -24,7 +26,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 	protected Cardinality cardinality;
 
 	@XmlElement(name = "regex", required = true)
-	protected Expression regex;
+	protected RegularExpression regex;
 
 	@XmlElement(name = "replacement", required = true)
 	protected Expression replacement;
@@ -37,11 +39,11 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 		this.cardinality = value;
 	}
 
-	public Expression getRegex() {
+	public RegularExpression getRegex() {
 		return this.regex;
 	}
 
-	public void setRegex(Expression value) {
+	public void setRegex(RegularExpression value) {
 		this.regex = value;
 	}
 
@@ -56,9 +58,15 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 	@Override
 	protected final void applyTransformation(TransformationContext ctx, TypedValue candidate)
 		throws TransformationException {
-		final String regex = Tools.toString(Expression.eval(getRegex(), ctx));
+		RegularExpression regexBase = getRegex();
+		final String regex = Tools.toString(Expression.eval(regexBase, ctx));
 		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
 		final String replacement = Tools.coalesce(Tools.toString(Expression.eval(getReplacement(), ctx)), "");
+
+		int flags = 0;
+		if (!regexBase.isCaseSensitive()) {
+			flags = Pattern.CASE_INSENSITIVE;
+		}
 
 		if (!candidate.isRepeating()) {
 			// Cardinality is irrelevant...
@@ -66,7 +74,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 			String oldString = ((oldValue != null) ? Tools.toString(oldValue) : null);
 			Object newValue = null;
 			if (oldString != null) {
-				newValue = oldString.replaceAll(regex, replacement);
+				newValue = Pattern.compile(regex, flags).matcher(oldString).replaceAll(replacement);
 			}
 			candidate.setValue(newValue);
 			return;
@@ -82,7 +90,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 						String oldString = Tools.toString(oldValue);
 						String newString = null;
 						if (oldString != null) {
-							newString = oldString.replaceAll(regex, replacement);
+							newString = Pattern.compile(regex, flags).matcher(oldString).replaceAll(replacement);
 						}
 						newValues.add(newString);
 					}
@@ -97,13 +105,12 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 					String oldString = Tools.toString(newValues.remove(targetIndex));
 					String newString = null;
 					if (oldString != null) {
-						newString = oldString.replaceAll(regex, replacement);
+						newString = Pattern.compile(regex, flags).matcher(oldString).replaceAll(replacement);
 					}
 					newValues.add(targetIndex, newString);
 					break;
 			}
 			candidate.setValues(newValues);
-
 		}
 	}
 }

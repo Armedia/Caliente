@@ -20,6 +20,14 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="regularExpression.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:expression.t">
+				<xsd:attribute name="caseSensitive" type="xsd:boolean" use="optional" default="true" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
 	<xsd:simpleType name="comparison.t" final="restriction">
 		<xsd:restriction base="xsd:token">
 			<!-- (eq|ne|ge|gt|le|lt|cn|ncn|re|nre|glob|nglob)(i)? -->
@@ -377,7 +385,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="regex" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="regex" type="tns:regularExpression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="replacement" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
@@ -409,7 +417,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="regex" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="regex" type="tns:regularExpression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="replacement" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
@@ -446,7 +454,7 @@
 					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="regex" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="regex" type="tns:regularExpression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="replacement" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
@@ -517,7 +525,7 @@
 					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="regex" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="regex" type="tns:regularExpression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="replacement" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
