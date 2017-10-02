@@ -626,4 +626,36 @@ public class ActionsTest {
 		Assert.assertTrue(decorators.contains("123XXX789"));
 		Assert.assertTrue(decorators.contains("1X3X5X7X9X"));
 	}
+
+	@Test
+	public void testAttributeSet() throws TransformationException {
+		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectFacade object = ctx.getObject();
+
+		AttributeSet action = new AttributeSet();
+		try {
+			action.apply(ctx);
+			Assert.fail("Did not fail with a null name");
+		} catch (TransformationException e) {
+			// All is well
+		}
+
+		final String attributeName = "testAttribute";
+
+		String attributeValue = null;
+
+		Expression e = new Expression();
+		action.setName(e);
+		e.setScript(attributeName);
+
+		e = new Expression();
+		action.setValue(e);
+		attributeValue = UUID.randomUUID().toString();
+		e.setScript(attributeValue);
+
+		Assert.assertFalse(object.getAtt().containsKey(attributeName));
+		action.apply(ctx);
+		Assert.assertTrue(object.getAtt().containsKey(attributeName));
+		Assert.assertEquals(attributeValue, object.getAtt().get(attributeName).getValue());
+	}
 }
