@@ -51,8 +51,8 @@ public class Transformer {
 				// Do nothing - this is simply our shortcut for stopping the transformation work in
 				// its tracks
 			}
-			// TODO harvest the transformations, and turn them into a new object
-			return object;
+
+			return ctx.getObject().applyChanges(object);
 		} finally {
 			destroyContext(ctx);
 		}
