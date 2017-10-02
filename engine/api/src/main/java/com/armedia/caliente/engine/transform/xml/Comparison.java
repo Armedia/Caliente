@@ -1,5 +1,10 @@
 package com.armedia.caliente.engine.transform.xml;
 
+import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -21,7 +26,7 @@ public enum Comparison {
 	EQ() {
 		@Override
 		protected boolean eval(CmfDataType type, Object candidate, Object comparand) {
-			return Tools.equals(candidate, comparand);
+			return (Comparison.compare(type, candidate, comparand) == 0);
 		}
 	},
 	NE() {
@@ -167,6 +172,9 @@ public enum Comparison {
 			case INTEGER:
 				return Tools.compare(Comparison.toLong(candidate), Comparison.toLong(comparand));
 
+			case URI:
+				return Tools.compare(Comparison.toURI(candidate), Comparison.toURI(comparand));
+
 			default:
 				return Tools.compare(Tools.toString(candidate), Tools.toString(comparand));
 		}
@@ -228,6 +236,25 @@ public enum Comparison {
 			}
 		}
 		throw new RuntimeTransformationException(String.format("Could not parse the date string [%s]", str));
+	}
+
+	private static URI toURI(Object obj) {
+		if (obj == null) { return null; }
+		if (File.class.isInstance(obj)) { return File.class.cast(obj).toURI(); }
+		if (Path.class.isInstance(obj)) { return Path.class.cast(obj).toUri(); }
+		if (URI.class.isInstance(obj)) { return URI.class.cast(obj); }
+
+		if (CmfValue.class.isInstance(obj)) {
+			obj = CmfValue.class.cast(obj).asObject();
+		}
+
+		final String str = obj.toString();
+		try {
+			if (URL.class.isInstance(obj)) { return URL.class.cast(obj).toURI(); }
+			return new URI(str);
+		} catch (URISyntaxException e) {
+			throw new RuntimeTransformationException(String.format("Could not parse the URI string [%s]", str), e);
+		}
 	}
 
 	protected boolean eval(CmfDataType type, Object candidate, Object comparand) {
