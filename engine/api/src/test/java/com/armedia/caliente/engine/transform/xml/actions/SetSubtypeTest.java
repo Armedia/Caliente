@@ -28,6 +28,17 @@ public class SetSubtypeTest {
 		action.apply(ctx);
 
 		Assert.assertEquals(value, object.getSubtype());
+
+		e.setScript(
+			"                                                       \n   \t   \n                       \t \t   \n                               ");
+		action.apply(ctx);
+		// Value is an empty string, so no change...
+		Assert.assertEquals(value, object.getSubtype());
+
+		e.setScript(null);
+		action.apply(ctx);
+		// Value is a null string, so no change...
+		Assert.assertEquals(value, object.getSubtype());
 	}
 
 }

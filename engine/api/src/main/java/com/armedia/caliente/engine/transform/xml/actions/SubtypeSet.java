@@ -6,6 +6,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
@@ -32,7 +34,8 @@ public class SubtypeSet extends ConditionalAction {
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
 		String subtype = Tools.toString(Expression.eval(getSubtype(), ctx));
-		if (subtype == null) { throw new TransformationException("No subtype given to set to"); }
+		subtype = StringUtils.strip(subtype);
+		if (StringUtils.isBlank(subtype)) { return; }
 		ctx.getObject().setSubtype(subtype);
 	}
 
