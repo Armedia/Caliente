@@ -575,7 +575,39 @@ public class ActionsTest {
 
 		DecoratorReplace action = new DecoratorReplace();
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().isEmpty());
+
+		Set<String> decorators = object.getDecorators();
+		Set<String> values = new TreeSet<>(Arrays.asList("abc123hij", "123def789", "1b3d5f7h9k"));
+		decorators.addAll(values);
+
+		try {
+			action.apply(ctx);
+			Assert.fail("Did not fail with neither a regex or a replacement");
+		} catch (TransformationException e) {
+			// All is well
+		}
+
+		Expression regex = new Expression();
+		action.setRegex(regex);
+		regex.setLang(null);
+		regex.setScript("\\d");
+
+		decorators.addAll(values);
+		action.apply(ctx);
+		Assert.assertTrue(decorators.contains("abchij"));
+		Assert.assertTrue(decorators.contains("def"));
+		Assert.assertTrue(decorators.contains("bdfhk"));
+
+		Expression replacement = new Expression();
+		action.setReplacement(replacement);
+		replacement.setLang(null);
+		replacement.setScript("X");
+
+		decorators.addAll(values);
+		action.apply(ctx);
+		Assert.assertTrue(decorators.contains("abcXXXhij"));
+		Assert.assertTrue(decorators.contains("XXXdefXXX"));
+		Assert.assertTrue(decorators.contains("XbXdXfXhXk"));
 
 	}
 }

@@ -52,8 +52,7 @@ public class DecoratorReplace extends ConditionalAction {
 
 		final String regex = Tools.toString(Expression.eval(getRegex(), ctx));
 		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
-		final String replacement = Tools.toString(Expression.eval(getReplacement(), ctx));
-		if (replacement == null) { throw new TransformationException("No replacement given to apply"); }
+		final String replacement = Tools.coalesce(Tools.toString(Expression.eval(getReplacement(), ctx)), "");
 
 		Set<String> decorators = new LinkedHashSet<>(originalDecorators);
 		Set<String> newDecorators = new LinkedHashSet<>();
