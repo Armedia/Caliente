@@ -20,6 +20,7 @@ import com.armedia.caliente.engine.transform.xml.actions.DecoratorAdd;
 import com.armedia.caliente.engine.transform.xml.actions.DecoratorRemove;
 import com.armedia.caliente.engine.transform.xml.actions.DecoratorReplace;
 import com.armedia.caliente.engine.transform.xml.actions.MapAttributeValue;
+import com.armedia.caliente.engine.transform.xml.actions.MapVariableValue;
 import com.armedia.caliente.engine.transform.xml.actions.SubtypeReplace;
 import com.armedia.caliente.engine.transform.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.transform.xml.actions.ValueMappingApply;
@@ -45,6 +46,7 @@ public class Transformation extends ConditionalAction {
 		@XmlElement(name = "remove-attribute", type = AttributeRemove.class),
 		@XmlElement(name = "replace-attribute", type = AttributeReplace.class),
 		@XmlElement(name = "map-attribute-value", type = MapAttributeValue.class),
+		@XmlElement(name = "map-variable-value", type = MapVariableValue.class),
 		@XmlElement(name = "set-variable", type = VariableSet.class),
 		@XmlElement(name = "remove-variable", type = VariableRemove.class),
 		@XmlElement(name = "replace-variable", type = VariableReplace.class),

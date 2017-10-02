@@ -455,7 +455,7 @@
 		<xsd:attribute name="comparison" type="tns:comparison.t" use="required" />
 	</xsd:complexType>
 
-	<xsd:complexType name="actionMapAttributeValue.t">
+	<xsd:complexType name="actionMapValue.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
@@ -466,6 +466,18 @@
 					<xsd:element name="default" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapAttributeValue.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionMapValue.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapVariableValue.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionMapValue.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
@@ -569,6 +581,7 @@
 			<xsd:element name="remove-attribute" type="tns:actionRemoveAttribute.t" />
 			<xsd:element name="replace-attribute" type="tns:actionReplaceAttribute.t" />
 			<xsd:element name="map-attribute-value" type="tns:actionMapAttributeValue.t" />
+			<xsd:element name="map-variable-value" type="tns:actionMapVariableValue.t" />
 			<xsd:element name="set-variable" type="tns:actionSetVariable.t" />
 			<xsd:element name="remove-variable" type="tns:actionRemoveVariable.t" />
 			<xsd:element name="replace-variable" type="tns:actionReplaceVariable.t" />

@@ -7,9 +7,9 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
@@ -50,8 +50,13 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 	protected abstract void applyTransformation(TransformationContext ctx, TypedValue candidate)
 		throws TransformationException;
 
+	protected boolean failShort() {
+		return false;
+	}
+
 	@Override
 	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
+		if (failShort()) { return; }
 		final String comparand = Tools.toString(Expression.eval(getName(), ctx));
 		if (comparand == null) { throw new TransformationException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();

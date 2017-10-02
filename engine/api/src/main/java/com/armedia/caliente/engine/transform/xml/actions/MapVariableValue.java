@@ -11,19 +11,19 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionMapAttributeValue.t", propOrder = {
+@XmlType(name = "actionMapVariableValue.t", propOrder = {
 	"comparison", "name", "cardinality", "cases", "defVal"
 })
-public class MapAttributeValue extends AbstractMapValue {
+public class MapVariableValue extends AbstractMapValue {
 
 	@Override
 	protected Set<String> getCandidateNames(TransformationContext ctx) {
-		return ctx.getObject().getAtt().keySet();
+		return ctx.getVariables().keySet();
 	}
 
 	@Override
 	protected TypedValue getCandidate(TransformationContext ctx, String name) {
-		return ctx.getObject().getAtt().get(name);
+		return ctx.getVariables().get(name);
 	}
 
 }
