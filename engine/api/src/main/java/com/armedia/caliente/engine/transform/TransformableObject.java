@@ -14,7 +14,7 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class TransformableObjectFacade {
+public abstract class TransformableObject {
 
 	protected final Map<String, TypedValue> attributes = new TreeMap<>();
 	protected final Map<String, TypedValue> privateProperties = new TreeMap<>();
@@ -38,7 +38,7 @@ public abstract class TransformableObjectFacade {
 		return Tools.coalesce(this.subtype, getOriginalSubtype());
 	}
 
-	public TransformableObjectFacade setSubtype(String subtype) {
+	public TransformableObject setSubtype(String subtype) {
 		this.subtype = subtype;
 		return this;
 	}
@@ -47,7 +47,7 @@ public abstract class TransformableObjectFacade {
 		return Tools.coalesce(this.name, getOriginalName());
 	}
 
-	public TransformableObjectFacade setName(String name) {
+	public TransformableObject setName(String name) {
 		this.name = name;
 		return this;
 	}

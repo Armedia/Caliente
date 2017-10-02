@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.armedia.caliente.store.CmfType;
 
-public class TestObjectFacade extends TransformableObjectFacade {
+public class TestObjectFacade extends TransformableObject {
 
 	private String objectId = null;
 	private final String historyId = null;

@@ -7,16 +7,16 @@ import com.armedia.caliente.store.CmfAttributeMapper;
 
 public class TransformationContext {
 
-	private final TransformableObjectFacade object;
+	private final TransformableObject object;
 	private final CmfAttributeMapper mapper;
 
 	private final Map<String, TypedValue> variables;
 
-	public TransformationContext(TransformableObjectFacade object, CmfAttributeMapper mapper) {
+	public TransformationContext(TransformableObject object, CmfAttributeMapper mapper) {
 		this(object, mapper, null);
 	}
 
-	protected TransformationContext(TransformableObjectFacade object, CmfAttributeMapper mapper,
+	protected TransformationContext(TransformableObject object, CmfAttributeMapper mapper,
 		Map<String, TypedValue> variables) {
 		this.object = object;
 		this.mapper = mapper;
@@ -26,7 +26,7 @@ public class TransformationContext {
 		this.variables = variables;
 	}
 
-	public TransformableObjectFacade getObject() {
+	public TransformableObject getObject() {
 		return this.object;
 	}
 

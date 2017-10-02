@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformableObjectFacade;
+import com.armedia.caliente.engine.transform.TransformableObject;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
@@ -16,7 +16,7 @@ public class AbortTransformation extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		TransformableObjectFacade obj = ctx.getObject();
+		TransformableObject obj = ctx.getObject();
 		throw new TransformationException(
 			String.format("The object transformation for %s (%s)[%s] was explicitly aborted", obj.getType(),
 				obj.getLabel(), obj.getObjectId()));

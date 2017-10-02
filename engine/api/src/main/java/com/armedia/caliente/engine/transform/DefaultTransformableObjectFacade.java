@@ -10,7 +10,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 
-public class DefaultTransformableObjectFacade extends TransformableObjectFacade {
+public class DefaultTransformableObjectFacade extends TransformableObject {
 
 	private final CmfObject<CmfValue> object;
 	private final Set<String> originalDecorators;
