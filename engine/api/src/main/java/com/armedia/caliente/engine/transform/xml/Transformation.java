@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.xml.actions.AbortTransformation;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeRemove;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeReplace;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeSet;
@@ -19,6 +20,7 @@ import com.armedia.caliente.engine.transform.xml.actions.CustomAction;
 import com.armedia.caliente.engine.transform.xml.actions.DecoratorAdd;
 import com.armedia.caliente.engine.transform.xml.actions.DecoratorRemove;
 import com.armedia.caliente.engine.transform.xml.actions.DecoratorReplace;
+import com.armedia.caliente.engine.transform.xml.actions.EndTransformation;
 import com.armedia.caliente.engine.transform.xml.actions.MapAttributeValue;
 import com.armedia.caliente.engine.transform.xml.actions.MapVariableValue;
 import com.armedia.caliente.engine.transform.xml.actions.SubtypeReplace;
@@ -53,7 +55,9 @@ public class Transformation extends ConditionalAction {
 		@XmlElement(name = "set-value-mapping", type = ValueMappingSet.class),
 		@XmlElement(name = "clear-value-mapping", type = ValueMappingClear.class),
 		@XmlElement(name = "apply-value-mapping", type = ValueMappingApply.class),
-		@XmlElement(name = "custom-action", type = CustomAction.class)
+		@XmlElement(name = "custom-action", type = CustomAction.class),
+		@XmlElement(name = "end-transformation", type = EndTransformation.class),
+		@XmlElement(name = "abort-transformation", type = AbortTransformation.class),
 	})
 	protected List<ConditionalAction> transformations;
 

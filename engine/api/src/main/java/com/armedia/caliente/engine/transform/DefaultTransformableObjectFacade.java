@@ -53,6 +53,11 @@ public class DefaultTransformableObjectFacade extends TransformableObjectFacade 
 	}
 
 	@Override
+	public String getLabel() {
+		return this.object.getLabel();
+	}
+
+	@Override
 	public String getOriginalSubtype() {
 		return this.object.getSubtype();
 	}

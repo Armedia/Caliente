@@ -74,6 +74,11 @@ public class ImmutableTransformationContext extends TransformationContext {
 		}
 
 		@Override
+		public String getLabel() {
+			return this.object.getLabel();
+		}
+
+		@Override
 		public String getOriginalSubtype() {
 			return this.object.getOriginalSubtype();
 		}

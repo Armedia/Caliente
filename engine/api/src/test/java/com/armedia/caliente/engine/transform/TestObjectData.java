@@ -11,6 +11,7 @@ public class TestObjectData extends TransformableObjectFacade {
 	private final String historyId = null;
 	private boolean historyCurrent = false;
 	private CmfType type = null;
+	private String label = null;
 	private String originalSubtype = null;
 	private Set<String> originalDecorators = new HashSet<>();
 	private Set<String> decorators = new HashSet<>();
@@ -45,6 +46,16 @@ public class TestObjectData extends TransformableObjectFacade {
 	@Override
 	public CmfType getType() {
 		return this.type;
+	}
+
+	@Override
+	public String getLabel() {
+		return this.label;
+	}
+
+	public TestObjectData setLabel(String label) {
+		this.label = label;
+		return this;
 	}
 
 	public TestObjectData setType(CmfType type) {

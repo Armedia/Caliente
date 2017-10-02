@@ -23,6 +23,8 @@ public abstract class TransformableObjectFacade {
 
 	public abstract CmfType getType();
 
+	public abstract String getLabel();
+
 	public abstract String getOriginalSubtype();
 
 	public String getSubtype() {

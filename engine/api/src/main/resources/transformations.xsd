@@ -357,6 +357,12 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionAbortTransformation.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionSetSubtype.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
@@ -573,6 +579,7 @@
 	<xsd:group name="actions">
 		<xsd:choice>
 			<xsd:element name="set-subtype" type="tns:actionSetSubtype.t" />
+			<xsd:element name="set-subtype" type="tns:actionSetSubtype.t" />
 			<xsd:element name="replace-subtype" type="tns:actionReplaceSubtype.t" />
 			<xsd:element name="add-decorator" type="tns:actionAddDecorator.t" />
 			<xsd:element name="remove-decorator" type="tns:actionRemoveDecorator.t" />
@@ -590,6 +597,7 @@
 			<xsd:element name="apply-value-mapping" type="tns:actionApplyValueMapping.t" />
 			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
 			<xsd:element name="end-transformation" type="tns:actionEndTransformation.t" />
+			<xsd:element name="abort-transformation" type="tns:actionAbortTransformation.t" />
 		</xsd:choice>
 	</xsd:group>
 
