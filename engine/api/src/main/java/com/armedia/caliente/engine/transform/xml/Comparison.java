@@ -9,6 +9,7 @@ import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -78,7 +79,7 @@ public enum Comparison {
 		protected boolean eval(CmfDataType type, Object candidate, Object regex) {
 			// Regardless of type, must treat them as strings
 			if ((candidate == null) || (regex == null)) { return false; }
-			return candidate.toString().matches(regex.toString());
+			return Pattern.compile(regex.toString()).matcher(candidate.toString()).find();
 		}
 	},
 	GLOB() {
