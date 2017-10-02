@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.transform.xml.actions;
+package com.armedia.caliente.engine.transform.xml;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -8,7 +8,6 @@ import org.junit.Test;
 import com.armedia.caliente.engine.transform.TestTransformationContext;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
-import com.armedia.caliente.engine.transform.xml.ConditionTools;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 
 public class ConditionalActionTest {
