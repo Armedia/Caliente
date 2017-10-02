@@ -116,21 +116,20 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 
 	protected boolean getDataProperties(UcmExportContext ctx, Collection<CmfProperty<CmfValue>> properties, T object)
 		throws ExportException {
-		CmfProperty<CmfValue> paths = new CmfProperty<>(IntermediateProperty.PATH, CmfDataType.STRING, false);
-		properties.add(paths);
-		paths.setValue(new CmfValue(object.getParentPath()));
+		CmfProperty<CmfValue> p = new CmfProperty<>(IntermediateProperty.PATH, CmfDataType.STRING,
+			new CmfValue(object.getParentPath()));
+		properties.add(p);
 
-		CmfProperty<CmfValue> parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, false);
-		paths.setValue(new CmfValue(object.getParentURI().toString()));
-		properties.add(parents);
+		p = new CmfProperty<>(IntermediateProperty.IS_REFERENCE, CmfDataType.BOOLEAN,
+			new CmfValue(object.isShortcut()));
+		properties.add(p);
 
-		CmfProperty<CmfValue> latestVersion = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION,
-			CmfDataType.BOOLEAN, false);
-		properties.add(latestVersion);
+		p = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID,
+			new CmfValue(object.getParentURI().toString()));
+		properties.add(p);
 
-		CmfProperty<CmfValue> idtree = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfDataType.STRING,
-			false);
-		properties.add(idtree);
+		p = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfDataType.STRING, false);
+		properties.add(p);
 		LinkedList<String> l = new LinkedList<>();
 		UcmFolder parent = null;
 		while (true) {
@@ -145,7 +144,7 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 			}
 			l.addFirst(parent.getURI().getSchemeSpecificPart());
 		}
-		idtree.setValue(new CmfValue(FileNameTools.reconstitute(l, false, false, '/')));
+		p.setValue(new CmfValue(FileNameTools.reconstitute(l, false, false, '/')));
 		return true;
 	}
 }

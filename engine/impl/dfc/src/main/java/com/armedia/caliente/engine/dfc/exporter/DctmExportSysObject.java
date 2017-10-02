@@ -196,6 +196,11 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 		IDfSession session = object.getSession();
 
+		CmfProperty<IDfValue> reference = new CmfProperty<>(IntermediateProperty.IS_REFERENCE,
+			DctmDataType.DF_BOOLEAN.getStoredType(), false);
+		properties.add(reference);
+		reference.setValue(DfValueFactory.newBooleanValue(object.isReference()));
+
 		CmfProperty<IDfValue> aclInheritedProp = new CmfProperty<>(IntermediateProperty.ACL_INHERITANCE,
 			DctmDataType.DF_STRING.getStoredType(), false);
 		properties.add(aclInheritedProp);

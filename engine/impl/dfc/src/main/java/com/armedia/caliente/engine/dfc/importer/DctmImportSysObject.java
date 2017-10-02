@@ -852,8 +852,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected boolean isReference() {
-		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.I_IS_REFERENCE);
-		return ((att != null) && att.hasValues() && att.getValue().asBoolean());
+		// Prefer the Documentum attribute over the property...
+		CmfProperty<IDfValue> reference = this.cmfObject.getAttribute(DctmAttributes.I_IS_REFERENCE);
+		if (reference == null) {
+			// No attribute? Possibly doesn't come from Documentum...go for the property
+			reference = this.cmfObject.getProperty(IntermediateProperty.IS_REFERENCE);
+		}
+		return ((reference != null) && reference.hasValues() && reference.getValue().asBoolean());
 	}
 
 	protected boolean isDfReference(T object) throws DfException {

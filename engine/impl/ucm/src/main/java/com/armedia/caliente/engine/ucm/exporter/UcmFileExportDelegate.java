@@ -98,17 +98,21 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 
 		UcmFileHistory history = getHistory(ctx);
 
-		p = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type);
+		p = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfDataType.BOOLEAN,
+			new CmfValue(object.isLatestRevision()));
 		properties.add(p);
-		p.setValue(new CmfValue(history.getRevisionCount()));
 
-		p = new CmfProperty<>(IntermediateProperty.VERSION_INDEX, IntermediateProperty.VERSION_INDEX.type);
+		p = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
+			new CmfValue(history.getRevisionCount()));
 		properties.add(p);
-		p.setValue(new CmfValue(this.object.getRevisionNumber() - 1));
 
-		p = new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, IntermediateProperty.VERSION_HEAD_INDEX.type);
+		p = new CmfProperty<>(IntermediateProperty.VERSION_INDEX, IntermediateProperty.VERSION_INDEX.type,
+			new CmfValue(this.object.getRevisionNumber() - 1));
 		properties.add(p);
-		p.setValue(new CmfValue(history.getLastRevision().getRevisionId() - 1));
+
+		p = new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, IntermediateProperty.VERSION_HEAD_INDEX.type,
+			new CmfValue(history.getLastRevision().getRevisionId() - 1));
+		properties.add(p);
 
 		return true;
 	}
