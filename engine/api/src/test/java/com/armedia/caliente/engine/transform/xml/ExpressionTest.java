@@ -217,12 +217,45 @@ public class ExpressionTest {
 			}
 		}
 
-		if (languages.contains("jexl2")) {
+		if (languages.contains("jexl")) {
 			// Test Jexl2
-		}
+			Expression e = new Expression();
+			e.setLang("jexl");
 
-		if (languages.contains("jexl3")) {
-			// Test Jexl3
+			Object expected = null;
+			String script = null;
+			Object actual = null;
+
+			// Test Jexl2 syntax
+			expected = UUID.randomUUID().toString();
+			script = String.format("'%s'", expected);
+			e.setScript(script);
+			actual = Expression.eval(e, ctx);
+			Assert.assertEquals(expected, actual);
+
+			for (int i = 0; i < 100; i++) {
+				int number = random.nextInt(Integer.MAX_VALUE);
+				script = String.format("(%d / 2)", number);
+				e.setScript(script);
+				actual = Expression.eval(e, ctx);
+				Assert.assertEquals(number >> 1, actual);
+			}
+
+			script = "vars.testValue.value";
+			e.setScript(script);
+			for (int i = 0; i < 99; i++) {
+				int expectedInt = (random.nextInt(10000) * 1000) + i;
+				TypedValue value = new TypedValue("testValue", CmfDataType.INTEGER, false);
+				value.setValue(expectedInt);
+				ctx.getVariables().put("testValue", value);
+				actual = Expression.eval(e, ctx);
+				if (Number.class.isInstance(actual)) {
+					Number n = Number.class.cast(actual);
+					Assert.assertEquals(expectedInt, n.intValue());
+				} else {
+					Assert.fail(String.format("Expected the integer number [%s] but got [%s]", expectedInt, actual));
+				}
+			}
 		}
 	}
 
