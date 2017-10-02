@@ -1,5 +1,7 @@
 package com.armedia.caliente.store;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
@@ -87,6 +89,12 @@ public final class CmfValue {
 		this.nullValue = (value == null);
 	}
 
+	public CmfValue(URI value) {
+		this.type = CmfDataType.URI;
+		this.value = value;
+		this.nullValue = (value == null);
+	}
+
 	public CmfValue(byte[] data) {
 		this.type = CmfDataType.BASE64_BINARY;
 		this.value = Base64.encodeBase64(data);
@@ -112,21 +120,21 @@ public final class CmfValue {
 			switch (type) {
 				case INTEGER:
 					if (value instanceof Number) {
-						this.value = Number.class.cast(value);
+						this.value = value;
 					} else {
 						this.value = Integer.valueOf(value.toString());
 					}
 					break;
 				case BOOLEAN:
 					if (value instanceof Boolean) {
-						this.value = Boolean.class.cast(value);
+						this.value = value;
 					} else {
 						this.value = Boolean.valueOf(value.toString());
 					}
 					break;
 				case DOUBLE:
 					if (value instanceof Number) {
-						this.value = Number.class.cast(value);
+						this.value = value;
 					} else {
 						this.value = Double.valueOf(value.toString());
 					}
@@ -138,6 +146,20 @@ public final class CmfValue {
 						this.value = Base64.decodeBase64(value.toString());
 					}
 					break;
+				case URI:
+					if (URI.class.isInstance(value)) {
+						this.value = value;
+					} else {
+						try {
+							this.value = new URI(value.toString());
+						} catch (URISyntaxException e) {
+							ParseException pe = new ParseException(value.toString(), 0);
+							pe.initCause(e);
+							throw pe;
+						}
+					}
+					break;
+				case HTML:
 				case STRING:
 				case ID:
 					this.value = Tools.toString(value);
@@ -193,8 +215,14 @@ public final class CmfValue {
 
 	public byte[] asBinary() {
 		if (this.nullValue) { return null; }
-		if (this.value instanceof byte[]) { return (byte[]) this.value; }
+		if (this.value instanceof byte[]) { return ((byte[]) this.value).clone(); }
 		return Base64.decodeBase64(this.value.toString());
+	}
+
+	public URI asURI() throws URISyntaxException {
+		if (this.nullValue) { return null; }
+		if (this.value instanceof URI) { return URI.class.cast(this.value); }
+		return new URI(this.value.toString());
 	}
 
 	public Object asObject() {
