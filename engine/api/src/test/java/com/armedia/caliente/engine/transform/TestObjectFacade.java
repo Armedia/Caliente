@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.armedia.caliente.store.CmfType;
 
-public class TestObjectData extends TransformableObjectFacade {
+public class TestObjectFacade extends TransformableObjectFacade {
 
 	private String objectId = null;
 	private final String historyId = null;
@@ -20,7 +20,7 @@ public class TestObjectData extends TransformableObjectFacade {
 	private String productName = null;
 	private String productVersion = null;
 
-	public TestObjectData() {
+	public TestObjectFacade() {
 	}
 
 	@Override
@@ -28,7 +28,7 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.objectId;
 	}
 
-	public TestObjectData setObjectId(String objectId) {
+	public TestObjectFacade setObjectId(String objectId) {
 		this.objectId = objectId;
 		return this;
 	}
@@ -38,7 +38,7 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.historyCurrent;
 	}
 
-	public TestObjectData setHistoryCurrent(boolean historyCurrent) {
+	public TestObjectFacade setHistoryCurrent(boolean historyCurrent) {
 		this.historyCurrent = historyCurrent;
 		return this;
 	}
@@ -53,12 +53,12 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.label;
 	}
 
-	public TestObjectData setLabel(String label) {
+	public TestObjectFacade setLabel(String label) {
 		this.label = label;
 		return this;
 	}
 
-	public TestObjectData setType(CmfType type) {
+	public TestObjectFacade setType(CmfType type) {
 		this.type = type;
 		return this;
 	}
@@ -68,13 +68,13 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.originalSubtype;
 	}
 
-	public TestObjectData setOriginalSubtype(String originalSubtype) {
+	public TestObjectFacade setOriginalSubtype(String originalSubtype) {
 		this.originalSubtype = originalSubtype;
 		return this;
 	}
 
 	@Override
-	public TestObjectData setSubtype(String subtype) {
+	public TestObjectFacade setSubtype(String subtype) {
 		super.setSubtype(subtype);
 		return this;
 	}
@@ -84,7 +84,7 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.originalDecorators;
 	}
 
-	public TestObjectData setOriginalDecorators(Set<String> originalDecorators) {
+	public TestObjectFacade setOriginalDecorators(Set<String> originalDecorators) {
 		this.originalDecorators = originalDecorators;
 		return this;
 	}
@@ -94,7 +94,7 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.decorators;
 	}
 
-	public TestObjectData setDecorators(Set<String> decorators) {
+	public TestObjectFacade setDecorators(Set<String> decorators) {
 		this.decorators = decorators;
 		return this;
 	}
@@ -104,13 +104,13 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.dependencyTier;
 	}
 
-	public TestObjectData setDependencyTier(int dependencyTier) {
+	public TestObjectFacade setDependencyTier(int dependencyTier) {
 		this.dependencyTier = dependencyTier;
 		return this;
 	}
 
 	@Override
-	public TestObjectData setName(String name) {
+	public TestObjectFacade setName(String name) {
 		super.setName(name);
 		return this;
 	}
@@ -120,7 +120,7 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.productName;
 	}
 
-	public TestObjectData setProductName(String productName) {
+	public TestObjectFacade setProductName(String productName) {
 		this.productName = productName;
 		return this;
 	}
@@ -130,7 +130,7 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.productVersion;
 	}
 
-	public TestObjectData setProductVersion(String productVersion) {
+	public TestObjectFacade setProductVersion(String productVersion) {
 		this.productVersion = productVersion;
 		return this;
 	}
@@ -140,7 +140,7 @@ public class TestObjectData extends TransformableObjectFacade {
 		return this.historyId;
 	}
 
-	public TestObjectData setOriginalName(String originalName) {
+	public TestObjectFacade setOriginalName(String originalName) {
 		this.originalName = originalName;
 		return this;
 	}

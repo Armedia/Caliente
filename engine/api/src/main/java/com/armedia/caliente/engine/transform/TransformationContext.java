@@ -26,15 +26,15 @@ public class TransformationContext {
 		this.variables = variables;
 	}
 
-	public final TransformableObjectFacade getObject() {
+	public TransformableObjectFacade getObject() {
 		return this.transformableObjectFacade;
 	}
 
-	public final Map<String, TypedValue> getVariables() {
+	public Map<String, TypedValue> getVariables() {
 		return this.variables;
 	}
 
-	public final CmfAttributeMapper getAttributeMapper() {
+	public CmfAttributeMapper getAttributeMapper() {
 		return this.mapper;
 	}
 
