@@ -55,17 +55,19 @@ public class CheckExpression extends AbstractComparisonCheck {
 		this.right = value;
 	}
 
+	private Object castTo(CmfDataType type, Object object) throws TransformationException {
+		if (object == null) { return null; }
+		// TODO: Make sure we typecast the object properly...
+		return object;
+	}
+
 	@Override
 	public boolean check(TransformationContext ctx) throws TransformationException {
+		final CmfDataType type = getType();
 		Expression leftExp = getLeft();
-		Object leftVal = Expression.eval(leftExp, ctx);
 		Expression rightExp = getRight();
-		Object rightVal = Expression.eval(rightExp, ctx);
-
-		// CmfDataType comparisonType = getType();
-		// TODO: Make sure each value is cast to the correct type, and then perform the
-		// comparison...
-		return getComparison().check(getType(), leftVal, rightVal);
+		return getComparison().check(getType(), castTo(type, Expression.eval(leftExp, ctx)),
+			castTo(type, Expression.eval(rightExp, ctx)));
 	}
 
 }
