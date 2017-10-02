@@ -32,7 +32,7 @@ public class TypedValue extends CmfBaseSetting {
 		super(name, type, multivalue);
 	}
 
-	public TypedValue(CmfProperty<CmfValue> property) {
+	public <V extends CmfProperty<CmfValue>> TypedValue(V property) {
 		super(property);
 		// Copy the values over
 		if (isRepeating()) {
