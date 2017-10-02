@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.transform.TestTransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Expression;
 
-public class SetSubtypeTest {
+public class SubtypeSetTest {
 
 	@Test
 	public void test() throws TransformationException {
