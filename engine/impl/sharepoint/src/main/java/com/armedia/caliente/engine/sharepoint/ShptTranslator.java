@@ -116,6 +116,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 
 	private ShptTranslator() {
 		// Avoid instantiation
+		super(CmfValue.class, true);
 	}
 
 	@Override

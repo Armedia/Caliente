@@ -10,6 +10,10 @@ import com.armedia.caliente.store.CmfValueCodec;
 
 public class AlfTranslator extends CmfAttributeTranslator<CmfValue> {
 
+	protected AlfTranslator() {
+		super(CmfValue.class, false);
+	}
+
 	@Override
 	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
 		return new CmfValue(type, value);

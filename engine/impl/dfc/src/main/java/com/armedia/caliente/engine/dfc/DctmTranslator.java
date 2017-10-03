@@ -139,6 +139,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 
 	private DctmTranslator() {
 		// Nobody can instantiate
+		super(IDfValue.class, true);
 	}
 
 	public static DctmDataType translateType(CmfDataType type) {

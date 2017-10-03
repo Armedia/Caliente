@@ -56,6 +56,14 @@ public abstract class CmfAttributeTranslator<V> {
 		return CmfAttributeTranslator.CODECS.get(type);
 	}
 
+	private final Class<V> valueClass;
+	private final boolean requiresAttributeNameMappings;
+
+	protected CmfAttributeTranslator(Class<V> valueClass, boolean requiresAttributeNameMappings) {
+		this.valueClass = valueClass;
+		this.requiresAttributeNameMappings = requiresAttributeNameMappings;
+	}
+
 	public final String encodeValue(CmfDataType value) {
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to encode"); }
 		return value.name();
@@ -88,7 +96,14 @@ public abstract class CmfAttributeTranslator<V> {
 
 	public abstract String getDefaultSubtype(CmfType baseType);
 
-	public CmfObject<V> decodeObject(CmfObject<CmfValue> obj) {
+	public final CmfObject<V> decodeObject(CmfObject<CmfValue> obj) {
+		// Can we optimize this if there are no changes needed?
+		if (this.valueClass.equals(CmfValue.class) && !this.requiresAttributeNameMappings) {
+			@SuppressWarnings("unchecked")
+			CmfObject<V> ret = (CmfObject<V>) obj;
+			return ret;
+		}
+
 		CmfObject<V> newObj = new CmfObject<>(//
 			this, //
 			obj.getType(), //
@@ -135,7 +150,7 @@ public abstract class CmfAttributeTranslator<V> {
 		return newObj;
 	}
 
-	public CmfObject<CmfValue> encodeObject(CmfObject<V> obj) {
+	public final CmfObject<CmfValue> encodeObject(CmfObject<V> obj) {
 		CmfObject<CmfValue> newObj = new CmfObject<>(//
 			null, //
 			obj.getType(), //

@@ -12,7 +12,6 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
@@ -68,14 +67,8 @@ public class XmlTranslator extends CmfAttributeTranslator<CmfValue> {
 		return XmlTranslator.DATA_TYPES_REV.get(t);
 	}
 
-	@Override
-	public CmfObject<CmfValue> decodeObject(CmfObject<CmfValue> rawObject) {
-		return rawObject;
-	}
-
-	@Override
-	public CmfObject<CmfValue> encodeObject(CmfObject<CmfValue> rawObject) {
-		return rawObject;
+	public XmlTranslator() {
+		super(CmfValue.class, true);
 	}
 
 	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {

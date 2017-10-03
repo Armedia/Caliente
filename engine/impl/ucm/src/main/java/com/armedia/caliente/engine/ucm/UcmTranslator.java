@@ -12,7 +12,6 @@ import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.ucm.model.UcmAtt;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
@@ -68,14 +67,8 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
 	}
 
-	@Override
-	public CmfObject<CmfValue> decodeObject(CmfObject<CmfValue> rawObject) {
-		return rawObject;
-	}
-
-	@Override
-	public CmfObject<CmfValue> encodeObject(CmfObject<CmfValue> rawObject) {
-		return rawObject;
+	public UcmTranslator() {
+		super(CmfValue.class, true);
 	}
 
 	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
