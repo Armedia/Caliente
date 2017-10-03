@@ -94,12 +94,12 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 
 	@Override
 	public CmfObject<CmfValue> decodeObject(CmfObject<CmfValue> rawObject) {
-		return super.decodeObject(rawObject);
+		return rawObject;
 	}
 
 	@Override
 	public CmfObject<CmfValue> encodeObject(CmfObject<CmfValue> rawObject) {
-		return super.encodeObject(rawObject);
+		return rawObject;
 	}
 
 	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {

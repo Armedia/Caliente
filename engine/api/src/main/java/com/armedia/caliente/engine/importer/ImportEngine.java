@@ -563,17 +563,17 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			ImportContextFactory<S, W, V, C, ?, ?> contextFactory = null;
 			ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
-			CmfTransformer typeMapper = null;
+			CmfTransformer transformer = null;
 			try {
 				try {
-					typeMapper = getTransformer(baseSession.getWrapped(), configuration);
+					transformer = getTransformer(baseSession.getWrapped(), configuration);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the required type mapper", e);
 				}
 
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
-						streamStore, typeMapper, output, warningTracker);
+						streamStore, transformer, output, warningTracker);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}
@@ -590,13 +590,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					baseSession = null;
 				}
 
-				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory, typeMapper);
+				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory, transformer);
 			} finally {
 				if (baseSession != null) {
 					baseSession.close();
 				}
-				if (typeMapper != null) {
-					typeMapper.close();
+				if (transformer != null) {
+					transformer.close();
 				}
 				if (delegateFactory != null) {
 					delegateFactory.close();

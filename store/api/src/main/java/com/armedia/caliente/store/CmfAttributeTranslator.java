@@ -68,14 +68,6 @@ public abstract class CmfAttributeTranslator<V> {
 
 	public abstract CmfValueCodec<V> getCodec(CmfDataType type);
 
-	public CmfObject<V> decodeObject(CmfObject<V> rawObject) {
-		return rawObject;
-	}
-
-	public CmfObject<V> encodeObject(CmfObject<V> rawObject) {
-		return rawObject;
-	}
-
 	public final String encodeAttributeName(CmfType type, CmfEncodeableName attributeName) {
 		return encodeAttributeName(type, attributeName.encode());
 	}
@@ -95,4 +87,98 @@ public abstract class CmfAttributeTranslator<V> {
 	public abstract V getValue(CmfDataType type, Object value) throws ParseException;
 
 	public abstract String getDefaultSubtype(CmfType baseType);
+
+	public CmfObject<V> decodeObject(CmfObject<CmfValue> obj) {
+		CmfObject<V> newObj = new CmfObject<>(//
+			this, //
+			obj.getType(), //
+			obj.getId(), //
+			obj.getName(), //
+			obj.getParentReferences(), //
+			obj.getDependencyTier(), //
+			obj.getHistoryId(), //
+			obj.isHistoryCurrent(), //
+			obj.getLabel(), //
+			obj.getSubtype(), //
+			obj.getProductName(), //
+			obj.getProductVersion(), //
+			obj.getNumber() //
+		);
+
+		for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
+			final String newName = decodeAttributeName(newObj.getType(), att.getName());
+			CmfAttribute<V> newAtt = new CmfAttribute<>(newName, att.getType(), att.isRepeating());
+			CmfValueCodec<V> codec = getCodec(att.getType());
+			if (newAtt.isRepeating()) {
+				for (CmfValue v : att) {
+					newAtt.addValue(codec.decodeValue(v));
+				}
+			} else {
+				newAtt.setValue(codec.decodeValue(att.getValue()));
+			}
+			newObj.setAttribute(newAtt);
+		}
+
+		for (CmfProperty<CmfValue> prop : obj.getProperties()) {
+			CmfProperty<V> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isRepeating());
+			CmfValueCodec<V> codec = getCodec(prop.getType());
+			if (newProp.isRepeating()) {
+				for (CmfValue v : prop) {
+					newProp.addValue(codec.decodeValue(v));
+				}
+			} else {
+				newProp.setValue(codec.decodeValue(prop.getValue()));
+			}
+			newObj.setProperty(newProp);
+		}
+
+		return newObj;
+	}
+
+	public CmfObject<CmfValue> encodeObject(CmfObject<V> obj) {
+		CmfObject<CmfValue> newObj = new CmfObject<>(//
+			null, //
+			obj.getType(), //
+			obj.getId(), //
+			obj.getName(), //
+			obj.getParentReferences(), //
+			obj.getDependencyTier(), //
+			obj.getHistoryId(), //
+			obj.isHistoryCurrent(), //
+			obj.getLabel(), //
+			obj.getSubtype(), //
+			obj.getProductName(), //
+			obj.getProductVersion(), //
+			obj.getNumber() //
+		);
+
+		for (CmfAttribute<V> att : obj.getAttributes()) {
+			final String newName = encodeAttributeName(newObj.getType(), att.getName());
+			CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(newName, att.getType(), att.isRepeating());
+			CmfValueCodec<V> codec = getCodec(att.getType());
+			if (newAtt.isRepeating()) {
+				for (V v : att) {
+					newAtt.addValue(codec.encodeValue(v));
+				}
+			} else {
+				newAtt.setValue(codec.encodeValue(att.getValue()));
+			}
+			newObj.setAttribute(newAtt);
+		}
+
+		for (CmfProperty<V> prop : obj.getProperties()) {
+			CmfProperty<CmfValue> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isRepeating());
+			CmfValueCodec<V> codec = getCodec(prop.getType());
+			if (newProp.isRepeating()) {
+				for (V v : prop) {
+					newProp.addValue(codec.encodeValue(v));
+				}
+			} else {
+				newProp.setValue(codec.encodeValue(prop.getValue()));
+			}
+			newObj.setProperty(newProp);
+		}
+
+		return newObj;
+	}
 }

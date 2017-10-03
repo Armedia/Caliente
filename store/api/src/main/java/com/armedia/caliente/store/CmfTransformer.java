@@ -2,8 +2,7 @@ package com.armedia.caliente.store;
 
 public interface CmfTransformer {
 
-	public <V> CmfObject<V> transformObject(CmfObject<V> object);
+	public CmfObject<CmfValue> transform(CmfObject<CmfValue> object) throws CmfStorageException;
 
 	public void close();
-
 }

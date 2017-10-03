@@ -224,18 +224,6 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 	}
 
 	@Override
-	public CmfObject<IDfValue> decodeObject(CmfObject<IDfValue> rawObject) {
-		// TODO: Perhaps perform specific attribute and property processing here?
-		return super.decodeObject(rawObject);
-	}
-
-	@Override
-	public CmfObject<IDfValue> encodeObject(CmfObject<IDfValue> rawObject) {
-		// TODO: Perhaps perform specific attribute and property processing here?
-		return super.encodeObject(rawObject);
-	}
-
-	@Override
 	public IDfValue getValue(CmfDataType type, Object value) {
 		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
 	}

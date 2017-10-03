@@ -427,14 +427,10 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract boolean lockHistory(O operation, CmfType type, String historyId, String lockId)
 		throws CmfStorageException;
 
-	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTransformer transformer,
-		CmfAttributeTranslator<V> translator) {
-		// If there is no transformer, then don't even bother
-		if (transformer == null) { return dataObject; }
-
-		// TODO: Is this the right way to do it?
-		CmfObject<V> transformed = translator.decodeObject(dataObject);
-		return transformer.transformObject(transformed);
+	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<CmfValue> dataObject, CmfTransformer transformer,
+		CmfAttributeTranslator<V> translator) throws CmfStorageException {
+		CmfObject<CmfValue> transformed = (transformer != null ? transformer.transform(dataObject) : dataObject);
+		return translator.decodeObject(transformed);
 	}
 
 	public final <V> CmfObject<V> loadHeadObject(final CmfTransformer typeMapper, CmfAttributeTranslator<V> translator,
@@ -519,14 +515,14 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				actualIds.add(s);
 			}
 			final CmfObjectHandler<V> h = new CollectionObjectHandler<>(ret);
-			loadObjects(operation, translator, type, actualIds, new CmfObjectHandler<V>() {
+			loadObjects(operation, type, actualIds, new CmfObjectHandler<CmfValue>() {
 				@Override
 				public boolean newTier(int tierNumber) throws CmfStorageException {
 					return h.newTier(tierNumber);
 				}
 
 				@Override
-				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
+				public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
 					return h.handleObject(adjustLoadedObject(dataObject, typeMapper, translator));
 				}
 
@@ -571,14 +567,14 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return loadObjects(operation, translator, type, ids, new CmfObjectHandler<V>() {
+				return loadObjects(operation, type, ids, new CmfObjectHandler<CmfValue>() {
 					@Override
 					public boolean newTier(int tierNumber) throws CmfStorageException {
 						return handler.newTier(tierNumber);
 					}
 
 					@Override
-					public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
+					public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
 						return handler.handleObject(adjustLoadedObject(dataObject, typeMapper, translator));
 					}
 
@@ -617,8 +613,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> int loadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
-		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException;
+	protected abstract <V> int loadObjects(O operation, CmfType type, Collection<String> ids,
+		CmfObjectHandler<CmfValue> handler) throws CmfStorageException;
 
 	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
 		throws CmfStorageException {
