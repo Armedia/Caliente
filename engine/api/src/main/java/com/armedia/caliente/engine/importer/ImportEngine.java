@@ -4,12 +4,6 @@
 
 package com.armedia.caliente.engine.importer;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -28,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -492,43 +485,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
 
-	protected final CmfTransformer getTransformer(S session, CfgTools cfg) throws Exception {
-		final String xmlData = cfg.getString(ImportSetting.TRANSFORMATION);
-		// This may be a fully-qualified file path, a classpath:/ resource, or a URL...
-		if (StringUtils.isEmpty(xmlData)) { return null; }
-
-		URL url = null;
-		try {
-			URI uri = new URI(xmlData);
-			if ("resource".equalsIgnoreCase(uri.getScheme()) || "res".equalsIgnoreCase(uri.getScheme())
-				|| "classpath".equalsIgnoreCase(uri.getScheme()) || "cp".equalsIgnoreCase(uri.getScheme())) {
-				// It's a classpath reference, so let's just find the first resource that matches
-				// the SSP
-				url = Thread.currentThread().getContextClassLoader().getResource(uri.getSchemeSpecificPart());
-				if (url == null) { throw new Exception(
-					String.format("Failed to locate the specified transformation [%s] in the classpath",
-						uri.getSchemeSpecificPart())); }
-			} else {
-				try {
-					url = uri.toURL();
-				} catch (MalformedURLException e) {
-					throw new Exception(String.format("The given URI [%s] is not a valid URL", xmlData), e);
-				}
-			}
-		} catch (URISyntaxException e) {
-			// Not a URI, so it must be an absolute path
-			File f = Tools.canonicalize(new File(xmlData));
-			if (!f.exists()) { throw new FileNotFoundException(
-				String.format("Transformation file [%s] does not exist", f.getAbsolutePath())); }
-			if (!f.isFile()) { throw new FileNotFoundException(String
-				.format("The path at [%s] is not a valid transformation file (not a file!)", f.getAbsolutePath())); }
-			if (!f.canRead()) { throw new FileNotFoundException(
-				String.format("Transformation file [%s] is not readable", f.getAbsolutePath())); }
-			// It exists, it's a file, and can be read!! Move forward!
-			url = f.toURI().toURL();
-		}
-
-		return Transformer.getInstance(url);
+	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
+		return Transformer.getInstance(cfg.getString(ImportSetting.TRANSFORMATION));
 	}
 
 	protected final ExecutorService newExecutor(int threadCount) {
@@ -575,7 +533,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
 			try {
 				try {
-					transformer = getTransformer(baseSession.getWrapped(), configuration);
+					transformer = getTransformer(configuration);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the required transformation engine", e);
 				}
