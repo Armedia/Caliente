@@ -6,7 +6,6 @@ import java.util.Collections;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.importer.TypeDescriptor;
 import com.armedia.caliente.engine.xml.importer.jaxb.AggregatorBase;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
@@ -24,8 +23,8 @@ abstract class XmlAggregatedImportDelegate<I, T extends AggregatorBase<I>> exten
 	}
 
 	@Override
-	protected final Collection<ImportOutcome> importObject(TypeDescriptor targetType,
-		CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx) throws ImportException, CmfStorageException {
+	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
+		XmlImportContext ctx) throws ImportException, CmfStorageException {
 		I item = createItem(translator, ctx);
 		if (item == null) { return Collections.singleton(ImportOutcome.SKIPPED); }
 		getXmlObject().add(item);

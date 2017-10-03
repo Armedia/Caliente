@@ -32,7 +32,6 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.importer.TypeDescriptor;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -644,8 +643,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	@Override
-	protected final Collection<ImportOutcome> importObject(TypeDescriptor finalType,
-		CmfAttributeTranslator<CmfValue> translator, AlfImportContext ctx) throws ImportException, CmfStorageException {
+	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
+		AlfImportContext ctx) throws ImportException, CmfStorageException {
 
 		if (!ctx.getContentStore()
 			.isSupportsFileAccess()) { throw new ImportException("This engine requires filesystem access"); }

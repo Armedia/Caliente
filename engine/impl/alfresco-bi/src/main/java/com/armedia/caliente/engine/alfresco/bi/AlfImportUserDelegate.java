@@ -6,7 +6,6 @@ import java.util.Collections;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.importer.TypeDescriptor;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
@@ -19,8 +18,8 @@ public class AlfImportUserDelegate extends AlfImportDelegate {
 	}
 
 	@Override
-	protected Collection<ImportOutcome> importObject(TypeDescriptor targetType,
-		CmfAttributeTranslator<CmfValue> translator, AlfImportContext ctx) throws ImportException, CmfStorageException {
+	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, AlfImportContext ctx)
+		throws ImportException, CmfStorageException {
 		CmfValue group = getAttributeValue("dctm:r_is_group");
 		if ((group != null) && group.asBoolean()) { return Collections.singleton(ImportOutcome.SKIPPED); }
 		CmfValue name = getAttributeValue("cmis:name");

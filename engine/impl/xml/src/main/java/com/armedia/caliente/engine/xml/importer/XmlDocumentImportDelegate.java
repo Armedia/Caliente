@@ -17,7 +17,6 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.importer.TypeDescriptor;
 import com.armedia.caliente.engine.xml.importer.jaxb.ContentInfoT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentVersionT;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -151,8 +150,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 	}
 
 	@Override
-	protected Collection<ImportOutcome> importObject(TypeDescriptor targetType,
-		CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx) throws ImportException, CmfStorageException {
+	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, XmlImportContext ctx)
+		throws ImportException, CmfStorageException {
 		ImportOutcome outcome = ImportOutcome.SKIPPED;
 		DocumentVersionT v = createVersion(translator, ctx);
 		if (v != null) {

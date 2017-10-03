@@ -20,7 +20,7 @@ public abstract class ImportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		this.strategy = factory.getEngine().getImportStrategy(storedObject.getType());
 	}
 
-	protected abstract Collection<ImportOutcome> importObject(TypeDescriptor targetType,
-		CmfAttributeTranslator<V> translator, C ctx) throws ImportException, CmfStorageException;
+	protected abstract Collection<ImportOutcome> importObject(CmfAttributeTranslator<V> translator, C ctx)
+		throws ImportException, CmfStorageException;
 
 }
