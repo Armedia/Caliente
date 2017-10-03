@@ -15,12 +15,25 @@ public class RegularExpression extends Expression {
 	@XmlAttribute(name = "caseSensitive")
 	protected Boolean caseSensitive;
 
+	public RegularExpression() {
+		super();
+	}
+
+	public RegularExpression(String lang, String script) {
+		super(lang, script);
+	}
+
+	public RegularExpression(String script) {
+		super(script);
+	}
+
 	public boolean isCaseSensitive() {
 		return Tools.coalesce(this.caseSensitive, Boolean.TRUE);
 	}
 
-	public void setCaseSensitive(Boolean caseSensitive) {
+	public RegularExpression setCaseSensitive(Boolean caseSensitive) {
 		this.caseSensitive = caseSensitive;
+		return this;
 	}
 
 }

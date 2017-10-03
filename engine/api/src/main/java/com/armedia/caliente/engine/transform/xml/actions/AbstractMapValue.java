@@ -100,7 +100,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 		final AtomicReference<Object> ref = new AtomicReference<>(null);
 		if (cardinality == Cardinality.ALL) {
 			for (Object o : candidate.getValues()) {
-				if (mapValue(ctx, candidate.getType(), newValues, ref)) {
+				if (mapValue(ctx, candidate.getType(), o, ref)) {
 					newValues.add(ref.get());
 				} else {
 					newValues.add(o);

@@ -1,10 +1,14 @@
 package com.armedia.caliente.engine.transform.xml.actions;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -12,9 +16,11 @@ import com.armedia.caliente.engine.transform.TestObjectFacade;
 import com.armedia.caliente.engine.transform.TestTransformationContext;
 import com.armedia.caliente.engine.transform.TransformationCompletedException;
 import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.engine.transform.xml.RegularExpression;
+import com.armedia.caliente.store.CmfDataType;
 
 public class ActionsTest {
 
@@ -45,23 +51,20 @@ public class ActionsTest {
 		Assert.assertNull(object.getSubtype());
 
 		SubtypeSet action = new SubtypeSet();
-		Expression e = new Expression();
-		e.setLang(null);
 		String value = UUID.randomUUID().toString();
-		e.setScript(value);
-		action.setSubtype(e);
+		action.setSubtype(new Expression(value));
 
 		action.apply(ctx);
 
 		Assert.assertEquals(value, object.getSubtype());
 
-		e.setScript(
-			"                                                       \n   \t   \n                       \t \t   \n                               ");
+		action.setSubtype(new Expression(
+			"                                                       \n   \t   \n                       \t \t   \n                               "));
 		action.apply(ctx);
 		// Value is an empty string, so no change...
 		Assert.assertEquals(value, object.getSubtype());
 
-		e.setScript(null);
+		action.setSubtype(new Expression());
 		action.apply(ctx);
 		// Value is a null string, so no change...
 		Assert.assertEquals(value, object.getSubtype());
@@ -82,10 +85,7 @@ public class ActionsTest {
 			// All is well
 		}
 
-		RegularExpression regex = new RegularExpression();
-		action.setRegex(regex);
-		regex.setLang(null);
-		regex.setScript("^dctm:");
+		action.setRegex(new RegularExpression("^dctm:"));
 
 		action.apply(ctx);
 		Assert.assertEquals("test_subtype_value", object.getSubtype());
@@ -93,16 +93,13 @@ public class ActionsTest {
 		// Reset the value...
 		object.setSubtype("dctm:test_subtype_value");
 
-		Expression replacement = new Expression();
-		action.setReplacement(replacement);
-		replacement.setLang(null);
-		replacement.setScript("alfresco||");
+		action.setReplacement(new Expression("alfresco||"));
 
 		action.apply(ctx);
 		Assert.assertEquals("alfresco||test_subtype_value", object.getSubtype());
 
-		regex.setScript("(test_)(subtype)(_value)");
-		replacement.setScript("$3$1$2");
+		action.setRegex(new RegularExpression("(test_)(subtype)(_value)"));
+		action.setReplacement(new Expression("$3$1$2"));
 		action.apply(ctx);
 		Assert.assertEquals("alfresco||_valuetest_subtype", object.getSubtype());
 	}
@@ -116,15 +113,12 @@ public class ActionsTest {
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().isEmpty());
 
-		Expression e = new Expression();
-		action.setDecorator(e);
-		e.setLang(null);
-		e.setScript(null);
+		action.setDecorator(new Expression());
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().isEmpty());
 
 		String testValue = UUID.randomUUID().toString();
-		e.setScript(testValue);
+		action.setDecorator(new Expression(testValue));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().isEmpty());
 		Assert.assertTrue(object.getDecorators().contains(testValue));
@@ -136,8 +130,7 @@ public class ActionsTest {
 		TestObjectFacade object = ctx.getObject();
 
 		DecoratorRemove action = new DecoratorRemove();
-		Expression e = new Expression();
-		action.setDecorator(e);
+		action.setDecorator(new Expression());
 
 		// First things first: remove by equals
 		Set<String> values = new TreeSet<>();
@@ -146,9 +139,8 @@ public class ActionsTest {
 		action.setComparison(Comparison.EQ);
 		object.getDecorators().addAll(values);
 		for (String s : values) {
-			e.setLang(null);
-			e.setScript(s);
 			Assert.assertTrue(object.getDecorators().contains(s));
+			action.setDecorator(new Expression(s));
 			action.apply(ctx);
 			Assert.assertFalse(object.getDecorators().contains(s));
 		}
@@ -156,18 +148,16 @@ public class ActionsTest {
 		action.setComparison(Comparison.EQI);
 		object.getDecorators().addAll(values);
 		for (String s : values) {
-			e.setLang(null);
-			e.setScript(s.toUpperCase());
 			Assert.assertTrue(s, object.getDecorators().contains(s));
+			action.setDecorator(new Expression(s.toUpperCase()));
 			action.apply(ctx);
 			Assert.assertFalse(s, object.getDecorators().contains(s));
 		}
 
 		action.setComparison(Comparison.NEQ);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("a");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -175,9 +165,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NEQI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("B");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("B"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertTrue(object.getDecorators().contains("b"));
@@ -185,9 +174,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.LT);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("b");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertTrue(object.getDecorators().contains("b"));
@@ -195,9 +183,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.LTI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("C");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("C"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -205,9 +192,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.GT);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("a");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -215,9 +201,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.GTI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("A");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("A"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -225,9 +210,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NGE);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("b");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertTrue(object.getDecorators().contains("b"));
@@ -235,9 +219,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NGEI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("C");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("C"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -245,9 +228,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NLE);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("a");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -255,9 +237,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NLEI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("A");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("A"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -265,9 +246,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.LE);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("b");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -275,9 +255,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.LEI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("A");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("A"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertTrue(object.getDecorators().contains("b"));
@@ -285,9 +264,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.GE);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("a");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -295,9 +273,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.GEI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("b");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -305,9 +282,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NGT);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("b");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -315,9 +291,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NGTI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("C");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("C"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -325,9 +300,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NLT);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("a");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -335,9 +309,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NLTI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("B");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("B"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("a"));
 		Assert.assertFalse(object.getDecorators().contains("b"));
@@ -350,9 +323,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.SW);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("first_");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("first_"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -361,9 +333,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.SWI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("SeCoNd_");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("SeCoNd_"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("first_value"));
 		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
@@ -372,9 +343,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NSW);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("first_");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("first_"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("first_value"));
 		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
@@ -383,9 +353,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NSWI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("SeCoNd_");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("SeCoNd_"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -394,9 +363,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.EW);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("_value");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("_value"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -405,9 +373,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.EWI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("_DeCoRaToR");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("_DeCoRaToR"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("first_value"));
 		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
@@ -416,9 +383,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NEW);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("_decorator");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("_decorator"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -427,9 +393,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NEWI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("_vAlUe");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("_vAlUe"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("first_value"));
 		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
@@ -438,8 +403,7 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.CN);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("_va");
+		action.setDecorator(new Expression("_va"));
 		Assert.assertEquals(values, object.getDecorators());
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
@@ -449,9 +413,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.CNI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("RsT");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("RsT"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -460,9 +423,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NCN);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("seco");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("seco"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -471,9 +433,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NCNI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("DeCo");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("DeCo"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -482,9 +443,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.RE);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("t_[dv]");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("t_[dv]"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -493,9 +453,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.REI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("T_[Dv]");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("T_[Dv]"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -504,9 +463,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NRE);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("e$");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("e$"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("first_value"));
 		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
@@ -515,9 +473,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NREI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("^F");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("^F"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("first_value"));
 		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
@@ -526,9 +483,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.GLOB);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("first*");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("first*"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
@@ -537,9 +493,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.GLOBI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("*dEcO*");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("*dEcO*"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("first_value"));
 		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
@@ -548,9 +503,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NGLOB);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("last*");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("last*"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getDecorators().contains("first_value"));
 		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
@@ -559,9 +513,8 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.NGLOBI);
 		object.getDecorators().addAll(values);
-		e.setLang(null);
-		e.setScript("*sT_v?L?e");
 		Assert.assertEquals(values, object.getDecorators());
+		action.setDecorator(new Expression("*sT_v?L?e"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getDecorators().contains("first_value"));
 		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
@@ -588,10 +541,7 @@ public class ActionsTest {
 			// All is well
 		}
 
-		RegularExpression regex = new RegularExpression();
-		action.setRegex(regex);
-		regex.setLang(null);
-		regex.setScript("\\d");
+		action.setRegex(new RegularExpression("\\d"));
 
 		decorators.clear();
 		decorators.addAll(values);
@@ -600,10 +550,7 @@ public class ActionsTest {
 		Assert.assertTrue(decorators.contains("def"));
 		Assert.assertTrue(decorators.contains("bdfhj"));
 
-		Expression replacement = new Expression();
-		action.setReplacement(replacement);
-		replacement.setLang(null);
-		replacement.setScript("X");
+		action.setReplacement(new Expression("X"));
 
 		decorators.clear();
 		decorators.addAll(values);
@@ -614,13 +561,12 @@ public class ActionsTest {
 
 		decorators.clear();
 
-		regex.setCaseSensitive(true);
-		regex.setScript("[ABCDEFGHIJ]");
+		action.setRegex(new RegularExpression("[ABCDEFGHIJ]").setCaseSensitive(true));
 		decorators.addAll(values);
 		action.apply(ctx);
 		Assert.assertEquals(values, decorators);
 
-		regex.setCaseSensitive(false);
+		action.setRegex(new RegularExpression("[ABCDEFGHIJ]").setCaseSensitive(false));
 		action.apply(ctx);
 		Assert.assertTrue(decorators.contains("XXX123XXX"));
 		Assert.assertTrue(decorators.contains("123XXX789"));
@@ -641,21 +587,62 @@ public class ActionsTest {
 		}
 
 		final String attributeName = "testAttribute";
+		final String attributeValue = UUID.randomUUID().toString();
 
-		String attributeValue = null;
-
-		Expression e = new Expression();
-		action.setName(e);
-		e.setScript(attributeName);
-
-		e = new Expression();
-		action.setValue(e);
-		attributeValue = UUID.randomUUID().toString();
-		e.setScript(attributeValue);
+		action.setName(new Expression(attributeName));
+		action.setValue(new Expression(attributeValue));
 
 		Assert.assertFalse(object.getAtt().containsKey(attributeName));
 		action.apply(ctx);
 		Assert.assertTrue(object.getAtt().containsKey(attributeName));
 		Assert.assertEquals(attributeValue, object.getAtt().get(attributeName).getValue());
+	}
+
+	@Test
+	public void testMapAttributeValue() throws TransformationException {
+		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectFacade object = ctx.getObject();
+
+		MapAttributeValue action = new MapAttributeValue();
+		action.apply(ctx);
+
+		List<MapValueCase> cases = action.getCases();
+
+		List<Pair<String, String>> data = new ArrayList<>();
+		data.add(Pair.of("alpha", "OMEGA"));
+		data.add(Pair.of("James Bond", "Ernst Stavro Blofeld"));
+		data.add(Pair.of("Kingsman", "Statesman"));
+		data.add(Pair.of("123", "998877"));
+
+		for (Pair<String, String> p : data) {
+			MapValueCase c = new MapValueCase();
+			c.setValue(new Expression(p.getLeft()));
+			c.setReplacement(new Expression(p.getRight()));
+			cases.add(c);
+		}
+		// final String defaultValue = UUID.randomUUID().toString();
+		// action.setDefaultValue(new Expression(defaultValue));
+
+		final String attributeName = UUID.randomUUID().toString();
+		action.setName(new Expression(attributeName));
+		TypedValue tv = new TypedValue(attributeName, CmfDataType.STRING, true);
+		object.getAtt().put(attributeName, tv);
+		Set<String> expected = new HashSet<>();
+		for (Pair<String, String> p : data) {
+			expected.add(p.getRight());
+			tv.getValues().add(p.getLeft());
+			String fixed = String.format("nochange-%s", p.getLeft());
+			expected.add(fixed);
+			tv.getValues().add(fixed);
+		}
+
+		action.apply(ctx);
+		tv = object.getAtt().get(attributeName);
+		Assert.assertNotNull(tv);
+		Assert.assertFalse(tv.isEmpty());
+		Assert.assertEquals(expected.size(), tv.getSize());
+		for (Object o : tv.getValues()) {
+			Assert.assertTrue(o.toString(), expected.contains(o));
+		}
 	}
 }

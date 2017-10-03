@@ -48,7 +48,7 @@ public class SubtypeReplace extends ConditionalAction {
 		final RegularExpression regexBase = getRegex();
 		final String regex = Tools.toString(Expression.eval(getRegex(), ctx));
 		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
-		final String replacement = Tools.toString(Expression.eval(getReplacement(), ctx));
+		final String replacement = Tools.coalesce(Tools.toString(Expression.eval(getReplacement(), ctx)), "");
 		String oldSubtype = ctx.getObject().getSubtype();
 		// If there is no replacement, then it's a deletion...
 		int flags = 0;

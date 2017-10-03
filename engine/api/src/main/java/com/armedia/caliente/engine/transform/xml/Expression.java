@@ -149,6 +149,21 @@ public class Expression {
 		}
 	}
 
+	public Expression() {
+		this(null, null);
+	}
+
+	public Expression(String script) {
+		this(null, script);
+	}
+
+	public Expression(String lang, String script) {
+		lang = StringUtils.strip(lang);
+		this.engine = Expression.getEngine(lang);
+		this.lang = lang;
+		this.script = script;
+	}
+
 	public String getScript() {
 		return this.script;
 	}
@@ -230,6 +245,12 @@ public class Expression {
 			this.log.debug(msg, e);
 			throw new TransformationException(msg, e);
 		}
+	}
+
+	public static Expression constant(String value) {
+		Expression e = new Expression();
+		e.setScript(value);
+		return e;
 	}
 
 	public static Object eval(Expression e, TransformationContext ctx) throws TransformationException {
