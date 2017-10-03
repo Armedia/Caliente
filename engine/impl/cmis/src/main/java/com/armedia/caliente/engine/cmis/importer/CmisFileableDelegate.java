@@ -25,7 +25,6 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.importer.TypeDescriptor;
 import com.armedia.caliente.engine.tools.AclTools;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -303,8 +302,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected Collection<ImportOutcome> importObject(TypeDescriptor targetType,
-		CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
+	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException, CmfStorageException {
 
 		Map<String, Object> props = prepareProperties(translator, ctx);

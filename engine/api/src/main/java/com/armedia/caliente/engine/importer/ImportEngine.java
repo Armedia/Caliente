@@ -5,7 +5,6 @@
 package com.armedia.caliente.engine.importer;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -80,11 +79,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			this.delegateFactory = delegateFactory;
 			this.workerCounter = synchronizedCounter;
 			this.workerCounter.increment();
-		}
-
-		protected TypeDescriptor getTypeDescriptor(C ctx, CmfObject<V> target) throws ImportException {
-			// TODO: do the actual mapping and translation...
-			return new TypeDescriptor(target.getType(), target.getSubtype());
 		}
 
 		@Override
@@ -187,19 +181,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								}
 								try {
 									this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-									// TODO: Transform the loaded object from the intermediate
-									// format into the target format
 									ImportDelegate<?, S, W, V, C, ?, ?> delegate = this.delegateFactory
 										.newImportDelegate(next);
-									// TODO: identify the target type this object must be imported
-									// as... eventually, null will mean "do not import"
-									TypeDescriptor newType = getTypeDescriptor(ctx, next);
-									final Collection<ImportOutcome> outcome;
-									if (newType != null) {
-										outcome = delegate.importObject(newType, getTranslator(), ctx);
-									} else {
-										outcome = Collections.emptyList();
-									}
+									final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
+										ctx);
 									if (outcome.isEmpty()) {
 										result = ImportResult.SKIPPED;
 									} else {
