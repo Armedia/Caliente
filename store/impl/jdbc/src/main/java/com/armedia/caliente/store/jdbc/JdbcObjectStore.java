@@ -325,10 +325,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> CmfObject<V> loadHeadObject(JdbcOperation operation, CmfTransformer typeMapper,
-		CmfAttributeTranslator<V> translator, CmfObject<V> sample) throws CmfStorageException {
+	protected CmfObject<CmfValue> loadHeadObject(JdbcOperation operation, CmfTransformer typeMapper, CmfType type,
+		String historyId) throws CmfStorageException {
 		final Connection connection = operation.getConnection();
-		final CmfType type = sample.getType();
 		try {
 			PreparedStatement objectPS = null;
 			PreparedStatement attributePS = null;
@@ -351,8 +350,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				ResultSet valueRS = null;
 				ResultSet parentsRS = null;
 
-				objectPS.setString(1, sample.getType().name());
-				objectPS.setString(2, sample.getHistoryId());
+				objectPS.setString(1, type.name());
+				objectPS.setString(2, historyId);
 				objectRS = objectPS.executeQuery();
 				try {
 					while (objectRS.next()) {
@@ -422,7 +421,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						} catch (SQLException e) {
 							throw handlerExceptionUnhandled(e);
 						}
-						return translator.decodeObject(obj);
+						return obj;
 					}
 					return null;
 				} finally {
