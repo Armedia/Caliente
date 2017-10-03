@@ -29,76 +29,122 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class Transformer implements CmfTransformer {
-	private static ConcurrentMap<URI, Transformer> INSTANCES = new ConcurrentHashMap<>();
+	private static ConcurrentMap<URL, Transformer> INSTANCES = new ConcurrentHashMap<>();
 
 	private static final String DEFAULT_TRANSFORMATION_NAME = "transform.xml";
 
-	public static Transformer getInstance() throws Exception {
+	public static Transformer getInstance() throws TransformationException {
 		return Transformer.getInstance((String) null);
 	}
 
-	public static Transformer getInstance(String xmlData) throws Exception {
+	private static URL getFileURL(String filePath, boolean required)
+		throws FileNotFoundException, MalformedURLException {
+		File f = Tools.canonicalize(new File(filePath));
+		if (!f.exists()) {
+			if (!required) { return null; }
+			throw new FileNotFoundException(
+				String.format("Transformation file [%s] does not exist", f.getAbsolutePath()));
+		}
+
+		if (!f.isFile()) {
+			if (!required) { return null; }
+			throw new FileNotFoundException(String
+				.format("The path at [%s] is not a valid transformation file (not a file!)", f.getAbsolutePath()));
+		}
+
+		if (!f.canRead()) { throw new FileNotFoundException(
+			String.format("Transformation file [%s] is not readable", f.getAbsolutePath())); }
+
+		// It exists, it's a file, and can be read!! Move forward!
+		return f.toURI().toURL();
+	}
+
+	public static Transformer getInstance(String location) throws TransformationException {
 		URL url = null;
-		if (xmlData != null) {
+		if (location == null) {
 			try {
-				URI uri = new URI(xmlData);
-				// TODO: Support commons-VFS URLs here?
+				url = Transformer.getFileURL(Transformer.DEFAULT_TRANSFORMATION_NAME, false);
+				// If nothing was returned, then we return no transformer...
+				if (url == null) { return null; }
+			} catch (FileNotFoundException | MalformedURLException e) {
+				throw new TransformationException(String.format("Failed to load the default transformation file [%s]",
+					Transformer.DEFAULT_TRANSFORMATION_NAME), e);
+			}
+		}
+
+		if (url == null) {
+			// Try to see if it's a URI...
+			try {
+				URI uri = new URI(location);
 				if ("resource".equalsIgnoreCase(uri.getScheme()) || "res".equalsIgnoreCase(uri.getScheme())
 					|| "classpath".equalsIgnoreCase(uri.getScheme()) || "cp".equalsIgnoreCase(uri.getScheme())) {
 					// It's a classpath reference, so let's just find the first resource that
 					// matches the SSP
 					url = Thread.currentThread().getContextClassLoader().getResource(uri.getSchemeSpecificPart());
-					if (url == null) { throw new Exception(
-						String.format("Failed to locate the specified transformation [%s] in the classpath",
-							uri.getSchemeSpecificPart())); }
-					return Transformer.getInstance(url);
+					if (url == null) {
+						// No match!! Explode!
+						throw new TransformationException(
+							String.format("Failed to locate the specified transformation [%s] in the classpath",
+								uri.getSchemeSpecificPart()));
+					}
 				} else {
 					try {
-						url = uri.toURL();
+						url = uri.normalize().toURL();
 					} catch (MalformedURLException e) {
-						throw new Exception(String.format("The given URI [%s] is not a valid URL", xmlData), e);
+						// This isn't a valid URL...so it must be a file path
 					}
 				}
 			} catch (URISyntaxException e) {
-				// Not a URI, so it must be an absolute path
+				// Not a URI...is it a URL? (URL syntax rules are looser than a URI's)
+				try {
+					url = new URL(location);
+				} catch (MalformedURLException e2) {
+					// Do nothing...it may still be a file path
+				}
 			}
-		} else {
-			// No data given, so use the default
-			xmlData = Transformer.DEFAULT_TRANSFORMATION_NAME;
 		}
 
 		if (url == null) {
-			File f = Tools.canonicalize(new File(xmlData));
-			if (!f.exists()) { throw new FileNotFoundException(
-				String.format("Transformation file [%s] does not exist", f.getAbsolutePath())); }
-			if (!f.isFile()) { throw new FileNotFoundException(String
-				.format("The path at [%s] is not a valid transformation file (not a file!)", f.getAbsolutePath())); }
-			if (!f.canRead()) { throw new FileNotFoundException(
-				String.format("Transformation file [%s] is not readable", f.getAbsolutePath())); }
-			// It exists, it's a file, and can be read!! Move forward!
-			url = f.toURI().toURL();
+			// If it wasn't a straight-up URL, or a classpath URI, then it must be a file path...
+			try {
+				url = Transformer.getFileURL(location, true);
+			} catch (FileNotFoundException | MalformedURLException e) {
+				throw new TransformationException(String.format("Failed to get the file URL from [%s]", location), e);
+			}
 		}
 
 		return Transformer.getInstance(url);
 	}
 
-	public static Transformer getInstance(final URL resource) throws Exception {
+	private static URL normalize(final URL url) {
+		try {
+			return url.toURI().normalize().toURL();
+		} catch (MalformedURLException | URISyntaxException e) {
+			return url;
+		}
+	}
+
+	public static Transformer getInstance(final URL resource) throws TransformationException {
 		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
-		return ConcurrentUtils.createIfAbsent(Transformer.INSTANCES, resource.toURI(),
-			new ConcurrentInitializer<Transformer>() {
+		final URL key = Transformer.normalize(resource);
+		try {
+			return ConcurrentUtils.createIfAbsent(Transformer.INSTANCES, key, new ConcurrentInitializer<Transformer>() {
 				@Override
 				public Transformer get() throws ConcurrentException {
-					try (InputStream in = resource.openStream()) {
+					try (InputStream in = key.openStream()) {
 						return new Transformer(in);
 					} catch (JAXBException e) {
 						throw new ConcurrentException(
-							String.format("Failed to parse out the XML resource at [%s]", resource), e);
+							String.format("Failed to parse out the XML resource at [%s]", key), e);
 					} catch (IOException e) {
 						throw new ConcurrentException(
-							String.format("Failed to retrieve the contents of the URL [%s]", resource), e);
+							String.format("Failed to retrieve the contents of the URL [%s]", key), e);
 					}
 				}
 			});
+		} catch (ConcurrentException e) {
+			throw new TransformationException(e.getMessage(), e.getCause());
+		}
 	}
 
 	public static Transformer getNewInstance(final URL resource) throws Exception {
