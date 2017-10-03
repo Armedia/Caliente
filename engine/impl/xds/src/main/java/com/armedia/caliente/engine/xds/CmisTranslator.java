@@ -91,39 +91,41 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		return CmisTranslator.OBJECT_TYPES_REV.get(type);
 	}
 
-	public CmisTranslator() {
-		super(CmfValue.class, true);
-	}
-
-	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
-		return CmisTranslator.ATTRIBUTE_MAPPINGS.get(type);
-	}
-
-	@Override
-	public String encodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			// TODO: normalize the CMS attribute name
-			IntermediateAttribute att = mappings.get(attributeName);
-			if (att != null) { return att.encode(); }
-		}
-		return super.encodeAttributeName(type, attributeName);
-	}
-
-	@Override
-	public String decodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			String att = null;
-			try {
-				// TODO: normalize the intermediate attribute name
-				att = mappings.getKey(IntermediateAttribute.decode(attributeName));
-			} catch (IllegalArgumentException e) {
-				att = null;
+	private static final AttributeNameMapper MAPPER = new AttributeNameMapper() {
+		@Override
+		public String encodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = CmisTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				// TODO: normalize the CMS attribute name
+				IntermediateAttribute att = mappings.get(attributeName);
+				if (att != null) { return att.encode(); }
 			}
-			if (att != null) { return att; }
+			return super.encodeAttributeName(type, attributeName);
 		}
-		return super.decodeAttributeName(type, attributeName);
+
+		@Override
+		public String decodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = CmisTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				String att = null;
+				try {
+					// TODO: normalize the intermediate attribute name
+					att = mappings.getKey(IntermediateAttribute.decode(attributeName));
+				} catch (IllegalArgumentException e) {
+					att = null;
+				}
+				if (att != null) { return att; }
+			}
+			return super.decodeAttributeName(type, attributeName);
+		}
+	};
+
+	public CmisTranslator() {
+		super(CmfValue.class, CmisTranslator.MAPPER);
+	}
+
+	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
+		return CmisTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
 	@Override

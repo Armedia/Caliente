@@ -114,47 +114,50 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 
 	public static ShptTranslator INSTANCE = new ShptTranslator();
 
-	private ShptTranslator() {
-		// Avoid instantiation
-		super(CmfValue.class, true);
+	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
+		return ShptTranslator.ATTRIBUTE_MAPPINGS.get(type);
+	}
+
+	private static final AttributeNameMapper MAPPER = new AttributeNameMapper() {
+
+		@Override
+		public String encodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = ShptTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				// TODO: normalize the CMS attribute name
+				IntermediateAttribute att = mappings.get(attributeName);
+				if (att != null) { return att.encode(); }
+			}
+			return String.format("%s%s", ShptTranslator.SHPT_PREFIX, attributeName);
+		}
+
+		@Override
+		public String decodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = ShptTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				String att = null;
+				try {
+					// TODO: normalize the intermediate attribute name
+					att = mappings.getKey(IntermediateAttribute.decode(attributeName));
+				} catch (IllegalArgumentException e) {
+					att = null;
+				}
+				if (att != null) { return att; }
+			}
+			if (attributeName.startsWith(
+				ShptTranslator.SHPT_PREFIX)) { return attributeName.substring(ShptTranslator.SHPT_PREFIX.length()); }
+			return super.decodeAttributeName(type, attributeName);
+		}
+
+	};
+
+	public ShptTranslator() {
+		super(CmfValue.class, ShptTranslator.MAPPER);
 	}
 
 	@Override
 	public CmfValueCodec<CmfValue> getCodec(CmfDataType type) {
 		return CmfAttributeTranslator.getStoredValueCodec(type);
-	}
-
-	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
-		return ShptTranslator.ATTRIBUTE_MAPPINGS.get(type);
-	}
-
-	@Override
-	public String encodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			// TODO: normalize the CMS attribute name
-			IntermediateAttribute att = mappings.get(attributeName);
-			if (att != null) { return att.encode(); }
-		}
-		return String.format("%s%s", ShptTranslator.SHPT_PREFIX, attributeName);
-	}
-
-	@Override
-	public String decodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			String att = null;
-			try {
-				// TODO: normalize the intermediate attribute name
-				att = mappings.getKey(IntermediateAttribute.decode(attributeName));
-			} catch (IllegalArgumentException e) {
-				att = null;
-			}
-			if (att != null) { return att; }
-		}
-		if (attributeName.startsWith(
-			ShptTranslator.SHPT_PREFIX)) { return attributeName.substring(ShptTranslator.SHPT_PREFIX.length()); }
-		return super.decodeAttributeName(type, attributeName);
 	}
 
 	@Override

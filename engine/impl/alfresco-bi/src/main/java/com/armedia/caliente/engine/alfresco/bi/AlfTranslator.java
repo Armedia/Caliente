@@ -11,7 +11,7 @@ import com.armedia.caliente.store.CmfValueCodec;
 public class AlfTranslator extends CmfAttributeTranslator<CmfValue> {
 
 	protected AlfTranslator() {
-		super(CmfValue.class, false);
+		super(CmfValue.class, null);
 	}
 
 	@Override

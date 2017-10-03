@@ -42,6 +42,20 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 	};
 
+	protected static class AttributeNameMapper {
+
+		public String encodeAttributeName(CmfType type, String attributeName) {
+			return attributeName;
+		}
+
+		public String decodeAttributeName(CmfType type, String attributeName) {
+			return attributeName;
+		}
+
+	}
+
+	private static final AttributeNameMapper NULL_MAPPER = new AttributeNameMapper();
+
 	private static final Map<CmfDataType, Codec> CODECS;
 
 	static {
@@ -57,11 +71,11 @@ public abstract class CmfAttributeTranslator<V> {
 	}
 
 	private final Class<V> valueClass;
-	private final boolean requiresAttributeNameMappings;
+	private final AttributeNameMapper attributeNameMapper;
 
-	protected CmfAttributeTranslator(Class<V> valueClass, boolean requiresAttributeNameMappings) {
+	protected CmfAttributeTranslator(Class<V> valueClass, AttributeNameMapper attributeNameMapper) {
 		this.valueClass = valueClass;
-		this.requiresAttributeNameMappings = requiresAttributeNameMappings;
+		this.attributeNameMapper = Tools.coalesce(attributeNameMapper);
 	}
 
 	public final String encodeValue(CmfDataType value) {
@@ -84,12 +98,12 @@ public abstract class CmfAttributeTranslator<V> {
 		return decodeAttributeName(type, attributeName.encode());
 	}
 
-	public String encodeAttributeName(CmfType type, String attributeName) {
-		return attributeName;
+	public final String encodeAttributeName(CmfType type, String attributeName) {
+		return this.attributeNameMapper.encodeAttributeName(type, attributeName);
 	}
 
-	public String decodeAttributeName(CmfType type, String attributeName) {
-		return attributeName;
+	public final String decodeAttributeName(CmfType type, String attributeName) {
+		return this.attributeNameMapper.decodeAttributeName(type, attributeName);
 	}
 
 	public abstract V getValue(CmfDataType type, Object value) throws ParseException;
@@ -98,7 +112,8 @@ public abstract class CmfAttributeTranslator<V> {
 
 	public final CmfObject<V> decodeObject(CmfObject<CmfValue> obj) {
 		// Can we optimize this if there are no changes needed?
-		if (this.valueClass.equals(CmfValue.class) && !this.requiresAttributeNameMappings) {
+		if (this.valueClass.equals(CmfValue.class)
+			&& (this.attributeNameMapper == CmfAttributeTranslator.NULL_MAPPER)) {
 			@SuppressWarnings("unchecked")
 			CmfObject<V> ret = (CmfObject<V>) obj;
 			return ret;
@@ -121,7 +136,7 @@ public abstract class CmfAttributeTranslator<V> {
 		);
 
 		for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
-			final String newName = decodeAttributeName(newObj.getType(), att.getName());
+			final String newName = this.attributeNameMapper.decodeAttributeName(newObj.getType(), att.getName());
 			CmfAttribute<V> newAtt = new CmfAttribute<>(newName, att.getType(), att.isRepeating());
 			CmfValueCodec<V> codec = getCodec(att.getType());
 			if (newAtt.isRepeating()) {
@@ -168,7 +183,7 @@ public abstract class CmfAttributeTranslator<V> {
 		);
 
 		for (CmfAttribute<V> att : obj.getAttributes()) {
-			final String newName = encodeAttributeName(newObj.getType(), att.getName());
+			final String newName = this.attributeNameMapper.encodeAttributeName(newObj.getType(), att.getName());
 			CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(newName, att.getType(), att.isRepeating());
 			CmfValueCodec<V> codec = getCodec(att.getType());
 			if (newAtt.isRepeating()) {

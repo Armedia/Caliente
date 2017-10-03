@@ -67,39 +67,43 @@ public class XmlTranslator extends CmfAttributeTranslator<CmfValue> {
 		return XmlTranslator.DATA_TYPES_REV.get(t);
 	}
 
-	public XmlTranslator() {
-		super(CmfValue.class, true);
-	}
-
-	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
+	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
 		return XmlTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
-	@Override
-	public String encodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			// TODO: normalize the CMS attribute name
-			IntermediateAttribute att = mappings.get(attributeName);
-			if (att != null) { return att.encode(); }
-		}
-		return super.encodeAttributeName(type, attributeName);
-	}
+	@SuppressWarnings("unused")
+	private static final AttributeNameMapper MAPPER = new AttributeNameMapper() {
 
-	@Override
-	public String decodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			String att = null;
-			try {
-				// TODO: normalize the intermediate attribute name
-				att = mappings.getKey(IntermediateAttribute.decode(attributeName));
-			} catch (IllegalArgumentException e) {
-				att = null;
+		@Override
+		public String encodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = XmlTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				// TODO: normalize the CMS attribute name
+				IntermediateAttribute att = mappings.get(attributeName);
+				if (att != null) { return att.encode(); }
 			}
-			if (att != null) { return att; }
+			return super.encodeAttributeName(type, attributeName);
 		}
-		return super.decodeAttributeName(type, attributeName);
+
+		@Override
+		public String decodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = XmlTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				String att = null;
+				try {
+					// TODO: normalize the intermediate attribute name
+					att = mappings.getKey(IntermediateAttribute.decode(attributeName));
+				} catch (IllegalArgumentException e) {
+					att = null;
+				}
+				if (att != null) { return att; }
+			}
+			return super.decodeAttributeName(type, attributeName);
+		}
+	};
+
+	public XmlTranslator() {
+		super(CmfValue.class, null);
 	}
 
 	@Override
