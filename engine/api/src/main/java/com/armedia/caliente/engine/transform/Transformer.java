@@ -19,9 +19,37 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import com.armedia.caliente.engine.transform.xml.Transformations;
 import com.armedia.caliente.store.CmfAttributeMapper;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfValue;
 
-public class Transformer {
+public class Transformer implements CmfTransformer {
+	private static ConcurrentMap<URI, Transformer> INSTANCES = new ConcurrentHashMap<>();
+
+	public static Transformer getInstance(final URL resource) throws Exception {
+		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
+		return ConcurrentUtils.createIfAbsent(Transformer.INSTANCES, resource.toURI(),
+			new ConcurrentInitializer<Transformer>() {
+				@Override
+				public Transformer get() throws ConcurrentException {
+					try (InputStream in = resource.openStream()) {
+						return new Transformer(in);
+					} catch (JAXBException e) {
+						throw new ConcurrentException(
+							String.format("Failed to parse out the XML resource at [%s]", resource), e);
+					} catch (IOException e) {
+						throw new ConcurrentException(
+							String.format("Failed to retrieve the contents of the URL [%s]", resource), e);
+					}
+				}
+			});
+	}
+
+	public static Transformer getNewInstance(final URL resource) throws Exception {
+		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
+		Transformer.INSTANCES.remove(resource.toURI());
+		return Transformer.getInstance(resource);
+	}
 
 	private final Transformations transformations;
 
@@ -41,8 +69,9 @@ public class Transformer {
 		return new TransformationContext(new DefaultTransformableObjectFacade(object), mapper);
 	}
 
+	@Override
 	public CmfObject<CmfValue> transform(CmfAttributeMapper mapper, CmfObject<CmfValue> object)
-		throws TransformationException {
+		throws CmfStorageException {
 		TransformationContext ctx = createContext(mapper, object);
 		try {
 			try {
@@ -53,6 +82,11 @@ public class Transformer {
 			}
 
 			return ctx.getObject().applyChanges(object);
+		} catch (TransformationException e) {
+			throw new CmfStorageException(
+				String.format("Exception caught while performing the transformation for %s (%s)[%s]", object.getType(),
+					object.getLabel(), object.getId()),
+				e);
 		} finally {
 			destroyContext(ctx);
 		}
@@ -65,31 +99,9 @@ public class Transformer {
 		ctx.getVariables().clear();
 	}
 
-	private static ConcurrentMap<URI, Transformer> INSTANCES = new ConcurrentHashMap<>();
-
-	public static Transformer getCachedInstance(final URL resource) throws Exception {
-		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
-		return ConcurrentUtils.createIfAbsent(Transformer.INSTANCES, resource.toURI(),
-			new ConcurrentInitializer<Transformer>() {
-				@Override
-				public Transformer get() throws ConcurrentException {
-					try (InputStream in = resource.openStream()) {
-						return new Transformer(in);
-					} catch (JAXBException e) {
-						throw new ConcurrentException(
-							String.format("Failed to parse out the XML resource at [%s]", resource), e);
-					} catch (IOException e) {
-						throw new ConcurrentException(
-							String.format("Failed to retrieve the contents of the URL [%s]", resource), e);
-					}
-				}
-			});
-	}
-
-	public static Transformer forceNewInstance(final URL resource) throws Exception {
-		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
-		Transformer.INSTANCES.remove(resource.toURI());
-		return Transformer.getCachedInstance(resource);
+	@Override
+	public void close() {
+		// Don't really need to do anything here...
 	}
 
 }

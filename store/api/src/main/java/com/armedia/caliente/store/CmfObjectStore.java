@@ -429,7 +429,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<CmfValue> dataObject, CmfTransformer transformer,
 		CmfAttributeTranslator<V> translator) throws CmfStorageException {
-		CmfObject<CmfValue> transformed = (transformer != null ? transformer.transform(dataObject) : dataObject);
+		CmfObject<CmfValue> transformed = (transformer != null ? transformer.transform(getAttributeMapper(), dataObject)
+			: dataObject);
 		return translator.decodeObject(transformed);
 	}
 

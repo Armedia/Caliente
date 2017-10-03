@@ -4,9 +4,14 @@
 
 package com.armedia.caliente.engine.importer;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -23,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +38,7 @@ import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.tools.MappingTools;
+import com.armedia.caliente.engine.transform.Transformer;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfNameFixer;
@@ -70,7 +77,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter, SessionFactory<S> sessionFactory,
 			ImportEngineListener listenerDelegator, ImportState importState,
 			final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-			final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTransformer typeMapper) {
+			final ImportDelegateFactory<S, W, V, C, ?> delegateFactory) {
 			this.sessionFactory = sessionFactory;
 			this.listenerDelegator = listenerDelegator;
 			this.importState = importState;
@@ -264,9 +271,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 		}
 	}
-
-	public static final String TRANSFORMER_SETTING_PREFIX = "cmf.transformer.";
-	public static final String TRANSFORMER_SELECTOR = "cmf.transformer.name";
 
 	private static final Pattern MAP_KEY_PARSER = Pattern.compile("^\\s*([^#\\s]+)\\s*#\\s*(.+)\\s*$");
 
@@ -489,22 +493,42 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
 
 	protected final CmfTransformer getTransformer(S session, CfgTools cfg) throws Exception {
-		final String typeMapperName = cfg.getString(ImportEngine.TRANSFORMER_SELECTOR);
-		if (typeMapperName != null) {
-			typeMapperName.hashCode();
-		}
+		final String xmlData = cfg.getString(ImportSetting.TRANSFORMATION);
+		// This may be a fully-qualified file path, a classpath:/ resource, or a URL...
+		if (StringUtils.isEmpty(xmlData)) { return null; }
 
-		Map<String, Object> m = new HashMap<>();
-		for (String str : cfg.getSettings()) {
-			if (str.startsWith(ImportEngine.TRANSFORMER_SETTING_PREFIX)) {
-				str = str.substring(ImportEngine.TRANSFORMER_SETTING_PREFIX.length());
-				m.put(str, cfg.getObject(str));
+		URL url = null;
+		try {
+			URI uri = new URI(xmlData);
+			if ("resource".equalsIgnoreCase(uri.getScheme()) || "res".equalsIgnoreCase(uri.getScheme())
+				|| "classpath".equalsIgnoreCase(uri.getScheme()) || "cp".equalsIgnoreCase(uri.getScheme())) {
+				// It's a classpath reference, so let's just find the first resource that matches
+				// the SSP
+				url = Thread.currentThread().getContextClassLoader().getResource(uri.getSchemeSpecificPart());
+				if (url == null) { throw new Exception(
+					String.format("Failed to locate the specified transformation [%s] in the classpath",
+						uri.getSchemeSpecificPart())); }
+			} else {
+				try {
+					url = uri.toURL();
+				} catch (MalformedURLException e) {
+					throw new Exception(String.format("The given URI [%s] is not a valid URL", xmlData), e);
+				}
 			}
+		} catch (URISyntaxException e) {
+			// Not a URI, so it must be an absolute path
+			File f = Tools.canonicalize(new File(xmlData));
+			if (!f.exists()) { throw new FileNotFoundException(
+				String.format("Transformation file [%s] does not exist", f.getAbsolutePath())); }
+			if (!f.isFile()) { throw new FileNotFoundException(String
+				.format("The path at [%s] is not a valid transformation file (not a file!)", f.getAbsolutePath())); }
+			if (!f.canRead()) { throw new FileNotFoundException(
+				String.format("Transformation file [%s] is not readable", f.getAbsolutePath())); }
+			// It exists, it's a file, and can be read!! Move forward!
+			url = f.toURI().toURL();
 		}
-		cfg = new CfgTools(m);
 
-		// TODO: Construct the object transformer
-		return null;
+		return Transformer.getInstance(url);
 	}
 
 	protected final ExecutorService newExecutor(int threadCount) {
@@ -546,14 +570,14 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				throw new ImportException("Failed to obtain the import initialization session", e);
 			}
 
+			CmfTransformer transformer = null;
 			ImportContextFactory<S, W, V, C, ?, ?> contextFactory = null;
 			ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
-			CmfTransformer transformer = null;
 			try {
 				try {
 					transformer = getTransformer(baseSession.getWrapped(), configuration);
 				} catch (Exception e) {
-					throw new ImportException("Failed to configure the required type mapper", e);
+					throw new ImportException("Failed to configure the required transformation engine", e);
 				}
 
 				try {
@@ -667,7 +691,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private final CmfObjectCounter<ImportResult> runImportImpl(final ImportState importState,
 		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTransformer typeMapper)
+		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTransformer transformer)
 		throws ImportException, CmfStorageException {
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;
@@ -786,7 +810,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 				try {
-					objectStore.loadObjects(typeMapper, translator, type, new CmfObjectHandler<V>() {
+					objectStore.loadObjects(transformer, translator, type, new CmfObjectHandler<V>() {
 						private List<CmfObject<V>> contents = null;
 
 						@Override
@@ -816,10 +840,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							// We will have already validated that a valid strategy is provided
 							// for all stored types
 							try {
-								executor
-									.submit(new BatchWorker(new Batch(storedType, historyId, this.contents, strategy),
-										workerCounter, sessionFactory, listenerDelegator, importState, contextFactory,
-										delegateFactory, typeMapper));
+								executor.submit(new BatchWorker(
+									new Batch(storedType, historyId, this.contents, strategy), workerCounter,
+									sessionFactory, listenerDelegator, importState, contextFactory, delegateFactory));
 							} finally {
 								this.contents = null;
 							}
