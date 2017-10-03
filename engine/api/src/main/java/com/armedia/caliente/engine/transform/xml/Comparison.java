@@ -246,15 +246,10 @@ public enum Comparison {
 		}
 		Comparison comp = Comparison.valueOf(name);
 		if (caseInsensitive && (type == CmfDataType.STRING)) {
-			comparand = (comparand != null ? comparand.toString().toUpperCase() : null);
-			candidate = (candidate != null ? candidate.toString().toUpperCase() : null);
+			comparand = StringUtils.upperCase(Tools.toString(comparand));
+			candidate = StringUtils.upperCase(Tools.toString(candidate));
 		}
-		boolean result = comp.eval(type, candidate, comparand);
-		if (negated) {
-			// Flip the result...
-			result = !result;
-		}
-		return result;
+		return (negated ^ comp.eval(type, candidate, comparand));
 	}
 
 	public final boolean check(CmfDataType type, Object candidate, Object comparand) {
