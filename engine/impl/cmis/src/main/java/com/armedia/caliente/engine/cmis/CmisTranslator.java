@@ -91,7 +91,7 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		return CmisTranslator.OBJECT_TYPES_REV.get(type);
 	}
 
-	protected CmisTranslator() {
+	public CmisTranslator() {
 		super(CmfValue.class, true);
 	}
 
