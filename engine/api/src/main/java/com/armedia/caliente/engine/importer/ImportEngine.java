@@ -196,9 +196,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 									TypeDescriptor newType = getTypeDescriptor(ctx, next);
 									final Collection<ImportOutcome> outcome;
 									if (newType != null) {
-										outcome = Collections.emptyList();
-									} else {
 										outcome = delegate.importObject(newType, getTranslator(), ctx);
+									} else {
+										outcome = Collections.emptyList();
 									}
 									if (outcome.isEmpty()) {
 										result = ImportResult.SKIPPED;
@@ -590,7 +590,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					baseSession = null;
 				}
 
-				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory, transformer);
+				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory,
+					transformer);
 			} finally {
 				if (baseSession != null) {
 					baseSession.close();
