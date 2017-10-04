@@ -13,3 +13,4 @@ test-fs
 *map.xml
 *.properties
 *.sh
+transform.xml
