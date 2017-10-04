@@ -1,6 +1,6 @@
 package com.armedia.caliente.store;
 
-public class AttributeNameMapper {
+public class CmfAttributeNameMapper {
 
 	public final String encodeAttributeName(CmfType type, CmfEncodeableName attributeName) {
 		return encodeAttributeName(type, attributeName.encode());

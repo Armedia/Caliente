@@ -11,7 +11,7 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
-import com.armedia.caliente.store.AttributeNameMapper;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfType;
@@ -97,7 +97,7 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 	}
 
 	@SuppressWarnings("unused")
-	private static final AttributeNameMapper MAPPER = new AttributeNameMapper() {
+	private static final CmfAttributeNameMapper MAPPER = new CmfAttributeNameMapper() {
 
 		@Override
 		public String encodeAttributeName(CmfType type, String attributeName) {

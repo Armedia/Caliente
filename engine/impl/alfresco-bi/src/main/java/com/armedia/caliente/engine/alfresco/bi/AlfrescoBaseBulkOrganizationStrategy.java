@@ -6,7 +6,7 @@ import java.util.List;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
-import com.armedia.caliente.store.AttributeNameMapper;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -92,7 +92,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 
 	protected <T> String calculateVersionAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info, boolean primaryContent, boolean vDoc) {
-		AttributeNameMapper nameMapper = translator.getAttributeNameMapper();
+		CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		boolean headVersion = false;
 		switch (object.getType()) {
 			case DOCUMENT:

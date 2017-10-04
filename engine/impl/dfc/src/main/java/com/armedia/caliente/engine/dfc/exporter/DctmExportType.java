@@ -13,7 +13,7 @@ import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.store.AttributeNameMapper;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -164,7 +164,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			final CmfAttributeTranslator<IDfValue> translator = this.factory.getTranslator();
 			CmfProperty<IDfValue> orig = new CmfProperty<>(IntermediateProperty.ORIG_ATTR_NAME, CmfDataType.STRING);
 			CmfProperty<IDfValue> mapped = new CmfProperty<>(IntermediateProperty.MAPPED_ATTR_NAME, CmfDataType.STRING);
-			AttributeNameMapper nameMapper = translator.getAttributeNameMapper();
+			CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 			for (int i = 0; i < attCount; i++) {
 				IDfValue o = type.getRepeatingValue(DctmAttributes.ATTR_NAME, i);
 				IDfValue m = DfValueFactory.newStringValue(

@@ -620,7 +620,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract <V> int loadObjects(O operation, CmfType type, Collection<String> ids,
-		final AttributeNameMapper nameMapper, CmfObjectHandler<CmfValue> handler) throws CmfStorageException;
+		final CmfAttributeNameMapper nameMapper, CmfObjectHandler<CmfValue> handler) throws CmfStorageException;
 
 	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
 		throws CmfStorageException {

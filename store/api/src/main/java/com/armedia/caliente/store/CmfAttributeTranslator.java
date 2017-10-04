@@ -42,7 +42,7 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 	};
 
-	private static final AttributeNameMapper NULL_MAPPER = new AttributeNameMapper();
+	private static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();
 
 	private static final Map<CmfDataType, Codec> CODECS;
 
@@ -59,15 +59,15 @@ public abstract class CmfAttributeTranslator<V> {
 	}
 
 	private final Class<V> valueClass;
-	private final AttributeNameMapper attributeNameMapper;
+	private final CmfAttributeNameMapper cmfAttributeNameMapper;
 
 	protected CmfAttributeTranslator(Class<V> valueClass) {
 		this(valueClass, null);
 	}
 
-	protected CmfAttributeTranslator(Class<V> valueClass, AttributeNameMapper attributeNameMapper) {
+	protected CmfAttributeTranslator(Class<V> valueClass, CmfAttributeNameMapper cmfAttributeNameMapper) {
 		this.valueClass = valueClass;
-		this.attributeNameMapper = Tools.coalesce(attributeNameMapper, CmfAttributeTranslator.NULL_MAPPER);
+		this.cmfAttributeNameMapper = Tools.coalesce(cmfAttributeNameMapper, CmfAttributeTranslator.NULL_MAPPER);
 	}
 
 	public final String encodeValue(CmfDataType value) {
@@ -80,8 +80,8 @@ public abstract class CmfAttributeTranslator<V> {
 		return CmfDataType.decodeString(value);
 	}
 
-	public final AttributeNameMapper getAttributeNameMapper() {
-		return this.attributeNameMapper;
+	public final CmfAttributeNameMapper getAttributeNameMapper() {
+		return this.cmfAttributeNameMapper;
 	}
 
 	public abstract CmfValueCodec<V> getCodec(CmfDataType type);
@@ -93,7 +93,7 @@ public abstract class CmfAttributeTranslator<V> {
 	public final CmfObject<V> decodeObject(CmfObject<CmfValue> obj) {
 		// Can we optimize this if there are no changes needed?
 		if (this.valueClass.equals(CmfValue.class)
-			&& (this.attributeNameMapper == CmfAttributeTranslator.NULL_MAPPER)) {
+			&& (this.cmfAttributeNameMapper == CmfAttributeTranslator.NULL_MAPPER)) {
 			@SuppressWarnings("unchecked")
 			CmfObject<V> ret = (CmfObject<V>) obj;
 			return ret;

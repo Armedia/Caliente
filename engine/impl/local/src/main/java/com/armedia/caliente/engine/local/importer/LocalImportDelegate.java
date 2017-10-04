@@ -29,7 +29,7 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
-import com.armedia.caliente.store.AttributeNameMapper;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
@@ -105,7 +105,7 @@ public abstract class LocalImportDelegate extends
 	protected boolean isSameDatesAndOwners(File targetFile, CmfAttributeTranslator<CmfValue> translator)
 		throws IOException, ParseException {
 		Path targetPath = targetFile.toPath();
-		final AttributeNameMapper nameMapper = translator.getAttributeNameMapper();
+		final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
 		final BasicFileAttributeView basicView = Files.getFileAttributeView(targetPath, BasicFileAttributeView.class);
 		final PosixFileAttributeView posixView = Files.getFileAttributeView(targetPath, PosixFileAttributeView.class);
@@ -190,7 +190,7 @@ public abstract class LocalImportDelegate extends
 		throws IOException, ParseException {
 		Path targetPath = targetFile.toPath();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
-		final AttributeNameMapper nameMapper = translator.getAttributeNameMapper();
+		final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		final BasicFileAttributeView basicView = Files.getFileAttributeView(targetPath, BasicFileAttributeView.class);
 		final PosixFileAttributeView posixView = Files.getFileAttributeView(targetPath, PosixFileAttributeView.class);
 		final AclFileAttributeView aclView = Files.getFileAttributeView(targetPath, AclFileAttributeView.class);

@@ -35,7 +35,7 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.store.AttributeNameMapper;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -152,7 +152,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final CmfType objectType = object.getType();
 		final String objectId = JdbcTools.composeDatabaseId(object);
 
-		final AttributeNameMapper nameMapper = translator.getAttributeNameMapper();
+		final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 
 		Collection<Object[]> attributeParameters = new ArrayList<>();
 		Collection<Object[]> attributeValueParameters = new ArrayList<>();
@@ -330,7 +330,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	protected <V> CmfObject<CmfValue> loadHeadObject(JdbcOperation operation, CmfType type, String historyId,
 		CmfAttributeTranslator<V> translator) throws CmfStorageException {
 		final Connection connection = operation.getConnection();
-		final AttributeNameMapper nameMapper = translator.getAttributeNameMapper();
+		final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		try {
 			PreparedStatement objectPS = null;
 			PreparedStatement attributePS = null;
@@ -447,7 +447,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected <V> int loadObjects(JdbcOperation operation, final CmfType type, Collection<String> ids,
-		final AttributeNameMapper nameMapper, CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
+		final CmfAttributeNameMapper nameMapper, CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
 
@@ -1267,7 +1267,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		return new CmfProperty<>(name, type, repeating);
 	}
 
-	private <V> CmfAttribute<CmfValue> loadAttribute(CmfType objectType, AttributeNameMapper nameMapper, ResultSet rs)
+	private <V> CmfAttribute<CmfValue> loadAttribute(CmfType objectType, CmfAttributeNameMapper nameMapper, ResultSet rs)
 		throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = nameMapper.decodeAttributeName(objectType, rs.getString("name"));
@@ -1302,7 +1302,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		property.setValues(values);
 	}
 
-	private <V> void loadAttributes(ResultSet rs, AttributeNameMapper nameMapper, CmfObject<CmfValue> obj)
+	private <V> void loadAttributes(ResultSet rs, CmfAttributeNameMapper nameMapper, CmfObject<CmfValue> obj)
 		throws SQLException {
 		List<CmfAttribute<CmfValue>> attributes = new LinkedList<>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
