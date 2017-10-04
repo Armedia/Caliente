@@ -35,9 +35,9 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.store.AttributeNameMapper;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfAttributeTranslator.AttributeNameMapper;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfNameFixer;

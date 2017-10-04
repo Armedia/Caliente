@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
-import com.armedia.caliente.store.CmfAttributeTranslator.AttributeNameMapper;
 import com.armedia.caliente.store.tools.CollectionObjectHandler;
 import com.armedia.commons.utilities.Tools;
 

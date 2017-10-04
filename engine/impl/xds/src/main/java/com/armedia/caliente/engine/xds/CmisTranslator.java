@@ -11,6 +11,7 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
+import com.armedia.caliente.store.AttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfType;

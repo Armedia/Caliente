@@ -42,26 +42,6 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 	};
 
-	public static class AttributeNameMapper {
-
-		public final String encodeAttributeName(CmfType type, CmfEncodeableName attributeName) {
-			return encodeAttributeName(type, attributeName.encode());
-		}
-
-		public String encodeAttributeName(CmfType type, String attributeName) {
-			return attributeName;
-		}
-
-		public final String decodeAttributeName(CmfType type, CmfEncodeableName attributeName) {
-			return decodeAttributeName(type, attributeName.encode());
-		}
-
-		public String decodeAttributeName(CmfType type, String attributeName) {
-			return attributeName;
-		}
-
-	}
-
 	private static final AttributeNameMapper NULL_MAPPER = new AttributeNameMapper();
 
 	private static final Map<CmfDataType, Codec> CODECS;

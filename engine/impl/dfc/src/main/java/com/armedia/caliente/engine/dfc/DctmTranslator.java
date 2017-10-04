@@ -10,6 +10,7 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.dfc.importer.DctmImportContext;
 import com.armedia.caliente.engine.importer.ImportException;
+import com.armedia.caliente.store.AttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
