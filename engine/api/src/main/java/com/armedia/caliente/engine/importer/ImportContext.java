@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
-import com.armedia.caliente.store.CmfAttributeMapper;
+import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -49,7 +49,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		return this.historyPosition;
 	}
 
-	public final CmfAttributeMapper getAttributeMapper() {
+	public final CmfValueMapper getAttributeMapper() {
 		return this.cmfObjectStore.getAttributeMapper();
 	}
 

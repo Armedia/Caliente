@@ -11,7 +11,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.Condition;
 import com.armedia.caliente.engine.transform.xml.Expression;
-import com.armedia.caliente.store.CmfAttributeMapper;
+import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
 
@@ -74,7 +74,7 @@ public class HasValueMapping implements Condition {
 		Object name = Expression.eval(getName(), ctx);
 		if (name == null) { throw new TransformationException("No name given to check for"); }
 
-		CmfAttributeMapper mapper = ctx.getAttributeMapper();
+		CmfValueMapper mapper = ctx.getAttributeMapper();
 		Expression key = null;
 
 		key = getFrom();

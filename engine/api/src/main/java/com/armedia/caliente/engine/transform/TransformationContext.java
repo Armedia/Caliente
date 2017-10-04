@@ -3,20 +3,20 @@ package com.armedia.caliente.engine.transform;
 import java.util.Map;
 import java.util.TreeMap;
 
-import com.armedia.caliente.store.CmfAttributeMapper;
+import com.armedia.caliente.store.CmfValueMapper;
 
 public class TransformationContext {
 
 	private final TransformableObject object;
-	private final CmfAttributeMapper mapper;
+	private final CmfValueMapper mapper;
 
 	private final Map<String, TypedValue> variables;
 
-	public TransformationContext(TransformableObject object, CmfAttributeMapper mapper) {
+	public TransformationContext(TransformableObject object, CmfValueMapper mapper) {
 		this(object, mapper, null);
 	}
 
-	protected TransformationContext(TransformableObject object, CmfAttributeMapper mapper,
+	protected TransformationContext(TransformableObject object, CmfValueMapper mapper,
 		Map<String, TypedValue> variables) {
 		this.object = object;
 		this.mapper = mapper;
@@ -34,7 +34,7 @@ public class TransformationContext {
 		return this.variables;
 	}
 
-	public CmfAttributeMapper getAttributeMapper() {
+	public CmfValueMapper getAttributeMapper() {
 		return this.mapper;
 	}
 

@@ -19,7 +19,7 @@ import com.armedia.caliente.engine.transform.xml.Comparison;
 import com.armedia.caliente.engine.transform.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.xml.Expression;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;

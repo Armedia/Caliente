@@ -17,7 +17,7 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.xds.CmisSessionWrapper;
 import com.armedia.caliente.engine.xds.CmisTranslator;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;

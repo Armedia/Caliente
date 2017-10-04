@@ -21,7 +21,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
 import com.armedia.caliente.engine.transform.xml.Transformations;
-import com.armedia.caliente.store.CmfAttributeMapper;
+import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfTransformer;
@@ -167,12 +167,12 @@ public class Transformer implements CmfTransformer {
 		this.transformations = Transformations.loadFromXML(in);
 	}
 
-	private TransformationContext createContext(CmfAttributeMapper mapper, CmfObject<CmfValue> object) {
+	private TransformationContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
 		return new TransformationContext(new DefaultTransformableObjectFacade(object), mapper);
 	}
 
 	@Override
-	public CmfObject<CmfValue> transform(CmfAttributeMapper mapper, CmfObject<CmfValue> object)
+	public CmfObject<CmfValue> transform(CmfValueMapper mapper, CmfObject<CmfValue> object)
 		throws CmfStorageException {
 		TransformationContext ctx = createContext(mapper, object);
 		try {

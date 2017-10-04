@@ -10,10 +10,10 @@ import java.util.TreeSet;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualTreeBidiMap;
 
-import com.armedia.caliente.store.CmfAttributeMapper;
+import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfType;
 
-public class TestAttributeMapper extends CmfAttributeMapper {
+public class TestAttributeMapper extends CmfValueMapper {
 
 	private final Map<CmfType, Map<String, BidiMap<String, String>>> mappings = new EnumMap<>(CmfType.class);
 

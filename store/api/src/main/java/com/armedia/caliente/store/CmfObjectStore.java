@@ -17,7 +17,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator.AttributeNameMapper;
 import com.armedia.caliente.store.tools.CollectionObjectHandler;
 import com.armedia.commons.utilities.Tools;
@@ -53,7 +53,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	private class Mapper extends CmfAttributeMapper {
+	private class Mapper extends CmfValueMapper {
 
 		private final O operation;
 
@@ -821,11 +821,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract Map<CmfType, Long> getStoredObjectTypes(O operation) throws CmfStorageException;
 
-	public final CmfAttributeMapper getAttributeMapper() {
+	public final CmfValueMapper getAttributeMapper() {
 		return this.mapper;
 	}
 
-	protected final CmfAttributeMapper getAttributeMapper(O operation) {
+	protected final CmfValueMapper getAttributeMapper(O operation) {
 		return new Mapper(operation);
 	}
 

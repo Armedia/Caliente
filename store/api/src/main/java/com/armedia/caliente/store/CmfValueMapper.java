@@ -16,7 +16,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class CmfAttributeMapper {
+public abstract class CmfValueMapper {
 
 	/**
 	 * <p>

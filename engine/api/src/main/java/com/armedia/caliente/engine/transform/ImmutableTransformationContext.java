@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.armedia.caliente.store.CmfAttributeMapper;
+import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.Tools;
 
@@ -140,10 +140,10 @@ public class ImmutableTransformationContext extends TransformationContext {
 
 	}
 
-	private static class ImmutableAttributeMapper extends CmfAttributeMapper {
-		private final CmfAttributeMapper mapper;
+	private static class ImmutableAttributeMapper extends CmfValueMapper {
+		private final CmfValueMapper mapper;
 
-		private ImmutableAttributeMapper(CmfAttributeMapper mapper) {
+		private ImmutableAttributeMapper(CmfValueMapper mapper) {
 			this.mapper = mapper;
 		}
 
