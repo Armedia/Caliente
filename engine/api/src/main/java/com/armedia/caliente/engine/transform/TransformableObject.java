@@ -153,8 +153,6 @@ public abstract class TransformableObject {
 		newObject.setAttributes(attributeList);
 		newObject.setProperties(propertyList);
 
-		// TODO: The aspects (secondary types).... need a mechanism to set these...
-
 		return newObject;
 	}
 }
