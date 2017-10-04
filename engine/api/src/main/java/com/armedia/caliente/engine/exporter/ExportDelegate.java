@@ -3,7 +3,9 @@ package com.armedia.caliente.engine.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferDelegate;
@@ -26,6 +28,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected final String name;
 	protected final Collection<CmfObjectRef> parentIds;
 	protected final String subType;
+	protected final Set<String> secondaries;
 
 	protected ExportDelegate(DF factory, S session, Class<T> objectClass, T object) throws Exception {
 		super(factory, objectClass);
@@ -40,6 +43,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		this.historyId = calculateHistoryId(session, object);
 		this.historyCurrent = calculateHistoryCurrent(session, object);
 		this.subType = calculateSubType(session, this.exportTarget.getType(), object);
+		this.secondaries = calculateSecondarySubtypes(session, this.exportTarget.getType(), this.subType, object);
 		if (factory.getEngine().isSupportsDuplicateFileNames()) {
 			// We only calculate parent IDs
 			Collection<CmfObjectRef> parentIds = calculateParentIds(session, object);
@@ -125,6 +129,11 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return type.name();
 	}
 
+	protected Set<String> calculateSecondarySubtypes(S session, CmfType type, String subtype, T object)
+		throws Exception {
+		return new LinkedHashSet<>();
+	}
+
 	public final String getSubType() {
 		return this.subType;
 	}
@@ -146,7 +155,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
 		CmfObject<V> marshaled = new CmfObject<>(this.factory.getTranslator(), this.exportTarget.getType(),
 			this.exportTarget.getId(), this.name, this.parentIds, this.exportTarget.getSearchKey(), this.dependencyTier,
-			this.historyId, this.historyCurrent, this.label, this.subType, ctx.getProductName(),
+			this.historyId, this.historyCurrent, this.label, this.subType, this.secondaries, ctx.getProductName(),
 			ctx.getProductVersion(), null);
 		if (!marshal(ctx, marshaled)) { return null; }
 		this.factory.getEngine().setReferrent(marshaled, referrent);

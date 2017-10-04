@@ -84,6 +84,7 @@ public abstract class TransformableObject {
 			isHistoryCurrent(), //
 			getLabel(), //
 			getSubtype(), //
+			getSecondarySubtypes(), //
 			getProductName(), //
 			getProductVersion(), //
 			object.getNumber() //

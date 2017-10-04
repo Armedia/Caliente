@@ -4,9 +4,12 @@
 
 package com.armedia.caliente.store;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,6 +33,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 	private final boolean historyCurrent;
 	private final String label;
 	private final String subtype;
+	private final Set<String> secondaries;
 	private final String productName;
 	private final String productVersion;
 	private final Map<String, CmfAttribute<V>> attributes = new HashMap<>();
@@ -47,7 +51,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		super(pattern);
 		this.number = pattern.getNumber();
 		this.name = pattern.getName();
-		this.parentIds = pattern.parentIds;
+		this.parentIds = new ArrayList<>(pattern.parentIds);
 		this.dependencyTier = pattern.getDependencyTier();
 		this.historyId = pattern.getHistoryId();
 		this.historyCurrent = pattern.isHistoryCurrent();
@@ -61,49 +65,21 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		for (CmfProperty<V> property : pattern.getProperties()) {
 			this.properties.put(property.getName(), new CmfProperty<>(property));
 		}
-		this.translator = pattern.translator;
-	}
-
-	/**
-	 * <p>
-	 * Make a new copy of the object in the given pattern, but with the given type specification
-	 * data instead.
-	 * </p>
-	 *
-	 * @param pattern
-	 * @param altType
-	 */
-	CmfObject(CmfObject<V> pattern, String altSubType) {
-		super(pattern);
-		this.number = pattern.getNumber();
-		this.name = pattern.getName();
-		this.parentIds = pattern.parentIds;
-		this.dependencyTier = pattern.getDependencyTier();
-		this.historyId = pattern.getHistoryId();
-		this.historyCurrent = pattern.isHistoryCurrent();
-		this.label = pattern.getLabel();
-		this.subtype = altSubType;
-		this.productName = pattern.getProductName();
-		this.productVersion = pattern.getProductVersion();
-		for (CmfAttribute<V> attribute : pattern.getAttributes()) {
-			this.attributes.put(attribute.getName(), attribute);
-		}
-		for (CmfProperty<V> property : pattern.getProperties()) {
-			this.properties.put(property.getName(), property);
-		}
+		this.secondaries = Tools.freezeSet(new LinkedHashSet<>(pattern.getSecondaries()));
 		this.translator = pattern.translator;
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
 		Collection<CmfObjectRef> parentIds, int dependencyTier, String historyId, boolean historyCurrent, String label,
-		String subtype, String productName, String productVersion, Long number) {
+		String subtype, Set<String> secondaries, String productName, String productVersion, Long number) {
 		this(translator, type, id, name, parentIds, id, dependencyTier, historyId, historyCurrent, label, subtype,
-			productName, productVersion, number);
+			secondaries, productName, productVersion, number);
 	}
 
 	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
 		Collection<CmfObjectRef> parentIds, String searchKey, int dependencyTier, String historyId,
-		boolean historyCurrent, String label, String subtype, String productName, String productVersion, Long number) {
+		boolean historyCurrent, String label, String subtype, Set<String> secondaries, String productName,
+		String productVersion, Long number) {
 		super(type, id, searchKey);
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
@@ -117,12 +93,13 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		}
 		this.number = number;
 		this.name = name;
-		this.parentIds = parentIds;
+		this.parentIds = Tools.freezeCollection(new ArrayList<>(parentIds));
 		this.dependencyTier = dependencyTier;
 		this.historyId = Tools.coalesce(historyId, id);
 		this.historyCurrent = (historyId == null ? true : historyCurrent);
 		this.label = label;
 		this.subtype = subtype;
+		this.secondaries = Tools.freezeSet(new LinkedHashSet<>(secondaries));
 		this.productName = productName;
 		this.productVersion = productVersion;
 		this.translator = translator;
@@ -183,7 +160,11 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 	}
 
 	public final Set<String> getAttributeNames() {
-		return Collections.unmodifiableSet(this.attributes.keySet());
+		return new HashSet<>(this.attributes.keySet());
+	}
+
+	public final Set<String> getSecondaries() {
+		return this.secondaries;
 	}
 
 	public final CmfAttribute<V> getAttribute(CmfEncodeableName name) {
@@ -212,7 +193,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 	}
 
 	public final Collection<CmfAttribute<V>> getAttributes() {
-		return Collections.unmodifiableCollection(this.attributes.values());
+		return new ArrayList<>(this.attributes.values());
 	}
 
 	public final void setAttributes(Collection<CmfAttribute<V>> attributes) {
@@ -227,7 +208,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 	}
 
 	public final Set<String> getPropertyNames() {
-		return Collections.unmodifiableSet(this.properties.keySet());
+		return new HashSet<>(this.properties.keySet());
 	}
 
 	public final CmfProperty<V> getProperty(CmfEncodeableName name) {
@@ -256,7 +237,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 	}
 
 	public final Collection<CmfProperty<V>> getProperties() {
-		return Collections.unmodifiableCollection(this.properties.values());
+		return new ArrayList<>(this.properties.values());
 	}
 
 	public final void setProperties(Collection<CmfProperty<V>> properties) {
@@ -264,32 +245,6 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		for (CmfProperty<V> prop : properties) {
 			setProperty(prop);
 		}
-	}
-
-	public final CmfAttribute<V> getOrCreateAttribute(CmfEncodeableName name, CmfDataType type, boolean repeating) {
-		return getOrCreateAttribute(name.encode(), type, repeating);
-	}
-
-	public final CmfAttribute<V> getOrCreateAttribute(String name, CmfDataType type, boolean repeating) {
-		CmfAttribute<V> att = getAttribute(name);
-		if (att == null) {
-			att = new CmfAttribute<>(name, type, repeating);
-			setAttribute(att);
-		}
-		return att;
-	}
-
-	public final CmfProperty<V> getOrCreateProperty(CmfEncodeableName name, CmfDataType type, boolean repeating) {
-		return getOrCreateProperty(name.encode(), type, repeating);
-	}
-
-	public final CmfProperty<V> getOrCreateProperty(String name, CmfDataType type, boolean repeating) {
-		CmfProperty<V> prop = getProperty(name);
-		if (prop == null) {
-			prop = new CmfProperty<>(name, type, repeating);
-			setProperty(prop);
-		}
-		return prop;
 	}
 
 	protected String toStringTrailer() {
@@ -301,8 +256,8 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		final String trailer = toStringTrailer();
 		final String trailerSep = ((trailer != null) && (trailer.length() > 0) ? ", " : "");
 		return String.format(
-			"%s [type=%s, subtype=%s, id=%s, name=%s, searchKey=%s, dependencyTier=%d, historyId=%s, historyCurrent=%s, label=%s%s%s]",
-			getClass().getSimpleName(), getType(), this.subtype, getId(), this.name, getSearchKey(),
+			"%s [type=%s, subtype=%s, secondaries=%s, id=%s, name=%s, searchKey=%s, dependencyTier=%d, historyId=%s, historyCurrent=%s, label=%s%s%s]",
+			getClass().getSimpleName(), getType(), this.subtype, this.secondaries, getId(), this.name, getSearchKey(),
 			this.dependencyTier, this.historyId, this.historyCurrent, this.label, trailerSep, trailer);
 	}
 }
