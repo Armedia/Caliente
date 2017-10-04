@@ -178,7 +178,7 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionHasDecorator.t">
+	<xsd:complexType name="conditionHasSecondarySubtype.t">
 		<xsd:simpleContent>
 			<xsd:extension base="tns:expression.t">
 				<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
@@ -186,7 +186,7 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="conditionHasOriginalDecorator.t">
+	<xsd:complexType name="conditionHasOriginalSecondarySubtype.t">
 		<xsd:simpleContent>
 			<xsd:extension base="tns:expression.t">
 				<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eq" />
@@ -346,8 +346,8 @@
 			<xsd:element name="is-original-name" type="tns:conditionIsOriginalName.t" />
 			<xsd:element name="is-subtype" type="tns:conditionIsSubtype.t" />
 			<xsd:element name="is-original-subtype" type="tns:conditionIsOriginalSubtype.t" />
-			<xsd:element name="has-decorator" type="tns:conditionHasDecorator.t" />
-			<xsd:element name="has-original-decorator" type="tns:conditionHasOriginalDecorator.t" />
+			<xsd:element name="has-secondary-subtype" type="tns:conditionHasSecondarySubtype.t" />
+			<xsd:element name="has-original-secondary-subtype" type="tns:conditionHasOriginalSecondarySubtype.t" />
 			<xsd:element name="is-reference" type="tns:conditionIsReference.t" />
 			<xsd:element name="is-first-version" type="tns:conditionIsFirstVersion.t" />
 			<xsd:element name="is-latest-version" type="tns:conditionIsLatestVersion.t" />
@@ -419,28 +419,28 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionAddDecorator.t">
+	<xsd:complexType name="actionAddSecondarySubtype.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="decorator" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionRemoveDecorator.t">
+	<xsd:complexType name="actionRemoveSecondarySubtype.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
 					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="decorator" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionReplaceDecorator.t">
+	<xsd:complexType name="actionReplaceSecondarySubtype.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
@@ -451,13 +451,13 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionRemoveOriginalDecorators.t">
+	<xsd:complexType name="actionRemoveOriginalSecondarySubtypes.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionResetOriginalDecorators.t">
+	<xsd:complexType name="actionResetOriginalSecondarySubtypes.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t" />
 		</xsd:complexContent>
@@ -628,11 +628,11 @@
 			<xsd:element name="group" type="tns:actionGroup.t" />
 			<xsd:element name="set-subtype" type="tns:actionSetSubtype.t" />
 			<xsd:element name="replace-subtype" type="tns:actionReplaceSubtype.t" />
-			<xsd:element name="add-decorator" type="tns:actionAddDecorator.t" />
-			<xsd:element name="remove-decorator" type="tns:actionRemoveDecorator.t" />
-			<xsd:element name="replace-decorator" type="tns:actionReplaceDecorator.t" />
-			<xsd:element name="remove-original-decorators" type="tns:actionRemoveOriginalDecorators.t" />
-			<xsd:element name="reset-original-decorators" type="tns:actionResetOriginalDecorators.t" />
+			<xsd:element name="add-secondary-subtype" type="tns:actionAddSecondarySubtype.t" />
+			<xsd:element name="remove-secondary-subtype" type="tns:actionRemoveSecondarySubtype.t" />
+			<xsd:element name="replace-secondary-subtype" type="tns:actionReplaceSecondarySubtype.t" />
+			<xsd:element name="remove-original-secondary-subtypes" type="tns:actionRemoveOriginalSecondarySubtypes.t" />
+			<xsd:element name="reset-original-secondary-subtypes" type="tns:actionResetOriginalSecondarySubtypes.t" />
 			<xsd:element name="set-attribute" type="tns:actionSetAttribute.t" />
 			<xsd:element name="remove-attribute" type="tns:actionRemoveAttribute.t" />
 			<xsd:element name="replace-attribute" type="tns:actionReplaceAttribute.t" />

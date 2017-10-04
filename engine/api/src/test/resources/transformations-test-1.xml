@@ -45,9 +45,9 @@
 						<is-latest-version />
 					</oneof>
 
-					<has-decorator comparison="eq" lang="jexl">
+					<has-secondary-subtype comparison="eq" lang="jexl">
 						<!-- expression -->
-					</has-decorator>
+					</has-secondary-subtype>
 
 					<check-expression comparison="eq">
 						<left lang="jexl">
@@ -111,27 +111,27 @@
 			</replacement>
 		</replace-subtype>
 
-		<add-decorator>
+		<add-secondary-subtype>
 			<if>
 			</if>
-			<decorator lang="rhino">
+			<value lang="rhino">
 				<![CDATA[sdjflk > < DS FASDF SD F<>F ASDF <>ASDF A>SD F<AD FA! & &  && A >  AD>]]>
-			</decorator>
-		</add-decorator>
-		<remove-decorator>
+			</value>
+		</add-secondary-subtype>
+		<remove-secondary-subtype>
 			<comparison>eq</comparison>
-			<decorator lang="jexl">
+			<value lang="jexl">
 				<!-- expression -->
-			</decorator>
-		</remove-decorator>
-		<replace-decorator>
+			</value>
+		</remove-secondary-subtype>
+		<replace-secondary-subtype>
 			<regex lang="jexl" caseSensitive="false">
 				<!-- expression -->
 			</regex>
 			<replacement lang="jexl">
 				<!-- expression -->
 			</replacement>
-		</replace-decorator>
+		</replace-secondary-subtype>
 
 		<set-attribute>
 			<name lang="jexl">

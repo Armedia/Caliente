@@ -13,8 +13,8 @@ public class TestObjectFacade extends TransformableObject {
 	private CmfType type = null;
 	private String label = null;
 	private String originalSubtype = null;
-	private Set<String> originalDecorators = new HashSet<>();
-	private Set<String> decorators = new HashSet<>();
+	private Set<String> originalSecondaries = new HashSet<>();
+	private Set<String> secondaries = new HashSet<>();
 	private int dependencyTier = 0;
 	private String originalName = null;
 	private String productName = null;
@@ -80,22 +80,22 @@ public class TestObjectFacade extends TransformableObject {
 	}
 
 	@Override
-	public Set<String> getOriginalDecorators() {
-		return this.originalDecorators;
+	public Set<String> getOriginalSecondarySubtypes() {
+		return this.originalSecondaries;
 	}
 
-	public TestObjectFacade setOriginalDecorators(Set<String> originalDecorators) {
-		this.originalDecorators = originalDecorators;
+	public TestObjectFacade setOriginalSecondarySubtypes(Set<String> originalSecondaries) {
+		this.originalSecondaries = originalSecondaries;
 		return this;
 	}
 
 	@Override
-	public Set<String> getDecorators() {
-		return this.decorators;
+	public Set<String> getSecondarySubtypes() {
+		return this.secondaries;
 	}
 
-	public TestObjectFacade setDecorators(Set<String> decorators) {
-		this.decorators = decorators;
+	public TestObjectFacade setSecondarySubtypes(Set<String> secondaries) {
+		this.secondaries = secondaries;
 		return this;
 	}
 

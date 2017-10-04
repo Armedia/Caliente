@@ -24,12 +24,12 @@ public abstract class AbstractSingleValueSet extends ConditionalAction {
 		this.value = value;
 	}
 
-	protected abstract void setNewValue(TransformationContext ctx, String newValue);
+	protected abstract void setNewValue(TransformationContext ctx, String newValue) throws TransformationException;
 
 	@Override
 	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
 		String newValue = Tools.toString(Expression.eval(getValue(), ctx));
-		if (newValue == null) { throw new TransformationException("No name given to set"); }
+		if (newValue == null) { throw new TransformationException("No value given to set"); }
 		setNewValue(ctx, newValue);
 	}
 }

@@ -16,14 +16,14 @@ import com.armedia.caliente.engine.transform.xml.actions.AttributeRemove;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeReplace;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeSet;
 import com.armedia.caliente.engine.transform.xml.actions.CustomAction;
-import com.armedia.caliente.engine.transform.xml.actions.DecoratorAdd;
-import com.armedia.caliente.engine.transform.xml.actions.DecoratorOriginalRemove;
-import com.armedia.caliente.engine.transform.xml.actions.DecoratorOriginalReset;
-import com.armedia.caliente.engine.transform.xml.actions.DecoratorRemove;
-import com.armedia.caliente.engine.transform.xml.actions.DecoratorReplace;
 import com.armedia.caliente.engine.transform.xml.actions.EndTransformation;
 import com.armedia.caliente.engine.transform.xml.actions.MapAttributeValue;
 import com.armedia.caliente.engine.transform.xml.actions.MapVariableValue;
+import com.armedia.caliente.engine.transform.xml.actions.OriginalSecondarySubtypeRemove;
+import com.armedia.caliente.engine.transform.xml.actions.OriginalSecondarySubtypeReset;
+import com.armedia.caliente.engine.transform.xml.actions.SecondarySubtypeAdd;
+import com.armedia.caliente.engine.transform.xml.actions.SecondarySubtypeRemove;
+import com.armedia.caliente.engine.transform.xml.actions.SecondarySubtypeReplace;
 import com.armedia.caliente.engine.transform.xml.actions.SubtypeReplace;
 import com.armedia.caliente.engine.transform.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.transform.xml.actions.ValueMappingApply;
@@ -43,11 +43,11 @@ public class ActionGroup extends ConditionalAction {
 		@XmlElement(name = "group", type = ActionGroup.class), //
 		@XmlElement(name = "set-subtype", type = SubtypeSet.class), //
 		@XmlElement(name = "replace-subtype", type = SubtypeReplace.class), //
-		@XmlElement(name = "add-decorator", type = DecoratorAdd.class), //
-		@XmlElement(name = "remove-decorator", type = DecoratorRemove.class), //
-		@XmlElement(name = "replace-decorator", type = DecoratorReplace.class), //
-		@XmlElement(name = "remove-original-decorators", type = DecoratorOriginalRemove.class), //
-		@XmlElement(name = "reset-original-decorators", type = DecoratorOriginalReset.class), //
+		@XmlElement(name = "add-secondary-subtype", type = SecondarySubtypeAdd.class), //
+		@XmlElement(name = "remove-secondary-subtype", type = SecondarySubtypeRemove.class), //
+		@XmlElement(name = "replace-secondary-subtype", type = SecondarySubtypeReplace.class), //
+		@XmlElement(name = "remove-original-secondary-subtypes", type = OriginalSecondarySubtypeRemove.class), //
+		@XmlElement(name = "reset-original-secondary-subtypes", type = OriginalSecondarySubtypeReset.class), //
 		@XmlElement(name = "set-attribute", type = AttributeSet.class), //
 		@XmlElement(name = "remove-attribute", type = AttributeRemove.class), //
 		@XmlElement(name = "replace-attribute", type = AttributeReplace.class), //

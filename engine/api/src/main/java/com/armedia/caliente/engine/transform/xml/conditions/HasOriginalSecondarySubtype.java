@@ -12,16 +12,16 @@ import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionHasOriginalDecorator.t")
-public class HasOriginalDecorator extends AbstractExpressionComparison {
+@XmlType(name = "conditionHasOriginalSecondarySubtype.t")
+public class HasOriginalSecondarySubtype extends AbstractExpressionComparison {
 
 	@Override
 	public boolean check(TransformationContext ctx) throws TransformationException {
-		Object decorator = Expression.eval(this, ctx);
-		if (decorator == null) { return false; }
+		Object secondary = Expression.eval(this, ctx);
+		if (secondary == null) { return false; }
 		final Comparison comp = getComparison();
-		for (String d : ctx.getObject().getOriginalDecorators()) {
-			if (comp.check(CmfDataType.STRING, d, decorator.toString())) { return true; }
+		for (String s : ctx.getObject().getOriginalSecondarySubtypes()) {
+			if (comp.check(CmfDataType.STRING, s, secondary.toString())) { return true; }
 		}
 		return false;
 	}

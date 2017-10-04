@@ -21,17 +21,17 @@ import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionRemoveDecorator.t", propOrder = {
-	"comparison", "decorator"
+@XmlType(name = "actionRemoveSecondarySubtype.t", propOrder = {
+	"comparison", "value"
 })
-public class DecoratorRemove extends ConditionalAction {
+public class SecondarySubtypeRemove extends ConditionalAction {
 
 	@XmlElement(name = "comparison", required = true)
 	@XmlJavaTypeAdapter(ComparisonAdapter.class)
 	protected Comparison comparison;
 
-	@XmlElement(name = "decorator", required = true)
-	protected Expression decorator;
+	@XmlElement(name = "value", required = true)
+	protected Expression value;
 
 	public Comparison getComparison() {
 		return Tools.coalesce(this.comparison, Comparison.DEFAULT);
@@ -41,27 +41,27 @@ public class DecoratorRemove extends ConditionalAction {
 		this.comparison = value;
 	}
 
-	public Expression getDecorator() {
-		return this.decorator;
+	public Expression getValue() {
+		return this.value;
 	}
 
-	public void setDecorator(Expression value) {
-		this.decorator = value;
+	public void setValue(Expression value) {
+		this.value = value;
 	}
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		String comparand = StringUtils.strip(Tools.toString(Expression.eval(getDecorator(), ctx)));
+		String comparand = StringUtils.strip(Tools.toString(Expression.eval(getValue(), ctx)));
 		if (StringUtils.isEmpty(comparand)) { return; }
 
 		Comparison comparison = getComparison();
 		if (comparison == Comparison.EQ) {
 			// Shortcut
-			ctx.getObject().getDecorators().remove(comparand);
+			ctx.getObject().getSecondarySubtypes().remove(comparand);
 			return;
 		}
 
-		Iterator<String> it = ctx.getObject().getDecorators().iterator();
+		Iterator<String> it = ctx.getObject().getSecondarySubtypes().iterator();
 		while (it.hasNext()) {
 			String current = it.next();
 			if (comparison.check(CmfDataType.STRING, current, comparand)) {

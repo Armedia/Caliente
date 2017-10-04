@@ -13,8 +13,8 @@ import com.armedia.caliente.store.CmfValue;
 public class DefaultTransformableObjectFacade extends TransformableObject {
 
 	private final CmfObject<CmfValue> object;
-	private final Set<String> originalDecorators;
-	private final Set<String> decorators;
+	private final Set<String> originalSecondaries;
+	private final Set<String> secondaries;
 
 	public DefaultTransformableObjectFacade(CmfObject<CmfValue> object) {
 		Objects.requireNonNull(object, "Must provide a CmfObject to pattern this instance on");
@@ -27,9 +27,9 @@ public class DefaultTransformableObjectFacade extends TransformableObject {
 			this.privateProperties.put(prop.getName(), new TypedValue(prop));
 		}
 
-		// TODO: Calculate the actual decorators associated with the object...
-		this.originalDecorators = new LinkedHashSet<>();
-		this.decorators = new LinkedHashSet<>();
+		// TODO: Calculate the actual secondaries associated with the object...
+		this.originalSecondaries = new LinkedHashSet<>();
+		this.secondaries = new LinkedHashSet<>();
 	}
 
 	@Override
@@ -63,13 +63,13 @@ public class DefaultTransformableObjectFacade extends TransformableObject {
 	}
 
 	@Override
-	public Set<String> getOriginalDecorators() {
-		return this.originalDecorators;
+	public Set<String> getOriginalSecondarySubtypes() {
+		return this.originalSecondaries;
 	}
 
 	@Override
-	public Set<String> getDecorators() {
-		return this.decorators;
+	public Set<String> getSecondarySubtypes() {
+		return this.secondaries;
 	}
 
 	@Override

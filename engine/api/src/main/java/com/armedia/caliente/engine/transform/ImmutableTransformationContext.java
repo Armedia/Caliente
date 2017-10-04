@@ -42,13 +42,13 @@ public class ImmutableTransformationContext extends TransformationContext {
 		private final TransformableObject object;
 		private final Map<String, TypedValue> att;
 		private final Map<String, TypedValue> priv;
-		private final Set<String> originalDecorators;
-		private final Set<String> decorators;
+		private final Set<String> originalSecondaries;
+		private final Set<String> secondaries;
 
 		private ImmutableObjectData(TransformableObject object) {
 			this.object = object;
-			this.originalDecorators = Collections.unmodifiableSet(object.getOriginalDecorators());
-			this.decorators = Collections.unmodifiableSet(object.getDecorators());
+			this.originalSecondaries = Collections.unmodifiableSet(object.getOriginalSecondarySubtypes());
+			this.secondaries = Collections.unmodifiableSet(object.getSecondarySubtypes());
 			this.att = ImmutableTransformationContext.makeImmutable(object.getAtt());
 			this.priv = ImmutableTransformationContext.makeImmutable(object.getPriv());
 		}
@@ -89,13 +89,13 @@ public class ImmutableTransformationContext extends TransformationContext {
 		}
 
 		@Override
-		public Set<String> getOriginalDecorators() {
-			return this.originalDecorators;
+		public Set<String> getOriginalSecondarySubtypes() {
+			return this.originalSecondaries;
 		}
 
 		@Override
-		public Set<String> getDecorators() {
-			return this.decorators;
+		public Set<String> getSecondarySubtypes() {
+			return this.secondaries;
 		}
 
 		@Override

@@ -12,13 +12,14 @@ import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.ConditionalAction;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionRemoveOriginalDecorators.t")
-public class DecoratorOriginalRemove extends ConditionalAction {
+@XmlType(name = "actionResetOriginalSecondarySubtypes.t")
+public class OriginalSecondarySubtypeReset extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		Set<String> originals = ctx.getObject().getOriginalDecorators();
-		ctx.getObject().getDecorators().removeAll(originals);
+		Set<String> secondaries = ctx.getObject().getSecondarySubtypes();
+		secondaries.clear();
+		secondaries.addAll(ctx.getObject().getOriginalSecondarySubtypes());
 	}
 
 }

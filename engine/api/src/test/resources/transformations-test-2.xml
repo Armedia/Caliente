@@ -38,9 +38,9 @@
 						<is-first-version />
 						<is-latest-version />
 					</oneof>
-					<has-decorator comparison="eq" lang="...">
+					<has-secondary-subtype comparison="eq" lang="...">
 						
-					</has-decorator>
+					</has-secondary-subtype>
 					<check-expression comparison="eq">
 						<left lang="...">
 							
@@ -81,26 +81,26 @@
 				
 			</replacement>
 		</replace-subtype>
-		<add-decorator>
+		<add-secondary-subtype>
 			<if />
-			<decorator lang="...">
+			<value lang="...">
 				
-			</decorator>
-		</add-decorator>
-		<remove-decorator>
+			</value>
+		</add-secondary-subtype>
+		<remove-secondary-subtype>
 			<comparison>eq</comparison>
-			<decorator lang="...">
+			<value lang="...">
 				
-			</decorator>
-		</remove-decorator>
-		<replace-decorator>
+			</value>
+		</remove-secondary-subtype>
+		<replace-secondary-subtype>
 			<regex lang="...">
 				
 			</regex>
 			<replacement lang="...">
 				
 			</replacement>
-		</replace-decorator>
+		</replace-secondary-subtype>
 		<set-attribute>
 			<name lang="...">
 				

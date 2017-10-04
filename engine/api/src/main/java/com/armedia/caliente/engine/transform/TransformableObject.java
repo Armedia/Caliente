@@ -52,9 +52,9 @@ public abstract class TransformableObject {
 		return this;
 	}
 
-	public abstract Set<String> getOriginalDecorators();
+	public abstract Set<String> getOriginalSecondarySubtypes();
 
-	public abstract Set<String> getDecorators();
+	public abstract Set<String> getSecondarySubtypes();
 
 	public abstract int getDependencyTier();
 
@@ -152,7 +152,7 @@ public abstract class TransformableObject {
 		newObject.setAttributes(attributeList);
 		newObject.setProperties(propertyList);
 
-		// TODO: The aspects (decorators).... need a mechanism to set these...
+		// TODO: The aspects (secondary types).... need a mechanism to set these...
 
 		return newObject;
 	}

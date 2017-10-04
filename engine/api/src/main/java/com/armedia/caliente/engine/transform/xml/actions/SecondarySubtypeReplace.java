@@ -20,10 +20,10 @@ import com.armedia.caliente.engine.transform.xml.RegularExpression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionReplaceDecorator.t", propOrder = {
+@XmlType(name = "actionReplaceSecondarySubtype.t", propOrder = {
 	"regex", "replacement"
 })
-public class DecoratorReplace extends ConditionalAction {
+public class SecondarySubtypeReplace extends ConditionalAction {
 
 	@XmlElement(name = "regex", required = true)
 	protected RegularExpression regex;
@@ -49,8 +49,8 @@ public class DecoratorReplace extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		Set<String> originalDecorators = ctx.getObject().getDecorators();
-		if (originalDecorators.isEmpty()) { return; }
+		Set<String> currentSecondaries = ctx.getObject().getSecondarySubtypes();
+		if (currentSecondaries.isEmpty()) { return; }
 
 		RegularExpression regexBase = getRegex();
 		final String regex = Tools.toString(Expression.eval(regexBase, ctx));
@@ -62,17 +62,15 @@ public class DecoratorReplace extends ConditionalAction {
 			flags |= Pattern.CASE_INSENSITIVE;
 		}
 
-		Set<String> decorators = new LinkedHashSet<>(originalDecorators);
-		Set<String> newDecorators = new LinkedHashSet<>();
-		originalDecorators.clear();
-		for (String d : decorators) {
-			d = Pattern.compile(regex, flags).matcher(d).replaceAll(replacement);
-			d = StringUtils.strip(d);
-			if (!StringUtils.isEmpty(d)) {
-				newDecorators.add(d);
+		Set<String> secondaries = new LinkedHashSet<>(currentSecondaries);
+		currentSecondaries.clear();
+		for (String s : secondaries) {
+			s = Pattern.compile(regex, flags).matcher(s).replaceAll(replacement);
+			s = StringUtils.strip(s);
+			if (!StringUtils.isEmpty(s)) {
+				currentSecondaries.add(s);
 			}
 		}
-		originalDecorators.addAll(newDecorators);
 	}
 
 }

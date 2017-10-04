@@ -15,27 +15,27 @@ import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionAddDecorator.t", propOrder = {
-	"decorator"
+@XmlType(name = "actionAddSecondarySubtype.t", propOrder = {
+	"value"
 })
-public class DecoratorAdd extends ConditionalAction {
+public class SecondarySubtypeAdd extends ConditionalAction {
 
-	@XmlElement(name = "decorator", required = true)
-	protected Expression decorator;
+	@XmlElement(name = "value", required = true)
+	protected Expression value;
 
-	public Expression getDecorator() {
-		return this.decorator;
+	public Expression getValue() {
+		return this.value;
 	}
 
-	public void setDecorator(Expression value) {
-		this.decorator = value;
+	public void setValue(Expression value) {
+		this.value = value;
 	}
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		String decorator = StringUtils.strip(Tools.toString(Expression.eval(getDecorator(), ctx)));
-		if (!StringUtils.isEmpty(decorator)) {
-			ctx.getObject().getDecorators().add(decorator);
+		String secondary = StringUtils.strip(Tools.toString(Expression.eval(getValue(), ctx)));
+		if (!StringUtils.isEmpty(secondary)) {
+			ctx.getObject().getSecondarySubtypes().add(secondary);
 		}
 	}
 

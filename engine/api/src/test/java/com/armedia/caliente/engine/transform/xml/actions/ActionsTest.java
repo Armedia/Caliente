@@ -51,6 +51,13 @@ public class ActionsTest {
 		Assert.assertNull(object.getSubtype());
 
 		SubtypeSet action = new SubtypeSet();
+		try {
+			action.apply(ctx);
+			Assert.fail("Did not fail with a null expression");
+		} catch (TransformationException e) {
+			// All is well
+		}
+
 		String value = UUID.randomUUID().toString();
 		action.setValue(new Expression(value));
 
@@ -60,14 +67,20 @@ public class ActionsTest {
 
 		action.setValue(new Expression(
 			"                                                       \n   \t   \n                       \t \t   \n                               "));
-		action.apply(ctx);
-		// Value is an empty string, so no change...
-		Assert.assertEquals(value, object.getSubtype());
+		try {
+			action.apply(ctx);
+			Assert.fail("Did not fail with a blank-valued expression");
+		} catch (TransformationException e) {
+			// All is well
+		}
 
 		action.setValue(new Expression());
-		action.apply(ctx);
-		// Value is a null string, so no change...
-		Assert.assertEquals(value, object.getSubtype());
+		try {
+			action.apply(ctx);
+			Assert.fail("Did not fail with a null-valued expression");
+		} catch (TransformationException e) {
+			// All is well
+		}
 	}
 
 	@Test
@@ -105,434 +118,434 @@ public class ActionsTest {
 	}
 
 	@Test
-	public void testDecoratorAdd() throws TransformationException {
+	public void testSecondarySubtypeAdd() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getObject();
 
-		DecoratorAdd action = new DecoratorAdd();
+		SecondarySubtypeAdd action = new SecondarySubtypeAdd();
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().isEmpty());
+		Assert.assertTrue(object.getSecondarySubtypes().isEmpty());
 
-		action.setDecorator(new Expression());
+		action.setValue(new Expression());
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().isEmpty());
+		Assert.assertTrue(object.getSecondarySubtypes().isEmpty());
 
 		String testValue = UUID.randomUUID().toString();
-		action.setDecorator(new Expression(testValue));
+		action.setValue(new Expression(testValue));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().isEmpty());
-		Assert.assertTrue(object.getDecorators().contains(testValue));
+		Assert.assertFalse(object.getSecondarySubtypes().isEmpty());
+		Assert.assertTrue(object.getSecondarySubtypes().contains(testValue));
 	}
 
 	@Test
-	public void testDecoratorRemove() throws TransformationException {
+	public void testSecondarySubtypeRemove() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getObject();
 
-		DecoratorRemove action = new DecoratorRemove();
-		action.setDecorator(new Expression());
+		SecondarySubtypeRemove action = new SecondarySubtypeRemove();
+		action.setValue(new Expression());
 
 		// First things first: remove by equals
 		Set<String> values = new TreeSet<>();
 		values.addAll(Arrays.asList("a", "b", "c"));
 
 		action.setComparison(Comparison.EQ);
-		object.getDecorators().addAll(values);
+		object.getSecondarySubtypes().addAll(values);
 		for (String s : values) {
-			Assert.assertTrue(object.getDecorators().contains(s));
-			action.setDecorator(new Expression(s));
+			Assert.assertTrue(object.getSecondarySubtypes().contains(s));
+			action.setValue(new Expression(s));
 			action.apply(ctx);
-			Assert.assertFalse(object.getDecorators().contains(s));
+			Assert.assertFalse(object.getSecondarySubtypes().contains(s));
 		}
 
 		action.setComparison(Comparison.EQI);
-		object.getDecorators().addAll(values);
+		object.getSecondarySubtypes().addAll(values);
 		for (String s : values) {
-			Assert.assertTrue(s, object.getDecorators().contains(s));
-			action.setDecorator(new Expression(s.toUpperCase()));
+			Assert.assertTrue(s, object.getSecondarySubtypes().contains(s));
+			action.setValue(new Expression(s.toUpperCase()));
 			action.apply(ctx);
-			Assert.assertFalse(s, object.getDecorators().contains(s));
+			Assert.assertFalse(s, object.getSecondarySubtypes().contains(s));
 		}
 
 		action.setComparison(Comparison.NEQ);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("a"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("a"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.NEQI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("B"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("B"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertTrue(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.LT);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("b"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("b"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertTrue(object.getDecorators().contains("b"));
-		Assert.assertTrue(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("b"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.LTI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("C"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("C"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertTrue(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.GT);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("a"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("a"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.GTI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("A"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("A"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.NGE);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("b"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("b"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertTrue(object.getDecorators().contains("b"));
-		Assert.assertTrue(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("b"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.NGEI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("C"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("C"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertTrue(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.NLE);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("a"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("a"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.NLEI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("A"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("A"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.LE);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("b"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("b"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertTrue(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.LEI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("A"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("A"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertTrue(object.getDecorators().contains("b"));
-		Assert.assertTrue(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("b"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.GE);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("a"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("a"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.GEI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("b"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("b"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.NGT);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("b"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("b"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertTrue(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.NGTI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("C"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("C"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.NLT);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("a"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("a"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		action.setComparison(Comparison.NLTI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("B"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("B"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("a"));
-		Assert.assertFalse(object.getDecorators().contains("b"));
-		Assert.assertFalse(object.getDecorators().contains("c"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("c"));
 
 		values.clear();
-		object.getDecorators().clear();
+		object.getSecondarySubtypes().clear();
 
-		values.addAll(Arrays.asList("first_value", "second_decorator", "first_decorator", "last_value"));
+		values.addAll(Arrays.asList("first_value", "second_secondary", "first_secondary", "last_value"));
 
 		action.setComparison(Comparison.SW);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("first_"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("first_"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.SWI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("SeCoNd_"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("SeCoNd_"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("first_value"));
-		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NSW);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("first_"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("first_"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("first_value"));
-		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NSWI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("SeCoNd_"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("SeCoNd_"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.EW);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("_value"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("_value"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.EWI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("_DeCoRaToR"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("_SeCoNdArY"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("first_value"));
-		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NEW);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("_decorator"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("_secondary"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NEWI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("_vAlUe"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("_vAlUe"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("first_value"));
-		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.CN);
-		object.getDecorators().addAll(values);
-		action.setDecorator(new Expression("_va"));
-		Assert.assertEquals(values, object.getDecorators());
+		object.getSecondarySubtypes().addAll(values);
+		action.setValue(new Expression("_va"));
+		Assert.assertEquals(values, object.getSecondarySubtypes());
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.CNI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("RsT"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("RsT"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NCN);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("seco"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("seco"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NCNI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("DeCo"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("SeCo"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.RE);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("t_[dv]"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("t_[sv]"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.REI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("T_[Dv]"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("T_[Sv]"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NRE);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("e$"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("e$"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("first_value"));
-		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NREI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("^F"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("^F"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("first_value"));
-		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("first_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("last_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.GLOB);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("first*"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("first*"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertTrue(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.GLOBI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("*dEcO*"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("*sEcO*"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("first_value"));
-		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NGLOB);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("last*"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("last*"));
 		action.apply(ctx);
-		Assert.assertFalse(object.getDecorators().contains("first_value"));
-		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 
 		action.setComparison(Comparison.NGLOBI);
-		object.getDecorators().addAll(values);
-		Assert.assertEquals(values, object.getDecorators());
-		action.setDecorator(new Expression("*sT_v?L?e"));
+		object.getSecondarySubtypes().addAll(values);
+		Assert.assertEquals(values, object.getSecondarySubtypes());
+		action.setValue(new Expression("*sT_v?L?e"));
 		action.apply(ctx);
-		Assert.assertTrue(object.getDecorators().contains("first_value"));
-		Assert.assertFalse(object.getDecorators().contains("second_decorator"));
-		Assert.assertFalse(object.getDecorators().contains("first_decorator"));
-		Assert.assertTrue(object.getDecorators().contains("last_value"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
+		Assert.assertFalse(object.getSecondarySubtypes().contains("first_secondary"));
+		Assert.assertTrue(object.getSecondarySubtypes().contains("last_value"));
 	}
 
 	@Test
-	public void testDecoratorReplace() throws TransformationException {
+	public void testSecondarySubtypeReplace() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getObject();
 
-		DecoratorReplace action = new DecoratorReplace();
+		SecondarySubtypeReplace action = new SecondarySubtypeReplace();
 		action.apply(ctx);
 
-		Set<String> decorators = object.getDecorators();
+		Set<String> secondaries = object.getSecondarySubtypes();
 		Set<String> values = new TreeSet<>(Arrays.asList("abc123hij", "123def789", "1b3d5f7h9j"));
-		decorators.addAll(values);
+		secondaries.addAll(values);
 
 		try {
 			action.apply(ctx);
@@ -543,34 +556,34 @@ public class ActionsTest {
 
 		action.setRegex(new RegularExpression("\\d"));
 
-		decorators.clear();
-		decorators.addAll(values);
+		secondaries.clear();
+		secondaries.addAll(values);
 		action.apply(ctx);
-		Assert.assertTrue(decorators.contains("abchij"));
-		Assert.assertTrue(decorators.contains("def"));
-		Assert.assertTrue(decorators.contains("bdfhj"));
+		Assert.assertTrue(secondaries.contains("abchij"));
+		Assert.assertTrue(secondaries.contains("def"));
+		Assert.assertTrue(secondaries.contains("bdfhj"));
 
 		action.setReplacement(new Expression("X"));
 
-		decorators.clear();
-		decorators.addAll(values);
+		secondaries.clear();
+		secondaries.addAll(values);
 		action.apply(ctx);
-		Assert.assertTrue(decorators.contains("abcXXXhij"));
-		Assert.assertTrue(decorators.contains("XXXdefXXX"));
-		Assert.assertTrue(decorators.contains("XbXdXfXhXj"));
+		Assert.assertTrue(secondaries.contains("abcXXXhij"));
+		Assert.assertTrue(secondaries.contains("XXXdefXXX"));
+		Assert.assertTrue(secondaries.contains("XbXdXfXhXj"));
 
-		decorators.clear();
+		secondaries.clear();
 
 		action.setRegex(new RegularExpression("[ABCDEFGHIJ]").setCaseSensitive(true));
-		decorators.addAll(values);
+		secondaries.addAll(values);
 		action.apply(ctx);
-		Assert.assertEquals(values, decorators);
+		Assert.assertEquals(values, secondaries);
 
 		action.setRegex(new RegularExpression("[ABCDEFGHIJ]").setCaseSensitive(false));
 		action.apply(ctx);
-		Assert.assertTrue(decorators.contains("XXX123XXX"));
-		Assert.assertTrue(decorators.contains("123XXX789"));
-		Assert.assertTrue(decorators.contains("1X3X5X7X9X"));
+		Assert.assertTrue(secondaries.contains("XXX123XXX"));
+		Assert.assertTrue(secondaries.contains("123XXX789"));
+		Assert.assertTrue(secondaries.contains("1X3X5X7X9X"));
 	}
 
 	@Test
