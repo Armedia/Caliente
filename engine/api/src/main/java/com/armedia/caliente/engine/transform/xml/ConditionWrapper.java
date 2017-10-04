@@ -19,6 +19,7 @@ import com.armedia.caliente.engine.transform.xml.conditions.GroupXor;
 import com.armedia.caliente.engine.transform.xml.conditions.HasAttribute;
 import com.armedia.caliente.engine.transform.xml.conditions.HasCalienteProperty;
 import com.armedia.caliente.engine.transform.xml.conditions.HasDecorator;
+import com.armedia.caliente.engine.transform.xml.conditions.HasOriginalDecorator;
 import com.armedia.caliente.engine.transform.xml.conditions.HasValueMapping;
 import com.armedia.caliente.engine.transform.xml.conditions.IsAttributeEmpty;
 import com.armedia.caliente.engine.transform.xml.conditions.IsAttributeRepeating;
@@ -57,7 +58,9 @@ public class ConditionWrapper {
 		@XmlElement(name = "is-type", type = IsType.class), //
 		@XmlElement(name = "is-subtype", type = IsSubtype.class), //
 		@XmlElement(name = "is-original-subtype", type = IsOriginalSubtype.class), //
+
 		@XmlElement(name = "has-decorator", type = HasDecorator.class), //
+		@XmlElement(name = "has-original-decorator", type = HasOriginalDecorator.class), //
 
 		@XmlElement(name = "is-reference", type = IsReference.class), //
 		@XmlElement(name = "is-first-version", type = IsFirstVersion.class), //

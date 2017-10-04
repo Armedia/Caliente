@@ -17,6 +17,8 @@ import com.armedia.caliente.engine.transform.xml.actions.AttributeReplace;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeSet;
 import com.armedia.caliente.engine.transform.xml.actions.CustomAction;
 import com.armedia.caliente.engine.transform.xml.actions.DecoratorAdd;
+import com.armedia.caliente.engine.transform.xml.actions.DecoratorOriginalRemove;
+import com.armedia.caliente.engine.transform.xml.actions.DecoratorOriginalReset;
 import com.armedia.caliente.engine.transform.xml.actions.DecoratorRemove;
 import com.armedia.caliente.engine.transform.xml.actions.DecoratorReplace;
 import com.armedia.caliente.engine.transform.xml.actions.EndTransformation;
@@ -44,6 +46,8 @@ public class ActionGroup extends ConditionalAction {
 		@XmlElement(name = "add-decorator", type = DecoratorAdd.class), //
 		@XmlElement(name = "remove-decorator", type = DecoratorRemove.class), //
 		@XmlElement(name = "replace-decorator", type = DecoratorReplace.class), //
+		@XmlElement(name = "remove-original-decorators", type = DecoratorOriginalRemove.class), //
+		@XmlElement(name = "reset-original-decorators", type = DecoratorOriginalReset.class), //
 		@XmlElement(name = "set-attribute", type = AttributeSet.class), //
 		@XmlElement(name = "remove-attribute", type = AttributeRemove.class), //
 		@XmlElement(name = "replace-attribute", type = AttributeReplace.class), //

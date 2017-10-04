@@ -12,15 +12,15 @@ import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionHasDecorator.t")
-public class HasDecorator extends AbstractExpressionComparison {
+@XmlType(name = "conditionHasOriginalDecorator.t")
+public class HasOriginalDecorator extends AbstractExpressionComparison {
 
 	@Override
 	public boolean check(TransformationContext ctx) throws TransformationException {
 		Object decorator = Expression.eval(this, ctx);
 		if (decorator == null) { return false; }
 		final Comparison comp = getComparison();
-		for (String d : ctx.getObject().getDecorators()) {
+		for (String d : ctx.getObject().getOriginalDecorators()) {
 			if (comp.check(CmfDataType.STRING, d, decorator.toString())) { return true; }
 		}
 		return false;
