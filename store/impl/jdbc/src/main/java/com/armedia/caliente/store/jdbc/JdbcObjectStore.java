@@ -35,8 +35,8 @@ import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfDataType;
@@ -392,7 +392,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							attributeValuePS.clearParameters();
 							attributeValuePS.setString(1, objId);
 							for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
-								attributeValuePS.setString(2, att.getName());
+								attributeValuePS.setString(2, nameMapper.encodeAttributeName(type, att.getName()));
 								valueRS = attributeValuePS.executeQuery();
 								try {
 									loadValues(CmfValueSerializer.get(att.getType()), valueRS, att);
@@ -593,7 +593,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
 								// We need to re-encode, since that's the value that will be
 								// referenced in the DB
-								attributeValuePS.setString(2, att.getName());
+								attributeValuePS.setString(2, nameMapper.encodeAttributeName(type, att.getName()));
 								valueRS = attributeValuePS.executeQuery();
 								try {
 									loadValues(CmfValueSerializer.get(att.getType()), valueRS, att);
@@ -1267,8 +1267,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		return new CmfProperty<>(name, type, repeating);
 	}
 
-	private <V> CmfAttribute<CmfValue> loadAttribute(CmfType objectType, CmfAttributeNameMapper nameMapper, ResultSet rs)
-		throws SQLException {
+	private <V> CmfAttribute<CmfValue> loadAttribute(CmfType objectType, CmfAttributeNameMapper nameMapper,
+		ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = nameMapper.decodeAttributeName(objectType, rs.getString("name"));
 		CmfDataType type = CmfDataType.decodeString(rs.getString("data_type"));
