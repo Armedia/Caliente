@@ -37,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfAttributeTranslator.AttributeNameMapper;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfNameFixer;
@@ -48,7 +49,6 @@ import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfTreeScanner;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
@@ -152,6 +152,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final CmfType objectType = object.getType();
 		final String objectId = JdbcTools.composeDatabaseId(object);
 
+		final AttributeNameMapper nameMapper = translator.getAttributeNameMapper();
+
 		Collection<Object[]> attributeParameters = new ArrayList<>();
 		Collection<Object[]> attributeValueParameters = new ArrayList<>();
 		Collection<Object[]> propertyParameters = new ArrayList<>();
@@ -182,7 +184,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			attValue[0] = objectId; // This should never change within the loop
 			final Map<String, String> encodedNames = new HashMap<>();
 			for (final CmfAttribute<V> attribute : object.getAttributes()) {
-				final String name = translator.encodeAttributeName(object.getType(), attribute.getName());
+				final String name = nameMapper.encodeAttributeName(object.getType(), attribute.getName());
 				final String duplicate = encodedNames.put(name, attribute.getName());
 				if (duplicate != null) {
 					this.log.warn(String.format(
@@ -325,9 +327,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected CmfObject<CmfValue> loadHeadObject(JdbcOperation operation, CmfTransformer typeMapper, CmfType type,
-		String historyId) throws CmfStorageException {
+	protected <V> CmfObject<CmfValue> loadHeadObject(JdbcOperation operation, CmfType type, String historyId,
+		CmfAttributeTranslator<V> translator) throws CmfStorageException {
 		final Connection connection = operation.getConnection();
+		final AttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		try {
 			PreparedStatement objectPS = null;
 			PreparedStatement attributePS = null;
@@ -381,7 +384,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							attributePS.setString(1, objId);
 							attributeRS = attributePS.executeQuery();
 							try {
-								loadAttributes(attributeRS, obj);
+								loadAttributes(attributeRS, nameMapper, obj);
 							} finally {
 								JdbcTools.closeQuietly(attributeRS);
 							}
@@ -444,8 +447,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected <V> int loadObjects(JdbcOperation operation, final CmfType type, Collection<String> ids,
-		CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
-
+		final AttributeNameMapper nameMapper, CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
 
@@ -581,7 +583,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							attributePS.setString(1, objId);
 							attributeRS = attributePS.executeQuery();
 							try {
-								loadAttributes(attributeRS, obj);
+								loadAttributes(attributeRS, nameMapper, obj);
 							} finally {
 								JdbcTools.closeQuietly(attributeRS);
 							}
@@ -707,52 +709,53 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				continue;
 			}
 
-			loadObjects(operation, currentType, ids, new CmfObjectHandler<CmfValue>() {
-				@Override
-				public boolean newTier(int tierNumber) throws CmfStorageException {
-					return true;
-				}
-
-				@Override
-				public boolean newHistory(String historyId) throws CmfStorageException {
-					return true;
-				}
-
-				@Override
-				public boolean handleObject(CmfObject<CmfValue> obj) throws CmfStorageException {
-					final CmfObject<V> decodedObj = translator.decodeObject(obj);
-					final String oldName = obj.getName();
-					final String newName = nameFixer.fixName(decodedObj);
-					if ((newName != null) && !Tools.equals(oldName, newName)) {
-						renameObject(operation, obj, newName);
-						result.incrementAndGet();
-						try {
-							nameFixer.nameFixed(decodedObj, oldName, newName);
-						} catch (Exception e) {
-							// Just log it
-							JdbcObjectStore.this.log.warn(String.format(
-								"Exception caught while invoking the nameFixed() callback for %s [%s](%s)",
-								obj.getType().name(), obj.getLabel(), obj.getId()), e);
-						}
+			loadObjects(operation, currentType, ids, translator.getAttributeNameMapper(),
+				new CmfObjectHandler<CmfValue>() {
+					@Override
+					public boolean newTier(int tierNumber) throws CmfStorageException {
+						return true;
 					}
-					return true;
-				}
 
-				@Override
-				public boolean handleException(Exception e) {
-					return false;
-				}
+					@Override
+					public boolean newHistory(String historyId) throws CmfStorageException {
+						return true;
+					}
 
-				@Override
-				public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
-					return true;
-				}
+					@Override
+					public boolean handleObject(CmfObject<CmfValue> obj) throws CmfStorageException {
+						final CmfObject<V> decodedObj = translator.decodeObject(obj);
+						final String oldName = obj.getName();
+						final String newName = nameFixer.fixName(decodedObj);
+						if ((newName != null) && !Tools.equals(oldName, newName)) {
+							renameObject(operation, obj, newName);
+							result.incrementAndGet();
+							try {
+								nameFixer.nameFixed(decodedObj, oldName, newName);
+							} catch (Exception e) {
+								// Just log it
+								JdbcObjectStore.this.log.warn(String.format(
+									"Exception caught while invoking the nameFixed() callback for %s [%s](%s)",
+									obj.getType().name(), obj.getLabel(), obj.getId()), e);
+							}
+						}
+						return true;
+					}
 
-				@Override
-				public boolean endTier(int tierNum, boolean ok) throws CmfStorageException {
-					return true;
-				}
-			});
+					@Override
+					public boolean handleException(Exception e) {
+						return false;
+					}
+
+					@Override
+					public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
+						return true;
+					}
+
+					@Override
+					public boolean endTier(int tierNum, boolean ok) throws CmfStorageException {
+						return true;
+					}
+				});
 
 		}
 		return result.get();
@@ -1264,9 +1267,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		return new CmfProperty<>(name, type, repeating);
 	}
 
-	private CmfAttribute<CmfValue> loadAttribute(CmfType objectType, ResultSet rs) throws SQLException {
+	private <V> CmfAttribute<CmfValue> loadAttribute(CmfType objectType, AttributeNameMapper nameMapper, ResultSet rs)
+		throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
-		String name = rs.getString("name");
+		String name = nameMapper.decodeAttributeName(objectType, rs.getString("name"));
 		CmfDataType type = CmfDataType.decodeString(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
 		return new CmfAttribute<>(name, type, repeating);
@@ -1298,11 +1302,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		property.setValues(values);
 	}
 
-	private void loadAttributes(ResultSet rs, CmfObject<CmfValue> obj) throws SQLException {
+	private <V> void loadAttributes(ResultSet rs, AttributeNameMapper nameMapper, CmfObject<CmfValue> obj)
+		throws SQLException {
 		List<CmfAttribute<CmfValue>> attributes = new LinkedList<>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
-			attributes.add(loadAttribute(obj.getType(), rs));
+			attributes.add(loadAttribute(obj.getType(), nameMapper, rs));
 		}
 		obj.setAttributes(attributes);
 	}

@@ -8,6 +8,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfAttributeTranslator.AttributeNameMapper;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -91,13 +92,14 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 
 	protected <T> String calculateVersionAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info, boolean primaryContent, boolean vDoc) {
+		AttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		boolean headVersion = false;
 		switch (object.getType()) {
 			case DOCUMENT:
 				// The "latest version" attribute really only says which version is "CURRENT". In
 				// systems like Documentum, the "current" version may not be the "latest" one...
 				CmfProperty<T> p = object.getAttribute(
-					translator.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
+					nameMapper.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
 				headVersion = ((p != null) && p.hasValues()
 					&& translator.getCodec(p.getType()).encodeValue(p.getValue()).asBoolean());
 				break;
@@ -144,7 +146,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 			} else {
 				// Use the version string
 				CmfAttribute<T> versionString = object.getAttribute(
-					translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
+					nameMapper.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
 				if ((versionString != null) && versionString.hasValues()) {
 					final String v = translator.getCodec(versionString.getType()).encodeValue(versionString.getValue())
 						.asString();

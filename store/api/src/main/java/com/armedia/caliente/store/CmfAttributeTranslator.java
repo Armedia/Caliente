@@ -42,10 +42,18 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 	};
 
-	protected static class AttributeNameMapper {
+	public static class AttributeNameMapper {
+
+		public final String encodeAttributeName(CmfType type, CmfEncodeableName attributeName) {
+			return encodeAttributeName(type, attributeName.encode());
+		}
 
 		public String encodeAttributeName(CmfType type, String attributeName) {
 			return attributeName;
+		}
+
+		public final String decodeAttributeName(CmfType type, CmfEncodeableName attributeName) {
+			return decodeAttributeName(type, attributeName.encode());
 		}
 
 		public String decodeAttributeName(CmfType type, String attributeName) {
@@ -73,9 +81,13 @@ public abstract class CmfAttributeTranslator<V> {
 	private final Class<V> valueClass;
 	private final AttributeNameMapper attributeNameMapper;
 
+	protected CmfAttributeTranslator(Class<V> valueClass) {
+		this(valueClass, null);
+	}
+
 	protected CmfAttributeTranslator(Class<V> valueClass, AttributeNameMapper attributeNameMapper) {
 		this.valueClass = valueClass;
-		this.attributeNameMapper = Tools.coalesce(attributeNameMapper);
+		this.attributeNameMapper = Tools.coalesce(attributeNameMapper, CmfAttributeTranslator.NULL_MAPPER);
 	}
 
 	public final String encodeValue(CmfDataType value) {
@@ -88,23 +100,11 @@ public abstract class CmfAttributeTranslator<V> {
 		return CmfDataType.decodeString(value);
 	}
 
+	public final AttributeNameMapper getAttributeNameMapper() {
+		return this.attributeNameMapper;
+	}
+
 	public abstract CmfValueCodec<V> getCodec(CmfDataType type);
-
-	public final String encodeAttributeName(CmfType type, CmfEncodeableName attributeName) {
-		return encodeAttributeName(type, attributeName.encode());
-	}
-
-	public final String decodeAttributeName(CmfType type, CmfEncodeableName attributeName) {
-		return decodeAttributeName(type, attributeName.encode());
-	}
-
-	public final String encodeAttributeName(CmfType type, String attributeName) {
-		return this.attributeNameMapper.encodeAttributeName(type, attributeName);
-	}
-
-	public final String decodeAttributeName(CmfType type, String attributeName) {
-		return this.attributeNameMapper.decodeAttributeName(type, attributeName);
-	}
 
 	public abstract V getValue(CmfDataType type, Object value) throws ParseException;
 
@@ -136,8 +136,7 @@ public abstract class CmfAttributeTranslator<V> {
 		);
 
 		for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
-			final String newName = this.attributeNameMapper.decodeAttributeName(newObj.getType(), att.getName());
-			CmfAttribute<V> newAtt = new CmfAttribute<>(newName, att.getType(), att.isRepeating());
+			CmfAttribute<V> newAtt = new CmfAttribute<>(att.getName(), att.getType(), att.isRepeating());
 			CmfValueCodec<V> codec = getCodec(att.getType());
 			if (newAtt.isRepeating()) {
 				for (CmfValue v : att) {
@@ -183,8 +182,7 @@ public abstract class CmfAttributeTranslator<V> {
 		);
 
 		for (CmfAttribute<V> att : obj.getAttributes()) {
-			final String newName = this.attributeNameMapper.encodeAttributeName(newObj.getType(), att.getName());
-			CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(newName, att.getType(), att.isRepeating());
+			CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(att.getName(), att.getType(), att.isRepeating());
 			CmfValueCodec<V> codec = getCodec(att.getType());
 			if (newAtt.isRepeating()) {
 				for (V v : att) {

@@ -55,8 +55,8 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 
 	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
-		CmfAttribute<?> name = object
-			.getAttribute(translator.decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
+		CmfAttribute<?> name = object.getAttribute(
+			translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
 		return name.getValue().toString();
 	}
 
@@ -67,7 +67,8 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 
 	protected <T> String calculateDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
-		final String attName = translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL);
+		final String attName = translator.getAttributeNameMapper().decodeAttributeName(object.getType(),
+			IntermediateAttribute.VERSION_LABEL);
 		final CmfAttribute<?> versionLabelAtt = object.getAttribute(attName);
 		String oldFrag = String.format("%s.%08x", info.getRenditionIdentifier(), info.getRenditionPage());
 		if ((versionLabelAtt != null) && versionLabelAtt.hasValues()) {

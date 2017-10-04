@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
+import com.armedia.caliente.store.CmfAttributeTranslator.AttributeNameMapper;
 import com.armedia.caliente.store.tools.CollectionObjectHandler;
 import com.armedia.commons.utilities.Tools;
 
@@ -445,8 +446,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		try {
 			final boolean tx = operation.begin();
 			try {
-				CmfObject<CmfValue> headObject = loadHeadObject(operation, transformer, sample.getType(),
-					sample.getHistoryId());
+				CmfObject<CmfValue> headObject = loadHeadObject(operation, sample.getType(), sample.getHistoryId(),
+					translator);
 				return adjustLoadedObject(headObject, transformer, translator);
 			} finally {
 				if (tx) {
@@ -463,8 +464,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract CmfObject<CmfValue> loadHeadObject(O operation, CmfTransformer typeMapper, CmfType type,
-		String historyId) throws CmfStorageException;
+	protected abstract <V> CmfObject<CmfValue> loadHeadObject(O operation, CmfType type, String historyId,
+		CmfAttributeTranslator<V> translator) throws CmfStorageException;
 
 	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTransformer typeMapper,
 		CmfAttributeTranslator<V> translator, CmfType type, String... ids) throws CmfStorageException {
@@ -517,38 +518,39 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				actualIds.add(s);
 			}
 			final CmfObjectHandler<V> h = new CollectionObjectHandler<>(ret);
-			loadObjects(operation, type, actualIds, new CmfObjectHandler<CmfValue>() {
-				@Override
-				public boolean newTier(int tierNumber) throws CmfStorageException {
-					return h.newTier(tierNumber);
-				}
+			loadObjects(operation, type, actualIds, translator.getAttributeNameMapper(),
+				new CmfObjectHandler<CmfValue>() {
+					@Override
+					public boolean newTier(int tierNumber) throws CmfStorageException {
+						return h.newTier(tierNumber);
+					}
 
-				@Override
-				public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
-					CmfObject<V> finalObject = adjustLoadedObject(dataObject, transformer, translator);
-					return h.handleObject(finalObject);
-				}
+					@Override
+					public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
+						CmfObject<V> finalObject = adjustLoadedObject(dataObject, transformer, translator);
+						return h.handleObject(finalObject);
+					}
 
-				@Override
-				public boolean newHistory(String historyId) throws CmfStorageException {
-					return h.newHistory(historyId);
-				}
+					@Override
+					public boolean newHistory(String historyId) throws CmfStorageException {
+						return h.newHistory(historyId);
+					}
 
-				@Override
-				public boolean handleException(Exception e) {
-					return h.handleException(e);
-				}
+					@Override
+					public boolean handleException(Exception e) {
+						return h.handleException(e);
+					}
 
-				@Override
-				public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
-					return h.endHistory(historyId, ok);
-				}
+					@Override
+					public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
+						return h.endHistory(historyId, ok);
+					}
 
-				@Override
-				public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
-					return h.endTier(tierNumber, ok);
-				}
-			});
+					@Override
+					public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
+						return h.endTier(tierNumber, ok);
+					}
+				});
 			return ret;
 		} finally {
 			getReadLock().unlock();
@@ -570,38 +572,39 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return loadObjects(operation, type, ids, new CmfObjectHandler<CmfValue>() {
-					@Override
-					public boolean newTier(int tierNumber) throws CmfStorageException {
-						return handler.newTier(tierNumber);
-					}
+				return loadObjects(operation, type, ids, translator.getAttributeNameMapper(),
+					new CmfObjectHandler<CmfValue>() {
+						@Override
+						public boolean newTier(int tierNumber) throws CmfStorageException {
+							return handler.newTier(tierNumber);
+						}
 
-					@Override
-					public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
-						CmfObject<V> finalObject = adjustLoadedObject(dataObject, typeMapper, translator);
-						return handler.handleObject(finalObject);
-					}
+						@Override
+						public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
+							CmfObject<V> finalObject = adjustLoadedObject(dataObject, typeMapper, translator);
+							return handler.handleObject(finalObject);
+						}
 
-					@Override
-					public boolean newHistory(String historyId) throws CmfStorageException {
-						return handler.newHistory(historyId);
-					}
+						@Override
+						public boolean newHistory(String historyId) throws CmfStorageException {
+							return handler.newHistory(historyId);
+						}
 
-					@Override
-					public boolean handleException(Exception e) {
-						return handler.handleException(e);
-					}
+						@Override
+						public boolean handleException(Exception e) {
+							return handler.handleException(e);
+						}
 
-					@Override
-					public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
-						return handler.endHistory(historyId, ok);
-					}
+						@Override
+						public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
+							return handler.endHistory(historyId, ok);
+						}
 
-					@Override
-					public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
-						return handler.endTier(tierNumber, ok);
-					}
-				});
+						@Override
+						public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
+							return handler.endTier(tierNumber, ok);
+						}
+					});
 			} finally {
 				if (tx) {
 					try {
@@ -618,7 +621,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	}
 
 	protected abstract <V> int loadObjects(O operation, CmfType type, Collection<String> ids,
-		CmfObjectHandler<CmfValue> handler) throws CmfStorageException;
+		final AttributeNameMapper nameMapper, CmfObjectHandler<CmfValue> handler) throws CmfStorageException;
 
 	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
 		throws CmfStorageException {
