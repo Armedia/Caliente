@@ -658,10 +658,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							}
 						} catch (SQLException e) {
 							// TODO: WTF?!?! Why is it detecting this when it's clearly impossible?
-							if (!handler.handleException(e)) {
-								handlerExceptionUnhandled(e);
-							}
+							if (!handler.handleException(e)) { throw handlerExceptionUnhandled(e); }
 							continue;
+						} finally {
+							// Just in case...
+							JdbcTools.closeQuietly(valueRS);
 						}
 
 						try {
