@@ -235,11 +235,16 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
-		AlfrescoType type = this.factory.mapType(this.cmfObject.getSubtype().toLowerCase());
-		if ((type == null) && (this.defaultType != null)) {
-			type = this.defaultType;
-		}
-		return type;
+		// TODO: Pull the aspects!!!
+		Set<String> aspects = Collections.emptySet();
+		AlfrescoType type = this.factory.schema.buildType(this.cmfObject.getSubtype(), aspects);
+		if (type != null) { return type; }
+		if (this.defaultType != null) { return this.defaultType; }
+
+		// If we have neither the type, nor a default, this is a problem
+		throw new ImportException(
+			String.format("Failed to locate the Alfresco type [%s] for %s (%s)[%s]", this.cmfObject.getSubtype(),
+				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId()));
 	}
 
 	protected final AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {

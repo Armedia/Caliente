@@ -35,15 +35,14 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import com.armedia.caliente.engine.alfresco.bi.cache.Cache;
 import com.armedia.caliente.engine.alfresco.bi.cache.CacheItem;
 import com.armedia.caliente.engine.alfresco.bi.cache.CacheItemMarker;
-import com.armedia.caliente.engine.alfresco.bi.cache.CacheItemVersion;
 import com.armedia.caliente.engine.alfresco.bi.cache.CacheItemMarker.MarkerType;
+import com.armedia.caliente.engine.alfresco.bi.cache.CacheItemVersion;
 import com.armedia.caliente.engine.alfresco.bi.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.MappingTools;
-import com.armedia.caliente.engine.tools.MappingTools.MappingValidator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
@@ -134,8 +133,6 @@ public class AlfImportDelegateFactory
 
 	private static final BigDecimal LAST_INDEX = new BigDecimal(Long.MAX_VALUE);
 
-	private static final Pattern TYPE_MAPPING_PARSER = Pattern.compile("^([^\\[]+)(?:\\[(.*)\\])?$");
-
 	private static final String SCHEMA_NAME = "alfresco-model.xsd";
 
 	private static final String MODEL_DIR_NAME = "content-models";
@@ -155,7 +152,6 @@ public class AlfImportDelegateFactory
 	private final File content;
 	private final Path biRootPath;
 
-	private final Properties typeMap = new Properties();
 	private final Properties userMap = new Properties();
 	private final Properties userLoginMap = new Properties();
 	private final Properties groupMap = new Properties();
@@ -163,7 +159,6 @@ public class AlfImportDelegateFactory
 
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
-	private final Map<String, AlfrescoType> mappedTypes;
 
 	private final ConcurrentMap<String, VirtualDocument> vdocs = new ConcurrentHashMap<>();
 	private final ThreadLocal<List<CacheItemMarker>> currentVersions = new ThreadLocal<>();
@@ -227,48 +222,6 @@ public class AlfImportDelegateFactory
 
 		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<>(m));
 
-		final Map<String, AlfrescoType> mappedTypes = new TreeMap<>();
-		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.TYPE_MAP), this.typeMap,
-			new MappingValidator() {
-
-				@Override
-				public void validate(String key, String value) throws Exception {
-					if (StringUtils.isEmpty(
-						key)) { throw new Exception(String.format("No key provided when mapping for [%s]", value)); }
-					if (StringUtils
-						.isEmpty(value)) { throw new Exception(String.format("No mapping for type [%s]", key)); }
-					Matcher m = AlfImportDelegateFactory.TYPE_MAPPING_PARSER.matcher(value);
-					if (!m.matches()) { throw new Exception(
-						String.format("Mapping does not conform to the required syntax")); }
-					// All is well, move on...
-					String baseName = m.group(1);
-					if (!AlfImportDelegateFactory.this.schema.hasType(baseName)) { throw new Exception(
-						String.format("No default type named [%s] was found", baseName)); }
-
-					String aspects = m.group(2);
-					if (!StringUtils.isEmpty(aspects)) {
-						List<String> l = new ArrayList<>();
-						for (String aspect : aspects.split(",")) {
-							aspect = aspect.trim();
-							if (StringUtils.isEmpty(aspects)) {
-								continue;
-							}
-							if (!AlfImportDelegateFactory.this.schema.hasAspect(aspect)) { throw new Exception(
-								String.format("No aspect named [%s] was found", baseName)); }
-							l.add(aspect);
-						}
-						// Build with aspects...
-						mappedTypes.put(key, AlfImportDelegateFactory.this.schema.buildType(baseName, l));
-					} else {
-						// No need to build since we lack aspects...
-						mappedTypes.put(key, AlfImportDelegateFactory.this.defaultTypes.get(baseName));
-					}
-				}
-			});
-		if (mappedTypes.isEmpty()) {
-			this.log.warn("No type mappings defined, only the default fallback types and aspects will be used");
-		}
-		this.mappedTypes = Tools.freezeMap(mappedTypes);
 		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.USER_MAP), this.userMap);
 		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.GROUP_MAP), this.groupMap);
 		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.ROLE_MAP), this.roleMap);
@@ -675,10 +628,6 @@ public class AlfImportDelegateFactory
 			throw new ImportException(
 				String.format("Failed to serialize the %s to XML: %s", folder ? "folder" : "file", item), e);
 		}
-	}
-
-	public final AlfrescoType mapType(String type) {
-		return this.mappedTypes.get(type);
 	}
 
 	protected String mapUser(String user) {

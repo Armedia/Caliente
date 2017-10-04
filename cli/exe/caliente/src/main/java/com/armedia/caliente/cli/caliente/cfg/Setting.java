@@ -47,7 +47,6 @@ public enum Setting {
 	USER_MAP("user.map"),
 	GROUP_MAP("group.map"),
 	ROLE_MAP("role.map"),
-	TYPE_MAP("type.map"),
 	FILENAME_MAP("filename.map"),
 
 	//
