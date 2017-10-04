@@ -8,8 +8,17 @@
 		</if>
 		
 		<set-name>
-			<name>xdfs</name>
+			<value lang="jexl">obj.name.toUpperCase()</value>
 		</set-name>
 	</transformation>
 
+	<transformation>
+		<if>
+			<is-type>DOCUMENT</is-type>
+		</if>
+		
+		<set-name>
+			<value lang="jexl">obj.name.toLowerCase()</value>
+		</set-name>
+	</transformation>
 </transformations>
