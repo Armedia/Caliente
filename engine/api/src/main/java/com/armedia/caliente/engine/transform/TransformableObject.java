@@ -93,9 +93,21 @@ public abstract class TransformableObject {
 		for (String s : this.attributes.keySet()) {
 			TypedValue v = this.attributes.get(s);
 			CmfAttribute<CmfValue> a = new CmfAttribute<>(v.getName(), v.getType(), v.isRepeating());
-			for (Object o : v.getValues()) {
+			if (a.isRepeating()) {
+				for (Object o : v.getValues()) {
+					try {
+						a.addValue(new CmfValue(v.getType(), o));
+					} catch (ParseException e) {
+						throw new TransformationException(
+							String.format("Failed to convert the %s value [%s] into a %s for attribute [%s]",
+								o.getClass().getCanonicalName(), o, v.getType(), v.getName()),
+							e);
+					}
+				}
+			} else {
+				Object o = v.getValue();
 				try {
-					a.addValue(new CmfValue(v.getType(), o));
+					a.setValue(new CmfValue(v.getType(), o));
 				} catch (ParseException e) {
 					throw new TransformationException(
 						String.format("Failed to convert the %s value [%s] into a %s for attribute [%s]",
@@ -111,9 +123,21 @@ public abstract class TransformableObject {
 		for (String s : this.privateProperties.keySet()) {
 			TypedValue v = this.privateProperties.get(s);
 			CmfProperty<CmfValue> p = new CmfProperty<>(v.getName(), v.getType(), v.isRepeating());
-			for (Object o : v.getValues()) {
+			if (p.isRepeating()) {
+				for (Object o : v.getValues()) {
+					try {
+						p.addValue(new CmfValue(v.getType(), o));
+					} catch (ParseException e) {
+						throw new TransformationException(
+							String.format("Failed to convert the %s value [%s] into a %s for property [%s]",
+								o.getClass().getCanonicalName(), o, v.getType(), v.getName()),
+							e);
+					}
+				}
+			} else {
+				Object o = v.getValue();
 				try {
-					p.addValue(new CmfValue(v.getType(), o));
+					p.setValue(new CmfValue(v.getType(), o));
 				} catch (ParseException e) {
 					throw new TransformationException(
 						String.format("Failed to convert the %s value [%s] into a %s for property [%s]",
