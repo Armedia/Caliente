@@ -28,11 +28,11 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
@@ -402,14 +402,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			currentAspects.add(object.getRepeatingString(DctmAttributes.R_ASPECT_NAME, i));
 		}
 
-		Set<String> newAspects = new LinkedHashSet<>();
 		// Next... which aspects does the incoming object have?
-		CmfAttribute<IDfValue> aspectAttr = this.cmfObject.getAttribute(DctmAttributes.R_ASPECT_NAME);
-		if (aspectAttr != null) {
-			for (IDfValue v : aspectAttr) {
-				newAspects.add(v.toString());
-			}
-		}
+		Set<String> newAspects = this.cmfObject.getSecondaries();
 
 		final AspectHelper helper = new AspectHelper(object);
 
