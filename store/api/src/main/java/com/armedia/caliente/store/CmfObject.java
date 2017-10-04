@@ -65,7 +65,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		for (CmfProperty<V> property : pattern.getProperties()) {
 			this.properties.put(property.getName(), new CmfProperty<>(property));
 		}
-		this.secondaries = Tools.freezeSet(new LinkedHashSet<>(pattern.getSecondaries()));
+		this.secondaries = Tools.freezeSet(new LinkedHashSet<>(pattern.getSecondarySubtypes()));
 		this.translator = pattern.translator;
 	}
 
@@ -163,7 +163,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		return new HashSet<>(this.attributes.keySet());
 	}
 
-	public final Set<String> getSecondaries() {
+	public final Set<String> getSecondarySubtypes() {
 		return this.secondaries;
 	}
 

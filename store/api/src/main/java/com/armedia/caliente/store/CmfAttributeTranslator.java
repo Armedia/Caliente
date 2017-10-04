@@ -110,7 +110,7 @@ public abstract class CmfAttributeTranslator<V> {
 			obj.isHistoryCurrent(), //
 			obj.getLabel(), //
 			obj.getSubtype(), //
-			obj.getSecondaries(), //
+			obj.getSecondarySubtypes(), //
 			obj.getProductName(), //
 			obj.getProductVersion(), //
 			obj.getNumber() //
@@ -157,7 +157,7 @@ public abstract class CmfAttributeTranslator<V> {
 			obj.isHistoryCurrent(), //
 			obj.getLabel(), //
 			obj.getSubtype(), //
-			obj.getSecondaries(), //
+			obj.getSecondarySubtypes(), //
 			obj.getProductName(), //
 			obj.getProductVersion(), //
 			obj.getNumber() //

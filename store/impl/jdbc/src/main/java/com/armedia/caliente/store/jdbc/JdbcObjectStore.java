@@ -172,7 +172,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			// First, the secondary subtypes
 			secondariesData[0] = objectId;
 			int i = 0;
-			for (String s : object.getSecondaries()) {
+			for (String s : object.getSecondarySubtypes()) {
 				s = StringUtils.strip(s);
 				if (StringUtils.isEmpty(s)) {
 					continue;

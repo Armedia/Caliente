@@ -9,11 +9,13 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -235,9 +237,16 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
-		// TODO: Pull the aspects!!!
-		Set<String> aspects = Collections.emptySet();
-		AlfrescoType type = this.factory.schema.buildType(this.cmfObject.getSubtype(), aspects);
+		Set<String> allAspects = this.factory.schema.getAspectNames();
+		List<String> badAspects = new ArrayList<>();
+		List<String> goodAspects = new ArrayList<>(allAspects.size());
+		for (String s : this.cmfObject.getSecondarySubtypes()) {
+			(allAspects.contains(s) ? goodAspects : badAspects).add(s);
+		}
+		if (!badAspects
+			.isEmpty()) { throw new ImportException(String.format("Aspects %s not found while importing %s (%s)[%s]",
+				badAspects, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		AlfrescoType type = this.factory.schema.buildType(this.cmfObject.getSubtype(), goodAspects);
 		if (type != null) { return type; }
 		if (this.defaultType != null) { return this.defaultType; }
 
