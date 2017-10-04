@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.transform;
+package com.armedia.caliente.engine.transform.xml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +9,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.xml.Action;
-import com.armedia.caliente.engine.transform.xml.ConditionalAction;
+import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.xml.actions.AbortTransformation;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeRemove;
 import com.armedia.caliente.engine.transform.xml.actions.AttributeReplace;

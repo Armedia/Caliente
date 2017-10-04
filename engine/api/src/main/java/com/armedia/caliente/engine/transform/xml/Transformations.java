@@ -17,7 +17,6 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
-import com.armedia.caliente.engine.transform.ActionGroup;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.commons.utilities.XmlTools;
