@@ -245,15 +245,6 @@
 			</case>
 		</map-variable-value>
 		
-		<set-name>
-			<value>sdfasdf</value>
-		</set-name>
-		
-		<replace-name>
-			<regex>abc</regex>
-			<replacement>1234</replacement>
-		</replace-name>
-
 		<map-attribute-value>
 			<if>
 				<is-reference />

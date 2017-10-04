@@ -82,9 +82,9 @@
 				</and>
 			</if>
 
-			<subtype lang="asdfasdf">
+			<value lang="asdfasdf">
 				<!-- expression -->
-			</subtype>
+			</value>
 		</set-subtype>
 
 		<replace-subtype>

@@ -22,8 +22,6 @@ import com.armedia.caliente.engine.transform.xml.actions.DecoratorReplace;
 import com.armedia.caliente.engine.transform.xml.actions.EndTransformation;
 import com.armedia.caliente.engine.transform.xml.actions.MapAttributeValue;
 import com.armedia.caliente.engine.transform.xml.actions.MapVariableValue;
-import com.armedia.caliente.engine.transform.xml.actions.NameReplace;
-import com.armedia.caliente.engine.transform.xml.actions.NameSet;
 import com.armedia.caliente.engine.transform.xml.actions.SubtypeReplace;
 import com.armedia.caliente.engine.transform.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.transform.xml.actions.ValueMappingApply;
@@ -41,8 +39,6 @@ public class ActionGroup extends ConditionalAction {
 
 	@XmlElements({
 		@XmlElement(name = "group", type = ActionGroup.class), //
-		@XmlElement(name = "set-name", type = NameSet.class), //
-		@XmlElement(name = "replace-name", type = NameReplace.class), //
 		@XmlElement(name = "set-subtype", type = SubtypeSet.class), //
 		@XmlElement(name = "replace-subtype", type = SubtypeReplace.class), //
 		@XmlElement(name = "add-decorator", type = DecoratorAdd.class), //

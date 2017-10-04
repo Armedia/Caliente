@@ -602,32 +602,9 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionSetName.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:conditionalAction.t">
-				<xsd:sequence>
-					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-				</xsd:sequence>
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="actionReplaceName.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:conditionalAction.t">
-				<xsd:sequence>
-					<xsd:element name="regex" type="tns:regularExpression.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="replacement" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
-				</xsd:sequence>
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-
 	<xsd:group name="actions">
 		<xsd:choice>
 			<xsd:element name="group" type="tns:actionGroup.t" />
-			<xsd:element name="set-name" type="tns:actionSetName.t" />
-			<xsd:element name="replace-name" type="tns:actionReplaceName.t" />
 			<xsd:element name="set-subtype" type="tns:actionSetSubtype.t" />
 			<xsd:element name="replace-subtype" type="tns:actionReplaceSubtype.t" />
 			<xsd:element name="add-decorator" type="tns:actionAddDecorator.t" />
