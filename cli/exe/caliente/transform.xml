@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<transformations xmlns="http://www.armedia.com/ns/caliente/engine/transformations" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/transformations platform:/resource/caliente-engine/src/main/resources/transformations.xsd">
+
+	<transformation>
+		<if>
+			<is-type>FOLDER</is-type>
+		</if>
+		
+		<set-name>
+			<name>xdfs</name>
+		</set-name>
+	</transformation>
+
+</transformations>

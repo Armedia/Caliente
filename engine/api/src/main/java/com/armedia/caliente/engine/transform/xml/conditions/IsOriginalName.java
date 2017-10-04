@@ -9,8 +9,8 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.store.CmfDataType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionIsSubtype.t")
-public class IsSubtype extends AbstractSingleValueComparison {
+@XmlType(name = "conditionIsOriginalName.t")
+public class IsOriginalName extends AbstractSingleValueComparison {
 
 	@Override
 	protected CmfDataType getCandidateType(TransformationContext ctx) {
@@ -19,7 +19,7 @@ public class IsSubtype extends AbstractSingleValueComparison {
 
 	@Override
 	protected Object getCandidateValue(TransformationContext ctx) {
-		return ctx.getObject().getSubtype();
+		return ctx.getObject().getOriginalName();
 	}
 
 }

@@ -28,7 +28,7 @@ public class DecoratorReplace extends ConditionalAction {
 	@XmlElement(name = "regex", required = true)
 	protected RegularExpression regex;
 
-	@XmlElement(name = "replacement", required = true)
+	@XmlElement(name = "replacement", required = false)
 	protected Expression replacement;
 
 	public RegularExpression getRegex() {

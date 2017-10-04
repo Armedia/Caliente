@@ -6,20 +6,20 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
-import com.armedia.caliente.engine.transform.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
-import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsOriginalSubtype.t")
-public class IsOriginalSubtype extends AbstractExpressionComparison {
+public class IsOriginalSubtype extends AbstractSingleValueComparison {
 
 	@Override
-	public boolean check(TransformationContext ctx) throws TransformationException {
-		String subtype = Tools.toString(Expression.eval(this, ctx));
-		if (subtype == null) { throw new TransformationException("No value given to compare against"); }
-		return getComparison().check(CmfDataType.STRING, ctx.getObject().getOriginalSubtype(), subtype);
+	protected CmfDataType getCandidateType(TransformationContext ctx) {
+		return CmfDataType.STRING;
+	}
+
+	@Override
+	protected Object getCandidateValue(TransformationContext ctx) {
+		return ctx.getObject().getOriginalSubtype();
 	}
 
 }

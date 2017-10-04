@@ -8,14 +8,19 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.engine.transform.TransformationContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionSetSubtype.t", propOrder = {
-	"value"
+@XmlType(name = "actionReplaceName.t", propOrder = {
+	"regex", "replacement"
 })
-public class SubtypeSet extends AbstractSingleValueSet {
+public class NameReplace extends AbstractSingleReplace {
 
 	@Override
 	protected void setNewValue(TransformationContext ctx, String newValue) {
-		ctx.getObject().setSubtype(newValue);
+		ctx.getObject().setName(newValue);
+	}
+
+	@Override
+	protected String getOldValue(TransformationContext ctx) {
+		return ctx.getObject().getName();
 	}
 
 }

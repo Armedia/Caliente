@@ -28,7 +28,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 	@XmlElement(name = "regex", required = true)
 	protected RegularExpression regex;
 
-	@XmlElement(name = "replacement", required = true)
+	@XmlElement(name = "replacement", required = false)
 	protected Expression replacement;
 
 	public Cardinality getCardinality() {

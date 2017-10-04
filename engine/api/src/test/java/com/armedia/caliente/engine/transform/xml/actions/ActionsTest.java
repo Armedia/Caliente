@@ -52,19 +52,19 @@ public class ActionsTest {
 
 		SubtypeSet action = new SubtypeSet();
 		String value = UUID.randomUUID().toString();
-		action.setSubtype(new Expression(value));
+		action.setValue(new Expression(value));
 
 		action.apply(ctx);
 
 		Assert.assertEquals(value, object.getSubtype());
 
-		action.setSubtype(new Expression(
+		action.setValue(new Expression(
 			"                                                       \n   \t   \n                       \t \t   \n                               "));
 		action.apply(ctx);
 		// Value is an empty string, so no change...
 		Assert.assertEquals(value, object.getSubtype());
 
-		action.setSubtype(new Expression());
+		action.setValue(new Expression());
 		action.apply(ctx);
 		// Value is a null string, so no change...
 		Assert.assertEquals(value, object.getSubtype());

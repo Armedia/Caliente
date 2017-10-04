@@ -17,6 +17,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
+import com.armedia.caliente.engine.transform.ActionGroup;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.commons.utilities.XmlTools;
@@ -30,7 +31,7 @@ public final class Transformations implements Action {
 
 	private static String SCHEMA = "transformations.xsd";
 
-	@XmlElement(name = "transformation", type = Transformation.class)
+	@XmlElement(name = "transformation", type = ActionGroup.class)
 	protected List<Action> elements;
 
 	public List<Action> getElements() {

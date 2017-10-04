@@ -74,6 +74,18 @@
 			</and>
 		</if>
 
+		<group>
+			<if>
+				<is-attribute-empty>sdfasdfsdf</is-attribute-empty>
+			</if>
+			<group>
+				<if>
+					<is-attribute-repeating>12341324</is-attribute-repeating>
+				</if>
+				<end-transformation/>
+			</group>
+			<abort-transformation/>
+		</group>
 
 		<set-subtype>
 			<if>
@@ -82,9 +94,9 @@
 				</and>
 			</if>
 
-			<subtype lang="java">
+			<value lang="java">
 				<!-- expression -->
-			</subtype>
+			</value>
 		</set-subtype>
 
 		<replace-subtype>
@@ -232,6 +244,15 @@
 				</replacement>
 			</case>
 		</map-variable-value>
+		
+		<set-name>
+			<value>sdfasdf</value>
+		</set-name>
+		
+		<replace-name>
+			<regex>abc</regex>
+			<replacement>1234</replacement>
+		</replace-name>
 
 		<map-attribute-value>
 			<if>
