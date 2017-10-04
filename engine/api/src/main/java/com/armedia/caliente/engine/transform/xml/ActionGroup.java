@@ -69,6 +69,12 @@ public class ActionGroup extends ConditionalAction {
 	}
 
 	@Override
+	protected boolean isSkippable() {
+		// Allow skipping if there are no actions contained in this group
+		return super.isSkippable() || (this.actions == null) || this.actions.isEmpty();
+	}
+
+	@Override
 	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
 		for (Action action : getActions()) {
 			if (action != null) {

@@ -40,8 +40,14 @@ public abstract class ConditionalAction implements Action {
 		return this;
 	}
 
+	protected boolean isSkippable() {
+		// By default, no action is skippable
+		return false;
+	}
+
 	@Override
 	public final void apply(TransformationContext ctx) throws TransformationException {
+		if (isSkippable()) { return; }
 		final Condition condition = getCondition();
 		// Basically, execute this action if there is no condition given, or if the given condition
 		// evaluates to true
