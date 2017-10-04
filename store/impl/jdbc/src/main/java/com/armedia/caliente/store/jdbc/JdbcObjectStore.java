@@ -598,7 +598,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							}
 
 							secondariesPS.setString(1, objId);
-							secondariesRS = parentsPS.executeQuery();
+							secondariesRS = secondariesPS.executeQuery();
 
 							parentsPS.setString(1, objId);
 							parentsRS = parentsPS.executeQuery();
