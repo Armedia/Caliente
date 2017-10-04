@@ -6,7 +6,7 @@
 		<if>
 			<is-type>FOLDER</is-type>
 		</if>
-		
+
 		<set-attribute>
 			<name>object_name</name>
 			<value lang="jexl">obj.name.toUpperCase()</value>
@@ -17,7 +17,7 @@
 		<if>
 			<is-type>DOCUMENT</is-type>
 		</if>
-		
+
 		<set-attribute>
 			<name>object_name</name>
 			<value lang="jexl">obj.name.toLowerCase()</value>
