@@ -71,6 +71,19 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		super(factory, session, objectClass, object);
 	}
 
+	@Override
+	protected Set<String> calculateSecondarySubtypes(IDfSession session, CmfType type, String subtype, T object)
+		throws Exception {
+		Set<String> secondaries = super.calculateSecondarySubtypes(session, type, subtype, object);
+		if (object.hasAttr(DctmAttributes.R_ASPECT_NAME)) {
+			final int count = object.getValueCount(DctmAttributes.R_ASPECT_NAME);
+			for (int i = 0; i < count; i++) {
+				secondaries.add(object.getRepeatingString(DctmAttributes.R_ASPECT_NAME, i));
+			}
+		}
+		return secondaries;
+	}
+
 	protected List<String> calculateFullPath(IDfSysObject f) throws DfException {
 		IDfSession session = f.getSession();
 		LinkedList<String> ret = new LinkedList<>();

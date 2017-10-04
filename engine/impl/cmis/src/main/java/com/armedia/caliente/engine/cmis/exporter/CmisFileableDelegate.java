@@ -3,10 +3,12 @@ package com.armedia.caliente.engine.cmis.exporter;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
+import org.apache.chemistry.opencmis.client.api.SecondaryType;
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.commons.lang3.StringUtils;
 
@@ -40,6 +42,19 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		String version = calculateVersion(f);
 		if (StringUtils.isBlank(version)) { return path; }
 		return String.format("%s#%s", path, version);
+	}
+
+	@Override
+	protected Set<String> calculateSecondarySubtypes(Session session, CmfType type, String subtype, T object)
+		throws Exception {
+		Set<String> secondaries = super.calculateSecondarySubtypes(session, type, subtype, object);
+		List<SecondaryType> t = object.getSecondaryTypes();
+		if ((t != null) && !t.isEmpty()) {
+			for (SecondaryType st : t) {
+				secondaries.add(st.getId());
+			}
+		}
+		return secondaries;
 	}
 
 	protected String calculateVersion(T obj) throws Exception {

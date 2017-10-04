@@ -42,6 +42,7 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	VERSION_SERIES_ID(PropertyIds.VERSION_SERIES_ID, CmfDataType.ID),
 	VERSION_SERIES_CHECKED_OUT_BY(PropertyIds.VERSION_SERIES_CHECKED_OUT_BY, CmfDataType.STRING),
 	CHECKIN_COMMENT(PropertyIds.CHECKIN_COMMENT, CmfDataType.STRING),
+	SECONDARY_TYPE_IDS(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, CmfDataType.STRING),
 
 	// Non-CMIS attributes
 	SUPER_NAME(CmfDataType.STRING),

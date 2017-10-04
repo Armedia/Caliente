@@ -32,5 +32,18 @@
 			<column name="pos" />
 		</createIndex>
 
+		<!-- This one covers Documentum, renaming to match the latest code -->
+		<sql>
+			update cmf_attribute set name = 'cmis:secondaryObjectTypeIds' where name = 'dctm:r_aspect_name'
+		</sql>
+		<!-- This one reconstructs the aspects table once everything is in order -->
+		<sql>
+			insert into cmf_object_secondary_subtype 
+			select object_id, value_number, data
+			  from cmf_attribute_value
+			 where name = 'cmis:secondaryObjectTypeIds'
+		  order by object_id, value_number
+		</sql>
+
 	</changeSet>
 </databaseChangeLog>
