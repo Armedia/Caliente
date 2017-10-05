@@ -20,39 +20,39 @@ import com.armedia.commons.utilities.XmlTools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"elements"
+	"filters"
 })
-@XmlRootElement(name = "transformations")
-public final class Transformations extends XmlBase {
+@XmlRootElement(name = "filters")
+public final class Filters extends XmlBase {
 
-	@XmlElement(name = "transformation", type = ActionGroup.class)
-	protected List<Action> elements;
+	@XmlElement(name = "filter", type = Filter.class)
+	protected List<Action> filters;
 
-	public List<Action> getElements() {
-		if (this.elements == null) {
-			this.elements = new ArrayList<>();
+	public List<Action> getFilters() {
+		if (this.filters == null) {
+			this.filters = new ArrayList<>();
 		}
-		return this.elements;
+		return this.filters;
 	}
 
 	@Override
 	public void apply(TransformationContext ctx) throws TransformationException {
-		for (Action t : getElements()) {
+		for (Action t : getFilters()) {
 			if (t != null) {
 				t.apply(ctx);
 			}
 		}
 	}
 
-	public static Transformations loadFromXML(InputStream in) throws JAXBException {
-		return XmlTools.unmarshal(Transformations.class, in);
+	public static Filters loadFromXML(InputStream in) throws JAXBException {
+		return XmlTools.unmarshal(Filters.class, in);
 	}
 
-	public static Transformations loadFromXML(Reader in) throws JAXBException {
-		return XmlTools.unmarshal(Transformations.class, in);
+	public static Filters loadFromXML(Reader in) throws JAXBException {
+		return XmlTools.unmarshal(Filters.class, in);
 	}
 
-	public static Transformations loadFromXML(XMLStreamReader in) throws JAXBException {
-		return XmlTools.unmarshal(Transformations.class, in);
+	public static Filters loadFromXML(XMLStreamReader in) throws JAXBException {
+		return XmlTools.unmarshal(Filters.class, in);
 	}
 }

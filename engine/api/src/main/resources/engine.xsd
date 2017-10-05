@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd" targetNamespace="http://www.armedia.com/ns/caliente/engine/transformations"
-	xmlns:tns="http://www.armedia.com/ns/caliente/engine/transformations" elementFormDefault="qualified" attributeFormDefault="unqualified"
+	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd" targetNamespace="http://www.armedia.com/ns/caliente/engine"
+	xmlns:tns="http://www.armedia.com/ns/caliente/engine" elementFormDefault="qualified" attributeFormDefault="unqualified"
 	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
 
 	<xsd:simpleType name="noSpaces.t">
@@ -386,6 +386,24 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionSkipObject.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionFailObject.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionProcessObject.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionEndTransformation.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t" />
@@ -647,6 +665,16 @@
 			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
 			<xsd:element name="end-transformation" type="tns:actionEndTransformation.t" />
 			<xsd:element name="abort-transformation" type="tns:actionAbortTransformation.t" />
+			<xsd:element name="skip-object" type="tns:actionSkipObject.t" />
+			<xsd:element name="fail-object" type="tns:actionFailObject.t" />
+		</xsd:choice>
+	</xsd:group>
+
+	<xsd:group name="filterActions">
+		<xsd:choice>
+			<xsd:element name="process-object" type="tns:actionProcessObject.t" />
+			<xsd:element name="skip-object" type="tns:actionSkipObject.t" />
+			<xsd:element name="fail-object" type="tns:actionFailObject.t" />
 		</xsd:choice>
 	</xsd:group>
 
@@ -663,8 +691,25 @@
 	<xsd:element name="transformations">
 		<xsd:complexType>
 			<xsd:choice minOccurs="0" maxOccurs="unbounded">
-				<!-- <xsd:element name="include" type="xsd:string" /> -->
 				<xsd:element name="transformation" type="tns:actionGroup.t" />
+			</xsd:choice>
+		</xsd:complexType>
+	</xsd:element>
+
+	<xsd:complexType name="filter.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence minOccurs="0" maxOccurs="unbounded">
+					<xsd:group ref="tns:filterActions" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:element name="filters">
+		<xsd:complexType>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element name="filter" type="tns:filter.t" />
 			</xsd:choice>
 		</xsd:complexType>
 	</xsd:element>

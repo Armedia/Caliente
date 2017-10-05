@@ -11,7 +11,7 @@
     </node>
     <node name="schemas">
       <node name="schema-1">
-        <attribute name="location" value="platform:/resource/caliente-engine/src/main/resources/transformations.xsd"/>
+        <attribute name="location" value="platform:/resource/caliente-engine/src/main/resources/engine.xsd"/>
       </node>
     </node>
   </facet>
