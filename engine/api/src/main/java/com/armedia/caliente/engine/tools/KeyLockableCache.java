@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.ucm.model;
+package com.armedia.caliente.engine.tools;
 
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
