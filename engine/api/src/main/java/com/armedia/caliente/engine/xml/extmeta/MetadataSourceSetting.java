@@ -10,7 +10,7 @@ import javax.xml.bind.annotation.XmlValue;
 @XmlType(name = "setting.t", propOrder = {
 	"value"
 })
-public class SettingT {
+public class MetadataSourceSetting {
 
 	@XmlValue
 	protected String value;

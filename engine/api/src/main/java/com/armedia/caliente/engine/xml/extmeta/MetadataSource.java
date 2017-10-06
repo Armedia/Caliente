@@ -28,7 +28,7 @@ public class MetadataSource {
 
 	@XmlElementWrapper(name = "settings")
 	@XmlElement(name = "setting", required = true)
-	protected List<SettingT> settings;
+	protected List<MetadataSourceSetting> settings;
 
 	@XmlElements({
 		@XmlElement(name = "from-sql", type = MetadataFromSQL.class),
@@ -52,7 +52,7 @@ public class MetadataSource {
 		return this.sources;
 	}
 
-	public List<SettingT> getSettings() {
+	public List<MetadataSourceSetting> getSettings() {
 		if (this.settings == null) {
 			this.settings = new ArrayList<>();
 		}
@@ -61,7 +61,7 @@ public class MetadataSource {
 
 	public Map<String, String> getSettingsMap() {
 		Map<String, String> ret = new TreeMap<>();
-		for (SettingT s : getSettings()) {
+		for (MetadataSourceSetting s : getSettings()) {
 			String name = s.getName();
 			String value = s.getValue();
 			if ((name != null) && (value != null)) {
