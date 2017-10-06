@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.xml.extmeta;
 
+import java.sql.Connection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,7 +13,6 @@ import javax.xml.bind.annotation.XmlValue;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.xml.ExternalMetadataContext;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -51,7 +51,7 @@ public class SeparatedValuesList implements AttributeNamesSource {
 	}
 
 	@Override
-	public Set<String> getAttributeNames(ExternalMetadataContext ctx) {
+	public Set<String> getAttributeNames(Connection c) {
 		if (this.values != null) {
 			synchronized (this) {
 				if (this.values != null) {
