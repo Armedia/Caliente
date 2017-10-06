@@ -2,12 +2,11 @@ package com.armedia.caliente.engine.xml.extmeta;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 
@@ -21,8 +20,6 @@ import com.armedia.commons.utilities.Tools;
 })
 public class SeparatedValuesList implements AttributeNamesLister {
 
-	private static final Pattern SPLITTER = Pattern.compile("(?<!\\\\)#");
-
 	public static final Character DEFAULT_SEPARATOR = Character.valueOf(',');
 
 	@XmlValue
@@ -31,12 +28,17 @@ public class SeparatedValuesList implements AttributeNamesLister {
 	@XmlAttribute(name = "separator")
 	protected String separator;
 
+	@XmlTransient
+	private volatile Set<String> values = null;
+
 	public String getValue() {
 		return this.value;
 	}
 
-	public void setValue(String value) {
+	public synchronized void setValue(String value) {
 		this.value = value;
+		this.values = null;
+		getNames();
 	}
 
 	public Character getSeparator() {
@@ -49,20 +51,21 @@ public class SeparatedValuesList implements AttributeNamesLister {
 
 	@Override
 	public Set<String> getNames() {
-		Set<String> ret = new HashSet<>();
-		if (this.value != null) {
-			Matcher m = SeparatedValuesList.SPLITTER.matcher(this.value);
-			int prev = 0;
-			while (m.find()) {
-				String str = this.value.substring(prev, m.start());
-				str = StringUtils.strip(str);
-				str = str.replaceAll("\\\\,", ",");
-				if (!StringUtils.isEmpty(str) && !StringUtils.isAnyBlank(str)) {
-					ret.add(str);
+		if (this.values != null) {
+			synchronized (this) {
+				if (this.values != null) {
+					this.values = new HashSet<>();
+					if (this.value != null) {
+						for (String s : Tools.splitCSVEscaped(this.value)) {
+							s = StringUtils.strip(s);
+							if (!StringUtils.isEmpty(s) && !StringUtils.isAnyBlank(s)) {
+								this.values.add(s);
+							}
+						}
+					}
 				}
-				prev = m.end();
 			}
 		}
-		return ret;
+		return this.values;
 	}
 }
