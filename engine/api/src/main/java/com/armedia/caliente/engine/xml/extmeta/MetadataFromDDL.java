@@ -51,9 +51,21 @@ public class MetadataFromDDL implements AttributeValuesLoader {
 	}
 
 	@Override
+	public void initialize(Connection c) throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void close() {
+		// TODO Auto-generated method stub
+
 	}
 
 }

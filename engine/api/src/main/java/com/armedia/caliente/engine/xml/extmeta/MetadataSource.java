@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.sql.DataSource;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -29,7 +32,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSource.t", propOrder = {
-	"settings", "sources"
+	"settings", "loaders"
 })
 public class MetadataSource {
 
@@ -41,7 +44,7 @@ public class MetadataSource {
 		@XmlElement(name = "from-sql", type = MetadataFromSQL.class),
 		@XmlElement(name = "from-ddl", type = MetadataFromDDL.class)
 	})
-	protected List<AttributeValuesLoader> sources;
+	protected List<AttributeValuesLoader> loaders;
 
 	@XmlAttribute(name = "failOnError", required = false)
 	protected Boolean failOnError;
@@ -50,13 +53,19 @@ public class MetadataSource {
 	protected Boolean failOnMissing;
 
 	@XmlTransient
+	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+
+	@XmlTransient
+	private List<AttributeValuesLoader> initializedLoaders;
+
+	@XmlTransient
 	private DataSource dataSource = null;
 
-	public List<AttributeValuesLoader> getSources() {
-		if (this.sources == null) {
-			this.sources = new ArrayList<>();
+	public List<AttributeValuesLoader> getLoaders() {
+		if (this.loaders == null) {
+			this.loaders = new ArrayList<>();
 		}
-		return this.sources;
+		return this.loaders;
 	}
 
 	public List<MetadataSourceSetting> getSettings() {
@@ -94,79 +103,133 @@ public class MetadataSource {
 		this.failOnMissing = value;
 	}
 
-	public synchronized void initialize() throws Exception {
-		if (this.dataSource != null) { return; }
-		CfgTools cfg = new CfgTools(getSettingsMap());
-		for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor("pooled")) {
-			final DataSourceDescriptor<?> ds;
-			try {
-				ds = locator.locateDataSource(cfg);
-			} catch (Exception e) {
-				// This one failed...try the next one
-				continue;
-			}
+	public void initialize() throws Exception {
+		final Lock lock = this.rwLock.writeLock();
+		lock.lock();
+		try {
+			if (this.dataSource != null) { return; }
+			CfgTools cfg = new CfgTools(getSettingsMap());
+			for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor("pooled")) {
+				final DataSourceDescriptor<?> ds;
+				try {
+					ds = locator.locateDataSource(cfg);
+				} catch (Exception e) {
+					// This one failed...try the next one
+					continue;
+				}
 
-			// Set the context with the newly-found DataSource
-			this.dataSource = ds.getDataSource();
-			return;
+				// Set the context with the newly-found DataSource
+				DataSource dataSource = ds.getDataSource();
+
+				Connection c = dataSource.getConnection();
+				List<AttributeValuesLoader> initializedLoaders = new ArrayList<>();
+				try {
+					for (AttributeValuesLoader loader : getLoaders()) {
+						if (loader != null) {
+							loader.initialize(c);
+							initializedLoaders.add(loader);
+						}
+					}
+				} finally {
+					if (!initializedLoaders.isEmpty()) {
+						this.initializedLoaders = initializedLoaders;
+					}
+					DbUtils.closeQuietly(c);
+				}
+
+				this.dataSource = dataSource;
+				return;
+			}
+			throw new Exception("Failed to initialize this metadata source - no datasources located!");
+		} finally {
+			lock.unlock();
 		}
-		throw new Exception("Failed to initialize this metadata source - no datasources located!");
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
-		Map<String, CmfAttribute<V>> finalAttributes = new HashMap<>();
-		final Connection c;
+		final Lock lock = this.rwLock.readLock();
+		lock.lock();
 		try {
-			c = this.dataSource.getConnection();
-		} catch (SQLException e) {
-			if (isFailOnError()) {
-				// An exceptikon was caught, but we need to fail on it
-				throw new Exception(String.format(
-					"Failed to obtain a JDBC connection for loading external metadata attributes for %s (%s)[%s]",
-					object.getType(), object.getLabel(), object.getId()), e);
-			}
-			// If we're not supposed to fail on an error, then we simply return null
-			return null;
-		}
+			// If there are no loades initialized, this is a problem...
+			if (this.initializedLoaders == null) { throw new Exception("This metadata source is not yet initialized"); }
 
-		try {
-			for (AttributeValuesLoader l : getSources()) {
-				if (l != null) {
-					Map<String, CmfAttribute<V>> newAttributes = null;
-					try {
-						newAttributes = l.getAttributeValues(c, object);
-					} catch (Exception e) {
-						if (isFailOnError()) {
-							// An exceptikon was caught, but we need to fail on it
-							throw new Exception(String.format(
-								"Exception raised while loading external metadata attributes for %s (%s)[%s]",
-								object.getType(), object.getLabel(), object.getId()), e);
-						} else {
-							// TODO: Log this exception anyway...
+			// If there are no loaders initialized, we always return empty
+			if (this.initializedLoaders.isEmpty()) { return null; }
+
+			Map<String, CmfAttribute<V>> finalAttributes = new HashMap<>();
+			final Connection c;
+			try {
+				c = this.dataSource.getConnection();
+			} catch (SQLException e) {
+				if (isFailOnError()) {
+					// An exceptikon was caught, but we need to fail on it
+					throw new Exception(String.format(
+						"Failed to obtain a JDBC connection for loading external metadata attributes for %s (%s)[%s]",
+						object.getType(), object.getLabel(), object.getId()), e);
+				}
+				// If we're not supposed to fail on an error, then we simply return null - i.e.
+				// nothing
+				// found
+				return null;
+			}
+
+			try {
+				for (AttributeValuesLoader l : this.initializedLoaders) {
+					if (l != null) {
+						Map<String, CmfAttribute<V>> newAttributes = null;
+						try {
+							newAttributes = l.getAttributeValues(c, object);
+						} catch (Exception e) {
+							if (isFailOnError()) {
+								// An exceptikon was caught, but we need to fail on it
+								throw new Exception(String.format(
+									"Exception raised while loading external metadata attributes for %s (%s)[%s]",
+									object.getType(), object.getLabel(), object.getId()), e);
+							} else {
+								// TODO: Log this exception anyway...
+							}
+						}
+
+						if ((newAttributes == null) && isFailOnMissing()) {
+							// The attribute values are required, but none were found...this is an
+							// error!
+							throw new Exception(
+								String.format("Did not find the required external metadata attributes for %s (%s)[%s]",
+									object.getType(), object.getLabel(), object.getId()));
+						}
+
+						if (newAttributes != null) {
+							finalAttributes.putAll(newAttributes);
 						}
 					}
-
-					if ((newAttributes == null) && isFailOnMissing()) {
-						// The attribute values are required, but none were found...this is an
-						// error!
-						throw new Exception(
-							String.format("Did not find the required external metadata attributes for %s (%s)[%s]",
-								object.getType(), object.getLabel(), object.getId()));
-					}
-
-					if (newAttributes != null) {
-						finalAttributes.putAll(newAttributes);
-					}
 				}
+				return null;
+			} finally {
+				DbUtils.closeQuietly(c);
 			}
-			return null;
 		} finally {
-			DbUtils.closeQuietly(c);
+			lock.unlock();
 		}
 	}
 
-	public synchronized void close() {
-		if (this.dataSource == null) { return; }
-		this.dataSource = null;
+	public void close() {
+		final Lock lock = this.rwLock.writeLock();
+		lock.lock();
+		try {
+			if (this.initializedLoaders != null) {
+				for (AttributeValuesLoader loader : this.initializedLoaders) {
+					try {
+						loader.close();
+					} catch (Throwable t) {
+						// TODO log this exception
+					}
+				}
+				this.initializedLoaders = null;
+			}
+			if (this.dataSource == null) { return; }
+			this.dataSource = null;
+		} finally {
+			lock.unlock();
+		}
 	}
 }

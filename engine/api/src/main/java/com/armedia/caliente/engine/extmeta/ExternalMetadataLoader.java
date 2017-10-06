@@ -17,7 +17,7 @@ public class ExternalMetadataLoader {
 	private static final XmlInstances<ExternalMetadata> INSTANCES = new XmlInstances<>(ExternalMetadata.class,
 		"external-metadata.xml");
 
-	private final ExternalMetadata metadata;
+	private ExternalMetadata metadata = null;
 
 	private final List<MetadataSource> sources = new ArrayList<>();
 
@@ -42,15 +42,20 @@ public class ExternalMetadataLoader {
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
 		Map<String, CmfAttribute<V>> finalMap = new HashMap<>();
-		for (final MetadataSource desc : this.metadata.getSources()) {
+		for (final MetadataSource desc : this.sources) {
 			finalMap.putAll(desc.getAttributeValues(object));
 		}
 		return finalMap;
 	}
 
 	public synchronized void close() {
-		for (MetadataSource desc : this.sources) {
-			desc.close();
+		if (this.metadata == null) { return; }
+		try {
+			for (MetadataSource desc : this.sources) {
+				desc.close();
+			}
+		} finally {
+			this.metadata = null;
 		}
 	}
 }

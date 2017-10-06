@@ -10,6 +10,10 @@ import com.armedia.caliente.store.CmfObject;
 
 @XmlTransient
 public interface AttributeValuesLoader {
+	public void initialize(Connection c) throws Exception;
+
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection connection, CmfObject<V> object)
 		throws Exception;
+
+	public void close();
 }

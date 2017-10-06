@@ -4,12 +4,14 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.store.CmfAttribute;
@@ -17,26 +19,15 @@ import com.armedia.caliente.store.CmfObject;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromSQL.t", propOrder = {
-	"nameSources", "attributeQueries"
+	"attributeQueries"
 })
 public class MetadataFromSQL implements AttributeValuesLoader {
 
-	@XmlElementWrapper(name = "names")
-	@XmlElements({
-		@XmlElement(name = "list", type = SeparatedValuesList.class),
-		@XmlElement(name = "query", type = MetadataNamesQuery.class)
-	})
-	protected List<AttributeNamesSource> nameSources;
-
-	@XmlElement(name = "attribute-query", required = true)
+	@XmlElement(name = "attributes", required = false)
 	protected List<MetadataAttributeQuery> attributeQueries;
 
-	public List<AttributeNamesSource> getNameSources() {
-		if (this.nameSources == null) {
-			this.nameSources = new ArrayList<>();
-		}
-		return this.nameSources;
-	}
+	@XmlTransient
+	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
 	public List<MetadataAttributeQuery> getAttributeQueries() {
 		if (this.attributeQueries == null) {
@@ -46,8 +37,35 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 	}
 
 	@Override
-	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
-		return null;
+	public void initialize(Connection c) throws Exception {
+		final Lock lock = this.rwLock.writeLock();
+		lock.lock();
+		try {
+
+		} finally {
+			lock.unlock();
+		}
 	}
 
+	@Override
+	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
+		final Lock lock = this.rwLock.readLock();
+		lock.lock();
+		try {
+			return null;
+		} finally {
+			lock.unlock();
+		}
+	}
+
+	@Override
+	public void close() {
+		final Lock lock = this.rwLock.writeLock();
+		lock.lock();
+		try {
+
+		} finally {
+			lock.unlock();
+		}
+	}
 }
