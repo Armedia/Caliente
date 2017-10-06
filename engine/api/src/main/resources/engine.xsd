@@ -764,13 +764,31 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:complexType name="externalMetadataAttributeQuery.t">
+	<xsd:complexType name="parameterizedSqlParameter.t">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="value" type="xsd:string" minOccurs="1" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="parameterizedSqlQuery.t">
+		<xsd:sequence>
+			<xsd:element name="sql" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="parameter" type="tns:parameterizedSqlParameter.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="externalMetadataFromSQL.t">
 		<xsd:sequence>
 			<xsd:choice minOccurs="1" maxOccurs="1">
-				<xsd:element name="names-list" type="tns:externalMetadataNamesList.t" />
-				<xsd:element name="names-query" type="tns:externalMetadataNamesQuery.t" />
+				<xsd:element name="search-names-list" type="tns:externalMetadataNamesList.t" />
+				<xsd:element name="search-names-query" type="tns:externalMetadataNamesQuery.t" />
 			</xsd:choice>
-			<xsd:element name="sql" type="xsd:string" />
+
+			<xsd:element name="query" type="tns:parameterizedSqlQuery.t"  minOccurs="1" maxOccurs="1" />
+
+			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" minOccurs="0" maxOccurs="1" />
+
 			<xsd:choice minOccurs="0" maxOccurs="1">
 				<xsd:element name="type" type="tns:cmfDataType.t" />
 				<xsd:element name="type-column" type="tns:noSpaces.t" />
@@ -780,13 +798,7 @@
 				<xsd:element name="multivalued" type="xsd:boolean" />
 				<xsd:element name="multivalued-column" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
 			</xsd:choice>
-			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" />
-		</xsd:sequence>
-	</xsd:complexType>
 
-	<xsd:complexType name="externalMetadataFromSQL.t">
-		<xsd:sequence>
-			<xsd:element name="attributes" type="tns:externalMetadataAttributeQuery.t" minOccurs="1" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>
 
