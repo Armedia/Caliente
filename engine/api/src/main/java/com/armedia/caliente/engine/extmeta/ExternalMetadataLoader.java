@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.xml.ExternalMetadata;
 import com.armedia.caliente.engine.xml.XmlInstances;
-import com.armedia.caliente.engine.xml.extmeta.ExternalMetadata;
 import com.armedia.caliente.engine.xml.extmeta.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;

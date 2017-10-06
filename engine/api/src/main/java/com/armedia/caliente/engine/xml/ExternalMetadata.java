@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.xml.extmeta;
+package com.armedia.caliente.engine.xml;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.XMLStreamReader;
 
-import com.armedia.caliente.engine.xml.XmlBase;
+import com.armedia.caliente.engine.xml.extmeta.MetadataSource;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
