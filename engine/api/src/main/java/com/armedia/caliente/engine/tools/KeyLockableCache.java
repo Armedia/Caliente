@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.tools;
 
 import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,18 +26,16 @@ public class KeyLockableCache<K, V> {
 	public static final TimeUnit DEFAULT_MAX_AGE_UNIT = TimeUnit.MINUTES;
 	public static final long DEFAULT_MAX_AGE = 5;
 
-	private final class CacheItem {
+	protected abstract class CacheItem {
 		private final long creationDate;
-		private final Reference<V> value;
 
-		private CacheItem(V value) {
-			this.value = newReference(value);
+		protected CacheItem() {
 			this.creationDate = System.currentTimeMillis();
 		}
 
-		private V get() {
+		public final V get() {
 			// If the age is negative, it NEVER expires unless the GC reclaims it...
-			if (KeyLockableCache.this.maxAge < 0) { return this.value.get(); }
+			if (KeyLockableCache.this.maxAge < 0) { return doGet(); }
 
 			// If the age is 0, then it expires immediately
 			if (KeyLockableCache.this.maxAge == 0) { return null; }
@@ -46,7 +45,50 @@ public class KeyLockableCache<K, V> {
 			if (age > KeyLockableCache.this.maxAgeUnit.toMillis(KeyLockableCache.this.maxAge)) { return null; }
 
 			// It's not expired, so it's up to the GC
+			return doGet();
+		}
+
+		protected abstract V doGet();
+	}
+
+	protected final class DirectCacheItem extends CacheItem {
+		private final V value;
+
+		public DirectCacheItem(V value) {
+			Objects.requireNonNull(value, "Must provide a non-null value");
+			this.value = value;
+		}
+
+		@Override
+		protected V doGet() {
+			return this.value;
+		}
+	}
+
+	protected class ReferenceCacheItem extends CacheItem {
+		private final Reference<V> value;
+
+		public ReferenceCacheItem(Reference<V> value) {
+			super();
+			Objects.requireNonNull(value, "Must provide a non-null Reference object");
+			this.value = value;
+		}
+
+		@Override
+		protected V doGet() {
 			return this.value.get();
+		}
+	}
+
+	protected final class WeakReferenceCacheItem extends ReferenceCacheItem {
+		public WeakReferenceCacheItem(V value) {
+			super(new WeakReference<>(value));
+		}
+	}
+
+	protected final class SoftReferenceCacheItem extends ReferenceCacheItem {
+		public SoftReferenceCacheItem(V value) {
+			super(new SoftReference<>(value));
 		}
 	}
 
@@ -92,14 +134,8 @@ public class KeyLockableCache<K, V> {
 		return this.locks.getLock(key).readLock();
 	}
 
-	/**
-	 * This method is only invoked from within the CacheItem nested class
-	 *
-	 * @param value
-	 * @return a new {@link Reference} object encapsulating the given value
-	 */
-	protected Reference<V> newReference(V value) {
-		return new WeakReference<>(value);
+	protected CacheItem newCacheItem(V value) {
+		return new WeakReferenceCacheItem(value);
 	}
 
 	protected final boolean threadHoldsExclusiveLock(K key) {
@@ -126,23 +162,23 @@ public class KeyLockableCache<K, V> {
 		final Lock l = getExclusiveLock(key);
 		l.lock();
 		try {
-			V ret = null;
-			CacheItem ref = this.cache.get(key);
-			if (ref != null) {
-				ret = ref.get();
+			V value = null;
+			CacheItem item = this.cache.get(key);
+			if (item != null) {
+				value = item.get();
 			}
 			// We still have a value, so return it...
-			if (ret != null) { return ret; }
+			if (value != null) { return value; }
 
 			// The value is absent or expired...
-			V newVal = initializer.get();
-			if (newVal != null) {
-				this.cache.put(key, new CacheItem(newVal));
+			V newValue = initializer.get();
+			if (newValue != null) {
+				this.cache.put(key, newCacheItem(newValue));
 			} else {
 				this.cache.remove(key);
 			}
 
-			return newVal;
+			return newValue;
 		} finally {
 			l.unlock();
 		}
@@ -158,9 +194,9 @@ public class KeyLockableCache<K, V> {
 		final Lock l = getExclusiveLock(key);
 		l.lock();
 		try {
-			CacheItem ref = this.cache.get(key);
-			if ((ref != null) && (ref.get() != null)) { return; }
-			this.cache.put(key, new CacheItem(value));
+			CacheItem item = this.cache.get(key);
+			if ((item != null) && (item.get() != null)) { return; }
+			this.cache.put(key, newCacheItem(value));
 		} finally {
 			l.unlock();
 		}
@@ -174,11 +210,11 @@ public class KeyLockableCache<K, V> {
 		l.lock();
 		try {
 			V ret = null;
-			CacheItem ref = this.cache.get(key);
-			if (ref != null) {
-				ret = ref.get();
+			CacheItem item = this.cache.get(key);
+			if (item != null) {
+				ret = item.get();
 			}
-			this.cache.put(key, new CacheItem(value));
+			this.cache.put(key, newCacheItem(value));
 			return ret;
 		} finally {
 			l.unlock();
@@ -190,8 +226,8 @@ public class KeyLockableCache<K, V> {
 		final Lock l = getExclusiveLock(key);
 		l.lock();
 		try {
-			CacheItem ref = this.cache.remove(key);
-			return (ref != null ? ref.get() : null);
+			CacheItem item = this.cache.remove(key);
+			return (item != null ? item.get() : null);
 		} finally {
 			l.unlock();
 		}
@@ -211,9 +247,9 @@ public class KeyLockableCache<K, V> {
 		final Lock l = getSharedLock(key);
 		l.lock();
 		try {
-			CacheItem ref = this.cache.get(key);
-			if (ref == null) { return false; }
-			return (ref.get() != null);
+			CacheItem item = this.cache.get(key);
+			if (item == null) { return false; }
+			return (item.get() != null);
 		} finally {
 			l.unlock();
 		}
@@ -238,13 +274,13 @@ public class KeyLockableCache<K, V> {
 	}
 
 	public final Collection<V> values() {
-		Collection<V> ret = new ArrayList<>();
+		Collection<V> values = new ArrayList<>();
 		for (CacheItem r : new ArrayList<>(this.cache.values())) {
 			V v = r.get();
 			if (v != null) {
-				ret.add(v);
+				values.add(v);
 			}
 		}
-		return ret;
+		return values;
 	}
 }
