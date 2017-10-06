@@ -56,7 +56,7 @@ public class SeparatedValuesList implements AttributeNamesLister {
 				if (this.values != null) {
 					this.values = new HashSet<>();
 					if (this.value != null) {
-						for (String s : Tools.splitCSVEscaped(this.value)) {
+						for (String s : Tools.splitEscaped(this.value, getSeparator())) {
 							s = StringUtils.strip(s);
 							if (!StringUtils.isEmpty(s) && !StringUtils.isAnyBlank(s)) {
 								this.values.add(s);
