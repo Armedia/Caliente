@@ -33,13 +33,17 @@
 			<scope>compile</scope>
 		</dependency>
 
-		<!--
 		<dependency>
-			<groupId>com.armedia.caliente</groupId>
-			<artifactId>caliente-transformer-api</artifactId>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>datasource-locator-api</artifactId>
 			<scope>compile</scope>
 		</dependency>
-		-->
+
+		<dependency>
+			<groupId>commons-dbutils</groupId>
+			<artifactId>commons-dbutils</artifactId>
+			<scope>compile</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.apache.commons</groupId>
