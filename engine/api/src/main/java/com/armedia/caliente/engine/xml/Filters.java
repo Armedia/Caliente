@@ -16,14 +16,13 @@ import javax.xml.stream.XMLStreamReader;
 
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
-import com.armedia.commons.utilities.XmlTools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
 	"filters"
 })
 @XmlRootElement(name = "filters")
-public final class Filters extends XmlBase {
+public final class Filters extends XmlBase implements Action {
 
 	@XmlElement(name = "filter", type = Filter.class)
 	protected List<Action> filters;
@@ -45,14 +44,14 @@ public final class Filters extends XmlBase {
 	}
 
 	public static Filters loadFromXML(InputStream in) throws JAXBException {
-		return XmlTools.unmarshal(Filters.class, in);
+		return XmlBase.loadFromXML(Filters.class, in);
 	}
 
 	public static Filters loadFromXML(Reader in) throws JAXBException {
-		return XmlTools.unmarshal(Filters.class, in);
+		return XmlBase.loadFromXML(Filters.class, in);
 	}
 
 	public static Filters loadFromXML(XMLStreamReader in) throws JAXBException {
-		return XmlTools.unmarshal(Filters.class, in);
+		return XmlBase.loadFromXML(Filters.class, in);
 	}
 }

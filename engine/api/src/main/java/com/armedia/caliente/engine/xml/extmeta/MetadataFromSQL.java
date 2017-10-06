@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.xml.extmeta;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -45,7 +46,8 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 	}
 
 	@Override
-	public <V> CmfAttribute<V> getAttributeValues(ExternalMetadataContext ctx, CmfObject<V> object) throws Exception {
+	public <V> Map<String, CmfAttribute<V>> getAttributeValues(ExternalMetadataContext ctx, CmfObject<V> object)
+		throws Exception {
 		return null;
 	}
 

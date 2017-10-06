@@ -247,7 +247,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	}
 
 	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
-		return Transformer.getInstance(cfg.getString(TransferSetting.TRANSFORMATION));
+		return new Transformer(cfg.getString(TransferSetting.TRANSFORMATION));
 	}
 
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {

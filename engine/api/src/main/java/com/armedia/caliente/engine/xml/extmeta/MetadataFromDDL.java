@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.xml.extmeta;
 
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -49,7 +51,8 @@ public class MetadataFromDDL implements AttributeValuesLoader {
 	}
 
 	@Override
-	public <V> CmfAttribute<V> getAttributeValues(ExternalMetadataContext ctx, CmfObject<V> object) throws Exception {
+	public <V> Map<String, CmfAttribute<V>> getAttributeValues(ExternalMetadataContext ctx, CmfObject<V> object)
+		throws Exception {
 		// TODO Auto-generated method stub
 		return null;
 	}

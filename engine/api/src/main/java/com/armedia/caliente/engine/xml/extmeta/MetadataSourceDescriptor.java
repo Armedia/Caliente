@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.xml.extmeta;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -10,6 +11,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.xml.ExternalMetadataContext;
@@ -19,25 +22,35 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSource.t", propOrder = {
-	"settings", "metadata"
+	"settings", "sources"
 })
-public class MetadataSourceDescriptor implements AttributeValuesSource {
+public class MetadataSourceDescriptor {
 
 	@XmlElementWrapper(name = "settings")
 	@XmlElement(name = "setting", required = true)
 	protected List<SettingT> settings;
 
-	@XmlElement(name = "metadata", required = true)
-	protected List<Metadata> metadata;
-
-	@XmlAttribute(name = "name", required = true)
-	protected String name;
+	@XmlElements({
+		@XmlElement(name = "from-sql", type = MetadataFromSQL.class),
+		@XmlElement(name = "from-ddl", type = MetadataFromDDL.class)
+	})
+	protected List<AttributeValuesLoader> sources;
 
 	@XmlAttribute(name = "failOnError", required = false)
 	protected Boolean failOnError;
 
 	@XmlAttribute(name = "failOnMissing", required = false)
 	protected Boolean failOnMissing;
+
+	@XmlTransient
+	private ExternalMetadataContext context = null;
+
+	public List<AttributeValuesLoader> getSources() {
+		if (this.sources == null) {
+			this.sources = new ArrayList<>();
+		}
+		return this.sources;
+	}
 
 	public List<SettingT> getSettings() {
 		if (this.settings == null) {
@@ -58,21 +71,6 @@ public class MetadataSourceDescriptor implements AttributeValuesSource {
 		return ret;
 	}
 
-	public List<Metadata> getMetadata() {
-		if (this.metadata == null) {
-			this.metadata = new ArrayList<>();
-		}
-		return this.metadata;
-	}
-
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(String value) {
-		this.name = value;
-	}
-
 	public boolean isFailOnError() {
 		return Tools.coalesce(this.failOnError, Boolean.FALSE);
 	}
@@ -89,20 +87,48 @@ public class MetadataSourceDescriptor implements AttributeValuesSource {
 		this.failOnMissing = value;
 	}
 
-	@Override
-	public ExternalMetadataContext initialize() throws Exception {
+	public synchronized void initialize() throws Exception {
+		if (this.context != null) { return; }
 		// TODO initialize the base connection and datasource
+	}
+
+	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
+		Map<String, CmfAttribute<V>> finalAttributes = new HashMap<>();
+		for (AttributeValuesLoader l : getSources()) {
+			if (l != null) {
+				Map<String, CmfAttribute<V>> newAttributes = null;
+				try {
+					newAttributes = l.getAttributeValues(this.context, object);
+				} catch (Exception e) {
+					if (isFailOnError()) {
+						// An exceptikon was caught, but we need to fail on it
+						throw new Exception(
+							String.format("Exception raised while loading external metadata attributes for %s (%s)[%s]",
+								object.getType(), object.getLabel(), object.getId()),
+							e);
+					} else {
+						// TODO: Log this exception anyway...
+					}
+				}
+
+				if ((newAttributes == null) && isFailOnMissing()) {
+					// The attribute values are required, but none were found...this is an
+					// error!
+					throw new Exception(
+						String.format("Did not find the required external metadata attributes for %s (%s)[%s]",
+							object.getType(), object.getLabel(), object.getId()));
+				}
+
+				if (newAttributes != null) {
+					finalAttributes.putAll(newAttributes);
+				}
+			}
+		}
 		return null;
 	}
 
-	@Override
-	public <V> CmfAttribute<V> getAttributeValues(ExternalMetadataContext ctx, CmfObject<V> object) throws Exception {
-		// TODO: Go through each of the metadata sources and retrieve the attribute data
-		return null;
-	}
-
-	@Override
-	public void close(ExternalMetadataContext ctx) {
-		// TODO close everything and clean up!
+	public synchronized void close() {
+		if (this.context == null) { return; }
+		// TODO close everything up
 	}
 }

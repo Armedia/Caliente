@@ -14,7 +14,7 @@ import javax.xml.stream.XMLStreamWriter;
 import com.armedia.commons.utilities.XmlTools;
 
 @XmlTransient
-public abstract class XmlBase implements Action {
+public abstract class XmlBase {
 
 	protected static final String SCHEMA = "engine.xsd";
 
@@ -42,15 +42,15 @@ public abstract class XmlBase implements Action {
 		XmlTools.marshal(this, XmlBase.SCHEMA, out, format);
 	}
 
-	protected static <T extends XmlBase> T loadFromXML(Class<T> klass, InputStream in) throws JAXBException {
+	public static <T extends XmlBase> T loadFromXML(Class<T> klass, InputStream in) throws JAXBException {
 		return XmlTools.unmarshal(klass, XmlBase.SCHEMA, in);
 	}
 
-	protected static <T extends XmlBase> T loadFromXML(Class<T> klass, Reader in) throws JAXBException {
+	public static <T extends XmlBase> T loadFromXML(Class<T> klass, Reader in) throws JAXBException {
 		return XmlTools.unmarshal(klass, XmlBase.SCHEMA, in);
 	}
 
-	protected static <T extends XmlBase> T loadFromXML(Class<T> klass, XMLStreamReader in) throws JAXBException {
+	public static <T extends XmlBase> T loadFromXML(Class<T> klass, XMLStreamReader in) throws JAXBException {
 		return XmlTools.unmarshal(klass, XmlBase.SCHEMA, in);
 	}
 }

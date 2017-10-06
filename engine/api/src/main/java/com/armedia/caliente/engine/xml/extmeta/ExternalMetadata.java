@@ -1,29 +1,46 @@
 package com.armedia.caliente.engine.xml.extmeta;
 
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.stream.XMLStreamReader;
+
+import com.armedia.caliente.engine.xml.XmlBase;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"source"
+	"sources"
 })
 @XmlRootElement(name = "external-metadata")
-public class ExternalMetadata {
+public class ExternalMetadata extends XmlBase {
 
 	@XmlElement(name = "source", required = false)
-	protected List<MetadataSourceDescriptor> source;
+	protected List<MetadataSourceDescriptor> sources;
 
-	public List<MetadataSourceDescriptor> getSource() {
-		if (this.source == null) {
-			this.source = new ArrayList<>();
+	public List<MetadataSourceDescriptor> getSources() {
+		if (this.sources == null) {
+			this.sources = new ArrayList<>();
 		}
-		return this.source;
+		return this.sources;
 	}
 
+	public static ExternalMetadata loadFromXML(InputStream in) throws JAXBException {
+		return XmlBase.loadFromXML(ExternalMetadata.class, in);
+	}
+
+	public static ExternalMetadata loadFromXML(Reader in) throws JAXBException {
+		return XmlBase.loadFromXML(ExternalMetadata.class, in);
+	}
+
+	public static ExternalMetadata loadFromXML(XMLStreamReader in) throws JAXBException {
+		return XmlBase.loadFromXML(ExternalMetadata.class, in);
+	}
 }
