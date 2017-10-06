@@ -24,7 +24,7 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "externalMetadataSource.t", propOrder = {
 	"settings", "sources"
 })
-public class MetadataSourceDescriptor {
+public class MetadataSource {
 
 	@XmlElementWrapper(name = "settings")
 	@XmlElement(name = "setting", required = true)

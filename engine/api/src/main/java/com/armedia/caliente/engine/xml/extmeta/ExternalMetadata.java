@@ -23,9 +23,9 @@ import com.armedia.caliente.engine.xml.XmlBase;
 public class ExternalMetadata extends XmlBase {
 
 	@XmlElement(name = "source", required = false)
-	protected List<MetadataSourceDescriptor> sources;
+	protected List<MetadataSource> sources;
 
-	public List<MetadataSourceDescriptor> getSources() {
+	public List<MetadataSource> getSources() {
 		if (this.sources == null) {
 			this.sources = new ArrayList<>();
 		}
