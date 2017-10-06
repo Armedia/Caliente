@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
@@ -28,6 +29,15 @@ public class XmlInstances<T extends XmlBase> {
 	private final String label;
 	private final Class<T> objectClass;
 
+	private static String getDefaultFileName(Class<?> klass) {
+		String name = klass.getSimpleName();
+		XmlRootElement element = klass.getAnnotation(XmlRootElement.class);
+		if (element != null) {
+			name = element.name();
+		}
+		return String.format("%s.xml", name.toLowerCase());
+	}
+
 	public XmlInstances(Class<T> objectClass) {
 		this(objectClass, null);
 	}
@@ -38,7 +48,7 @@ public class XmlInstances<T extends XmlBase> {
 		if (defaultFileName != null) {
 			this.defaultFileName = defaultFileName;
 		} else {
-			this.defaultFileName = String.format("%s.xml", this.label.toLowerCase());
+			this.defaultFileName = XmlInstances.getDefaultFileName(objectClass);
 		}
 	}
 
