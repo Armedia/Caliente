@@ -4,7 +4,6 @@ import java.text.ParseException;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 
@@ -17,19 +16,6 @@ public class AlfTranslator extends CmfAttributeTranslator<CmfValue> {
 	@Override
 	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
 		return new CmfValue(type, value);
-	}
-
-	@Override
-	public String getDefaultSubtype(CmfType baseType) {
-		switch (baseType) {
-			case DOCUMENT:
-				return "arm:document";
-			case FOLDER:
-				return "arm:folder";
-			default:
-				break;
-		}
-		return baseType.name();
 	}
 
 	@Override

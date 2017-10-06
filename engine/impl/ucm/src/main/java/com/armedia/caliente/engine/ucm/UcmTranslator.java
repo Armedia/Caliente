@@ -117,19 +117,4 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
 		return new CmfValue(type, value);
 	}
-
-	@Override
-	public String getDefaultSubtype(CmfType baseType) {
-		switch (baseType) {
-			case DOCUMENT:
-				return "Document";
-
-			case FOLDER:
-				return "Folder";
-
-			default:
-				break;
-		}
-		return null;
-	}
 }

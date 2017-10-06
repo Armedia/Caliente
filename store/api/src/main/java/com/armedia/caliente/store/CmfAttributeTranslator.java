@@ -42,6 +42,60 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 	};
 
+	private static class DefaultValueCodec implements CmfValueCodec<CmfValue> {
+
+		private final CmfDataType type;
+
+		private DefaultValueCodec(CmfDataType type) {
+			this.type = type;
+		}
+
+		@Override
+		public boolean isNull(CmfValue value) {
+			return (value == null) || value.isNull();
+		}
+
+		@Override
+		public CmfValue getNull() {
+			return CmfValue.NULL.get(this.type);
+		}
+
+		@Override
+		public CmfValue encodeValue(CmfValue value) {
+			return value;
+		}
+
+		@Override
+		public CmfValue decodeValue(CmfValue value) {
+			return value;
+		}
+	};
+
+	private static final CmfAttributeTranslator<CmfValue> CMFVALUE_TRANSLATOR = new CmfAttributeTranslator<CmfValue>(
+		CmfValue.class) {
+
+		private final Map<CmfDataType, CmfValueCodec<CmfValue>> codecs;
+
+		{
+			Map<CmfDataType, CmfValueCodec<CmfValue>> codecs = new EnumMap<>(CmfDataType.class);
+			for (CmfDataType t : CmfDataType.values()) {
+				codecs.put(t, new DefaultValueCodec(t));
+			}
+			this.codecs = Tools.freezeMap(codecs);
+		}
+
+		@Override
+		public CmfValueCodec<CmfValue> getCodec(CmfDataType type) {
+			return this.codecs.get(type);
+		}
+
+		@Override
+		public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
+			return new CmfValue(type, value);
+		}
+
+	};
+
 	private static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();
 
 	private static final Map<CmfDataType, Codec> CODECS;
@@ -77,8 +131,6 @@ public abstract class CmfAttributeTranslator<V> {
 	public abstract CmfValueCodec<V> getCodec(CmfDataType type);
 
 	public abstract V getValue(CmfDataType type, Object value) throws ParseException;
-
-	public abstract String getDefaultSubtype(CmfType baseType);
 
 	public final CmfObject<V> decodeObject(CmfObject<CmfValue> obj) {
 		// Can we optimize this if there are no changes needed?
@@ -137,7 +189,7 @@ public abstract class CmfAttributeTranslator<V> {
 
 	public final CmfObject<CmfValue> encodeObject(CmfObject<V> obj) {
 		CmfObject<CmfValue> newObj = new CmfObject<>(//
-			null, //
+			CmfAttributeTranslator.CMFVALUE_TRANSLATOR, //
 			obj.getType(), //
 			obj.getId(), //
 			obj.getName(), //

@@ -116,9 +116,4 @@ public class XmlTranslator extends CmfAttributeTranslator<CmfValue> {
 	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
 		return new CmfValue(type, value);
 	}
-
-	@Override
-	public String getDefaultSubtype(CmfType baseType) {
-		return baseType.name();
-	}
 }
