@@ -7,8 +7,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,16 +30,15 @@ import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTransformer;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 public class UcmExportEngine extends
 	ExportEngine<UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory> {
-
-	private static final Pattern UNESCAPED_COMMA = Pattern.compile("(?<!\\\\),");
 
 	public UcmExportEngine() {
 		super(new CmfCrypt());
@@ -99,8 +96,8 @@ public class UcmExportEngine extends
 
 	@Override
 	protected UcmExportContextFactory newContextFactory(UcmSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output,
-		WarningTracker warningTracker) throws Exception {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper,
+		Logger output, WarningTracker warningTracker) throws Exception {
 		return new UcmExportContextFactory(this, session, cfg, objectStore, streamStore, output, warningTracker);
 	}
 
@@ -135,20 +132,10 @@ public class UcmExportEngine extends
 
 	public static List<String> decodePathList(String paths) {
 		if (StringUtils.isEmpty(paths)) { return Collections.emptyList(); }
-		Matcher m = UcmExportEngine.UNESCAPED_COMMA.matcher(paths);
-		int prev = 0;
 		List<String> ret = new ArrayList<>();
-		while (m.find()) {
-			String str = paths.substring(prev, m.start());
+		for (String str : Tools.splitCSVEscaped(paths)) {
 			if (!StringUtils.isEmpty(str)) {
-				ret.add(str.replaceAll("\\\\,", ","));
-			}
-			prev = m.end();
-		}
-		if (prev < paths.length()) {
-			String str = paths.substring(prev);
-			if (!StringUtils.isEmpty(str)) {
-				ret.add(str.replaceAll("\\\\,", ","));
+				ret.add(str);
 			}
 		}
 		return ret;
