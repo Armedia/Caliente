@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.transform.Transformer;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -188,7 +189,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		String id = Tools.toString(referrentId.getValue(), true);
 		String key = Tools.toString(referrentKey.getValue(), true);
 		if ((type == null) || (id == null)) { return null; }
-		return new ExportTarget(CmfType.decodeString(type), id, key);
+		return new ExportTarget(CmfType.valueOf(type), id, key);
 	}
 
 	public final void setReferrent(CmfObject<V> marshaled, ExportTarget referrent) throws ExportException {
@@ -243,6 +244,10 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 			c.add(settings.get(s));
 		}
 		return Collections.unmodifiableCollection(c);
+	}
+
+	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
+		return Transformer.getInstance(cfg.getString(TransferSetting.TRANSFORMATION));
 	}
 
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {

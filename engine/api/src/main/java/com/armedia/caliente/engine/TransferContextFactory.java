@@ -28,7 +28,7 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		if (o instanceof CmfType) { return CmfType.class.cast(o); }
 		if (o instanceof String) {
 			try {
-				return CmfType.decodeString(String.valueOf(o));
+				return CmfType.valueOf(String.valueOf(o));
 			} catch (IllegalArgumentException e) {
 				// Do nothing...
 			}

@@ -52,7 +52,6 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfTreeScanner;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
@@ -146,13 +145,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> Long storeObject(JdbcOperation operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
+	protected Long storeObject(JdbcOperation operation, CmfObject<CmfValue> object, CmfAttributeNameMapper nameMapper)
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final CmfType objectType = object.getType();
 		final String objectId = JdbcTools.composeDatabaseId(object);
-
-		final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 
 		Collection<Object[]> attributeParameters = new ArrayList<>();
 		Collection<Object[]> attributeValueParameters = new ArrayList<>();
@@ -199,7 +196,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			attData[5] = false; // Explicitly hardcoded
 			attValue[0] = objectId; // This should never change within the loop
 			final Map<String, String> encodedNames = new HashMap<>();
-			for (final CmfAttribute<V> attribute : object.getAttributes()) {
+			for (final CmfAttribute<CmfValue> attribute : object.getAttributes()) {
 				final String name = nameMapper.encodeAttributeName(object.getType(), attribute.getName());
 				final String duplicate = encodedNames.put(name, attribute.getName());
 				if (duplicate != null) {
@@ -209,7 +206,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					continue;
 				}
 				final boolean repeating = attribute.isRepeating();
-				final String type = translator.encodeValue(attribute.getType());
+				final String type = attribute.getType().name();
 
 				attData[1] = name;
 				attData[2] = name;
@@ -226,20 +223,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				attValue[1] = name; // This never changes inside this next loop
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				final CmfValueCodec<V> codec = translator.getCodec(attribute.getType());
 				final CmfValueSerializer serializer = CmfValueSerializer.get(attribute.getType());
 				if (serializer != null) {
-					for (V value : attribute) {
-						CmfValue encoded = codec.encodeValue(value);
+					for (CmfValue value : attribute) {
 						attValue[2] = v;
-						attValue[3] = encoded.isNull();
-						if (!encoded.isNull()) {
+						attValue[3] = value.isNull();
+						if (!value.isNull()) {
 							try {
-								attValue[4] = serializer.serialize(encoded);
+								attValue[4] = serializer.serialize(value);
 							} catch (ParseException e) {
 								throw new CmfStorageException(
 									String.format("Failed to encode value #%d for attribute [%s::%s]: %s", v,
-										attValue[0], attValue[1], encoded),
+										attValue[0], attValue[1], value),
 									e);
 							}
 						} else {
@@ -254,7 +249,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			// Then, the properties
 			encodedNames.clear();
 			propData[0] = objectId; // This should never change within the loop
-			for (final CmfProperty<V> property : object.getProperties()) {
+			for (final CmfProperty<CmfValue> property : object.getProperties()) {
 				final String name = property.getName();
 				final String duplicate = encodedNames.put(name, property.getName());
 				if (duplicate != null) {
@@ -263,7 +258,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						name, property.getName(), duplicate));
 					continue;
 				}
-				final String type = translator.encodeValue(property.getType());
+				final String type = property.getType().name();
 
 				propData[1] = name;
 				propData[2] = type;
@@ -275,20 +270,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				attValue[1] = name; // This never changes inside this next loop
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				final CmfValueCodec<V> codec = translator.getCodec(property.getType());
 				final CmfValueSerializer serializer = CmfValueSerializer.get(property.getType());
 				if (serializer != null) {
-					for (V value : property) {
-						CmfValue encoded = codec.encodeValue(value);
+					for (CmfValue value : property) {
 						attValue[2] = v;
-						attValue[3] = encoded.isNull();
-						if (!encoded.isNull()) {
+						attValue[3] = value.isNull();
+						if (!value.isNull()) {
 							try {
-								attValue[4] = serializer.serialize(encoded);
+								attValue[4] = serializer.serialize(value);
 							} catch (ParseException e) {
 								throw new CmfStorageException(
 									String.format("Failed to encode value #%d for property [%s::%s]: %s", v,
-										attValue[0], attValue[1], encoded),
+										attValue[0], attValue[1], value),
 									e);
 							}
 						} else {
@@ -1038,7 +1031,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 								continue;
 							}
 							try {
-								ret.put(CmfType.decodeString(t), rs.getLong(2));
+								ret.put(CmfType.valueOf(t), rs.getLong(2));
 							} catch (IllegalArgumentException e) {
 								JdbcObjectStore.this.log
 									.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
@@ -1080,7 +1073,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				CmfType currentType = null;
 				Set<String> names = null;
 				while (rs.next()) {
-					final CmfType newType = CmfType.decodeString(rs.getString("object_type"));
+					final CmfType newType = CmfType.valueOf(rs.getString("object_type"));
 					if (newType != currentType) {
 						names = new TreeSet<>();
 						ret.put(newType, names);
@@ -1250,7 +1243,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		throws SQLException {
 		if (objectRS == null) { throw new IllegalArgumentException(
 			"Must provide a ResultSet to load the structure from"); }
-		CmfType type = CmfType.decodeString(objectRS.getString("object_type"));
+		CmfType type = CmfType.valueOf(objectRS.getString("object_type"));
 		String id = objectRS.getString("object_id");
 		String name = objectRS.getString("object_name");
 		String newName = objectRS.getString("new_name");
@@ -1310,7 +1303,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private CmfProperty<CmfValue> loadProperty(CmfType objectType, ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
-		CmfDataType type = CmfDataType.decodeString(rs.getString("data_type"));
+		CmfDataType type = CmfDataType.valueOf(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
 		return new CmfProperty<>(name, type, repeating);
 	}
@@ -1319,7 +1312,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = nameMapper.decodeAttributeName(objectType, rs.getString("name"));
-		CmfDataType type = CmfDataType.decodeString(rs.getString("data_type"));
+		CmfDataType type = CmfDataType.valueOf(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
 		return new CmfAttribute<>(name, type, repeating);
 	}

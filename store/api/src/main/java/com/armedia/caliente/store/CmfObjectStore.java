@@ -181,8 +181,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		return this.operationClass.cast(operation);
 	}
 
-	public final <V> Long storeObject(CmfObject<V> object, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException {
+	public final <V> Long storeObject(CmfObject<V> object, CmfTransformer transformer,
+		CmfAttributeTranslator<V> translator) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		if (translator == null) { throw new IllegalArgumentException(
 			"Must provide a translator for storing object values"); }
@@ -191,7 +191,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				Long ret = storeObject(operation, object, translator);
+				CmfObject<CmfValue> encoded = translator.encodeObject(object);
+				if (transformer != null) {
+					encoded = transformer.transform(getAttributeMapper(), encoded);
+				}
+				Long ret = storeObject(operation, encoded, translator.getAttributeNameMapper());
 				markStoreStatus(operation, object, StoreStatus.STORED, null);
 				object.setNumber(ret);
 				if (tx) {
@@ -214,7 +218,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> Long storeObject(O operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
+	protected abstract Long storeObject(O operation, CmfObject<CmfValue> object, CmfAttributeNameMapper nameMapper)
 		throws CmfStorageException;
 
 	public final <V> boolean markStoreStatus(CmfObjectRef target, StoreStatus status) throws CmfStorageException {

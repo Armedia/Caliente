@@ -70,16 +70,6 @@ public abstract class CmfAttributeTranslator<V> {
 		this.cmfAttributeNameMapper = Tools.coalesce(cmfAttributeNameMapper, CmfAttributeTranslator.NULL_MAPPER);
 	}
 
-	public final String encodeValue(CmfDataType value) {
-		if (value == null) { throw new IllegalArgumentException("Must provide a value to encode"); }
-		return value.name();
-	}
-
-	public final CmfDataType decodeValue(String value) {
-		if (value == null) { throw new IllegalArgumentException("Must provide a value to decode"); }
-		return CmfDataType.decodeString(value);
-	}
-
 	public final CmfAttributeNameMapper getAttributeNameMapper() {
 		return this.cmfAttributeNameMapper;
 	}

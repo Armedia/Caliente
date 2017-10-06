@@ -65,7 +65,7 @@ public class JdbcStorePropertyManager {
 					final CmfDataType t;
 
 					try {
-						t = CmfDataType.decodeString(type);
+						t = CmfDataType.valueOf(type);
 					} catch (IllegalArgumentException e) {
 						throw new SQLException(String.format("Unsupported data type name: [%s]", type), e);
 					}

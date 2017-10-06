@@ -11,6 +11,7 @@ public enum TransferSetting implements TransferEngineSetting {
 	LATEST_ONLY(CmfDataType.BOOLEAN, false),
 	NO_RENDITIONS(CmfDataType.BOOLEAN, false),
 	RETRY_ATTEMPTS(CmfDataType.INTEGER, 2),
+	TRANSFORMATION(CmfDataType.STRING),
 	//
 	;
 

@@ -12,7 +12,7 @@ public class CmfDataTypeAdapter extends XmlAdapter<String, CmfDataType> {
 	public CmfDataType unmarshal(String v) throws Exception {
 		if (v == null) { return null; }
 		v = StringUtils.strip(v).toUpperCase();
-		return CmfDataType.decodeString(v);
+		return CmfDataType.valueOf(v);
 	}
 
 	@Override

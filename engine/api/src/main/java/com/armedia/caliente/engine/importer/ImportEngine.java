@@ -31,7 +31,6 @@ import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.tools.MappingTools;
-import com.armedia.caliente.engine.transform.Transformer;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfNameFixer;
@@ -484,10 +483,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
-
-	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
-		return Transformer.getInstance(cfg.getString(ImportSetting.TRANSFORMATION));
-	}
 
 	protected final ExecutorService newExecutor(int threadCount) {
 		return new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
