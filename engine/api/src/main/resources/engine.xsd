@@ -764,17 +764,27 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
+	<xsd:complexType name="externalMetadataAttributeQuery.t">
+		<xsd:sequence>
+			<xsd:element name="sql" type="xsd:string" />
+			<xsd:element name="type-column" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="value-column" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="multivalued-column" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+		</xsd:sequence>
+	</xsd:complexType>
+
 	<xsd:complexType name="externalMetadataFromSQL.t">
 		<xsd:sequence>
-			<xsd:element name="query" type="tns:externalMetadataNamesQuery.t" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="ignore" type="tns:externalMetadataNamesList.t" minOccurs="0" maxOccurs="1" />
-			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" />
+			<xsd:element name="names" type="tns:externalMetadataNames.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="attribute-query" type="tns:externalMetadataAttributeQuery.t" minOccurs="1" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>
 
 	<xsd:complexType name="externalMetadataFromDDL.t">
 		<xsd:sequence>
-			<xsd:element name="setting" type="tns:setting.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="query" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="ignore-columns" type="tns:externalMetadataNamesList.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="transform-column-names" type="tns:externalMetadataTransformNames.t" />
 		</xsd:sequence>
 	</xsd:complexType>
 

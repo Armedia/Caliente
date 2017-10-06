@@ -12,13 +12,14 @@ import javax.xml.bind.annotation.XmlValue;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.xml.ExternalMetadataContext;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataNamesList.t", propOrder = {
 	"value"
 })
-public class SeparatedValuesList implements AttributeNamesLister {
+public class SeparatedValuesList implements AttributeNamesSource {
 
 	public static final Character DEFAULT_SEPARATOR = Character.valueOf(',');
 
@@ -38,7 +39,7 @@ public class SeparatedValuesList implements AttributeNamesLister {
 	public synchronized void setValue(String value) {
 		this.value = value;
 		this.values = null;
-		getNames();
+		getAttributeNames(null);
 	}
 
 	public Character getSeparator() {
@@ -50,7 +51,7 @@ public class SeparatedValuesList implements AttributeNamesLister {
 	}
 
 	@Override
-	public Set<String> getNames() {
+	public Set<String> getAttributeNames(ExternalMetadataContext ctx) {
 		if (this.values != null) {
 			synchronized (this) {
 				if (this.values != null) {
