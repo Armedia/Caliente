@@ -195,18 +195,9 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 					bindings.put("prop", properties);
 					bindings.put("obj", object);
 				}
-				bindings.put("attName", attributeName);
+				bindings.put("sqlName", attributeName);
 			}
 		});
-	}
-
-	private String transformName(String sqlName) throws ExpressionException {
-		if (this.transformNames == null) { return sqlName; }
-		for (MetadataNameMapping mapping : this.transformNames.getMap()) {
-			if (Tools.equals(mapping.from,
-				sqlName)) { return Tools.toString(evaluateExpression(mapping.to, null, sqlName)); }
-		}
-		return sqlName;
 	}
 
 	@Override
@@ -294,7 +285,11 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 								}
 
 								// Assume attributes are multivalued
-								attribute = new CmfAttribute<>(transformName(sqlAttributeName), type, true);
+								String attName = sqlAttributeName;
+								if (this.transformNames != null) {
+									attName = this.transformNames.transformName(sqlAttributeName);
+								}
+								attribute = new CmfAttribute<>(attName, type, true);
 							}
 							if (codec == null) {
 								codec = translator.getCodec(attribute.getType());
