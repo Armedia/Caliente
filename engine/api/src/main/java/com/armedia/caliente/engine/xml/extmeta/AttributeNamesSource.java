@@ -104,6 +104,17 @@ public abstract class AttributeNamesSource implements Iterable<String> {
 		}
 	}
 
+	public final Set<String> getCanonicalizedValues() {
+		Lock lock = this.rwLock.readLock();
+		lock.lock();
+		try {
+			if (this.values == null) { return Collections.emptySet(); }
+			return Tools.freezeSet(new LinkedHashSet<>(this.values.keySet()));
+		} finally {
+			lock.unlock();
+		}
+	}
+
 	public final boolean contains(String str) {
 		Lock lock = this.rwLock.readLock();
 		lock.lock();
