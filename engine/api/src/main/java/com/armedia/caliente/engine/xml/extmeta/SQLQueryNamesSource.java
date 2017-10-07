@@ -16,7 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 @XmlType(name = "externalMetadataNamesQuery.t", propOrder = {
 	"value"
 })
-public class MetadataNamesQuery extends AttributeNamesSource {
+public class SQLQueryNamesSource extends AttributeNamesSource {
 
 	@Override
 	protected Set<String> getValues(Connection c) throws Exception {

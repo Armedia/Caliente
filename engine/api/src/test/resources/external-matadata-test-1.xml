@@ -1,0 +1,72 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+	<source failOnError="true" failOnMissing="false">
+		<settings>
+			<setting name="url">jdbc-url</setting>
+			<setting name="user">jdbc-user</setting>
+			<setting name="pass">encryptable-jdbc-pass</setting>
+		</settings>
+		<from-sql>
+			<search-names-list>.....</search-names-list>
+
+			<query>
+				<!-- There's a ${attSearchName} parameter which is replaced by the search name for the attribute name currently being sought -->
+				<!-- There's a ${attFinalName} parameter which is replaced by the final name for the attribute name currently being sought -->
+				<!-- all other ${} values are replaced with ? and are stored in a list -->
+				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
+				<parameter>
+					<name>param1</name>
+					<value>...JEXL...</value>
+				</parameter>
+				<parameter>
+					<name>param2</name>
+					<value>...JEXL...</value>
+				</parameter>
+				<parameter>
+					<name>param3</name>
+					<value>...JEXL...</value>
+				</parameter>
+			</query>
+
+			<transform-names>
+				<map>
+					<from>att_name_1</from>
+					<to>cmis:someAttributeName1</to>
+				</map>
+				<default>...JEXL...</default>
+			</transform-names>
+
+			<value-column>att_value</value-column>
+
+		</from-sql>
+
+		<from-ddl>
+			<!-- This query will return only a single row. Multivalued attributes are supported to be read if the JDBC driver supports array-types -->
+			<query>
+				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
+				<parameter>
+					<name>param1</name>
+					<value>...JEXL...</value>
+				</parameter>
+				<parameter>
+					<name>param2</name>
+					<value>...JEXL...</value>
+				</parameter>
+				<parameter>
+					<name>param3</name>
+					<value>...JEXL...</value>
+				</parameter>
+			</query>
+
+			<ignore-columns>col1,col2,col3</ignore-columns>
+			<transform-names>
+				<map>
+					<from>att_value_1</from>
+					<to>cmis:someAttributeName</to>
+				</map>
+				<default>...JEXL...</default>
+			</transform-names>
+		</from-ddl>
+	</source>
+</external-metadata>

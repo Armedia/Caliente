@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 
 	@XmlElements({
 		@XmlElement(name = "search-names-list", type = SeparatedValuesNamesSource.class),
-		@XmlElement(name = "search-names-query", type = MetadataNamesQuery.class)
+		@XmlElement(name = "search-names-query", type = SQLQueryNamesSource.class)
 	})
 	protected AttributeNamesSource names;
 
@@ -71,11 +70,13 @@ public class MetadataFromSQL extends MetadataReaderBase {
 			final CmfAttributeTranslator<V> translator = object.getTranslator();
 			try (final PreparedStatement ps = c.prepareStatement(this.finalSql)) {
 				Map<String, CmfAttribute<V>> attributes = new TreeMap<>();
+				final String columnName = getValueColumn();
 				for (final String sqlAttributeName : this.names) {
 					try (final ResultSet rs = getResultSet(ps, object, sqlAttributeName)) {
 						CmfValueCodec<V> codec = null;
 						CmfAttribute<V> attribute = new CmfAttribute<>(null);
 						List<V> values = new ArrayList<>();
+						int columnIndex = 0;
 						while (rs.next()) {
 							if (attribute == null) {
 								// Deduce the type from the SQL type
@@ -83,49 +84,15 @@ public class MetadataFromSQL extends MetadataReaderBase {
 								ResultSetMetaData md = rs.getMetaData();
 								final int columns = md.getColumnCount();
 								CmfDataType type = null;
-								columnLoop: for (int i = 1; i <= columns; i++) {
-									if (Tools.equals(this.valueColumn, md.getColumnName(i))) {
-										switch (md.getColumnType(i)) {
-											case Types.BIT:
-											case Types.BOOLEAN:
-												type = CmfDataType.BOOLEAN;
-												break columnLoop;
-
-											case Types.CHAR:
-											case Types.CLOB:
-											case Types.LONGVARCHAR:
-											case Types.LONGNVARCHAR:
-											case Types.VARCHAR:
-											case Types.NVARCHAR:
-												type = CmfDataType.STRING;
-												break columnLoop;
-
-											case Types.SMALLINT:
-											case Types.TINYINT:
-											case Types.INTEGER:
-											case Types.BIGINT:
-												type = CmfDataType.INTEGER;
-												break columnLoop;
-
-											case Types.REAL:
-											case Types.FLOAT:
-											case Types.DOUBLE:
-											case Types.NUMERIC:
-												type = CmfDataType.DOUBLE;
-												break columnLoop;
-
-											case Types.TIME:
-											case Types.TIMESTAMP:
-											case Types.DATE:
-												type = CmfDataType.DATETIME;
-												break columnLoop;
-
-											default:
-												throw new Exception(String.format(
-													"Unsupported data type [%s] for column [%s] (query = %s), searching for attribute [%s]",
-													md.getColumnTypeName(i), this.valueColumn, this.finalSql,
-													sqlAttributeName));
-										}
+								for (int i = 1; i <= columns; i++) {
+									if ((columnName == null) || Tools.equals(columnName, md.getColumnName(i))) {
+										type = decodeSQLType(md.getColumnType(i));
+										if (type == CmfDataType.OTHER) { throw new Exception(String.format(
+											"Unsupported data type [%s] for column [%s] (query = %s), searching for attribute [%s]",
+											md.getColumnTypeName(i), this.valueColumn, this.finalSql,
+											sqlAttributeName)); }
+										columnIndex = i;
+										break;
 									}
 								}
 
@@ -137,7 +104,9 @@ public class MetadataFromSQL extends MetadataReaderBase {
 								codec = translator.getCodec(attribute.getType());
 							}
 							V finalValue = codec.getNull();
-							Object value = rs.getObject(this.valueColumn);
+							// If we have a column name, use it. Otherwise, default to the first
+							// column in the result set
+							Object value = rs.getObject(columnIndex);
 							if (!rs.wasNull()) {
 								finalValue = codec.decodeValue(new CmfValue(attribute.getType(), value));
 							}

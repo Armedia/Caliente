@@ -17,7 +17,7 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "externalMetadataNamesList.t", propOrder = {
 	"value"
 })
-public abstract class SeparatedValuesNamesSource extends AttributeNamesSource {
+public class SeparatedValuesNamesSource extends AttributeNamesSource {
 
 	public static final Character DEFAULT_SEPARATOR = Character.valueOf(',');
 

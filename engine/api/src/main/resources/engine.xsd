@@ -824,7 +824,6 @@
 				<xsd:element name="from-ddl" type="tns:externalMetadataFromDDL.t" />
 			</xsd:choice>
 		</xsd:sequence>
-		<xsd:attribute name="name" type="xsd:string" use="required" />
 		<xsd:attribute name="failOnError" type="xsd:boolean" use="optional" default="false" />
 		<xsd:attribute name="failOnMissing" type="xsd:boolean" use="optional" default="false" />
 	</xsd:complexType>

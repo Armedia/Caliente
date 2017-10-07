@@ -41,7 +41,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 	@XmlElement(name = "query", required = true)
 	protected ParameterizedQuery query;
 
-	@XmlElement(name = "transform-column-names", required = true)
+	@XmlElement(name = "transform-names", required = true)
 	protected TransformAttributeNames transformAttributeNames;
 
 	@XmlTransient

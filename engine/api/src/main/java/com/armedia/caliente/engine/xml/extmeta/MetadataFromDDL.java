@@ -29,9 +29,6 @@ import com.armedia.commons.utilities.Tools;
 })
 public class MetadataFromDDL extends MetadataReaderBase {
 
-	@XmlElement(name = "query", required = true)
-	protected ParameterizedQuery query;
-
 	@XmlElement(name = "ignore-columns", required = false)
 	protected SeparatedValuesNamesSource ignore;
 
