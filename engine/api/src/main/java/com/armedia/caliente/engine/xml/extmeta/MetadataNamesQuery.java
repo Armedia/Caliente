@@ -32,7 +32,7 @@ public class MetadataNamesQuery extends AttributeNamesSource {
 					if (StringUtils.isEmpty(v)) {
 						continue;
 					}
-					values.add(canonicalize(v));
+					values.add(v);
 				}
 				return values;
 			}

@@ -2,8 +2,10 @@ package com.armedia.caliente.engine.xml.extmeta;
 
 import java.sql.Connection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -35,7 +37,7 @@ public abstract class AttributeNamesSource implements Iterable<String> {
 	private Boolean activeCaseSensitive = null;
 
 	@XmlTransient
-	private Set<String> values = null;
+	private Map<String, String> values = null;
 
 	public String getValue() {
 		return this.value;
@@ -70,7 +72,11 @@ public abstract class AttributeNamesSource implements Iterable<String> {
 			if (values == null) {
 				values = Collections.emptySet();
 			}
-			this.values = values;
+			Map<String, String> m = new HashMap<>();
+			for (String s : values) {
+				m.put(canonicalize(s), s);
+			}
+			this.values = Tools.freezeMap(m);
 		} finally {
 			lock.unlock();
 		}
@@ -92,7 +98,7 @@ public abstract class AttributeNamesSource implements Iterable<String> {
 		lock.lock();
 		try {
 			if (this.values == null) { return Collections.emptySet(); }
-			return Tools.freezeSet(new LinkedHashSet<>(this.values));
+			return Tools.freezeSet(new LinkedHashSet<>(this.values.values()));
 		} finally {
 			lock.unlock();
 		}
@@ -103,7 +109,7 @@ public abstract class AttributeNamesSource implements Iterable<String> {
 		lock.lock();
 		try {
 			if (this.values == null) { return false; }
-			return this.values.contains(canonicalize(str));
+			return this.values.containsKey(canonicalize(str));
 		} finally {
 			lock.unlock();
 		}

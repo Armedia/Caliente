@@ -35,14 +35,10 @@ public abstract class SeparatedValuesNamesSource extends AttributeNamesSource {
 
 	@Override
 	protected final Set<String> getValues(Connection c) throws Exception {
-		boolean caseSensitive = isCaseSensitive();
 		Set<String> values = new HashSet<>();
 		for (String s : Tools.splitEscaped(getValue(), getSeparator())) {
 			s = StringUtils.strip(s);
 			if (!StringUtils.isEmpty(s)) {
-				if (!caseSensitive) {
-					s = s.toUpperCase();
-				}
 				values.add(s);
 			}
 		}
