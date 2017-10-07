@@ -1,35 +1,42 @@
 package com.armedia.caliente.engine.xml.extmeta;
 
 import java.sql.Connection;
-import java.util.Collections;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
+
+import org.apache.commons.lang3.StringUtils;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataNamesQuery.t", propOrder = {
-	"query"
+	"value"
 })
-public class MetadataNamesQuery implements AttributeNamesSource {
-
-	@XmlValue
-	protected String query;
-
-	public String getQuery() {
-		return this.query;
-	}
-
-	public void setQuery(String query) {
-		this.query = query;
-	}
+public class MetadataNamesQuery extends AttributeNamesSource {
 
 	@Override
-	public Set<String> getAttributeNames(Connection c) throws Exception {
-		// TODO get the JDBC connection, prepare the statement (if needed), and run it!
-		return Collections.emptySet();
+	protected Set<String> getValues(Connection c) throws Exception {
+		try (final Statement s = c.createStatement()) {
+			try (final ResultSet rs = s.executeQuery(getValue())) {
+				// Scan through the result set, and only take the values from the FIRST column
+				Set<String> values = new HashSet<>();
+				while (rs.next()) {
+					String v = rs.getString(1);
+					if (rs.wasNull()) {
+						continue;
+					}
+					if (StringUtils.isEmpty(v)) {
+						continue;
+					}
+					values.add(canonicalize(v));
+				}
+				return values;
+			}
+		}
 	}
 
 }

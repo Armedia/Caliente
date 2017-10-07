@@ -6,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.locks.Lock;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -34,29 +33,24 @@ public class MetadataFromDDL extends MetadataReaderBase {
 	protected ParameterizedQuery query;
 
 	@XmlElement(name = "ignore-columns", required = false)
-	protected SeparatedValuesList ignore;
-
-	@XmlTransient
-	private Set<String> ignoreColumns = null;
+	protected SeparatedValuesNamesSource ignore;
 
 	@XmlTransient
 	private volatile Map<String, CmfBaseSetting> structure = null;
 
-	public SeparatedValuesList getIgnore() {
+	public SeparatedValuesNamesSource getIgnore() {
 		return this.ignore;
 	}
 
-	public void setIgnore(SeparatedValuesList value) {
+	public void setIgnore(SeparatedValuesNamesSource value) {
 		this.ignore = value;
 	}
 
 	@Override
 	protected void doInitialize(Connection c) throws Exception {
-		Set<String> ignoreColumns = null;
 		if (this.ignore != null) {
-			ignoreColumns = this.ignore.getAttributeNames(c);
+			this.ignore.initialize(c);
 		}
-		this.ignoreColumns = Tools.freezeSet(ignoreColumns, true);
 	}
 
 	private Map<String, CmfBaseSetting> getStructure(ResultSetMetaData md) throws Exception {
@@ -67,7 +61,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 				structure = new HashMap<>();
 			}
 			String sqlName = md.getColumnName(i);
-			if ((this.ignore != null) && this.ignoreColumns.contains(this.ignore.canonicalize(sqlName))) {
+			if ((this.ignore != null) && this.ignore.contains(sqlName)) {
 				continue columnLoop;
 			}
 
@@ -156,7 +150,13 @@ public class MetadataFromDDL extends MetadataReaderBase {
 	@Override
 	protected void doClose() {
 		this.structure = null;
-		this.ignoreColumns = null;
+		if (this.ignore != null) {
+			try {
+				this.ignore.close();
+			} finally {
+				this.ignore = null;
+			}
+		}
 	}
 
 }

@@ -8,7 +8,6 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.locks.Lock;
 
@@ -16,7 +15,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.store.CmfAttribute;
@@ -34,16 +32,13 @@ import com.armedia.commons.utilities.Tools;
 public class MetadataFromSQL extends MetadataReaderBase {
 
 	@XmlElements({
-		@XmlElement(name = "search-names-list", type = SeparatedValuesList.class),
+		@XmlElement(name = "search-names-list", type = SeparatedValuesNamesSource.class),
 		@XmlElement(name = "search-names-query", type = MetadataNamesQuery.class)
 	})
 	protected AttributeNamesSource names;
 
 	@XmlElement(name = "value-column", required = true)
 	protected String valueColumn;
-
-	@XmlTransient
-	private Set<String> sqlAttributeNames = null;
 
 	public AttributeNamesSource getNames() {
 		return this.names;
@@ -65,10 +60,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 	protected void doInitialize(Connection c) throws Exception {
 		if (this.names == null) { throw new Exception("No attribute names defined for this SQL lookup"); }
 		super.doInitialize(c);
-		final Set<String> attributeNames = this.names.getAttributeNames(c);
-		if ((attributeNames == null)
-			|| attributeNames.isEmpty()) { throw new Exception("No attribute names found for this SQL lookup"); }
-		this.sqlAttributeNames = Tools.freezeSet(attributeNames);
+		this.names.initialize(c);
 	}
 
 	@Override
@@ -79,7 +71,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 			final CmfAttributeTranslator<V> translator = object.getTranslator();
 			try (final PreparedStatement ps = c.prepareStatement(this.finalSql)) {
 				Map<String, CmfAttribute<V>> attributes = new TreeMap<>();
-				for (final String sqlAttributeName : this.sqlAttributeNames) {
+				for (final String sqlAttributeName : this.names) {
 					try (final ResultSet rs = getResultSet(ps, object, sqlAttributeName)) {
 						CmfValueCodec<V> codec = null;
 						CmfAttribute<V> attribute = new CmfAttribute<>(null);
@@ -169,6 +161,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 
 	@Override
 	protected void doClose() {
-		this.sqlAttributeNames = null;
+		this.names.close();
+		this.names = null;
 	}
 }
