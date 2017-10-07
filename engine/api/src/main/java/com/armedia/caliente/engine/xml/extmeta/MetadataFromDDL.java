@@ -2,10 +2,14 @@ package com.armedia.caliente.engine.xml.extmeta;
 
 import java.sql.Connection;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.store.CmfAttribute;
@@ -25,6 +29,9 @@ public class MetadataFromDDL implements AttributeValuesLoader {
 
 	@XmlElement(name = "transform-column-names", required = true)
 	protected TransformAttributeNames transformAttributeNames;
+
+	@XmlTransient
+	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
 	public String getQuery() {
 		return this.query;
@@ -52,20 +59,33 @@ public class MetadataFromDDL implements AttributeValuesLoader {
 
 	@Override
 	public void initialize(Connection c) throws Exception {
-		// TODO Auto-generated method stub
-
+		final Lock lock = this.rwLock.writeLock();
+		lock.lock();
+		try {
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection c, CmfObject<V> object) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
+		final Lock lock = this.rwLock.readLock();
+		lock.lock();
+		try {
+			return null;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
 	public void close() {
-		// TODO Auto-generated method stub
-
+		final Lock lock = this.rwLock.writeLock();
+		lock.lock();
+		try {
+		} finally {
+			lock.unlock();
+		}
 	}
 
 }
