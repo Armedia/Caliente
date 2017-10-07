@@ -6,10 +6,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -19,22 +17,9 @@ import com.armedia.commons.utilities.Tools;
 
 public final class CmfValue {
 
-	public static final Map<CmfDataType, CmfValue> NULL;
-
 	private static final List<FastDateFormat> DATE_FORMATS;
 
 	static {
-		Map<CmfDataType, CmfValue> nvl = new EnumMap<>(CmfDataType.class);
-		for (CmfDataType t : CmfDataType.values()) {
-			try {
-				nvl.put(t, new CmfValue(t, null));
-			} catch (ParseException e) {
-				throw new RuntimeException(
-					String.format("Failed to create a CMF value with a null value for type [%s]", t), e);
-			}
-		}
-		NULL = Tools.freezeMap(nvl);
-
 		List<FastDateFormat> dateFormats = new LinkedList<>();
 		dateFormats.add(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT);
 		dateFormats.add(DateFormatUtils.ISO_DATETIME_FORMAT);

@@ -24,9 +24,9 @@ public abstract class AlfImportDelegate extends
 
 	protected final CmfValue getAttributeValue(String attribute) {
 		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(attribute);
-		if (att == null) { return CmfValue.NULL.get(CmfDataType.OTHER); }
+		if (att == null) { return CmfDataType.OTHER.getNull(); }
 		if (att.hasValues()) { return att.getValue(); }
-		return CmfValue.NULL.get(att.getType());
+		return att.getType().getNull();
 	}
 
 	protected final List<CmfValue> getAttributeValues(CmfEncodeableName attribute) {
@@ -45,9 +45,9 @@ public abstract class AlfImportDelegate extends
 
 	protected final CmfValue getPropertyValue(String attribute) {
 		CmfProperty<CmfValue> att = this.cmfObject.getProperty(attribute);
-		if (att == null) { return CmfValue.NULL.get(CmfDataType.OTHER); }
+		if (att == null) { return CmfDataType.OTHER.getNull(); }
 		if (att.hasValues()) { return att.getValue(); }
-		return CmfValue.NULL.get(att.getType());
+		return att.getType().getNull();
 	}
 
 	protected final List<CmfValue> getPropertyValues(CmfEncodeableName attribute) {

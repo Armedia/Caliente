@@ -57,7 +57,7 @@ public abstract class CmfAttributeTranslator<V> {
 
 		@Override
 		public CmfValue getNull() {
-			return CmfValue.NULL.get(this.type);
+			return this.type.getNull();
 		}
 
 		@Override

@@ -133,7 +133,7 @@ public final class UcmAttributes {
 					break;
 			}
 			if (value == null) {
-				value = CmfValue.NULL.get(T);
+				value = T.getNull();
 			}
 			tgt.put(f.getName(), value);
 		}
