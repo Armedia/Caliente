@@ -9,7 +9,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import javax.script.Bindings;
 import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
@@ -67,6 +66,10 @@ public class Expression {
 		}
 	};
 
+	public interface ScriptContextConfig {
+		public void configure(ScriptContext ctx);
+	}
+
 	private static final ConcurrentMap<String, CompiledScript> getCompilerCache(String lang) {
 		Objects.requireNonNull(lang, "Must provide a language to scan the cache for");
 		return ConcurrentUtils.createIfAbsentUnchecked(Expression.COMPILER_CACHE, lang,
@@ -90,8 +93,7 @@ public class Expression {
 		return engine;
 	}
 
-	private static final CompiledScript compileScript(String language, final String source)
-		throws ScriptException, TransformationException {
+	private static final CompiledScript compileScript(String language, final String source) throws ScriptException {
 		final ScriptEngine engine = Expression.getEngine(language);
 		if (!Compilable.class.isInstance(engine)) { return null; }
 
@@ -113,8 +115,8 @@ public class Expression {
 		} catch (ConcurrentException e) {
 			final Throwable cause = e.getCause();
 			if (ScriptException.class.isInstance(cause)) { throw ScriptException.class.cast(cause); }
-			throw new TransformationException(
-				String.format("Failed to pre-compile the %s script:%n%s%n", language, source), cause);
+			throw new RuntimeException(String.format("Failed to pre-compile the %s script:%n%s%n", language, source),
+				cause);
 		}
 	}
 
@@ -186,7 +188,11 @@ public class Expression {
 		return this.engine = Expression.getEngine(getLang());
 	}
 
-	private Object evaluate(TransformationContext ctx) throws TransformationException {
+	public Object evaluate() throws ExpressionException {
+		return evaluate(null);
+	}
+
+	public Object evaluate(ScriptContextConfig cfg) throws ExpressionException {
 		// If there is no engine needed, then we simply return the contents of the script as a
 		// literal string script
 		final ScriptEngine engine = getEngine();
@@ -200,11 +206,9 @@ public class Expression {
 		scriptCtx.setWriter(new PrintWriter(System.out));
 		scriptCtx.setErrorWriter(new PrintWriter(System.err));
 
-		final Bindings bindings = engine.createBindings();
-		bindings.put("obj", ctx.getObject());
-		bindings.put("vars", ctx.getVariables());
-		bindings.put("mapper", ctx.getAttributeMapper());
-		engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+		if (cfg != null) {
+			cfg.configure(scriptCtx);
+		}
 
 		final CompiledScript compiled;
 		try {
@@ -214,18 +218,18 @@ public class Expression {
 			// Compilation failed...
 			String msg = String.format("Script compilation failed for %s script:%n%s%n", lang, script);
 			this.log.debug(msg, e);
-			throw new TransformationException(msg, e);
+			throw new ExpressionException(msg, e);
 		}
 
 		if (compiled != null) {
 			this.log.trace("The {} script was compiled - will use the precompiled version", lang);
 			try {
-				return compiled.eval(bindings);
+				return compiled.eval(scriptCtx);
 			} catch (ScriptException e) {
 				String msg = String.format("Exception caught while executing the compiled %s script:%n%s%n", lang,
 					script);
 				this.log.debug(msg, e);
-				throw new TransformationException(msg, e);
+				throw new ExpressionException(msg, e);
 			}
 		}
 
@@ -243,7 +247,7 @@ public class Expression {
 		} catch (ScriptException e) {
 			String msg = String.format("Exception caught while evaluating %s expression script:%n%s%n", lang, script);
 			this.log.debug(msg, e);
-			throw new TransformationException(msg, e);
+			throw new ExpressionException(msg, e);
 		}
 	}
 
@@ -256,6 +260,10 @@ public class Expression {
 	public static Object eval(Expression e, TransformationContext ctx) throws TransformationException {
 		Objects.requireNonNull(ctx, "No transformation context given for expression evaluation");
 		if (e == null) { return null; }
-		return e.evaluate(ctx);
+		try {
+			return e.evaluate(ctx);
+		} catch (ExpressionException ex) {
+			throw new TransformationException(ex);
+		}
 	}
 }

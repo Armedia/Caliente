@@ -760,14 +760,14 @@
 	<xsd:complexType name="externalMetadataTransformNames.t">
 		<xsd:sequence>
 			<xsd:element name="map" type="tns:externalMetadataNameMapping.t"  minOccurs="0" maxOccurs="unbounded"/>
-			<xsd:element name="transform" type="tns:expression.t"  minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="default" type="tns:expression.t"  minOccurs="0" maxOccurs="1"/>
 		</xsd:sequence>
 	</xsd:complexType>
 
 	<xsd:complexType name="parameterizedSqlParameter.t">
 		<xsd:sequence>
 			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="value" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -789,16 +789,7 @@
 
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" minOccurs="0" maxOccurs="1" />
 
-			<xsd:choice minOccurs="0" maxOccurs="1">
-				<xsd:element name="type" type="tns:cmfDataType.t" />
-				<xsd:element name="type-column" type="tns:noSpaces.t" />
-			</xsd:choice>
 			<xsd:element name="value-column" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
-			<xsd:choice minOccurs="0" maxOccurs="1">
-				<xsd:element name="multivalued" type="xsd:boolean" />
-				<xsd:element name="multivalued-column" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
-			</xsd:choice>
-
 		</xsd:sequence>
 	</xsd:complexType>
 

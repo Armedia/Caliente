@@ -5,6 +5,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.xml.Expression;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "parameterizedSqlParameter.t", propOrder = {
 	"name", "value"
@@ -15,7 +17,7 @@ public class QueryParameter {
 	protected String name;
 
 	@XmlElement(name = "value", required = true)
-	protected String value;
+	protected Expression value;
 
 	public String getName() {
 		return this.name;
@@ -25,11 +27,11 @@ public class QueryParameter {
 		this.name = name;
 	}
 
-	public String getValue() {
+	public Expression getValue() {
 		return this.value;
 	}
 
-	public void setValue(String value) {
+	public void setValue(Expression value) {
 		this.value = value;
 	}
 

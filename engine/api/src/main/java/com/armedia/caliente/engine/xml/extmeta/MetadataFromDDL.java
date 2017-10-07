@@ -13,7 +13,7 @@ import com.armedia.caliente.store.CmfObject;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromDDL.t", propOrder = {
-	"query", "ignore", "transformDDLNames"
+	"query", "ignore", "transformAttributeNames"
 })
 public class MetadataFromDDL implements AttributeValuesLoader {
 
@@ -24,7 +24,7 @@ public class MetadataFromDDL implements AttributeValuesLoader {
 	protected SeparatedValuesList ignore;
 
 	@XmlElement(name = "transform-column-names", required = true)
-	protected TransformDDLNames transformDDLNames;
+	protected TransformAttributeNames transformAttributeNames;
 
 	public String getQuery() {
 		return this.query;
@@ -42,12 +42,12 @@ public class MetadataFromDDL implements AttributeValuesLoader {
 		this.ignore = value;
 	}
 
-	public TransformDDLNames getTransformNames() {
-		return this.transformDDLNames;
+	public TransformAttributeNames getTransformNames() {
+		return this.transformAttributeNames;
 	}
 
-	public void setTransformNames(TransformDDLNames value) {
-		this.transformDDLNames = value;
+	public void setTransformNames(TransformAttributeNames value) {
+		this.transformAttributeNames = value;
 	}
 
 	@Override

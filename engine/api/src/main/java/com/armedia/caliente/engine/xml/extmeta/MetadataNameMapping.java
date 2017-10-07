@@ -13,10 +13,10 @@ import com.armedia.caliente.engine.xml.Expression;
 })
 public class MetadataNameMapping {
 
-	@XmlElement(required = true)
+	@XmlElement(name = "from", required = true)
 	protected String from;
 
-	@XmlElement(required = true)
+	@XmlElement(name = "to", required = true)
 	protected Expression to;
 
 	public String getFrom() {

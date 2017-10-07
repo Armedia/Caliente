@@ -3,9 +3,13 @@ package com.armedia.caliente.engine.transform;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+
+import com.armedia.caliente.engine.xml.Expression.ScriptContextConfig;
 import com.armedia.caliente.store.CmfValueMapper;
 
-public class TransformationContext {
+public class TransformationContext implements ScriptContextConfig {
 
 	private final TransformableObject object;
 	private final CmfValueMapper mapper;
@@ -36,6 +40,14 @@ public class TransformationContext {
 
 	public CmfValueMapper getAttributeMapper() {
 		return this.mapper;
+	}
+
+	@Override
+	public void configure(ScriptContext ctx) {
+		final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
+		bindings.put("obj", getObject());
+		bindings.put("vars", getVariables());
+		bindings.put("mapper", getAttributeMapper());
 	}
 
 }

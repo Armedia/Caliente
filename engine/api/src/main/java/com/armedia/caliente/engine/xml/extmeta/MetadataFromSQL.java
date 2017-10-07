@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.xml.extmeta;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,31 +16,34 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import javax.script.ScriptException;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
+import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Expression.ScriptContextConfig;
+import com.armedia.caliente.engine.xml.ExpressionException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
-import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromSQL.t", propOrder = {
-	"names", "query", "valueColumn", "type", "typeColumn", "multivalued"
+	"names", "transformNames", "valueColumn", "query"
 })
 public class MetadataFromSQL implements AttributeValuesLoader {
 
@@ -48,6 +52,12 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 		@XmlElement(name = "search-names-query", type = MetadataNamesQuery.class)
 	})
 	protected AttributeNamesSource names;
+
+	@XmlElement(name = "transform-names", required = false)
+	protected TransformAttributeNames transformNames;
+
+	@XmlElement(name = "value-column", required = true)
+	protected String valueColumn;
 
 	// The query should accept declare multiple parameters using the ${} syntax,
 	// where the following values are allowed:
@@ -59,24 +69,6 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 	@XmlElement(name = "query", required = true)
 	protected ParameterizedQuery query;
 
-	@XmlElement(name = "value-column", required = true)
-	protected String valueColumn;
-
-	// If no type is given, it'll be decoded from the column's SQL type
-	@XmlElement(name = "type")
-	@XmlJavaTypeAdapter(CmfDataTypeAdapter.class)
-	protected CmfDataType type;
-
-	@XmlElement(name = "type-column") //
-	protected String typeColumn;
-
-	// If no multivalue is given, it'll be guessed from the number of values returned
-	@XmlElements({
-		@XmlElement(name = "multivalued", type = Boolean.class), //
-		@XmlElement(name = "multivalued-column", type = String.class), //
-	})
-	protected Object multivalued;
-
 	@XmlTransient
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -84,10 +76,10 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 	private String finalSql = null;
 
 	@XmlTransient
-	private Set<String> attributeNames = null;
+	private Set<String> sqlAttributeNames = null;
 
 	@XmlTransient
-	private Map<String, String> parameterExpressions = null;
+	private Map<String, Expression> parameterExpressions = null;
 
 	@XmlTransient
 	private Map<Integer, String> indexedNames = null;
@@ -114,36 +106,6 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 
 	public void setValueColumn(String valueColumn) {
 		this.valueColumn = valueColumn;
-	}
-
-	public String getTypeColumn() {
-		return this.typeColumn;
-	}
-
-	public void setTypeColumn(String typeColumn) {
-		this.typeColumn = typeColumn;
-		if (typeColumn != null) {
-			this.type = null;
-		}
-	}
-
-	public CmfDataType getType() {
-		return this.type;
-	}
-
-	public void setType(CmfDataType type) {
-		this.type = type;
-		if (type != null) {
-			this.typeColumn = null;
-		}
-	}
-
-	public Object getMultivalued() {
-		return this.multivalued;
-	}
-
-	public void setMultivalued(Object multivalued) {
-		this.multivalued = multivalued;
 	}
 
 	@Override
@@ -177,7 +139,7 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 
 			// Step 2: make sure all the indexed parameters have expressions defined for their
 			// assignment
-			Map<String, String> parameterExpressions = this.query.getParameterMap();
+			Map<String, Expression> parameterExpressions = this.query.getParameterMap();
 			Set<String> missing = new LinkedHashSet<>();
 			int i = 0;
 			Map<Integer, String> indexedNames = new TreeMap<>();
@@ -195,16 +157,56 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 
 			this.parameterExpressions = Tools.freezeMap(parameterExpressions);
 			this.indexedNames = Tools.freezeMap(indexedNames);
-			this.attributeNames = Tools.freezeSet(attributeNames);
+			this.sqlAttributeNames = Tools.freezeSet(attributeNames);
 			this.finalSql = finalSql;
 		} finally {
 			lock.unlock();
 		}
 	}
 
-	private <V> Object evaluateJexlExpression(String expression, CmfObject<V> object, String attributeName)
-		throws ScriptException {
-		return null;
+	private <V> Object evaluateExpression(Expression expression, final CmfObject<V> object, final String attributeName)
+		throws ExpressionException {
+		if (expression == null) { return null; }
+		return expression.evaluate(new ScriptContextConfig() {
+			@Override
+			public void configure(ScriptContext ctx) {
+				final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
+				if (object != null) {
+					CmfAttributeTranslator<V> translator = object.getTranslator();
+					Map<String, Object> attributes = new HashMap<>();
+					for (CmfAttribute<V> att : object.getAttributes()) {
+						Object value = null;
+						if (att.hasValues()) {
+							CmfValueCodec<V> codec = translator.getCodec(att.getType());
+							value = att.getType().getValue(codec.encodeValue(att.getValue()));
+						}
+						attributes.put(att.getName(), value);
+					}
+					Map<String, Object> properties = new HashMap<>();
+					for (CmfProperty<V> prop : object.getProperties()) {
+						Object value = null;
+						if (prop.hasValues()) {
+							CmfValueCodec<V> codec = translator.getCodec(prop.getType());
+							value = prop.getType().getValue(codec.encodeValue(prop.getValue()));
+						}
+						attributes.put(prop.getName(), value);
+					}
+					bindings.put("att", attributes);
+					bindings.put("prop", properties);
+					bindings.put("obj", object);
+				}
+				bindings.put("attName", attributeName);
+			}
+		});
+	}
+
+	private String transformName(String sqlName) throws ExpressionException {
+		if (this.transformNames == null) { return sqlName; }
+		for (MetadataNameMapping mapping : this.transformNames.getMap()) {
+			if (Tools.equals(mapping.from,
+				sqlName)) { return Tools.toString(evaluateExpression(mapping.to, null, sqlName)); }
+		}
+		return sqlName;
 	}
 
 	@Override
@@ -216,11 +218,11 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 			final PreparedStatement ps = c.prepareStatement(this.finalSql);
 			try {
 				Map<String, CmfAttribute<V>> attributes = new TreeMap<>();
-				for (final String attributeName : this.attributeNames) {
+				for (final String sqlAttributeName : this.sqlAttributeNames) {
 					Map<String, Object> resultCache = new HashMap<>();
 					for (final String parameter : this.parameterExpressions.keySet()) {
-						String expression = this.parameterExpressions.get(parameter);
-						Object value = evaluateJexlExpression(expression, object, attributeName);
+						Expression expression = this.parameterExpressions.get(parameter);
+						Object value = evaluateExpression(expression, object, sqlAttributeName);
 						resultCache.put(parameter, value);
 					}
 					for (final Integer i : this.indexedNames.keySet()) {
@@ -240,8 +242,59 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 						List<V> values = new ArrayList<>();
 						while (rs.next()) {
 							if (attribute == null) {
-								// TODO: Identify the type, whether it's multivalued, and transform
-								// the SQL name to an attribute name
+								// Deduce the type from the SQL type
+								// Find the column we're interested in
+								ResultSetMetaData md = rs.getMetaData();
+								final int columns = md.getColumnCount();
+								CmfDataType type = null;
+								columnLoop: for (int i = 1; i <= columns; i++) {
+									if (Tools.equals(this.valueColumn, md.getColumnName(i))) {
+										switch (md.getColumnType(i)) {
+											case Types.BIT:
+											case Types.BOOLEAN:
+												type = CmfDataType.BOOLEAN;
+												break columnLoop;
+
+											case Types.CHAR:
+											case Types.CLOB:
+											case Types.LONGVARCHAR:
+											case Types.LONGNVARCHAR:
+											case Types.VARCHAR:
+											case Types.NVARCHAR:
+												type = CmfDataType.STRING;
+												break columnLoop;
+
+											case Types.SMALLINT:
+											case Types.TINYINT:
+											case Types.INTEGER:
+											case Types.BIGINT:
+												type = CmfDataType.INTEGER;
+												break columnLoop;
+
+											case Types.REAL:
+											case Types.FLOAT:
+											case Types.DOUBLE:
+											case Types.NUMERIC:
+												type = CmfDataType.DOUBLE;
+												break columnLoop;
+
+											case Types.TIME:
+											case Types.TIMESTAMP:
+											case Types.DATE:
+												type = CmfDataType.DATETIME;
+												break columnLoop;
+
+											default:
+												throw new Exception(String.format(
+													"Unsupported data type [%s] for column [%s] (query = %s), searching for attribute [%s]",
+													md.getColumnTypeName(i), this.valueColumn, this.finalSql,
+													sqlAttributeName));
+										}
+									}
+								}
+
+								// Assume attributes are multivalued
+								attribute = new CmfAttribute<>(transformName(sqlAttributeName), type, true);
 							}
 							if (codec == null) {
 								codec = translator.getCodec(attribute.getType());
@@ -252,8 +305,7 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 								continue;
 							}
 
-							CmfValue cmfValue = new CmfValue(attribute.getType(), value);
-							values.add(codec.decodeValue(cmfValue));
+							values.add(codec.decodeValue(new CmfValue(attribute.getType(), value)));
 						}
 						if (attribute != null) {
 							attributes.put(attribute.getName(), attribute);
@@ -286,8 +338,8 @@ public class MetadataFromSQL implements AttributeValuesLoader {
 				this.indexedNames = null;
 				this.parameterExpressions.clear();
 				this.parameterExpressions = null;
-				this.attributeNames.clear();
-				this.attributeNames = null;
+				this.sqlAttributeNames.clear();
+				this.sqlAttributeNames = null;
 			}
 		} finally {
 			lock.unlock();

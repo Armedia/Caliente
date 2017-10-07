@@ -5,18 +5,20 @@ import java.util.List;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-
-import com.armedia.caliente.engine.xml.Expression;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataTransformNames.t", propOrder = {
-	"map", "transform"
+	"map", "defaultTransform"
 })
-public class TransformDDLNames {
+public class TransformAttributeNames {
 
+	@XmlElement(name = "map", required = false)
 	protected List<MetadataNameMapping> map;
-	protected Expression transform;
+
+	@XmlElement(name = "default", required = false)
+	protected String defaultTransform;
 
 	public List<MetadataNameMapping> getMap() {
 		if (this.map == null) {
@@ -25,12 +27,12 @@ public class TransformDDLNames {
 		return this.map;
 	}
 
-	public Expression getTransform() {
-		return this.transform;
+	public String getDefaultTransform() {
+		return this.defaultTransform;
 	}
 
-	public void setTransform(Expression value) {
-		this.transform = value;
+	public void setDefaultTransform(String value) {
+		this.defaultTransform = value;
 	}
 
 }

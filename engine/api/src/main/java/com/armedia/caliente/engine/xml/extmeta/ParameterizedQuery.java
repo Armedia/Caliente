@@ -12,6 +12,8 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.xml.Expression;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "parameterizedSqlQuery.t", propOrder = {
 	"sql", "parameters"
@@ -39,11 +41,11 @@ public class ParameterizedQuery {
 		return this.parameters;
 	}
 
-	public Map<String, String> getParameterMap() {
-		Map<String, String> map = new HashMap<>();
+	public Map<String, Expression> getParameterMap() {
+		Map<String, Expression> map = new HashMap<>();
 		for (QueryParameter p : getParameters()) {
-			String name = StringUtils.strip(p.name);
-			String value = p.value;
+			String name = StringUtils.strip(p.getName());
+			Expression value = p.getValue();
 			if ((p != null) && !StringUtils.isEmpty(name)) {
 				map.put(name, value);
 			}
