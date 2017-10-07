@@ -9,7 +9,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Comparison;
-import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -22,7 +22,7 @@ public abstract class AbstractAttributeCalientePropertyVariableCheck extends Abs
 
 	@Override
 	public final boolean check(TransformationContext ctx) throws TransformationException {
-		final String comparand = Tools.toString(Expression.eval(this, ctx));
+		final String comparand = Tools.toString(Transformations.eval(this, ctx));
 		final Comparison comparison = getComparison();
 		final Map<String, TypedValue> values = getCandidateValues(ctx);
 

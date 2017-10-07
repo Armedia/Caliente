@@ -8,6 +8,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -28,7 +29,7 @@ public abstract class AbstractSingleValueSet extends ConditionalAction {
 
 	@Override
 	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
-		String newValue = Tools.toString(Expression.eval(getValue(), ctx));
+		String newValue = Tools.toString(Transformations.eval(getValue(), ctx));
 		if (newValue == null) { throw new TransformationException("No value given to set"); }
 		setNewValue(ctx, newValue);
 	}

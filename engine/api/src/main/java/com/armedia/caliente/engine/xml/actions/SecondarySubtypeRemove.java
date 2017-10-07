@@ -17,6 +17,7 @@ import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -51,7 +52,7 @@ public class SecondarySubtypeRemove extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		String comparand = StringUtils.strip(Tools.toString(Expression.eval(getValue(), ctx)));
+		String comparand = StringUtils.strip(Tools.toString(Transformations.eval(getValue(), ctx)));
 		if (StringUtils.isEmpty(comparand)) { return; }
 
 		Comparison comparison = getComparison();

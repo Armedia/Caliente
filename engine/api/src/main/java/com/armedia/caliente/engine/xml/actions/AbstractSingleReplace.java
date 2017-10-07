@@ -11,6 +11,7 @@ import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
 import com.armedia.caliente.engine.xml.RegularExpression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -45,9 +46,9 @@ public abstract class AbstractSingleReplace extends ConditionalAction {
 	@Override
 	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
 		final RegularExpression regexBase = getRegex();
-		final String regex = Tools.toString(Expression.eval(getRegex(), ctx));
+		final String regex = Tools.toString(Transformations.eval(getRegex(), ctx));
 		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
-		final String replacement = Tools.coalesce(Tools.toString(Expression.eval(getReplacement(), ctx)), "");
+		final String replacement = Tools.coalesce(Tools.toString(Transformations.eval(getReplacement(), ctx)), "");
 		String oldValue = getOldValue(ctx);
 		int flags = 0;
 		if (!regexBase.isCaseSensitive()) {

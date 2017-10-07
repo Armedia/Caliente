@@ -15,6 +15,7 @@ import com.armedia.caliente.engine.xml.Cardinality;
 import com.armedia.caliente.engine.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -60,7 +61,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 	@Override
 	public boolean check(TransformationContext ctx) throws TransformationException {
 		Expression nameExp = getName();
-		Object name = Expression.eval(nameExp, ctx);
+		Object name = Transformations.eval(nameExp, ctx);
 		if (name == null) { throw new TransformationException("No name was given for the candidate value check"); }
 
 		final Map<String, TypedValue> values = getCandidateValues(ctx);
@@ -70,7 +71,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 
 		Comparison comparison = getComparison();
 		Expression valueExp = getValue();
-		Object comparand = Expression.eval(valueExp, ctx);
+		Object comparand = Transformations.eval(valueExp, ctx);
 		if (comparand == null) { throw new TransformationException(
 			"No comparand value given to check the name against"); }
 		if (!candidate.isRepeating()) {

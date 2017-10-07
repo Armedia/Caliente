@@ -14,6 +14,7 @@ import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -55,7 +56,7 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 	@Override
 	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
 		if (failShort()) { return; }
-		final String comparand = Tools.toString(Expression.eval(getName(), ctx));
+		final String comparand = Tools.toString(Transformations.eval(getName(), ctx));
 		if (comparand == null) { throw new TransformationException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();
 

@@ -20,6 +20,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
@@ -137,9 +138,9 @@ public class CheckExpression extends AbstractComparisonCheck {
 	public boolean check(TransformationContext ctx) throws TransformationException {
 		final CmfDataType type = getType();
 		Expression leftExp = getLeft();
-		Object leftVal = Expression.eval(leftExp, ctx);
+		Object leftVal = Transformations.eval(leftExp, ctx);
 		Expression rightExp = getRight();
-		Object rightVal = Expression.eval(rightExp, ctx);
+		Object rightVal = Transformations.eval(rightExp, ctx);
 
 		Comparison comparison = getComparison();
 		if (comparison == Comparison.EQ) {

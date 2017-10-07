@@ -12,6 +12,7 @@ import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
 import com.armedia.commons.utilities.Tools;
@@ -58,11 +59,11 @@ public abstract class AbstractSetValue extends ConditionalAction {
 
 	@Override
 	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
-		Object name = Tools.toString(Expression.eval(getName(), ctx));
+		Object name = Tools.toString(Transformations.eval(getName(), ctx));
 		if (name == null) { throw new TransformationException("No name expression given for variable definition"); }
 
 		final CmfDataType type = getType();
-		final Object value = Expression.eval(getValue(), ctx);
+		final Object value = Transformations.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
 		final TypedValue variable = createValue(ctx, String.valueOf(name), type, repeating);
 		if (repeating) {

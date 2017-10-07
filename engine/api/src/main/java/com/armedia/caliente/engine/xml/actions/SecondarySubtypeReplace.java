@@ -17,6 +17,7 @@ import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
 import com.armedia.caliente.engine.xml.RegularExpression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -53,9 +54,9 @@ public class SecondarySubtypeReplace extends ConditionalAction {
 		if (currentSecondaries.isEmpty()) { return; }
 
 		RegularExpression regexBase = getRegex();
-		final String regex = Tools.toString(Expression.eval(regexBase, ctx));
+		final String regex = Tools.toString(Transformations.eval(regexBase, ctx));
 		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
-		final String replacement = Tools.coalesce(Tools.toString(Expression.eval(getReplacement(), ctx)), "");
+		final String replacement = Tools.coalesce(Tools.toString(Transformations.eval(getReplacement(), ctx)), "");
 
 		int flags = 0;
 		if (!regexBase.isCaseSensitive()) {

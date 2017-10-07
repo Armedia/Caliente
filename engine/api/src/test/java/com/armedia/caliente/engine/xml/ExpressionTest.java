@@ -13,9 +13,7 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.transform.TestTransformationContext;
 import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.TypedValue;
-import com.armedia.caliente.engine.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
 
 public class ExpressionTest {
@@ -31,7 +29,7 @@ public class ExpressionTest {
 	}
 
 	@Test
-	public void testValue() throws TransformationException {
+	public void testValue() throws Exception {
 		TransformationContext ctx = new TestTransformationContext();
 		Expression e = null;
 
@@ -85,7 +83,7 @@ public class ExpressionTest {
 	}
 
 	@Test
-	public void testEval() throws TransformationException {
+	public void testEval() throws Exception {
 		ScriptEngineManager manager = new ScriptEngineManager();
 		Set<String> languages = new TreeSet<>();
 		for (ScriptEngineFactory f : manager.getEngineFactories()) {

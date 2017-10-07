@@ -12,6 +12,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -33,7 +34,7 @@ public class SecondarySubtypeAdd extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		String secondary = StringUtils.strip(Tools.toString(Expression.eval(getValue(), ctx)));
+		String secondary = StringUtils.strip(Tools.toString(Transformations.eval(getValue(), ctx)));
 		if (!StringUtils.isEmpty(secondary)) {
 			ctx.getObject().getSecondarySubtypes().add(secondary);
 		}

@@ -11,6 +11,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
 import com.armedia.commons.utilities.Tools;
@@ -71,11 +72,11 @@ public class ValueMappingClear extends ConditionalAction {
 		CmfType type = getType();
 		if (type == null) { throw new TransformationException(
 			"Must provide a type name to associate the mapping with"); }
-		String name = Tools.toString(Expression.eval(getName(), ctx));
+		String name = Tools.toString(Transformations.eval(getName(), ctx));
 		if (name == null) { throw new TransformationException("Must provide a mapping name"); }
 
-		String from = Tools.toString(Expression.eval(getFrom(), ctx));
-		String to = Tools.toString(Expression.eval(getTo(), ctx));
+		String from = Tools.toString(Transformations.eval(getFrom(), ctx));
+		String to = Tools.toString(Transformations.eval(getTo(), ctx));
 		if ((from == null) && (to == null)) { throw new TransformationException(
 			"Must provide either a sorce or target value to identify the mapping to remove"); }
 		if ((from != null) && (to != null)) { throw new TransformationException(

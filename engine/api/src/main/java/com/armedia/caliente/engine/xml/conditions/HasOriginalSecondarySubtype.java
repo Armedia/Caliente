@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.Comparison;
-import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -17,7 +17,7 @@ public class HasOriginalSecondarySubtype extends AbstractExpressionComparison {
 
 	@Override
 	public boolean check(TransformationContext ctx) throws TransformationException {
-		Object secondary = Expression.eval(this, ctx);
+		Object secondary = Transformations.eval(this, ctx);
 		if (secondary == null) { return false; }
 		final Comparison comp = getComparison();
 		for (String s : ctx.getObject().getOriginalSecondarySubtypes()) {

@@ -10,6 +10,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Cardinality;
 import com.armedia.caliente.engine.xml.CardinalityAdapter;
@@ -17,11 +19,10 @@ import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
-import com.armedia.caliente.store.CmfValueMapper.Mapping;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
@@ -140,10 +141,10 @@ public class ValueMappingApply extends ConditionalAction {
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
 		final CmfType type = getType();
 		if (type == null) { throw new TransformationException("No type name given to find the mapping"); }
-		final String comparand = Tools.toString(Expression.eval(getName(), ctx));
+		final String comparand = Tools.toString(Transformations.eval(getName(), ctx));
 		if (comparand == null) { throw new TransformationException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();
-		final String mappingName = Tools.toString(Expression.eval(getMappingName(), ctx));
+		final String mappingName = Tools.toString(Transformations.eval(getMappingName(), ctx));
 		if (mappingName == null) { throw new TransformationException("No mapping name given to apply"); }
 
 		if (comparison == Comparison.EQ) {

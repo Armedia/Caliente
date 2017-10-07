@@ -13,6 +13,7 @@ import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.Action;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -34,7 +35,7 @@ public class CustomAction extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		String className = Tools.toString(Expression.eval(getClassName(), ctx));
+		String className = Tools.toString(Transformations.eval(getClassName(), ctx));
 		if (className == null) { throw new TransformationException("No classname given to insantiate"); }
 
 		final ActionFactory factory = DynamicTransformationElements.getActionFactory(className);

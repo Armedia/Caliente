@@ -34,8 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.transform.RuntimeTransformationException;
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "expression.t", propOrder = {
@@ -257,13 +255,9 @@ public class Expression {
 		return e;
 	}
 
-	public static Object eval(Expression e, TransformationContext ctx) throws TransformationException {
-		Objects.requireNonNull(ctx, "No transformation context given for expression evaluation");
+	public static Object eval(Expression e, ScriptContextConfig cfg) throws ExpressionException {
+		Objects.requireNonNull(cfg, "No ScriptContextConfig instance given for expression evaluation");
 		if (e == null) { return null; }
-		try {
-			return e.evaluate(ctx);
-		} catch (ExpressionException ex) {
-			throw new TransformationException(ex);
-		}
+		return e.evaluate(cfg);
 	}
 }

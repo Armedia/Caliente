@@ -16,6 +16,7 @@ import com.armedia.caliente.engine.xml.Cardinality;
 import com.armedia.caliente.engine.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.Expression;
+import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -68,8 +69,8 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 			if (replacement == null) { throw new TransformationException("No value given to replace with"); }
 
 			// All is well, execute!
-			if (comparison.check(type, candidate, Expression.eval(comparand, ctx))) {
-				result.set(Expression.eval(replacement, ctx));
+			if (comparison.check(type, candidate, Transformations.eval(comparand, ctx))) {
+				result.set(Transformations.eval(replacement, ctx));
 				return true;
 			}
 		}
@@ -77,7 +78,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 		Expression def = getDefaultValue();
 		if (def != null) {
 			// If there was no match, apply the default
-			result.set(Expression.eval(def, ctx));
+			result.set(Transformations.eval(def, ctx));
 			return true;
 		}
 

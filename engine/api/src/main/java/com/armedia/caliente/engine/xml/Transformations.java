@@ -54,4 +54,12 @@ public final class Transformations extends XmlBase implements Action {
 	public static Transformations loadFromXML(XMLStreamReader in) throws JAXBException {
 		return XmlBase.loadFromXML(Transformations.class, in);
 	}
+
+	public static Object eval(Expression e, TransformationContext ctx) throws TransformationException {
+		try {
+			return Expression.eval(e, ctx);
+		} catch (ExpressionException ex) {
+			throw new TransformationException(ex);
+		}
+	}
 }
