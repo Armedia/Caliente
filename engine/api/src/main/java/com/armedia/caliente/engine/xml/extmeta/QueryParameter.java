@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.engine.xml.Expression;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "parameterizedSqlParameter.t", propOrder = {
+@XmlType(name = "parameterizedSQLParameter.t", propOrder = {
 	"name", "value"
 })
 public class QueryParameter {

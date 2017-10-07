@@ -15,7 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.engine.xml.Expression;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "parameterizedSqlQuery.t", propOrder = {
+@XmlType(name = "parameterizedSQL.t", propOrder = {
 	"sql", "parameters"
 })
 public class ParameterizedQuery {

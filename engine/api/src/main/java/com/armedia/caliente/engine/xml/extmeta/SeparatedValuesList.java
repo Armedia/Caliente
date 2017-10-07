@@ -29,6 +29,9 @@ public class SeparatedValuesList implements AttributeNamesSource {
 	@XmlAttribute(name = "separator")
 	protected String separator;
 
+	@XmlAttribute(name = "caseSensitive")
+	protected volatile Boolean caseSensitive;
+
 	@XmlTransient
 	private volatile Set<String> values = null;
 
@@ -50,8 +53,21 @@ public class SeparatedValuesList implements AttributeNamesSource {
 		this.separator = Tools.toString(value);
 	}
 
+	public boolean isCaseSensitive() {
+		return Tools.coalesce(this.caseSensitive, Boolean.FALSE);
+	}
+
+	public void setCaseSensitive(Boolean caseSensitive) {
+		this.caseSensitive = caseSensitive;
+	}
+
+	public String canonicalize(String value) {
+		return (isCaseSensitive() ? value : StringUtils.upperCase(value));
+	}
+
 	@Override
 	public Set<String> getAttributeNames(Connection c) {
+		final boolean caseSensitive = isCaseSensitive();
 		if (this.values != null) {
 			synchronized (this) {
 				if (this.values != null) {
@@ -59,7 +75,10 @@ public class SeparatedValuesList implements AttributeNamesSource {
 					if (this.value != null) {
 						for (String s : Tools.splitEscaped(this.value, getSeparator())) {
 							s = StringUtils.strip(s);
-							if (!StringUtils.isEmpty(s) && !StringUtils.isAnyBlank(s)) {
+							if (!StringUtils.isEmpty(s)) {
+								if (!caseSensitive) {
+									s = s.toUpperCase();
+								}
 								this.values.add(s);
 							}
 						}

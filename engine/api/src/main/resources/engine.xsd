@@ -733,6 +733,7 @@
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
 				<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="'" />
+				<xsd:attribute name="caseSensitive" type="xsd:boolean" use="optional" default="false" />
 			</xsd:extension>
 		</xsd:simpleContent>
 	</xsd:complexType>
@@ -764,17 +765,17 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:complexType name="parameterizedSqlParameter.t">
+	<xsd:complexType name="parameterizedSQLParameter.t">
 		<xsd:sequence>
 			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:complexType name="parameterizedSqlQuery.t">
+	<xsd:complexType name="parameterizedSQL.t">
 		<xsd:sequence>
 			<xsd:element name="sql" type="xsd:string" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="parameter" type="tns:parameterizedSqlParameter.t" minOccurs="0" maxOccurs="unbounded" />
+			<xsd:element name="parameter" type="tns:parameterizedSQLParameter.t" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -785,7 +786,7 @@
 				<xsd:element name="search-names-query" type="tns:externalMetadataNamesQuery.t" />
 			</xsd:choice>
 
-			<xsd:element name="query" type="tns:parameterizedSqlQuery.t"  minOccurs="1" maxOccurs="1" />
+			<xsd:element name="query" type="tns:parameterizedSQL.t"  minOccurs="1" maxOccurs="1" />
 
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" minOccurs="0" maxOccurs="1" />
 
@@ -795,9 +796,9 @@
 
 	<xsd:complexType name="externalMetadataFromDDL.t">
 		<xsd:sequence>
-			<xsd:element name="query" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="query" type="tns:parameterizedSQL.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="ignore-columns" type="tns:externalMetadataNamesList.t" minOccurs="0" maxOccurs="1" />
-			<xsd:element name="transform-column-names" type="tns:externalMetadataTransformNames.t" />
+			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" />
 		</xsd:sequence>
 	</xsd:complexType>
 
