@@ -36,7 +36,7 @@ public class SeparatedValuesNamesSource extends AttributeNamesSource {
 	@Override
 	protected final Set<String> getValues(Connection c) throws Exception {
 		Set<String> values = new HashSet<>();
-		for (String s : Tools.splitEscaped(getValue(), getSeparator())) {
+		for (String s : Tools.splitEscaped(getSeparator(), getValue())) {
 			s = StringUtils.strip(s);
 			if (!StringUtils.isEmpty(s)) {
 				values.add(s);

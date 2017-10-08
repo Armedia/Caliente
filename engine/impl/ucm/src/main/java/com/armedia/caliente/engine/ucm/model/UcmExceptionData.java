@@ -35,7 +35,7 @@ public class UcmExceptionData {
 			if (this.string == null) {
 				synchronized (this) {
 					if (this.string == null) {
-						this.string = Tools.joinEscaped(this.allValues, ',');
+						this.string = Tools.joinEscaped(',', this.allValues);
 					}
 				}
 			}
@@ -44,13 +44,13 @@ public class UcmExceptionData {
 	}
 
 	private static List<String> parseParameters(String msg) {
-		return Tools.splitEscaped(msg, ',');
+		return Tools.splitEscaped(',', msg);
 	}
 
 	public static List<Entry> parseMessageKey(String msg) {
 		if (msg == null) { return Collections.emptyList(); }
 		List<Entry> data = new ArrayList<>();
-		for (String part : Tools.splitEscaped(msg, '!')) {
+		for (String part : Tools.splitEscaped('!', msg)) {
 			if (!StringUtils.isEmpty(part)) {
 				List<String> parameters = UcmExceptionData.parseParameters(part);
 				if (!parameters.isEmpty()) {
@@ -67,6 +67,6 @@ public class UcmExceptionData {
 		for (Entry e : entries) {
 			str.add(e.toString());
 		}
-		return Tools.joinEscaped(str, '!');
+		return Tools.joinEscaped('!', str);
 	}
 }
