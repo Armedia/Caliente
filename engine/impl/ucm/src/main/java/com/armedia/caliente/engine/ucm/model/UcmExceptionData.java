@@ -13,10 +13,12 @@ public class UcmExceptionData {
 	public static final class Entry {
 		private final String tag;
 		private final List<String> parameters;
+		private final List<String> allValues;
 		private volatile String string = null;
 
-		private Entry(String tag, List<String> parameters) {
-			this.tag = tag;
+		private Entry(List<String> parameters) {
+			this.allValues = Tools.freezeCopy(parameters);
+			this.tag = parameters.remove(0);
 			this.parameters = Tools.freezeList(parameters);
 		}
 
@@ -33,24 +35,12 @@ public class UcmExceptionData {
 			if (this.string == null) {
 				synchronized (this) {
 					if (this.string == null) {
-						StringBuilder sb = new StringBuilder();
-						sb.append('!').append(UcmExceptionData.escape(this.tag));
-						for (String p : this.parameters) {
-							sb.append(',').append(UcmExceptionData.escape(p));
-						}
-						this.string = sb.toString();
+						this.string = Tools.joinEscaped(this.allValues, ',');
 					}
 				}
 			}
 			return this.string;
 		}
-	}
-
-	private static String escape(String string) {
-		return string //
-			.replaceAll("!", "\\\\!") //
-			.replaceAll(",", "\\\\,") //
-		;
 	}
 
 	private static List<String> parseParameters(String msg) {
@@ -64,8 +54,7 @@ public class UcmExceptionData {
 			if (!StringUtils.isEmpty(part)) {
 				List<String> parameters = UcmExceptionData.parseParameters(part);
 				if (!parameters.isEmpty()) {
-					String tag = parameters.remove(0);
-					data.add(new Entry(tag, parameters));
+					data.add(new Entry(parameters));
 				}
 			}
 		}
@@ -73,10 +62,11 @@ public class UcmExceptionData {
 	}
 
 	public static String generateMessageKey(List<Entry> entries) {
-		StringBuilder sb = new StringBuilder();
+		List<String> str = new ArrayList<>(entries.size());
+		str.add(""); // This adds the leading '!'
 		for (Entry e : entries) {
-			sb.append(e.toString());
+			str.add(e.toString());
 		}
-		return sb.toString();
+		return Tools.joinEscaped(str, '!');
 	}
 }
