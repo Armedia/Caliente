@@ -3,4 +3,5 @@
   <runtime name="Apache Tomcat v7.0"/>
   <fixed facet="java"/>
   <installed facet="java" version="1.7"/>
+  <installed facet="jst.utility" version="1.0"/>
 </faceted-project>
