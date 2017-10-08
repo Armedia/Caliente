@@ -765,6 +765,20 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
+	<xsd:complexType name="externalMetadataTypeMapping.t">
+		<xsd:sequence>
+			<xsd:element name="name" type="xsd:string" />
+			<xsd:element name="type" type="tns:cmfDataType.t" />
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:complexType name="externalMetadataAttributeTypes.t">
+		<xsd:sequence>
+			<xsd:element name="attribute" type="tns:externalMetadataTypeMapping.t"  minOccurs="0" maxOccurs="unbounded"/>
+			<xsd:element name="default" type="tns:cmfDataType.t"  minOccurs="0" maxOccurs="1"/>
+		</xsd:sequence>
+	</xsd:complexType>
+
 	<xsd:complexType name="parameterizedSQLParameter.t">
 		<xsd:sequence>
 			<xsd:element name="name" type="xsd:string" minOccurs="1" maxOccurs="1" />
@@ -785,12 +799,10 @@
 				<xsd:element name="search-names-list" type="tns:externalMetadataNamesList.t" />
 				<xsd:element name="search-names-query" type="tns:externalMetadataNamesQuery.t" />
 			</xsd:choice>
-
 			<xsd:element name="query" type="tns:parameterizedSQL.t"  minOccurs="1" maxOccurs="1" />
-
-			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" minOccurs="0" maxOccurs="1" />
-
 			<xsd:element name="value-column" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -798,7 +810,8 @@
 		<xsd:sequence>
 			<xsd:element name="query" type="tns:parameterizedSQL.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="ignore-columns" type="tns:externalMetadataNamesList.t" minOccurs="0" maxOccurs="1" />
-			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" />
+			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t"  minOccurs="0" maxOccurs="1" />
+			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 

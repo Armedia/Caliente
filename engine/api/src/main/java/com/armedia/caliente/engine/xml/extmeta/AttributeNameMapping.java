@@ -18,7 +18,7 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "externalMetadataTransformNames.t", propOrder = {
 	"map", "defaultTransform"
 })
-public class TransformAttributeNames {
+public class AttributeNameMapping {
 
 	@XmlElement(name = "map", required = false)
 	protected List<MetadataNameMapping> map;

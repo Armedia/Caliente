@@ -41,8 +41,11 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 	@XmlElement(name = "query", required = true)
 	protected ParameterizedQuery query;
 
-	@XmlElement(name = "transform-names", required = true)
-	protected TransformAttributeNames transformAttributeNames;
+	@XmlElement(name = "transform-names", required = false)
+	protected AttributeNameMapping attributeNameMapping;
+
+	@XmlElement(name = "attribute-types", required = false)
+	protected AttributeTypeMapping attributeTypeMapping;
 
 	@XmlTransient
 	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -64,17 +67,34 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		this.query = value;
 	}
 
-	public final TransformAttributeNames getTransformNames() {
-		return this.transformAttributeNames;
+	public final AttributeNameMapping getAttributeNameMapping() {
+		return this.attributeNameMapping;
 	}
 
-	public final void setTransformNames(TransformAttributeNames value) {
-		this.transformAttributeNames = value;
+	public final void setAttributeNameMapping(AttributeNameMapping value) {
+		this.attributeNameMapping = value;
 	}
 
 	protected final String transformAttributeName(String name) throws ExpressionException {
-		if (this.transformAttributeNames == null) { return name; }
-		return this.transformAttributeNames.transformName(name);
+		if (this.attributeNameMapping == null) { return name; }
+		return this.attributeNameMapping.transformName(name);
+	}
+
+	public AttributeTypeMapping getAttributeTypeMapping() {
+		return this.attributeTypeMapping;
+	}
+
+	public void setAttributeTypeMapping(AttributeTypeMapping attributeTypeMapping) {
+		this.attributeTypeMapping = attributeTypeMapping;
+	}
+
+	protected CmfDataType getMappedAttributeType(String sqlAttributeName) {
+		if (this.attributeTypeMapping == null) { return null; }
+		for (MetadataTypeMapping mapping : this.attributeTypeMapping.getAttributes()) {
+			if (Tools.equals(mapping.name,
+				sqlAttributeName)) { return Tools.coalesce(mapping.type, this.attributeTypeMapping.getDefaultType()); }
+		}
+		return null;
 	}
 
 	protected void doInitialize(Connection c) throws Exception {

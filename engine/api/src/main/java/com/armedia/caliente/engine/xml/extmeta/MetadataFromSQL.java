@@ -26,7 +26,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromSQL.t", propOrder = {
-	"names", "query", "transformAttributeNames", "valueColumn",
+	"names", "query", "valueColumn", "attributeNameMapping", "attributeTypeMapping"
 })
 public class MetadataFromSQL extends MetadataReaderBase {
 
@@ -83,10 +83,14 @@ public class MetadataFromSQL extends MetadataReaderBase {
 								// Find the column we're interested in
 								ResultSetMetaData md = rs.getMetaData();
 								final int columns = md.getColumnCount();
-								CmfDataType type = null;
+								CmfDataType type = getMappedAttributeType(sqlAttributeName);
 								for (int i = 1; i <= columns; i++) {
 									if ((columnName == null) || Tools.equals(columnName, md.getColumnName(i))) {
-										type = decodeSQLType(md.getColumnType(i));
+										// Here we try to decode the data type, but we also find the
+										// column's index
+										if (type == null) {
+											type = decodeSQLType(md.getColumnType(i));
+										}
 										if (type == CmfDataType.OTHER) { throw new Exception(String.format(
 											"Unsupported data type [%s] for column [%s] (query = %s), searching for attribute [%s]",
 											md.getColumnTypeName(i), this.valueColumn, this.finalSql,

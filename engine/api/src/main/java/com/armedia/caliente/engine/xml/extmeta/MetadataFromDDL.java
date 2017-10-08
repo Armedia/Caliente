@@ -25,7 +25,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromDDL.t", propOrder = {
-	"query", "ignore", "transformAttributeNames"
+	"query", "ignore", "attributeNameMapping", "attributeTypeMapping"
 })
 public class MetadataFromDDL extends MetadataReaderBase {
 
@@ -63,11 +63,14 @@ public class MetadataFromDDL extends MetadataReaderBase {
 			}
 
 			String finalName = sqlName;
-			if (this.transformAttributeNames != null) {
-				finalName = this.transformAttributeNames.transformName(sqlName);
+			if (this.attributeNameMapping != null) {
+				finalName = this.attributeNameMapping.transformName(sqlName);
 			}
 
-			CmfDataType type = decodeSQLType(md.getColumnType(i));
+			CmfDataType type = getMappedAttributeType(sqlName);
+			if (type == null) {
+				type = decodeSQLType(md.getColumnType(i));
+			}
 			if (type == CmfDataType.OTHER) {
 				continue columnLoop;
 			}
