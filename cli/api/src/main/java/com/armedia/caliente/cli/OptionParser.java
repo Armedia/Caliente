@@ -350,7 +350,7 @@ public class OptionParser {
 							}
 							values.add(str);
 						} else {
-							nextValue: for (String nextValue : Tools.splitEscaped(str, sep)) {
+							nextValue: for (String nextValue : Tools.splitEscaped(sep, str)) {
 								if (!currentOption.isValueAllowed(nextValue)) {
 									if (badValues == null) {
 										badValues = new TreeSet<>();
