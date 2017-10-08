@@ -11,9 +11,6 @@
 			<search-names-list>.....</search-names-list>
 
 			<query>
-				<!-- There's a ${attSearchName} parameter which is replaced by the search name for the attribute name currently being sought -->
-				<!-- There's a ${attFinalName} parameter which is replaced by the final name for the attribute name currently being sought -->
-				<!-- all other ${} values are replaced with ? and are stored in a list -->
 				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
 				<parameter>
 					<name>param1</name>
@@ -29,6 +26,8 @@
 				</parameter>
 			</query>
 
+			<value-column>att_value</value-column>
+
 			<transform-names>
 				<map>
 					<from>att_name_1</from>
@@ -36,13 +35,17 @@
 				</map>
 				<default>...JEXL...</default>
 			</transform-names>
-
-			<value-column>att_value</value-column>
-
+			
+			<attribute-types>
+				<attribute>
+					<name>asdfsdf</name>
+					<type>INTEGER</type>
+				</attribute>
+				<default>OTHER</default>
+			</attribute-types>
 		</from-sql>
 
 		<from-ddl>
-			<!-- This query will return only a single row. Multivalued attributes are supported to be read if the JDBC driver supports array-types -->
 			<query>
 				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
 				<parameter>
@@ -67,6 +70,14 @@
 				</map>
 				<default>...JEXL...</default>
 			</transform-names>
+			
+			<attribute-types>
+				<attribute>
+					<name>asdfsdf</name>
+					<type>BOOLEAN</type>
+				</attribute>
+				<default>STRING</default>
+			</attribute-types>
 		</from-ddl>
 	</source>
 </external-metadata>
