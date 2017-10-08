@@ -29,6 +29,8 @@
 				</parameter>
 			</query>
 
+			<value-column>att_value</value-column>
+
 			<transform-names>
 				<map>
 					<from>att_name_1</from>
@@ -36,9 +38,14 @@
 				</map>
 				<default>...JEXL...</default>
 			</transform-names>
-
-			<value-column>att_value</value-column>
-
+			
+			<attribute-types>
+				<attribute>
+					<name>asdfsdf</name>
+					<type>INTEGER</type>
+				</attribute>
+				<default>OTHER</default>
+			</attribute-types>
 		</from-sql>
 
 		<from-ddl>
@@ -67,6 +74,14 @@
 				</map>
 				<default>...JEXL...</default>
 			</transform-names>
+			
+			<attribute-types>
+				<attribute>
+					<name>asdfsdf</name>
+					<type>BOOLEAN</type>
+				</attribute>
+				<default>STRING</default>
+			</attribute-types>
 		</from-ddl>
 	</source>
 </external-metadata>
