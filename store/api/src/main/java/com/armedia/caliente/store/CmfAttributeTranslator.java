@@ -71,7 +71,7 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 	};
 
-	private static final CmfAttributeTranslator<CmfValue> CMFVALUE_TRANSLATOR = new CmfAttributeTranslator<CmfValue>(
+	public static final CmfAttributeTranslator<CmfValue> CMFVALUE_TRANSLATOR = new CmfAttributeTranslator<CmfValue>(
 		CmfValue.class) {
 
 		private final Map<CmfDataType, CmfValueCodec<CmfValue>> codecs;
@@ -96,7 +96,7 @@ public abstract class CmfAttributeTranslator<V> {
 
 	};
 
-	private static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();
+	public static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();
 
 	private static final Map<CmfDataType, Codec> CODECS;
 
