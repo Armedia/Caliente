@@ -45,9 +45,19 @@ public class MetadataFromDDL extends MetadataReaderBase {
 
 	@Override
 	protected void doInitialize(Connection c) throws Exception {
+		super.doInitialize(c);
 		if (this.ignore != null) {
+			this.ignore.setCaseSensitive(this.columnNamesCaseSensitive);
 			this.ignore.initialize(c);
 		}
+		if (this.attributeNameMapping != null) {
+			this.attributeNameMapping.initialize(this.columnNamesCaseSensitive);
+		}
+	}
+
+	@Override
+	protected boolean isRequiresCaseAwareTransform() {
+		return true;
 	}
 
 	private Map<String, CmfBaseSetting> getStructure(ResultSetMetaData md) throws Exception {
@@ -157,6 +167,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 				this.ignore = null;
 			}
 		}
+		super.doClose();
 	}
 
 }

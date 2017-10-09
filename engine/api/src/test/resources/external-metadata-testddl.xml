@@ -3,81 +3,30 @@
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
 	<source failOnError="true" failOnMissing="false">
 		<settings>
-			<setting name="jdbc.url">jdbc-url</setting>
-			<setting name="jdbc.user">jdbc-user</setting>
-			<setting name="jdbc.pass">encryptable-jdbc-pass</setting>
+			<setting name="jdbc.driver">org.h2.Driver</setting>
+			<setting name="jdbc.url">jdbc:h2:${h2.test.path};AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
 		</settings>
-		<from-sql>
-			<search-names-list>.....</search-names-list>
-
-			<query>
-				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
-				<parameter>
-					<name>param1</name>
-					<value>...JEXL...</value>
-				</parameter>
-				<parameter>
-					<name>param2</name>
-					<value>...JEXL...</value>
-				</parameter>
-				<parameter>
-					<name>param3</name>
-					<value>...JEXL...</value>
-				</parameter>
-			</query>
-
-			<value-column>att_value</value-column>
-
-			<transform-names>
-				<map>
-					<from>att_name_1</from>
-					<to>cmis:someAttributeName1</to>
-				</map>
-				<default>...JEXL...</default>
-			</transform-names>
-			
-			<attribute-types>
-				<attribute>
-					<name>asdfsdf</name>
-					<type>INTEGER</type>
-				</attribute>
-				<default>OTHER</default>
-			</attribute-types>
-		</from-sql>
-
 		<from-ddl>
 			<query>
-				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
+				<sql>select * from cmf_object where object_id = ${objectId}</sql>
 				<parameter>
-					<name>param1</name>
-					<value>...JEXL...</value>
-				</parameter>
-				<parameter>
-					<name>param2</name>
-					<value>...JEXL...</value>
-				</parameter>
-				<parameter>
-					<name>param3</name>
-					<value>...JEXL...</value>
+					<name>objectId</name>
+					<value lang="jexl">`{0${obj.type.ordinal()}-${obj.id}}`</value>
 				</parameter>
 			</query>
 
-			<ignore-columns>col1,col2,col3</ignore-columns>
+			<ignore-columns>tier_id,object_number</ignore-columns>
 			<transform-names>
 				<map>
-					<from>att_value_1</from>
-					<to>cmis:someAttributeName</to>
+					<from>object_id</from>
+					<to>cmis:objectId</to>
 				</map>
-				<default>...JEXL...</default>
+				<map>
+					<from>search_key</from>
+					<to>cmf:someSearchKey</to>
+				</map>
+				<default lang="jexl">`cmf:${sqlName}`</default>
 			</transform-names>
-			
-			<attribute-types>
-				<attribute>
-					<name>asdfsdf</name>
-					<type>BOOLEAN</type>
-				</attribute>
-				<default>STRING</default>
-			</attribute-types>
 		</from-ddl>
 	</source>
 </external-metadata>

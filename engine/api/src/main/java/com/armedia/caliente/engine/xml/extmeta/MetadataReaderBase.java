@@ -142,10 +142,19 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 
 		DatabaseMetaData md = c.getMetaData();
 		this.columnNamesCaseSensitive = md.supportsMixedCaseIdentifiers();
+		if (this.attributeNameMapping != null) {
+			if (isRequiresCaseAwareTransform()) {
+				this.attributeNameMapping.initialize(this.columnNamesCaseSensitive);
+			} else {
+				this.attributeNameMapping.initialize(null);
+			}
+		}
 		this.parameterExpressions = Tools.freezeMap(parameterExpressions);
 		this.indexedNames = Tools.freezeMap(indexedNames);
 		this.finalSql = finalSql;
 	}
+
+	protected abstract boolean isRequiresCaseAwareTransform();
 
 	@Override
 	public final void initialize(Connection c) throws Exception {
@@ -316,6 +325,9 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 	}
 
 	protected void doClose() {
+		if (this.attributeNameMapping != null) {
+			this.attributeNameMapping.close();
+		}
 		this.columnNamesCaseSensitive = null;
 		this.parameterExpressions = null;
 		this.indexedNames = null;

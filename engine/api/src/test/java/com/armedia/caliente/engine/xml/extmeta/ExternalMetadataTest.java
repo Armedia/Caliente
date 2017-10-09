@@ -12,6 +12,7 @@ import org.junit.Test;
 import com.armedia.caliente.engine.extmeta.ExternalMetadataLoader;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
@@ -29,21 +30,6 @@ public class ExternalMetadataTest {
 		System.setProperty("h2.test.path", dbPath);
 		return new ExternalMetadataLoader(cfg);
 	}
-
-	/*
-	{07-0800144c80028f75}
-	{07-0800144c80028f76}
-	{07-0800144c80028f7b}
-	{07-0800144c8002aba2}
-	{07-0800144c8002abc8}
-	{07-0800144c8002abe3}
-	{07-0800144c8002ac02}
-	{07-0800144c8002ac08}
-	{07-0800144c8002ac0e}
-	{07-0800144c8002ac14}
-	{07-0800144c8002ac1d}
-	{07-0800144c8002ac23}
-	 */
 
 	@Test
 	public void testSQL() throws Exception {
@@ -455,6 +441,114 @@ public class ExternalMetadataTest {
 
 			for (int i = 0; i < count; i++) {
 				Assert.assertEquals(values[i], att.getValue(i).asString());
+			}
+		}
+	}
+
+	@Test
+	public void testDDL() throws Exception {
+		ExternalMetadataLoader loader = getEMDL("resource:external-metadata-testddl.xml");
+		loader.initialize();
+		CmfAttributeTranslator<CmfValue> translator = CmfAttributeTranslator.CMFVALUE_TRANSLATOR;
+		Set<String> secondaries = Collections.emptySet();
+		List<CmfObjectRef> parentIds = Collections.emptyList();
+		CmfObject<CmfValue> obj = new CmfObject<>( //
+			translator, //
+			CmfType.DOCUMENT, //
+			"09de75d180020638", //
+			"/CMSMFTests/LANDING/ACCESS/READ_NONE/primary.png", //
+			parentIds, //
+			0, //
+			"09de75d180020638", //
+			false, //
+			"09de75d180020638", //
+			"subtype", //
+			secondaries, //
+			"test", //
+			"Test2", //
+			null //
+		);
+
+		Object[][] data = {
+			{
+				"cmf:HISTORY_CURRENT", 1, CmfDataType.BOOLEAN, new Object[] {
+					true,
+				}
+			}, //
+			{
+				"cmf:HISTORY_ID", 1, CmfDataType.STRING, new Object[] {
+					"09de75d180020638",
+				}
+			}, //
+			{
+				"cmf:OBJECT_LABEL", 1, CmfDataType.STRING, new Object[] {
+					"/CMSMFTests/LANDING/ACCESS/READ_NONE/primary.png [1.0,CURRENT]",
+				}
+			}, //
+			{
+				"cmf:OBJECT_NAME", 1, CmfDataType.STRING, new Object[] {
+					"primary.png",
+				}
+			}, //
+			{
+				"cmf:OBJECT_SUBTYPE", 1, CmfDataType.STRING, new Object[] {
+					"dm_document",
+				}
+			}, //
+			{
+				"cmf:OBJECT_TYPE", 1, CmfDataType.STRING, new Object[] {
+					"DOCUMENT",
+				}
+			}, //
+			{
+				"cmf:PRODUCT_NAME", 1, CmfDataType.STRING, new Object[] {
+					"Documentum",
+				}
+			}, //
+			{
+				"cmf:PRODUCT_VERSION", 1, CmfDataType.STRING, new Object[] {
+					"6.6.0.055 P3400 Win32.SQLServer",
+				}
+			}, //
+			{
+				"cmf:someSearchKey", 1, CmfDataType.STRING, new Object[] {
+					"09de75d180020638",
+				}
+			}, //
+			{
+				"cmis:objectId", 1, CmfDataType.STRING, new Object[] {
+					"{07-09de75d180020638}",
+				}
+			}, //
+		};
+		Map<String, CmfAttribute<CmfValue>> attributes = loader.getAttributeValues(obj);
+		Assert.assertNotNull(attributes);
+		Assert.assertFalse(attributes.isEmpty());
+		for (Object[] d : data) {
+			Assert.assertEquals(4, d.length);
+			final String name = Tools.toString(d[0]);
+			Assert.assertNotNull(name);
+			final Integer count = Tools.decodeInteger(d[1]);
+			Assert.assertNotNull(count);
+			final CmfDataType type = CmfDataType.class.cast(d[2]);
+			Assert.assertNotNull(type);
+			final Object[] values = (Object[]) d[3];
+			Assert.assertNotNull(values);
+			Assert.assertEquals(count.intValue(), values.length);
+			Assert.assertTrue(attributes.containsKey(name));
+			CmfAttribute<CmfValue> att = attributes.get(name);
+			Assert.assertNotNull(att);
+			Assert.assertTrue(att.hasValues());
+			Assert.assertEquals(name, att.getName());
+			Assert.assertSame(type, att.getType());
+
+			int actualCount = att.getValueCount();
+			List<CmfValue> actualValues = att.getValues();
+			Assert.assertEquals(count.intValue(), actualCount);
+			Assert.assertEquals(actualCount, actualValues.size());
+
+			for (int i = 0; i < count; i++) {
+				Assert.assertEquals(values[i], att.getValue(i).asObject());
 			}
 		}
 	}

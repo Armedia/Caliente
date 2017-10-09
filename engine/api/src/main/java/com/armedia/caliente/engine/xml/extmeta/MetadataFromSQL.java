@@ -57,6 +57,11 @@ public class MetadataFromSQL extends MetadataReaderBase {
 	}
 
 	@Override
+	protected boolean isRequiresCaseAwareTransform() {
+		return false;
+	}
+
+	@Override
 	protected void doInitialize(Connection c) throws Exception {
 		if (this.names == null) { throw new ExternalMetadataException(
 			"No attribute names defined for this SQL lookup"); }
@@ -147,5 +152,6 @@ public class MetadataFromSQL extends MetadataReaderBase {
 	protected void doClose() {
 		this.names.close();
 		this.names = null;
+		super.doClose();
 	}
 }
