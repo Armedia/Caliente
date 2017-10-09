@@ -207,7 +207,10 @@ public class MetadataSource {
 						}
 					}
 				}
-				return null;
+				if (finalAttributes.isEmpty()) {
+					finalAttributes = null;
+				}
+				return finalAttributes;
 			} finally {
 				DbUtils.closeQuietly(c);
 			}
