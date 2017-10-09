@@ -16,6 +16,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.extmeta.ExternalMetadataException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
@@ -57,7 +58,8 @@ public class MetadataFromSQL extends MetadataReaderBase {
 
 	@Override
 	protected void doInitialize(Connection c) throws Exception {
-		if (this.names == null) { throw new Exception("No attribute names defined for this SQL lookup"); }
+		if (this.names == null) { throw new ExternalMetadataException(
+			"No attribute names defined for this SQL lookup"); }
 		super.doInitialize(c);
 		this.names.initialize(c);
 	}

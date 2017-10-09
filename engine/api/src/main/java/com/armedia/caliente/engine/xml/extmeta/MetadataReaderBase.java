@@ -24,6 +24,7 @@ import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
+import com.armedia.caliente.engine.extmeta.ExternalMetadataException;
 import com.armedia.caliente.engine.xml.Expression;
 import com.armedia.caliente.engine.xml.Expression.ScriptContextConfig;
 import com.armedia.caliente.engine.xml.ExpressionException;
@@ -98,7 +99,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 	}
 
 	protected void doInitialize(Connection c) throws Exception {
-		if (this.query == null) { throw new Exception("No query defined for this SQL lookup"); }
+		if (this.query == null) { throw new ExternalMetadataException("No query defined for this SQL lookup"); }
 		// Step 1: make an index of the referenced parameters...
 		// Here we use a list instead of a set because the parameter's position on the list is
 		// relevant, and we can have one parameter referenced multiple times
@@ -129,7 +130,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 				missing.add(p);
 			}
 		}
-		if (!missing.isEmpty()) { throw new Exception(String.format(
+		if (!missing.isEmpty()) { throw new ExternalMetadataException(String.format(
 			"The given SQL query references the following parameters that have no expression associated: %s",
 			missing)); }
 
@@ -193,8 +194,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		Map<String, Object> resultCache = new HashMap<>();
 		for (final String parameter : this.parameterExpressions.keySet()) {
 			Expression expression = this.parameterExpressions.get(parameter);
-			Object value = evaluateExpression(expression, object, sqlAttributeName);
-			resultCache.put(parameter, value);
+			resultCache.put(parameter, evaluateExpression(expression, object, sqlAttributeName));
 		}
 		for (final Integer i : this.indexedNames.keySet()) {
 			final String name = this.indexedNames.get(i);
