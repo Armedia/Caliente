@@ -15,7 +15,11 @@ public class Transformer implements CmfTransformer {
 	private final Transformations transformations;
 
 	public Transformer(String location) throws TransformationException {
-		this.transformations = Transformer.INSTANCES.getInstance(location);
+		try {
+			this.transformations = Transformer.INSTANCES.getInstance(location);
+		} catch (Exception e) {
+			throw new TransformationException("Failed to load the transformation configuration", e);
+		}
 	}
 
 	private TransformationContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {

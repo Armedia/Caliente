@@ -77,7 +77,7 @@ public class XmlInstances<T extends XmlBase> {
 		return f.toURI().toURL();
 	}
 
-	public T getInstance(String location) throws TransformationException {
+	public T getInstance(String location) throws Exception {
 		URL url = null;
 		if (location == null) {
 			try {
@@ -85,7 +85,7 @@ public class XmlInstances<T extends XmlBase> {
 				// If nothing was returned, then we return no transformer...
 				if (url == null) { return null; }
 			} catch (FileNotFoundException | MalformedURLException e) {
-				throw new TransformationException(
+				throw new Exception(
 					String.format("Failed to load the default %s file [%s]", this.label, this.defaultFileName), e);
 			}
 		}
@@ -101,7 +101,7 @@ public class XmlInstances<T extends XmlBase> {
 					url = Thread.currentThread().getContextClassLoader().getResource(uri.getSchemeSpecificPart());
 					if (url == null) {
 						// No match!! Explode!
-						throw new TransformationException(
+						throw new Exception(
 							String.format("Failed to locate the specified %s file [%s] in the classpath", this.label,
 								uri.getSchemeSpecificPart()));
 					}
@@ -127,8 +127,7 @@ public class XmlInstances<T extends XmlBase> {
 			try {
 				url = getFileURL(location, true);
 			} catch (FileNotFoundException | MalformedURLException e) {
-				throw new TransformationException(
-					String.format("Failed to get the %s file URL from [%s]", this.label, location), e);
+				throw new Exception(String.format("Failed to get the %s file URL from [%s]", this.label, location), e);
 			}
 		}
 
@@ -147,7 +146,7 @@ public class XmlInstances<T extends XmlBase> {
 		return XmlBase.loadFromXML(this.objectClass, in);
 	}
 
-	public T getInstance(final URL resource) throws TransformationException {
+	public T getInstance(final URL resource) throws Exception {
 		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
 		final URL key = normalize(resource);
 		try {

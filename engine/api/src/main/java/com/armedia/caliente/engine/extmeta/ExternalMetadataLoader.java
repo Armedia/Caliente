@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.ExternalMetadata;
 import com.armedia.caliente.engine.xml.XmlInstances;
 import com.armedia.caliente.engine.xml.extmeta.MetadataSource;
@@ -21,7 +20,7 @@ public class ExternalMetadataLoader {
 
 	private final List<MetadataSource> sources = new ArrayList<>();
 
-	public ExternalMetadataLoader(String location) throws TransformationException {
+	public ExternalMetadataLoader(String location) throws Exception {
 		this.metadata = ExternalMetadataLoader.INSTANCES.getInstance(location);
 	}
 
