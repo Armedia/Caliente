@@ -127,9 +127,8 @@ public class MetadataSource {
 				// Set the context with the newly-found DataSource
 				DataSource dataSource = ds.getDataSource();
 
-				Connection c = dataSource.getConnection();
 				List<AttributeValuesLoader> initializedLoaders = new ArrayList<>();
-				try {
+				try (final Connection c = dataSource.getConnection()) {
 					for (AttributeValuesLoader loader : getLoaders()) {
 						if (loader != null) {
 							loader.initialize(c);
@@ -140,7 +139,6 @@ public class MetadataSource {
 					if (!initializedLoaders.isEmpty()) {
 						this.initializedLoaders = initializedLoaders;
 					}
-					DbUtils.closeQuietly(c);
 				}
 
 				this.dataSource = dataSource;
