@@ -1,6 +1,8 @@
 package com.armedia.caliente.engine.xml.extmeta;
 
+import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
@@ -21,6 +23,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
@@ -59,6 +62,9 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 
 	@XmlTransient
 	protected Map<Integer, String> indexedNames = null;
+
+	@XmlTransient
+	protected Boolean columnNamesCaseSensitive = false;
 
 	public final ParameterizedQuery getQuery() {
 		return this.query;
@@ -134,6 +140,8 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 			"The given SQL query references the following parameters that have no expression associated: %s",
 			missing)); }
 
+		DatabaseMetaData md = c.getMetaData();
+		this.columnNamesCaseSensitive = md.supportsMixedCaseIdentifiers();
 		this.parameterExpressions = Tools.freezeMap(parameterExpressions);
 		this.indexedNames = Tools.freezeMap(indexedNames);
 		this.finalSql = finalSql;
@@ -194,7 +202,8 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		Map<String, Object> resultCache = new HashMap<>();
 		for (final String parameter : this.parameterExpressions.keySet()) {
 			Expression expression = this.parameterExpressions.get(parameter);
-			resultCache.put(parameter, evaluateExpression(expression, object, sqlAttributeName));
+			Object result = evaluateExpression(expression, object, sqlAttributeName);
+			resultCache.put(parameter, result);
 		}
 		for (final Integer i : this.indexedNames.keySet()) {
 			final String name = this.indexedNames.get(i);
@@ -206,6 +215,68 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 			}
 		}
 		return ps.executeQuery();
+	}
+
+	protected final Object getValue(ResultSet rs, String columnName, CmfDataType type) throws Exception {
+		switch (type) {
+			case BOOLEAN:
+				return rs.getBoolean(columnName);
+
+			case DATETIME:
+				return rs.getDate(columnName);
+
+			case DOUBLE:
+				return rs.getDouble(columnName);
+
+			case INTEGER:
+				return rs.getLong(columnName);
+
+			case URI:
+			case HTML:
+			case ID:
+			case STRING:
+				return rs.getString(columnName);
+
+			case BASE64_BINARY:
+				try (InputStream in = rs.getBinaryStream(columnName)) {
+					if (in == null) { return null; }
+					return IOUtils.toByteArray(in);
+				}
+
+			default:
+				throw new Exception(String.format("Unsupported data type %s for column %s", type.name(), columnName));
+		}
+	}
+
+	protected final Object getValue(ResultSet rs, int columnIndex, CmfDataType type) throws Exception {
+		switch (type) {
+			case BOOLEAN:
+				return rs.getBoolean(columnIndex);
+
+			case DATETIME:
+				return rs.getDate(columnIndex);
+
+			case DOUBLE:
+				return rs.getDouble(columnIndex);
+
+			case INTEGER:
+				return rs.getLong(columnIndex);
+
+			case URI:
+			case HTML:
+			case ID:
+			case STRING:
+				return rs.getString(columnIndex);
+
+			case BASE64_BINARY:
+				try (InputStream in = rs.getBinaryStream(columnIndex)) {
+					if (in == null) { return null; }
+					return IOUtils.toByteArray(in);
+				}
+
+			default:
+				throw new Exception(String.format("Unsupported data type %s for column %s", type.name(), columnIndex));
+		}
 	}
 
 	protected final CmfDataType decodeSQLType(int type) {
@@ -245,6 +316,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 	}
 
 	protected void doClose() {
+		this.columnNamesCaseSensitive = null;
 		this.parameterExpressions = null;
 		this.indexedNames = null;
 		this.finalSql = null;

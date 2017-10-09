@@ -4,8 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.locks.Lock;
@@ -15,6 +13,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.extmeta.ExternalMetadataException;
 import com.armedia.caliente.store.CmfAttribute;
@@ -76,8 +76,8 @@ public class MetadataFromSQL extends MetadataReaderBase {
 				for (final String sqlAttributeName : this.names) {
 					try (final ResultSet rs = getResultSet(ps, object, sqlAttributeName)) {
 						CmfValueCodec<V> codec = null;
-						CmfAttribute<V> attribute = new CmfAttribute<>(null);
-						List<V> values = new ArrayList<>();
+						CmfAttribute<V> attribute = null;
+						Integer columnType = null;
 						int columnIndex = 0;
 						while (rs.next()) {
 							if (attribute == null) {
@@ -87,11 +87,20 @@ public class MetadataFromSQL extends MetadataReaderBase {
 								final int columns = md.getColumnCount();
 								CmfDataType type = getMappedAttributeType(sqlAttributeName);
 								for (int i = 1; i <= columns; i++) {
-									if ((columnName == null) || Tools.equals(columnName, md.getColumnName(i))) {
+									String soughtColumnName = columnName;
+									String thisColumnName = md.getColumnName(i);
+									if (!this.columnNamesCaseSensitive) {
+										// If column names aren't case sensitive, we fold to
+										// uppercase for the comparison
+										thisColumnName = thisColumnName.toUpperCase();
+										soughtColumnName = StringUtils.upperCase(soughtColumnName);
+									}
+									if ((soughtColumnName == null) || Tools.equals(soughtColumnName, thisColumnName)) {
 										// Here we try to decode the data type, but we also find the
 										// column's index
+										columnType = md.getColumnType(i);
 										if (type == null) {
-											type = decodeSQLType(md.getColumnType(i));
+											type = decodeSQLType(columnType);
 										}
 										if (type == CmfDataType.OTHER) { throw new Exception(String.format(
 											"Unsupported data type [%s] for column [%s] (query = %s), searching for attribute [%s]",
@@ -104,21 +113,21 @@ public class MetadataFromSQL extends MetadataReaderBase {
 
 								// Assume attributes are multivalued
 								String attName = transformAttributeName(sqlAttributeName);
+								// By default, all attributes are multivalued...
 								attribute = new CmfAttribute<>(attName, type, true);
-							}
-							if (codec == null) {
 								codec = translator.getCodec(attribute.getType());
 							}
 							V finalValue = codec.getNull();
 							// If we have a column name, use it. Otherwise, default to the first
 							// column in the result set
-							Object value = rs.getObject(columnIndex);
+							Object value = getValue(rs, columnIndex, attribute.getType());
 							if (!rs.wasNull()) {
 								finalValue = codec.decodeValue(new CmfValue(attribute.getType(), value));
 							}
-							values.add(finalValue);
+							attribute.addValue(finalValue);
 						}
-						if (attribute != null) {
+						// Only include attributes with values...
+						if ((attribute != null) && attribute.hasValues()) {
 							attributes.put(attribute.getName(), attribute);
 						}
 					}

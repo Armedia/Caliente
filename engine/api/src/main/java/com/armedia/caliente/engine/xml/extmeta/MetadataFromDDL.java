@@ -122,7 +122,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 
 							CmfValueCodec<V> codec = translator.getCodec(attribute.getType());
 							V finalValue = codec.getNull();
-							Object value = rs.getObject(column);
+							Object value = getValue(rs, column, attribute.getType());
 							if (!rs.wasNull()) {
 								finalValue = codec.decodeValue(new CmfValue(attribute.getType(), value));
 							}
