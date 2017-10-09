@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.armedia.caliente.engine.xml.ExternalMetadata;
 import com.armedia.caliente.engine.xml.XmlInstanceException;
 import com.armedia.caliente.engine.xml.XmlInstances;
@@ -13,6 +16,8 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 
 public class ExternalMetadataLoader {
+
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private static final XmlInstances<ExternalMetadata> INSTANCES = new XmlInstances<>(ExternalMetadata.class,
 		"external-metadata.xml");
@@ -66,12 +71,22 @@ public class ExternalMetadataLoader {
 							object.getType(), object.getLabel(), object.getId()),
 						e);
 				}
+				this.log.warn("Exception caught while retrieving external metadata for {} [{}]({})", object.getType(),
+					object.getLabel(), object.getId(), e);
+				continue;
 			}
-			if (desc.isFailOnMissing() && (m == null)) {
-				// The data is required, but not present - explode!!
-				throw new ExternalMetadataException(
-					String.format("Did not find any required external metadata for %s [%s](%s)", object.getType(),
-						object.getLabel(), object.getId()));
+			if (m == null) {
+				if (desc.isFailOnMissing()) {
+					// The data is required, but not present - explode!!
+					throw new ExternalMetadataException(
+						String.format("Did not find any required external metadata for %s [%s](%s)", object.getType(),
+							object.getLabel(), object.getId()));
+				}
+				if (this.log.isTraceEnabled()) {
+					this.log.warn("Did not retrieve any external metadata for {} [{}]({})", object.getType(),
+						object.getLabel(), object.getId());
+				}
+				continue;
 			}
 
 			// All is well...store what was retrieved
