@@ -42,7 +42,26 @@ public class ExternalMetadataLoader {
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
 		Map<String, CmfAttribute<V>> finalMap = new HashMap<>();
 		for (final MetadataSource desc : this.sources) {
-			finalMap.putAll(desc.getAttributeValues(object));
+			Map<String, CmfAttribute<V>> m = null;
+			try {
+				m = desc.getAttributeValues(object);
+			} catch (Exception e) {
+				if (desc.isFailOnError()) {
+					// There was an error which we should fail on
+					throw new Exception(
+						String.format("Exception caught while loading required external metadata for %s [%s](%s)",
+							object.getType(), object.getLabel(), object.getId()),
+						e);
+				}
+			}
+			if (desc.isFailOnMissing() && (m == null)) {
+				// The data is required, but not present - explode!!
+				throw new Exception(String.format("Did not find any required external metadata for %s [%s](%s)",
+					object.getType(), object.getLabel(), object.getId()));
+			}
+
+			// All is well...store what was retrieved
+			finalMap.putAll(m);
 		}
 		return finalMap;
 	}
