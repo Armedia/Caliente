@@ -99,7 +99,11 @@ public class ExternalMetadataLoader {
 		if (this.metadata == null) { return; }
 		try {
 			for (MetadataSource desc : this.sources) {
-				desc.close();
+				try {
+					desc.close();
+				} catch (Throwable t) {
+					this.log.warn("Exception caught while closing a metadata source", t);
+				}
 			}
 		} finally {
 			this.metadata = null;
