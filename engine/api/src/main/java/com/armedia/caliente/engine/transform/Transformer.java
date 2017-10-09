@@ -37,6 +37,10 @@ public class Transformer implements CmfTransformer {
 
 	@Override
 	public CmfObject<CmfValue> transform(CmfValueMapper mapper, CmfObject<CmfValue> object) throws CmfStorageException {
+		if (this.transformations == null) {
+			//
+			return object;
+		}
 		TransformationContext ctx = createContext(mapper, object);
 		try {
 			try {
