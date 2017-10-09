@@ -174,8 +174,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				if (StringUtils.isEmpty(s)) {
 					continue;
 				}
-				parentData[1] = i;
-				parentData[2] = s;
+				secondariesData[1] = i;
+				secondariesData[2] = s;
 				secondariesParameters.add(secondariesData.clone());
 				i++;
 			}
