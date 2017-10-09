@@ -249,6 +249,14 @@ public class Expression {
 		}
 	}
 
+	@Override
+	public String toString() {
+		String lang = getLang();
+		String script = getScript();
+		if (lang == null) { return script; }
+		return String.format("/* %s */%n%s", lang, script);
+	}
+
 	public static Expression constant(String value) {
 		Expression e = new Expression();
 		e.setScript(value);
@@ -260,4 +268,5 @@ public class Expression {
 		if (e == null) { return null; }
 		return e.evaluate(cfg);
 	}
+
 }
