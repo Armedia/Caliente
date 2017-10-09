@@ -22,6 +22,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +87,7 @@ public class MetadataSource {
 			String name = s.getName();
 			String value = s.getValue();
 			if ((name != null) && (value != null)) {
-				ret.put(name, value);
+				ret.put(name, StrSubstitutor.replaceSystemProperties(value));
 			}
 		}
 		return ret;
