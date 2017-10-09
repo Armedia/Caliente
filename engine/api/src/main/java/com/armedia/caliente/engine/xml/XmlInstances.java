@@ -19,7 +19,6 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
-import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.commons.utilities.Tools;
 
 public class XmlInstances<T extends XmlBase> {
@@ -77,7 +76,7 @@ public class XmlInstances<T extends XmlBase> {
 		return f.toURI().toURL();
 	}
 
-	public T getInstance(String location) throws Exception {
+	public T getInstance(String location) throws XmlInstanceException {
 		URL url = null;
 		if (location == null) {
 			try {
@@ -85,7 +84,7 @@ public class XmlInstances<T extends XmlBase> {
 				// If nothing was returned, then we return no transformer...
 				if (url == null) { return null; }
 			} catch (FileNotFoundException | MalformedURLException e) {
-				throw new Exception(
+				throw new XmlInstanceException(
 					String.format("Failed to load the default %s file [%s]", this.label, this.defaultFileName), e);
 			}
 		}
@@ -101,7 +100,7 @@ public class XmlInstances<T extends XmlBase> {
 					url = Thread.currentThread().getContextClassLoader().getResource(uri.getSchemeSpecificPart());
 					if (url == null) {
 						// No match!! Explode!
-						throw new Exception(
+						throw new XmlInstanceException(
 							String.format("Failed to locate the specified %s file [%s] in the classpath", this.label,
 								uri.getSchemeSpecificPart()));
 					}
@@ -127,7 +126,8 @@ public class XmlInstances<T extends XmlBase> {
 			try {
 				url = getFileURL(location, true);
 			} catch (FileNotFoundException | MalformedURLException e) {
-				throw new Exception(String.format("Failed to get the %s file URL from [%s]", this.label, location), e);
+				throw new XmlInstanceException(
+					String.format("Failed to get the %s file URL from [%s]", this.label, location), e);
 			}
 		}
 
@@ -146,7 +146,7 @@ public class XmlInstances<T extends XmlBase> {
 		return XmlBase.loadFromXML(this.objectClass, in);
 	}
 
-	public T getInstance(final URL resource) throws Exception {
+	public T getInstance(final URL resource) throws XmlInstanceException {
 		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
 		final URL key = normalize(resource);
 		try {
@@ -165,7 +165,7 @@ public class XmlInstances<T extends XmlBase> {
 				}
 			});
 		} catch (ConcurrentException e) {
-			throw new TransformationException(e.getMessage(), e.getCause());
+			throw new XmlInstanceException(e.getMessage(), e.getCause());
 		}
 	}
 

@@ -1,6 +1,8 @@
 package com.armedia.caliente.engine.transform;
 
-public class TransformationException extends Exception {
+import com.armedia.caliente.engine.TransferEngineException;
+
+public class TransformationException extends TransferEngineException {
 	private static final long serialVersionUID = 1L;
 
 	public TransformationException() {

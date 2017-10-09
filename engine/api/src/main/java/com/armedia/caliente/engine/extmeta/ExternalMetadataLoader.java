@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.armedia.caliente.engine.xml.ExternalMetadata;
+import com.armedia.caliente.engine.xml.XmlInstanceException;
 import com.armedia.caliente.engine.xml.XmlInstances;
 import com.armedia.caliente.engine.xml.extmeta.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
@@ -20,11 +21,23 @@ public class ExternalMetadataLoader {
 
 	private final List<MetadataSource> sources = new ArrayList<>();
 
-	public ExternalMetadataLoader(String location) throws Exception {
-		this.metadata = ExternalMetadataLoader.INSTANCES.getInstance(location);
+	public ExternalMetadataLoader(String location) throws ExternalMetadataException {
+		try {
+			this.metadata = ExternalMetadataLoader.INSTANCES.getInstance(location);
+		} catch (XmlInstanceException e) {
+			String pre = "";
+			String post = "";
+			if (location == null) {
+				pre = "default ";
+			} else {
+				post = String.format(" from [%s]", location);
+			}
+			throw new ExternalMetadataException(
+				String.format("Failed to load the %sexternal metadata configuration%s", pre, post), e);
+		}
 	}
 
-	public synchronized void initialize() throws Exception {
+	public synchronized void initialize() throws ExternalMetadataException {
 		if (this.metadata == null) { return; }
 		for (final MetadataSource desc : this.metadata.getSources()) {
 			try {
@@ -32,14 +45,14 @@ public class ExternalMetadataLoader {
 			} catch (Exception e) {
 				if (desc.isFailOnError()) {
 					// This item is required, so we must abort
-					throw new Exception("Failed to initialize a required external metadata source", e);
+					throw new ExternalMetadataException("Failed to initialize a required external metadata source", e);
 				}
 			}
 			this.sources.add(desc);
 		}
 	}
 
-	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws Exception {
+	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws ExternalMetadataException {
 		Map<String, CmfAttribute<V>> finalMap = new HashMap<>();
 		for (final MetadataSource desc : this.sources) {
 			Map<String, CmfAttribute<V>> m = null;
@@ -48,7 +61,7 @@ public class ExternalMetadataLoader {
 			} catch (Exception e) {
 				if (desc.isFailOnError()) {
 					// There was an error which we should fail on
-					throw new Exception(
+					throw new ExternalMetadataException(
 						String.format("Exception caught while loading required external metadata for %s [%s](%s)",
 							object.getType(), object.getLabel(), object.getId()),
 						e);
@@ -56,8 +69,9 @@ public class ExternalMetadataLoader {
 			}
 			if (desc.isFailOnMissing() && (m == null)) {
 				// The data is required, but not present - explode!!
-				throw new Exception(String.format("Did not find any required external metadata for %s [%s](%s)",
-					object.getType(), object.getLabel(), object.getId()));
+				throw new ExternalMetadataException(
+					String.format("Did not find any required external metadata for %s [%s](%s)", object.getType(),
+						object.getLabel(), object.getId()));
 			}
 
 			// All is well...store what was retrieved

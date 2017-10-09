@@ -1,6 +1,8 @@
 package com.armedia.caliente.engine.xml;
 
-public class ExpressionException extends Exception {
+import com.armedia.caliente.engine.TransferEngineException;
+
+public class ExpressionException extends TransferEngineException {
 	private static final long serialVersionUID = 1L;
 
 	public ExpressionException() {

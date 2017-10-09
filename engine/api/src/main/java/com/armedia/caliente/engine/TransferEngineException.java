@@ -26,4 +26,9 @@ public class TransferEngineException extends Exception {
 	public TransferEngineException(Throwable cause) {
 		super(cause);
 	}
+
+	public TransferEngineException(String message, Throwable cause, boolean enableSuppression,
+		boolean writableStackTrace) {
+		super(message, cause, enableSuppression, writableStackTrace);
+	}
 }
