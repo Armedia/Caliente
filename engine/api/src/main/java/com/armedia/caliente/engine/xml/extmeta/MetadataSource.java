@@ -22,6 +22,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.dbutils.DbUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -35,6 +37,9 @@ import com.armedia.commons.utilities.Tools;
 	"settings", "loaders"
 })
 public class MetadataSource {
+
+	@XmlTransient
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElementWrapper(name = "settings")
 	@XmlElement(name = "setting", required = true)
@@ -221,7 +226,7 @@ public class MetadataSource {
 					try {
 						loader.close();
 					} catch (Throwable t) {
-						// TODO log this exception
+						this.log.error("Exception caught closing an attribute loader", t);
 					}
 				}
 				this.initializedLoaders = null;
