@@ -16,6 +16,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import javax.script.SimpleScriptContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -199,7 +200,8 @@ public class Expression {
 		// We have an engine, so strip out the script for (slightly) faster parsing
 		final String script = StringUtils.strip(getScript());
 		final String lang = getLang();
-		final ScriptContext scriptCtx = engine.getContext();
+		final ScriptContext scriptCtx = new SimpleScriptContext();
+		engine.setContext(scriptCtx);
 
 		scriptCtx.setWriter(new PrintWriter(System.out));
 		scriptCtx.setErrorWriter(new PrintWriter(System.err));
