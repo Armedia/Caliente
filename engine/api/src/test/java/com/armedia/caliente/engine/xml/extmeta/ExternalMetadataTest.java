@@ -466,7 +466,7 @@ public class ExternalMetadataTest {
 			secondaries, //
 			"test", //
 			"Test2", //
-			null //
+			217L //
 		);
 
 		Object[][] data = {
@@ -518,6 +518,11 @@ public class ExternalMetadataTest {
 			{
 				"cmis:objectId", 1, CmfDataType.STRING, new Object[] {
 					"{07-09de75d180020638}",
+				}
+			}, //
+			{
+				"cmf:objectIndexWithinExport", 1, CmfDataType.INTEGER, new Object[] {
+					217L,
 				}
 			}, //
 		};

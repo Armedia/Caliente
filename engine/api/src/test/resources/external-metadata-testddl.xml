@@ -15,11 +15,15 @@
 				</parameter>
 			</query>
 
-			<ignore-columns>tier_id,object_number</ignore-columns>
+			<ignore-columns>tier_id</ignore-columns>
 			<transform-names>
 				<map>
 					<from>object_id</from>
 					<to>cmis:objectId</to>
+				</map>
+				<map>
+					<from>object_number</from>
+					<to>cmf:objectIndexWithinExport</to>
 				</map>
 				<map>
 					<from>search_key</from>
