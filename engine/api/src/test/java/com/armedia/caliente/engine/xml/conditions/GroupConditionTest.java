@@ -8,11 +8,19 @@ import java.util.Objects;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.transform.ConditionException;
-import com.armedia.caliente.engine.transform.ObjectContext;
+import com.armedia.caliente.engine.dynamic.Condition;
+import com.armedia.caliente.engine.dynamic.ConditionException;
+import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.jaxb.conditions.ConditionGroup;
+import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupAnd;
+import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupNand;
+import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupNor;
+import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupNot;
+import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupOneof;
+import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupOr;
+import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupXnor;
+import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupXor;
 import com.armedia.caliente.engine.transform.TestObjectContext;
-import com.armedia.caliente.engine.xml.Condition;
-import com.armedia.caliente.engine.xml.ConditionGroup;
 import com.armedia.caliente.engine.xml.ConditionTools;
 
 public class GroupConditionTest {

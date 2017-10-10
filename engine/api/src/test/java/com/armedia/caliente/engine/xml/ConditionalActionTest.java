@@ -5,8 +5,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.transform.ActionException;
-import com.armedia.caliente.engine.transform.ObjectContext;
+import com.armedia.caliente.engine.dynamic.ActionException;
+import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
 import com.armedia.caliente.engine.transform.TestObjectContext;
 
 public class ConditionalActionTest {

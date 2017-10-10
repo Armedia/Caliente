@@ -1,9 +1,12 @@
 package com.armedia.caliente.engine.transform;
 
+import com.armedia.caliente.engine.dynamic.ActionException;
+import com.armedia.caliente.engine.dynamic.DefaultTransformableObjectFacade;
+import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.jaxb.Transformations;
+import com.armedia.caliente.engine.dynamic.jaxb.XmlInstanceException;
+import com.armedia.caliente.engine.dynamic.jaxb.XmlInstances;
 import com.armedia.caliente.engine.extmeta.ExternalMetadataLoader;
-import com.armedia.caliente.engine.xml.Transformations;
-import com.armedia.caliente.engine.xml.XmlInstanceException;
-import com.armedia.caliente.engine.xml.XmlInstances;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfTransformer;

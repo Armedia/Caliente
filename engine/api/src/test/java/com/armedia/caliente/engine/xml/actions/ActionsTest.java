@@ -12,14 +12,24 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.transform.ActionException;
 import com.armedia.caliente.engine.transform.TestObjectFacade;
+import com.armedia.caliente.engine.dynamic.ActionException;
+import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
+import com.armedia.caliente.engine.dynamic.jaxb.Expression;
+import com.armedia.caliente.engine.dynamic.jaxb.RegularExpression;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.AbortTransformation;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.AttributeSet;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.EndTransformation;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.MapAttributeValue;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.MapValueCase;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.SecondarySubtypeAdd;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.SecondarySubtypeRemove;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.SecondarySubtypeReplace;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.SubtypeReplace;
+import com.armedia.caliente.engine.dynamic.jaxb.actions.SubtypeSet;
 import com.armedia.caliente.engine.transform.TestObjectContext;
 import com.armedia.caliente.engine.transform.TransformationCompletedException;
-import com.armedia.caliente.engine.transform.TypedValue;
-import com.armedia.caliente.engine.xml.Comparison;
-import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.xml.RegularExpression;
 import com.armedia.caliente.store.CmfDataType;
 
 public class ActionsTest {

@@ -1,0 +1,30 @@
+
+package com.armedia.caliente.engine.dynamic.jaxb.conditions;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlType;
+
+import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.dynamic.Condition;
+import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.TypedValue;
+
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "conditionIsFirstVersion.t")
+public class IsFirstVersion implements Condition {
+
+	@Override
+	public boolean check(ObjectContext ctx) {
+		TypedValue index = ctx.getTransformableObject().getPriv().get(IntermediateProperty.VERSION_INDEX.encode());
+		Object v = ((index != null) && !index.isEmpty() ? index.getValue() : null);
+		if (v == null) { return true; }
+		// Is it the number 1?
+		try {
+			return (Integer.valueOf(v.toString()) == 1);
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
+
+}

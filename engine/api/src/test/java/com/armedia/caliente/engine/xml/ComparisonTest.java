@@ -14,7 +14,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.xml.Comparison;
+import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 

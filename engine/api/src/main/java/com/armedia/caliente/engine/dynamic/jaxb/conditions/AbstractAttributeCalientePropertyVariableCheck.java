@@ -1,0 +1,45 @@
+
+package com.armedia.caliente.engine.dynamic.jaxb.conditions;
+
+import java.util.Map;
+
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.armedia.caliente.engine.dynamic.ConditionException;
+import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
+import com.armedia.caliente.store.CmfDataType;
+import com.armedia.commons.utilities.Tools;
+
+@XmlTransient
+public abstract class AbstractAttributeCalientePropertyVariableCheck extends AbstractExpressionComparison {
+
+	protected abstract Map<String, TypedValue> getCandidateValues(ObjectContext ctx);
+
+	protected abstract boolean check(TypedValue candidate);
+
+	@Override
+	public final boolean check(ObjectContext ctx) throws ConditionException {
+		final String comparand = Tools.toString(ConditionTools.eval(this, ctx));
+		final Comparison comparison = getComparison();
+		final Map<String, TypedValue> values = getCandidateValues(ctx);
+
+		if (comparison == Comparison.EQ) {
+			// Shortcut!! Look for only one candidate!
+			return check(values.get(comparand));
+		}
+
+		// Need to find a matching candidate...
+		for (String s : values.keySet()) {
+			if (comparison.check(CmfDataType.STRING, s, comparand)) {
+				// This candidate matches...if this one is empty, we're done!
+				if (check(values.get(s))) { return true; }
+			}
+		}
+
+		// None of the matching candidates fulfilled the check...so this is false
+		return false;
+	}
+
+}

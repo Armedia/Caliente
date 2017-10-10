@@ -11,9 +11,10 @@ import javax.script.ScriptEngineManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.transform.ObjectContext;
+import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.caliente.engine.transform.TestObjectContext;
-import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.store.CmfDataType;
 
 public class ExpressionTest {

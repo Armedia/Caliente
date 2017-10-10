@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.transform;
 
+import com.armedia.caliente.engine.dynamic.ObjectContext;
 import com.armedia.caliente.store.CmfValueMapper;
 
 public class TestObjectContext extends ObjectContext {

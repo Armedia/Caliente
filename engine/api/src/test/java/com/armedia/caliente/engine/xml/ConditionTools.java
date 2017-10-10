@@ -1,7 +1,8 @@
 package com.armedia.caliente.engine.xml;
 
-import com.armedia.caliente.engine.transform.ConditionException;
-import com.armedia.caliente.engine.transform.ObjectContext;
+import com.armedia.caliente.engine.dynamic.Condition;
+import com.armedia.caliente.engine.dynamic.ConditionException;
+import com.armedia.caliente.engine.dynamic.ObjectContext;
 
 public class ConditionTools {
 

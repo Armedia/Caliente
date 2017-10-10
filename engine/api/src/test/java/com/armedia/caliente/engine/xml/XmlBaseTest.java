@@ -7,6 +7,9 @@ import javax.xml.bind.JAXBException;
 
 import org.junit.Test;
 
+import com.armedia.caliente.engine.dynamic.jaxb.ExternalMetadata;
+import com.armedia.caliente.engine.dynamic.jaxb.Transformations;
+
 public class XmlBaseTest {
 
 	private InputStream getXml(String name) {
