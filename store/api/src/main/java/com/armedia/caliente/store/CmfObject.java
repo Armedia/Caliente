@@ -251,6 +251,10 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		return "";
 	}
 
+	public final String getDescription() {
+		return String.format("%s (%s)[%s]", getType().name(), this.label, getId());
+	}
+
 	@Override
 	public final String toString() {
 		final String trailer = toStringTrailer();
