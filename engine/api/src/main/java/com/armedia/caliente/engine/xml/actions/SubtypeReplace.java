@@ -15,11 +15,11 @@ public class SubtypeReplace extends AbstractSingleReplace {
 
 	@Override
 	protected String getOldValue(TransformationContext ctx) {
-		return ctx.getObject().getSubtype();
+		return ctx.getTransformableObject().getSubtype();
 	}
 
 	@Override
 	protected void setNewValue(TransformationContext ctx, String newValue) {
-		ctx.getObject().setSubtype(newValue);
+		ctx.getTransformableObject().setSubtype(newValue);
 	}
 }

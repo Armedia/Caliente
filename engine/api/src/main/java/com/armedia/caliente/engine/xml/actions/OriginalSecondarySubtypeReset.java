@@ -17,9 +17,9 @@ public class OriginalSecondarySubtypeReset extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		Set<String> secondaries = ctx.getObject().getSecondarySubtypes();
+		Set<String> secondaries = ctx.getTransformableObject().getSecondarySubtypes();
 		secondaries.clear();
-		secondaries.addAll(ctx.getObject().getOriginalSecondarySubtypes());
+		secondaries.addAll(ctx.getTransformableObject().getOriginalSecondarySubtypes());
 	}
 
 }

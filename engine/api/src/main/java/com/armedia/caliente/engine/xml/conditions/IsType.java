@@ -36,7 +36,7 @@ public class IsType implements Condition {
 		CmfType type = getValue();
 		if (type == null) { throw new TransformationException("No type value to check against"); }
 		// We can use == because this is an enum
-		return (type == ctx.getObject().getType());
+		return (type == ctx.getTransformableObject().getType());
 	}
 
 }

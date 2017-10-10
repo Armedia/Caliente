@@ -19,7 +19,7 @@ public class IsOriginalName extends AbstractSingleValueComparison {
 
 	@Override
 	protected Object getCandidateValue(TransformationContext ctx) {
-		return ctx.getObject().getOriginalName();
+		return ctx.getTransformableObject().getOriginalName();
 	}
 
 }

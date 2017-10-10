@@ -11,12 +11,12 @@ public class TestTransformationContext extends TransformationContext {
 	}
 
 	public TestTransformationContext(CmfValueMapper mapper) {
-		super(new TestObjectFacade(), mapper);
-		this.object = TestObjectFacade.class.cast(super.getObject());
+		super(null, new TestObjectFacade(), mapper);
+		this.object = TestObjectFacade.class.cast(super.getTransformableObject());
 	}
 
 	@Override
-	public TestObjectFacade getObject() {
+	public TestObjectFacade getTransformableObject() {
 		return this.object;
 	}
 

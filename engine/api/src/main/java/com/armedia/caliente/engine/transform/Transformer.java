@@ -32,7 +32,7 @@ public class Transformer implements CmfTransformer {
 	}
 
 	private TransformationContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
-		return new TransformationContext(new DefaultTransformableObjectFacade(object), mapper);
+		return new TransformationContext(object, new DefaultTransformableObjectFacade(object), mapper);
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class Transformer implements CmfTransformer {
 				// its tracks
 			}
 
-			return ctx.getObject().applyChanges(object);
+			return ctx.getTransformableObject().applyChanges(object);
 		} catch (TransformationException e) {
 			throw new CmfStorageException(
 				String.format("Exception caught while performing the transformation for %s (%s)[%s]", object.getType(),
@@ -63,8 +63,8 @@ public class Transformer implements CmfTransformer {
 
 	private void destroyContext(TransformationContext ctx) {
 		// Clean things out... to help the GC...
-		ctx.getObject().getAtt().clear();
-		ctx.getObject().getPriv().clear();
+		ctx.getTransformableObject().getAtt().clear();
+		ctx.getTransformableObject().getPriv().clear();
 		ctx.getVariables().clear();
 	}
 

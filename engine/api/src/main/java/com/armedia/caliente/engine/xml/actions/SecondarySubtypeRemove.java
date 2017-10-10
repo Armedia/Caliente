@@ -58,11 +58,11 @@ public class SecondarySubtypeRemove extends ConditionalAction {
 		Comparison comparison = getComparison();
 		if (comparison == Comparison.EQ) {
 			// Shortcut
-			ctx.getObject().getSecondarySubtypes().remove(comparand);
+			ctx.getTransformableObject().getSecondarySubtypes().remove(comparand);
 			return;
 		}
 
-		Iterator<String> it = ctx.getObject().getSecondarySubtypes().iterator();
+		Iterator<String> it = ctx.getTransformableObject().getSecondarySubtypes().iterator();
 		while (it.hasNext()) {
 			String current = it.next();
 			if (comparison.check(CmfDataType.STRING, current, comparand)) {

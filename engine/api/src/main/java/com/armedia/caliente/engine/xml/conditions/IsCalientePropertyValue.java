@@ -18,7 +18,7 @@ public class IsCalientePropertyValue extends AbstractAttributeCalientePropertyVa
 
 	@Override
 	protected Map<String, TypedValue> getCandidateValues(TransformationContext ctx) {
-		return ctx.getObject().getPriv();
+		return ctx.getTransformableObject().getPriv();
 	}
 
 }

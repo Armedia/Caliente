@@ -36,7 +36,7 @@ public class SecondarySubtypeAdd extends ConditionalAction {
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
 		String secondary = StringUtils.strip(Tools.toString(Transformations.eval(getValue(), ctx)));
 		if (!StringUtils.isEmpty(secondary)) {
-			ctx.getObject().getSecondarySubtypes().add(secondary);
+			ctx.getTransformableObject().getSecondarySubtypes().add(secondary);
 		}
 	}
 

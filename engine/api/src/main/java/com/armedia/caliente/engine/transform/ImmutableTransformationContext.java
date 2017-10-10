@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.Tools;
 
 public class ImmutableTransformationContext extends TransformationContext {
@@ -180,7 +180,8 @@ public class ImmutableTransformationContext extends TransformationContext {
 	}
 
 	public ImmutableTransformationContext(TransformationContext context) {
-		super(new ImmutableObjectData(context.getObject()), new ImmutableAttributeMapper(context.getAttributeMapper()),
+		super(context.getBaseObject(), new ImmutableObjectData(context.getTransformableObject()),
+			new ImmutableAttributeMapper(context.getAttributeMapper()),
 			ImmutableTransformationContext.makeImmutable(context.getVariables()));
 	}
 

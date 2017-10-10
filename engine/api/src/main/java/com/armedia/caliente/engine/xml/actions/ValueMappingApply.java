@@ -149,7 +149,7 @@ public class ValueMappingApply extends ConditionalAction {
 
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!
-			TypedValue candidate = ctx.getObject().getAtt().get(comparand);
+			TypedValue candidate = ctx.getTransformableObject().getAtt().get(comparand);
 			if (candidate != null) {
 				applyMapping(ctx, type, mappingName, candidate);
 			}
@@ -157,9 +157,9 @@ public class ValueMappingApply extends ConditionalAction {
 		}
 
 		// Need to find a matching candidate...
-		for (String s : ctx.getObject().getAtt().keySet()) {
+		for (String s : ctx.getTransformableObject().getAtt().keySet()) {
 			if (comparison.check(CmfDataType.STRING, s, comparand)) {
-				applyMapping(ctx, type, mappingName, ctx.getObject().getAtt().get(s));
+				applyMapping(ctx, type, mappingName, ctx.getTransformableObject().getAtt().get(s));
 			}
 		}
 	}

@@ -17,8 +17,8 @@ public class OriginalSecondarySubtypeRemove extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		Set<String> originals = ctx.getObject().getOriginalSecondarySubtypes();
-		ctx.getObject().getSecondarySubtypes().removeAll(originals);
+		Set<String> originals = ctx.getTransformableObject().getOriginalSecondarySubtypes();
+		ctx.getTransformableObject().getSecondarySubtypes().removeAll(originals);
 	}
 
 }

@@ -7,22 +7,27 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 
 import com.armedia.caliente.engine.xml.Expression.ScriptContextConfig;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 
 public class TransformationContext implements ScriptContextConfig {
 
-	private final TransformableObject object;
+	private final CmfObject<CmfValue> baseObject;
+	private final TransformableObject transformableObject;
 	private final CmfValueMapper mapper;
 
 	private final Map<String, TypedValue> variables;
 
-	public TransformationContext(TransformableObject object, CmfValueMapper mapper) {
-		this(object, mapper, null);
+	public TransformationContext(CmfObject<CmfValue> baseObject, TransformableObject transformableObject,
+		CmfValueMapper mapper) {
+		this(baseObject, transformableObject, mapper, null);
 	}
 
-	protected TransformationContext(TransformableObject object, CmfValueMapper mapper,
-		Map<String, TypedValue> variables) {
-		this.object = object;
+	protected TransformationContext(CmfObject<CmfValue> baseObject, TransformableObject transformableObject,
+		CmfValueMapper mapper, Map<String, TypedValue> variables) {
+		this.baseObject = baseObject;
+		this.transformableObject = transformableObject;
 		this.mapper = mapper;
 		if (variables == null) {
 			variables = new TreeMap<>();
@@ -30,8 +35,12 @@ public class TransformationContext implements ScriptContextConfig {
 		this.variables = variables;
 	}
 
-	public TransformableObject getObject() {
-		return this.object;
+	public CmfObject<CmfValue> getBaseObject() {
+		return this.baseObject;
+	}
+
+	public TransformableObject getTransformableObject() {
+		return this.transformableObject;
 	}
 
 	public Map<String, TypedValue> getVariables() {
@@ -45,7 +54,8 @@ public class TransformationContext implements ScriptContextConfig {
 	@Override
 	public void configure(ScriptContext ctx) {
 		final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
-		bindings.put("obj", getObject());
+		bindings.put("baseObj", getBaseObject());
+		bindings.put("obj", getTransformableObject());
 		bindings.put("vars", getVariables());
 		bindings.put("mapper", getAttributeMapper());
 	}

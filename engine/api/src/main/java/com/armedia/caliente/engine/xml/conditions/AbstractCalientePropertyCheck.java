@@ -13,7 +13,7 @@ public abstract class AbstractCalientePropertyCheck extends AbstractAttributeCal
 
 	@Override
 	protected Map<String, TypedValue> getCandidateValues(TransformationContext ctx) {
-		return ctx.getObject().getPriv();
+		return ctx.getTransformableObject().getPriv();
 	}
 
 }

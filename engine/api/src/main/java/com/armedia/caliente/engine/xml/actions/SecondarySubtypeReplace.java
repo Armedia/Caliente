@@ -50,7 +50,7 @@ public class SecondarySubtypeReplace extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		Set<String> currentSecondaries = ctx.getObject().getSecondarySubtypes();
+		Set<String> currentSecondaries = ctx.getTransformableObject().getSecondarySubtypes();
 		if (currentSecondaries.isEmpty()) { return; }
 
 		RegularExpression regexBase = getRegex();

@@ -18,7 +18,7 @@ public class IsAttributeValue extends AbstractAttributeCalientePropertyVariableV
 
 	@Override
 	protected Map<String, TypedValue> getCandidateValues(TransformationContext ctx) {
-		return ctx.getObject().getAtt();
+		return ctx.getTransformableObject().getAtt();
 	}
 
 }

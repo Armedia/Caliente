@@ -13,7 +13,7 @@ public abstract class AbstractTransformValueAttribute extends AbstractTransformV
 
 	@Override
 	protected final Map<String, TypedValue> getCandidateValues(TransformationContext ctx) {
-		return ctx.getObject().getAtt();
+		return ctx.getTransformableObject().getAtt();
 	}
 
 }

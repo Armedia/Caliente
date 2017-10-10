@@ -20,16 +20,6 @@ import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.Expression;
 import com.armedia.caliente.engine.xml.RegularExpression;
-import com.armedia.caliente.engine.xml.actions.AbortTransformation;
-import com.armedia.caliente.engine.xml.actions.AttributeSet;
-import com.armedia.caliente.engine.xml.actions.EndTransformation;
-import com.armedia.caliente.engine.xml.actions.MapAttributeValue;
-import com.armedia.caliente.engine.xml.actions.MapValueCase;
-import com.armedia.caliente.engine.xml.actions.SecondarySubtypeAdd;
-import com.armedia.caliente.engine.xml.actions.SecondarySubtypeRemove;
-import com.armedia.caliente.engine.xml.actions.SecondarySubtypeReplace;
-import com.armedia.caliente.engine.xml.actions.SubtypeReplace;
-import com.armedia.caliente.engine.xml.actions.SubtypeSet;
 import com.armedia.caliente.store.CmfDataType;
 
 public class ActionsTest {
@@ -57,7 +47,7 @@ public class ActionsTest {
 	@Test
 	public void testSubtypeSet() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
-		TestObjectFacade object = ctx.getObject();
+		TestObjectFacade object = ctx.getTransformableObject();
 		Assert.assertNull(object.getSubtype());
 
 		SubtypeSet action = new SubtypeSet();
@@ -96,7 +86,7 @@ public class ActionsTest {
 	@Test
 	public void testSubtypeReplace() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
-		TestObjectFacade object = ctx.getObject();
+		TestObjectFacade object = ctx.getTransformableObject();
 		object.setSubtype("dctm:test_subtype_value");
 
 		SubtypeReplace action = new SubtypeReplace();
@@ -130,7 +120,7 @@ public class ActionsTest {
 	@Test
 	public void testSecondarySubtypeAdd() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
-		TestObjectFacade object = ctx.getObject();
+		TestObjectFacade object = ctx.getTransformableObject();
 
 		SecondarySubtypeAdd action = new SecondarySubtypeAdd();
 		action.apply(ctx);
@@ -150,7 +140,7 @@ public class ActionsTest {
 	@Test
 	public void testSecondarySubtypeRemove() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
-		TestObjectFacade object = ctx.getObject();
+		TestObjectFacade object = ctx.getTransformableObject();
 
 		SecondarySubtypeRemove action = new SecondarySubtypeRemove();
 		action.setValue(new Expression());
@@ -548,7 +538,7 @@ public class ActionsTest {
 	@Test
 	public void testSecondarySubtypeReplace() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
-		TestObjectFacade object = ctx.getObject();
+		TestObjectFacade object = ctx.getTransformableObject();
 
 		SecondarySubtypeReplace action = new SecondarySubtypeReplace();
 		action.apply(ctx);
@@ -599,7 +589,7 @@ public class ActionsTest {
 	@Test
 	public void testAttributeSet() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
-		TestObjectFacade object = ctx.getObject();
+		TestObjectFacade object = ctx.getTransformableObject();
 
 		AttributeSet action = new AttributeSet();
 		try {
@@ -624,7 +614,7 @@ public class ActionsTest {
 	@Test
 	public void testMapAttributeValue() throws TransformationException {
 		TestTransformationContext ctx = new TestTransformationContext();
-		TestObjectFacade object = ctx.getObject();
+		TestObjectFacade object = ctx.getTransformableObject();
 
 		MapAttributeValue action = new MapAttributeValue();
 		action.apply(ctx);

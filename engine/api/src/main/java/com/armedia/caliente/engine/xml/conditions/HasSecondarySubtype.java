@@ -20,7 +20,7 @@ public class HasSecondarySubtype extends AbstractExpressionComparison {
 		Object secondary = Transformations.eval(this, ctx);
 		if (secondary == null) { return false; }
 		final Comparison comp = getComparison();
-		for (String s : ctx.getObject().getSecondarySubtypes()) {
+		for (String s : ctx.getTransformableObject().getSecondarySubtypes()) {
 			if (comp.check(CmfDataType.STRING, s, secondary.toString())) { return true; }
 		}
 		return false;

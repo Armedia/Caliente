@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.transform.ImmutableTransformationContext;
 import com.armedia.caliente.engine.transform.TransformationContext;
 import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionalAction.t", propOrder = {
@@ -54,6 +56,12 @@ public abstract class ConditionalAction implements Action {
 		if ((condition == null) || condition.check(new ImmutableTransformationContext(ctx))) {
 			applyTransformation(ctx);
 		}
+	}
+
+	protected final String getObjectDescription(TransformationContext ctx) {
+		CmfObject<CmfValue> obj = ctx.getBaseObject();
+		if (obj == null) { return null; }
+		return String.format("%s (%s)[%s]", obj.getType().name(), obj.getLabel(), obj.getId());
 	}
 
 	protected abstract void applyTransformation(TransformationContext ctx) throws TransformationException;

@@ -17,7 +17,7 @@ public class IsReference implements Condition {
 
 	@Override
 	public boolean check(TransformationContext ctx) {
-		TypedValue v = ctx.getObject().getPriv().get(IntermediateProperty.IS_REFERENCE.encode());
+		TypedValue v = ctx.getTransformableObject().getPriv().get(IntermediateProperty.IS_REFERENCE.encode());
 		if (v == null) { return false; }
 		return Tools.toBoolean(v);
 	}

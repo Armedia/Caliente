@@ -19,7 +19,7 @@ public class IsOriginalSubtype extends AbstractSingleValueComparison {
 
 	@Override
 	protected Object getCandidateValue(TransformationContext ctx) {
-		return ctx.getObject().getOriginalSubtype();
+		return ctx.getTransformableObject().getOriginalSubtype();
 	}
 
 }
