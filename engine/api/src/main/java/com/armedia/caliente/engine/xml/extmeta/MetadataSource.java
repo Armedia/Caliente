@@ -179,8 +179,8 @@ public class MetadataSource {
 				if (isFailOnError()) {
 					// An exceptikon was caught, but we need to fail on it
 					throw new Exception(String.format(
-						"Failed to obtain a JDBC connection for loading external metadata attributes for %s (%s)[%s]",
-						object.getType(), object.getLabel(), object.getId()), e);
+						"Failed to obtain a JDBC connection for loading external metadata attributes for %s",
+						object.getDescription()), e);
 				}
 				// If we're not supposed to fail on an error, then we simply return null - i.e.
 				// nothing
@@ -197,9 +197,10 @@ public class MetadataSource {
 						} catch (Exception e) {
 							if (isFailOnError()) {
 								// An exceptikon was caught, but we need to fail on it
-								throw new Exception(String.format(
-									"Exception raised while loading external metadata attributes for %s (%s)[%s]",
-									object.getType(), object.getLabel(), object.getId()), e);
+								throw new Exception(
+									String.format("Exception raised while loading external metadata attributes for %s",
+										object.getDescription()),
+									e);
 							} else {
 								// TODO: Log this exception anyway...
 							}
@@ -209,8 +210,8 @@ public class MetadataSource {
 							// The attribute values are required, but none were found...this is an
 							// error!
 							throw new Exception(
-								String.format("Did not find the required external metadata attributes for %s (%s)[%s]",
-									object.getType(), object.getLabel(), object.getId()));
+								String.format("Did not find the required external metadata attributes for %s",
+									object.getDescription()));
 						}
 
 						if (newAttributes != null) {

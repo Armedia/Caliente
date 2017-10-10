@@ -53,8 +53,7 @@ public class Transformer implements CmfTransformer {
 			return ctx.getTransformableObject().applyChanges(object);
 		} catch (TransformationException e) {
 			throw new CmfStorageException(
-				String.format("Exception caught while performing the transformation for %s (%s)[%s]", object.getType(),
-					object.getLabel(), object.getId()),
+				String.format("Exception caught while performing the transformation for %s", object.getDescription()),
 				e);
 		} finally {
 			destroyContext(ctx);
