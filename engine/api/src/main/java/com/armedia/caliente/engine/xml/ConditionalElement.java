@@ -20,7 +20,7 @@ public abstract class ConditionalElement {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElement(name = "if", required = false)
-	protected ActionCondition condition;
+	protected ConditionWrapper condition;
 
 	public Condition getCondition() {
 		if (this.condition == null) { return null; }
@@ -31,7 +31,7 @@ public abstract class ConditionalElement {
 		if (condition == null) {
 			this.condition = null;
 		} else {
-			this.condition = new ActionCondition(condition);
+			this.condition = new ConditionWrapper(condition);
 		}
 		return this;
 	}

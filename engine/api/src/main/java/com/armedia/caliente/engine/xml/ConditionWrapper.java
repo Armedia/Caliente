@@ -1,10 +1,14 @@
 
 package com.armedia.caliente.engine.xml;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
-import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.conditions.CheckExpression;
 import com.armedia.caliente.engine.xml.conditions.CustomCheck;
 import com.armedia.caliente.engine.xml.conditions.CustomScript;
@@ -38,8 +42,11 @@ import com.armedia.caliente.engine.xml.conditions.IsType;
 import com.armedia.caliente.engine.xml.conditions.IsVariableSet;
 import com.armedia.caliente.engine.xml.conditions.IsVariableValue;
 
-@XmlTransient
-public class ConditionWrapper {
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "condition.t", propOrder = {
+	"condition"
+})
+public class ConditionWrapper implements Condition {
 
 	@XmlElements({
 		// First, the groups
@@ -96,12 +103,21 @@ public class ConditionWrapper {
 		this.condition = condition;
 	}
 
-	public Condition getCondition() {
+	public final boolean hasCondition() {
+		return (this.condition != null);
+	}
+
+	public final Condition getCondition() {
 		return this.condition;
 	}
 
 	public ConditionWrapper setCondition(Condition child) {
 		this.condition = child;
 		return this;
+	}
+
+	@Override
+	public boolean check(ObjectContext ctx) throws ConditionException {
+		return hasCondition() && getCondition().check(ctx);
 	}
 }

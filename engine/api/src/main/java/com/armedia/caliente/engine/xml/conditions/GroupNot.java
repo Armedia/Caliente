@@ -11,10 +11,8 @@ import com.armedia.caliente.engine.xml.Condition;
 import com.armedia.caliente.engine.xml.ConditionWrapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "conditionGroupNot.t", propOrder = {
-	"condition"
-})
-public class GroupNot extends ConditionWrapper implements Condition {
+@XmlType(name = "conditionGroupNot.t")
+public class GroupNot extends ConditionWrapper {
 
 	@Override
 	public boolean check(ObjectContext ctx) throws ConditionException {
