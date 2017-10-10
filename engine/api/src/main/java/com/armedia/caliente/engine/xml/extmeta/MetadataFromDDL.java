@@ -29,11 +29,22 @@ import com.armedia.commons.utilities.Tools;
 })
 public class MetadataFromDDL extends MetadataReaderBase {
 
+	private static class ColumnStructure extends CmfBaseSetting {
+		private final int sqlType;
+		private final String sqlTypeName;
+
+		private ColumnStructure(String name, CmfDataType type, boolean repeating, int sqlType, String sqlTypeName) {
+			super(name, type, repeating);
+			this.sqlType = sqlType;
+			this.sqlTypeName = sqlTypeName;
+		}
+	}
+
 	@XmlElement(name = "ignore-columns", required = false)
 	protected SeparatedValuesNamesSource ignore;
 
 	@XmlTransient
-	private volatile Map<String, CmfBaseSetting> structure = null;
+	private volatile Map<String, ColumnStructure> structure = null;
 
 	public SeparatedValuesNamesSource getIgnore() {
 		return this.ignore;
@@ -60,8 +71,8 @@ public class MetadataFromDDL extends MetadataReaderBase {
 		return true;
 	}
 
-	private Map<String, CmfBaseSetting> getStructure(ResultSetMetaData md) throws Exception {
-		Map<String, CmfBaseSetting> structure = null;
+	private Map<String, ColumnStructure> getStructure(ResultSetMetaData md) throws Exception {
+		Map<String, ColumnStructure> structure = null;
 		final int columns = md.getColumnCount();
 		columnLoop: for (int i = 1; i <= columns; i++) {
 			if (structure == null) {
@@ -84,7 +95,8 @@ public class MetadataFromDDL extends MetadataReaderBase {
 			if (type == CmfDataType.OTHER) {
 				continue columnLoop;
 			}
-			structure.put(sqlName, new CmfBaseSetting(finalName, type, true));
+			structure.put(sqlName,
+				new ColumnStructure(finalName, type, true, md.getColumnType(i), md.getColumnTypeName(i)));
 		}
 		return Tools.freezeMap(structure, true);
 
@@ -123,16 +135,23 @@ public class MetadataFromDDL extends MetadataReaderBase {
 					Map<String, CmfAttribute<V>> tempAtts = new HashMap<>();
 					while (rs.next()) {
 						for (String column : this.structure.keySet()) {
+							final ColumnStructure structure = this.structure.get(column);
+
+							Tools.equals(structure.sqlType, structure.sqlTypeName); // to disable a
+																					// warning...
 							CmfAttribute<V> attribute = tempAtts.get(column);
 							if (attribute == null) {
-								CmfBaseSetting base = this. structure.get(column);
-								attribute = new CmfAttribute<>(base.getName(), base.getType(), base.isRepeating());
+								attribute = new CmfAttribute<>(structure.getName(), structure.getType(),
+									structure.isRepeating());
 								tempAtts.put(column, attribute);
 							}
 
 							CmfValueCodec<V> codec = translator.getCodec(attribute.getType());
 							V finalValue = codec.getNull();
 							Object value = getValue(rs, column, attribute.getType());
+							// TODO: Use the structure information to determine if we need to
+							// deserialize the value or not... should we also make this bit
+							// configurable?
 							if (!rs.wasNull()) {
 								finalValue = codec.decodeValue(new CmfValue(attribute.getType(), value));
 							}
