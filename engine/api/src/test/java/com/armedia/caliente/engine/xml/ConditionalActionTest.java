@@ -5,21 +5,20 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TestTransformationContext;
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
-import com.armedia.caliente.engine.xml.ConditionalAction;
 
 public class ConditionalActionTest {
 
 	@Test
-	public void testConditionalAction() throws TransformationException {
+	public void testConditionalAction() throws ActionException {
 		final AtomicReference<Boolean> executed = new AtomicReference<>(null);
-		final TransformationContext ctx = new TestTransformationContext();
+		final ObjectContext ctx = new TestTransformationContext();
 
 		ConditionalAction action = new ConditionalAction() {
 			@Override
-			protected void applyTransformation(TransformationContext ctx) throws TransformationException {
+			protected void applyTransformation(ObjectContext ctx) throws ActionException {
 				executed.set(true);
 			}
 		};
@@ -45,7 +44,7 @@ public class ConditionalActionTest {
 		try {
 			action.apply(ctx);
 			Assert.fail("Did not fail with an exploding condition");
-		} catch (TransformationException e) {
+		} catch (ActionException e) {
 			// All is well
 		}
 	}

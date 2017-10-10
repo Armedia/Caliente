@@ -7,12 +7,11 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
 import com.armedia.commons.utilities.Tools;
@@ -54,16 +53,16 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		this.value = value;
 	}
 
-	protected abstract TypedValue createValue(TransformationContext ctx, String name, CmfDataType type,
+	protected abstract TypedValue createValue(ObjectContext ctx, String name, CmfDataType type,
 		boolean multivalue);
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
-		Object name = Tools.toString(Transformations.eval(getName(), ctx));
-		if (name == null) { throw new TransformationException("No name expression given for variable definition"); }
+	protected final void applyTransformation(ObjectContext ctx) throws ActionException {
+		Object name = Tools.toString(ActionTools.eval(getName(), ctx));
+		if (name == null) { throw new ActionException("No name expression given for variable definition"); }
 
 		final CmfDataType type = getType();
-		final Object value = Transformations.eval(getValue(), ctx);
+		final Object value = ActionTools.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
 		final TypedValue variable = createValue(ctx, String.valueOf(name), type, repeating);
 		if (repeating) {

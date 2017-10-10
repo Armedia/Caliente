@@ -5,8 +5,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
-import com.armedia.caliente.engine.transform.TransformationContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionRemoveVariable.t", propOrder = {
@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class VariableRemove extends AbstractTransformValueVariable {
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx, TypedValue candidate) {
+	protected void applyTransformation(ObjectContext ctx, TypedValue candidate) {
 		ctx.getVariables().remove(candidate.getName());
 	}
 

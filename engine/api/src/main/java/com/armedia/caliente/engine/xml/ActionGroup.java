@@ -9,8 +9,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.actions.AbortTransformation;
 import com.armedia.caliente.engine.xml.actions.AttributeRemove;
 import com.armedia.caliente.engine.xml.actions.AttributeReplace;
@@ -79,7 +79,7 @@ public class ActionGroup extends ConditionalAction {
 	}
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
+	protected final void applyTransformation(ObjectContext ctx) throws ActionException {
 		for (Action action : getActions()) {
 			if (action != null) {
 				action.apply(ctx);

@@ -9,14 +9,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Cardinality;
 import com.armedia.caliente.engine.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -56,21 +55,21 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 		this.defVal = defaultValue;
 	}
 
-	protected boolean mapValue(TransformationContext ctx, CmfDataType type, Object candidate,
-		AtomicReference<Object> result) throws TransformationException {
+	protected boolean mapValue(ObjectContext ctx, CmfDataType type, Object candidate, AtomicReference<Object> result)
+		throws ActionException {
 
 		// Apply the comparison to each value in the typed value, and if there's a
 		// match, apply the replacement and move on to the next value
 		for (MapValueCase c : getCases()) {
 			Comparison comparison = c.getComparison();
 			Expression comparand = c.getValue();
-			if (comparand == null) { throw new TransformationException("No comparand value given to compare against"); }
+			if (comparand == null) { throw new ActionException("No comparand value given to compare against"); }
 			Expression replacement = c.getReplacement();
-			if (replacement == null) { throw new TransformationException("No value given to replace with"); }
+			if (replacement == null) { throw new ActionException("No value given to replace with"); }
 
 			// All is well, execute!
-			if (comparison.check(type, candidate, Transformations.eval(comparand, ctx))) {
-				result.set(Transformations.eval(replacement, ctx));
+			if (comparison.check(type, candidate, ActionTools.eval(comparand, ctx))) {
+				result.set(ActionTools.eval(replacement, ctx));
 				return true;
 			}
 		}
@@ -78,7 +77,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 		Expression def = getDefaultValue();
 		if (def != null) {
 			// If there was no match, apply the default
-			result.set(Transformations.eval(def, ctx));
+			result.set(ActionTools.eval(def, ctx));
 			return true;
 		}
 
@@ -92,7 +91,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx, TypedValue candidate) throws TransformationException {
+	protected void applyTransformation(ObjectContext ctx, TypedValue candidate) throws ActionException {
 		// Shortcut - avoid any work if no work can be done...
 		if (candidate.isEmpty()) { return; }
 

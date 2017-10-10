@@ -34,9 +34,8 @@ public class Transformer implements CmfTransformer {
 		this.metadataLoader = metadataLoader;
 	}
 
-	private TransformationContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
-		return new TransformationContext(object, new DefaultTransformableObjectFacade(object), mapper,
-			this.metadataLoader);
+	private ObjectContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
+		return new ObjectContext(object, new DefaultTransformableObjectFacade(object), mapper, this.metadataLoader);
 	}
 
 	@Override
@@ -45,7 +44,7 @@ public class Transformer implements CmfTransformer {
 			//
 			return object;
 		}
-		TransformationContext ctx = createContext(mapper, object);
+		ObjectContext ctx = createContext(mapper, object);
 		try {
 			try {
 				this.transformations.apply(ctx);
@@ -55,7 +54,7 @@ public class Transformer implements CmfTransformer {
 			}
 
 			return ctx.getTransformableObject().applyChanges(object);
-		} catch (TransformationException e) {
+		} catch (ActionException | TransformationException e) {
 			throw new CmfStorageException(
 				String.format("Exception caught while performing the transformation for %s", object.getDescription()),
 				e);
@@ -64,7 +63,7 @@ public class Transformer implements CmfTransformer {
 		}
 	}
 
-	private void destroyContext(TransformationContext ctx) {
+	private void destroyContext(ObjectContext ctx) {
 		// Clean things out... to help the GC...
 		ctx.getTransformableObject().getAtt().clear();
 		ctx.getTransformableObject().getPriv().clear();

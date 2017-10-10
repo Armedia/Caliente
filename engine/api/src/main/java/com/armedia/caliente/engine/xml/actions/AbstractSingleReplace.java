@@ -6,12 +6,11 @@ import java.util.regex.Pattern;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
 import com.armedia.caliente.engine.xml.RegularExpression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -39,16 +38,16 @@ public abstract class AbstractSingleReplace extends ConditionalAction {
 		this.replacement = replacement;
 	}
 
-	protected abstract String getOldValue(TransformationContext ctx);
+	protected abstract String getOldValue(ObjectContext ctx);
 
-	protected abstract void setNewValue(TransformationContext ctx, String newValue);
+	protected abstract void setNewValue(ObjectContext ctx, String newValue);
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
+	protected final void applyTransformation(ObjectContext ctx) throws ActionException {
 		final RegularExpression regexBase = getRegex();
-		final String regex = Tools.toString(Transformations.eval(getRegex(), ctx));
-		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
-		final String replacement = Tools.coalesce(Tools.toString(Transformations.eval(getReplacement(), ctx)), "");
+		final String regex = Tools.toString(ActionTools.eval(getRegex(), ctx));
+		if (regex == null) { throw new ActionException("No regular expression given to check against"); }
+		final String replacement = Tools.coalesce(Tools.toString(ActionTools.eval(getReplacement(), ctx)), "");
 		String oldValue = getOldValue(ctx);
 		int flags = 0;
 		if (!regexBase.isCaseSensitive()) {

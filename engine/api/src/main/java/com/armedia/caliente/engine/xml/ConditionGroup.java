@@ -11,8 +11,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.conditions.CheckExpression;
 import com.armedia.caliente.engine.xml.conditions.CustomCheck;
 import com.armedia.caliente.engine.xml.conditions.CustomScript;
@@ -120,13 +120,12 @@ public abstract class ConditionGroup implements Condition {
 	}
 
 	@Override
-	public final boolean check(TransformationContext ctx) throws TransformationException {
+	public final boolean check(ObjectContext ctx) throws ConditionException {
 		// If there are no elements, then we simply return true
 		List<Condition> elements = sanitizeElements(getElements());
 		if ((elements == null) || elements.isEmpty()) { return true; }
 		return check(elements, ctx);
 	}
 
-	protected abstract boolean check(List<Condition> elements, TransformationContext ctx)
-		throws TransformationException;
+	protected abstract boolean check(List<Condition> elements, ObjectContext ctx) throws ConditionException;
 }

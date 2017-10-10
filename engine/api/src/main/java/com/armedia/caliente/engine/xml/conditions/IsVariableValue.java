@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -17,7 +17,7 @@ import com.armedia.caliente.engine.transform.TypedValue;
 public class IsVariableValue extends AbstractAttributeCalientePropertyVariableValueCheck {
 
 	@Override
-	protected Map<String, TypedValue> getCandidateValues(TransformationContext ctx) {
+	protected Map<String, TypedValue> getCandidateValues(ObjectContext ctx) {
 		return ctx.getVariables();
 	}
 

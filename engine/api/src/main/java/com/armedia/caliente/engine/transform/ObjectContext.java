@@ -15,7 +15,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 
-public class TransformationContext implements ScriptContextConfig {
+public class ObjectContext implements ScriptContextConfig {
 
 	private final CmfObject<CmfValue> baseObject;
 	private final TransformableObject transformableObject;
@@ -24,12 +24,12 @@ public class TransformationContext implements ScriptContextConfig {
 
 	private final Map<String, TypedValue> variables;
 
-	public TransformationContext(CmfObject<CmfValue> baseObject, TransformableObject transformableObject,
+	public ObjectContext(CmfObject<CmfValue> baseObject, TransformableObject transformableObject,
 		CmfValueMapper mapper, ExternalMetadataLoader metadataLoader) {
 		this(baseObject, transformableObject, mapper, metadataLoader, null);
 	}
 
-	protected TransformationContext(CmfObject<CmfValue> baseObject, TransformableObject transformableObject,
+	protected ObjectContext(CmfObject<CmfValue> baseObject, TransformableObject transformableObject,
 		CmfValueMapper mapper, ExternalMetadataLoader metadataLoader, Map<String, TypedValue> variables) {
 		this.baseObject = baseObject;
 		this.transformableObject = transformableObject;

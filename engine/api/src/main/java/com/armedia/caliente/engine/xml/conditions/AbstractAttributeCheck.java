@@ -5,14 +5,14 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 
 @XmlTransient
 public abstract class AbstractAttributeCheck extends AbstractAttributeCalientePropertyVariableCheck {
 
 	@Override
-	protected Map<String, TypedValue> getCandidateValues(TransformationContext ctx) {
+	protected Map<String, TypedValue> getCandidateValues(ObjectContext ctx) {
 		return ctx.getTransformableObject().getAtt();
 	}
 

@@ -7,11 +7,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.Condition;
 import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
@@ -68,30 +67,30 @@ public class HasValueMapping implements Condition {
 	}
 
 	@Override
-	public boolean check(TransformationContext ctx) throws TransformationException {
+	public boolean check(ObjectContext ctx) throws ConditionException {
 		CmfType type = getType();
-		if (type == null) { throw new TransformationException("No type given to find the mappings with"); }
+		if (type == null) { throw new ConditionException("No type given to find the mappings with"); }
 
-		Object name = Transformations.eval(getName(), ctx);
-		if (name == null) { throw new TransformationException("No name given to check for"); }
+		Object name = ConditionTools.eval(getName(), ctx);
+		if (name == null) { throw new ConditionException("No name given to check for"); }
 
 		CmfValueMapper mapper = ctx.getAttributeMapper();
 		Expression key = null;
 
 		key = getFrom();
 		if (key != null) {
-			Object sourceValue = Transformations.eval(key, ctx);
-			if (sourceValue == null) { throw new TransformationException("No source value given to search with"); }
+			Object sourceValue = ConditionTools.eval(key, ctx);
+			if (sourceValue == null) { throw new ConditionException("No source value given to search with"); }
 			return (mapper.getTargetMapping(getType(), name.toString(), sourceValue.toString()) != null);
 		}
 
 		key = getTo();
 		if (key != null) {
-			Object targetValue = Transformations.eval(key, ctx);
-			if (targetValue == null) { throw new TransformationException("No target value given to search with"); }
+			Object targetValue = ConditionTools.eval(key, ctx);
+			if (targetValue == null) { throw new ConditionException("No target value given to search with"); }
 			return (mapper.getSourceMapping(getType(), name.toString(), targetValue.toString()) != null);
 		}
 
-		throw new TransformationException("No source or target value given to search with");
+		throw new ConditionException("No source or target value given to search with");
 	}
 }

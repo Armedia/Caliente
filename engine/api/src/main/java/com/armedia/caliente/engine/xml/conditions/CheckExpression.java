@@ -16,11 +16,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
@@ -66,7 +65,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 		this.right = value;
 	}
 
-	private Object castTo(CmfDataType type, Object object) throws TransformationException {
+	private Object castTo(CmfDataType type, Object object) throws ConditionException {
 		if (object == null) { return null; }
 		switch (type) {
 			case BOOLEAN:
@@ -79,7 +78,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 				try {
 					return new CmfValue(type, object).asTime();
 				} catch (ParseException e) {
-					throw new TransformationException(
+					throw new ConditionException(
 						String.format("Failed to convert the value [%s] as a Date", object), e);
 				}
 
@@ -89,7 +88,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 				try {
 					return Long.parseLong(object.toString());
 				} catch (NumberFormatException e) {
-					throw new TransformationException(
+					throw new ConditionException(
 						String.format("Failed to convert the value [%s] as an integer", object), e);
 				}
 
@@ -102,7 +101,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 				try {
 					return Long.parseLong(object.toString());
 				} catch (NumberFormatException e) {
-					throw new TransformationException(
+					throw new ConditionException(
 						String.format("Failed to convert the value [%s] as an integer", object), e);
 				}
 
@@ -111,7 +110,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 				try {
 					return new URI(object.toString());
 				} catch (URISyntaxException e) {
-					throw new TransformationException(
+					throw new ConditionException(
 						String.format("Failed to convert the value [%s] as a URI", object), e);
 				}
 
@@ -135,12 +134,12 @@ public class CheckExpression extends AbstractComparisonCheck {
 	}
 
 	@Override
-	public boolean check(TransformationContext ctx) throws TransformationException {
+	public boolean check(ObjectContext ctx) throws ConditionException {
 		final CmfDataType type = getType();
 		Expression leftExp = getLeft();
-		Object leftVal = Transformations.eval(leftExp, ctx);
+		Object leftVal = ConditionTools.eval(leftExp, ctx);
 		Expression rightExp = getRight();
-		Object rightVal = Transformations.eval(rightExp, ctx);
+		Object rightVal = ConditionTools.eval(rightExp, ctx);
 
 		Comparison comparison = getComparison();
 		if (comparison == Comparison.EQ) {

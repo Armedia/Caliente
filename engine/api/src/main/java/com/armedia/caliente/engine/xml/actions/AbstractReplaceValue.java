@@ -9,14 +9,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Cardinality;
 import com.armedia.caliente.engine.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.xml.Expression;
 import com.armedia.caliente.engine.xml.RegularExpression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -57,12 +56,11 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx, TypedValue candidate)
-		throws TransformationException {
+	protected final void applyTransformation(ObjectContext ctx, TypedValue candidate) throws ActionException {
 		RegularExpression regexBase = getRegex();
-		final String regex = Tools.toString(Transformations.eval(regexBase, ctx));
-		if (regex == null) { throw new TransformationException("No regular expression given to check against"); }
-		final String replacement = Tools.coalesce(Tools.toString(Transformations.eval(getReplacement(), ctx)), "");
+		final String regex = Tools.toString(ActionTools.eval(regexBase, ctx));
+		if (regex == null) { throw new ActionException("No regular expression given to check against"); }
+		final String replacement = Tools.coalesce(Tools.toString(ActionTools.eval(getReplacement(), ctx)), "");
 
 		int flags = 0;
 		if (!regexBase.isCaseSensitive()) {

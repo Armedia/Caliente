@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.ObjectContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionReplaceSubtype.t", propOrder = {
@@ -14,12 +14,12 @@ import com.armedia.caliente.engine.transform.TransformationContext;
 public class SubtypeReplace extends AbstractSingleReplace {
 
 	@Override
-	protected String getOldValue(TransformationContext ctx) {
+	protected String getOldValue(ObjectContext ctx) {
 		return ctx.getTransformableObject().getSubtype();
 	}
 
 	@Override
-	protected void setNewValue(TransformationContext ctx, String newValue) {
+	protected void setNewValue(ObjectContext ctx, String newValue) {
 		ctx.getTransformableObject().setSubtype(newValue);
 	}
 }

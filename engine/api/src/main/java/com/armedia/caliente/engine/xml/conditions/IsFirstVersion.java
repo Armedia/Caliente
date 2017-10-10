@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
-import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Condition;
 
@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.xml.Condition;
 public class IsFirstVersion implements Condition {
 
 	@Override
-	public boolean check(TransformationContext ctx) {
+	public boolean check(ObjectContext ctx) {
 		TypedValue index = ctx.getTransformableObject().getPriv().get(IntermediateProperty.VERSION_INDEX.encode());
 		Object v = ((index != null) && !index.isEmpty() ? index.getValue() : null);
 		if (v == null) { return true; }

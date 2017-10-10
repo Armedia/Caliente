@@ -8,20 +8,12 @@ import java.util.Objects;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TestTransformationContext;
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.xml.Condition;
 import com.armedia.caliente.engine.xml.ConditionGroup;
 import com.armedia.caliente.engine.xml.ConditionTools;
-import com.armedia.caliente.engine.xml.conditions.GroupAnd;
-import com.armedia.caliente.engine.xml.conditions.GroupNand;
-import com.armedia.caliente.engine.xml.conditions.GroupNor;
-import com.armedia.caliente.engine.xml.conditions.GroupNot;
-import com.armedia.caliente.engine.xml.conditions.GroupOneof;
-import com.armedia.caliente.engine.xml.conditions.GroupOr;
-import com.armedia.caliente.engine.xml.conditions.GroupXnor;
-import com.armedia.caliente.engine.xml.conditions.GroupXor;
 
 public class GroupConditionTest {
 
@@ -47,9 +39,9 @@ public class GroupConditionTest {
 		return ret;
 	}
 
-	public void testGrouped(ConditionGroup c, Integer[][] data) throws TransformationException {
+	public void testGrouped(ConditionGroup c, Integer[][] data) throws ConditionException {
 		final String name = c.getClass().getSimpleName();
-		final TransformationContext ctx = new TestTransformationContext();
+		final ObjectContext ctx = new TestTransformationContext();
 		for (Integer[] d : data) {
 			List<Condition> conditions = GroupConditionTest.convertToList(d, true);
 			final boolean expected = (d[5] != 0);
@@ -61,7 +53,7 @@ public class GroupConditionTest {
 	}
 
 	@Test
-	public void testAnd() throws TransformationException {
+	public void testAnd() throws ConditionException {
 		Integer[][] data = {
 			{
 				0, 0, 0, 0, 0, 0
@@ -133,7 +125,7 @@ public class GroupConditionTest {
 	}
 
 	@Test
-	public void testOr() throws TransformationException {
+	public void testOr() throws ConditionException {
 		Integer[][] data = {
 			{
 				0, 0, 0, 0, 0, 0
@@ -205,9 +197,9 @@ public class GroupConditionTest {
 	}
 
 	@Test
-	public void testNot() throws TransformationException {
+	public void testNot() throws ConditionException {
 		GroupNot not = new GroupNot();
-		final TransformationContext ctx = new TestTransformationContext();
+		final ObjectContext ctx = new TestTransformationContext();
 		not.setCondition(ConditionTools.COND_FALSE);
 		Assert.assertTrue(not.check(ctx));
 		not.setCondition(ConditionTools.COND_TRUE);
@@ -215,7 +207,7 @@ public class GroupConditionTest {
 	}
 
 	@Test
-	public void testXor() throws TransformationException {
+	public void testXor() throws ConditionException {
 		Integer[][] data = {
 			{
 				0, 0, 0, 0, 0, 0
@@ -287,7 +279,7 @@ public class GroupConditionTest {
 	}
 
 	@Test
-	public void testNand() throws TransformationException {
+	public void testNand() throws ConditionException {
 		Integer[][] data = {
 			{
 				0, 0, 0, 0, 0, 1
@@ -359,7 +351,7 @@ public class GroupConditionTest {
 	}
 
 	@Test
-	public void testNor() throws TransformationException {
+	public void testNor() throws ConditionException {
 		Integer[][] data = {
 			{
 				0, 0, 0, 0, 0, 1
@@ -431,7 +423,7 @@ public class GroupConditionTest {
 	}
 
 	@Test
-	public void testXnor() throws TransformationException {
+	public void testXnor() throws ConditionException {
 		Integer[][] data = {
 			{
 				0, 0, 0, 0, 0, 1
@@ -503,7 +495,7 @@ public class GroupConditionTest {
 	}
 
 	@Test
-	public void testOneof() throws TransformationException {
+	public void testOneof() throws ConditionException {
 		Integer[][] data = {
 			{
 				0, 0, 0, 0, 0, 0

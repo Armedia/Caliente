@@ -7,14 +7,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -44,20 +43,20 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 		this.name = value;
 	}
 
-	protected abstract Map<String, TypedValue> getCandidateValues(TransformationContext ctx);
+	protected abstract Map<String, TypedValue> getCandidateValues(ObjectContext ctx);
 
-	protected abstract void applyTransformation(TransformationContext ctx, TypedValue candidate)
-		throws TransformationException;
+	protected abstract void applyTransformation(ObjectContext ctx, TypedValue candidate)
+		throws ActionException;
 
 	protected boolean failShort() {
 		return false;
 	}
 
 	@Override
-	protected final void applyTransformation(TransformationContext ctx) throws TransformationException {
+	protected final void applyTransformation(ObjectContext ctx) throws ActionException {
 		if (failShort()) { return; }
-		final String comparand = Tools.toString(Transformations.eval(getName(), ctx));
-		if (comparand == null) { throw new TransformationException("No comparand given to check the name against"); }
+		final String comparand = Tools.toString(ActionTools.eval(getName(), ctx));
+		if (comparand == null) { throw new ActionException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();
 
 		final Map<String, TypedValue> values = getCandidateValues(ctx);

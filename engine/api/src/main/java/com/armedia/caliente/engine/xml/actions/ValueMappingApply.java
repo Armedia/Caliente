@@ -10,8 +10,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Cardinality;
 import com.armedia.caliente.engine.xml.CardinalityAdapter;
@@ -19,7 +19,6 @@ import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
@@ -90,14 +89,14 @@ public class ValueMappingApply extends ConditionalAction {
 		this.cardinality = cardinality;
 	}
 
-	private String mapValue(TransformationContext ctx, CmfType mappingType, String mappingName, String sourceValue,
-		CmfDataType targetType) throws TransformationException {
+	private String mapValue(ObjectContext ctx, CmfType mappingType, String mappingName, String sourceValue,
+		CmfDataType targetType) throws ActionException {
 		Mapping m = ctx.getAttributeMapper().getTargetMapping(mappingType, mappingName, sourceValue);
 		return (m != null ? m.getTargetValue() : null);
 	}
 
-	private void applyMapping(TransformationContext ctx, CmfType type, String mappingName, TypedValue candidate)
-		throws TransformationException {
+	private void applyMapping(ObjectContext ctx, CmfType type, String mappingName, TypedValue candidate)
+		throws ActionException {
 
 		if (!candidate.isRepeating()) {
 			// Cardinality is irrelevant...
@@ -138,14 +137,14 @@ public class ValueMappingApply extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
+	protected void applyTransformation(ObjectContext ctx) throws ActionException {
 		final CmfType type = getType();
-		if (type == null) { throw new TransformationException("No type name given to find the mapping"); }
-		final String comparand = Tools.toString(Transformations.eval(getName(), ctx));
-		if (comparand == null) { throw new TransformationException("No comparand given to check the name against"); }
+		if (type == null) { throw new ActionException("No type name given to find the mapping"); }
+		final String comparand = Tools.toString(ActionTools.eval(getName(), ctx));
+		if (comparand == null) { throw new ActionException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();
-		final String mappingName = Tools.toString(Transformations.eval(getMappingName(), ctx));
-		if (mappingName == null) { throw new TransformationException("No mapping name given to apply"); }
+		final String mappingName = Tools.toString(ActionTools.eval(getMappingName(), ctx));
+		if (mappingName == null) { throw new ActionException("No mapping name given to apply"); }
 
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!

@@ -2,7 +2,7 @@ package com.armedia.caliente.engine.transform;
 
 import com.armedia.caliente.store.CmfValueMapper;
 
-public class TestTransformationContext extends TransformationContext {
+public class TestTransformationContext extends ObjectContext {
 
 	private final TestObjectFacade object;
 

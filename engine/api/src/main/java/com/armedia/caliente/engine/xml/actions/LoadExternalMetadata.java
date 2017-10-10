@@ -14,8 +14,8 @@ import javax.xml.bind.annotation.XmlType;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.extmeta.ExternalMetadataException;
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
@@ -40,7 +40,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
+	protected void applyTransformation(ObjectContext ctx) throws ActionException {
 		for (ExternalMetadataSource metadataSource : getSources()) {
 			if (metadataSource == null) {
 				continue;
@@ -50,7 +50,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 			try {
 				sourceName = Tools.toString(Expression.eval(metadataSource, ctx));
 			} catch (ScriptException e) {
-				throw new TransformationException(e);
+				throw new ActionException(e);
 			}
 
 			if (StringUtils.isEmpty(sourceName)) {
@@ -62,7 +62,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 			try {
 				externalAttributes = ctx.getAttributeValues(ctx.getBaseObject(), sourceName);
 			} catch (ExternalMetadataException e) {
-				throw new TransformationException(
+				throw new ActionException(
 					String.format("Failed to load the external metadata for %s from source [%s]",
 						ctx.getBaseObject().getDescription(), sourceName),
 					e);

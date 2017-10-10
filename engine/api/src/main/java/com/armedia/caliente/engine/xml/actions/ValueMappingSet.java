@@ -7,11 +7,10 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
 import com.armedia.commons.utilities.Tools;
@@ -68,16 +67,16 @@ public class ValueMappingSet extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
+	protected void applyTransformation(ObjectContext ctx) throws ActionException {
 		CmfType type = getType();
-		if (type == null) { throw new TransformationException(
+		if (type == null) { throw new ActionException(
 			"Must provide a type name to associate the mapping with"); }
-		String name = Tools.toString(Transformations.eval(getName(), ctx));
-		if (name == null) { throw new TransformationException("Must provide a mapping name"); }
-		String from = Tools.toString(Transformations.eval(getFrom(), ctx));
-		if (from == null) { throw new TransformationException("Must provide a source value to map from"); }
-		String to = Tools.toString(Transformations.eval(getTo(), ctx));
-		if (to == null) { throw new TransformationException("Must provide a target value map into"); }
+		String name = Tools.toString(ActionTools.eval(getName(), ctx));
+		if (name == null) { throw new ActionException("Must provide a mapping name"); }
+		String from = Tools.toString(ActionTools.eval(getFrom(), ctx));
+		if (from == null) { throw new ActionException("Must provide a source value to map from"); }
+		String to = Tools.toString(ActionTools.eval(getTo(), ctx));
+		if (to == null) { throw new ActionException("Must provide a target value map into"); }
 
 		ctx.getAttributeMapper().setMapping(type, name, from, to);
 	}

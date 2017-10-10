@@ -5,24 +5,23 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Comparison;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
 public abstract class AbstractAttributeCalientePropertyVariableCheck extends AbstractExpressionComparison {
 
-	protected abstract Map<String, TypedValue> getCandidateValues(TransformationContext ctx);
+	protected abstract Map<String, TypedValue> getCandidateValues(ObjectContext ctx);
 
 	protected abstract boolean check(TypedValue candidate);
 
 	@Override
-	public final boolean check(TransformationContext ctx) throws TransformationException {
-		final String comparand = Tools.toString(Transformations.eval(this, ctx));
+	public final boolean check(ObjectContext ctx) throws ConditionException {
+		final String comparand = Tools.toString(ConditionTools.eval(this, ctx));
 		final Comparison comparison = getComparison();
 		final Map<String, TypedValue> values = getCandidateValues(ctx);
 

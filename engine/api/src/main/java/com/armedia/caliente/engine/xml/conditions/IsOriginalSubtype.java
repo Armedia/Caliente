@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.store.CmfDataType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -13,12 +13,12 @@ import com.armedia.caliente.store.CmfDataType;
 public class IsOriginalSubtype extends AbstractSingleValueComparison {
 
 	@Override
-	protected CmfDataType getCandidateType(TransformationContext ctx) {
+	protected CmfDataType getCandidateType(ObjectContext ctx) {
 		return CmfDataType.STRING;
 	}
 
 	@Override
-	protected Object getCandidateValue(TransformationContext ctx) {
+	protected Object getCandidateValue(ObjectContext ctx) {
 		return ctx.getTransformableObject().getOriginalSubtype();
 	}
 

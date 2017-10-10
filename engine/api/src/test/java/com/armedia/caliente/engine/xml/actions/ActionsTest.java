@@ -12,10 +12,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.armedia.caliente.engine.transform.ActionException;
 import com.armedia.caliente.engine.transform.TestObjectFacade;
 import com.armedia.caliente.engine.transform.TestTransformationContext;
 import com.armedia.caliente.engine.transform.TransformationCompletedException;
-import com.armedia.caliente.engine.transform.TransformationException;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.Expression;
@@ -29,13 +29,13 @@ public class ActionsTest {
 		try {
 			new AbortTransformation().apply(new TestTransformationContext());
 			Assert.fail("Failed to abort the transformation");
-		} catch (TransformationException e) {
+		} catch (ActionException e) {
 			// All is well
 		}
 	}
 
 	@Test
-	public void testEndTransformation() throws TransformationException {
+	public void testEndTransformation() throws ActionException {
 		try {
 			new EndTransformation().apply(new TestTransformationContext());
 			Assert.fail("Failed to end the transformation");
@@ -45,7 +45,7 @@ public class ActionsTest {
 	}
 
 	@Test
-	public void testSubtypeSet() throws TransformationException {
+	public void testSubtypeSet() throws ActionException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 		Assert.assertNull(object.getSubtype());
@@ -54,7 +54,7 @@ public class ActionsTest {
 		try {
 			action.apply(ctx);
 			Assert.fail("Did not fail with a null expression");
-		} catch (TransformationException e) {
+		} catch (ActionException e) {
 			// All is well
 		}
 
@@ -70,7 +70,7 @@ public class ActionsTest {
 		try {
 			action.apply(ctx);
 			Assert.fail("Did not fail with a blank-valued expression");
-		} catch (TransformationException e) {
+		} catch (ActionException e) {
 			// All is well
 		}
 
@@ -78,13 +78,13 @@ public class ActionsTest {
 		try {
 			action.apply(ctx);
 			Assert.fail("Did not fail with a null-valued expression");
-		} catch (TransformationException e) {
+		} catch (ActionException e) {
 			// All is well
 		}
 	}
 
 	@Test
-	public void testSubtypeReplace() throws TransformationException {
+	public void testSubtypeReplace() throws ActionException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 		object.setSubtype("dctm:test_subtype_value");
@@ -94,7 +94,7 @@ public class ActionsTest {
 		try {
 			action.apply(ctx);
 			Assert.fail("Did not fail with neither a regex or a replacement");
-		} catch (TransformationException e) {
+		} catch (ActionException e) {
 			// All is well
 		}
 
@@ -118,7 +118,7 @@ public class ActionsTest {
 	}
 
 	@Test
-	public void testSecondarySubtypeAdd() throws TransformationException {
+	public void testSecondarySubtypeAdd() throws ActionException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 
@@ -138,7 +138,7 @@ public class ActionsTest {
 	}
 
 	@Test
-	public void testSecondarySubtypeRemove() throws TransformationException {
+	public void testSecondarySubtypeRemove() throws ActionException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 
@@ -536,7 +536,7 @@ public class ActionsTest {
 	}
 
 	@Test
-	public void testSecondarySubtypeReplace() throws TransformationException {
+	public void testSecondarySubtypeReplace() throws ActionException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 
@@ -550,7 +550,7 @@ public class ActionsTest {
 		try {
 			action.apply(ctx);
 			Assert.fail("Did not fail with neither a regex or a replacement");
-		} catch (TransformationException e) {
+		} catch (ActionException e) {
 			// All is well
 		}
 
@@ -587,7 +587,7 @@ public class ActionsTest {
 	}
 
 	@Test
-	public void testAttributeSet() throws TransformationException {
+	public void testAttributeSet() throws ActionException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 
@@ -595,7 +595,7 @@ public class ActionsTest {
 		try {
 			action.apply(ctx);
 			Assert.fail("Did not fail with a null name");
-		} catch (TransformationException e) {
+		} catch (ActionException e) {
 			// All is well
 		}
 
@@ -612,7 +612,7 @@ public class ActionsTest {
 	}
 
 	@Test
-	public void testMapAttributeValue() throws TransformationException {
+	public void testMapAttributeValue() throws ActionException {
 		TestTransformationContext ctx = new TestTransformationContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 

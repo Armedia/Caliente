@@ -5,17 +5,16 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
-import com.armedia.caliente.engine.xml.Transformations;
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionCustomScript.t")
 public class CustomScript extends AbstractExpressionCondition {
 
 	@Override
-	public boolean check(TransformationContext ctx) throws TransformationException {
-		Object result = Transformations.eval(this, ctx);
+	public boolean check(ObjectContext ctx) throws ConditionException {
+		Object result = ConditionTools.eval(this, ctx);
 		// No result? No problem! It's a "false"!
 		if (result == null) { return false; }
 

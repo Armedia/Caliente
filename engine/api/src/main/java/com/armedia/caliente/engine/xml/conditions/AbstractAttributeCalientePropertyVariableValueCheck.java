@@ -8,14 +8,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Cardinality;
 import com.armedia.caliente.engine.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.xml.Comparison;
 import com.armedia.caliente.engine.xml.Expression;
-import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -56,13 +55,13 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		this.cardinality = value;
 	}
 
-	protected abstract Map<String, TypedValue> getCandidateValues(TransformationContext ctx);
+	protected abstract Map<String, TypedValue> getCandidateValues(ObjectContext ctx);
 
 	@Override
-	public boolean check(TransformationContext ctx) throws TransformationException {
+	public boolean check(ObjectContext ctx) throws ConditionException {
 		Expression nameExp = getName();
-		Object name = Transformations.eval(nameExp, ctx);
-		if (name == null) { throw new TransformationException("No name was given for the candidate value check"); }
+		Object name = ConditionTools.eval(nameExp, ctx);
+		if (name == null) { throw new ConditionException("No name was given for the candidate value check"); }
 
 		final Map<String, TypedValue> values = getCandidateValues(ctx);
 
@@ -71,8 +70,8 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 
 		Comparison comparison = getComparison();
 		Expression valueExp = getValue();
-		Object comparand = Transformations.eval(valueExp, ctx);
-		if (comparand == null) { throw new TransformationException(
+		Object comparand = ConditionTools.eval(valueExp, ctx);
+		if (comparand == null) { throw new ConditionException(
 			"No comparand value given to check the name against"); }
 		if (!candidate.isRepeating()) {
 			// Check the one and only value

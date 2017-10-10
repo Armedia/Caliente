@@ -6,7 +6,6 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.script.ScriptException;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -15,8 +14,8 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.XMLStreamReader;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
@@ -36,7 +35,7 @@ public final class Transformations extends XmlBase implements Action {
 	}
 
 	@Override
-	public void apply(TransformationContext ctx) throws TransformationException {
+	public void apply(ObjectContext ctx) throws ActionException {
 		for (Action t : getElements()) {
 			if (t != null) {
 				t.apply(ctx);
@@ -54,14 +53,5 @@ public final class Transformations extends XmlBase implements Action {
 
 	public static Transformations loadFromXML(XMLStreamReader in) throws JAXBException {
 		return XmlBase.loadFromXML(Transformations.class, in);
-	}
-
-	public static Object eval(Expression e, TransformationContext ctx) throws TransformationException {
-		try {
-			return Expression.eval(e, ctx);
-		} catch (ScriptException ex) {
-			throw new TransformationException(String.format("Exception raised evaluating the expression :%n%s%n", e),
-				ex);
-		}
 	}
 }

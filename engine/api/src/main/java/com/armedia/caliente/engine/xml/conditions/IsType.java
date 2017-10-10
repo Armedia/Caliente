@@ -7,8 +7,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.XmlValue;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.Condition;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
@@ -32,9 +32,9 @@ public class IsType implements Condition {
 	}
 
 	@Override
-	public boolean check(TransformationContext ctx) throws TransformationException {
+	public boolean check(ObjectContext ctx) throws ConditionException {
 		CmfType type = getValue();
-		if (type == null) { throw new TransformationException("No type value to check against"); }
+		if (type == null) { throw new ConditionException("No type value to check against"); }
 		// We can use == because this is an enum
 		return (type == ctx.getTransformableObject().getType());
 	}

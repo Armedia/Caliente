@@ -7,8 +7,8 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionSetSubtype.t", propOrder = {
@@ -17,9 +17,9 @@ import com.armedia.caliente.engine.transform.TransformationException;
 public class SubtypeSet extends AbstractSingleValueSet {
 
 	@Override
-	protected void setNewValue(TransformationContext ctx, String newValue) throws TransformationException {
+	protected void setNewValue(ObjectContext ctx, String newValue) throws ActionException {
 		newValue = StringUtils.strip(newValue);
-		if (StringUtils.isEmpty(newValue)) { throw new TransformationException("Empty value given to set"); }
+		if (StringUtils.isEmpty(newValue)) { throw new ActionException("Empty value given to set"); }
 		ctx.getTransformableObject().setSubtype(newValue);
 	}
 

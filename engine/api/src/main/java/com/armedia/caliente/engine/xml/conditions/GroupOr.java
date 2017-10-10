@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ConditionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.Condition;
 import com.armedia.caliente.engine.xml.ConditionGroup;
 
@@ -18,7 +18,7 @@ import com.armedia.caliente.engine.xml.ConditionGroup;
 public class GroupOr extends ConditionGroup {
 
 	@Override
-	protected boolean check(List<Condition> elements, TransformationContext ctx) throws TransformationException {
+	protected boolean check(List<Condition> elements, ObjectContext ctx) throws ConditionException {
 		for (Condition c : elements) {
 			Objects.requireNonNull(c, "Null conditional elements are not allowed");
 			if (c.check(ctx)) { return true; }

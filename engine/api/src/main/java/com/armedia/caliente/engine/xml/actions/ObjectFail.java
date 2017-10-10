@@ -5,8 +5,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.transform.TransformationContext;
-import com.armedia.caliente.engine.transform.TransformationException;
+import com.armedia.caliente.engine.transform.ActionException;
+import com.armedia.caliente.engine.transform.ObjectContext;
 import com.armedia.caliente.engine.xml.ConditionalAction;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -14,8 +14,8 @@ import com.armedia.caliente.engine.xml.ConditionalAction;
 public class ObjectFail extends ConditionalAction {
 
 	@Override
-	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		throw new TransformationException("Object explicitly failed");
+	protected void applyTransformation(ObjectContext ctx) throws ActionException {
+		throw new ActionException("Object explicitly failed");
 	}
 
 }

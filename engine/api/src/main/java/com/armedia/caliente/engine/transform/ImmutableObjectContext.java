@@ -12,7 +12,7 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.Tools;
 
-public class ImmutableTransformationContext extends TransformationContext {
+public class ImmutableObjectContext extends ObjectContext {
 
 	private static class ImmutableTypedValue extends TypedValue {
 
@@ -27,12 +27,12 @@ public class ImmutableTransformationContext extends TransformationContext {
 
 		@Override
 		public TypedValue setValue(Object value) {
-			throw ImmutableTransformationContext.fail();
+			throw ImmutableObjectContext.fail();
 		}
 
 		@Override
 		public TypedValue setValues(Iterator<?> values) {
-			throw ImmutableTransformationContext.fail();
+			throw ImmutableObjectContext.fail();
 		}
 
 	}
@@ -49,8 +49,8 @@ public class ImmutableTransformationContext extends TransformationContext {
 			this.object = object;
 			this.originalSecondaries = Collections.unmodifiableSet(object.getOriginalSecondarySubtypes());
 			this.secondaries = Collections.unmodifiableSet(object.getSecondarySubtypes());
-			this.att = ImmutableTransformationContext.makeImmutable(object.getAtt());
-			this.priv = ImmutableTransformationContext.makeImmutable(object.getPriv());
+			this.att = ImmutableObjectContext.makeImmutable(object.getAtt());
+			this.priv = ImmutableObjectContext.makeImmutable(object.getPriv());
 		}
 
 		@Override
@@ -85,7 +85,7 @@ public class ImmutableTransformationContext extends TransformationContext {
 
 		@Override
 		public ImmutableObjectData setSubtype(String subtype) {
-			throw ImmutableTransformationContext.fail();
+			throw ImmutableObjectContext.fail();
 		}
 
 		@Override
@@ -110,7 +110,7 @@ public class ImmutableTransformationContext extends TransformationContext {
 
 		@Override
 		public ImmutableObjectData setName(String name) {
-			throw ImmutableTransformationContext.fail();
+			throw ImmutableObjectContext.fail();
 		}
 
 		@Override
@@ -150,7 +150,7 @@ public class ImmutableTransformationContext extends TransformationContext {
 		@Override
 		protected Mapping createMapping(CmfType objectType, String mappingName, String sourceValue,
 			String targetValue) {
-			throw ImmutableTransformationContext.fail();
+			throw ImmutableObjectContext.fail();
 		}
 
 		@Override
@@ -179,10 +179,10 @@ public class ImmutableTransformationContext extends TransformationContext {
 		}
 	}
 
-	public ImmutableTransformationContext(TransformationContext context) {
+	public ImmutableObjectContext(ObjectContext context) {
 		super(context.getBaseObject(), new ImmutableObjectData(context.getTransformableObject()),
 			new ImmutableAttributeMapper(context.getAttributeMapper()), context.getMetadataLoader(),
-			ImmutableTransformationContext.makeImmutable(context.getVariables()));
+			ImmutableObjectContext.makeImmutable(context.getVariables()));
 	}
 
 	private static Map<String, TypedValue> makeImmutable(Map<String, TypedValue> orig) {
