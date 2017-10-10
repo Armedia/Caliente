@@ -106,6 +106,10 @@ public enum CmfDataType {
 		return CmfDataType.NULL.get(this);
 	}
 
+	public final CmfValueSerializer getSerializer() {
+		return CmfValueSerializer.get(this);
+	}
+
 	public final Object getValue(CmfValue value) {
 		if (value.getDataType() == this) { return value.asObject(); }
 		try {
