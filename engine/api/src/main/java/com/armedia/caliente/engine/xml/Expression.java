@@ -187,11 +187,11 @@ public class Expression {
 		return this.engine = Expression.getEngine(getLang());
 	}
 
-	public Object evaluate() throws ExpressionException {
+	public Object evaluate() throws ScriptException {
 		return evaluate(null);
 	}
 
-	public Object evaluate(ScriptContextConfig cfg) throws ExpressionException {
+	public Object evaluate(ScriptContextConfig cfg) throws ScriptException {
 		// If there is no engine needed, then we simply return the contents of the script as a
 		// literal string script
 		final ScriptEngine engine = getEngine();
@@ -210,45 +210,23 @@ public class Expression {
 			cfg.configure(scriptCtx);
 		}
 
-		final CompiledScript compiled;
-		try {
-			this.log.trace("Compiling {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
-			compiled = Expression.compileScript(lang, script);
-		} catch (ScriptException e) {
-			// Compilation failed...
-			String msg = String.format("Script compilation failed for %s script:%n%s%n", lang, script);
-			this.log.debug(msg, e);
-			throw new ExpressionException(msg, e);
-		}
-
+		this.log.trace("Compiling {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
+		final CompiledScript compiled = Expression.compileScript(lang, script);
 		if (compiled != null) {
 			this.log.trace("The {} script was compiled - will use the precompiled version", lang);
-			try {
-				return compiled.eval(scriptCtx);
-			} catch (ScriptException e) {
-				String msg = String.format("Exception caught while executing the compiled %s script:%n%s%n", lang,
-					script);
-				this.log.debug(msg, e);
-				throw new ExpressionException(msg, e);
-			}
+			return compiled.eval(scriptCtx);
 		}
 
-		try {
-			this.log.trace("Evaluating {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
-			Object ret = engine.eval(script);
-			if (ret != null) {
-				this.log.trace("Returned [{}] from {} expression script:{}{}{}", ret, lang, Expression.NL, script,
-					Expression.NL);
-			} else {
-				this.log.trace("Returned <null> from {} expression script:{}{}{}", lang, Expression.NL, script,
-					Expression.NL);
-			}
-			return ret;
-		} catch (ScriptException e) {
-			String msg = String.format("Exception caught while evaluating %s expression script:%n%s%n", lang, script);
-			this.log.debug(msg, e);
-			throw new ExpressionException(msg, e);
+		this.log.trace("Evaluating {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
+		Object ret = engine.eval(script);
+		if (ret != null) {
+			this.log.trace("Returned [{}] from {} expression script:{}{}{}", ret, lang, Expression.NL, script,
+				Expression.NL);
+		} else {
+			this.log.trace("Returned <null> from {} expression script:{}{}{}", lang, Expression.NL, script,
+				Expression.NL);
 		}
+		return ret;
 	}
 
 	@Override
@@ -265,8 +243,7 @@ public class Expression {
 		return e;
 	}
 
-	public static Object eval(Expression e, ScriptContextConfig cfg) throws ExpressionException {
-		Objects.requireNonNull(cfg, "No ScriptContextConfig instance given for expression evaluation");
+	public static Object eval(Expression e, ScriptContextConfig cfg) throws ScriptException {
 		if (e == null) { return null; }
 		return e.evaluate(cfg);
 	}

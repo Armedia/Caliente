@@ -1,26 +1,24 @@
 package com.armedia.caliente.engine.xml.extmeta;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
+import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.caliente.engine.xml.Expression;
 import com.armedia.caliente.engine.xml.Expression.ScriptContextConfig;
-import com.armedia.caliente.engine.xml.ExpressionException;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -30,6 +28,16 @@ import com.armedia.commons.utilities.Tools;
 public class AttributeNameMapping {
 
 	private static final boolean DEFAULT_CASE_SENSITIVE = true;
+
+	private static class NameMatcher {
+		private final Pattern pattern;
+		private final Expression expression;
+
+		private NameMatcher(Pattern pattern, Expression expression) {
+			this.pattern = pattern;
+			this.expression = expression;
+		}
+	}
 
 	@XmlElement(name = "map", required = false)
 	protected List<MetadataNameMapping> mappings;
@@ -41,7 +49,7 @@ public class AttributeNameMapping {
 	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
 	@XmlTransient
-	protected Map<String, MetadataNameMapping> map = null;
+	protected List<NameMatcher> matchers = null;
 
 	@XmlTransient
 	protected Expression activeDefault = null;
@@ -60,20 +68,17 @@ public class AttributeNameMapping {
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
 		try {
-			if (this.map != null) { return; }
+			if (this.matchers != null) { return; }
 			this.caseSensitive = Tools.coalesce(caseSensitive, AttributeNameMapping.DEFAULT_CASE_SENSITIVE);
 			this.activeDefault = this.defaultTransform;
-			Map<String, MetadataNameMapping> map = new HashMap<>();
+			List<NameMatcher> matchers = new ArrayList<>();
 			for (final MetadataNameMapping mapping : getMappings()) {
-				String key = mapping.from;
-				if (!this.caseSensitive) {
-					key = StringUtils.upperCase(key);
-				}
-				if ((key != null) && (mapping.to != null)) {
-					map.put(key, mapping);
+				if ((mapping.from != null) && (mapping.to != null)) {
+					Pattern p = Pattern.compile(mapping.from, this.caseSensitive ? 0 : Pattern.CASE_INSENSITIVE);
+					matchers.add(new NameMatcher(p, mapping.to));
 				}
 			}
-			this.map = Tools.freezeMap(map);
+			this.matchers = Tools.freezeList(matchers);
 		} finally {
 			l.unlock();
 		}
@@ -111,43 +116,47 @@ public class AttributeNameMapping {
 		}
 	}
 
-	protected boolean isSameName(String a, String b) {
-		if (!this.caseSensitive) { return StringUtils.equalsIgnoreCase(a, b); }
-		return Tools.equals(a, b);
-	}
-
-	public String transformName(final String sqlName) throws ExpressionException {
+	public String transformName(final String sqlName) throws ScriptException {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			String key = sqlName;
-			if (!this.caseSensitive) {
-				key = StringUtils.upperCase(key);
-			}
-			final MetadataNameMapping mapping = this.map.get(key);
-			Expression exp = null;
-			if (mapping == null) {
-				// Use the default expression...
-				exp = this.activeDefault;
-			} else {
-				exp = mapping.to;
+			boolean hasGroups = false;
+			String regex = null;
+			Expression repl = null;
+			for (NameMatcher nm : this.matchers) {
+				Matcher m = nm.pattern.matcher(sqlName);
+				if (m.matches()) {
+					regex = nm.pattern.pattern();
+					repl = nm.expression;
+					hasGroups = (m.groupCount() > 0);
+					break;
+				}
 			}
 
-			// If there's no expression to evaluate, foxtrot oscar
-			if (exp == null) { return sqlName; }
+			// If we have no match yet, then we go with the default
+			if (repl == null) {
+				repl = this.activeDefault;
+			}
 
-			// There's an expression to evaluate!! Let's do it!
-			Object value = exp.evaluate(new ScriptContextConfig() {
+			String value = Tools.toString(repl.evaluate(new ScriptContextConfig() {
 				@Override
 				public void configure(ScriptContext ctx) {
 					final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
 					bindings.put("sqlName", sqlName);
-					if (mapping != null) {
-						bindings.put("mapName", mapping.from);
-					}
 				}
-			});
-			return Tools.toString(Tools.coalesce(value, sqlName));
+			}));
+
+			// If there is no replacement, then we simply return the original name
+			if (value == null) { return sqlName; }
+
+			// If there is a replacement, we check to see if we have to return it verbatim or not.
+			// We return verbatim when there's no regex (i.e. this is the default value), or when
+			// the matching regex has no capturing groups (i.e. it's a literal)
+			if ((regex == null) || !hasGroups) { return value; }
+
+			// We have a regular expression, a replacement, and the regex has capturing groups, so
+			// we have to do a replacement
+			return sqlName.replaceAll(regex, value);
 		} finally {
 			l.unlock();
 		}
@@ -157,10 +166,10 @@ public class AttributeNameMapping {
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
 		try {
-			if (this.map == null) { return; }
+			if (this.matchers == null) { return; }
 			this.activeDefault = null;
 			this.caseSensitive = null;
-			this.map = null;
+			this.matchers = null;
 		} finally {
 			l.unlock();
 		}

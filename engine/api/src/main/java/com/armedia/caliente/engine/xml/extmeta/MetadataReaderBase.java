@@ -19,6 +19,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
+import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -30,7 +31,6 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 import com.armedia.caliente.engine.extmeta.ExternalMetadataException;
 import com.armedia.caliente.engine.xml.Expression;
 import com.armedia.caliente.engine.xml.Expression.ScriptContextConfig;
-import com.armedia.caliente.engine.xml.ExpressionException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
@@ -82,7 +82,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		this.attributeNameMapping = value;
 	}
 
-	protected final String transformAttributeName(String name) throws ExpressionException {
+	protected final String transformAttributeName(String name) throws ScriptException {
 		if (this.attributeNameMapping == null) { return name; }
 		return this.attributeNameMapping.transformName(name);
 	}
@@ -97,11 +97,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 
 	protected CmfDataType getMappedAttributeType(String sqlAttributeName) {
 		if (this.attributeTypeMapping == null) { return null; }
-		for (MetadataTypeMapping mapping : this.attributeTypeMapping.getAttributes()) {
-			if (Tools.equals(mapping.name,
-				sqlAttributeName)) { return Tools.coalesce(mapping.type, this.attributeTypeMapping.getDefaultType()); }
-		}
-		return null;
+		return this.attributeTypeMapping.getMappedType(sqlAttributeName);
 	}
 
 	protected void doInitialize(Connection c) throws Exception {
@@ -169,7 +165,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 	}
 
 	protected final <V> Object evaluateExpression(Expression expression, final CmfObject<V> object,
-		final String sqlName) throws ExpressionException {
+		final String sqlName) throws ScriptException {
 		if (expression == null) { return null; }
 		return expression.evaluate(new ScriptContextConfig() {
 			@Override

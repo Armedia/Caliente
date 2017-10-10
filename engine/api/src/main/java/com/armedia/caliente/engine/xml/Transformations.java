@@ -6,6 +6,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.script.ScriptException;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -58,8 +59,9 @@ public final class Transformations extends XmlBase implements Action {
 	public static Object eval(Expression e, TransformationContext ctx) throws TransformationException {
 		try {
 			return Expression.eval(e, ctx);
-		} catch (ExpressionException ex) {
-			throw new TransformationException(ex);
+		} catch (ScriptException ex) {
+			throw new TransformationException(String.format("Exception raised evaluating the expression :%n%s%n", e),
+				ex);
 		}
 	}
 }
