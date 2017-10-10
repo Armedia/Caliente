@@ -243,17 +243,15 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		for (String s : this.cmfObject.getSecondarySubtypes()) {
 			(allAspects.contains(s) ? goodAspects : badAspects).add(s);
 		}
-		if (!badAspects
-			.isEmpty()) { throw new ImportException(String.format("Aspects %s not found while importing %s (%s)[%s]",
-				badAspects, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if (!badAspects.isEmpty()) { throw new ImportException(
+			String.format("Aspects %s not found while importing %s", badAspects, this.cmfObject.getDescription())); }
 		AlfrescoType type = this.factory.schema.buildType(this.cmfObject.getSubtype(), goodAspects);
 		if (type != null) { return type; }
 		if (this.defaultType != null) { return this.defaultType; }
 
 		// If we have neither the type, nor a default, this is a problem
-		throw new ImportException(
-			String.format("Failed to locate the Alfresco type [%s] for %s (%s)[%s]", this.cmfObject.getSubtype(),
-				this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId()));
+		throw new ImportException(String.format("Failed to locate the Alfresco type [%s] for %s",
+			this.cmfObject.getSubtype(), this.cmfObject.getDescription()));
 	}
 
 	protected final AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {
@@ -589,8 +587,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId.asString()), handler);
 			if (count > 0) { return ret.toString(); }
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)",
-				aclId.asString(), this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s", aclId.asString(),
+				this.cmfObject.getDescription()), e);
 		}
 		return null;
 	}
@@ -644,8 +642,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				String.format("Failed to open the properties file at [%s]", main.getAbsolutePath()), e);
 		}
 		try {
-			XmlProperties.saveToXML(p, out,
-				String.format("Properties for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId()));
+			XmlProperties.saveToXML(p, out, String.format("Properties for %s", this.cmfObject.getDescription()));
 		} catch (IOException e) {
 			meta.delete();
 			throw new ImportException(
@@ -668,9 +665,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		if ((pathProp == null) || pathProp.isNull()) {
 			pathProp = getPropertyValue(IntermediateProperty.PARENT_TREE_IDS);
 		}
-		if (pathProp == null) { throw new ImportException(String.format(
-			"Failed to find the required property [%s] in %s [%s](%s)", IntermediateProperty.PARENT_TREE_IDS.encode(),
-			this.cmfObject.getSubtype(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if (pathProp == null) { throw new ImportException(
+			String.format("Failed to find the required property [%s] in %s",
+				IntermediateProperty.PARENT_TREE_IDS.encode(), this.cmfObject.getDescription())); }
 
 		String prefix = (!pathProp.isNull() ? pathProp.asString() : "");
 		path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/", this.cmfObject.getId());
@@ -701,8 +698,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 
 			if (!main.exists()) {
-				ctx.printf("Creating a stub for %s [%s](%s)", this.cmfObject.getType(), this.cmfObject.getLabel(),
-					this.cmfObject.getId());
+				ctx.printf("Creating a stub for %s", this.cmfObject.getDescription());
 				if (!createStub(ctx, main,
 					this.cmfObject.getLabel())) { return Collections.singleton(ImportOutcome.SKIPPED); }
 			}
@@ -715,8 +711,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 			if (this.virtual && !primaryRendition) {
 				// This is a VDoc rendition...and is currently not supported
-				this.log.warn("VDoc renditions aren't yet supported for [{}]({})", this.cmfObject.getLabel(),
-					this.cmfObject.getId());
+				this.log.warn("VDoc renditions aren't yet supported for {}", this.cmfObject.getDescription());
 				continue;
 			}
 
@@ -773,15 +768,15 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						}
 						Matcher matcher = AlfImportFileableDelegate.VDOC_MEMBER_PARSER.matcher(member.asString());
 						if (!matcher.matches()) {
-							this.log.warn("Incomplete VDoc member data for [%s](%s) - [%s]", this.cmfObject.getLabel(),
-								this.cmfObject.getId(), member.asString());
+							this.log.warn("Incomplete VDoc member data for %s - [%s]", this.cmfObject.getDescription(),
+								member.asString());
 							continue;
 						}
 
 						String[] memberData = matcher.group(1).split("\\|");
 						if (memberData.length < 5) {
-							this.log.warn("Incomplete VDoc member reference data for [%s](%s) - [%s]",
-								this.cmfObject.getLabel(), this.cmfObject.getId(), member.asString());
+							this.log.warn("Incomplete VDoc member reference data for %s - [%s]",
+								this.cmfObject.getDescription(), member.asString());
 							continue;
 						}
 
@@ -815,9 +810,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 						ok = true;
 					} catch (IOException e) {
 						throw new ImportException(
-							String.format("Failed to create a copy of the HEAD version for [%s](%s) from [%s] to [%s]",
-								this.cmfObject.getLabel(), this.cmfObject.getId(), main.getAbsolutePath(),
-								newMain.getAbsolutePath()),
+							String.format("Failed to create a copy of the HEAD version for %s from [%s] to [%s]",
+								this.cmfObject.getDescription(), main.getAbsolutePath(), newMain.getAbsolutePath()),
 							e);
 					} finally {
 						if (!ok) {

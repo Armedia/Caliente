@@ -342,8 +342,8 @@ public class AbstractCalienteModule_export extends
 	@Override
 	public final void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber) {
 		if (objectNumber != null) {
-			this.console.info(String.format("%s export completed for [%s](%s) as object #%d", object.getType().name(),
-				object.getLabel(), object.getId(), objectNumber));
+			this.console
+				.info(String.format("Export completed for %s as object #%d", object.getDescription(), objectNumber));
 			this.counter.increment(object.getType(), ExportResult.EXPORTED);
 		}
 	}

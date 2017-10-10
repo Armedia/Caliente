@@ -252,7 +252,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 	}
 
 	public final String getDescription() {
-		return String.format("%s (%s)[%s]", getType().name(), this.label, getId());
+		return String.format("%s [%s](%s)", getType().name(), this.label, getId());
 	}
 
 	@Override

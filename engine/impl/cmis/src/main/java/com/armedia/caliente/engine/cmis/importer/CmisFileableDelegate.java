@@ -71,11 +71,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				if (directPermissions != null) {
 					if (accessorNames.getValueCount() != directPermissions.getValueCount()) {
 						CmisFileableDelegate.this.log.warn(String.format(
-							"ACL accessors and directPermissions have different object counts (%s != %s) for %s [%s](%s)",
+							"ACL accessors and directPermissions have different object counts (%s != %s) for %s",
 							accessorNames.getValueCount(), accessorActions.getValueCount(),
-							CmisFileableDelegate.this.cmfObject.getType(),
-							CmisFileableDelegate.this.cmfObject.getLabel(),
-							CmisFileableDelegate.this.cmfObject.getId()));
+							CmisFileableDelegate.this.cmfObject.getDescription()));
 					} else {
 						// Ok...we have explicit permissions for each accessor, so skip the actions
 						// mappings and simply apply them directly
@@ -104,10 +102,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				}
 
 				if (accessorNames.getValueCount() != accessorActions.getValueCount()) { throw new CmfStorageException(
-					String.format("ACL accessors and actions have different object counts (%s != %s) for %s [%s](%s)",
+					String.format("ACL accessors and actions have different object counts (%d != %d) for %s",
 						accessorNames.getValueCount(), accessorActions.getValueCount(),
-						CmisFileableDelegate.this.cmfObject.getType(), CmisFileableDelegate.this.cmfObject.getLabel(),
-						CmisFileableDelegate.this.cmfObject.getId())); }
+						CmisFileableDelegate.this.cmfObject.getDescription())); }
 
 				final int count = accessorNames.getValueCount();
 				for (int i = 0; i < count; i++) {
@@ -137,8 +134,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId.asString()), handler);
 			if (count == 0) { return; }
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s [%s](%s)", aclIdAtt,
-				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s", aclIdAtt,
+				this.cmfObject.getDescription()), e);
 		}
 	}
 

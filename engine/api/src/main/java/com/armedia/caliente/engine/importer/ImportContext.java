@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
-import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -20,6 +19,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.CfgTools;
 
 public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>>
@@ -83,8 +83,8 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		try {
 			return this.cmfObjectStore.getContentInfo(object);
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)", object.getType(),
-				object.getLabel(), object.getId()), e);
+			throw new ImportException(String.format("Failed to load the content info for %s", object.getDescription()),
+				e);
 		}
 	}
 
@@ -92,8 +92,8 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		try {
 			return this.cmfObjectStore.getContainers(object);
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to load the containers for %s [%s](%s)", object.getType(),
-				object.getLabel(), object.getId()), e);
+			throw new ImportException(String.format("Failed to load the containers for %s", object.getDescription()),
+				e);
 		}
 	}
 
@@ -101,8 +101,8 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		try {
 			return this.cmfObjectStore.getContainedObjects(object);
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to load the contained objects for %s [%s](%s)",
-				object.getType(), object.getLabel(), object.getId()), e);
+			throw new ImportException(
+				String.format("Failed to load the contained objects for %s", object.getDescription()), e);
 		}
 	}
 }

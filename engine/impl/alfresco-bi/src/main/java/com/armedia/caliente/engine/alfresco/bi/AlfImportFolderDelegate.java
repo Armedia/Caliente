@@ -86,9 +86,8 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 			FileUtils.forceMkdir(target);
 			return true;
 		} catch (IOException e) {
-			throw new ImportException(String.format("Failed to create the folder for %s [%s](%s) at [%s]",
-				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId(), target.getAbsolutePath()),
-				e);
+			throw new ImportException(String.format("Failed to create the folder for %s at [%s]",
+				this.cmfObject.getDescription(), target.getAbsolutePath()), e);
 		}
 	}
 }

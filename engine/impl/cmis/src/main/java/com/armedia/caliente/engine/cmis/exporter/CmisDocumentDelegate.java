@@ -110,7 +110,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			try {
 				antecedentId.setValue(new CmfValue(CmfDataType.ID, Object.class.cast(this.antecedentId)));
 			} catch (ParseException e) {
-				throw new ExportException(String.format("Failed to create an object ID value for [%s] for %s [%s](%s)",
+				throw new ExportException(String.format("Failed to create an object ID value for [%s] for %s",
 					this.antecedentId, getType(), getLabel(), getObjectId()));
 			}
 			object.setAttribute(antecedentId);

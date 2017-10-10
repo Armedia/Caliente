@@ -25,7 +25,6 @@ import com.armedia.caliente.engine.dfc.common.DctmDocument;
 import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -34,6 +33,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.dfc.util.DctmVersionNumber;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
@@ -459,10 +459,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		try {
 			path = contentHandle.getFile();
 		} catch (IOException e) {
-			throw new ImportException(
-				String.format("Failed to get the content file for DOCUMENT (%s)[%s], qualifier [%s]",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getInfo()),
-				e);
+			throw new ImportException(String.format("Failed to get the content file for %s, qualifier [%s]",
+				this.cmfObject.getDescription(), contentHandle.getInfo()), e);
 		}
 
 		if (path == null) {
@@ -477,17 +475,16 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				if (path != null) {
 					path.delete();
 				}
-				throw new ImportException(String.format(
-					"Failed to create and write the temporary content file for DOCUMENT (%s)[%s], qualifier [%s]",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getInfo()), e);
+				throw new ImportException(
+					String.format("Failed to create and write the temporary content file for %s, qualifier [%s]",
+						this.cmfObject.getDescription(), contentHandle.getInfo()),
+					e);
 			} catch (CmfStorageException e) {
 				if (path != null) {
 					path.delete();
 				}
-				throw new ImportException(
-					String.format("Failed to get the content stream for DOCUMENT (%s)[%s], qualifier [%s]",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getInfo()),
-					e);
+				throw new ImportException(String.format("Failed to get the content stream for %s, qualifier [%s]",
+					this.cmfObject.getDescription(), contentHandle.getInfo()), e);
 			}
 		}
 

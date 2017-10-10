@@ -761,9 +761,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 								nameFixer.nameFixed(decodedObj, oldName, newName);
 							} catch (Exception e) {
 								// Just log it
-								JdbcObjectStore.this.log.warn(String.format(
-									"Exception caught while invoking the nameFixed() callback for %s [%s](%s)",
-									obj.getType().name(), obj.getLabel(), obj.getId()), e);
+								JdbcObjectStore.this.log.warn(
+									String.format("Exception caught while invoking the nameFixed() callback for %s",
+										obj.getDescription()),
+									e);
 							}
 						}
 						return true;
@@ -1497,8 +1498,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			qr.update(c, translateQuery(JdbcDialect.Query.DELETE_CONTENT), objectId);
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to delete the existing content records for %s [%s](%s)",
-				object.getType(), object.getLabel(), object.getId()), e);
+			throw new CmfStorageException(
+				String.format("Failed to delete the existing content records for %s", object.getDescription()), e);
 		}
 
 		// Step 2: prepare the new content records and properties
@@ -1545,8 +1546,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_CONTENT_PROPERTY), JdbcTools.HANDLER_NULL,
 				properties.toArray(JdbcTools.NO_PARAMS));
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to insert the new content records for %s [%s](%s)",
-				object.getType(), object.getLabel(), object.getId()), e);
+			throw new CmfStorageException(
+				String.format("Failed to insert the new content records for %s", object.getDescription()), e);
 		}
 	}
 
@@ -1616,8 +1617,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 			return new QueryRunner().query(c, translateQuery(JdbcDialect.Query.LOAD_CONTENTS), cHandler, objectId);
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to load the content records for %s [%s](%s)",
-				object.getType(), object.getLabel(), object.getId()), e);
+			throw new CmfStorageException(
+				String.format("Failed to load the content records for %s", object.getDescription()), e);
 		} finally {
 			JdbcTools.closeQuietly(pPS);
 			JdbcTools.closeQuietly(cPS);

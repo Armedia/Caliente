@@ -133,24 +133,23 @@ public class ExternalMetadataLoader {
 					if (source.isFailOnError()) {
 						// There was an error which we should fail on
 						throw new ExternalMetadataException(String.format(
-							"Exception caught while retrieving required external metadata for %s [%s](%s) from source [%s] at %s",
-							object.getType(), object.getLabel(), object.getId(), source.getId(), this.locationDesc), e);
+							"Exception caught while retrieving required external metadata for %s from source [%s] at %s",
+							object.getDescription(), source.getId(), this.locationDesc), e);
 					}
-					this.log.warn(
-						"Exception caught while retrieving external metadata for {} [{}]({}) from source [{}] at {}",
-						object.getType(), object.getLabel(), object.getId(), source.getId(), this.locationDesc, e);
+					this.log.warn("Exception caught while retrieving external metadata for {} from source [{}] at {}",
+						object.getDescription(), source.getId(), this.locationDesc, e);
 					continue;
 				}
 				if (m == null) {
 					if (source.isFailOnMissing()) {
 						// The data is required, but not present - explode!!
 						throw new ExternalMetadataException(String.format(
-							"Did not retrieve any required external metadata for %s [%s](%s) from source [%s] at %s",
-							object.getType(), object.getLabel(), object.getId(), source.getId(), this.locationDesc));
+							"Did not retrieve any required external metadata for %s from source [%s] at %s",
+							object.getDescription(), source.getId(), this.locationDesc));
 					}
 					if (this.log.isTraceEnabled()) {
-						this.log.warn("Did not retrieve any external metadata for {} [{}]({}) from source [{}] at {}",
-							object.getType(), object.getLabel(), object.getId(), source.getId(), this.locationDesc);
+						this.log.warn("Did not retrieve any external metadata for {} from source [{}] at {}",
+							object.getDescription(), source.getId(), this.locationDesc);
 					}
 					continue;
 				}

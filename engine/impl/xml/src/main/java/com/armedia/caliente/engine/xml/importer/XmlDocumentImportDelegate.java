@@ -92,8 +92,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			} catch (IOException e) {
 				// Failed to get the file, so we can't handle this
 				throw new CmfStorageException(
-					String.format("Failed to locate the content file for DOCUMENT (%s)[%s], content qualifier [%s]",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), info),
+					String.format("Failed to locate the content file for %s, content qualifier [%s]",
+						this.cmfObject.getDescription(), info),
 					e);
 			}
 			ContentInfoT xml = new ContentInfoT();
@@ -125,8 +125,8 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			} catch (IOException e) {
 				// Failed to get the file, so we can't handle this
 				throw new CmfStorageException(
-					String.format("Failed to generate the placeholder content file for DOCUMENT (%s)[%s] at [%s]",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), f.getAbsolutePath()),
+					String.format("Failed to generate the placeholder content file for %s at [%s]",
+						this.cmfObject.getDescription(), f.getAbsolutePath()),
 					e);
 			}
 			ContentInfoT xml = new ContentInfoT();

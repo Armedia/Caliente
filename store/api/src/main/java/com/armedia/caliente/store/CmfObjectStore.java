@@ -208,8 +208,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s [%s](%s)",
-							object.getType(), object.getLabel(), object.getId()), e);
+						this.log.warn(
+							String.format("Failed to rollback the transaction for %s", object.getDescription()), e);
 					}
 				}
 			}
@@ -277,8 +277,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s [%s](%s)",
-							object.getType(), object.getLabel(), object.getId()), e);
+						this.log.warn(
+							String.format("Failed to rollback the transaction for %s", object.getDescription()), e);
 					}
 				}
 			}
@@ -302,8 +302,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s [%s](%s)",
-							object.getType(), object.getLabel(), object.getId()), e);
+						this.log.warn(
+							String.format("Failed to rollback the transaction for %s", object.getDescription()), e);
 					}
 				}
 			}

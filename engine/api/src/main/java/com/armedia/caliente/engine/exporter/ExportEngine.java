@@ -238,8 +238,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 			} catch (CmfStorageException e) {
 				throw new ExportException(
-					String.format("Exception caught attempting to lock a %s for storage [%s](%s)", type, logLabel, id),
-					e);
+					String.format("Exception caught attempting to lock a %s for storage", logLabel), e);
 			}
 
 			listenerDelegator.objectExportStarted(exportState.jobId, target, referrent);
@@ -772,11 +771,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							if (this.log.isDebugEnabled()) {
 								if (result.skipReason != null) {
 									this.log.debug(String.format("Skipped %s [%s](%s) : %s", target.getType(),
-										target.getId(), target.getSearchKey(), result.skipReason));
+										target.getSearchKey(), target.getId(), result.skipReason));
 								} else {
-									this.log.debug(
-										String.format("Exported %s [%s](%s) in position %d", result.object.getType(),
-											result.object.getLabel(), result.object.getId(), result.objectNumber));
+									this.log.debug(String.format("Exported %s in position %d",
+										result.object.getDescription(), result.objectNumber));
 								}
 							}
 						}

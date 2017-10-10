@@ -68,7 +68,7 @@ public class TestLoop {
 		case CREATE:
 			addWatcher(obj);
 			break;
-
+	
 		case UPDATE:
 			boolean updateRecord = true;
 			Record existing = getExistingRecord(obj);
@@ -88,7 +88,7 @@ public class TestLoop {
 				}
 			}
 			break;
-
+	
 		case DELETE:
 			removeWatcher(obj);
 			break;
@@ -281,9 +281,8 @@ public class TestLoop {
 				try {
 					session.abortTransEx(tx);
 				} catch (DfException e) {
-					this.log
-						.warn(String.format("Failed to abort the transaction adding the TYPE watch for type [%s](%s)",
-							obj.getName(), obj.getObjectId()), e);
+					this.log.warn(String.format("Failed to abort the transaction adding the TYPE watch for %s",
+						obj.getDescription()), e);
 				}
 			}
 		}

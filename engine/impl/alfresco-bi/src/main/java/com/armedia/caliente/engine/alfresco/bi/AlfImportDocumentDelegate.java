@@ -39,9 +39,8 @@ public class AlfImportDocumentDelegate extends AlfImportFileableDelegate {
 			FileUtils.write(target, content, AlfImportFileableDelegate.DEFAULT_CHARSET);
 			return true;
 		} catch (IOException e) {
-			throw new ImportException(String.format(
-				"Failed to create the stub file for %s [%s](%s) at [%s] with contents [%s]", this.cmfObject.getType(),
-				this.cmfObject.getLabel(), this.cmfObject.getId(), target.getAbsolutePath(), content), e);
+			throw new ImportException(String.format("Failed to create the stub file for %s at [%s] with contents [%s]",
+				this.cmfObject.getDescription(), target.getAbsolutePath(), content), e);
 		}
 	}
 }

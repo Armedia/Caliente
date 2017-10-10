@@ -190,8 +190,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			ret.add(doImportObject(context));
 			return ret;
 		} catch (DfException e) {
-			throw new ImportException(String.format("Documentum Exception caught while processing [%s](%s)",
-				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(
+				String.format("Documentum Exception caught while processing %s", this.cmfObject.getDescription()), e);
 		}
 	}
 
@@ -233,8 +233,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			String newLabel = null;
 			if (isNew) {
 				// Create a new object
-				this.log.info(String.format("Creating %s [%s](%s)", this.cmfObject.getType().name(),
-					this.cmfObject.getLabel(), this.cmfObject.getId()));
+				this.log.info(String.format("Creating %s", this.cmfObject.getDescription()));
 				object = newObject(context);
 				// Apply the aspects right away?
 				object = applyAspects(object, context);
@@ -248,12 +247,10 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			} else {
 				// Is this correct?
 				newLabel = calculateLabel(object);
-				this.log.info(String.format("Acquiring lock on existing %s [%s](%s)", getDctmType().name(),
-					this.cmfObject.getLabel(), this.cmfObject.getId()));
+				this.log.info(String.format("Acquiring lock on existing %s", this.cmfObject.getDescription()));
 				DfUtils.lockObject(this.log, object);
 				object.fetch(null);
-				this.log.info(String.format("Acquired lock on %s [%s](%s)", getDctmType().name(),
-					this.cmfObject.getLabel(), this.cmfObject.getId()));
+				this.log.info(String.format("Acquired lock on %s", this.cmfObject.getDescription()));
 				context.getAttributeMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
 					this.cmfObject.getId(), object.getObjectId().getId());
 
@@ -368,20 +365,20 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				} catch (DfException e) {
 					ok = false;
 					this.log.error(String.format(
-						"Caught an exception while trying to finalize the import for [%s](%s) - aborting the transaction",
-						this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+						"Caught an exception while trying to finalize the import for %s - aborting the transaction",
+						this.cmfObject.getDescription()), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
 				// modification
 				if (this.log.isTraceEnabled()) {
-					this.log.trace(String.format("Updating the system attributes for [%s](%s)",
-						this.cmfObject.getLabel(), this.cmfObject.getId()));
+					this.log
+						.trace(String.format("Updating the system attributes for %s", this.cmfObject.getDescription()));
 				}
 
 				if (!updateSystemAttributes(this.cmfObject, object, context)) {
-					this.log.warn(String.format("Failed to update the system attributes for [%s](%s)",
-						this.cmfObject.getLabel(), this.cmfObject.getId()));
+					this.log.warn(String.format("Failed to update the system attributes for %s",
+						this.cmfObject.getDescription()));
 				}
 			} else {
 				// Clear the mapping
@@ -622,14 +619,11 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 					}
 					if (repeating) {
 						msg = String.format(
-							"Failed to set the value in position %d for the repeating %s attribute [%s] to [%s](%s) on %s [%s](%s)",
-							i, dataType, attrName, value.asString(), valueTypeLabel, this.cmfObject.getType(),
-							this.cmfObject.getLabel(), this.cmfObject.getId());
+							"Failed to set the value in position %d for the repeating %s attribute [%s] to [%s](%s) on %s",
+							i, dataType, attrName, value.asString(), valueTypeLabel, this.cmfObject.getDescription());
 					} else {
-						msg = String.format(
-							"Failed to set the value for the %s attribute [%s] to [%s](%s) on %s [%s](%s)", dataType,
-							attrName, value.asString(), valueTypeLabel, this.cmfObject.getType(),
-							this.cmfObject.getLabel(), this.cmfObject.getId());
+						msg = String.format("Failed to set the value for the %s attribute [%s] to [%s](%s) on %s",
+							dataType, attrName, value.asString(), valueTypeLabel, this.cmfObject.getDescription());
 					}
 					this.log.warn(msg);
 				}

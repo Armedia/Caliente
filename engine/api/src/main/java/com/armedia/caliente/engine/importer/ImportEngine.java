@@ -117,8 +117,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						int i = 0;
 						batch: for (CmfObject<V> next : this.batch.contents) {
 							if (failBatch) {
-								this.log.error(String.format("Batch has been failed - will not process [%s](%s) (%s)",
-									next.getLabel(), next.getId(), ImportResult.SKIPPED.name()));
+								this.log.error(String.format("Batch has been failed - will not process %s (%s)",
+									next.getDescription(), ImportResult.SKIPPED.name()));
 								this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
 								this.listenerDelegator.objectImportCompleted(this.importState.jobId, next,
 									ImportOutcome.SKIPPED);
@@ -141,10 +141,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 											ImportResult status = req.getStatus();
 											if (status == null) {
 												failBatch = true;
-												this.log.error(String.format(
-													"The required %s for %s [%s](%s) has not been imported yet",
-													req.getShortLabel(), next.getType().name(), next.getLabel(),
-													next.getId(), req.getStatus().name(), req.getData()));
+												this.log.error(
+													String.format("The required %s for %s has not been imported yet",
+														req.getShortLabel(), next.getDescription()));
 												this.listenerDelegator.objectImportStarted(this.importState.jobId,
 													next);
 												this.listenerDelegator.objectImportCompleted(this.importState.jobId,
@@ -158,9 +157,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 													// Can't continue... a requirement is missing
 													failBatch = true;
 													this.log.error(String.format(
-														"The required %s for %s [%s](%s) was %s, can't import the object (extra info = %s)",
-														req.getShortLabel(), next.getType().name(), next.getLabel(),
-														next.getId(), req.getStatus().name(), req.getData()));
+														"The required %s for %s was %s, can't import the object (extra info = %s)",
+														req.getShortLabel(), next.getDescription(),
+														req.getStatus().name(), req.getData()));
 													this.listenerDelegator.objectImportStarted(this.importState.jobId,
 														next);
 													this.listenerDelegator.objectImportCompleted(this.importState.jobId,
