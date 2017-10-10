@@ -73,7 +73,9 @@ public class Transformer implements CmfTransformer {
 
 	@Override
 	public void close() {
-		// Don't really need to do anything here...
+		if (this.metadataLoader != null) {
+			this.metadataLoader.close();
+		}
 	}
 
 }
