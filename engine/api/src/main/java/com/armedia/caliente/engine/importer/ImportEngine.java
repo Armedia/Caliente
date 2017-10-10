@@ -182,7 +182,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 									this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
 									ImportDelegate<?, S, W, V, C, ?, ?> delegate = this.delegateFactory
 										.newImportDelegate(next);
-									// TODO: Load the external metadata?
 									final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
 										ctx);
 									if (outcome.isEmpty()) {

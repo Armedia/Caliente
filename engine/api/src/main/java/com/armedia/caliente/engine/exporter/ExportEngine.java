@@ -329,8 +329,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			final CmfObject<V> marshaled = sourceObject.marshal(ctx, referrent);
 			if (marshaled == null) { return new Result(ExportSkipReason.SKIPPED); }
 
-			// TODO: Load External Metadata
-
 			Collection<? extends ExportDelegate<?, S, W, V, C, ?, ?>> referenced;
 			try {
 				referenced = sourceObject.identifyRequirements(marshaled, ctx);
