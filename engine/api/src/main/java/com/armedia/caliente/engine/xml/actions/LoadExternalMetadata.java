@@ -29,10 +29,10 @@ import com.armedia.commons.utilities.Tools;
 })
 public class LoadExternalMetadata extends ConditionalAction {
 
-	@XmlElement(name = "from", required = false)
-	protected List<Expression> sources;
+	@XmlElement(name = "source", required = false)
+	protected List<ExternalMetadataSource> sources;
 
-	public List<Expression> getSources() {
+	public List<ExternalMetadataSource> getSources() {
 		if (this.sources == null) {
 			this.sources = new ArrayList<>();
 		}
@@ -41,7 +41,11 @@ public class LoadExternalMetadata extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(TransformationContext ctx) throws TransformationException {
-		for (Expression metadataSource : getSources()) {
+		for (ExternalMetadataSource metadataSource : getSources()) {
+			if (metadataSource == null) {
+				continue;
+			}
+
 			String sourceName;
 			try {
 				sourceName = Tools.toString(Expression.eval(metadataSource, ctx));
@@ -53,8 +57,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 				continue;
 			}
 
-			boolean override = false;
-
+			final boolean override = metadataSource.isOverride();
 			final Map<String, CmfAttribute<CmfValue>> externalAttributes;
 			try {
 				externalAttributes = ctx.getAttributeValues(ctx.getBaseObject(), sourceName);

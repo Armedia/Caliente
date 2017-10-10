@@ -393,11 +393,19 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionLoadExternalMetadataSource.t">
+		<xsd:simpleContent>
+			<xsd:extension base="tns:expression.t">
+				<xsd:attribute name="override" type="xsd:boolean" use="optional" default="false" />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionLoadExternalMetadata.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="from" type="tns:expression.t" minOccurs="0" maxOccurs="unbounded" />
+					<xsd:element name="source" type="tns:actionLoadExternalMetadataSource.t" minOccurs="0" maxOccurs="unbounded" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
