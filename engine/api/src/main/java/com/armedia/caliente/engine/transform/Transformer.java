@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.transform;
 
+import com.armedia.caliente.engine.extmeta.ExternalMetadataLoader;
 import com.armedia.caliente.engine.xml.Transformations;
 import com.armedia.caliente.engine.xml.XmlInstanceException;
 import com.armedia.caliente.engine.xml.XmlInstances;
@@ -14,8 +15,9 @@ public class Transformer implements CmfTransformer {
 	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class);
 
 	private final Transformations transformations;
+	private final ExternalMetadataLoader metadataLoader;
 
-	public Transformer(String location) throws TransformationException {
+	public Transformer(String location, ExternalMetadataLoader metadataLoader) throws TransformationException {
 		try {
 			this.transformations = Transformer.INSTANCES.getInstance(location);
 		} catch (XmlInstanceException e) {
@@ -29,10 +31,12 @@ public class Transformer implements CmfTransformer {
 			throw new TransformationException(
 				String.format("Failed to load the %stransformation configuration%s", pre, post), e);
 		}
+		this.metadataLoader = metadataLoader;
 	}
 
 	private TransformationContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
-		return new TransformationContext(object, new DefaultTransformableObjectFacade(object), mapper);
+		return new TransformationContext(object, new DefaultTransformableObjectFacade(object), mapper,
+			this.metadataLoader);
 	}
 
 	@Override

@@ -181,7 +181,7 @@ public class ImmutableTransformationContext extends TransformationContext {
 
 	public ImmutableTransformationContext(TransformationContext context) {
 		super(context.getBaseObject(), new ImmutableObjectData(context.getTransformableObject()),
-			new ImmutableAttributeMapper(context.getAttributeMapper()),
+			new ImmutableAttributeMapper(context.getAttributeMapper()), context.getMetadataLoader(),
 			ImmutableTransformationContext.makeImmutable(context.getVariables()));
 	}
 

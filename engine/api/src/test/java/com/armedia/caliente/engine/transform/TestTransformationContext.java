@@ -11,7 +11,7 @@ public class TestTransformationContext extends TransformationContext {
 	}
 
 	public TestTransformationContext(CmfValueMapper mapper) {
-		super(null, new TestObjectFacade(), mapper);
+		super(null, new TestObjectFacade(), mapper, null);
 		this.object = TestObjectFacade.class.cast(super.getTransformableObject());
 	}
 

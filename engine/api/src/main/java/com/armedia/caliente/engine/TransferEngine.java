@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.extmeta.ExternalMetadataLoader;
 import com.armedia.caliente.engine.transform.Transformer;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -247,7 +248,8 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	}
 
 	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
-		return new Transformer(cfg.getString(TransferSetting.TRANSFORMATION));
+		ExternalMetadataLoader emdl = new ExternalMetadataLoader(cfg.getString(TransferSetting.EXTERNAL_METADATA));
+		return new Transformer(cfg.getString(TransferSetting.TRANSFORMATION), emdl);
 	}
 
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
