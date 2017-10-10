@@ -11,8 +11,8 @@ import javax.script.ScriptEngineManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.transform.TestTransformationContext;
 import com.armedia.caliente.engine.transform.ObjectContext;
+import com.armedia.caliente.engine.transform.TestTransformationContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.store.CmfDataType;
 
@@ -92,12 +92,7 @@ public class ExpressionTest {
 
 		ObjectContext ctx = new TestTransformationContext();
 
-		try {
-			Expression.eval(null, null);
-			Assert.fail("Did not fail with a null context");
-		} catch (NullPointerException e) {
-			// This is expected
-		}
+		Expression.eval(null, null);
 
 		Assert.assertNull(Expression.eval(null, ctx));
 
