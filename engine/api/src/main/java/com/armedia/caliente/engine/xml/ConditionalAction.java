@@ -61,7 +61,7 @@ public abstract class ConditionalAction implements Action {
 	protected final String getObjectDescription(TransformationContext ctx) {
 		CmfObject<CmfValue> obj = ctx.getBaseObject();
 		if (obj == null) { return null; }
-		return String.format("%s (%s)[%s]", obj.getType().name(), obj.getLabel(), obj.getId());
+		return obj.getDescription();
 	}
 
 	protected abstract void applyTransformation(TransformationContext ctx) throws TransformationException;
