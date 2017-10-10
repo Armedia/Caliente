@@ -64,9 +64,9 @@ public class ActionGroup extends ConditionalAction {
 		@XmlElement(name = "end-transformation", type = EndTransformation.class), //
 		@XmlElement(name = "abort-transformation", type = AbortTransformation.class), //
 	})
-	protected List<? extends Action> actions;
+	protected List<Action> actions;
 
-	public List<? extends Action> getActions() {
+	public List<Action> getActions() {
 		if (this.actions == null) {
 			this.actions = new ArrayList<>();
 		}

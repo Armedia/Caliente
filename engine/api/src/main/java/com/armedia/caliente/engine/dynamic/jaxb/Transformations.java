@@ -26,9 +26,9 @@ import com.armedia.caliente.engine.dynamic.ObjectContext;
 public final class Transformations extends XmlBase implements Action {
 
 	@XmlElement(name = "transformation", type = ActionGroup.class)
-	protected List<? extends Action> elements;
+	protected List<Action> elements;
 
-	public List<? extends Action> getElements() {
+	public List<Action> getElements() {
 		if (this.elements == null) {
 			this.elements = new ArrayList<>();
 		}
