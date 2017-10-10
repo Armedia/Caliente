@@ -14,7 +14,7 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.transform.ActionException;
 import com.armedia.caliente.engine.transform.TestObjectFacade;
-import com.armedia.caliente.engine.transform.TestTransformationContext;
+import com.armedia.caliente.engine.transform.TestObjectContext;
 import com.armedia.caliente.engine.transform.TransformationCompletedException;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.engine.xml.Comparison;
@@ -27,7 +27,7 @@ public class ActionsTest {
 	@Test
 	public void testAbortTransformation() {
 		try {
-			new AbortTransformation().apply(new TestTransformationContext());
+			new AbortTransformation().apply(new TestObjectContext());
 			Assert.fail("Failed to abort the transformation");
 		} catch (ActionException e) {
 			// All is well
@@ -37,7 +37,7 @@ public class ActionsTest {
 	@Test
 	public void testEndTransformation() throws ActionException {
 		try {
-			new EndTransformation().apply(new TestTransformationContext());
+			new EndTransformation().apply(new TestObjectContext());
 			Assert.fail("Failed to end the transformation");
 		} catch (TransformationCompletedException e) {
 			// All is well
@@ -46,7 +46,7 @@ public class ActionsTest {
 
 	@Test
 	public void testSubtypeSet() throws ActionException {
-		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 		Assert.assertNull(object.getSubtype());
 
@@ -85,7 +85,7 @@ public class ActionsTest {
 
 	@Test
 	public void testSubtypeReplace() throws ActionException {
-		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 		object.setSubtype("dctm:test_subtype_value");
 
@@ -119,7 +119,7 @@ public class ActionsTest {
 
 	@Test
 	public void testSecondarySubtypeAdd() throws ActionException {
-		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 
 		SecondarySubtypeAdd action = new SecondarySubtypeAdd();
@@ -139,7 +139,7 @@ public class ActionsTest {
 
 	@Test
 	public void testSecondarySubtypeRemove() throws ActionException {
-		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 
 		SecondarySubtypeRemove action = new SecondarySubtypeRemove();
@@ -537,7 +537,7 @@ public class ActionsTest {
 
 	@Test
 	public void testSecondarySubtypeReplace() throws ActionException {
-		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 
 		SecondarySubtypeReplace action = new SecondarySubtypeReplace();
@@ -588,7 +588,7 @@ public class ActionsTest {
 
 	@Test
 	public void testAttributeSet() throws ActionException {
-		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 
 		AttributeSet action = new AttributeSet();
@@ -613,7 +613,7 @@ public class ActionsTest {
 
 	@Test
 	public void testMapAttributeValue() throws ActionException {
-		TestTransformationContext ctx = new TestTransformationContext();
+		TestObjectContext ctx = new TestObjectContext();
 		TestObjectFacade object = ctx.getTransformableObject();
 
 		MapAttributeValue action = new MapAttributeValue();

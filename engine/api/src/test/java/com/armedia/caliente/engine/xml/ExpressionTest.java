@@ -12,7 +12,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.armedia.caliente.engine.transform.ObjectContext;
-import com.armedia.caliente.engine.transform.TestTransformationContext;
+import com.armedia.caliente.engine.transform.TestObjectContext;
 import com.armedia.caliente.engine.transform.TypedValue;
 import com.armedia.caliente.store.CmfDataType;
 
@@ -30,7 +30,7 @@ public class ExpressionTest {
 
 	@Test
 	public void testValue() throws Exception {
-		ObjectContext ctx = new TestTransformationContext();
+		ObjectContext ctx = new TestObjectContext();
 		Expression e = null;
 
 		e = new Expression();
@@ -90,7 +90,7 @@ public class ExpressionTest {
 			languages.addAll(f.getNames());
 		}
 
-		ObjectContext ctx = new TestTransformationContext();
+		ObjectContext ctx = new TestObjectContext();
 
 		Expression.eval(null, null);
 

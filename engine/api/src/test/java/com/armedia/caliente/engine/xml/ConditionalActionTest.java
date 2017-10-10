@@ -7,14 +7,14 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.transform.ActionException;
 import com.armedia.caliente.engine.transform.ObjectContext;
-import com.armedia.caliente.engine.transform.TestTransformationContext;
+import com.armedia.caliente.engine.transform.TestObjectContext;
 
 public class ConditionalActionTest {
 
 	@Test
 	public void testConditionalAction() throws ActionException {
 		final AtomicReference<Boolean> executed = new AtomicReference<>(null);
-		final ObjectContext ctx = new TestTransformationContext();
+		final ObjectContext ctx = new TestObjectContext();
 
 		ConditionalAction action = new ConditionalAction() {
 			@Override
