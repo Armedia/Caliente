@@ -396,9 +396,9 @@
 	<xsd:complexType name="actionLoadExternalMetadata.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
-				<!-- TODO: Add attributes/elements? -->
-				<!-- TODO: Maybe allow the external metadata sources to be loaded with aliases? -->
-				<!-- TODO: How to allow specific configuration of the metadata bits? -->
+				<xsd:sequence>
+					<xsd:element name="from" type="tns:expression.t" minOccurs="0" maxOccurs="unbounded" />
+				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
