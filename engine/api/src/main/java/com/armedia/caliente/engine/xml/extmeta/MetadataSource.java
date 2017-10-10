@@ -52,6 +52,9 @@ public class MetadataSource {
 	})
 	protected List<AttributeValuesLoader> loaders;
 
+	@XmlAttribute(name = "id", required = true)
+	protected String id;
+
 	@XmlAttribute(name = "failOnError", required = false)
 	protected Boolean failOnError;
 
@@ -91,6 +94,14 @@ public class MetadataSource {
 			}
 		}
 		return ret;
+	}
+
+	public String getId() {
+		return this.id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
 	}
 
 	public boolean isFailOnError() {

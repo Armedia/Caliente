@@ -22,7 +22,7 @@ public class XmlBaseTest {
 
 	@Test
 	public void testExternalMetadata() throws IOException, JAXBException {
-		try (InputStream in = getXml("external-matadata-test-1.xml")) {
+		try (InputStream in = getXml("external-metadata-test-1.xml")) {
 			ExternalMetadata.loadFromXML(in).storeToXML(System.out, true);
 		}
 	}

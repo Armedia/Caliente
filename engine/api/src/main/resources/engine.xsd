@@ -393,6 +393,16 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionLoadExternalMetadata.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<!-- TODO: Add attributes/elements? -->
+				<!-- TODO: Maybe allow the external metadata sources to be loaded with aliases? -->
+				<!-- TODO: How to allow specific configuration of the metadata bits? -->
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionSkipObject.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t" />
@@ -674,6 +684,7 @@
 			<xsd:element name="abort-transformation" type="tns:actionAbortTransformation.t" />
 			<xsd:element name="skip-object" type="tns:actionSkipObject.t" />
 			<xsd:element name="fail-object" type="tns:actionFailObject.t" />
+			<xsd:element name="load-external-metadata" type="tns:actionLoadExternalMetadata.t" />
 		</xsd:choice>
 	</xsd:group>
 
@@ -837,6 +848,7 @@
 				<xsd:element name="from-ddl" type="tns:externalMetadataFromDDL.t" />
 			</xsd:choice>
 		</xsd:sequence>
+		<xsd:attribute name="id" type="xsd:ID" use="required" />
 		<xsd:attribute name="failOnError" type="xsd:boolean" use="optional" default="false" />
 		<xsd:attribute name="failOnMissing" type="xsd:boolean" use="optional" default="false" />
 	</xsd:complexType>

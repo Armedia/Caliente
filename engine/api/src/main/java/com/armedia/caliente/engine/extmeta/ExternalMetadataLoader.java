@@ -1,8 +1,8 @@
 package com.armedia.caliente.engine.extmeta;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -20,14 +20,18 @@ import com.armedia.caliente.store.CmfObject;
 
 public class ExternalMetadataLoader {
 
+	private static final Collection<String> ALL_SOURCES = null;
+
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private static final XmlInstances<ExternalMetadata> INSTANCES = new XmlInstances<>(ExternalMetadata.class,
 		"external-metadata.xml");
 
-	private ExternalMetadata metadata = null;
+	private boolean initialized = false;
 
-	private final List<MetadataSource> sources = new ArrayList<>();
+	private final ExternalMetadata metadata;
+
+	private final Map<String, MetadataSource> sources = new HashMap<>();
 
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -58,7 +62,7 @@ public class ExternalMetadataLoader {
 		}
 		w.lock();
 		try {
-			if (this.metadata == null) { return; }
+			if (this.initialized) { return; }
 			for (final MetadataSource desc : this.metadata.getSources()) {
 				try {
 					desc.initialize();
@@ -69,9 +73,13 @@ public class ExternalMetadataLoader {
 							e);
 					}
 				}
-				this.sources.add(desc);
+				this.sources.put(desc.getId(), desc);
 			}
+			this.initialized = true;
 		} finally {
+			if (!this.initialized) {
+				closeSources();
+			}
 			if (r != null) {
 				r.lock();
 			}
@@ -79,15 +87,29 @@ public class ExternalMetadataLoader {
 		}
 	}
 
-	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws ExternalMetadataException {
+	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, String... sources)
+		throws ExternalMetadataException {
+		if (sources != null) { return getAttributeValues(object, Arrays.asList(sources)); }
+		return getAttributeValues(object, ExternalMetadataLoader.ALL_SOURCES);
+	}
+
+	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, Collection<String> sources)
+		throws ExternalMetadataException {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
 			if (this.metadata == null) {
 				initialize(l);
 			}
+			if (sources == null) {
+				sources = this.sources.keySet();
+			}
 			Map<String, CmfAttribute<V>> finalMap = new HashMap<>();
-			for (final MetadataSource desc : this.sources) {
+			for (String src : sources) {
+				final MetadataSource desc = this.sources.get(src);
+				if (desc == null) { throw new ExternalMetadataException(
+					String.format("No metadata source named [%s] has been defined", src)); }
+
 				Map<String, CmfAttribute<V>> m = null;
 				try {
 					m = desc.getAttributeValues(object);
@@ -126,21 +148,29 @@ public class ExternalMetadataLoader {
 		}
 	}
 
+	private void closeSources() {
+		try {
+			for (MetadataSource desc : this.sources.values()) {
+				try {
+					desc.close();
+				} catch (Throwable t) {
+					this.log.warn("Exception caught while closing a metadata source", t);
+				}
+			}
+		} finally {
+			this.sources.clear();
+		}
+	}
+
 	public void close() {
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
 		try {
-			if (this.metadata == null) { return; }
+			if (!this.initialized) { return; }
 			try {
-				for (MetadataSource desc : this.sources) {
-					try {
-						desc.close();
-					} catch (Throwable t) {
-						this.log.warn("Exception caught while closing a metadata source", t);
-					}
-				}
+				closeSources();
 			} finally {
-				this.metadata = null;
+				this.initialized = false;
 			}
 		} finally {
 			l.unlock();
