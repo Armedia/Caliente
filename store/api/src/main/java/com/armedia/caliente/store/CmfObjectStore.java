@@ -537,19 +537,17 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract int loadObjects(O operation, CmfType type, Collection<String> ids,
 		CmfObjectHandler<CmfValue> handler) throws CmfStorageException;
 
-	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
+	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer) throws CmfStorageException {
+		return fixObjectNames(nameFixer, null, null);
+	}
+
+	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfType type)
 		throws CmfStorageException {
-		return fixObjectNames(translator, nameFixer, null, null);
+		return fixObjectNames(nameFixer, type, null);
 	}
 
-	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer,
-		final CmfType type) throws CmfStorageException {
-		return fixObjectNames(translator, nameFixer, type, null);
-	}
-
-	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer,
-		final CmfType type, Set<String> ids) throws CmfStorageException {
-		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
+	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfType type, Set<String> ids)
+		throws CmfStorageException {
 		if (nameFixer == null) { throw new IllegalArgumentException(
 			"Must provide name fixer to fix the object names"); }
 		if (ids != null) {
@@ -564,7 +562,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		try {
 			final boolean tx = operation.begin();
 			try {
-				int ret = fixObjectNames(operation, translator, nameFixer, type, ids);
+				int ret = fixObjectNames(operation, nameFixer, type, ids);
 				if (tx) {
 					operation.commit();
 				}
@@ -584,8 +582,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> int fixObjectNames(O operation, CmfAttributeTranslator<V> translator,
-		CmfNameFixer<V> nameFixer, CmfType type, Set<String> ids) throws CmfStorageException;
+	protected abstract int fixObjectNames(O operation, CmfNameFixer<CmfValue> nameFixer, CmfType type, Set<String> ids)
+		throws CmfStorageException;
 
 	public final void scanObjectTree(final CmfTreeScanner scanner) throws CmfStorageException {
 		if (scanner == null) { throw new IllegalArgumentException("Must provide scanner to process the object tree"); }

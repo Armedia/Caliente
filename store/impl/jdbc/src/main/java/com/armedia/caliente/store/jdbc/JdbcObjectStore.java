@@ -36,7 +36,6 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfNameFixer;
@@ -720,8 +719,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> int fixObjectNames(final JdbcOperation operation, final CmfAttributeTranslator<V> translator,
-		final CmfNameFixer<V> nameFixer, CmfType type, Set<String> ids) throws CmfStorageException {
+	protected int fixObjectNames(final JdbcOperation operation, final CmfNameFixer<CmfValue> nameFixer, CmfType type,
+		Set<String> ids) throws CmfStorageException {
 		final AtomicInteger result = new AtomicInteger(0);
 		CmfType[] types = {
 			type
@@ -747,14 +746,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 				@Override
 				public boolean handleObject(CmfObject<CmfValue> obj) throws CmfStorageException {
-					final CmfObject<V> decodedObj = translator.decodeObject(obj);
 					final String oldName = obj.getName();
-					final String newName = nameFixer.fixName(decodedObj);
+					final String newName = nameFixer.fixName(obj);
 					if ((newName != null) && !Tools.equals(oldName, newName)) {
 						renameObject(operation, obj, newName);
 						result.incrementAndGet();
 						try {
-							nameFixer.nameFixed(decodedObj, oldName, newName);
+							nameFixer.nameFixed(obj, oldName, newName);
 						} catch (Exception e) {
 							// Just log it
 							JdbcObjectStore.this.log

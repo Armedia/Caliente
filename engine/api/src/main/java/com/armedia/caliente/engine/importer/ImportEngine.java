@@ -612,7 +612,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		for (final CmfType t : idMap.keySet()) {
 			final Map<String, String> mappings = idMap.get(t);
-			CmfNameFixer<V> nameFixer = new CmfNameFixer<V>() {
+			CmfNameFixer<CmfValue> nameFixer = new CmfNameFixer<CmfValue>() {
 
 				@Override
 				public boolean supportsType(CmfType type) {
@@ -620,7 +620,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 
 				@Override
-				public String fixName(CmfObject<V> dataObject) throws CmfStorageException {
+				public String fixName(CmfObject<CmfValue> dataObject) throws CmfStorageException {
 					return mappings.get(dataObject.getId());
 				}
 
@@ -630,13 +630,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 
 				@Override
-				public void nameFixed(CmfObject<V> dataObject, String oldName, String newName) {
+				public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
 					output.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(),
 						oldName, newName);
 				}
 			};
 			output.info("Trying to {} {} {} names...", verb, mappings.size(), t.name());
-			final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer, t, mappings.keySet());
+			final int fixes = objectStore.fixObjectNames(nameFixer, t, mappings.keySet());
 			output.info("Modified {} {} objects", fixes, t.name());
 		}
 	}
