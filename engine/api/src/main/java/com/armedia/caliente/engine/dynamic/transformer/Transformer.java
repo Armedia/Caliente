@@ -1,7 +1,7 @@
 package com.armedia.caliente.engine.dynamic.transformer;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.DefaultTransformableObjectFacade;
+import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
@@ -39,7 +39,7 @@ public class Transformer implements CmfTransformer {
 	}
 
 	private DynamicElementContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
-		return new DynamicElementContext(object, new DefaultTransformableObjectFacade(object), mapper, this.metadataLoader);
+		return new DynamicElementContext(object, new DefaultDynamicObject(object), mapper, this.metadataLoader);
 	}
 
 	@Override

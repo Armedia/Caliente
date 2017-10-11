@@ -14,9 +14,9 @@ import com.armedia.commons.utilities.Tools;
 
 public class ImmutableElementContext extends DynamicElementContext {
 
-	private static class ImmutableTypedValue extends DynamicValue {
+	private static class ImmutableDynamicValue extends DynamicValue {
 
-		public ImmutableTypedValue(DynamicValue pattern) {
+		public ImmutableDynamicValue(DynamicValue pattern) {
 			super(pattern);
 		}
 
@@ -37,17 +37,15 @@ public class ImmutableElementContext extends DynamicElementContext {
 
 	}
 
-	private static class ImmutableObjectData extends DynamicObject {
+	private static class ImmutableDynamicObject extends DynamicObject {
 
 		private final DynamicObject object;
 		private final Map<String, DynamicValue> att;
 		private final Map<String, DynamicValue> priv;
-		private final Set<String> originalSecondaries;
 		private final Set<String> secondaries;
 
-		private ImmutableObjectData(DynamicObject object) {
+		private ImmutableDynamicObject(DynamicObject object) {
 			this.object = object;
-			this.originalSecondaries = Collections.unmodifiableSet(object.getOriginalSecondarySubtypes());
 			this.secondaries = Collections.unmodifiableSet(object.getSecondarySubtypes());
 			this.att = ImmutableElementContext.makeImmutable(object.getAtt());
 			this.priv = ImmutableElementContext.makeImmutable(object.getPriv());
@@ -84,13 +82,13 @@ public class ImmutableElementContext extends DynamicElementContext {
 		}
 
 		@Override
-		public ImmutableObjectData setSubtype(String subtype) {
+		public ImmutableDynamicObject setSubtype(String subtype) {
 			throw ImmutableElementContext.fail();
 		}
 
 		@Override
 		public Set<String> getOriginalSecondarySubtypes() {
-			return this.originalSecondaries;
+			return this.object.getOriginalSecondarySubtypes();
 		}
 
 		@Override
@@ -109,7 +107,7 @@ public class ImmutableElementContext extends DynamicElementContext {
 		}
 
 		@Override
-		public ImmutableObjectData setName(String name) {
+		public ImmutableDynamicObject setName(String name) {
 			throw ImmutableElementContext.fail();
 		}
 
@@ -180,7 +178,7 @@ public class ImmutableElementContext extends DynamicElementContext {
 	}
 
 	public ImmutableElementContext(DynamicElementContext context) {
-		super(context.getBaseObject(), new ImmutableObjectData(context.getDynamicObject()),
+		super(context.getBaseObject(), new ImmutableDynamicObject(context.getDynamicObject()),
 			new ImmutableAttributeMapper(context.getAttributeMapper()), context.getMetadataLoader(),
 			ImmutableElementContext.makeImmutable(context.getVariables()));
 	}
@@ -189,7 +187,7 @@ public class ImmutableElementContext extends DynamicElementContext {
 		if ((orig == null) || orig.isEmpty()) { return Collections.emptyMap(); }
 		Map<String, DynamicValue> copy = new TreeMap<>();
 		for (String s : orig.keySet()) {
-			copy.put(s, new ImmutableTypedValue(orig.get(s)));
+			copy.put(s, new ImmutableDynamicValue(orig.get(s)));
 		}
 		return Tools.freezeMap(new LinkedHashMap<>(copy));
 

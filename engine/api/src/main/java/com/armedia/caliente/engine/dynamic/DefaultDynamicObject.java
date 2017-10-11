@@ -10,13 +10,12 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 
-public class DefaultTransformableObjectFacade extends DynamicObject {
+public class DefaultDynamicObject extends DynamicObject {
 
 	private final CmfObject<CmfValue> object;
-	private final Set<String> originalSecondaries;
 	private final Set<String> secondaries;
 
-	public DefaultTransformableObjectFacade(CmfObject<CmfValue> object) {
+	public DefaultDynamicObject(CmfObject<CmfValue> object) {
 		Objects.requireNonNull(object, "Must provide a CmfObject to pattern this instance on");
 		this.object = object;
 		for (CmfAttribute<CmfValue> att : object.getAttributes()) {
@@ -27,9 +26,7 @@ public class DefaultTransformableObjectFacade extends DynamicObject {
 			this.privateProperties.put(prop.getName(), new DynamicValue(prop));
 		}
 
-		// TODO: Calculate the actual secondaries associated with the object...
-		this.originalSecondaries = new LinkedHashSet<>();
-		this.secondaries = new LinkedHashSet<>();
+		this.secondaries = new LinkedHashSet<>(object.getSecondarySubtypes());
 	}
 
 	@Override
@@ -64,7 +61,7 @@ public class DefaultTransformableObjectFacade extends DynamicObject {
 
 	@Override
 	public Set<String> getOriginalSecondarySubtypes() {
-		return this.originalSecondaries;
+		return this.object.getSecondarySubtypes();
 	}
 
 	@Override
