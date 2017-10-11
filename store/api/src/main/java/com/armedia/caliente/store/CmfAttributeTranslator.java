@@ -188,6 +188,14 @@ public abstract class CmfAttributeTranslator<V> {
 	}
 
 	public final CmfObject<CmfValue> encodeObject(CmfObject<V> obj) {
+		// Can we optimize this if there are no changes needed?
+		if (this.valueClass.equals(CmfValue.class)
+			&& (this.cmfAttributeNameMapper == CmfAttributeTranslator.NULL_MAPPER)) {
+			@SuppressWarnings("unchecked")
+			CmfObject<CmfValue> ret = (CmfObject<CmfValue>) obj;
+			return ret;
+		}
+
 		CmfObject<CmfValue> newObj = new CmfObject<>(//
 			CmfAttributeTranslator.CMFVALUE_TRANSLATOR, //
 			obj.getType(), //
