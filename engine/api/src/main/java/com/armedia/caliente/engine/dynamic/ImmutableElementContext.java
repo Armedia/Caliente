@@ -8,7 +8,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.Tools;
 
@@ -175,6 +178,12 @@ public class ImmutableElementContext extends DynamicElementContext {
 		public Map<String, String> getMappings(CmfType objectType, String mappingName) {
 			return this.mapper.getMappings(objectType, mappingName);
 		}
+	}
+
+	public ImmutableElementContext(CmfObject<CmfValue> baseObject, DynamicObject dynamicObject, CmfValueMapper mapper,
+		ExternalMetadataLoader metadataLoader, Map<String, DynamicValue> variables) {
+		super(baseObject, new ImmutableDynamicObject(dynamicObject), new ImmutableAttributeMapper(mapper),
+			metadataLoader, ImmutableElementContext.makeImmutable(variables));
 	}
 
 	public ImmutableElementContext(DynamicElementContext context) {

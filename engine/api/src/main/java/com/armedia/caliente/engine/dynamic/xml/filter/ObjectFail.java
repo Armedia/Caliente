@@ -1,5 +1,5 @@
 
-package com.armedia.caliente.engine.dynamic.xml.actions;
+package com.armedia.caliente.engine.dynamic.xml.filter;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionFailObject.t")
+@XmlType(name = "filterFailObject.t")
 public class ObjectFail extends ConditionalAction {
 
 	@Override

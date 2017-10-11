@@ -1,42 +1,38 @@
 package com.armedia.caliente.engine.dynamic.filter;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
+import com.armedia.caliente.engine.dynamic.ActionException;
+import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
+import com.armedia.caliente.engine.dynamic.xml.Filters;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
-import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
-import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.engine.dynamic.xml.filter.Filter;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueMapper;
 
 public class ObjectFilter {
 
-	private static final Collection<String> ALL_SOURCES = null;
-
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private static final XmlInstances<ExternalMetadata> INSTANCES = new XmlInstances<>(ExternalMetadata.class,
-		"external-metadata.xml");
+	private static final XmlInstances<Filters> INSTANCES = new XmlInstances<>(Filters.class);
 
 	private boolean initialized = false;
 
 	private final String locationDesc;
-	private final ExternalMetadata metadata;
-
-	private final Map<String, MetadataSource> sources = new LinkedHashMap<>();
+	private final Filters filters;
+	private final List<Filter> activeFilters = new ArrayList<>();
 
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -47,7 +43,7 @@ public class ObjectFilter {
 			this.locationDesc = String.format("configuration [%s]", location);
 		}
 		try {
-			this.metadata = ObjectFilter.INSTANCES.getInstance(location);
+			this.filters = ObjectFilter.INSTANCES.getInstance(location);
 		} catch (XmlInstanceException e) {
 			throw new FilterException(
 				String.format("Failed to load the external metadata configuration from %s", this.locationDesc), e);
@@ -55,126 +51,39 @@ public class ObjectFilter {
 	}
 
 	public void initialize() throws FilterException {
-		initialize(null);
-	}
-
-	private void initialize(final Lock r) throws FilterException {
 		final Lock w = this.rwLock.writeLock();
-		if (r != null) {
-			r.unlock();
-		}
 		w.lock();
 		try {
 			if (this.initialized) { return; }
-			for (final MetadataSource desc : this.metadata.getSources()) {
-				try {
-					desc.initialize();
-				} catch (Exception e) {
-					if (desc.isFailOnError()) {
-						// This item is required, so we must abort
-						throw new FilterException("Failed to initialize a required external metadata source", e);
-					}
-				}
-				this.sources.put(desc.getId(), desc);
-			}
+			this.activeFilters.addAll(this.filters.getFilters());
 			this.initialized = true;
 		} finally {
-			if (!this.initialized) {
-				closeSources();
-			}
-			if (r != null) {
-				r.lock();
-			}
 			w.unlock();
 		}
 	}
 
-	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws FilterException {
-		return getAttributeValues(object, ObjectFilter.ALL_SOURCES);
-	}
-
-	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, String firstSourceName,
-		String... sourceNames) throws FilterException {
-		if (StringUtils.isEmpty(firstSourceName)) { throw new IllegalArgumentException(
-			"Must provide the name of a source to retrieve the values from"); }
-		List<String> finalSources = new ArrayList<>();
-		finalSources.add(firstSourceName);
-		for (String source : sourceNames) {
-			if (StringUtils.isEmpty(source)) { throw new IllegalArgumentException(
-				String.format("The given source name [%s] is not valid from %s", source, this.locationDesc)); }
-			finalSources.add(source);
+	public <V> boolean accept(CmfObject<V> object, CmfValueMapper mapper) throws FilterException {
+		Objects.requireNonNull(object, "Must provide an object to filter");
+		CmfObject<CmfValue> cmfObject = object.getTranslator().encodeObject(object);
+		DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject), mapper,
+			null);
+		for (Filter f : this.activeFilters) {
+			try {
+				f.apply(ctx);
+			} catch (ProcessingCompletedException e) {
+				// The object was explicitly accepted!
+				break;
+			} catch (ObjectFilteredException e) {
+				// The object was explicitly filtered!
+				this.log.info("Explicitly filtered {}", object.getDescription());
+				return false;
+			} catch (ActionException e) {
+				this.log.trace("Explicitly failed {}", object.getDescription(), e);
+				throw new FilterException(e);
+			}
 		}
-		return getAttributeValues(object, finalSources);
-	}
-
-	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, Collection<String> sourceNames)
-		throws FilterException {
-		Objects.requireNonNull(object, "Must provide a CmfObject instance to retrieve extra metadata for");
-		final Lock l = this.rwLock.readLock();
-		l.lock();
-		try {
-			if (this.metadata == null) {
-				initialize(l);
-			}
-			if (sourceNames == null) {
-				sourceNames = this.sources.keySet();
-			}
-			Map<String, CmfAttribute<V>> finalMap = new HashMap<>();
-			for (String src : sourceNames) {
-				final MetadataSource source = this.sources.get(src);
-				if (source == null) { throw new FilterException(
-					String.format("No metadata source named [%s] has been defined at %s", src, this.locationDesc)); }
-
-				Map<String, CmfAttribute<V>> m = null;
-				try {
-					m = source.getAttributeValues(object);
-				} catch (Exception e) {
-					if (source.isFailOnError()) {
-						// There was an error which we should fail on
-						throw new FilterException(String.format(
-							"Exception caught while retrieving required external metadata for %s from source [%s] at %s",
-							object.getDescription(), source.getId(), this.locationDesc), e);
-					}
-					this.log.warn("Exception caught while retrieving external metadata for {} from source [{}] at {}",
-						object.getDescription(), source.getId(), this.locationDesc, e);
-					continue;
-				}
-				if (m == null) {
-					if (source.isFailOnMissing()) {
-						// The data is required, but not present - explode!!
-						throw new FilterException(String.format(
-							"Did not retrieve any required external metadata for %s from source [%s] at %s",
-							object.getDescription(), source.getId(), this.locationDesc));
-					}
-					if (this.log.isTraceEnabled()) {
-						this.log.warn("Did not retrieve any external metadata for {} from source [{}] at {}",
-							object.getDescription(), source.getId(), this.locationDesc);
-					}
-					continue;
-				}
-
-				// All is well...store what was retrieved
-				finalMap.putAll(m);
-			}
-			return finalMap;
-		} finally {
-			l.unlock();
-		}
-	}
-
-	private void closeSources() {
-		try {
-			for (MetadataSource desc : this.sources.values()) {
-				try {
-					desc.close();
-				} catch (Throwable t) {
-					this.log.warn("Exception caught while closing metadata source [{}] at {}", desc.getId(),
-						this.locationDesc, t);
-				}
-			}
-		} finally {
-			this.sources.clear();
-		}
+		this.log.trace("Accepting {}", object.getDescription());
+		return true;
 	}
 
 	public void close() {
@@ -183,7 +92,7 @@ public class ObjectFilter {
 		try {
 			if (!this.initialized) { return; }
 			try {
-				closeSources();
+				this.activeFilters.clear();
 			} finally {
 				this.initialized = false;
 			}

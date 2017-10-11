@@ -411,19 +411,19 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionSkipObject.t">
+	<xsd:complexType name="filterSkipObject.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionFailObject.t">
+	<xsd:complexType name="filterFailObject.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionProcessObject.t">
+	<xsd:complexType name="filterProcessObject.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t" />
 		</xsd:complexContent>
@@ -690,17 +690,15 @@
 			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
 			<xsd:element name="end-transformation" type="tns:actionEndTransformation.t" />
 			<xsd:element name="abort-transformation" type="tns:actionAbortTransformation.t" />
-			<xsd:element name="skip-object" type="tns:actionSkipObject.t" />
-			<xsd:element name="fail-object" type="tns:actionFailObject.t" />
 			<xsd:element name="load-external-metadata" type="tns:actionLoadExternalMetadata.t" />
 		</xsd:choice>
 	</xsd:group>
 
 	<xsd:group name="filterActions">
 		<xsd:choice>
-			<xsd:element name="process-object" type="tns:actionProcessObject.t" />
-			<xsd:element name="skip-object" type="tns:actionSkipObject.t" />
-			<xsd:element name="fail-object" type="tns:actionFailObject.t" />
+			<xsd:element name="process-object" type="tns:filterProcessObject.t" />
+			<xsd:element name="skip-object" type="tns:filterSkipObject.t" />
+			<xsd:element name="fail-object" type="tns:filterFailObject.t" />
 		</xsd:choice>
 	</xsd:group>
 

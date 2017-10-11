@@ -28,8 +28,7 @@ public class ExternalMetadataLoader {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private static final XmlInstances<ExternalMetadata> INSTANCES = new XmlInstances<>(ExternalMetadata.class,
-		"external-metadata.xml");
+	private static final XmlInstances<ExternalMetadata> INSTANCES = new XmlInstances<>(ExternalMetadata.class);
 
 	private boolean initialized = false;
 
