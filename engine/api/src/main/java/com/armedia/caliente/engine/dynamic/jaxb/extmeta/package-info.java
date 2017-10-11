@@ -1,6 +1,10 @@
-@javax.xml.bind.annotation.XmlSchema(namespace = com.armedia.caliente.engine.dynamic.jaxb.ObjectFactory.NAMESPACE, elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED, xmlns = {
-	@XmlNs(prefix = "", namespaceURI = com.armedia.caliente.engine.dynamic.jaxb.ObjectFactory.NAMESPACE)
+@XmlSchema(namespace = ObjectFactory.NAMESPACE, elementFormDefault = XmlNsForm.QUALIFIED, xmlns = {
+	@XmlNs(prefix = "", namespaceURI = ObjectFactory.NAMESPACE)
 })
 package com.armedia.caliente.engine.dynamic.jaxb.extmeta;
 
 import javax.xml.bind.annotation.XmlNs;
+import javax.xml.bind.annotation.XmlNsForm;
+import javax.xml.bind.annotation.XmlSchema;
+
+import com.armedia.caliente.engine.dynamic.jaxb.ObjectFactory;
