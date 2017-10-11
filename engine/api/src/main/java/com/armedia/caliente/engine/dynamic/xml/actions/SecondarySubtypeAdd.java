@@ -33,9 +33,14 @@ public class SecondarySubtypeAdd extends ConditionalAction {
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
-		String secondary = StringUtils.strip(Tools.toString(ActionTools.eval(getValue(), ctx)));
-		if (!StringUtils.isEmpty(secondary)) {
-			ctx.getDynamicObject().getSecondarySubtypes().add(secondary);
+		String secondary = Tools.toString(ActionTools.eval(getValue(), ctx));
+		if (StringUtils.isEmpty(secondary)) { return; }
+
+		for (String s : Tools.splitCSVEscaped(secondary)) {
+			s = StringUtils.strip(s);
+			if (!StringUtils.isEmpty(s)) {
+				ctx.getDynamicObject().getSecondarySubtypes().add(s);
+			}
 		}
 	}
 
