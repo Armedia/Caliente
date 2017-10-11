@@ -1,8 +1,8 @@
 package com.armedia.caliente.engine.dynamic.xml;
 
-import com.armedia.caliente.engine.TransferEngineException;
+import com.armedia.caliente.engine.dynamic.DynamicElementException;
 
-public class XmlInstanceException extends TransferEngineException {
+public class XmlInstanceException extends DynamicElementException {
 	private static final long serialVersionUID = 1L;
 
 	public XmlInstanceException() {
