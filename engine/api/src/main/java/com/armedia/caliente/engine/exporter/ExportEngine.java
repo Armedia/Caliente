@@ -211,29 +211,20 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				switch (locked) {
 					case LOCK_ACQUIRED:
 						// We got the lock, which means we create the locker object
-						if (this.log.isTraceEnabled()) {
-							this.log.trace(String.format("Locked %s for storage", logLabel));
-						}
+						this.log.trace("Locked {} for storage", logLabel);
 						break;
 
 					case LOCK_CONCURRENT:
-						if (this.log.isTraceEnabled()) {
-							this.log
-								.trace(String.format("%s is already locked for storage by another thread", logLabel));
-						}
+						this.log.trace("{} is already locked for storage by another thread", logLabel);
 						return new Result(ExportSkipReason.ALREADY_LOCKED);
 
 					case ALREADY_FAILED:
 						String msg = String.format("%s was already failed, skipping it", logLabel);
-						if (this.log.isTraceEnabled()) {
-							this.log.trace(msg);
-						}
+						this.log.trace(msg);
 						return new Result(ExportSkipReason.ALREADY_FAILED, msg);
 
 					case ALREADY_STORED:
-						if (this.log.isTraceEnabled()) {
-							this.log.trace(String.format("%s is already locked for storage, skipping it", logLabel));
-						}
+						this.log.trace("{} is already stored", logLabel);
 						return new Result(ExportSkipReason.ALREADY_STORED);
 				}
 			} catch (CmfStorageException e) {
