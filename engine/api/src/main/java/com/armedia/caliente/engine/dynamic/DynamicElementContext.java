@@ -24,13 +24,13 @@ public class DynamicElementContext implements ScriptContextConfig {
 
 	private final Map<String, DynamicValue> variables;
 
-	public DynamicElementContext(CmfObject<CmfValue> baseObject, DynamicObject dynamicObject,
-		CmfValueMapper mapper, ExternalMetadataLoader metadataLoader) {
+	public DynamicElementContext(CmfObject<CmfValue> baseObject, DynamicObject dynamicObject, CmfValueMapper mapper,
+		ExternalMetadataLoader metadataLoader) {
 		this(baseObject, dynamicObject, mapper, metadataLoader, null);
 	}
 
-	protected DynamicElementContext(CmfObject<CmfValue> baseObject, DynamicObject dynamicObject,
-		CmfValueMapper mapper, ExternalMetadataLoader metadataLoader, Map<String, DynamicValue> variables) {
+	protected DynamicElementContext(CmfObject<CmfValue> baseObject, DynamicObject dynamicObject, CmfValueMapper mapper,
+		ExternalMetadataLoader metadataLoader, Map<String, DynamicValue> variables) {
 		this.baseObject = baseObject;
 		this.dynamicObject = dynamicObject;
 		this.mapper = mapper;
@@ -45,7 +45,7 @@ public class DynamicElementContext implements ScriptContextConfig {
 		return this.baseObject;
 	}
 
-	public ExternalMetadataLoader getMetadataLoader() {
+	protected ExternalMetadataLoader getMetadataLoader() {
 		return this.metadataLoader;
 	}
 
