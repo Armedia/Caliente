@@ -3,7 +3,7 @@ package com.armedia.caliente.engine.dynamic.jaxb.actions;
 import javax.script.ScriptException;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 
 class ActionTools {
@@ -12,7 +12,7 @@ class ActionTools {
 		// TODO Auto-generated constructor stub
 	}
 
-	public static Object eval(Expression e, ObjectContext ctx) throws ActionException {
+	public static Object eval(Expression e, DynamicElementContext ctx) throws ActionException {
 		try {
 			return Expression.eval(e, ctx);
 		} catch (ScriptException ex) {

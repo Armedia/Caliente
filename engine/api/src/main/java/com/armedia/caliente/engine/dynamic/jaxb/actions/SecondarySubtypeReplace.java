@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlType;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.caliente.engine.dynamic.jaxb.RegularExpression;
@@ -48,7 +48,7 @@ public class SecondarySubtypeReplace extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(ObjectContext ctx) throws ActionException {
+	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
 		Set<String> currentSecondaries = ctx.getTransformableObject().getSecondarySubtypes();
 		if (currentSecondaries.isEmpty()) { return; }
 

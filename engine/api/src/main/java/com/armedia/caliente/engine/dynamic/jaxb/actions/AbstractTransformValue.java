@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
 import com.armedia.caliente.engine.dynamic.jaxb.ComparisonAdapter;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
@@ -43,9 +43,9 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 		this.name = value;
 	}
 
-	protected abstract Map<String, TypedValue> getCandidateValues(ObjectContext ctx);
+	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx);
 
-	protected abstract void applyTransformation(ObjectContext ctx, TypedValue candidate)
+	protected abstract void applyTransformation(DynamicElementContext ctx, DynamicValue candidate)
 		throws ActionException;
 
 	protected boolean failShort() {
@@ -53,17 +53,17 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 	}
 
 	@Override
-	protected final void applyTransformation(ObjectContext ctx) throws ActionException {
+	protected final void applyTransformation(DynamicElementContext ctx) throws ActionException {
 		if (failShort()) { return; }
 		final String comparand = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (comparand == null) { throw new ActionException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();
 
-		final Map<String, TypedValue> values = getCandidateValues(ctx);
+		final Map<String, DynamicValue> values = getCandidateValues(ctx);
 
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!
-			TypedValue candidate = values.get(comparand);
+			DynamicValue candidate = values.get(comparand);
 			if (candidate != null) {
 				applyTransformation(ctx, candidate);
 			}

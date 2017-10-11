@@ -12,11 +12,11 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.Tools;
 
-public class ImmutableObjectContext extends ObjectContext {
+public class ImmutableElementContext extends DynamicElementContext {
 
-	private static class ImmutableTypedValue extends TypedValue {
+	private static class ImmutableTypedValue extends DynamicValue {
 
-		public ImmutableTypedValue(TypedValue pattern) {
+		public ImmutableTypedValue(DynamicValue pattern) {
 			super(pattern);
 		}
 
@@ -26,31 +26,31 @@ public class ImmutableObjectContext extends ObjectContext {
 		}
 
 		@Override
-		public TypedValue setValue(Object value) {
-			throw ImmutableObjectContext.fail();
+		public DynamicValue setValue(Object value) {
+			throw ImmutableElementContext.fail();
 		}
 
 		@Override
-		public TypedValue setValues(Iterator<?> values) {
-			throw ImmutableObjectContext.fail();
+		public DynamicValue setValues(Iterator<?> values) {
+			throw ImmutableElementContext.fail();
 		}
 
 	}
 
-	private static class ImmutableObjectData extends TransformableObject {
+	private static class ImmutableObjectData extends DynamicObject {
 
-		private final TransformableObject object;
-		private final Map<String, TypedValue> att;
-		private final Map<String, TypedValue> priv;
+		private final DynamicObject object;
+		private final Map<String, DynamicValue> att;
+		private final Map<String, DynamicValue> priv;
 		private final Set<String> originalSecondaries;
 		private final Set<String> secondaries;
 
-		private ImmutableObjectData(TransformableObject object) {
+		private ImmutableObjectData(DynamicObject object) {
 			this.object = object;
 			this.originalSecondaries = Collections.unmodifiableSet(object.getOriginalSecondarySubtypes());
 			this.secondaries = Collections.unmodifiableSet(object.getSecondarySubtypes());
-			this.att = ImmutableObjectContext.makeImmutable(object.getAtt());
-			this.priv = ImmutableObjectContext.makeImmutable(object.getPriv());
+			this.att = ImmutableElementContext.makeImmutable(object.getAtt());
+			this.priv = ImmutableElementContext.makeImmutable(object.getPriv());
 		}
 
 		@Override
@@ -85,7 +85,7 @@ public class ImmutableObjectContext extends ObjectContext {
 
 		@Override
 		public ImmutableObjectData setSubtype(String subtype) {
-			throw ImmutableObjectContext.fail();
+			throw ImmutableElementContext.fail();
 		}
 
 		@Override
@@ -110,7 +110,7 @@ public class ImmutableObjectContext extends ObjectContext {
 
 		@Override
 		public ImmutableObjectData setName(String name) {
-			throw ImmutableObjectContext.fail();
+			throw ImmutableElementContext.fail();
 		}
 
 		@Override
@@ -124,12 +124,12 @@ public class ImmutableObjectContext extends ObjectContext {
 		}
 
 		@Override
-		public Map<String, TypedValue> getAtt() {
+		public Map<String, DynamicValue> getAtt() {
 			return this.att;
 		}
 
 		@Override
-		public Map<String, TypedValue> getPriv() {
+		public Map<String, DynamicValue> getPriv() {
 			return this.priv;
 		}
 
@@ -150,7 +150,7 @@ public class ImmutableObjectContext extends ObjectContext {
 		@Override
 		protected Mapping createMapping(CmfType objectType, String mappingName, String sourceValue,
 			String targetValue) {
-			throw ImmutableObjectContext.fail();
+			throw ImmutableElementContext.fail();
 		}
 
 		@Override
@@ -179,15 +179,15 @@ public class ImmutableObjectContext extends ObjectContext {
 		}
 	}
 
-	public ImmutableObjectContext(ObjectContext context) {
+	public ImmutableElementContext(DynamicElementContext context) {
 		super(context.getBaseObject(), new ImmutableObjectData(context.getTransformableObject()),
 			new ImmutableAttributeMapper(context.getAttributeMapper()), context.getMetadataLoader(),
-			ImmutableObjectContext.makeImmutable(context.getVariables()));
+			ImmutableElementContext.makeImmutable(context.getVariables()));
 	}
 
-	private static Map<String, TypedValue> makeImmutable(Map<String, TypedValue> orig) {
+	private static Map<String, DynamicValue> makeImmutable(Map<String, DynamicValue> orig) {
 		if ((orig == null) || orig.isEmpty()) { return Collections.emptyMap(); }
-		Map<String, TypedValue> copy = new TreeMap<>();
+		Map<String, DynamicValue> copy = new TreeMap<>();
 		for (String s : orig.keySet()) {
 			copy.put(s, new ImmutableTypedValue(orig.get(s)));
 		}

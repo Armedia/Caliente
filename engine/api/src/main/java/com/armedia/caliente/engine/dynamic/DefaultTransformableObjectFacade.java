@@ -10,7 +10,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 
-public class DefaultTransformableObjectFacade extends TransformableObject {
+public class DefaultTransformableObjectFacade extends DynamicObject {
 
 	private final CmfObject<CmfValue> object;
 	private final Set<String> originalSecondaries;
@@ -20,11 +20,11 @@ public class DefaultTransformableObjectFacade extends TransformableObject {
 		Objects.requireNonNull(object, "Must provide a CmfObject to pattern this instance on");
 		this.object = object;
 		for (CmfAttribute<CmfValue> att : object.getAttributes()) {
-			this.attributes.put(att.getName(), new TypedValue(att));
+			this.attributes.put(att.getName(), new DynamicValue(att));
 		}
 
 		for (CmfProperty<CmfValue> prop : object.getProperties()) {
-			this.privateProperties.put(prop.getName(), new TypedValue(prop));
+			this.privateProperties.put(prop.getName(), new DynamicValue(prop));
 		}
 
 		// TODO: Calculate the actual secondaries associated with the object...

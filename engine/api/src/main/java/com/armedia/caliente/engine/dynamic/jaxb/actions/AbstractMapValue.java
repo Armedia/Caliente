@@ -10,8 +10,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.jaxb.Cardinality;
 import com.armedia.caliente.engine.dynamic.jaxb.CardinalityAdapter;
 import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
@@ -55,7 +55,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 		this.defVal = defaultValue;
 	}
 
-	protected boolean mapValue(ObjectContext ctx, CmfDataType type, Object candidate, AtomicReference<Object> result)
+	protected boolean mapValue(DynamicElementContext ctx, CmfDataType type, Object candidate, AtomicReference<Object> result)
 		throws ActionException {
 
 		// Apply the comparison to each value in the typed value, and if there's a
@@ -91,7 +91,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected void applyTransformation(ObjectContext ctx, TypedValue candidate) throws ActionException {
+	protected void applyTransformation(DynamicElementContext ctx, DynamicValue candidate) throws ActionException {
 		// Shortcut - avoid any work if no work can be done...
 		if (candidate.isEmpty()) { return; }
 

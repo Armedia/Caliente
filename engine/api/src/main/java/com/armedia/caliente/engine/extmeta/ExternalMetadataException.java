@@ -1,8 +1,8 @@
 package com.armedia.caliente.engine.extmeta;
 
-import com.armedia.caliente.engine.TransferEngineException;
+import com.armedia.caliente.engine.dynamic.DynamicElementException;
 
-public class ExternalMetadataException extends TransferEngineException {
+public class ExternalMetadataException extends DynamicElementException {
 	private static final long serialVersionUID = 1L;
 
 	public ExternalMetadataException() {

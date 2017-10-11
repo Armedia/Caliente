@@ -10,8 +10,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.jaxb.Cardinality;
 import com.armedia.caliente.engine.dynamic.jaxb.CardinalityAdapter;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
@@ -56,7 +56,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected final void applyTransformation(ObjectContext ctx, TypedValue candidate) throws ActionException {
+	protected final void applyTransformation(DynamicElementContext ctx, DynamicValue candidate) throws ActionException {
 		RegularExpression regexBase = getRegex();
 		final String regex = Tools.toString(ActionTools.eval(regexBase, ctx));
 		if (regex == null) { throw new ActionException("No regular expression given to check against"); }

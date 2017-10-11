@@ -72,8 +72,7 @@ public class ObjectFilter {
 				} catch (Exception e) {
 					if (desc.isFailOnError()) {
 						// This item is required, so we must abort
-						throw new FilterException("Failed to initialize a required external metadata source",
-							e);
+						throw new FilterException("Failed to initialize a required external metadata source", e);
 					}
 				}
 				this.sources.put(desc.getId(), desc);

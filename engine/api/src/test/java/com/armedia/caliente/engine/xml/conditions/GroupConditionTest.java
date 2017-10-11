@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.conditions.ConditionGroup;
 import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupAnd;
 import com.armedia.caliente.engine.dynamic.jaxb.conditions.GroupNand;
@@ -49,7 +49,7 @@ public class GroupConditionTest {
 
 	public void testGrouped(ConditionGroup c, Integer[][] data) throws ConditionException {
 		final String name = c.getClass().getSimpleName();
-		final ObjectContext ctx = new TestObjectContext();
+		final DynamicElementContext ctx = new TestObjectContext();
 		for (Integer[] d : data) {
 			List<Condition> conditions = GroupConditionTest.convertToList(d, true);
 			final boolean expected = (d[5] != 0);
@@ -207,7 +207,7 @@ public class GroupConditionTest {
 	@Test
 	public void testNot() throws ConditionException {
 		GroupNot not = new GroupNot();
-		final ObjectContext ctx = new TestObjectContext();
+		final DynamicElementContext ctx = new TestObjectContext();
 		not.setCondition(ConditionTools.COND_FALSE);
 		Assert.assertTrue(not.check(ctx));
 		not.setCondition(ConditionTools.COND_TRUE);

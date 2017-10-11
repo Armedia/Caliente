@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.caliente.engine.dynamic.jaxb.RegularExpression;
@@ -38,12 +38,12 @@ public abstract class AbstractSingleReplace extends ConditionalAction {
 		this.replacement = replacement;
 	}
 
-	protected abstract String getOldValue(ObjectContext ctx);
+	protected abstract String getOldValue(DynamicElementContext ctx);
 
-	protected abstract void setNewValue(ObjectContext ctx, String newValue);
+	protected abstract void setNewValue(DynamicElementContext ctx, String newValue);
 
 	@Override
-	protected final void applyTransformation(ObjectContext ctx) throws ActionException {
+	protected final void applyTransformation(DynamicElementContext ctx) throws ActionException {
 		final RegularExpression regexBase = getRegex();
 		final String regex = Tools.toString(ActionTools.eval(getRegex(), ctx));
 		if (regex == null) { throw new ActionException("No regular expression given to check against"); }

@@ -14,8 +14,8 @@ import javax.xml.bind.annotation.XmlType;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.caliente.engine.extmeta.ExternalMetadataException;
@@ -40,7 +40,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(ObjectContext ctx) throws ActionException {
+	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
 		for (ExternalMetadataSource metadataSource : getSources()) {
 			if (metadataSource == null) {
 				continue;
@@ -68,11 +68,11 @@ public class LoadExternalMetadata extends ConditionalAction {
 					e);
 			}
 
-			Map<String, TypedValue> currentAttributes = ctx.getTransformableObject().getAtt();
+			Map<String, DynamicValue> currentAttributes = ctx.getTransformableObject().getAtt();
 			for (String attributeName : externalAttributes.keySet()) {
 				if (override || !currentAttributes.containsKey(attributeName)) {
 					final CmfAttribute<CmfValue> external = externalAttributes.get(attributeName);
-					final TypedValue newAttribute = new TypedValue(external);
+					final DynamicValue newAttribute = new DynamicValue(external);
 					currentAttributes.put(attributeName, newAttribute);
 					final List<Object> newValues = new ArrayList<>(external.getValueCount());
 					for (CmfValue v : external) {

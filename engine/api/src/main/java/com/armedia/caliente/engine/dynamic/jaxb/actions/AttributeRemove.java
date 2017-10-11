@@ -5,8 +5,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionRemoveAttribute.t", propOrder = {
@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.dynamic.TypedValue;
 public class AttributeRemove extends AbstractTransformValueAttribute {
 
 	@Override
-	protected void applyTransformation(ObjectContext ctx, TypedValue candidate) {
+	protected void applyTransformation(DynamicElementContext ctx, DynamicValue candidate) {
 		ctx.getTransformableObject().getAtt().remove(candidate.getName());
 	}
 

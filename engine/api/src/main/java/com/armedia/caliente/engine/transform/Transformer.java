@@ -2,7 +2,7 @@ package com.armedia.caliente.engine.transform;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DefaultTransformableObjectFacade;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.Transformations;
 import com.armedia.caliente.engine.dynamic.jaxb.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.jaxb.XmlInstances;
@@ -37,8 +37,8 @@ public class Transformer implements CmfTransformer {
 		this.metadataLoader = metadataLoader;
 	}
 
-	private ObjectContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
-		return new ObjectContext(object, new DefaultTransformableObjectFacade(object), mapper, this.metadataLoader);
+	private DynamicElementContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
+		return new DynamicElementContext(object, new DefaultTransformableObjectFacade(object), mapper, this.metadataLoader);
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class Transformer implements CmfTransformer {
 			//
 			return object;
 		}
-		ObjectContext ctx = createContext(mapper, object);
+		DynamicElementContext ctx = createContext(mapper, object);
 		try {
 			try {
 				this.transformations.apply(ctx);
@@ -66,7 +66,7 @@ public class Transformer implements CmfTransformer {
 		}
 	}
 
-	private void destroyContext(ObjectContext ctx) {
+	private void destroyContext(DynamicElementContext ctx) {
 		// Clean things out... to help the GC...
 		ctx.getTransformableObject().getAtt().clear();
 		ctx.getTransformableObject().getPriv().clear();

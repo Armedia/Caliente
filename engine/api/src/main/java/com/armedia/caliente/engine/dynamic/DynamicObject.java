@@ -15,10 +15,10 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class TransformableObject {
+public abstract class DynamicObject {
 
-	protected final Map<String, TypedValue> attributes = new TreeMap<>();
-	protected final Map<String, TypedValue> privateProperties = new TreeMap<>();
+	protected final Map<String, DynamicValue> attributes = new TreeMap<>();
+	protected final Map<String, DynamicValue> privateProperties = new TreeMap<>();
 
 	private String subtype = null;
 	private String name = null;
@@ -39,7 +39,7 @@ public abstract class TransformableObject {
 		return Tools.coalesce(this.subtype, getOriginalSubtype());
 	}
 
-	public TransformableObject setSubtype(String subtype) {
+	public DynamicObject setSubtype(String subtype) {
 		this.subtype = subtype;
 		return this;
 	}
@@ -48,7 +48,7 @@ public abstract class TransformableObject {
 		return Tools.coalesce(this.name, getOriginalName());
 	}
 
-	public TransformableObject setName(String name) {
+	public DynamicObject setName(String name) {
 		this.name = name;
 		return this;
 	}
@@ -65,11 +65,11 @@ public abstract class TransformableObject {
 
 	public abstract String getProductVersion();
 
-	public Map<String, TypedValue> getAtt() {
+	public Map<String, DynamicValue> getAtt() {
 		return this.attributes;
 	}
 
-	public Map<String, TypedValue> getPriv() {
+	public Map<String, DynamicValue> getPriv() {
 		return this.privateProperties;
 	}
 
@@ -93,7 +93,7 @@ public abstract class TransformableObject {
 		// Create the list of attributes to copy...
 		Collection<CmfAttribute<CmfValue>> attributeList = new ArrayList<>(this.attributes.size());
 		for (String s : this.attributes.keySet()) {
-			TypedValue v = this.attributes.get(s);
+			DynamicValue v = this.attributes.get(s);
 			CmfAttribute<CmfValue> a = new CmfAttribute<>(v.getName(), v.getType(), v.isRepeating());
 			if (a.isRepeating()) {
 				for (Object o : v.getValues()) {
@@ -123,7 +123,7 @@ public abstract class TransformableObject {
 		// Create the list of properties to copy...
 		Collection<CmfProperty<CmfValue>> propertyList = new ArrayList<>(this.privateProperties.size());
 		for (String s : this.privateProperties.keySet()) {
-			TypedValue v = this.privateProperties.get(s);
+			DynamicValue v = this.privateProperties.get(s);
 			CmfProperty<CmfValue> p = new CmfProperty<>(v.getName(), v.getType(), v.isRepeating());
 			if (p.isRepeating()) {
 				for (Object o : v.getValues()) {

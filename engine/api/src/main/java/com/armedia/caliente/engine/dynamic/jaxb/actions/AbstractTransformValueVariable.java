@@ -5,14 +5,14 @@ import java.util.Map;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 
 @XmlTransient
 public abstract class AbstractTransformValueVariable extends AbstractTransformValue {
 
 	@Override
-	protected final Map<String, TypedValue> getCandidateValues(ObjectContext ctx) {
+	protected final Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx) {
 		return ctx.getVariables();
 	}
 

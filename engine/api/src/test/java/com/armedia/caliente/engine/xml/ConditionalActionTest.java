@@ -6,7 +6,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
 import com.armedia.caliente.engine.transform.TestObjectContext;
 
@@ -15,11 +15,11 @@ public class ConditionalActionTest {
 	@Test
 	public void testConditionalAction() throws ActionException {
 		final AtomicReference<Boolean> executed = new AtomicReference<>(null);
-		final ObjectContext ctx = new TestObjectContext();
+		final DynamicElementContext ctx = new TestObjectContext();
 
 		ConditionalAction action = new ConditionalAction() {
 			@Override
-			protected void applyTransformation(ObjectContext ctx) throws ActionException {
+			protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
 				executed.set(true);
 			}
 		};

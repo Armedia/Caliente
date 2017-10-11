@@ -14,12 +14,12 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
-public class TypedValue extends CmfBaseSetting {
+public class DynamicValue extends CmfBaseSetting {
 
 	private final List<Object> values = new ArrayList<>();
 	private Object value = null;
 
-	public TypedValue(TypedValue member) {
+	public DynamicValue(DynamicValue member) {
 		super(member);
 		if (member.isRepeating()) {
 			this.values.addAll(member.values);
@@ -28,11 +28,11 @@ public class TypedValue extends CmfBaseSetting {
 		}
 	}
 
-	public TypedValue(String name, CmfDataType type, boolean multivalue) {
+	public DynamicValue(String name, CmfDataType type, boolean multivalue) {
 		super(name, type, multivalue);
 	}
 
-	public <V extends CmfProperty<CmfValue>> TypedValue(V property) {
+	public <V extends CmfProperty<CmfValue>> DynamicValue(V property) {
 		super(property);
 		// Copy the values over
 		if (isRepeating()) {
@@ -53,7 +53,7 @@ public class TypedValue extends CmfBaseSetting {
 		}
 	}
 
-	public <V> TypedValue(CmfProperty<V> property, CmfAttributeTranslator<V> translator) {
+	public <V> DynamicValue(CmfProperty<V> property, CmfAttributeTranslator<V> translator) {
 		super(property);
 		// Copy the values over
 		CmfValueCodec<V> codec = translator.getCodec(property.getType());
@@ -87,7 +87,7 @@ public class TypedValue extends CmfBaseSetting {
 		return values.get(0);
 	}
 
-	public TypedValue setValue(Object value) {
+	public DynamicValue setValue(Object value) {
 		if (!isRepeating()) {
 			this.value = value;
 		} else {
@@ -97,7 +97,7 @@ public class TypedValue extends CmfBaseSetting {
 		return this;
 	}
 
-	public TypedValue setValues(Iterator<?> values) {
+	public DynamicValue setValues(Iterator<?> values) {
 		if (!isRepeating()) {
 			this.value = null;
 			if ((values != null) && values.hasNext()) {
@@ -117,7 +117,7 @@ public class TypedValue extends CmfBaseSetting {
 		return this;
 	}
 
-	public TypedValue setValues(Iterable<?> values) {
+	public DynamicValue setValues(Iterable<?> values) {
 		if (values != null) {
 			values = Collections.emptyList();
 		}
@@ -125,7 +125,7 @@ public class TypedValue extends CmfBaseSetting {
 		return this;
 	}
 
-	public TypedValue setValues(Collection<?> values) {
+	public DynamicValue setValues(Collection<?> values) {
 		if (values == null) {
 			values = Collections.emptyList();
 		}

@@ -16,7 +16,7 @@ import javax.xml.stream.XMLStreamReader;
 
 import com.armedia.caliente.engine.dynamic.Action;
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
@@ -36,7 +36,7 @@ public final class Transformations extends XmlBase implements Action {
 	}
 
 	@Override
-	public void apply(ObjectContext ctx) throws ActionException {
+	public void apply(DynamicElementContext ctx) throws ActionException {
 		for (Action t : getElements()) {
 			if (t != null) {
 				t.apply(ctx);

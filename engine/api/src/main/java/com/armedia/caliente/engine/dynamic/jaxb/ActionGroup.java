@@ -11,7 +11,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.Action;
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.actions.AbortTransformation;
 import com.armedia.caliente.engine.dynamic.jaxb.actions.AttributeRemove;
 import com.armedia.caliente.engine.dynamic.jaxb.actions.AttributeReplace;
@@ -80,7 +80,7 @@ public class ActionGroup extends ConditionalAction {
 	}
 
 	@Override
-	protected final void applyTransformation(ObjectContext ctx) throws ActionException {
+	protected final void applyTransformation(DynamicElementContext ctx) throws ActionException {
 		for (Action action : getActions()) {
 			if (action != null) {
 				action.apply(ctx);

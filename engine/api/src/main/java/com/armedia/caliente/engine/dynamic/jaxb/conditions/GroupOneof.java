@@ -10,14 +10,14 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionGroupOneof.t")
 public class GroupOneof extends ConditionGroup {
 
 	@Override
-	protected boolean check(List<Condition> elements, ObjectContext ctx) throws ConditionException {
+	protected boolean check(List<Condition> elements, DynamicElementContext ctx) throws ConditionException {
 		int trueCount = 0;
 		for (Condition c : elements) {
 			Objects.requireNonNull(c, "Null conditional elements are not allowed");

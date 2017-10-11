@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.engine.dynamic.Action;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionalAction.t", propOrder = {
@@ -22,7 +22,7 @@ public abstract class ConditionalAction extends ConditionalElement implements Ac
 	}
 
 	@Override
-	public final void apply(ObjectContext ctx) throws ActionException {
+	public final void apply(DynamicElementContext ctx) throws ActionException {
 		if (isSkippable()) { return; }
 		try {
 			if (!checkCondition(ctx)) { return; }
@@ -33,5 +33,5 @@ public abstract class ConditionalAction extends ConditionalElement implements Ac
 		applyTransformation(ctx);
 	}
 
-	protected abstract void applyTransformation(ObjectContext ctx) throws ActionException;
+	protected abstract void applyTransformation(DynamicElementContext ctx) throws ActionException;
 }

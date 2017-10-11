@@ -7,16 +7,16 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.Condition;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsFirstVersion.t")
 public class IsFirstVersion implements Condition {
 
 	@Override
-	public boolean check(ObjectContext ctx) {
-		TypedValue index = ctx.getTransformableObject().getPriv().get(IntermediateProperty.VERSION_INDEX.encode());
+	public boolean check(DynamicElementContext ctx) {
+		DynamicValue index = ctx.getTransformableObject().getPriv().get(IntermediateProperty.VERSION_INDEX.encode());
 		Object v = ((index != null) && !index.isEmpty() ? index.getValue() : null);
 		if (v == null) { return true; }
 		// Is it the number 1?

@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.dynamic.Action;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.ActionFactory;
 import com.armedia.caliente.engine.dynamic.DynamicElements;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.commons.utilities.Tools;
@@ -33,7 +33,7 @@ public class CustomAction extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(ObjectContext ctx) throws ActionException {
+	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
 		String className = Tools.toString(ActionTools.eval(getClassName(), ctx));
 		if (className == null) { throw new ActionException("No classname given to insantiate"); }
 

@@ -1,8 +1,8 @@
 package com.armedia.caliente.engine.transform;
 
-import com.armedia.caliente.engine.TransferEngineException;
+import com.armedia.caliente.engine.dynamic.DynamicElementException;
 
-public class TransformationException extends TransferEngineException {
+public class TransformationException extends DynamicElementException {
 	private static final long serialVersionUID = 1L;
 
 	public TransformationException() {

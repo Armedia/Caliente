@@ -11,8 +11,8 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.jaxb.Cardinality;
 import com.armedia.caliente.engine.dynamic.jaxb.CardinalityAdapter;
 import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
@@ -89,13 +89,13 @@ public class ValueMappingApply extends ConditionalAction {
 		this.cardinality = cardinality;
 	}
 
-	private String mapValue(ObjectContext ctx, CmfType mappingType, String mappingName, String sourceValue,
+	private String mapValue(DynamicElementContext ctx, CmfType mappingType, String mappingName, String sourceValue,
 		CmfDataType targetType) throws ActionException {
 		Mapping m = ctx.getAttributeMapper().getTargetMapping(mappingType, mappingName, sourceValue);
 		return (m != null ? m.getTargetValue() : null);
 	}
 
-	private void applyMapping(ObjectContext ctx, CmfType type, String mappingName, TypedValue candidate)
+	private void applyMapping(DynamicElementContext ctx, CmfType type, String mappingName, DynamicValue candidate)
 		throws ActionException {
 
 		if (!candidate.isRepeating()) {
@@ -137,7 +137,7 @@ public class ValueMappingApply extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(ObjectContext ctx) throws ActionException {
+	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
 		final CmfType type = getType();
 		if (type == null) { throw new ActionException("No type name given to find the mapping"); }
 		final String comparand = Tools.toString(ActionTools.eval(getName(), ctx));
@@ -148,7 +148,7 @@ public class ValueMappingApply extends ConditionalAction {
 
 		if (comparison == Comparison.EQ) {
 			// Shortcut!! Look for only one candidate!
-			TypedValue candidate = ctx.getTransformableObject().getAtt().get(comparand);
+			DynamicValue candidate = ctx.getTransformableObject().getAtt().get(comparand);
 			if (candidate != null) {
 				applyMapping(ctx, type, mappingName, candidate);
 			}

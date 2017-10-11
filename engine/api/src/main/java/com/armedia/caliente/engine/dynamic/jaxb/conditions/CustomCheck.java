@@ -9,7 +9,7 @@ import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.ConditionFactory;
 import com.armedia.caliente.engine.dynamic.DynamicElements;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -17,7 +17,7 @@ import com.armedia.commons.utilities.Tools;
 public class CustomCheck extends AbstractExpressionCondition {
 
 	@Override
-	public boolean check(ObjectContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext ctx) throws ConditionException {
 		String className = Tools.toString(ConditionTools.eval(this, ctx));
 		if (className == null) { throw new ConditionException(
 			String.format("The given %s expression did not return a string value: %s", getLang(), getScript())); }

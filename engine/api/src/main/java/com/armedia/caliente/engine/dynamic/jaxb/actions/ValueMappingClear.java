@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.caliente.store.CmfType;
@@ -67,7 +67,7 @@ public class ValueMappingClear extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(ObjectContext ctx) throws ActionException {
+	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
 		CmfType type = getType();
 		if (type == null) { throw new ActionException(
 			"Must provide a type name to associate the mapping with"); }

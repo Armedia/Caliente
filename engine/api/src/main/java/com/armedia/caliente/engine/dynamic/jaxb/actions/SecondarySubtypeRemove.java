@@ -12,7 +12,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
 import com.armedia.caliente.engine.dynamic.jaxb.ComparisonAdapter;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
@@ -50,7 +50,7 @@ public class SecondarySubtypeRemove extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(ObjectContext ctx) throws ActionException {
+	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
 		String comparand = StringUtils.strip(Tools.toString(ActionTools.eval(getValue(), ctx)));
 		if (StringUtils.isEmpty(comparand)) { return; }
 

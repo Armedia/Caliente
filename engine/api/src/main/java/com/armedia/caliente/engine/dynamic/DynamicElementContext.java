@@ -15,24 +15,24 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 
-public class ObjectContext implements ScriptContextConfig {
+public class DynamicElementContext implements ScriptContextConfig {
 
 	private final CmfObject<CmfValue> baseObject;
-	private final TransformableObject transformableObject;
+	private final DynamicObject dynamicObject;
 	private final CmfValueMapper mapper;
 	private final ExternalMetadataLoader metadataLoader;
 
-	private final Map<String, TypedValue> variables;
+	private final Map<String, DynamicValue> variables;
 
-	public ObjectContext(CmfObject<CmfValue> baseObject, TransformableObject transformableObject,
+	public DynamicElementContext(CmfObject<CmfValue> baseObject, DynamicObject dynamicObject,
 		CmfValueMapper mapper, ExternalMetadataLoader metadataLoader) {
-		this(baseObject, transformableObject, mapper, metadataLoader, null);
+		this(baseObject, dynamicObject, mapper, metadataLoader, null);
 	}
 
-	protected ObjectContext(CmfObject<CmfValue> baseObject, TransformableObject transformableObject,
-		CmfValueMapper mapper, ExternalMetadataLoader metadataLoader, Map<String, TypedValue> variables) {
+	protected DynamicElementContext(CmfObject<CmfValue> baseObject, DynamicObject dynamicObject,
+		CmfValueMapper mapper, ExternalMetadataLoader metadataLoader, Map<String, DynamicValue> variables) {
 		this.baseObject = baseObject;
-		this.transformableObject = transformableObject;
+		this.dynamicObject = dynamicObject;
 		this.mapper = mapper;
 		if (variables == null) {
 			variables = new TreeMap<>();
@@ -49,11 +49,11 @@ public class ObjectContext implements ScriptContextConfig {
 		return this.metadataLoader;
 	}
 
-	public TransformableObject getTransformableObject() {
-		return this.transformableObject;
+	public DynamicObject getTransformableObject() {
+		return this.dynamicObject;
 	}
 
-	public Map<String, TypedValue> getVariables() {
+	public Map<String, DynamicValue> getVariables() {
 		return this.variables;
 	}
 

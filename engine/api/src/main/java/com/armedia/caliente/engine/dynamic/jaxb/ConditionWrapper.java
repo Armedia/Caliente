@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.conditions.CheckExpression;
 import com.armedia.caliente.engine.dynamic.jaxb.conditions.CustomCheck;
 import com.armedia.caliente.engine.dynamic.jaxb.conditions.CustomScript;
@@ -118,7 +118,7 @@ public class ConditionWrapper implements Condition {
 	}
 
 	@Override
-	public boolean check(ObjectContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext ctx) throws ConditionException {
 		return hasCondition() && getCondition().check(ctx);
 	}
 }

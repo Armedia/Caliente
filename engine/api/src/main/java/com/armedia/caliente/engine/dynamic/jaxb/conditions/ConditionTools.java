@@ -3,7 +3,7 @@ package com.armedia.caliente.engine.dynamic.jaxb.conditions;
 import javax.script.ScriptException;
 
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 
 class ConditionTools {
@@ -11,7 +11,7 @@ class ConditionTools {
 	private ConditionTools() {
 	}
 
-	public static Object eval(Expression e, ObjectContext ctx) throws ConditionException {
+	public static Object eval(Expression e, DynamicElementContext ctx) throws ConditionException {
 		try {
 			return Expression.eval(e, ctx);
 		} catch (ScriptException ex) {

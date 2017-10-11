@@ -14,7 +14,7 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.transform.TestObjectFacade;
 import com.armedia.caliente.engine.dynamic.ActionException;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.caliente.engine.dynamic.jaxb.RegularExpression;
@@ -648,7 +648,7 @@ public class ActionsTest {
 
 		final String attributeName = UUID.randomUUID().toString();
 		action.setName(new Expression(attributeName));
-		TypedValue tv = new TypedValue(attributeName, CmfDataType.STRING, true);
+		DynamicValue tv = new DynamicValue(attributeName, CmfDataType.STRING, true);
 		object.getAtt().put(attributeName, tv);
 		Set<String> expected = new HashSet<>();
 		for (Pair<String, String> p : data) {

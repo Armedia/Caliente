@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
 import com.armedia.caliente.store.CmfDataType;
 
@@ -15,7 +15,7 @@ import com.armedia.caliente.store.CmfDataType;
 public class HasSecondarySubtype extends AbstractExpressionComparison {
 
 	@Override
-	public boolean check(ObjectContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext ctx) throws ConditionException {
 		Object secondary = ConditionTools.eval(this, ctx);
 		if (secondary == null) { return false; }
 		final Comparison comp = getComparison();

@@ -9,8 +9,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.jaxb.Cardinality;
 import com.armedia.caliente.engine.dynamic.jaxb.CardinalityAdapter;
 import com.armedia.caliente.engine.dynamic.jaxb.Comparison;
@@ -55,17 +55,17 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		this.cardinality = value;
 	}
 
-	protected abstract Map<String, TypedValue> getCandidateValues(ObjectContext ctx);
+	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx);
 
 	@Override
-	public boolean check(ObjectContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext ctx) throws ConditionException {
 		Expression nameExp = getName();
 		Object name = ConditionTools.eval(nameExp, ctx);
 		if (name == null) { throw new ConditionException("No name was given for the candidate value check"); }
 
-		final Map<String, TypedValue> values = getCandidateValues(ctx);
+		final Map<String, DynamicValue> values = getCandidateValues(ctx);
 
-		TypedValue candidate = values.get(name.toString());
+		DynamicValue candidate = values.get(name.toString());
 		if (candidate == null) { return false; }
 
 		Comparison comparison = getComparison();

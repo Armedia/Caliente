@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionWrapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.dynamic.jaxb.ConditionWrapper;
 public class GroupNot extends ConditionWrapper {
 
 	@Override
-	public boolean check(ObjectContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext ctx) throws ConditionException {
 		final Condition condition = getCondition();
 		if (condition == null) { return true; }
 		return !condition.check(ctx);

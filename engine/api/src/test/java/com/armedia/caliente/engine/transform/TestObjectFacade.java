@@ -3,10 +3,10 @@ package com.armedia.caliente.engine.transform;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.armedia.caliente.engine.dynamic.TransformableObject;
+import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.store.CmfType;
 
-public class TestObjectFacade extends TransformableObject {
+public class TestObjectFacade extends DynamicObject {
 
 	private String objectId = null;
 	private final String historyId = null;

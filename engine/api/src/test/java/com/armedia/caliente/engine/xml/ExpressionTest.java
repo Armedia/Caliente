@@ -11,8 +11,8 @@ import javax.script.ScriptEngineManager;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.dynamic.ObjectContext;
-import com.armedia.caliente.engine.dynamic.TypedValue;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.caliente.engine.transform.TestObjectContext;
 import com.armedia.caliente.store.CmfDataType;
@@ -31,7 +31,7 @@ public class ExpressionTest {
 
 	@Test
 	public void testValue() throws Exception {
-		ObjectContext ctx = new TestObjectContext();
+		DynamicElementContext ctx = new TestObjectContext();
 		Expression e = null;
 
 		e = new Expression();
@@ -91,7 +91,7 @@ public class ExpressionTest {
 			languages.addAll(f.getNames());
 		}
 
-		ObjectContext ctx = new TestObjectContext();
+		DynamicElementContext ctx = new TestObjectContext();
 
 		Expression.eval(null, null);
 
@@ -117,7 +117,7 @@ public class ExpressionTest {
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
-				TypedValue value = new TypedValue("testValue", CmfDataType.INTEGER, false);
+				DynamicValue value = new DynamicValue("testValue", CmfDataType.INTEGER, false);
 				value.setValue(expectedInt);
 				ctx.getVariables().put("testValue", value);
 				actual = Expression.eval(e, ctx);
@@ -158,7 +158,7 @@ public class ExpressionTest {
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
-				TypedValue value = new TypedValue("testValue", CmfDataType.INTEGER, false);
+				DynamicValue value = new DynamicValue("testValue", CmfDataType.INTEGER, false);
 				value.setValue(expectedInt);
 				ctx.getVariables().put("testValue", value);
 				actual = Expression.eval(e, ctx);
@@ -199,7 +199,7 @@ public class ExpressionTest {
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
-				TypedValue value = new TypedValue("testValue", CmfDataType.INTEGER, false);
+				DynamicValue value = new DynamicValue("testValue", CmfDataType.INTEGER, false);
 				value.setValue(expectedInt);
 				ctx.getVariables().put("testValue", value);
 				actual = Expression.eval(e, ctx);
@@ -240,7 +240,7 @@ public class ExpressionTest {
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
-				TypedValue value = new TypedValue("testValue", CmfDataType.INTEGER, false);
+				DynamicValue value = new DynamicValue("testValue", CmfDataType.INTEGER, false);
 				value.setValue(expectedInt);
 				ctx.getVariables().put("testValue", value);
 				actual = Expression.eval(e, ctx);

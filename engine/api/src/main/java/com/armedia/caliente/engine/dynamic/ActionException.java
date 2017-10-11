@@ -1,8 +1,6 @@
 package com.armedia.caliente.engine.dynamic;
 
-import com.armedia.caliente.engine.TransferEngineException;
-
-public class ActionException extends TransferEngineException {
+public class ActionException extends DynamicElementException {
 	private static final long serialVersionUID = 1L;
 
 	public ActionException() {
@@ -20,8 +18,7 @@ public class ActionException extends TransferEngineException {
 		super(message, cause);
 	}
 
-	public ActionException(String message, Throwable cause, boolean enableSuppression,
-		boolean writableStackTrace) {
+	public ActionException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
 

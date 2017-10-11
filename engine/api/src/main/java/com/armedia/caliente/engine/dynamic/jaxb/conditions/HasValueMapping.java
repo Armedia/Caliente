@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ObjectContext;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueMapper;
@@ -67,7 +67,7 @@ public class HasValueMapping implements Condition {
 	}
 
 	@Override
-	public boolean check(ObjectContext ctx) throws ConditionException {
+	public boolean check(DynamicElementContext ctx) throws ConditionException {
 		CmfType type = getType();
 		if (type == null) { throw new ConditionException("No type given to find the mappings with"); }
 
