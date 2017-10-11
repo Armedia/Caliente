@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.dynamic.xml.extmeta;
+package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

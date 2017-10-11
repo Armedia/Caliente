@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.XMLStreamReader;
 
-import com.armedia.caliente.engine.dynamic.xml.extmeta.MetadataSource;
+import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {

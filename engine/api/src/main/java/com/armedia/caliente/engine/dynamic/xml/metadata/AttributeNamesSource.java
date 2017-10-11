@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.dynamic.xml.extmeta;
+package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.sql.Connection;
 import java.util.Collections;

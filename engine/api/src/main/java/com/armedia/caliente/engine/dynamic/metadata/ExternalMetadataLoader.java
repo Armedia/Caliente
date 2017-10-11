@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.dynamic.extmeta;
+package com.armedia.caliente.engine.dynamic.metadata;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
-import com.armedia.caliente.engine.dynamic.xml.extmeta.MetadataSource;
+import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 

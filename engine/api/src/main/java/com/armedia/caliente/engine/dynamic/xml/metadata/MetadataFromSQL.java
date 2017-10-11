@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.dynamic.xml.extmeta;
+package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,7 +16,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.dynamic.extmeta.ExternalMetadataException;
+import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
