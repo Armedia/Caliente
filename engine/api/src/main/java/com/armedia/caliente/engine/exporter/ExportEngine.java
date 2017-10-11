@@ -218,8 +218,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 					case LOCK_CONCURRENT:
 						if (this.log.isTraceEnabled()) {
-							this.log.trace(String
-								.format("%s is already locked for storage by another thread, skipping it", logLabel));
+							this.log
+								.trace(String.format("%s is already locked for storage by another thread", logLabel));
 						}
 						return new Result(ExportSkipReason.ALREADY_LOCKED);
 
