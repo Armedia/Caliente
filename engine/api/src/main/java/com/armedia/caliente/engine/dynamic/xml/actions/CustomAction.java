@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.dynamic.Action;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.ActionFactory;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.engine.dynamic.DynamicElements;
+import com.armedia.caliente.engine.dynamic.CustomComponents;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.commons.utilities.Tools;
@@ -37,7 +37,7 @@ public class CustomAction extends ConditionalAction {
 		String className = Tools.toString(ActionTools.eval(getClassName(), ctx));
 		if (className == null) { throw new ActionException("No classname given to insantiate"); }
 
-		final ActionFactory factory = DynamicElements.getActionFactory(className);
+		final ActionFactory factory = CustomComponents.getActionFactory(className);
 		if (factory == null) { throw new ActionException(
 			String.format("Failed to locate an action factory for class [%s]", className)); }
 		try {

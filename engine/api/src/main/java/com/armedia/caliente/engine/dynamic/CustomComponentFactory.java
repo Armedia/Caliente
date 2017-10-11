@@ -2,7 +2,7 @@ package com.armedia.caliente.engine.dynamic;
 
 import java.util.Set;
 
-public interface DynamicElementFactory<E> {
+public interface CustomComponentFactory<E> {
 
 	public E acquireInstance(String classNameOrAlias) throws Exception;
 

@@ -9,7 +9,7 @@ import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.ConditionFactory;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.engine.dynamic.DynamicElements;
+import com.armedia.caliente.engine.dynamic.CustomComponents;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -22,7 +22,7 @@ public class CustomCheck extends AbstractExpressionCondition {
 		if (className == null) { throw new ConditionException(
 			String.format("The given %s expression did not return a string value: %s", getLang(), getScript())); }
 
-		ConditionFactory factory = DynamicElements.getConditionFactory(className);
+		ConditionFactory factory = CustomComponents.getConditionFactory(className);
 		if (factory == null) { throw new ConditionException(
 			String.format("No factory found for custom condition type [%s]", className)); }
 		try {

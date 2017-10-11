@@ -11,16 +11,16 @@ import org.slf4j.LoggerFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public class DynamicElements {
+public class CustomComponents {
 
-	private static final Logger LOG = LoggerFactory.getLogger(DynamicElements.class);
+	private static final Logger LOG = LoggerFactory.getLogger(CustomComponents.class);
 
-	static <I, F extends DynamicElementFactory<I>> Map<String, F> buildFactoryMap(final Class<F> klass) {
+	static <I, F extends CustomComponentFactory<I>> Map<String, F> buildFactoryMap(final Class<F> klass) {
 		PluggableServiceLocator<F> locator = new PluggableServiceLocator<>(klass);
 		locator.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 			@Override
 			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				DynamicElements.LOG.error(
+				CustomComponents.LOG.error(
 					"Failed to load initialize the factory class {} (as a subclass of {})",
 					serviceClass.getCanonicalName(), klass.getCanonicalName(), t);
 			}
@@ -30,7 +30,7 @@ public class DynamicElements {
 		for (F f : locator) {
 			Set<String> aliases = f.getClassNamesOrAliases();
 			if ((aliases == null) || aliases.isEmpty()) {
-				DynamicElements.LOG.warn(
+				CustomComponents.LOG.warn(
 					"Factory class [{}] does not define any class names or aliases - it will not be used",
 					f.getClass().getCanonicalName());
 				continue;
@@ -39,7 +39,7 @@ public class DynamicElements {
 			for (String alias : aliases) {
 				F oldF = map.put(alias, f);
 				if (oldF != null) {
-					DynamicElements.LOG.warn(
+					CustomComponents.LOG.warn(
 						"Factory conflict detected for alias [{}]: {} and {} - only the latter will be used", alias,
 						oldF.getClass().getCanonicalName(), f.getClass().getCanonicalName());
 				}
@@ -48,16 +48,16 @@ public class DynamicElements {
 		return Tools.freezeMap(new LinkedHashMap<>(map));
 	}
 
-	private static final Map<String, ActionFactory> ACTIONS = DynamicElements
+	private static final Map<String, ActionFactory> ACTIONS = CustomComponents
 		.buildFactoryMap(ActionFactory.class);
-	private static final Map<String, ConditionFactory> CONDITIONS = DynamicElements
+	private static final Map<String, ConditionFactory> CONDITIONS = CustomComponents
 		.buildFactoryMap(ConditionFactory.class);
 
 	public static ActionFactory getActionFactory(String className) {
-		return DynamicElements.ACTIONS.get(className);
+		return CustomComponents.ACTIONS.get(className);
 	}
 
 	public static ConditionFactory getConditionFactory(String className) {
-		return DynamicElements.CONDITIONS.get(className);
+		return CustomComponents.CONDITIONS.get(className);
 	}
 }
