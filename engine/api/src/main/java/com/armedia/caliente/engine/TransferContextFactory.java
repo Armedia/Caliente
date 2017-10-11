@@ -68,12 +68,12 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 	private final String productVersion;
 	private final CmfContentStore<?, ?, ?> contentStore;
 	private final CmfObjectStore<?, ?> objectStore;
-	private final CmfTransformer typeMapper;
+	private final CmfTransformer transformer;
 	private final Logger output;
 	private final WarningTracker warningTracker;
 
 	protected TransferContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, CmfTransformer typeMapper, Logger output, WarningTracker tracker)
+		CmfContentStore<?, ?, ?> contentStore, CmfTransformer transformer, Logger output, WarningTracker tracker)
 		throws Exception {
 		if (engine == null) { throw new IllegalArgumentException(
 			"Must provide an engine to which this factory is tied"); }
@@ -98,7 +98,7 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		this.productVersion = calculateProductVersion(session);
 		this.objectStore = objectStore;
 		this.contentStore = contentStore;
-		this.typeMapper = typeMapper;
+		this.transformer = transformer;
 		this.output = output;
 		this.warningTracker = tracker;
 	}
@@ -116,8 +116,8 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		return this.contentStore;
 	}
 
-	protected final CmfTransformer getTypeMapper() {
-		return this.typeMapper;
+	protected final CmfTransformer getTransformer() {
+		return this.transformer;
 	}
 
 	protected final Logger getOutput() {

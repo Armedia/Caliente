@@ -22,10 +22,10 @@ import com.armedia.commons.utilities.CfgTools;
 public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImportContextFactory> {
 
 	public AlfImportContext(AlfImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
-		AlfRoot session, Logger output, WarningTracker tracker, CmfTransformer typeMapper,
+		AlfRoot session, Logger output, WarningTracker tracker, CmfTransformer transformer,
 		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
-		super(factory, settings, rootId, rootType, session, output, tracker, typeMapper, translator, objectStore,
+		super(factory, settings, rootId, rootType, session, output, tracker, transformer, translator, objectStore,
 			streamStore, batchPosition);
 	}
 

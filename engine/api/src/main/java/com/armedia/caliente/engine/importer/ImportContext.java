@@ -28,20 +28,20 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
 	private final CmfObjectStore<?, ?> cmfObjectStore;
 	private final CmfAttributeTranslator<V> translator;
-	private final CmfTransformer typeMapper;
+	private final CmfTransformer transformer;
 	private final CmfContentStore<?, ?, ?> streamStore;
 	private final int historyPosition;
 
 	public <C extends ImportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
 		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
-		WarningTracker tracker, CmfTransformer typeMapper, CmfAttributeTranslator<V> translator,
+		WarningTracker tracker, CmfTransformer transformer, CmfAttributeTranslator<V> translator,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
 		this.factory = factory;
 		this.translator = translator;
 		this.cmfObjectStore = objectStore;
 		this.streamStore = streamStore;
-		this.typeMapper = typeMapper;
+		this.transformer = transformer;
 		this.historyPosition = historyPosition;
 	}
 
@@ -55,11 +55,11 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 
 	public final int loadObjects(CmfType type, Set<String> ids, CmfObjectHandler<V> handler)
 		throws CmfStorageException {
-		return this.cmfObjectStore.loadObjects(this.typeMapper, this.translator, type, ids, handler);
+		return this.cmfObjectStore.loadObjects(this.transformer, this.translator, type, ids, handler);
 	}
 
 	public final CmfObject<V> getHeadObject(CmfObject<V> sample) throws CmfStorageException {
-		return this.cmfObjectStore.loadHeadObject(this.typeMapper, this.translator, sample);
+		return this.cmfObjectStore.loadHeadObject(this.transformer, this.translator, sample);
 	}
 
 	public final CmfContentStore<?, ?, ?> getContentStore() {

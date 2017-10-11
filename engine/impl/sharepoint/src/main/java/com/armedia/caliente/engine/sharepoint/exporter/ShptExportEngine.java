@@ -82,8 +82,8 @@ public class ShptExportEngine extends
 
 	@Override
 	protected ShptExportContextFactory newContextFactory(ShptSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output,
-		WarningTracker warningTracker) throws Exception {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer,
+		Logger output, WarningTracker warningTracker) throws Exception {
 		return new ShptExportContextFactory(this, cfg, session, objectStore, streamStore, output, warningTracker);
 	}
 

@@ -57,8 +57,8 @@ public class LocalExportEngine extends
 
 	@Override
 	protected LocalExportContextFactory newContextFactory(LocalRoot session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output,
-		WarningTracker warningTracker) throws Exception {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer,
+		Logger output, WarningTracker warningTracker) throws Exception {
 		return new LocalExportContextFactory(this, cfg, session, objectStore, streamStore, output, warningTracker);
 	}
 

@@ -10,8 +10,8 @@ import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.engine.xml.common.XmlSessionWrapper;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTransformer;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -19,9 +19,9 @@ public class XmlImportContextFactory
 	extends ImportContextFactory<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportEngine, File> {
 
 	protected XmlImportContextFactory(XmlImportEngine engine, CfgTools settings, XmlRoot root,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer typeMapper,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer transformer,
 		Logger output, WarningTracker warningTracker) throws Exception {
-		super(engine, settings, root, objectStore, contentStore, typeMapper, output, warningTracker);
+		super(engine, settings, root, objectStore, contentStore, transformer, output, warningTracker);
 	}
 
 	@Override
@@ -43,7 +43,7 @@ public class XmlImportContextFactory
 	@Override
 	protected XmlImportContext constructContext(String rootId, CmfType rootType, XmlRoot session, int historyPosition) {
 		return new XmlImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
-			getTypeMapper(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
+			getTransformer(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
 	}
 
 	@Override

@@ -14,8 +14,8 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTransformer;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -25,9 +25,9 @@ public class AlfImportContextFactory
 	private volatile Map<CmfType, Map<String, String>> renameMap = null;
 
 	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer typeMapper,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer transformer,
 		Logger output, WarningTracker tracker) throws Exception {
-		super(engine, settings, root, objectStore, contentStore, typeMapper, output, tracker);
+		super(engine, settings, root, objectStore, contentStore, transformer, output, tracker);
 	}
 
 	@Override
@@ -65,7 +65,7 @@ public class AlfImportContextFactory
 			}
 		}
 		return new AlfImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
-			getTypeMapper(), getEngine().getTranslator(), store, getContentStore(), batchPosition);
+			getTransformer(), getEngine().getTranslator(), store, getContentStore(), batchPosition);
 	}
 
 	@Override

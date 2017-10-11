@@ -78,8 +78,8 @@ public class DctmExportEngine extends
 
 	@Override
 	protected DctmExportContextFactory newContextFactory(IDfSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output,
-		WarningTracker warningTracker) throws Exception {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer,
+		Logger output, WarningTracker warningTracker) throws Exception {
 		return new DctmExportContextFactory(this, cfg, session, objectStore, streamStore, output, warningTracker);
 	}
 

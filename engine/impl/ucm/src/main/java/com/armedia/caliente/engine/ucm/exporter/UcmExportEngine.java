@@ -96,7 +96,7 @@ public class UcmExportEngine extends
 
 	@Override
 	protected UcmExportContextFactory newContextFactory(UcmSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer,
 		Logger output, WarningTracker warningTracker) throws Exception {
 		return new UcmExportContextFactory(this, session, cfg, objectStore, streamStore, output, warningTracker);
 	}

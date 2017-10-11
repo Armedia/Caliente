@@ -22,8 +22,8 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTransformer;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.util.DfValueFactory;
@@ -75,9 +75,9 @@ public class DctmImportEngine extends
 
 	@Override
 	protected DctmImportContextFactory newContextFactory(IDfSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output,
-		WarningTracker warningTracker) throws Exception {
-		return new DctmImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer,
+		Logger output, WarningTracker warningTracker) throws Exception {
+		return new DctmImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);
 	}
 

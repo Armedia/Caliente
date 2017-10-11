@@ -169,7 +169,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
 
 	protected abstract F newContextFactory(S session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output, WarningTracker warningTracker)
+		CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer, Logger output, WarningTracker warningTracker)
 		throws Exception;
 
 	protected abstract D newDelegateFactory(S session, CfgTools cfg) throws Exception;

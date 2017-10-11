@@ -16,8 +16,8 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTransformer;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -185,9 +185,9 @@ public class XmlImportEngine extends
 
 	@Override
 	protected XmlImportContextFactory newContextFactory(XmlRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, CmfTransformer typeMapper, Logger output, WarningTracker warningTracker)
+		CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer, Logger output, WarningTracker warningTracker)
 		throws Exception {
-		return new XmlImportContextFactory(this, cfg, session, objectStore, streamStore, typeMapper, output,
+		return new XmlImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);
 	}
 

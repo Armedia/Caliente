@@ -28,9 +28,9 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 	private final int pathTrunc;
 
 	protected ImportContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, CmfTransformer typeMapper, Logger output, WarningTracker tracker)
+		CmfContentStore<?, ?, ?> contentStore, CmfTransformer transformer, Logger output, WarningTracker tracker)
 		throws Exception {
-		super(engine, settings, session, objectStore, contentStore, typeMapper, output, tracker);
+		super(engine, settings, session, objectStore, contentStore, transformer, output, tracker);
 		String rootPath = settings.getString(ImportSetting.TARGET_LOCATION);
 		this.rootPath = Tools.freezeList(FileNameTools.tokenize(rootPath, '/'));
 		this.pathTrunc = Math.max(0, settings.getInteger(ImportSetting.TRIM_PREFIX));

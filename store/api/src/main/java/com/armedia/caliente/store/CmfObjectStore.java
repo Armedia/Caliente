@@ -470,19 +470,19 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> CmfObject<CmfValue> loadHeadObject(O operation, CmfType type, String historyId,
 		CmfAttributeTranslator<V> translator) throws CmfStorageException;
 
-	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTransformer typeMapper,
+	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTransformer transformer,
 		CmfAttributeTranslator<V> translator, CmfType type, String... ids) throws CmfStorageException {
-		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null));
+		return loadObjects(transformer, translator, type, (ids != null ? Arrays.asList(ids) : null));
 	}
 
-	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTransformer typeMapper,
+	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTransformer transformer,
 		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
 		throws CmfStorageException {
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return loadObjects(operation, typeMapper, translator, type, ids);
+				return loadObjects(operation, transformer, translator, type, ids);
 			} finally {
 				if (tx) {
 					try {
@@ -560,12 +560,12 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	public final <V> int loadObjects(final CmfTransformer typeMapper, CmfAttributeTranslator<V> translator,
+	public final <V> int loadObjects(final CmfTransformer transformer, CmfAttributeTranslator<V> translator,
 		final CmfType type, CmfObjectHandler<V> handler) throws CmfStorageException {
-		return loadObjects(typeMapper, translator, type, null, handler);
+		return loadObjects(transformer, translator, type, null, handler);
 	}
 
-	public final <V> int loadObjects(final CmfTransformer typeMapper, final CmfAttributeTranslator<V> translator,
+	public final <V> int loadObjects(final CmfTransformer transformer, final CmfAttributeTranslator<V> translator,
 		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler) throws CmfStorageException {
 		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
@@ -584,7 +584,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 						@Override
 						public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
-							CmfObject<V> finalObject = adjustLoadedObject(dataObject, typeMapper, translator);
+							CmfObject<V> finalObject = adjustLoadedObject(dataObject, transformer, translator);
 							return handler.handleObject(finalObject);
 						}
 

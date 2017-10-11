@@ -21,8 +21,8 @@ import com.armedia.caliente.engine.xds.CmisSessionWrapper;
 import com.armedia.caliente.engine.xds.PermissionMapper;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfTransformer;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -33,9 +33,9 @@ public class CmisImportContextFactory
 	private final RepositoryInfo repositoryInfo;
 
 	CmisImportContextFactory(CmisImportEngine engine, Session session, CfgTools settings,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer typeMapper,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer transformer,
 		Logger output, WarningTracker warningTracker) throws Exception {
-		super(engine, settings, session, objectStore, contentStore, typeMapper, output, warningTracker);
+		super(engine, settings, session, objectStore, contentStore, transformer, output, warningTracker);
 		this.repositoryInfo = session.getRepositoryInfo();
 		if (super.isSupported(CmfType.ACL)) {
 			this.permissionMapper = new PermissionMapper(session);
@@ -54,8 +54,9 @@ public class CmisImportContextFactory
 	}
 
 	@Override
-	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session, int historyPosition) {
-		return new CmisImportContext(this, rootId, rootType, session, getOutput(), getWarningTracker(), getTypeMapper(),
+	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session,
+		int historyPosition) {
+		return new CmisImportContext(this, rootId, rootType, session, getOutput(), getWarningTracker(), getTransformer(),
 			getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
 	}
 
