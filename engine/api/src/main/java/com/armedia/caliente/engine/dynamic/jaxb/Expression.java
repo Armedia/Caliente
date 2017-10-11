@@ -34,7 +34,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
+import com.armedia.caliente.engine.dynamic.transformer.RuntimeTransformationException;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "expression.t", propOrder = {

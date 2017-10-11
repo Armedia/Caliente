@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.transform.RuntimeTransformationException;
+import com.armedia.caliente.engine.dynamic.transformer.RuntimeTransformationException;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;

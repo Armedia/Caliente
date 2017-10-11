@@ -27,7 +27,7 @@ import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
-import com.armedia.caliente.engine.transform.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;

@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.filter;
+package com.armedia.caliente.engine.dynamic.filter;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 

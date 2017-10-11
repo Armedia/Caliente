@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.extmeta;
+package com.armedia.caliente.engine.dynamic.filter;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +22,7 @@ import com.armedia.caliente.engine.dynamic.jaxb.extmeta.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 
-public class ExternalMetadataLoader {
+public class ObjectFilter {
 
 	private static final Collection<String> ALL_SOURCES = null;
 
@@ -40,25 +40,25 @@ public class ExternalMetadataLoader {
 
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-	public ExternalMetadataLoader(String location) throws ExternalMetadataException {
+	public ObjectFilter(String location) throws FilterException {
 		if (location == null) {
 			this.locationDesc = "the default configuration";
 		} else {
 			this.locationDesc = String.format("configuration [%s]", location);
 		}
 		try {
-			this.metadata = ExternalMetadataLoader.INSTANCES.getInstance(location);
+			this.metadata = ObjectFilter.INSTANCES.getInstance(location);
 		} catch (XmlInstanceException e) {
-			throw new ExternalMetadataException(
+			throw new FilterException(
 				String.format("Failed to load the external metadata configuration from %s", this.locationDesc), e);
 		}
 	}
 
-	public void initialize() throws ExternalMetadataException {
+	public void initialize() throws FilterException {
 		initialize(null);
 	}
 
-	private void initialize(final Lock r) throws ExternalMetadataException {
+	private void initialize(final Lock r) throws FilterException {
 		final Lock w = this.rwLock.writeLock();
 		if (r != null) {
 			r.unlock();
@@ -72,8 +72,7 @@ public class ExternalMetadataLoader {
 				} catch (Exception e) {
 					if (desc.isFailOnError()) {
 						// This item is required, so we must abort
-						throw new ExternalMetadataException("Failed to initialize a required external metadata source",
-							e);
+						throw new FilterException("Failed to initialize a required external metadata source", e);
 					}
 				}
 				this.sources.put(desc.getId(), desc);
@@ -90,12 +89,12 @@ public class ExternalMetadataLoader {
 		}
 	}
 
-	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws ExternalMetadataException {
-		return getAttributeValues(object, ExternalMetadataLoader.ALL_SOURCES);
+	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object) throws FilterException {
+		return getAttributeValues(object, ObjectFilter.ALL_SOURCES);
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, String firstSourceName,
-		String... sourceNames) throws ExternalMetadataException {
+		String... sourceNames) throws FilterException {
 		if (StringUtils.isEmpty(firstSourceName)) { throw new IllegalArgumentException(
 			"Must provide the name of a source to retrieve the values from"); }
 		List<String> finalSources = new ArrayList<>();
@@ -109,7 +108,7 @@ public class ExternalMetadataLoader {
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, Collection<String> sourceNames)
-		throws ExternalMetadataException {
+		throws FilterException {
 		Objects.requireNonNull(object, "Must provide a CmfObject instance to retrieve extra metadata for");
 		final Lock l = this.rwLock.readLock();
 		l.lock();
@@ -123,7 +122,7 @@ public class ExternalMetadataLoader {
 			Map<String, CmfAttribute<V>> finalMap = new HashMap<>();
 			for (String src : sourceNames) {
 				final MetadataSource source = this.sources.get(src);
-				if (source == null) { throw new ExternalMetadataException(
+				if (source == null) { throw new FilterException(
 					String.format("No metadata source named [%s] has been defined at %s", src, this.locationDesc)); }
 
 				Map<String, CmfAttribute<V>> m = null;
@@ -132,7 +131,7 @@ public class ExternalMetadataLoader {
 				} catch (Exception e) {
 					if (source.isFailOnError()) {
 						// There was an error which we should fail on
-						throw new ExternalMetadataException(String.format(
+						throw new FilterException(String.format(
 							"Exception caught while retrieving required external metadata for %s from source [%s] at %s",
 							object.getDescription(), source.getId(), this.locationDesc), e);
 					}
@@ -143,7 +142,7 @@ public class ExternalMetadataLoader {
 				if (m == null) {
 					if (source.isFailOnMissing()) {
 						// The data is required, but not present - explode!!
-						throw new ExternalMetadataException(String.format(
+						throw new FilterException(String.format(
 							"Did not retrieve any required external metadata for %s from source [%s] at %s",
 							object.getDescription(), source.getId(), this.locationDesc));
 					}

@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.extmeta;
+package com.armedia.caliente.engine.dynamic.extmeta;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 

@@ -28,8 +28,8 @@ import com.armedia.caliente.engine.dynamic.jaxb.actions.SecondarySubtypeRemove;
 import com.armedia.caliente.engine.dynamic.jaxb.actions.SecondarySubtypeReplace;
 import com.armedia.caliente.engine.dynamic.jaxb.actions.SubtypeReplace;
 import com.armedia.caliente.engine.dynamic.jaxb.actions.SubtypeSet;
+import com.armedia.caliente.engine.dynamic.transformer.TransformationCompletedException;
 import com.armedia.caliente.engine.transform.TestObjectContext;
-import com.armedia.caliente.engine.transform.TransformationCompletedException;
 import com.armedia.caliente.store.CmfDataType;
 
 public class ActionsTest {

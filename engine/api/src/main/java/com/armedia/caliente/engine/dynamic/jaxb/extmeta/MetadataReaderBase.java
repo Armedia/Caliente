@@ -28,9 +28,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrLookup;
 import org.apache.commons.lang3.text.StrSubstitutor;
 
+import com.armedia.caliente.engine.dynamic.extmeta.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression.ScriptContextConfig;
-import com.armedia.caliente.engine.extmeta.ExternalMetadataException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;

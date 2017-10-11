@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
-import com.armedia.caliente.engine.transform.TransformationCompletedException;
+import com.armedia.caliente.engine.dynamic.transformer.TransformationCompletedException;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionProcessObject.t")

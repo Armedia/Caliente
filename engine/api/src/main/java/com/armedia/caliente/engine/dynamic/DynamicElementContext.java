@@ -7,9 +7,9 @@ import java.util.TreeMap;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 
+import com.armedia.caliente.engine.dynamic.extmeta.ExternalMetadataException;
+import com.armedia.caliente.engine.dynamic.extmeta.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.jaxb.Expression.ScriptContextConfig;
-import com.armedia.caliente.engine.extmeta.ExternalMetadataException;
-import com.armedia.caliente.engine.extmeta.ExternalMetadataLoader;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;

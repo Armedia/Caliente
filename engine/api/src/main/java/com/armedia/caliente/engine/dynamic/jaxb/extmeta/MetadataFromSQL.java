@@ -16,7 +16,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.extmeta.ExternalMetadataException;
+import com.armedia.caliente.engine.dynamic.extmeta.ExternalMetadataException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;

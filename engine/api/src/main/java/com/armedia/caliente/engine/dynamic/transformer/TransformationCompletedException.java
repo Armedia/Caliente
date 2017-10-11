@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.transform;
+package com.armedia.caliente.engine.dynamic.transformer;
 
 public class TransformationCompletedException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

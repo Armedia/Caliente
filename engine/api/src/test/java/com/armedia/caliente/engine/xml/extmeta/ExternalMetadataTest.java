@@ -9,7 +9,7 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.extmeta.ExternalMetadataLoader;
+import com.armedia.caliente.engine.dynamic.extmeta.ExternalMetadataLoader;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;

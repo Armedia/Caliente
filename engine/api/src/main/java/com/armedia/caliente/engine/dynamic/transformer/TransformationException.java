@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.transform;
+package com.armedia.caliente.engine.dynamic.transformer;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 
