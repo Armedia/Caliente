@@ -37,9 +37,9 @@ public final class Transformations extends XmlBase implements Action {
 
 	@Override
 	public void apply(DynamicElementContext ctx) throws ActionException {
-		for (Action t : getElements()) {
-			if (t != null) {
-				t.apply(ctx);
+		for (Action action : getElements()) {
+			if (action != null) {
+				action.apply(ctx);
 			}
 		}
 	}
