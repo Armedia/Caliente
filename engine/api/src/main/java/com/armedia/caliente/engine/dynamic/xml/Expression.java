@@ -34,7 +34,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.dynamic.transformer.RuntimeTransformationException;
+import com.armedia.caliente.engine.dynamic.RuntimeDynamicElementException;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "expression.t", propOrder = {
@@ -114,8 +114,8 @@ public class Expression {
 		} catch (ConcurrentException e) {
 			final Throwable cause = e.getCause();
 			if (ScriptException.class.isInstance(cause)) { throw ScriptException.class.cast(cause); }
-			throw new RuntimeException(String.format("Failed to pre-compile the %s script:%n%s%n", language, source),
-				cause);
+			throw new RuntimeDynamicElementException(
+				String.format("Failed to pre-compile the %s script:%n%s%n", language, source), cause);
 		}
 	}
 
@@ -144,7 +144,7 @@ public class Expression {
 				for (ScriptEngineFactory f : Expression.ENGINE_FACTORY.getEngineFactories()) {
 					m.put(String.format("%s %s", f.getLanguageName(), f.getLanguageVersion()), f.getNames());
 				}
-				throw new RuntimeTransformationException(
+				throw new RuntimeDynamicElementException(
 					String.format("Unknown script language [%s] - supported languages: %s", this.lang, m));
 			}
 		}

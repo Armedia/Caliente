@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.dynamic.transformer;
+package com.armedia.caliente.engine.dynamic.filter;
 
 public class ObjectSkippedException extends RuntimeException {
 	private static final long serialVersionUID = 1L;

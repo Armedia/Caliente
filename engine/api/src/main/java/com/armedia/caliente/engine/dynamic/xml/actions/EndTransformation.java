@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.engine.dynamic.transformer.TransformationCompletedException;
+import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -15,7 +15,7 @@ public class EndTransformation extends ConditionalAction {
 
 	@Override
 	protected void applyTransformation(DynamicElementContext ctx) {
-		throw new TransformationCompletedException();
+		throw new ProcessingCompletedException();
 	}
 
 }

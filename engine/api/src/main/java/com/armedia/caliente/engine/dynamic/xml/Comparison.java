@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.dynamic.transformer.RuntimeTransformationException;
+import com.armedia.caliente.engine.dynamic.RuntimeDynamicElementException;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
@@ -202,7 +202,7 @@ public enum Comparison {
 		try {
 			return new CmfValue(CmfDataType.DATETIME, str).asTime();
 		} catch (ParseException e) {
-			throw new RuntimeTransformationException(String.format("Could not parse the date string [%s]", str));
+			throw new RuntimeDynamicElementException(String.format("Could not parse the date string [%s]", str));
 		}
 	}
 
@@ -221,7 +221,7 @@ public enum Comparison {
 			if (URL.class.isInstance(obj)) { return URL.class.cast(obj).toURI(); }
 			return new URI(str);
 		} catch (URISyntaxException e) {
-			throw new RuntimeTransformationException(String.format("Could not parse the URI string [%s]", str), e);
+			throw new RuntimeDynamicElementException(String.format("Could not parse the URI string [%s]", str), e);
 		}
 	}
 

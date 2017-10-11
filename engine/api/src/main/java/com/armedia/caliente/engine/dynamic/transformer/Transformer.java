@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.dynamic.transformer;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DefaultTransformableObjectFacade;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
@@ -51,7 +52,7 @@ public class Transformer implements CmfTransformer {
 		try {
 			try {
 				this.transformations.apply(ctx);
-			} catch (TransformationCompletedException e) {
+			} catch (ProcessingCompletedException e) {
 				// Do nothing - this is simply our shortcut for stopping the transformation work in
 				// its tracks
 			}

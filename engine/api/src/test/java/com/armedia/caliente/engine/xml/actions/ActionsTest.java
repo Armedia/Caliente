@@ -15,7 +15,7 @@ import org.junit.Test;
 import com.armedia.caliente.engine.transform.TestObjectFacade;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
-import com.armedia.caliente.engine.dynamic.transformer.TransformationCompletedException;
+import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.engine.dynamic.xml.RegularExpression;
@@ -49,7 +49,7 @@ public class ActionsTest {
 		try {
 			new EndTransformation().apply(new TestObjectContext());
 			Assert.fail("Failed to end the transformation");
-		} catch (TransformationCompletedException e) {
+		} catch (ProcessingCompletedException e) {
 			// All is well
 		}
 	}
