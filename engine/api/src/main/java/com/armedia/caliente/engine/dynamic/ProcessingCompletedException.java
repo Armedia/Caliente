@@ -1,6 +1,6 @@
 package com.armedia.caliente.engine.dynamic;
 
-public class ProcessingCompletedException extends RuntimeException {
+public class ProcessingCompletedException extends RuntimeDynamicElementException {
 	private static final long serialVersionUID = 1L;
 
 	public ProcessingCompletedException() {
