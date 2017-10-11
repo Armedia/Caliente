@@ -481,7 +481,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				encoded = transformer.transform(objectStore.getAttributeMapper(), encoded);
 			}
 
-			final Long ret = objectStore.storeObject(encoded, getTranslator().getAttributeNameMapper());
+			final Long ret = objectStore.storeObject(encoded);
 
 			if (ret == null) {
 				// Should be impossible, but still guard against it

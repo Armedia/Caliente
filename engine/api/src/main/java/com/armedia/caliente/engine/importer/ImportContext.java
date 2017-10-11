@@ -56,49 +56,47 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 
 	public final int loadObjects(CmfType type, Set<String> ids, final CmfObjectHandler<V> handler)
 		throws CmfStorageException {
-		return this.cmfObjectStore.loadObjects(this.translator.getAttributeNameMapper(), type, ids,
-			new CmfObjectHandler<CmfValue>() {
+		return this.cmfObjectStore.loadObjects(type, ids, new CmfObjectHandler<CmfValue>() {
 
-				@Override
-				public boolean newTier(int tierNumber) throws CmfStorageException {
-					return handler.newTier(tierNumber);
-				}
+			@Override
+			public boolean newTier(int tierNumber) throws CmfStorageException {
+				return handler.newTier(tierNumber);
+			}
 
-				@Override
-				public boolean newHistory(String historyId) throws CmfStorageException {
-					return handler.newHistory(historyId);
-				}
+			@Override
+			public boolean newHistory(String historyId) throws CmfStorageException {
+				return handler.newHistory(historyId);
+			}
 
-				@Override
-				public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
-					if (ImportContext.this.transformer != null) {
-						dataObject = ImportContext.this.transformer.transform(getAttributeMapper(), dataObject);
-					}
-					CmfObject<V> encoded = ImportContext.this.translator.decodeObject(dataObject);
-					return handler.handleObject(encoded);
+			@Override
+			public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
+				if (ImportContext.this.transformer != null) {
+					dataObject = ImportContext.this.transformer.transform(getAttributeMapper(), dataObject);
 				}
+				CmfObject<V> encoded = ImportContext.this.translator.decodeObject(dataObject);
+				return handler.handleObject(encoded);
+			}
 
-				@Override
-				public boolean handleException(Exception e) {
-					return handler.handleException(e);
-				}
+			@Override
+			public boolean handleException(Exception e) {
+				return handler.handleException(e);
+			}
 
-				@Override
-				public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
-					return handler.endHistory(historyId, ok);
-				}
+			@Override
+			public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
+				return handler.endHistory(historyId, ok);
+			}
 
-				@Override
-				public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
-					return handler.endTier(tierNumber, ok);
-				}
-			});
+			@Override
+			public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
+				return handler.endTier(tierNumber, ok);
+			}
+		});
 	}
 
 	public final CmfObject<V> getHeadObject(CmfObject<V> sample) throws CmfStorageException {
 		if (sample.isHistoryCurrent()) { return sample; }
-		CmfObject<CmfValue> rawObject = this.cmfObjectStore.loadHeadObject(this.translator.getAttributeNameMapper(),
-			sample.getType(), sample.getHistoryId());
+		CmfObject<CmfValue> rawObject = this.cmfObjectStore.loadHeadObject(sample.getType(), sample.getHistoryId());
 		if (this.transformer != null) {
 			rawObject = this.transformer.transform(getAttributeMapper(), rawObject);
 		}

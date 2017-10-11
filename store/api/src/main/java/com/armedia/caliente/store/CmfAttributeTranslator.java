@@ -160,9 +160,7 @@ public abstract class CmfAttributeTranslator<V> {
 		);
 
 		for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
-			String attName = att.getName();
-			// TODO: Use the name mapper?
-			// attName = this.nameMapper.decodeAttributeName(newObj.getType(), attName);
+			String attName = this.nameMapper.decodeAttributeName(newObj.getType(), att.getName());
 			CmfAttribute<V> newAtt = new CmfAttribute<>(attName, att.getType(), att.isRepeating());
 			CmfValueCodec<V> codec = getCodec(att.getType());
 			if (newAtt.isRepeating()) {
@@ -217,9 +215,7 @@ public abstract class CmfAttributeTranslator<V> {
 		);
 
 		for (CmfAttribute<V> att : obj.getAttributes()) {
-			String attName = att.getName();
-			// TODO: Use the name mapper?
-			// attName = this.nameMapper.encodeAttributeName(newObj.getType(), attName);
+			String attName = this.nameMapper.encodeAttributeName(newObj.getType(), att.getName());
 			CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(attName, att.getType(), att.isRepeating());
 			CmfValueCodec<V> codec = getCodec(att.getType());
 			if (newAtt.isRepeating()) {
