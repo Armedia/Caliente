@@ -13,7 +13,7 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
-import com.armedia.caliente.engine.dynamic.jaxb.Expression;
+import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.engine.transform.TestObjectContext;
 import com.armedia.caliente.store.CmfDataType;
 

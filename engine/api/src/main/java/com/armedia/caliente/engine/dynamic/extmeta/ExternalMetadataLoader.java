@@ -15,10 +15,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.dynamic.jaxb.ExternalMetadata;
-import com.armedia.caliente.engine.dynamic.jaxb.XmlInstanceException;
-import com.armedia.caliente.engine.dynamic.jaxb.XmlInstances;
-import com.armedia.caliente.engine.dynamic.jaxb.extmeta.MetadataSource;
+import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
+import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
+import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.engine.dynamic.xml.extmeta.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 

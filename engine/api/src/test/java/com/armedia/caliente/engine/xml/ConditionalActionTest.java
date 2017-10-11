@@ -7,7 +7,7 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.engine.dynamic.jaxb.ConditionalAction;
+import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.transform.TestObjectContext;
 
 public class ConditionalActionTest {
