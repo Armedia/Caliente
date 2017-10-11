@@ -57,7 +57,7 @@ public class ActionsTest {
 	@Test
 	public void testSubtypeSet() throws ActionException {
 		TestObjectContext ctx = new TestObjectContext();
-		TestObjectFacade object = ctx.getTransformableObject();
+		TestObjectFacade object = ctx.getDynamicObject();
 		Assert.assertNull(object.getSubtype());
 
 		SubtypeSet action = new SubtypeSet();
@@ -96,7 +96,7 @@ public class ActionsTest {
 	@Test
 	public void testSubtypeReplace() throws ActionException {
 		TestObjectContext ctx = new TestObjectContext();
-		TestObjectFacade object = ctx.getTransformableObject();
+		TestObjectFacade object = ctx.getDynamicObject();
 		object.setSubtype("dctm:test_subtype_value");
 
 		SubtypeReplace action = new SubtypeReplace();
@@ -130,7 +130,7 @@ public class ActionsTest {
 	@Test
 	public void testSecondarySubtypeAdd() throws ActionException {
 		TestObjectContext ctx = new TestObjectContext();
-		TestObjectFacade object = ctx.getTransformableObject();
+		TestObjectFacade object = ctx.getDynamicObject();
 
 		SecondarySubtypeAdd action = new SecondarySubtypeAdd();
 		action.apply(ctx);
@@ -150,7 +150,7 @@ public class ActionsTest {
 	@Test
 	public void testSecondarySubtypeRemove() throws ActionException {
 		TestObjectContext ctx = new TestObjectContext();
-		TestObjectFacade object = ctx.getTransformableObject();
+		TestObjectFacade object = ctx.getDynamicObject();
 
 		SecondarySubtypeRemove action = new SecondarySubtypeRemove();
 		action.setValue(new Expression());
@@ -548,7 +548,7 @@ public class ActionsTest {
 	@Test
 	public void testSecondarySubtypeReplace() throws ActionException {
 		TestObjectContext ctx = new TestObjectContext();
-		TestObjectFacade object = ctx.getTransformableObject();
+		TestObjectFacade object = ctx.getDynamicObject();
 
 		SecondarySubtypeReplace action = new SecondarySubtypeReplace();
 		action.apply(ctx);
@@ -599,7 +599,7 @@ public class ActionsTest {
 	@Test
 	public void testAttributeSet() throws ActionException {
 		TestObjectContext ctx = new TestObjectContext();
-		TestObjectFacade object = ctx.getTransformableObject();
+		TestObjectFacade object = ctx.getDynamicObject();
 
 		AttributeSet action = new AttributeSet();
 		try {
@@ -624,7 +624,7 @@ public class ActionsTest {
 	@Test
 	public void testMapAttributeValue() throws ActionException {
 		TestObjectContext ctx = new TestObjectContext();
-		TestObjectFacade object = ctx.getTransformableObject();
+		TestObjectFacade object = ctx.getDynamicObject();
 
 		MapAttributeValue action = new MapAttributeValue();
 		action.apply(ctx);

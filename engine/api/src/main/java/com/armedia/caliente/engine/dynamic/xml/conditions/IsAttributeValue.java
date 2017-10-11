@@ -18,7 +18,7 @@ public class IsAttributeValue extends AbstractAttributeCalientePropertyVariableV
 
 	@Override
 	protected Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx) {
-		return ctx.getTransformableObject().getAtt();
+		return ctx.getDynamicObject().getAtt();
 	}
 
 }

@@ -19,7 +19,7 @@ public class HasOriginalSecondarySubtype extends AbstractExpressionComparison {
 		Object secondary = ConditionTools.eval(this, ctx);
 		if (secondary == null) { return false; }
 		final Comparison comp = getComparison();
-		for (String s : ctx.getTransformableObject().getOriginalSecondarySubtypes()) {
+		for (String s : ctx.getDynamicObject().getOriginalSecondarySubtypes()) {
 			if (comp.check(CmfDataType.STRING, s, secondary.toString())) { return true; }
 		}
 		return false;

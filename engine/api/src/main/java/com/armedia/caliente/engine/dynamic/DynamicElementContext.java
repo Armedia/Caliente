@@ -49,7 +49,7 @@ public class DynamicElementContext implements ScriptContextConfig {
 		return this.metadataLoader;
 	}
 
-	public DynamicObject getTransformableObject() {
+	public DynamicObject getDynamicObject() {
 		return this.dynamicObject;
 	}
 
@@ -75,7 +75,7 @@ public class DynamicElementContext implements ScriptContextConfig {
 	public void configure(ScriptContext ctx) {
 		final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
 		bindings.put("baseObj", getBaseObject());
-		bindings.put("obj", getTransformableObject());
+		bindings.put("obj", getDynamicObject());
 		bindings.put("vars", getVariables());
 		bindings.put("mapper", getAttributeMapper());
 	}

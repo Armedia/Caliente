@@ -13,11 +13,11 @@ public class TestObjectContext extends DynamicElementContext {
 
 	public TestObjectContext(CmfValueMapper mapper) {
 		super(null, new TestObjectFacade(), mapper, null);
-		this.object = TestObjectFacade.class.cast(super.getTransformableObject());
+		this.object = TestObjectFacade.class.cast(super.getDynamicObject());
 	}
 
 	@Override
-	public TestObjectFacade getTransformableObject() {
+	public TestObjectFacade getDynamicObject() {
 		return this.object;
 	}
 

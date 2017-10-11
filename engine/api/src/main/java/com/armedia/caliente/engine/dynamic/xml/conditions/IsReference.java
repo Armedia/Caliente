@@ -17,7 +17,7 @@ public class IsReference implements Condition {
 
 	@Override
 	public boolean check(DynamicElementContext ctx) {
-		DynamicValue v = ctx.getTransformableObject().getPriv().get(IntermediateProperty.IS_REFERENCE.encode());
+		DynamicValue v = ctx.getDynamicObject().getPriv().get(IntermediateProperty.IS_REFERENCE.encode());
 		if (v == null) { return false; }
 		return Tools.toBoolean(v);
 	}

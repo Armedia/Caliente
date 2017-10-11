@@ -14,7 +14,7 @@ public class IsLatestVersion implements Condition {
 
 	@Override
 	public boolean check(DynamicElementContext ctx) {
-		return ctx.getTransformableObject().isHistoryCurrent();
+		return ctx.getDynamicObject().isHistoryCurrent();
 	}
 
 }

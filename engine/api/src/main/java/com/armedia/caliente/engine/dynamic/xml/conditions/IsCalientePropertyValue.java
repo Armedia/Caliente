@@ -18,7 +18,7 @@ public class IsCalientePropertyValue extends AbstractAttributeCalientePropertyVa
 
 	@Override
 	protected Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx) {
-		return ctx.getTransformableObject().getPriv();
+		return ctx.getDynamicObject().getPriv();
 	}
 
 }

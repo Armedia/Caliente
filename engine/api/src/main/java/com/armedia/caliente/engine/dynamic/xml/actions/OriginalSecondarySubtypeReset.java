@@ -17,9 +17,9 @@ public class OriginalSecondarySubtypeReset extends ConditionalAction {
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
-		Set<String> secondaries = ctx.getTransformableObject().getSecondarySubtypes();
+		Set<String> secondaries = ctx.getDynamicObject().getSecondarySubtypes();
 		secondaries.clear();
-		secondaries.addAll(ctx.getTransformableObject().getOriginalSecondarySubtypes());
+		secondaries.addAll(ctx.getDynamicObject().getOriginalSecondarySubtypes());
 	}
 
 }

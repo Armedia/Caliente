@@ -74,7 +74,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		} else {
 			variable.setValue(value);
 		}
-		ctx.getTransformableObject().getAtt().put(variable.getName(), variable);
+		ctx.getDynamicObject().getAtt().put(variable.getName(), variable);
 	}
 
 }

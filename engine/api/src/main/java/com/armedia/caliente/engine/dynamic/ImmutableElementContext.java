@@ -180,7 +180,7 @@ public class ImmutableElementContext extends DynamicElementContext {
 	}
 
 	public ImmutableElementContext(DynamicElementContext context) {
-		super(context.getBaseObject(), new ImmutableObjectData(context.getTransformableObject()),
+		super(context.getBaseObject(), new ImmutableObjectData(context.getDynamicObject()),
 			new ImmutableAttributeMapper(context.getAttributeMapper()), context.getMetadataLoader(),
 			ImmutableElementContext.makeImmutable(context.getVariables()));
 	}

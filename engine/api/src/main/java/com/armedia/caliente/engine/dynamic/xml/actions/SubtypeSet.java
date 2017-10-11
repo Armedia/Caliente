@@ -20,7 +20,7 @@ public class SubtypeSet extends AbstractSingleValueSet {
 	protected void setNewValue(DynamicElementContext ctx, String newValue) throws ActionException {
 		newValue = StringUtils.strip(newValue);
 		if (StringUtils.isEmpty(newValue)) { throw new ActionException("Empty value given to set"); }
-		ctx.getTransformableObject().setSubtype(newValue);
+		ctx.getDynamicObject().setSubtype(newValue);
 	}
 
 }

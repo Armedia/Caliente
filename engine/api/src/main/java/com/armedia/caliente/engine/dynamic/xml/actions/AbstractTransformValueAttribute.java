@@ -13,7 +13,7 @@ public abstract class AbstractTransformValueAttribute extends AbstractTransformV
 
 	@Override
 	protected final Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx) {
-		return ctx.getTransformableObject().getAtt();
+		return ctx.getDynamicObject().getAtt();
 	}
 
 }

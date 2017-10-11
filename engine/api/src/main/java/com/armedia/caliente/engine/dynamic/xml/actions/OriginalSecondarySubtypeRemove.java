@@ -17,8 +17,8 @@ public class OriginalSecondarySubtypeRemove extends ConditionalAction {
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
-		Set<String> originals = ctx.getTransformableObject().getOriginalSecondarySubtypes();
-		ctx.getTransformableObject().getSecondarySubtypes().removeAll(originals);
+		Set<String> originals = ctx.getDynamicObject().getOriginalSecondarySubtypes();
+		ctx.getDynamicObject().getSecondarySubtypes().removeAll(originals);
 	}
 
 }

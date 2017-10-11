@@ -19,7 +19,7 @@ public class IsName extends AbstractSingleValueComparison {
 
 	@Override
 	protected Object getCandidateValue(DynamicElementContext ctx) {
-		return ctx.getTransformableObject().getName();
+		return ctx.getDynamicObject().getName();
 	}
 
 }

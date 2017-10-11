@@ -15,11 +15,11 @@ public class SubtypeReplace extends AbstractSingleReplace {
 
 	@Override
 	protected String getOldValue(DynamicElementContext ctx) {
-		return ctx.getTransformableObject().getSubtype();
+		return ctx.getDynamicObject().getSubtype();
 	}
 
 	@Override
 	protected void setNewValue(DynamicElementContext ctx, String newValue) {
-		ctx.getTransformableObject().setSubtype(newValue);
+		ctx.getDynamicObject().setSubtype(newValue);
 	}
 }

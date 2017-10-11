@@ -49,7 +49,7 @@ public class SecondarySubtypeReplace extends ConditionalAction {
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
-		Set<String> currentSecondaries = ctx.getTransformableObject().getSecondarySubtypes();
+		Set<String> currentSecondaries = ctx.getDynamicObject().getSecondarySubtypes();
 		if (currentSecondaries.isEmpty()) { return; }
 
 		RegularExpression regexBase = getRegex();

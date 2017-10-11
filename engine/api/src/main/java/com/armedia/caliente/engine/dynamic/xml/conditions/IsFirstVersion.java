@@ -16,7 +16,7 @@ public class IsFirstVersion implements Condition {
 
 	@Override
 	public boolean check(DynamicElementContext ctx) {
-		DynamicValue index = ctx.getTransformableObject().getPriv().get(IntermediateProperty.VERSION_INDEX.encode());
+		DynamicValue index = ctx.getDynamicObject().getPriv().get(IntermediateProperty.VERSION_INDEX.encode());
 		Object v = ((index != null) && !index.isEmpty() ? index.getValue() : null);
 		if (v == null) { return true; }
 		// Is it the number 1?

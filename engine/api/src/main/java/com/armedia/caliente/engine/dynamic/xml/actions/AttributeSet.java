@@ -18,7 +18,7 @@ public class AttributeSet extends AbstractSetValue {
 	@Override
 	protected DynamicValue createValue(DynamicElementContext ctx, String name, CmfDataType type, boolean multivalue) {
 		DynamicValue member = new DynamicValue(name, type, multivalue);
-		ctx.getTransformableObject().getAtt().put(name, member);
+		ctx.getDynamicObject().getAtt().put(name, member);
 		return member;
 	}
 

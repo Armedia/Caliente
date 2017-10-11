@@ -13,7 +13,7 @@ public abstract class AbstractCalientePropertyCheck extends AbstractAttributeCal
 
 	@Override
 	protected Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx) {
-		return ctx.getTransformableObject().getPriv();
+		return ctx.getDynamicObject().getPriv();
 	}
 
 }

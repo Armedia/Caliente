@@ -16,7 +16,7 @@ public class AttributeRemove extends AbstractTransformValueAttribute {
 
 	@Override
 	protected void applyTransformation(DynamicElementContext ctx, DynamicValue candidate) {
-		ctx.getTransformableObject().getAtt().remove(candidate.getName());
+		ctx.getDynamicObject().getAtt().remove(candidate.getName());
 	}
 
 }

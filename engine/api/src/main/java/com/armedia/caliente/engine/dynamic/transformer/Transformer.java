@@ -57,7 +57,7 @@ public class Transformer implements CmfTransformer {
 				// its tracks
 			}
 
-			return ctx.getTransformableObject().applyChanges(object);
+			return ctx.getDynamicObject().applyChanges(object);
 		} catch (ActionException | TransformationException e) {
 			throw new CmfStorageException(
 				String.format("Exception caught while performing the transformation for %s", object.getDescription()),
@@ -69,8 +69,8 @@ public class Transformer implements CmfTransformer {
 
 	private void destroyContext(DynamicElementContext ctx) {
 		// Clean things out... to help the GC...
-		ctx.getTransformableObject().getAtt().clear();
-		ctx.getTransformableObject().getPriv().clear();
+		ctx.getDynamicObject().getAtt().clear();
+		ctx.getDynamicObject().getPriv().clear();
 		ctx.getVariables().clear();
 	}
 

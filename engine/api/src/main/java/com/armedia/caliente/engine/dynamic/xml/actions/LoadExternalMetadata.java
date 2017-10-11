@@ -68,7 +68,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 					e);
 			}
 
-			Map<String, DynamicValue> currentAttributes = ctx.getTransformableObject().getAtt();
+			Map<String, DynamicValue> currentAttributes = ctx.getDynamicObject().getAtt();
 			for (String attributeName : externalAttributes.keySet()) {
 				if (override || !currentAttributes.containsKey(attributeName)) {
 					final CmfAttribute<CmfValue> external = externalAttributes.get(attributeName);

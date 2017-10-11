@@ -35,7 +35,7 @@ public class SecondarySubtypeAdd extends ConditionalAction {
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		String secondary = StringUtils.strip(Tools.toString(ActionTools.eval(getValue(), ctx)));
 		if (!StringUtils.isEmpty(secondary)) {
-			ctx.getTransformableObject().getSecondarySubtypes().add(secondary);
+			ctx.getDynamicObject().getSecondarySubtypes().add(secondary);
 		}
 	}
 
