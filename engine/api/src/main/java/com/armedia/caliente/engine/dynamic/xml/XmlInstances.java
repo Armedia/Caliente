@@ -51,6 +51,10 @@ public class XmlInstances<T extends XmlBase> {
 		}
 	}
 
+	public String getDefaultFileName() {
+		return this.defaultFileName;
+	}
+
 	public T getInstance() throws Exception {
 		return getInstance((String) null);
 	}
