@@ -91,7 +91,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 	}
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx, DynamicValue candidate) throws ActionException {
+	protected void executeAction(DynamicElementContext ctx, DynamicValue candidate) throws ActionException {
 		// Shortcut - avoid any work if no work can be done...
 		if (candidate.isEmpty()) { return; }
 

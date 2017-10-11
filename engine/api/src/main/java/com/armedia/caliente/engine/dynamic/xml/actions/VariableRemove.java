@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 public class VariableRemove extends AbstractTransformValueVariable {
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx, DynamicValue candidate) {
+	protected void executeAction(DynamicElementContext ctx, DynamicValue candidate) {
 		ctx.getVariables().remove(candidate.getName());
 	}
 

@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 public class AttributeRemove extends AbstractTransformValueAttribute {
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx, DynamicValue candidate) {
+	protected void executeAction(DynamicElementContext ctx, DynamicValue candidate) {
 		ctx.getDynamicObject().getAtt().remove(candidate.getName());
 	}
 
