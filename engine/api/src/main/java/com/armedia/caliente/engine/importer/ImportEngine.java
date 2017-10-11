@@ -30,6 +30,7 @@ import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -40,7 +41,6 @@ import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -523,7 +523,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				throw new ImportException("Failed to obtain the import initialization session", e);
 			}
 
-			CmfTransformer transformer = null;
+			Transformer transformer = null;
 			ImportContextFactory<S, W, V, C, ?, ?> contextFactory = null;
 			ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
 			try {
@@ -644,7 +644,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private final CmfObjectCounter<ImportResult> runImportImpl(final ImportState importState,
 		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTransformer transformer)
+		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final Transformer transformer)
 		throws ImportException, CmfStorageException {
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;

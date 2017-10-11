@@ -11,10 +11,10 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
@@ -28,7 +28,7 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 	private final int pathTrunc;
 
 	protected ImportContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, CmfTransformer transformer, Logger output, WarningTracker tracker)
+		CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output, WarningTracker tracker)
 		throws Exception {
 		super(engine, settings, session, objectStore, contentStore, transformer, output, tracker);
 		String rootPath = settings.getString(ImportSetting.TARGET_LOCATION);

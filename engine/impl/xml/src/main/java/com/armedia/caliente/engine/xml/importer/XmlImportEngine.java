@@ -5,6 +5,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.engine.xml.common.XmlCommon;
@@ -16,7 +17,6 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -185,7 +185,7 @@ public class XmlImportEngine extends
 
 	@Override
 	protected XmlImportContextFactory newContextFactory(XmlRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer, Logger output, WarningTracker warningTracker)
+		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
 		throws Exception {
 		return new XmlImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);

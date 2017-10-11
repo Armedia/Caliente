@@ -25,13 +25,13 @@ import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.CmisSetting;
 import com.armedia.caliente.engine.cmis.CmisTransformerIterator;
 import com.armedia.caliente.engine.cmis.CmisTranslator;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -189,8 +189,8 @@ public class CmisExportEngine extends
 
 	@Override
 	protected CmisExportContextFactory newContextFactory(Session session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer,
-		Logger output, WarningTracker warningTracker) throws Exception {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		WarningTracker warningTracker) throws Exception {
 		return new CmisExportContextFactory(this, session, cfg, objectStore, streamStore, output, warningTracker);
 	}
 

@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sharepoint.ShptException;
@@ -25,7 +26,6 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -82,8 +82,8 @@ public class ShptExportEngine extends
 
 	@Override
 	protected ShptExportContextFactory newContextFactory(ShptSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer,
-		Logger output, WarningTracker warningTracker) throws Exception {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		WarningTracker warningTracker) throws Exception {
 		return new ShptExportContextFactory(this, cfg, session, objectStore, streamStore, output, warningTracker);
 	}
 

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContext;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -15,14 +16,13 @@ import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImportContextFactory> {
 
 	public AlfImportContext(AlfImportContextFactory factory, CfgTools settings, String rootId, CmfType rootType,
-		AlfRoot session, Logger output, WarningTracker tracker, CmfTransformer transformer,
+		AlfRoot session, Logger output, WarningTracker tracker, Transformer transformer,
 		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker, transformer, translator, objectStore,

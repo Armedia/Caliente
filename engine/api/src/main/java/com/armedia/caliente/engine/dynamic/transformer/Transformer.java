@@ -10,11 +10,10 @@ import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 
-public class Transformer implements CmfTransformer {
+public class Transformer {
 
 	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class);
 
@@ -42,7 +41,6 @@ public class Transformer implements CmfTransformer {
 		return new DynamicElementContext(object, new DefaultDynamicObject(object), mapper, this.metadataLoader);
 	}
 
-	@Override
 	public CmfObject<CmfValue> transform(CmfValueMapper mapper, CmfObject<CmfValue> object) throws CmfStorageException {
 		if (this.transformations == null) {
 			//
@@ -74,7 +72,6 @@ public class Transformer implements CmfTransformer {
 		ctx.getVariables().clear();
 	}
 
-	@Override
 	public void close() {
 		if (this.metadataLoader != null) {
 			this.metadataLoader.close();

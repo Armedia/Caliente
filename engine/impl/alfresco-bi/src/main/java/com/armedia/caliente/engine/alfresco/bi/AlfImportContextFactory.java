@@ -8,13 +8,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
@@ -25,8 +25,8 @@ public class AlfImportContextFactory
 	private volatile Map<CmfType, Map<String, String>> renameMap = null;
 
 	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTransformer transformer,
-		Logger output, WarningTracker tracker) throws Exception {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
+		WarningTracker tracker) throws Exception {
 		super(engine, settings, root, objectStore, contentStore, transformer, output, tracker);
 	}
 

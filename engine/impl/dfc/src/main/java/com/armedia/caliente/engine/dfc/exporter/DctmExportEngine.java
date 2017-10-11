@@ -17,13 +17,13 @@ import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.DctmTranslator;
 import com.armedia.caliente.engine.dfc.common.DctmCommon;
 import com.armedia.caliente.engine.dfc.common.Setting;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -78,8 +78,8 @@ public class DctmExportEngine extends
 
 	@Override
 	protected DctmExportContextFactory newContextFactory(IDfSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, CmfTransformer transformer,
-		Logger output, WarningTracker warningTracker) throws Exception {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		WarningTracker warningTracker) throws Exception {
 		return new DctmExportContextFactory(this, cfg, session, objectStore, streamStore, output, warningTracker);
 	}
 
