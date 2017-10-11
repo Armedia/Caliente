@@ -38,6 +38,7 @@ import com.armedia.caliente.store.CmfObjectStore.LockStatus;
 import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PooledWorkers;
@@ -475,7 +476,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					e);
 			}
 
-			final Long ret = objectStore.storeObject(marshaled, transformer, getTranslator());
+			CmfObject<CmfValue> encoded = getTranslator().encodeObject(marshaled);
+			if (transformer != null) {
+				encoded = transformer.transform(objectStore.getAttributeMapper(), encoded);
+			}
+
+			final Long ret = objectStore.storeObject(encoded, getTranslator().getAttributeNameMapper());
 
 			if (ret == null) {
 				// Should be impossible, but still guard against it

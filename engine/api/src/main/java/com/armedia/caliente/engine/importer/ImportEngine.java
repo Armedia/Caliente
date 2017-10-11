@@ -42,6 +42,7 @@ import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfTransformer;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
@@ -762,64 +763,68 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 				try {
-					objectStore.loadObjects(transformer, translator, type, new CmfObjectHandler<V>() {
-						private List<CmfObject<V>> contents = null;
+					objectStore.loadObjects(translator.getAttributeNameMapper(), type,
+						new CmfObjectHandler<CmfValue>() {
+							private List<CmfObject<V>> contents = null;
 
-						@Override
-						public boolean newTier(int tier) throws CmfStorageException {
-							output.info("Processing {} tier {}", type.name(), tier);
-							return true;
-						}
-
-						@Override
-						public boolean newHistory(String historyId) throws CmfStorageException {
-							this.contents = new LinkedList<>();
-							return true;
-						}
-
-						@Override
-						public boolean handleObject(CmfObject<V> dataObject) {
-							this.contents.add(dataObject);
-							return true;
-						}
-
-						@Override
-						public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
-							if ((this.contents == null) || this.contents.isEmpty()) { return true; }
-							CmfObject<?> sample = this.contents.get(0);
-							CmfType storedType = sample.getType();
-							ImportStrategy strategy = getImportStrategy(storedType);
-							// We will have already validated that a valid strategy is provided
-							// for all stored types
-							try {
-								executor.submit(new BatchWorker(
-									new Batch(storedType, historyId, this.contents, strategy), workerCounter,
-									sessionFactory, listenerDelegator, importState, contextFactory, delegateFactory));
-							} finally {
-								this.contents = null;
+							@Override
+							public boolean newTier(int tier) throws CmfStorageException {
+								output.info("Processing {} tier {}", type.name(), tier);
+								return true;
 							}
-							return true;
-						}
 
-						@Override
-						public boolean endTier(int tierId, boolean ok) throws CmfStorageException {
-							try {
-								workerCounter.waitUntil(0);
-							} catch (InterruptedException e) {
-								throw new CmfStorageException(
-									String.format("Thread interrupted while waiting for tier [%d] to complete", tierId),
-									e);
-							} finally {
-								output.info("Completed {} tier {}", type.name(), tierId);
+							@Override
+							public boolean newHistory(String historyId) throws CmfStorageException {
+								this.contents = new LinkedList<>();
+								return true;
 							}
-							return ok;
-						}
 
-						@Override
-						public boolean handleException(Exception e) {
-							return true;
-						}
-					});
+							@Override
+							public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
+								if (transformer != null) {
+									dataObject = transformer.transform(objectStore.getAttributeMapper(), dataObject);
+								}
+								this.contents.add(translator.decodeObject(dataObject));
+								return true;
+							}
+
+							@Override
+							public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
+								if ((this.contents == null) || this.contents.isEmpty()) { return true; }
+								CmfObject<?> sample = this.contents.get(0);
+								CmfType storedType = sample.getType();
+								ImportStrategy strategy = getImportStrategy(storedType);
+								// We will have already validated that a valid strategy is provided
+								// for all stored types
+								try {
+									executor.submit(
+										new BatchWorker(new Batch(storedType, historyId, this.contents, strategy),
+											workerCounter, sessionFactory, listenerDelegator, importState,
+											contextFactory, delegateFactory));
+								} finally {
+									this.contents = null;
+								}
+								return true;
+							}
+
+							@Override
+							public boolean endTier(int tierId, boolean ok) throws CmfStorageException {
+								try {
+									workerCounter.waitUntil(0);
+								} catch (InterruptedException e) {
+									throw new CmfStorageException(String.format(
+										"Thread interrupted while waiting for tier [%d] to complete", tierId), e);
+								} finally {
+									output.info("Completed {} tier {}", type.name(), tierId);
+								}
+								return ok;
+							}
+
+							@Override
+							public boolean handleException(Exception e) {
+								return true;
+							}
+						});
 				} catch (Exception e) {
 					throw new ImportException(
 						String.format("Exception raised while loading objects of type [%s]", type), e);

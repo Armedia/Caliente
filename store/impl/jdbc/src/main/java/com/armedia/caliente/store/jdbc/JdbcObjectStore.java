@@ -338,10 +338,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> CmfObject<CmfValue> loadHeadObject(JdbcOperation operation, CmfType type, String historyId,
-		CmfAttributeTranslator<V> translator) throws CmfStorageException {
+	protected CmfObject<CmfValue> loadHeadObject(JdbcOperation operation, CmfType type, String historyId,
+		final CmfAttributeNameMapper nameMapper) throws CmfStorageException {
 		final Connection connection = operation.getConnection();
-		final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		try {
 			PreparedStatement objectPS = null;
 			PreparedStatement secondariesPS = null;
@@ -465,7 +464,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> int loadObjects(JdbcOperation operation, final CmfType type, Collection<String> ids,
+	protected int loadObjects(JdbcOperation operation, final CmfType type, Collection<String> ids,
 		final CmfAttributeNameMapper nameMapper, CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
