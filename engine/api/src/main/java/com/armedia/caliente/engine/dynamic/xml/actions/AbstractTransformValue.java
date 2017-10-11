@@ -53,7 +53,7 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 	}
 
 	@Override
-	protected final void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
 		if (failShort()) { return; }
 		final String comparand = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (comparand == null) { throw new ActionException("No comparand given to check the name against"); }

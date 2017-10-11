@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 public class ObjectFail extends ConditionalAction {
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		throw new ActionException(
 			String.format("Explicitly failed processing %s", ctx.getBaseObject().getDescription()));
 	}

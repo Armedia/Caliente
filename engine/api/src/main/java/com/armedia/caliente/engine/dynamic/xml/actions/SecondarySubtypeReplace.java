@@ -48,7 +48,7 @@ public class SecondarySubtypeReplace extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		Set<String> currentSecondaries = ctx.getTransformableObject().getSecondarySubtypes();
 		if (currentSecondaries.isEmpty()) { return; }
 

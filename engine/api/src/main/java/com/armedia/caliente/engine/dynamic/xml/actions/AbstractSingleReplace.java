@@ -43,7 +43,7 @@ public abstract class AbstractSingleReplace extends ConditionalAction {
 	protected abstract void setNewValue(DynamicElementContext ctx, String newValue);
 
 	@Override
-	protected final void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
 		final RegularExpression regexBase = getRegex();
 		final String regex = Tools.toString(ActionTools.eval(getRegex(), ctx));
 		if (regex == null) { throw new ActionException("No regular expression given to check against"); }

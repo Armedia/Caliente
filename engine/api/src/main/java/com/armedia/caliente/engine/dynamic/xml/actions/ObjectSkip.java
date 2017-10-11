@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 public class ObjectSkip extends ConditionalAction {
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx) {
+	protected void executeAction(DynamicElementContext ctx) {
 		throw new ObjectSkippedException(
 			String.format("Explicitly skipped processing %s", ctx.getBaseObject().getDescription()));
 	}

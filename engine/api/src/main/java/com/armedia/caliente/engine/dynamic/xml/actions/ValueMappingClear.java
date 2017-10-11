@@ -67,7 +67,7 @@ public class ValueMappingClear extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		CmfType type = getType();
 		if (type == null) { throw new ActionException(
 			"Must provide a type name to associate the mapping with"); }

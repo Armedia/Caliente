@@ -137,7 +137,7 @@ public class ValueMappingApply extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		final CmfType type = getType();
 		if (type == null) { throw new ActionException("No type name given to find the mapping"); }
 		final String comparand = Tools.toString(ActionTools.eval(getName(), ctx));

@@ -57,7 +57,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		boolean multivalue);
 
 	@Override
-	protected final void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
 		Object name = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (name == null) { throw new ActionException("No name expression given for variable definition"); }
 

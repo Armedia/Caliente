@@ -50,7 +50,7 @@ public class SecondarySubtypeRemove extends ConditionalAction {
 	}
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		String comparand = StringUtils.strip(Tools.toString(ActionTools.eval(getValue(), ctx)));
 		if (StringUtils.isEmpty(comparand)) { return; }
 

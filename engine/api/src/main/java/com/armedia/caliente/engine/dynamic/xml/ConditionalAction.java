@@ -30,8 +30,8 @@ public abstract class ConditionalAction extends ConditionalElement implements Ac
 			throw new ActionException(
 				String.format("Exception caught checking the condition for a %s", getClass().getSimpleName()), e);
 		}
-		applyTransformation(ctx);
+		executeAction(ctx);
 	}
 
-	protected abstract void applyTransformation(DynamicElementContext ctx) throws ActionException;
+	protected abstract void executeAction(DynamicElementContext ctx) throws ActionException;
 }

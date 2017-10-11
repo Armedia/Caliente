@@ -19,7 +19,7 @@ public class ConditionalActionTest {
 
 		ConditionalAction action = new ConditionalAction() {
 			@Override
-			protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
+			protected void executeAction(DynamicElementContext ctx) throws ActionException {
 				executed.set(true);
 			}
 		};

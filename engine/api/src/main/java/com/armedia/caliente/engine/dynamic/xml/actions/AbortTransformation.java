@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 public class AbortTransformation extends ConditionalAction {
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		throw new ActionException(
 			String.format("The object transformation for %s was explicitly aborted", getObjectDescription(ctx)));
 	}

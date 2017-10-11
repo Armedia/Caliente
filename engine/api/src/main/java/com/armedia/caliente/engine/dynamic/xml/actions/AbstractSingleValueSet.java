@@ -27,7 +27,7 @@ public abstract class AbstractSingleValueSet extends ConditionalAction {
 	protected abstract void setNewValue(DynamicElementContext ctx, String newValue) throws ActionException;
 
 	@Override
-	protected final void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
 		String newValue = Tools.toString(ActionTools.eval(getValue(), ctx));
 		if (newValue == null) { throw new ActionException("No value given to set"); }
 		setNewValue(ctx, newValue);

@@ -16,7 +16,7 @@ import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 public class OriginalSecondarySubtypeReset extends ConditionalAction {
 
 	@Override
-	protected void applyTransformation(DynamicElementContext ctx) throws ActionException {
+	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		Set<String> secondaries = ctx.getTransformableObject().getSecondarySubtypes();
 		secondaries.clear();
 		secondaries.addAll(ctx.getTransformableObject().getOriginalSecondarySubtypes());
