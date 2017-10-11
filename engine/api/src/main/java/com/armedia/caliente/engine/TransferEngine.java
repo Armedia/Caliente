@@ -258,8 +258,14 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	}
 
 	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
-		ExternalMetadataLoader emdl = new ExternalMetadataLoader(cfg.getString(TransferSetting.EXTERNAL_METADATA));
-		return new Transformer(cfg.getString(TransferSetting.TRANSFORMATION), emdl);
+		String defaultXform = String.format("%s%s", this.cfgNamePrefix, Transformer.getDefaultLocation());
+		String xform = cfg.getString(TransferSetting.TRANSFORMATION.getLabel(), defaultXform);
+
+		String defaultMeta = String.format("%s%s", this.cfgNamePrefix, ExternalMetadataLoader.getDefaultLocation());
+		String meta = cfg.getString(TransferSetting.EXTERNAL_METADATA.getLabel(), defaultMeta);
+
+		ExternalMetadataLoader emdl = ExternalMetadataLoader.getExternalMetadataLoader(meta, !defaultMeta.equals(meta));
+		return Transformer.getTransformer(xform, emdl, !defaultXform.equals(xform));
 	}
 
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {

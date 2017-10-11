@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.dynamic.xml;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -52,48 +51,42 @@ public class XmlInstances<T extends XmlBase> {
 	}
 
 	public String getDefaultFileName() {
-		return this.defaultFileName;
+		return String.format("%s.xml", this.defaultFileName);
 	}
 
 	public T getInstance() throws Exception {
 		return getInstance((String) null);
 	}
 
-	private URL getFileURL(String filePath, boolean required) throws FileNotFoundException, MalformedURLException {
+	private URL getFileURL(String filePath, boolean required) throws XmlNotFoundException, MalformedURLException {
 		File f = Tools.canonicalize(new File(filePath));
-		if (!f.exists()) {
-			if (!required) { return null; }
-			throw new FileNotFoundException(
-				String.format("The %s file [%s] does not exist", this.label, f.getAbsolutePath()));
-		}
+		if (!f.exists()) { return null; }
 
 		if (!f.isFile()) {
 			if (!required) { return null; }
-			throw new FileNotFoundException(String.format("The path at [%s] is not a valid %s file (not a file!)",
+			throw new XmlNotFoundException(String.format("The path at [%s] is not a valid %s file (not a file!)",
 				this.label, f.getAbsolutePath()));
 		}
 
-		if (!f.canRead()) { throw new FileNotFoundException(
+		if (!f.canRead()) { throw new XmlNotFoundException(
 			String.format("The %s file [%s] is not readable", this.label, f.getAbsolutePath())); }
 
 		// It exists, it's a file, and can be read!! Move forward!
 		return f.toURI().toURL();
 	}
 
-	public T getInstance(String location) throws XmlInstanceException {
+	public T getInstance(String location) throws XmlInstanceException, XmlNotFoundException {
 		URL url = null;
 		if (location == null) {
 			try {
 				url = getFileURL(this.defaultFileName, false);
 				// If nothing was returned, then we return no transformer...
 				if (url == null) { return null; }
-			} catch (FileNotFoundException | MalformedURLException e) {
+			} catch (MalformedURLException e) {
 				throw new XmlInstanceException(
 					String.format("Failed to load the default %s file [%s]", this.label, this.defaultFileName), e);
 			}
-		}
-
-		if (url == null) {
+		} else {
 			// Try to see if it's a URI...
 			try {
 				URI uri = new URI(location);
@@ -101,13 +94,11 @@ public class XmlInstances<T extends XmlBase> {
 					|| "classpath".equalsIgnoreCase(uri.getScheme()) || "cp".equalsIgnoreCase(uri.getScheme())) {
 					// It's a classpath reference, so let's just find the first resource that
 					// matches the SSP
-					url = Thread.currentThread().getContextClassLoader().getResource(uri.getSchemeSpecificPart());
-					if (url == null) {
-						// No match!! Explode!
-						throw new XmlInstanceException(
-							String.format("Failed to locate the specified %s file [%s] in the classpath", this.label,
-								uri.getSchemeSpecificPart()));
-					}
+					String path = uri.getSchemeSpecificPart();
+					// Remove all leading slahes
+					path = path.replaceAll("^/+", "");
+					url = Thread.currentThread().getContextClassLoader().getResource(path);
+					if (url == null) { return null; }
 				} else {
 					try {
 						url = uri.normalize().toURL();
@@ -123,15 +114,16 @@ public class XmlInstances<T extends XmlBase> {
 					// Do nothing...it may still be a file path
 				}
 			}
-		}
 
-		if (url == null) {
-			// If it wasn't a straight-up URL, or a classpath URI, then it must be a file path...
-			try {
-				url = getFileURL(location, true);
-			} catch (FileNotFoundException | MalformedURLException e) {
-				throw new XmlInstanceException(
-					String.format("Failed to get the %s file URL from [%s]", this.label, location), e);
+			if (url == null) {
+				// If it wasn't a straight-up URL, or a classpath URI, then it must be a file
+				// path...
+				try {
+					url = getFileURL(location, true);
+				} catch (MalformedURLException e) {
+					throw new XmlInstanceException(
+						String.format("Failed to get the %s file URL from [%s]", this.label, location), e);
+				}
 			}
 		}
 

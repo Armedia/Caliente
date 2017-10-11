@@ -28,7 +28,7 @@ public class ExternalMetadataTest {
 		String dbPath = url.getPath();
 		dbPath = dbPath.replaceAll("\\.mv\\.db$", "");
 		System.setProperty("h2.test.path", dbPath);
-		return new ExternalMetadataLoader(cfg);
+		return ExternalMetadataLoader.getExternalMetadataLoader(cfg, true);
 	}
 
 	@Test

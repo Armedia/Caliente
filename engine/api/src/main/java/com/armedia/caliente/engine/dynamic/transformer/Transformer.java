@@ -6,8 +6,8 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
-import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
@@ -17,13 +17,18 @@ public class Transformer {
 
 	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class);
 
-	private final Transformations transformations;
-	private final ExternalMetadataLoader metadataLoader;
-
-	public Transformer(String location, ExternalMetadataLoader metadataLoader) throws TransformationException {
+	public static Transformer getTransformer(String location, ExternalMetadataLoader metadataLoader,
+		boolean failIfMissing) throws TransformerException {
 		try {
-			this.transformations = Transformer.INSTANCES.getInstance(location);
-		} catch (XmlInstanceException e) {
+			try {
+				Transformations transformations = Transformer.INSTANCES.getInstance(location);
+				if (transformations == null) { return null; }
+				return new Transformer(location, transformations, metadataLoader);
+			} catch (final XmlNotFoundException e) {
+				if (!failIfMissing) { return null; }
+				throw e;
+			}
+		} catch (Exception e) {
 			String pre = "";
 			String post = "";
 			if (location == null) {
@@ -31,9 +36,21 @@ public class Transformer {
 			} else {
 				post = String.format(" from [%s]", location);
 			}
-			throw new TransformationException(
+			throw new TransformerException(
 				String.format("Failed to load the %stransformation configuration%s", pre, post), e);
 		}
+	}
+
+	public static String getDefaultLocation() {
+		return Transformer.INSTANCES.getDefaultFileName();
+	}
+
+	private final Transformations transformations;
+	private final ExternalMetadataLoader metadataLoader;
+
+	private Transformer(String location, Transformations transformations, ExternalMetadataLoader metadataLoader)
+		throws TransformerException {
+		this.transformations = transformations;
 		this.metadataLoader = metadataLoader;
 	}
 
@@ -56,7 +73,7 @@ public class Transformer {
 			}
 
 			return ctx.getDynamicObject().applyChanges(object);
-		} catch (ActionException | TransformationException e) {
+		} catch (ActionException | TransformerException e) {
 			throw new CmfStorageException(
 				String.format("Exception caught while performing the transformation for %s", object.getDescription()),
 				e);

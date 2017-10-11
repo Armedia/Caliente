@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import com.armedia.caliente.engine.dynamic.transformer.TransformationException;
+import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -73,7 +73,7 @@ public abstract class DynamicObject {
 		return this.privateProperties;
 	}
 
-	public CmfObject<CmfValue> applyChanges(CmfObject<CmfValue> object) throws TransformationException {
+	public CmfObject<CmfValue> applyChanges(CmfObject<CmfValue> object) throws TransformerException {
 		CmfObject<CmfValue> newObject = new CmfObject<>(//
 			object.getTranslator(), //
 			getType(), //
@@ -100,7 +100,7 @@ public abstract class DynamicObject {
 					try {
 						a.addValue(new CmfValue(v.getType(), o));
 					} catch (ParseException e) {
-						throw new TransformationException(
+						throw new TransformerException(
 							String.format("Failed to convert the %s value [%s] into a %s for attribute [%s]",
 								o.getClass().getCanonicalName(), o, v.getType(), v.getName()),
 							e);
@@ -111,7 +111,7 @@ public abstract class DynamicObject {
 				try {
 					a.setValue(new CmfValue(v.getType(), o));
 				} catch (ParseException e) {
-					throw new TransformationException(
+					throw new TransformerException(
 						String.format("Failed to convert the %s value [%s] into a %s for attribute [%s]",
 							o.getClass().getCanonicalName(), o, v.getType(), v.getName()),
 						e);
@@ -130,7 +130,7 @@ public abstract class DynamicObject {
 					try {
 						p.addValue(new CmfValue(v.getType(), o));
 					} catch (ParseException e) {
-						throw new TransformationException(
+						throw new TransformerException(
 							String.format("Failed to convert the %s value [%s] into a %s for property [%s]",
 								o.getClass().getCanonicalName(), o, v.getType(), v.getName()),
 							e);
@@ -141,7 +141,7 @@ public abstract class DynamicObject {
 				try {
 					p.setValue(new CmfValue(v.getType(), o));
 				} catch (ParseException e) {
-					throw new TransformationException(
+					throw new TransformerException(
 						String.format("Failed to convert the %s value [%s] into a %s for property [%s]",
 							o.getClass().getCanonicalName(), o, v.getType(), v.getName()),
 						e);

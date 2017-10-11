@@ -16,8 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
-import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -26,9 +26,37 @@ public class ExternalMetadataLoader {
 
 	private static final Collection<String> ALL_SOURCES = null;
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
-
 	private static final XmlInstances<ExternalMetadata> INSTANCES = new XmlInstances<>(ExternalMetadata.class);
+
+	public static ExternalMetadataLoader getExternalMetadataLoader(String location, boolean failIfMissing)
+		throws ExternalMetadataException {
+		try {
+			try {
+				ExternalMetadata externalMetadata = ExternalMetadataLoader.INSTANCES.getInstance(location);
+				if (externalMetadata == null) { return null; }
+				return new ExternalMetadataLoader(location, externalMetadata);
+			} catch (final XmlNotFoundException e) {
+				if (!failIfMissing) { return null; }
+				throw e;
+			}
+		} catch (Exception e) {
+			String pre = "";
+			String post = "";
+			if (location == null) {
+				pre = "default ";
+			} else {
+				post = String.format(" from [%s]", location);
+			}
+			throw new ExternalMetadataException(
+				String.format("Failed to load the %sexternal metadata configuration%s", pre, post), e);
+		}
+	}
+
+	public static String getDefaultLocation() {
+		return ExternalMetadataLoader.INSTANCES.getDefaultFileName();
+	}
+
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private boolean initialized = false;
 
@@ -39,18 +67,13 @@ public class ExternalMetadataLoader {
 
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-	public ExternalMetadataLoader(String location) throws ExternalMetadataException {
+	private ExternalMetadataLoader(String location, ExternalMetadata metadata) {
 		if (location == null) {
 			this.locationDesc = "the default configuration";
 		} else {
 			this.locationDesc = String.format("configuration [%s]", location);
 		}
-		try {
-			this.metadata = ExternalMetadataLoader.INSTANCES.getInstance(location);
-		} catch (XmlInstanceException e) {
-			throw new ExternalMetadataException(
-				String.format("Failed to load the external metadata configuration from %s", this.locationDesc), e);
-		}
+		this.metadata = metadata;
 	}
 
 	public void initialize() throws ExternalMetadataException {

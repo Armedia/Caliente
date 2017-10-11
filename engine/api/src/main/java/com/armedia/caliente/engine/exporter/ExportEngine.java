@@ -647,7 +647,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					transformer = getTransformer(configuration);
 				} catch (Exception e) {
-					throw new ExportException("Failed to retrieve the configured storage transformations", e);
+					throw new ExportException("Failed to retrieve the configured object transformations", e);
 				}
 
 				return runExportImpl(exportState, counter, sessionFactory, baseSession, contextFactory, delegateFactory,

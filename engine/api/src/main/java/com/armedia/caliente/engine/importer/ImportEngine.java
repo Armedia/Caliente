@@ -530,7 +530,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					transformer = getTransformer(configuration);
 				} catch (Exception e) {
-					throw new ImportException("Failed to configure the required transformation engine", e);
+					throw new ImportException("Failed to configure the configured object transformations", e);
 				}
 
 				try {
