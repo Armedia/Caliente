@@ -3,6 +3,7 @@ package com.armedia.caliente.store;
 import java.text.ParseException;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Objects;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -120,6 +121,7 @@ public abstract class CmfAttributeTranslator<V> {
 	}
 
 	protected CmfAttributeTranslator(Class<V> valueClass, CmfAttributeNameMapper cmfAttributeNameMapper) {
+		Objects.requireNonNull(valueClass, "Must provide a value class");
 		this.valueClass = valueClass;
 		this.cmfAttributeNameMapper = Tools.coalesce(cmfAttributeNameMapper, CmfAttributeTranslator.NULL_MAPPER);
 	}
