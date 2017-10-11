@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.ConditionFactory;
-import com.armedia.caliente.engine.dynamic.DynamicElements;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicElements;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -30,7 +30,11 @@ public class CustomCheck extends AbstractExpressionCondition {
 			try {
 				return condition.check(ctx);
 			} finally {
-				factory.releaseInstance(condition);
+				try {
+					factory.releaseInstance(condition);
+				} catch (Exception e) {
+					this.log.warn("Failed to release a Condition instance of {}", className, e);
+				}
 			}
 		} catch (Exception e) {
 			throw new ConditionException(

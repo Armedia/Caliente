@@ -9,10 +9,10 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.engine.dynamic.Action;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.ActionFactory;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicElements;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -45,7 +45,11 @@ public class CustomAction extends ConditionalAction {
 			try {
 				action.apply(ctx);
 			} finally {
-				factory.releaseInstance(action);
+				try {
+					factory.releaseInstance(action);
+				} catch (Exception e) {
+					this.log.warn("Failed to release an Action instance of {}", className, e);
+				}
 			}
 		} catch (Exception e) {
 			throw new ActionException(e);
