@@ -120,13 +120,20 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	protected final CmfCrypt crypto;
 
 	private final boolean supportsDuplicateFileNames;
+	private final String cfgNamePrefix;
 
-	public TransferEngine(CmfCrypt crypto) {
-		this(crypto, false);
+	public TransferEngine(CmfCrypt crypto, String cfgNamePrefix) {
+		this(crypto, cfgNamePrefix, false);
 	}
 
-	public TransferEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
+	public TransferEngine(CmfCrypt crypto, String cfgNamePrefix, boolean supportsDuplicateNames) {
 		this.crypto = crypto;
+		if (!StringUtils.isEmpty(cfgNamePrefix)) {
+			cfgNamePrefix = String.format("%s-", cfgNamePrefix);
+		} else {
+			cfgNamePrefix = "";
+		}
+		this.cfgNamePrefix = cfgNamePrefix;
 		this.supportsDuplicateFileNames = supportsDuplicateNames;
 	}
 
@@ -212,6 +219,10 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 				throw new ExportException("Failed to store the referrent information", e);
 			}
 		}
+	}
+
+	protected final String getCfgNamePrefix() {
+		return this.cfgNamePrefix;
 	}
 
 	public final boolean isSupportsDuplicateFileNames() {

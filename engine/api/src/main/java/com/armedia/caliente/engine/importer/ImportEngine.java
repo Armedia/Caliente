@@ -475,11 +475,11 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	protected ImportEngine(CmfCrypt crypto) {
-		super(crypto);
+		super(crypto, "import");
 	}
 
 	protected ImportEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
-		super(crypto, supportsDuplicateNames);
+		super(crypto, "import", supportsDuplicateNames);
 	}
 
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
