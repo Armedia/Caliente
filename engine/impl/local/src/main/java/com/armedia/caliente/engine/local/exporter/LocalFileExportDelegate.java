@@ -280,12 +280,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected String calculateHistoryId(LocalRoot root, LocalFile object) throws Exception {
-		if (object.getAbsolute().isDirectory()) { return String.format("%08X", object.getPathCount()); }
-		return super.calculateHistoryId(root, object);
-	}
-
-	@Override
 	protected String calculateSearchKey(LocalRoot root, LocalFile object) throws Exception {
 		return object.getSafePath();
 	}
