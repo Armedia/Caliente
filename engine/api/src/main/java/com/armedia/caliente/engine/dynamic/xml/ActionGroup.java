@@ -13,12 +13,16 @@ import com.armedia.caliente.engine.dynamic.Action;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.actions.AbortTransformation;
+import com.armedia.caliente.engine.dynamic.xml.actions.AttributeCopy;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeRemove;
+import com.armedia.caliente.engine.dynamic.xml.actions.AttributeRename;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeSet;
 import com.armedia.caliente.engine.dynamic.xml.actions.CustomAction;
 import com.armedia.caliente.engine.dynamic.xml.actions.EndTransformation;
 import com.armedia.caliente.engine.dynamic.xml.actions.MapAttributeValue;
+import com.armedia.caliente.engine.dynamic.xml.actions.MapOriginalSubtype;
+import com.armedia.caliente.engine.dynamic.xml.actions.MapSubtype;
 import com.armedia.caliente.engine.dynamic.xml.actions.MapVariableValue;
 import com.armedia.caliente.engine.dynamic.xml.actions.OriginalSecondarySubtypeRemove;
 import com.armedia.caliente.engine.dynamic.xml.actions.OriginalSecondarySubtypeReset;
@@ -30,7 +34,9 @@ import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.dynamic.xml.actions.ValueMappingApply;
 import com.armedia.caliente.engine.dynamic.xml.actions.ValueMappingClear;
 import com.armedia.caliente.engine.dynamic.xml.actions.ValueMappingSet;
+import com.armedia.caliente.engine.dynamic.xml.actions.VariableCopy;
 import com.armedia.caliente.engine.dynamic.xml.actions.VariableRemove;
+import com.armedia.caliente.engine.dynamic.xml.actions.VariableRename;
 import com.armedia.caliente.engine.dynamic.xml.actions.VariableReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.VariableSet;
 
@@ -42,6 +48,8 @@ public class ActionGroup extends ConditionalAction {
 
 	@XmlElements({
 		@XmlElement(name = "group", type = ActionGroup.class), //
+		@XmlElement(name = "map-subtype", type = MapSubtype.class), //
+		@XmlElement(name = "map-original-subtype", type = MapOriginalSubtype.class), //
 		@XmlElement(name = "set-subtype", type = SubtypeSet.class), //
 		@XmlElement(name = "replace-subtype", type = SubtypeReplace.class), //
 		@XmlElement(name = "add-secondary-subtype", type = SecondarySubtypeAdd.class), //
@@ -50,11 +58,15 @@ public class ActionGroup extends ConditionalAction {
 		@XmlElement(name = "remove-original-secondary-subtypes", type = OriginalSecondarySubtypeRemove.class), //
 		@XmlElement(name = "reset-original-secondary-subtypes", type = OriginalSecondarySubtypeReset.class), //
 		@XmlElement(name = "set-attribute", type = AttributeSet.class), //
+		@XmlElement(name = "copy-attribute", type = AttributeCopy.class), //
+		@XmlElement(name = "rename-attribute", type = AttributeRename.class), //
 		@XmlElement(name = "remove-attribute", type = AttributeRemove.class), //
 		@XmlElement(name = "replace-attribute", type = AttributeReplace.class), //
 		@XmlElement(name = "map-attribute-value", type = MapAttributeValue.class), //
 		@XmlElement(name = "map-variable-value", type = MapVariableValue.class), //
 		@XmlElement(name = "set-variable", type = VariableSet.class), //
+		@XmlElement(name = "copy-variable", type = VariableCopy.class), //
+		@XmlElement(name = "rename-variable", type = VariableRename.class), //
 		@XmlElement(name = "remove-variable", type = VariableRemove.class), //
 		@XmlElement(name = "replace-variable", type = VariableReplace.class), //
 		@XmlElement(name = "set-value-mapping", type = ValueMappingSet.class), //

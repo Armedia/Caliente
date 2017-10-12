@@ -518,6 +518,28 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionCopyAttribute.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="from" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="to" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionRenameAttribute.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="from" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="to" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionRemoveAttribute.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
@@ -565,6 +587,29 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionMapSubtypeBase.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="case" type="tns:mapValueCase.t"  minOccurs="0" maxOccurs="unbounded" />
+					<xsd:element name="default" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapSubtype.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionMapSubtypeBase.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionMapOriginalSubtype.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:actionMapSubtypeBase.t" />
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionMapAttributeValue.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:actionMapValue.t" />
@@ -584,6 +629,28 @@
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="type" type="tns:cmfDataType.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionCopyVariable.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="from" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="to" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="actionRenameVariable.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="from" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="to" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -677,11 +744,17 @@
 			<xsd:element name="remove-original-secondary-subtypes" type="tns:actionRemoveOriginalSecondarySubtypes.t" />
 			<xsd:element name="reset-original-secondary-subtypes" type="tns:actionResetOriginalSecondarySubtypes.t" />
 			<xsd:element name="set-attribute" type="tns:actionSetAttribute.t" />
+			<xsd:element name="copy-attribute" type="tns:actionCopyAttribute.t" />
+			<xsd:element name="rename-attribute" type="tns:actionCopyAttribute.t" />
 			<xsd:element name="remove-attribute" type="tns:actionRemoveAttribute.t" />
 			<xsd:element name="replace-attribute" type="tns:actionReplaceAttribute.t" />
 			<xsd:element name="map-attribute-value" type="tns:actionMapAttributeValue.t" />
 			<xsd:element name="map-variable-value" type="tns:actionMapVariableValue.t" />
+			<xsd:element name="map-subtype" type="tns:actionMapSubtype.t" />
+			<xsd:element name="map-original-subtype" type="tns:actionMapOriginalSubtype.t" />
 			<xsd:element name="set-variable" type="tns:actionSetVariable.t" />
+			<xsd:element name="copy-variable" type="tns:actionCopyVariable.t" />
+			<xsd:element name="rename-variable" type="tns:actionRenameVariable.t" />
 			<xsd:element name="remove-variable" type="tns:actionRemoveVariable.t" />
 			<xsd:element name="replace-variable" type="tns:actionReplaceVariable.t" />
 			<xsd:element name="set-value-mapping" type="tns:actionSetValueMapping.t" />
