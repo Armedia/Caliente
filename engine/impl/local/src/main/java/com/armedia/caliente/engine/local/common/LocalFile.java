@@ -7,6 +7,8 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -64,7 +66,7 @@ public class LocalFile {
 	}
 
 	public String getId() {
-		return String.format("%08x", getPortableFullPath().hashCode());
+		return DigestUtils.sha256Hex(getPortableFullPath());
 	}
 
 	public String getParentId() {
