@@ -51,7 +51,7 @@ public class XmlInstances<T extends XmlBase> {
 	}
 
 	public String getDefaultFileName() {
-		return String.format("%s.xml", this.defaultFileName);
+		return this.defaultFileName;
 	}
 
 	public T getInstance() throws Exception {
@@ -80,8 +80,6 @@ public class XmlInstances<T extends XmlBase> {
 		if (location == null) {
 			try {
 				url = getFileURL(this.defaultFileName, false);
-				// If nothing was returned, then we return no transformer...
-				if (url == null) { return null; }
 			} catch (MalformedURLException e) {
 				throw new XmlInstanceException(
 					String.format("Failed to load the default %s file [%s]", this.label, this.defaultFileName), e);
@@ -100,10 +98,12 @@ public class XmlInstances<T extends XmlBase> {
 					url = Thread.currentThread().getContextClassLoader().getResource(path);
 					if (url == null) { return null; }
 				} else {
-					try {
-						url = uri.normalize().toURL();
-					} catch (MalformedURLException e) {
-						// This isn't a valid URL...so it must be a file path
+					if (uri.isAbsolute()) {
+						try {
+							url = uri.normalize().toURL();
+						} catch (MalformedURLException e) {
+							// This isn't a valid URL...so it must be a file path
+						}
 					}
 				}
 			} catch (URISyntaxException e) {
@@ -127,6 +127,8 @@ public class XmlInstances<T extends XmlBase> {
 			}
 		}
 
+		// If nothing was returned, then we return no instance...
+		if (url == null) { return null; }
 		return getInstance(url);
 	}
 
