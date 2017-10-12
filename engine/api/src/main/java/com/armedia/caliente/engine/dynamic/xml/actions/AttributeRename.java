@@ -8,7 +8,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionCopyAttribute.t")
+@XmlType(name = "actionRenameAttribute.t")
 public class AttributeRename extends AttributeCopy {
 
 	@Override
