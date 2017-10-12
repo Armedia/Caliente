@@ -82,7 +82,7 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 				IntermediateAttribute att = mappings.get(attributeName);
 				if (att != null) { return att.encode(); }
 			}
-			return String.format("%s%s", UcmTranslator.UCM_PREFIX, attributeName.toLowerCase());
+			return String.format("%s%s", UcmTranslator.UCM_PREFIX, attributeName);
 		}
 
 		@Override
