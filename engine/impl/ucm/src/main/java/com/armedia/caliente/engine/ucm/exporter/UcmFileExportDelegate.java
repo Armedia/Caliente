@@ -83,7 +83,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 
 		UcmFileHistory history = getHistory(ctx);
 		boolean latest = (history.getLastRevision().getRevisionId() == this.object.getRevisionNumber());
-		CmfAttribute<CmfValue> latestVersion = new CmfAttribute<>(UcmAtt.$latestVersion.name(), CmfDataType.BOOLEAN,
+		CmfAttribute<CmfValue> latestVersion = new CmfAttribute<>(UcmAtt.cmfLatestVersion.name(), CmfDataType.BOOLEAN,
 			false, Collections.singleton(new CmfValue(latest)));
 		object.setAttribute(latestVersion);
 

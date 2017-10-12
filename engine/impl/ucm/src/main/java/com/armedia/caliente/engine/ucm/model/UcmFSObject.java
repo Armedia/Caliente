@@ -32,13 +32,13 @@ public abstract class UcmFSObject extends UcmModelObject {
 		this.uniqueUri = UcmModel.getUniqueURI(data);
 		this.parentUri = new UcmUniqueURI(UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID)));
 		final Map<String, CmfValue> mutableData = data.getMutableData();
-		mutableData.put(UcmAtt.$ucmUniqueURI.name(), new CmfValue(this.uniqueUri.toString()));
-		mutableData.put(UcmAtt.$ucmParentURI.name(), new CmfValue(this.parentUri.toString()));
+		mutableData.put(UcmAtt.cmfUniqueURI.name(), new CmfValue(this.uniqueUri.toString()));
+		mutableData.put(UcmAtt.cmfParentURI.name(), new CmfValue(this.parentUri.toString()));
 
 		this.attributes = data;
 		this.nameAtt = nameAtt;
 
-		this.parentPath = this.attributes.getString(UcmAtt.$ucmParentPath);
+		this.parentPath = this.attributes.getString(UcmAtt.cmfParentPath);
 		if (this.parentPath == null) {
 			"".hashCode();
 		}
@@ -51,7 +51,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 		} else {
 			this.path = String.format("%s/%s", this.parentPath, name);
 		}
-		mutableData.put(UcmAtt.$ucmPath.name(), new CmfValue(this.path));
+		mutableData.put(UcmAtt.cmfPath.name(), new CmfValue(this.path));
 
 		this.ucmObjectType = (UcmModel.isFileURI(uri) ? UcmObjectType.FILE : UcmObjectType.FOLDER);
 	}

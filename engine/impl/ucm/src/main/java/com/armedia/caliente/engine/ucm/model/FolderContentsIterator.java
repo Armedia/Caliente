@@ -199,7 +199,7 @@ public class FolderContentsIterator {
 					List<DataObject> l = rs.getRows();
 					if ((l != null) && !l.isEmpty()) {
 						this.folder = new UcmAttributes(l.get(0), rs.getFields());
-						this.folder.getMutableData().put(UcmAtt.$ucmParentPath.name(),
+						this.folder.getMutableData().put(UcmAtt.cmfParentPath.name(),
 							new CmfValue(FileNameTools.dirname(this.parentPath, '/')));
 					}
 				}
@@ -229,7 +229,7 @@ public class FolderContentsIterator {
 			final boolean folder = this.folders.hasNext();
 			DataObject o = (folder ? this.folders.next() : this.files.next());
 			Map<String, String> m = new HashMap<>(o);
-			m.put(UcmAtt.$ucmParentPath.name(), this.parentPath);
+			m.put(UcmAtt.cmfParentPath.name(), this.parentPath);
 			this.current = new UcmAttributes(m, folder ? this.folderFields : this.fileFields);
 			this.currentInPage++;
 			return true;

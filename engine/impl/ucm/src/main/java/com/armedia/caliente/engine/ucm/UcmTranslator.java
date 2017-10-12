@@ -31,16 +31,16 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 		am = new DualHashBidiMap<>();
 		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (Document|...)
-		am.put(UcmAtt.$ucmUniqueURI.name(), IntermediateAttribute.OBJECT_ID);
-		am.put(UcmAtt.$ucmParentURI.name(), IntermediateAttribute.PARENT_ID);
-		am.put(UcmAtt.$ucmPath.name(), IntermediateAttribute.PATH);
+		am.put(UcmAtt.cmfUniqueURI.name(), IntermediateAttribute.OBJECT_ID);
+		am.put(UcmAtt.cmfParentURI.name(), IntermediateAttribute.PARENT_ID);
+		am.put(UcmAtt.cmfPath.name(), IntermediateAttribute.PATH);
 		am.put(UcmAtt.dDocType.name(), IntermediateAttribute.OBJECT_TYPE_ID);
 		am.put(UcmAtt.fFileName.name(), IntermediateAttribute.NAME);
 		am.put(UcmAtt.fDisplayDescription.name(), IntermediateAttribute.DESCRIPTION);
 		am.put(UcmAtt.dFormat.name(), IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
 		am.put(UcmAtt.dFileSize.name(), IntermediateAttribute.CONTENT_STREAM_LENGTH);
 		am.put(UcmAtt.fFileGUID.name(), IntermediateAttribute.VERSION_SERIES_ID);
-		am.put(UcmAtt.$latestVersion.name(), IntermediateAttribute.IS_LATEST_VERSION);
+		am.put(UcmAtt.cmfLatestVersion.name(), IntermediateAttribute.IS_LATEST_VERSION);
 		am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.VERSION_LABEL);
 		// am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.CHANGE_TOKEN);
 		am.put(UcmAtt.fCreator.name(), IntermediateAttribute.CREATED_BY);
@@ -54,9 +54,9 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 		am = new DualHashBidiMap<>();
 		// BASE_TYPE_ID (FOLDER)
 		// OBJECT_TYPE_ID (Folder|...)
-		am.put(UcmAtt.$ucmUniqueURI.name(), IntermediateAttribute.OBJECT_ID);
-		am.put(UcmAtt.$ucmParentURI.name(), IntermediateAttribute.PARENT_ID);
-		am.put(UcmAtt.$ucmPath.name(), IntermediateAttribute.PATH);
+		am.put(UcmAtt.cmfUniqueURI.name(), IntermediateAttribute.OBJECT_ID);
+		am.put(UcmAtt.cmfParentURI.name(), IntermediateAttribute.PARENT_ID);
+		am.put(UcmAtt.cmfPath.name(), IntermediateAttribute.PATH);
 		am.put(UcmAtt.fFolderName.name(), IntermediateAttribute.NAME);
 		am.put(UcmAtt.fFolderDescription.name(), IntermediateAttribute.DESCRIPTION);
 		am.put(UcmAtt.fCreator.name(), IntermediateAttribute.CREATED_BY);

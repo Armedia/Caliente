@@ -339,7 +339,7 @@ public class UcmModel {
 							// to dirname it
 							String parentPath = responseData
 								.getLocal(String.format("%sPath", file ? "file" : "folder"));
-							baseObj.put(UcmAtt.$ucmParentPath.name(), FileNameTools.dirname(parentPath, '/'));
+							baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
 							data.set(new UcmAttributes(baseObj, rs.getFields()));
 
 							String guid = data.get().getString(UcmAtt.fFileGUID);
@@ -429,7 +429,7 @@ public class UcmModel {
 							// to dirname it
 							String parentPath = responseData
 								.getLocal(String.format("%sPath", type.name().toLowerCase()));
-							baseObj.put(UcmAtt.$ucmParentPath.name(), FileNameTools.dirname(parentPath, '/'));
+							baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
 							data.set(new UcmAttributes(baseObj, rs.getFields()));
 
 							String uriIdentifier = data.get().getString(uriIdentifierAtt);
@@ -515,7 +515,7 @@ public class UcmModel {
 							baseObj.putAll(rs.getRows().get(0));
 							String parentPath = responseData
 								.getLocal(String.format("%sPath", file ? "file" : "folder"));
-							baseObj.put(UcmAtt.$ucmParentPath.name(), FileNameTools.dirname(parentPath, '/'));
+							baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
 
 							UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
 							data.set(baseData);
@@ -599,7 +599,7 @@ public class UcmModel {
 							baseObj.putAll(rs.getRows().get(0));
 							// Capture the parent path...from DOC_INFO, it's stored in
 							// LocalData.fParentPath
-							baseObj.put(UcmAtt.$ucmParentPath.name(), responseData.getLocalData().get("fParentPath"));
+							baseObj.put(UcmAtt.cmfParentPath.name(), responseData.getLocalData().get("fParentPath"));
 
 							DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
 							baseObj.putAll(docInfo);
@@ -1117,7 +1117,7 @@ public class UcmModel {
 								baseObj.putAll(rs.getRows().get(0));
 								// Capture the parent path...from DOC_INFO, it's stored in
 								// LocalData.fParentPath
-								baseObj.put(UcmAtt.$ucmParentPath.name(),
+								baseObj.put(UcmAtt.cmfParentPath.name(),
 									responseData.getLocalData().get("fParentPath"));
 
 								DataResultSet DOC_INFO = responseData.getResultSet("DOC_INFO");

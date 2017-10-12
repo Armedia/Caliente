@@ -67,7 +67,7 @@ public class UcmModelTest extends BaseTest {
 				} else {
 					type = String.format(" %s", type);
 				}
-				String path = att.getString(UcmAtt.$ucmParentPath);
+				String path = att.getString(UcmAtt.cmfParentPath);
 				String name = att.getString(nameAtt);
 				if (path == null) {
 					path = "";
