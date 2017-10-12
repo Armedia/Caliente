@@ -40,6 +40,7 @@ import oracle.stellent.ridc.protocol.ServiceResponse.ResponseType;
 // FLD_CREATE_FILE (fParentGUID, dDocName, fRelationshipType="(owner|soft)")
 // FLD_CREATE_FILE (fParentGUID, fFileGUID, fRelationshipType="(owner|soft)") (???)
 // FLD_CREATE_FOLDER (fParentGUID, fFolderGUID, fRelationshipType="(owner|soft)")
+// CHECKIN_UNIVERSAL (dDocAuthor, dDocTitle, dDocType, dSecurityGroup, dCreateDate, doFileCopy = 1)
 public class UcmModel {
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 	private static final String PRIMARY = "primary";
