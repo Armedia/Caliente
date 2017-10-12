@@ -4,6 +4,7 @@ import java.net.URI;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -26,6 +27,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 
 	UcmFSObject(UcmModel model, URI uri, UcmAttributes data, UcmAtt nameAtt) {
 		super(model, uri);
+		Objects.requireNonNull(data, String.format("No attribute data provided for URI [%s]", uri));
 		// Here we use the cloning constructor so we keep a *copy* of the DataObject, to allow
 		// the caches in the model the opportunity to expire objects appropriately regardless
 		// of references held outside the model
