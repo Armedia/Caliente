@@ -570,7 +570,7 @@
 			<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 			<xsd:element name="replacement" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 		</xsd:sequence>
-		<xsd:attribute name="comparison" type="tns:comparison.t" use="required" />
+		<xsd:attribute name="comparison" type="tns:comparison.t" use="optional" default="eqi" />
 	</xsd:complexType>
 
 	<xsd:complexType name="actionMapValue.t">
@@ -745,7 +745,7 @@
 			<xsd:element name="reset-original-secondary-subtypes" type="tns:actionResetOriginalSecondarySubtypes.t" />
 			<xsd:element name="set-attribute" type="tns:actionSetAttribute.t" />
 			<xsd:element name="copy-attribute" type="tns:actionCopyAttribute.t" />
-			<xsd:element name="rename-attribute" type="tns:actionCopyAttribute.t" />
+			<xsd:element name="rename-attribute" type="tns:actionRenameAttribute.t" />
 			<xsd:element name="remove-attribute" type="tns:actionRemoveAttribute.t" />
 			<xsd:element name="replace-attribute" type="tns:actionReplaceAttribute.t" />
 			<xsd:element name="map-attribute-value" type="tns:actionMapAttributeValue.t" />
