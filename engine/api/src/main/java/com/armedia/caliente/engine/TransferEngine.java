@@ -203,16 +203,19 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		// Now, add the properties to reference the referrent object
 		if (referrent != null) {
 			final CmfAttributeTranslator<V> translator = getTranslator();
-			CmfProperty<V> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING, false);
 			try {
+				CmfProperty<V> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING,
+					false);
 				referrentType.setValue(translator.getValue(CmfDataType.STRING, referrent.getType().name()));
 				marshaled.setProperty(referrentType);
+
 				CmfProperty<V> referrentId = new CmfProperty<>(TransferEngine.REFERRENT_ID, CmfDataType.STRING, false);
 				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getId()));
 				marshaled.setProperty(referrentId);
+
 				CmfProperty<V> referrentKey = new CmfProperty<>(TransferEngine.REFERRENT_KEY, CmfDataType.STRING,
 					false);
-				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getSearchKey()));
+				referrentKey.setValue(translator.getValue(CmfDataType.STRING, referrent.getSearchKey()));
 				marshaled.setProperty(referrentKey);
 			} catch (ParseException e) {
 				// This should never happen...
