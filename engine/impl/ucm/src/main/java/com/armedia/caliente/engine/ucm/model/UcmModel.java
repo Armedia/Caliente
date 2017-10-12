@@ -37,6 +37,9 @@ import oracle.stellent.ridc.protocol.ServiceException;
 import oracle.stellent.ridc.protocol.ServiceResponse;
 import oracle.stellent.ridc.protocol.ServiceResponse.ResponseType;
 
+// FLD_CREATE_FILE (fParentGUID, dDocName, fRelationshipType="(owner|soft)")
+// FLD_CREATE_FILE (fParentGUID, fFileGUID, fRelationshipType="(owner|soft)") (???)
+// FLD_CREATE_FOLDER (fParentGUID, fFolderGUID, fRelationshipType="(owner|soft)")
 public class UcmModel {
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 	private static final String PRIMARY = "primary";
