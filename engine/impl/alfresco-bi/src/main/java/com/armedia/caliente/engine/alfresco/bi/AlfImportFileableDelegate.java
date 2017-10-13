@@ -56,7 +56,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private static final String METADATA_SUFFIX = ".metadata.properties.xml";
 
 	public static final String REFERENCE_TYPE = "arm:reference";
-	public static final String VDOC_REFERENCE_TYPE = "arm:vdocReference";
+	public static final String VDOC_REFERENCE_TYPE = "dctm:vdocReference";
 	public static final String STATUS_ASPECT = "arm:calienteStatus";
 	public static final String CALIENTE_ASPECT = "arm:caliente";
 
@@ -115,8 +115,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
 		this.defaultType = this.factory.getType(defaultType);
 		this.referenceType = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
-		this.vdocRoot = this.factory.getType("cm:folder", "arm:vdocRoot");
-		this.vdocVersion = this.factory.getType("cm:folder", "arm:vdocVersion");
+		this.vdocRoot = this.factory.getType("cm:folder", "dctm:vdocRoot");
+		this.vdocVersion = this.factory.getType("cm:folder", "dctm:vdocVersion");
 		this.vdocReference = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE,
 			AlfImportFileableDelegate.VDOC_REFERENCE_TYPE);
 	}
