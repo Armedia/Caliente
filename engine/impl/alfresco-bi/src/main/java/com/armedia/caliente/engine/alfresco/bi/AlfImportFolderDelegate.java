@@ -27,7 +27,7 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 
 	public AlfImportFolderDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
-		super(null, factory, storedObject);
+		super(AlfImportFolderDelegate.BASE_TYPE, factory, storedObject);
 		this.folderType = this.factory.schema.buildType(AlfImportFolderDelegate.BASE_TYPE,
 			AlfImportFolderDelegate.BASE_ASPECTS);
 	}
