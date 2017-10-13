@@ -26,6 +26,10 @@ public class KeyLockableCache<K, V> {
 	public static final TimeUnit DEFAULT_MAX_AGE_UNIT = TimeUnit.MINUTES;
 	public static final long DEFAULT_MAX_AGE = 5;
 
+	public static interface Expirable {
+		public void expire();
+	}
+
 	protected abstract class CacheItem {
 		private final long creationDate;
 
@@ -35,20 +39,38 @@ public class KeyLockableCache<K, V> {
 
 		public final V get() {
 			// If the age is negative, it NEVER expires unless the GC reclaims it...
-			if (KeyLockableCache.this.maxAge < 0) { return doGet(); }
+			if (KeyLockableCache.this.maxAge < 0) {
+				V ret = doGet();
+				if (ret == null) {
+					expire();
+				}
+				return ret;
+			}
 
 			// If the age is 0, then it expires immediately
-			if (KeyLockableCache.this.maxAge == 0) { return null; }
+			if (KeyLockableCache.this.maxAge == 0) {
+				expire();
+				return null;
+			}
 
 			// Let's check if it's expired...
 			final long age = System.currentTimeMillis() - this.creationDate;
-			if (age > KeyLockableCache.this.maxAgeUnit.toMillis(KeyLockableCache.this.maxAge)) { return null; }
+			if (age > KeyLockableCache.this.maxAgeUnit.toMillis(KeyLockableCache.this.maxAge)) {
+				expire();
+				return null;
+			}
 
 			// It's not expired, so it's up to the GC
-			return doGet();
+			V ret = doGet();
+			if (ret == null) {
+				expire();
+			}
+			return ret;
 		}
 
 		protected abstract V doGet();
+
+		protected abstract void expire();
 	}
 
 	protected final class DirectCacheItem extends CacheItem {
@@ -62,6 +84,13 @@ public class KeyLockableCache<K, V> {
 		@Override
 		protected V doGet() {
 			return this.value;
+		}
+
+		@Override
+		protected void expire() {
+			if (Expirable.class.isInstance(this.value)) {
+				Expirable.class.cast(this.value).expire();
+			}
 		}
 	}
 
@@ -77,6 +106,18 @@ public class KeyLockableCache<K, V> {
 		@Override
 		protected V doGet() {
 			return this.value.get();
+		}
+
+		@Override
+		protected void expire() {
+			V v = this.value.get();
+			try {
+				if (Expirable.class.isInstance(v)) {
+					Expirable.class.cast(v).expire();
+				}
+			} finally {
+				this.value.enqueue();
+			}
 		}
 	}
 
