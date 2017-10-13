@@ -12,13 +12,12 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,8 +63,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private static final String TYPE_PROPERTY = "type";
 	private static final String ASPECT_PROPERTY = "aspects";
 
-	private static final Map<String, String> ATTRIBUTE_MAPPER;
-	private static final Map<String, String> ATTRIBUTE_SPECIAL_COPIES;
 	private static final Set<String> USER_CONVERSIONS;
 
 	private static final Pattern VDOC_MEMBER_PARSER = Pattern.compile("^\\[(.+)\\]\\{(.+)\\}$");
@@ -91,119 +88,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	static {
-		Map<String, String> m = new HashMap<>();
-
-		// Attribute Y (right) "gets populated from" X (left)
-		String[][] unmappings = {
-			{
-				"dctm:acl_name", "cmf:acl_name"
-			}, {
-				"dctm:group_name", "cmf:group"
-			}, {
-				"dctm:group_permit", "cmf:group_permission"
-			}, {
-				"dctm:r_access_date", "cmf:last_access_date"
-			}, {
-				"dctm:acl_domain", "cmf:login_realm"
-			}, {
-				"dctm:owner_name", "cmf:owner"
-			}, {
-				"dctm:owner_permit", "cmf:owner_permission"
-			}, {
-				"dctm:i_antecedent_id", "cmf:version_antecedent_id"
-			}, {
-				"dctm:i_vstamp", "cmis:changeToken"
-			}, {
-				"dctm:log_entry", "cmis:checkinComment"
-			}, {
-				"dctm:r_full_content_size", "cmis:contentStreamLength"
-			}, {
-				"dctm:a_content_type", "cmis:contentStreamMimeType"
-			}, {
-				"dctm:r_creator_name", "cmis:createdBy"
-			}, {
-				"dctm:r_creation_date", "cmis:creationDate"
-			}, {
-				"dctm:title", "cmis:description"
-			}, {
-				"dctm:r_immutable_flag", "cmis:isImmutable"
-			}, {
-				"dctm:i_has_folder", "cmis:isLatestVersion"
-			}, {
-				"dctm:r_modify_date", "cmis:lastModificationDate"
-			}, {
-				"dctm:r_modifier", "cmis:lastModifiedBy"
-			}, {
-				"dctm:object_name", "cmis:name"
-			}, {
-				"dctm:r_object_type", "cmis:objectTypeId"
-			}, {
-				"dctm:i_folder_id", "cmis:parentId"
-			}, {
-				"dctm:r_version_label", "cmis:versionLabel"
-			}, {
-				"dctm:r_lock_owner", "cmis:versionSeriesCheckedOutBy"
-			}, {
-				"dctm:i_chronicle_id", "cmis:versionSeriesId"
-			}, {
-				"dctm:r_folder_path", "cmis:path"
-			}, {
-				"dctm:binding_condition", "binding_condition"
-			}, {
-				"dctm:binding_label", "binding_label"
-			}, {
-				"dctm:reference_by_id", "reference_by_id"
-			},
-		};
-
-		for (String[] s : unmappings) {
-			m.put(s[0], s[1]);
-		}
-		ATTRIBUTE_MAPPER = Tools.freezeMap(m);
-
-		// Attribute X (left) "gets populated from" Y (right), Y may need re-mapping through
-		// ATTRIBUTE_MAPPER
-		m = new HashMap<>();
-		String[][] copies = {
-			{
-				"cm:author", "dctm:authors"
-			}, {
-				"cm:description", "dctm:log_entry"
-			}, {
-				"cm:subjectline", "dctm:message_subject"
-			}, {
-				"cm:name", "dctm:object_name"
-			}, {
-				"cm:owner", "dctm:owner_name"
-			}, {
-				"cm:accessed", "dctm:r_access_date"
-			}, {
-				"cm:created", "dctm:r_creation_date"
-			}, {
-				"cm:creator", "dctm:r_creator_name"
-			}, {
-				"cm:modifier", "dctm:r_modifier"
-			}, {
-				"cm:modified", "dctm:r_modify_date"
-			}, {
-				"cm:sentdate", "dctm:sent_date"
-			}, {
-				"cm:title", "dctm:title"
-			},
-		};
-		for (String[] s : copies) {
-			m.put(s[0], s[1]);
-		}
-		ATTRIBUTE_SPECIAL_COPIES = Tools.freezeMap(m);
-
-		m = new HashMap<>();
+		Set<String> set = new TreeSet<>();
 		String[] conversions = {
 			"cm:owner", "cm:creator", "cm:modifier"
 		};
 		for (String s : conversions) {
-			m.put(s, s);
+			set.add(s);
 		}
-		USER_CONVERSIONS = Tools.freezeSet(new HashSet<>(m.keySet()));
+		USER_CONVERSIONS = Tools.freezeSet(new LinkedHashSet<>(set));
 	}
 
 	private final boolean reference;
@@ -273,12 +165,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return type;
 	}
 
-	protected final CmfAttribute<CmfValue> mapAttributeName(String attributeName) {
-		String target = AlfImportFileableDelegate.ATTRIBUTE_MAPPER.get(attributeName);
-		if (target == null) { return null; }
-		return this.cmfObject.getAttribute(target);
-	}
-
 	protected final void storeValue(AlfImportContext ctx, CmfProperty<CmfValue> srcAtt, SchemaAttribute tgtAtt,
 		Properties p, boolean concatenateFallback) throws ImportException {
 		final String value;
@@ -336,6 +222,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
 		CmfContentInfo content) throws ImportException {
 
+		final AlfAttributeMapper mapper = AlfAttributeMapper.getMapper(this.cmfObject);
+
 		Set<String> tgtNames = targetType.getAttributeNames();
 		Set<String> srcNames = this.cmfObject.getAttributeNames();
 
@@ -357,7 +245,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			final SchemaAttribute tgtAtt = targetType.getAttribute(tgtAttName);
 
 			// Easy path: is this already mapped?
-			String srcAttName = AlfImportFileableDelegate.ATTRIBUTE_MAPPER.get(tgtAttName);
+			String srcAttName = mapper.getSourceAttribute(tgtAttName);
 			if (srcAttName == null) {
 				// This is because the source attributes all come with either "dctm:", "cmf:", or
 				// "cmis:" as a prefix, so we first try the happy path (prefix "dctm:")...
@@ -386,17 +274,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 		// Now, do the mappings as copies of what has already been copied over, except when the
 		// source attribute is repeating.
-		for (final String specialName : AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.keySet()) {
+		for (final String specialName : mapper.getSpecialCopies()) {
 			// First get the attribute the special copy must go to
 			final SchemaAttribute specialAtt = targetType.getAttribute(specialName);
 			if (specialAtt == null) {
 				continue;
 			}
 
-			String srcName = AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.get(specialName);
-			// If it didn't need mapping, stick to the original name.
-			srcName = Tools.coalesce(AlfImportFileableDelegate.ATTRIBUTE_MAPPER.get(srcName), srcName);
-
+			String srcName = mapper.getSpecialCopySourceAttribute(specialName);
 			CmfAttribute<CmfValue> srcAtt = this.cmfObject.getAttribute(srcName);
 			if ((srcAtt == null) || !srcAtt.hasValues()) {
 				continue;
@@ -466,11 +351,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 			// Finally, perform user mappings for special user-relative attributes
 			for (String s : AlfImportFileableDelegate.USER_CONVERSIONS) {
-				final String src = AlfImportFileableDelegate.ATTRIBUTE_SPECIAL_COPIES.get(s);
-				if (src == null) {
+				final String userAttribute = mapper.getSpecialCopyMapping(s);
+				if (userAttribute == null) {
 					continue;
 				}
-				String v = this.factory.mapUser(p.getProperty(src));
+				String v = this.factory.mapUser(p.getProperty(userAttribute));
 				if (v == null) {
 					continue;
 				}
