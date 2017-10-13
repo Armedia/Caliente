@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<model name="arm:calienteModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd">
+<model name="arm:calienteDctmModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0  platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd ">
 	<description>Armedia Caliente Object Model</description>
 	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>
 	<version>1.1</version>
@@ -11,98 +11,47 @@
 
 		<!--  Import Alfresco Content Domain Model Definitions  -->
 		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm" />
+
+		<!--  Import Caliente Domain Model Definitions  -->
+		<import uri="http://www.armedia.com/model/armedia/1.0" prefix="arm" />
 	</imports>
 
 	<namespaces>
 		<namespace uri="http://www.armedia.com/model/documentum/1.0" prefix="dctm" />
-		<namespace uri="http://www.armedia.com/model/armedia/1.0" prefix="arm" />
 	</namespaces>
-
-	<constraints>
-		<constraint name="arm:calienteProcessingStatus" type="LIST">
-			<parameter name="allowedValues">
-				<list>
-					<value>Success</value>
-					<value>Fail</value>
-					<value>N/A</value>
-					<value>Remediate</value>
-					<value>Unprocessed</value>
-				</list>
-			</parameter>
-		</constraint>
-	</constraints>
 
 	<types>
 		<!--
-			BEGIN arm:document
+			BEGIN dctm:document
 		-->
-		<type name="arm:document">
-			<title>Armedia Caliente Base Document Object</title>
-			<parent>cm:content</parent>
+		<type name="dctm:document">
+			<title>Documentum Base Document Object</title>
+			<parent>arm:document</parent>
 			<mandatory-aspects>
 				<aspect>dctm:dm_document</aspect>
-				<aspect>arm:caliente</aspect>
 			</mandatory-aspects>
 		</type>
 		<!--
-			END arm:document
+			END dctm:document
 		-->
 
 		<!--
-			BEGIN arm:rendition
+			BEGIN dctm:vdocReference
 		-->
-		<type name="arm:rendition">
-			<title>Armedia Caliente Extra Rendition Object</title>
-			<parent>cm:content</parent>
+		<type name="dctm:vdocReference">
+			<title>Documentum Virtual Document Object Reference</title>
+			<parent>arm:reference</parent>
 			<properties>
-				<property name="arm:renditionObjectId">
-					<title>Rendition's Parent Object's R_OBJECT_ID</title>
+				<property name="dctm:vdocReferenceId">
+					<title>Original ID for the reference object itself</title>
 					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="arm:renditionName">
-					<title>Rendition's Name</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="arm:renditionPage">
-					<title>Rendition's Page Number</title>
-					<type>d:int</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="arm:renditionModifier">
-					<title>Rendition's Name</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="arm:renditionFormat">
-					<title>Rendition's MIME type</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
+					<mandatory enforced="false">true</mandatory>
 					<multiple>false</multiple>
 				</property>
 			</properties>
 		</type>
 		<!--
-			END arm:rendition
-		-->
-
-		<!--
-			BEGIN arm:reference
-		-->
-		<type name="arm:reference">
-			<title>Armedia Caliente Object Reference</title>
-			<parent>cm:content</parent>
-			<mandatory-aspects>
-				<aspect>dctm:dm_reference</aspect>
-			</mandatory-aspects>
-		</type>
-		<!--
-			END arm:reference
+			END dctm:vdocReference
 		-->
 	</types>
 
@@ -817,9 +766,9 @@
 		-->
 
 		<!--
-			BEGIN dctm:dm_folder
+			BEGIN dctm:folder
 		-->
-		<aspect name="dctm:dm_folder">
+		<aspect name="dctm:folder">
 			<title>Documentum Migrated Folder</title>
 			<parent>dctm:dm_sysobject</parent>
 			<properties>
@@ -837,14 +786,14 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>true</multiple>
 				</property>
-				<property name="arm:usersWithDefaultFolder">
+				<property name="dctm:usersWithDefaultFolder">
 					<!-- preserve -->
 					<title>Users with this folder as their Home Folder</title>
 					<type>d:text</type>
 					<mandatory enforced="false">false</mandatory>
 					<multiple>true</multiple>
 				</property>
-				<property name="arm:groupsWithDefaultFolder">
+				<property name="dctm:groupsWithDefaultFolder">
 					<!-- preserve -->
 					<title>Groups with this folder as their Home Folder</title>
 					<type>d:text</type>
@@ -852,9 +801,12 @@
 					<multiple>true</multiple>
 				</property>
 			</properties>
+			<mandatory-aspects>
+				<aspect>arm:folder</aspect>
+			</mandatory-aspects>
 		</aspect>
 		<!--
-			END dctm:dm_folder
+			END dctm:folder
 		-->
 
 		<!--
@@ -1052,7 +1004,7 @@
 		-->
 		<aspect name="dctm:dmc_rm_formal_rec_folder">
 			<title>dmc_rm_formal_rec_folder</title>
-			<parent>dctm:dm_folder</parent>
+			<parent>dctm:folder</parent>
 		</aspect>
 		<!--
 			END dctm:dmc_rm_formal_rec_folder
@@ -1083,152 +1035,25 @@
 		-->
 
 		<!--
-			BEGIN arm:calienteStatus
+			BEGIN dctm:vdocRoot
 		-->
-		<aspect name="arm:calienteStatus">
-			<title>Armedia Caliente Ingested Content</title>
-			<properties>
-				<property name="arm:appliedAcls">
-					<title>AppliedAcls</title>
-					<type>d:text</type>
-					<default>Unprocessed</default>
-					<constraints>
-						<constraint ref="arm:calienteProcessingStatus" />
-					</constraints>
-				</property>
-				<property name="arm:appliedRenditions">
-					<title>AppliedRenditions</title>
-					<type>d:text</type>
-					<default>Unprocessed</default>
-					<constraints>
-						<constraint ref="arm:calienteProcessingStatus" />
-					</constraints>
-				</property>
-				<property name="arm:appliedReferences">
-					<title>AppliedReferences</title>
-					<type>d:text</type>
-					<default>Unprocessed</default>
-					<constraints>
-						<constraint ref="arm:calienteProcessingStatus" />
-					</constraints>
-				</property>
-				<property name="arm:appliedParents">
-					<title>AppliedParents</title>
-					<type>d:text</type>
-					<default>Unprocessed</default>
-					<constraints>
-						<constraint ref="arm:calienteProcessingStatus" />
-					</constraints>
-				</property>
-				<property name="arm:appliedVdocs">
-					<title>AppliedAcls</title>
-					<type>d:text</type>
-					<default>Unprocessed</default>
-					<constraints>
-						<constraint ref="arm:calienteProcessingStatus" />
-					</constraints>
-				</property>
-			</properties>
+		<aspect name="dctm:vdocRoot">
+			<title>Documentum Virtual Document Root Folder Object</title>
+			<parent>dctm:folder</parent>
 		</aspect>
 		<!--
-			BEGIN arm:calienteStatus
+			END dctm:vdocRoot
 		-->
 
 		<!--
-			BEGIN arm:folder
+			BEGIN dctm:vdocVersion
 		-->
-		<aspect name="arm:folder">
-			<title>Armedia Caliente Base Folder Aspect</title>
-			<parent>dctm:dm_folder</parent>
-			<mandatory-aspects>
-				<aspect>arm:caliente</aspect>
-			</mandatory-aspects>
+		<aspect name="dctm:vdocVersion">
+			<title>Documentum Virtual Document Version Folder Object</title>
+			<parent>dctm:folder</parent>
 		</aspect>
 		<!--
-			END arm:folder
-		-->
-
-		<!--
-			BEGIN arm:caliente
-		-->
-		<aspect name="arm:caliente">
-			<title>Armedia Caliente</title>
-			<properties>
-				<property name="arm:dmAcl">
-					<!-- The object's Documentum ACL                           -->
-					<!-- strings in the format (g|u|r)|${name}|(N|B|R|L|V|W|D) -->
-					<!-- Where g|u|r -> group|user|role                        -->
-					<!--       ${name} -> accessor name                        -->
-					<!--       N|B|R|L|V|W|D -> None, Browse, Read, reLate,    -->
-					<!--                        Version, Write, Delete         -->
-					<title>Documentum ACL</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>true</multiple>
-				</property>
-				<property name="arm:aclInheritance">
-					<!-- The object's ACL Inheritance mode                     -->
-					<!-- * FOLDER[${folderId}]                                 -->
-					<!-- * TYPE[${typeName}]                                   -->
-					<!-- * USER[${userName}]                                   -->
-					<!-- * NONE[]                                              -->
-					<title>ACL Inheritance</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="arm:aspects">
-					<!-- The list of aspects that were added to preserve metadata -->
-					<title>Extra Aspects</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>true</multiple>
-				</property>
-			</properties>
-		</aspect>
-		<!--
-			END arm:caliente
-		-->
-
-		<!--
-			BEGIN arm:vdocRoot
-		-->
-		<aspect name="arm:vdocRoot">
-			<title>Armedia Caliente Virtual Document Root Folder Object</title>
-			<parent>arm:folder</parent>
-		</aspect>
-		<!--
-			END arm:vdocRoot
-		-->
-
-		<!--
-			BEGIN arm:vdocVersion
-		-->
-		<aspect name="arm:vdocVersion">
-			<title>Armedia Caliente Virtual Document Version Folder Object</title>
-			<parent>arm:folder</parent>
-		</aspect>
-		<!--
-			END arm:vdocVersion
-		-->
-
-		<!--
-			BEGIN arm:vdocReference
-		-->
-		<aspect name="arm:vdocReference">
-			<title>Armedia Caliente Virtual Document Object Reference</title>
-			<parent>dctm:dm_reference</parent>
-			<properties>
-				<property name="arm:vdocReferenceId">
-					<title>Original ID for the reference object itself</title>
-					<type>d:text</type>
-					<mandatory enforced="false">true</mandatory>
-					<multiple>false</multiple>
-				</property>
-			</properties>
-		</aspect>
-		<!--
-			END arm:vdocReference
+			END dctm:vdocVersion
 		-->
 	</aspects>
 </model>

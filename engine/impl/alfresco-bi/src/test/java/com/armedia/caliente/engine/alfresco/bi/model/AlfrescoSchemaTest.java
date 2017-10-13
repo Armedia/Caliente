@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,8 +46,12 @@ public class AlfrescoSchemaTest {
 	public void testAlfrescoSchema() throws Exception {
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		URL[] urls = {
-			cl.getResource("systemModel.xml"), cl.getResource("contentModel.xml"), cl.getResource("cmisModel.xml"),
-			cl.getResource("calienteModel.xml"), cl.getResource("jsapModel.xml"),
+			cl.getResource("systemModel.xml"), //
+			cl.getResource("contentModel.xml"), //
+			cl.getResource("cmisModel.xml"), //
+			cl.getResource("calienteBaseModel.xml"), //
+			cl.getResource("calienteDctmModel.xml"), //
+			cl.getResource("jsapModel.xml"), //
 		};
 		List<URI> urlList = new ArrayList<>();
 		for (URL u : urls) {
@@ -72,15 +77,15 @@ public class AlfrescoSchemaTest {
 		}
 		*/
 		System.out.printf("Types%n");
-		for (String typeName : schema.getTypeNames()) {
+		for (String typeName : new TreeSet<>(schema.getTypeNames())) {
 			SchemaMember<?> type = schema.getType(typeName);
 			SchemaMember<?> parent = type.getParent();
 			String parentStr = (parent == null ? "" : String.format(" extends [%s]", parent.name));
 			System.out.printf("\tSchema for type [%s]%s%n", typeName, parentStr);
 			if (!type.getMandatoryAspects().isEmpty()) {
-				System.out.printf("\t\tMandatory Aspects : %s%n", type.getMandatoryAspects());
+				System.out.printf("\t\tMandatory Aspects : %s%n", new TreeSet<>(type.getMandatoryAspects()));
 			}
-			for (String attributeName : type.getAllAttributeNames()) {
+			for (String attributeName : new TreeSet<>(type.getAllAttributeNames())) {
 				SchemaAttribute attribute = type.getAttribute(attributeName);
 				System.out.printf("\t\t[%s]=[%s:%s] from %s [%s]%n", attribute.name, attribute.multiple ? "R" : "S",
 					attribute.type.name(), attribute.declaration.getClass().getSimpleName().toLowerCase(),
@@ -93,8 +98,12 @@ public class AlfrescoSchemaTest {
 	public void test2() throws Exception {
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		URL[] urls = {
-			cl.getResource("systemModel.xml"), cl.getResource("contentModel.xml"), cl.getResource("cmisModel.xml"),
-			cl.getResource("calienteModel.xml"), cl.getResource("jsapModel.xml"),
+			cl.getResource("systemModel.xml"), //
+			cl.getResource("contentModel.xml"), //
+			cl.getResource("cmisModel.xml"), //
+			cl.getResource("calienteBaseModel.xml"), //
+			cl.getResource("calienteDctmModel.xml"), //
+			cl.getResource("jsapModel.xml"), //
 		};
 		List<URI> urlList = new ArrayList<>();
 		for (URL u : urls) {
@@ -111,8 +120,7 @@ public class AlfrescoSchemaTest {
 			IOUtils.closeQuietly(propIn);
 		}
 
-		for (Object o : p.keySet()) {
-			final String s = o.toString();
+		for (String s : new TreeSet<>(p.stringPropertyNames())) {
 			if (!s.startsWith("j")) {
 				continue;
 			}
@@ -129,7 +137,7 @@ public class AlfrescoSchemaTest {
 			}
 			AlfrescoType type = schema.buildType(typeName, aspects);
 			Assert.assertNotNull(type);
-			for (String attributeName : type.getAttributeNames()) {
+			for (String attributeName : new TreeSet<>(type.getAttributeNames())) {
 				if (attributeName.startsWith("cm:") || attributeName.startsWith("sys:")
 					|| attributeName.startsWith("arm:")) {
 					continue;
