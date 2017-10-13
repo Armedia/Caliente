@@ -111,10 +111,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		BasicFileAttributeView basic = Files.getFileAttributeView(path, BasicFileAttributeView.class);
 		AclFileAttributeView acl = Files.getFileAttributeView(path, AclFileAttributeView.class);
 		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
-		FileOwnerAttributeView owner = posix;
-		if (owner == null) {
-			owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
-		}
+		FileOwnerAttributeView owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
 
 		// Ok... we have the attribute views, export the information
 		try {
