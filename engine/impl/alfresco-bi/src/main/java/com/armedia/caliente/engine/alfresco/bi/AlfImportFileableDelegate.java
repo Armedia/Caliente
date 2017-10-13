@@ -109,7 +109,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	public AlfImportFileableDelegate(String defaultType, AlfImportDelegateFactory factory,
 		CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, storedObject);
-		CmfValue reference = getAttributeValue("dctm:i_is_reference");
+		CmfValue reference = getPropertyValue(IntermediateProperty.IS_REFERENCE);
 		this.reference = ((reference != null) && !reference.isNull() && reference.asBoolean());
 		CmfValue virtual = getPropertyValue(IntermediateProperty.VDOC_HISTORY);
 		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
