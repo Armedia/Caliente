@@ -48,6 +48,18 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		super(factory, root, LocalFile.class, object);
 	}
 
+	protected UserPrincipal getOwner(Path path) {
+		FileOwnerAttributeView owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
+		if (owner != null) {
+			try {
+				return owner.getOwner();
+			} catch (IOException e) {
+				this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
+			}
+		}
+		return null;
+	}
+
 	@Override
 	protected Collection<LocalExportDelegate<?>> identifyRequirements(CmfObject<CmfValue> marshalled,
 		LocalExportContext ctx) throws Exception {
@@ -66,13 +78,10 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 		Path path = this.object.getAbsolute().toPath();
 		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
-		FileOwnerAttributeView owner = posix;
-		if (owner == null) {
-			owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
-		}
 
+		UserPrincipal owner = getOwner(path);
 		if (owner != null) {
-			ret.add(new LocalPrincipalExportDelegate(this.factory, ctx.getSession(), owner.getOwner()));
+			ret.add(new LocalPrincipalExportDelegate(this.factory, ctx.getSession(), owner));
 		}
 
 		if (posix != null) {
@@ -111,7 +120,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		BasicFileAttributeView basic = Files.getFileAttributeView(path, BasicFileAttributeView.class);
 		AclFileAttributeView acl = Files.getFileAttributeView(path, AclFileAttributeView.class);
 		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
-		FileOwnerAttributeView owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
 
 		// Ok... we have the attribute views, export the information
 		try {
@@ -141,14 +149,14 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				object.setProperty(versionTreeRoot);
 			}
 
+			UserPrincipal owner = getOwner(path);
 			if (owner != null) {
-				UserPrincipal ownerUser = owner.getOwner();
 				att = new CmfAttribute<>(IntermediateAttribute.CREATED_BY, CmfDataType.STRING, false);
-				att.setValue(new CmfValue(ownerUser.getName()));
+				att.setValue(new CmfValue(owner.getName()));
 				object.setAttribute(att);
 
 				att = new CmfAttribute<>(IntermediateAttribute.OWNER, CmfDataType.STRING, false);
-				att.setValue(new CmfValue(ownerUser.getName()));
+				att.setValue(new CmfValue(owner.getName()));
 				object.setAttribute(att);
 			}
 
