@@ -67,8 +67,9 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 	@Override
 	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		settings.put(LocalSetting.ROOT.getLabel(), this.source.getAbsolutePath());
-		settings.put(LocalSetting.COPY_CONTENT.getLabel(), false);
-		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(), false);
+		settings.put(LocalSetting.COPY_CONTENT.getLabel(),
+			CLIParam.copy_content.isPresent() && !CLIParam.skip_content.isPresent());
+		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(), CLIParam.ignore_empty_folders.isPresent());
 	}
 
 	@Override

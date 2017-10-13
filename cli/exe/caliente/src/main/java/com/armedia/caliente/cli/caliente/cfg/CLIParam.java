@@ -140,6 +140,8 @@ public enum CLIParam {
 		"The Properties (XML) file that contains the static filename mappings to be applied"),
 	object_store_config(null, 1, "The properties file to use for Object Store DB configuration"),
 	content_store_config(null, 1, "The properties file to use for Content Store DB configuration"),
+	copy_content(null, 0, "Enable the copying of content for the Local engine"),
+	ignore_empty_folders(null, 0, "Enable the copying of content for the Local engine"),
 	//
 	;
 
