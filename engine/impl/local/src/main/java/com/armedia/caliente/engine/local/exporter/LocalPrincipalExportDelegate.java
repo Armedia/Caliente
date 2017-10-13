@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
@@ -72,7 +74,7 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 
 	@Override
 	protected String calculateObjectId(LocalRoot root, Principal object) throws Exception {
-		return String.format("%08x", object.hashCode());
+		return DigestUtils.sha256Hex(String.format("%s:%s", object.getClass().getCanonicalName(), object.getName()));
 	}
 
 	@Override
