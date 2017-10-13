@@ -135,7 +135,7 @@ public class KeyLockableCache<K, V> {
 	}
 
 	protected CacheItem newCacheItem(V value) {
-		return new WeakReferenceCacheItem(value);
+		return new SoftReferenceCacheItem(value);
 	}
 
 	protected final boolean threadHoldsExclusiveLock(K key) {
