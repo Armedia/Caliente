@@ -20,8 +20,11 @@ public class AlfImportUserDelegate extends AlfImportDelegate {
 	@Override
 	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, AlfImportContext ctx)
 		throws ImportException, CmfStorageException {
+
+		// Special dispensation for Documentum...
 		CmfValue group = getAttributeValue("dctm:r_is_group");
 		if ((group != null) && group.asBoolean()) { return Collections.singleton(ImportOutcome.SKIPPED); }
+
 		CmfValue name = getAttributeValue("cmis:name");
 		if (name == null) { return Collections.singleton(ImportOutcome.SKIPPED); }
 		CmfValue login = getAttributeValue("cmf:login_name");
