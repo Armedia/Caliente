@@ -142,6 +142,13 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>true</multiple>
 				</property>
+				<property name="arm:parentPaths">
+					<!-- preserve from source paths -->
+					<title>Parent Paths</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
 				<property name="arm:aclInfo">
 					<!-- The object's ACL (inspired by Documentum, for now)    -->
 					<!-- strings in the format (g|u|r)|${name}|(N|B|R|L|V|W|D) -->

@@ -691,13 +691,6 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>false</multiple>
 				</property>
-				<property name="dctm:r_parent_paths">
-					<!-- preserve from source paths -->
-					<title>Parent Paths</title>
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>true</multiple>
-				</property>
 			</properties>
 			<mandatory-aspects>
 				<aspect>cm:ownable</aspect>

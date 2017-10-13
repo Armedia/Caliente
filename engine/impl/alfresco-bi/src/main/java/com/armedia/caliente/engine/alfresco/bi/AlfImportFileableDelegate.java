@@ -293,7 +293,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 			values.add(s);
 		}
-		p.setProperty("dctm:r_parent_path_ids", StringUtils.join(values, ','));
+		p.setProperty("arm:parentPathIDs", StringUtils.join(values, ','));
 
 		values.clear();
 		for (CmfValue v : getPropertyValues(IntermediateProperty.PATH)) {
@@ -307,7 +307,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				throw new ImportException("Unsupported encoding UTF-8...what?!?!?", e);
 			}
 		}
-		p.setProperty("dctm:r_parent_paths", StringUtils.join(values, ','));
+		p.setProperty("arm:parentPaths", StringUtils.join(values, ','));
 
 		values.clear();
 		for (CmfValue v : getPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER)) {
@@ -336,12 +336,12 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
 
-		p.setProperty("dctm:r_object_id", this.cmfObject.getId());
+		p.setProperty("arm:objectId", this.cmfObject.getId());
 
 		values.clear();
 		values.add(AlfImportFileableDelegate.STATUS_ASPECT);
 		if (!isReference()) {
-			p.setProperty("dctm:i_chronicle_id", this.cmfObject.getHistoryId());
+			p.setProperty("arm:historyId", this.cmfObject.getHistoryId());
 
 			// Finally, perform user mappings for special user-relative attributes
 			for (String s : AlfImportFileableDelegate.USER_CONVERSIONS) {
@@ -499,11 +499,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
 		p.setProperty("arm:aspects", StringUtils.join(aspects, ','));
 		p.setProperty("arm:aclInheritance", "NONE[]");
-		p.setProperty("arm:vdocReferenceId", referenceId);
 		p.setProperty("cm:name", targetName);
-		p.setProperty("dctm:binding_condition", "VERSION_LABEL");
-		p.setProperty("dctm:reference_by_id", targetId);
-		p.setProperty("dctm:binding_label", StringUtils.isEmpty(label) ? "CURRENT" : label);
+		p.setProperty("arm:refTargtet", targetId);
+		if (!StringUtils.isEmpty(label)) {
+			p.setProperty("arm:refVersion", label);
+		}
+		if (!StringUtils.isEmpty(referenceId)) {
+			p.setProperty("dctm:vdocReferenceId", referenceId);
+		}
 	}
 
 	protected final File generateMetadataFile(final AlfImportContext ctx, final Properties p, final File main)
