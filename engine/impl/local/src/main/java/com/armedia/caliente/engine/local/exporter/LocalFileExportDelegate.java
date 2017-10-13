@@ -101,7 +101,9 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 	@Override
 	protected int calculateDependencyTier(LocalRoot root, LocalFile file) throws Exception {
-		return file.getPathCount() - 1;
+		if (file.isFolder()) { return file.getPathCount() - 1; }
+		// TODO: Symbolic links should be handled properly here
+		return 0;
 	}
 
 	@Override
