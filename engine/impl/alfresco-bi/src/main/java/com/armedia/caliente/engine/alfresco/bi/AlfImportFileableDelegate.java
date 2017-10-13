@@ -136,8 +136,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		for (String s : this.cmfObject.getSecondarySubtypes()) {
 			(allAspects.contains(s) ? goodAspects : badAspects).add(s);
 		}
-		if (!badAspects.isEmpty()) { throw new ImportException(
-			String.format("Aspects %s not found while importing %s", badAspects, this.cmfObject.getDescription())); }
+		if (!badAspects.isEmpty()) {
+			this.log.warn("Aspects {} not found while importing {}", badAspects, this.cmfObject.getDescription());
+		}
 		AlfrescoType type = this.factory.schema.buildType(this.cmfObject.getSubtype(), goodAspects);
 		if (type != null) { return type; }
 		if (this.defaultType != null) { return this.defaultType; }
