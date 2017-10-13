@@ -244,16 +244,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		for (final String tgtAttName : tgtOnly) {
 			final SchemaAttribute tgtAtt = targetType.getAttribute(tgtAttName);
 
-			// Easy path: is this already mapped?
-			String srcAttName = mapper.getSourceAttribute(tgtAttName);
-			if (srcAttName == null) {
-				// This is because the source attributes all come with either "dctm:", "cmf:", or
-				// "cmis:" as a prefix, so we first try the happy path (prefix "dctm:")...
-				// attributes with the prefixes "cmis:" and "cmf:" are dealt with separately,
-				// below (via ATTRIBUTE_SPECIAL_COPIES)
-				srcAttName = tgtAttName.replaceAll("^[^:]+:", "dctm:");
-			}
-
+			// Easy path: is this already mapped? If there's no mapping, we leave the attribute name
+			// as-is to avoid confusion
+			String srcAttName = Tools.coalesce(mapper.getSourceAttribute(tgtAttName), tgtAttName);
 			CmfProperty<CmfValue> srcAtt = this.cmfObject.getAttribute(srcAttName);
 			if (srcAtt == null) {
 				srcAtt = this.cmfObject.getProperty(srcAttName);
