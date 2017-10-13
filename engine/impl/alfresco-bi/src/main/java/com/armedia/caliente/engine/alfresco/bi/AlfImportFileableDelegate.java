@@ -93,7 +93,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	static {
 		Map<String, String> m = new HashMap<>();
 
-		// Attribute X "gets populated from" Y
+		// Attribute Y (right) "gets populated from" X (left)
 		String[][] unmappings = {
 			{
 				"dctm:acl_name", "cmf:acl_name"
@@ -161,7 +161,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 		ATTRIBUTE_MAPPER = Tools.freezeMap(m);
 
-		// Attribute X "gets populated from" Y, Y may need re-mapping through ATTRIBUTE_MAPPER
+		// Attribute X (left) "gets populated from" Y (right), Y may need re-mapping through
+		// ATTRIBUTE_MAPPER
 		m = new HashMap<>();
 		String[][] copies = {
 			{
