@@ -21,11 +21,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.alfresco.bi.model.AlfrescoSchema;
-import com.armedia.caliente.engine.alfresco.bi.model.AlfrescoType;
-import com.armedia.caliente.engine.alfresco.bi.model.SchemaAttribute;
-import com.armedia.caliente.engine.alfresco.bi.model.SchemaMember;
-
 public class AlfrescoSchemaTest {
 
 	private static final Pattern TYPE_MAPPING_PARSER = Pattern.compile("^([^\\[]+)(?:\\[(.*)\\])?$");
@@ -46,7 +41,7 @@ public class AlfrescoSchemaTest {
 	public void tearDown() throws Exception {
 	}
 
-	// @Test
+	@Test
 	public void testAlfrescoSchema() throws Exception {
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		URL[] urls = {
