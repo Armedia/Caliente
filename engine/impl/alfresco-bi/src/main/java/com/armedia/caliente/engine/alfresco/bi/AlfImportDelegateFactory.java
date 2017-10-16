@@ -227,6 +227,10 @@ public class AlfImportDelegateFactory
 		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.ROLE_MAP), this.roleMap);
 	}
 
+	protected AlfrescoSchema getSchema() {
+		return this.schema;
+	}
+
 	protected AlfrescoType getType(String name, String... aspects) {
 		if ((aspects == null) || (aspects.length == 0)) { return this.defaultTypes.get(name); }
 		return this.schema.buildType(name, aspects);
