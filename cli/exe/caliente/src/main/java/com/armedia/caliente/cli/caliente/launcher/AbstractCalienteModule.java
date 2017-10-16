@@ -224,11 +224,18 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		}
 
 		// Try to find the file...only explode if it's been explicitly requested
-		final File f = locateFile(jdbcConfig, !usingDefault);
+		File f = locateFile(jdbcConfig, !usingDefault);
+		if ((f == null) && usingDefault) {
+			jdbcConfig = String.format("caliente-%s-store.xml", type.toLowerCase());
+			f = locateFile(jdbcConfig, false);
+		}
+
 		if (f == null) {
 			this.console.info("No special {} store properties set, using defaulted values", type);
 			return new Properties();
 		}
+
+		final boolean supportsFallback = (!StringUtils.endsWithIgnoreCase(jdbcConfig, ".xml"));
 
 		try {
 			// Ok...so we have the file...try to load it!
@@ -238,14 +245,14 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 				return p;
 			} catch (InvalidPropertiesFormatException | XMLStreamException e) {
 				if (this.log.isTraceEnabled()) {
-					this.log.trace("The {} store properties at [{}] aren't in XML format, trying the classic format",
-						type, f.getAbsolutePath(), e);
+					this.log.trace("The {} store properties at [{}] aren't in XML format{}", type, f.getAbsolutePath(),
+						supportsFallback ? ", trying the classic format" : "", e);
 				}
-				this.console.warn("The {} store properties at [{}] aren't in XML format, trying the classic format",
-					type, f.getAbsolutePath());
+				this.console.warn("The {} store properties at [{}] aren't in XML format", type, f.getAbsolutePath(),
+					supportsFallback ? ", trying the classic format" : "");
 			}
 
-			if (!StringUtils.endsWithIgnoreCase(jdbcConfig, ".xml")) {
+			if (supportsFallback) {
 				// We only make it this far if the XML read failed, and the file isn't named "*.xml"
 				try (InputStream textIn = new FileInputStream(f)) {
 					Properties p = new Properties();
