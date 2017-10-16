@@ -65,6 +65,8 @@ public class AbstractCalienteModule_export extends
 			CLIParam.no_versions.isPresent() || CLIParam.direct_fs.isPresent());
 		settings.put(TransferSetting.NO_RENDITIONS.getLabel(),
 			CLIParam.no_renditions.isPresent() || CLIParam.direct_fs.isPresent());
+		settings.put(TransferSetting.TRANSFORMATION.getLabel(), CLIParam.transformations.getString());
+		settings.put(TransferSetting.FILTER.getLabel(), CLIParam.filters.getString());
 		if (this.user != null) {
 			settings.put(CmisSessionSetting.USER.getLabel(), this.user);
 		}
