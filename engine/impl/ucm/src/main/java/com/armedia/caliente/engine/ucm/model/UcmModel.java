@@ -91,29 +91,51 @@ public class UcmModel {
 	// UniqueURI -> History URI
 	private final KeyLockableCache<UcmUniqueURI, URI> historyUriByUniqueURI;
 
-	public static boolean isFrameworkFoldersEnabled(UcmSession s) throws UcmServiceException {
+	public static DataBinder getConfigInfo(UcmSession s) throws UcmServiceException {
 		try {
-			ServiceResponse response = null;
-			DataBinder responseData = null;
-			try {
-				response = s.callService("CONFIG_INFO");
-				responseData = response.getResponseAsBinder();
-			} catch (final IdcClientException e) {
-				throw new UcmServiceException(
-					"Failed to retrieve the system configuration information using CONFIG_INFO", e);
+			ServiceResponse response = s.callService("CONFIG_INFO");
+			return response.getResponseAsBinder();
+		} catch (final IdcClientException e) {
+			if (ServiceException.class.isInstance(e)) {
+				ServiceException se = ServiceException.class.cast(e);
+
+				DataBinder binder = se.getBinder();
+				DataObject local = binder.getLocalData();
+
+				int statusCode = local.getInteger("StatusCode");
+				if (statusCode == -1) {
+					String mk = local.get("StatusMessageKey");
+					List<UcmExceptionData.Entry> entries = UcmExceptionData.parseMessageKey(mk);
+					if (entries.size() == 2) {
+						UcmExceptionData.Entry first = entries.get(0);
+						UcmExceptionData.Entry second = entries.get(1);
+						if (first.tagIs("csUnableToRetrieveConfigInfo") && second.tagIs("csUserInsufficientAccess")) {
+							// This user lacks access to CONFIG_INFO, so just return null
+							// instead of an error, since this allows the caller to decide what
+							// to do about this
+							return null;
+						}
+					}
+				}
 			}
 
-			// First things first!! Stash the retrieved object...
-			DataResultSet rs = responseData.getResultSet("EnabledComponents");
-			List<DataObject> components = rs.getRows();
-			for (DataObject component : components) {
-				if (("FrameworkFolders".equals(component.get("name")))
-					&& ("Enabled".equals(component.get("status")))) { return true; }
-			}
-			return false;
-		} catch (Exception e) {
-			throw new UcmServiceException(e);
+			throw new UcmServiceException("Failed to retrieve the system configuration information using CONFIG_INFO",
+				e);
 		}
+	}
+
+	public static Boolean isFrameworkFoldersEnabled(UcmSession s) throws UcmServiceException {
+		DataBinder responseData = UcmModel.getConfigInfo(s);
+		if (responseData == null) { return null; }
+
+		// First things first!! Stash the retrieved object...
+		DataResultSet rs = responseData.getResultSet("EnabledComponents");
+		List<DataObject> components = rs.getRows();
+		for (DataObject component : components) {
+			if (("FrameworkFolders".equals(component.get("name")))
+				&& ("Enabled".equals(component.get("status")))) { return Boolean.TRUE; }
+		}
+		return Boolean.FALSE;
 	}
 
 	public UcmModel() throws UcmServiceException {

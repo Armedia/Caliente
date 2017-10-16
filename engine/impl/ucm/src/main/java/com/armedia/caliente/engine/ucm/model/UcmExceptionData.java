@@ -26,6 +26,10 @@ public class UcmExceptionData {
 			return this.tag;
 		}
 
+		public boolean tagIs(String candidate) {
+			return Tools.equals(candidate, this.tag);
+		}
+
 		public List<String> getParameters() {
 			return this.parameters;
 		}

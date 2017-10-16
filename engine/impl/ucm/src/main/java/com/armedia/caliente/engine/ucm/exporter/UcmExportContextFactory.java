@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.ucm.exporter;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -12,6 +13,7 @@ import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
 import com.armedia.caliente.engine.ucm.model.UcmAtt;
 import com.armedia.caliente.engine.ucm.model.UcmAttributes;
+import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmRuntimeException;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfContentStore;
@@ -24,19 +26,26 @@ import com.armedia.commons.utilities.Tools;
 import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.model.DataResultSet;
-import oracle.stellent.ridc.protocol.ServiceResponse;
 
 public class UcmExportContextFactory
 	extends ExportContextFactory<UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportEngine> {
 
+	private String serverVersion = null;
 	private UcmAttributes systemInfo = null;
 	private Map<String, DataResultSet> serverData = null;
 
-	private static synchronized void initializeConnectionData(UcmExportContextFactory factory, UcmSession session)
+	private static void initializeConnectionData(UcmExportContextFactory factory, UcmSession session)
 		throws UcmServiceException, IdcClientException {
 		if ((factory.systemInfo == null) && (factory.serverData == null)) {
-			ServiceResponse rsp = session.callService("CONFIG_INFO");
-			DataBinder binder = rsp.getResponseAsBinder();
+			DataBinder binder = UcmModel.getConfigInfo(session);
+			if (binder == null) {
+				factory.serverData = Collections.emptyMap();
+				factory.serverVersion = "0.0.0";
+				factory.log.warn(
+					"User [{}] does not have permissions to read system configuration information - will proceed without it but this may cause issues later on",
+					session.getUserContext().getUser());
+				return;
+			}
 
 			Map<String, DataResultSet> m = new TreeMap<>();
 			for (String rsName : binder.getResultSetNames()) {
@@ -44,6 +53,7 @@ public class UcmExportContextFactory
 			}
 			factory.systemInfo = new UcmAttributes(binder.getLocalData(), binder);
 			factory.serverData = Tools.freezeMap(new LinkedHashMap<>(m));
+			factory.serverVersion = factory.systemInfo.getString(UcmAtt.ProductBuildInfo);
 		}
 	}
 
@@ -80,6 +90,6 @@ public class UcmExportContextFactory
 		} catch (UcmServiceException | IdcClientException e) {
 			throw new UcmRuntimeException("Failed to query the server version data", e);
 		}
-		return this.systemInfo.getString(UcmAtt.ProductBuildInfo);
+		return this.serverVersion;
 	}
 }

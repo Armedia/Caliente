@@ -123,8 +123,14 @@ public class UcmExportEngine extends
 	@Override
 	protected void validateEngine(UcmSession session) throws ExportException {
 		try {
-			if (!UcmModel.isFrameworkFoldersEnabled(
-				session)) { throw new ExportException("FrameworkFolders is not enabled in this UCM server instance"); }
+			Boolean b = UcmModel.isFrameworkFoldersEnabled(session);
+			if (b == null) {
+				// Uknown if it's enabled...assume it's OK but log a warning
+				this.log.warn(
+					"Could not determine if FrameworkFolders is enabled because the user [{}] lacks the necessary permissions to perform the check. Will proceed as if it's enabled, but this may cause problems moving forward.",
+					session.getUserContext().getUser());
+			} else if (!b.booleanValue()) { throw new ExportException(
+				"FrameworkFolders is not enabled in this UCM server instance"); }
 		} catch (UcmServiceException e) {
 			throw new ExportException("Failed to validate the UCM connectivity", e);
 		}
