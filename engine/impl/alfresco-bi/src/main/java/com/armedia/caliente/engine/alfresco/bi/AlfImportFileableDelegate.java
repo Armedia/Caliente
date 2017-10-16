@@ -365,7 +365,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			p.setProperty("arm:dmAcl", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
 
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
-			if (aclInherit != null) {
+			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
 			}
 
