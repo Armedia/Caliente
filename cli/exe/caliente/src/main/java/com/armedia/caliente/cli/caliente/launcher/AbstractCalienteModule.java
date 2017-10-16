@@ -9,7 +9,8 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.Map;
 import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
+import javax.xml.stream.XMLStreamException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ import com.armedia.caliente.store.CmfStoreFactory;
 import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.caliente.tools.xml.XmlProperties;
 
 public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CalienteMain {
 
@@ -191,49 +193,70 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		return f;
 	}
 
-	protected Properties loadStoreProperties(String type, final String jdbcConfig) throws IOException {
-		Properties p = new Properties();
-		if (jdbcConfig != null) {
-			File f = createFile(jdbcConfig);
-			if (!f.exists()) { throw new IOException(
-				String.format("The %s store properties file at [%s] doesn't exist", type, f.getAbsolutePath())); }
-			if (!f.isFile()) { throw new IOException(String
-				.format("The %s store properties file at [%s] is not a regular file", type, f.getAbsolutePath())); }
+	protected Properties loadStoreProperties(String type, String jdbcConfig) throws IOException {
+		final boolean usingDefault = (jdbcConfig == null);
+		boolean loadedSettingsFile = false;
+
+		if (usingDefault) {
+			// Follow a default value if it exists
+			jdbcConfig = String.format("caliente-%s-store.properties", type.toLowerCase());
+		}
+
+		// Try to find the file...only explode if it's been explicitly requested
+		final File f = createFile(jdbcConfig);
+		boolean suppressDefaultMessage = true;
+		try {
+			if (!f.exists()) {
+				if (!usingDefault) { throw new IOException(
+					String.format("The %s store properties file at [%s] doesn't exist", type, f.getAbsolutePath())); }
+				suppressDefaultMessage = false;
+				return new Properties();
+			}
+
+			// We've found the path we're looking for...verify that it's regular file. Otherwise,
+			// just ignore it. If this is an explicit configuration setting, then we explode!
+			if (!f.isFile()) {
+				if (!usingDefault) { throw new IOException(String
+					.format("The %s store properties file at [%s] is not a regular file", type, f.getAbsolutePath())); }
+				suppressDefaultMessage = false;
+				return new Properties();
+			}
+
+			// Regardless, if it exists and is a regular file, explode if we can't read it
 			if (!f.canRead()) { throw new IOException(
 				String.format("The %s store properties file at [%s] can't be read", type, f.getAbsolutePath())); }
 
-			InputStream in = null;
-			boolean ok = false;
-			try {
-				in = new FileInputStream(f);
-				p.loadFromXML(in);
-				ok = true;
+			// Ok...so we have the file...try to load it!
+			try (InputStream xmlIn = new FileInputStream(f)) {
+				Properties p = XmlProperties.loadFromXML(xmlIn);
+				loadedSettingsFile = true;
 				return p;
-			} catch (InvalidPropertiesFormatException e) {
+			} catch (InvalidPropertiesFormatException | XMLStreamException e) {
+				if (this.log.isTraceEnabled()) {
+					this.log.trace("The {} store properties at [{}] aren't in XML format, trying the classic format",
+						type, f.getAbsolutePath(), e);
+				}
 				this.console.warn("The {} store properties at [{}] aren't in XML format, trying the classic format",
 					type, f.getAbsolutePath());
-				p.clear();
-				IOUtils.closeQuietly(in);
-				in = new FileInputStream(f);
-				try {
-					p.load(in);
-				} catch (IllegalArgumentException e2) {
-					throw new IOException(
-						String.format("Failed to load the %s store properties from [%s]", type, f.getAbsolutePath()),
-						e2);
-				}
-				ok = true;
-				return p;
-			} finally {
-				IOUtils.closeQuietly(in);
-				if (ok) {
-					this.console.info("Loaded the {} store properties from [{}]", type, f.getAbsolutePath());
-				}
 			}
-		} else {
-			this.console.info("No special {} store properties set, using defaulted values", type);
+
+			// We only make it this far if the XML read failed
+			try (InputStream textIn = new FileInputStream(f)) {
+				Properties p = new Properties();
+				p.load(textIn);
+				loadedSettingsFile = true;
+				return p;
+			} catch (IllegalArgumentException e) {
+				throw new IOException(
+					String.format("Failed to load the %s store properties from [%s]", type, f.getAbsolutePath()), e);
+			}
+		} finally {
+			if (loadedSettingsFile) {
+				this.console.info("Loaded the {} store properties from [{}]", type, f.getAbsolutePath());
+			} else if (!suppressDefaultMessage) {
+				this.console.info("No special {} store properties set, using defaulted values", type);
+			}
 		}
-		return p;
 	}
 
 	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
