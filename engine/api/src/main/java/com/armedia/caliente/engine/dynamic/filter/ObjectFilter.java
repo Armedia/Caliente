@@ -87,10 +87,11 @@ public class ObjectFilter {
 				f.apply(ctx);
 			} catch (ProcessingCompletedException e) {
 				// The object was explicitly accepted!
-				break;
+				this.log.trace("Filter logic accepted {}", cmfObject.getDescription());
+				return true;
 			} catch (ObjectRejectedByFilterException e) {
 				// The object was explicitly filtered!
-				this.log.info("Explicitly filtered {}", cmfObject.getDescription());
+				this.log.info("Filter logic rejected {}", cmfObject.getDescription());
 				return false;
 			} catch (ActionException e) {
 				this.log.trace("Exception caught while processing filters for {}", cmfObject.getDescription(), e);
