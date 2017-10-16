@@ -28,9 +28,8 @@ public class Filter extends ConditionalAction {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@XmlElements({
-		@XmlElement(name = "skip-object", type = ObjectSkip.class), //
-		@XmlElement(name = "process-object", type = ObjectProcess.class), //
-		@XmlElement(name = "fail-object", type = ObjectFail.class), //
+		@XmlElement(name = "reject-object", type = ObjectReject.class), //
+		@XmlElement(name = "accept-object", type = ObjectAccept.class), //
 	})
 	protected List<Action> actions;
 

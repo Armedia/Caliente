@@ -411,19 +411,13 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="filterSkipObject.t">
+	<xsd:complexType name="filterRejectObject.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t" />
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="filterFailObject.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:conditionalAction.t" />
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="filterProcessObject.t">
+	<xsd:complexType name="filterAcceptObject.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t" />
 		</xsd:complexContent>
@@ -769,9 +763,8 @@
 
 	<xsd:group name="filterActions">
 		<xsd:choice>
-			<xsd:element name="process-object" type="tns:filterProcessObject.t" />
-			<xsd:element name="skip-object" type="tns:filterSkipObject.t" />
-			<xsd:element name="fail-object" type="tns:filterFailObject.t" />
+			<xsd:element name="accept-object" type="tns:filterAcceptObject.t" />
+			<xsd:element name="reject-object" type="tns:filterRejectObject.t" />
 		</xsd:choice>
 	</xsd:group>
 

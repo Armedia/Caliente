@@ -12,6 +12,7 @@ public enum TransferSetting implements TransferEngineSetting {
 	NO_RENDITIONS(CmfDataType.BOOLEAN, false),
 	RETRY_ATTEMPTS(CmfDataType.INTEGER, 2),
 	TRANSFORMATION(CmfDataType.STRING),
+	FILTER(CmfDataType.STRING),
 	EXTERNAL_METADATA(CmfDataType.STRING),
 	//
 	;

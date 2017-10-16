@@ -16,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -269,6 +270,12 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 
 		ExternalMetadataLoader emdl = ExternalMetadataLoader.getExternalMetadataLoader(meta, !defaultMeta.equals(meta));
 		return Transformer.getTransformer(xform, emdl, !defaultXform.equals(xform));
+	}
+
+	protected final ObjectFilter getFilter(CfgTools cfg) throws Exception {
+		String defaultFilter = String.format("%s%s", this.cfgNamePrefix, ObjectFilter.getDefaultLocation());
+		String xform = cfg.getString(TransferSetting.FILTER.getLabel(), defaultFilter);
+		return ObjectFilter.getObjectFilter(xform, !defaultFilter.equals(xform));
 	}
 
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {

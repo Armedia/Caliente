@@ -49,6 +49,10 @@ public class ObjectFilter {
 		}
 	}
 
+	public static String getDefaultLocation() {
+		return ObjectFilter.INSTANCES.getDefaultFileName();
+	}
+
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private boolean initialized = false;
@@ -74,9 +78,8 @@ public class ObjectFilter {
 		}
 	}
 
-	public <V> boolean accept(CmfObject<V> object, CmfValueMapper mapper) throws ObjectFilterException {
-		Objects.requireNonNull(object, "Must provide an object to filter");
-		CmfObject<CmfValue> cmfObject = object.getTranslator().encodeObject(object);
+	public Boolean accept(CmfObject<CmfValue> cmfObject, CmfValueMapper mapper) throws ObjectFilterException {
+		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
 		DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject), mapper,
 			null);
 		for (Filter f : this.activeFilters) {
@@ -87,15 +90,20 @@ public class ObjectFilter {
 				break;
 			} catch (ObjectRejectedByFilterException e) {
 				// The object was explicitly filtered!
-				this.log.info("Explicitly filtered {}", object.getDescription());
+				this.log.info("Explicitly filtered {}", cmfObject.getDescription());
 				return false;
 			} catch (ActionException e) {
-				this.log.trace("Explicitly failed {}", object.getDescription(), e);
+				this.log.trace("Exception caught while processing filters for {}", cmfObject.getDescription(), e);
 				throw new ObjectFilterException(e);
 			}
 		}
-		this.log.trace("Accepting {}", object.getDescription());
+		this.log.trace("Accepting {}", cmfObject.getDescription());
 		return true;
+	}
+
+	public <V> boolean acceptRaw(CmfObject<V> object, CmfValueMapper mapper) throws ObjectFilterException {
+		Objects.requireNonNull(object, "Must provide an object to filter");
+		return accept(object.getTranslator().encodeObject(object), mapper);
 	}
 
 	public void close() {

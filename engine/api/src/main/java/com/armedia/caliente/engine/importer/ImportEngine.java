@@ -30,6 +30,8 @@ import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
+import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -524,6 +526,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			Transformer transformer = null;
+			ObjectFilter filter = null;
 			ImportContextFactory<S, W, V, C, ?, ?> contextFactory = null;
 			ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
 			try {
@@ -531,6 +534,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					transformer = getTransformer(configuration);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the configured object transformations", e);
+				}
+
+				try {
+					filter = getFilter(configuration);
+				} catch (Exception e) {
+					throw new ImportException("Failed to configure the configured object filters", e);
 				}
 
 				try {
@@ -552,8 +561,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					baseSession = null;
 				}
 
-				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory,
-					transformer);
+				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory, transformer,
+					filter);
 			} finally {
 				if (baseSession != null) {
 					baseSession.close();
@@ -644,8 +653,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private final CmfObjectCounter<ImportResult> runImportImpl(final ImportState importState,
 		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final Transformer transformer)
-		throws ImportException, CmfStorageException {
+		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final Transformer transformer,
+		final ObjectFilter filter) throws ImportException, CmfStorageException {
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;
 		final CmfObjectStore<?, ?> objectStore = importState.objectStore;
@@ -764,6 +773,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 				try {
 					objectStore.loadObjects(type, new CmfObjectHandler<CmfValue>() {
+						private boolean filtered = false;
 						private List<CmfObject<V>> contents = null;
 
 						@Override
@@ -774,12 +784,31 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 						@Override
 						public boolean newHistory(String historyId) throws CmfStorageException {
+							this.filtered = false;
 							this.contents = new LinkedList<>();
 							return true;
 						}
 
 						@Override
 						public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
+							// Shortcut... if we're already filtered, just blow past the next
+							// objects
+							if (this.filtered) { return true; }
+
+							if (filter != null) {
+								try {
+									if (!filter.accept(dataObject, objectStore.getAttributeMapper())) {
+										this.filtered = true;
+										return true;
+									}
+								} catch (ObjectFilterException e) {
+									throw new CmfStorageException(
+										String.format("Filtering logic exception while processing %s",
+											dataObject.getDescription()),
+										e);
+								}
+							}
+
 							if (transformer != null) {
 								dataObject = transformer.transform(objectStore.getAttributeMapper(), dataObject);
 							}
@@ -789,7 +818,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 						@Override
 						public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
+							// Is there anything to process?
 							if ((this.contents == null) || this.contents.isEmpty()) { return true; }
+
+							// Was it filtered?
+							if (this.filtered) { return true; }
+
+							// Ok... we have stuff to process that wasn't filtered, process it!
 							CmfObject<?> sample = this.contents.get(0);
 							CmfType storedType = sample.getType();
 							ImportStrategy strategy = getImportStrategy(storedType);

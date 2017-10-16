@@ -27,6 +27,8 @@ import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
+import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -194,10 +196,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		super(crypto, "export", supportsDuplicateNames);
 	}
 
-	private Result exportObject(ExportState exportState, final Transformer transformer, final ExportTarget referrent,
-		final ExportTarget target, final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject, final C ctx,
-		final ExportListenerDelegator listenerDelegator, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
-		throws ExportException, CmfStorageException {
+	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
+		final ExportTarget referrent, final ExportTarget target, final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
+		final C ctx, final ExportListenerDelegator listenerDelegator,
+		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws ExportException, CmfStorageException {
 		try {
 			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
 
@@ -235,7 +237,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			listenerDelegator.objectExportStarted(exportState.jobId, target, referrent);
 
-			final Result result = doExportObject(exportState, transformer, referrent, target, sourceObject, ctx,
+			final Result result = doExportObject(exportState, transformer, filter, referrent, target, sourceObject, ctx,
 				listenerDelegator, statusMap);
 			if ((result.objectNumber != null) && (result.object != null)) {
 				listenerDelegator.objectExportCompleted(exportState.jobId, result.object, result.objectNumber);
@@ -275,10 +277,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	private Result doExportObject(ExportState exportState, final Transformer transformer, final ExportTarget referrent,
-		final ExportTarget target, final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject, final C ctx,
-		final ExportListenerDelegator listenerDelegator, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
-		throws ExportException, CmfStorageException {
+	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
+		final ExportTarget referrent, final ExportTarget target, final ExportDelegate<?, S, W, V, C, ?, ?> sourceObject,
+		final C ctx, final ExportListenerDelegator listenerDelegator,
+		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws ExportException, CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
@@ -319,6 +321,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			final CmfObject<V> marshaled = sourceObject.marshal(ctx, referrent);
 			if (marshaled == null) { return new Result(ExportSkipReason.SKIPPED); }
+			if (filter != null) {
+				try {
+					if (!filter.acceptRaw(marshaled, objectStore.getAttributeMapper())) { return new Result(
+						ExportSkipReason.SKIPPED, "Object excluded by filtering logic"); }
+				} catch (ObjectFilterException e) {
+					throw new ExportException(String.format("Filtering logic exception while processing %s", logLabel),
+						e);
+				}
+			}
 
 			Collection<? extends ExportDelegate<?, S, W, V, C, ?, ?>> referenced;
 			try {
@@ -349,8 +360,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 				final Result r;
 				try {
-					r = exportObject(exportState, transformer, target, requirement.getExportTarget(), requirement, ctx,
-						listenerDelegator, statusMap);
+					r = exportObject(exportState, transformer, filter, target, requirement.getExportTarget(),
+						requirement, ctx, listenerDelegator, statusMap);
 				} catch (Exception e) {
 					// This exception will already be logged...so we simply accept the failure and
 					// report it upwards, without bubbling up the exception to be reported 1000
@@ -440,8 +451,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				CmfObjectRef prev = null;
 				for (ExportDelegate<?, S, W, V, C, ?, ?> antecedent : referenced) {
 					try {
-						exportObject(exportState, transformer, target, antecedent.getExportTarget(), antecedent, ctx,
-							listenerDelegator, statusMap);
+						exportObject(exportState, transformer, filter, target, antecedent.getExportTarget(), antecedent,
+							ctx, listenerDelegator, statusMap);
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
@@ -527,8 +538,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				CmfObjectRef prev = marshaled;
 				for (ExportDelegate<?, S, W, V, C, ?, ?> successor : referenced) {
 					try {
-						exportObject(exportState, transformer, target, successor.getExportTarget(), successor, ctx,
-							listenerDelegator, statusMap);
+						exportObject(exportState, transformer, filter, target, successor.getExportTarget(), successor,
+							ctx, listenerDelegator, statusMap);
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
@@ -563,7 +574,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			int dependentsExported = 0;
 			for (ExportDelegate<?, S, W, V, C, ?, ?> dependent : referenced) {
 				try {
-					exportObject(exportState, transformer, target, dependent.getExportTarget(), dependent, ctx,
+					exportObject(exportState, transformer, filter, target, dependent.getExportTarget(), dependent, ctx,
 						listenerDelegator, statusMap);
 				} catch (Exception e) {
 					// Contrary to previous cases, this isn't a failure because this doesn't
@@ -627,6 +638,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			TransferContextFactory<S, V, C, ?> contextFactory = null;
 			DF delegateFactory = null;
 			Transformer transformer = null;
+			ObjectFilter filter = null;
 			try {
 
 				validateEngine(baseSession.getWrapped());
@@ -650,9 +662,18 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					throw new ExportException("Failed to retrieve the configured object transformations", e);
 				}
 
+				try {
+					filter = getFilter(configuration);
+				} catch (Exception e) {
+					throw new ExportException("Failed to retrieve the configured object filters", e);
+				}
+
 				return runExportImpl(exportState, counter, sessionFactory, baseSession, contextFactory, delegateFactory,
-					transformer);
+					transformer, filter);
 			} finally {
+				if (filter != null) {
+					filter.close();
+				}
 				if (transformer != null) {
 					transformer.close();
 				}
@@ -674,7 +695,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
 		CmfObjectCounter<ExportResult> objectCounter, final SessionFactory<S> sessionFactory,
 		final SessionWrapper<S> baseSession, final TransferContextFactory<S, V, C, ?> contextFactory,
-		final DF delegateFactory, final Transformer transformer) throws ExportException, CmfStorageException {
+		final DF delegateFactory, final Transformer transformer, final ObjectFilter filter)
+		throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
 		final CfgTools settings = exportState.cfg;
@@ -756,7 +778,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						initContext(ctx);
 						Result result = null;
 						try {
-							result = exportObject(exportState, transformer, null, target, exportDelegate, ctx,
+							result = exportObject(exportState, transformer, filter, null, target, exportDelegate, ctx,
 								listenerDelegator, statusMap);
 						} catch (Exception e) {
 							// Any and all Exceptions have already been processed in exportObject,

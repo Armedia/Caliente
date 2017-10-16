@@ -8,6 +8,7 @@ import javax.xml.bind.JAXBException;
 import org.junit.Test;
 
 import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
+import com.armedia.caliente.engine.dynamic.xml.Filters;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
 
 public class XmlBaseTest {
@@ -30,4 +31,10 @@ public class XmlBaseTest {
 		}
 	}
 
+	@Test
+	public void testFilters() throws IOException, JAXBException {
+		try (InputStream in = getXml("filters-test-1.xml")) {
+			Filters.loadFromXML(in).storeToXML(System.out, true);
+		}
+	}
 }
