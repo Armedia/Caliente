@@ -142,7 +142,7 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 			} catch (UcmException e) {
 				throw new ExportException(e.getMessage(), e);
 			}
-			l.addFirst(parent.getURI().getSchemeSpecificPart());
+			l.addFirst(parent.getURI().toString());
 		}
 		p.setValue(new CmfValue(FileNameTools.reconstitute(l, false, false, '/')));
 		return true;
