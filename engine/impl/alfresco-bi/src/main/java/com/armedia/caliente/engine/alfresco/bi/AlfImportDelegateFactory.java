@@ -17,6 +17,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -166,6 +167,7 @@ public class AlfImportDelegateFactory
 	private final AlfXmlIndex fileIndex;
 	private final AlfXmlIndex folderIndex;
 	private final AtomicBoolean manifestSerialized = new AtomicBoolean(false);
+	private final AtomicReference<Boolean> initializedVdocs = new AtomicReference<>(null);
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException {
@@ -249,6 +251,28 @@ public class AlfImportDelegateFactory
 
 	File getLocation(String relativePath) {
 		return new File(this.content, relativePath);
+	}
+
+	boolean initializeVdocSupport() {
+		if (this.initializedVdocs.get() == null) {
+			synchronized (this) {
+				if (this.initializedVdocs.get() == null) {
+					boolean ok = false;
+					try {
+						getType("cm:folder", "dctm:vdocRoot");
+						getType("cm:folder", "dctm:vdocVersion");
+						getType("dctm:vdocReference");
+						ok = true;
+					} catch (Exception e) {
+						this.log.warn("VDoc support has been disabled", e);
+					} finally {
+						// Make sure we only do this once
+						this.initializedVdocs.set(ok);
+					}
+				}
+			}
+		}
+		return this.initializedVdocs.get();
 	}
 
 	@Override

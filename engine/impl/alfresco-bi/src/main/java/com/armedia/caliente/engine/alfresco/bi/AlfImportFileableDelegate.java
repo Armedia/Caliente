@@ -101,9 +101,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private final boolean virtual;
 	private final AlfrescoType defaultType;
 	private final AlfrescoType referenceType;
-	private final AlfrescoType vdocRoot;
-	private final AlfrescoType vdocVersion;
-	private final AlfrescoType vdocReference;
+
+	private volatile AlfrescoType vdocRoot = null;
+	private volatile AlfrescoType vdocVersion = null;
+	private volatile AlfrescoType vdocReference = null;
 
 	public AlfImportFileableDelegate(String defaultType, AlfImportDelegateFactory factory,
 		CmfObject<CmfValue> storedObject) throws Exception {
@@ -114,9 +115,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
 		this.defaultType = this.factory.getType(defaultType);
 		this.referenceType = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
-		this.vdocRoot = this.factory.getType("cm:folder", "dctm:vdocRoot");
-		this.vdocVersion = this.factory.getType("cm:folder", "dctm:vdocVersion");
-		this.vdocReference = this.factory.getType("dctm:vdocReference");
 	}
 
 	protected final boolean isVirtual() {
@@ -483,6 +481,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty("arm:renditionFormat", content.getMimeType().toString());
 	}
 
+	private boolean resolveVdocTypes() {
+		if (!this.factory.initializeVdocSupport()) { return false; }
+		this.vdocRoot = this.factory.getType("cm:folder", "dctm:vdocRoot");
+		this.vdocVersion = this.factory.getType("cm:folder", "dctm:vdocVersion");
+		this.vdocReference = this.factory.getType("dctm:vdocReference");
+		return (this.vdocRoot != null) && (this.vdocVersion != null) && (this.vdocReference != null);
+	}
+
 	protected final void populateVdocReference(Properties p, String referenceId, String targetName, String targetId,
 		String label) throws ImportException {
 		// Set the type property
@@ -614,7 +620,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 
 			final File meta = generateMetadataFile(ctx, p, main);
-			if (this.virtual) {
+			if (this.virtual && resolveVdocTypes()) {
 				File vdocVersion = meta.getParentFile();
 				if (vdocVersionsIndexed.add(vdocVersion.getName())) {
 					// Does the reference home already have properties? If not, then add them...
