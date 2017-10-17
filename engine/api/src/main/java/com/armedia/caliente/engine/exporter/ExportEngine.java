@@ -322,7 +322,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			final CmfObject<V> marshaled = sourceObject.marshal(ctx, referrent);
 			if (marshaled == null) { return new Result(ExportSkipReason.SKIPPED); }
-			if (filter != null) {
+			// For now, only filter "leaf" objects (i.e. with no referrent, which means they were
+			// explicitly requested). In the (near) future, we'll add an option to allow filtering
+			// of any object in the graph, including dependencies, such that the filtering of a
+			// dependency causes the export "failure" of its dependent object tree.
+			if ((filter != null) && (referrent == null)) {
 				try {
 					if (!filter.acceptRaw(marshaled, objectStore.getAttributeMapper())) { return new Result(
 						ExportSkipReason.SKIPPED, "Object excluded by filtering logic"); }
