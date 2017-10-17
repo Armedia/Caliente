@@ -73,7 +73,15 @@
 				</or>
 			</and>
 		</if>
-		<accept-object/>
+		<accept-object>
+			<if>
+				<check-expression comparison="eq">
+					<left>sdfasdf</left>
+					<right>fsdfsdf</right>
+				</check-expression>
+			</if>
+		</accept-object>
 	</filter>
 
+	<default>ACCEPT</default>
 </filters>
