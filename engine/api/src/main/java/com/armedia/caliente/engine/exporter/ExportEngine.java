@@ -329,7 +329,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			if ((filter != null) && (referrent == null)) {
 				try {
 					if (!filter.acceptRaw(marshaled, objectStore.getAttributeMapper())) { return new Result(
-						ExportSkipReason.SKIPPED, "Object excluded by filtering logic"); }
+						ExportSkipReason.SKIPPED, "Excluded by filtering logic"); }
 				} catch (ObjectFilterException e) {
 					throw new ExportException(String.format("Filtering logic exception while processing %s", logLabel),
 						e);
