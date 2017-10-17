@@ -52,6 +52,13 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="filterOutcome.t" final="restriction">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="ACCEPT" />
+			<xsd:enumeration value="REJECT" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
 	<xsd:simpleType name="cmfType.t" final="restriction">
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="DATASTORE" />
@@ -798,9 +805,12 @@
 
 	<xsd:element name="filters">
 		<xsd:complexType>
-			<xsd:choice minOccurs="0" maxOccurs="unbounded">
-				<xsd:element name="filter" type="tns:filter.t" />
-			</xsd:choice>
+			<xsd:sequence>
+				<xsd:choice minOccurs="0" maxOccurs="unbounded">
+					<xsd:element name="filter" type="tns:filter.t" />
+				</xsd:choice>
+				<xsd:element name="default" type="tns:filterOutcome.t" minOccurs="0" maxOccurs="1" />
+			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>
 
