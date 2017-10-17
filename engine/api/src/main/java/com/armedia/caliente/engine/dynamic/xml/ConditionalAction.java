@@ -25,12 +25,13 @@ public abstract class ConditionalAction extends ConditionalElement implements Ac
 	public final void apply(DynamicElementContext ctx) throws ActionException {
 		if (isSkippable()) { return; }
 		try {
-			if (!checkCondition(ctx)) { return; }
+			if (checkCondition(ctx)) {
+				executeAction(ctx);
+			}
 		} catch (ConditionException e) {
 			throw new ActionException(
 				String.format("Exception caught checking the condition for a %s", getClass().getSimpleName()), e);
 		}
-		executeAction(ctx);
 	}
 
 	protected abstract void executeAction(DynamicElementContext ctx) throws ActionException;
