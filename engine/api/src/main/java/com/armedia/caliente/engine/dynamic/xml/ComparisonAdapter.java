@@ -2,12 +2,15 @@ package com.armedia.caliente.engine.dynamic.xml;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class ComparisonAdapter extends XmlAdapter<String, Comparison> {
 
 	@Override
 	public Comparison unmarshal(String v) throws Exception {
 		if (v == null) { return null; }
-		return Comparison.get(v.trim());
+		v = StringUtils.strip(v);
+		return Comparison.get(v);
 	}
 
 	@Override

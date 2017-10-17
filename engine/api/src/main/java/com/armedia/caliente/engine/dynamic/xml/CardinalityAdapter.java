@@ -6,6 +6,8 @@ import java.util.TreeSet;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.commons.utilities.Tools;
 
 public class CardinalityAdapter extends XmlAdapter<String, Cardinality> {
@@ -23,7 +25,8 @@ public class CardinalityAdapter extends XmlAdapter<String, Cardinality> {
 	@Override
 	public Cardinality unmarshal(String v) throws Exception {
 		if (v == null) { return null; }
-		v = v.trim().toUpperCase();
+		v = StringUtils.strip(v);
+		v = StringUtils.upperCase(v);
 		if (CardinalityAdapter.STAR_ALIASES.contains(v)) { return Cardinality.ALL; }
 		return Cardinality.valueOf(v.toUpperCase());
 	}
