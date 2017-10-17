@@ -806,9 +806,7 @@
 	<xsd:element name="filters">
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:choice minOccurs="0" maxOccurs="unbounded">
-					<xsd:element name="filter" type="tns:filter.t" />
-				</xsd:choice>
+				<xsd:element name="filter" type="tns:filter.t" minOccurs="0" maxOccurs="unbounded" />
 				<xsd:element name="default" type="tns:filterOutcome.t" minOccurs="0" maxOccurs="1" />
 			</xsd:sequence>
 		</xsd:complexType>
