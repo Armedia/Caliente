@@ -10,6 +10,7 @@ import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -71,7 +72,12 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 			@Override
 			public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
 				if (ImportContext.this.transformer != null) {
-					dataObject = ImportContext.this.transformer.transform(getAttributeMapper(), dataObject);
+					try {
+						dataObject = ImportContext.this.transformer.transform(getAttributeMapper(), dataObject);
+					} catch (TransformerException e) {
+						throw new CmfStorageException(
+							String.format("Failed to transform %s", dataObject.getDescription()), e);
+					}
 				}
 				CmfObject<V> encoded = ImportContext.this.translator.decodeObject(dataObject);
 				return handler.handleObject(encoded);
@@ -98,7 +104,11 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		if (sample.isHistoryCurrent()) { return sample; }
 		CmfObject<CmfValue> rawObject = this.cmfObjectStore.loadHeadObject(sample.getType(), sample.getHistoryId());
 		if (this.transformer != null) {
-			rawObject = this.transformer.transform(getAttributeMapper(), rawObject);
+			try {
+				rawObject = this.transformer.transform(getAttributeMapper(), rawObject);
+			} catch (TransformerException e) {
+				throw new CmfStorageException(String.format("Failed to transform %s", sample.getDescription()), e);
+			}
 		}
 		return this.translator.decodeObject(rawObject);
 	}

@@ -30,6 +30,7 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
@@ -489,7 +490,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			CmfObject<CmfValue> encoded = getTranslator().encodeObject(marshaled);
 			if (transformer != null) {
-				encoded = transformer.transform(objectStore.getAttributeMapper(), encoded);
+				try {
+					encoded = transformer.transform(objectStore.getAttributeMapper(), encoded);
+				} catch (TransformerException e) {
+					throw new ExportException(String.format("Transformation failed for %s", marshaled.getDescription()),
+						e);
+				}
 			}
 
 			final Long ret = objectStore.storeObject(encoded);

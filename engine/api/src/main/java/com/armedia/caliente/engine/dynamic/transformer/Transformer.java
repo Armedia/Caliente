@@ -1,5 +1,9 @@
 package com.armedia.caliente.engine.dynamic.transformer;
 
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
@@ -9,7 +13,6 @@ import com.armedia.caliente.engine.dynamic.xml.Transformations;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 
@@ -45,8 +48,10 @@ public class Transformer {
 		return Transformer.INSTANCES.getDefaultFileName();
 	}
 
+	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private final Transformations transformations;
 	private final ExternalMetadataLoader metadataLoader;
+	private boolean closed = false;
 
 	private Transformer(String location, Transformations transformations, ExternalMetadataLoader metadataLoader)
 		throws TransformerException {
@@ -58,27 +63,32 @@ public class Transformer {
 		return new DynamicElementContext(object, new DefaultDynamicObject(object), mapper, this.metadataLoader);
 	}
 
-	public CmfObject<CmfValue> transform(CmfValueMapper mapper, CmfObject<CmfValue> object) throws CmfStorageException {
-		if (this.transformations == null) {
-			//
-			return object;
-		}
-		DynamicElementContext ctx = createContext(mapper, object);
+	public CmfObject<CmfValue> transform(CmfValueMapper mapper, CmfObject<CmfValue> object)
+		throws TransformerException {
+		Lock l = this.rwLock.readLock();
+		l.lock();
 		try {
+			if (this.closed) { throw new TransformerException("This transformer instance is already closed"); }
+			if (this.transformations == null) { return object; }
+			DynamicElementContext ctx = createContext(mapper, object);
 			try {
-				this.transformations.apply(ctx);
-			} catch (ProcessingCompletedException e) {
-				// Do nothing - this is simply our shortcut for stopping the transformation work in
-				// its tracks
-			}
+				try {
+					this.transformations.apply(ctx);
+				} catch (ProcessingCompletedException e) {
+					// Do nothing - this is simply our shortcut for stopping the transformation work
+					// in
+					// its tracks
+				}
 
-			return ctx.getDynamicObject().applyChanges(object);
-		} catch (ActionException | TransformerException e) {
-			throw new CmfStorageException(
-				String.format("Exception caught while performing the transformation for %s", object.getDescription()),
-				e);
+				return ctx.getDynamicObject().applyChanges(object);
+			} catch (ActionException e) {
+				throw new TransformerException(String
+					.format("Exception caught while performing the transformation for %s", object.getDescription()), e);
+			} finally {
+				destroyContext(ctx);
+			}
 		} finally {
-			destroyContext(ctx);
+			l.unlock();
 		}
 	}
 
@@ -90,8 +100,16 @@ public class Transformer {
 	}
 
 	public void close() {
-		if (this.metadataLoader != null) {
-			this.metadataLoader.close();
+		Lock l = this.rwLock.writeLock();
+		l.lock();
+		try {
+			if (this.closed) { return; }
+			if (this.metadataLoader != null) {
+				this.metadataLoader.close();
+			}
+		} finally {
+			this.closed = true;
+			l.unlock();
 		}
 	}
 

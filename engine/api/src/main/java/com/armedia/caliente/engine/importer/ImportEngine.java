@@ -33,6 +33,7 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -505,7 +506,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		// is not the same as the previous target repo - we can tell this by
 		// looking at the target mappings.
 		// this.log.info("Clearing all previous mappings");
-		// objectStore.clearAllMappings();
+		// objectStore.clearAllMappings();Object
 
 		final CfgTools configuration = new CfgTools(settings);
 
@@ -810,7 +811,12 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							}
 
 							if (transformer != null) {
-								dataObject = transformer.transform(objectStore.getAttributeMapper(), dataObject);
+								try {
+									dataObject = transformer.transform(objectStore.getAttributeMapper(), dataObject);
+								} catch (TransformerException e) {
+									throw new CmfStorageException(
+										String.format("Failed to transform %s", dataObject.getDescription()), e);
+								}
 							}
 							this.contents.add(translator.decodeObject(dataObject));
 							return true;

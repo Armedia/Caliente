@@ -54,52 +54,43 @@ public class ObjectFilter {
 	}
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
-
-	private boolean initialized = false;
-
-	private final Filters filters;
 	private final List<Filter> activeFilters = new ArrayList<>();
-
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+	private boolean closed = false;
 
 	private ObjectFilter(Filters filters) {
-		this.filters = filters;
-	}
-
-	public void initialize() throws ObjectFilterException {
-		final Lock w = this.rwLock.writeLock();
-		w.lock();
-		try {
-			if (this.initialized) { return; }
-			this.activeFilters.addAll(this.filters.getFilters());
-			this.initialized = true;
-		} finally {
-			w.unlock();
-		}
+		this.activeFilters.addAll(filters.getFilters());
 	}
 
 	public Boolean accept(CmfObject<CmfValue> cmfObject, CmfValueMapper mapper) throws ObjectFilterException {
 		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
-		DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject), mapper,
-			null);
-		for (Filter f : this.activeFilters) {
-			try {
-				f.apply(ctx);
-			} catch (ProcessingCompletedException e) {
-				// The object was explicitly accepted!
-				this.log.trace("Filter logic accepted {}", cmfObject.getDescription());
-				return true;
-			} catch (ObjectRejectedByFilterException e) {
-				// The object was explicitly filtered!
-				this.log.info("Filter logic rejected {}", cmfObject.getDescription());
-				return false;
-			} catch (ActionException e) {
-				this.log.trace("Exception caught while processing filters for {}", cmfObject.getDescription(), e);
-				throw new ObjectFilterException(e);
+		Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			if (this.closed) { throw new ObjectFilterException("This object filter is already closed"); }
+			DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject),
+				mapper, null);
+			for (Filter f : this.activeFilters) {
+				try {
+					f.apply(ctx);
+				} catch (ProcessingCompletedException e) {
+					// The object was explicitly accepted!
+					this.log.trace("Filter logic accepted {}", cmfObject.getDescription());
+					return true;
+				} catch (ObjectRejectedByFilterException e) {
+					// The object was explicitly filtered!
+					this.log.info("Filter logic rejected {}", cmfObject.getDescription());
+					return false;
+				} catch (ActionException e) {
+					this.log.trace("Exception caught while processing filters for {}", cmfObject.getDescription(), e);
+					throw new ObjectFilterException(e);
+				}
 			}
+			this.log.trace("Accepting {}", cmfObject.getDescription());
+			return true;
+		} finally {
+			l.unlock();
 		}
-		this.log.trace("Accepting {}", cmfObject.getDescription());
-		return true;
 	}
 
 	public <V> boolean acceptRaw(CmfObject<V> object, CmfValueMapper mapper) throws ObjectFilterException {
@@ -111,13 +102,10 @@ public class ObjectFilter {
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
 		try {
-			if (!this.initialized) { return; }
-			try {
-				this.activeFilters.clear();
-			} finally {
-				this.initialized = false;
-			}
+			if (this.closed) { return; }
+			this.activeFilters.clear();
 		} finally {
+			this.closed = true;
 			l.unlock();
 		}
 	}
