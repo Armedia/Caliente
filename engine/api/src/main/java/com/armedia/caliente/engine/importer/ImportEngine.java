@@ -828,7 +828,14 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							if ((this.contents == null) || this.contents.isEmpty()) { return true; }
 
 							// Was it filtered?
-							if (this.filtered) { return true; }
+							if (this.filtered) {
+								// Mark it as filtered in the import status!!
+								for (CmfObject<V> object : this.contents) {
+									objectStore.setImportStatus(object, ImportResult.SKIPPED,
+										"Excluded by filtering logic");
+								}
+								return true;
+							}
 
 							// Ok... we have stuff to process that wasn't filtered, process it!
 							CmfObject<?> sample = this.contents.get(0);
