@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
-import com.armedia.caliente.engine.dynamic.ImmutableElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.ImmutableElementContext;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
@@ -40,7 +40,14 @@ public abstract class ConditionalElement {
 	protected final boolean checkCondition(DynamicElementContext ctx) throws ConditionException {
 		final Condition condition = getCondition();
 		if (condition == null) { return true; }
-		return condition.check(new ImmutableElementContext(ctx));
+		ImmutableElementContext immutable = null;
+		if (ImmutableElementContext.class.isInstance(ctx)) {
+			// Small tweak in hopes of optimization...
+			immutable = ImmutableElementContext.class.cast(ctx);
+		} else {
+			immutable = new ImmutableElementContext(ctx);
+		}
+		return condition.check(immutable);
 	}
 
 	protected final String getObjectDescription(DynamicElementContext ctx) {
