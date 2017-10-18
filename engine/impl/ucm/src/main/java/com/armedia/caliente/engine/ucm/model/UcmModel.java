@@ -410,13 +410,13 @@ public class UcmModel {
 						try {
 							ServiceResponse response = null;
 							DataBinder responseData = null;
-							final UcmAtt uriIdentifierAtt;
+							final UcmAtt identifierAtt;
 							switch (type) {
 								case FILE:
-									uriIdentifierAtt = UcmAtt.fFileGUID;
+									identifierAtt = UcmAtt.fFileGUID;
 									break;
 								case FOLDER:
-									uriIdentifierAtt = UcmAtt.fFolderGUID;
+									identifierAtt = UcmAtt.fFolderGUID;
 									break;
 
 								default:
@@ -430,7 +430,7 @@ public class UcmModel {
 								response = s.callService("FLD_INFO", new RequestPreparation() {
 									@Override
 									public void prepareRequest(DataBinder binder) {
-										binder.putLocal(uriIdentifierAtt.name(), guid);
+										binder.putLocal(identifierAtt.name(), guid);
 									}
 								});
 								responseData = response.getResponseAsBinder();
@@ -458,12 +458,12 @@ public class UcmModel {
 							baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
 							data.set(new UcmAttributes(baseObj, rs.getFields()));
 
-							String uriIdentifier = data.get().getString(uriIdentifierAtt);
+							String uriIdentifier = data.get().getString(identifierAtt);
 							if (uriIdentifier != null) { return UcmModel.getURI(data.get()); }
 
 							throw new UcmServiceException(
 								String.format("%s GUID [%s] was found, returned no results (no value for %s)?!?",
-									type.name(), guid, uriIdentifierAtt.name()));
+									type.name(), guid, identifierAtt.name()));
 						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
