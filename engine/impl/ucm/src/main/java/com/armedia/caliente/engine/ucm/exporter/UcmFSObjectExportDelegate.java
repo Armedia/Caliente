@@ -62,9 +62,9 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		UcmExportContext ctx) throws Exception {
 		Collection<UcmExportDelegate<?>> requirements = super.identifyRequirements(marshalled, ctx);
 
-		// First things first - add the parent folder
+		// First things first - add the parent folder, but only if it's not the root folder
 		UcmFolder parent = this.object.getParentFolder(ctx.getSession());
-		if (parent != null) {
+		if ((parent != null) && !parent.isRoot()) {
 			requirements.add(new UcmFolderExportDelegate(this.factory, ctx.getSession(), parent));
 		}
 
