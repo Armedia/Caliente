@@ -9,7 +9,7 @@ import com.armedia.caliente.store.CmfValueCodec;
 
 public class AlfTranslator extends CmfAttributeTranslator<CmfValue> {
 
-	protected AlfTranslator() {
+	public AlfTranslator() {
 		super(CmfValue.class, null);
 	}
 
