@@ -65,34 +65,34 @@ public class UcmModel {
 	// * FILE -> file:${fFileGUID}#${dID}
 	// * FOLDER -> folder:${fFolderGUID}
 
-	// Unique URI -> DataObject
+	// Unique URI -> UcmAttributes
 	private final KeyLockableCache<UcmUniqueURI, UcmAttributes> objectByUniqueURI;
 
-	// path -> URI
+	// path -> HistoryURI
 	private final KeyLockableCache<String, URI> uriByPaths;
 
-	// GUID -> URI
+	// GUID -> HistoryURI
 	private final KeyLockableCache<String, URI> uriByGUID;
 
-	// child URI -> parent URI
+	// Child HistoryURI -> Parent HistoryURI
 	private final KeyLockableCache<URI, URI> parentByURI;
 
-	// parent URI -> Map<childName, child URI>
+	// Parent HistoryURI -> Map<Child Name, Child HistoryURI>
 	private final KeyLockableCache<URI, Map<String, URI>> childrenByURI;
 
-	// History URI -> List<UcmRevision>
+	// HistoryURI -> List<UcmRevision>
 	private final KeyLockableCache<URI, List<UcmRevision>> historyByURI;
 
-	// String -> UcmUniqueURI
+	// dID -> UcmUniqueURI
 	private final KeyLockableCache<String, UcmUniqueURI> revisionUriByRevisionID;
 
 	// UcmUniqueURI -> Map<String, UcmRenditionInfo>
 	private final KeyLockableCache<UcmUniqueURI, Map<String, UcmRenditionInfo>> renditionsByUniqueURI;
 
-	// History URI -> UcmUniqueURI
+	// HistoryURI -> UcmUniqueURI
 	private final KeyLockableCache<URI, UcmUniqueURI> uniqueUriByHistoryUri;
 
-	// UniqueURI -> History URI
+	// UniqueURI -> HistoryURI
 	private final KeyLockableCache<UcmUniqueURI, URI> historyUriByUniqueURI;
 
 	public static DataBinder getConfigInfo(UcmSession s) throws UcmServiceException {
