@@ -587,6 +587,32 @@ public class UcmModel {
 		return new UcmFile(this, file.getURI(), getFileRevision(s, file.getRevisionId(), true));
 	}
 
+	private UcmAttributes buildAttributesFromDocInfo(DataBinder responseData, AtomicReference<DataResultSet> history,
+		AtomicReference<DataResultSet> renditions) {
+		// First things first!! Stash the retrieved object...
+		DataResultSet rs = responseData.getResultSet("FileInfo");
+		if (rs == null) { return null; }
+
+		Map<String, String> baseObj = new HashMap<>();
+		baseObj.putAll(rs.getRows().get(0));
+		// Capture the parent path...from DOC_INFO, it's stored in
+		// LocalData.fParentPath
+		baseObj.put(UcmAtt.cmfParentPath.name(), responseData.getLocalData().get("fParentPath"));
+
+		DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
+		baseObj.putAll(docInfo);
+
+		if (history != null) {
+			history.set(responseData.getResultSet("REVISION_HISTORY"));
+		}
+		if (renditions != null) {
+			renditions.set(responseData.getResultSet("Renditions"));
+		}
+
+		UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
+		return baseData;
+	}
+
 	protected UcmAttributes getFileRevision(final UcmSession s, final String id, final boolean refreshRenditions)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		UcmUniqueURI guid = this.revisionUriByRevisionID.get(id);
@@ -619,25 +645,10 @@ public class UcmModel {
 								throw e;
 							}
 
-							// First things first!! Stash the retrieved object...
-							DataResultSet rs = responseData.getResultSet("FileInfo");
-							if (rs == null) { throw new UcmServiceException(
+							UcmAttributes baseData = buildAttributesFromDocInfo(responseData, history,
+								(refreshRenditions ? renditions : null));
+							if (baseData == null) { throw new UcmServiceException(
 								String.format("Revision ID [%s] was found, but returned incorrect results?!?", id)); }
-
-							Map<String, String> baseObj = new HashMap<>();
-							baseObj.putAll(rs.getRows().get(0));
-							// Capture the parent path...from DOC_INFO, it's stored in
-							// LocalData.fParentPath
-							baseObj.put(UcmAtt.cmfParentPath.name(), responseData.getLocalData().get("fParentPath"));
-
-							DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
-							baseObj.putAll(docInfo);
-							history.set(responseData.getResultSet("REVISION_HISTORY"));
-							if (refreshRenditions) {
-								renditions.set(responseData.getResultSet("Renditions"));
-							}
-
-							UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
 							data.set(baseData);
 							return UcmModel.getUniqueURI(baseData);
 						} catch (IdcClientException | UcmException e) {
