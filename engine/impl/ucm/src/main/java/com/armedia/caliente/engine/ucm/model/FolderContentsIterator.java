@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import com.armedia.caliente.engine.ucm.UcmConstants;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
 import com.armedia.caliente.store.CmfValue;
@@ -24,10 +25,6 @@ import oracle.stellent.ridc.model.DataResultSet.Field;
 public class FolderContentsIterator {
 
 	public static final FolderIteratorMode DEFAULT_MODE = FolderIteratorMode.COMBINED;
-
-	public static final int MINIMUM_PAGE_SIZE = 1;
-	public static final int DEFAULT_PAGE_SIZE = 1000;
-	public static final int MAXIMUM_PAGE_SIZE = 100000;
 
 	private final UcmSession session;
 	private final FolderLocatorMode folderLocatorMode;
@@ -53,11 +50,11 @@ public class FolderContentsIterator {
 	private boolean completed = false;
 
 	public FolderContentsIterator(UcmSession session, String path) {
-		this(session, FolderLocatorMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_PATH, path, null, UcmConstants.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(UcmSession session, String path, FolderIteratorMode folderIteratorMode) {
-		this(session, FolderLocatorMode.BY_PATH, path, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_PATH, path, null, UcmConstants.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(UcmSession session, String path, int pageSize) {
@@ -70,11 +67,11 @@ public class FolderContentsIterator {
 	}
 
 	public FolderContentsIterator(UcmSession session, UcmUniqueURI uri) {
-		this(session, FolderLocatorMode.BY_GUID, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_GUID, uri, null, UcmConstants.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(UcmSession session, UcmUniqueURI uri, FolderIteratorMode folderIteratorMode) {
-		this(session, FolderLocatorMode.BY_GUID, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_GUID, uri, null, UcmConstants.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(UcmSession session, UcmUniqueURI uri, int pageSize) {
@@ -87,11 +84,11 @@ public class FolderContentsIterator {
 	}
 
 	public FolderContentsIterator(UcmSession session, URI uri) {
-		this(session, FolderLocatorMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_URI, uri, null, UcmConstants.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(UcmSession session, URI uri, FolderIteratorMode folderIteratorMode) {
-		this(session, FolderLocatorMode.BY_URI, uri, null, FolderContentsIterator.DEFAULT_PAGE_SIZE);
+		this(session, FolderLocatorMode.BY_URI, uri, null, UcmConstants.DEFAULT_PAGE_SIZE);
 	}
 
 	public FolderContentsIterator(UcmSession session, URI uri, int pageSize) {
@@ -109,8 +106,7 @@ public class FolderContentsIterator {
 		this.folderLocatorMode = folderLocatorMode;
 		this.searchKey = folderLocatorMode.sanitizeKey(searchKey);
 		this.session = session;
-		this.pageSize = Tools.ensureBetween(FolderContentsIterator.MINIMUM_PAGE_SIZE, pageSize,
-			FolderContentsIterator.MAXIMUM_PAGE_SIZE);
+		this.pageSize = Tools.ensureBetween(UcmConstants.MINIMUM_PAGE_SIZE, pageSize, UcmConstants.MAXIMUM_PAGE_SIZE);
 		this.folderIteratorMode = Tools.coalesce(folderIteratorMode, FolderContentsIterator.DEFAULT_MODE);
 	}
 

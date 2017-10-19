@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 
+import com.armedia.caliente.engine.ucm.UcmConstants;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.commons.utilities.Tools;
 
@@ -102,8 +103,8 @@ class FolderTreeIterator {
 		if (config == null) {
 			config = FolderTreeIterator.DEFAULT_CONFIG;
 		}
-		this.pageSize = Tools.ensureBetween(FolderContentsIterator.MINIMUM_PAGE_SIZE, config.pageSize,
-			FolderContentsIterator.MAXIMUM_PAGE_SIZE);
+		this.pageSize = Tools.ensureBetween(UcmConstants.MINIMUM_PAGE_SIZE, config.pageSize,
+			UcmConstants.MAXIMUM_PAGE_SIZE);
 		this.mode = Tools.coalesce(config.mode, FolderContentsIterator.DEFAULT_MODE);
 		this.recursion.push(new FolderContentsIterator(session, searchMode, this.searchKey, FolderIteratorMode.COMBINED,
 			this.pageSize));
