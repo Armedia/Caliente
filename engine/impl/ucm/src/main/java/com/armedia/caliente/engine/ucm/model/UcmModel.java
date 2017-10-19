@@ -77,16 +77,16 @@ public class UcmModel {
 	// parent URI -> Map<childName, child URI>
 	private final KeyLockableCache<URI, Map<String, URI>> childrenByURI;
 
-	// History URI -> List<UcmUniqueURI>
+	// History URI -> List<UcmRevision>
 	private final KeyLockableCache<URI, List<UcmRevision>> historyByURI;
 
-	// String -> Unique URI
+	// String -> UcmUniqueURI
 	private final KeyLockableCache<String, UcmUniqueURI> revisionUriByRevisionID;
 
-	// Unique URI -> Map<String, UcmRenditionInfo>
+	// UcmUniqueURI -> Map<String, UcmRenditionInfo>
 	private final KeyLockableCache<UcmUniqueURI, Map<String, UcmRenditionInfo>> renditionsByUniqueURI;
 
-	// History URI -> Unique URI
+	// History URI -> UcmUniqueURI
 	private final KeyLockableCache<URI, UcmUniqueURI> uniqueUriByHistoryUri;
 
 	// UniqueURI -> History URI
