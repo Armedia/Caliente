@@ -543,8 +543,7 @@ public class UcmModel {
 
 							Map<String, String> baseObj = new HashMap<>();
 							baseObj.putAll(rs.getRows().get(0));
-							String parentPath = responseData
-								.getLocal(String.format("%sPath", file ? "file" : "folder"));
+							String parentPath = responseData.getLocal(String.format("%sPath", prefix.toLowerCase()));
 							baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
 
 							UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
