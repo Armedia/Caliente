@@ -50,12 +50,6 @@ public final class CmfValue {
 	private final Object value;
 	private final boolean nullValue;
 
-	public CmfValue(int value) {
-		this.type = CmfDataType.INTEGER;
-		this.value = value;
-		this.nullValue = false;
-	}
-
 	public CmfValue(long value) {
 		this.type = CmfDataType.INTEGER;
 		this.value = value;
