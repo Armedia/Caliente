@@ -119,7 +119,7 @@ public final class UcmAttributes {
 					break;
 				case INT:
 					if (!StringUtils.isEmpty(v)) {
-						value = new CmfValue(Integer.valueOf(v.toString()));
+						value = new CmfValue(Long.valueOf(v.toString()));
 					} else {
 						T = CmfDataType.INTEGER;
 					}
