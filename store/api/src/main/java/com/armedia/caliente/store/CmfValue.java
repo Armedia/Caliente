@@ -56,6 +56,12 @@ public final class CmfValue {
 		this.nullValue = false;
 	}
 
+	public CmfValue(long value) {
+		this.type = CmfDataType.INTEGER;
+		this.value = value;
+		this.nullValue = false;
+	}
+
 	public CmfValue(boolean value) {
 		this.type = CmfDataType.BOOLEAN;
 		this.value = value;
@@ -178,6 +184,12 @@ public final class CmfValue {
 		if (this.nullValue) { return 0; }
 		if (this.value instanceof Number) { return Number.class.cast(this.value).intValue(); }
 		return Integer.valueOf(this.value.toString());
+	}
+
+	public long asLong() {
+		if (this.nullValue) { return 0; }
+		if (this.value instanceof Number) { return Number.class.cast(this.value).longValue(); }
+		return Long.valueOf(this.value.toString());
 	}
 
 	public boolean asBoolean() {
