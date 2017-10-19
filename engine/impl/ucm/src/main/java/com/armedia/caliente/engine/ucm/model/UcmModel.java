@@ -24,6 +24,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 
 import com.armedia.caliente.engine.tools.KeyLockableCache;
+import com.armedia.caliente.engine.ucm.UcmConstants;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
 import com.armedia.commons.utilities.FileNameTools;
@@ -706,6 +707,97 @@ public class UcmModel {
 		public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object);
 	}
 
+	public Collection<UcmFile> getDocumentSearchResults(final UcmSession s, final String query)
+		throws UcmServiceException {
+		return getDocumentSearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE);
+	}
+
+	public Collection<UcmFile> getDocumentSearchResults(final UcmSession s, final String query, final int pageSize)
+		throws UcmServiceException {
+		final List<UcmFile> results = new ArrayList<>();
+		iterateDocumentSearchResults(s, query, pageSize, new ObjectHandler() {
+			@Override
+			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject object) {
+				if (UcmFile.class.isInstance(object)) {
+					results.add(UcmFile.class.cast(object));
+				}
+			}
+		});
+		return results;
+	}
+
+	public int iterateDocumentSearchResults(final UcmSession s, final String query, final ObjectHandler handler)
+		throws UcmServiceException {
+		return iterateDocumentSearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE, handler);
+	}
+
+	public int iterateDocumentSearchResults(final UcmSession s, final String query, int pageSize,
+		final ObjectHandler handler) throws UcmServiceException {
+		Objects.requireNonNull(s, "Must provide a session to search with");
+		Objects.requireNonNull(query, "Must provide a URI to search for");
+		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
+
+		final boolean dbMode = false;
+		// TODO: Parse out the query string to see if it's a DB mode query or not
+
+		final String actualQuery = StringUtils.strip(query);
+		if (StringUtils.isEmpty(
+			actualQuery)) { throw new UcmServiceException("The actual query string is empty - this is not supported"); }
+
+		final AtomicInteger currentRow = new AtomicInteger(1);
+		final int actualPageSize = Tools.ensureBetween(UcmConstants.MINIMUM_PAGE_SIZE, pageSize,
+			UcmConstants.MAXIMUM_PAGE_SIZE);
+		while (true) {
+			try {
+				ServiceResponse response = s.callService("GET_SEARCH_RESULTS", new RequestPreparation() {
+					@Override
+					public void prepareRequest(DataBinder binder) {
+						binder.putLocal("QueryText", actualQuery);
+						if (dbMode) {
+							binder.putLocal("SearchEngineName", "database");
+						}
+						binder.putLocal("ResultCount", String.valueOf(actualPageSize));
+						binder.putLocal("StartRow", String.valueOf(currentRow.get()));
+						binder.putLocal("isAddFolderMetadata", "1");
+						binder.putLocal("SortField", "dID");
+						binder.putLocal("SortOrder", "Asc");
+					}
+				});
+				DataBinder binder = response.getResponseAsBinder();
+				DataResultSet results = binder.getResultSet("SearchResults");
+				if (results == null) { return currentRow.get(); }
+				List<DataObject> rows = results.getRows();
+				if ((rows == null) || rows.isEmpty()) { return currentRow.get(); }
+				for (DataObject o : results.getRows()) {
+					UcmAttributes att = new UcmAttributes(o, results.getFields());
+					String guid = att.getString(UcmAtt.fFileGUID);
+					try {
+						if (guid == null) {
+							// This object has no GUID that we can use to retrieve it... now what da
+							// fuk do we do?
+						} else {
+							final UcmFile file;
+							try {
+								file = getFileByGUID(s, guid);
+							} catch (UcmFileNotFoundException e) {
+								// The result was returned, but not accessible? KABOOM!
+								throw new UcmServiceException(String.format(
+									"The file with fFileGUID [%s] was returned in the result set, but was not retrieved when searched for explicitly",
+									guid), e);
+							}
+							handler.handleObject(s, currentRow.get(), file.getURI(), file);
+						}
+					} finally {
+						currentRow.incrementAndGet();
+					}
+				}
+			} catch (final IdcClientException e) {
+				throw new UcmServiceException(String.format("Exception raised while performing the %s query [%s]",
+					dbMode ? "database" : "fulltext", actualQuery), e);
+			}
+		}
+	}
+
 	public int iterateFolderContents(final UcmSession s, final UcmFolder folder, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(folder, "Must provide a folder object to iterate over");
@@ -714,6 +806,7 @@ public class UcmModel {
 
 	int iterateFolderContents(final UcmSession s, final URI uri, final ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
+		Objects.requireNonNull(s, "Must provide a session to search with");
 		Objects.requireNonNull(uri, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
 		// If this isn't a folder, we don't even try it...

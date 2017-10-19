@@ -1,6 +1,8 @@
 package com.armedia.caliente.engine.ucm;
 
 import java.net.URI;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -10,6 +12,8 @@ import com.armedia.caliente.engine.ucm.UcmSession.RequestPreparation;
 
 import oracle.stellent.ridc.IdcClientException;
 import oracle.stellent.ridc.model.DataBinder;
+import oracle.stellent.ridc.model.DataObject;
+import oracle.stellent.ridc.model.DataResultSet;
 import oracle.stellent.ridc.protocol.ServiceResponse;
 import oracle.stellent.ridc.protocol.ServiceResponse.ResponseType;
 
@@ -136,6 +140,48 @@ public class UcmSessionFactoryTest extends BaseTest {
 			@Override
 			public void prepareRequest(DataBinder binder) {
 				binder.putLocal("dGroupName", "Public");
+			}
+		});
+	}
+
+	@Test
+	public void GET_SEARCH_RESULTS() throws Exception {
+		final int pageSize = 5;
+		final AtomicInteger currentRow = new AtomicInteger(1);
+		while (true) {
+			ServiceResponse rsp = callService("GET_SEARCH_RESULTS", new RequestPreparation() {
+				@Override
+				public void prepareRequest(DataBinder binder) {
+					binder.putLocal("QueryText", "<not>(dID <matches> `0`)");
+					// binder.putLocal("SearchEngineName", "database");
+					binder.putLocal("StartRow", String.valueOf(currentRow.get()));
+					binder.putLocal("ResultCount", String.valueOf(pageSize));
+					binder.putLocal("isAddFolderMetadata", "1");
+					binder.putLocal("SortField", "dID");
+					binder.putLocal("SortOrder", "Asc");
+				}
+			});
+			DataBinder binder = rsp.getResponseAsBinder();
+			DataResultSet results = binder.getResultSet("SearchResults");
+			if (results == null) {
+				break;
+			}
+			List<DataObject> rows = results.getRows();
+			if ((rows == null) || rows.isEmpty()) {
+				break;
+			}
+			currentRow.addAndGet(rows.size());
+		}
+	}
+
+	@Test
+	public void FLD_FOLDER_SEARCH() throws Exception {
+		callService("FLD_FOLDER_SEARCH", new RequestPreparation() {
+			@Override
+			public void prepareRequest(DataBinder binder) {
+				binder.putLocal("QueryText", "<NOT>(fParentGUID <matches> `FLD_ROOT`)");
+				binder.putLocal("ResultCount", "1000");
+				binder.putLocal("StartRow", "1");
 			}
 		});
 	}

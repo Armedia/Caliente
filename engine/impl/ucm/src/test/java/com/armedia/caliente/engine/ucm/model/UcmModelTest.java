@@ -307,4 +307,23 @@ public class UcmModelTest extends BaseTest {
 			w.close();
 		}
 	}
+
+	@Test
+	public void testSearchResults() throws Exception {
+		String query = "<not>(dID <matches> `0`)";
+		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
+		try {
+			UcmSession s = w.getWrapped();
+			UcmModel model = new UcmModel();
+
+			model.iterateDocumentSearchResults(s, query, new ObjectHandler() {
+				@Override
+				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+					System.out.printf("Got the file: [%s](%s)%n", object.getPath(), object.getUniqueURI());
+				}
+			});
+		} finally {
+			w.close();
+		}
+	}
 }
