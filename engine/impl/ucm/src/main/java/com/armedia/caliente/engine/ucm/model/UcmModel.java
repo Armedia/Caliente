@@ -61,7 +61,7 @@ public class UcmModel {
 
 	static final URI ROOT_URI = UcmModel.newFolderURI("FLD_ROOT");
 
-	// Unique URI:
+	// UniqueURI:
 	// * FILE -> file:${fFileGUID}#${dID}
 	// * FOLDER -> folder:${fFolderGUID}
 
