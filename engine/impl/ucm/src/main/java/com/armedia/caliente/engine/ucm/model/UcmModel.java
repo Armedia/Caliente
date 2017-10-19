@@ -49,6 +49,9 @@ public class UcmModel {
 	private static final int DEFAULT_OBJECT_COUNT = 10000;
 	private static final int MAX_OBJECT_COUNT = 1000000;
 
+	private static final Pattern TEXT_QUERY = Pattern.compile("(<(matches|contains|starts|ends|substring)>)",
+		Pattern.CASE_INSENSITIVE);
+
 	private static final String FILE_SCHEME = "file";
 	private static final String FOLDER_SCHEME = "folder";
 	private static final String NULL_SCHEME = "null";
@@ -737,13 +740,11 @@ public class UcmModel {
 		Objects.requireNonNull(query, "Must provide a URI to search for");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
 
-		final boolean dbMode = false;
-		// TODO: Parse out the query string to see if it's a DB mode query or not
-
 		final String actualQuery = StringUtils.strip(query);
 		if (StringUtils.isEmpty(
 			actualQuery)) { throw new UcmServiceException("The actual query string is empty - this is not supported"); }
 
+		final boolean dbMode = !UcmModel.TEXT_QUERY.matcher(actualQuery).find();
 		final AtomicInteger currentRow = new AtomicInteger(1);
 		final int actualPageSize = Tools.ensureBetween(UcmConstants.MINIMUM_PAGE_SIZE, pageSize,
 			UcmConstants.MAXIMUM_PAGE_SIZE);
