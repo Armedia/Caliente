@@ -3,11 +3,11 @@ package com.armedia.caliente.engine.ucm.model;
 public enum UcmAtt {
 
 	// Custom attributes
-	cmfPath,
+	cmfLatestVersion,
 	cmfParentPath,
 	cmfParentURI,
+	cmfPath,
 	cmfUniqueURI,
-	cmfLatestVersion,
 
 	// System attributes
 	ProductBuildInfo, //
