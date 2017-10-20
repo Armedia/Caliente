@@ -9,10 +9,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -34,8 +36,8 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
-import com.armedia.caliente.engine.alfresco.bi.AlfSessionFactory;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
+import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.alfresco.bi.AlfXmlIndex;
 import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.caliente.engine.alfresco.bi.importer.cache.Cache;
@@ -49,6 +51,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.MappingTools;
+import com.armedia.caliente.engine.tools.MappingTools.MappingValidator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
@@ -162,6 +165,7 @@ public class AlfImportDelegateFactory
 	private final Properties userLoginMap = new Properties();
 	private final Properties groupMap = new Properties();
 	private final Properties roleMap = new Properties();
+	private final Properties attributeMap = new Properties();
 
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
@@ -177,14 +181,14 @@ public class AlfImportDelegateFactory
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException {
 		super(engine, configuration);
-		String db = configuration.getString(AlfSessionFactory.DB);
+		String db = configuration.getString(AlfSetting.DB);
 		if (db != null) {
 			this.db = new File(db).getCanonicalFile();
 		} else {
 			this.db = new File("cmsmf-xml").getCanonicalFile();
 		}
 		FileUtils.forceMkdir(this.db);
-		String content = configuration.getString(AlfSessionFactory.CONTENT);
+		String content = configuration.getString(AlfSetting.CONTENT);
 		if (content != null) {
 			this.content = new File(content).getCanonicalFile();
 		} else {
@@ -203,7 +207,7 @@ public class AlfImportDelegateFactory
 		this.folderIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FOLDER_CACHE_FILE),
 			idxClasses);
 
-		String contentModels = configuration.getString(AlfSessionFactory.CONTENT_MODEL);
+		String contentModels = configuration.getString(AlfSetting.CONTENT_MODEL);
 		if (contentModels == null) { throw new IllegalStateException(
 			"Must provide a valid set of content model XML files"); }
 
@@ -229,9 +233,19 @@ public class AlfImportDelegateFactory
 
 		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<>(m));
 
-		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.USER_MAP), this.userMap);
-		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.GROUP_MAP), this.groupMap);
-		MappingTools.loadMap(this.log, configuration.getString(AlfSessionFactory.ROLE_MAP), this.roleMap);
+		MappingTools.loadMap(this.log, configuration.getString(AlfSetting.USER_MAP), this.userMap);
+		MappingTools.loadMap(this.log, configuration.getString(AlfSetting.GROUP_MAP), this.groupMap);
+		MappingTools.loadMap(this.log, configuration.getString(AlfSetting.ROLE_MAP), this.roleMap);
+		MappingTools.loadMap(this.log, configuration.getString(AlfSetting.ATTRIBUTE_MAP), this.attributeMap,
+			new MappingValidator() {
+				private final Set<String> sources = new HashSet<>();
+
+				@Override
+				public void validate(String key, String value) throws Exception {
+					if (!this.sources
+						.add(key)) { throw new Exception("Source attribute [%s] is mapped from more than once"); }
+				}
+			});
 	}
 
 	protected AlfrescoSchema getSchema() {

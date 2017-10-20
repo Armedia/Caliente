@@ -2,19 +2,27 @@ package com.armedia.caliente.engine.alfresco.bi;
 
 import com.armedia.commons.utilities.ConfigurationSetting;
 
-public enum Setting implements ConfigurationSetting {
+public enum AlfSetting implements ConfigurationSetting {
 	//
+	ROOT, //
+	DB, //
+	CONTENT, //
+	CONTENT_MODEL, //
+	USER_MAP, //
+	GROUP_MAP, //
+	ROLE_MAP, //
+	ATTRIBUTE_MAP, //
 	//
 	;
 
 	private final String label;
 	private final Object defaultValue;
 
-	private Setting() {
+	private AlfSetting() {
 		this(null);
 	}
 
-	private Setting(Object defaultValue) {
+	private AlfSetting(Object defaultValue) {
 		String l = name();
 		l = l.toLowerCase();
 		l = l.replaceAll("_", ".");
