@@ -46,6 +46,7 @@ import com.documentum.fc.client.IDfVirtualDocument;
 import com.documentum.fc.client.IDfVirtualDocumentNode;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.client.distributed.IDfReference;
+import com.documentum.fc.client.impl.ISysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
@@ -400,7 +401,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
 		if (!full) { return String.format("%s%s", sysObject.getImplicitVersionLabel(),
-			sysObject.getHasFolder() ? ",CURRENT" : ""); }
+			sysObject.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : ""); }
 		int labelCount = sysObject.getVersionLabelCount();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < labelCount; i++) {
@@ -513,7 +514,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 					try {
 						IDfSysObject o = IDfSysObject.class.cast(session.getObject(id));
 
-						IDfVirtualDocument vDoc = o.asVirtualDocument("CURRENT", false);
+						IDfVirtualDocument vDoc = o.asVirtualDocument(ISysObject.CURRENT_VERSION_LABEL, false);
 						final IDfVirtualDocumentNode root = vDoc.getRootNode();
 						final int members = root.getChildCount();
 						for (int i = 0; i < members; i++) {

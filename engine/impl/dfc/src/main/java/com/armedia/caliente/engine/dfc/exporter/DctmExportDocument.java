@@ -48,6 +48,7 @@ import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfVirtualDocument;
 import com.documentum.fc.client.IDfVirtualDocumentNode;
 import com.documentum.fc.client.content.IDfContent;
+import com.documentum.fc.client.impl.ISysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
@@ -112,7 +113,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			CmfProperty<IDfValue> p = new CmfProperty<>(IntermediateProperty.VDOC_MEMBER,
 				IntermediateProperty.VDOC_MEMBER.type);
 			properties.add(p);
-			final IDfVirtualDocument vDoc = document.asVirtualDocument("CURRENT", false);
+			final IDfVirtualDocument vDoc = document.asVirtualDocument(ISysObject.CURRENT_VERSION_LABEL, false);
 			final IDfVirtualDocumentNode root = vDoc.getRootNode();
 			final int members = root.getChildCount();
 			for (int i = 0; i < members; i++) {
@@ -167,7 +168,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 
 		// If this is a virtual document, we export the document's components first
 		if (document.isVirtualDocument() || (document.getLinkCount() > 0)) {
-			IDfVirtualDocument vDoc = document.asVirtualDocument("CURRENT", false);
+			IDfVirtualDocument vDoc = document.asVirtualDocument(ISysObject.CURRENT_VERSION_LABEL, false);
 			int components = vDoc.getUniqueObjectIdCount();
 			for (int i = 0; i < components; i++) {
 				req.add(this.factory.newExportDelegate(session.getObject(vDoc.getUniqueObjectId(i))));

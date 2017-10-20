@@ -49,6 +49,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfVirtualDocument;
 import com.documentum.fc.client.IDfVirtualDocumentNode;
+import com.documentum.fc.client.impl.ISysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
@@ -99,7 +100,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 
 	private String calculateVersionString(IDfSysObject document, boolean full) throws DfException {
 		if (!full) { return String.format("%s%s", document.getImplicitVersionLabel(),
-			document.getHasFolder() ? ",CURRENT" : ""); }
+			document.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : ""); }
 		int labelCount = document.getVersionLabelCount();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < labelCount; i++) {
@@ -773,7 +774,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 
 		if (addVdocMembers && document.isCheckedOut()) {
 			CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
-			IDfVirtualDocument vdoc = document.asVirtualDocument("CURRENT", false);
+			IDfVirtualDocument vdoc = document.asVirtualDocument(ISysObject.CURRENT_VERSION_LABEL, false);
 			IDfVirtualDocumentNode root = vdoc.getRootNode();
 
 			// First, remove all the existing nodes
@@ -808,8 +809,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 						"Virtual Document [%s](%s) references a component [%s] which could not be located, but may have failed during import",
 						this.cmfObject.getLabel(), this.cmfObject.getId(), m.getTargetValue())); }
 
-					final String childBinding = (StringUtils.isBlank(member.getBinding()) ? "CURRENT"
-						: member.getBinding());
+					final String childBinding = (StringUtils.isBlank(member.getBinding())
+						? ISysObject.CURRENT_VERSION_LABEL : member.getBinding());
 					final boolean childIsVirtualDoc = (so.isVirtualDocument() || (so.getLinkCount() > 0));
 					final boolean followAssembly = childIsVirtualDoc ? member.isFollowAssembly() : false;
 					final boolean overrideLateBinding = childIsVirtualDoc ? member.isOverrideLateBinding() : false;
