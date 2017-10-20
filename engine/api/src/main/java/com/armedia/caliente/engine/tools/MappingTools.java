@@ -12,6 +12,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.ConfigurationSetting;
+
 public class MappingTools {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MappingTools.class);
@@ -26,12 +29,16 @@ public class MappingTools {
 		}
 	};
 
-	public static boolean loadMap(Logger log, String mapFile, Properties properties) {
-		return MappingTools.loadMap(log, mapFile, properties, null);
+	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties) {
+		return MappingTools.loadMap(log, cfg, setting, properties, null);
 	}
 
-	public static boolean loadMap(Logger log, String mapFile, Properties properties, MappingValidator validator) {
+	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties,
+		MappingValidator validator) {
+
+		String mapFile = cfg.getString(setting);
 		if (StringUtils.isEmpty(mapFile)) { return false; }
+
 		if (log == null) {
 			log = MappingTools.LOG;
 		}

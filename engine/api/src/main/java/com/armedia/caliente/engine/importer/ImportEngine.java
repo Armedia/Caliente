@@ -722,7 +722,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();
-				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.FILENAME_MAP), p)) {
+				if (MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p)) {
 					// Things happen differently here... since we have a limited scope in which
 					// objects require fixing, we don't sweep the whole table, but instead submit
 					// the IDs that we want fixed.

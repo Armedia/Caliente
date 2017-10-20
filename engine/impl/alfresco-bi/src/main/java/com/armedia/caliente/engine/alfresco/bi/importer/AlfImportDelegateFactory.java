@@ -233,10 +233,10 @@ public class AlfImportDelegateFactory
 
 		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<>(m));
 
-		MappingTools.loadMap(this.log, configuration.getString(AlfSetting.USER_MAP), this.userMap);
-		MappingTools.loadMap(this.log, configuration.getString(AlfSetting.GROUP_MAP), this.groupMap);
-		MappingTools.loadMap(this.log, configuration.getString(AlfSetting.ROLE_MAP), this.roleMap);
-		MappingTools.loadMap(this.log, configuration.getString(AlfSetting.ATTRIBUTE_MAP), this.attributeMap,
+		MappingTools.loadMap(this.log, configuration, AlfSetting.USER_MAP, this.userMap);
+		MappingTools.loadMap(this.log, configuration, AlfSetting.GROUP_MAP, this.groupMap);
+		MappingTools.loadMap(this.log, configuration, AlfSetting.ROLE_MAP, this.roleMap);
+		MappingTools.loadMap(this.log, configuration, AlfSetting.ATTRIBUTE_MAP, this.attributeMap,
 			new MappingValidator() {
 				private final Set<String> sources = new HashSet<>();
 
