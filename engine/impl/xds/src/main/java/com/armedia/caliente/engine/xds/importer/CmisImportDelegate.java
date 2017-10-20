@@ -17,12 +17,12 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.xds.CmisSessionWrapper;
 import com.armedia.caliente.engine.xds.CmisTranslator;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 
 public abstract class CmisImportDelegate<T> extends
 	ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
