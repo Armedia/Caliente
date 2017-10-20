@@ -784,9 +784,14 @@ public class UcmModel {
 				});
 				DataBinder binder = response.getResponseAsBinder();
 				DataResultSet results = binder.getResultSet("SearchResults");
-				if (results == null) { return currentRow.get(); }
+				if (results == null) {
+					break;
+				}
 				List<DataObject> rows = results.getRows();
-				if ((rows == null) || rows.isEmpty()) { return currentRow.get(); }
+				if ((rows == null) || rows.isEmpty()) {
+					break;
+				}
+				final boolean lastPage = (rows.size() < actualPageSize);
 				for (DataObject o : results.getRows()) {
 					UcmAttributes att = new UcmAttributes(o, results.getFields());
 					String guid = att.getString(UcmAtt.dDocName);
@@ -805,11 +810,15 @@ public class UcmModel {
 						currentRow.incrementAndGet();
 					}
 				}
+				if (lastPage) {
+					break;
+				}
 			} catch (final IdcClientException e) {
 				throw new UcmServiceException(String.format("Exception raised while performing the %s query [%s]",
 					dbMode ? "database" : "fulltext", actualQuery), e);
 			}
 		}
+		return currentRow.get();
 	}
 
 	public int iterateFolderContents(final UcmSession s, final UcmFolder folder, final ObjectHandler handler)

@@ -146,9 +146,9 @@ public class UcmSessionFactoryTest extends BaseTest {
 
 	@Test
 	public void GET_SEARCH_RESULTS() throws Exception {
-		final int pageSize = 20;
+		final int pageSize = 999;
 		final AtomicInteger currentRow = new AtomicInteger(1);
-		final String query = "<not>(dID <matches> `xyz`)";
+		final String query = "<not>(dID <matches> `-1`)";
 		while (true) {
 			ServiceResponse rsp = callService("GET_SEARCH_RESULTS", new RequestPreparation() {
 				@Override
@@ -171,7 +171,11 @@ public class UcmSessionFactoryTest extends BaseTest {
 			if ((rows == null) || rows.isEmpty()) {
 				break;
 			}
+			final boolean lastPage = (rows.size() < pageSize);
 			currentRow.addAndGet(rows.size());
+			if (lastPage) {
+				break;
+			}
 		}
 	}
 

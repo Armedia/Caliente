@@ -316,7 +316,7 @@ public class UcmModelTest extends BaseTest {
 			UcmSession s = w.getWrapped();
 			UcmModel model = new UcmModel();
 
-			model.iterateDocumentSearchResults(s, query, new ObjectHandler() {
+			model.iterateDocumentSearchResults(s, query, 10000, new ObjectHandler() {
 				@Override
 				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
 					System.out.printf("Got file # %02d: [%s](%s)%n", pos, object.getPath(), object.getUniqueURI());
