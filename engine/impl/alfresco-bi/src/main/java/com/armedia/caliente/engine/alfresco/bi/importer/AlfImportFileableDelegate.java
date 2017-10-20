@@ -294,7 +294,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		srcOnly.addAll(srcNames);
 		srcOnly.removeAll(tgtNames);
 		// Now handle the attributes that only exist on the source, but not on the target...here
-		// we need to do some guesswork...
+		// we need to do some detective work...
 		Set<String> matched = new HashSet<>();
 		final String residualsPrefix = this.factory.getResidualsPrefix();
 		for (final String srcAttName : srcOnly) {
