@@ -146,13 +146,14 @@ public class UcmSessionFactoryTest extends BaseTest {
 
 	@Test
 	public void GET_SEARCH_RESULTS() throws Exception {
-		final int pageSize = 5;
+		final int pageSize = 20;
 		final AtomicInteger currentRow = new AtomicInteger(1);
+		final String query = "<not>(dID <matches> `0`)";
 		while (true) {
 			ServiceResponse rsp = callService("GET_SEARCH_RESULTS", new RequestPreparation() {
 				@Override
 				public void prepareRequest(DataBinder binder) {
-					binder.putLocal("QueryText", "<not>(dID <matches> `0`)");
+					binder.putLocal("QueryText", query);
 					// binder.putLocal("SearchEngineName", "database");
 					binder.putLocal("StartRow", String.valueOf(currentRow.get()));
 					binder.putLocal("ResultCount", String.valueOf(pageSize));
