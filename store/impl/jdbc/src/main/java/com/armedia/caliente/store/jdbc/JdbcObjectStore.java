@@ -1133,9 +1133,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected final void clearAllObjects(JdbcOperation operation) throws CmfStorageException {
 		// Allow for subclasses to implement optimized clearing operations
-		if (optimizedClearAllObjects(operation)) { return; }
+		if (optimizedClearAllObjects(operation)) {
+			resetSequences(operation.getConnection());
+			return;
+		}
 		try {
 			clearAllObjects(operation.getConnection());
+			resetSequences(operation.getConnection());
 		} catch (SQLException e) {
 			throw new CmfStorageException("SQLException caught while removing all objects", e);
 		}
@@ -1217,6 +1221,34 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			return false;
 		}
 		return truncateTables(operation, tables);
+	}
+
+	private void resetSequences(Connection c) throws CmfStorageException {
+		// Find all the sequences, and reset them to their initial state
+		try {
+			DatabaseMetaData dmd = c.getMetaData();
+			ResultSet rs = null;
+			String sql = translateOptionalQuery(JdbcDialect.Query.RESTART_SEQUENCE);
+			if (sql == null) { return; }
+			Statement s = c.createStatement();
+			try {
+				rs = dmd.getTables(null, null, null, new String[] {
+					"SEQUENCE"
+				});
+				while (rs.next()) {
+					String tn = rs.getString("TABLE_NAME");
+					if (tn.toLowerCase().startsWith("cmf_")) {
+						// Restart this sequence!!
+						s.executeUpdate(String.format(sql, tn));
+					}
+				}
+			} finally {
+				JdbcTools.closeQuietly(rs);
+				JdbcTools.closeQuietly(s);
+			}
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to reset the sequences", e);
+		}
 	}
 
 	private void clearAllObjects(Connection c) throws SQLException {

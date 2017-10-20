@@ -174,6 +174,10 @@ public abstract class JdbcDialect {
 			"     truncate table cmf_mapper" //
 		),
 
+		RESTART_SEQUENCE( //
+			null //
+		),
+
 		LOAD_ALL_MAPPINGS( //
 			"       select distinct object_type, name " + //
 				"     from cmf_mapper " + //

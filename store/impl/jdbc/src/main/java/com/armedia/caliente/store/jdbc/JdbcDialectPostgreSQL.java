@@ -72,6 +72,10 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 			"                 update set new_name = excluded.new_name " //
 	;
 
+	private static final String RESTART_SEQUENCE = //
+		"     alter sequence %s restart" //
+	;
+
 	public JdbcDialectPostgreSQL(DatabaseMetaData md) throws SQLException {
 		super(EngineType.PostgreSQL, md);
 	}
@@ -100,6 +104,8 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				return JdbcDialectPostgreSQL.DISABLE_REFERENTIAL_INTEGRITY;
 			case UPSERT_ALT_NAME:
 				return JdbcDialectPostgreSQL.UPSERT_ALT_NAME;
+			case RESTART_SEQUENCE:
+				return JdbcDialectPostgreSQL.RESTART_SEQUENCE;
 			default:
 				break;
 		}
