@@ -294,11 +294,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		srcOnly.removeAll(tgtNames);
 		// Now handle the attributes that only exist on the source, but not on the target...here
 		// we need to do some detective work...
-		Set<String> matched = new HashSet<>();
+		Set<String> processed = new HashSet<>(specialCopies);
 		final String residualsPrefix = this.factory.getResidualsPrefix();
 		nextAtt: for (final String srcAttName : srcOnly) {
 			// Avoid attributes that have been handled specially by the code above
-			if (specialCopies.contains(srcAttName)) {
+			if (processed.contains(srcAttName)) {
 				continue;
 			}
 
@@ -321,9 +321,17 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 				if (mapped) {
 					// If this attribute was mapped, move on to the next one
+					processed.add(srcAttName);
 					continue nextAtt;
 				}
 			}
+		}
+
+		srcOnly.removeAll(processed);
+		processed.clear();
+		// Process whatever's left at the source that we weren't able to handle gracefully
+		for (String srcAttName : srcOnly) {
+			final CmfProperty<CmfValue> srcAtt = this.cmfObject.getAttribute(srcAttName);
 
 			// Ok so no mapping was found... we'll try to auto-find the attribute using
 			// a name-based approach...
@@ -331,19 +339,19 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			// Strip the source attribute prefix - try to match strictly based on the tail end
 			final String rawName = srcAttName.replaceAll("^[^:]*:", ":");
 			SchemaAttribute target = null;
-			nextTarget: for (String tgtAttName : tgtOnly) {
-				if (tgtAttName.endsWith(rawName)) {
-					if (matched.add(tgtAttName)) {
-						target = targetType.getAttribute(tgtAttName);
-						break nextTarget;
-					}
+			for (String tgtAttName : tgtOnly) {
+				// Make sure we don't double-copy...
+				if (tgtAttName.endsWith(rawName) && processed.add(tgtAttName)) {
+					target = targetType.getAttribute(tgtAttName);
+					break;
 				}
 			}
 
 			if (target != null) {
+				// We have a candidate attribute, so copy directly!
 				storeValue(ctx, srcAtt, target, p, true);
 			} else if (residualsPrefix != null) {
-				// No candidate, copy it as a residual...
+				// No candidate, copy it as a residual (if so configured)
 				storeValue(ctx, srcAtt, String.format("%s%s", residualsPrefix, rawName), srcAtt.isRepeating(), p, true);
 			}
 		}
