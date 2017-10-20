@@ -194,6 +194,23 @@ public class UcmSession implements TrackedUse {
 		return this.model.iterateFolderContentsRecursive(this, folder, recurseShortcuts, handler);
 	}
 
+	public int iterateDocumentSearchResults(String query, ObjectHandler handler) throws UcmServiceException {
+		return this.model.iterateDocumentSearchResults(this, query, handler);
+	}
+
+	public int iterateDocumentSearchResults(String query, int pageSize, ObjectHandler handler)
+		throws UcmServiceException {
+		return this.model.iterateDocumentSearchResults(this, query, pageSize, handler);
+	}
+
+	public Collection<UcmFile> getDocumentSearchResults(String query) throws UcmServiceException {
+		return this.model.getDocumentSearchResults(this, query);
+	}
+
+	public Collection<UcmFile> getDocumentSearchResults(String query, int pageSize) throws UcmServiceException {
+		return this.model.getDocumentSearchResults(this, query, pageSize);
+	}
+
 	public Collection<UcmFSObject> getFolderContentsRecursive(UcmFolder folder, boolean followShortCuts)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		return this.model.getFolderContentsRecursive(this, folder, followShortCuts);
