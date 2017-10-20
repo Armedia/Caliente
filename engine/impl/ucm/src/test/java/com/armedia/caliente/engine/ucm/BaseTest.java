@@ -151,7 +151,7 @@ public class BaseTest {
 	public void test() throws Exception {
 		final ExportEngine<?, ?, ?, ?, ?, ?> engine = UcmExportEngine.getExportEngine();
 		Logger output = LoggerFactory.getLogger("console");
-	
+
 		Map<String, String> settings = new TreeMap<>();
 		settings.put(UcmSessionSetting.ATOMPUB_URL.getLabel(),
 			"http://armedia-vm.rivera.prv/alfresco/api/-default-/public/cmis/versions/1.0/atom");
@@ -161,7 +161,7 @@ public class BaseTest {
 		// settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
 		settings.put(CmisSetting.EXPORT_PATH.getLabel(), "/Shared");
 		settings.put(CmisSetting.EXPORT_PAGE_SIZE.getLabel(), "5");
-	
+
 		CmfObjectStore<?, ?> objectStore = CmfStores.getObjectStore("default");
 		objectStore.clearProperties();
 		objectStore.clearAllObjects();
