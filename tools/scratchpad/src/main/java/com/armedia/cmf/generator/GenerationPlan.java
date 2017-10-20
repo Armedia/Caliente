@@ -26,7 +26,7 @@ public class GenerationPlan {
 
 	public List<FsObject> getChildren() {
 		if (this.children == null) {
-			this.children = new ArrayList<FsObject>();
+			this.children = new ArrayList<>();
 		}
 		return this.children;
 	}

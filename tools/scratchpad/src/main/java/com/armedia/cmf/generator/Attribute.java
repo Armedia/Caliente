@@ -23,7 +23,7 @@ public class Attribute {
 
 	public List<Value> getValue() {
 		if (this.value == null) {
-			this.value = new ArrayList<Value>();
+			this.value = new ArrayList<>();
 		}
 		return this.value;
 	}

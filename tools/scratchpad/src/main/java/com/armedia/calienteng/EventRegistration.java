@@ -338,7 +338,7 @@ public class EventRegistration implements Comparable<EventRegistration> {
 		String dql = "select * from dmi_registry where registered_id = %s and user_name = %s order by event";
 		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()), DfUtils.quoteString(user));
 		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.EXECREAD_QUERY);
-		Set<EventRegistration> ret = new TreeSet<EventRegistration>();
+		Set<EventRegistration> ret = new TreeSet<>();
 		try {
 			while (c.next()) {
 				ret.add(EventRegistration.loadRegistration(c));
@@ -371,7 +371,7 @@ public class EventRegistration implements Comparable<EventRegistration> {
 		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()));
 		IDfCollection c = DfUtils.executeQuery(session, dql, IDfQuery.EXECREAD_QUERY);
 		try {
-			Map<String, Set<EventRegistration>> ret = new TreeMap<String, Set<EventRegistration>>();
+			Map<String, Set<EventRegistration>> ret = new TreeMap<>();
 			String user = null;
 			Set<EventRegistration> s = null;
 			while (c.next()) {
@@ -382,7 +382,7 @@ public class EventRegistration implements Comparable<EventRegistration> {
 					}
 
 					user = userName;
-					s = new TreeSet<EventRegistration>();
+					s = new TreeSet<>();
 				}
 				s.add(EventRegistration.loadRegistration(c));
 			}

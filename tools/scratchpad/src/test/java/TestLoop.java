@@ -68,7 +68,7 @@ public class TestLoop {
 		case CREATE:
 			addWatcher(obj);
 			break;
-	
+
 		case UPDATE:
 			boolean updateRecord = true;
 			Record existing = getExistingRecord(obj);
@@ -88,7 +88,7 @@ public class TestLoop {
 				}
 			}
 			break;
-	
+
 		case DELETE:
 			removeWatcher(obj);
 			break;

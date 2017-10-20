@@ -11,8 +11,8 @@ public final class FileSpec implements Cloneable, Comparable<FileSpec>, Serializ
 
 	public static enum Type {
 		//
-		FOLDER,
-		FILE,
+		FOLDER, //
+		FILE, //
 		//
 		;
 	}
