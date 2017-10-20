@@ -49,9 +49,6 @@ public class UcmModel {
 	private static final int DEFAULT_OBJECT_COUNT = 10000;
 	private static final int MAX_OBJECT_COUNT = 1000000;
 
-	private static final Pattern TEXT_QUERY = Pattern.compile("(<(matches|contains|starts|ends|substring)>)",
-		Pattern.CASE_INSENSITIVE);
-
 	private static final String FILE_SCHEME = "file";
 	private static final String FOLDER_SCHEME = "folder";
 	private static final String NULL_SCHEME = "null";
@@ -762,7 +759,9 @@ public class UcmModel {
 		if (StringUtils.isEmpty(
 			actualQuery)) { throw new UcmServiceException("The actual query string is empty - this is not supported"); }
 
-		final boolean dbMode = !UcmModel.TEXT_QUERY.matcher(actualQuery).find();
+		// TODO: Need to find the correct way to identify "automagically" if we should use database
+		// or databasetext engines when running the search...if only there were documentation...
+		final boolean dbMode = true;
 		final AtomicInteger currentRow = new AtomicInteger(1);
 		final int actualPageSize = Tools.ensureBetween(UcmConstants.MINIMUM_PAGE_SIZE, pageSize,
 			UcmConstants.MAXIMUM_PAGE_SIZE);
