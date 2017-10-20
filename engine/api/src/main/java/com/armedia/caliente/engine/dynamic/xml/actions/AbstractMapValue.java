@@ -55,8 +55,8 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 		this.defVal = defaultValue;
 	}
 
-	protected boolean mapValue(DynamicElementContext ctx, CmfDataType type, Object candidate, AtomicReference<Object> result)
-		throws ActionException {
+	protected boolean mapValue(DynamicElementContext ctx, CmfDataType type, Object candidate,
+		AtomicReference<Object> result) throws ActionException {
 
 		// Apply the comparison to each value in the typed value, and if there's a
 		// match, apply the replacement and move on to the next value

@@ -62,10 +62,8 @@ public class LoadExternalMetadata extends ConditionalAction {
 			try {
 				externalAttributes = ctx.getAttributeValues(ctx.getBaseObject(), sourceName);
 			} catch (ExternalMetadataException e) {
-				throw new ActionException(
-					String.format("Failed to load the external metadata for %s from source [%s]",
-						ctx.getBaseObject().getDescription(), sourceName),
-					e);
+				throw new ActionException(String.format("Failed to load the external metadata for %s from source [%s]",
+					ctx.getBaseObject().getDescription(), sourceName), e);
 			}
 
 			Map<String, DynamicValue> currentAttributes = ctx.getDynamicObject().getAtt();

@@ -9,7 +9,8 @@ public class TokenLoaderException extends CommandLineException {
 		super();
 	}
 
-	public TokenLoaderException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+	public TokenLoaderException(String message, Throwable cause, boolean enableSuppression,
+		boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
 

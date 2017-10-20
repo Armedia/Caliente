@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.ConditionFactory;
-import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.CustomComponents;
+import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)

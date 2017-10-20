@@ -45,8 +45,7 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 
 	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx);
 
-	protected abstract void executeAction(DynamicElementContext ctx, DynamicValue candidate)
-		throws ActionException;
+	protected abstract void executeAction(DynamicElementContext ctx, DynamicValue candidate) throws ActionException;
 
 	protected boolean failShort() {
 		return false;

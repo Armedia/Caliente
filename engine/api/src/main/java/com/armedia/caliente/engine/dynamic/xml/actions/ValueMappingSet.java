@@ -69,8 +69,7 @@ public class ValueMappingSet extends ConditionalAction {
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		CmfType type = getType();
-		if (type == null) { throw new ActionException(
-			"Must provide a type name to associate the mapping with"); }
+		if (type == null) { throw new ActionException("Must provide a type name to associate the mapping with"); }
 		String name = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (name == null) { throw new ActionException("Must provide a mapping name"); }
 		String from = Tools.toString(ActionTools.eval(getFrom(), ctx));

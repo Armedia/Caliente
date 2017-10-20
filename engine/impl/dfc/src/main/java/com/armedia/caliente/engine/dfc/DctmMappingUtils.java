@@ -48,7 +48,8 @@ public class DctmMappingUtils {
 	};
 
 	private static IDfTypedObject[] getSources(IDfSession session) throws DfException {
-		if (session == null) { throw new IllegalArgumentException("Must provide a session to get the nameSources from"); }
+		if (session == null) { throw new IllegalArgumentException(
+			"Must provide a session to get the nameSources from"); }
 		// Always add the nameSources in priority order
 		return new IDfTypedObject[] {
 			session.getDocbaseConfig(), session.getServerConfig()

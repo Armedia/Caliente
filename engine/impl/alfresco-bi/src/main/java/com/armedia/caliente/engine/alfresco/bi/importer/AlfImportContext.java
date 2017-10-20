@@ -31,12 +31,12 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 	}
 
 	public final String getAlternateName(CmfType type, String id) throws ImportException {
-		return this.getFactory().getAlternateName(type, id);
+		return getFactory().getAlternateName(type, id);
 	}
 
 	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean current)
 		throws ImportException {
-		return this.getFactory().getObjectNames(refs, current);
+		return getFactory().getObjectNames(refs, current);
 	}
 
 	protected String getObjectName(CmfObject<CmfValue> object) {

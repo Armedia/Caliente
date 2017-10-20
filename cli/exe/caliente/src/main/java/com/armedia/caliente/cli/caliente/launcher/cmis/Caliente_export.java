@@ -52,7 +52,8 @@ public class Caliente_export extends AbstractCalienteModule_export {
 		// If it has a leading "id:", it's an object ID
 		if (srcPath.startsWith(Caliente_export.ID_PREFIX)) {
 			srcPath = srcPath.substring(Caliente_export.ID_PREFIX.length());
-			if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Must provide a non-empty CMIS object ID"); }
+			if (StringUtils
+				.isEmpty(srcPath)) { throw new CalienteException("Must provide a non-empty CMIS object ID"); }
 			settings.put(CmisSetting.EXPORT_ID.getLabel(), srcPath);
 		} else {
 			// If it's neither a path or an ID, it's a query

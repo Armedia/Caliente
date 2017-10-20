@@ -12,7 +12,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.transform.TestObjectFacade;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
@@ -30,6 +29,7 @@ import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.transform.TestObjectContext;
+import com.armedia.caliente.engine.transform.TestObjectFacade;
 import com.armedia.caliente.store.CmfDataType;
 
 public class ActionsTest {

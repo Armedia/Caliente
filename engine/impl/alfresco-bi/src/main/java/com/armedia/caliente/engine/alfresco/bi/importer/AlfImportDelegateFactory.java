@@ -41,8 +41,8 @@ import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrat
 import com.armedia.caliente.engine.alfresco.bi.importer.cache.Cache;
 import com.armedia.caliente.engine.alfresco.bi.importer.cache.CacheItem;
 import com.armedia.caliente.engine.alfresco.bi.importer.cache.CacheItemMarker;
-import com.armedia.caliente.engine.alfresco.bi.importer.cache.CacheItemVersion;
 import com.armedia.caliente.engine.alfresco.bi.importer.cache.CacheItemMarker.MarkerType;
+import com.armedia.caliente.engine.alfresco.bi.importer.cache.CacheItemVersion;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateProperty;

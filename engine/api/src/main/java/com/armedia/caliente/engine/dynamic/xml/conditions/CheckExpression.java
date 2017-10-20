@@ -78,8 +78,8 @@ public class CheckExpression extends AbstractComparisonCheck {
 				try {
 					return new CmfValue(type, object).asTime();
 				} catch (ParseException e) {
-					throw new ConditionException(
-						String.format("Failed to convert the value [%s] as a Date", object), e);
+					throw new ConditionException(String.format("Failed to convert the value [%s] as a Date", object),
+						e);
 				}
 
 			case DOUBLE:
@@ -110,8 +110,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 				try {
 					return new URI(object.toString());
 				} catch (URISyntaxException e) {
-					throw new ConditionException(
-						String.format("Failed to convert the value [%s] as a URI", object), e);
+					throw new ConditionException(String.format("Failed to convert the value [%s] as a URI", object), e);
 				}
 
 			case HTML:

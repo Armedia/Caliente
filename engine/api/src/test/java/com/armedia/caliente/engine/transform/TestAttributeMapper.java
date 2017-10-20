@@ -10,8 +10,8 @@ import java.util.TreeSet;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualTreeBidiMap;
 
-import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValueMapper;
 
 public class TestAttributeMapper extends CmfValueMapper {
 

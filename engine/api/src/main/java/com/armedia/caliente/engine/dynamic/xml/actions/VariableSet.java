@@ -16,8 +16,7 @@ import com.armedia.caliente.store.CmfDataType;
 public class VariableSet extends AbstractSetValue {
 
 	@Override
-	protected DynamicValue createValue(DynamicElementContext ctx, String name, CmfDataType type,
-		boolean multivalue) {
+	protected DynamicValue createValue(DynamicElementContext ctx, String name, CmfDataType type, boolean multivalue) {
 		DynamicValue member = new DynamicValue(name, type, multivalue);
 		ctx.getVariables().put(name, member);
 		return member;

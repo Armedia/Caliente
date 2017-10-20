@@ -22,11 +22,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
-
 public class AlfrescoSchemaTest {
 
 	private static final Pattern TYPE_MAPPING_PARSER = Pattern.compile("^([^\\[]+)(?:\\[(.*)\\])?$");

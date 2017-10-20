@@ -71,8 +71,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 		Comparison comparison = getComparison();
 		Expression valueExp = getValue();
 		Object comparand = ConditionTools.eval(valueExp, ctx);
-		if (comparand == null) { throw new ConditionException(
-			"No comparand value given to check the name against"); }
+		if (comparand == null) { throw new ConditionException("No comparand value given to check the name against"); }
 		if (!candidate.isRepeating()) {
 			// Check the one and only value
 			Object cv = candidate.getValue();
