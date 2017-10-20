@@ -54,7 +54,8 @@ public class UcmModel {
 	private static final String NULL_SCHEME = "null";
 
 	private static final URI NULL_URI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
-	static final URI NULL_FOLDER_URI = UcmModel.newFolderURI("idcnull");
+	private static final String NULL_FOLDER_GUID = "idcnull";
+	static final URI NULL_FOLDER_URI = UcmModel.newFolderURI(UcmModel.NULL_FOLDER_GUID);
 
 	static final URI ROOT_URI = UcmModel.newFolderURI("FLD_ROOT");
 
@@ -137,6 +138,10 @@ public class UcmModel {
 				&& ("Enabled".equals(component.get("status")))) { return Boolean.TRUE; }
 		}
 		return Boolean.FALSE;
+	}
+
+	public static boolean isRoot(URI uri) {
+		return UcmModel.ROOT_URI.equals(uri);
 	}
 
 	public UcmModel() throws UcmServiceException {
@@ -529,7 +534,7 @@ public class UcmModel {
 	protected UcmAttributes getDataObject(final UcmSession s, final URI uri)
 		throws UcmServiceException, UcmObjectNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to retrieve");
-		if (UcmModel.NULL_FOLDER_URI.equals(uri)) {
+		if (UcmModel.NULL_FOLDER_GUID.equals(uri.getSchemeSpecificPart())) {
 			// Take a quick shortcut to avoid unnecessary calls
 			return null;
 		}

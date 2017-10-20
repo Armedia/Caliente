@@ -1,10 +1,13 @@
 package com.armedia.caliente.engine.ucm.exporter;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -12,6 +15,7 @@ import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.model.UcmException;
 import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
+import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -19,6 +23,7 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.FileNameTools;
+import com.armedia.commons.utilities.Tools;
 
 public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends UcmExportDelegate<T> {
 
@@ -116,35 +121,42 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 
 	protected boolean getDataProperties(UcmExportContext ctx, Collection<CmfProperty<CmfValue>> properties, T object)
 		throws ExportException {
+		String path = object.getParentPath();
 		CmfProperty<CmfValue> p = new CmfProperty<>(IntermediateProperty.PATH, CmfDataType.STRING,
-			new CmfValue(object.getParentPath()));
+			new CmfValue(Tools.coalesce(path, StringUtils.EMPTY)));
 		properties.add(p);
 
 		p = new CmfProperty<>(IntermediateProperty.IS_REFERENCE, CmfDataType.BOOLEAN,
 			new CmfValue(object.isShortcut()));
 		properties.add(p);
 
-		p = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID,
-			new CmfValue(object.getParentURI().toString()));
+		URI parentUri = object.getParentURI();
+		p = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
 		properties.add(p);
 
-		p = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfDataType.STRING, false);
-		properties.add(p);
-		LinkedList<String> l = new LinkedList<>();
-		UcmFolder parent = null;
-		while (true) {
-			try {
-				parent = (parent == null ? object : parent).getParentFolder(ctx.getSession());
-				if (parent == null) {
-					// If this object has no parent, then there's no parent IDs to generate
-					break;
-				}
-			} catch (UcmException e) {
-				throw new ExportException(e.getMessage(), e);
-			}
-			l.addFirst(parent.getURI().toString());
+		if (!UcmModel.isRoot(parentUri)) {
+			p.addValue(new CmfValue(parentUri.toString()));
 		}
-		p.setValue(new CmfValue(FileNameTools.reconstitute(l, false, false, '/')));
+
+		p = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfDataType.STRING, true);
+		properties.add(p);
+		if (!UcmModel.isRoot(parentUri)) {
+			LinkedList<String> l = new LinkedList<>();
+			UcmFolder parentFolder = null;
+			while (true) {
+				try {
+					parentFolder = (parentFolder == null ? object : parentFolder).getParentFolder(ctx.getSession());
+					if ((parentFolder == null) || parentFolder.isRoot()) {
+						// If this object has no parent, then there's no parent IDs to generate
+						break;
+					}
+				} catch (UcmException e) {
+					throw new ExportException(e.getMessage(), e);
+				}
+				l.addFirst(parentFolder.getURI().toString());
+			}
+			p.addValue(new CmfValue(FileNameTools.reconstitute(l, false, false, '/')));
+		}
 		return true;
 	}
 }
