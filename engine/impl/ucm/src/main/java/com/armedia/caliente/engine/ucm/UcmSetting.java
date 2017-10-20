@@ -4,7 +4,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum UcmSetting implements ConfigurationSetting {
 	//
-	PATHS("paths"), //
+	SOURCE("source"), //
 	//
 	;
 

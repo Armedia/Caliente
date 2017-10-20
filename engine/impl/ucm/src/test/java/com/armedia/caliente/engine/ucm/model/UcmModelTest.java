@@ -310,7 +310,7 @@ public class UcmModelTest extends BaseTest {
 
 	@Test
 	public void testSearchResults() throws Exception {
-		String query = "<not>(dID <matches> `0`)";
+		String query = "<not>(dID <matches> `-1`)";
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
 			UcmSession s = w.getWrapped();
@@ -319,7 +319,7 @@ public class UcmModelTest extends BaseTest {
 			model.iterateDocumentSearchResults(s, query, new ObjectHandler() {
 				@Override
 				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
-					System.out.printf("Got the file: [%s](%s)%n", object.getPath(), object.getUniqueURI());
+					System.out.printf("Got file # %02d: [%s](%s)%n", pos, object.getPath(), object.getUniqueURI());
 				}
 			});
 		} finally {

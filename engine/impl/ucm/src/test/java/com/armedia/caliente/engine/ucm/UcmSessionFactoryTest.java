@@ -148,7 +148,7 @@ public class UcmSessionFactoryTest extends BaseTest {
 	public void GET_SEARCH_RESULTS() throws Exception {
 		final int pageSize = 20;
 		final AtomicInteger currentRow = new AtomicInteger(1);
-		final String query = "<not>(dID <matches> `0`)";
+		final String query = "<not>(dID <matches> `xyz`)";
 		while (true) {
 			ServiceResponse rsp = callService("GET_SEARCH_RESULTS", new RequestPreparation() {
 				@Override

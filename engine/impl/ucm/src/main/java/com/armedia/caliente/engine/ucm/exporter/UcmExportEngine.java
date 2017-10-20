@@ -40,6 +40,16 @@ import com.armedia.commons.utilities.Tools;
 public class UcmExportEngine extends
 	ExportEngine<UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory> {
 
+	private static class ExceptionWrapper extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+		private final UcmFSObject file;
+
+		private ExceptionWrapper(UcmFSObject file, Throwable cause) {
+			super(cause);
+			this.file = file;
+		}
+	}
+
 	public UcmExportEngine() {
 		super(new CmfCrypt());
 	}
@@ -48,38 +58,63 @@ public class UcmExportEngine extends
 	protected void findExportResults(final UcmSession session, CfgTools cfg, UcmExportDelegateFactory factory,
 		final TargetSubmitter submitter) throws Exception {
 		// Get the list of files/folders to be exported.
-		List<String> paths = UcmExportEngine.decodePathList(cfg.getString(UcmSetting.PATHS));
+		List<String> paths = UcmExportEngine.decodePathList(cfg.getString(UcmSetting.SOURCE));
 		if (paths.isEmpty()) { throw new ExportException("No paths given to export - cannot continue"); }
 
 		for (String path : paths) {
-			UcmFSObject object = session.getObject(path);
-			switch (object.getType()) {
-				case FILE:
-					submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
-						object.getURI().toString()));
-					break;
-				case FOLDER:
-					if (object.isShortcut()) {
-						submitter.submit(new ExportTarget(CmfType.FOLDER, object.getUniqueURI().toString(),
-							object.getURI().toString()));
-						break;
-					}
-					UcmFolder folder = UcmFolder.class.cast(object);
-					// Not a shortcut, so we'll recurse into it and submit each and every one of its
-					// contents, but we won't be recursing into shortcuts
-					session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
+			if (!StringUtils.startsWith(path, "/")) {
+				if (StringUtils.isEmpty(path)) {
+					this.log.warn("Empty query found (raw string: [{}]), skipping it", path);
+					continue;
+				}
+				try {
+					session.iterateDocumentSearchResults(path, new ObjectHandler() {
 						@Override
 						public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
 							try {
-								submitter.submit(new ExportTarget(object.getType().cmfType,
-									object.getUniqueURI().toString(), object.getURI().toString()));
-							} catch (ExportException e) {
-								throw new UcmRuntimeException(String.format(
-									"ExportException caught while submitting item [%s] to the workload", objectUri), e);
+								submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
+									object.getURI().toString()));
+							} catch (final ExportException e) {
+								throw new ExceptionWrapper(object, e);
 							}
 						}
 					});
-					break;
+				} catch (ExceptionWrapper e) {
+					throw new ExportException(
+						String.format("Exception caught while handling search result %s", e.file.getUniqueURI()),
+						e.getCause());
+				}
+			} else {
+				UcmFSObject object = session.getObject(path);
+				switch (object.getType()) {
+					case FILE:
+						submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
+							object.getURI().toString()));
+						break;
+					case FOLDER:
+						if (object.isShortcut()) {
+							submitter.submit(new ExportTarget(CmfType.FOLDER, object.getUniqueURI().toString(),
+								object.getURI().toString()));
+							break;
+						}
+						UcmFolder folder = UcmFolder.class.cast(object);
+						// Not a shortcut, so we'll recurse into it and submit each and every one of
+						// its contents, but we won't be recursing into shortcuts
+						session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
+							@Override
+							public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+								try {
+									submitter.submit(new ExportTarget(object.getType().cmfType,
+										object.getUniqueURI().toString(), object.getURI().toString()));
+								} catch (ExportException e) {
+									throw new UcmRuntimeException(String.format(
+										"ExportException caught while submitting item [%s] to the workload", objectUri),
+										e);
+								}
+							}
+						});
+						break;
+				}
 			}
 		}
 	}
