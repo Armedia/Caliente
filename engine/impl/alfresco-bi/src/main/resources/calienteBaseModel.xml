@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<model name="arm:calienteBaseModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<model name="arm:calienteModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0  platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd ">
 	<description>Armedia Caliente Base Object Model</description>
 	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>

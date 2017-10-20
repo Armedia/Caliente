@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<model name="arm:calienteDctmModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<model name="ucm:contentModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0  platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd ">
 	<description>Armedia Caliente Object Model</description>
 	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>
@@ -11,6 +11,9 @@
 
 		<!-- Import Alfresco Content Domain Model Definitions -->
 		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm" />
+
+		<!-- Import CMIS Data Model -->
+    	<import uri="http://www.alfresco.org/model/cmis/1.0/cs01" prefix="cmis" />
 
 		<!-- Import Caliente Domain Model Definitions -->
 		<import uri="http://www.armedia.com/model/armedia/1.0" prefix="arm" />
@@ -39,11 +42,6 @@
 					<multiple>false</multiple>
 				</property>
 				<property name="cmis:name">
-					<type>d:text</type>
-					<mandatory enforced="false">false</mandatory>
-					<multiple>false</multiple>
-				</property>
-				<property name="cmis:parentId">
 					<type>d:text</type>
 					<mandatory enforced="false">false</mandatory>
 					<multiple>false</multiple>
