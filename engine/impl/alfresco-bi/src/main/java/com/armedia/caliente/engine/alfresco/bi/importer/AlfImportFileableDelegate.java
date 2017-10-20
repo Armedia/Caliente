@@ -290,14 +290,18 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		Set<String> srcOnly = new HashSet<>();
-		List<SchemaAttribute> candidates = new ArrayList<>();
 		srcOnly.addAll(srcNames);
 		srcOnly.removeAll(tgtNames);
 		// Now handle the attributes that only exist on the source, but not on the target...here
 		// we need to do some detective work...
 		Set<String> matched = new HashSet<>();
 		final String residualsPrefix = this.factory.getResidualsPrefix();
-		for (final String srcAttName : srcOnly) {
+		nextAtt: for (final String srcAttName : srcOnly) {
+			// Avoid attributes that have been handled specially by the code above
+			if (specialCopies.contains(srcAttName)) {
+				continue;
+			}
+
 			final CmfProperty<CmfValue> srcAtt = this.cmfObject.getAttribute(srcAttName);
 
 			// Let's see if we have a specific mapping
@@ -306,6 +310,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				// We have an explicit mapping!!! Let's apply it!
 				boolean mapped = false;
 				for (String tgt : mappings) {
+					// Here we allow copying one source attribute into many targets
 					SchemaAttribute tgtAtt = targetType.getAttribute(tgt);
 					if (tgtAtt != null) {
 						// The mapping applies!! Let's do it!
@@ -315,53 +320,31 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 
 				if (mapped) {
-					// If this attribute was already handled, move on to the next one
-					continue;
+					// If this attribute was mapped, move on to the next one
+					continue nextAtt;
 				}
 			}
 
-			// Avoid attributes that have been handled specially
-			if (specialCopies.contains(srcAttName)) {
-				continue;
-			}
-
-			// First things first: try to find a target-only attribtue that can be mapped to this
-			// one. We only look at target-only because if it were common, it'd have already been
-			// handled above
+			// Ok so no mapping was found... we'll try to auto-find the attribute using
+			// a name-based approach...
 
 			// Strip the source attribute prefix - try to match strictly based on the tail end
 			final String rawName = srcAttName.replaceAll("^[^:]*:", ":");
-			candidates.clear();
-			for (String tgtAttName : tgtOnly) {
-				if (tgtAttName.endsWith(rawName)) {
-					candidates.add(targetType.getAttribute(tgtAttName));
-				}
-			}
-
 			SchemaAttribute target = null;
-			if (!candidates.isEmpty()) {
-				if (candidates.size() == 1) {
-					// Single candidate found!! Use it!
-					target = candidates.get(0);
-				} else {
-					// Multiple candidates found!! Use the first one that hasn't already been
-					// used...
-					for (SchemaAttribute c : candidates) {
-						if (matched.add(c.name)) {
-							target = c;
-							break;
-						}
+			nextTarget: for (String tgtAttName : tgtOnly) {
+				if (tgtAttName.endsWith(rawName)) {
+					if (matched.add(tgtAttName)) {
+						target = targetType.getAttribute(tgtAttName);
+						break nextTarget;
 					}
 				}
 			}
-			if (target == null) {
-				// No candidate, copy it as a residual?
-				if (residualsPrefix != null) {
-					storeValue(ctx, srcAtt, String.format("%s%s", residualsPrefix, rawName), srcAtt.isRepeating(), p,
-						true);
-				}
-			} else {
+
+			if (target != null) {
 				storeValue(ctx, srcAtt, target, p, true);
+			} else if (residualsPrefix != null) {
+				// No candidate, copy it as a residual...
+				storeValue(ctx, srcAtt, String.format("%s%s", residualsPrefix, rawName), srcAtt.isRepeating(), p, true);
 			}
 		}
 
