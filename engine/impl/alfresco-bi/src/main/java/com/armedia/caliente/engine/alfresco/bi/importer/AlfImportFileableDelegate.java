@@ -624,10 +624,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		AlfImportContext ctx) throws ImportException, CmfStorageException {
 
-		if ("08de75d18002b163".equalsIgnoreCase(this.cmfObject.getId())) {
-			"".hashCode();
-		}
-
 		if (!ctx.getContentStore()
 			.isSupportsFileAccess()) { throw new ImportException("This engine requires filesystem access"); }
 
