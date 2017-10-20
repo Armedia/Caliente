@@ -294,6 +294,15 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 		IDfReference ref = getReferenceFor(object);
 		if (ref != null) {
+			properties.add(new CmfProperty<>(IntermediateProperty.REF_TARGET, DctmDataType.DF_STRING.getStoredType(),
+				false, DfValueFactory.newStringValue(object.getChronicleId().getId())));
+			String refVersion = ref.getBindingLabel();
+			if (StringUtils.equalsIgnoreCase(ISysObject.CURRENT_VERSION_LABEL, refVersion)) {
+				refVersion = "HEAD";
+			}
+			properties.add(new CmfProperty<>(IntermediateProperty.REF_VERSION, DctmDataType.DF_STRING.getStoredType(),
+				false, DfValueFactory.newStringValue(refVersion)));
+
 			properties.add(new CmfProperty<>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING.getStoredType(),
 				false, DfValueFactory.newStringValue(ref.getBindingCondition())));
 			properties.add(new CmfProperty<>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING.getStoredType(),

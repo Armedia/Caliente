@@ -53,6 +53,8 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	DEFAULT_ASPECTS(CmfDataType.STRING),
 	DEFAULT_STORAGE(CmfDataType.STRING),
 	IS_REFERENCE(CmfDataType.BOOLEAN),
+	REF_TARGET(CmfDataType.STRING),
+	REF_VERSION(CmfDataType.STRING),
 	//
 	;
 

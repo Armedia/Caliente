@@ -16,6 +16,8 @@ import com.armedia.caliente.engine.ucm.model.UcmException;
 import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
+import com.armedia.caliente.engine.ucm.model.UcmObjectNotFoundException;
+import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -129,6 +131,25 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		p = new CmfProperty<>(IntermediateProperty.IS_REFERENCE, CmfDataType.BOOLEAN,
 			new CmfValue(object.isShortcut()));
 		properties.add(p);
+		if (object.isShortcut()) {
+			String targetGuid = object.getTargetGUID();
+			UcmFSObject target = null;
+			try {
+				if (getType() == CmfType.DOCUMENT) {
+					target = ctx.getSession().getFolderByGUID(targetGuid);
+				} else {
+					target = ctx.getSession().getFileByGUID(targetGuid);
+				}
+			} catch (UcmObjectNotFoundException | UcmServiceException e) {
+				throw new ExportException(
+					String.format("Failed to locate the referenced %s with GUID %s", getType().name(), targetGuid), e);
+			}
+			p = new CmfProperty<>(IntermediateProperty.REF_TARGET, CmfDataType.STRING,
+				new CmfValue(target.getURI().toString()));
+			properties.add(p);
+			p = new CmfProperty<>(IntermediateProperty.REF_VERSION, CmfDataType.STRING, new CmfValue("HEAD"));
+			properties.add(p);
+		}
 
 		URI parentUri = object.getParentURI();
 		p = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
