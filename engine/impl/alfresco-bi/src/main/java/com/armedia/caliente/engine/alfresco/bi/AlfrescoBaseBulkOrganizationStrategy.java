@@ -3,6 +3,8 @@ package com.armedia.caliente.engine.alfresco.bi;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
@@ -38,6 +40,10 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 			pathProp = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
 		}
 		if (pathProp == null) { return super.calculateLocation(translator, object, info); }
+
+		if (!pathProp.hasValues() || StringUtils.isEmpty(Tools.toString(pathProp.getValue()))) {
+			// TODO: What shall we do about this "unfiled" object?
+		}
 
 		final boolean primaryContent = (info.isDefaultRendition() && (info.getRenditionPage() == 0));
 
