@@ -296,7 +296,30 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		// Now handle the attributes that only exist on the source, but not on the target...here
 		// we need to do some guesswork...
 		Set<String> matched = new HashSet<>();
+		final String residualsPrefix = this.factory.getResidualsPrefix();
 		for (final String srcAttName : srcOnly) {
+			final CmfProperty<CmfValue> srcAtt = this.cmfObject.getAttribute(srcAttName);
+
+			// Let's see if we have a specific mapping
+			Collection<String> mappings = this.factory.getMappedAttributes(srcAttName);
+			if (mappings != null) {
+				// We have an explicit mapping!!! Let's apply it!
+				boolean mapped = false;
+				for (String tgt : mappings) {
+					SchemaAttribute tgtAtt = targetType.getAttribute(tgt);
+					if (tgtAtt != null) {
+						// The mapping applies!! Let's do it!
+						storeValue(ctx, srcAtt, tgtAtt, p, true);
+						mapped = true;
+					}
+				}
+
+				if (mapped) {
+					// If this attribute was already handled, move on to the next one
+					continue;
+				}
+			}
+
 			// Avoid attributes that have been handled specially
 			if (specialCopies.contains(srcAttName)) {
 				continue;
@@ -315,7 +338,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 			}
 
-			final CmfProperty<CmfValue> srcAtt = this.cmfObject.getAttribute(srcAttName);
 			SchemaAttribute target = null;
 			if (!candidates.isEmpty()) {
 				if (candidates.size() == 1) {
@@ -334,8 +356,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 			if (target == null) {
 				// No candidate, copy it as a residual?
-				// storeValue(ctx, srcAtt, String.format("armres%s", rawName), srcAtt.isRepeating(),
-				// p, true);
+				if (residualsPrefix != null) {
+					storeValue(ctx, srcAtt, String.format("%s%s", residualsPrefix, rawName), srcAtt.isRepeating(), p,
+						true);
+				}
 			} else {
 				storeValue(ctx, srcAtt, target, p, true);
 			}

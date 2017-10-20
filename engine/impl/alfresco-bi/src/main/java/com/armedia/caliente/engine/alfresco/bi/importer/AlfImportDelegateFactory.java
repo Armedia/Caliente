@@ -9,13 +9,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,7 +55,6 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.MappingTools;
-import com.armedia.caliente.engine.tools.MappingTools.MappingValidator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
@@ -165,7 +168,8 @@ public class AlfImportDelegateFactory
 	private final Properties userLoginMap = new Properties();
 	private final Properties groupMap = new Properties();
 	private final Properties roleMap = new Properties();
-	private final Properties attributeMap = new Properties();
+	private final Map<String, Set<String>> attributeMap;
+	private final String residualsPrefix;
 
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
@@ -233,19 +237,42 @@ public class AlfImportDelegateFactory
 
 		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<>(m));
 
-		MappingTools.loadMap(this.log, configuration, AlfSetting.USER_MAP, this.userMap);
-		MappingTools.loadMap(this.log, configuration, AlfSetting.GROUP_MAP, this.groupMap);
-		MappingTools.loadMap(this.log, configuration, AlfSetting.ROLE_MAP, this.roleMap);
-		MappingTools.loadMap(this.log, configuration, AlfSetting.ATTRIBUTE_MAP, this.attributeMap,
-			new MappingValidator() {
-				private final Set<String> sources = new HashSet<>();
+		if (!MappingTools.loadMap(this.log, configuration, AlfSetting.USER_MAP, this.userMap)) {
+			this.userMap.clear();
+		}
+		if (!MappingTools.loadMap(this.log, configuration, AlfSetting.GROUP_MAP, this.groupMap)) {
+			this.groupMap.clear();
+		}
+		if (!MappingTools.loadMap(this.log, configuration, AlfSetting.ROLE_MAP, this.roleMap)) {
+			this.roleMap.clear();
+		}
 
-				@Override
-				public void validate(String key, String value) throws Exception {
-					if (!this.sources
-						.add(key)) { throw new Exception("Source attribute [%s] is mapped from more than once"); }
+		Properties p = new Properties();
+		if (MappingTools.loadMap(this.log, configuration, AlfSetting.ATTRIBUTE_MAP, p)) {
+			// Freeze the parsed mappings
+			final Map<String, Set<String>> attributeMap = new HashMap<>();
+			Set<String> mappedTargets = new HashSet<>();
+			for (String src : p.stringPropertyNames()) {
+				String targetStr = p.getProperty(src);
+				Set<String> targets = new TreeSet<>();
+				for (String target : Tools.splitCSVEscaped(targetStr)) {
+					target = StringUtils.strip(target);
+					if (!StringUtils.isEmpty(target) && mappedTargets.add(target)) {
+						targets.add(target);
+					}
 				}
-			});
+				attributeMap.put(src, new LinkedHashSet<>(targets));
+			}
+			this.attributeMap = Tools.freezeMap(attributeMap);
+		} else {
+			this.attributeMap = Collections.emptyMap();
+		}
+		String pfx = configuration.getString(AlfSetting.RESIDUALS_PREFIX);
+		pfx = StringUtils.strip(pfx);
+		if (StringUtils.isEmpty(pfx)) {
+			pfx = null;
+		}
+		this.residualsPrefix = pfx;
 	}
 
 	protected AlfrescoSchema getSchema() {
@@ -700,6 +727,14 @@ public class AlfImportDelegateFactory
 	protected String mapRole(String role) {
 		if (role == null) { return null; }
 		return Tools.coalesce(this.roleMap.getProperty(role), role);
+	}
+
+	protected Collection<String> getMappedAttributes(String sourceName) {
+		return this.attributeMap.get(sourceName);
+	}
+
+	protected String getResidualsPrefix() {
+		return this.residualsPrefix;
 	}
 
 	@Override
