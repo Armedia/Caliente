@@ -164,7 +164,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return type;
 	}
 
-	protected final void storeValue(AlfImportContext ctx, CmfProperty<CmfValue> srcAtt, SchemaAttribute tgtAtt,
+	protected final void storeValue(AlfImportContext ctx, CmfProperty<CmfValue> srcAtt, String name, boolean multiple,
 		Properties p, boolean concatenateFallback) throws ImportException {
 		final String value;
 		// If the source attribute is repeating, but the target isn't, we'll concatenate
@@ -182,7 +182,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 		try {
 			if (srcAtt.isRepeating()) {
-				if (tgtAtt.multiple || concatenateFallback) {
+				if (multiple || concatenateFallback) {
 					// Concatenate using the separator
 					StringBuilder sb = new StringBuilder();
 					char separator = ',';
@@ -212,8 +212,13 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		if (!StringUtils.isEmpty(value)) {
-			p.setProperty(tgtAtt.name, value);
+			p.setProperty(name, value);
 		}
+	}
+
+	protected final void storeValue(AlfImportContext ctx, CmfProperty<CmfValue> srcAtt, SchemaAttribute tgtAtt,
+		Properties p, boolean concatenateFallback) throws ImportException {
+		storeValue(ctx, srcAtt, tgtAtt.name, tgtAtt.multiple, p, concatenateFallback);
 	}
 
 	protected abstract boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException;
@@ -266,6 +271,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 		// Now, do the mappings as copies of what has already been copied over, except when the
 		// source attribute is repeating.
+		Set<String> specialCopies = new HashSet<>();
 		for (final String specialName : mapper.getSpecialCopies()) {
 			// First get the attribute the special copy must go to
 			final SchemaAttribute specialAtt = targetType.getAttribute(specialName);
@@ -274,12 +280,65 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 
 			String srcName = mapper.getSpecialCopySourceAttribute(specialName);
+			specialCopies.add(srcName);
 			CmfAttribute<CmfValue> srcAtt = this.cmfObject.getAttribute(srcName);
 			if ((srcAtt == null) || !srcAtt.hasValues()) {
 				continue;
 			}
 
 			storeValue(ctx, srcAtt, specialAtt, p, false);
+		}
+
+		Set<String> srcOnly = new HashSet<>();
+		List<SchemaAttribute> candidates = new ArrayList<>();
+		srcOnly.addAll(srcNames);
+		srcOnly.removeAll(tgtNames);
+		// Now handle the attributes that only exist on the source, but not on the target...here
+		// we need to do some guesswork...
+		Set<String> matched = new HashSet<>();
+		for (final String srcAttName : srcOnly) {
+			// Avoid attributes that have been handled specially
+			if (specialCopies.contains(srcAttName)) {
+				continue;
+			}
+
+			// First things first: try to find a target-only attribtue that can be mapped to this
+			// one. We only look at target-only because if it were common, it'd have already been
+			// handled above
+
+			// Strip the source attribute prefix - try to match strictly based on the tail end
+			final String rawName = srcAttName.replaceAll("^[^:]*:", ":");
+			candidates.clear();
+			for (String tgtAttName : tgtOnly) {
+				if (tgtAttName.endsWith(rawName)) {
+					candidates.add(targetType.getAttribute(tgtAttName));
+				}
+			}
+
+			final CmfProperty<CmfValue> srcAtt = this.cmfObject.getAttribute(srcAttName);
+			SchemaAttribute target = null;
+			if (!candidates.isEmpty()) {
+				if (candidates.size() == 1) {
+					// Single candidate found!! Use it!
+					target = candidates.get(0);
+				} else {
+					// Multiple candidates found!! Use the first one that hasn't already been
+					// used...
+					for (SchemaAttribute c : candidates) {
+						if (matched.add(c.name)) {
+							target = c;
+							break;
+						}
+					}
+				}
+			}
+			if (target == null) {
+				// No candidate, copy it as a residual?
+				// storeValue(ctx, srcAtt, String.format("armres%s", rawName), srcAtt.isRepeating(),
+				// p, true);
+			} else {
+				storeValue(ctx, srcAtt, target, p, true);
+			}
 		}
 
 		// Now handle the special properties
@@ -564,6 +623,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		AlfImportContext ctx) throws ImportException, CmfStorageException {
+
+		if ("08de75d18002b163".equalsIgnoreCase(this.cmfObject.getId())) {
+			"".hashCode();
+		}
 
 		if (!ctx.getContentStore()
 			.isSupportsFileAccess()) { throw new ImportException("This engine requires filesystem access"); }
