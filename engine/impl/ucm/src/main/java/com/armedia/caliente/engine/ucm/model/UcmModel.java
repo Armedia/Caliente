@@ -1241,34 +1241,16 @@ public class UcmModel {
 									throw e;
 								}
 
-								// First things first!! Stash the retrieved object...
-								DataResultSet rs = responseData.getResultSet("FileInfo");
-								if (rs == null) { throw new UcmServiceException(String
-									.format("Revision ID [%s] was found, but returned incorrect results?!?", id)); }
-
-								Map<String, String> baseObj = new HashMap<>();
-								baseObj.putAll(rs.getRows().get(0));
-								// Capture the parent path...from DOC_INFO, it's stored in
-								// LocalData.fParentPath
-								baseObj.put(UcmAtt.cmfParentPath.name(),
-									responseData.getLocalData().get("fParentPath"));
-
-								DataResultSet DOC_INFO = responseData.getResultSet("DOC_INFO");
-								DataObject docInfo = DOC_INFO.getRows().get(0);
-								baseObj.putAll(docInfo);
-								history.set(responseData.getResultSet("REVISION_HISTORY"));
-
+								UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, null);
 								Map<String, UcmRenditionInfo> renditions = new TreeMap<>();
-								rs = responseData.getResultSet("Renditions");
+								DataResultSet rs = responseData.getResultSet("Renditions");
 								if (rs == null) { throw new UcmServiceException(String.format(
 									"Revision ID [%s] was found, but no rendition information was returned??!", id)); }
 								for (DataObject o : rs.getRows()) {
 									UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
 									renditions.put(r.getType().toUpperCase(), r);
 								}
-
-								UcmAttributes baseData = new UcmAttributes(baseObj, DOC_INFO.getFields());
-								data.set(baseData);
+								data.set(attributes);
 								return renditions;
 							} catch (IdcClientException | UcmException e) {
 								throw new ConcurrentException(e);
