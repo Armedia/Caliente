@@ -62,7 +62,7 @@ public class UcmModel {
 	static final URI ROOT_URI = UcmModel.newFolderURI("FLD_ROOT");
 
 	// UniqueURI:
-	// * FILE -> file:${fFileGUID}#${dID}
+	// * FILE -> file:${dDocName}#${dID}
 	// * FOLDER -> folder:${fFolderGUID}
 
 	// Unique URI -> UcmAttributes
@@ -187,13 +187,15 @@ public class UcmModel {
 	}
 
 	protected static final URI getURI(UcmAttributes data) {
-		final boolean file = data.hasAttribute(UcmAtt.fFileGUID) || data.hasAttribute(UcmAtt.dDocName);
-		return (file ? UcmModel.newFileURI(data.getString(UcmAtt.fFileGUID))
+		final boolean file = data.hasAttribute(UcmAtt.dDocName);
+		return (file ? UcmModel.newFileURI(data.getString(UcmAtt.dDocName))
 			: UcmModel.newFolderURI(data.getString(UcmAtt.fFolderGUID)));
 	}
 
 	protected static final UcmUniqueURI getUniqueURI(UcmAttributes data) {
+		if (data == null) { return null; }
 		URI uri = UcmModel.getURI(data);
+		if (uri == null) { return null; }
 		if (UcmModel.isFileURI(uri)) {
 			final String dID = data.getString(UcmAtt.dID);
 			try {
@@ -211,10 +213,12 @@ public class UcmModel {
 	}
 
 	protected static final URI newFileURI(String ssp) {
+		if (StringUtils.isEmpty(ssp)) { return null; }
 		return UcmModel.newURI(UcmModel.FILE_SCHEME, ssp, null);
 	}
 
 	protected static final URI newFolderURI(String ssp) {
+		if (StringUtils.isEmpty(ssp)) { return null; }
 		return UcmModel.newURI(UcmModel.FOLDER_SCHEME, ssp, null);
 	}
 
@@ -274,6 +278,55 @@ public class UcmModel {
 	public static final boolean isShortcut(UcmAttributes att) {
 		Objects.requireNonNull(att, "Must provide a non-null attribute set to check");
 		return !StringUtils.isEmpty(att.getString(UcmAtt.fTargetGUID));
+	}
+
+	private UcmAttributes buildAttributesFromDocInfo(DataBinder responseData, AtomicReference<DataResultSet> history,
+		AtomicReference<DataResultSet> renditions) {
+		// First things first!! Stash the retrieved object...
+		DataResultSet rs = responseData.getResultSet("FileInfo");
+		if (rs == null) { return null; }
+
+		Map<String, String> baseObj = new HashMap<>();
+		baseObj.putAll(rs.getRows().get(0));
+
+		String parentPath = responseData.getLocalData().get("fParentPath");
+		if (!StringUtils.isEmpty(parentPath)) {
+			// Capture the parent path...from DOC_INFO, it's stored in LocalData.fParentPath
+			baseObj.put(UcmAtt.cmfParentPath.name(), responseData.getLocalData().get("fParentPath"));
+		}
+
+		DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
+		baseObj.putAll(docInfo);
+
+		if (history != null) {
+			history.set(responseData.getResultSet("REVISION_HISTORY"));
+		}
+		if (renditions != null) {
+			renditions.set(responseData.getResultSet("Renditions"));
+		}
+
+		UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
+		return baseData;
+	}
+
+	private UcmAttributes buildAttributesFromFldInfo(DataBinder responseData) {
+		boolean file = true;
+		DataResultSet rs = responseData.getResultSet("FileInfo");
+		if (rs == null) {
+			file = false;
+			rs = responseData.getResultSet("FolderInfo");
+		}
+		if (rs == null) { return null; }
+
+		Map<String, String> baseObj = new HashMap<>();
+		baseObj.putAll(rs.getRows().get(0));
+		// Capture the parent path - it's either LocalData.filePath or LocalData.folderPath...but it
+		// also contains the filename so we need to dirname it
+		String parentPath = responseData.getLocal(String.format("%sPath", file ? "file" : "folder"));
+		if (!StringUtils.isEmpty(parentPath)) {
+			baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
+		}
+		return new UcmAttributes(baseObj, rs.getFields());
 	}
 
 	public UcmFSObject getObject(UcmSession s, String path) throws UcmServiceException, UcmObjectNotFoundException {
@@ -353,34 +406,16 @@ public class UcmModel {
 								throw e;
 							}
 
-							// First things first!! Stash the retrieved object...
-							boolean file = true;
-							DataResultSet rs = responseData.getResultSet("FileInfo");
-							if (rs == null) {
-								file = false;
-								rs = responseData.getResultSet("FolderInfo");
-							}
-							if (rs == null) { throw new UcmServiceException(String.format(
+							final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
+							if (attributes == null) { throw new UcmServiceException(String.format(
 								"Path [%s] was found, but was neither a file nor a folder?!?", sanitizedPath)); }
-							Map<String, String> baseObj = new HashMap<>();
-							baseObj.putAll(rs.getRows().get(0));
-							// Capture the parent path - it's either LocalData.filePath or
-							// LocalData.folderPath...but it also contains the filename so we need
-							// to dirname it
-							String parentPath = responseData
-								.getLocal(String.format("%sPath", file ? "file" : "folder"));
-							baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
-							data.set(new UcmAttributes(baseObj, rs.getFields()));
+							data.set(attributes);
 
-							String guid = data.get().getString(UcmAtt.fFileGUID);
-							if (guid != null) { return UcmModel.newFileURI(guid); }
-
-							guid = data.get().getString(UcmAtt.fFolderGUID);
-							if (guid != null) { return UcmModel.newFolderURI(guid); }
-
-							throw new UcmServiceException(String.format(
+							URI uri = UcmModel.getURI(attributes);
+							if (uri == null) { throw new UcmServiceException(String.format(
 								"Path [%s] was found, but was neither a file nor a folder (no identifier attributes)?!?",
-								sanitizedPath));
+								sanitizedPath)); }
+							return uri;
 						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
@@ -406,6 +441,7 @@ public class UcmModel {
 		throws UcmServiceException, UcmObjectNotFoundException {
 		URI uri = this.uriByGUID.get(guid);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
+		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		if (uri == null) {
 			try {
 				uri = this.uriByPaths.createIfAbsent(guid, new ConcurrentInitializer<URI>() {
@@ -415,23 +451,24 @@ public class UcmModel {
 							ServiceResponse response = null;
 							DataBinder responseData = null;
 							final UcmAtt identifierAtt;
+							final String serviceName;
 							switch (type) {
 								case FILE:
-									identifierAtt = UcmAtt.fFileGUID;
+									identifierAtt = UcmAtt.dDocName;
+									serviceName = "DOC_INFO_BY_NAME";
 									break;
 								case FOLDER:
 									identifierAtt = UcmAtt.fFolderGUID;
+									serviceName = "FLD_INFO";
 									break;
 
 								default:
 									throw new UcmServiceException(
 										String.format("Unsupported object type %s", type.name()));
 							}
-							final String resultSet = String.format("%sInfo",
-								StringUtils.capitalize(type.name().toLowerCase()));
 
 							try {
-								response = s.callService("FLD_INFO", new RequestPreparation() {
+								response = s.callService(serviceName, new RequestPreparation() {
 									@Override
 									public void prepareRequest(DataBinder binder) {
 										binder.putLocal(identifierAtt.name(), guid);
@@ -445,22 +482,18 @@ public class UcmModel {
 								throw e;
 							}
 
-							// First things first!! Stash the retrieved object...
-							DataResultSet rs = responseData.getResultSet(resultSet);
-							if (rs == null) {
+							final UcmAttributes attributes;
+							if (type == UcmObjectType.FILE) {
+								attributes = buildAttributesFromDocInfo(responseData, history, null);
+							} else {
+								attributes = buildAttributesFromFldInfo(responseData);
+							}
+							if (attributes == null) {
 								"".hashCode();
 								throw new UcmServiceException(String
 									.format("%s GUID [%s] was found, didn't contain any data?!?", type.name(), guid));
 							}
-							Map<String, String> baseObj = new HashMap<>();
-							baseObj.putAll(rs.getRows().get(0));
-							// Capture the parent path - it's either LocalData.filePath or
-							// LocalData.folderPath...but it also contains the filename so we need
-							// to dirname it
-							String parentPath = responseData
-								.getLocal(String.format("%sPath", type.name().toLowerCase()));
-							baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
-							data.set(new UcmAttributes(baseObj, rs.getFields()));
+							data.set(attributes);
 
 							String uriIdentifier = data.get().getString(identifierAtt);
 							if (uriIdentifier != null) { return UcmModel.getURI(data.get()); }
@@ -484,6 +517,15 @@ public class UcmModel {
 		// There's an object...so stash it
 		cacheDataObject(data.get());
 
+		if (history.get() != null) {
+			DataResultSet rs = history.get();
+			LinkedList<UcmRevision> list = new LinkedList<>();
+			for (DataObject o : rs.getRows()) {
+				list.addFirst(new UcmRevision(uri, o, rs.getFields()));
+			}
+			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
+		}
+
 		if (Tools.equals(UcmModel.NULL_URI, uri)) { throw new UcmObjectNotFoundException(
 			String.format("No %s found with GUID [%s]", type.name(), guid)); }
 		return uri;
@@ -500,7 +542,7 @@ public class UcmModel {
 
 		final boolean file;
 		if (UcmModel.isFileURI(uri)) {
-			// The SSP is the fFileGUID
+			// The SSP is the dDocName
 			file = true;
 		} else if (UcmModel.isFolderURI(uri)) {
 			// The SSP is the fFolderGUID
@@ -536,19 +578,11 @@ public class UcmModel {
 								throw e;
 							}
 
-							// First things first!! Stash the retrieved object...
-							DataResultSet rs = responseData.getResultSet(String.format("%sInfo", prefix));
-							if (rs == null) { throw new UcmServiceException(
+							UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
+							if (attributes == null) { throw new UcmServiceException(
 								String.format("URI [%s] was found, but returned incorrect results?!?", uri)); }
-
-							Map<String, String> baseObj = new HashMap<>();
-							baseObj.putAll(rs.getRows().get(0));
-							String parentPath = responseData.getLocal(String.format("%sPath", prefix.toLowerCase()));
-							baseObj.put(UcmAtt.cmfParentPath.name(), FileNameTools.dirname(parentPath, '/'));
-
-							UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
-							data.set(baseData);
-							return UcmModel.getUniqueURI(baseData);
+							data.set(attributes);
+							return UcmModel.getUniqueURI(attributes);
 						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
@@ -585,32 +619,6 @@ public class UcmModel {
 	public UcmFile getFileRevision(UcmSession s, UcmFile file)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
 		return new UcmFile(this, file.getURI(), getFileRevision(s, file.getRevisionId(), true));
-	}
-
-	private UcmAttributes buildAttributesFromDocInfo(DataBinder responseData, AtomicReference<DataResultSet> history,
-		AtomicReference<DataResultSet> renditions) {
-		// First things first!! Stash the retrieved object...
-		DataResultSet rs = responseData.getResultSet("FileInfo");
-		if (rs == null) { return null; }
-
-		Map<String, String> baseObj = new HashMap<>();
-		baseObj.putAll(rs.getRows().get(0));
-		// Capture the parent path...from DOC_INFO, it's stored in
-		// LocalData.fParentPath
-		baseObj.put(UcmAtt.cmfParentPath.name(), responseData.getLocalData().get("fParentPath"));
-
-		DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
-		baseObj.putAll(docInfo);
-
-		if (history != null) {
-			history.set(responseData.getResultSet("REVISION_HISTORY"));
-		}
-		if (renditions != null) {
-			renditions.set(responseData.getResultSet("Renditions"));
-		}
-
-		UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
-		return baseData;
 	}
 
 	protected UcmAttributes getFileRevision(final UcmSession s, final String id, final boolean refreshRenditions)
@@ -767,8 +775,8 @@ public class UcmModel {
 						if (dbMode) {
 							binder.putLocal("SearchEngineName", "database");
 						}
-						binder.putLocal("ResultCount", String.valueOf(actualPageSize));
 						binder.putLocal("StartRow", String.valueOf(currentRow.get()));
+						binder.putLocal("ResultCount", String.valueOf(actualPageSize));
 						binder.putLocal("isAddFolderMetadata", "1");
 						binder.putLocal("SortField", "dID");
 						binder.putLocal("SortOrder", "Asc");
@@ -781,23 +789,18 @@ public class UcmModel {
 				if ((rows == null) || rows.isEmpty()) { return currentRow.get(); }
 				for (DataObject o : results.getRows()) {
 					UcmAttributes att = new UcmAttributes(o, results.getFields());
-					String guid = att.getString(UcmAtt.fFileGUID);
+					String guid = att.getString(UcmAtt.dDocName);
 					try {
-						if (guid == null) {
-							// This object has no GUID that we can use to retrieve it... now what da
-							// fuk do we do?
-						} else {
-							final UcmFile file;
-							try {
-								file = getFileByGUID(s, guid);
-							} catch (UcmFileNotFoundException e) {
-								// The result was returned, but not accessible? KABOOM!
-								throw new UcmServiceException(String.format(
-									"The file with fFileGUID [%s] was returned in the result set, but was not retrieved when searched for explicitly",
-									guid), e);
-							}
-							handler.handleObject(s, currentRow.get(), file.getURI(), file);
+						final UcmFile file;
+						try {
+							file = getFileByGUID(s, guid);
+						} catch (UcmFileNotFoundException e) {
+							// The result was returned, but not accessible? KABOOM!
+							throw new UcmServiceException(String.format(
+								"The file with dDocName [%s] was returned in the result set, but was not retrieved when searched for explicitly",
+								guid), e);
 						}
+						handler.handleObject(s, currentRow.get(), file.getURI(), file);
 					} finally {
 						currentRow.incrementAndGet();
 					}
