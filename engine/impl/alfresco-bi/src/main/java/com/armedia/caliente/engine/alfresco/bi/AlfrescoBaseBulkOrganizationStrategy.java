@@ -3,8 +3,6 @@ package com.armedia.caliente.engine.alfresco.bi;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
@@ -15,7 +13,6 @@ import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValueCodec;
-import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganizationStrategy {
@@ -35,15 +32,12 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 	@Override
 	protected <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
-		CmfProperty<T> pathProp = object.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
-		if (pathProp == null) {
-			pathProp = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-		}
-		if (pathProp == null) { return super.calculateLocation(translator, object, info); }
 
-		if (!pathProp.hasValues() || StringUtils.isEmpty(Tools.toString(pathProp.getValue()))) {
-			// TODO: What shall we do about this "unfiled" object?
-		}
+		int folderLevels = 3;
+		// A maximum of 7 levels...
+		folderLevels = Tools.ensureBetween(3, folderLevels, 7);
+		final String format = String.format("%%0%dx", (folderLevels + 1) * 2);
+		String fullObjectNumber = String.format(format, object.getNumber() & 0xFFFFFFFF);
 
 		final boolean primaryContent = (info.isDefaultRendition() && (info.getRenditionPage() == 0));
 
@@ -51,10 +45,9 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		// Make sure the contents all land in the bulk-import root location, so it's easy to point
 		// the bulk importer at that directory and not import any unwanted crap
 		paths.add(AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
-		if (pathProp.hasValues()) {
-			for (String p : FileNameTools.tokenize(pathProp.getValue().toString(), '/')) {
-				paths.add(p);
-			}
+		for (int i = 0; i < folderLevels; i++) {
+			final int start = (i * 2);
+			paths.add(fullObjectNumber.substring(start, start + 2));
 		}
 
 		CmfProperty<T> vdocProp = object.getProperty(IntermediateProperty.VDOC_HISTORY);
@@ -69,12 +62,12 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		String appendix = calculateVersionAppendix(translator, object, info, primaryContent, vdoc);
 
 		if (vdoc) {
-			paths.add(object.getHistoryId());
+			paths.add(fullObjectNumber);
 			paths.add(appendix);
 			appendix = "";
 		}
 
-		String baseName = object.getId();
+		String baseName = fullObjectNumber;
 		if (!primaryContent) {
 			// Ok...so this isn't the default rendition, so we have to add the object ID
 			// at the end of the path
@@ -85,7 +78,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		switch (object.getType()) {
 			case DOCUMENT:
 				if (primaryContent) {
-					baseName = object.getHistoryId();
+					appendix = "";
 				} else {
 					baseName = AlfrescoBaseBulkOrganizationStrategy.generateRenditionName(object, info);
 				}
