@@ -9,11 +9,11 @@ import com.armedia.caliente.engine.ucm.UcmSession;
 public class UcmFile extends UcmFSObject {
 
 	UcmFile(UcmModel model, URI uri, UcmAttributes data) {
-		super(model, uri, data, UcmAtt.fFileName);
+		super(model, uri, data, UcmAtt.dOriginalName);
 	}
 
 	public String getPublishedFileName() {
-		return getString(UcmAtt.fPublishedFilename);
+		return getString(UcmAtt.dDocTitle);
 	}
 
 	public int getRevisionRank() {

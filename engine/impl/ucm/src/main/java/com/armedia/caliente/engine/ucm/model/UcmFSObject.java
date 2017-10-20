@@ -32,7 +32,11 @@ public abstract class UcmFSObject extends UcmModelObject {
 		// the caches in the model the opportunity to expire objects appropriately regardless
 		// of references held outside the model
 		this.uniqueUri = UcmModel.getUniqueURI(data);
-		this.parentUri = new UcmUniqueURI(UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID)));
+		URI parentUri = UcmModel.NULL_FOLDER_URI;
+		if (data.hasAttribute(UcmAtt.fParentGUID)) {
+			parentUri = UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID));
+		}
+		this.parentUri = new UcmUniqueURI(parentUri);
 		final Map<String, CmfValue> mutableData = data.getMutableData();
 		mutableData.put(UcmAtt.cmfUniqueURI.name(), new CmfValue(this.uniqueUri.toString()));
 		mutableData.put(UcmAtt.cmfParentURI.name(), new CmfValue(this.parentUri.toString()));
@@ -41,19 +45,21 @@ public abstract class UcmFSObject extends UcmModelObject {
 		this.nameAtt = nameAtt;
 
 		this.parentPath = this.attributes.getString(UcmAtt.cmfParentPath);
-		if (this.parentPath == null) {
-			"".hashCode();
-		}
-		String name = this.attributes.getString(nameAtt);
-		if (this.parentPath.equals("/")) {
-			if (name.equals("/")) {
-				name = "";
+		if (this.parentPath != null) {
+			String name = this.attributes.getString(nameAtt);
+			if (this.parentPath.equals("/")) {
+				if (name.equals("/")) {
+					name = "";
+				}
+				this.path = String.format("/%s", name);
+			} else {
+				this.path = String.format("%s/%s", this.parentPath, name);
 			}
-			this.path = String.format("/%s", name);
+			mutableData.put(UcmAtt.cmfPath.name(), new CmfValue(this.path));
 		} else {
-			this.path = String.format("%s/%s", this.parentPath, name);
+			this.path = String.format("{unfiled[#%08x]:%s}", this.attributes.getInteger(UcmAtt.dID),
+				this.attributes.getString(UcmAtt.dOriginalName));
 		}
-		mutableData.put(UcmAtt.cmfPath.name(), new CmfValue(this.path));
 
 		this.ucmObjectType = (UcmModel.isFileURI(uri) ? UcmObjectType.FILE : UcmObjectType.FOLDER);
 	}

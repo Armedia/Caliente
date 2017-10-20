@@ -54,7 +54,7 @@ public class UcmModel {
 	private static final String NULL_SCHEME = "null";
 
 	private static final URI NULL_URI = UcmModel.newURI(UcmModel.NULL_SCHEME, "null");
-	private static final URI NULL_FOLDER_URI = UcmModel.newFolderURI("idcnull");
+	static final URI NULL_FOLDER_URI = UcmModel.newFolderURI("idcnull");
 
 	static final URI ROOT_URI = UcmModel.newFolderURI("FLD_ROOT");
 
@@ -279,12 +279,12 @@ public class UcmModel {
 
 	private UcmAttributes buildAttributesFromDocInfo(DataBinder responseData, AtomicReference<DataResultSet> history,
 		AtomicReference<DataResultSet> renditions) {
-		// First things first!! Stash the retrieved object...
-		DataResultSet rs = responseData.getResultSet("FileInfo");
-		if (rs == null) { return null; }
-
 		Map<String, String> baseObj = new HashMap<>();
-		baseObj.putAll(rs.getRows().get(0));
+		// First things first!! Stash the retrieved object...
+		DataResultSet fileInfo = responseData.getResultSet("FileInfo");
+		if (fileInfo != null) {
+			baseObj.putAll(fileInfo.getRows().get(0));
+		}
 
 		String parentPath = responseData.getLocalData().get("fParentPath");
 		if (!StringUtils.isEmpty(parentPath)) {
@@ -292,8 +292,8 @@ public class UcmModel {
 			baseObj.put(UcmAtt.cmfParentPath.name(), responseData.getLocalData().get("fParentPath"));
 		}
 
-		DataObject docInfo = responseData.getResultSet("DOC_INFO").getRows().get(0);
-		baseObj.putAll(docInfo);
+		DataResultSet docInfo = responseData.getResultSet("DOC_INFO");
+		baseObj.putAll(docInfo.getRows().get(0));
 
 		if (history != null) {
 			history.set(responseData.getResultSet("REVISION_HISTORY"));
@@ -302,7 +302,8 @@ public class UcmModel {
 			renditions.set(responseData.getResultSet("Renditions"));
 		}
 
-		UcmAttributes baseData = new UcmAttributes(baseObj, rs.getFields());
+		UcmAttributes baseData = new UcmAttributes(baseObj, docInfo.getFields(),
+			(fileInfo != null ? fileInfo.getFields() : null));
 		return baseData;
 	}
 
@@ -485,11 +486,8 @@ public class UcmModel {
 							} else {
 								attributes = buildAttributesFromFldInfo(responseData);
 							}
-							if (attributes == null) {
-								"".hashCode();
-								throw new UcmServiceException(String
-									.format("%s GUID [%s] was found, didn't contain any data?!?", type.name(), guid));
-							}
+							if (attributes == null) { throw new UcmServiceException(String
+								.format("%s GUID [%s] was found, didn't contain any data?!?", type.name(), guid)); }
 							data.set(attributes);
 
 							String uriIdentifier = data.get().getString(identifierAtt);
@@ -533,8 +531,7 @@ public class UcmModel {
 		Objects.requireNonNull(uri, "Must provide a URI to retrieve");
 		if (UcmModel.NULL_FOLDER_URI.equals(uri)) {
 			// Take a quick shortcut to avoid unnecessary calls
-			throw new UcmObjectNotFoundException(
-				String.format("The folder [%s] is not a valid folder URI - it's a null pointer", uri));
+			return null;
 		}
 
 		final boolean file;
@@ -1057,7 +1054,9 @@ public class UcmModel {
 		if (!UcmModel.isFolderURI(uri)) { throw new UcmFolderNotFoundException(
 			String.format("The object URI [%s] is not a folder URI", uri)); }
 		try {
-			return new UcmFolder(this, uri, getDataObject(s, uri));
+			UcmAttributes data = getDataObject(s, uri);
+			if (data == null) { return null; }
+			return new UcmFolder(this, uri, data);
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
 		}

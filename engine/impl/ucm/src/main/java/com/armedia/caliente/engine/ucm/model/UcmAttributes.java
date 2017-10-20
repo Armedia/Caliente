@@ -64,78 +64,86 @@ public final class UcmAttributes {
 		this(data, UcmAttributes.calculateStructure(binder));
 	}
 
-	public UcmAttributes(Map<String, String> data, Collection<Field> structure) {
+	@SafeVarargs
+	public UcmAttributes(Map<String, String> data, Collection<Field>... structures) {
 		if (data == null) {
 			data = new TreeMap<>();
 		} else {
 			data = new TreeMap<>(data);
 		}
 		Map<String, CmfValue> tgt = new TreeMap<>();
-		for (Field f : structure) {
-			String v = data.get(f.getName());
+		for (Collection<Field> structure : structures) {
+			if (structure == null) {
+				continue;
+			}
+			for (Field f : structure) {
+				String v = data.get(f.getName());
 
-			Type t = f.getType();
-			// Map that type to a CmfDataType
-			CmfValue value = null;
-			CmfDataType T = null;
-			switch (t) {
-				case BOOLEAN:
-					if (!StringUtils.isEmpty(v)) {
-						value = new CmfValue(UcmAttributes.TRUE_VALUES.contains(v.toString().toUpperCase()));
-					} else {
-						T = CmfDataType.BOOLEAN;
-					}
-					break;
-				case CHAR:
-				case STRING:
-				case MEMO:
-				case CLOB:
-					if (v != null) {
-						value = new CmfValue(v.toString());
-					} else {
-						T = CmfDataType.STRING;
-					}
-					break;
-				case DECIMAL:
-				case FLOAT:
-					// Parse as a double...
-					if (!StringUtils.isEmpty(v)) {
-						value = new CmfValue(Double.valueOf(v.toString()));
-					} else {
-						T = CmfDataType.DOUBLE;
-					}
-					break;
-				case DATE:
-					if (!StringUtils.isEmpty(v)) {
-						try {
-							value = new CmfValue(DataObjectEncodingUtils.decodeDate(v.toString()));
-						} catch (ParseException e) {
-							throw new UcmRuntimeException(String.format("Failed to parse the value [%s] as a date", v),
-								e);
+				Type t = f.getType();
+				// Map that type to a CmfDataType
+				CmfValue value = null;
+				CmfDataType T = null;
+				switch (t) {
+					case BOOLEAN:
+						if (!StringUtils.isEmpty(v)) {
+							value = new CmfValue(UcmAttributes.TRUE_VALUES.contains(v.toString().toUpperCase()));
+						} else {
+							T = CmfDataType.BOOLEAN;
 						}
-					} else {
-						T = CmfDataType.DATETIME;
-					}
-					break;
-				case INT:
-					if (!StringUtils.isEmpty(v)) {
-						value = new CmfValue(Long.valueOf(v.toString()));
-					} else {
-						T = CmfDataType.INTEGER;
-					}
-					break;
-				case BINARY:
-				case BLOB:
-					// Can't support this...no way to retrieve the data, and even if I got it as a
-					// string, I don't know how it's encoded and thus how to turn it into a binary
-					// stream of octets...so we simply keep a null value in its place
-					T = CmfDataType.BASE64_BINARY;
-					break;
+						break;
+					case CHAR:
+					case STRING:
+					case MEMO:
+					case CLOB:
+						if (v != null) {
+							value = new CmfValue(v.toString());
+						} else {
+							T = CmfDataType.STRING;
+						}
+						break;
+					case DECIMAL:
+					case FLOAT:
+						// Parse as a double...
+						if (!StringUtils.isEmpty(v)) {
+							value = new CmfValue(Double.valueOf(v.toString()));
+						} else {
+							T = CmfDataType.DOUBLE;
+						}
+						break;
+					case DATE:
+						if (!StringUtils.isEmpty(v)) {
+							try {
+								value = new CmfValue(DataObjectEncodingUtils.decodeDate(v.toString()));
+							} catch (ParseException e) {
+								throw new UcmRuntimeException(
+									String.format("Failed to parse the value [%s] as a date", v), e);
+							}
+						} else {
+							T = CmfDataType.DATETIME;
+						}
+						break;
+					case INT:
+						if (!StringUtils.isEmpty(v)) {
+							value = new CmfValue(Long.valueOf(v.toString()));
+						} else {
+							T = CmfDataType.INTEGER;
+						}
+						break;
+					case BINARY:
+					case BLOB:
+						// Can't support this...no way to retrieve the data, and even if I got it as
+						// a
+						// string, I don't know how it's encoded and thus how to turn it into a
+						// binary
+						// stream of octets...so we simply keep a null value in its place
+						T = CmfDataType.BASE64_BINARY;
+						break;
+				}
+				if (value == null) {
+					value = T.getNull();
+				}
+				tgt.put(f.getName(), value);
 			}
-			if (value == null) {
-				value = T.getNull();
-			}
-			tgt.put(f.getName(), value);
 		}
 		// Now, all the other custom fields are string-typed
 		for (String s : data.keySet()) {
