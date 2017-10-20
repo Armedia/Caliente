@@ -370,25 +370,23 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 			// Not a reference? Add the caliente aspect
 			values.add(AlfImportFileableDelegate.CALIENTE_ASPECT);
+		} else {
+			CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.REF_TARGET);
+			if ((prop == null) || !prop.hasValues()) { throw new ImportException(
+				String.format("Exported object %s doesn't have the required reference target metadata",
+					this.cmfObject.getDescription())); }
 
-			if (isReference()) {
-				CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.REF_TARGET);
-				if ((prop == null) || !prop.hasValues()) { throw new ImportException(
-					String.format("Exported object %s doesn't have the required reference target metadata",
-						this.cmfObject.getDescription())); }
+			String refTarget = prop.getValue().asString();
+			if (StringUtils.isEmpty(refTarget)) { throw new ImportException(
+				String.format("Exported object %s has empty reference target metadata (must not be empty)",
+					this.cmfObject.getDescription())); }
+			p.setProperty("arm:refTarget", refTarget);
 
-				String refTarget = prop.getValue().asString();
-				if (StringUtils.isEmpty(refTarget)) { throw new ImportException(
-					String.format("Exported object %s has empty reference target metadata (must not be empty)",
-						this.cmfObject.getDescription())); }
-				p.setProperty("arm:refTarget", refTarget);
-
-				prop = this.cmfObject.getProperty(IntermediateProperty.REF_VERSION);
-				if ((prop != null) && prop.hasValues()) {
-					String value = prop.getValue().asString();
-					if (!StringUtils.isEmpty(value)) {
-						p.setProperty("arm:refVersion", value);
-					}
+			prop = this.cmfObject.getProperty(IntermediateProperty.REF_VERSION);
+			if ((prop != null) && prop.hasValues()) {
+				String value = prop.getValue().asString();
+				if (!StringUtils.isEmpty(value)) {
+					p.setProperty("arm:refVersion", value);
 				}
 			}
 		}
@@ -566,10 +564,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		AlfImportContext ctx) throws ImportException, CmfStorageException {
-
-		if (isReference()) {
-			"".hashCode();
-		}
 
 		if (!ctx.getContentStore()
 			.isSupportsFileAccess()) { throw new ImportException("This engine requires filesystem access"); }
