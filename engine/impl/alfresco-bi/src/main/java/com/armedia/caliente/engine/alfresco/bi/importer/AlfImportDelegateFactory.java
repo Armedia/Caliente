@@ -435,6 +435,7 @@ public class AlfImportDelegateFactory
 		final int head;
 		final int count;
 		final int current;
+		String renditionRootPath = null;
 		switch (type) {
 			case RENDITION_ROOT:
 				contentFile = contentFile.getParentFile();
@@ -443,6 +444,8 @@ public class AlfImportDelegateFactory
 				contentFile = contentFile.getParentFile();
 				// Fall-through
 			case RENDITION_ENTRY:
+				renditionRootPath = String.format("%s-renditions", cmfObject.getId());
+				// Fall-through
 			case VDOC_ROOT:
 			case VDOC_VERSION:
 			case VDOC_STREAM:
@@ -545,14 +548,20 @@ public class AlfImportDelegateFactory
 				}
 				break;
 
-			case RENDITION_ENTRY:
+			case RENDITION_ROOT:
+				// Special case: the target name must be ${objectId}-renditions
+				thisMarker.setTargetName(String.format("%s-renditions", cmfObject.getId()));
+				break;
+
 			case RENDITION_TYPE:
-				sourcePathProp = cmfObject.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-				String specialCmsPath = ((sourcePathProp == null) || !sourcePathProp.hasValues() ? ""
-					: sourcePathProp.getValue().asString());
-				Path p = Paths.get(specialCmsPath);
-				p = p.relativize(relativeContentPath);
-				targetPath = String.format("%s/%s", targetPath, p.getParent().toString());
+				targetPath = String.format("%s/%s", targetPath, renditionRootPath);
+				break;
+
+			case RENDITION_ENTRY:
+				// Add the rendition root path
+				targetPath = String.format("%s/%s", targetPath, renditionRootPath);
+				// Add the rendition type path
+				targetPath = String.format("%s/%s", targetPath, contentFile.getParentFile().getName());
 				break;
 
 			default:
