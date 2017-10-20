@@ -37,6 +37,7 @@ public class CmfObjectSearchSpec extends CmfObjectRef {
 
 	@Override
 	public String toString() {
-		return String.format("CmfObjectSearchSpec [type=%s, id=%s, searchKey=%s]", getType().name(), getId(), getSearchKey());
+		return String.format("CmfObjectSearchSpec [type=%s, id=%s, searchKey=%s]", getType().name(), getId(),
+			getSearchKey());
 	}
 }
