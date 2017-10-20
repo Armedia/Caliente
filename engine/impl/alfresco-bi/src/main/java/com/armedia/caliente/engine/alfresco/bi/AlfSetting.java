@@ -12,7 +12,7 @@ public enum AlfSetting implements ConfigurationSetting {
 	GROUP_MAP, //
 	ROLE_MAP, //
 	ATTRIBUTE_MAP, //
-	RESIDUALS_PREFIX("armres"), //
+	RESIDUALS_PREFIX, //
 	//
 	;
 
