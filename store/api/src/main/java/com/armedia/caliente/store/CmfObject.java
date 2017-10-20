@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import com.armedia.commons.utilities.Tools;
@@ -113,6 +114,13 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		if (number == null) { throw new IllegalArgumentException("Must provide a number to set"); }
 		if (this.number != null) { throw new IllegalStateException("A number has already been set, can't change it"); }
 		this.number = number;
+	}
+
+	public final void copyNumber(CmfObject<?> other) {
+		Objects.requireNonNull(other, "Must provide an object whose number to copy");
+		if (!new CmfObjectSearchSpec(this).equals(new CmfObjectSearchSpec(other))) { throw new IllegalArgumentException(
+			String.format("The given %s is not the same as %s", other.getDescription(), this.getDescription())); }
+		setNumber(other.getNumber());
 	}
 
 	public final String getName() {

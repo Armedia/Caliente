@@ -503,6 +503,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			final Long ret = objectStore.storeObject(encoded);
+			marshaled.copyNumber(encoded); // PATCH: make sure the object number is always copied
 
 			if (ret == null) {
 				// Should be impossible, but still guard against it
