@@ -361,7 +361,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				group = this.factory.mapGroup(groupValue.asString());
 			}
 
-			p.setProperty("arm:dmAcl", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
+			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
 
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
@@ -506,7 +506,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty("arm:aspects", StringUtils.join(aspects, ','));
 		p.setProperty("arm:aclInheritance", "NONE[]");
 		p.setProperty("cm:name", targetName);
-		p.setProperty("arm:refTargtet", targetId);
+		p.setProperty("arm:refTarget", targetId);
 		if (!StringUtils.isEmpty(label)) {
 			p.setProperty("arm:refVersion", label);
 		}
