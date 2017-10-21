@@ -185,6 +185,11 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		return this.attributes.get(name);
 	}
 
+	public final boolean hasAttribute(CmfEncodeableName name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to check for"); }
+		return hasAttribute(name.encode());
+	}
+
 	public final boolean hasAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to check for"); }
 		return this.attributes.containsKey(name);
@@ -232,6 +237,11 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 	public final CmfProperty<V> getProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
 		return this.properties.get(name);
+	}
+
+	public final boolean hasProperty(CmfEncodeableName name) {
+		if (name == null) { throw new IllegalArgumentException("Must provide a property name to check for"); }
+		return hasProperty(name.encode());
 	}
 
 	public final boolean hasProperty(String name) {
