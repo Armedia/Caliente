@@ -32,3 +32,17 @@
 	<entry key="dctm:binding_label">binding_label</entry>
 	<entry key="dctm:reference_by_id">reference_by_id</entry>
 </properties>
+
+<!-- 
+cmis:createdBy ==> ucm:dDocAuthor
+cmis:lastModifiedBy ==> ucm:dDocCreator
+cmis:creationDate ==> ucm:dCreateDate
+cmis:lastModificationDate ==> ucm:dLastModifiedDate 
+cmis:name ==> ucm:dOriginalName,ucm:fFolderName
+cmis:contentStreamFileName ==> ucm:dOriginalName
+cmis:contentStreamLength ==> ucm:VaultFileSize
+cmis:contentStreamMimeType ==> ucm:dFormat
+
+// cmis:objectId ==> ucm:dDocName
+// cmis:objectTypeId ==> Oracle WebCenter Content profile name or SiteStudio Region Definition name
+ -->
