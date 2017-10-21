@@ -348,8 +348,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 
 			if (target != null) {
-				// We have a candidate attribute, so copy directly!
-				storeValue(ctx, srcAtt, target, p, true);
+				// We have a candidate attribute, so copy directly! But we make sure not to clobber
+				// anything that may already have been assigned by some other means
+				if (!p.containsKey(target.name)) {
+					storeValue(ctx, srcAtt, target, p, true);
+				}
 			} else if (residualsPrefix != null) {
 				// No candidate, copy it as a residual (if so configured)
 				storeValue(ctx, srcAtt, String.format("%s%s", residualsPrefix, rawName), srcAtt.isRepeating(), p, true);

@@ -39,8 +39,13 @@ public class AlfAttributeMapper {
 
 	private static Map<String, String> loadMappings(Class<?> klazz, String sourceProduct, String sourceVersion,
 		String suffix) throws IOException, XMLStreamException {
+		sourceProduct = StringUtils.lowerCase(sourceProduct);
+		sourceProduct = sourceProduct.replaceAll("\\s+", "_");
+		sourceVersion = StringUtils.lowerCase(sourceVersion);
+		sourceVersion = sourceVersion.replaceAll("\\s+", "_");
+
 		Map<String, String> commonMappings = new TreeMap<>();
-		String commonName = String.format("%s%s%s", AlfAttributeMapper.PREFIX, sourceProduct.toLowerCase(), suffix);
+		String commonName = String.format("%s%s%s", AlfAttributeMapper.PREFIX, sourceProduct, suffix);
 		URL url = klazz.getResource(commonName);
 		if (url != null) {
 			// Load the mappings from the URL
@@ -52,8 +57,8 @@ public class AlfAttributeMapper {
 			}
 		}
 
-		String versionName = String.format("%s%s-%s%s", AlfAttributeMapper.PREFIX, sourceProduct.toLowerCase(),
-			sourceVersion.toLowerCase(), suffix);
+		String versionName = String.format("%s%s-%s%s", AlfAttributeMapper.PREFIX, sourceProduct, sourceVersion,
+			suffix);
 		url = klazz.getResource(versionName);
 		if (url != null) {
 			// Load the mappings from the URL, overriding the existing values. Empty values cause

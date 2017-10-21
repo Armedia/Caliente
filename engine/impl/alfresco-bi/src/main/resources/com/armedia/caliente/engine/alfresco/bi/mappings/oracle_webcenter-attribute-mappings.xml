@@ -1,0 +1,34 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<comment>UCM-to-CMIS attribute mappings</comment>
+	<entry key="dctm:acl_name">cmf:acl_name</entry>
+	<entry key="dctm:group_name">cmf:group</entry>
+	<entry key="dctm:group_permit">cmf:group_permission</entry>
+	<entry key="dctm:r_access_date">cmf:last_access_date</entry>
+	<entry key="dctm:acl_domain">cmf:login_realm</entry>
+	<entry key="dctm:owner_name">cmf:owner</entry>
+	<entry key="dctm:owner_permit">cmf:owner_permission</entry>
+	<entry key="dctm:i_antecedent_id">cmf:version_antecedent_id</entry>
+	<entry key="dctm:i_vstamp">cmis:changeToken</entry>
+	<entry key="dctm:log_entry">cmis:checkinComment</entry>
+	<entry key="dctm:r_full_content_size">cmis:contentStreamLength</entry>
+	<entry key="dctm:a_content_type">cmis:contentStreamMimeType</entry>
+	<entry key="dctm:r_creator_name">cmis:createdBy</entry>
+	<entry key="dctm:r_creation_date">cmis:creationDate</entry>
+	<entry key="dctm:title">cmis:description</entry>
+	<entry key="dctm:r_immutable_flag">cmis:isImmutable</entry>
+	<entry key="dctm:i_has_folder">cmis:isLatestVersion</entry>
+	<entry key="dctm:r_modify_date">cmis:lastModificationDate</entry>
+	<entry key="dctm:r_modifier">cmis:lastModifiedBy</entry>
+	<entry key="dctm:object_name">cmis:name</entry>
+	<entry key="dctm:r_object_type">cmis:objectTypeId</entry>
+	<entry key="dctm:i_folder_id">cmis:parentId</entry>
+	<entry key="dctm:r_version_label">cmis:versionLabel</entry>
+	<entry key="dctm:r_lock_owner">cmis:versionSeriesCheckedOutBy</entry>
+	<entry key="dctm:i_chronicle_id">cmis:versionSeriesId</entry>
+	<entry key="dctm:r_folder_path">cmis:path</entry>
+	<entry key="dctm:binding_condition">binding_condition</entry>
+	<entry key="dctm:binding_label">binding_label</entry>
+	<entry key="dctm:reference_by_id">reference_by_id</entry>
+</properties>
