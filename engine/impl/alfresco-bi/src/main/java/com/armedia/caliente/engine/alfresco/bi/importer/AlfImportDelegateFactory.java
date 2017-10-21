@@ -563,6 +563,23 @@ public class AlfImportDelegateFactory
 			: sourcePathProp.getValue().asString());
 		targetPath = resolveTreeIds(ctx, targetPath);
 
+		final boolean unfiled;
+		{
+			CmfProperty<CmfValue> unfiledProp = cmfObject.getProperty(IntermediateProperty.IS_UNFILED);
+			unfiled = (unfiledProp != null) && unfiledProp.hasValues() && unfiledProp.getValue().asBoolean();
+		}
+
+		if (unfiled) {
+			String balancedPath = String.format("%08x", cmfObject.getNumber());
+			// Split the number every 2 digits..., but only the first 6
+			balancedPath = balancedPath.substring(0, 6);
+			List<String> l = new ArrayList<>(3);
+			for (int i = 0; i < 3; i++) {
+				l.add(balancedPath.substring(i * 2, (i * 2) + 2));
+			}
+			targetPath = String.format("(unfiled)/%s", Tools.joinEscaped('/', l));
+		}
+
 		String append = null;
 		// This is the base name, others may change it...
 		thisMarker.setTargetName(contentFile.getName());
@@ -609,6 +626,9 @@ public class AlfImportDelegateFactory
 				break;
 		}
 
+		if (unfiled) {
+			thisMarker.setTargetName(String.format("%08x-%s", cmfObject.getNumber(), thisMarker.getTargetName()));
+		}
 		thisMarker.setTargetPath(targetPath);
 		thisMarker.setIndex(current);
 		thisMarker.setHeadIndex(head);
