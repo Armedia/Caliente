@@ -102,6 +102,9 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			new CmfValue(object.isLatestRevision()));
 		properties.add(p);
 
+		p = new CmfProperty<>(IntermediateProperty.IS_UNFILED, CmfDataType.BOOLEAN, new CmfValue(object.isUnfiled()));
+		properties.add(p);
+
 		p = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
 			new CmfValue(history.getRevisionCount()));
 		properties.add(p);

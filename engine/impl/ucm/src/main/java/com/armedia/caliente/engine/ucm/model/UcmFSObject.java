@@ -24,6 +24,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 	private final UcmUniqueURI parentUri;
 
 	private final UcmObjectType ucmObjectType;
+	private final boolean unfiled;
 
 	UcmFSObject(UcmModel model, URI uri, UcmAttributes data, UcmAtt nameAtt) {
 		super(model, uri);
@@ -60,12 +61,18 @@ public abstract class UcmFSObject extends UcmModelObject {
 				this.path = String.format("%s/%s", this.parentPath, name);
 			}
 			mutableData.put(UcmAtt.cmfPath.name(), new CmfValue(this.path));
+			this.unfiled = false;
 		} else {
 			this.path = String.format("{unfiled[#%08x]:%s}", this.attributes.getInteger(UcmAtt.dID),
 				this.attributes.getString(UcmAtt.dOriginalName));
+			this.unfiled = true;
 		}
 
 		this.ucmObjectType = (UcmModel.isFileURI(uri) ? UcmObjectType.FILE : UcmObjectType.FOLDER);
+	}
+
+	public final boolean isUnfiled() {
+		return this.unfiled;
 	}
 
 	public final UcmObjectType getType() {
