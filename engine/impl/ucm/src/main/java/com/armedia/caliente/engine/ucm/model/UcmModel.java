@@ -15,7 +15,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FilenameUtils;
@@ -43,6 +45,10 @@ import oracle.stellent.ridc.protocol.ServiceResponse.ResponseType;
 // FLD_CREATE_FOLDER (fParentGUID, fFolderGUID, fRelationshipType="(owner|soft)")
 // CHECKIN_UNIVERSAL (dDocAuthor, dDocTitle, dDocType, dSecurityGroup, dCreateDate, doFileCopy = 1)
 public class UcmModel {
+	// Syntax: query{sortAtts}[startRow,rowCount] / sortAtts == +att1,-att2,
+	private static final Pattern QUERY_PARSER = Pattern.compile("^(.*?)(?:\\{(.*)\\})?(?:\\[(.*)\\])?$");
+	private static final Pattern SORT_PARSER = Pattern.compile("^[-+]?\\w+$");
+	private static final Pattern ROW_PARSER = Pattern.compile("^(?:([1-9][0-9]*),)?([1-9][0-9]*)(?:/([1-9][0-9]*))?$");
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 	private static final String PRIMARY = "primary";
 	private static final int MIN_OBJECT_COUNT = 100;
@@ -724,7 +730,7 @@ public class UcmModel {
 	}
 
 	public static interface ObjectHandler {
-		public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object);
+		public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object);
 	}
 
 	public Collection<UcmFile> getDocumentSearchResults(final UcmSession s, final String query)
@@ -737,7 +743,7 @@ public class UcmModel {
 		final List<UcmFile> results = new ArrayList<>();
 		iterateDocumentSearchResults(s, query, pageSize, new ObjectHandler() {
 			@Override
-			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject object) {
+			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject object) {
 				if (UcmFile.class.isInstance(object)) {
 					results.add(UcmFile.class.cast(object));
 				}
@@ -746,28 +752,72 @@ public class UcmModel {
 		return results;
 	}
 
-	public int iterateDocumentSearchResults(final UcmSession s, final String query, final ObjectHandler handler)
+	public long iterateDocumentSearchResults(final UcmSession s, final String query, final ObjectHandler handler)
 		throws UcmServiceException {
 		return iterateDocumentSearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE, handler);
 	}
 
-	public int iterateDocumentSearchResults(final UcmSession s, final String query, int pageSize,
+	public long iterateDocumentSearchResults(final UcmSession s, final String query, int pageSize,
 		final ObjectHandler handler) throws UcmServiceException {
 		Objects.requireNonNull(s, "Must provide a session to search with");
-		Objects.requireNonNull(query, "Must provide a URI to search for");
+		Objects.requireNonNull(query, "Must provide a query to execute");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
 
-		final String actualQuery = StringUtils.strip(query);
+		// Syntax: query{sortAtts}[(startRow,)?rowCount(/pageSize)?] / sortAtts == +att1,-att2,...
+		Matcher m = UcmModel.QUERY_PARSER.matcher(StringUtils.strip(query));
+		if (!m.matches()) { throw new UcmServiceException(String.format("Invalid query syntax: [%s]", query)); }
+
+		final String actualQuery = m.group(1);
 		if (StringUtils.isEmpty(
 			actualQuery)) { throw new UcmServiceException("The actual query string is empty - this is not supported"); }
+
+		final StringBuilder sortSpec = new StringBuilder();
+		String sortSpecStr = m.group(2);
+		if (sortSpecStr != null) {
+			List<String> l = Tools.splitCSVEscaped(sortSpecStr);
+			if (l.isEmpty()) { throw new UcmServiceException(String.format(
+				"Illegal empty sort specification - the syntax is spec1[,spec2,spec3,...,specN] where specX is [-+]attributeName (+ = ASC, - = DESC, default is ASC)")); }
+			for (String ss : l) {
+				Matcher sm = UcmModel.SORT_PARSER.matcher(ss);
+				if (!sm.matches()) { throw new UcmServiceException(String.format(
+					"Illegal attribute sort specification '%s' - the syntax is [-+]attributeName (+ = ASC, - = DESC, default is ASC)",
+					ss)); }
+				boolean desc = ss.startsWith("-");
+				if (sortSpec.length() > 0) {
+					sortSpec.append(' ');
+				}
+				sortSpec.append(ss).append(' ').append(desc ? "DE" : "A").append("SC");
+			}
+		}
 
 		// TODO: Need to find the correct way to identify "automagically" if we should use database
 		// or databasetext engines when running the search...if only there were documentation...
 		final boolean dbMode = true;
-		final AtomicInteger currentRow = new AtomicInteger(1);
+		final AtomicLong startRow = new AtomicLong(1);
+		final long maxRows;
+		String rowSpec = m.group(3);
+		if (rowSpec != null) {
+			Matcher rm = UcmModel.ROW_PARSER.matcher(rowSpec);
+			if (!rm.matches()) { throw new UcmServiceException(String.format(
+				"Illegal row specification '%s' - the syntax is [startRow,]rowCount[/pageSize] where elements in [] are optional (numbers may not begin with a 0, and must be positive integers - the first row is 1)")); }
+			String startRowStr = rm.group(1);
+			if (startRowStr != null) {
+				startRow.set(Long.parseLong(startRowStr));
+			}
+			maxRows = Integer.parseInt(rm.group(2));
+			String pageSizeStr = rm.group(3);
+			if (pageSizeStr != null) {
+				pageSize = Integer.valueOf(pageSizeStr);
+			}
+		} else {
+			maxRows = -1;
+		}
+
 		final int actualPageSize = Tools.ensureBetween(UcmConstants.MINIMUM_PAGE_SIZE, pageSize,
 			UcmConstants.MAXIMUM_PAGE_SIZE);
-		while (true) {
+
+		long rowNumber = 0;
+		outer: while (true) {
 			try {
 				ServiceResponse response = s.callService("GET_SEARCH_RESULTS", new RequestPreparation() {
 					@Override
@@ -776,7 +826,13 @@ public class UcmModel {
 						if (dbMode) {
 							binder.putLocal("SearchEngineName", "database");
 						}
-						binder.putLocal("StartRow", String.valueOf(currentRow.get()));
+						binder.putLocal("StartRow", String.valueOf(startRow.get()));
+						/*
+						if (sortSpec.length() > 0) {
+							// TODO Why isn't this working? It should work as per the docs...
+							binder.putLocal("SortSpec", sortSpec.toString());
+						}
+						*/
 						binder.putLocal("ResultCount", String.valueOf(actualPageSize));
 						binder.putLocal("isAddFolderMetadata", "1");
 						binder.putLocal("SortField", "dID");
@@ -806,20 +862,23 @@ public class UcmModel {
 								"The file with dDocName [%s] was returned in the result set, but was not retrieved when searched for explicitly",
 								guid), e);
 						}
-						handler.handleObject(s, currentRow.get(), file.getURI(), file);
+						handler.handleObject(s, ++rowNumber, file.getURI(), file);
 					} finally {
-						currentRow.incrementAndGet();
+						startRow.incrementAndGet();
+						if ((maxRows > 0) && (rowNumber >= maxRows)) {
+							break outer;
+						}
 					}
 				}
 				if (lastPage) {
-					break;
+					break outer;
 				}
 			} catch (final IdcClientException e) {
 				throw new UcmServiceException(String.format("Exception raised while performing the %s query [%s]",
 					dbMode ? "database" : "fulltext", actualQuery), e);
 			}
 		}
-		return currentRow.get();
+		return rowNumber;
 	}
 
 	public int iterateFolderContents(final UcmSession s, final UcmFolder folder, final ObjectHandler handler)
@@ -930,7 +989,7 @@ public class UcmModel {
 		final Map<String, URI> children = new LinkedHashMap<>();
 		iterateFolderContents(s, uri, new ObjectHandler() {
 			@Override
-			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject object) {
+			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject object) {
 				children.put(object.getName(), uri);
 			}
 		});
@@ -942,7 +1001,7 @@ public class UcmModel {
 		final Map<String, UcmFSObject> children = new LinkedHashMap<>();
 		iterateFolderContents(s, folder.getURI(), new ObjectHandler() {
 			@Override
-			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject data) {
+			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject data) {
 				children.put(data.getName(), data);
 			}
 		});
@@ -968,7 +1027,7 @@ public class UcmModel {
 		try {
 			iterateFolderContents(s, uri, new ObjectHandler() {
 				@Override
-				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+				public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
 					handler.handleObject(session, outerPos.getAndIncrement(), objectUri, object);
 					if (UcmModel.isFolderURI(uri) && (followShortcuts || !object.isShortcut())) {
 						try {
@@ -1012,7 +1071,7 @@ public class UcmModel {
 		final Collection<URI> children = new ArrayList<>();
 		iterateFolderContentsRecursive(s, uri, followShortCuts, new ObjectHandler() {
 			@Override
-			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject obj) {
+			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject obj) {
 				children.add(uri);
 			}
 		});
@@ -1024,7 +1083,7 @@ public class UcmModel {
 		final Collection<UcmFSObject> children = new ArrayList<>();
 		iterateFolderContentsRecursive(s, folder.getURI(), followShortCuts, new ObjectHandler() {
 			@Override
-			public void handleObject(UcmSession session, int pos, URI uri, UcmFSObject o) {
+			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject o) {
 				children.add(o);
 			}
 		});

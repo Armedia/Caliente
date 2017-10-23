@@ -194,11 +194,11 @@ public class UcmSession implements TrackedUse {
 		return this.model.iterateFolderContentsRecursive(this, folder, recurseShortcuts, handler);
 	}
 
-	public int iterateDocumentSearchResults(String query, ObjectHandler handler) throws UcmServiceException {
+	public long iterateDocumentSearchResults(String query, ObjectHandler handler) throws UcmServiceException {
 		return this.model.iterateDocumentSearchResults(this, query, handler);
 	}
 
-	public int iterateDocumentSearchResults(String query, int pageSize, ObjectHandler handler)
+	public long iterateDocumentSearchResults(String query, int pageSize, ObjectHandler handler)
 		throws UcmServiceException {
 		return this.model.iterateDocumentSearchResults(this, query, pageSize, handler);
 	}

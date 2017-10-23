@@ -64,8 +64,6 @@ public class UcmExportEngine extends
 		for (String path : paths) {
 			if (!StringUtils.startsWith(path, "/")) {
 				String query = path;
-				// TODO: Parse out any query special indications
-				// Syntax: query{sortAtts}[startRow,rowCount] / sortAtts == +att1,-att2,
 				if (StringUtils.isEmpty(query)) {
 					this.log.warn("Empty query found (raw string: [{}]), skipping it", query);
 					continue;
@@ -73,7 +71,7 @@ public class UcmExportEngine extends
 				try {
 					session.iterateDocumentSearchResults(query, new ObjectHandler() {
 						@Override
-						public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+						public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
 							try {
 								submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
 									object.getURI().toString()));
@@ -105,7 +103,7 @@ public class UcmExportEngine extends
 						// its contents, but we won't be recursing into shortcuts
 						session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
 							@Override
-							public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+							public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
 								try {
 									submitter.submit(new ExportTarget(object.getType().cmfType,
 										object.getUniqueURI().toString(), object.getURI().toString()));

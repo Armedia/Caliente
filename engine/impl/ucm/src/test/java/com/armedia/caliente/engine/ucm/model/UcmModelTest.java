@@ -103,7 +103,7 @@ public class UcmModelTest extends BaseTest {
 			UcmFolder f = s.getFolder("/");
 			m.iterateFolderContentsRecursive(s, f.getURI(), true, new ObjectHandler() {
 				@Override
-				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+				public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
 					String type = (object.getType() == UcmObjectType.FILE ? "FILE" : "FLDR");
 					if (object.isShortcut()) {
 						type = String.format(">%s", type);
@@ -234,7 +234,7 @@ public class UcmModelTest extends BaseTest {
 			UcmFolder root = model.getRootFolder(s);
 			model.iterateFolderContentsRecursive(s, root, false, new ObjectHandler() {
 				@Override
-				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+				public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
 					UcmAtt guidAtt = (object.getType() == UcmObjectType.FILE ? UcmAtt.dDocName : UcmAtt.fFolderGUID);
 					System.out.printf("[%s] -> [%s] (GUID:%s)%n", object.getPath(), objectUri,
 						object.getString(guidAtt));
@@ -321,7 +321,7 @@ public class UcmModelTest extends BaseTest {
 
 	@Test
 	public void testSearchResults() throws Exception {
-		String query = "<not>(dID <matches> `-1`)";
+		String query = "<not>(dID <matches> `-1`){dID}[5]";
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
 			UcmSession s = w.getWrapped();
@@ -329,7 +329,7 @@ public class UcmModelTest extends BaseTest {
 
 			model.iterateDocumentSearchResults(s, query, 10000, new ObjectHandler() {
 				@Override
-				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
+				public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
 					System.out.printf("Got file # %02d: [%s](%s)%n", pos, object.getPath(), object.getUniqueURI());
 				}
 			});
