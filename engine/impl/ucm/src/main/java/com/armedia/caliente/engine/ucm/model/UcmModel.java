@@ -481,6 +481,9 @@ public class UcmModel {
 									@Override
 									public void prepareRequest(DataBinder binder) {
 										binder.putLocal(identifierAtt.name(), guid);
+										if (type == UcmObjectType.FILE) {
+											binder.putLocal("isAddFolderMetadata", "1");
+										}
 									}
 								});
 								responseData = response.getResponseAsBinder();
@@ -565,27 +568,53 @@ public class UcmModel {
 					@Override
 					public UcmUniqueURI get() throws ConcurrentException {
 						try {
-							final String prefix = (file ? "File" : "Folder");
 							ServiceResponse response = null;
 							DataBinder responseData = null;
+							final UcmAtt identifierAtt;
+							final String serviceName;
+							final String searchKey;
+							if (file) {
+								String id = uri.getFragment();
+								serviceName = "DOC_INFO";
+								if (id != null) {
+									identifierAtt = UcmAtt.dID;
+									searchKey = id;
+								} else {
+									identifierAtt = UcmAtt.dDocName;
+									searchKey = uri.getSchemeSpecificPart();
+								}
+							} else {
+								identifierAtt = UcmAtt.fFolderGUID;
+								serviceName = "FLD_INFO";
+								searchKey = uri.getSchemeSpecificPart();
+							}
+
 							try {
-								response = s.callService("FLD_INFO", new RequestPreparation() {
+								response = s.callService(serviceName, new RequestPreparation() {
 									@Override
 									public void prepareRequest(DataBinder binder) {
-										binder.putLocal(String.format("f%sGUID", prefix), uri.getSchemeSpecificPart());
+										binder.putLocal(identifierAtt.name(), searchKey);
+										if (file) {
+											binder.putLocal("isAddFolderMetadata", "1");
+										}
 									}
 								});
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
-								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
+								if (isNotFoundException(e, "Exception caught locating the object using URI [%s]",
 									uri)) { return UcmUniqueURI.NULL_GUID; }
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
 
-							UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
+							final UcmAttributes attributes;
+							if (file) {
+								attributes = buildAttributesFromDocInfo(responseData, null, null);
+							} else {
+								attributes = buildAttributesFromFldInfo(responseData);
+							}
 							if (attributes == null) { throw new UcmServiceException(
-								String.format("URI [%s] was found, but returned incorrect results?!?", uri)); }
+								String.format("The URI [%s] was found, didn't contain any data?!?", uri)); }
 							data.set(attributes);
 							return UcmModel.getUniqueURI(attributes);
 						} catch (IdcClientException | UcmException e) {
@@ -647,6 +676,7 @@ public class UcmModel {
 										binder.putLocal("dID", id);
 										if (refreshRenditions) {
 											binder.putLocal("includeFileRenditionsInfo", "1");
+											binder.putLocal("isAddFolderMetadata", "1");
 										}
 									}
 								});
@@ -1302,6 +1332,7 @@ public class UcmModel {
 										public void prepareRequest(DataBinder binder) {
 											binder.putLocal("dID", id);
 											binder.putLocal("includeFileRenditionsInfo", "1");
+											binder.putLocal("isAddFolderMetadata", "1");
 										}
 									});
 									responseData = response.getResponseAsBinder();
