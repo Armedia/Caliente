@@ -560,6 +560,7 @@ public class UcmModel {
 			throw new IllegalArgumentException(String.format("The URI [%s] doesn't point to a valid object", uri));
 		}
 
+		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		UcmUniqueURI guid = this.uniqueUriByHistoryUri.get(uri);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
 		if (guid == null) {
@@ -609,7 +610,7 @@ public class UcmModel {
 
 							final UcmAttributes attributes;
 							if (file) {
-								attributes = buildAttributesFromDocInfo(responseData, null, null);
+								attributes = buildAttributesFromDocInfo(responseData, history, null);
 							} else {
 								attributes = buildAttributesFromFldInfo(responseData);
 							}
@@ -631,6 +632,15 @@ public class UcmModel {
 
 		if (UcmUniqueURI.NULL_GUID.equals(
 			guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri)); }
+
+		if (history.get() != null) {
+			DataResultSet rs = history.get();
+			LinkedList<UcmRevision> list = new LinkedList<>();
+			for (DataObject o : rs.getRows()) {
+				list.addFirst(new UcmRevision(uri, o, rs.getFields()));
+			}
+			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
+		}
 
 		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid,
 			new ConcurrentInitializer<UcmAttributes>() {
