@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsd:schema
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd"
-	targetNamespace="http://www.armedia.com/ns/caliente/engine/alfresco-bi"
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.w3.org/2001/XMLSchema http://www.w3.org/2001/XMLSchema.xsd" targetNamespace="http://www.armedia.com/ns/caliente/engine/alfresco-bi"
 	xmlns:tns="http://www.armedia.com/ns/caliente/engine/alfresco-bi" elementFormDefault="qualified" attributeFormDefault="unqualified"
 	xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" jaxb:version="2.0">
+
+	<xsd:simpleType name="noSpaces.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:whiteSpace value="collapse" />
+			<xsd:pattern value="[^\s]+" />
+		</xsd:restriction>
+	</xsd:simpleType>
 
 	<xsd:simpleType name="trimmed_string.t">
 		<xsd:restriction base="xsd:string">
@@ -23,15 +28,22 @@
 
 	<xsd:simpleType name="version_number.t">
 		<xsd:restriction base="xsd:decimal">
-			<xsd:minInclusive value="0.0"/>
+			<xsd:minInclusive value="0.0" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="singleChar.t">
+		<xsd:restriction base="xsd:string">
+			<xsd:minLength value="1" />
+			<xsd:maxLength value="1" />
 		</xsd:restriction>
 	</xsd:simpleType>
 
 	<xsd:complexType name="version.t">
 		<xsd:sequence>
 			<xsd:element name="number" type="tns:version_number.t" minOccurs="1" maxOccurs="1" />
-			<xsd:element name="content" type="tns:trimmed_string.t" minOccurs="0" maxOccurs="1"/>
-			<xsd:element name="metadata" type="tns:trimmed_string.t" minOccurs="0" maxOccurs="1"/>
+			<xsd:element name="content" type="tns:trimmed_string.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="metadata" type="tns:trimmed_string.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
 	</xsd:complexType>
 
@@ -58,9 +70,59 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:element name="version" type="tns:version.t"/>
-	<xsd:element name="item" type="tns:item.t"/>
-	<xsd:element name="scan" type="tns:scan.t"/>
+	<xsd:element name="version" type="tns:version.t" />
+	<xsd:element name="item" type="tns:item.t" />
+	<xsd:element name="scan" type="tns:scan.t" />
 
+	<xsd:complexType name="emptyElement.t">
+		<xsd:complexContent>
+			<xsd:restriction base="xsd:anyType" />
+		</xsd:complexContent>
+	</xsd:complexType>
+	
+	<xsd:complexType name="mapping.t">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="tgt" type="tns:noSpaces.t" use="required" />
+				<xsd:attribute name="caseSensitive" type="xsd:boolean" use="optional" default="true" />
+				<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="," />
+			</xsd:extension>
+		</xsd:simpleContent>
+	</xsd:complexType>
 
+	<xsd:complexType name="mappingSet.t">
+		<xsd:sequence>
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element name="map" type="tns:mapping.t" />
+				<xsd:element name="nsmap" type="tns:mapping.t" />
+			</xsd:choice>
+			<xsd:choice minOccurs="0" maxOccurs="1">
+				<xsd:element name="enable-residuals" type="tns:emptyElement.t" />
+				<xsd:element name="disable-residuals" type="tns:emptyElement.t" />
+			</xsd:choice>
+		</xsd:sequence>
+		<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="," />
+	</xsd:complexType>
+
+	<xsd:complexType name="namedMappingSet.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:mappingSet.t">
+				<xsd:attribute name="includes" type="tns:noSpaces.t" use="optional" />
+				<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="attributeMappings.t">
+		<xsd:sequence>
+			<xsd:element name="common-mappings" type="tns:mappingSet.t" minOccurs="0" maxOccurs="1" />
+			<xsd:choice minOccurs="0" maxOccurs="unbounded">
+				<xsd:element name="mappings" type="tns:namedMappingSet.t" />
+				<xsd:element name="type-mappings" type="tns:namedMappingSet.t" />
+				<xsd:element name="secondary-mappings" type="tns:namedMappingSet.t" />
+			</xsd:choice>
+		</xsd:sequence>
+	</xsd:complexType>
+
+	<xsd:element name="attribute-mappings" type="tns:attributeMappings.t" />
 </xsd:schema>
