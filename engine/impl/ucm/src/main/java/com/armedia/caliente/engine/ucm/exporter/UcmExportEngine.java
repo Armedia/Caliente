@@ -63,12 +63,15 @@ public class UcmExportEngine extends
 
 		for (String path : paths) {
 			if (!StringUtils.startsWith(path, "/")) {
-				if (StringUtils.isEmpty(path)) {
-					this.log.warn("Empty query found (raw string: [{}]), skipping it", path);
+				String query = path;
+				// TODO: Parse out any query special indications
+				// Syntax: query{sortAtts}[startRow,rowCount] / sortAtts == +att1,-att2,
+				if (StringUtils.isEmpty(query)) {
+					this.log.warn("Empty query found (raw string: [{}]), skipping it", query);
 					continue;
 				}
 				try {
-					session.iterateDocumentSearchResults(path, new ObjectHandler() {
+					session.iterateDocumentSearchResults(query, new ObjectHandler() {
 						@Override
 						public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
 							try {
