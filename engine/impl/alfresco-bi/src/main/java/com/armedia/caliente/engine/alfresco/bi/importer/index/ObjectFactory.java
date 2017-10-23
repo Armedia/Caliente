@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.cache;
+package com.armedia.caliente.engine.alfresco.bi.importer.index;
 
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlElementDecl;
@@ -14,20 +14,20 @@ public class ObjectFactory {
 	public ObjectFactory() {
 	}
 
-	public Cache createCache() {
-		return new Cache();
+	public ScanIndex createCache() {
+		return new ScanIndex();
 	}
 
-	public CacheItem createCacheItem() {
-		return new CacheItem();
+	public ScanIndexItem createCacheItem() {
+		return new ScanIndexItem();
 	}
 
-	public CacheItemVersion createCacheItemVersion() {
-		return new CacheItemVersion();
+	public ScanIndexItemVersion createCacheItemVersion() {
+		return new ScanIndexItemVersion();
 	}
 
 	@XmlElementDecl(namespace = ObjectFactory.NAMESPACE, name = "scan")
-	public JAXBElement<Cache> createScan(Cache value) {
-		return new JAXBElement<>(ObjectFactory._Scan_QNAME, Cache.class, null, value);
+	public JAXBElement<ScanIndex> createScan(ScanIndex value) {
+		return new JAXBElement<>(ObjectFactory._Scan_QNAME, ScanIndex.class, null, value);
 	}
 }

@@ -1,2 +1,2 @@
 @javax.xml.bind.annotation.XmlSchema(namespace = ObjectFactory.NAMESPACE, elementFormDefault = javax.xml.bind.annotation.XmlNsForm.QUALIFIED)
-package com.armedia.caliente.engine.alfresco.bi.importer.cache;
+package com.armedia.caliente.engine.alfresco.bi.importer.index;

@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.cache;
+package com.armedia.caliente.engine.alfresco.bi.importer.index;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlType;
 	"directory", "sourceName", "sourcePath", "targetName", "targetPath", "versions"
 })
 @XmlRootElement(name = "item")
-public class CacheItem {
+public class ScanIndexItem {
 	@XmlElement(name = "directory", required = true)
 	protected boolean directory;
 
@@ -33,7 +33,7 @@ public class CacheItem {
 
 	@XmlElementWrapper(name = "versions", required = true)
 	@XmlElement(name = "version", required = true)
-	protected List<CacheItemVersion> versions;
+	protected List<ScanIndexItemVersion> versions;
 
 	public boolean isDirectory() {
 		return this.directory;
@@ -75,7 +75,7 @@ public class CacheItem {
 		this.targetPath = targetPath;
 	}
 
-	public List<CacheItemVersion> getVersions() {
+	public List<ScanIndexItemVersion> getVersions() {
 		if (this.versions == null) {
 			this.versions = new ArrayList<>();
 		}
@@ -85,7 +85,7 @@ public class CacheItem {
 	@Override
 	public String toString() {
 		return String.format(
-			"CacheItem [directory=%s, sourceName=%s, sourcePath=%s, targetName=%s, targetPath=%s, versions=%s]",
+			"ScanIndexItem [directory=%s, sourceName=%s, sourcePath=%s, targetName=%s, targetPath=%s, versions=%s]",
 			this.directory, this.sourceName, this.sourcePath, this.targetName, this.targetPath, this.versions);
 	}
 }

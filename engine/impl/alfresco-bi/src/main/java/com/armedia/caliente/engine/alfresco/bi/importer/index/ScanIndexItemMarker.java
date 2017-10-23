@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.cache;
+package com.armedia.caliente.engine.alfresco.bi.importer.index;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 
-public class CacheItemMarker implements Cloneable {
+public class ScanIndexItemMarker implements Cloneable {
 	public static enum MarkerType {
 		//
 		NORMAL, // A standalone file or folder
@@ -61,7 +61,7 @@ public class CacheItemMarker implements Cloneable {
 
 	private Path metadata;
 
-	protected CacheItemMarker(CacheItemMarker copy) {
+	protected ScanIndexItemMarker(ScanIndexItemMarker copy) {
 		if (copy == null) { throw new IllegalArgumentException("Must provide an object to base the copy off of"); }
 		this.type = copy.type;
 		this.directory = copy.directory;
@@ -74,11 +74,11 @@ public class CacheItemMarker implements Cloneable {
 		this.metadata = copy.metadata;
 	}
 
-	public CacheItemMarker(MarkerType type) {
+	public ScanIndexItemMarker(MarkerType type) {
 		this.type = type;
 	}
 
-	public CacheItemMarker() {
+	public ScanIndexItemMarker() {
 		this(MarkerType.NORMAL);
 	}
 
@@ -189,13 +189,13 @@ public class CacheItemMarker implements Cloneable {
 	@Override
 	public String toString() {
 		return String.format(
-			"CacheItemMarker [type=%s, targetName=%s, directory=%s, thisIndex=%s, headIndex=%s, versionCount=%s, sourcePath=%s, sourceName=%s, targetPath=%s, targetName=%s, number=%s, content=%s, metadata=%s]",
+			"ScanIndexItemMarker [type=%s, targetName=%s, directory=%s, thisIndex=%s, headIndex=%s, versionCount=%s, sourcePath=%s, sourceName=%s, targetPath=%s, targetName=%s, number=%s, content=%s, metadata=%s]",
 			this.type, this.targetName, this.directory, this.index, this.headIndex, this.versionCount, this.sourcePath,
 			this.sourceName, this.targetPath, this.targetName, this.number, this.content, this.metadata);
 	}
 
-	public CacheItemVersion getVersion() {
-		CacheItemVersion version = new CacheItemVersion();
+	public ScanIndexItemVersion getVersion() {
+		ScanIndexItemVersion version = new ScanIndexItemVersion();
 		version.setNumber(this.number);
 		if (this.content != null) {
 			version.setContent(convertToSlashes(this.content.toString()));
@@ -210,19 +210,19 @@ public class CacheItemMarker implements Cloneable {
 		return version;
 	}
 
-	public CacheItem getItem() {
+	public ScanIndexItem getItem() {
 		return getItem(Collections.singletonList(this));
 	}
 
-	public CacheItem getItem(List<CacheItemMarker> markers) {
-		CacheItem item = new CacheItem();
+	public ScanIndexItem getItem(List<ScanIndexItemMarker> markers) {
+		ScanIndexItem item = new ScanIndexItem();
 		item.setDirectory(this.directory);
 		item.setSourcePath(convertToSlashes(this.sourcePath.toString()));
 		item.setSourceName(this.sourceName);
 		item.setTargetPath(this.targetPath);
 		item.setTargetName(this.targetName);
-		List<CacheItemVersion> versions = item.getVersions();
-		for (CacheItemMarker m : markers) {
+		List<ScanIndexItemVersion> versions = item.getVersions();
+		for (ScanIndexItemMarker m : markers) {
 			versions.add(m.getVersion());
 		}
 		return item;
@@ -237,7 +237,7 @@ public class CacheItemMarker implements Cloneable {
 	}
 
 	@Override
-	public CacheItemMarker clone() {
-		return new CacheItemMarker(this);
+	public ScanIndexItemMarker clone() {
+		return new ScanIndexItemMarker(this);
 	}
 }

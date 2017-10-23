@@ -44,11 +44,11 @@ import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.alfresco.bi.AlfXmlIndex;
 import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
-import com.armedia.caliente.engine.alfresco.bi.importer.cache.Cache;
-import com.armedia.caliente.engine.alfresco.bi.importer.cache.CacheItem;
-import com.armedia.caliente.engine.alfresco.bi.importer.cache.CacheItemMarker;
-import com.armedia.caliente.engine.alfresco.bi.importer.cache.CacheItemMarker.MarkerType;
-import com.armedia.caliente.engine.alfresco.bi.importer.cache.CacheItemVersion;
+import com.armedia.caliente.engine.alfresco.bi.importer.index.ScanIndex;
+import com.armedia.caliente.engine.alfresco.bi.importer.index.ScanIndexItem;
+import com.armedia.caliente.engine.alfresco.bi.importer.index.ScanIndexItemMarker;
+import com.armedia.caliente.engine.alfresco.bi.importer.index.ScanIndexItemVersion;
+import com.armedia.caliente.engine.alfresco.bi.importer.index.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
@@ -69,28 +69,28 @@ public class AlfImportDelegateFactory
 
 	private final class VirtualDocument {
 		private final String historyId;
-		private CacheItemMarker root = null;
-		private final Map<String, CacheItemMarker> versions = new TreeMap<>();
-		private final Map<String, List<CacheItemMarker>> members = new TreeMap<>();
+		private ScanIndexItemMarker root = null;
+		private final Map<String, ScanIndexItemMarker> versions = new TreeMap<>();
+		private final Map<String, List<ScanIndexItemMarker>> members = new TreeMap<>();
 
 		private VirtualDocument(String historyId) {
 			this.historyId = historyId;
 		}
 
-		public void setRoot(CacheItemMarker marker) throws ImportException {
+		public void setRoot(ScanIndexItemMarker marker) throws ImportException {
 			if (this.root != null) { throw new ImportException("This virtual document already has a root element"); }
 			this.root = marker;
 		}
 
-		public void addVersion(CacheItemMarker version) throws ImportException {
+		public void addVersion(ScanIndexItemMarker version) throws ImportException {
 			if (this.versions.containsKey(version.getTargetName())) { throw new ImportException(
 				String.format("This virtual document already has a version called [%s]", version.getTargetName())); }
 			this.versions.put(version.getTargetName(), version);
-			this.members.put(version.getTargetName(), new ArrayList<CacheItemMarker>());
+			this.members.put(version.getTargetName(), new ArrayList<ScanIndexItemMarker>());
 		}
 
-		public void addMember(String version, CacheItemMarker member) throws ImportException {
-			List<CacheItemMarker> markers = this.members.get(version);
+		public void addMember(String version, ScanIndexItemMarker member) throws ImportException {
+			List<ScanIndexItemMarker> markers = this.members.get(version);
 			if ((markers == null) || !this.versions.containsKey(version)) { throw new ImportException(
 				String.format("This virtual document has no version called [%s]", version)); }
 			markers.add(member);
@@ -109,7 +109,7 @@ public class AlfImportDelegateFactory
 
 			synchronized (AlfImportDelegateFactory.this.fileIndex) {
 				for (String v : this.members.keySet()) {
-					for (CacheItemMarker marker : this.members.get(v)) {
+					for (ScanIndexItemMarker marker : this.members.get(v)) {
 						(marker.isDirectory() ? AlfImportDelegateFactory.this.folderIndex
 							: AlfImportDelegateFactory.this.fileIndex).marshal(marker.getItem());
 					}
@@ -175,7 +175,7 @@ public class AlfImportDelegateFactory
 	private final Map<String, AlfrescoType> defaultTypes;
 
 	private final ConcurrentMap<String, VirtualDocument> vdocs = new ConcurrentHashMap<>();
-	private final ThreadLocal<List<CacheItemMarker>> currentVersions = new ThreadLocal<>();
+	private final ThreadLocal<List<ScanIndexItemMarker>> currentVersions = new ThreadLocal<>();
 
 	private final AlfXmlIndex fileIndex;
 	private final AlfXmlIndex folderIndex;
@@ -205,7 +205,7 @@ public class AlfImportDelegateFactory
 		final File biRootFile = new File(this.content, AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
 		this.biRootPath = biRootFile.toPath();
 		Class<?>[] idxClasses = {
-			Cache.class, CacheItem.class, CacheItemVersion.class
+			ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class
 		};
 		this.fileIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FILE_CACHE_FILE), idxClasses);
 		this.folderIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FOLDER_CACHE_FILE),
@@ -392,7 +392,7 @@ public class AlfImportDelegateFactory
 		final String name = AlfImportEngine.MANIFEST_NAME;
 		final Path relativeContentPath = Paths.get(name);
 
-		CacheItemMarker thisMarker = new CacheItemMarker();
+		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
 		thisMarker.setDirectory(false);
 		thisMarker.setContent(relativeContentPath);
 		thisMarker.setMetadata(null);
@@ -402,10 +402,10 @@ public class AlfImportDelegateFactory
 		thisMarker.setTargetName(name);
 		thisMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
 
-		List<CacheItemMarker> markerList = new ArrayList<>(1);
+		List<ScanIndexItemMarker> markerList = new ArrayList<>(1);
 		markerList.add(thisMarker);
 
-		final CacheItem item = thisMarker.getItem(markerList);
+		final ScanIndexItem item = thisMarker.getItem(markerList);
 		try {
 			this.fileIndex.marshal(item);
 		} catch (Exception e) {
@@ -470,7 +470,7 @@ public class AlfImportDelegateFactory
 		return path.toString();
 	}
 
-	protected final CacheItemMarker generateItemMarker(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject,
+	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject,
 		File contentFile, File metadataFile, MarkerType type) throws ImportException {
 		final boolean folder = type.isFolder(contentFile);
 		final int head;
@@ -540,7 +540,7 @@ public class AlfImportDelegateFactory
 			relativeMetadataParent = (relativeContentPath != null ? relativeContentPath.getParent() : null);
 		}
 
-		CacheItemMarker thisMarker = new CacheItemMarker();
+		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
 		thisMarker.setDirectory(folder);
 		thisMarker.setContent(relativeContentPath);
 		thisMarker.setMetadata(relativeMetadataPath);
@@ -637,7 +637,7 @@ public class AlfImportDelegateFactory
 	}
 
 	private final void handleVirtual(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile,
-		MarkerType type, CacheItemMarker thisMarker) throws ImportException {
+		MarkerType type, ScanIndexItemMarker thisMarker) throws ImportException {
 		VirtualDocument vdoc = ConcurrentUtils.createIfAbsentUnchecked(this.vdocs, cmfObject.getHistoryId(),
 			new ConcurrentInitializer<VirtualDocument>() {
 				@Override
@@ -671,8 +671,8 @@ public class AlfImportDelegateFactory
 
 		storeIngestionIndexToScanIndex();
 
-		final CacheItemMarker thisMarker = generateItemMarker(ctx, cmfObject, contentFile, metadataFile, type);
-		List<CacheItemMarker> markerList = null;
+		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, cmfObject, contentFile, metadataFile, type);
+		List<ScanIndexItemMarker> markerList = null;
 		switch (type) {
 			case VDOC_ROOT:
 			case VDOC_VERSION:
@@ -710,7 +710,7 @@ public class AlfImportDelegateFactory
 			return;
 		}
 
-		CacheItemMarker headMarker = thisMarker;
+		ScanIndexItemMarker headMarker = thisMarker;
 		if (!thisMarker.isHeadVersion()) {
 			// This is not the head version. We need to make a copy
 			// of it and change the version number...
@@ -722,7 +722,7 @@ public class AlfImportDelegateFactory
 			markerList.add(headMarker);
 		}
 
-		CacheItem item = headMarker.getItem(markerList);
+		ScanIndexItem item = headMarker.getItem(markerList);
 		markerList.clear();
 
 		try {

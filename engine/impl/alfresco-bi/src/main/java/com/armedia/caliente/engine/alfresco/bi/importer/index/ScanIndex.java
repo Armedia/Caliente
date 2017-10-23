@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.cache;
+package com.armedia.caliente.engine.alfresco.bi.importer.index;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,11 +14,11 @@ import javax.xml.bind.annotation.XmlType;
 	"items"
 })
 @XmlRootElement(name = "scan")
-public class Cache {
+public class ScanIndex {
 	@XmlElement(name = "item", required = true)
-	protected List<CacheItem> items;
+	protected List<ScanIndexItem> items;
 
-	public List<CacheItem> getItems() {
+	public List<ScanIndexItem> getItems() {
 		if (this.items == null) {
 			this.items = new ArrayList<>();
 		}
@@ -27,6 +27,6 @@ public class Cache {
 
 	@Override
 	public String toString() {
-		return String.format("Cache [items=%s]", this.items);
+		return String.format("ScanIndex [items=%s]", this.items);
 	}
 }

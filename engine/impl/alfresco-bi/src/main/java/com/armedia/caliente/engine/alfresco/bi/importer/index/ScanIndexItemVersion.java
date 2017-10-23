@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.cache;
+package com.armedia.caliente.engine.alfresco.bi.importer.index;
 
 import java.math.BigDecimal;
 
@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlType;
 	"number", "content", "metadata"
 })
 @XmlRootElement(name = "version")
-public class CacheItemVersion implements Cloneable {
+public class ScanIndexItemVersion implements Cloneable {
 	@XmlElement(required = true)
 	protected BigDecimal number;
 
@@ -23,7 +23,7 @@ public class CacheItemVersion implements Cloneable {
 	@XmlElement(required = true)
 	protected String metadata;
 
-	protected CacheItemVersion(CacheItemVersion copy) {
+	protected ScanIndexItemVersion(ScanIndexItemVersion copy) {
 		if (copy != null) {
 			this.number = copy.number;
 			this.content = copy.content;
@@ -31,7 +31,7 @@ public class CacheItemVersion implements Cloneable {
 		}
 	}
 
-	public CacheItemVersion() {
+	public ScanIndexItemVersion() {
 
 	}
 
@@ -61,12 +61,12 @@ public class CacheItemVersion implements Cloneable {
 
 	@Override
 	public String toString() {
-		return String.format("CacheItemVersion [number=%s, content=%s, metadata=%s]", this.number, this.content,
+		return String.format("ScanIndexItemVersion [number=%s, content=%s, metadata=%s]", this.number, this.content,
 			this.metadata);
 	}
 
 	@Override
-	public CacheItemVersion clone() {
-		return new CacheItemVersion(this);
+	public ScanIndexItemVersion clone() {
+		return new ScanIndexItemVersion(this);
 	}
 }
