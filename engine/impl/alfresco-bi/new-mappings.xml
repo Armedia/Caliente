@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE attribute-mappings>
+<attribute-mappings>
+
+	<common-mappings>
+		...
+	</common-mappings>
+
+	<named-mappings name="nm?" extends="nm1,nm2,nm3,...,nmX">
+		...
+	</named-mappings>
+
+	<type-mappings name="type-name" extends="nm1,nm2,nm3,...,nmX">
+		...
+	</type-mappings>
+
+	<!--
+		RULES: 
+			1)	As soon as a target attribute has been written to, it cannot be
+				over-written by another rule
+			2)	As soon as a rule matches, the attribute copy is performed with no
+				further attempts to match rules
+			3)	Rules are matched in the order declared, with explicitly-defined rules
+				superseding any defaulted values (by aggregation and re-ordering)
+			4)	Extension loops are forbidden (obviously)
+			5)	named-mappings.name, type-mappings.name and secondary-mappings.name must
+				be globally unique
+	-->
+	<secondary-mappings name="secondary-name" extends="nm1,nm2,nm3,...,nmX">
+
+		<!-- Copy one source attribute to one or more target attributes -->
+		<map src="srcAttName">tgtAttName1,tgtAttName2,tgtAttName3</map>
+
+		<!-- Apply a regular expression transformation to the attribute's name -->
+		<regex src="regex">replacement</regex>
+
+		<!-- Convert a source namespace to a target namespace -->
+		<nsmap src="srcNs">tgtNs</nsmap>
+
+		<!-- Apply a regular expression transformation to the attribute's namespace -->
+		<nsregex src="regex">replacement</nsregex>
+	</secondary-mappings>
+
+</attribute-mappings>

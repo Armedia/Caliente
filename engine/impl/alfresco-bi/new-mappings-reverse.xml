@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE attribute-mappings>
+<attribute-mappings>
+
+	<common-mappings>
+		...
+		
+		<!--
+			This directive tells the engine that if there's no mapping, the
+			attribute should still be preserved as a residual property. This
+			should generally live in the <common-mappings> section though
+			it may make sense to only apply it based on type/secondary or even
+			named rule sets
+		-->
+		<copy-residuals/>
+
+	</common-mappings>
+
+	<mappings name="nm?" extends="nm1,nm2,nm3,...,nmX">
+		...
+	</mappings>
+
+	<type-mappings name="tn1" extends="nm1,nm2,nm3,...,nmX">
+		...
+	</type-mappings>
+
+	<!--
+		RULES: 
+			1)	As soon as a target attribute has been written to, it cannot be
+				over-written by another rule
+
+			2)	As soon as a rule matches, the attribute copy is performed with no
+				further attempts to match rules, and no transformation of the content
+				
+				* If the source attribute is multivalued and the target is not,
+				  comma-concatenation is performed
+
+			3)	Rules are matched in the order declared, with explicitly-defined rules
+				superseding any defaulted rules (i.e. the most specific rule wins)
+
+			4)	Rule set extension loops are forbidden (obviously)
+
+			5)	named-mappings.name, type-mappings.name and secondary-mappings.name must
+				be globally unique, to avoid confusion
+	-->
+	<secondary-mappings name="sn1" extends="nm1,nm2,nm3,...,nmX">
+
+		<!-- Copy one source attribute to one or more target attributes -->
+		<map tgt="tgtAttName">srcAttName</map>
+
+		<!-- Apply a regular expression transformation to the attribute name -->
+		<regex tgt="tgtRegex">srcRep</regex>
+
+		<!-- Convert a source namespace to a target namespace -->
+		<nsmap tgt="tgtNs">srcNs</nsmap>
+
+		<!-- Apply a regular expression transformation to the attribute's namespace -->
+		<nsregex src="tgtRegex">srcRep</nsregex>
+	</secondary-mappings>
+
+</attribute-mappings>
