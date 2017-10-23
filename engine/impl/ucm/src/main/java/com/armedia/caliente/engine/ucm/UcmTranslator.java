@@ -39,7 +39,7 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(UcmAtt.fDisplayDescription.name(), IntermediateAttribute.DESCRIPTION);
 		am.put(UcmAtt.dFormat.name(), IntermediateAttribute.CONTENT_STREAM_MIME_TYPE);
 		am.put(UcmAtt.dFileSize.name(), IntermediateAttribute.CONTENT_STREAM_LENGTH);
-		am.put(UcmAtt.fFileGUID.name(), IntermediateAttribute.VERSION_SERIES_ID);
+		am.put(UcmAtt.dDocName.name(), IntermediateAttribute.VERSION_SERIES_ID);
 		am.put(UcmAtt.cmfLatestVersion.name(), IntermediateAttribute.IS_LATEST_VERSION);
 		am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.VERSION_LABEL);
 		// am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.CHANGE_TOKEN);

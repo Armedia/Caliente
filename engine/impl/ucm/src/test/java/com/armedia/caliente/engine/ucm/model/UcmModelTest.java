@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.ucm.model;
 
 import java.io.InputStream;
 import java.net.URI;
+import java.util.UUID;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -80,7 +81,7 @@ public class UcmModelTest extends BaseTest {
 					? String.format(" | target=%s ", att.getString(UcmAtt.fTargetGUID)) : "";
 				URI uri = UcmModel.getURI(att);
 				String data = String.format("{ uri=%s | guid=%s%s }", uri,
-					att.getString(UcmModel.isFileURI(uri) ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID), shortcut);
+					att.getString(UcmModel.isFileURI(uri) ? UcmAtt.dDocName : UcmAtt.fFolderGUID), shortcut);
 				System.out.printf("%s %s : %s%n", type, name, data);
 				// System.out.printf("%s%n", StringUtils.repeat('-', 40));
 				// dumpObject(1, att);
@@ -110,8 +111,9 @@ public class UcmModelTest extends BaseTest {
 						type = String.format(" %s", type);
 					}
 					String shortcut = object.isShortcut() ? String.format(" | target=%s ", object.getTargetGUID()) : "";
-					String data = String.format("{ uri=%s | guid=%s%s }", object.getURI(), object.getString(
-						object.getType() == UcmObjectType.FILE ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID), shortcut);
+					String data = String.format("{ uri=%s | guid=%s%s }", object.getURI(),
+						object.getString(object.getType() == UcmObjectType.FILE ? UcmAtt.dDocName : UcmAtt.fFolderGUID),
+						shortcut);
 					System.out.printf("%s %s : %s%n", type, object.getPath(), data);
 				}
 			});
@@ -126,7 +128,7 @@ public class UcmModelTest extends BaseTest {
 	public void testResolvePath() throws Exception {
 		String[] paths = {
 			"/Enterprise Libraries", "/Shortcut To Test Folder", "/Test Folder", "/Users",
-			"/Caliente 3.0 Concept Document v4.0.docx", "/non-existent-path"
+			"/Caliente 3.0 Concept Document v4.0.docx"
 		};
 
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
@@ -137,6 +139,15 @@ public class UcmModelTest extends BaseTest {
 			processPaths(model, s, paths);
 			// This call is to verify that the caching is being done...
 			processPaths(model, s, paths);
+
+			try {
+				String path = String.format("/%s-non-existent-path-%s", UUID.randomUUID().toString(),
+					UUID.randomUUID().toString());
+				processPaths(model, s, path);
+				Assert.fail(String.format("Did not fail seeking non-existent path [%s]", path));
+			} catch (UcmObjectNotFoundException e) {
+				// all is well
+			}
 		} finally {
 			w.close();
 		}
@@ -224,7 +235,7 @@ public class UcmModelTest extends BaseTest {
 			model.iterateFolderContentsRecursive(s, root, false, new ObjectHandler() {
 				@Override
 				public void handleObject(UcmSession session, int pos, URI objectUri, UcmFSObject object) {
-					UcmAtt guidAtt = (object.getType() == UcmObjectType.FILE ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
+					UcmAtt guidAtt = (object.getType() == UcmObjectType.FILE ? UcmAtt.dDocName : UcmAtt.fFolderGUID);
 					System.out.printf("[%s] -> [%s] (GUID:%s)%n", object.getPath(), objectUri,
 						object.getString(guidAtt));
 					try {
