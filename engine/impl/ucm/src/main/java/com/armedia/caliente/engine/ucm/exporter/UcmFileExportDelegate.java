@@ -191,7 +191,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 				InputStream in = null;
 				try {
 					// Don't pull the content until we're sure we can put it somewhere...
-					contentHandle.setContents(this.object.getInputStream(ctx.getSession()));
+					contentHandle.setContents(this.object.getInputStream(ctx.getSession(), r));
 				} finally {
 					IOUtils.closeQuietly(in);
 				}
