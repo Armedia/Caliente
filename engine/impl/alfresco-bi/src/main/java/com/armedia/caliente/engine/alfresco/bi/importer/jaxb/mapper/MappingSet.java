@@ -15,14 +15,15 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mappingSet.t", propOrder = {
-	"mappings", "enableResiduals", "disableResiduals"
+	"mappings", "residualMarker"
 })
 @XmlSeeAlso({
 	NamedMappings.class
 })
 public class MappingSet {
 
-	private static final EmptyElement ELEMENT = new EmptyElement();
+	private static final ResidualsMarker RESIDUALS_ENABLE = new ResidualsEnable();
+	private static final ResidualsMarker RESIDUALS_DISABLE = new ResidualsDisable();
 
 	@XmlElements({
 		@XmlElement(name = "map", type = Mapping.class, required = false),
@@ -30,11 +31,11 @@ public class MappingSet {
 	})
 	protected List<Mapping> mappings;
 
-	@XmlElement(name = "enable-residuals")
-	protected EmptyElement enableResiduals;
-
-	@XmlElement(name = "disable-residuals")
-	protected EmptyElement disableResiduals;
+	@XmlElements({
+		@XmlElement(name = "enable-residuals", type = ResidualsEnable.class, required = false),
+		@XmlElement(name = "disable-residuals", type = ResidualsDisable.class, required = false),
+	})
+	protected ResidualsMarker residualMarker;
 
 	@XmlAttribute(name = "separator")
 	protected String separator;
@@ -47,25 +48,16 @@ public class MappingSet {
 	}
 
 	public void setEnableResiduals(Boolean value) {
-		this.enableResiduals = null;
-		this.disableResiduals = null;
-		if (value != null) {
-			if (value) {
-				this.enableResiduals = MappingSet.ELEMENT;
-				this.disableResiduals = null;
-			} else {
-				this.enableResiduals = null;
-				this.disableResiduals = MappingSet.ELEMENT;
-			}
+		if (value == null) {
+			this.residualMarker = null;
+		} else {
+			this.residualMarker = (value ? MappingSet.RESIDUALS_ENABLE : MappingSet.RESIDUALS_DISABLE);
 		}
 	}
 
-	public Boolean isEnableResiduals() {
-		if ((this.enableResiduals != null) && (this.disableResiduals != null)) { throw new IllegalStateException(
-			"May not have both enable and disable residuals"); }
-		if (this.enableResiduals != null) { return Boolean.TRUE; }
-		if (this.disableResiduals != null) { return Boolean.FALSE; }
-		return null;
+	public Boolean getEnableResiduals() {
+		if (this.residualMarker == null) { return null; }
+		return this.residualMarker.isResidualsEnabled();
 	}
 
 	public String getSeparator() {
