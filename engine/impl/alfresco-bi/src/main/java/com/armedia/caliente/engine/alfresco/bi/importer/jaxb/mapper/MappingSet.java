@@ -22,7 +22,7 @@ import com.armedia.commons.utilities.Tools;
 })
 public class MappingSet {
 
-	private static final EmptyElementT ELEMENT = new EmptyElementT();
+	private static final EmptyElement ELEMENT = new EmptyElement();
 
 	@XmlElements({
 		@XmlElement(name = "map", type = Mapping.class, required = false),
@@ -31,10 +31,10 @@ public class MappingSet {
 	protected List<Mapping> mappings;
 
 	@XmlElement(name = "enable-residuals")
-	protected EmptyElementT enableResiduals;
+	protected EmptyElement enableResiduals;
 
 	@XmlElement(name = "disable-residuals")
-	protected EmptyElementT disableResiduals;
+	protected EmptyElement disableResiduals;
 
 	@XmlAttribute(name = "separator")
 	protected String separator;
