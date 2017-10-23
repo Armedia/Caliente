@@ -27,7 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfAttributeMapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
-import com.armedia.caliente.engine.alfresco.bi.importer.index.ScanIndexItemMarker.MarkerType;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;

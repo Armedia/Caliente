@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.model.jaxb;
+package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

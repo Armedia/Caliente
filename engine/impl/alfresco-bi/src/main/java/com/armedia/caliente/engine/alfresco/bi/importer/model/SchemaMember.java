@@ -8,9 +8,9 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.ClassElement;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.Property;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Aspect;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.jaxb.ClassElement;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.jaxb.Property;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class SchemaMember<T extends SchemaMember<T>> {

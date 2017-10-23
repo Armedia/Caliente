@@ -1,6 +1,6 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.model;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.model.jaxb.MandatoryDef;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.MandatoryDef;
 import com.armedia.commons.utilities.Tools;
 
 public final class SchemaAttribute {

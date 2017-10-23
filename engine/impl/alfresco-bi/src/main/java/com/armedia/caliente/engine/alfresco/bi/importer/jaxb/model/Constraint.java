@@ -1,5 +1,5 @@
 
-package com.armedia.caliente.engine.alfresco.bi.importer.model.jaxb;
+package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.Model;
 import com.armedia.commons.utilities.XmlTools;
 
 public class JaxbTest {

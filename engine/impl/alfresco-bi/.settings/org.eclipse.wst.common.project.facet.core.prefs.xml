@@ -1,7 +1,7 @@
 <root>
   <facet id="jpt.jaxb">
     <node name="classgen">
-      <attribute name="package" value="com.armedia.caliente.engine.alfresco.bi.importer.index"/>
+      <attribute name="package" value="com.armedia.caliente.engine.alfresco.bi.importer.mapper"/>
     </node>
     <node name="libprov">
       <attribute name="provider-id" value="jaxb-jre-library-provider"/>
@@ -14,10 +14,10 @@
         <attribute name="location" value="platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd"/>
       </node>
       <node name="schema-2">
-        <attribute name="location" value="platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-bi.xsd"/>
+        <attribute name="location" value="platform:/resource/caliente-engine-alfresco-bi/src/main/resources/properties.xsd"/>
       </node>
       <node name="schema-3">
-        <attribute name="location" value="platform:/resource/caliente-engine-alfresco-bi/src/main/resources/properties.xsd"/>
+        <attribute name="location" value="platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-bi.xsd"/>
       </node>
     </node>
   </facet>

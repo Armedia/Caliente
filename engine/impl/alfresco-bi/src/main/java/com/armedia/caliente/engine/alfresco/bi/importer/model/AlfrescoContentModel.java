@@ -17,8 +17,8 @@ import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.IOUtils;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.model.jaxb.ClassElement;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.jaxb.Model;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.ClassElement;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.Model;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 

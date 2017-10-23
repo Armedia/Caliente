@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.index;
+package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index;
 
 import java.io.File;
 import java.math.BigDecimal;
