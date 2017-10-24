@@ -1406,7 +1406,7 @@ public class UcmModel {
 									}
 								} else {
 									UcmModel.this.log.warn(
-										"Revision ID [{}] was found via DOC_INFO(dID=%s), but no rendition information was returned??! Generated a default primary rendition",
+										"Revision ID [{}] was found via DOC_INFO(dID={}), but no rendition information was returned??! Generated a default primary rendition",
 										id, id);
 									UcmRenditionInfo info = generateDefaultRendition(guid, attributes);
 									renditions.put(info.getType(), info);
