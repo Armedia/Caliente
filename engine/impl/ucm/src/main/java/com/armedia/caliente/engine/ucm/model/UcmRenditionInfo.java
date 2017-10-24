@@ -9,8 +9,7 @@ import oracle.stellent.ridc.model.DataResultSet.Field;
 
 public final class UcmRenditionInfo {
 
-	public static final String PRIMARY = "primary";
-	public static final String DEFAULT = UcmRenditionInfo.PRIMARY;
+	public static final String DEFAULT = "primary";
 
 	private final UcmUniqueURI guid;
 	private final String type;
@@ -25,6 +24,14 @@ public final class UcmRenditionInfo {
 		this.format = data.getString(UcmAtt.rendFormat);
 		this.name = data.getString(UcmAtt.rendName);
 		this.description = data.getString(UcmAtt.rendDescription);
+	}
+
+	UcmRenditionInfo(UcmUniqueURI guid, String type, String format, String name, String description) {
+		this.guid = guid;
+		this.type = type;
+		this.format = format;
+		this.name = name;
+		this.description = description;
 	}
 
 	public UcmUniqueURI getGuid() {
@@ -48,7 +55,7 @@ public final class UcmRenditionInfo {
 	}
 
 	public boolean isPrimary() {
-		return StringUtils.equalsIgnoreCase(this.name, UcmRenditionInfo.PRIMARY);
+		return StringUtils.equalsIgnoreCase(this.name, UcmRenditionInfo.DEFAULT);
 	}
 
 	public boolean isDefault() {

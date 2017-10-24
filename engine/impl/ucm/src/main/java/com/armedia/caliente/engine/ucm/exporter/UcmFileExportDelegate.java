@@ -162,20 +162,20 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			includeRenditions);
 		final boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		final Map<String, UcmRenditionInfo> renditions = ctx.getSession().getRenditions(this.object);
-		for (String r : renditions.keySet()) {
-			if (!UcmRenditionInfo.PRIMARY.equalsIgnoreCase(r) && !includeRenditions) {
+		for (String renditionLabel : renditions.keySet()) {
+			if (!UcmRenditionInfo.DEFAULT.equalsIgnoreCase(renditionLabel) && !includeRenditions) {
 				// If this isn't the primary renditon and we're not interested in pulling
 				// renditions, then we skip this particular rendition
 				continue;
 			}
-			UcmRenditionInfo rendition = renditions.get(r);
-			r = r.toUpperCase();
+			UcmRenditionInfo rendition = renditions.get(renditionLabel);
+			renditionLabel = renditionLabel.toUpperCase();
 
-			if (UcmRenditionInfo.PRIMARY.equalsIgnoreCase(r)) {
-				r = CmfContentInfo.DEFAULT_RENDITION;
+			if (UcmRenditionInfo.DEFAULT.equalsIgnoreCase(renditionLabel)) {
+				renditionLabel = CmfContentInfo.DEFAULT_RENDITION;
 			}
 
-			CmfContentInfo info = new CmfContentInfo(r, 0);
+			CmfContentInfo info = new CmfContentInfo(renditionLabel, 0);
 			try {
 				info.setMimeType(new MimeType(rendition.getFormat()));
 			} catch (MimeTypeParseException e) {

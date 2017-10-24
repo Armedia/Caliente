@@ -24,6 +24,8 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.engine.ucm.UcmConstants;
@@ -50,7 +52,8 @@ public class UcmModel {
 	private static final Pattern SORT_PARSER = Pattern.compile("^[-+]?\\w+$");
 	private static final Pattern ROW_PARSER = Pattern.compile("^(?:([1-9][0-9]*),)?([1-9][0-9]*)(?:/([1-9][0-9]*))?$");
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
-	private static final String PRIMARY = "primary";
+	private static final String RENDITION_DEFAULT_TYPE = UcmRenditionInfo.DEFAULT;
+	private static final String REMDITION_DEFAULT_FORMAT = "application/octet-stream";
 	private static final int MIN_OBJECT_COUNT = 100;
 	private static final int DEFAULT_OBJECT_COUNT = 10000;
 	private static final int MAX_OBJECT_COUNT = 1000000;
@@ -149,6 +152,8 @@ public class UcmModel {
 	public static boolean isRoot(URI uri) {
 		return UcmModel.ROOT_URI.equals(uri);
 	}
+
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	public UcmModel() throws UcmServiceException {
 		this(UcmModel.DEFAULT_OBJECT_COUNT);
@@ -1281,7 +1286,7 @@ public class UcmModel {
 		} catch (IdcClientException e) {
 			throw new UcmServiceException(String.format(
 				"Failed to decode the service response when invoking GET_FILE for rendition [%s] from file [%s]",
-				Tools.coalesce(rendition, UcmModel.PRIMARY), file.getUniqueURI()), e);
+				Tools.coalesce(rendition, UcmModel.RENDITION_DEFAULT_TYPE), file.getUniqueURI()), e);
 		}
 
 		DataObject local = binder.getLocalData();
@@ -1297,13 +1302,13 @@ public class UcmModel {
 			if (local.get("StatusMessageKey").indexOf("!csGetFileRenditionNotFound,") >= 0) {
 				// Rendition not found!
 				throw new UcmRenditionNotFoundException(String.format("Rendition [%s] not found for file [%s]",
-					Tools.coalesce(rendition, UcmModel.PRIMARY), file.getUniqueURI()));
+					Tools.coalesce(rendition, UcmModel.RENDITION_DEFAULT_TYPE), file.getUniqueURI()));
 			}
 		}
 
 		// Some other error!
 		throw new UcmServiceException(String.format("Failed to load rendition [%s] from file [%s]",
-			Tools.coalesce(rendition, UcmModel.PRIMARY), file.getUniqueURI()));
+			Tools.coalesce(rendition, UcmModel.RENDITION_DEFAULT_TYPE), file.getUniqueURI()));
 	}
 
 	static String sanitizePath(String path) {
@@ -1339,6 +1344,15 @@ public class UcmModel {
 	UcmFileHistory refresh(UcmSession s, UcmFileHistory h)
 		throws UcmFileNotFoundException, UcmServiceException, UcmFileRevisionNotFoundException {
 		return getFileHistory(s, h.getURI());
+	}
+
+	private UcmRenditionInfo generateDefaultRendition(UcmUniqueURI guid, UcmAttributes attributes) {
+		String format = attributes.getString(UcmAtt.dFormat);
+		if (format == null) {
+			format = UcmModel.REMDITION_DEFAULT_FORMAT;
+		}
+		return new UcmRenditionInfo(guid, UcmModel.RENDITION_DEFAULT_TYPE, format, "Native File",
+			"The original format (added automatically)");
 	}
 
 	public Map<String, UcmRenditionInfo> getRenditions(final UcmSession s, final UcmFile file)
@@ -1379,11 +1393,17 @@ public class UcmModel {
 								UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, null);
 								Map<String, UcmRenditionInfo> renditions = new TreeMap<>();
 								DataResultSet rs = responseData.getResultSet("Renditions");
-								if (rs == null) { throw new UcmServiceException(String.format(
-									"Revision ID [%s] was found, but no rendition information was returned??!", id)); }
-								for (DataObject o : rs.getRows()) {
-									UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
-									renditions.put(r.getType().toUpperCase(), r);
+								if (rs != null) {
+									for (DataObject o : rs.getRows()) {
+										UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
+										renditions.put(r.getType().toUpperCase(), r);
+									}
+								} else {
+									UcmModel.this.log.warn(
+										"Revision ID [{}] was found, but no rendition information was returned??! Generated a default primary rendition",
+										id);
+									UcmRenditionInfo info = generateDefaultRendition(guid, attributes);
+									renditions.put(info.getType(), info);
 								}
 								data.set(attributes);
 								return renditions;
