@@ -294,9 +294,12 @@ public class UcmModel {
 	}
 
 	private UcmAttributes buildAttributesFromDocInfo(DataBinder responseData, AtomicReference<DataResultSet> history,
-		AtomicReference<DataResultSet> renditions) {
+		AtomicReference<DataResultSet> renditions) throws UcmServiceException {
 		Map<String, String> baseObj = new HashMap<>();
 		// First things first!! Stash the retrieved object...
+		DataResultSet docInfo = responseData.getResultSet("DOC_INFO");
+		if (docInfo == null) { return null; }
+
 		DataResultSet fileInfo = responseData.getResultSet("FileInfo");
 		if (fileInfo != null) {
 			baseObj.putAll(fileInfo.getRows().get(0));
@@ -308,7 +311,6 @@ public class UcmModel {
 			baseObj.put(UcmAtt.cmfParentPath.name(), responseData.getLocalData().get("fParentPath"));
 		}
 
-		DataResultSet docInfo = responseData.getResultSet("DOC_INFO");
 		baseObj.putAll(docInfo.getRows().get(0));
 
 		if (history != null) {
@@ -422,7 +424,8 @@ public class UcmModel {
 
 							final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
 							if (attributes == null) { throw new UcmServiceException(String.format(
-								"Path [%s] was found, but was neither a file nor a folder?!?", sanitizedPath)); }
+								"Path [%s] was found via FLD_INFO, but was neither a file nor a folder?!?",
+								sanitizedPath)); }
 							data.set(attributes);
 
 							URI uri = UcmModel.getURI(attributes);
@@ -507,8 +510,9 @@ public class UcmModel {
 							} else {
 								attributes = buildAttributesFromFldInfo(responseData);
 							}
-							if (attributes == null) { throw new UcmServiceException(String
-								.format("%s GUID [%s] was found, didn't contain any data?!?", type.name(), guid)); }
+							if (attributes == null) { throw new UcmServiceException(
+								String.format("%s GUID [%s] was found via %s(%s=%s), didn't contain any data?!?",
+									type.name(), guid, serviceName, identifierAtt.name(), guid)); }
 							data.set(attributes);
 
 							String uriIdentifier = data.get().getString(identifierAtt);
@@ -637,7 +641,8 @@ public class UcmModel {
 								attributes = buildAttributesFromFldInfo(responseData);
 							}
 							if (attributes == null) { throw new UcmServiceException(
-								String.format("The URI [%s] was found, didn't contain any data?!?", uri)); }
+								String.format("The URI [%s] was found via %s(%s=%s), didn't contain any data?!?", uri,
+									serviceName, identifierAtt.name(), searchKey)); }
 							data.set(attributes);
 							return UcmModel.getUniqueURI(attributes);
 						} catch (IdcClientException | UcmException e) {
@@ -729,8 +734,9 @@ public class UcmModel {
 							}
 
 							UcmAttributes baseData = buildAttributesFromDocInfo(responseData, history, renditions);
-							if (baseData == null) { throw new UcmServiceException(
-								String.format("Revision ID [%s] was found, but returned incorrect results?!?", id)); }
+							if (baseData == null) { throw new UcmServiceException(String.format(
+								"Revision ID [%s] was found via DOC_INFO(dID=%s), but returned empty results", id,
+								id)); }
 							data.set(baseData);
 							return UcmModel.getUniqueURI(baseData);
 						} catch (IdcClientException | UcmException e) {
@@ -1400,8 +1406,8 @@ public class UcmModel {
 									}
 								} else {
 									UcmModel.this.log.warn(
-										"Revision ID [{}] was found, but no rendition information was returned??! Generated a default primary rendition",
-										id);
+										"Revision ID [{}] was found via DOC_INFO(dID=%s), but no rendition information was returned??! Generated a default primary rendition",
+										id, id);
 									UcmRenditionInfo info = generateDefaultRendition(guid, attributes);
 									renditions.put(info.getType(), info);
 								}
