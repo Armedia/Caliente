@@ -134,6 +134,21 @@
 					<mandatory enforced="false">false</mandatory>
 					<multiple>false</multiple>
 				</property>
+				<property name="ucm:dDocName">
+					<type>d:text</type>
+					<mandatory enforced="true">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dRevisionID">
+					<type>d:int</type>
+					<mandatory enforced="true">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dRevLabel">
+					<type>d:int</type>
+					<mandatory enforced="true">true</mandatory>
+					<multiple>false</multiple>
+				</property>
 				<property name="ucm:dDocAuthor">
 					<type>d:text</type>
 					<mandatory enforced="false">false</mandatory>
@@ -265,6 +280,11 @@
 					<multiple>false</multiple>
 				</property>
 				<property name="ucm:fDocClass">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fFileGUID">
 					<type>d:text</type>
 					<mandatory enforced="false">false</mandatory>
 					<multiple>false</multiple>
