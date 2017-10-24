@@ -48,7 +48,8 @@ import oracle.stellent.ridc.protocol.ServiceResponse.ResponseType;
 // CHECKIN_UNIVERSAL (dDocAuthor, dDocTitle, dDocType, dSecurityGroup, dCreateDate, doFileCopy = 1)
 public class UcmModel {
 	// Syntax: query{sortAtts}[startRow,rowCount] / sortAtts == +att1,-att2,
-	private static final Pattern QUERY_PARSER = Pattern.compile("^(.*?)(?:\\{(.*)\\})?(?:\\[(.*)\\])?$");
+	private static final Pattern QUERY_PARSER = Pattern.compile("^(.*?)(?:\\{(.*)\\})?(?:\\[(.*)\\])?$",
+		Pattern.DOTALL);
 	private static final Pattern SORT_PARSER = Pattern.compile("^[-+]?\\w+$");
 	private static final Pattern ROW_PARSER = Pattern.compile("^(?:([1-9][0-9]*),)?([1-9][0-9]*)(?:/([1-9][0-9]*))?$");
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
