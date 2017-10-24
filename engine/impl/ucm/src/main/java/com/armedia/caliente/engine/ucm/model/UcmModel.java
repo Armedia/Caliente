@@ -48,10 +48,11 @@ import oracle.stellent.ridc.protocol.ServiceResponse.ResponseType;
 // CHECKIN_UNIVERSAL (dDocAuthor, dDocTitle, dDocType, dSecurityGroup, dCreateDate, doFileCopy = 1)
 public class UcmModel {
 	// Syntax: query{sortAtts}[startRow,rowCount] / sortAtts == +att1,-att2,
-	private static final Pattern QUERY_PARSER = Pattern.compile("^(.*?)(?:\\{(.*)\\})?(?:\\[(.*)\\])?$",
-		Pattern.DOTALL);
+	private static final Pattern QUERY_PARSER = Pattern
+		.compile("^(.*?)(?:\\s*\\{\\s*(.*)\\s*\\}\\s*)?(?:\\s*\\[\\s*(.*)\\s*\\]\\s*)?$", Pattern.DOTALL);
 	private static final Pattern SORT_PARSER = Pattern.compile("^[-+]?\\w+$");
-	private static final Pattern ROW_PARSER = Pattern.compile("^(?:([1-9][0-9]*),)?([1-9][0-9]*)(?:/([1-9][0-9]*))?$");
+	private static final Pattern ROW_PARSER = Pattern
+		.compile("^(?:\\s*([1-9][0-9]*)\\s*,)?\\s*([1-9][0-9]*)\\s*(?:/\\s*([1-9][0-9]*))?\\s*$");
 	private static final Pattern PATH_CHECKER = Pattern.compile("^(/|(/[^/]+)+/?)$");
 	private static final String RENDITION_DEFAULT_TYPE = UcmRenditionInfo.DEFAULT;
 	private static final String REMDITION_DEFAULT_FORMAT = "application/octet-stream";
@@ -853,6 +854,7 @@ public class UcmModel {
 			if (l.isEmpty()) { throw new UcmServiceException(String.format(
 				"Illegal empty sort specification - the syntax is spec1[,spec2,spec3,...,specN] where specX is [-+]attributeName (+ = ASC, - = DESC, default is ASC)")); }
 			for (String ss : l) {
+				ss = StringUtils.strip(ss);
 				Matcher sm = UcmModel.SORT_PARSER.matcher(ss);
 				if (!sm.matches()) { throw new UcmServiceException(String.format(
 					"Illegal attribute sort specification '%s' - the syntax is [-+]attributeName (+ = ASC, - = DESC, default is ASC)",
