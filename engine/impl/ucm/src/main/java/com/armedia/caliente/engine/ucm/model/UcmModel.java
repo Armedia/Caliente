@@ -451,6 +451,7 @@ public class UcmModel {
 		URI uri = this.uriByGUID.get(guid);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
+		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		if (uri == null) {
 			try {
 				uri = this.uriByPaths.createIfAbsent(guid, new ConcurrentInitializer<URI>() {
@@ -482,6 +483,7 @@ public class UcmModel {
 									public void prepareRequest(DataBinder binder) {
 										binder.putLocal(identifierAtt.name(), guid);
 										if (type == UcmObjectType.FILE) {
+											binder.putLocal("includeFileRenditionsInfo", "1");
 											binder.putLocal("isAddFolderMetadata", "1");
 										}
 									}
@@ -496,7 +498,7 @@ public class UcmModel {
 
 							final UcmAttributes attributes;
 							if (type == UcmObjectType.FILE) {
-								attributes = buildAttributesFromDocInfo(responseData, history, null);
+								attributes = buildAttributesFromDocInfo(responseData, history, renditions);
 							} else {
 								attributes = buildAttributesFromFldInfo(responseData);
 							}
@@ -524,15 +526,28 @@ public class UcmModel {
 		}
 
 		// There's an object...so stash it
-		cacheDataObject(data.get());
+		if (data.get() != null) {
+			cacheDataObject(data.get());
 
-		if (history.get() != null) {
-			DataResultSet rs = history.get();
-			LinkedList<UcmRevision> list = new LinkedList<>();
-			for (DataObject o : rs.getRows()) {
-				list.addFirst(new UcmRevision(uri, o, rs.getFields()));
+			if (history.get() != null) {
+				DataResultSet rs = history.get();
+				LinkedList<UcmRevision> list = new LinkedList<>();
+				for (DataObject o : rs.getRows()) {
+					list.addFirst(new UcmRevision(uri, o, rs.getFields()));
+				}
+				this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
 			}
-			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
+
+			if (renditions.get() != null) {
+				UcmUniqueURI uniqueId = UcmModel.getUniqueURI(data.get());
+				DataResultSet rs = renditions.get();
+				Map<String, UcmRenditionInfo> m = new TreeMap<>();
+				for (DataObject o : rs.getRows()) {
+					UcmRenditionInfo r = new UcmRenditionInfo(uniqueId, o, rs.getFields());
+					m.put(r.getType().toUpperCase(), r);
+				}
+				this.renditionsByUniqueURI.put(uniqueId, Tools.freezeMap(new LinkedHashMap<>(m)));
+			}
 		}
 
 		if (Tools.equals(UcmModel.NULL_URI, uri)) { throw new UcmObjectNotFoundException(
@@ -560,9 +575,10 @@ public class UcmModel {
 			throw new IllegalArgumentException(String.format("The URI [%s] doesn't point to a valid object", uri));
 		}
 
-		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
-		UcmUniqueURI guid = this.uniqueUriByHistoryUri.get(uri);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
+		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
+		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
+		UcmUniqueURI guid = this.uniqueUriByHistoryUri.get(uri);
 		if (guid == null) {
 			try {
 				guid = this.uniqueUriByHistoryUri.createIfAbsent(uri, new ConcurrentInitializer<UcmUniqueURI>() {
@@ -576,11 +592,12 @@ public class UcmModel {
 							final String searchKey;
 							if (file) {
 								String id = uri.getFragment();
-								serviceName = "DOC_INFO";
 								if (id != null) {
+									serviceName = "DOC_INFO";
 									identifierAtt = UcmAtt.dID;
 									searchKey = id;
 								} else {
+									serviceName = "DOC_INFO_BY_NAME";
 									identifierAtt = UcmAtt.dDocName;
 									searchKey = uri.getSchemeSpecificPart();
 								}
@@ -610,7 +627,7 @@ public class UcmModel {
 
 							final UcmAttributes attributes;
 							if (file) {
-								attributes = buildAttributesFromDocInfo(responseData, history, null);
+								attributes = buildAttributesFromDocInfo(responseData, history, renditions);
 							} else {
 								attributes = buildAttributesFromFldInfo(responseData);
 							}
@@ -642,6 +659,16 @@ public class UcmModel {
 			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
 		}
 
+		if (renditions.get() != null) {
+			DataResultSet rs = renditions.get();
+			Map<String, UcmRenditionInfo> m = new TreeMap<>();
+			for (DataObject o : rs.getRows()) {
+				UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
+				m.put(r.getType().toUpperCase(), r);
+			}
+			this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
+		}
+
 		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid,
 			new ConcurrentInitializer<UcmAttributes>() {
 				@Override
@@ -657,15 +684,15 @@ public class UcmModel {
 
 	public UcmFile getFileRevision(UcmSession s, UcmRevision revision)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return new UcmFile(this, revision.getUri(), getFileRevision(s, revision.getId(), true));
+		return new UcmFile(this, revision.getUri(), getFileRevision(s, revision.getId()));
 	}
 
 	public UcmFile getFileRevision(UcmSession s, UcmFile file)
 		throws UcmServiceException, UcmFileNotFoundException, UcmFileRevisionNotFoundException {
-		return new UcmFile(this, file.getURI(), getFileRevision(s, file.getRevisionId(), true));
+		return new UcmFile(this, file.getURI(), getFileRevision(s, file.getRevisionId()));
 	}
 
-	protected UcmAttributes getFileRevision(final UcmSession s, final String id, final boolean refreshRenditions)
+	protected UcmAttributes getFileRevision(final UcmSession s, final String id)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		UcmUniqueURI guid = this.revisionUriByRevisionID.get(id);
 		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
@@ -684,10 +711,8 @@ public class UcmModel {
 									@Override
 									public void prepareRequest(DataBinder binder) {
 										binder.putLocal("dID", id);
-										if (refreshRenditions) {
-											binder.putLocal("includeFileRenditionsInfo", "1");
-											binder.putLocal("isAddFolderMetadata", "1");
-										}
+										binder.putLocal("includeFileRenditionsInfo", "1");
+										binder.putLocal("isAddFolderMetadata", "1");
 									}
 								});
 								responseData = response.getResponseAsBinder();
@@ -698,8 +723,7 @@ public class UcmModel {
 								throw e;
 							}
 
-							UcmAttributes baseData = buildAttributesFromDocInfo(responseData, history,
-								(refreshRenditions ? renditions : null));
+							UcmAttributes baseData = buildAttributesFromDocInfo(responseData, history, renditions);
 							if (baseData == null) { throw new UcmServiceException(
 								String.format("Revision ID [%s] was found, but returned incorrect results?!?", id)); }
 							data.set(baseData);
@@ -729,9 +753,8 @@ public class UcmModel {
 				}
 			});
 
-		URI uri = UcmModel.getURI(ret);
-
 		if (history.get() != null) {
+			URI uri = UcmModel.getURI(ret);
 			DataResultSet rs = history.get();
 			LinkedList<UcmRevision> list = new LinkedList<>();
 			for (DataObject o : rs.getRows()) {
@@ -740,7 +763,7 @@ public class UcmModel {
 			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
 		}
 
-		if (refreshRenditions && (renditions.get() != null)) {
+		if (renditions.get() != null) {
 			DataResultSet rs = renditions.get();
 			Map<String, UcmRenditionInfo> m = new TreeMap<>();
 			for (DataObject o : rs.getRows()) {
