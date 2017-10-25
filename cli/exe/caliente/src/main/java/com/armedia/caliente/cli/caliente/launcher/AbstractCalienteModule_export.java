@@ -362,10 +362,10 @@ public class AbstractCalienteModule_export extends
 			final long count = (current.longValue() - prev.longValue());
 			final Double itemRate = (count / AbstractCalienteModule_export.PROGRESS_INTERVAL.doubleValue());
 
-			objectLine = String.format("%n\tExported %d objects (~%.2f/s, %d since last report)", current.longValue(),
+			objectLine = String.format("Exported %d objects (~%.2f/s, %d since last report)", current.longValue(),
 				itemRate, count);
 			this.console.info(
-				String.format("PROGRESS REPORT%s%n\tProcessed %d objects in total", objectLine, current.longValue()));
+				String.format("PROGRESS REPORT%n\t%s%n%n%s", objectLine, this.counter.generateCummulativeReport(1)));
 		}
 	}
 
