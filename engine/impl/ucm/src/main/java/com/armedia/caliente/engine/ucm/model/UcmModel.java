@@ -805,36 +805,33 @@ public class UcmModel {
 		return getFolderContents(s, guid.getURI());
 	}
 
-	public static interface ObjectHandler {
-		public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object);
+	public static interface URIHandler {
+		public void handleURI(UcmSession session, long pos, URI objectUri) throws UcmServiceException;
 	}
 
-	public Collection<UcmFile> getDocumentSearchResults(final UcmSession s, final String query)
-		throws UcmServiceException {
-		return getDocumentSearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE);
+	public Collection<URI> getURISearchResults(final UcmSession s, final String query) throws UcmServiceException {
+		return getURISearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE);
 	}
 
-	public Collection<UcmFile> getDocumentSearchResults(final UcmSession s, final String query, final int pageSize)
+	public Collection<URI> getURISearchResults(final UcmSession s, final String query, final int pageSize)
 		throws UcmServiceException {
-		final List<UcmFile> results = new ArrayList<>();
-		iterateDocumentSearchResults(s, query, pageSize, new ObjectHandler() {
+		final List<URI> results = new ArrayList<>();
+		iterateURISearchResults(s, query, pageSize, new URIHandler() {
 			@Override
-			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject object) {
-				if (UcmFile.class.isInstance(object)) {
-					results.add(UcmFile.class.cast(object));
-				}
+			public void handleURI(UcmSession session, long pos, URI uri) {
+				results.add(uri);
 			}
 		});
 		return results;
 	}
 
-	public long iterateDocumentSearchResults(final UcmSession s, final String query, final ObjectHandler handler)
+	public long iterateURISearchResults(final UcmSession s, final String query, final URIHandler handler)
 		throws UcmServiceException {
-		return iterateDocumentSearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE, handler);
+		return iterateURISearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE, handler);
 	}
 
-	public long iterateDocumentSearchResults(final UcmSession s, final String query, int pageSize,
-		final ObjectHandler handler) throws UcmServiceException {
+	public long iterateURISearchResults(final UcmSession s, final String query, int pageSize, final URIHandler handler)
+		throws UcmServiceException {
 		Objects.requireNonNull(s, "Must provide a session to search with");
 		Objects.requireNonNull(query, "Must provide a query to execute");
 		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
@@ -955,19 +952,9 @@ public class UcmModel {
 				}
 				final boolean lastPage = (rows.size() < actualPageSize);
 				for (DataObject o : results.getRows()) {
-					UcmAttributes att = new UcmAttributes(o, results.getFields());
-					String guid = att.getString(UcmAtt.dDocName);
 					try {
-						final UcmFile file;
-						try {
-							file = getFileByGUID(s, guid);
-						} catch (UcmFileNotFoundException e) {
-							// The result was returned, but not accessible? KABOOM!
-							throw new UcmServiceException(String.format(
-								"The file with dDocName [%s] was returned in the result set, but was not retrieved when searched for explicitly",
-								guid), e);
-						}
-						handler.handleObject(s, ++rowNumber, file.getURI(), file);
+						URI uri = UcmModel.getURI(new UcmAttributes(o, results.getFields()));
+						handler.handleURI(s, ++rowNumber, uri);
 					} finally {
 						startRow.incrementAndGet();
 						if ((maxRows > 0) && (rowNumber >= maxRows)) {
@@ -984,6 +971,57 @@ public class UcmModel {
 			}
 		}
 		return rowNumber;
+	}
+
+	public static interface ObjectHandler {
+		public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object);
+	}
+
+	public Collection<UcmFile> getDocumentSearchResults(final UcmSession s, final String query)
+		throws UcmServiceException {
+		return getDocumentSearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE);
+	}
+
+	public Collection<UcmFile> getDocumentSearchResults(final UcmSession s, final String query, final int pageSize)
+		throws UcmServiceException {
+		final List<UcmFile> results = new ArrayList<>();
+		iterateDocumentSearchResults(s, query, pageSize, new ObjectHandler() {
+			@Override
+			public void handleObject(UcmSession session, long pos, URI uri, UcmFSObject object) {
+				if (UcmFile.class.isInstance(object)) {
+					results.add(UcmFile.class.cast(object));
+				}
+			}
+		});
+		return results;
+	}
+
+	public long iterateDocumentSearchResults(final UcmSession s, final String query, final ObjectHandler handler)
+		throws UcmServiceException {
+		return iterateDocumentSearchResults(s, query, UcmConstants.DEFAULT_PAGE_SIZE, handler);
+	}
+
+	public long iterateDocumentSearchResults(final UcmSession s, final String query, int pageSize,
+		final ObjectHandler handler) throws UcmServiceException {
+		Objects.requireNonNull(s, "Must provide a session to search with");
+		Objects.requireNonNull(query, "Must provide a query to execute");
+		Objects.requireNonNull(handler, "Must provide handler to use while iterating");
+
+		return iterateURISearchResults(s, query, new URIHandler() {
+			@Override
+			public void handleURI(UcmSession session, long pos, URI objectUri) throws UcmServiceException {
+				final UcmFile file;
+				try {
+					file = getFile(s, objectUri);
+				} catch (UcmFileNotFoundException e) {
+					// The result was returned, but not accessible? KABOOM!
+					throw new UcmServiceException(String.format(
+						"The file with URI [%s] was returned in the result set, but was not retrieved when searched for explicitly",
+						objectUri), e);
+				}
+				handler.handleObject(s, pos, file.getURI(), file);
+			}
+		});
 	}
 
 	public int iterateFolderContents(final UcmSession s, final UcmFolder folder, final ObjectHandler handler)

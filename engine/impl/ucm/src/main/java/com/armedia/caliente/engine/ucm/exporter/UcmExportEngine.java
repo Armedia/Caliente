@@ -35,6 +35,7 @@ import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
+import com.armedia.caliente.engine.ucm.model.UcmModel.URIHandler;
 import com.armedia.caliente.engine.ucm.model.UcmRuntimeException;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfContentStore;
@@ -55,11 +56,11 @@ public class UcmExportEngine extends
 
 	private static class ExceptionWrapper extends RuntimeException {
 		private static final long serialVersionUID = 1L;
-		private final UcmFSObject file;
+		private final URI uri;
 
-		private ExceptionWrapper(UcmFSObject file, Throwable cause) {
+		private ExceptionWrapper(URI uri, Throwable cause) {
 			super(cause);
-			this.file = file;
+			this.uri = uri;
 		}
 	}
 
@@ -143,21 +144,20 @@ public class UcmExportEngine extends
 					continue;
 				}
 				try {
-					session.iterateDocumentSearchResults(query, new ObjectHandler() {
+					session.iterateURISearchResults(query, new URIHandler() {
 						@Override
-						public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
+						public void handleURI(UcmSession session, long pos, URI objectUri) {
 							try {
-								submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
-									object.getURI().toString()));
+								submitter.submit(
+									new ExportTarget(CmfType.DOCUMENT, objectUri.toString(), objectUri.toString()));
 							} catch (final ExportException e) {
-								throw new ExceptionWrapper(object, e);
+								throw new ExceptionWrapper(objectUri, e);
 							}
 						}
 					});
 				} catch (ExceptionWrapper e) {
 					throw new ExportException(
-						String.format("Exception caught while handling search result %s", e.file.getUniqueURI()),
-						e.getCause());
+						String.format("Exception caught while handling search result [%s]", e.uri), e.getCause());
 				}
 				continue nextPath;
 			}

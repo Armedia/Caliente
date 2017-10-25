@@ -17,6 +17,7 @@ import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
+import com.armedia.caliente.engine.ucm.model.UcmModel.URIHandler;
 import com.armedia.caliente.engine.ucm.model.UcmObjectNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmRenditionInfo;
 import com.armedia.caliente.engine.ucm.model.UcmRenditionNotFoundException;
@@ -192,6 +193,22 @@ public class UcmSession implements TrackedUse {
 	public int iterateFolderContentsRecursive(UcmFolder folder, boolean recurseShortcuts, ObjectHandler handler)
 		throws UcmServiceException, UcmFolderNotFoundException {
 		return this.model.iterateFolderContentsRecursive(this, folder, recurseShortcuts, handler);
+	}
+
+	public Collection<URI> getURISearchResults(String query) throws UcmServiceException {
+		return this.model.getURISearchResults(this, query);
+	}
+
+	public Collection<URI> getURISearchResults(String query, int pageSize) throws UcmServiceException {
+		return this.model.getURISearchResults(this, query, pageSize);
+	}
+
+	public long iterateURISearchResults(String query, URIHandler handler) throws UcmServiceException {
+		return this.model.iterateURISearchResults(this, query, handler);
+	}
+
+	public long iterateURISearchResults(String query, int pageSize, URIHandler handler) throws UcmServiceException {
+		return this.model.iterateURISearchResults(this, query, pageSize, handler);
 	}
 
 	public long iterateDocumentSearchResults(String query, ObjectHandler handler) throws UcmServiceException {
