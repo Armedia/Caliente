@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -586,7 +587,7 @@ public class UcmModel {
 			throw new IllegalArgumentException(String.format("The URI [%s] doesn't point to a valid object", uri));
 		}
 
-		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
+		final AtomicBoolean serviceInvoked = new AtomicBoolean(false);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		UcmUniqueURI guid = this.uniqueUriByHistoryUri.get(uri);
@@ -645,8 +646,17 @@ public class UcmModel {
 							if (attributes == null) { throw new UcmServiceException(
 								String.format("The URI [%s] was found via %s(%s=%s), didn't contain any data?!?", uri,
 									serviceName, identifierAtt.name(), searchKey)); }
-							data.set(attributes);
-							return UcmModel.getUniqueURI(attributes);
+							final URI uri = UcmModel.getURI(attributes);
+							final UcmUniqueURI guid = UcmModel.getUniqueURI(attributes);
+
+							UcmModel.this.objectByUniqueURI.put(guid, attributes);
+							if (attributes.hasAttribute(UcmAtt.fParentGUID)) {
+								UcmModel.this.parentByURI.put(uri,
+									UcmModel.newFolderURI(attributes.getString(UcmAtt.fParentGUID)));
+							}
+							UcmModel.this.historyUriByUniqueURI.put(guid, uri);
+							serviceInvoked.set(true);
+							return guid;
 						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
@@ -662,36 +672,28 @@ public class UcmModel {
 		if (UcmUniqueURI.NULL_GUID.equals(
 			guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri)); }
 
-		if (history.get() != null) {
-			DataResultSet rs = history.get();
-			LinkedList<UcmRevision> list = new LinkedList<>();
-			for (DataObject o : rs.getRows()) {
-				list.addFirst(new UcmRevision(uri, o, rs.getFields()));
-			}
-			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
-		}
-
-		if (renditions.get() != null) {
-			DataResultSet rs = renditions.get();
-			Map<String, UcmRenditionInfo> m = new TreeMap<>();
-			for (DataObject o : rs.getRows()) {
-				UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
-				m.put(r.getType().toUpperCase(), r);
-			}
-			this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
-		}
-
-		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid,
-			new ConcurrentInitializer<UcmAttributes>() {
-				@Override
-				public UcmAttributes get() throws ConcurrentException {
-					UcmAttributes ret = data.get();
-					cacheDataObject(ret);
-					return ret;
+		if (serviceInvoked.get()) {
+			if (history.get() != null) {
+				DataResultSet rs = history.get();
+				LinkedList<UcmRevision> list = new LinkedList<>();
+				for (DataObject o : rs.getRows()) {
+					list.addFirst(new UcmRevision(uri, o, rs.getFields()));
 				}
-			});
+				this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
+			}
 
-		return ret;
+			if (renditions.get() != null) {
+				DataResultSet rs = renditions.get();
+				Map<String, UcmRenditionInfo> m = new TreeMap<>();
+				for (DataObject o : rs.getRows()) {
+					UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
+					m.put(r.getType().toUpperCase(), r);
+				}
+				this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
+			}
+		}
+
+		return this.objectByUniqueURI.get(guid);
 	}
 
 	public UcmFile getFileRevision(UcmSession s, UcmRevision revision)
@@ -707,7 +709,7 @@ public class UcmModel {
 	protected UcmAttributes getFileRevision(final UcmSession s, final String id)
 		throws UcmServiceException, UcmFileRevisionNotFoundException {
 		UcmUniqueURI guid = this.revisionUriByRevisionID.get(id);
-		final AtomicReference<UcmAttributes> data = new AtomicReference<>(null);
+		final AtomicBoolean serviceInvoked = new AtomicBoolean(false);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
 		if (guid == null) {
@@ -735,12 +737,20 @@ public class UcmModel {
 								throw e;
 							}
 
-							UcmAttributes baseData = buildAttributesFromDocInfo(responseData, history, renditions);
-							if (baseData == null) { throw new UcmServiceException(String.format(
+							UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, renditions);
+							if (attributes == null) { throw new UcmServiceException(String.format(
 								"Revision ID [%s] was found via DOC_INFO(dID=%s), but returned empty results", id,
 								id)); }
-							data.set(baseData);
-							return UcmModel.getUniqueURI(baseData);
+							final URI uri = UcmModel.getURI(attributes);
+							final UcmUniqueURI guid = UcmModel.getUniqueURI(attributes);
+							UcmModel.this.objectByUniqueURI.put(guid, attributes);
+							if (attributes.hasAttribute(UcmAtt.fParentGUID)) {
+								UcmModel.this.parentByURI.put(uri,
+									UcmModel.newFolderURI(attributes.getString(UcmAtt.fParentGUID)));
+							}
+							UcmModel.this.historyUriByUniqueURI.put(guid, uri);
+							serviceInvoked.set(true);
+							return UcmModel.getUniqueURI(attributes);
 						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
 						}
@@ -756,36 +766,28 @@ public class UcmModel {
 		if (UcmUniqueURI.NULL_GUID.equals(
 			guid)) { throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id)); }
 
-		UcmAttributes ret = createIfAbsentInCache(this.objectByUniqueURI, guid,
-			new ConcurrentInitializer<UcmAttributes>() {
-				@Override
-				public UcmAttributes get() throws ConcurrentException {
-					UcmAttributes ret = data.get();
-					cacheDataObject(ret);
-					return ret;
+		UcmAttributes ret = this.objectByUniqueURI.get(guid);
+		if (serviceInvoked.get()) {
+			if (history.get() != null) {
+				URI uri = UcmModel.getURI(ret);
+				DataResultSet rs = history.get();
+				LinkedList<UcmRevision> list = new LinkedList<>();
+				for (DataObject o : rs.getRows()) {
+					list.addFirst(new UcmRevision(uri, o, rs.getFields()));
 				}
-			});
-
-		if (history.get() != null) {
-			URI uri = UcmModel.getURI(ret);
-			DataResultSet rs = history.get();
-			LinkedList<UcmRevision> list = new LinkedList<>();
-			for (DataObject o : rs.getRows()) {
-				list.addFirst(new UcmRevision(uri, o, rs.getFields()));
+				this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
 			}
-			this.historyByURI.put(uri, Tools.freezeList(new ArrayList<>(list)));
-		}
 
-		if (renditions.get() != null) {
-			DataResultSet rs = renditions.get();
-			Map<String, UcmRenditionInfo> m = new TreeMap<>();
-			for (DataObject o : rs.getRows()) {
-				UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
-				m.put(r.getType().toUpperCase(), r);
+			if (renditions.get() != null) {
+				DataResultSet rs = renditions.get();
+				Map<String, UcmRenditionInfo> m = new TreeMap<>();
+				for (DataObject o : rs.getRows()) {
+					UcmRenditionInfo r = new UcmRenditionInfo(guid, o, rs.getFields());
+					m.put(r.getType().toUpperCase(), r);
+				}
+				this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
 			}
-			this.renditionsByUniqueURI.put(guid, Tools.freezeMap(new LinkedHashMap<>(m)));
 		}
-
 		return ret;
 	}
 
