@@ -321,7 +321,7 @@ public class UcmModelTest extends BaseTest {
 
 	@Test
 	public void testSearchResults() throws Exception {
-		String query = "<not>\n(\ndID\n<matches>\n`-1`\n)\n              {   dID    ,   -dID    , +dCrap             }         \n    [   3    ,    5     / 2 ]\n\n";
+		String query = "<not>\n(\ndID\n<matches>\n`-1`\n)\n              {   dID                }         \n    [   3    ,    5     / 2 ]\n\n";
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
 			UcmSession s = w.getWrapped();

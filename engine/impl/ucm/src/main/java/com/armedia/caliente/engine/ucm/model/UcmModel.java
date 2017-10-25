@@ -847,8 +847,27 @@ public class UcmModel {
 		if (StringUtils.isEmpty(
 			actualQuery)) { throw new UcmServiceException("The actual query string is empty - this is not supported"); }
 
-		final StringBuilder sortSpec = new StringBuilder();
+		final String sortField;
+		final boolean desc;
 		String sortSpecStr = m.group(2);
+		if (sortSpecStr != null) {
+			sortSpecStr = StringUtils.strip(sortSpecStr);
+			Matcher sm = UcmModel.SORT_PARSER.matcher(sortSpecStr);
+			if (!sm.matches()) {
+
+			}
+
+			sortField = sortSpecStr.replaceAll("^[-+]", "");
+			desc = sortSpecStr.startsWith("-");
+		} else {
+			sortField = null;
+			desc = false;
+		}
+
+		// TODO: This section supports multiple sort specifications - need to figure out why this
+		// doesn't work...
+		/*
+		final StringBuilder sortSpec = new StringBuilder();
 		if (sortSpecStr != null) {
 			List<String> l = Tools.splitCSVEscaped(sortSpecStr);
 			if (l.isEmpty()) { throw new UcmServiceException(String.format(
@@ -861,11 +880,15 @@ public class UcmModel {
 					ss)); }
 				boolean desc = ss.startsWith("-");
 				if (sortSpec.length() > 0) {
-					sortSpec.append(' ');
+					sortSpec.append(", ");
 				}
-				sortSpec.append(ss).append(' ').append(desc ? "DE" : "A").append("SC");
+				if (ss.startsWith("-") || ss.startsWith("+")) {
+					ss = ss.substring(1);
+				}
+				sortSpec.append(ss).append(' ').append(desc ? "De" : "A").append("sc");
 			}
 		}
+		*/
 
 		// TODO: Need to find the correct way to identify "automagically" if we should use database
 		// or databasetext engines when running the search...if only there were documentation...
@@ -899,6 +922,10 @@ public class UcmModel {
 				ServiceResponse response = s.callService("GET_SEARCH_RESULTS", new RequestPreparation() {
 					@Override
 					public void prepareRequest(DataBinder binder) {
+						UcmModel.this.log.debug(
+							"Calling GET_SEARCH_RESULTS (dbMode = {}, start row = {}, page size = {}, sortField = {} {}, query = [{}])",
+							dbMode, startRow.get(), actualPageSize, sortField, desc ? "Desc" : "Asc", actualQuery);
+
 						binder.putLocal("QueryText", actualQuery);
 						if (dbMode) {
 							binder.putLocal("SearchEngineName", "database");
@@ -906,14 +933,15 @@ public class UcmModel {
 						binder.putLocal("StartRow", String.valueOf(startRow.get()));
 						/*
 						if (sortSpec.length() > 0) {
-							// TODO Why isn't this working? It should work as per the docs...
 							binder.putLocal("SortSpec", sortSpec.toString());
 						}
 						*/
+						if (sortField != null) {
+							binder.putLocal("SortField", sortField);
+							binder.putLocal("SortOrder", desc ? "Desc" : "Asc");
+						}
 						binder.putLocal("ResultCount", String.valueOf(actualPageSize));
 						binder.putLocal("isAddFolderMetadata", "1");
-						binder.putLocal("SortField", "dID");
-						binder.putLocal("SortOrder", "Asc");
 					}
 				});
 				DataBinder binder = response.getResponseAsBinder();
