@@ -566,7 +566,7 @@ public class UcmModel {
 		return uri;
 	}
 
-	protected UcmAttributes getAttributes(final UcmSession s, final URI searchUri)
+	protected UcmAttributes getAttributes(final UcmSession s, final URI uri)
 		throws UcmServiceException, UcmObjectNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to retrieve");
 		if (UcmModel.NULL_FOLDER_GUID.equals(uri.getSchemeSpecificPart())) {
