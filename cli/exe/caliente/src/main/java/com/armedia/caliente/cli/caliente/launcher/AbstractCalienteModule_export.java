@@ -47,6 +47,7 @@ public class AbstractCalienteModule_export extends
 
 	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<>(ExportResult.class);
 
+	private final AtomicLong start = new AtomicLong(0);
 	private final AtomicLong previous = new AtomicLong(0);
 	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
 	private final AtomicLong objectCounter = new AtomicLong();
@@ -336,6 +337,7 @@ public class AbstractCalienteModule_export extends
 
 	@Override
 	public final void exportStarted(ExportState exportState) {
+		this.start.set(System.currentTimeMillis());
 		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportState.cfg));
 	}
 
@@ -358,12 +360,14 @@ public class AbstractCalienteModule_export extends
 		if (shouldDisplay && this.progressReporter.compareAndSet(last, now)) {
 			String objectLine = "";
 			final Double prev = this.previous.doubleValue();
+			final Long duration = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - this.start.get());
 			this.previous.set(current.longValue());
 			final long count = (current.longValue() - prev.longValue());
 			final Double itemRate = (count / AbstractCalienteModule_export.PROGRESS_INTERVAL.doubleValue());
+			final Double startRate = (current.doubleValue() / duration.doubleValue());
 
-			objectLine = String.format("Exported %d objects (~%.2f/s, %d since last report)", current.longValue(),
-				itemRate, count);
+			objectLine = String.format("Exported %d objects (~%.2f/s, %d since last report, ~%.2f/s average)",
+				current.longValue(), itemRate, count, startRate);
 			this.console.info(
 				String.format("PROGRESS REPORT%n\t%s%n%n%s", objectLine, this.counter.generateCummulativeReport(1)));
 		}
