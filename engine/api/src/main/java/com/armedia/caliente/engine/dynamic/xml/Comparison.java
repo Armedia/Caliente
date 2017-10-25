@@ -22,70 +22,84 @@ public enum Comparison {
 	// Base checks
 	EQ() {
 		@Override
-		protected boolean eval(CmfDataType type, Object candidate, Object comparand) {
+		protected boolean eval(CmfDataType type, Object candidate, Object comparand, boolean caseInsensitive) {
+			candidate = Comparison.canonicalizeCase(type, candidate, caseInsensitive);
+			comparand = Comparison.canonicalizeCase(type, comparand, caseInsensitive);
 			return (Comparison.compare(type, candidate, comparand) == 0);
 		}
 	},
 	GT() {
 		@Override
-		protected boolean eval(CmfDataType type, Object bigger, Object smaller) {
+		protected boolean eval(CmfDataType type, Object bigger, Object smaller, boolean caseInsensitive) {
+			bigger = Comparison.canonicalizeCase(type, bigger, caseInsensitive);
+			smaller = Comparison.canonicalizeCase(type, smaller, caseInsensitive);
 			return (Comparison.compare(type, bigger, smaller) > 0);
 		}
 	},
 	GE() {
 		@Override
-		protected boolean eval(CmfDataType type, Object bigger, Object smallerOrEqual) {
+		protected boolean eval(CmfDataType type, Object bigger, Object smallerOrEqual, boolean caseInsensitive) {
+			bigger = Comparison.canonicalizeCase(type, bigger, caseInsensitive);
+			smallerOrEqual = Comparison.canonicalizeCase(type, smallerOrEqual, caseInsensitive);
 			return (Comparison.compare(type, bigger, smallerOrEqual) >= 0);
 		}
 	},
 	LT() {
 		@Override
-		protected boolean eval(CmfDataType type, Object smaller, Object bigger) {
-			return GT.eval(type, bigger, smaller);
+		protected boolean eval(CmfDataType type, Object smaller, Object bigger, boolean caseInsensitive) {
+			return GT.eval(type, bigger, smaller, caseInsensitive);
 		}
 	},
 	LE() {
 		@Override
-		protected boolean eval(CmfDataType type, Object smallerOrEqual, Object bigger) {
-			return GE.eval(type, bigger, smallerOrEqual);
+		protected boolean eval(CmfDataType type, Object smallerOrEqual, Object bigger, boolean caseInsensitive) {
+			return GE.eval(type, bigger, smallerOrEqual, caseInsensitive);
 		}
 	},
 	SW() {
 		@Override
-		protected boolean eval(CmfDataType type, Object candidate, Object prefix) {
+		protected boolean eval(CmfDataType type, Object candidate, Object prefix, boolean caseInsensitive) {
 			// Regardless of type, must treat them as strings
 			if ((candidate == null) || (prefix == null)) { return false; }
+			candidate = Comparison.canonicalizeCase(type, candidate, caseInsensitive);
+			prefix = Comparison.canonicalizeCase(type, prefix, caseInsensitive);
 			return candidate.toString().startsWith(prefix.toString());
 		}
 	},
 	EW() {
 		@Override
-		protected boolean eval(CmfDataType type, Object candidate, Object suffix) {
+		protected boolean eval(CmfDataType type, Object candidate, Object suffix, boolean caseInsensitive) {
 			// Regardless of type, must treat them as strings
 			if ((candidate == null) || (suffix == null)) { return false; }
+			candidate = Comparison.canonicalizeCase(type, candidate, caseInsensitive);
+			suffix = Comparison.canonicalizeCase(type, suffix, caseInsensitive);
 			return candidate.toString().endsWith(suffix.toString());
 		}
 	},
 	CN() {
 		@Override
-		protected boolean eval(CmfDataType type, Object candidate, Object substring) {
+		protected boolean eval(CmfDataType type, Object candidate, Object substring, boolean caseInsensitive) {
 			// Regardless of type, must treat them as strings
 			if ((candidate == null) || (substring == null)) { return false; }
+			candidate = Comparison.canonicalizeCase(type, candidate, caseInsensitive);
+			substring = Comparison.canonicalizeCase(type, substring, caseInsensitive);
 			return (candidate.toString().indexOf(substring.toString()) >= 0);
 		}
 	},
 	RE() {
 		@Override
-		protected boolean eval(CmfDataType type, Object candidate, Object regex) {
+		protected boolean eval(CmfDataType type, Object candidate, Object regex, boolean caseInsensitive) {
 			// Regardless of type, must treat them as strings
 			if ((candidate == null) || (regex == null)) { return false; }
-			return Pattern.compile(regex.toString()).matcher(candidate.toString()).find();
+			int flags = (caseInsensitive ? Pattern.CASE_INSENSITIVE : 0);
+			return Pattern.compile(regex.toString(), flags).matcher(candidate.toString()).find();
 		}
 	},
 	GLOB() {
 		@Override
-		protected boolean eval(CmfDataType type, Object candidate, Object comparand) {
-			return RE.eval(CmfDataType.STRING, Tools.toString(candidate), Tools.globToRegex(Tools.toString(comparand)));
+		protected boolean eval(CmfDataType type, Object candidate, Object comparand, boolean caseInsensitive) {
+			return RE.eval(CmfDataType.STRING, Tools.toString(candidate), Tools.globToRegex(Tools.toString(comparand)),
+				caseInsensitive);
 		}
 	},
 
@@ -126,6 +140,11 @@ public enum Comparison {
 	NGLOBI(), //
 	//
 	;
+
+	private static Object canonicalizeCase(CmfDataType type, Object value, boolean caseInsensitive) {
+		if ((value == null) || (type != CmfDataType.STRING) || !caseInsensitive) { return value; }
+		return StringUtils.upperCase(String.valueOf(value));
+	}
 
 	public static Comparison DEFAULT = Comparison.EQI;
 
@@ -225,7 +244,7 @@ public enum Comparison {
 		}
 	}
 
-	protected boolean eval(CmfDataType type, Object candidate, Object comparand) {
+	protected boolean eval(CmfDataType type, Object candidate, Object comparand, boolean caseInsensitive) {
 		// The default implementation only looks for the case-insensitive counterpart.
 		// This way we only have to provide the comparison implementation assuming case
 		// sensitivity.
@@ -235,7 +254,7 @@ public enum Comparison {
 
 		// Case-insensitive, find my counterpart!
 		boolean negated = false;
-		boolean caseInsensitive = false;
+		caseInsensitive = false;
 		if (name.startsWith("N")) {
 			negated = true;
 			name = name.substring(1);
@@ -245,16 +264,12 @@ public enum Comparison {
 			caseInsensitive = true;
 		}
 		Comparison comp = Comparison.valueOf(name);
-		if (caseInsensitive && (type == CmfDataType.STRING)) {
-			comparand = StringUtils.upperCase(Tools.toString(comparand));
-			candidate = StringUtils.upperCase(Tools.toString(candidate));
-		}
-		return (negated ^ comp.eval(type, candidate, comparand));
+		return (negated ^ comp.eval(type, candidate, comparand, caseInsensitive));
 	}
 
 	public final boolean check(CmfDataType type, Object candidate, Object comparand) {
 		Objects.requireNonNull(comparand, "Must provide a non-null comparand value to check the candidate against");
-		return eval(type, candidate, comparand);
+		return eval(type, candidate, comparand, false);
 	}
 
 	public static Comparison get(String value) {

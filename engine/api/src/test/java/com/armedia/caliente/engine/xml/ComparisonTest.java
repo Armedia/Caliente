@@ -22,6 +22,10 @@ public class ComparisonTest {
 
 	@Test
 	public void testEQ() throws Exception {
+		final Comparison comp = Comparison.EQ;
+		final Comparison ncomp = Comparison.NEQ;
+		final Comparison compi = Comparison.EQI;
+		final Comparison ncompi = Comparison.NEQI;
 		// Test two known-equal values for equality ... on each data type
 		Map<CmfDataType, Collection<Pair<?, ?>>> data = new EnumMap<>(CmfDataType.class);
 		Collection<Pair<?, ?>> pairs = null;
@@ -70,15 +74,15 @@ public class ComparisonTest {
 			for (Pair<?, ?> p : data.get(t)) {
 				Assert.assertTrue(
 					String.format("Equality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
-					Comparison.EQ.check(t, p.getLeft(), p.getRight()));
+					comp.check(t, p.getLeft(), p.getRight()));
 				Assert.assertFalse(
 					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
-					Comparison.NEQ.check(t, p.getLeft(), p.getRight()));
+					ncomp.check(t, p.getLeft(), p.getRight()));
 
 				Assert.assertFalse(String.format("Equality test failed between [%s] and [%s]", null, p.getRight()),
-					Comparison.EQ.check(t, null, p.getRight()));
+					comp.check(t, null, p.getRight()));
 				Assert.assertTrue(String.format("Inequality test failed between [%s] and [%s]", null, p.getRight()),
-					Comparison.NEQ.check(t, null, p.getRight()));
+					ncomp.check(t, null, p.getRight()));
 
 				if (t == CmfDataType.STRING) {
 					// Also try the case-insensitive variants
@@ -86,9 +90,9 @@ public class ComparisonTest {
 					String right = Tools.toString(p.getRight()).toUpperCase();
 
 					Assert.assertTrue(String.format("Equality (CI) test failed between [%s] and [%s]", left, right),
-						Comparison.EQI.check(t, p.getLeft(), p.getRight()));
+						compi.check(t, p.getLeft(), p.getRight()));
 					Assert.assertFalse(String.format("Inequality (CI) test failed between [%s] and [%s]", left, right),
-						Comparison.NEQI.check(t, p.getLeft(), p.getRight()));
+						ncompi.check(t, p.getLeft(), p.getRight()));
 				}
 			}
 		}
@@ -135,7 +139,7 @@ public class ComparisonTest {
 			for (Pair<?, ?> p : data.get(t)) {
 				Assert.assertFalse(
 					String.format("Inequality test failed between [%s] and [%s]", p.getLeft(), p.getRight()),
-					Comparison.EQ.check(t, p.getLeft(), p.getRight()));
+					comp.check(t, p.getLeft(), p.getRight()));
 			}
 		}
 	}
