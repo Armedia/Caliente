@@ -1,12 +1,21 @@
 package com.armedia.caliente.engine.ucm.exporter;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -40,6 +49,10 @@ import com.armedia.commons.utilities.Tools;
 public class UcmExportEngine extends
 	ExportEngine<UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory> {
 
+	private static final Pattern STATIC_COMMENT_MARKER = Pattern.compile("(?<!\\\\)#");
+	private static final Pattern STATIC_PARSER = Pattern.compile("^(file|folder)\\s*:\\s*(.+)$",
+		Pattern.CASE_INSENSITIVE);
+
 	private static class ExceptionWrapper extends RuntimeException {
 		private static final long serialVersionUID = 1L;
 		private final UcmFSObject file;
@@ -61,7 +74,68 @@ public class UcmExportEngine extends
 		List<String> paths = UcmExportEngine.decodePathList(cfg.getString(UcmSetting.SOURCE));
 		if (paths.isEmpty()) { throw new ExportException("No paths given to export - cannot continue"); }
 
-		for (String path : paths) {
+		nextPath: for (String path : paths) {
+
+			URL url = null;
+			try {
+				url = new URL(path);
+			} catch (MalformedURLException e) {
+				// Not a URL so it's not a dDocName/fFolderGUID list...so we move along...
+				url = null;
+			}
+
+			// If it's a URL, it points to a text list of the objects to export...
+			if (url != null) {
+				try (InputStream in = url.openStream()) {
+					LineNumberReader r = new LineNumberReader(new InputStreamReader(in, Charset.forName("UTF-8")));
+					while (true) {
+						final String rawLine = r.readLine();
+						if (rawLine == null) {
+							break;
+						}
+
+						String line = rawLine;
+						Matcher m = UcmExportEngine.STATIC_COMMENT_MARKER.matcher(line);
+						if (m.find()) {
+							// Remove everything past the first #
+							line = line.substring(m.start());
+						}
+
+						// Remove leading and trailing space
+						line = StringUtils.strip(line);
+
+						m = UcmExportEngine.STATIC_PARSER.matcher(line);
+						if (!m.matches()) {
+							this.log.error("MALFORMED INPUT on line {}: [{}] -> [{}]", r.getLineNumber(), rawLine,
+								line);
+							continue;
+						}
+
+						String type = m.group(1);
+						String key = m.group(2);
+
+						URI uri = null;
+						try {
+							uri = new URI(type, key, null);
+						} catch (URISyntaxException e) {
+							this.log.error("Can't form a URI from line {}: [{}] -> [{}] -> [{}, {}]", r.getLineNumber(),
+								rawLine, line, type, key);
+							continue;
+						}
+						CmfType cmfType = null;
+						if (type.equalsIgnoreCase("file")) {
+							cmfType = CmfType.DOCUMENT;
+						} else {
+							cmfType = CmfType.FOLDER;
+						}
+
+						submitter.submit(new ExportTarget(cmfType, uri.toString(), uri.toString()));
+					}
+					continue nextPath;
+				}
+			}
+
+			// It's not a path...so assume it's a search string
 			if (!StringUtils.startsWith(path, "/")) {
 				String query = path;
 				if (StringUtils.isEmpty(query)) {
@@ -85,37 +159,38 @@ public class UcmExportEngine extends
 						String.format("Exception caught while handling search result %s", e.file.getUniqueURI()),
 						e.getCause());
 				}
-			} else {
-				UcmFSObject object = session.getObject(path);
-				switch (object.getType()) {
-					case FILE:
-						submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
+				continue nextPath;
+			}
+
+			// It really is a path...so use it for a search!
+			UcmFSObject object = session.getObject(path);
+			switch (object.getType()) {
+				case FILE:
+					submitter.submit(new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(),
+						object.getURI().toString()));
+					break;
+				case FOLDER:
+					if (object.isShortcut()) {
+						submitter.submit(new ExportTarget(CmfType.FOLDER, object.getUniqueURI().toString(),
 							object.getURI().toString()));
 						break;
-					case FOLDER:
-						if (object.isShortcut()) {
-							submitter.submit(new ExportTarget(CmfType.FOLDER, object.getUniqueURI().toString(),
-								object.getURI().toString()));
-							break;
-						}
-						UcmFolder folder = UcmFolder.class.cast(object);
-						// Not a shortcut, so we'll recurse into it and submit each and every one of
-						// its contents, but we won't be recursing into shortcuts
-						session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
-							@Override
-							public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
-								try {
-									submitter.submit(new ExportTarget(object.getType().cmfType,
-										object.getUniqueURI().toString(), object.getURI().toString()));
-								} catch (ExportException e) {
-									throw new UcmRuntimeException(String.format(
-										"ExportException caught while submitting item [%s] to the workload", objectUri),
-										e);
-								}
+					}
+					UcmFolder folder = UcmFolder.class.cast(object);
+					// Not a shortcut, so we'll recurse into it and submit each and every one of
+					// its contents, but we won't be recursing into shortcuts
+					session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
+						@Override
+						public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
+							try {
+								submitter.submit(new ExportTarget(object.getType().cmfType,
+									object.getUniqueURI().toString(), object.getURI().toString()));
+							} catch (ExportException e) {
+								throw new UcmRuntimeException(String.format(
+									"ExportException caught while submitting item [%s] to the workload", objectUri), e);
 							}
-						});
-						break;
-				}
+						}
+					});
+					break;
 			}
 		}
 	}
