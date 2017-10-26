@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "namedMappingSet.t")
+@XmlType(name = "namedMappings.t")
 public class NamedMappings extends MappingSet {
 
 	@XmlAttribute(name = "includes", required = false)

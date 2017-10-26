@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "emptyElement.t")
+@XmlType(name = "disableResiduals.t")
 public class ResidualsDisable extends EmptyElement implements ResidualsMarker {
 
 	@Override

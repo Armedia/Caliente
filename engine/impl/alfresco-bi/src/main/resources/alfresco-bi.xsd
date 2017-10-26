@@ -79,7 +79,20 @@
 			<xsd:restriction base="xsd:anyType" />
 		</xsd:complexContent>
 	</xsd:complexType>
-	
+
+	<xsd:complexType name="enableResiduals.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:emptyElement.t"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="disableResiduals.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:emptyElement.t"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+
 	<xsd:complexType name="mapping.t">
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
@@ -90,21 +103,33 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="mappingName.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:mapping.t"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="mappingNamespace.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:mapping.t"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="mappingSet.t">
 		<xsd:sequence>
 			<xsd:choice minOccurs="0" maxOccurs="unbounded">
-				<xsd:element name="map" type="tns:mapping.t" />
-				<xsd:element name="nsmap" type="tns:mapping.t" />
+				<xsd:element name="map" type="tns:mappingName.t" />
+				<xsd:element name="nsmap" type="tns:mappingNamespace.t" />
 			</xsd:choice>
 			<xsd:choice minOccurs="0" maxOccurs="1">
-				<xsd:element name="enable-residuals" type="tns:emptyElement.t" />
-				<xsd:element name="disable-residuals" type="tns:emptyElement.t" />
+				<xsd:element name="enable-residuals" type="tns:enableResiduals.t" />
+				<xsd:element name="disable-residuals" type="tns:disableResiduals.t" />
 			</xsd:choice>
 		</xsd:sequence>
 		<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="," />
 	</xsd:complexType>
 
-	<xsd:complexType name="namedMappingSet.t">
+	<xsd:complexType name="namedMappings.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:mappingSet.t">
 				<xsd:attribute name="includes" type="tns:noSpaces.t" use="optional" />
@@ -113,13 +138,26 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="typeMappings.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:namedMappings.t"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+	<xsd:complexType name="secondaryMappings.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:namedMappings.t"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+
+ 
 	<xsd:complexType name="attributeMappings.t">
 		<xsd:sequence>
 			<xsd:element name="common-mappings" type="tns:mappingSet.t" minOccurs="0" maxOccurs="1" />
 			<xsd:choice minOccurs="0" maxOccurs="unbounded">
-				<xsd:element name="mappings" type="tns:namedMappingSet.t" />
-				<xsd:element name="type-mappings" type="tns:namedMappingSet.t" />
-				<xsd:element name="secondary-mappings" type="tns:namedMappingSet.t" />
+				<xsd:element name="mappings" type="tns:namedMappings.t" />
+				<xsd:element name="type-mappings" type="tns:typeMappings.t" />
+				<xsd:element name="secondary-mappings" type="tns:secondaryMappings.t" />
 			</xsd:choice>
 		</xsd:sequence>
 	</xsd:complexType>

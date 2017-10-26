@@ -7,12 +7,14 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
+import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "attributeMappings.t", propOrder = {
 	"commonMappings", "namedMappings"
 })
+@XmlRootElement(name = "attribute-mappings")
 public class AttributeMappings {
 
 	@XmlElement(name = "common-mappings")

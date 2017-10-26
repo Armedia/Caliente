@@ -1,18 +1,13 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlValue;
 
 import com.armedia.commons.utilities.Tools;
 
-@XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "mapping.t", propOrder = {
-	"value"
-})
-public class Mapping {
+@XmlTransient
+public abstract class Mapping {
 
 	@XmlValue
 	protected String value;

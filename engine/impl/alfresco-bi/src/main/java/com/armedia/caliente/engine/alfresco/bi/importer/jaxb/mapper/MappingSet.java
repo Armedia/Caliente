@@ -26,7 +26,7 @@ public class MappingSet {
 	private static final ResidualsMarker RESIDUALS_DISABLE = new ResidualsDisable();
 
 	@XmlElements({
-		@XmlElement(name = "map", type = Mapping.class, required = false),
+		@XmlElement(name = "map", type = NameMapping.class, required = false),
 		@XmlElement(name = "nsmap", type = NamespaceMapping.class, required = false)
 	})
 	protected List<Mapping> mappings;

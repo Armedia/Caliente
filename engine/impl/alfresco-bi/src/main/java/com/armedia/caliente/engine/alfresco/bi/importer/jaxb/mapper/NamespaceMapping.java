@@ -5,6 +5,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "mapping.t")
+@XmlType(name = "mappingNamespace.t", propOrder = {
+	"value"
+})
 public class NamespaceMapping extends Mapping {
 }
