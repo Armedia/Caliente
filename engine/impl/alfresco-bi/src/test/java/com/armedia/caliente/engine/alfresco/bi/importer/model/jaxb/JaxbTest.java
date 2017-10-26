@@ -11,6 +11,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.AttributeMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.Model;
 import com.armedia.commons.utilities.XmlTools;
 
@@ -20,27 +21,28 @@ public class JaxbTest {
 
 		private final Class<T> c;
 		private final URL resource;
+		private final String schema;
 
-		protected XmlTest(Class<T> c, String resource) {
+		protected XmlTest(Class<T> c, String resource, String schema) {
 			this.c = c;
 			this.resource = Thread.currentThread().getContextClassLoader().getResource(resource);
+			this.schema = schema;
 		}
 
-		protected void run() throws Exception {
+		protected final void run() throws Exception {
 			InputStream in = null;
-			final String schema = "alfresco-model.xsd";
 
 			T obj = null;
 			try {
 				in = this.resource.openStream();
-				obj = XmlTools.unmarshal(this.c, schema, in);
+				obj = XmlTools.unmarshal(this.c, this.schema, in);
 				Assert.assertNotNull(obj);
 			} finally {
 				IOUtils.closeQuietly(in);
 			}
 
 			validate(obj);
-			validate(obj, XmlTools.marshal(obj, schema, true));
+			validate(obj, XmlTools.marshal(obj, this.schema, true));
 		}
 
 		protected void validate(T obj) throws Exception {
@@ -70,7 +72,8 @@ public class JaxbTest {
 	}
 
 	@Test
-	public void testAll() throws Exception {
+	public void testModels() throws Exception {
+		final String schema = "alfresco-model.xsd";
 		String[] s = {
 			"contentModel.xml", "alfresco-model.xml", "cmisModel.xml"
 		};
@@ -79,7 +82,27 @@ public class JaxbTest {
 			@SuppressWarnings({
 				"unchecked", "rawtypes"
 			})
-			XmlTest<?> xmlTest = new XmlTest(Model.class, xml);
+			XmlTest<?> xmlTest = new XmlTest(Model.class, xml, schema);
+			try {
+				xmlTest.run();
+			} catch (Throwable t) {
+				throw new Exception(String.format("Failed while processing [%s]", xml), t);
+			}
+		}
+	}
+
+	@Test
+	public void testMappings() throws Exception {
+		final String schema = "alfresco-bi.xsd";
+		String[] s = {
+			"test-mappings.xml"
+		};
+
+		for (String xml : s) {
+			@SuppressWarnings({
+				"unchecked", "rawtypes"
+			})
+			XmlTest<?> xmlTest = new XmlTest(AttributeMappings.class, xml, schema);
 			try {
 				xmlTest.run();
 			} catch (Throwable t) {
