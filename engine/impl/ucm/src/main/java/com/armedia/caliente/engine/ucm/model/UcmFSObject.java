@@ -190,4 +190,12 @@ public abstract class UcmFSObject extends UcmModelObject {
 	public final String getTargetGUID() {
 		return getString(UcmAtt.fTargetGUID);
 	}
+
+	public final boolean hasAttribute(UcmAtt attribute) {
+		return this.attributes.hasAttribute(attribute);
+	}
+
+	public final boolean hasAttribute(String name) {
+		return this.attributes.hasAttribute(name);
+	}
 }
