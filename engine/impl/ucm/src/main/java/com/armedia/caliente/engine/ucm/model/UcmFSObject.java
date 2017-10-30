@@ -34,15 +34,15 @@ public abstract class UcmFSObject extends UcmModelObject {
 		// of references held outside the model
 		this.uniqueUri = UcmModel.getUniqueURI(data);
 		URI parentUri = UcmModel.NULL_FOLDER_URI;
+		final Map<String, CmfValue> mutableData = data.getMutableData();
 		if (data.hasAttribute(UcmAtt.fParentGUID)) {
 			parentUri = UcmModel.newFolderURI(data.getString(UcmAtt.fParentGUID));
 			if (UcmModel.isRoot(parentUri)) {
 				parentUri = UcmModel.NULL_FOLDER_URI;
-				data.getMutableData().put(UcmAtt.fParentGUID.name(), new CmfValue(parentUri.getSchemeSpecificPart()));
+				mutableData.put(UcmAtt.fParentGUID.name(), new CmfValue(parentUri.getSchemeSpecificPart()));
 			}
 		}
 		this.parentUri = new UcmUniqueURI(parentUri);
-		final Map<String, CmfValue> mutableData = data.getMutableData();
 		mutableData.put(UcmAtt.cmfUniqueURI.name(), new CmfValue(this.uniqueUri.toString()));
 		mutableData.put(UcmAtt.cmfParentURI.name(), new CmfValue(this.parentUri.toString()));
 
