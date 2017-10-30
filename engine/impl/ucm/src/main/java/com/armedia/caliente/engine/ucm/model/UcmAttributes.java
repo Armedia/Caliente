@@ -304,4 +304,9 @@ public final class UcmAttributes {
 		}
 		return ret;
 	}
+
+	@Override
+	public String toString() {
+		return this.data.toString();
+	}
 }
