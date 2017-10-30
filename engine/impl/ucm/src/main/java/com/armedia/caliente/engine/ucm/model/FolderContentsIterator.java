@@ -194,9 +194,10 @@ public class FolderContentsIterator {
 				if (rs != null) {
 					List<DataObject> l = rs.getRows();
 					if ((l != null) && !l.isEmpty()) {
-						this.folder = new UcmAttributes(l.get(0), rs.getFields());
-						this.folder.getMutableData().put(UcmAtt.cmfParentPath.name(),
+						UcmAttributes folderAtts = new UcmAttributes(l.get(0), rs.getFields());
+						folderAtts.getMutableData().put(UcmAtt.cmfParentPath.name(),
 							new CmfValue(FileNameTools.dirname(this.parentPath, '/')));
+						this.folder = folderAtts;
 					}
 				}
 			}
