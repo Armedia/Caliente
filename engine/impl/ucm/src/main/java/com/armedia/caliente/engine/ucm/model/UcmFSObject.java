@@ -8,12 +8,15 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.store.CmfValue;
 
 public abstract class UcmFSObject extends UcmModelObject {
 
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 	protected final UcmAtt nameAtt;
 
 	private final UcmAttributes attributes;
@@ -69,6 +72,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 		}
 
 		this.ucmObjectType = (UcmModel.isFileURI(uri) ? UcmObjectType.FILE : UcmObjectType.FOLDER);
+		this.log.debug("New {} for {} ({})", this.ucmObjectType.name(), this.uniqueUri, this.path);
 	}
 
 	public final boolean isUnfiled() {
