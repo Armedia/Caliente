@@ -30,8 +30,9 @@ public class AlfAttributeMapper {
 
 	private static final KeyLockableCache<String, AlfAttributeMapper> MAPPERS = new KeyLockableCache<String, AlfAttributeMapper>() {
 		@Override
-		protected KeyLockableCache<String, AlfAttributeMapper>.CacheItem newCacheItem(AlfAttributeMapper value) {
-			return new DirectCacheItem(value);
+		protected KeyLockableCache<String, AlfAttributeMapper>.CacheItem newCacheItem(String key,
+			AlfAttributeMapper value) {
+			return new DirectCacheItem(key, value);
 		}
 	};
 
