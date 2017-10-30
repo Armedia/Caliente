@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.tools;
 
+import java.io.Serializable;
 import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
@@ -14,7 +15,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.collections4.map.LRUMap;
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.LockDispenser;
 
-public class KeyLockableCache<K, V> {
+public class KeyLockableCache<K extends Serializable, V> {
 
 	public static final int MIN_LIMIT = 1000;
 	public static final TimeUnit DEFAULT_MAX_AGE_UNIT = TimeUnit.MINUTES;
@@ -183,10 +183,10 @@ public class KeyLockableCache<K, V> {
 	private final TimeUnit maxAgeUnit;
 	private final long maxAge;
 	private final Map<K, CacheItem> cache;
-	private final LockDispenser<K, ReadWriteLock> locks = new LockDispenser<K, ReadWriteLock>() {
+	private final LockDispenser<K, ReentrantReadWriteLock> locks = new LockDispenser<K, ReentrantReadWriteLock>() {
 		@Override
-		protected ReadWriteLock newLock(K key) {
-			return new ReentrantReadWriteLock();
+		protected ReentrantReadWriteLock newLock(K key) {
+			return new TraceableReentrantReadWriteLock(key);
 		}
 	};
 
@@ -227,11 +227,9 @@ public class KeyLockableCache<K, V> {
 		return new SoftReferenceCacheItem(key, value);
 	}
 
-	/*
 	protected final boolean threadHoldsExclusiveLock(K key) {
 		return this.locks.getLock(key).isWriteLockedByCurrentThread();
 	}
-	*/
 
 	public final V get(K key) {
 		Objects.requireNonNull(key, "Must provide a non-null key");

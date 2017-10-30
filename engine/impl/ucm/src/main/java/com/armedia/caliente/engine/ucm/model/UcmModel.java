@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.ucm.model;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -192,7 +193,7 @@ public class UcmModel {
 		this.historyUriByUniqueURI.put(guid, uri);
 	}
 
-	protected <K, V> V createIfAbsentInCache(KeyLockableCache<K, V> cache, K key,
+	protected <K extends Serializable, V> V createIfAbsentInCache(KeyLockableCache<K, V> cache, K key,
 		ConcurrentInitializer<V> initializer) {
 		try {
 			return cache.createIfAbsent(key, initializer);
