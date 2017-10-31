@@ -11,7 +11,7 @@
 			named rule sets.  This is a flag that's enabled for processing, and
 			can be turned on or off
 		-->
-		<enable-residuals/>
+		<residuals>INCLUDE</residuals>
 		<!--
 		<disable-residuals/>
 		-->
