@@ -11,10 +11,7 @@
 			named rule sets.  This is a flag that's enabled for processing, and
 			can be turned on or off
 		-->
-		<enable-residuals/>
-		<!--
-		<disable-residuals/>
-		-->
+		<residuals>MANDATORY</residuals>
 	</common-mappings>
 	
 	<mappings name="nm?" includes="nm1,nm2,nm3,...,nmX">

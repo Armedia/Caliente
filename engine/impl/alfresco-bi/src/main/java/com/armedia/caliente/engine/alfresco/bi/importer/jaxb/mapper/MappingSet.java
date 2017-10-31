@@ -10,20 +10,18 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mappingSet.t", propOrder = {
-	"mappings", "residualMarker"
+	"mappings", "residuals"
 })
 @XmlSeeAlso({
 	NamedMappings.class
 })
 public class MappingSet {
-
-	private static final ResidualsMarker RESIDUALS_ENABLE = new ResidualsEnable();
-	private static final ResidualsMarker RESIDUALS_DISABLE = new ResidualsDisable();
 
 	@XmlElements({
 		@XmlElement(name = "map", type = NameMapping.class, required = false),
@@ -31,11 +29,9 @@ public class MappingSet {
 	})
 	protected List<Mapping> mappings;
 
-	@XmlElements({
-		@XmlElement(name = "enable-residuals", type = ResidualsEnable.class, required = false),
-		@XmlElement(name = "disable-residuals", type = ResidualsDisable.class, required = false),
-	})
-	protected ResidualsMarker residualMarker;
+	@XmlElement(name = "residuals", required = false)
+	@XmlJavaTypeAdapter(ResidualsModeAdapter.class)
+	protected ResidualsMode residuals;
 
 	@XmlAttribute(name = "separator")
 	protected String separator;
@@ -47,17 +43,12 @@ public class MappingSet {
 		return this.mappings;
 	}
 
-	public void setEnableResiduals(Boolean value) {
-		if (value == null) {
-			this.residualMarker = null;
-		} else {
-			this.residualMarker = (value ? MappingSet.RESIDUALS_ENABLE : MappingSet.RESIDUALS_DISABLE);
-		}
+	public void setResidualsMode(ResidualsMode mode) {
+		this.residuals = mode;
 	}
 
-	public Boolean getEnableResiduals() {
-		if (this.residualMarker == null) { return null; }
-		return this.residualMarker.isResidualsEnabled();
+	public ResidualsMode getResidualsMode() {
+		return this.residuals;
 	}
 
 	public String getSeparator() {

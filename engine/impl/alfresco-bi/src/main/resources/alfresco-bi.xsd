@@ -38,6 +38,16 @@
 			<xsd:maxLength value="1" />
 		</xsd:restriction>
 	</xsd:simpleType>
+	
+	<xsd:simpleType name="residualsMode.t" final="restriction">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="MANDATORY" />
+			<xsd:enumeration value="INCLUDE" />
+			<xsd:enumeration value="EXCLUDE" />
+			<xsd:enumeration value="REJECT" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
 
 	<xsd:complexType name="version.t">
 		<xsd:sequence>
@@ -80,19 +90,6 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="enableResiduals.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:emptyElement.t"/>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="disableResiduals.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:emptyElement.t"/>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-
 	<xsd:complexType name="mapping.t">
 		<xsd:simpleContent>
 			<xsd:extension base="xsd:string">
@@ -122,8 +119,7 @@
 				<xsd:element name="nsmap" type="tns:mappingNamespace.t" />
 			</xsd:choice>
 			<xsd:choice minOccurs="0" maxOccurs="1">
-				<xsd:element name="enable-residuals" type="tns:enableResiduals.t" />
-				<xsd:element name="disable-residuals" type="tns:disableResiduals.t" />
+				<xsd:element name="residuals" type="tns:residualsMode.t" />
 			</xsd:choice>
 		</xsd:sequence>
 		<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="," />
