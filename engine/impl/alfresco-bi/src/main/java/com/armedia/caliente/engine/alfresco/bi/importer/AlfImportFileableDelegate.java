@@ -13,10 +13,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -104,6 +107,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private final AlfrescoType defaultType;
 	private final AlfrescoType referenceType;
 
+	private final Map<String, Set<String>> strippedAttributes;
+
 	private volatile AlfrescoType vdocRoot = null;
 	private volatile AlfrescoType vdocVersion = null;
 	private volatile AlfrescoType vdocReference = null;
@@ -117,6 +122,25 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
 		this.defaultType = this.factory.getType(defaultType);
 		this.referenceType = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
+
+		Map<String, Set<String>> strippedAttributes = new TreeMap<>();
+		for (String att : storedObject.getAttributeNames()) {
+			String stripped = AlfrescoType.stripNamespace(att);
+			Set<String> s = strippedAttributes.get(stripped);
+			if (s == null) {
+				s = new TreeSet<>();
+				strippedAttributes.put(stripped, s);
+			}
+			s.add(att);
+		}
+
+		for (String att : new LinkedHashSet<>(strippedAttributes.keySet())) {
+			Set<String> s = strippedAttributes.get(att);
+			s = Tools.freezeSet(s);
+			strippedAttributes.put(att, s);
+		}
+
+		this.strippedAttributes = Tools.freezeMap(new LinkedHashMap<>(strippedAttributes));
 	}
 
 	protected final boolean isVirtual() {
@@ -222,6 +246,41 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected abstract boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException;
+
+	@SuppressWarnings("unused")
+	private String getSourceAttribute(String targetAttributeName, AlfrescoType targetType) {
+
+		// First things first: Is there an explicit mapping configured?
+		// If there is, then this supersedes everything else...
+		// TODO: Implement this mapping...
+
+		// No explicit mapping, so try to do it automatically...
+
+		// If we have a direct match, then we simply do a direct copy
+		if (this.cmfObject.hasAttribute(targetAttributeName)) { return targetAttributeName; }
+
+		// No direct match...this is where life gets interesting...
+
+		// Is there a singular source attribute that differs only by namespace? This is only
+		// acceptable if this attribute's name without a namespace is also unique within this type,
+		// and the same applies to the source (i.e. only one attribute which coincides with the
+		// stripped name)
+		String stripped = AlfrescoType.stripNamespace(targetAttributeName);
+		if (targetType.hasStrippedAttribute(stripped)) {
+			Set<String> targets = targetType.getStrippedAttributeMatches(stripped);
+			if (targets.size() == 1) {
+				// We have a single target...do we have a single source?
+				Set<String> sourceMatches = this.strippedAttributes.get(stripped);
+				if ((sourceMatches != null) && (sourceMatches.size() == 1)) {
+					// We have a single potential source, so use it!
+					return sourceMatches.iterator().next();
+				}
+			}
+		}
+
+		// We couldn't do an auto match... so there's no mapping available...
+		return null;
+	}
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
 		CmfContentInfo content) throws ImportException {
