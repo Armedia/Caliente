@@ -44,16 +44,11 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		this.historyCurrent = calculateHistoryCurrent(session, object);
 		this.subType = calculateSubType(session, this.exportTarget.getType(), object);
 		this.secondaries = calculateSecondarySubtypes(session, this.exportTarget.getType(), this.subType, object);
-		if (factory.getEngine().isSupportsDuplicateFileNames()) {
-			// We only calculate parent IDs
-			Collection<CmfObjectRef> parentIds = calculateParentIds(session, object);
-			if (parentIds == null) {
-				parentIds = Collections.emptySet();
-			}
-			this.parentIds = Tools.freezeList(new ArrayList<>(parentIds));
-		} else {
-			this.parentIds = Collections.emptyList();
+		Collection<CmfObjectRef> parentIds = calculateParentIds(session, object);
+		if (parentIds == null) {
+			parentIds = Collections.emptySet();
 		}
+		this.parentIds = Tools.freezeList(new ArrayList<>(parentIds));
 		this.name = calculateName(session, object);
 		if (this.subType == null) { throw new IllegalStateException("calculateSubType() may not return null"); }
 	}
