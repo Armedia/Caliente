@@ -132,10 +132,8 @@ public final class UcmAttributes {
 					case BINARY:
 					case BLOB:
 						// Can't support this...no way to retrieve the data, and even if I got it as
-						// a
-						// string, I don't know how it's encoded and thus how to turn it into a
-						// binary
-						// stream of octets...so we simply keep a null value in its place
+						// a string, I don't know how it's encoded and thus how to turn it into a
+						// binary stream of octets...so we simply keep a null value in its place
 						T = CmfDataType.BASE64_BINARY;
 						break;
 				}
