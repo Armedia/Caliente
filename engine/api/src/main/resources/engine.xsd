@@ -412,7 +412,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="metadataSet" type="tns:actionLoadExternalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
+					<xsd:element name="metadata-set" type="tns:actionLoadExternalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -930,6 +930,10 @@
 
 	<xsd:complexType name="externalMetadataSource.t">
 		<xsd:sequence>
+			<xsd:element name="url" type="tns:noSpaces.t" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="driver" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="user" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
+			<xsd:element name="password" type="tns:noSpaces.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="setting" type="tns:setting.t" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 		<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
@@ -938,8 +942,8 @@
 	<xsd:element name="external-metadata">
 		<xsd:complexType>
 			<xsd:sequence>
-				<xsd:element name="dataSource" type="tns:externalMetadataSource.t" minOccurs="1" maxOccurs="unbounded" />
-				<xsd:element name="metadataSet" type="tns:externalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
+				<xsd:element name="data-source" type="tns:externalMetadataSource.t" minOccurs="1" maxOccurs="unbounded" />
+				<xsd:element name="metadata-set" type="tns:externalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>

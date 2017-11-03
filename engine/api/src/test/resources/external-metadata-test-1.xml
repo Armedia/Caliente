@@ -2,14 +2,19 @@
 <external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
 
-	<datasource name="dsName">
-		<setting name="url">jdbc-url</setting>
-		<setting name="user">jdbc-user</setting>
-		<setting name="pass">encryptable-jdbc-pass</setting>
-	</datasource>
+	<data-source name="dsName">
+		<url>jdbc-url</url>
+		<driver>jdbc.driver.Class</driver>
+		<user>jdbc-user</user>
+		<password>encryptable-jdbc-pass</password>
+		<setting name="setting.1">value.1</setting>
+		<setting name="setting.2">value.2</setting>
+		<!-- ... -->
+		<setting name="setting.N">value.N</setting>
+	</data-source>
 
 	<metadata-set id="primary" failOnError="true" failOnMissing="false">
-		<from-sql datasource="dsName">
+		<from-sql dataSource="dsName">
 			<search-names-list>.....</search-names-list>
 
 			<query>
@@ -47,7 +52,7 @@
 			</attribute-types>
 		</from-sql>
 
-		<from-ddl datasource="dsName">
+		<from-ddl dataSource="dsName">
 			<query>
 				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
 				<parameter>

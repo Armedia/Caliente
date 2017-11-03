@@ -1,12 +1,17 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
-	<dataSource name="dsName">
-		<setting name="url">jdbc-url</setting>
-		<setting name="user">jdbc-user</setting>
-		<setting name="pass">encryptable-jdbc-pass</setting>
-	</dataSource>
-	<metadataSet id="primary" failOnError="true" failOnMissing="false">
+	<data-source name="dsName">
+		<url>jdbc-url</url>
+		<driver>jdbc.driver.Class</driver>
+		<user>jdbc-user</user>
+		<password>encryptable-jdbc-pass</password>
+		<setting name="setting.1">value.1</setting>
+		<setting name="setting.2">value.2</setting>
+		<!-- ... -->
+		<setting name="setting.N">value.N</setting>
+	</data-source>
+	<metadata-set id="primary" failOnError="true" failOnMissing="false">
 		<from-sql dataSource="dsName">
 			<search-names-list>.....</search-names-list>
 
@@ -79,5 +84,5 @@
 				<default>STRING</default>
 			</attribute-types>
 		</from-ddl>
-	</metadataSet>
+	</metadata-set>
 </external-metadata>

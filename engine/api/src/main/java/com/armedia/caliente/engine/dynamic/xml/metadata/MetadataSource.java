@@ -19,6 +19,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,12 +30,24 @@ import com.armedia.commons.utilities.CfgTools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataSource.t", propOrder = {
-	"settings",
+	"url", "driver", "user", "password", "settings",
 })
 public class MetadataSource {
 
 	@XmlTransient
 	protected final Logger log = LoggerFactory.getLogger(getClass());
+
+	@XmlElement(name = "url", required = true)
+	protected String url;
+
+	@XmlElement(name = "driver", required = false)
+	protected String driver;
+
+	@XmlElement(name = "user", required = false)
+	protected String user;
+
+	@XmlElement(name = "password", required = false)
+	protected String password;
 
 	@XmlElement(name = "setting", required = true)
 	protected List<MetadataSourceSetting> settings;
@@ -47,6 +60,38 @@ public class MetadataSource {
 
 	@XmlTransient
 	private DataSource dataSource = null;
+
+	public String getUrl() {
+		return this.url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
+	public String getDriver() {
+		return this.driver;
+	}
+
+	public void setDriver(String driver) {
+		this.driver = driver;
+	}
+
+	public String getUser() {
+		return this.user;
+	}
+
+	public void setUser(String user) {
+		this.user = user;
+	}
+
+	public String getPassword() {
+		return this.password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
 	public List<MetadataSourceSetting> getSettings() {
 		if (this.settings == null) {
@@ -61,7 +106,7 @@ public class MetadataSource {
 			String name = s.getName();
 			String value = s.getValue();
 			if ((name != null) && (value != null)) {
-				ret.put(name, StrSubstitutor.replaceSystemProperties(value));
+				ret.put(String.format("jdbc.%s", name), StrSubstitutor.replaceSystemProperties(value));
 			}
 		}
 		return ret;
@@ -75,12 +120,32 @@ public class MetadataSource {
 		this.name = name;
 	}
 
+	private void setValue(String name, String value, Map<String, String> map) {
+		value = StringUtils.strip(value);
+		if (!StringUtils.isEmpty(value)) {
+			map.put(String.format("jdbc.%s", name), StrSubstitutor.replaceSystemProperties(value));
+		}
+	}
+
 	public void initialize() throws Exception {
 		final Lock lock = this.rwLock.writeLock();
 		lock.lock();
 		try {
 			if (this.dataSource != null) { return; }
-			CfgTools cfg = new CfgTools(getSettingsMap());
+			Map<String, String> settingsMap = getSettingsMap();
+
+			String url = StringUtils.strip(getUrl());
+			if (StringUtils.isEmpty(url)) { throw new Exception("The JDBC url may not be empty or null"); }
+			setValue("url", url, settingsMap);
+
+			setValue("driver", getDriver(), settingsMap);
+			setValue("user", getUser(), settingsMap);
+
+			String password = StringUtils.strip(getPassword());
+			// TODO: Potentially try to decrypt the password...
+			setValue("password", password, settingsMap);
+
+			CfgTools cfg = new CfgTools(settingsMap);
 			for (DataSourceLocator locator : DataSourceLocator.getAllLocatorsFor("pooled")) {
 				final DataSourceDescriptor<?> ds;
 				try {

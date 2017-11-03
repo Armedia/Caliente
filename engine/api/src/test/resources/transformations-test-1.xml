@@ -259,7 +259,7 @@
 		<abort-transformation/>
 
 		<load-external-metadata>
-			<source>asdfsadf</source>
+			<metadata-set>xxxxxxx</metadata-set>
 		</load-external-metadata>
 	</transformation>
 

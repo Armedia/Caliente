@@ -29,10 +29,10 @@ import com.armedia.commons.utilities.Tools;
 })
 public class LoadExternalMetadata extends ConditionalAction {
 
-	@XmlElement(name = "metadataSet", required = false)
+	@XmlElement(name = "metadata-set", required = false)
 	protected List<ExternalMetadataSet> metadataSets;
 
-	public List<ExternalMetadataSet> getSources() {
+	public List<ExternalMetadataSet> getMetadataSets() {
 		if (this.metadataSets == null) {
 			this.metadataSets = new ArrayList<>();
 		}
@@ -41,7 +41,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
-		for (ExternalMetadataSet metadataSource : getSources()) {
+		for (ExternalMetadataSet metadataSource : getMetadataSets()) {
 			if (metadataSource == null) {
 				continue;
 			}

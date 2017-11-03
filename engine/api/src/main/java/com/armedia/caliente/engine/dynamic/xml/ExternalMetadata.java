@@ -23,10 +23,10 @@ import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 @XmlRootElement(name = "external-metadata")
 public class ExternalMetadata extends XmlBase {
 
-	@XmlElement(name = "dataSource", required = false)
+	@XmlElement(name = "data-source", required = false)
 	protected List<MetadataSource> metadataSources;
 
-	@XmlElement(name = "metadataSet", required = false)
+	@XmlElement(name = "metadata-set", required = false)
 	protected List<MetadataSet> metadataSets;
 
 	public List<MetadataSource> getMetadataSources() {
