@@ -21,6 +21,7 @@ import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
@@ -42,6 +43,16 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 	@Override
 	protected String calculateLabel(UcmSession session, T object) throws Exception {
 		return object.getPath();
+	}
+
+	@Override
+	protected Collection<CmfObjectRef> calculateParentIds(UcmSession session, T object) throws Exception {
+		Collection<CmfObjectRef> parents = new ArrayList<>();
+		UcmFolder folder = object.getParentFolder(session);
+		if (folder != null) {
+			parents.add(new CmfObjectRef(CmfType.FOLDER, folder.getUniqueURI().toString()));
+		}
+		return parents;
 	}
 
 	@Override
