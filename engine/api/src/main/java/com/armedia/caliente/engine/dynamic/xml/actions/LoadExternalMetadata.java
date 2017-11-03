@@ -25,18 +25,18 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionLoadExternalMetadata.t", propOrder = {
-	"sources"
+	"metadataSets"
 })
 public class LoadExternalMetadata extends ConditionalAction {
 
 	@XmlElement(name = "metadataSet", required = false)
-	protected List<ExternalMetadataSet> sources;
+	protected List<ExternalMetadataSet> metadataSets;
 
 	public List<ExternalMetadataSet> getSources() {
-		if (this.sources == null) {
-			this.sources = new ArrayList<>();
+		if (this.metadataSets == null) {
+			this.metadataSets = new ArrayList<>();
 		}
-		return this.sources;
+		return this.metadataSets;
 	}
 
 	@Override
@@ -46,24 +46,26 @@ public class LoadExternalMetadata extends ConditionalAction {
 				continue;
 			}
 
-			String sourceName;
+			String setName;
 			try {
-				sourceName = Tools.toString(Expression.eval(metadataSource, ctx));
+				setName = Tools.toString(Expression.eval(metadataSource, ctx));
 			} catch (ScriptException e) {
 				throw new ActionException(e);
 			}
 
-			if (StringUtils.isEmpty(sourceName)) {
+			if (StringUtils.isEmpty(setName)) {
 				continue;
 			}
 
 			final boolean override = metadataSource.isOverride();
 			final Map<String, CmfAttribute<CmfValue>> externalAttributes;
 			try {
-				externalAttributes = ctx.getAttributeValues(ctx.getBaseObject(), sourceName);
+				externalAttributes = ctx.getAttributeValues(ctx.getBaseObject(), setName);
 			} catch (ExternalMetadataException e) {
-				throw new ActionException(String.format("Failed to load the external metadata for %s from source [%s]",
-					ctx.getBaseObject().getDescription(), sourceName), e);
+				throw new ActionException(
+					String.format("Failed to load the external metadata for %s from metadata set [%s]",
+						ctx.getBaseObject().getDescription(), setName),
+					e);
 			}
 
 			Map<String, DynamicValue> currentAttributes = ctx.getDynamicObject().getAtt();
