@@ -13,23 +13,34 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.XMLStreamReader;
 
+import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
 import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-	"sources"
+	"metadataSources", "metadataSets"
 })
 @XmlRootElement(name = "external-metadata")
 public class ExternalMetadata extends XmlBase {
 
-	@XmlElement(name = "source", required = false)
-	protected List<MetadataSource> sources;
+	@XmlElement(name = "dataSource", required = false)
+	protected List<MetadataSource> metadataSources;
 
-	public List<MetadataSource> getSources() {
-		if (this.sources == null) {
-			this.sources = new ArrayList<>();
+	@XmlElement(name = "metadataSet", required = false)
+	protected List<MetadataSet> metadataSets;
+
+	public List<MetadataSource> getMetadataSources() {
+		if (this.metadataSources == null) {
+			this.metadataSources = new ArrayList<>();
 		}
-		return this.sources;
+		return this.metadataSources;
+	}
+
+	public List<MetadataSet> getMetadataSets() {
+		if (this.metadataSets == null) {
+			this.metadataSets = new ArrayList<>();
+		}
+		return this.metadataSets;
 	}
 
 	public static ExternalMetadata loadFromXML(InputStream in) throws JAXBException {

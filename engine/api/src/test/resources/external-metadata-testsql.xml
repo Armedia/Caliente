@@ -1,12 +1,12 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
-	<source id="primary" failOnError="true" failOnMissing="false">
-		<settings>
-			<setting name="jdbc.driver">org.h2.Driver</setting>
-			<setting name="jdbc.url">jdbc:h2:${h2.test.path};AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
-		</settings>
-		<from-sql>
+	<dataSource name="default">
+		<setting name="jdbc.driver">org.h2.Driver</setting>
+		<setting name="jdbc.url">jdbc:h2:${h2.test.path};AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</setting>
+	</dataSource>
+	<metadataSet id="primary" failOnError="true" failOnMissing="false">
+		<from-sql dataSource="default">
 			<search-names-query>select distinct name from cmf_attribute order by name</search-names-query>
 
 			<query>
@@ -23,5 +23,5 @@
 
 			<value-column>data</value-column>
 		</from-sql>
-	</source>
+	</metadataSet>
 </external-metadata>

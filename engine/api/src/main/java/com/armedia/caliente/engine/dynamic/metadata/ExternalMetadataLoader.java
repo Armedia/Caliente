@@ -18,9 +18,11 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
+import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
 import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.commons.utilities.Tools;
 
 public class ExternalMetadataLoader {
 
@@ -63,7 +65,8 @@ public class ExternalMetadataLoader {
 	private final String locationDesc;
 	private final ExternalMetadata metadata;
 
-	private final Map<String, MetadataSource> sources = new LinkedHashMap<>();
+	private final Map<String, MetadataSource> metadataSources = new LinkedHashMap<>();
+	private final Map<String, MetadataSet> metadataSets = new LinkedHashMap<>();
 
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -88,9 +91,21 @@ public class ExternalMetadataLoader {
 		w.lock();
 		try {
 			if (this.initialized) { return; }
-			for (final MetadataSource desc : this.metadata.getSources()) {
+			for (final MetadataSource src : this.metadata.getMetadataSources()) {
 				try {
-					desc.initialize();
+					src.initialize();
+				} catch (Exception e) {
+					throw new ExternalMetadataException(
+						String.format("Failed to initialize the external metadata source [%s]", src.getName()), e);
+				}
+				this.metadataSources.put(src.getName(), src);
+			}
+
+			for (final MetadataSet desc : this.metadata.getMetadataSets()) {
+				if (this.metadataSources.isEmpty()) { throw new ExternalMetadataException(
+					"No metadata sources are defined - this is a configuration error!"); }
+				try {
+					desc.initialize(Tools.freezeMap(this.metadataSources));
 				} catch (Exception e) {
 					if (desc.isFailOnError()) {
 						// This item is required, so we must abort
@@ -98,8 +113,9 @@ public class ExternalMetadataLoader {
 							e);
 					}
 				}
-				this.sources.put(desc.getId(), desc);
+				this.metadataSets.put(desc.getId(), desc);
 			}
+
 			this.initialized = true;
 		} finally {
 			if (!this.initialized) {
@@ -140,11 +156,11 @@ public class ExternalMetadataLoader {
 				initialize(l);
 			}
 			if (sourceNames == null) {
-				sourceNames = this.sources.keySet();
+				sourceNames = this.metadataSets.keySet();
 			}
 			Map<String, CmfAttribute<V>> finalMap = new HashMap<>();
 			for (String src : sourceNames) {
-				final MetadataSource source = this.sources.get(src);
+				final MetadataSet source = this.metadataSets.get(src);
 				if (source == null) { throw new ExternalMetadataException(
 					String.format("No metadata source named [%s] has been defined at %s", src, this.locationDesc)); }
 
@@ -187,16 +203,24 @@ public class ExternalMetadataLoader {
 
 	private void closeSources() {
 		try {
-			for (MetadataSource desc : this.sources.values()) {
+			for (MetadataSet desc : this.metadataSets.values()) {
 				try {
 					desc.close();
 				} catch (Throwable t) {
-					this.log.warn("Exception caught while closing metadata source [{}] at {}", desc.getId(),
+					this.log.warn("Exception caught while closing metadata set [{}] at {}", desc.getId(),
+						this.locationDesc, t);
+				}
+			}
+			for (MetadataSource src : this.metadataSources.values()) {
+				try {
+					src.close();
+				} catch (Throwable t) {
+					this.log.warn("Exception caught while closing metadata source [{}] at {}", src.getName(),
 						this.locationDesc, t);
 				}
 			}
 		} finally {
-			this.sources.clear();
+			this.metadataSets.clear();
 		}
 	}
 

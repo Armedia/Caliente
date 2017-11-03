@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
+import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -51,6 +52,9 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 	@XmlElement(name = "attribute-types", required = false)
 	protected AttributeTypeMapping attributeTypeMapping;
 
+	@XmlAttribute(name = "dataSource", required = true)
+	protected String dataSource;
+
 	@XmlTransient
 	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
@@ -65,6 +69,15 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 
 	@XmlTransient
 	protected Boolean columnNamesCaseSensitive = false;
+
+	@Override
+	public final String getDataSource() {
+		return this.dataSource;
+	}
+
+	public final void setDataSource(String dataSource) {
+		this.dataSource = dataSource;
+	}
 
 	public final ParameterizedQuery getQuery() {
 		return this.query;

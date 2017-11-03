@@ -15,5 +15,7 @@ public interface AttributeValuesLoader {
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(Connection connection, CmfObject<V> object)
 		throws Exception;
 
+	public String getDataSource();
+
 	public void close();
 }

@@ -257,7 +257,7 @@
 		</map-attribute-value>
 		<end-transformation/>
 		<abort-transformation/>
-		
+
 		<load-external-metadata>
 			<source>asdfsadf</source>
 		</load-external-metadata>

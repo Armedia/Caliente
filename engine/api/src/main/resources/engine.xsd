@@ -400,7 +400,7 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:complexType name="actionLoadExternalMetadataSource.t">
+	<xsd:complexType name="actionLoadExternalMetadataSet.t">
 		<xsd:simpleContent>
 			<xsd:extension base="tns:expression.t">
 				<xsd:attribute name="override" type="xsd:boolean" use="optional" default="false" />
@@ -412,7 +412,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="source" type="tns:actionLoadExternalMetadataSource.t" minOccurs="0" maxOccurs="unbounded" />
+					<xsd:element name="metadataSet" type="tns:actionLoadExternalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -895,6 +895,7 @@
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t" minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
+		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="externalMetadataFromDDL.t">
@@ -904,6 +905,7 @@
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t"  minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
+		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="setting.t">
@@ -914,15 +916,8 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="settings.t">
+	<xsd:complexType name="externalMetadataSet.t">
 		<xsd:sequence>
-			<xsd:element name="setting" type="tns:setting.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
-	</xsd:complexType>
-
-	<xsd:complexType name="externalMetadataSource.t">
-		<xsd:sequence>
-			<xsd:element name="settings" type="tns:settings.t" minOccurs="1" maxOccurs="1" />
 			<xsd:choice minOccurs="0" maxOccurs="unbounded">
 				<xsd:element name="from-sql" type="tns:externalMetadataFromSQL.t" />
 				<xsd:element name="from-ddl" type="tns:externalMetadataFromDDL.t" />
@@ -933,10 +928,18 @@
 		<xsd:attribute name="failOnMissing" type="xsd:boolean" use="optional" default="false" />
 	</xsd:complexType>
 
+	<xsd:complexType name="externalMetadataSource.t">
+		<xsd:sequence>
+			<xsd:element name="setting" type="tns:setting.t" minOccurs="0" maxOccurs="unbounded" />
+		</xsd:sequence>
+		<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
+	</xsd:complexType>
+
 	<xsd:element name="external-metadata">
 		<xsd:complexType>
-			<xsd:sequence minOccurs="0" maxOccurs="unbounded">
-				<xsd:element name="source" type="tns:externalMetadataSource.t" />
+			<xsd:sequence>
+				<xsd:element name="dataSource" type="tns:externalMetadataSource.t" minOccurs="1" maxOccurs="unbounded" />
+				<xsd:element name="metadataSet" type="tns:externalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
 			</xsd:sequence>
 		</xsd:complexType>
 	</xsd:element>

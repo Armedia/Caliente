@@ -10,21 +10,21 @@ import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "actionLoadExternalMetadataSource.t")
-public class ExternalMetadataSource extends Expression {
+@XmlType(name = "actionLoadExternalMetadataSet.t")
+public class ExternalMetadataSet extends Expression {
 
 	@XmlAttribute(name = "override")
 	protected Boolean override;
 
-	public ExternalMetadataSource() {
+	public ExternalMetadataSet() {
 		super();
 	}
 
-	public ExternalMetadataSource(String lang, String script) {
+	public ExternalMetadataSet(String lang, String script) {
 		super(lang, script);
 	}
 
-	public ExternalMetadataSource(String script) {
+	public ExternalMetadataSet(String script) {
 		super(script);
 	}
 
@@ -32,7 +32,7 @@ public class ExternalMetadataSource extends Expression {
 		return Tools.coalesce(this.override, Boolean.FALSE);
 	}
 
-	public ExternalMetadataSource setOverride(Boolean override) {
+	public ExternalMetadataSet setOverride(Boolean override) {
 		this.override = override;
 		return this;
 	}

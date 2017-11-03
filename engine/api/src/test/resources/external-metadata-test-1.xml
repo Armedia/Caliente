@@ -1,13 +1,15 @@
 <?xml version="1.1" encoding="UTF-8"?>
 <external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
-	<source id="primary" failOnError="true" failOnMissing="false">
-		<settings>
-			<setting name="url">jdbc-url</setting>
-			<setting name="user">jdbc-user</setting>
-			<setting name="pass">encryptable-jdbc-pass</setting>
-		</settings>
-		<from-sql>
+
+	<datasource name="dsName">
+		<setting name="url">jdbc-url</setting>
+		<setting name="user">jdbc-user</setting>
+		<setting name="pass">encryptable-jdbc-pass</setting>
+	</datasource>
+
+	<metadata-set id="primary" failOnError="true" failOnMissing="false">
+		<from-sql datasource="dsName">
 			<search-names-list>.....</search-names-list>
 
 			<query>
@@ -45,7 +47,7 @@
 			</attribute-types>
 		</from-sql>
 
-		<from-ddl>
+		<from-ddl datasource="dsName">
 			<query>
 				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
 				<parameter>
@@ -79,5 +81,5 @@
 				<default>STRING</default>
 			</attribute-types>
 		</from-ddl>
-	</source>
+	</metadata-set>
 </external-metadata>
