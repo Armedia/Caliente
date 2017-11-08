@@ -69,11 +69,16 @@ public class PostgresStorePrep implements CmfStorePrep {
 		final CfgTools engineSettings = new CfgTools(cfg.getEffectiveSettings());
 		String metadataStore = engineSettings.getString("dir.metadata");
 
-		// TODO: Here is where we set where PostgreSQL will be "installed"
+		// TODO: Here is where we set where PostgreSQL will be "installed" (i.e. the executables
+		// stored) and where the artifacts that are downloaded should be cached
+		// final FixedPath installDir = new FixedPath("/path/to/my/extracted/postgres");
 		final FixedPath cachedDir = new FixedPath("/path/to/my/extracted/postgres");
 		final IPackageResolver packageResolver = new PackagePaths(cmd, cachedDir);
-		final IDownloadConfig downloadConfig = new DownloadConfigBuilder().defaultsForCommand(cmd)
-			.packageResolver(packageResolver).build();
+		final IDownloadConfig downloadConfig = new DownloadConfigBuilder()//
+			.defaultsForCommand(cmd) //
+			.packageResolver(packageResolver) //
+			.artifactStorePath(cachedDir) //
+			.build();
 		final IArtifactStore artifactStore = new CachedArtifactStoreBuilder().defaults(cmd).tempDir(cachedDir)
 			.download(downloadConfig).build();
 		final IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(cmd).artifactStore(artifactStore)
@@ -100,9 +105,18 @@ public class PostgresStorePrep implements CmfStorePrep {
 		// environment settings
 		args.addAll(
 			Arrays.asList("-E", "UTF-8", "--locale=en_US.UTF-8", "--lc-collate=en_US.UTF-8", "--lc-ctype=en_US.UTF-8"));
-		// TODO: Calculate a specific, unique port/local address to listen on
 		// TODO: Add more arguments for memory size, etc...
-		args.addAll(Arrays.asList("-h", "HOSTNAME/IP", "-p", "PORT"));
+		/*
+			-B NBUFFERS        number of shared buffers
+			-c NAME=VALUE      set run-time parameter
+			-C NAME            print value of run-time parameter, then exit
+			-d 1-5             debugging level
+			-F                 turn fsync off
+			-S WORK-MEM        set amount of memory for sorts (in kB)
+			-V, --version      output version information, then exit
+			--NAME=VALUE       set run-time parameter
+		 */
+		/// args.addAll(Arrays.asList(.....));
 		config.getAdditionalInitDbParams().addAll(args);
 		PostgresExecutable exec = runtime.prepare(config);
 		settings.put("jdbc.url", String.format("jdbc:postgresql://%s:%s/%s", config.net().host(), config.net().port(),
@@ -110,7 +124,6 @@ public class PostgresStorePrep implements CmfStorePrep {
 		settings.put("jdbc.user", credentials.username());
 		settings.put("jdbc.password", credentials.password());
 		settings.put("jdbc.driver", "org.postgresql.Driver");
-		// TODO: Add more settings such as the base folder, etc...
 
 		this.process = exec.start();
 		this.config = config;
