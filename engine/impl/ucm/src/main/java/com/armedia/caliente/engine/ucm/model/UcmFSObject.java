@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.ucm.model;
 
 import java.net.URI;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -29,7 +30,7 @@ public abstract class UcmFSObject extends UcmModelObject {
 	private final UcmObjectType ucmObjectType;
 	private final boolean unfiled;
 
-	UcmFSObject(UcmModel model, URI uri, UcmAttributes data, UcmAtt nameAtt) {
+	UcmFSObject(UcmModel model, URI uri, UcmAttributes data, UcmAtt... nameAtts) {
 		super(model, uri);
 		Objects.requireNonNull(data, String.format("No attribute data provided for URI [%s]", uri));
 		// Here we use the cloning constructor so we keep a *copy* of the DataObject, to allow
@@ -50,11 +51,20 @@ public abstract class UcmFSObject extends UcmModelObject {
 		mutableData.put(UcmAtt.cmfParentURI.name(), new CmfValue(this.parentUri.toString()));
 
 		this.attributes = data;
+		UcmAtt nameAtt = null;
+		for (UcmAtt att : nameAtts) {
+			if (data.hasAttribute(att)) {
+				nameAtt = att;
+				break;
+			}
+		}
+		if (nameAtt == null) { throw new IllegalArgumentException(
+			String.format("No object name attribute is present from among %s", Arrays.toString(nameAtts))); }
 		this.nameAtt = nameAtt;
 
 		this.parentPath = this.attributes.getString(UcmAtt.cmfParentPath);
 		if (this.parentPath != null) {
-			String name = this.attributes.getString(nameAtt);
+			String name = this.attributes.getString(this.nameAtt);
 			if (this.parentPath.equals("/")) {
 				if (name.equals("/")) {
 					name = "";
