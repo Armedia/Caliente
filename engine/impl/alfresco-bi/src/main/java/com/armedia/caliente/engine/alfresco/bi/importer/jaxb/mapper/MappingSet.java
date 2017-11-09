@@ -25,6 +25,7 @@ public class MappingSet {
 
 	@XmlElements({
 		@XmlElement(name = "map", type = NameMapping.class, required = false),
+		@XmlElement(name = "set", type = SetValue.class, required = false),
 		@XmlElement(name = "nsmap", type = NamespaceMapping.class, required = false)
 	})
 	protected List<Mapping> mappings;

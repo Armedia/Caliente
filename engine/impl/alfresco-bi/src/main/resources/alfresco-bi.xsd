@@ -106,6 +106,12 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="setValue.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:mapping.t"/>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="mappingNamespace.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:mapping.t"/>
@@ -116,6 +122,7 @@
 		<xsd:sequence>
 			<xsd:choice minOccurs="0" maxOccurs="unbounded">
 				<xsd:element name="map" type="tns:mappingName.t" />
+				<xsd:element name="set" type="tns:setValue.t" />
 				<xsd:element name="nsmap" type="tns:mappingNamespace.t" />
 			</xsd:choice>
 			<xsd:choice minOccurs="0" maxOccurs="1">
