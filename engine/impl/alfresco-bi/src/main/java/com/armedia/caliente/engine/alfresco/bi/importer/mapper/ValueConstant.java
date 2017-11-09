@@ -18,11 +18,6 @@ class ValueConstant extends ValueMapping {
 
 	@Override
 	public String getValue(SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
-		if (this.caseSensitive) {
-			if (StringUtils.equals(tgtAtt.name, this.target)) { return this.value; }
-		} else {
-			if (StringUtils.equalsIgnoreCase(tgtAtt.name, this.target)) { return this.value; }
-		}
-		return null;
+		return (StringUtils.equals(tgtAtt.name, this.target) ? this.value : null);
 	}
 }

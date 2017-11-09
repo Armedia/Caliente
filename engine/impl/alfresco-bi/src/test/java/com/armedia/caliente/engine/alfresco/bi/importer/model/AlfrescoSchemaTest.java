@@ -3,6 +3,8 @@ package com.armedia.caliente.engine.alfresco.bi.importer.model;
 import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -71,10 +73,8 @@ public class AlfrescoSchemaTest {
 		System.out.printf("Types%n");
 		Set<String> typeNames = new TreeSet<>(schema.getTypeNames());
 		typeNames.addAll(schema.getAspectNames());
-		/*
 		typeNames = new LinkedHashSet<>(Arrays.asList("edms:doc", "edms:leasing", "edms:buildingproject",
 			"edms:realpropertycontracting", "edms:leasecontracting", "edms:buildingprojectaspect"));
-		*/
 		for (String typeName : typeNames) {
 			SchemaMember<?> type = schema.getType(typeName);
 			if (type == null) {

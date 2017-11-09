@@ -33,22 +33,25 @@ class ValueMapping {
 		this.sourceValues = Tools.freezeSet(sourceValues);
 	}
 
-	protected CmfAttribute<CmfValue> findMatchingAttribute(String tgtAttName, CmfObject<CmfValue> object) {
-		if (this.caseSensitive) { return object.getAttribute(tgtAttName); }
-		// Need to search case-insensitively...so...search
-		for (String s : object.getAttributeNames()) {
-			if (StringUtils.equalsIgnoreCase(tgtAttName, s)) { return object.getAttribute(s); }
+	protected CmfAttribute<CmfValue> findMatchingAttribute(String srcAttName, CmfObject<CmfValue> object) {
+		if (this.caseSensitive) { return object.getAttribute(srcAttName); }
+		for (String n : object.getAttributeNames()) {
+			if (StringUtils.equalsIgnoreCase(srcAttName, n)) { return object.getAttribute(n); }
 		}
 		return null;
 	}
 
-	public String getValue(SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
-		Objects.requireNonNull(tgtAtt, "Must provide a target attribute to map for");
-		Objects.requireNonNull(object, "Must provide a source object to map against");
+	private CmfAttribute<CmfValue> findMatchingAttribute(CmfObject<CmfValue> object) {
+		for (String candidate : this.sourceValues) {
+			CmfAttribute<CmfValue> srcAtt = findMatchingAttribute(candidate, object);
+			if (srcAtt != null) { return srcAtt; }
+		}
+		return null;
+	}
 
-		CmfAttribute<CmfValue> srcAtt = findMatchingAttribute(tgtAtt.name, object);
+	protected final String generateValue(CmfAttribute<CmfValue> srcAtt) {
 		if (srcAtt == null) { return null; }
-
+		if (!srcAtt.hasValues()) { return StringUtils.EMPTY; }
 		List<String> values = new ArrayList<>(srcAtt.getValueCount());
 		for (CmfValue value : srcAtt) {
 			// Avoid null values
@@ -58,5 +61,12 @@ class ValueMapping {
 			values.add(value.asString());
 		}
 		return Tools.joinEscaped(this.separator, values);
+	}
+
+	public String getValue(SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
+		Objects.requireNonNull(tgtAtt, "Must provide a target attribute to map for");
+		Objects.requireNonNull(object, "Must provide a source object to map against");
+		if (!StringUtils.equals(this.target, tgtAtt.name)) { return null; }
+		return generateValue(findMatchingAttribute(object));
 	}
 }

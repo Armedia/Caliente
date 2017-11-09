@@ -1,9 +1,11 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.AspectMappings;
+
 public class MapByAspect {
 
-	public MapByAspect() {
-		// TODO Auto-generated constructor stub
+	public MapByAspect(AspectMappings am) {
+
 	}
 
 }
