@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper;
 
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlValue;
@@ -8,6 +9,9 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
 public abstract class Mapping {
+
+	public static final Character DEFAULT_SEP = ',';
+	public static final String DEFAULT_SEP_STR = Mapping.DEFAULT_SEP.toString();
 
 	@XmlValue
 	protected String value;
@@ -20,6 +24,17 @@ public abstract class Mapping {
 
 	@XmlAttribute(name = "separator", required = false)
 	protected String separator;
+
+	protected void afterUnmarshal(Unmarshaller u, Object parent) {
+		if (this.separator != null) {
+			if (this.separator.length() > 1) {
+				// Only use the first character
+				this.separator = this.separator.substring(0, 1);
+			} else {
+				this.separator = null;
+			}
+		}
+	}
 
 	public String getValue() {
 		return this.value;
@@ -45,11 +60,16 @@ public abstract class Mapping {
 		this.caseSensitive = value;
 	}
 
-	public String getSeparator() {
-		return Tools.coalesce(this.separator, ",");
+	public char getSeparator() {
+		if (this.separator == null) { return Mapping.DEFAULT_SEP; }
+		return this.separator.charAt(0);
 	}
 
-	public void setSeparator(String value) {
-		this.separator = value;
+	public void setSeparator(Character value) {
+		if (value == null) {
+			this.separator = null;
+		} else {
+			this.separator = value.toString();
+		}
 	}
 }

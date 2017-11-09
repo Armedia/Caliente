@@ -147,7 +147,7 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="secondaryMappings.t">
+	<xsd:complexType name="aspectMappings.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:namedMappings.t"/>
 		</xsd:complexContent>
@@ -160,7 +160,7 @@
 			<xsd:choice minOccurs="0" maxOccurs="unbounded">
 				<xsd:element name="mappings" type="tns:namedMappings.t" />
 				<xsd:element name="type-mappings" type="tns:typeMappings.t" />
-				<xsd:element name="secondary-mappings" type="tns:secondaryMappings.t" />
+				<xsd:element name="aspect-mappings" type="tns:aspectMappings.t" />
 			</xsd:choice>
 		</xsd:sequence>
 	</xsd:complexType>

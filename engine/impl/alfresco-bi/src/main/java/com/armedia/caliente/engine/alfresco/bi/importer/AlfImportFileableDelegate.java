@@ -13,13 +13,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -107,8 +104,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private final AlfrescoType defaultType;
 	private final AlfrescoType referenceType;
 
-	private final Map<String, Set<String>> strippedAttributes;
-
 	private volatile AlfrescoType vdocRoot = null;
 	private volatile AlfrescoType vdocVersion = null;
 	private volatile AlfrescoType vdocReference = null;
@@ -122,25 +117,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		this.virtual = ((virtual != null) && !virtual.isNull() && virtual.asBoolean());
 		this.defaultType = this.factory.getType(defaultType);
 		this.referenceType = this.factory.getType(AlfImportFileableDelegate.REFERENCE_TYPE);
-
-		Map<String, Set<String>> strippedAttributes = new TreeMap<>();
-		for (String att : storedObject.getAttributeNames()) {
-			String stripped = AlfrescoType.stripNamespace(att);
-			Set<String> s = strippedAttributes.get(stripped);
-			if (s == null) {
-				s = new TreeSet<>();
-				strippedAttributes.put(stripped, s);
-			}
-			s.add(att);
-		}
-
-		for (String att : new LinkedHashSet<>(strippedAttributes.keySet())) {
-			Set<String> s = strippedAttributes.get(att);
-			s = Tools.freezeSet(s);
-			strippedAttributes.put(att, s);
-		}
-
-		this.strippedAttributes = Tools.freezeMap(new LinkedHashMap<>(strippedAttributes));
 	}
 
 	protected final boolean isVirtual() {
@@ -247,39 +223,17 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	protected abstract boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException;
 
-	@SuppressWarnings("unused")
-	private String getSourceAttribute(String targetAttributeName, AlfrescoType targetType) {
-
-		// First things first: Is there an explicit mapping configured?
-		// If there is, then this supersedes everything else...
-		// TODO: Implement this mapping...
-
-		// No explicit mapping, so try to do it automatically...
-
-		// If we have a direct match, then we simply do a direct copy
-		if (this.cmfObject.hasAttribute(targetAttributeName)) { return targetAttributeName; }
-
-		// No direct match...this is where life gets interesting...
-
-		// Is there a singular source attribute that differs only by namespace? This is only
-		// acceptable if this attribute's name without a namespace is also unique within this type,
-		// and the same applies to the source (i.e. only one attribute which coincides with the
-		// stripped name)
-		String stripped = AlfrescoType.stripNamespace(targetAttributeName);
-		if (targetType.hasStrippedAttribute(stripped)) {
-			Set<String> targets = targetType.getStrippedAttributeMatches(stripped);
-			if (targets.size() == 1) {
-				// We have a single target...do we have a single source?
-				Set<String> sourceMatches = this.strippedAttributes.get(stripped);
-				if ((sourceMatches != null) && (sourceMatches.size() == 1)) {
-					// We have a single potential source, so use it!
-					return sourceMatches.iterator().next();
-				}
-			}
-		}
-
-		// We couldn't do an auto match... so there's no mapping available...
+	private String getMappedValue(SchemaAttribute tgtAtt) {
+		// TODO: Check the specific mappings ... either by namespace, name, or set value
+		// TODO: If the specific mappings produce no value, then check the "default" mappings based
+		// on source product
+		// TODO: If the "default" mappings produce no source, try one-to-one
+		// TODO: If one-to-one mapping produces no source, return null
 		return null;
+	}
+
+	private boolean isResidualsEnabled(AlfrescoType type) {
+		return false;
 	}
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
@@ -288,133 +242,27 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		final AlfAttributeMapper mapper = AlfAttributeMapper.getMapper(this.cmfObject);
 
 		Set<String> tgtNames = targetType.getAttributeNames();
-		Set<String> srcNames = this.cmfObject.getAttributeNames();
-
-		Set<String> common = new HashSet<>();
-		common.addAll(tgtNames);
-		common.retainAll(srcNames);
-		// Copy everything that exists with the same name at the source and at the target
-		for (String s : common) {
-			final CmfProperty<CmfValue> src = this.cmfObject.getAttribute(s);
-			final SchemaAttribute tgt = targetType.getAttribute(s);
-			storeValue(ctx, src, tgt, p, true);
-		}
-
-		Set<String> tgtOnly = new HashSet<>();
-		tgtOnly.addAll(tgtNames);
-		tgtOnly.removeAll(srcNames);
-		// Copy everything that exists only at the target
-		for (final String tgtAttName : tgtOnly) {
-			final SchemaAttribute tgtAtt = targetType.getAttribute(tgtAttName);
-
-			// Easy path: is this already mapped? If there's no mapping, we leave the attribute name
-			// as-is to avoid confusion
-			String srcAttName = Tools.coalesce(mapper.getSourceAttribute(tgtAttName), tgtAttName);
-			CmfProperty<CmfValue> srcAtt = this.cmfObject.getAttribute(srcAttName);
-			if (srcAtt == null) {
-				srcAtt = this.cmfObject.getProperty(srcAttName);
-				if (srcAtt == null) {
-					if (this.log.isDebugEnabled()) {
-						this.log.warn(String.format(
-							"Target attribute [%s] in target type [%s] with aspects %s mapped to source attribute [%s] from source type [%s], but no such attribute or property was found",
-							tgtAttName, targetType.getName(), targetType.getAspects(), srcAttName,
-							this.cmfObject.getSubtype()));
-					}
-					continue;
-				}
-			}
-
-			// We're set, do it!!
-			storeValue(ctx, srcAtt, tgtAtt, p, true);
-		}
-
-		// Now, do the mappings as copies of what has already been copied over, except when the
-		// source attribute is repeating.
-		Set<String> specialCopies = new HashSet<>();
-		for (final String specialName : mapper.getSpecialCopies()) {
-			// First get the attribute the special copy must go to
-			final SchemaAttribute specialAtt = targetType.getAttribute(specialName);
-			if (specialAtt == null) {
-				continue;
-			}
-
-			String srcName = mapper.getSpecialCopySourceAttribute(specialName);
-			specialCopies.add(srcName);
-			CmfAttribute<CmfValue> srcAtt = this.cmfObject.getAttribute(srcName);
-			if ((srcAtt == null) || !srcAtt.hasValues()) {
-				continue;
-			}
-
-			storeValue(ctx, srcAtt, specialAtt, p, false);
-		}
-
-		Set<String> srcOnly = new HashSet<>();
-		srcOnly.addAll(srcNames);
-		srcOnly.removeAll(tgtNames);
-		// Now handle the attributes that only exist on the source, but not on the target...here
-		// we need to do some detective work...
-		Set<String> processed = new HashSet<>(specialCopies);
-		final String residualsPrefix = this.factory.getResidualsPrefix();
-		nextAtt: for (final String srcAttName : srcOnly) {
-			// Avoid attributes that have been handled specially by the code above
-			if (processed.contains(srcAttName)) {
-				continue;
-			}
-
-			final CmfProperty<CmfValue> srcAtt = this.cmfObject.getAttribute(srcAttName);
-
-			// Let's see if we have a specific mapping
-			Collection<String> mappings = this.factory.getMappedAttributes(srcAttName);
-			if (mappings != null) {
-				// We have an explicit mapping!!! Let's apply it!
-				boolean mapped = false;
-				for (String tgt : mappings) {
-					// Here we allow copying one source attribute into many targets
-					SchemaAttribute tgtAtt = targetType.getAttribute(tgt);
-					if (tgtAtt != null) {
-						// The mapping applies!! Let's do it!
-						storeValue(ctx, srcAtt, tgtAtt, p, true);
-						mapped = true;
-					}
-				}
-
-				if (mapped) {
-					// If this attribute was mapped, move on to the next one
-					processed.add(srcAttName);
-					continue nextAtt;
-				}
+		Set<String> mappedNames = new HashSet<>();
+		for (String tgtName : tgtNames) {
+			final SchemaAttribute tgtAtt = targetType.getAttribute(tgtName);
+			String value = getMappedValue(tgtAtt);
+			if (value != null) {
+				p.setProperty(tgtName, value);
+				mappedNames.add(tgtName);
 			}
 		}
 
-		srcOnly.removeAll(processed);
-		processed.clear();
-		// Process whatever's left at the source that we weren't able to handle gracefully
-		for (String srcAttName : srcOnly) {
-			final CmfProperty<CmfValue> srcAtt = this.cmfObject.getAttribute(srcAttName);
+		// Handle the residuals...
+		if (isResidualsEnabled(targetType)) {
+			Set<String> srcNames = this.cmfObject.getAttributeNames();
+			Set<String> residuals = new HashSet<>();
+			residuals.addAll(srcNames);
+			residuals.removeAll(mappedNames);
 
-			// Ok so no mapping was found... we'll try to auto-find the attribute using
-			// a name-based approach...
-
-			// Strip the source attribute prefix - try to match strictly based on the tail end
-			final String rawName = srcAttName.replaceAll("^[^:]*:", ":");
-			SchemaAttribute target = null;
-			for (String tgtAttName : tgtOnly) {
-				// Make sure we don't double-copy...
-				if (tgtAttName.endsWith(rawName) && processed.add(tgtAttName)) {
-					target = targetType.getAttribute(tgtAttName);
-					break;
-				}
-			}
-
-			if (target != null) {
-				// We have a candidate attribute, so copy directly! But we make sure not to clobber
-				// anything that may already have been assigned by some other means
-				if (!p.containsKey(target.name)) {
-					storeValue(ctx, srcAtt, target, p, true);
-				}
-			} else if (residualsPrefix != null) {
-				// No candidate, copy it as a residual (if so configured)
-				storeValue(ctx, srcAtt, String.format("%s%s", residualsPrefix, rawName), srcAtt.isRepeating(), p, true);
+			for (String resName : residuals) {
+				final CmfAttribute<CmfValue> srcAtt = this.cmfObject.getAttribute(resName);
+				// TODO: Store the residual value
+				srcAtt.hashCode();
 			}
 		}
 

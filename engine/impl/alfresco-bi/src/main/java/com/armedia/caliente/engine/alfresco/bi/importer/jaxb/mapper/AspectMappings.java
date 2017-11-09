@@ -5,6 +5,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "secondaryMappings.t")
-public class SecondaryMappings extends NamedMappings {
+@XmlType(name = "aspectMappings.t")
+public class AspectMappings extends NamedMappings {
 }

@@ -42,13 +42,13 @@
 			5)	named-mappings.name, type-mappings.name and secondary-mappings.name must
 				be globally unique, to avoid confusion
 	-->
-	<secondary-mappings name="sn1" includes="nm1,nm2,nm3,...,nmX">
+	<aspect-mappings name="sn1" includes="nm1,nm2,nm3,...,nmX">
 
 		<!-- Copy one source attribute to one or more target attributes -->
 		<map tgt="tgtAttName">srcAttName</map>
 
 		<!-- Convert a source namespace to a target namespace -->
 		<nsmap tgt="tgtNs">srcNs</nsmap>
-	</secondary-mappings>
+	</aspect-mappings>
 
 </attribute-mappings>

@@ -23,7 +23,7 @@ public class AttributeMappings {
 	@XmlElements({
 		@XmlElement(name = "mappings", type = NamedMappings.class, required = false),
 		@XmlElement(name = "type-mappings", type = TypeMappings.class, required = false),
-		@XmlElement(name = "secondary-mappings", type = SecondaryMappings.class, required = false)
+		@XmlElement(name = "aspect-mappings", type = AspectMappings.class, required = false)
 	})
 	protected List<NamedMappings> namedMappings;
 
