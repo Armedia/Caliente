@@ -19,18 +19,19 @@ class ValueMappingByNamespace extends ValueMapping {
 		super(m);
 	}
 
-	protected CmfAttribute<CmfValue> locateAttribute(String baseName, CmfObject<CmfValue> object) {
-		// First, get the source attribute's namespace
+	protected String getSourceAttributeName(String baseName, CmfObject<CmfValue> object) {
+		// Go through each of our namespace mappings, and try to find an attribute with
+		// the given baseName within that namespace
 		for (String srcNs : this.sourceValues) {
-			String srcAttName = String.format("%s:%s", srcNs, baseName);
-			CmfAttribute<CmfValue> srcAtt = findMatchingAttribute(srcAttName, object);
+			String srcAtt = findSourceAttributeName(String.format("%s:%s", srcNs, baseName), object);
+			// If we found one, return it immediately!
 			if (srcAtt != null) { return srcAtt; }
 		}
 		return null;
 	}
 
 	@Override
-	public String getValue(SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
+	public MappedValue getValue(SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
 		Objects.requireNonNull(tgtAtt, "Must provide a target attribute to map for");
 		Objects.requireNonNull(object, "Must provide a source object to map against");
 		// First, get the source attribute's namespace
@@ -40,9 +41,22 @@ class ValueMappingByNamespace extends ValueMapping {
 			return null;
 		}
 
-		final String tgtNs = m.group(1);
-		if (!StringUtils.equals(tgtNs, this.target)) { return null; }
+		// Is the attribute's namespace the same as we're configured for?
+		if (!StringUtils.equals(m.group(1), this.target)) { return null; }
 
-		return generateValue(locateAttribute(m.group(2), object));
+		// Ok...find a candidate from one of our namespaces
+		final String attribute = getSourceAttributeName(m.group(2), object);
+		if (attribute == null) { return null; }
+		return new MappedValue() {
+			private final String attributeName = attribute;
+			private final char separator = ValueMappingByNamespace.this.separator;
+
+			@Override
+			public String render(CmfObject<CmfValue> object) {
+				CmfAttribute<CmfValue> attribute = object.getAttribute(this.attributeName);
+				if (attribute == null) { return null; }
+				return ValueMapping.generateValue(this.separator, attribute);
+			}
+		};
 	}
 }

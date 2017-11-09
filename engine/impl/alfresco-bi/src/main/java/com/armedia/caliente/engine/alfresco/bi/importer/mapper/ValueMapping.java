@@ -33,23 +33,23 @@ class ValueMapping {
 		this.sourceValues = Tools.freezeSet(sourceValues);
 	}
 
-	protected CmfAttribute<CmfValue> findMatchingAttribute(String srcAttName, CmfObject<CmfValue> object) {
-		if (this.caseSensitive) { return object.getAttribute(srcAttName); }
+	protected String findSourceAttributeName(String srcAttName, CmfObject<CmfValue> object) {
+		if (this.caseSensitive) { return (object.hasAttribute(srcAttName) ? srcAttName : null); }
 		for (String n : object.getAttributeNames()) {
-			if (StringUtils.equalsIgnoreCase(srcAttName, n)) { return object.getAttribute(n); }
+			if (StringUtils.equalsIgnoreCase(srcAttName, n)) { return n; }
 		}
 		return null;
 	}
 
-	private CmfAttribute<CmfValue> findMatchingAttribute(CmfObject<CmfValue> object) {
+	private String findSourceAttributeName(CmfObject<CmfValue> object) {
 		for (String candidate : this.sourceValues) {
-			CmfAttribute<CmfValue> srcAtt = findMatchingAttribute(candidate, object);
+			String srcAtt = findSourceAttributeName(candidate, object);
 			if (srcAtt != null) { return srcAtt; }
 		}
 		return null;
 	}
 
-	protected final String generateValue(CmfAttribute<CmfValue> srcAtt) {
+	protected static String generateValue(char separator, CmfAttribute<CmfValue> srcAtt) {
 		if (srcAtt == null) { return null; }
 		if (!srcAtt.hasValues()) { return StringUtils.EMPTY; }
 		List<String> values = new ArrayList<>(srcAtt.getValueCount());
@@ -60,13 +60,27 @@ class ValueMapping {
 			}
 			values.add(value.asString());
 		}
-		return Tools.joinEscaped(this.separator, values);
+		return Tools.joinEscaped(separator, values);
 	}
 
-	public String getValue(SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
+	public MappedValue getValue(SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
 		Objects.requireNonNull(tgtAtt, "Must provide a target attribute to map for");
 		Objects.requireNonNull(object, "Must provide a source object to map against");
 		if (!StringUtils.equals(this.target, tgtAtt.name)) { return null; }
-		return generateValue(findMatchingAttribute(object));
+
+		final String attribute = findSourceAttributeName(object);
+		if (attribute == null) { return null; }
+
+		return new MappedValue() {
+			private final String attributeName = attribute;
+			private final char separator = ValueMapping.this.separator;
+
+			@Override
+			public String render(CmfObject<CmfValue> object) {
+				CmfAttribute<CmfValue> attribute = object.getAttribute(this.attributeName);
+				if (attribute == null) { return null; }
+				return ValueMapping.generateValue(this.separator, attribute);
+			}
+		};
 	}
 }
