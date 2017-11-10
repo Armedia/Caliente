@@ -3,19 +3,19 @@ package com.armedia.caliente.engine.alfresco.bi.importer.model;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Aspect;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfrescoType {
 
 	private final SchemaMember<?> type;
 	private final String name;
-	private final Set<String> aspects;
+	private final Map<String, Aspect> aspects;
 	private final Map<String, SchemaMember<?>> attributes;
 	private final Map<String, Set<String>> strippedAttributeNames;
 
@@ -24,17 +24,17 @@ public class AlfrescoType {
 		return attName.replaceAll("^\\w+:", "");
 	}
 
-	AlfrescoType(SchemaMember<?> type, Collection<SchemaMember<?>> appliedAspects) {
+	AlfrescoType(SchemaMember<?> type, Collection<Aspect> appliedAspects) {
 		this.type = type;
 		if (appliedAspects == null) {
 			appliedAspects = Collections.emptyList();
 		}
 		this.name = type.name;
-		Set<String> aspects = new LinkedHashSet<>(type.mandatoryAspects);
+		Map<String, Aspect> aspects = new LinkedHashMap<>(type.mandatoryAspects);
 
 		Map<String, SchemaMember<?>> attributes = new TreeMap<>();
-		for (SchemaMember<?> aspect : appliedAspects) {
-			aspects.add(aspect.name);
+		for (Aspect aspect : appliedAspects) {
+			aspects.put(aspect.name, aspect);
 			for (String attribute : aspect.getAllAttributeNames()) {
 				attributes.put(attribute, aspect);
 			}
@@ -63,7 +63,7 @@ public class AlfrescoType {
 			strippedAttributeNames.put(stripped, s);
 		}
 		this.strippedAttributeNames = Tools.freezeMap(strippedAttributeNames);
-		this.aspects = Tools.freezeSet(aspects);
+		this.aspects = Tools.freezeMap(aspects);
 	}
 
 	public String getName() {
@@ -71,11 +71,16 @@ public class AlfrescoType {
 	}
 
 	public boolean isDescendedOf(String typeName) {
-		return this.aspects.contains(typeName) || this.type.isDescendedOf(typeName);
+		if (this.aspects.containsKey(typeName)) { return true; }
+		if (this.type.isDescendedOf(typeName)) { return true; }
+		for (String aspectName : this.aspects.keySet()) {
+			if (this.aspects.get(aspectName).isDescendedOf(typeName)) { return true; }
+		}
+		return false;
 	}
 
 	public Set<String> getAspects() {
-		return this.aspects;
+		return this.aspects.keySet();
 	}
 
 	public SchemaAttribute getAttribute(String name) {

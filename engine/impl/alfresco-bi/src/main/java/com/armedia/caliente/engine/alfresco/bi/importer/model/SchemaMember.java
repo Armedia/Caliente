@@ -18,7 +18,7 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 	protected final T parent;
 	protected final String name;
 
-	protected final Set<String> mandatoryAspects;
+	protected final Map<String, Aspect> mandatoryAspects;
 	protected final Map<String, SchemaAttribute> localAttributes;
 	protected final Set<String> allAttributeNames;
 
@@ -46,9 +46,9 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		}
 
 		// Next, apply the attributes from the mandatory aspects as our own
-		Set<String> ma = new LinkedHashSet<>();
+		Map<String, Aspect> ma = new LinkedHashMap<>();
 		for (Aspect aspect : mandatoryAspects) {
-			ma.add(aspect.name);
+			ma.put(aspect.name, aspect);
 
 			// Add the aspect's attributes
 			for (String attributeName : aspect.getAllAttributeNames()) {
@@ -61,7 +61,7 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 			}
 		}
 
-		this.mandatoryAspects = Tools.freezeSet(ma);
+		this.mandatoryAspects = Tools.freezeMap(ma);
 		this.localAttributes = Tools.freezeMap(new LinkedHashMap<>(localAttributes));
 
 		// Finally, create the list of all the attributes this object supports
@@ -78,11 +78,15 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 	}
 
 	public Set<String> getMandatoryAspects() {
-		return this.mandatoryAspects;
+		return this.mandatoryAspects.keySet();
 	}
 
 	public boolean isDescendedOf(String name) {
 		if (this.name.equals(name)) { return true; }
+		if (this.mandatoryAspects.containsKey(name)) { return true; }
+		for (String aspectName : this.mandatoryAspects.keySet()) {
+			if (this.mandatoryAspects.get(aspectName).isDescendedOf(name)) { return true; }
+		}
 		if (this.parent != null) { return this.parent.isDescendedOf(name); }
 		return false;
 	}

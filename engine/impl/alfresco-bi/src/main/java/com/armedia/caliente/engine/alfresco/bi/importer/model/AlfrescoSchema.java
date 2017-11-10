@@ -14,18 +14,20 @@ import java.util.TreeMap;
 
 import javax.xml.bind.JAXBException;
 
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Aspect;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Type;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfrescoSchema {
 	private static final String[] NO_ASPECTS = {};
 
-	private final Map<String, SchemaMember<?>> typeIndex;
-	private final Map<String, SchemaMember<?>> aspectIndex;
+	private final Map<String, Type> typeIndex;
+	private final Map<String, Aspect> aspectIndex;
 
 	public AlfrescoSchema(Collection<URI> modelFiles) throws IOException, JAXBException {
 		List<AlfrescoContentModel> models = new ArrayList<>();
-		Map<String, SchemaMember<?>> typeIndex = new TreeMap<>();
-		Map<String, SchemaMember<?>> aspectIndex = new TreeMap<>();
+		Map<String, Type> typeIndex = new TreeMap<>();
+		Map<String, Aspect> aspectIndex = new TreeMap<>();
 		for (URI uri : modelFiles) {
 			AlfrescoContentModel model = AlfrescoContentModel.newModel(uri, models);
 			for (String typeName : model.getTypeNames()) {
@@ -62,11 +64,11 @@ public class AlfrescoSchema {
 		}
 		SchemaMember<?> baseType = this.typeIndex.get(typeName);
 		if (baseType == null) { return null; }
-		List<SchemaMember<?>> aspects = Collections.emptyList();
+		List<Aspect> aspects = Collections.emptyList();
 		if (aspectNames.size() > 0) {
 			aspects = new ArrayList<>(aspectNames.size());
 			for (String aspectName : aspectNames) {
-				SchemaMember<?> aspect = this.aspectIndex.get(aspectName);
+				Aspect aspect = this.aspectIndex.get(aspectName);
 				if (aspect == null) { throw new IllegalArgumentException(
 					String.format("Could not find aspect [%s] to apply", aspectName)); }
 				aspects.add(aspect);
