@@ -51,9 +51,9 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 			ma.add(aspect.name);
 
 			// Add the aspect's attributes
-			for (String attributeName : aspect.allAttributeNames) {
+			for (String attributeName : aspect.getAllAttributeNames()) {
 				SchemaAttribute attribute = aspect.getAttribute(attributeName);
-				// If this attribute isn't declared on this type, or it's not decalred in a
+				// If this attribute isn't declared on this type, or it's not declared in a
 				// parent type, or it's not declared in another mandatory aspect, we add it...
 				if (!localAttributes.containsKey(attributeName)) {
 					localAttributes.put(attributeName, attribute);
