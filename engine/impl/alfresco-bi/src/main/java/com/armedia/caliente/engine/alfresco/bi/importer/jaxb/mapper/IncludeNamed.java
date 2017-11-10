@@ -5,6 +5,9 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "aspectMappings.t")
-public class AspectMappings extends NamedMappings {
+@XmlType(name = "includeNamed.t", propOrder = {
+	"value"
+})
+public class IncludeNamed extends MappingElement {
+
 }

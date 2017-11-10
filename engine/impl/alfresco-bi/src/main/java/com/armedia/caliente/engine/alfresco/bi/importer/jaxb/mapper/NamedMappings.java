@@ -9,19 +9,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "namedMappings.t")
 public class NamedMappings extends MappingSet {
 
-	@XmlAttribute(name = "includes", required = false)
-	protected String includes;
-
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
-
-	public String getIncludes() {
-		return this.includes;
-	}
-
-	public void setIncludes(String value) {
-		this.includes = value;
-	}
 
 	public String getName() {
 		return this.name;

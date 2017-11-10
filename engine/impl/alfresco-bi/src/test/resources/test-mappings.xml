@@ -14,10 +14,12 @@
 		<residuals>MANDATORY</residuals>
 	</common-mappings>
 	
-	<mappings name="nm?" includes="nm1,nm2,nm3,...,nmX">
-	</mappings>
+	<named-mappings name="nm?">
+		<include>named-mapping-reference</include>
+	</named-mappings>
 
-	<type-mappings name="tn1" includes="nm1,nm2,nm3,...,nmX">
+	<type-mappings name="tn1">
+		<include>named-mapping-reference</include>
 	</type-mappings>
 
 	<!--
@@ -42,13 +44,15 @@
 			5)	named-mappings.name, type-mappings.name and secondary-mappings.name must
 				be globally unique, to avoid confusion
 	-->
-	<aspect-mappings name="sn1" includes="nm1,nm2,nm3,...,nmX">
+	<type-mappings name="sn1">
 
 		<!-- Copy one source attribute to one or more target attributes -->
 		<map tgt="tgtAttName">srcAttName</map>
 
+		<include>named-mapping-reference</include>
+
 		<!-- Convert a source namespace to a target namespace -->
 		<nsmap tgt="tgtNs">srcNs</nsmap>
-	</aspect-mappings>
+	</type-mappings>
 
 </attribute-mappings>

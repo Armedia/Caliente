@@ -16,7 +16,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mappingSet.t", propOrder = {
-	"mappings", "residuals"
+	"mappingElements", "residuals"
 })
 @XmlSeeAlso({
 	NamedMappings.class
@@ -26,9 +26,10 @@ public class MappingSet {
 	@XmlElements({
 		@XmlElement(name = "map", type = NameMapping.class, required = false),
 		@XmlElement(name = "set", type = SetValue.class, required = false),
+		@XmlElement(name = "include", type = IncludeNamed.class, required = false),
 		@XmlElement(name = "nsmap", type = NamespaceMapping.class, required = false)
 	})
-	protected List<Mapping> mappings;
+	protected List<MappingElement> mappingElements;
 
 	@XmlElement(name = "residuals", required = false)
 	@XmlJavaTypeAdapter(ResidualsModeAdapter.class)
@@ -37,11 +38,11 @@ public class MappingSet {
 	@XmlAttribute(name = "separator")
 	protected String separator;
 
-	public List<Mapping> getMappings() {
-		if (this.mappings == null) {
-			this.mappings = new ArrayList<>();
+	public List<MappingElement> getMappingElements() {
+		if (this.mappingElements == null) {
+			this.mappingElements = new ArrayList<>();
 		}
-		return this.mappings;
+		return this.mappingElements;
 	}
 
 	public void setResidualsMode(ResidualsMode mode) {

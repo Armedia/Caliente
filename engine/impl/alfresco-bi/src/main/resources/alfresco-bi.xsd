@@ -100,6 +100,12 @@
 		</xsd:simpleContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="includeNamed.t">
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string" />
+		</xsd:simpleContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="mappingName.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:mapping.t"/>
@@ -122,6 +128,7 @@
 		<xsd:sequence>
 			<xsd:choice minOccurs="0" maxOccurs="unbounded">
 				<xsd:element name="map" type="tns:mappingName.t" />
+				<xsd:element name="include" type="tns:includeNamed.t" />
 				<xsd:element name="set" type="tns:setValue.t" />
 				<xsd:element name="nsmap" type="tns:mappingNamespace.t" />
 			</xsd:choice>
@@ -135,7 +142,6 @@
 	<xsd:complexType name="namedMappings.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:mappingSet.t">
-				<xsd:attribute name="includes" type="tns:noSpaces.t" use="optional" />
 				<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
 			</xsd:extension>
 		</xsd:complexContent>
@@ -147,20 +153,12 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
-	<xsd:complexType name="aspectMappings.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:namedMappings.t"/>
-		</xsd:complexContent>
-	</xsd:complexType>
-
- 
 	<xsd:complexType name="attributeMappings.t">
 		<xsd:sequence>
 			<xsd:element name="common-mappings" type="tns:mappingSet.t" minOccurs="0" maxOccurs="1" />
 			<xsd:choice minOccurs="0" maxOccurs="unbounded">
-				<xsd:element name="mappings" type="tns:namedMappings.t" />
+				<xsd:element name="named-mappings" type="tns:namedMappings.t" />
 				<xsd:element name="type-mappings" type="tns:typeMappings.t" />
-				<xsd:element name="aspect-mappings" type="tns:aspectMappings.t" />
 			</xsd:choice>
 		</xsd:sequence>
 	</xsd:complexType>

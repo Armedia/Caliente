@@ -3,18 +3,14 @@ package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlValue;
 
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
-public abstract class Mapping {
+public abstract class Mapping extends MappingElement {
 
 	public static final Character DEFAULT_SEP = ',';
 	public static final String DEFAULT_SEP_STR = Mapping.DEFAULT_SEP.toString();
-
-	@XmlValue
-	protected String value;
 
 	@XmlAttribute(name = "tgt", required = true)
 	protected String tgt;
@@ -34,14 +30,6 @@ public abstract class Mapping {
 				this.separator = null;
 			}
 		}
-	}
-
-	public String getValue() {
-		return this.value;
-	}
-
-	public void setValue(String value) {
-		this.value = value;
 	}
 
 	public String getTgt() {
