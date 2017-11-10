@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Aspect;
 import com.armedia.commons.utilities.Tools;
 
@@ -18,6 +20,7 @@ public class AlfrescoType {
 	private final Map<String, Aspect> aspects;
 	private final Map<String, SchemaMember<?>> attributes;
 	private final Map<String, Set<String>> strippedAttributeNames;
+	private final String signature;
 
 	public static String stripNamespace(String attName) {
 		if (attName == null) { return null; }
@@ -64,6 +67,25 @@ public class AlfrescoType {
 		}
 		this.strippedAttributeNames = Tools.freezeMap(strippedAttributeNames);
 		this.aspects = Tools.freezeMap(aspects);
+
+		Set<String> s = new TreeSet<>();
+		s.addAll(type.getAncestors());
+		s.add(type.name);
+		s.addAll(this.aspects.keySet());
+		StringBuilder sb = new StringBuilder();
+		sb.append('[');
+		for (String str : s) {
+			if (sb.length() > 1) {
+				sb.append('|');
+			}
+			sb.append(str);
+		}
+		sb.append(']');
+		this.signature = DigestUtils.sha256Hex(sb.toString());
+	}
+
+	public String getSignature() {
+		return this.signature;
 	}
 
 	public String getName() {

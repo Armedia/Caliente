@@ -19,6 +19,8 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 	protected final String name;
 
 	protected final Map<String, Aspect> mandatoryAspects;
+	protected final Map<String, Aspect> allAspects;
+	protected final Map<String, SchemaMember<?>> ancestors;
 	protected final Map<String, SchemaAttribute> localAttributes;
 	protected final Set<String> allAttributeNames;
 
@@ -64,6 +66,28 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		this.mandatoryAspects = Tools.freezeMap(ma);
 		this.localAttributes = Tools.freezeMap(new LinkedHashMap<>(localAttributes));
 
+		ma = new LinkedHashMap<>();
+		// First, get the inherited aspects from the mandatory aspects
+		for (Aspect a : this.mandatoryAspects.values()) {
+			while (a != null) {
+				ma.put(a.name, a);
+				a = a.getParent();
+			}
+		}
+
+		// Now get the parent type's aspects
+		Map<String, SchemaMember<?>> ancestors = new TreeMap<>();
+		SchemaMember<T> p = this.parent;
+		while (p != null) {
+			ma.putAll(p.allAspects);
+			ancestors.put(p.name, p);
+			p = p.getParent();
+		}
+
+		this.allAspects = Tools.freezeMap(ma);
+		ancestors.putAll(this.allAspects);
+		this.ancestors = Tools.freezeMap(ancestors);
+
 		// Finally, create the list of all the attributes this object supports
 		Set<String> allAttributeNames = new TreeSet<>();
 		allAttributeNames.addAll(this.localAttributes.keySet());
@@ -71,6 +95,14 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 			allAttributeNames.addAll(parent.getAllAttributeNames());
 		}
 		this.allAttributeNames = Tools.freezeSet(new LinkedHashSet<>(allAttributeNames));
+	}
+
+	public Set<String> getAncestors() {
+		return this.ancestors.keySet();
+	}
+
+	public Set<String> getAllAspects() {
+		return this.allAspects.keySet();
 	}
 
 	public T getParent() {
@@ -82,13 +114,7 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 	}
 
 	public boolean isDescendedOf(String name) {
-		if (this.name.equals(name)) { return true; }
-		if (this.mandatoryAspects.containsKey(name)) { return true; }
-		for (String aspectName : this.mandatoryAspects.keySet()) {
-			if (this.mandatoryAspects.get(aspectName).isDescendedOf(name)) { return true; }
-		}
-		if (this.parent != null) { return this.parent.isDescendedOf(name); }
-		return false;
+		return this.ancestors.containsKey(name);
 	}
 
 	public SchemaAttribute getAttribute(String name) {
