@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.TreeMap;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.AttributeMappings;
@@ -12,7 +13,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.MappingSet;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NamedMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NamespaceMapping;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.SetValue;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
@@ -48,7 +49,12 @@ public class AttributeMapper {
 		}
 	}
 
-	public String getMappedValue(SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
+	public Properties getMappedAttributes(AlfrescoType type, CmfObject<CmfValue> object) {
+		// 1) if type == null, end
+		// 2) find the mappings for the current type
+		// 3) find the mappings for the aspects applied to the current type that aren't inherited
+		// 4) type = type.parent
+		// 5) goto 1)
 		return null;
 	}
 
