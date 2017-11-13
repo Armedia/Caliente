@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
+import java.util.Properties;
+
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -15,13 +17,15 @@ class ValueConstant extends ValueMapping {
 	}
 
 	@Override
-	public MappedValue getValue(SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
+	public MappedValue getValue(final SchemaAttribute tgtAtt, CmfObject<CmfValue> object) {
 		return new MappedValue() {
+			private final String name = tgtAtt.name;
 			private final String value = ValueConstant.this.value;
 
 			@Override
-			public String render(CmfObject<CmfValue> object) {
-				return this.value;
+			public boolean render(Properties properties, CmfObject<CmfValue> object) {
+				properties.setProperty(this.name, this.value);
+				return true;
 			}
 		};
 	}

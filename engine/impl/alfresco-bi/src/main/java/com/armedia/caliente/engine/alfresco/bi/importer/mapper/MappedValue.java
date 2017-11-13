@@ -7,6 +7,6 @@ import com.armedia.caliente.store.CmfValue;
 
 public interface MappedValue {
 
-	public void render(Properties properties, CmfObject<CmfValue> object);
+	public boolean render(Properties properties, CmfObject<CmfValue> object);
 
 }

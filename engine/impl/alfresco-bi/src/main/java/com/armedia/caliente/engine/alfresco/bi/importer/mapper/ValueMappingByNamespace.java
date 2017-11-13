@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
 import java.util.Objects;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -52,10 +53,11 @@ class ValueMappingByNamespace extends ValueMapping {
 			private final char separator = ValueMappingByNamespace.this.separator;
 
 			@Override
-			public String render(CmfObject<CmfValue> object) {
+			public boolean render(Properties properties, CmfObject<CmfValue> object) {
 				CmfAttribute<CmfValue> attribute = object.getAttribute(this.attributeName);
-				if (attribute == null) { return null; }
-				return ValueMapping.generateValue(this.separator, attribute);
+				if (attribute == null) { return false; }
+				ValueMapping.generateValue(this.separator, attribute);
+				return true;
 			}
 		};
 	}

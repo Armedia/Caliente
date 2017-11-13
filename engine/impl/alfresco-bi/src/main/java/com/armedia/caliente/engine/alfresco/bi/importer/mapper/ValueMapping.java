@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -76,10 +77,12 @@ class ValueMapping {
 			private final char separator = ValueMapping.this.separator;
 
 			@Override
-			public String render(CmfObject<CmfValue> object) {
+			public boolean render(Properties properties, CmfObject<CmfValue> object) {
 				CmfAttribute<CmfValue> attribute = object.getAttribute(this.attributeName);
-				if (attribute == null) { return null; }
-				return ValueMapping.generateValue(this.separator, attribute);
+				if (attribute == null) { return false; }
+				String value = ValueMapping.generateValue(this.separator, attribute);
+				properties.setProperty(this.attributeName, value);
+				return true;
 			}
 		};
 	}
