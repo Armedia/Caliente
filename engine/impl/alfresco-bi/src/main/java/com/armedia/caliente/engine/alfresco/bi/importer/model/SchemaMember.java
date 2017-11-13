@@ -142,6 +142,16 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		return this.allAttributeNames.size();
 	}
 
+	public boolean isAttributeInherited(String name) {
+		if (this.parent == null) { return false; }
+		return this.parent.getAllAttributeNames().contains(name);
+	}
+
+	public boolean isAspectInherited(String name) {
+		if (this.parent == null) { return false; }
+		return this.parent.getAllAspects().contains(name);
+	}
+
 	@Override
 	public int hashCode() {
 		return Tools.hashTool(this, null, this.name, this.parent);

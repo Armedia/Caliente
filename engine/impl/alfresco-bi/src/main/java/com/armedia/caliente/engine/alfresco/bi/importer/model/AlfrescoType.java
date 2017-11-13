@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.alfresco.bi.importer.model;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -18,6 +19,8 @@ public class AlfrescoType {
 	private final SchemaMember<?> type;
 	private final String name;
 	private final Map<String, Aspect> aspects;
+	private final Map<String, Aspect> extraAspects;
+	private final Set<String> declaredAspects;
 	private final Map<String, SchemaMember<?>> attributes;
 	private final Map<String, Set<String>> strippedAttributeNames;
 	private final String signature;
@@ -33,15 +36,25 @@ public class AlfrescoType {
 			appliedAspects = Collections.emptyList();
 		}
 		this.name = type.name;
+		Set<String> declaredAspects = new HashSet<>();
+		if (type.parent != null) {
+			declaredAspects.addAll(type.parent.getAllAspects());
+		}
+		declaredAspects.addAll(type.mandatoryAspects.keySet());
 		Map<String, Aspect> aspects = new LinkedHashMap<>(type.mandatoryAspects);
 
 		Map<String, SchemaMember<?>> attributes = new TreeMap<>();
+		Map<String, Aspect> extraAspects = new TreeMap<>();
 		for (Aspect aspect : appliedAspects) {
 			aspects.put(aspect.name, aspect);
+			if (!declaredAspects.contains(aspect.name)) {
+				extraAspects.put(aspect.name, aspect);
+			}
 			for (String attribute : aspect.getAllAttributeNames()) {
 				attributes.put(attribute, aspect);
 			}
 		}
+
 		// Override any aspect's attributes with our own
 		for (String attribute : type.getAllAttributeNames()) {
 			attributes.put(attribute, type);
@@ -66,6 +79,8 @@ public class AlfrescoType {
 			strippedAttributeNames.put(stripped, s);
 		}
 		this.strippedAttributeNames = Tools.freezeMap(strippedAttributeNames);
+		this.declaredAspects = Tools.freezeCopy(type.mandatoryAspects.keySet());
+		this.extraAspects = Tools.freezeMap(extraAspects);
 		this.aspects = Tools.freezeMap(aspects);
 
 		Set<String> s = new TreeSet<>();
@@ -103,6 +118,22 @@ public class AlfrescoType {
 
 	public Set<String> getAspects() {
 		return this.aspects.keySet();
+	}
+
+	public Set<String> getExtraAspects() {
+		return this.extraAspects.keySet();
+	}
+
+	public Set<String> getDeclaredAspects() {
+		return this.declaredAspects;
+	}
+
+	public boolean isAttributeInherited(String name) {
+		return this.type.isAttributeInherited(name);
+	}
+
+	public boolean isAspectInherited(String aspect) {
+		return this.type.isAspectInherited(this.name);
 	}
 
 	public SchemaAttribute getAttribute(String name) {

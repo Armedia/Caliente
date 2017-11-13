@@ -73,8 +73,9 @@ public class AlfrescoSchemaTest {
 		System.out.printf("Types%n");
 		Set<String> typeNames = new TreeSet<>(schema.getTypeNames());
 		typeNames.addAll(schema.getAspectNames());
-		typeNames = new LinkedHashSet<>(Arrays.asList("edms:doc", "edms:leasing", "edms:buildingproject",
-			"edms:realpropertycontracting", "edms:leasecontracting", "edms:buildingprojectaspect"));
+		typeNames = new LinkedHashSet<>(Arrays.asList("sys:base", "cm:cmobject", "cm:content", "edms:docbase",
+			"edms:doc", "edms:leasing", "edms:buildingproject", "edms:realpropertycontracting", "edms:leasecontracting",
+			"edms:buildingprojectaspect"));
 		for (String typeName : typeNames) {
 			SchemaMember<?> type = schema.getType(typeName);
 			if (type == null) {
@@ -89,6 +90,9 @@ public class AlfrescoSchemaTest {
 			}
 			for (String attributeName : new TreeSet<>(type.getAllAttributeNames())) {
 				SchemaAttribute attribute = type.getAttribute(attributeName);
+				if (type.isAttributeInherited(attributeName)) {
+					continue;
+				}
 				String reqFlag = attribute.mandatory.name().substring(0, 1);
 				System.out.printf("\t\t%s[%s]=[%s:%s] from %s [%s]%n", reqFlag, attribute.name,
 					attribute.multiple ? "R" : "S", attribute.type.name(),
