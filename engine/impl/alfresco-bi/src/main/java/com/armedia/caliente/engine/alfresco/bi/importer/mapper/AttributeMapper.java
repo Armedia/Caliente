@@ -77,7 +77,7 @@ public class AttributeMapper {
 		}
 	}
 
-	public Properties getMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
+	public Properties renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		Properties properties = new Properties();
 		// 1) if type == null, end
@@ -117,7 +117,6 @@ public class AttributeMapper {
 		for (String s : mappings.keySet()) {
 			mappings.get(s).render(properties, object);
 		}
-
 		return properties;
 	}
 
