@@ -18,6 +18,9 @@ public abstract class Mapping extends MappingElement {
 	@XmlAttribute(name = "caseSensitive", required = false)
 	protected Boolean caseSensitive;
 
+	@XmlAttribute(name = "override", required = false)
+	protected Boolean override;
+
 	@XmlAttribute(name = "separator", required = false)
 	protected String separator;
 
@@ -38,6 +41,14 @@ public abstract class Mapping extends MappingElement {
 
 	public void setTgt(String value) {
 		this.tgt = value;
+	}
+
+	public boolean isOverride() {
+		return Tools.coalesce(this.override, Boolean.FALSE);
+	}
+
+	public void setOverride(Boolean value) {
+		this.override = value;
 	}
 
 	public boolean isCaseSensitive() {
