@@ -14,12 +14,12 @@
 		<residuals>MANDATORY</residuals>
 	</common-mappings>
 	
-	<named-mappings name="nm?">
-		<include>named-mapping-reference</include>
+	<named-mappings name="named-mapping-1">
+		<include>named-mapping-1</include>
 	</named-mappings>
 
-	<type-mappings name="tn1">
-		<include>named-mapping-reference</include>
+	<type-mappings name="sn1">
+		<include>named-mapping-1</include>
 	</type-mappings>
 
 	<!--
@@ -44,12 +44,12 @@
 			5)	named-mappings.name, type-mappings.name and secondary-mappings.name must
 				be globally unique, to avoid confusion
 	-->
-	<type-mappings name="sn1">
+	<type-mappings name="sn2">
 
 		<!-- Copy one source attribute to one or more target attributes -->
 		<map tgt="tgtAttName">srcAttName</map>
 
-		<include>named-mapping-reference</include>
+		<include>named-mapping-1</include>
 
 		<!-- Convert a source namespace to a target namespace -->
 		<nsmap tgt="tgtNs">srcNs</nsmap>

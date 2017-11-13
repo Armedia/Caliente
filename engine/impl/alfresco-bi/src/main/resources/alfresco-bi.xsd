@@ -103,7 +103,7 @@
 
 	<xsd:complexType name="includeNamed.t">
 		<xsd:simpleContent>
-			<xsd:extension base="xsd:string" />
+			<xsd:extension base="xsd:IDREF" />
 		</xsd:simpleContent>
 	</xsd:complexType>
 
@@ -143,14 +143,16 @@
 	<xsd:complexType name="namedMappings.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:mappingSet.t">
-				<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
+				<xsd:attribute name="name" type="xsd:ID" use="required" />
 			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 
 	<xsd:complexType name="typeMappings.t">
 		<xsd:complexContent>
-			<xsd:extension base="tns:namedMappings.t"/>
+			<xsd:extension base="tns:mappingSet.t">
+				<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
+			</xsd:extension>
 		</xsd:complexContent>
 	</xsd:complexType>
 
@@ -164,5 +166,10 @@
 		</xsd:sequence>
 	</xsd:complexType>
 
-	<xsd:element name="attribute-mappings" type="tns:attributeMappings.t" />
+	<xsd:element name="attribute-mappings" type="tns:attributeMappings.t">
+		<xsd:unique name="uniqueTypeMappingName">
+			<xsd:selector xpath="tns:type-mappings"/>
+			<xsd:field xpath="@name"/>
+		</xsd:unique>
+	</xsd:element>
 </xsd:schema>

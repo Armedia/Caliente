@@ -17,10 +17,10 @@
 		-->
 	</common-mappings>
 	
-	<named-mappings name="nm?">
+	<named-mappings name="named-mapping-1">
 	</named-mappings>
 
-	<type-mappings name="tn1">
+	<type-mappings name="named-mapping-2">
 	</type-mappings>
 
 	<!--
@@ -49,11 +49,14 @@
 
 		<!-- Copy one source attribute to one or more target attributes -->
 		<map tgt="tgtAttName">srcAttName</map>
-		
-		<include>named-reference</include>
+
+		<include>named-mapping-1</include>
 
 		<!-- Convert a source namespace to a target namespace -->
 		<nsmap tgt="tgtNs">srcNs</nsmap>
+	</type-mappings>
+
+	<type-mappings name="sn2">
 	</type-mappings>
 
 </attribute-mappings>
