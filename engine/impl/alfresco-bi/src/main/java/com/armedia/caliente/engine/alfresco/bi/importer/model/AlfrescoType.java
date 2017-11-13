@@ -99,6 +99,10 @@ public class AlfrescoType {
 		this.signature = DigestUtils.sha256Hex(sb.toString());
 	}
 
+	public SchemaMember<?> getDeclaration() {
+		return this.type;
+	}
+
 	public String getSignature() {
 		return this.signature;
 	}
