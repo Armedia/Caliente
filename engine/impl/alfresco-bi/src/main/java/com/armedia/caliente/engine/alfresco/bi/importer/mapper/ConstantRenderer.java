@@ -9,7 +9,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
-public class ConstantRenderer extends MappingRenderer {
+class ConstantRenderer extends MappingRenderer {
 	private final Collection<Triple<String, String, String>> ret;
 
 	public ConstantRenderer(Mapping m) {

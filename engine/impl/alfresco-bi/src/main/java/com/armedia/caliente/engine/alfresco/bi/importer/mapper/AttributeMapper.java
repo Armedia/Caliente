@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -11,12 +12,22 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.AttributeMappings;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.MappingElement;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.MappingSet;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NameMapping;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NamedMappings;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NamespaceMapping;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.ResidualsMode;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.SetValue;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.TypeMappings;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
 
@@ -33,9 +44,43 @@ public class AttributeMapper {
 		return null;
 	}
 
-	public AttributeMapper() throws Exception {
+	private final ResidualsMode commonResidualsMode;
+	private final List<MappingRenderer> commonRenderers;
+
+	private static MappingRenderer buildRenderer(MappingElement e) {
+		if (!Mapping.class.isInstance(e)) { return null; }
+		Mapping m = Mapping.class.cast(e);
+		if (NameMapping.class.isInstance(m)) { return new MappingRenderer(m); }
+		if (NamespaceMapping.class.isInstance(m)) { return new NamespaceRenderer(m); }
+		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(m); }
+		return null;
+	}
+
+	public AttributeMapper(AlfrescoSchema schema) throws Exception {
 		AttributeMappings xml = AttributeMapper.loadMappings();
 		MappingSet commonMappings = xml.getCommonMappings();
+
+		this.commonResidualsMode = commonMappings.getResidualsMode();
+		List<MappingRenderer> commonRenderers = new ArrayList<>();
+		for (MappingElement e : commonMappings.getMappingElements()) {
+			MappingRenderer r = AttributeMapper.buildRenderer(e);
+			if (r == null) {
+				// TODO: Log a warning before we simply ignore it?
+				continue;
+			}
+			commonRenderers.add(r);
+		}
+		this.commonRenderers = Tools.freezeList(commonRenderers);
+
+		Map<String, NamedMappings> namedMappings = new HashMap<>();
+		Map<String, TypeMappings> typeMappings = new HashMap<>();
+		for (NamedMappings nm : xml.getMappings()) {
+			if (TypeMappings.class.isInstance(nm)) {
+				typeMappings.put(nm.getName(), TypeMappings.class.cast(nm));
+			} else {
+				namedMappings.put(nm.getName(), nm);
+			}
+		}
 	}
 
 	public Map<String, String> renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
@@ -66,6 +111,8 @@ public class AttributeMapper {
 						// Process the parent type's mappings
 						typeDecl = typeDecl.getParent();
 					}
+					// Finally, add the common renderers
+					renderers.addAll(AttributeMapper.this.commonRenderers);
 					return new MappingRendererSet(type, residuals, renderers);
 				}
 			});

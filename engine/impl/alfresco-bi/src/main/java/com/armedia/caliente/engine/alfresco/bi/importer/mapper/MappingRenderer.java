@@ -16,7 +16,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class MappingRenderer {
+class MappingRenderer {
 
 	protected final String target;
 	protected final Set<String> sourceValues;

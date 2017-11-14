@@ -13,7 +13,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
-public class NamespaceRenderer extends MappingRenderer {
+class NamespaceRenderer extends MappingRenderer {
 	private static final Pattern NSPARSER = Pattern.compile("^([^:]+):(.+)$");
 
 	public NamespaceRenderer(Mapping m) {
