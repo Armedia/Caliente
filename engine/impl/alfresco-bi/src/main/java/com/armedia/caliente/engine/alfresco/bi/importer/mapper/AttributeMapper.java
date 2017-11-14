@@ -8,6 +8,8 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.AttributeMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.IncludeNamed;
@@ -40,6 +42,7 @@ public class AttributeMapper {
 		return null;
 	}
 
+	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final Map<String, MappingRendererSet> typedMappings;
 
 	private static MappingRenderer buildRenderer(MappingElement e, Character parentSeparator) {
@@ -60,11 +63,9 @@ public class AttributeMapper {
 		if (commonMappings != null) {
 			for (MappingElement e : commonMappings.getMappingElements()) {
 				MappingRenderer r = AttributeMapper.buildRenderer(e, commonMappings.getSeparator());
-				if (r == null) {
-					// TODO: Log a warning before we simply ignore it?
-					continue;
+				if (r != null) {
+					renderers.add(r);
 				}
-				renderers.add(r);
 			}
 			if (!renderers.isEmpty()) {
 				commonRenderers = new MappingRendererSet(null, commonMappings.getSeparator(),
@@ -119,32 +120,40 @@ public class AttributeMapper {
 			if (type == null) {
 				type = schema.getAspect(tm.getName());
 			}
-			if (type == null) { throw new Exception(String.format(
-				"No type or aspect named [%s] was found in the declared Alfresco content model", tm.getName())); }
+			if (type == null) {
+				this.log.warn(
+					"No type or aspect named [{}] was found in the declared Alfresco content model - ignoring this mapping set",
+					tm.getName());
+				continue;
+			}
 
 			// Construct the mapping set for this:
 			final ResidualsMode residualsMode = tm.getResidualsMode();
 			final Character separator = tm.getSeparator();
 			renderers = new ArrayList<>();
 			for (MappingElement e : tm.getMappingElements()) {
-				if (IncludeNamed.class.isInstance(e)) {
+				MappingRenderer renderer = AttributeMapper.buildRenderer(e, tm.getSeparator());
+				if ((renderer == null) && IncludeNamed.class.isInstance(e)) {
+					// If this is an <include>, then get the element and add it to the rendering
+					// pipeline!
 					String included = IncludeNamed.class.cast(e).getValue();
 					included = StringUtils.strip(included);
-					final MappingRendererSet mappings = namedMappings.get(included);
-					if (mappings == null) {
-						// KABOOM!! Illegal forward reference
+					renderer = namedMappings.get(included);
+					if (renderer == null) {
+						// KABOOM!! Illegal forward reference ... this shouldn't happen, though,
+						// since the JAXB parser should trigger this error due to how the XSD is
+						// built
 						throw new Exception(
 							String.format("No named mapping [%s] found, referenced from type mapping set [%s]",
 								included, tm.getName()));
 					}
-					renderers.add(mappings);
-				} else {
-					MappingRenderer renderer = AttributeMapper.buildRenderer(e, tm.getSeparator());
-					if (renderer != null) {
-						renderers.add(renderer);
-					}
+				}
+				// If there's something to add, add it!
+				if (renderer != null) {
+					renderers.add(renderer);
 				}
 			}
+
 			if (commonRenderers != null) {
 				renderers.add(commonRenderers);
 			}
