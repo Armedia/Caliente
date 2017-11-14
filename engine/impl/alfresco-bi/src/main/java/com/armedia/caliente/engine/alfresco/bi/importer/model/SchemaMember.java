@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.ClassElement;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.Property;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Aspect;
@@ -23,6 +25,7 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 	protected final Map<String, SchemaMember<?>> ancestors;
 	protected final Map<String, SchemaAttribute> localAttributes;
 	protected final Set<String> allAttributeNames;
+	protected final String signature;
 
 	SchemaMember(T parent, ClassElement e, Collection<Aspect> mandatoryAspects) {
 		this.parent = parent;
@@ -95,6 +98,20 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 			allAttributeNames.addAll(parent.getAllAttributeNames());
 		}
 		this.allAttributeNames = Tools.freezeSet(new LinkedHashSet<>(allAttributeNames));
+
+		Set<String> s = new TreeSet<>();
+		s.addAll(this.ancestors.keySet());
+		s.add(this.name);
+		StringBuilder sb = new StringBuilder();
+		sb.append('[');
+		for (String str : s) {
+			if (sb.length() > 1) {
+				sb.append('|');
+			}
+			sb.append(str);
+		}
+		sb.append(']');
+		this.signature = DigestUtils.sha256Hex(sb.toString());
 	}
 
 	public Set<String> getAncestors() {
@@ -103,6 +120,10 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 
 	public Set<String> getAllAspects() {
 		return this.allAspects.keySet();
+	}
+
+	public String getSignature() {
+		return this.signature;
 	}
 
 	public T getParent() {

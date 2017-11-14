@@ -9,6 +9,8 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 class AttributeValue {
+	public static final char DEFAULT_SEPARATOR = ',';
+
 	private final String sourceName;
 	private final String targetName;
 	private final Collection<CmfValue> values;

@@ -15,8 +15,8 @@ import com.armedia.caliente.store.CmfValue;
 class NamespaceRenderer extends AttributeRendererImpl {
 	private static final Pattern NSPARSER = Pattern.compile("^([^:]+):(.+)$");
 
-	public NamespaceRenderer(Mapping m) {
-		super(m);
+	public NamespaceRenderer(Mapping m, Character parentSeparator) {
+		super(m, parentSeparator);
 	}
 
 	@Override

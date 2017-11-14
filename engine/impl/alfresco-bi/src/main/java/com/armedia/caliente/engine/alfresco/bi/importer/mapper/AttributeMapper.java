@@ -1,17 +1,16 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.AttributeMappings;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.IncludeNamed;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.MappingElement;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.MappingSet;
@@ -22,11 +21,8 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.ResidualsMod
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.SetValue;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.TypeMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
-import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
@@ -44,15 +40,14 @@ public class AttributeMapper {
 		return null;
 	}
 
-	private final ResidualsMode commonResidualsMode;
-	private final List<AttributeRendererImpl> commonRenderers;
+	private final Map<String, MappingRendererSet> typedMappings;
 
-	private static AttributeRendererImpl buildRenderer(MappingElement e) {
+	private static MappingRenderer buildRenderer(MappingElement e, Character parentSeparator) {
 		if (!Mapping.class.isInstance(e)) { return null; }
 		Mapping m = Mapping.class.cast(e);
-		if (NameMapping.class.isInstance(m)) { return new AttributeRendererImpl(m); }
-		if (NamespaceMapping.class.isInstance(m)) { return new NamespaceRenderer(m); }
-		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(m); }
+		if (NameMapping.class.isInstance(m)) { return new AttributeRendererImpl(m, parentSeparator); }
+		if (NamespaceMapping.class.isInstance(m)) { return new NamespaceRenderer(m, parentSeparator); }
+		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(m, parentSeparator); }
 		return null;
 	}
 
@@ -60,36 +55,112 @@ public class AttributeMapper {
 		AttributeMappings xml = AttributeMapper.loadMappings();
 		MappingSet commonMappings = xml.getCommonMappings();
 
-		this.commonResidualsMode = commonMappings.getResidualsMode();
-		List<AttributeRendererImpl> commonRenderers = new ArrayList<>();
-		for (MappingElement e : commonMappings.getMappingElements()) {
-			AttributeRendererImpl r = AttributeMapper.buildRenderer(e);
-			if (r == null) {
-				// TODO: Log a warning before we simply ignore it?
-				continue;
+		List<MappingRenderer> renderers = new ArrayList<>();
+		final MappingRendererSet commonRenderers;
+		if (commonMappings != null) {
+			for (MappingElement e : commonMappings.getMappingElements()) {
+				MappingRenderer r = AttributeMapper.buildRenderer(e, commonMappings.getSeparator());
+				if (r == null) {
+					// TODO: Log a warning before we simply ignore it?
+					continue;
+				}
+				renderers.add(r);
 			}
-			commonRenderers.add(r);
+			if (!renderers.isEmpty()) {
+				commonRenderers = new MappingRendererSet(null, commonMappings.getSeparator(),
+					commonMappings.getResidualsMode(), renderers);
+			} else {
+				commonRenderers = null;
+			}
+		} else {
+			commonRenderers = null;
 		}
-		this.commonRenderers = Tools.freezeList(commonRenderers);
 
-		Map<String, NamedMappings> namedMappings = new HashMap<>();
-		Map<String, TypeMappings> typeMappings = new HashMap<>();
+		List<TypeMappings> typeMappings = new ArrayList<>();
+		Map<String, MappingRendererSet> namedMappings = new TreeMap<>();
 		for (NamedMappings nm : xml.getMappings()) {
 			if (TypeMappings.class.isInstance(nm)) {
-				typeMappings.put(nm.getName(), TypeMappings.class.cast(nm));
-			} else {
-				namedMappings.put(nm.getName(), nm);
+				typeMappings.add(TypeMappings.class.cast(nm));
+				continue;
 			}
+
+			// Construct the mapping set for this:
+			final ResidualsMode residualsMode = nm.getResidualsMode();
+			final Character separator = nm.getSeparator();
+			renderers = new ArrayList<>();
+			for (MappingElement e : nm.getMappingElements()) {
+				if (IncludeNamed.class.isInstance(e)) {
+					String included = IncludeNamed.class.cast(e).getValue();
+					included = StringUtils.strip(included);
+					final MappingRendererSet mappings = namedMappings.get(included);
+					if (mappings == null) {
+						// KABOOM!! Illegal forward reference
+						throw new Exception(
+							String.format("Illegal forward reference of mappings set [%s] from mapping set [%s]",
+								included, nm.getName()));
+					}
+					renderers.add(mappings);
+				} else {
+					MappingRenderer renderer = AttributeMapper.buildRenderer(e, nm.getSeparator());
+					if (renderer != null) {
+						renderers.add(renderer);
+					}
+				}
+			}
+			if (commonRenderers != null) {
+				renderers.add(commonRenderers);
+			}
+			namedMappings.put(nm.getName(), new MappingRendererSet(null, separator, residualsMode, renderers));
 		}
+
+		Map<String, MappingRendererSet> typedMappings = new TreeMap<>();
+		for (TypeMappings tm : typeMappings) {
+			SchemaMember<?> type = schema.getType(tm.getName());
+			if (type == null) {
+				type = schema.getAspect(tm.getName());
+			}
+			if (type == null) { throw new Exception(String.format(
+				"No type or aspect named [%s] was found in the declared Alfresco content model", tm.getName())); }
+
+			// Construct the mapping set for this:
+			final ResidualsMode residualsMode = tm.getResidualsMode();
+			final Character separator = tm.getSeparator();
+			renderers = new ArrayList<>();
+			for (MappingElement e : tm.getMappingElements()) {
+				if (IncludeNamed.class.isInstance(e)) {
+					String included = IncludeNamed.class.cast(e).getValue();
+					included = StringUtils.strip(included);
+					final MappingRendererSet mappings = namedMappings.get(included);
+					if (mappings == null) {
+						// KABOOM!! Illegal forward reference
+						throw new Exception(
+							String.format("No named mapping [%s] found, referenced from type mapping set [%s]",
+								included, tm.getName()));
+					}
+					renderers.add(mappings);
+				} else {
+					MappingRenderer renderer = AttributeMapper.buildRenderer(e, tm.getSeparator());
+					if (renderer != null) {
+						renderers.add(renderer);
+					}
+				}
+			}
+			if (commonRenderers != null) {
+				renderers.add(commonRenderers);
+			}
+			typedMappings.put(tm.getName(), new MappingRendererSet(type, separator, residualsMode, renderers));
+		}
+		this.typedMappings = Tools.freezeMap(new LinkedHashMap<>(typedMappings));
 	}
 
+	/*
 	public Map<String, String> renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		// 1) if type == null, end
 		if (type == null) { return Collections.emptyMap(); }
-
+	
 		final String signature = type.getSignature();
-
+	
 		final MappingRendererSet renderers;
 		try {
 			renderers = this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
@@ -100,14 +171,14 @@ public class AttributeMapper {
 					boolean residuals = false;
 					while (typeDecl != null) {
 						// 1) find the mappings for the specific type
-
+	
 						// 2) find the mappings for the declared, uninherited aspects
-
+	
 						if (typeDecl == type.getDeclaration()) {
 							// This only happens the first time...
 							// 3) find the mappings for the undeclared, uninherited aspects
 						}
-
+	
 						// Process the parent type's mappings
 						typeDecl = typeDecl.getParent();
 					}
@@ -120,9 +191,10 @@ public class AttributeMapper {
 			throw new RuntimeException(String.format("Failed to generate the mapping renderers for type [%s] (%s)",
 				type.toString(), signature), e);
 		}
-
+	
 		// Render the mapped values
 		return renderers.render(object);
 	}
-
+	
+	*/
 }

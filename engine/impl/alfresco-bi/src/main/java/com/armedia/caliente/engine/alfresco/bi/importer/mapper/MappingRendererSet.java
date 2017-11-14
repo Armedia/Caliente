@@ -2,56 +2,50 @@ package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
-import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.ResidualsMode;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-public class MappingRendererSet {
+public class MappingRendererSet implements MappingRenderer {
 
-	private final AlfrescoType type;
-	private final boolean residuals;
+	private final SchemaMember<?> type;
+	private final ResidualsMode residualsMode;
+	private final Character separator;
 	private final List<MappingRenderer> renderers;
 
 	/**
 	 * @param type
 	 */
-	public MappingRendererSet(AlfrescoType type, boolean residuals, List<MappingRenderer> renderers) {
+	public MappingRendererSet(SchemaMember<?> type, Character separator, ResidualsMode residualsMode,
+		List<MappingRenderer> renderers) {
 		this.type = type;
 		this.renderers = Tools.freezeList(renderers);
-		this.residuals = residuals;
+		this.residualsMode = residualsMode;
+		this.separator = separator;
 	}
 
-	public final AlfrescoType getType() {
+	public final SchemaMember<?> getType() {
 		return this.type;
 	}
 
-	public final String getSignature() {
-		return this.type.getSignature();
+	public List<MappingRenderer> getRenderers() {
+		return this.renderers;
 	}
 
-	private String renderValue(char separator, Collection<CmfValue> values) {
-		if (values == null) { return null; }
-		if (values.isEmpty()) { return StringUtils.EMPTY; }
-		Collection<String> rendered = new ArrayList<>(values.size());
-		for (CmfValue value : values) {
-			// Avoid null values
-			if (value.isNull()) {
-				continue;
-			}
-			rendered.add(value.asString());
-		}
-		return Tools.joinEscaped(separator, rendered);
+	public final ResidualsMode getResidualsMode() {
+		return this.residualsMode;
+	}
+
+	public Character getSeparator() {
+		return this.separator;
 	}
 
 	/**
@@ -60,68 +54,47 @@ public class MappingRendererSet {
 	 * @param object
 	 * @return the set of target attributes that were rendered
 	 */
-	public Map<String, String> render(CmfObject<CmfValue> object) {
-		Map<String, String> m = new TreeMap<>();
+	@Override
+	public Collection<AttributeValue> render(CmfObject<CmfValue> object) {
+		Collection<AttributeValue> ret = new ArrayList<>();
 
+		Set<String> mappedTargetNames = new HashSet<>();
 		Set<String> mappedSourceNames = new HashSet<>();
 		for (MappingRenderer r : this.renderers) {
 			if (r == null) {
 				continue;
 			}
+
 			Collection<AttributeValue> values = r.render(object);
-			if (values == null) {
-				values = Collections.emptyList();
+			if ((values == null) || values.isEmpty()) {
+				continue;
 			}
+
 			for (AttributeValue value : values) {
 				final String sourceName = value.getSourceName();
 				final String targetName = value.getTargetName();
-				final String renderedValue = renderValue(value.getSeparator(), value.getValues());
 				final boolean override = value.isOverride();
 
 				if (!StringUtils.isBlank(sourceName)) {
 					mappedSourceNames.add(sourceName);
 				}
 
-				if (!this.type.getAttributeNames().contains(targetName) && !this.residuals) {
-					// This attribute doesn't exist, and we're not handling residuals, we skip it
+				if ((this.type != null) && !this.type.getAttributeNames().contains(targetName)) {
+					// This attribute doesn't exist, and we're not handling residualsMode, we skip
+					// it
 					continue;
 				}
 
-				if (StringUtils.isEmpty(renderedValue)) {
-					// Ignore empty or null values
-					continue;
-				}
-
-				if (m.containsKey(targetName) && !override) {
+				if (mappedTargetNames.contains(targetName) && !override) {
 					// If this attribute is already mapped, but isn't being overridden, we simply
 					// skip it
 					continue;
 				}
 
-				m.put(targetName, renderedValue);
+				mappedTargetNames.add(targetName);
+				ret.add(value);
 			}
 		}
-
-		if (this.residuals) {
-			for (String sourceName : object.getAttributeNames()) {
-				if (!mappedSourceNames.contains(sourceName)) {
-					// Add this residual
-					CmfAttribute<CmfValue> attribute = object.getAttribute(sourceName);
-					String v = renderAttribute(attribute, ',');
-					m.put(sourceName, v);
-				}
-			}
-		}
-
-		return m;
+		return ret;
 	}
-
-	private String renderAttribute(CmfAttribute<CmfValue> attribute, char sep) {
-		List<String> values = new ArrayList<>(attribute.getValueCount());
-		for (CmfValue v : attribute) {
-			values.add(v.asString());
-		}
-		return Tools.joinEscaped(sep, values);
-	}
-
 }

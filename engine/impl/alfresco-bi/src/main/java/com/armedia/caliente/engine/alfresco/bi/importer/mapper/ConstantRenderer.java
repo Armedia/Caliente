@@ -10,8 +10,8 @@ import com.armedia.caliente.store.CmfValue;
 class ConstantRenderer extends AttributeRendererImpl {
 	private final Collection<AttributeValue> value;
 
-	public ConstantRenderer(Mapping m) {
-		super(m);
+	public ConstantRenderer(Mapping m, Character parentSeparator) {
+		super(m, parentSeparator);
 		this.value = Collections
 			.singleton(new AttributeValue(m.getTgt(), this.separator, m.isOverride(), new CmfValue(m.getValue())));
 	}

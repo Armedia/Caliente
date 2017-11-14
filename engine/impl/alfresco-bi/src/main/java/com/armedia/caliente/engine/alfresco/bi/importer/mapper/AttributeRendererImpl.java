@@ -14,16 +14,19 @@ import com.armedia.commons.utilities.Tools;
 
 class AttributeRendererImpl implements MappingRenderer {
 
+	private static final char DEFAULT_SEPARATOR = ',';
+
 	protected final String target;
 	protected final Set<String> sourceValues;
 	protected final char separator;
 	protected final boolean caseSensitive;
 	protected final boolean override;
 
-	protected AttributeRendererImpl(Mapping mapping) {
+	protected AttributeRendererImpl(Mapping mapping, Character parentSeparator) {
 		this.target = StringUtils.strip(mapping.getTgt());
 		this.caseSensitive = mapping.isCaseSensitive();
-		this.separator = mapping.getSeparator();
+		this.separator = Tools.coalesce(mapping.getSeparator(), parentSeparator,
+			AttributeRendererImpl.DEFAULT_SEPARATOR);
 		String value = StringUtils.strip(mapping.getValue());
 		Set<String> sourceValues = new LinkedHashSet<>();
 		for (String v : Tools.splitEscaped(this.separator, value)) {
@@ -34,10 +37,6 @@ class AttributeRendererImpl implements MappingRenderer {
 		}
 		this.sourceValues = Tools.freezeSet(sourceValues);
 		this.override = mapping.isOverride();
-	}
-
-	public final boolean isOverride() {
-		return this.override;
 	}
 
 	@Override

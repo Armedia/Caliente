@@ -12,8 +12,6 @@ import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.commons.utilities.Tools;
-
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "mappingSet.t", propOrder = {
 	"mappingElements", "residuals"
@@ -53,12 +51,13 @@ public class MappingSet {
 		return this.residuals;
 	}
 
-	public String getSeparator() {
-		return Tools.coalesce(this.separator, ",");
+	public Character getSeparator() {
+		if (this.separator == null) { return null; }
+		return this.separator.charAt(0);
 	}
 
-	public void setSeparator(String value) {
-		this.separator = value;
+	public void setSeparator(Character value) {
+		this.separator = (value == null ? null : value.toString());
 	}
 
 }
