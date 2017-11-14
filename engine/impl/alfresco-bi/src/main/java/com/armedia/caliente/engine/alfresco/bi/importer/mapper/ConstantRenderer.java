@@ -3,22 +3,21 @@ package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.commons.lang3.tuple.Triple;
-
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
-class ConstantRenderer extends MappingRenderer {
-	private final Collection<Triple<String, String, String>> ret;
+class ConstantRenderer extends AttributeRendererImpl {
+	private final Collection<AttributeValue> value;
 
 	public ConstantRenderer(Mapping m) {
 		super(m);
-		this.ret = Collections.singleton(Triple.of((String) null, m.getValue(), m.getTgt()));
+		this.value = Collections
+			.singleton(new AttributeValue(m.getTgt(), this.separator, m.isOverride(), new CmfValue(m.getValue())));
 	}
 
 	@Override
-	public Collection<Triple<String, String, String>> render(CmfObject<CmfValue> object) {
-		return this.ret;
+	public Collection<AttributeValue> render(CmfObject<CmfValue> object) {
+		return this.value;
 	}
 }

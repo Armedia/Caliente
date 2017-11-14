@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Triple;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.store.CmfAttribute;
@@ -41,6 +40,20 @@ public class MappingRendererSet {
 		return this.type.getSignature();
 	}
 
+	private String renderValue(char separator, Collection<CmfValue> values) {
+		if (values == null) { return null; }
+		if (values.isEmpty()) { return StringUtils.EMPTY; }
+		Collection<String> rendered = new ArrayList<>(values.size());
+		for (CmfValue value : values) {
+			// Avoid null values
+			if (value.isNull()) {
+				continue;
+			}
+			rendered.add(value.asString());
+		}
+		return Tools.joinEscaped(separator, rendered);
+	}
+
 	/**
 	 * Render the mapped values, and return the attribute values that were rendered.
 	 *
@@ -55,20 +68,21 @@ public class MappingRendererSet {
 			if (r == null) {
 				continue;
 			}
-			Collection<Triple<String, String, String>> rendered = r.render(object);
-			if (rendered == null) {
-				rendered = Collections.emptyList();
+			Collection<AttributeValue> values = r.render(object);
+			if (values == null) {
+				values = Collections.emptyList();
 			}
-			for (Triple<String, String, String> triple : rendered) {
-				final String sourceName = triple.getLeft();
-				final String expectedTargetName = triple.getRight();
-				final String renderedValue = triple.getMiddle();
+			for (AttributeValue value : values) {
+				final String sourceName = value.getSourceName();
+				final String targetName = value.getTargetName();
+				final String renderedValue = renderValue(value.getSeparator(), value.getValues());
+				final boolean override = value.isOverride();
 
 				if (!StringUtils.isBlank(sourceName)) {
 					mappedSourceNames.add(sourceName);
 				}
 
-				if (!this.type.getAttributeNames().contains(expectedTargetName) && !this.residuals) {
+				if (!this.type.getAttributeNames().contains(targetName) && !this.residuals) {
 					// This attribute doesn't exist, and we're not handling residuals, we skip it
 					continue;
 				}
@@ -78,13 +92,13 @@ public class MappingRendererSet {
 					continue;
 				}
 
-				if (m.containsKey(expectedTargetName) && !r.isOverride()) {
+				if (m.containsKey(targetName) && !override) {
 					// If this attribute is already mapped, but isn't being overridden, we simply
 					// skip it
 					continue;
 				}
 
-				m.put(expectedTargetName, renderedValue);
+				m.put(targetName, renderedValue);
 			}
 		}
 

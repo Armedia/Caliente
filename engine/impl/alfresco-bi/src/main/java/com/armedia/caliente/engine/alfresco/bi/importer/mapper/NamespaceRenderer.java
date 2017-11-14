@@ -7,13 +7,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Triple;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
-class NamespaceRenderer extends MappingRenderer {
+class NamespaceRenderer extends AttributeRendererImpl {
 	private static final Pattern NSPARSER = Pattern.compile("^([^:]+):(.+)$");
 
 	public NamespaceRenderer(Mapping m) {
@@ -21,10 +20,10 @@ class NamespaceRenderer extends MappingRenderer {
 	}
 
 	@Override
-	public Collection<Triple<String, String, String>> render(CmfObject<CmfValue> object) {
+	public Collection<AttributeValue> render(CmfObject<CmfValue> object) {
 		Objects.requireNonNull(object, "Must provide a source object to map against");
 
-		Collection<Triple<String, String, String>> ret = new ArrayList<>();
+		Collection<AttributeValue> ret = new ArrayList<>();
 		for (final String sourceName : object.getAttributeNames()) {
 			// First, get the source attribute's namespace
 			Matcher m = NamespaceRenderer.NSPARSER.matcher(sourceName);
@@ -46,8 +45,7 @@ class NamespaceRenderer extends MappingRenderer {
 
 			final String attributeBaseName = m.group(2);
 			final String targetName = String.format("%s:%s", this.target, attributeBaseName);
-			final String renderedValue = MappingRenderer.renderValue(this.separator, object.getAttribute(sourceName));
-			ret.add(Triple.of(sourceName, renderedValue, targetName));
+			ret.add(new AttributeValue(object.getAttribute(sourceName), targetName, this.separator, this.override));
 		}
 		return ret;
 	}

@@ -45,12 +45,12 @@ public class AttributeMapper {
 	}
 
 	private final ResidualsMode commonResidualsMode;
-	private final List<MappingRenderer> commonRenderers;
+	private final List<AttributeRendererImpl> commonRenderers;
 
-	private static MappingRenderer buildRenderer(MappingElement e) {
+	private static AttributeRendererImpl buildRenderer(MappingElement e) {
 		if (!Mapping.class.isInstance(e)) { return null; }
 		Mapping m = Mapping.class.cast(e);
-		if (NameMapping.class.isInstance(m)) { return new MappingRenderer(m); }
+		if (NameMapping.class.isInstance(m)) { return new AttributeRendererImpl(m); }
 		if (NamespaceMapping.class.isInstance(m)) { return new NamespaceRenderer(m); }
 		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(m); }
 		return null;
@@ -61,9 +61,9 @@ public class AttributeMapper {
 		MappingSet commonMappings = xml.getCommonMappings();
 
 		this.commonResidualsMode = commonMappings.getResidualsMode();
-		List<MappingRenderer> commonRenderers = new ArrayList<>();
+		List<AttributeRendererImpl> commonRenderers = new ArrayList<>();
 		for (MappingElement e : commonMappings.getMappingElements()) {
-			MappingRenderer r = AttributeMapper.buildRenderer(e);
+			AttributeRendererImpl r = AttributeMapper.buildRenderer(e);
 			if (r == null) {
 				// TODO: Log a warning before we simply ignore it?
 				continue;
