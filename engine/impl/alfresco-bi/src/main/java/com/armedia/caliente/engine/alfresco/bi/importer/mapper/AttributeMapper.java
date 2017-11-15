@@ -78,7 +78,7 @@ public class AttributeMapper {
 				}
 			}
 			if (!renderers.isEmpty()) {
-				commonRenderers = new MappingRendererSet(null, commonMappings.getSeparator(),
+				commonRenderers = new MappingRendererSet("<common>", commonMappings.getSeparator(),
 					commonMappings.getResidualsMode(), renderers);
 			}
 		}
@@ -115,7 +115,7 @@ public class AttributeMapper {
 					}
 				}
 			}
-			namedMappings.put(nm.getName(), new MappingRendererSet(null, separator, residualsMode, renderers));
+			namedMappings.put(nm.getName(), new MappingRendererSet(nm.getName(), separator, residualsMode, renderers));
 		}
 
 		Map<String, MappingRendererSet> typedMappings = new TreeMap<>();
@@ -160,104 +160,139 @@ public class AttributeMapper {
 				renderers.add(commonRenderers);
 			}
 			typedMappings.put(tm.getName(),
-				new MappingRendererSet(type, tm.getSeparator(), tm.getResidualsMode(), renderers));
+				new MappingRendererSet(tm.getName(), tm.getSeparator(), tm.getResidualsMode(), renderers));
 		}
 		this.typedMappings = Tools.freezeMap(new LinkedHashMap<>(typedMappings));
 	}
 
 	private String renderValue(AttributeValue attribute) {
+		return renderValue(attribute.getSeparator(), attribute);
+	}
+
+	private String renderValue(char separator, Iterable<CmfValue> srcValues) {
 		List<String> values = new ArrayList<>();
-		for (CmfValue v : attribute) {
+		for (CmfValue v : srcValues) {
 			// TODO: Do we want to use special renderers here? I.e. data type serializers?
 			values.add(v.asString());
 		}
-		return Tools.joinEscaped(attribute.getSeparator(), values);
+		return Tools.joinEscaped(separator, values);
 	}
 
-	public Map<String, String> renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
-		// 1) if type == null, end
-		if (type == null) { return Collections.emptyMap(); }
-
-		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
-
+	private MappingRendererSet getMappingRendererSet(final AlfrescoType type) {
+		if (type == null) { return this.commonRenderers; }
 		final String signature = type.getSignature();
-
-		final MappingRendererSet renderer;
 		try {
-			renderer = this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
+			return this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
 				@Override
 				public MappingRendererSet get() throws ConcurrentException {
-					ResidualsMode residualsMode = null;
 					List<MappingRenderer> renderers = new ArrayList<>();
 					SchemaMember<?> typeDecl = type.getDeclaration();
+					Set<String> aspectsAdded = new HashSet<>();
 					while (typeDecl != null) {
 						// 1) find the mappings for the specific type
-						MappingRenderer renderer = AttributeMapper.this.typedMappings.get(typeDecl.getName());
-						if (renderer == null) {
-							// WTF?!?!?
+						MappingRendererSet rendererSet = AttributeMapper.this.typedMappings.get(typeDecl.getName());
+						if (rendererSet != null) {
+							// There's a specific renderer for this type, so add it!
+							renderers.add(rendererSet);
 						}
-						renderers.add(renderer);
 
-						// Now process all declared (mandatory) aspects
+						// 2) find the mappings for the type's declared (mandatory) aspects
 						for (String aspect : type.getDeclaredAspects()) {
-							if (type.isAspectInherited(aspect)) {
-								// Skip inherited aspects
+							if (!aspectsAdded.add(aspect)) {
+								// If this aspect is already being processed, we skip it
 								continue;
 							}
-							renderer = AttributeMapper.this.typedMappings.get(aspect);
-							if (renderer != null) {
-								renderers.add(renderer);
+							rendererSet = AttributeMapper.this.typedMappings.get(aspect);
+							if (rendererSet != null) {
+								renderers.add(rendererSet);
 							}
 						}
 
-						// Now process all undeclared (extra-attached) aspects...this should only
-						// produce results on the first class since the inherited types won't have
-						// "extra" aspects - only the mandatory declared ones.
+						// 3) find the mappings for the type's undeclared (extra-attached) aspects
+						// This should only produce results on the first class since the inherited
+						// types won't have "extra" aspects - only the mandatory declared ones.
 						for (String aspect : type.getExtraAspects()) {
-							if (type.isAspectInherited(aspect)) {
-								// Skip inherited aspects
+							if (!aspectsAdded.add(aspect)) {
+								// If this aspect is already being processed, we skip it
 								continue;
 							}
-							renderer = AttributeMapper.this.typedMappings.get(aspect);
-							if (renderer != null) {
-								renderers.add(renderer);
+							rendererSet = AttributeMapper.this.typedMappings.get(aspect);
+							if (rendererSet != null) {
+								renderers.add(rendererSet);
 							}
 						}
 
-						// Process the parent type's mappings
+						// 4) Recurse upward through the parent type...
 						typeDecl = typeDecl.getParent();
 					}
 
 					// Finally, add the common renderers
 					renderers.add(AttributeMapper.this.commonRenderers);
-					return new MappingRendererSet(null, null, null, renderers);
+					return new MappingRendererSet(type.toString(), null, null, renderers);
 				}
 			});
 		} catch (ConcurrentException e) {
 			throw new RuntimeException(String.format("Failed to generate the mapping renderers for type [%s] (%s)",
 				type.toString(), signature), e);
 		}
+	}
+
+	public Map<String, String> renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
+		// 1) if type == null, end
+		if (type == null) { return Collections.emptyMap(); }
+		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
+		final MappingRendererSet renderer = getMappingRendererSet(type);
 
 		// Render the mapped values
 		Set<String> sourcesProcessed = new HashSet<>();
-		Set<String> targetsProcessed = new HashSet<>();
 		Map<String, String> values = new TreeMap<>();
-		for (AttributeValue attributeRendition : renderer.render(object)) {
-			final String targetName = attributeRendition.getTargetName();
-			if (!targetsProcessed.add(targetName)) {
-				// If this isn't an override, we skip it
-				if (!attributeRendition.isOverride()) {
-					continue;
-				}
+		// The rendering will contain all attributes mapped. Time to filter out residuals from
+		// declared attributes...
+		Map<String, AttributeValue> residuals = new TreeMap<>();
+		for (AttributeValue attribute : renderer.render(object)) {
+			final String targetName = attribute.getTargetName();
+			// First things first: is this attribute residual?
+			if (type.getAttribute(targetName) == null) {
+				residuals.put(targetName, attribute);
+				continue;
 			}
 
-			final String sourceName = attributeRendition.getSourceName();
-
-			final String value = renderValue(attributeRendition);
-			final boolean override = attributeRendition.isOverride();
-
+			// This attribute is a declared attribute, so we render it!
+			// But make sure to take into account the overrides
+			if (attribute.isOverride() || !values.containsKey(targetName)) {
+				sourcesProcessed.add(attribute.getSourceName());
+				values.put(targetName, renderValue(attribute));
+			}
 		}
+
+		// Now...how do we decide if residuals are being processed?
 		// TODO: Process residuals
+		for (AttributeValue residual : residuals.values()) {
+			values.put(residual.getTargetName(), renderValue(residual));
+			sourcesProcessed.add(residual.getSourceName());
+		}
+		for (String sourceAttribute : object.getAttributeNames()) {
+			// If this is a direct-mappable attribute that has already been rendered,
+			// we skip it!
+			if (values.containsKey(sourceAttribute)) {
+				continue;
+			}
+
+			// If this is a direct-mappable attribute that has not already been rendered,
+			// we render it!
+			if (type.getAttribute(sourceAttribute) != null) {
+				values.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
+				continue;
+			}
+
+			// This attribute is not direct-mappable...but if it has already been processed,
+			// we skip it!
+			if (sourcesProcessed.contains(sourceAttribute)) {
+				continue;
+			}
+
+			// This is a residual attribute - i.e. a source attribute that
+		}
 		return values;
 	}
 }
