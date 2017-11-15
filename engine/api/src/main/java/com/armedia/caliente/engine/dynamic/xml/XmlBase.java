@@ -7,75 +7,74 @@ import java.io.Reader;
 import java.io.Writer;
 
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 import com.armedia.commons.utilities.XmlTools;
 
-@XmlTransient
 public abstract class XmlBase {
 
-	protected static final String SCHEMA = "engine.xsd";
+	public static final String DEFAULT_SCHEMA = "engine.xsd";
+	public static final boolean DEFAULT_FORMAT = true;
 
-	@XmlTransient
-	private final String schema;
-
-	protected XmlBase() {
-		this(XmlBase.SCHEMA);
+	public static <T> void storeToXML(T object, OutputStream out) throws JAXBException {
+		XmlBase.storeToXML(object, XmlBase.DEFAULT_SCHEMA, out, XmlBase.DEFAULT_FORMAT);
 	}
 
-	protected XmlBase(String schema) {
-		this.schema = schema;
+	public static <T> void storeToXML(T object, OutputStream out, boolean format) throws JAXBException {
+		XmlBase.storeToXML(object, XmlBase.DEFAULT_SCHEMA, out, format);
 	}
 
-	public final void storeToXML(OutputStream out) throws JAXBException {
-		storeToXML(out, false);
+	public static <T> void storeToXML(T object, String schema, OutputStream out, boolean format) throws JAXBException {
+		XmlTools.marshal(object, schema, out, format);
 	}
 
-	public final void storeToXML(Writer out) throws JAXBException {
-		storeToXML(out, false);
+	public static <T> void storeToXML(T object, Writer out) throws JAXBException {
+		XmlBase.storeToXML(object, XmlBase.DEFAULT_SCHEMA, out, XmlBase.DEFAULT_FORMAT);
 	}
 
-	public final void storeToXML(XMLStreamWriter out) throws JAXBException {
-		storeToXML(out, false);
+	public static <T> void storeToXML(T object, Writer out, boolean format) throws JAXBException {
+		XmlBase.storeToXML(object, XmlBase.DEFAULT_SCHEMA, out, format);
 	}
 
-	public final void storeToXML(OutputStream out, boolean format) throws JAXBException {
-		XmlTools.marshal(this, this.schema, out, format);
+	public static <T> void storeToXML(T object, String schema, Writer out, boolean format) throws JAXBException {
+		XmlTools.marshal(object, schema, out, format);
 	}
 
-	public final void storeToXML(Writer out, boolean format) throws JAXBException {
-		XmlTools.marshal(this, this.schema, out, format);
+	public static <T> void storeToXML(T object, XMLStreamWriter out) throws JAXBException {
+		XmlBase.storeToXML(object, XmlBase.DEFAULT_SCHEMA, out, XmlBase.DEFAULT_FORMAT);
 	}
 
-	public final void storeToXML(XMLStreamWriter out, boolean format) throws JAXBException {
-		XmlTools.marshal(this, this.schema, out, format);
+	public static <T> void storeToXML(T object, XMLStreamWriter out, boolean format) throws JAXBException {
+		XmlBase.storeToXML(object, XmlBase.DEFAULT_SCHEMA, out, format);
 	}
 
-	public static <T extends XmlBase> T loadFromXML(Class<T> klass, InputStream in) throws JAXBException {
-		return XmlBase.loadFromXML(klass, XmlBase.SCHEMA, in);
-	}
-
-	public static <T extends XmlBase> T loadFromXML(Class<T> klass, String schema, InputStream in)
+	public static <T> void storeToXML(T object, String schema, XMLStreamWriter out, boolean format)
 		throws JAXBException {
+		XmlTools.marshal(object, schema, out, format);
+	}
+
+	public static <T> T loadFromXML(Class<T> klass, InputStream in) throws JAXBException {
+		return XmlBase.loadFromXML(klass, XmlBase.DEFAULT_SCHEMA, in);
+	}
+
+	public static <T> T loadFromXML(Class<T> klass, String schema, InputStream in) throws JAXBException {
 		return XmlTools.unmarshal(klass, schema, in);
 	}
 
-	public static <T extends XmlBase> T loadFromXML(Class<T> klass, Reader in) throws JAXBException {
-		return XmlBase.loadFromXML(klass, XmlBase.SCHEMA, in);
+	public static <T> T loadFromXML(Class<T> klass, Reader in) throws JAXBException {
+		return XmlBase.loadFromXML(klass, XmlBase.DEFAULT_SCHEMA, in);
 	}
 
-	public static <T extends XmlBase> T loadFromXML(Class<T> klass, String schema, Reader in) throws JAXBException {
+	public static <T> T loadFromXML(Class<T> klass, String schema, Reader in) throws JAXBException {
 		return XmlTools.unmarshal(klass, schema, in);
 	}
 
-	public static <T extends XmlBase> T loadFromXML(Class<T> klass, XMLStreamReader in) throws JAXBException {
-		return XmlBase.loadFromXML(klass, XmlBase.SCHEMA, in);
+	public static <T> T loadFromXML(Class<T> klass, XMLStreamReader in) throws JAXBException {
+		return XmlBase.loadFromXML(klass, XmlBase.DEFAULT_SCHEMA, in);
 	}
 
-	public static <T extends XmlBase> T loadFromXML(Class<T> klass, String schema, XMLStreamReader in)
-		throws JAXBException {
+	public static <T> T loadFromXML(Class<T> klass, String schema, XMLStreamReader in) throws JAXBException {
 		return XmlTools.unmarshal(klass, schema, in);
 	}
 }

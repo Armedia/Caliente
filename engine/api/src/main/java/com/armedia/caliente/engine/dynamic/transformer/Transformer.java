@@ -10,6 +10,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
+import com.armedia.caliente.engine.dynamic.xml.XmlBase;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.store.CmfObject;
@@ -18,7 +19,8 @@ import com.armedia.caliente.store.CmfValueMapper;
 
 public class Transformer {
 
-	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class);
+	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class,
+		XmlBase.DEFAULT_SCHEMA);
 
 	public static Transformer getTransformer(String location, ExternalMetadataLoader metadataLoader,
 		boolean failIfMissing) throws TransformerException {

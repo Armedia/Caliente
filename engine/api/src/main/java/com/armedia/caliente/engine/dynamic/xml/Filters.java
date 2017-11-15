@@ -21,7 +21,7 @@ import com.armedia.caliente.engine.dynamic.xml.filter.Filter;
 	"filters", "defaultOutcome"
 })
 @XmlRootElement(name = "filters")
-public class Filters extends XmlBase {
+public class Filters {
 
 	@XmlElement(name = "filter", required = false)
 	protected List<Filter> filters;

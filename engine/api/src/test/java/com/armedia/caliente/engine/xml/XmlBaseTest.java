@@ -10,6 +10,7 @@ import org.junit.Test;
 import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
 import com.armedia.caliente.engine.dynamic.xml.Filters;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
+import com.armedia.caliente.engine.dynamic.xml.XmlBase;
 
 public class XmlBaseTest {
 
@@ -20,21 +21,21 @@ public class XmlBaseTest {
 	@Test
 	public void testTransformations() throws IOException, JAXBException {
 		try (InputStream in = getXml("transformations-test-1.xml")) {
-			Transformations.loadFromXML(in).storeToXML(System.out, true);
+			XmlBase.storeToXML(Transformations.loadFromXML(in), System.out, true);
 		}
 	}
 
 	@Test
 	public void testExternalMetadata() throws IOException, JAXBException {
 		try (InputStream in = getXml("external-metadata-test-1.xml")) {
-			ExternalMetadata.loadFromXML(in).storeToXML(System.out, true);
+			XmlBase.storeToXML(ExternalMetadata.loadFromXML(in), System.out, true);
 		}
 	}
 
 	@Test
 	public void testFilters() throws IOException, JAXBException {
 		try (InputStream in = getXml("filters-test-1.xml")) {
-			Filters.loadFromXML(in).storeToXML(System.out, true);
+			XmlBase.storeToXML(Filters.loadFromXML(in), System.out, true);
 		}
 	}
 }

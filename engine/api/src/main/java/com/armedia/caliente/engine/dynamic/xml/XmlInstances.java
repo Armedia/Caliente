@@ -20,7 +20,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public class XmlInstances<T extends XmlBase> {
+public class XmlInstances<T> {
 
 	private final ConcurrentMap<URL, T> instances = new ConcurrentHashMap<>();
 	private final String defaultFileName;
@@ -35,10 +35,6 @@ public class XmlInstances<T extends XmlBase> {
 			name = element.name();
 		}
 		return String.format("%s.xml", name.toLowerCase());
-	}
-
-	public XmlInstances(Class<T> objectClass) {
-		this(objectClass, XmlBase.SCHEMA, null);
 	}
 
 	public XmlInstances(Class<T> objectClass, String schema) {

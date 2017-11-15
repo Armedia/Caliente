@@ -21,7 +21,7 @@ import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 	"metadataSources", "metadataSets"
 })
 @XmlRootElement(name = "external-metadata")
-public class ExternalMetadata extends XmlBase {
+public class ExternalMetadata {
 
 	@XmlElement(name = "data-source", required = false)
 	protected List<MetadataSource> metadataSources;

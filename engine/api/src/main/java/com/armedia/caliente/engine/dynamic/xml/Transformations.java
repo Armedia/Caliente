@@ -23,7 +23,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 	"elements"
 })
 @XmlRootElement(name = "transformations")
-public final class Transformations extends XmlBase implements Action {
+public final class Transformations implements Action {
 
 	@XmlElement(name = "transformation", type = ActionGroup.class)
 	protected List<Action> elements;

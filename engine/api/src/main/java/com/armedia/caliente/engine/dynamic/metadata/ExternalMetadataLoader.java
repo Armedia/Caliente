@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.xml.ExternalMetadata;
+import com.armedia.caliente.engine.dynamic.xml.XmlBase;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
@@ -28,7 +29,8 @@ public class ExternalMetadataLoader {
 
 	private static final Collection<String> ALL_SOURCES = null;
 
-	private static final XmlInstances<ExternalMetadata> INSTANCES = new XmlInstances<>(ExternalMetadata.class);
+	private static final XmlInstances<ExternalMetadata> INSTANCES = new XmlInstances<>(ExternalMetadata.class,
+		XmlBase.DEFAULT_SCHEMA);
 
 	public static ExternalMetadataLoader getExternalMetadataLoader(String location, boolean failIfMissing)
 		throws ExternalMetadataException {
