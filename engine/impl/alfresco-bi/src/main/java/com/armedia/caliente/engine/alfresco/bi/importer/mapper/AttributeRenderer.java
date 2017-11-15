@@ -12,7 +12,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-class AttributeRendererImpl implements MappingRenderer {
+class AttributeRenderer implements MappingRenderer {
 
 	private static final char DEFAULT_SEPARATOR = ',';
 
@@ -22,11 +22,11 @@ class AttributeRendererImpl implements MappingRenderer {
 	protected final boolean caseSensitive;
 	protected final boolean override;
 
-	protected AttributeRendererImpl(Mapping mapping, Character parentSeparator) {
+	protected AttributeRenderer(Mapping mapping, Character parentSeparator) {
 		this.target = StringUtils.strip(mapping.getTgt());
 		this.caseSensitive = mapping.isCaseSensitive();
 		this.separator = Tools.coalesce(mapping.getSeparator(), parentSeparator,
-			AttributeRendererImpl.DEFAULT_SEPARATOR);
+			AttributeRenderer.DEFAULT_SEPARATOR);
 		String value = StringUtils.strip(mapping.getValue());
 		Set<String> sourceValues = new LinkedHashSet<>();
 		for (String v : Tools.splitEscaped(this.separator, value)) {

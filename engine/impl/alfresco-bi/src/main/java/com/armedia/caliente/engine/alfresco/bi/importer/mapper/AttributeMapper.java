@@ -1,13 +1,19 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.concurrent.ConcurrentException;
+import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,8 +29,11 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.ResidualsMod
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.SetValue;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.TypeMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
@@ -44,22 +53,23 @@ public class AttributeMapper {
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final Map<String, MappingRendererSet> typedMappings;
+	private final MappingRendererSet commonRenderers;
 
 	private static MappingRenderer buildRenderer(MappingElement e, Character parentSeparator) {
 		if (!Mapping.class.isInstance(e)) { return null; }
 		Mapping m = Mapping.class.cast(e);
-		if (NameMapping.class.isInstance(m)) { return new AttributeRendererImpl(m, parentSeparator); }
+		if (NameMapping.class.isInstance(m)) { return new AttributeRenderer(m, parentSeparator); }
 		if (NamespaceMapping.class.isInstance(m)) { return new NamespaceRenderer(m, parentSeparator); }
 		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(m, parentSeparator); }
 		return null;
 	}
 
-	public AttributeMapper(AlfrescoSchema schema) throws Exception {
+	public AttributeMapper(AlfrescoSchema schema, String xmlSource) throws Exception {
 		AttributeMappings xml = AttributeMapper.loadMappings();
 		MappingSet commonMappings = xml.getCommonMappings();
 
 		List<MappingRenderer> renderers = new ArrayList<>();
-		final MappingRendererSet commonRenderers;
+		MappingRendererSet commonRenderers = null;
 		if (commonMappings != null) {
 			for (MappingElement e : commonMappings.getMappingElements()) {
 				MappingRenderer r = AttributeMapper.buildRenderer(e, commonMappings.getSeparator());
@@ -70,12 +80,9 @@ public class AttributeMapper {
 			if (!renderers.isEmpty()) {
 				commonRenderers = new MappingRendererSet(null, commonMappings.getSeparator(),
 					commonMappings.getResidualsMode(), renderers);
-			} else {
-				commonRenderers = null;
 			}
-		} else {
-			commonRenderers = null;
 		}
+		this.commonRenderers = commonRenderers;
 
 		List<TypeMappings> typeMappings = new ArrayList<>();
 		Map<String, MappingRendererSet> namedMappings = new TreeMap<>();
@@ -108,9 +115,6 @@ public class AttributeMapper {
 					}
 				}
 			}
-			if (commonRenderers != null) {
-				renderers.add(commonRenderers);
-			}
 			namedMappings.put(nm.getName(), new MappingRendererSet(null, separator, residualsMode, renderers));
 		}
 
@@ -128,8 +132,6 @@ public class AttributeMapper {
 			}
 
 			// Construct the mapping set for this:
-			final ResidualsMode residualsMode = tm.getResidualsMode();
-			final Character separator = tm.getSeparator();
 			renderers = new ArrayList<>();
 			for (MappingElement e : tm.getMappingElements()) {
 				MappingRenderer renderer = AttributeMapper.buildRenderer(e, tm.getSeparator());
@@ -157,53 +159,105 @@ public class AttributeMapper {
 			if (commonRenderers != null) {
 				renderers.add(commonRenderers);
 			}
-			typedMappings.put(tm.getName(), new MappingRendererSet(type, separator, residualsMode, renderers));
+			typedMappings.put(tm.getName(),
+				new MappingRendererSet(type, tm.getSeparator(), tm.getResidualsMode(), renderers));
 		}
 		this.typedMappings = Tools.freezeMap(new LinkedHashMap<>(typedMappings));
 	}
 
-	/*
+	private String renderValue(AttributeValue attribute) {
+		List<String> values = new ArrayList<>();
+		for (CmfValue v : attribute) {
+			// TODO: Do we want to use special renderers here? I.e. data type serializers?
+			values.add(v.asString());
+		}
+		return Tools.joinEscaped(attribute.getSeparator(), values);
+	}
+
 	public Map<String, String> renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
-		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		// 1) if type == null, end
 		if (type == null) { return Collections.emptyMap(); }
-	
+
+		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
+
 		final String signature = type.getSignature();
-	
-		final MappingRendererSet renderers;
+
+		final MappingRendererSet renderer;
 		try {
-			renderers = this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
+			renderer = this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
 				@Override
 				public MappingRendererSet get() throws ConcurrentException {
+					ResidualsMode residualsMode = null;
 					List<MappingRenderer> renderers = new ArrayList<>();
 					SchemaMember<?> typeDecl = type.getDeclaration();
-					boolean residuals = false;
 					while (typeDecl != null) {
 						// 1) find the mappings for the specific type
-	
-						// 2) find the mappings for the declared, uninherited aspects
-	
-						if (typeDecl == type.getDeclaration()) {
-							// This only happens the first time...
-							// 3) find the mappings for the undeclared, uninherited aspects
+						MappingRenderer renderer = AttributeMapper.this.typedMappings.get(typeDecl.getName());
+						if (renderer == null) {
+							// WTF?!?!?
 						}
-	
+						renderers.add(renderer);
+
+						// Now process all declared (mandatory) aspects
+						for (String aspect : type.getDeclaredAspects()) {
+							if (type.isAspectInherited(aspect)) {
+								// Skip inherited aspects
+								continue;
+							}
+							renderer = AttributeMapper.this.typedMappings.get(aspect);
+							if (renderer != null) {
+								renderers.add(renderer);
+							}
+						}
+
+						// Now process all undeclared (extra-attached) aspects...this should only
+						// produce results on the first class since the inherited types won't have
+						// "extra" aspects - only the mandatory declared ones.
+						for (String aspect : type.getExtraAspects()) {
+							if (type.isAspectInherited(aspect)) {
+								// Skip inherited aspects
+								continue;
+							}
+							renderer = AttributeMapper.this.typedMappings.get(aspect);
+							if (renderer != null) {
+								renderers.add(renderer);
+							}
+						}
+
 						// Process the parent type's mappings
 						typeDecl = typeDecl.getParent();
 					}
+
 					// Finally, add the common renderers
-					renderers.addAll(AttributeMapper.this.commonRenderers);
-					return new MappingRendererSet(type, residuals, renderers);
+					renderers.add(AttributeMapper.this.commonRenderers);
+					return new MappingRendererSet(null, null, null, renderers);
 				}
 			});
 		} catch (ConcurrentException e) {
 			throw new RuntimeException(String.format("Failed to generate the mapping renderers for type [%s] (%s)",
 				type.toString(), signature), e);
 		}
-	
+
 		// Render the mapped values
-		return renderers.render(object);
+		Set<String> sourcesProcessed = new HashSet<>();
+		Set<String> targetsProcessed = new HashSet<>();
+		Map<String, String> values = new TreeMap<>();
+		for (AttributeValue attributeRendition : renderer.render(object)) {
+			final String targetName = attributeRendition.getTargetName();
+			if (!targetsProcessed.add(targetName)) {
+				// If this isn't an override, we skip it
+				if (!attributeRendition.isOverride()) {
+					continue;
+				}
+			}
+
+			final String sourceName = attributeRendition.getSourceName();
+
+			final String value = renderValue(attributeRendition);
+			final boolean override = attributeRendition.isOverride();
+
+		}
+		// TODO: Process residuals
+		return values;
 	}
-	
-	*/
 }

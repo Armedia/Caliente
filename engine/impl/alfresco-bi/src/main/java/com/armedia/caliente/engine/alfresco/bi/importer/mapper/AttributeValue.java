@@ -3,12 +3,13 @@ package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-class AttributeValue {
+class AttributeValue implements Iterable<CmfValue> {
 	public static final char DEFAULT_SEPARATOR = ',';
 
 	private final String sourceName;
@@ -55,5 +56,10 @@ class AttributeValue {
 
 	public boolean isOverride() {
 		return this.override;
+	}
+
+	@Override
+	public Iterator<CmfValue> iterator() {
+		return this.values.iterator();
 	}
 }

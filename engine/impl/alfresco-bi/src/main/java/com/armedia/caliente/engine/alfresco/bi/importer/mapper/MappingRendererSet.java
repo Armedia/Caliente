@@ -55,7 +55,7 @@ public class MappingRendererSet implements MappingRenderer {
 	 * @return the set of target attributes that were rendered
 	 */
 	@Override
-	public Collection<AttributeValue> render(CmfObject<CmfValue> object) {
+	public final Collection<AttributeValue> render(CmfObject<CmfValue> object) {
 		Collection<AttributeValue> ret = new ArrayList<>();
 
 		Set<String> mappedTargetNames = new HashSet<>();
@@ -80,8 +80,7 @@ public class MappingRendererSet implements MappingRenderer {
 				}
 
 				if ((this.type != null) && !this.type.getAttributeNames().contains(targetName)) {
-					// This attribute doesn't exist, and we're not handling residualsMode, we skip
-					// it
+					// This attribute doesn't exist, we skip it
 					continue;
 				}
 
