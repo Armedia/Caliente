@@ -25,8 +25,9 @@ interface MappingRenderer {
 	 *
 	 *
 	 * @param object
+	 * @param tracker
 	 * @return the set of target attributes that were rendered
 	 */
-	Collection<AttributeValue> render(CmfObject<CmfValue> object);
+	Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker);
 
 }

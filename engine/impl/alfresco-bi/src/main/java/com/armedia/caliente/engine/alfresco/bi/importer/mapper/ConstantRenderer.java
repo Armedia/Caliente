@@ -24,7 +24,7 @@ class ConstantRenderer extends AttributeRenderer {
 	}
 
 	@Override
-	public Collection<AttributeValue> render(CmfObject<CmfValue> object) {
+	public Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
 		return this.value;
 	}
 }

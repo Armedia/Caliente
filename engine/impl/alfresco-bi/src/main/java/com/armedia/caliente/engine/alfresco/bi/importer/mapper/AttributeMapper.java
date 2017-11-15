@@ -251,7 +251,8 @@ public class AttributeMapper {
 		// The rendering will contain all attributes mapped. Time to filter out residuals from
 		// declared attributes...
 		Map<String, AttributeValue> residuals = new TreeMap<>();
-		for (AttributeValue attribute : renderer.render(object)) {
+		ResidualsModeTracker tracker = new ResidualsModeTracker();
+		for (AttributeValue attribute : renderer.render(object, tracker)) {
 			final String targetName = attribute.getTargetName();
 			// First things first: is this attribute residual?
 			final SchemaAttribute schemaAttribute = type.getAttribute(targetName);
@@ -270,38 +271,50 @@ public class AttributeMapper {
 			}
 		}
 
-		// TODO: How do we decide if residuals should be processed?
-		// Process residuals we've already identified
-		for (AttributeValue residual : residuals.values()) {
-			finalValues.put(residual.getTargetName(), renderValue(residual));
-			sourcesProcessed.add(residual.getSourceName());
-		}
+		switch (tracker.getActiveResidualsMode()) {
+			case MANDATORY:
+			case INCLUDE:
+				// Process residuals we've already identified
+				for (AttributeValue residual : residuals.values()) {
+					finalValues.put(residual.getTargetName(), renderValue(residual));
+					sourcesProcessed.add(residual.getSourceName());
+				}
 
-		// Now, scan through the source object's attributes for any values that have not yet
-		// been processed and should be included as residuals
-		for (String sourceAttribute : object.getAttributeNames()) {
+				// Now, scan through the source object's attributes for any values that have not yet
+				// been processed and should be included as residuals
+				for (String sourceAttribute : object.getAttributeNames()) {
 
-			if (finalValues.containsKey(sourceAttribute)) {
-				// This is a direct-map attribute that has already been rendered, so skip it!
-				continue;
-			}
+					if (finalValues.containsKey(sourceAttribute)) {
+						// This is a direct-map attribute that has already been rendered, so skip
+						// it!
+						continue;
+					}
 
-			final SchemaAttribute schemaAttribute = type.getAttribute(sourceAttribute);
-			if (schemaAttribute != null) {
-				// This is a direct-map attribute that has not already been rendered, so render it!
-				// TODO: take into account the attribute's typing (i.e. cardinality and data type),
-				// as well as the source value's typing and cardinality
-				finalValues.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
-				continue;
-			}
+					final SchemaAttribute schemaAttribute = type.getAttribute(sourceAttribute);
+					if (schemaAttribute != null) {
+						// This is a direct-map attribute that has not already been rendered, so
+						// render it!
+						// TODO: take into account the attribute's typing (i.e. cardinality and data
+						// type),
+						// as well as the source value's typing and cardinality
+						finalValues.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
+						continue;
+					}
 
-			if (sourcesProcessed.contains(sourceAttribute)) {
-				// This attribute is not a direct-map...but has already been processed, so skip it!
-				continue;
-			}
+					if (sourcesProcessed.contains(sourceAttribute)) {
+						// This attribute is not a direct-map...but has already been processed, so
+						// skip it!
+						continue;
+					}
 
-			// This attribute is not a direct-map, and has not yet been processed, so process it!
-			finalValues.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
+					// This attribute is not a direct-map, and has not yet been processed, so
+					// process it!
+					finalValues.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
+				}
+
+				// Fall-through
+			default:
+				break;
 		}
 
 		return finalValues;

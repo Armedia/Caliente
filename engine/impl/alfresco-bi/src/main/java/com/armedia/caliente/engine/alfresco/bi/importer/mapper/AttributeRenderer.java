@@ -25,8 +25,7 @@ class AttributeRenderer implements MappingRenderer {
 	protected AttributeRenderer(Mapping mapping, Character parentSeparator) {
 		this.target = StringUtils.strip(mapping.getTgt());
 		this.caseSensitive = mapping.isCaseSensitive();
-		this.separator = Tools.coalesce(mapping.getSeparator(), parentSeparator,
-			AttributeRenderer.DEFAULT_SEPARATOR);
+		this.separator = Tools.coalesce(mapping.getSeparator(), parentSeparator, AttributeRenderer.DEFAULT_SEPARATOR);
 		String value = StringUtils.strip(mapping.getValue());
 		Set<String> sourceValues = new LinkedHashSet<>();
 		for (String v : Tools.splitEscaped(this.separator, value)) {
@@ -40,7 +39,7 @@ class AttributeRenderer implements MappingRenderer {
 	}
 
 	@Override
-	public Collection<AttributeValue> render(CmfObject<CmfValue> object) {
+	public Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
 		if (this.caseSensitive) {
 			// If the mapping is case sensitive, we don't need to do a scanning search
 			for (final String sourceName : this.sourceValues) {

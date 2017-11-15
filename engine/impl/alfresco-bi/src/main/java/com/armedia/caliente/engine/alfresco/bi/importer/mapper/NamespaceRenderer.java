@@ -20,7 +20,7 @@ class NamespaceRenderer extends AttributeRenderer {
 	}
 
 	@Override
-	public Collection<AttributeValue> render(CmfObject<CmfValue> object) {
+	public Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
 		Objects.requireNonNull(object, "Must provide a source object to map against");
 
 		Collection<AttributeValue> ret = new ArrayList<>();

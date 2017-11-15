@@ -48,15 +48,17 @@ public class MappingRendererSet implements MappingRenderer {
 	 * @return the set of target attributes that were rendered
 	 */
 	@Override
-	public final Collection<AttributeValue> render(CmfObject<CmfValue> object) {
+	public final Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
 		Map<String, AttributeValue> ret = new TreeMap<>();
-
+		if (tracker != null) {
+			tracker.applyResidualsMode(this.residualsMode);
+		}
 		for (MappingRenderer r : this.renderers) {
 			if (r == null) {
 				continue;
 			}
 
-			Collection<AttributeValue> values = r.render(object);
+			Collection<AttributeValue> values = r.render(object, tracker);
 			if ((values == null) || values.isEmpty()) {
 				continue;
 			}
