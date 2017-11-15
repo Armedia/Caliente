@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
 
-	private static final String DEFAULT_SCHEMA = AttributeMappings.SCHEMA;
+	private static final String DEFAULT_SCHEMA = "alfresco-bi.xsd";
 	private static final String DEFAULT_FILENAME = "alfresco-attribute-map.xml";
 
 	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class,

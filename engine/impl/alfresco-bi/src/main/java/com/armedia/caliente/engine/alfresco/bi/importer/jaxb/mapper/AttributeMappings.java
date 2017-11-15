@@ -8,20 +8,14 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
-
-import com.armedia.caliente.engine.dynamic.xml.XmlBase;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "attributeMappings.t", propOrder = {
 	"commonMappings", "namedMappings"
 })
 @XmlRootElement(name = "attribute-mappings")
-public class AttributeMappings extends XmlBase {
-
-	@XmlTransient
-	public static final String SCHEMA = "alfresco-bi.xsd";
+public class AttributeMappings {
 
 	@XmlElement(name = "common-mappings")
 	protected MappingSet commonMappings;
@@ -31,10 +25,6 @@ public class AttributeMappings extends XmlBase {
 		@XmlElement(name = "type-mappings", type = TypeMappings.class, required = false),
 	})
 	protected List<NamedMappings> namedMappings;
-
-	public AttributeMappings() {
-		super(AttributeMappings.SCHEMA);
-	}
 
 	public MappingSet getCommonMappings() {
 		return this.commonMappings;
