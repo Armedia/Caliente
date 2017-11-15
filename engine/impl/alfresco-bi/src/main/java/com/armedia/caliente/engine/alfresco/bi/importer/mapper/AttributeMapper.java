@@ -30,6 +30,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.SetValue;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.TypeMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfObject;
@@ -196,8 +197,8 @@ public class AttributeMapper {
 							renderers.add(rendererSet);
 						}
 
-						// 2) find the mappings for the type's declared (mandatory) aspects
-						for (String aspect : type.getDeclaredAspects()) {
+						// 2) find the mappings for the type's mandatory aspects
+						for (String aspect : typeDecl.getMandatoryAspects()) {
 							if (!aspectsAdded.add(aspect)) {
 								// If this aspect is already being processed, we skip it
 								continue;
@@ -208,17 +209,18 @@ public class AttributeMapper {
 							}
 						}
 
-						// 3) find the mappings for the type's undeclared (extra-attached) aspects
-						// This should only produce results on the first class since the inherited
-						// types won't have "extra" aspects - only the mandatory declared ones.
-						for (String aspect : type.getExtraAspects()) {
-							if (!aspectsAdded.add(aspect)) {
-								// If this aspect is already being processed, we skip it
-								continue;
-							}
-							rendererSet = AttributeMapper.this.typedMappings.get(aspect);
-							if (rendererSet != null) {
-								renderers.add(rendererSet);
+						// 3) find the mappings for the type's undeclared (extra-attached) aspects.
+						// We only do this for the first iteration (i.e. the leaf type)
+						if (typeDecl == type.getDeclaration()) {
+							for (String aspect : type.getExtraAspects()) {
+								if (!aspectsAdded.add(aspect)) {
+									// If this aspect is already being processed, we skip it
+									continue;
+								}
+								rendererSet = AttributeMapper.this.typedMappings.get(aspect);
+								if (rendererSet != null) {
+									renderers.add(rendererSet);
+								}
 							}
 						}
 
@@ -245,54 +247,63 @@ public class AttributeMapper {
 
 		// Render the mapped values
 		Set<String> sourcesProcessed = new HashSet<>();
-		Map<String, String> values = new TreeMap<>();
+		Map<String, String> finalValues = new TreeMap<>();
 		// The rendering will contain all attributes mapped. Time to filter out residuals from
 		// declared attributes...
 		Map<String, AttributeValue> residuals = new TreeMap<>();
 		for (AttributeValue attribute : renderer.render(object)) {
 			final String targetName = attribute.getTargetName();
 			// First things first: is this attribute residual?
-			if (type.getAttribute(targetName) == null) {
+			final SchemaAttribute schemaAttribute = type.getAttribute(targetName);
+			if (schemaAttribute == null) {
 				residuals.put(targetName, attribute);
 				continue;
 			}
 
 			// This attribute is a declared attribute, so we render it!
 			// But make sure to take into account the overrides
-			if (attribute.isOverride() || !values.containsKey(targetName)) {
+			if (attribute.isOverride() || !finalValues.containsKey(targetName)) {
 				sourcesProcessed.add(attribute.getSourceName());
-				values.put(targetName, renderValue(attribute));
+				// TODO: take into account the attribute's typing (i.e. cardinality and data type),
+				// as well as the source value's typing and cardinality
+				finalValues.put(targetName, renderValue(attribute));
 			}
 		}
 
-		// Now...how do we decide if residuals are being processed?
-		// TODO: Process residuals
+		// TODO: How do we decide if residuals should be processed?
+		// Process residuals we've already identified
 		for (AttributeValue residual : residuals.values()) {
-			values.put(residual.getTargetName(), renderValue(residual));
+			finalValues.put(residual.getTargetName(), renderValue(residual));
 			sourcesProcessed.add(residual.getSourceName());
 		}
+
+		// Now, scan through the source object's attributes for any values that have not yet
+		// been processed and should be included as residuals
 		for (String sourceAttribute : object.getAttributeNames()) {
-			// If this is a direct-mappable attribute that has already been rendered,
-			// we skip it!
-			if (values.containsKey(sourceAttribute)) {
+
+			if (finalValues.containsKey(sourceAttribute)) {
+				// This is a direct-map attribute that has already been rendered, so skip it!
 				continue;
 			}
 
-			// If this is a direct-mappable attribute that has not already been rendered,
-			// we render it!
-			if (type.getAttribute(sourceAttribute) != null) {
-				values.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
+			final SchemaAttribute schemaAttribute = type.getAttribute(sourceAttribute);
+			if (schemaAttribute != null) {
+				// This is a direct-map attribute that has not already been rendered, so render it!
+				// TODO: take into account the attribute's typing (i.e. cardinality and data type),
+				// as well as the source value's typing and cardinality
+				finalValues.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
 				continue;
 			}
 
-			// This attribute is not direct-mappable...but if it has already been processed,
-			// we skip it!
 			if (sourcesProcessed.contains(sourceAttribute)) {
+				// This attribute is not a direct-map...but has already been processed, so skip it!
 				continue;
 			}
 
-			// This is a residual attribute - i.e. a source attribute that
+			// This attribute is not a direct-map, and has not yet been processed, so process it!
+			finalValues.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
 		}
-		return values;
+
+		return finalValues;
 	}
 }
