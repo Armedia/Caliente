@@ -126,6 +126,10 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		return this.signature;
 	}
 
+	public String getName() {
+		return this.name;
+	}
+
 	public T getParent() {
 		return this.parent;
 	}
