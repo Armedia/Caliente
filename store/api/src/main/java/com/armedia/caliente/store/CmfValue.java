@@ -228,6 +228,10 @@ public final class CmfValue {
 		return this.nullValue;
 	}
 
+	public String serialize() throws ParseException {
+		return this.type.getSerializer().serialize(this);
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
