@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -33,6 +34,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
+import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
@@ -173,8 +175,12 @@ public class AttributeMapper {
 	private String renderValue(char separator, Iterable<CmfValue> srcValues) {
 		List<String> values = new ArrayList<>();
 		for (CmfValue v : srcValues) {
-			// TODO: Do we want to use special renderers here? I.e. data type serializers?
-			values.add(v.asString());
+			try {
+				values.add(v.serialize());
+			} catch (ParseException e) {
+				throw new RuntimeException(
+					String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
+			}
 		}
 		return Tools.joinEscaped(separator, values);
 	}
@@ -265,8 +271,6 @@ public class AttributeMapper {
 			// But make sure to take into account the overrides
 			if (attribute.isOverride() || !finalValues.containsKey(targetName)) {
 				sourcesProcessed.add(attribute.getSourceName());
-				// TODO: take into account the attribute's typing (i.e. cardinality and data type),
-				// as well as the source value's typing and cardinality
 				finalValues.put(targetName, renderValue(attribute));
 			}
 		}
@@ -290,14 +294,12 @@ public class AttributeMapper {
 						continue;
 					}
 
+					final CmfAttribute<CmfValue> att = object.getAttribute(sourceAttribute);
 					final SchemaAttribute schemaAttribute = type.getAttribute(sourceAttribute);
 					if (schemaAttribute != null) {
 						// This is a direct-map attribute that has not already been rendered, so
 						// render it!
-						// TODO: take into account the attribute's typing (i.e. cardinality and data
-						// type),
-						// as well as the source value's typing and cardinality
-						finalValues.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
+						finalValues.put(sourceAttribute, renderValue(',', att));
 						continue;
 					}
 
@@ -309,7 +311,7 @@ public class AttributeMapper {
 
 					// This attribute is not a direct-map, and has not yet been processed, so
 					// process it!
-					finalValues.put(sourceAttribute, renderValue(',', object.getAttribute(sourceAttribute)));
+					finalValues.put(sourceAttribute, renderValue(',', att));
 				}
 
 				// Fall-through
