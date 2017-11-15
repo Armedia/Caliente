@@ -18,6 +18,17 @@ public abstract class XmlBase {
 
 	protected static final String SCHEMA = "engine.xsd";
 
+	@XmlTransient
+	private final String schema;
+
+	protected XmlBase() {
+		this(XmlBase.SCHEMA);
+	}
+
+	protected XmlBase(String schema) {
+		this.schema = schema;
+	}
+
 	public final void storeToXML(OutputStream out) throws JAXBException {
 		storeToXML(out, false);
 	}
@@ -31,26 +42,40 @@ public abstract class XmlBase {
 	}
 
 	public final void storeToXML(OutputStream out, boolean format) throws JAXBException {
-		XmlTools.marshal(this, XmlBase.SCHEMA, out, format);
+		XmlTools.marshal(this, this.schema, out, format);
 	}
 
 	public final void storeToXML(Writer out, boolean format) throws JAXBException {
-		XmlTools.marshal(this, XmlBase.SCHEMA, out, format);
+		XmlTools.marshal(this, this.schema, out, format);
 	}
 
 	public final void storeToXML(XMLStreamWriter out, boolean format) throws JAXBException {
-		XmlTools.marshal(this, XmlBase.SCHEMA, out, format);
+		XmlTools.marshal(this, this.schema, out, format);
 	}
 
 	public static <T extends XmlBase> T loadFromXML(Class<T> klass, InputStream in) throws JAXBException {
-		return XmlTools.unmarshal(klass, XmlBase.SCHEMA, in);
+		return XmlBase.loadFromXML(klass, XmlBase.SCHEMA, in);
+	}
+
+	public static <T extends XmlBase> T loadFromXML(Class<T> klass, String schema, InputStream in)
+		throws JAXBException {
+		return XmlTools.unmarshal(klass, schema, in);
 	}
 
 	public static <T extends XmlBase> T loadFromXML(Class<T> klass, Reader in) throws JAXBException {
-		return XmlTools.unmarshal(klass, XmlBase.SCHEMA, in);
+		return XmlBase.loadFromXML(klass, XmlBase.SCHEMA, in);
+	}
+
+	public static <T extends XmlBase> T loadFromXML(Class<T> klass, String schema, Reader in) throws JAXBException {
+		return XmlTools.unmarshal(klass, schema, in);
 	}
 
 	public static <T extends XmlBase> T loadFromXML(Class<T> klass, XMLStreamReader in) throws JAXBException {
-		return XmlTools.unmarshal(klass, XmlBase.SCHEMA, in);
+		return XmlBase.loadFromXML(klass, XmlBase.SCHEMA, in);
+	}
+
+	public static <T extends XmlBase> T loadFromXML(Class<T> klass, String schema, XMLStreamReader in)
+		throws JAXBException {
+		return XmlTools.unmarshal(klass, schema, in);
 	}
 }

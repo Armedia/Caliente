@@ -26,6 +26,7 @@ public class XmlInstances<T extends XmlBase> {
 	private final String defaultFileName;
 	private final String label;
 	private final Class<T> objectClass;
+	private final String schema;
 
 	private static String getDefaultFileName(Class<?> klass) {
 		String name = klass.getSimpleName();
@@ -37,11 +38,16 @@ public class XmlInstances<T extends XmlBase> {
 	}
 
 	public XmlInstances(Class<T> objectClass) {
-		this(objectClass, null);
+		this(objectClass, XmlBase.SCHEMA, null);
 	}
 
-	public XmlInstances(Class<T> objectClass, String defaultFileName) {
+	public XmlInstances(Class<T> objectClass, String schema) {
+		this(objectClass, schema, null);
+	}
+
+	public XmlInstances(Class<T> objectClass, String schema, String defaultFileName) {
 		this.objectClass = objectClass;
+		this.schema = schema;
 		this.label = objectClass.getSimpleName();
 		if (defaultFileName != null) {
 			this.defaultFileName = defaultFileName;
@@ -141,7 +147,7 @@ public class XmlInstances<T extends XmlBase> {
 	}
 
 	protected T newInstance(InputStream in) throws JAXBException, IOException {
-		return XmlBase.loadFromXML(this.objectClass, in);
+		return XmlBase.loadFromXML(this.objectClass, this.schema, in);
 	}
 
 	public T getInstance(final URL resource) throws XmlInstanceException {
