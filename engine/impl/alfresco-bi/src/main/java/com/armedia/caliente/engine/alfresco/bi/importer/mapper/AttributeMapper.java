@@ -33,6 +33,9 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
+import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
+import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
+import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -40,6 +43,12 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
+
+	private static final String DEFAULT_SCHEMA = AttributeMappings.SCHEMA;
+	private static final String DEFAULT_FILENAME = "alfresco-attribute-map.xml";
+
+	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class,
+		AttributeMapper.DEFAULT_SCHEMA, AttributeMapper.DEFAULT_FILENAME);
 
 	// Make a cache that doesn't expire items and they don't get GC'd either
 	private final KeyLockableCache<String, MappingRendererSet> cache = new KeyLockableCache<String, MappingRendererSet>(
@@ -49,10 +58,6 @@ public class AttributeMapper {
 			return new DirectCacheItem(key, value);
 		}
 	};
-
-	private static AttributeMappings loadMappings() {
-		return null;
-	}
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final Map<String, MappingRendererSet> typedMappings;
@@ -67,8 +72,11 @@ public class AttributeMapper {
 		return null;
 	}
 
-	public AttributeMapper(AlfrescoSchema schema, String xmlSource) throws Exception {
-		AttributeMappings xml = AttributeMapper.loadMappings();
+	public AttributeMapper(AlfrescoSchema schema, String xmlSource) throws XmlInstanceException, XmlNotFoundException {
+		AttributeMappings xml = AttributeMapper.INSTANCES.getInstance(xmlSource);
+		if (xml == null) {
+			xml = new AttributeMappings();
+		}
 		MappingSet commonMappings = xml.getCommonMappings();
 
 		List<MappingRenderer> renderers = new ArrayList<>();
@@ -106,7 +114,7 @@ public class AttributeMapper {
 					final MappingRendererSet mappings = namedMappings.get(included);
 					if (mappings == null) {
 						// KABOOM!! Illegal forward reference
-						throw new Exception(
+						throw new XmlInstanceException(
 							String.format("Illegal forward reference of mappings set [%s] from mapping set [%s]",
 								included, nm.getName()));
 					}
@@ -148,7 +156,7 @@ public class AttributeMapper {
 						// KABOOM!! Illegal forward reference ... this shouldn't happen, though,
 						// since the JAXB parser should trigger this error due to how the XSD is
 						// built
-						throw new Exception(
+						throw new XmlInstanceException(
 							String.format("No named mapping [%s] found, referenced from type mapping set [%s]",
 								included, tm.getName()));
 					}
@@ -235,7 +243,9 @@ public class AttributeMapper {
 					}
 
 					// Finally, add the common renderers
-					renderers.add(AttributeMapper.this.commonRenderers);
+					if (AttributeMapper.this.commonRenderers != null) {
+						renderers.add(AttributeMapper.this.commonRenderers);
+					}
 					return new MappingRendererSet(type.toString(), null, null, renderers);
 				}
 			});
@@ -249,11 +259,12 @@ public class AttributeMapper {
 		// 1) if type == null, end
 		if (type == null) { return Collections.emptyMap(); }
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
+		Map<String, String> finalValues = new TreeMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
+		if (renderer == null) { return finalValues; }
 
 		// Render the mapped values
 		Set<String> sourcesProcessed = new HashSet<>();
-		Map<String, String> finalValues = new TreeMap<>();
 		// The rendering will contain all attributes mapped. Time to filter out residuals from
 		// declared attributes...
 		Map<String, AttributeValue> residuals = new TreeMap<>();
