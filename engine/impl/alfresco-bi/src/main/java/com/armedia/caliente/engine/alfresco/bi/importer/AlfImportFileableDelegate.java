@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -27,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
+import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMappingResult;
 import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeValue;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
@@ -225,76 +225,103 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return Tools.joinEscaped(separator, values);
 	}
 
+	private boolean includeProperty(boolean includeResiduals, String propertyName, AlfrescoType targetType) {
+		if (includeResiduals) { return true; }
+		return (targetType.getAttribute(propertyName) != null);
+	}
+
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
 		CmfContentInfo content) throws ImportException {
 
-		Map<String, AttributeValue> mappedAttributes = this.factory.getAttributeMapper()
-			.renderMappedAttributes(targetType, this.cmfObject);
-		if ((mappedAttributes != null) && !mappedAttributes.isEmpty()) {
-			for (String targetName : mappedAttributes.keySet()) {
-				p.setProperty(targetName, renderValue(mappedAttributes.get(targetName)));
-			}
+		AttributeMappingResult mappedAttributes = this.factory.getAttributeMapper().renderMappedAttributes(targetType,
+			this.cmfObject);
+		for (String targetName : mappedAttributes.getAttributeNames()) {
+			p.setProperty(targetName, renderValue(mappedAttributes.getAttributeValue(targetName)));
 		}
+		final boolean includeResiduals = mappedAttributes.isResidualsEnabled();
 
 		// Now handle the special properties
 		Set<String> values = new LinkedHashSet<>();
-		for (CmfValue v : getPropertyValues(IntermediateProperty.PARENT_TREE_IDS)) {
-			String s = v.asString();
-			if (StringUtils.isEmpty(s)) {
-				continue;
-			}
-			values.add(s);
-		}
-		p.setProperty("arm:parentPathIDs", StringUtils.join(values, ','));
+		String currentProperty = null;
 
-		values.clear();
-		for (CmfValue v : getPropertyValues(IntermediateProperty.PATH)) {
-			String s = v.asString();
-			if (StringUtils.isEmpty(s)) {
-				continue;
+		currentProperty = "arm:parentPathIDs";
+		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			values.clear();
+			for (CmfValue v : getPropertyValues(IntermediateProperty.PARENT_TREE_IDS)) {
+				String s = v.asString();
+				if (StringUtils.isEmpty(s)) {
+					continue;
+				}
+				values.add(s);
 			}
-			try {
-				values.add(URLEncoder.encode(s, "UTF-8"));
-			} catch (UnsupportedEncodingException e) {
-				throw new ImportException("Unsupported encoding UTF-8...what?!?!?", e);
-			}
-		}
-		p.setProperty("arm:parentPaths", StringUtils.join(values, ','));
-
-		values.clear();
-		for (CmfValue v : getPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER)) {
-			String s = v.asString();
-			if (StringUtils.isEmpty(s)) {
-				continue;
-			}
-			values.add(this.factory.mapUser(s));
-		}
-		if (!values.isEmpty()) {
-			p.setProperty("arm:usersWithDefaultFolder", StringUtils.join(values, ','));
+			p.setProperty(currentProperty, StringUtils.join(values, ','));
 		}
 
-		values.clear();
-		for (CmfValue v : getPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)) {
-			String s = v.asString();
-			if (StringUtils.isEmpty(s)) {
-				continue;
+		currentProperty = "arm:parentPaths";
+		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			values.clear();
+			for (CmfValue v : getPropertyValues(IntermediateProperty.PATH)) {
+				String s = v.asString();
+				if (StringUtils.isEmpty(s)) {
+					continue;
+				}
+				try {
+					values.add(URLEncoder.encode(s, "UTF-8"));
+				} catch (UnsupportedEncodingException e) {
+					throw new ImportException("Unsupported encoding UTF-8...what?!?!?", e);
+				}
 			}
-			values.add(this.factory.mapGroup(s));
+			p.setProperty(currentProperty, StringUtils.join(values, ','));
 		}
-		if (!values.isEmpty()) {
-			p.setProperty("arm:groupsWithDefaultFolder", StringUtils.join(values, ','));
+
+		currentProperty = "arm:usersWithDefaultFolder";
+		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			values.clear();
+			for (CmfValue v : getPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER)) {
+				String s = v.asString();
+				if (StringUtils.isEmpty(s)) {
+					continue;
+				}
+				values.add(this.factory.mapUser(s));
+			}
+			if (!values.isEmpty()) {
+				p.setProperty(currentProperty, StringUtils.join(values, ','));
+			}
+		}
+
+		currentProperty = "arm:groupsWithDefaultFolder";
+		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			values.clear();
+			for (CmfValue v : getPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)) {
+				String s = v.asString();
+				if (StringUtils.isEmpty(s)) {
+					continue;
+				}
+				values.add(this.factory.mapGroup(s));
+			}
+			if (!values.isEmpty()) {
+				p.setProperty(currentProperty, StringUtils.join(values, ','));
+			}
 		}
 
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
 
-		p.setProperty("arm:objectId", this.cmfObject.getId());
+		currentProperty = "arm:objectId";
+		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			p.setProperty(currentProperty, this.cmfObject.getId());
+		}
 
 		values.clear();
 		values.add(AlfImportFileableDelegate.STATUS_ASPECT);
 		if (!isReference()) {
 			// Set the history ID property
-			p.setProperty("arm:historyId", this.cmfObject.getHistoryId());
+			currentProperty = "arm:historyId";
+			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+				p.setProperty(currentProperty, this.cmfObject.getHistoryId());
+			}
+
+			// TODO: Apply the user, group and role mappings as required...
 
 			/*
 			// Finally, perform user mappings for special user-relative attributes
@@ -309,16 +336,16 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 				p.setProperty(s, v);
 			}
-
+			
 			// Map the group attribute
 			String group = null;
 			CmfValue groupValue = getAttributeValue(IntermediateAttribute.GROUP);
 			if (groupValue != null) {
 				group = this.factory.mapGroup(groupValue.asString());
 			}
-
+			
 			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-
+			
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
@@ -356,17 +383,23 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 		String aspectList = StringUtils.join(values, ',');
 		p.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, aspectList);
-		p.setProperty("arm:aspects", aspectList);
+		currentProperty = "arm:aspects";
+		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			p.setProperty(currentProperty, aspectList);
+		}
 
 		// Now, get the head object
-		CmfObject<CmfValue> head = this.cmfObject;
-		try {
-			head = ctx.getHeadObject(this.cmfObject);
-		} catch (CmfStorageException e) {
-			this.log.warn(String.format("Failed to load the HEAD object for %s batch [%s]",
-				this.cmfObject.getType().name(), this.cmfObject.getHistoryId()), e);
+		currentProperty = "cm:name";
+		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			CmfObject<CmfValue> head = this.cmfObject;
+			try {
+				head = ctx.getHeadObject(this.cmfObject);
+			} catch (CmfStorageException e) {
+				this.log.warn(String.format("Failed to load the HEAD object for %s batch [%s]",
+					this.cmfObject.getType().name(), this.cmfObject.getHistoryId()), e);
+			}
+			p.setProperty(currentProperty, ctx.getObjectName(head));
 		}
-		p.setProperty("cm:name", ctx.getObjectName(head));
 	}
 
 	protected final String generateAcl(final AlfImportContext ctx, final String owner, final String group)

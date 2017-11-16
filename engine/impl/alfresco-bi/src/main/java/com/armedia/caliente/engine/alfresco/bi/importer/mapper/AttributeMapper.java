@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -244,20 +243,17 @@ public class AttributeMapper {
 		}
 	}
 
-	public Map<String, AttributeValue> renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
-		// 1) if type == null, end
-		if (type == null) { return Collections.emptyMap(); }
+	public AttributeMappingResult renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		Map<String, AttributeValue> finalValues = new TreeMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
-		if (renderer == null) { return finalValues; }
 
 		// Render the mapped values
-		Set<String> sourcesProcessed = new HashSet<>();
+		final Set<String> sourcesProcessed = new HashSet<>();
 		// The rendering will contain all attributes mapped. Time to filter out residuals from
 		// declared attributes...
-		Map<String, AttributeValue> residuals = new TreeMap<>();
-		ResidualsModeTracker tracker = new ResidualsModeTracker();
+		final Map<String, AttributeValue> residuals = new TreeMap<>();
+		final ResidualsModeTracker tracker = new ResidualsModeTracker();
 		for (AttributeValue attribute : renderer.render(object, tracker)) {
 			final String targetName = attribute.getTargetName();
 			// First things first: is this attribute residual?
@@ -275,9 +271,11 @@ public class AttributeMapper {
 			}
 		}
 
+		boolean residualsEnabled = false;
 		switch (tracker.getActiveResidualsMode()) {
 			case MANDATORY:
 			case INCLUDE:
+				residualsEnabled = true;
 				// Process residuals we've already identified
 				for (AttributeValue residual : residuals.values()) {
 					finalValues.put(residual.getTargetName(), residual);
@@ -319,6 +317,6 @@ public class AttributeMapper {
 				break;
 		}
 
-		return finalValues;
+		return new AttributeMappingResult(finalValues, residualsEnabled);
 	}
 }
