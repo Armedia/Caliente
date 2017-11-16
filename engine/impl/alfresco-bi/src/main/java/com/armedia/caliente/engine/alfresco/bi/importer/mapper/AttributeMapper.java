@@ -1,6 +1,5 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -62,6 +61,7 @@ public class AttributeMapper {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final Map<String, MappingRendererSet> typedMappings;
 	private final MappingRendererSet commonRenderers;
+	private final String residualsPrefix;
 
 	private static MappingRenderer buildRenderer(MappingElement e, Character parentSeparator) {
 		if (!Mapping.class.isInstance(e)) { return null; }
@@ -72,7 +72,8 @@ public class AttributeMapper {
 		return null;
 	}
 
-	public AttributeMapper(AlfrescoSchema schema, String xmlSource) throws XmlInstanceException, XmlNotFoundException {
+	public AttributeMapper(AlfrescoSchema schema, String xmlSource, String residualsPrefix)
+		throws XmlInstanceException, XmlNotFoundException {
 		AttributeMappings xml = AttributeMapper.INSTANCES.getInstance(xmlSource);
 		if (xml == null) {
 			xml = new AttributeMappings();
@@ -174,23 +175,11 @@ public class AttributeMapper {
 				new MappingRendererSet(tm.getName(), tm.getSeparator(), tm.getResidualsMode(), renderers));
 		}
 		this.typedMappings = Tools.freezeMap(new LinkedHashMap<>(typedMappings));
+		this.residualsPrefix = residualsPrefix;
 	}
 
-	private String renderValue(AttributeValue attribute) {
-		return renderValue(attribute.getSeparator(), attribute);
-	}
-
-	private String renderValue(char separator, Iterable<CmfValue> srcValues) {
-		List<String> values = new ArrayList<>();
-		for (CmfValue v : srcValues) {
-			try {
-				values.add(v.serialize());
-			} catch (ParseException e) {
-				throw new RuntimeException(
-					String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
-			}
-		}
-		return Tools.joinEscaped(separator, values);
+	public String getResidualsPrefix() {
+		return this.residualsPrefix;
 	}
 
 	private MappingRendererSet getMappingRendererSet(final AlfrescoType type) {
@@ -255,11 +244,11 @@ public class AttributeMapper {
 		}
 	}
 
-	public Map<String, String> renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
+	public Map<String, AttributeValue> renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
 		// 1) if type == null, end
 		if (type == null) { return Collections.emptyMap(); }
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
-		Map<String, String> finalValues = new TreeMap<>();
+		Map<String, AttributeValue> finalValues = new TreeMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
 		if (renderer == null) { return finalValues; }
 
@@ -282,7 +271,7 @@ public class AttributeMapper {
 			// But make sure to take into account the overrides
 			if (attribute.isOverride() || !finalValues.containsKey(targetName)) {
 				sourcesProcessed.add(attribute.getSourceName());
-				finalValues.put(targetName, renderValue(attribute));
+				finalValues.put(targetName, attribute);
 			}
 		}
 
@@ -291,7 +280,7 @@ public class AttributeMapper {
 			case INCLUDE:
 				// Process residuals we've already identified
 				for (AttributeValue residual : residuals.values()) {
-					finalValues.put(residual.getTargetName(), renderValue(residual));
+					finalValues.put(residual.getTargetName(), residual);
 					sourcesProcessed.add(residual.getSourceName());
 				}
 
@@ -310,7 +299,7 @@ public class AttributeMapper {
 					if (schemaAttribute != null) {
 						// This is a direct-map attribute that has not already been rendered, so
 						// render it!
-						finalValues.put(sourceAttribute, renderValue(',', att));
+						finalValues.put(sourceAttribute, new AttributeValue(att, sourceAttribute, ',', false));
 						continue;
 					}
 
@@ -322,7 +311,7 @@ public class AttributeMapper {
 
 					// This attribute is not a direct-map, and has not yet been processed, so
 					// process it!
-					finalValues.put(sourceAttribute, renderValue(',', att));
+					finalValues.put(sourceAttribute, new AttributeValue(att, sourceAttribute, ',', false));
 				}
 
 				// Fall-through

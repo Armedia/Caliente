@@ -9,17 +9,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,11 +41,13 @@ import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrat
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndex;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItem;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemVersion;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemVersion;
+import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMapper;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
+import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.MappingTools;
@@ -168,8 +164,7 @@ public class AlfImportDelegateFactory
 	private final Properties userLoginMap = new Properties();
 	private final Properties groupMap = new Properties();
 	private final Properties roleMap = new Properties();
-	private final Map<String, Set<String>> attributeMap;
-	private final String residualsPrefix;
+	private final AttributeMapper attributeMapper;
 
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
@@ -183,7 +178,7 @@ public class AlfImportDelegateFactory
 	private final AtomicReference<Boolean> initializedVdocs = new AtomicReference<>(null);
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
-		throws IOException, JAXBException, XMLStreamException {
+		throws IOException, JAXBException, XMLStreamException, DynamicElementException {
 		super(engine, configuration);
 		String db = configuration.getString(AlfSetting.DB);
 		if (db != null) {
@@ -247,36 +242,21 @@ public class AlfImportDelegateFactory
 			this.roleMap.clear();
 		}
 
-		Properties p = new Properties();
-		if (MappingTools.loadMap(this.log, configuration, AlfSetting.ATTRIBUTE_MAP, p)) {
-			// Freeze the parsed mappings
-			final Map<String, Set<String>> attributeMap = new HashMap<>();
-			Set<String> mappedTargets = new HashSet<>();
-			for (String src : p.stringPropertyNames()) {
-				String targetStr = p.getProperty(src);
-				Set<String> targets = new TreeSet<>();
-				for (String target : Tools.splitCSVEscaped(targetStr)) {
-					target = StringUtils.strip(target);
-					if (!StringUtils.isEmpty(target) && mappedTargets.add(target)) {
-						targets.add(target);
-					}
-				}
-				attributeMap.put(src, new LinkedHashSet<>(targets));
-			}
-			this.attributeMap = Tools.freezeMap(attributeMap);
-		} else {
-			this.attributeMap = Collections.emptyMap();
-		}
 		String pfx = configuration.getString(AlfSetting.RESIDUALS_PREFIX);
 		pfx = StringUtils.strip(pfx);
 		if (StringUtils.isEmpty(pfx)) {
 			pfx = null;
 		}
-		this.residualsPrefix = pfx;
+		this.attributeMapper = new AttributeMapper(this.schema, configuration.getString(AlfSetting.ATTRIBUTE_MAPPING),
+			pfx);
 	}
 
 	protected AlfrescoSchema getSchema() {
 		return this.schema;
+	}
+
+	public AttributeMapper getAttributeMapper() {
+		return this.attributeMapper;
 	}
 
 	protected AlfrescoType getType(String name, String... aspects) {
@@ -470,8 +450,9 @@ public class AlfImportDelegateFactory
 		return path.toString();
 	}
 
-	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject,
-		File contentFile, File metadataFile, MarkerType type) throws ImportException {
+	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx,
+		final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile, MarkerType type)
+		throws ImportException {
 		final boolean folder = type.isFolder(contentFile);
 		final int head;
 		final int count;
@@ -747,14 +728,6 @@ public class AlfImportDelegateFactory
 	protected String mapRole(String role) {
 		if (role == null) { return null; }
 		return Tools.coalesce(this.roleMap.getProperty(role), role);
-	}
-
-	protected Collection<String> getMappedAttributes(String sourceName) {
-		return this.attributeMap.get(sourceName);
-	}
-
-	protected String getResidualsPrefix() {
-		return this.residualsPrefix;
 	}
 
 	@Override

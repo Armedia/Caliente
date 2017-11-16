@@ -9,7 +9,7 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-class AttributeValue implements Iterable<CmfValue> {
+public class AttributeValue implements Iterable<CmfValue> {
 	public static final char DEFAULT_SEPARATOR = ',';
 
 	private final String sourceName;

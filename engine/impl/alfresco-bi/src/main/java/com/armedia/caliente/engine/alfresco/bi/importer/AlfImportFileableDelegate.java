@@ -15,9 +15,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,18 +25,16 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.alfresco.bi.AlfAttributeMapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
+import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeValue;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
-import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
-import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -64,8 +62,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private static final String TYPE_PROPERTY = "type";
 	private static final String ASPECT_PROPERTY = "aspects";
 
-	private static final Set<String> USER_CONVERSIONS;
-
 	private static final Pattern VDOC_MEMBER_PARSER = Pattern.compile("^\\[(.+)\\]\\{(.+)\\}$");
 
 	private static enum PermitValue {
@@ -86,17 +82,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 			this.tag = tag;
 		}
-	}
-
-	static {
-		Set<String> set = new TreeSet<>();
-		String[] conversions = {
-			"cm:owner", "cm:creator", "cm:modifier"
-		};
-		for (String s : conversions) {
-			set.add(s);
-		}
-		USER_CONVERSIONS = Tools.freezeSet(new LinkedHashSet<>(set));
 	}
 
 	private final boolean reference;
@@ -223,46 +208,31 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	protected abstract boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException;
 
-	private String getMappedValue(SchemaAttribute tgtAtt) {
-		// TODO: Check the specific mappings ... either by namespace, name, or set value
-		// TODO: If the specific mappings produce no value, then check the "default" mappings based
-		// on source product
-		// TODO: If the "default" mappings produce no source, try one-to-one
-		// TODO: If one-to-one mapping produces no source, return null
-		return null;
+	private String renderValue(AttributeValue attribute) {
+		return renderValue(attribute.getSeparator(), attribute);
 	}
 
-	private boolean isResidualsEnabled(AlfrescoType type) {
-		return false;
+	private String renderValue(char separator, Iterable<CmfValue> srcValues) {
+		List<String> values = new ArrayList<>();
+		for (CmfValue v : srcValues) {
+			try {
+				values.add(v.serialize());
+			} catch (ParseException e) {
+				throw new RuntimeException(
+					String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
+			}
+		}
+		return Tools.joinEscaped(separator, values);
 	}
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
 		CmfContentInfo content) throws ImportException {
 
-		final AlfAttributeMapper mapper = AlfAttributeMapper.getMapper(this.cmfObject);
-
-		Set<String> tgtNames = targetType.getAttributeNames();
-		Set<String> mappedNames = new HashSet<>();
-		for (String tgtName : tgtNames) {
-			final SchemaAttribute tgtAtt = targetType.getAttribute(tgtName);
-			String value = getMappedValue(tgtAtt);
-			if (value != null) {
-				p.setProperty(tgtName, value);
-				mappedNames.add(tgtName);
-			}
-		}
-
-		// Handle the residuals...
-		if (isResidualsEnabled(targetType)) {
-			Set<String> srcNames = this.cmfObject.getAttributeNames();
-			Set<String> residuals = new HashSet<>();
-			residuals.addAll(srcNames);
-			residuals.removeAll(mappedNames);
-
-			for (String resName : residuals) {
-				final CmfAttribute<CmfValue> srcAtt = this.cmfObject.getAttribute(resName);
-				// TODO: Store the residual value
-				srcAtt.hashCode();
+		Map<String, AttributeValue> mappedAttributes = this.factory.getAttributeMapper()
+			.renderMappedAttributes(targetType, this.cmfObject);
+		if ((mappedAttributes != null) && !mappedAttributes.isEmpty()) {
+			for (String targetName : mappedAttributes.keySet()) {
+				p.setProperty(targetName, renderValue(mappedAttributes.get(targetName)));
 			}
 		}
 
@@ -323,8 +293,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		values.clear();
 		values.add(AlfImportFileableDelegate.STATUS_ASPECT);
 		if (!isReference()) {
+			// Set the history ID property
 			p.setProperty("arm:historyId", this.cmfObject.getHistoryId());
 
+			/*
 			// Finally, perform user mappings for special user-relative attributes
 			for (String s : AlfImportFileableDelegate.USER_CONVERSIONS) {
 				final String userAttribute = mapper.getSpecialCopyMapping(s);
@@ -351,6 +323,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
 			}
+			*/
 
 			// Not a reference? Add the caliente aspect
 			values.add(AlfImportFileableDelegate.CALIENTE_ASPECT);
