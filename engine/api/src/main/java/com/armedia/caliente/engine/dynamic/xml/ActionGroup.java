@@ -26,6 +26,7 @@ import com.armedia.caliente.engine.dynamic.xml.actions.MapSubtype;
 import com.armedia.caliente.engine.dynamic.xml.actions.MapVariableValue;
 import com.armedia.caliente.engine.dynamic.xml.actions.OriginalSecondarySubtypeRemove;
 import com.armedia.caliente.engine.dynamic.xml.actions.OriginalSecondarySubtypeReset;
+import com.armedia.caliente.engine.dynamic.xml.actions.PrincipalMappingApply;
 import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeAdd;
 import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeRemove;
 import com.armedia.caliente.engine.dynamic.xml.actions.SecondarySubtypeReplace;
@@ -72,6 +73,7 @@ public class ActionGroup extends ConditionalAction {
 		@XmlElement(name = "set-value-mapping", type = ValueMappingSet.class), //
 		@XmlElement(name = "clear-value-mapping", type = ValueMappingClear.class), //
 		@XmlElement(name = "apply-value-mapping", type = ValueMappingApply.class), //
+		@XmlElement(name = "map-principal", type = PrincipalMappingApply.class), //
 		@XmlElement(name = "custom-action", type = CustomAction.class), //
 		@XmlElement(name = "end-transformation", type = EndTransformation.class), //
 		@XmlElement(name = "abort-transformation", type = AbortTransformation.class), //

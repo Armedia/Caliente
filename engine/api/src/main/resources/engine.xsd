@@ -72,6 +72,14 @@
 		</xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="principalType.t" final="restriction">
+		<xsd:restriction base="xsd:string">
+			<xsd:enumeration value="USER" />
+			<xsd:enumeration value="GROUP" />
+			<xsd:enumeration value="ROLE" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
 	<xsd:simpleType name="cmfDataType.t" final="restriction">
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="BOOLEAN" />
@@ -724,6 +732,19 @@
 		</xsd:complexContent>
 	</xsd:complexType>
 
+	<xsd:complexType name="actionApplyPrincipalMapping.t">
+		<xsd:complexContent>
+			<xsd:extension base="tns:conditionalAction.t">
+				<xsd:sequence>
+					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="type" type="tns:principalType.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
+				</xsd:sequence>
+			</xsd:extension>
+		</xsd:complexContent>
+	</xsd:complexType>
+
 	<xsd:complexType name="actionCustomAction.t">
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
@@ -761,6 +782,7 @@
 			<xsd:element name="set-value-mapping" type="tns:actionSetValueMapping.t" />
 			<xsd:element name="clear-value-mapping" type="tns:actionClearValueMapping.t" />
 			<xsd:element name="apply-value-mapping" type="tns:actionApplyValueMapping.t" />
+			<xsd:element name="map-principal" type="tns:actionApplyPrincipalMapping.t" />
 			<xsd:element name="custom-action" type="tns:actionCustomAction.t" />
 			<xsd:element name="end-transformation" type="tns:actionEndTransformation.t" />
 			<xsd:element name="abort-transformation" type="tns:actionAbortTransformation.t" />
