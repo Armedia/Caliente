@@ -10,9 +10,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -43,6 +45,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItem
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemVersion;
+import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.PrincipalMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMapper;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
@@ -166,6 +169,10 @@ public class AlfImportDelegateFactory
 	private final Properties roleMap = new Properties();
 	private final AttributeMapper attributeMapper;
 
+	private final Set<String> userAttributes;
+	private final Set<String> groupAttributes;
+	private final Set<String> roleAttributes;
+
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
 
@@ -249,6 +256,27 @@ public class AlfImportDelegateFactory
 		}
 		this.attributeMapper = new AttributeMapper(this.schema, configuration.getString(AlfSetting.ATTRIBUTE_MAPPING),
 			pfx);
+
+		PrincipalMappings pmap = AttributeMapper.PRINCIPAL_MAPPINGS
+			.getInstance(configuration.getString(AlfSetting.PRINCIPAL_MAPPING));
+		if (pmap == null) {
+			pmap = new PrincipalMappings();
+		}
+		this.userAttributes = Tools.freezeSet(new LinkedHashSet<>(pmap.getUserSet()));
+		this.groupAttributes = Tools.freezeSet(new LinkedHashSet<>(pmap.getGroupSet()));
+		this.roleAttributes = Tools.freezeSet(new LinkedHashSet<>(pmap.getRoleSet()));
+	}
+
+	public Set<String> getUserAttributes() {
+		return this.userAttributes;
+	}
+
+	public Set<String> getGroupAttributes() {
+		return this.groupAttributes;
+	}
+
+	public Set<String> getRoleAttributes() {
+		return this.roleAttributes;
 	}
 
 	protected AlfrescoSchema getSchema() {

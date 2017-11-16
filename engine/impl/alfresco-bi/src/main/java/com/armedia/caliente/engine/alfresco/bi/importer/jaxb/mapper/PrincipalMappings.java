@@ -1,7 +1,10 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -9,6 +12,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+
+import org.apache.commons.lang3.StringUtils;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "principalMappings.t", propOrder = {
@@ -29,24 +34,44 @@ public class PrincipalMappings {
 	@XmlElement(name = "attribute")
 	protected List<String> role;
 
-	public List<String> getUser() {
-		if (this.user == null) {
-			this.user = new ArrayList<>();
+	private Set<String> getSet(Collection<String> c) {
+		TreeSet<String> s = new TreeSet<>();
+		if (c != null) {
+			for (String str : c) {
+				str = StringUtils.strip(str);
+				if (str != null) {
+					s.add(str);
+				}
+			}
 		}
-		return this.user;
+		return s;
+	}
+
+	private List<String> getList(List<String> l) {
+		return (l != null ? l : new ArrayList<String>());
+	}
+
+	public List<String> getUser() {
+		return (this.user = getList(this.user));
+	}
+
+	public Set<String> getUserSet() {
+		return getSet(getUser());
 	}
 
 	public List<String> getGroup() {
-		if (this.group == null) {
-			this.group = new ArrayList<>();
-		}
-		return this.group;
+		return (this.group = getList(this.group));
+	}
+
+	public Set<String> getGroupSet() {
+		return getSet(getGroup());
 	}
 
 	public List<String> getRole() {
-		if (this.role == null) {
-			this.role = new ArrayList<>();
-		}
-		return this.role;
+		return (this.role = getList(this.role));
+	}
+
+	public Set<String> getRoleSet() {
+		return getSet(getRole());
 	}
 }

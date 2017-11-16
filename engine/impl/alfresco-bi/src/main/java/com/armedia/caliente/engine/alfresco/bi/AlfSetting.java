@@ -12,6 +12,7 @@ public enum AlfSetting implements ConfigurationSetting {
 	GROUP_MAP, //
 	ROLE_MAP, //
 	ATTRIBUTE_MAPPING, //
+	PRINCIPAL_MAPPING, //
 	RESIDUALS_PREFIX, //
 	//
 	;

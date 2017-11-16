@@ -320,31 +320,68 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				p.setProperty(currentProperty, this.cmfObject.getHistoryId());
 			}
 
-			// TODO: Apply the user, group and role mappings as required...
-
-			/*
-			// Finally, perform user mappings for special user-relative attributes
-			for (String s : AlfImportFileableDelegate.USER_CONVERSIONS) {
-				final String userAttribute = mapper.getSpecialCopyMapping(s);
-				if (userAttribute == null) {
+			// Perform user mappings for special user-relative attributes
+			for (String attributeName : this.factory.getUserAttributes()) {
+				if (attributeName == null) {
 					continue;
 				}
-				String v = this.factory.mapUser(p.getProperty(userAttribute));
+
+				if (!includeProperty(includeResiduals, attributeName, targetType)) {
+					continue;
+				}
+
+				String v = this.factory.mapUser(p.getProperty(attributeName));
 				if (v == null) {
 					continue;
 				}
-				p.setProperty(s, v);
+				p.setProperty(attributeName, v);
 			}
 
-			// Map the group attribute
+			// Perform group mappings for special group-relative attributes
+			for (String attributeName : this.factory.getGroupAttributes()) {
+				if (attributeName == null) {
+					continue;
+				}
+
+				if (!includeProperty(includeResiduals, attributeName, targetType)) {
+					continue;
+				}
+
+				String v = this.factory.mapGroup(p.getProperty(attributeName));
+				if (v == null) {
+					continue;
+				}
+				p.setProperty(attributeName, v);
+			}
+
+			// Perform role mappings for special role-relative attributes
+			for (String attributeName : this.factory.getRoleAttributes()) {
+				if (attributeName == null) {
+					continue;
+				}
+
+				if (!includeProperty(includeResiduals, attributeName, targetType)) {
+					continue;
+				}
+
+				String v = this.factory.mapRole(p.getProperty(attributeName));
+				if (v == null) {
+					continue;
+				}
+				p.setProperty(attributeName, v);
+			}
+
+			/* For now, disable the ACL generation */
+			/*
+			// Map the group attributes
 			String group = null;
 			CmfValue groupValue = getAttributeValue(IntermediateAttribute.GROUP);
 			if (groupValue != null) {
 				group = this.factory.mapGroup(groupValue.asString());
 			}
-
+			
 			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-
+			
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
