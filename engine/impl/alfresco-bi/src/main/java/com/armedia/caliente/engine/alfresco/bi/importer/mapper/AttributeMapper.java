@@ -9,6 +9,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
@@ -43,6 +45,7 @@ import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
 
+	private static final Pattern NS_PARSER = Pattern.compile("^([^:]+):(.+)$");
 	private static final String DEFAULT_SCHEMA = "alfresco-bi.xsd";
 	private static final String DEFAULT_FILENAME = "alfresco-attribute-map.xml";
 
@@ -247,13 +250,18 @@ public class AttributeMapper {
 		}
 	}
 
+	private String getResidualName(String attributeName) {
+		// If if lacks a prefix, just pre-pend it...
+		Matcher m = AttributeMapper.NS_PARSER.matcher(attributeName);
+		return String.format("%s:%s", this.residualsPrefix, (m.matches() ? m.group(2) : attributeName));
+	}
+
 	public AttributeMappingResult renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		Map<String, AttributeValue> finalValues = new TreeMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
 
 		// Render the mapped values
-		final Set<String> sourcesProcessed = new HashSet<>();
 		// The rendering will contain all attributes mapped. Time to filter out residuals from
 		// declared attributes...
 		final Map<String, AttributeValue> residuals = new TreeMap<>();
@@ -270,9 +278,26 @@ public class AttributeMapper {
 			// This attribute is a declared attribute, so we render it!
 			// But make sure to take into account the overrides
 			if (attribute.isOverride() || !finalValues.containsKey(targetName)) {
-				sourcesProcessed.add(attribute.getSourceName());
 				finalValues.put(targetName, attribute);
 			}
+		}
+
+		// Now, scan through the source object's attributes for any values that have not yet
+		// been processed and should be included as direct mappings
+		for (String sourceAttribute : object.getAttributeNames()) {
+			if (finalValues.containsKey(sourceAttribute)) {
+				// This is attribute has already been rendered, so skip it! Direct mappings
+				// cannot override explicit mappings
+				continue;
+			}
+
+			final SchemaAttribute schemaAttribute = type.getAttribute(sourceAttribute);
+			final CmfAttribute<CmfValue> att = object.getAttribute(sourceAttribute);
+			final AttributeValue value = new AttributeValue(att, sourceAttribute, ',', false);
+
+			// If the attribute is declared, then copy it directly...otherwise, it's should be
+			// treated as a residual
+			(schemaAttribute != null ? finalValues : residuals).put(sourceAttribute, value);
 		}
 
 		boolean residualsEnabled = false;
@@ -282,38 +307,7 @@ public class AttributeMapper {
 				residualsEnabled = true;
 				// Process residuals we've already identified
 				for (AttributeValue residual : residuals.values()) {
-					finalValues.put(residual.getTargetName(), residual);
-					sourcesProcessed.add(residual.getSourceName());
-				}
-
-				// Now, scan through the source object's attributes for any values that have not yet
-				// been processed and should be included as residuals
-				for (String sourceAttribute : object.getAttributeNames()) {
-
-					if (finalValues.containsKey(sourceAttribute)) {
-						// This is a direct-map attribute that has already been rendered, so skip
-						// it!
-						continue;
-					}
-
-					final CmfAttribute<CmfValue> att = object.getAttribute(sourceAttribute);
-					final SchemaAttribute schemaAttribute = type.getAttribute(sourceAttribute);
-					if (schemaAttribute != null) {
-						// This is a direct-map attribute that has not already been rendered, so
-						// render it!
-						finalValues.put(sourceAttribute, new AttributeValue(att, sourceAttribute, ',', false));
-						continue;
-					}
-
-					if (sourcesProcessed.contains(sourceAttribute)) {
-						// This attribute is not a direct-map...but has already been processed, so
-						// skip it!
-						continue;
-					}
-
-					// This attribute is not a direct-map, and has not yet been processed, so
-					// process it!
-					finalValues.put(sourceAttribute, new AttributeValue(att, sourceAttribute, ',', false));
+					finalValues.put(getResidualName(residual.getTargetName()), residual);
 				}
 
 				// Fall-through
