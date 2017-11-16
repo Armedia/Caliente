@@ -226,8 +226,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	private boolean includeProperty(boolean includeResiduals, String propertyName, AlfrescoType targetType) {
-		if (includeResiduals) { return true; }
-		return (targetType.getAttribute(propertyName) != null);
+		return includeResiduals || targetType.hasAttribute(propertyName);
 	}
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
@@ -336,16 +335,16 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 				p.setProperty(s, v);
 			}
-			
+
 			// Map the group attribute
 			String group = null;
 			CmfValue groupValue = getAttributeValue(IntermediateAttribute.GROUP);
 			if (groupValue != null) {
 				group = this.factory.mapGroup(groupValue.asString());
 			}
-			
+
 			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-			
+
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
