@@ -22,7 +22,6 @@ public class AlfrescoType {
 	private final Map<String, Aspect> extraAspects;
 	private final Set<String> declaredAspects;
 	private final Map<String, SchemaMember<?>> attributes;
-	private final Map<String, Set<String>> strippedAttributeNames;
 	private final String signature;
 
 	public static String stripNamespace(String attName) {
@@ -61,24 +60,6 @@ public class AlfrescoType {
 		}
 		this.attributes = Tools.freezeMap(new LinkedHashMap<>(attributes));
 
-		Map<String, Set<String>> strippedAttributeNames = new TreeMap<>();
-		for (String attName : this.attributes.keySet()) {
-			// Remove the namespace
-			String stripped = AlfrescoType.stripNamespace(attName);
-			Set<String> s = strippedAttributeNames.get(stripped);
-			if (s == null) {
-				s = new TreeSet<>();
-				strippedAttributeNames.put(stripped, s);
-			}
-			s.add(attName);
-		}
-
-		for (String stripped : new TreeSet<>(strippedAttributeNames.keySet())) {
-			Set<String> s = strippedAttributeNames.get(stripped);
-			s = Tools.freezeSet(s);
-			strippedAttributeNames.put(stripped, s);
-		}
-		this.strippedAttributeNames = Tools.freezeMap(strippedAttributeNames);
 		this.declaredAspects = Tools.freezeCopy(type.mandatoryAspects.keySet());
 		this.extraAspects = Tools.freezeMap(extraAspects);
 		this.aspects = Tools.freezeMap(aspects);
@@ -146,12 +127,8 @@ public class AlfrescoType {
 		return m.getAttribute(name);
 	}
 
-	public boolean hasStrippedAttribute(String name) {
-		return this.strippedAttributeNames.containsKey(name);
-	}
-
-	public Set<String> getStrippedAttributeMatches(String name) {
-		return this.strippedAttributeNames.get(name);
+	public boolean hasAttribute(String name) {
+		return this.attributes.containsKey(name);
 	}
 
 	public Set<String> getAttributeNames() {
