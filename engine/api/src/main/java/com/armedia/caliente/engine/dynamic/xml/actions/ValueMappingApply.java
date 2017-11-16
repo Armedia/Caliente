@@ -82,7 +82,7 @@ public class ValueMappingApply extends ConditionalAction {
 	}
 
 	public Cardinality getCardinality() {
-		return this.cardinality;
+		return Tools.coalesce(this.cardinality, Cardinality.ALL);
 	}
 
 	public void setCardinality(Cardinality cardinality) {
