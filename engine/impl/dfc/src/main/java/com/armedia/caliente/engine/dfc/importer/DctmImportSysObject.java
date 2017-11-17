@@ -484,10 +484,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-
+		
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-		
+
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/
@@ -955,8 +955,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.cmfObject.getSubtype(),
 			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
 
-		final String dqlBase = String.format("%s (ALL) where object_name = %s and folder(%%s)", type.getName(),
-			DfUtils.quoteString(documentName.replaceAll("%", "%%")));
+		final String dqlBase = String.format("%s (ALL) where object_name = %%s and folder(%%s)", type.getName());
 
 		final boolean seeksReference = isReference();
 		String existingPath = null;
@@ -964,7 +963,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final Class<T> dfClass = getObjectClass();
 		for (IDfValue p : getTargetPaths()) {
 			final String targetPath = ctx.getTargetPath(p.asString());
-			final String dql = String.format(dqlBase, DfUtils.quoteString(targetPath));
+			final String dql = String.format(dqlBase, DfUtils.quoteString(documentName),
+				DfUtils.quoteString(targetPath));
 			final String currentPath = String.format("%s/%s", targetPath, documentName);
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {
