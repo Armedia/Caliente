@@ -239,7 +239,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		AttributeMappingResult mappedAttributes = this.factory.getAttributeMapper().renderMappedAttributes(targetType,
 			this.cmfObject);
 		for (String targetName : mappedAttributes.getAttributeNames()) {
-			p.setProperty(targetName, renderValue(mappedAttributes.getAttributeValue(targetName)));
+			String renderedValue = renderValue(mappedAttributes.getAttributeValue(targetName));
+			if (!StringUtils.isEmpty(renderedValue)) {
+				p.setProperty(targetName, renderedValue);
+			}
 		}
 		final boolean includeResiduals = mappedAttributes.isResidualsEnabled();
 
@@ -257,7 +260,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 				values.add(s);
 			}
-			p.setProperty(currentProperty, StringUtils.join(values, ','));
+			if (!values.isEmpty()) {
+				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
+			}
 		}
 
 		currentProperty = "arm:parentPaths";
@@ -274,7 +279,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					throw new ImportException("Unsupported encoding UTF-8...what?!?!?", e);
 				}
 			}
-			p.setProperty(currentProperty, StringUtils.join(values, ','));
+			if (!values.isEmpty()) {
+				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
+			}
 		}
 
 		currentProperty = "arm:usersWithDefaultFolder";
@@ -288,7 +295,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				values.add(this.factory.mapUser(s));
 			}
 			if (!values.isEmpty()) {
-				p.setProperty(currentProperty, StringUtils.join(values, ','));
+				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
 			}
 		}
 
@@ -303,7 +310,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				values.add(this.factory.mapGroup(s));
 			}
 			if (!values.isEmpty()) {
-				p.setProperty(currentProperty, StringUtils.join(values, ','));
+				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
 			}
 		}
 
@@ -325,6 +332,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 
 			// Perform user mappings for special user-relative attributes
+			// TODO: Support multivalued attributes
 			for (String attributeName : this.factory.getUserAttributes()) {
 				if (attributeName == null) {
 					continue;
@@ -335,13 +343,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 
 				String v = this.factory.mapUser(p.getProperty(attributeName));
-				if (v == null) {
+				if (StringUtils.isEmpty(v)) {
 					continue;
 				}
 				p.setProperty(attributeName, v);
 			}
 
 			// Perform group mappings for special group-relative attributes
+			// TODO: Support multivalued attributes
 			for (String attributeName : this.factory.getGroupAttributes()) {
 				if (attributeName == null) {
 					continue;
@@ -352,13 +361,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 
 				String v = this.factory.mapGroup(p.getProperty(attributeName));
-				if (v == null) {
+				if (StringUtils.isEmpty(v)) {
 					continue;
 				}
 				p.setProperty(attributeName, v);
 			}
 
 			// Perform role mappings for special role-relative attributes
+			// TODO: Support multivalued attributes
 			for (String attributeName : this.factory.getRoleAttributes()) {
 				if (attributeName == null) {
 					continue;
@@ -369,7 +379,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 
 				String v = this.factory.mapRole(p.getProperty(attributeName));
-				if (v == null) {
+				if (StringUtils.isEmpty(v)) {
 					continue;
 				}
 				p.setProperty(attributeName, v);
@@ -383,9 +393,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			if (groupValue != null) {
 				group = this.factory.mapGroup(groupValue.asString());
 			}
-
+			
 			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-
+			
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
