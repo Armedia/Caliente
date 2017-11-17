@@ -400,7 +400,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		}
 
 		// Next... which aspects does the incoming object have?
-		Set<String> newAspects = this.cmfObject.getSecondarySubtypes();
+		Set<String> newAspects = new LinkedHashSet<>(this.cmfObject.getSecondarySubtypes());
 
 		final AspectHelper helper = new AspectHelper(object);
 
