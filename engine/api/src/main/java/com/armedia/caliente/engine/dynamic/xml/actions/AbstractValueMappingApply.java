@@ -20,7 +20,6 @@ import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
-import com.armedia.caliente.store.xml.CmfTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -32,10 +31,6 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 
 	@XmlElement(name = "name", required = true)
 	protected Expression name;
-
-	@XmlElement(name = "type", required = false)
-	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
-	protected E type;
 
 	@XmlElement(name = "cardinality", required = false)
 	@XmlJavaTypeAdapter(CardinalityAdapter.class)
@@ -57,13 +52,9 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 		this.name = name;
 	}
 
-	public void setType(E type) {
-		this.type = type;
-	}
+	public abstract void setType(E type);
 
-	public E getType() {
-		return this.type;
-	}
+	public abstract E getType();
 
 	protected abstract String getMappedLabel(DynamicElementContext ctx) throws ActionException;
 

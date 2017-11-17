@@ -4,11 +4,13 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.xml.CmfTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -16,6 +18,10 @@ import com.armedia.commons.utilities.Tools;
 	"comparison", "name", "type", "mappingName", "cardinality"
 })
 public class ValueMappingApply extends AbstractValueMappingApply<CmfType> {
+
+	@XmlElement(name = "type", required = false)
+	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
+	protected CmfType type;
 
 	@XmlElement(name = "mapping-name", required = false)
 	protected Expression mappingName;
@@ -36,5 +42,15 @@ public class ValueMappingApply extends AbstractValueMappingApply<CmfType> {
 	@Override
 	protected CmfType getMappingType(CmfType type) {
 		return type;
+	}
+
+	@Override
+	public void setType(CmfType type) {
+		this.type = type;
+	}
+
+	@Override
+	public CmfType getType() {
+		return this.type;
 	}
 }
