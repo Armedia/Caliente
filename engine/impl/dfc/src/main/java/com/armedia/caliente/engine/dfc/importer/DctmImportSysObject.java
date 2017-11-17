@@ -484,10 +484,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-		
+
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-
+		
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/
@@ -956,7 +956,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
 
 		final String dqlBase = String.format("%s (ALL) where object_name = %s and folder(%%s)", type.getName(),
-			DfUtils.quoteString(documentName));
+			DfUtils.quoteString(documentName.replaceAll("%", "%%")));
 
 		final boolean seeksReference = isReference();
 		String existingPath = null;
