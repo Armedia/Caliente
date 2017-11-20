@@ -796,18 +796,7 @@ public class AlfImportDelegateFactory
 		// Now, tree contains the hierarchically-sorted list of folders that we should add, so now
 		// we can go one by one adding them
 
-		"".hashCode();
-		// TODO: Complete this
 		for (final String mf : tree) {
-
-			// First things first: get the folder's number
-			Long number = ConcurrentUtils.createIfAbsentUnchecked(this.folderNumbers, mf,
-				new ConcurrentInitializer<Long>() {
-					@Override
-					public Long get() throws ConcurrentException {
-						return AlfImportDelegateFactory.this.folderCounter.getAndIncrement();
-					}
-				});
 
 			final FolderLock lock;
 			try {
@@ -827,6 +816,15 @@ public class AlfImportDelegateFactory
 			}
 
 			try {
+				// First things first: get the folder's number
+				Long number = ConcurrentUtils.createIfAbsentUnchecked(this.folderNumbers, mf,
+					new ConcurrentInitializer<Long>() {
+						@Override
+						public Long get() throws ConcurrentException {
+							return AlfImportDelegateFactory.this.folderCounter.getAndIncrement();
+						}
+					});
+
 				// Already processed - move along!
 				final File baseFile;
 				{
