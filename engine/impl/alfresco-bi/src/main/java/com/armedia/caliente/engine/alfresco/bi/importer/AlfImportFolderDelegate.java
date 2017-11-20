@@ -2,6 +2,8 @@ package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -28,8 +30,14 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 	public AlfImportFolderDelegate(AlfImportDelegateFactory factory, CmfObject<CmfValue> storedObject)
 		throws Exception {
 		super(AlfImportFolderDelegate.BASE_TYPE, factory, storedObject);
-		this.folderType = this.factory.schema.buildType(AlfImportFolderDelegate.BASE_TYPE,
-			AlfImportFolderDelegate.BASE_ASPECTS);
+		Collection<String> aspects = new LinkedHashSet<>();
+		for (String s : AlfImportFolderDelegate.BASE_ASPECTS) {
+			if (factory.getSchema().hasAspect(s)) {
+				aspects.add(s);
+			}
+		}
+		this.folderType = this.factory.schema.buildType(AlfImportFolderDelegate.BASE_TYPE, aspects);
+
 	}
 
 	@Override
