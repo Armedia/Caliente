@@ -1,10 +1,7 @@
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -21,7 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
@@ -47,13 +43,11 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
-import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 
 abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	protected static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
-	private static final String METADATA_SUFFIX = ".metadata.properties.xml";
 
 	public static final String REFERENCE_TYPE = "arm:reference";
 	public static final String STATUS_ASPECT = "arm:calienteStatus";
@@ -590,33 +584,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 	}
 
-	protected final File generateMetadataFile(final AlfImportContext ctx, final Properties p, final File main)
-		throws ImportException {
-		String mainName = main.getName();
-		final String suffix = AlfImportDelegateFactory.parseVersionSuffix(mainName);
-		mainName = mainName.substring(0, mainName.length() - suffix.length());
-		final File meta = new File(main.getParentFile(),
-			String.format("%s%s%s", mainName, AlfImportFileableDelegate.METADATA_SUFFIX, suffix));
-
-		final OutputStream out;
-		try {
-			out = new FileOutputStream(meta);
-		} catch (FileNotFoundException e) {
-			throw new ImportException(
-				String.format("Failed to open the properties file at [%s]", main.getAbsolutePath()), e);
-		}
-		try {
-			XmlProperties.saveToXML(p, out, String.format("Properties for %s", this.cmfObject.getDescription()));
-		} catch (IOException e) {
-			meta.delete();
-			throw new ImportException(
-				String.format("Failed to write to the properties file at [%s]", main.getAbsolutePath()), e);
-		} finally {
-			IOUtils.closeQuietly(out);
-		}
-		return meta;
-	}
-
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		AlfImportContext ctx) throws ImportException, CmfStorageException {
@@ -696,7 +663,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 			}
 
-			final File meta = generateMetadataFile(ctx, p, main);
+			final File meta = this.factory.generateMetadataFile(p, this.cmfObject, main);
 			if (this.virtual && resolveVdocTypes()) {
 				File vdocVersion = meta.getParentFile();
 				if (vdocVersionsIndexed.add(vdocVersion.getName())) {
@@ -705,7 +672,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					populatePrimaryAttributes(ctx, versionProps, this.vdocRoot, content);
 
 					if (this.cmfObject.isHistoryCurrent() && !vdocRootIndexed) {
-						final File vdocRootMeta = generateMetadataFile(ctx, versionProps, vdocVersion.getParentFile());
+						final File vdocRootMeta = this.factory.generateMetadataFile(versionProps, this.cmfObject,
+							vdocVersion.getParentFile());
 						this.factory.storeToIndex(ctx, this.cmfObject, vdocVersion.getParentFile(), vdocRootMeta,
 							MarkerType.VDOC_ROOT);
 						vdocRootIndexed = true;
@@ -717,7 +685,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					Set<String> aspects = new LinkedHashSet<>(this.vdocVersion.getAspects());
 					aspects.add(AlfImportFileableDelegate.STATUS_ASPECT);
 					versionProps.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, StringUtils.join(aspects, ','));
-					final File vdocVersionMeta = generateMetadataFile(ctx, versionProps, vdocVersion);
+					final File vdocVersionMeta = this.factory.generateMetadataFile(versionProps, this.cmfObject,
+						vdocVersion);
 					this.factory.storeToIndex(ctx, this.cmfObject, vdocVersion, vdocVersionMeta,
 						MarkerType.VDOC_VERSION);
 				}
@@ -750,7 +719,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 						File vdocMember = new File(vdocVersion, memberData[0]);
 						createStub(ctx, vdocMember, member.asString());
-						File vdocMemberMeta = generateMetadataFile(ctx, vdocMemberProperties, vdocMember);
+						File vdocMemberMeta = this.factory.generateMetadataFile(vdocMemberProperties, this.cmfObject,
+							vdocMember);
 						this.factory.storeToIndex(ctx, this.cmfObject, vdocMember, vdocMemberMeta,
 							MarkerType.VDOC_REFERENCE);
 					}

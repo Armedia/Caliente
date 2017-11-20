@@ -36,8 +36,6 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		int folderLevels = 3;
 		// A maximum of 7 levels...
 		folderLevels = Tools.ensureBetween(3, folderLevels, 7);
-		final String format = String.format("%%0%dx", (folderLevels + 1) * 2);
-		String fullObjectNumber = String.format(format, object.getNumber() & 0xFFFFFFFF);
 
 		final boolean primaryContent = (info.isDefaultRendition() && (info.getRenditionPage() == 0));
 
@@ -45,10 +43,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		// Make sure the contents all land in the bulk-import root location, so it's easy to point
 		// the bulk importer at that directory and not import any unwanted crap
 		paths.add(AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
-		for (int i = 0; i < folderLevels; i++) {
-			final int start = (i * 2);
-			paths.add(fullObjectNumber.substring(start, start + 2));
-		}
+		String fullObjectNumber = AlfCommon.addNumericPaths(paths, object.getNumber());
 
 		CmfProperty<T> vdocProp = object.getProperty(IntermediateProperty.VDOC_HISTORY);
 		final boolean vdoc;

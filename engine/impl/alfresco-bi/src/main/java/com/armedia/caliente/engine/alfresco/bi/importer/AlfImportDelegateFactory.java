@@ -2,7 +2,9 @@ package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.file.Path;
@@ -16,10 +18,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,12 +35,14 @@ import javax.xml.validation.Schema;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 
+import com.armedia.caliente.engine.alfresco.bi.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
@@ -53,18 +61,81 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
+import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.XmlTools;
 
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
+
+	private static class FolderLock {
+		private final String folder;
+		private final Lock lock = new ReentrantLock();
+		private boolean processed = false;
+
+		private FolderLock(String folder) {
+			this.folder = folder;
+		}
+
+		/**
+		 * Lock the current object for processing, and return {@code true} if the lock was acquired,
+		 * or {@code false} if the lock was not acquired, but processing is not required. The method
+		 * will block until the lock is available, or processing has completed. If {@code false} is
+		 * returned, {@link #unlock()} must not be called as the lock is not being held.
+		 *
+		 * @return {@code true} if the lock was acquired, or {@code false} if the lock was not
+		 *         acquired, but processing is not required, otherwise block until either condition
+		 *         occurrs. If {@code false} is returned, {@link #unlock()} must not be called as
+		 *         the lock is not being held.
+		 */
+		public boolean lock() {
+			this.lock.lock();
+			// If we've already been processed, then we don't need to
+			// hold the lock and we can simply release it
+			final boolean unlock = (this.processed);
+			try {
+				// Return the (negated) processing status to indicate whether we should or should
+				// not process.
+				return (!this.processed);
+			} finally {
+				// If we're already processed, we need to release the lock
+				if (unlock) {
+					this.lock.unlock();
+				}
+			}
+		}
+
+		@SuppressWarnings("unused")
+		public String getFolder() {
+			return this.folder;
+		}
+
+		public void markProcessed() {
+			// We acquire the lock to ensure that only the thread that holds the lock can actually
+			// invoke this method successfully
+			this.lock.lock();
+			try {
+				this.processed = true;
+			} finally {
+				this.lock.unlock();
+			}
+		}
+
+		public void unlock() {
+			this.lock.unlock();
+		}
+	}
+
+	static final String METADATA_SUFFIX = ".metadata.properties.xml";
 
 	private final class VirtualDocument {
 		private final String historyId;
@@ -183,6 +254,12 @@ public class AlfImportDelegateFactory
 	private final AlfXmlIndex folderIndex;
 	private final AtomicBoolean manifestSerialized = new AtomicBoolean(false);
 	private final AtomicReference<Boolean> initializedVdocs = new AtomicReference<>(null);
+
+	private final AtomicLong folderCounter = new AtomicLong(0);
+	private final ConcurrentMap<String, Long> folderNumbers = new ConcurrentHashMap<>();
+
+	// Need to keep all of them, forever...
+	private final KeyLockableCache<String, FolderLock> folderLocks = new KeyLockableCache<>(100000);
 
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {
@@ -587,6 +664,7 @@ public class AlfImportDelegateFactory
 				l.add(balancedPath.substring(i * 2, (i * 2) + 2));
 			}
 			targetPath = String.format("(unfiled)/%s", Tools.joinEscaped('/', l));
+			storeArtificialFolderToIndex(targetPath);
 		}
 
 		String append = null;
@@ -673,6 +751,190 @@ public class AlfImportDelegateFactory
 			default:
 				break;
 		}
+	}
+
+	final File generateMetadataFile(final Properties p, final CmfObject<CmfValue> cmfObject, final File main)
+		throws ImportException {
+		String mainName = main.getName();
+		final String suffix = AlfImportDelegateFactory.parseVersionSuffix(mainName);
+		mainName = mainName.substring(0, mainName.length() - suffix.length());
+		final File meta = new File(main.getParentFile(),
+			String.format("%s%s%s", mainName, AlfImportDelegateFactory.METADATA_SUFFIX, suffix));
+		if (p == null) { return meta; }
+
+		final OutputStream out;
+		try {
+			out = new FileOutputStream(meta);
+		} catch (FileNotFoundException e) {
+			throw new ImportException(
+				String.format("Failed to open the properties file at [%s]", main.getAbsolutePath()), e);
+		}
+		try {
+			XmlProperties.saveToXML(p, out, String.format("Properties for %s", cmfObject.getDescription()));
+		} catch (IOException e) {
+			meta.delete();
+			throw new ImportException(
+				String.format("Failed to write to the properties file at [%s]", main.getAbsolutePath()), e);
+		} finally {
+			IOUtils.closeQuietly(out);
+		}
+		return meta;
+	}
+
+	protected final void storeArtificialFolderToIndex(String artificialFolder) throws ImportException {
+
+		storeIngestionIndexToScanIndex();
+
+		artificialFolder = FilenameUtils.normalize(artificialFolder, true);
+		if (StringUtils.isEmpty(artificialFolder)) { return; }
+		Set<String> tree = new TreeSet<>();
+		while (!Tools.equals(".", artificialFolder)) {
+			tree.add(artificialFolder);
+			artificialFolder = FileNameTools.dirname(artificialFolder, '/');
+		}
+
+		// Now, tree contains the hierarchically-sorted list of folders that we should add, so now
+		// we can go one by one adding them
+
+		"".hashCode();
+		// TODO: Complete this
+		for (final String mf : tree) {
+
+			// First things first: get the folder's number
+			Long number = ConcurrentUtils.createIfAbsentUnchecked(this.folderNumbers, mf,
+				new ConcurrentInitializer<Long>() {
+					@Override
+					public Long get() throws ConcurrentException {
+						return AlfImportDelegateFactory.this.folderCounter.getAndIncrement();
+					}
+				});
+
+			final FolderLock lock;
+			try {
+				lock = this.folderLocks.createIfAbsent(mf, new ConcurrentInitializer<FolderLock>() {
+					@Override
+					public FolderLock get() throws ConcurrentException {
+						return new FolderLock(mf);
+					}
+				});
+			} catch (ConcurrentException e) {
+				throw new ImportException("Unexpected runtime exception encountered while creating a lock", e);
+			}
+
+			if (!lock.lock()) {
+				// Ok... this folder is already processed, so move on to the next one!
+				continue;
+			}
+
+			try {
+				// Already processed - move along!
+				final File baseFile;
+				{
+					List<String> paths = new ArrayList<>();
+					String name = AlfCommon.addNumericPaths(paths, number);
+					name = String.format("folder-patch.%s", name);
+					// Concatenate them into a path
+					String path = FileNameTools.reconstitute(paths, false, false);
+					// Now, create a file for them
+					Path basePath = this.biRootPath.resolve(path);
+					baseFile = AlfImportDelegateFactory.normalizeAbsolute(basePath.resolve(name).toFile());
+				}
+
+				if (baseFile.exists() && baseFile.isDirectory()) {
+					// Work is already done...move on!
+					lock.markProcessed();
+					continue;
+				}
+
+				// Generate the numeric base paths...
+
+				final boolean root = (mf.indexOf('/') < 0);
+
+				final String parent;
+				final String name;
+				if (root) {
+					parent = "";
+					name = mf;
+				} else {
+					parent = FileNameTools.dirname(mf, '/');
+					name = FileNameTools.basename(mf, '/');
+				}
+
+				final ScanIndexItemMarker thisMarker = generateMissingFolderMarker(parent, name, baseFile);
+				List<ScanIndexItemMarker> markerList = this.currentVersions.get();
+				if (markerList == null) {
+					markerList = new ArrayList<>();
+					this.currentVersions.set(markerList);
+				}
+
+				markerList.add(thisMarker);
+
+				ScanIndexItemMarker headMarker = thisMarker;
+				headMarker = markerList.get(thisMarker.getHeadIndex() - 1);
+				headMarker = headMarker.clone();
+				headMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
+				headMarker.setContent(AlfImportDelegateFactory.removeVersionTag(headMarker.getContent()));
+				headMarker.setMetadata(AlfImportDelegateFactory.removeVersionTag(headMarker.getMetadata()));
+				markerList.add(headMarker);
+
+				ScanIndexItem item = headMarker.getItem(markerList);
+				markerList.clear();
+
+				boolean ok = false;
+				try {
+					FileUtils.forceMkdir(baseFile);
+					this.folderIndex.marshal(item);
+					ok = true;
+				} catch (Exception e) {
+					throw new ImportException(String.format("Failed to serialize the missing FOLDER to XML: %s", item),
+						e);
+				} finally {
+					if (!ok) {
+						try {
+							FileUtils.deleteDirectory(baseFile);
+						} catch (IOException e) {
+							this.log.error("Failed to remove the directory [{}] due to a previously-raised exception",
+								baseFile.getAbsolutePath(), e);
+						}
+					}
+				}
+				lock.markProcessed();
+			} finally {
+				lock.unlock();
+			}
+		}
+	}
+
+	protected final ScanIndexItemMarker generateMissingFolderMarker(final String targetPath, final String folderName,
+		File contentFile) throws ImportException {
+		// We don't use canonicalize() here because we want to be able to respect symlinks if
+		// for whatever reason they need to be employed
+		contentFile = AlfImportDelegateFactory.normalizeAbsolute(contentFile);
+		final File metadataFile = generateMetadataFile(null, null, contentFile);
+
+		// basePath is the base path within which the entire import resides
+		final Path relativeContentPath = this.biRootPath.relativize(contentFile.toPath());
+		final Path relativeMetadataPath = (metadataFile != null ? this.biRootPath.relativize(metadataFile.toPath())
+			: null);
+		Path relativeMetadataParent = (metadataFile != null ? relativeMetadataPath.getParent() : null);
+		if (relativeMetadataParent == null) {
+			// if there's no metadata file, we fall back to the content file's parent...
+			relativeMetadataParent = (relativeContentPath != null ? relativeContentPath.getParent() : null);
+		}
+
+		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
+		thisMarker.setDirectory(true);
+		thisMarker.setContent(relativeContentPath);
+		thisMarker.setMetadata(relativeMetadataPath);
+		thisMarker.setSourcePath(relativeMetadataParent != null ? relativeMetadataParent : Paths.get(""));
+		thisMarker.setSourceName(contentFile.getName());
+		thisMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
+		thisMarker.setTargetName(folderName);
+		thisMarker.setTargetPath(targetPath);
+		thisMarker.setIndex(1);
+		thisMarker.setHeadIndex(1);
+		thisMarker.setVersionCount(1);
+		return thisMarker;
 	}
 
 	protected final void storeToIndex(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject, File contentFile,
