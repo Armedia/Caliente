@@ -226,6 +226,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
 			}
 		}
+		// TODO: Temporary patch - when BI 2.2.7 becomes the norm, we can remove it b/c it will
+		// handle things more intelligently
+		if (values.isEmpty()) { return null; }
+		if (values.size() == 1) { return values.get(0); }
 		return Tools.joinEscaped(separator, values);
 	}
 
@@ -395,9 +399,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			if (groupValue != null) {
 				group = this.factory.mapGroup(groupValue.asString());
 			}
-
+			
 			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-
+			
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
