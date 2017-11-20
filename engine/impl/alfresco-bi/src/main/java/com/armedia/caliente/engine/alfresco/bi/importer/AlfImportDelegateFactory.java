@@ -861,23 +861,10 @@ public class AlfImportDelegateFactory
 				}
 
 				final ScanIndexItemMarker thisMarker = generateMissingFolderMarker(parent, name, baseFile);
-				List<ScanIndexItemMarker> markerList = this.currentVersions.get();
-				if (markerList == null) {
-					markerList = new ArrayList<>();
-					this.currentVersions.set(markerList);
-				}
-
+				List<ScanIndexItemMarker> markerList = new ArrayList<>();
 				markerList.add(thisMarker);
 
-				ScanIndexItemMarker headMarker = thisMarker;
-				headMarker = markerList.get(thisMarker.getHeadIndex() - 1);
-				headMarker = headMarker.clone();
-				headMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
-				headMarker.setContent(AlfImportDelegateFactory.removeVersionTag(headMarker.getContent()));
-				headMarker.setMetadata(AlfImportDelegateFactory.removeVersionTag(headMarker.getMetadata()));
-				markerList.add(headMarker);
-
-				ScanIndexItem item = headMarker.getItem(markerList);
+				ScanIndexItem item = thisMarker.getItem(markerList);
 				markerList.clear();
 
 				boolean ok = false;
@@ -910,23 +897,14 @@ public class AlfImportDelegateFactory
 		// We don't use canonicalize() here because we want to be able to respect symlinks if
 		// for whatever reason they need to be employed
 		contentFile = AlfImportDelegateFactory.normalizeAbsolute(contentFile);
-		final File metadataFile = generateMetadataFile(null, null, contentFile);
-
 		// basePath is the base path within which the entire import resides
 		final Path relativeContentPath = this.biRootPath.relativize(contentFile.toPath());
-		final Path relativeMetadataPath = (metadataFile != null ? this.biRootPath.relativize(metadataFile.toPath())
-			: null);
-		Path relativeMetadataParent = (metadataFile != null ? relativeMetadataPath.getParent() : null);
-		if (relativeMetadataParent == null) {
-			// if there's no metadata file, we fall back to the content file's parent...
-			relativeMetadataParent = (relativeContentPath != null ? relativeContentPath.getParent() : null);
-		}
+		final Path relativeContentParent = (relativeContentPath != null ? relativeContentPath.getParent() : null);
 
 		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
 		thisMarker.setDirectory(true);
 		thisMarker.setContent(relativeContentPath);
-		thisMarker.setMetadata(relativeMetadataPath);
-		thisMarker.setSourcePath(relativeMetadataParent != null ? relativeMetadataParent : Paths.get(""));
+		thisMarker.setSourcePath(relativeContentParent != null ? relativeContentParent : Paths.get(""));
 		thisMarker.setSourceName(contentFile.getName());
 		thisMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
 		thisMarker.setTargetName(folderName);
