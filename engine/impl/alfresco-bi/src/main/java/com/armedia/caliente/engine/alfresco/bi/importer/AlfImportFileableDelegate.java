@@ -323,7 +323,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		values.clear();
-		values.add(AlfImportFileableDelegate.STATUS_ASPECT);
+		if (this.factory.getSchema().hasAspect(AlfImportFileableDelegate.STATUS_ASPECT)) {
+			values.add(AlfImportFileableDelegate.STATUS_ASPECT);
+		}
 		if (!isReference()) {
 			// Set the history ID property
 			currentProperty = "arm:historyId";
@@ -393,9 +395,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			if (groupValue != null) {
 				group = this.factory.mapGroup(groupValue.asString());
 			}
-			
+
 			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-			
+
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
@@ -403,7 +405,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			*/
 
 			// Not a reference? Add the caliente aspect
-			values.add(AlfImportFileableDelegate.CALIENTE_ASPECT);
+			if (this.factory.getSchema().hasAspect(AlfImportFileableDelegate.CALIENTE_ASPECT)) {
+				values.add(AlfImportFileableDelegate.CALIENTE_ASPECT);
+			}
 		} else {
 			CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.REF_TARGET);
 			if ((prop == null) || !prop.hasValues()) { throw new ImportException(
@@ -425,17 +429,25 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 		}
 
-		for (String s : targetType.getAspects()) {
+		for (String s : targetType.getExtraAspects()) {
 			if (StringUtils.isEmpty(s)) {
 				continue;
 			}
+			if (!this.factory.getSchema()
+				.hasAspect(s)) { throw new ImportException(String.format(
+					"No aspect named [%s] is defined in the current content model schema, while importing %s", s,
+					this.cmfObject.getDescription())); }
 			values.add(s);
 		}
-		String aspectList = StringUtils.join(values, ',');
-		p.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, aspectList);
-		currentProperty = "arm:aspects";
-		if (includeProperty(includeResiduals, currentProperty, targetType)) {
-			p.setProperty(currentProperty, aspectList);
+
+		if (!values.isEmpty()) {
+			String aspectList = StringUtils.join(values, ',');
+			p.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, aspectList);
+
+			currentProperty = "arm:aspects";
+			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+				p.setProperty(currentProperty, aspectList);
+			}
 		}
 
 		// Now, get the head object
