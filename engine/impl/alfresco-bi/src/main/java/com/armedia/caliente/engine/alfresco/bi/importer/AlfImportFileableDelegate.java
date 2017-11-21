@@ -393,9 +393,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			if (groupValue != null) {
 				group = this.factory.mapGroup(groupValue.asString());
 			}
-			
+
 			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-			
+
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
@@ -458,7 +458,16 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				this.log.warn(String.format("Failed to load the HEAD object for %s batch [%s]",
 					this.cmfObject.getType().name(), this.cmfObject.getHistoryId()), e);
 			}
-			p.setProperty(currentProperty, ctx.getObjectName(head));
+			String name = ctx.getObjectName(head);
+
+			CmfProperty<CmfValue> unfiledProp = this.cmfObject.getProperty(IntermediateProperty.IS_UNFILED);
+			final boolean unfiled = (unfiledProp != null) && unfiledProp.hasValues()
+				&& unfiledProp.getValue().asBoolean();
+			if (unfiled) {
+				// This helps protect against duplicate object names
+				name = String.format("%s-%s", this.cmfObject.getHistoryId(), name);
+			}
+			p.setProperty(currentProperty, name);
 		}
 	}
 
@@ -489,7 +498,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					final int permitType = permitTypes.getValue(i).asInteger();
 
 					if (permitType != 0) {
-						// We can't handle other permit types yet...
+						// We can't handle other permit typespopulatePrimaryAttributes yet...
 						continue;
 					}
 
