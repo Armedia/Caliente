@@ -6,6 +6,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfBaseSetting;
 import com.armedia.caliente.store.CmfDataType;
@@ -77,7 +79,18 @@ public class DynamicValue extends CmfBaseSetting {
 	}
 
 	public boolean isEmpty() {
-		return (isRepeating() ? this.values.isEmpty() : false);
+		Object value = null;
+		if (isRepeating()) {
+			// it will be empty if and only if it has more than one value, or the first value is a
+			// non-empty value
+			if (this.values.isEmpty()) { return true; }
+			if (this.values.size() > 1) { return false; }
+			value = this.values.get(0);
+		} else {
+			value = this.value;
+		}
+		if (value == null) { return true; }
+		return StringUtils.isEmpty(Tools.toString(value));
 	}
 
 	public Object getValue() {
