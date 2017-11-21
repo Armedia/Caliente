@@ -1,6 +1,5 @@
 package com.armedia.caliente.engine.alfresco.bi;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Assert;
@@ -29,9 +28,8 @@ public class AlfCommonTest {
 			},
 		};
 		for (int i = 1; i < 8; i++) {
-			List<String> expected = Arrays.asList(data[i]);
 			List<String> actual = AlfCommon.getNumericPaths(n, i);
-			Assert.assertEquals(expected, actual);
+			Assert.assertArrayEquals(data[i], actual.toArray());
 		}
 	}
 

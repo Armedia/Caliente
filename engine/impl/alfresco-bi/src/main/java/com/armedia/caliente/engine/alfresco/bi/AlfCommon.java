@@ -19,7 +19,7 @@ public final class AlfCommon {
 
 	public static final int MIN_FOLDER_LEVELS = 1;
 	public static final int MAX_FOLDER_LEVELS = 7;
-	public static final int DEFAULT_FOLDER_LEVELS = 3;
+	public static final int DEFAULT_FOLDER_LEVELS = 7;
 
 	private AlfCommon() {
 
@@ -35,19 +35,13 @@ public final class AlfCommon {
 		return AlfCommon.addNumericPaths(paths, objectNumber, AlfCommon.DEFAULT_FOLDER_LEVELS);
 	}
 
-	public static String addNumericPaths(List<String> paths, long objectNumber, int folderLevels) {
+	// Don't expose this method just yet
+	protected static String addNumericPaths(List<String> paths, long objectNumber, int folderLevels) {
 		Objects.requireNonNull(paths, "Must provide a list to store the paths in");
 		folderLevels = Tools.ensureBetween(AlfCommon.MIN_FOLDER_LEVELS, folderLevels, AlfCommon.MAX_FOLDER_LEVELS);
 		final String fullObjectNumber = String.format("%016x", objectNumber);
 
 		// The number of levels tells us how large the prefix will be...
-		// 1 : 14 (16 - 2 = 16 - (l*2))
-		// 2 : 12 (16 - 4 = 16 - (l*2))
-		// 3 : 10 (16 - 6 = 16 - (l*2))
-		// 4 : 8 (16 - 8 = 16 - (l*2))
-		// 5 : 6 (16 - 10 = 16 - (l*2))
-		// 6 : 4 (16 - 12 = 16 - (l*2))
-		// 7 : 2 (16 - 14 = 16 - (l*2))
 		final int firstLevelLength = (16 - (folderLevels * 2));
 
 		// Make sure the contents all land in the bulk-import root location, so it's easy to point
@@ -65,7 +59,8 @@ public final class AlfCommon {
 		return AlfCommon.getNumericPaths(objectNumber, AlfCommon.DEFAULT_FOLDER_LEVELS);
 	}
 
-	public static List<String> getNumericPaths(long objectNumber, int folderLevels) {
+	// Don't expose this method just yet
+	protected static List<String> getNumericPaths(long objectNumber, int folderLevels) {
 		List<String> paths = new ArrayList<>();
 		paths.add(AlfCommon.addNumericPaths(paths, objectNumber, folderLevels));
 		return paths;
