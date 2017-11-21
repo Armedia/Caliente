@@ -43,6 +43,13 @@ public class AlfrescoType {
 		Map<String, Aspect> aspects = new LinkedHashMap<>(type.mandatoryAspects);
 
 		Map<String, SchemaMember<?>> attributes = new TreeMap<>();
+		// Go through the parent's attributes
+		if (type.parent != null) {
+			for (String attribute : type.parent.getAllAttributeNames()) {
+				attributes.put(attribute, type.parent.getAttribute(attribute).declaration);
+			}
+		}
+
 		Map<String, Aspect> extraAspects = new TreeMap<>();
 		for (Aspect aspect : appliedAspects) {
 			aspects.put(aspect.name, aspect);
