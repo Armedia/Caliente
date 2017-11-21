@@ -20,6 +20,7 @@ import com.armedia.caliente.engine.dynamic.xml.actions.AttributeReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.AttributeSet;
 import com.armedia.caliente.engine.dynamic.xml.actions.CustomAction;
 import com.armedia.caliente.engine.dynamic.xml.actions.EndTransformation;
+import com.armedia.caliente.engine.dynamic.xml.actions.LoadExternalMetadata;
 import com.armedia.caliente.engine.dynamic.xml.actions.MapAttributeValue;
 import com.armedia.caliente.engine.dynamic.xml.actions.MapOriginalSubtype;
 import com.armedia.caliente.engine.dynamic.xml.actions.MapSubtype;
@@ -77,6 +78,7 @@ public class ActionGroup extends ConditionalAction {
 		@XmlElement(name = "custom-action", type = CustomAction.class), //
 		@XmlElement(name = "end-transformation", type = EndTransformation.class), //
 		@XmlElement(name = "abort-transformation", type = AbortTransformation.class), //
+		@XmlElement(name = "load-external-metadata", type = LoadExternalMetadata.class), //
 	})
 	protected List<Action> actions;
 
