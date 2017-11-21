@@ -592,14 +592,9 @@ public class AlfImportDelegateFactory
 		}
 
 		if (unfiled) {
-			String balancedPath = String.format("%08x", cmfObject.getNumber());
-			// Split the number every 2 digits..., but only the first 6
-			balancedPath = balancedPath.substring(0, 6);
-			List<String> l = new ArrayList<>(3);
-			for (int i = 0; i < 3; i++) {
-				l.add(balancedPath.substring(i * 2, (i * 2) + 2));
-			}
-			targetPath = String.format("(unfiled)/%s", Tools.joinEscaped('/', l));
+			List<String> paths = new ArrayList<>();
+			AlfCommon.addNumericPaths(paths, cmfObject.getNumber());
+			targetPath = String.format("(unfiled)/%s", Tools.joinEscaped('/', paths));
 			storeArtificialFolderToIndex(targetPath);
 		}
 
