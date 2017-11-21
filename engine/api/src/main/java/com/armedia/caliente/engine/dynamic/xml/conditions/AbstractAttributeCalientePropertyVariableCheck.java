@@ -15,6 +15,8 @@ import com.armedia.commons.utilities.Tools;
 @XmlTransient
 public abstract class AbstractAttributeCalientePropertyVariableCheck extends AbstractExpressionComparison {
 
+	private static final DynamicValue NULL = null;
+
 	protected abstract Map<String, DynamicValue> getCandidateValues(DynamicElementContext ctx);
 
 	protected abstract boolean check(DynamicValue candidate);
@@ -38,8 +40,9 @@ public abstract class AbstractAttributeCalientePropertyVariableCheck extends Abs
 			}
 		}
 
-		// None of the matching candidates fulfilled the check...so this is false
-		return false;
+		// None of the matching candidates fulfilled the check...so the result is whatever the NULL
+		// value compares to
+		return check(AbstractAttributeCalientePropertyVariableCheck.NULL);
 	}
 
 }
