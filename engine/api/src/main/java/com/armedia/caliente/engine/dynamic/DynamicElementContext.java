@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.dynamic;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -63,11 +64,13 @@ public class DynamicElementContext implements ScriptContextConfig {
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, Collection<String> sourceNames)
 		throws ExternalMetadataException {
+		if (this.metadataLoader == null) { return new HashMap<>(); }
 		return this.metadataLoader.getAttributeValues(object, sourceNames);
 	}
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, String sourceName)
 		throws ExternalMetadataException {
+		if (this.metadataLoader == null) { return new HashMap<>(); }
 		return this.metadataLoader.getAttributeValues(object, sourceName);
 	}
 
