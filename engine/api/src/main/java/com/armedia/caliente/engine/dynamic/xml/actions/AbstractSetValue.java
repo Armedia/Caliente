@@ -2,6 +2,8 @@
 package com.armedia.caliente.engine.dynamic.xml.actions;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
@@ -56,6 +58,26 @@ public abstract class AbstractSetValue extends ConditionalAction {
 	protected abstract DynamicValue createValue(DynamicElementContext ctx, String name, CmfDataType type,
 		boolean multivalue);
 
+	private Iterable<?> toIterable(Object o) {
+		if (o == null) { return null; }
+		if (Iterable.class.isInstance(o)) { return Iterable.class.cast(o); }
+		if (o.getClass().isArray()) { return Arrays.asList((Object[]) o); }
+		return Collections.singletonList(o);
+	}
+
+	private Object fromIterable(Object o) {
+		if (o == null) { return null; }
+		if (Iterable.class.isInstance(o) || o.getClass().isArray()) {
+			Iterable<?> iterable = (Iterable.class.isInstance(o) ? Iterable.class.cast(o)
+				: Arrays.asList((Object[]) o));
+			Iterator<?> iterator = iterable.iterator();
+			if (iterator.hasNext()) {
+				o = iterator.next();
+			}
+		}
+		return o;
+	}
+
 	@Override
 	protected final void executeAction(DynamicElementContext ctx) throws ActionException {
 		Object name = Tools.toString(ActionTools.eval(getName(), ctx));
@@ -65,14 +87,14 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		final Object value = ActionTools.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
 		final DynamicValue variable = createValue(ctx, String.valueOf(name), type, repeating);
-		if (repeating) {
-			if (Iterable.class.isInstance(value)) {
-				variable.setValues(Iterable.class.cast(value));
+		if (value != null) {
+			if (repeating) {
+				// Make sure we take all available values
+				variable.setValues(toIterable(value));
 			} else {
-				variable.setValues(Arrays.asList((Object[]) value));
+				// Make sure we take only the first value
+				variable.setValue(fromIterable(value));
 			}
-		} else {
-			variable.setValue(value);
 		}
 		ctx.getDynamicObject().getAtt().put(variable.getName(), variable);
 	}
