@@ -726,7 +726,9 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final void serializeArtificialFolders() {
+	private final void serializeArtificialFolders() throws XMLStreamException {
+		if (this.artificialFolders.isEmpty()) { return; }
+		this.folderIndex.writeComment(" Begin the artificial folders for unfiled objects ");
 		final AtomicLong number = new AtomicLong(0);
 		// Make sure we order them so they are sorted hierarchically
 		for (final String mf : new TreeSet<>(this.artificialFolders)) {
@@ -741,6 +743,15 @@ public class AlfImportDelegateFactory
 				// Now, create a file for them
 				Path basePath = this.biRootPath.resolve(path);
 				baseFile = AlfImportDelegateFactory.normalizeAbsolute(basePath.resolve(name).toFile());
+			}
+
+			// Make sure nothing is there...
+			if (baseFile.exists()) {
+				try {
+					FileUtils.forceDelete(baseFile);
+				} catch (IOException e) {
+					this.log.warn("Failed to delete the artificial folder [{}]", baseFile.getAbsolutePath(), e);
+				}
 			}
 
 			// Generate the numeric base paths...
@@ -771,6 +782,7 @@ public class AlfImportDelegateFactory
 				this.log.warn("Failed to create/serialize the artificial FOLDER to XML: {}", item, e);
 			}
 		}
+		this.folderIndex.writeComment("  End the artificial folders for unfiled objects  ");
 	}
 
 	protected final ScanIndexItemMarker generateMissingFolderMarker(final String targetPath, final String folderName,
@@ -892,7 +904,11 @@ public class AlfImportDelegateFactory
 
 		this.fileIndex.close();
 		// Make sure we do this last
-		serializeArtificialFolders();
+		try {
+			serializeArtificialFolders();
+		} catch (Exception e) {
+			this.log.warn("Failed to serialize the artificial folders", e);
+		}
 		this.folderIndex.close();
 		super.close();
 	}
