@@ -35,8 +35,8 @@ public abstract class AbstractAttributeCalientePropertyVariableCheck extends Abs
 		// Need to find a matching candidate...
 		for (String s : values.keySet()) {
 			if (comparison.check(CmfDataType.STRING, s, comparand)) {
-				// This candidate matches...if this one is empty, we're done!
-				if (check(values.get(s))) { return true; }
+				// Only check the first match, since a true or false result may be conclusive
+				return check(values.get(s));
 			}
 		}
 
