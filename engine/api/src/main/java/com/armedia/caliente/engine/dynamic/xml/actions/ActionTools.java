@@ -9,7 +9,6 @@ import com.armedia.caliente.engine.dynamic.xml.Expression;
 class ActionTools {
 
 	private ActionTools() {
-		// TODO Auto-generated constructor stub
 	}
 
 	public static Object eval(Expression e, DynamicElementContext ctx) throws ActionException {
