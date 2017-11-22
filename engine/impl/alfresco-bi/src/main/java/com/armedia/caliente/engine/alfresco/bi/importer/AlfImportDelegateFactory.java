@@ -571,12 +571,7 @@ public class AlfImportDelegateFactory
 
 		BigDecimal number = AlfImportDelegateFactory.LAST_INDEX;
 		if (!headVersion || !lastVersion) {
-			// Parse out the version number, so we don't have to muck around with having
-			// to guess which "type" is in use
-			String n = AlfImportDelegateFactory.parseVersionNumber(contentFile.getName());
-			if (n != null) {
-				number = new BigDecimal(n);
-			}
+			number = new BigDecimal(current);
 		}
 		thisMarker.setNumber(number);
 
