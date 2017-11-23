@@ -36,6 +36,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfNameFixer;
@@ -857,7 +858,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			int count = qr.update(c, sql, type.name(), name, refValue);
 			if (count > 0) {
 				this.log.info(String.format("Deleted the mappings [%s/%s/%s->%s] : %d", type, name, sourceValue,
-					targetValue , count));
+					targetValue, count));
 			}
 			return;
 		}
@@ -968,7 +969,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			// No existing status, so we can continue
 			if (this.log.isTraceEnabled()) {
-				this.log.trac e(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR %s", status.name(),
+				this.log.trace(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR %s", status.name(),
 					target.getShortLabel()));
 			}
 			int result = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_EXPORT_RESULT), status.name(), message,
@@ -1088,7 +1089,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected Set<String> getAvailableMappings(JdbcOperation operation, CmfType type) throws CmfStorageException {
-		final Set<Strin g> ret = new TreeSet<>();
+		final Set<String> ret = new TreeSet<>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
 			public Void handle(ResultSet rs) throws SQLException {
@@ -1265,7 +1266,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	private <V> CmfObject<CmfValue> loadObject(ResultSet objectRS, ResultSet parentsRS, ResultSet secondariesRS)
+	private CmfObject<CmfValue> loadObject(ResultSet objectRS, ResultSet parentsRS, ResultSet secondariesRS)
 		throws SQLException {
 		if (objectRS == null) { throw new IllegalArgumentException(
 			"Must provide a ResultSet to load the structure from"); }
@@ -1322,8 +1323,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			parentIds = Collections.emptyList();
 		}
 
-		return new CmfObject<>(null, type, id, name, parentIds, searchKey, tierId, historyId, historyCurrent, label,
-			subtype, secondaries, productName, productVersion, number);
+		return new CmfObject<>(CmfAttributeTranslator.CMFVALUE_TRANSLATOR, type, id, name, parentIds, searchKey, tierId,
+			historyId, historyCurrent, label, subtype, secondaries, productName, productVersion, number);
 	}
 
 	private CmfProperty<CmfValue> loadProperty(CmfType objectType, ResultSet rs) throws SQLException {
