@@ -154,9 +154,7 @@ public class ExternalMetadataLoader {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
-			if (this.metadata == null) {
-				initialize(l);
-			}
+			initialize(l);
 			if (sourceNames == null) {
 				sourceNames = this.metadataSets.keySet();
 			}
