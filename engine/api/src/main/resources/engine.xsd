@@ -927,7 +927,7 @@
 			<xsd:element name="transform-names" type="tns:externalMetadataTransformNames.t"  minOccurs="0" maxOccurs="1" />
 			<xsd:element name="attribute-types" type="tns:externalMetadataAttributeTypes.t" minOccurs="0" maxOccurs="1" />
 		</xsd:sequence>
-		<xsd:attribute name="dataSource" type="tns:noSpaces.t" use="required" />
+		<xsd:attribute name="dataSource" type="xsd:IDREF" use="required" />
 	</xsd:complexType>
 
 	<xsd:complexType name="setting.t">
@@ -945,7 +945,7 @@
 				<xsd:element name="from-ddl" type="tns:externalMetadataFromDDL.t" />
 			</xsd:choice>
 		</xsd:sequence>
-		<xsd:attribute name="id" type="xsd:ID" use="required" />
+		<xsd:attribute name="id" type="tns:noSpaces.t" use="required" />
 		<xsd:attribute name="failOnError" type="xsd:boolean" use="optional" default="false" />
 		<xsd:attribute name="failOnMissing" type="xsd:boolean" use="optional" default="false" />
 	</xsd:complexType>
@@ -968,6 +968,10 @@
 				<xsd:element name="metadata-set" type="tns:externalMetadataSet.t" minOccurs="0" maxOccurs="unbounded" />
 			</xsd:sequence>
 		</xsd:complexType>
+		<xsd:unique name="uniqueDataSourceReference">
+			<xsd:selector xpath="*"/>
+			<xsd:field xpath="@id"/>
+		</xsd:unique>
 	</xsd:element>
 	
 </xsd:schema>
