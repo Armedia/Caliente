@@ -655,6 +655,18 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				validateEngine(baseSession.getWrapped());
 
 				try {
+					transformer = getTransformer(configuration);
+				} catch (Exception e) {
+					throw new ExportException("Failed to initialize the configured object transformations", e);
+				}
+
+				try {
+					filter = getFilter(configuration);
+				} catch (Exception e) {
+					throw new ExportException("Failed to initialize the configured object filters", e);
+				}
+
+				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
 						contentStore, null, output, warningTracker);
 				} catch (Exception e) {
@@ -667,21 +679,15 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					throw new ExportException("Failed to configure the delegate factory to carry out the export", e);
 				}
 
-				try {
-					transformer = getTransformer(configuration);
-				} catch (Exception e) {
-					throw new ExportException("Failed to retrieve the configured object transformations", e);
-				}
-
-				try {
-					filter = getFilter(configuration);
-				} catch (Exception e) {
-					throw new ExportException("Failed to retrieve the configured object filters", e);
-				}
-
 				return runExportImpl(exportState, counter, sessionFactory, baseSession, contextFactory, delegateFactory,
 					transformer, filter);
 			} finally {
+				if (delegateFactory != null) {
+					delegateFactory.close();
+				}
+				if (contextFactory != null) {
+					contextFactory.close();
+				}
 				if (filter != null) {
 					filter.close();
 				}
@@ -690,12 +696,6 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 				if (baseSession != null) {
 					baseSession.close();
-				}
-				if (delegateFactory != null) {
-					delegateFactory.close();
-				}
-				if (contextFactory != null) {
-					contextFactory.close();
 				}
 			}
 		} finally {

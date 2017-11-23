@@ -534,7 +534,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					transformer = getTransformer(configuration);
 				} catch (Exception e) {
-					throw new ImportException("Failed to configure the configured object transformations", e);
+					throw new ImportException("Failed to initialize the configured object transformations", e);
 				}
 
 				try {
@@ -568,14 +568,17 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				if (baseSession != null) {
 					baseSession.close();
 				}
-				if (transformer != null) {
-					transformer.close();
+				if (contextFactory != null) {
+					contextFactory.close();
 				}
 				if (delegateFactory != null) {
 					delegateFactory.close();
 				}
-				if (contextFactory != null) {
-					contextFactory.close();
+				if (filter != null) {
+					filter.close();
+				}
+				if (transformer != null) {
+					transformer.close();
 				}
 			}
 		} finally {
