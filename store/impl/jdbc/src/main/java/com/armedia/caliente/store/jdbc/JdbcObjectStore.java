@@ -857,7 +857,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			int count = qr.update(c, sql, type.name(), name, refValue);
 			if (count > 0) {
 				this.log.info(String.format("Deleted the mappings [%s/%s/%s->%s] : %d", type, name, sourceValue,
-					targetValue, count));
+					targetValue , count));
 			}
 			return;
 		}
@@ -968,7 +968,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			// No existing status, so we can continue
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR %s", status.name(),
+				this.log.trac e(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR %s", status.name(),
 					target.getShortLabel()));
 			}
 			int result = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_EXPORT_RESULT), status.name(), message,
@@ -1088,7 +1088,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	@Override
 	protected Set<String> getAvailableMappings(JdbcOperation operation, CmfType type) throws CmfStorageException {
-		final Set<String> ret = new TreeSet<>();
+		final Set<Strin g> ret = new TreeSet<>();
 		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
 			@Override
 			public Void handle(ResultSet rs) throws SQLException {

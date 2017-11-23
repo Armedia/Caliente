@@ -82,6 +82,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		boolean historyCurrent, String label, String subtype, Set<String> secondaries, String productName,
 		String productVersion, Long number) {
 		super(type, id, searchKey);
+		if (translator == null) { throw new IllegalArgumentException("Must provide a valid value translator"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
