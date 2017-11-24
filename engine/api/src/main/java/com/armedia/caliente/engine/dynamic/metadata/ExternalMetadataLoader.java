@@ -195,7 +195,7 @@ public class ExternalMetadataLoader {
 				// All is well...store what was retrieved
 				finalMap.putAll(m);
 			}
-			return finalMap;
+			return finalMap.isEmpty() ? null : finalMap;
 		} finally {
 			l.unlock();
 		}
