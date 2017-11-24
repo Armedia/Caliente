@@ -19,6 +19,8 @@
 
 			<query>
 				<sql>select att_type, att_value from att_table where col1 = ${param2} and col2 = ${param3} and att_name = ${param1} order by ....</sql>
+				<skip>1</skip>
+				<count>222</count>
 				<parameter>
 					<name>param1</name>
 					<value>...JEXL...</value>

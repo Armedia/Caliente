@@ -132,8 +132,20 @@ public class MetadataFromDDL extends MetadataReaderBase {
 						}
 					}
 
+					int pos = 0;
+					int skip = this.skip;
+					final int count = this.count;
 					Map<String, CmfAttribute<V>> tempAtts = new HashMap<>();
 					while (rs.next()) {
+						// Make sure we skip the correct number of records
+						if (skip > 0) {
+							--skip;
+							continue;
+						}
+
+						// Increase our counter, since rs.getRow() isn't mandatory
+						++pos;
+
 						for (String column : this.structure.keySet()) {
 							final ColumnStructure structure = this.structure.get(column);
 
@@ -156,6 +168,12 @@ public class MetadataFromDDL extends MetadataReaderBase {
 								finalValue = codec.decodeValue(new CmfValue(attribute.getType(), value));
 							}
 							attribute.addValue(finalValue);
+						}
+
+						// If we're count-limited, and our position matches or exceeds our count, we
+						// stop processing records
+						if ((count > 0) && (pos >= count)) {
+							break;
 						}
 					}
 

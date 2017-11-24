@@ -62,6 +62,12 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 	protected String finalSql = null;
 
 	@XmlTransient
+	protected int skip = 0;
+
+	@XmlTransient
+	protected int count = 0;
+
+	@XmlTransient
 	protected Map<String, Expression> parameterExpressions = null;
 
 	@XmlTransient
@@ -161,6 +167,8 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		this.parameterExpressions = Tools.freezeMap(parameterExpressions);
 		this.indexedNames = Tools.freezeMap(indexedNames);
 		this.finalSql = finalSql;
+		this.skip = this.query.getSkip();
+		this.count = this.query.getCount();
 	}
 
 	protected abstract boolean isRequiresCaseAwareTransform();
@@ -341,6 +349,8 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		this.parameterExpressions = null;
 		this.indexedNames = null;
 		this.finalSql = null;
+		this.skip = 0;
+		this.count = 0;
 	}
 
 	@Override

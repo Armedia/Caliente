@@ -16,12 +16,18 @@ import com.armedia.caliente.engine.dynamic.xml.Expression;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "parameterizedSQL.t", propOrder = {
-	"sql", "parameters"
+	"sql", "skip", "count", "parameters"
 })
 public class ParameterizedQuery {
 
 	@XmlElement(name = "sql", required = true)
 	protected String sql;
+
+	@XmlElement(name = "skip", required = false)
+	protected Integer skip;
+
+	@XmlElement(name = "count", required = false)
+	protected Integer count;
 
 	@XmlElement(name = "parameter", required = false)
 	protected List<QueryParameter> parameters;
@@ -32,6 +38,24 @@ public class ParameterizedQuery {
 
 	public void setSql(String sql) {
 		this.sql = sql;
+	}
+
+	public int getSkip() {
+		if (this.skip == null) { return 0; }
+		return Math.max(0, this.skip.intValue());
+	}
+
+	public void setSkip(Integer skip) {
+		this.skip = skip;
+	}
+
+	public int getCount() {
+		if (this.count == null) { return 0; }
+		return Math.max(0, this.count.intValue());
+	}
+
+	public void setCount(Integer count) {
+		this.count = count;
 	}
 
 	public List<QueryParameter> getParameters() {

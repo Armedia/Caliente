@@ -84,6 +84,9 @@ public class MetadataFromSQL extends MetadataReaderBase {
 						CmfAttribute<V> attribute = null;
 						Integer columnType = null;
 						int columnIndex = 0;
+						int pos = 0;
+						int skip = this.skip;
+						final int count = this.count;
 						while (rs.next()) {
 							if (attribute == null) {
 								// Deduce the type from the SQL type
@@ -120,8 +123,18 @@ public class MetadataFromSQL extends MetadataReaderBase {
 								String attName = transformAttributeName(sqlAttributeName);
 								// By default, all attributes are multivalued...
 								attribute = new CmfAttribute<>(attName, type, true);
-								codec = translator.getCodec(attribute.getType());
+								codec = translator.getCodec(type);
 							}
+
+							// Make sure we skip the correct number of records
+							if (skip > 0) {
+								--skip;
+								continue;
+							}
+
+							// Increase our counter, since rs.getRow() isn't mandatory
+							++pos;
+
 							V finalValue = codec.getNull();
 							// If we have a column name, use it. Otherwise, default to the first
 							// column in the result set
@@ -130,6 +143,12 @@ public class MetadataFromSQL extends MetadataReaderBase {
 								finalValue = codec.decodeValue(new CmfValue(attribute.getType(), value));
 							}
 							attribute.addValue(finalValue);
+
+							// If we're count-limited, and our position matches or exceeds our
+							// count, we stop processing records
+							if ((count > 0) && (pos >= count)) {
+								break;
+							}
 						}
 						// Only include attributes with values...
 						if ((attribute != null) && attribute.hasValues()) {

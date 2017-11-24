@@ -902,6 +902,8 @@
 	<xsd:complexType name="parameterizedSQL.t">
 		<xsd:sequence>
 			<xsd:element name="sql" type="xsd:string" minOccurs="1" maxOccurs="1" />
+			<xsd:element name="skip" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
+			<xsd:element name="count" type="xsd:int" minOccurs="0" maxOccurs="1" default="0" />
 			<xsd:element name="parameter" type="tns:parameterizedSQLParameter.t" minOccurs="0" maxOccurs="unbounded" />
 		</xsd:sequence>
 	</xsd:complexType>
