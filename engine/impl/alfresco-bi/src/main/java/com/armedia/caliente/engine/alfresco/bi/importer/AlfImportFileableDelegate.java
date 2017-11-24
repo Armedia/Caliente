@@ -202,11 +202,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	protected abstract boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException;
 
-	private String renderValue(AttributeValue attribute) {
-		return renderValue(attribute.getSeparator(), attribute);
+	private String renderValue(boolean multiple, AttributeValue attribute) {
+		return renderValue(multiple, attribute.getSeparator(), attribute);
 	}
 
-	private String renderValue(char separator, Iterable<CmfValue> srcValues) {
+	private String renderValue(boolean multiple, char separator, Iterable<CmfValue> srcValues) {
 		List<String> values = new ArrayList<>();
 		for (CmfValue v : srcValues) {
 			if ((v == null) || v.isNull()) {
@@ -218,6 +218,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			} catch (ParseException e) {
 				throw new RuntimeException(
 					String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
+			}
+			if (!multiple) {
+				// Avoid processing more than one value if this isn't a multivalued attribute
+				break;
 			}
 		}
 		// TODO: Temporary patch - when BI 2.2.7 becomes the norm, we can remove it b/c it will
@@ -237,7 +241,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		AttributeMappingResult mappedAttributes = this.factory.getAttributeMapper().renderMappedAttributes(targetType,
 			this.cmfObject);
 		for (String targetName : mappedAttributes.getAttributeNames()) {
-			String renderedValue = renderValue(mappedAttributes.getAttributeValue(targetName));
+			final SchemaAttribute targetAttribute = targetType.getAttribute(targetName);
+			final AttributeValue attributeValue = mappedAttributes.getAttributeValue(targetName);
+			// For residuals, which are always treated as multivalued
+			final boolean multiple = (targetAttribute != null ? targetAttribute.multiple : true);
+			final String renderedValue = renderValue(multiple, attributeValue);
 			if (!StringUtils.isEmpty(renderedValue)) {
 				p.setProperty(targetName, renderedValue);
 			}
