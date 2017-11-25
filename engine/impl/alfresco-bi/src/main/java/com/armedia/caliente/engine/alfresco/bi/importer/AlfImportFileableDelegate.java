@@ -227,7 +227,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		// TODO: Temporary patch - when BI 2.2.7 becomes the norm, we can remove it b/c it will
 		// handle things more intelligently
 		if (values.isEmpty()) { return null; }
-		if (values.size() == 1) { return values.get(0); }
+		if (values.size() == 1) {
+			String ret = values.get(0);
+			// Make sure we return a null value if the only value to be returned is an empty string
+			return StringUtils.isEmpty(ret) ? null : ret;
+		}
 		return Tools.joinEscaped(separator, values);
 	}
 
@@ -401,9 +405,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			if (groupValue != null) {
 				group = this.factory.mapGroup(groupValue.asString());
 			}
-
+			
 			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-
+			
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
