@@ -417,6 +417,7 @@ public class UcmModel {
 		final String sanitizedPath = UcmModel.sanitizePath(p);
 		URI uri = this.uriByPaths.get(sanitizedPath);
 		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
+		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
 		if (uri == null) {
 			try {
 				uri = this.uriByPaths.createIfAbsent(sanitizedPath, new ConcurrentInitializer<URI>() {
@@ -435,7 +436,10 @@ public class UcmModel {
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the file at [%s]",
-									sanitizedPath)) { return UcmModel.NULL_URI; }
+									sanitizedPath)) {
+									thrown.set(e);
+									return UcmModel.NULL_URI;
+								}
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -466,8 +470,9 @@ public class UcmModel {
 		// There's an object...so stash it
 		cacheDataObject(data.get());
 
-		if (Tools.equals(UcmModel.NULL_URI, uri)) { throw new UcmObjectNotFoundException(
-			String.format("No object found at path [%s]", sanitizedPath)); }
+		if (Tools.equals(UcmModel.NULL_URI,
+			uri)) { throw new UcmObjectNotFoundException(String.format("No object found at path [%s]", sanitizedPath),
+				thrown.get()); }
 		return uri;
 	}
 
@@ -477,6 +482,7 @@ public class UcmModel {
 		final AtomicReference<UcmFSObject> data = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
+		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
 		if (uri == null) {
 			try {
 				uri = this.uriByPaths.createIfAbsent(guid, new ConcurrentInitializer<URI>() {
@@ -516,7 +522,10 @@ public class UcmModel {
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the %s with GUID [%s]",
-									type.name(), guid)) { return UcmModel.NULL_URI; }
+									type.name(), guid)) {
+									thrown.set(e);
+									return UcmModel.NULL_URI;
+								}
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -579,8 +588,9 @@ public class UcmModel {
 			}
 		}
 
-		if (Tools.equals(UcmModel.NULL_URI, uri)) { throw new UcmObjectNotFoundException(
-			String.format("No %s found with GUID [%s]", type.name(), guid)); }
+		if (Tools.equals(UcmModel.NULL_URI,
+			uri)) { throw new UcmObjectNotFoundException(String.format("No %s found with GUID [%s]", type.name(), guid),
+				thrown.get()); }
 		return uri;
 	}
 
@@ -607,6 +617,7 @@ public class UcmModel {
 		final AtomicBoolean serviceInvoked = new AtomicBoolean(false);
 		final AtomicReference<DataResultSet> history = new AtomicReference<>(null);
 		final AtomicReference<DataResultSet> renditions = new AtomicReference<>(null);
+		final AtomicReference<Throwable> thrown = new AtomicReference<>(null);
 		UcmUniqueURI guid = this.uniqueUriByHistoryUri.get(uri);
 		if (guid == null) {
 			try {
@@ -649,7 +660,10 @@ public class UcmModel {
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught locating the object using URI [%s]",
-									uri)) { return UcmUniqueURI.NULL_GUID; }
+									uri)) {
+									thrown.set(e);
+									return UcmUniqueURI.NULL_GUID;
+								}
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -686,8 +700,9 @@ public class UcmModel {
 			}
 		}
 
-		if (UcmUniqueURI.NULL_GUID.equals(
-			guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri)); }
+		if (UcmUniqueURI.NULL_GUID
+			.equals(guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri),
+				thrown.get()); }
 
 		if (serviceInvoked.get()) {
 			if (history.get() != null) {
