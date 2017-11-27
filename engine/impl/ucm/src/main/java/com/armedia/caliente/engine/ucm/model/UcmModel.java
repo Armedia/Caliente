@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -268,10 +269,62 @@ public class UcmModel {
 		DataObject local = binder.getLocalData();
 
 		int statusCode = local.getInteger("StatusCode");
-		if (statusCode == -16) { return true; }
+		// We know this to be access denied...
+		/*
+		 known error codes:
+		 0 : success
+		-1 : generic error / unknown error condition
+		-2 : comm address not found
+		-3 : comm failed connect
+		-4 : comm failed send
+		-5 : comm failed receive
+		-5 : comm timeout received
+		-16 : resource not found
+		-17 : resource exists
+		-18 : resource cannot access
+		-19 : resource read only
+		-20 : insufficient privileges
+		-21 : failed login
+		-22 : resource locked
+		-23 : resource wrong version
+		-24 : resource wrong type
+		-25 : resource unavailable
+		-26 : resource misconfigured
+		-27 : resource not defined
+		-32 : process error
+		-33 : process unnecessary
+		-34 : process logic error
+		-48 : unhanded exception
+		-49 : insufficient memory
+		-50 : mismatched parameters
+		-64 : activity aborted
+		-65 : activity cancelled
+		-66 : activity suspended
+		-67 : activity warning abort
+		 */
+		switch (statusCode) {
+			case -18:
+			case -20: // Known to be access errors
+				return false;
+
+			case -16: // Known to be "not found" errors
+				return true;
+
+			default:
+				break;
+		}
 
 		String mk = local.get("StatusMessageKey");
-		for (UcmExceptionData.Entry entry : UcmExceptionData.parseMessageKey(mk)) {
+		List<UcmExceptionData.Entry> entries = UcmExceptionData.parseMessageKey(mk);
+		Set<String> tags = new HashSet<>();
+		for (UcmExceptionData.Entry entry : entries) {
+			tags.add(entry.getTag());
+		}
+
+		// Known to be an access issue
+		if (tags.contains("csUserInsufficientAccess")) { return false; }
+
+		for (UcmExceptionData.Entry entry : entries) {
 			String op = entry.getTag();
 			if (Tools.equals(op, "csFldDoesNotExist") || //
 				Tools.equals(op, "csUnableToGetRevInfo2") || //
