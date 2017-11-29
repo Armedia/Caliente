@@ -34,6 +34,8 @@ public class CalienteLauncher extends AbstractLauncher {
 	private static final String MAIN_CLASS = "com.armedia.caliente.cli.caliente.launcher.%s.Caliente_%s";
 	private static Properties PARAMETER_PROPERTIES = new Properties();
 
+	public static final String DEFAULT_LOG_FORMAT = "caliente-${logEngine}-${logMode}-${logTimeStamp}";
+
 	public static final String VERSION;
 
 	static {
@@ -83,7 +85,7 @@ public class CalienteLauncher extends AbstractLauncher {
 		String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
 		String logName = CLIParam.log.getString();
 		if (logName == null) {
-			logName = String.format("caliente-%s-%s-%s", engine.toLowerCase(), mode.toLowerCase(), logTimeStamp);
+			logName = CalienteLauncher.DEFAULT_LOG_FORMAT;
 		}
 		System.setProperty("logName", logName);
 		System.setProperty("logTimeStamp", logTimeStamp);

@@ -17,6 +17,7 @@ import org.apache.commons.cli.Option.Builder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.armedia.caliente.cli.caliente.launcher.CalienteLauncher;
 import com.armedia.commons.utilities.Tools;
 
 public enum CLIParam {
@@ -37,7 +38,12 @@ public enum CLIParam {
 	user(null, 1, "The username to connect with"),
 	password(null, 1, "The password to connect with"),
 	domain(null, 1, "The domain the user belongs to"),
-	log(null, 1, "The base name of the log file to use instead of the default (caliente-${action}-${date})"),
+	log(
+		null,
+		1,
+		String.format(
+			"The base name of the log file to use. The default is %s - you can use a similar format with similar placeholders (make sure you escape the $ sign if necessary!)",
+			CalienteLauncher.DEFAULT_LOG_FORMAT)),
 	log_cfg(null, 1, "The Log4j configuration (XML format) to use instead of the default (overrides --log)"),
 	threads(Setting.THREADS, 1, "The number of threads to use while importing or exporting"),
 	non_recursive(null, 0, "Turn off counter recursion (i.e. to count a single folder without descending)"),
