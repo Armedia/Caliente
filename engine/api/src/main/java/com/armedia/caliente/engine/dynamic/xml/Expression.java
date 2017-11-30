@@ -5,7 +5,9 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -86,8 +88,16 @@ public class Expression {
 		ScriptEngine engine = null;
 		if (language != null) {
 			engine = Expression.ENGINE_FACTORY.getEngineByName(language);
-			if (engine == null) { throw new IllegalArgumentException(
-				String.format("Unknown script language [%s]", language)); }
+			if (engine == null) {
+				Set<String> s = new TreeSet<>();
+				for (ScriptEngineFactory f : Expression.ENGINE_FACTORY.getEngineFactories()) {
+					for (String n : f.getNames()) {
+						s.add(StringUtils.lowerCase(n));
+					}
+				}
+				throw new IllegalArgumentException(
+					String.format("Unknown script language [%s] - supported languages are %s", language, s));
+			}
 		}
 		return engine;
 	}
