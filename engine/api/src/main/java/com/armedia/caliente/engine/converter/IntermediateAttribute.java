@@ -64,6 +64,7 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	VERSION_ANTECEDENT_ID(CmfDataType.ID),
 	USER_SOURCE(CmfDataType.STRING),
 	GROUP_SOURCE(CmfDataType.STRING),
+	UNFILED_FOLDER(CmfDataType.STRING),
 	//
 	;
 

@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -41,7 +40,6 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
-import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
@@ -57,6 +55,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItem
 import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMapper;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
+import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
@@ -551,25 +550,14 @@ public class AlfImportDelegateFactory
 
 		if (unfiled) {
 			List<String> paths = new ArrayList<>();
-			// TODO: This is just for GSA, remove this later!!
-			CmfAttribute<CmfValue> lastModAtt = cmfObject.getAttribute("ucm:xGSADocumentUpdateDate");
-			if (lastModAtt == null) {
-				lastModAtt = cmfObject.getAttribute("ucm:dDocLastModifiedDate");
-			}
-			if ((lastModAtt != null) && lastModAtt.hasValues()) {
-				CmfValue v = lastModAtt.getValue();
+			CmfAttribute<CmfValue> unfiledFolderAtt = cmfObject.getAttribute(IntermediateAttribute.UNFILED_FOLDER);
+			if ((unfiledFolderAtt != null) && unfiledFolderAtt.hasValues()) {
+				CmfValue v = unfiledFolderAtt.getValue();
 				if ((v != null) && !v.isNull()) {
-					try {
-						paths.add(DateFormatUtils.ISO_DATE_FORMAT.format(v.asTime()));
-					} catch (ParseException e) {
-						// Should not happen...but still
-						throw new ImportException(
-							String.format("Failed to format the modification date value %s:=[%s/%s] for %s",
-								lastModAtt.getName(), v.getDataType().name(), v.asObject(), cmfObject.getDescription()),
-							e);
-					}
+					paths.add(v.asString());
 				}
-			} else {
+			}
+			if (paths.isEmpty()) {
 				AlfCommon.addNumericPaths(paths, cmfObject.getNumber());
 			}
 			targetPath = String.format("(unfiled)/%s", Tools.joinEscaped('/', paths));
