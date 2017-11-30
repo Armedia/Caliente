@@ -556,11 +556,11 @@ public class AlfImportDelegateFactory
 				if ((v != null) && !v.isNull()) {
 					paths.add(v.asString());
 				}
-			}
-			if (paths.isEmpty()) {
+			} else {
+				paths.add("(unfiled)");
 				AlfCommon.addNumericPaths(paths, cmfObject.getNumber());
 			}
-			targetPath = String.format("(unfiled)/%s", Tools.joinEscaped('/', paths));
+			targetPath = Tools.joinEscaped('/', paths);
 			storeArtificialFolderToIndex(targetPath);
 		}
 
