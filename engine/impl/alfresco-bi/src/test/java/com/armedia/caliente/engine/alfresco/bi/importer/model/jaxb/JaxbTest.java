@@ -12,7 +12,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.AttributeMappings;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.PrincipalMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.Model;
 import com.armedia.commons.utilities.XmlTools;
 
@@ -104,26 +103,6 @@ public class JaxbTest {
 				"unchecked", "rawtypes"
 			})
 			XmlTest<?> xmlTest = new XmlTest(AttributeMappings.class, xml, schema);
-			try {
-				xmlTest.run();
-			} catch (Throwable t) {
-				throw new Exception(String.format("Failed while processing [%s]", xml), t);
-			}
-		}
-	}
-
-	@Test
-	public void testPrincipalMappings() throws Exception {
-		final String schema = "alfresco-bi.xsd";
-		String[] s = {
-			"test-principal-mappings.xml"
-		};
-
-		for (String xml : s) {
-			@SuppressWarnings({
-				"unchecked", "rawtypes"
-			})
-			XmlTest<?> xmlTest = new XmlTest(PrincipalMappings.class, xml, schema);
 			try {
 				xmlTest.run();
 			} catch (Throwable t) {
