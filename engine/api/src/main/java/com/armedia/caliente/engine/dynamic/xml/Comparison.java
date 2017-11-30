@@ -146,7 +146,7 @@ public enum Comparison {
 		return StringUtils.upperCase(String.valueOf(value));
 	}
 
-	public static Comparison DEFAULT = Comparison.EQI;
+	public static Comparison DEFAULT = Comparison.EQ;
 
 	public static int compare(CmfDataType type, Object candidate, Object comparand) {
 		switch (type) {

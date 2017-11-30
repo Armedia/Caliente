@@ -50,7 +50,7 @@ public class PrincipalMappingApply extends ConditionalAction {
 	protected Expression fallback;
 
 	public Comparison getComparison() {
-		return Tools.coalesce(this.comparison, Comparison.EQI);
+		return Tools.coalesce(this.comparison, Comparison.DEFAULT);
 	}
 
 	public void setComparison(Comparison comparison) {

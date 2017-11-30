@@ -42,7 +42,7 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 	protected Expression fallback;
 
 	public Comparison getComparison() {
-		return Tools.coalesce(this.comparison, Comparison.EQI);
+		return Tools.coalesce(this.comparison, Comparison.DEFAULT);
 	}
 
 	public void setComparison(Comparison comparison) {

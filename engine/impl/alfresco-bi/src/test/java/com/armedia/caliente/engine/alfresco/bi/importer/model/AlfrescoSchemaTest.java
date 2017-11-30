@@ -43,6 +43,7 @@ public class AlfrescoSchemaTest {
 			cl.getResource("calienteBaseModel.xml"), //
 			cl.getResource("calienteDctmModel.xml"), //
 			cl.getResource("calienteUcmModel.xml"), //
+			cl.getResource("content-model-20171129.xml"), //
 		};
 		List<URI> urlList = new ArrayList<>();
 		for (URL u : urls) {
@@ -72,7 +73,9 @@ public class AlfrescoSchemaTest {
 		System.out.printf("Types%n");
 		Set<String> typeNames = new TreeSet<>(schema.getTypeNames());
 		typeNames.addAll(schema.getAspectNames());
-		typeNames = new LinkedHashSet<>(Arrays.asList("sys:base", "cm:cmobject", "cm:content"));
+		typeNames = new LinkedHashSet<>(Arrays.asList("sys:base", "cm:cmobject", "cm:content", "edms:docbase",
+			"edms:doc", "edms:leasing", "edms:buildingproject", "edms:realpropertycontracting", "edms:leasecontracting",
+			"edms:buildingprojectaspect"));
 		for (String typeName : typeNames) {
 			SchemaMember<?> type = schema.getType(typeName);
 			if (type == null) {
@@ -108,6 +111,7 @@ public class AlfrescoSchemaTest {
 			cl.getResource("calienteBaseModel.xml"), //
 			cl.getResource("calienteDctmModel.xml"), //
 			cl.getResource("calienteUcmModel.xml"), //
+			cl.getResource("content-model-20171129.xml"), //
 		};
 		List<URI> urlList = new ArrayList<>();
 		for (URL u : urls) {
@@ -134,7 +138,7 @@ public class AlfrescoSchemaTest {
 			}
 		}
 		*/
-		AlfrescoType type = schema.buildType("cm:content");
+		AlfrescoType type = schema.buildType("edms:leasecontracting");
 		System.out.printf("\tSchema for type %s%n", type.getName());
 		if (!type.getExtraAspects().isEmpty()) {
 			System.out.printf("\t\tExtra Aspects : %s%n", new TreeSet<>(type.getExtraAspects()));
