@@ -257,6 +257,19 @@
 		</map-attribute-value>
 		<end-transformation/>
 		<abort-transformation/>
+		
+		<apply-value-mapping>
+			<name>attribute-name</name>
+			<type>ACL</type>
+			<mapping-name>Some-Mapping-Name</mapping-name>
+			<fallback>someExpression</fallback>
+		</apply-value-mapping>
+		
+		<map-principal>
+			<name>attribute-name</name>
+			<type>USER</type>
+			<fallback>expression</fallback>
+		</map-principal>
 
 		<load-external-metadata>
 			<metadata-set>xxxxxxx</metadata-set>

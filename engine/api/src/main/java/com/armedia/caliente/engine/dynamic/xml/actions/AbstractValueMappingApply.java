@@ -8,6 +8,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
@@ -36,6 +38,9 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 	@XmlJavaTypeAdapter(CardinalityAdapter.class)
 	protected Cardinality cardinality;
 
+	@XmlElement(name = "fallback", required = false)
+	protected Expression fallback;
+
 	public Comparison getComparison() {
 		return Tools.coalesce(this.comparison, Comparison.EQI);
 	}
@@ -50,6 +55,14 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 
 	public void setName(Expression name) {
 		this.name = name;
+	}
+
+	public Expression getFallback() {
+		return this.fallback;
+	}
+
+	public void setFallback(Expression fallback) {
+		this.fallback = fallback;
 	}
 
 	public abstract void setType(E type);
@@ -81,7 +94,11 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 			// Cardinality is irrelevant...
 			String oldString = Tools.toString(candidate.getValue());
 			String newString = mapValue(ctx, type, mappingName, oldString, candidate.getType());
-			if (newString != null) {
+			if (newString == null) {
+				// Try a fallback value
+				newString = Tools.toString(ActionTools.eval(getFallback(), ctx));
+			}
+			if ((newString != null) && !StringUtils.equals(oldString, newString)) {
 				candidate.setValue(newString);
 			}
 			return;

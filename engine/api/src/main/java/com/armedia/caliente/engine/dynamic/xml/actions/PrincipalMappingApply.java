@@ -12,7 +12,7 @@ import com.armedia.caliente.store.CmfType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionApplyPrincipalMapping.t", propOrder = {
-	"comparison", "name", "type", "cardinality"
+	"comparison", "name", "type", "cardinality", "fallback"
 })
 public class PrincipalMappingApply extends AbstractValueMappingApply<PrincipalType> {
 
