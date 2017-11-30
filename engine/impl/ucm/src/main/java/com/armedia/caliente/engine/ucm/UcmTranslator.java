@@ -43,6 +43,11 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(UcmAtt.cmfLatestVersion.name(), IntermediateAttribute.IS_LATEST_VERSION);
 		am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.VERSION_LABEL);
 		// am.put(UcmAtt.dRevisionID.name(), IntermediateAttribute.CHANGE_TOKEN);
+		// TODO: These are the correct, infallible mappings for the creation/modification attributes
+		// am.put(UcmAtt.dDocCreator.name(), IntermediateAttribute.CREATED_BY);
+		// am.put(UcmAtt.dDocCreatedDate.name(), IntermediateAttribute.CREATION_DATE);
+		// am.put(UcmAtt.dDocLastModifier.name(), IntermediateAttribute.LAST_MODIFIED_BY);
+		// am.put(UcmAtt.dDocLastModifiedDate.name(), IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(UcmAtt.fCreator.name(), IntermediateAttribute.CREATED_BY);
 		am.put(UcmAtt.fCreateDate.name(), IntermediateAttribute.CREATION_DATE);
 		am.put(UcmAtt.fLastModifier.name(), IntermediateAttribute.LAST_MODIFIED_BY);
