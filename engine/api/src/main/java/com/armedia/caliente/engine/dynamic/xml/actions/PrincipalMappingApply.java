@@ -153,7 +153,7 @@ public class PrincipalMappingApply extends ConditionalAction {
 				if (candidate != null) {
 					applyMapping(ctx, candidate);
 				}
-				return;
+				continue;
 			}
 
 			// Need to find a matching candidate...
