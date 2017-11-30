@@ -35,6 +35,10 @@ public enum UcmAtt {
 	dFileSize, //
 	dFormat, //
 	dDocAuthor, //
+	dDocCreator, //
+	dDocCreatedDate, //
+	dDocLastModifiedDate, //
+	dDocLastModifier, //
 	dDocName, //
 	dDocTitle, //
 	dDocType, //
