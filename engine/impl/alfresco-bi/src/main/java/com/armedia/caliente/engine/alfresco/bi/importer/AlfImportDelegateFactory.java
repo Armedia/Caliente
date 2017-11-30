@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -40,6 +41,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.commons.lang3.time.DateFormatUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
@@ -61,6 +63,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.MappingTools;
+import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
@@ -588,7 +591,27 @@ public class AlfImportDelegateFactory
 
 		if (unfiled) {
 			List<String> paths = new ArrayList<>();
-			AlfCommon.addNumericPaths(paths, cmfObject.getNumber());
+			// TODO: This is just for GSA, remove this later!!
+			CmfAttribute<CmfValue> lastModAtt = cmfObject.getAttribute("ucm:xGSADocumentUpdateDate");
+			if (lastModAtt == null) {
+				lastModAtt = cmfObject.getAttribute("ucm:dDocLastModifiedDate");
+			}
+			if ((lastModAtt != null) && lastModAtt.hasValues()) {
+				CmfValue v = lastModAtt.getValue();
+				if ((v != null) && !v.isNull()) {
+					try {
+						paths.add(DateFormatUtils.ISO_DATE_FORMAT.format(v.asTime()));
+					} catch (ParseException e) {
+						// Should not happen...but still
+						throw new ImportException(
+							String.format("Failed to format the modification date value %s:=[%s/%s] for %s",
+								lastModAtt.getName(), v.getDataType().name(), v.asObject(), cmfObject.getDescription()),
+							e);
+					}
+				}
+			} else {
+				AlfCommon.addNumericPaths(paths, cmfObject.getNumber());
+			}
 			targetPath = String.format("(unfiled)/%s", Tools.joinEscaped('/', paths));
 			storeArtificialFolderToIndex(targetPath);
 		}
