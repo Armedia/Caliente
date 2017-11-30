@@ -2,6 +2,7 @@
 package com.armedia.caliente.engine.dynamic.xml;
 
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import javax.script.Bindings;
 import javax.script.Compilable;
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
@@ -33,10 +35,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
+import org.apache.commons.lang3.concurrent.LazyInitializer;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.RuntimeDynamicElementException;
+import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "expression.t", propOrder = {
@@ -44,6 +49,28 @@ import com.armedia.caliente.engine.dynamic.RuntimeDynamicElementException;
 })
 public class Expression {
 	private static final ScriptEngineManager ENGINE_FACTORY = new ScriptEngineManager();
+
+	private static final LazyInitializer<Object> TOOLS = new LazyInitializer<Object>() {
+		@Override
+		protected Object initialize() throws ConcurrentException {
+			Map<String, Object> tools = new HashMap<>();
+
+			// Add some date formatting stuff
+			Map<String, Object> dateMap = new HashMap<>();
+			dateMap.put("ISO_DATE", DateFormatUtils.ISO_DATE_FORMAT);
+			dateMap.put("ISO_DATE_TZ", DateFormatUtils.ISO_DATE_TIME_ZONE_FORMAT);
+			dateMap.put("ISO_DATETIME", DateFormatUtils.ISO_DATETIME_FORMAT);
+			dateMap.put("ISO_DATETIME_TZ", DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT);
+			dateMap.put("ISO_TIME", DateFormatUtils.ISO_TIME_FORMAT);
+			dateMap.put("ISO_TIME_TZ", DateFormatUtils.ISO_TIME_TIME_ZONE_FORMAT);
+			dateMap.put("ISO_TIME_NO_T", DateFormatUtils.ISO_TIME_NO_T_FORMAT);
+			dateMap.put("ISO_TIME_NO_T_TZ", DateFormatUtils.ISO_TIME_NO_T_TIME_ZONE_FORMAT);
+
+			tools.put("dateFormat", Tools.freezeMap(dateMap));
+
+			return Tools.freezeMap(tools);
+		}
+	};
 
 	private static final ConcurrentMap<String, ConcurrentMap<String, CompiledScript>> COMPILER_CACHE = new ConcurrentHashMap<>();
 
@@ -218,6 +245,17 @@ public class Expression {
 
 		if (cfg != null) {
 			cfg.configure(scriptCtx);
+		}
+		Bindings b = scriptCtx.getBindings(ScriptContext.GLOBAL_SCOPE);
+		if (b == null) {
+			b = scriptCtx.getBindings(ScriptContext.ENGINE_SCOPE);
+		}
+		if (!b.containsKey("tools")) {
+			try {
+				b.put("tools", Expression.TOOLS.get());
+			} catch (ConcurrentException e) {
+				throw new ScriptException(e);
+			}
 		}
 
 		this.log.trace("Compiling {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
