@@ -34,7 +34,7 @@ public abstract class CmfAttributeTranslator<V> {
 
 		@Override
 		public boolean isNull(CmfValue value) {
-			return value.isNull();
+			return (value == null) || value.isNull();
 		}
 
 		@Override
@@ -72,6 +72,18 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 	};
 
+	public static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();
+
+	private static final Map<CmfDataType, Codec> CODECS;
+
+	static {
+		Map<CmfDataType, Codec> codecs = new EnumMap<>(CmfDataType.class);
+		for (CmfDataType t : CmfDataType.values()) {
+			codecs.put(t, new Codec(t));
+		}
+		CODECS = Tools.freezeMap(codecs);
+	}
+
 	public static final CmfAttributeTranslator<CmfValue> CMFVALUE_TRANSLATOR = new CmfAttributeTranslator<CmfValue>(
 		CmfValue.class) {
 
@@ -96,18 +108,6 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 
 	};
-
-	public static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();
-
-	private static final Map<CmfDataType, Codec> CODECS;
-
-	static {
-		Map<CmfDataType, Codec> codecs = new EnumMap<>(CmfDataType.class);
-		for (CmfDataType t : CmfDataType.values()) {
-			codecs.put(t, new Codec(t));
-		}
-		CODECS = Tools.freezeMap(codecs);
-	}
 
 	public static CmfValueCodec<CmfValue> getStoredValueCodec(CmfDataType type) {
 		return CmfAttributeTranslator.CODECS.get(type);
