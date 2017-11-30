@@ -76,7 +76,7 @@
 		<xsd:restriction base="xsd:string">
 			<xsd:enumeration value="USER" />
 			<xsd:enumeration value="GROUP" />
-			<xsd:enumeration value="ROLE" />
+			<!-- <xsd:enumeration value="ROLE" /> -->
 		</xsd:restriction>
 	</xsd:simpleType>
 
@@ -738,7 +738,7 @@
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
 					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="unbounded" />
 					<xsd:element name="type" type="tns:principalType.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="fallback" type="tns:expression.t" minOccurs="0" maxOccurs="1" />

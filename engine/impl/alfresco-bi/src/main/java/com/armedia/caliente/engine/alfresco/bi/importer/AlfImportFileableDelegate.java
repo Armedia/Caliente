@@ -294,36 +294,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 		}
 
-		currentProperty = "arm:usersWithDefaultFolder";
-		if (includeProperty(includeResiduals, currentProperty, targetType)) {
-			values.clear();
-			for (CmfValue v : getPropertyValues(IntermediateProperty.USERS_WITH_DEFAULT_FOLDER)) {
-				String s = v.asString();
-				if (StringUtils.isEmpty(s)) {
-					continue;
-				}
-				values.add(this.factory.mapUser(s));
-			}
-			if (!values.isEmpty()) {
-				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
-			}
-		}
-
-		currentProperty = "arm:groupsWithDefaultFolder";
-		if (includeProperty(includeResiduals, currentProperty, targetType)) {
-			values.clear();
-			for (CmfValue v : getPropertyValues(IntermediateProperty.GROUPS_WITH_DEFAULT_FOLDER)) {
-				String s = v.asString();
-				if (StringUtils.isEmpty(s)) {
-					continue;
-				}
-				values.add(this.factory.mapGroup(s));
-			}
-			if (!values.isEmpty()) {
-				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
-			}
-		}
-
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
 
@@ -341,60 +311,6 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			currentProperty = "arm:historyId";
 			if (includeProperty(includeResiduals, currentProperty, targetType)) {
 				p.setProperty(currentProperty, this.cmfObject.getHistoryId());
-			}
-
-			// Perform user mappings for special user-relative attributes
-			// TODO: Support multivalued attributes
-			for (String attributeName : this.factory.getUserAttributes()) {
-				if (attributeName == null) {
-					continue;
-				}
-
-				if (!includeProperty(includeResiduals, attributeName, targetType)) {
-					continue;
-				}
-
-				String v = this.factory.mapUser(p.getProperty(attributeName));
-				if (StringUtils.isEmpty(v)) {
-					continue;
-				}
-				p.setProperty(attributeName, v);
-			}
-
-			// Perform group mappings for special group-relative attributes
-			// TODO: Support multivalued attributes
-			for (String attributeName : this.factory.getGroupAttributes()) {
-				if (attributeName == null) {
-					continue;
-				}
-
-				if (!includeProperty(includeResiduals, attributeName, targetType)) {
-					continue;
-				}
-
-				String v = this.factory.mapGroup(p.getProperty(attributeName));
-				if (StringUtils.isEmpty(v)) {
-					continue;
-				}
-				p.setProperty(attributeName, v);
-			}
-
-			// Perform role mappings for special role-relative attributes
-			// TODO: Support multivalued attributes
-			for (String attributeName : this.factory.getRoleAttributes()) {
-				if (attributeName == null) {
-					continue;
-				}
-
-				if (!includeProperty(includeResiduals, attributeName, targetType)) {
-					continue;
-				}
-
-				String v = this.factory.mapRole(p.getProperty(attributeName));
-				if (StringUtils.isEmpty(v)) {
-					continue;
-				}
-				p.setProperty(attributeName, v);
 			}
 
 			/* For now, disable the ACL generation */
@@ -527,10 +443,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					final AccessorType type;
 					if (is_group) {
 						type = AccessorType.GROUP;
-						accessor = AlfImportFileableDelegate.this.factory.mapGroup(accessor);
+						// accessor = AlfImportFileableDelegate.this.factory.mapGroup(accessor);
 					} else {
 						type = AccessorType.USER;
-						accessor = AlfImportFileableDelegate.this.factory.mapUser(accessor);
+						// accessor = AlfImportFileableDelegate.this.factory.mapUser(accessor);
 					}
 
 					char permitChar = '?';

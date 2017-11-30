@@ -54,7 +54,6 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItem
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemVersion;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.PrincipalMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMapper;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
@@ -62,7 +61,6 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
@@ -177,15 +175,8 @@ public class AlfImportDelegateFactory
 	private final File content;
 	private final Path biRootPath;
 
-	private final Properties userMap = new Properties();
 	private final Properties userLoginMap = new Properties();
-	private final Properties groupMap = new Properties();
-	private final Properties roleMap = new Properties();
 	private final AttributeMapper attributeMapper;
-
-	private final Set<String> userAttributes;
-	private final Set<String> groupAttributes;
-	private final Set<String> roleAttributes;
 
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
@@ -255,16 +246,6 @@ public class AlfImportDelegateFactory
 
 		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<>(m));
 
-		if (!MappingTools.loadMap(this.log, configuration, AlfSetting.USER_MAP, this.userMap)) {
-			this.userMap.clear();
-		}
-		if (!MappingTools.loadMap(this.log, configuration, AlfSetting.GROUP_MAP, this.groupMap)) {
-			this.groupMap.clear();
-		}
-		if (!MappingTools.loadMap(this.log, configuration, AlfSetting.ROLE_MAP, this.roleMap)) {
-			this.roleMap.clear();
-		}
-
 		String pfx = configuration.getString(AlfSetting.RESIDUALS_PREFIX);
 		pfx = StringUtils.strip(pfx);
 		if (StringUtils.isEmpty(pfx)) {
@@ -272,27 +253,6 @@ public class AlfImportDelegateFactory
 		}
 		this.attributeMapper = new AttributeMapper(this.schema, configuration.getString(AlfSetting.ATTRIBUTE_MAPPING),
 			pfx);
-
-		PrincipalMappings pmap = AttributeMapper.PRINCIPAL_MAPPINGS
-			.getInstance(configuration.getString(AlfSetting.PRINCIPAL_MAPPING));
-		if (pmap == null) {
-			pmap = new PrincipalMappings();
-		}
-		this.userAttributes = Tools.freezeSet(new LinkedHashSet<>(pmap.getUserSet()));
-		this.groupAttributes = Tools.freezeSet(new LinkedHashSet<>(pmap.getGroupSet()));
-		this.roleAttributes = Tools.freezeSet(new LinkedHashSet<>(pmap.getRoleSet()));
-	}
-
-	public Set<String> getUserAttributes() {
-		return this.userAttributes;
-	}
-
-	public Set<String> getGroupAttributes() {
-		return this.groupAttributes;
-	}
-
-	public Set<String> getRoleAttributes() {
-		return this.roleAttributes;
 	}
 
 	protected AlfrescoSchema getSchema() {
@@ -886,22 +846,6 @@ public class AlfImportDelegateFactory
 			throw new ImportException(
 				String.format("Failed to serialize the %s to XML: %s", folder ? "folder" : "file", item), e);
 		}
-	}
-
-	protected String mapUser(String user) {
-		if (user == null) { return null; }
-		user = Tools.coalesce(this.userLoginMap.getProperty(user), user);
-		return Tools.coalesce(this.userMap.getProperty(user), user);
-	}
-
-	protected String mapGroup(String group) {
-		if (group == null) { return null; }
-		return Tools.coalesce(this.groupMap.getProperty(group), group);
-	}
-
-	protected String mapRole(String role) {
-		if (role == null) { return null; }
-		return Tools.coalesce(this.roleMap.getProperty(role), role);
 	}
 
 	@Override

@@ -26,7 +26,6 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.MappingSet;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NameMapping;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NamedMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NamespaceMapping;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.PrincipalMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.ResidualsMode;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.SetValue;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.TypeMappings;
@@ -51,9 +50,6 @@ public class AttributeMapper {
 
 	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class,
 		AttributeMapper.DEFAULT_SCHEMA, AttributeMapper.DEFAULT_FILENAME);
-
-	public static final XmlInstances<PrincipalMappings> PRINCIPAL_MAPPINGS = new XmlInstances<>(PrincipalMappings.class,
-		AttributeMapper.DEFAULT_SCHEMA, "alfresco-principal-mappings.xml");
 
 	// Make a cache that doesn't expire items and they don't get GC'd either
 	private final KeyLockableCache<String, MappingRendererSet> cache = new KeyLockableCache<String, MappingRendererSet>(

@@ -8,11 +8,7 @@ public enum AlfSetting implements ConfigurationSetting {
 	DB, //
 	CONTENT, //
 	CONTENT_MODEL, //
-	USER_MAP, //
-	GROUP_MAP, //
-	ROLE_MAP, //
 	ATTRIBUTE_MAPPING, //
-	PRINCIPAL_MAPPING, //
 	RESIDUALS_PREFIX, //
 	//
 	;

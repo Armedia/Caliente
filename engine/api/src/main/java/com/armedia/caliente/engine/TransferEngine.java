@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -21,6 +22,7 @@ import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -29,6 +31,7 @@ import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
@@ -259,6 +262,22 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 			c.add(settings.get(s));
 		}
 		return Collections.unmodifiableCollection(c);
+	}
+
+	protected final void loadPrincipalMappings(CmfValueMapper mapper, CfgTools cfg) {
+		for (PrincipalType t : PrincipalType.values()) {
+			Properties p = new Properties();
+			if (!MappingTools.loadMap(this.log, cfg, t.getSetting(), p)) {
+				continue;
+			}
+
+			for (String s : p.stringPropertyNames()) {
+				String v = StringUtils.strip(p.getProperty(s));
+				if (!StringUtils.isEmpty(s)) {
+					mapper.setMapping(t.getObjectType(), t.getMappingName(), s, v);
+				}
+			}
+		}
 	}
 
 	protected final Transformer getTransformer(CfgTools cfg) throws Exception {

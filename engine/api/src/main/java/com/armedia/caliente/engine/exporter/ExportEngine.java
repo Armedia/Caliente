@@ -628,7 +628,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
-
+		objectStore.clearAttributeMappings();
+		loadPrincipalMappings(objectStore.getAttributeMapper(), configuration);
 		final ExportState exportState = new ExportState(output, objectStore, contentStore, configuration);
 
 		final SessionFactory<S> sessionFactory;

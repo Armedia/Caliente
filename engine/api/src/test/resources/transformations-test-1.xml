@@ -267,6 +267,11 @@
 		
 		<map-principal>
 			<name>attribute-name</name>
+			<name>attribute-name</name>
+			<name>attribute-name</name>
+			<name>attribute-name</name>
+			<name>attribute-name</name>
+			<name>attribute-name</name>
 			<type>USER</type>
 			<fallback>expression</fallback>
 		</map-principal>

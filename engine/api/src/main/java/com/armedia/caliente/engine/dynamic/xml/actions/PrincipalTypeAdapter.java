@@ -4,6 +4,8 @@ import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.PrincipalType;
+
 public class PrincipalTypeAdapter extends XmlAdapter<String, PrincipalType> {
 
 	@Override

@@ -509,7 +509,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		// objectStore.clearAllMappings();Object
 
 		final CfgTools configuration = new CfgTools(settings);
-
 		final ImportState importState = new ImportState(output, objectStore, streamStore, configuration);
 		final SessionFactory<S> sessionFactory;
 		try {
@@ -694,6 +693,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			objectStore.clearAttributeMappings();
+			loadPrincipalMappings(objectStore.getAttributeMapper(), settings);
 			// Ensure the target path exists
 			{
 				final SessionWrapper<S> rootSession;

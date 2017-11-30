@@ -36,9 +36,6 @@ public class Caliente_import extends AbstractCalienteMain_import {
 		settings.put(AlfSetting.DB.getLabel(), Setting.DB_DIRECTORY.getString());
 		settings.put(AlfSetting.CONTENT.getLabel(), Setting.CONTENT_DIRECTORY.getString());
 		settings.put(AlfSetting.CONTENT_MODEL.getLabel(), StringUtils.join(CLIParam.content_model.getAllString(), ','));
-		settings.put(AlfSetting.USER_MAP.getLabel(), Setting.USER_MAP.getString());
-		settings.put(AlfSetting.GROUP_MAP.getLabel(), Setting.GROUP_MAP.getString());
-		settings.put(AlfSetting.ROLE_MAP.getLabel(), Setting.ROLE_MAP.getString());
 		super.customizeSettings(settings);
 	}
 }

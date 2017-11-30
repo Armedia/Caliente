@@ -172,25 +172,4 @@
 			<xsd:field xpath="@name"/>
 		</xsd:unique>
 	</xsd:element>
-	
-	<xsd:complexType name="principalMappingAttributes.t">
-		<xsd:sequence>
-			<xsd:element name="attribute" type="tns:noSpaces.t" minOccurs="0" maxOccurs="unbounded" />
-		</xsd:sequence>
-	</xsd:complexType>
-
-	<xsd:complexType name="principalMappings.t">
-		<xsd:sequence>
-			<xsd:element name="user" type="tns:principalMappingAttributes.t" minOccurs="0" maxOccurs="1"/>
-			<xsd:element name="group" type="tns:principalMappingAttributes.t" minOccurs="0" maxOccurs="1"/>
-			<xsd:element name="role" type="tns:principalMappingAttributes.t" minOccurs="0" maxOccurs="1"/>
-		</xsd:sequence>
-	</xsd:complexType>
-
-	<xsd:element name="principal-mappings" type="tns:principalMappings.t">
-		<xsd:unique name="uniqueAttributeReference">
-			<xsd:selector xpath="*/tns:attribute"/>
-			<xsd:field xpath="."/>
-		</xsd:unique>
-	</xsd:element>
 </xsd:schema>
