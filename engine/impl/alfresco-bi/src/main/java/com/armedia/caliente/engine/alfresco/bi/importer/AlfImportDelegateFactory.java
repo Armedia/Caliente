@@ -173,6 +173,7 @@ public class AlfImportDelegateFactory
 	private final File db;
 	private final File content;
 	private final Path biRootPath;
+	private final String unfiledPath;
 
 	private final Properties userLoginMap = new Properties();
 	private final AttributeMapper attributeMapper;
@@ -252,6 +253,10 @@ public class AlfImportDelegateFactory
 		}
 		this.attributeMapper = new AttributeMapper(this.schema, configuration.getString(AlfSetting.ATTRIBUTE_MAPPING),
 			pfx);
+		String unfiledPath = configuration.getString(AlfSetting.UNFILED_PATH);
+		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
+		unfiledPath = FilenameUtils.normalizeNoEndSeparator(unfiledPath, true);
+		this.unfiledPath = unfiledPath.replaceAll("^/+", "");
 	}
 
 	protected AlfrescoSchema getSchema() {
@@ -552,12 +557,13 @@ public class AlfImportDelegateFactory
 			List<String> paths = new ArrayList<>();
 			CmfAttribute<CmfValue> unfiledFolderAtt = cmfObject.getAttribute(IntermediateAttribute.UNFILED_FOLDER);
 			if ((unfiledFolderAtt != null) && unfiledFolderAtt.hasValues()) {
-				CmfValue v = unfiledFolderAtt.getValue();
-				if ((v != null) && !v.isNull()) {
-					paths.add(v.asString());
+				for (CmfValue v : unfiledFolderAtt) {
+					if ((v != null) && !v.isNull()) {
+						paths.add(v.asString());
+					}
 				}
 			} else {
-				paths.add("(unfiled)");
+				paths.add(this.unfiledPath);
 				AlfCommon.addNumericPaths(paths, cmfObject.getNumber());
 			}
 			targetPath = Tools.joinEscaped('/', paths);

@@ -10,6 +10,7 @@ public enum AlfSetting implements ConfigurationSetting {
 	CONTENT_MODEL, //
 	ATTRIBUTE_MAPPING, //
 	RESIDUALS_PREFIX, //
+	UNFILED_PATH("(unfiled)"), //
 	//
 	;
 
