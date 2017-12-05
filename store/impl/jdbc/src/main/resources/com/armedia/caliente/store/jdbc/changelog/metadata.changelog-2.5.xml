@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+	<changeSet author="caliente-jdbc" id="2.5">
+		<preConditions>
+			<changeSetExecuted id="2.0" author="caliente-jdbc" changeLogFile="metadata.changelog.deltas.xml"/>
+		</preConditions>
+
+		<!-- **************************************** -->
+		<!-- Add the "enabled" column to cmf_object   -->
+		<!-- **************************************** -->
+		<addColumn tableName="cmf_object">
+			<column name="object_enabled" type="boolean" remarks="Is this object enabled to be processed?" defaultValueBoolean="true">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
+	</changeSet>
+</databaseChangeLog>
