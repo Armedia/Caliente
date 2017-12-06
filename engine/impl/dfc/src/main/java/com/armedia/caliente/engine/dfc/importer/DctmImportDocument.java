@@ -24,8 +24,6 @@ import com.armedia.caliente.engine.dfc.DctmVdocMember;
 import com.armedia.caliente.engine.dfc.common.DctmDocument;
 import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.engine.importer.ImportReplaceMode;
-import com.armedia.caliente.engine.importer.ImportSetting;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -73,21 +71,6 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 
 	protected DctmImportDocument(DctmImportDelegateFactory factory, CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, IDfSysObject.class, DctmObjectType.DOCUMENT, storedObject);
-	}
-
-	@Override
-	protected void doDeleteExisting(IDfSysObject object) throws DfException {
-		object.destroyAllVersions();
-	}
-
-	@Override
-	protected ImportReplaceMode getReplaceMode(DctmImportContext context) throws ImportException {
-		final String v = context.getSettings().getString(ImportSetting.REPLACE_MODE);
-		try {
-			return ImportReplaceMode.valueOf(v.toUpperCase());
-		} catch (Exception e) {
-			throw new ImportException(String.format("Illegal replace mode specified: [%s]", v), e);
-		}
 	}
 
 	@Override

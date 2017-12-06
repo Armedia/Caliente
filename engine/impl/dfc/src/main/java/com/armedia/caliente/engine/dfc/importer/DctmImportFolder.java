@@ -16,6 +16,7 @@ import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmTranslator;
 import com.armedia.caliente.engine.dfc.common.DctmFolder;
 import com.armedia.caliente.engine.importer.ImportException;
+import com.armedia.caliente.engine.importer.ImportReplaceMode;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -239,5 +240,10 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			return newObject;
 		}
 		return super.newObject(ctx);
+	}
+
+	@Override
+	protected ImportReplaceMode getReplaceMode(DctmImportContext context) throws ImportException {
+		return ImportReplaceMode.UPDATE;
 	}
 }
