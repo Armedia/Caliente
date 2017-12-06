@@ -6,7 +6,6 @@ package com.armedia.caliente.engine.importer;
 
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +30,10 @@ import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
+import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -42,7 +45,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
@@ -70,7 +73,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter, SessionFactory<S> sessionFactory,
 			ImportEngineListener listenerDelegator, ImportState importState,
 			final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-			final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper) {
+			final ImportDelegateFactory<S, W, V, C, ?> delegateFactory) {
 			this.sessionFactory = sessionFactory;
 			this.listenerDelegator = listenerDelegator;
 			this.importState = importState;
@@ -118,8 +121,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						int i = 0;
 						batch: for (CmfObject<V> next : this.batch.contents) {
 							if (failBatch) {
-								this.log.error(String.format("Batch has been failed - will not process [%s](%s) (%s)",
-									next.getLabel(), next.getId(), ImportResult.SKIPPED.name()));
+								this.log.error(String.format("Batch has been failed - will not process %s (%s)",
+									next.getDescription(), ImportResult.SKIPPED.name()));
 								this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
 								this.listenerDelegator.objectImportCompleted(this.importState.jobId, next,
 									ImportOutcome.SKIPPED);
@@ -142,10 +145,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 											ImportResult status = req.getStatus();
 											if (status == null) {
 												failBatch = true;
-												this.log.error(String.format(
-													"The required %s for %s [%s](%s) has not been imported yet",
-													req.getShortLabel(), next.getType().name(), next.getLabel(),
-													next.getId(), req.getStatus().name(), req.getData()));
+												this.log.error(
+													String.format("The required %s for %s has not been imported yet",
+														req.getShortLabel(), next.getDescription()));
 												this.listenerDelegator.objectImportStarted(this.importState.jobId,
 													next);
 												this.listenerDelegator.objectImportCompleted(this.importState.jobId,
@@ -159,9 +161,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 													// Can't continue... a requirement is missing
 													failBatch = true;
 													this.log.error(String.format(
-														"The required %s for %s [%s](%s) was %s, can't import the object (extra info = %s)",
-														req.getShortLabel(), next.getType().name(), next.getLabel(),
-														next.getId(), req.getStatus().name(), req.getData()));
+														"The required %s for %s was %s, can't import the object (extra info = %s)",
+														req.getShortLabel(), next.getDescription(),
+														req.getStatus().name(), req.getData()));
 													this.listenerDelegator.objectImportStarted(this.importState.jobId,
 														next);
 													this.listenerDelegator.objectImportCompleted(this.importState.jobId,
@@ -181,8 +183,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								}
 								try {
 									this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-									// TODO: Transform the loaded object from the intermediate
-									// format into the target format
 									ImportDelegate<?, S, W, V, C, ?, ?> delegate = this.delegateFactory
 										.newImportDelegate(next);
 									final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
@@ -267,19 +267,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 	}
 
-	public static final String TYPE_MAPPER_PREFIX = "cmfTypeMapper.";
-	public static final String TYPE_MAPPER_SELECTOR = "cmfTypeMapperName";
-
 	private static final Pattern MAP_KEY_PARSER = Pattern.compile("^\\s*([^#\\s]+)\\s*#\\s*(.+)\\s*$");
-
-	private static final CmfTypeMapper DEFAULT_TYPE_MAPPER = new CmfTypeMapper() {
-
-		@Override
-		protected String getMapping(String sourceType) {
-			return null;
-		}
-
-	};
 
 	private static enum BatchStatus {
 		//
@@ -490,32 +478,14 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	protected ImportEngine(CmfCrypt crypto) {
-		super(crypto);
+		super(crypto, "import");
 	}
 
 	protected ImportEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
-		super(crypto, supportsDuplicateNames);
+		super(crypto, "import", supportsDuplicateNames);
 	}
 
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
-
-	protected final CmfTypeMapper getTypeMapper(S session, CfgTools cfg) throws Exception {
-		final String typeMapperName = cfg.getString(ImportEngine.TYPE_MAPPER_SELECTOR);
-
-		Map<String, Object> m = new HashMap<>();
-		for (String str : cfg.getSettings()) {
-			if (str.startsWith(ImportEngine.TYPE_MAPPER_PREFIX)) {
-				str = str.substring(ImportEngine.TYPE_MAPPER_PREFIX.length());
-				m.put(str, cfg.getObject(str));
-			}
-		}
-		cfg = new CfgTools(m);
-		CmfTypeMapper mapper = CmfTypeMapper.getTypeMapper(typeMapperName, cfg);
-		if (mapper == null) {
-			mapper = ImportEngine.DEFAULT_TYPE_MAPPER;
-		}
-		return mapper;
-	}
 
 	protected final ExecutorService newExecutor(int threadCount) {
 		return new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
@@ -536,10 +506,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		// is not the same as the previous target repo - we can tell this by
 		// looking at the target mappings.
 		// this.log.info("Clearing all previous mappings");
-		// objectStore.clearAllMappings();
+		// objectStore.clearAllMappings();Object
 
 		final CfgTools configuration = new CfgTools(settings);
-
 		final ImportState importState = new ImportState(output, objectStore, streamStore, configuration);
 		final SessionFactory<S> sessionFactory;
 		try {
@@ -556,19 +525,26 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				throw new ImportException("Failed to obtain the import initialization session", e);
 			}
 
+			Transformer transformer = null;
+			ObjectFilter filter = null;
 			ImportContextFactory<S, W, V, C, ?, ?> contextFactory = null;
 			ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
-			CmfTypeMapper typeMapper = null;
 			try {
 				try {
-					typeMapper = getTypeMapper(baseSession.getWrapped(), configuration);
+					transformer = getTransformer(configuration);
 				} catch (Exception e) {
-					throw new ImportException("Failed to configure the required type mapper", e);
+					throw new ImportException("Failed to initialize the configured object transformations", e);
+				}
+
+				try {
+					filter = getFilter(configuration);
+				} catch (Exception e) {
+					throw new ImportException("Failed to configure the configured object filters", e);
 				}
 
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
-						streamStore, typeMapper, output, warningTracker);
+						streamStore, transformer, output, warningTracker);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}
@@ -585,19 +561,23 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					baseSession = null;
 				}
 
-				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory, typeMapper);
+				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory, transformer,
+					filter);
 			} finally {
 				if (baseSession != null) {
 					baseSession.close();
 				}
-				if (typeMapper != null) {
-					typeMapper.close();
+				if (contextFactory != null) {
+					contextFactory.close();
 				}
 				if (delegateFactory != null) {
 					delegateFactory.close();
 				}
-				if (contextFactory != null) {
-					contextFactory.close();
+				if (filter != null) {
+					filter.close();
+				}
+				if (transformer != null) {
+					transformer.close();
 				}
 			}
 		} finally {
@@ -644,7 +624,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		for (final CmfType t : idMap.keySet()) {
 			final Map<String, String> mappings = idMap.get(t);
-			CmfNameFixer<V> nameFixer = new CmfNameFixer<V>() {
+			CmfNameFixer<CmfValue> nameFixer = new CmfNameFixer<CmfValue>() {
 
 				@Override
 				public boolean supportsType(CmfType type) {
@@ -652,7 +632,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 
 				@Override
-				public String fixName(CmfObject<V> dataObject) throws CmfStorageException {
+				public String fixName(CmfObject<CmfValue> dataObject) throws CmfStorageException {
 					return mappings.get(dataObject.getId());
 				}
 
@@ -662,13 +642,13 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				}
 
 				@Override
-				public void nameFixed(CmfObject<V> dataObject, String oldName, String newName) {
+				public void nameFixed(CmfObject<CmfValue> dataObject, String oldName, String newName) {
 					output.info("Renamed {} with ID[{}] from [{}] to [{}]", dataObject.getType(), dataObject.getId(),
 						oldName, newName);
 				}
 			};
 			output.info("Trying to {} {} {} names...", verb, mappings.size(), t.name());
-			final int fixes = objectStore.fixObjectNames(getTranslator(), nameFixer, t, mappings.keySet());
+			final int fixes = objectStore.fixObjectNames(nameFixer, t, mappings.keySet());
 			output.info("Modified {} {} objects", fixes, t.name());
 		}
 	}
@@ -676,8 +656,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private final CmfObjectCounter<ImportResult> runImportImpl(final ImportState importState,
 		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final CmfTypeMapper typeMapper)
-		throws ImportException, CmfStorageException {
+		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final Transformer transformer,
+		final ObjectFilter filter) throws ImportException, CmfStorageException {
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;
 		final CmfObjectStore<?, ?> objectStore = importState.objectStore;
@@ -713,6 +693,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			objectStore.clearAttributeMappings();
+			loadPrincipalMappings(objectStore.getAttributeMapper(), settings);
 			// Ensure the target path exists
 			{
 				final SessionWrapper<S> rootSession;
@@ -744,7 +725,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();
-				if (MappingTools.loadMap(this.log, settings.getString(ImportSetting.FILENAME_MAP), p)) {
+				if (MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p)) {
 					// Things happen differently here... since we have a limited scope in which
 					// objects require fixing, we don't sweep the whole table, but instead submit
 					// the IDs that we want fixed.
@@ -795,7 +776,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
 				try {
-					objectStore.loadObjects(typeMapper, translator, type, new CmfObjectHandler<V>() {
+					objectStore.loadObjects(type, new CmfObjectHandler<CmfValue>() {
+						private boolean filtered = false;
 						private List<CmfObject<V>> contents = null;
 
 						@Override
@@ -806,29 +788,68 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 						@Override
 						public boolean newHistory(String historyId) throws CmfStorageException {
+							this.filtered = false;
 							this.contents = new LinkedList<>();
 							return true;
 						}
 
 						@Override
-						public boolean handleObject(CmfObject<V> dataObject) {
-							this.contents.add(dataObject);
+						public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
+							// Shortcut... if we're already filtered, just blow past the next
+							// objects
+							if (this.filtered) { return true; }
+
+							if (filter != null) {
+								try {
+									if (!filter.accept(dataObject, objectStore.getAttributeMapper())) {
+										this.filtered = true;
+										return true;
+									}
+								} catch (ObjectFilterException e) {
+									throw new CmfStorageException(
+										String.format("Filtering logic exception while processing %s",
+											dataObject.getDescription()),
+										e);
+								}
+							}
+
+							if (transformer != null) {
+								try {
+									dataObject = transformer.transform(objectStore.getAttributeMapper(), dataObject);
+								} catch (TransformerException e) {
+									throw new CmfStorageException(
+										String.format("Failed to transform %s", dataObject.getDescription()), e);
+								}
+							}
+							this.contents.add(translator.decodeObject(dataObject));
 							return true;
 						}
 
 						@Override
 						public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
+							// Is there anything to process?
 							if ((this.contents == null) || this.contents.isEmpty()) { return true; }
+
+							// Was it filtered?
+							if (this.filtered) {
+								// Mark it as filtered in the import status!!
+								for (CmfObject<V> object : this.contents) {
+									objectStore.setImportStatus(object, ImportResult.SKIPPED,
+										"Excluded by filtering logic");
+								}
+								return true;
+							}
+
+							// Ok... we have stuff to process that wasn't filtered, process it!
 							CmfObject<?> sample = this.contents.get(0);
 							CmfType storedType = sample.getType();
 							ImportStrategy strategy = getImportStrategy(storedType);
 							// We will have already validated that a valid strategy is provided
 							// for all stored types
 							try {
-								executor
-									.submit(new BatchWorker(new Batch(storedType, historyId, this.contents, strategy),
-										workerCounter, sessionFactory, listenerDelegator, importState, contextFactory,
-										delegateFactory, typeMapper));
+								executor.submit(new BatchWorker(
+									new Batch(storedType, historyId, this.contents, strategy), workerCounter,
+									sessionFactory, listenerDelegator, importState, contextFactory, delegateFactory));
 							} finally {
 								this.contents = null;
 							}
@@ -837,8 +858,6 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 						@Override
 						public boolean endTier(int tierId, boolean ok) throws CmfStorageException {
-							// TODO: Wait for the currently-running tier to complete.
-							// i.e. wait until the workers are idle
 							try {
 								workerCounter.waitUntil(0);
 							} catch (InterruptedException e) {

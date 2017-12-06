@@ -29,6 +29,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalFile;
+import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -42,8 +43,21 @@ import com.armedia.caliente.store.tools.MimeTools;
 
 public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
-	protected LocalFileExportDelegate(LocalExportDelegateFactory factory, LocalFile object) throws Exception {
-		super(factory, LocalFile.class, object);
+	protected LocalFileExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, LocalFile object)
+		throws Exception {
+		super(factory, root, LocalFile.class, object);
+	}
+
+	protected UserPrincipal getOwner(Path path) {
+		FileOwnerAttributeView owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
+		if (owner != null) {
+			try {
+				return owner.getOwner();
+			} catch (IOException e) {
+				this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -57,19 +71,17 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		if (p != null) {
 			File parent = new File(p);
 			if (!parent.equals(this.factory.getRoot().getFile())) {
-				ret.add(new LocalFileExportDelegate(this.factory, new LocalFile(this.factory.getRoot(), p)));
+				ret.add(new LocalFileExportDelegate(this.factory, ctx.getSession(),
+					new LocalFile(this.factory.getRoot(), p)));
 			}
 		}
 
 		Path path = this.object.getAbsolute().toPath();
 		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
-		FileOwnerAttributeView owner = posix;
-		if (owner == null) {
-			owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
-		}
 
+		UserPrincipal owner = getOwner(path);
 		if (owner != null) {
-			ret.add(new LocalPrincipalExportDelegate(this.factory, owner.getOwner()));
+			ret.add(new LocalPrincipalExportDelegate(this.factory, ctx.getSession(), owner));
 		}
 
 		if (posix != null) {
@@ -88,8 +100,10 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected int calculateDependencyTier(LocalFile file) throws Exception {
-		return file.getPathCount() - 1;
+	protected int calculateDependencyTier(LocalRoot root, LocalFile file) throws Exception {
+		if (file.isFolder()) { return file.getPathCount() - 1; }
+		// TODO: Symbolic links should be handled properly here
+		return 0;
 	}
 
 	@Override
@@ -108,10 +122,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		BasicFileAttributeView basic = Files.getFileAttributeView(path, BasicFileAttributeView.class);
 		AclFileAttributeView acl = Files.getFileAttributeView(path, AclFileAttributeView.class);
 		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
-		FileOwnerAttributeView owner = posix;
-		if (owner == null) {
-			owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
-		}
 
 		// Ok... we have the attribute views, export the information
 		try {
@@ -141,14 +151,14 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				object.setProperty(versionTreeRoot);
 			}
 
+			UserPrincipal owner = getOwner(path);
 			if (owner != null) {
-				UserPrincipal ownerUser = owner.getOwner();
 				att = new CmfAttribute<>(IntermediateAttribute.CREATED_BY, CmfDataType.STRING, false);
-				att.setValue(new CmfValue(ownerUser.getName()));
+				att.setValue(new CmfValue(owner.getName()));
 				object.setAttribute(att);
 
 				att = new CmfAttribute<>(IntermediateAttribute.OWNER, CmfDataType.STRING, false);
-				att.setValue(new CmfValue(ownerUser.getName()));
+				att.setValue(new CmfValue(owner.getName()));
 				object.setAttribute(att);
 			}
 
@@ -259,7 +269,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected CmfType calculateType(LocalFile f) throws Exception {
+	protected CmfType calculateType(LocalRoot root, LocalFile f) throws Exception {
 		File F = f.getAbsolute();
 		if (F.isFile()) { return CmfType.DOCUMENT; }
 		if (F.isDirectory()) { return CmfType.FOLDER; }
@@ -267,33 +277,27 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	@Override
-	protected String calculateLabel(LocalFile object) throws Exception {
+	protected String calculateLabel(LocalRoot root, LocalFile object) throws Exception {
 		return object.getPortableFullPath();
 	}
 
 	@Override
-	protected String calculateObjectId(LocalFile object) throws Exception {
+	protected String calculateObjectId(LocalRoot root, LocalFile object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateHistoryId(LocalFile object) throws Exception {
-		if (object.getAbsolute().isDirectory()) { return String.format("%08X", object.getPathCount()); }
-		return super.calculateHistoryId(object);
-	}
-
-	@Override
-	protected String calculateSearchKey(LocalFile object) throws Exception {
+	protected String calculateSearchKey(LocalRoot root, LocalFile object) throws Exception {
 		return object.getSafePath();
 	}
 
 	@Override
-	protected String calculateName(LocalFile object) throws Exception {
+	protected String calculateName(LocalRoot root, LocalFile object) throws Exception {
 		return object.getName();
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(LocalFile object) throws Exception {
+	protected boolean calculateHistoryCurrent(LocalRoot root, LocalFile object) throws Exception {
 		// Always true
 		return true;
 	}

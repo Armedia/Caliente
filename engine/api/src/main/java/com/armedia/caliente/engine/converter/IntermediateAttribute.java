@@ -42,6 +42,7 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	VERSION_SERIES_ID(PropertyIds.VERSION_SERIES_ID, CmfDataType.ID),
 	VERSION_SERIES_CHECKED_OUT_BY(PropertyIds.VERSION_SERIES_CHECKED_OUT_BY, CmfDataType.STRING),
 	CHECKIN_COMMENT(PropertyIds.CHECKIN_COMMENT, CmfDataType.STRING),
+	SECONDARY_TYPE_IDS(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, CmfDataType.STRING),
 
 	// Non-CMIS attributes
 	SUPER_NAME(CmfDataType.STRING),
@@ -63,8 +64,12 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	VERSION_ANTECEDENT_ID(CmfDataType.ID),
 	USER_SOURCE(CmfDataType.STRING),
 	GROUP_SOURCE(CmfDataType.STRING),
+	UNFILED_FOLDER(CmfDataType.STRING),
 	//
 	;
+
+	private static final Map<String, IntermediateAttribute> MAPPINGS = Tools
+		.freezeMap(MappingManager.createMappings(IntermediateAttribute.class, IntermediateAttribute.values()));
 
 	private final String name;
 	public final CmfDataType type;
@@ -98,22 +103,8 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 		return this.name;
 	}
 
-	private static volatile Map<String, IntermediateAttribute> MAPPINGS = null;
-
-	private static void initMappings() {
-		if (IntermediateAttribute.MAPPINGS == null) {
-			synchronized (IntermediateAttribute.class) {
-				if (IntermediateAttribute.MAPPINGS == null) {
-					IntermediateAttribute.MAPPINGS = Tools.freezeMap(
-						MappingManager.createMappings(IntermediateAttribute.class, IntermediateAttribute.values()));
-				}
-			}
-		}
-	}
-
 	public static IntermediateAttribute decode(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
-		IntermediateAttribute.initMappings();
 		IntermediateAttribute ret = IntermediateAttribute.MAPPINGS.get(name);
 		if (ret == null) { throw new IllegalArgumentException(
 			String.format("Failed to decode [%s] into a valid intermediate attribute", name)); }

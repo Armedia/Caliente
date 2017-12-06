@@ -30,11 +30,11 @@ public class ShptExportDelegateFactory
 		throws Exception {
 		switch (type) {
 			case USER:
-				return new ShptUser(this, session.getUser(Tools.decodeInteger(searchKey)));
+				return new ShptUser(this, session, session.getUser(Tools.decodeInteger(searchKey)));
 			case GROUP:
-				return new ShptGroup(this, session.getGroup(Tools.decodeInteger(searchKey)));
+				return new ShptGroup(this, session, session.getGroup(Tools.decodeInteger(searchKey)));
 			case FOLDER:
-				return new ShptFolder(this, session.getFolder(searchKey));
+				return new ShptFolder(this, session, session.getFolder(searchKey));
 			case DOCUMENT:
 				return ShptFile.locateFile(this, session, searchKey);
 			default:

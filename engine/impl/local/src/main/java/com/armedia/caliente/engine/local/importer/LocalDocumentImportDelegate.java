@@ -93,10 +93,8 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 			try {
 				src = h.getFile();
 			} catch (IOException e) {
-				throw new ImportException(
-					String.format("Failed to obtain the content file for DOCUMENT (%s)[%s], content [%s]",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), info),
-					e);
+				throw new ImportException(String.format("Failed to obtain the content file for %s, content [%s]",
+					this.cmfObject.getDescription(), info), e);
 			}
 			if (src != null) {
 				try {

@@ -19,23 +19,23 @@ import com.independentsoft.share.User;
 
 public class ShptGroup extends ShptSecurityObject<Group> {
 
-	public ShptGroup(ShptExportDelegateFactory factory, Group object) throws Exception {
-		super(factory, Group.class, object);
+	public ShptGroup(ShptExportDelegateFactory factory, ShptSession session, Group object) throws Exception {
+		super(factory, session, Group.class, object);
 	}
 
 	@Override
-	protected String calculateLabel(Group object) throws Exception {
+	protected String calculateLabel(ShptSession session, Group object) throws Exception {
 		return object.getLoginName();
 	}
 
 	@Override
-	protected int calculateNumericId(Group object) {
+	protected int calculateNumericId(ShptSession session, Group object) {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateHistoryId(Group object) throws Exception {
-		return calculateObjectId(object);
+	protected String calculateHistoryId(ShptSession session, Group object) throws Exception {
+		return calculateObjectId(session, object);
 	}
 
 	@Override
@@ -110,13 +110,13 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			for (User u : l) {
 				if (u.getType() == PrincipalType.USER) {
 					try {
-						ret.add(new ShptUser(this.factory, u));
+						ret.add(new ShptUser(this.factory, service, u));
 					} catch (IncompleteDataException e) {
 						this.log.warn(e.getMessage());
 					}
 				} else {
 					try {
-						ret.add(new ShptGroup(this.factory, service.getGroup(u.getId())));
+						ret.add(new ShptGroup(this.factory, service, service.getGroup(u.getId())));
 					} catch (ShptSessionException e) {
 						this.log.warn(String.format("Failed to locate group with ID [%d]", u.getId()));
 					}
@@ -131,7 +131,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 				switch (u.getType()) {
 					case USER:
 						try {
-							owner = new ShptUser(this.factory, u);
+							owner = new ShptUser(this.factory, service, u);
 						} catch (IncompleteDataException e) {
 							this.log.warn(e.getMessage());
 						}
@@ -140,7 +140,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 					case SECURITY_GROUP:
 						if (this.object.getId() != u.getId()) {
 							try {
-								owner = new ShptGroup(this.factory, service.getGroup(u.getId()));
+								owner = new ShptGroup(this.factory, service, service.getGroup(u.getId()));
 							} catch (ShptSessionException e) {
 								// Did not find an owner group
 								if (this.log.isDebugEnabled()) {
@@ -167,7 +167,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	}
 
 	@Override
-	protected String calculateName(Group group) throws Exception {
+	protected String calculateName(ShptSession session, Group group) throws Exception {
 		return group.getLoginName();
 	}
 }

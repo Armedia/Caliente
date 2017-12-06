@@ -237,8 +237,7 @@ public abstract class AbstractCalienteMain_import extends
 	@Override
 	public final void objectImportStarted(UUID jobId, CmfObject<?> object) {
 		showProgress(object.getType());
-		this.console.info(String.format("Import started for %s [%s](%s)", object.getType().name(), object.getLabel(),
-			object.getId()));
+		this.console.info(String.format("Import started for %s", object.getDescription()));
 	}
 
 	@Override
@@ -256,8 +255,8 @@ public abstract class AbstractCalienteMain_import extends
 				suffix = "";
 				break;
 		}
-		this.console.info(String.format("Import completed for %s [%s](%s): %s%s", object.getType().name(),
-			object.getLabel(), object.getId(), outcome.getResult().name(), suffix));
+		this.console.info(String.format("Import completed for %s: %s%s", object.getDescription(),
+			outcome.getResult().name(), suffix));
 		showProgress(object.getType());
 	}
 
@@ -265,9 +264,7 @@ public abstract class AbstractCalienteMain_import extends
 	public final void objectImportFailed(UUID jobId, CmfObject<?> object, Throwable thrown) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
-		this.console.info(
-			String.format("Import failed for %s [%s](%s)", object.getType().name(), object.getLabel(), object.getId()),
-			thrown);
+		this.console.info(String.format("Import failed for %s", object.getDescription()), thrown);
 		showProgress(object.getType());
 	}
 

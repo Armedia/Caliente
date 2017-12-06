@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Property;
+import org.apache.chemistry.opencmis.client.api.Session;
 
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.xds.CmisTranslator;
@@ -16,8 +17,9 @@ import com.armedia.caliente.store.CmfValue;
 
 public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExportDelegate<T> {
 
-	protected CmisObjectDelegate(CmisExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected CmisObjectDelegate(CmisExportDelegateFactory factory, Session session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	@Override
@@ -47,28 +49,28 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 	}
 
 	@Override
-	protected String calculateLabel(T obj) throws Exception {
+	protected String calculateLabel(Session session, T obj) throws Exception {
 		CmisObject o = CmisObject.class.cast(obj);
 		return String.format("[%s|%s]", o.getType().getId(), o.getName());
 	}
 
 	@Override
-	protected String calculateHistoryId(T object) throws Exception {
+	protected String calculateHistoryId(Session session, T object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected final String calculateObjectId(T object) throws Exception {
+	protected final String calculateObjectId(Session session, T object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object) throws Exception {
+	protected final String calculateSearchKey(Session session, T object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected int calculateDependencyTier(T object) throws Exception {
+	protected int calculateDependencyTier(Session session, T object) throws Exception {
 		return 0;
 	}
 }

@@ -46,10 +46,10 @@ import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.alfresco.bi.model.AlfrescoDataType;
-import com.armedia.caliente.engine.alfresco.bi.model.AlfrescoSchema;
-import com.armedia.caliente.engine.alfresco.bi.model.AlfrescoType;
-import com.armedia.caliente.engine.alfresco.bi.model.SchemaAttribute;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoDataType;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.BinaryEncoding;
 import com.armedia.commons.utilities.Tools;

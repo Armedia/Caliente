@@ -6,10 +6,14 @@ dfc.keystore
 *.log
 *.manifest.csv
 *.err
-cmsmf
 caliente
 test-fs
 *Model.xml
 *map.xml
 *.properties
 *.sh
+import-*.xml
+export-*.xml
+test-*.xml
+caliente-*.xml
+alfresco-*.xml

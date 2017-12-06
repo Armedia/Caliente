@@ -1,0 +1,17 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<comment>Documentum-to-CMIS attribute additional copies</comment>
+	<entry key="cm:author">dctm:authors</entry>
+	<entry key="cm:description">dctm:log_entry</entry>
+	<entry key="cm:subjectline">dctm:message_subject</entry>
+	<entry key="cm:name">dctm:object_name</entry>
+	<entry key="cm:owner">dctm:owner_name</entry>
+	<entry key="cm:accessed">dctm:r_access_date</entry>
+	<entry key="cm:created">dctm:r_creation_date</entry>
+	<entry key="cm:creator">dctm:r_creator_name</entry>
+	<entry key="cm:modifier">dctm:r_modifier</entry>
+	<entry key="cm:modified">dctm:r_modify_date</entry>
+	<entry key="cm:sentdate">dctm:sent_date</entry>
+	<entry key="cm:title">dctm:title</entry>
+</properties>

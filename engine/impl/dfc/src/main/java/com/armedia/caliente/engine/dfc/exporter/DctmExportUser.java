@@ -18,16 +18,16 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 
-	protected DctmExportUser(DctmExportDelegateFactory factory, IDfUser user) throws Exception {
-		super(factory, IDfUser.class, user);
+	protected DctmExportUser(DctmExportDelegateFactory factory, IDfSession session, IDfUser user) throws Exception {
+		super(factory, session, IDfUser.class, user);
 	}
 
-	DctmExportUser(DctmExportDelegateFactory factory, IDfPersistentObject user) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfUser.class, user));
+	DctmExportUser(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject user) throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfUser.class, user));
 	}
 
 	@Override
-	protected String calculateLabel(IDfUser user) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfUser user) throws Exception {
 		return user.getUserName();
 	}
 
@@ -63,7 +63,7 @@ public class DctmExportUser extends DctmExportDelegate<IDfUser> {
 	}
 
 	@Override
-	protected String calculateName(IDfUser user) throws Exception {
+	protected String calculateName(IDfSession session, IDfUser user) throws Exception {
 		return user.getUserLoginName();
 	}
 }

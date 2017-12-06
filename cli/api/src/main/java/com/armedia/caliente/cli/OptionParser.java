@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
@@ -99,8 +98,6 @@ public class OptionParser {
 	public static final Character DEFAULT_VALUE_SEPARATOR = TokenLoader.DEFAULT_VALUE_SEPARATOR;
 
 	protected static final Pattern DEFAULT_COMMAND_PATTERN = Pattern.compile("^[\\w&&[^\\d]]\\w*$");
-
-	private static final String VALUE_SEPARATOR_PATTERN = "(?<!\\\\)\\Q%s\\E";
 
 	private static final List<String> NO_POSITIONALS = Collections.emptyList();
 
@@ -353,12 +350,7 @@ public class OptionParser {
 							}
 							values.add(str);
 						} else {
-							final Pattern valueSplitter = Pattern
-								.compile(String.format(OptionParser.VALUE_SEPARATOR_PATTERN, sep));
-							Matcher m = valueSplitter.matcher(str);
-							int start = 0;
-							nextValue: while (m.find()) {
-								String nextValue = str.substring(start, m.start());
+							nextValue: for (String nextValue : Tools.splitEscaped(sep, str)) {
 								if (!currentOption.isValueAllowed(nextValue)) {
 									if (badValues == null) {
 										badValues = new TreeSet<>();
@@ -368,18 +360,7 @@ public class OptionParser {
 								}
 
 								values.add(currentOption.canonicalizeValue(nextValue));
-								start = m.end();
 							}
-
-							// Add the last value - or total value if there were no splitters
-							String lastValue = str.substring(start);
-							if (!currentOption.isValueAllowed(lastValue)) {
-								if (badValues == null) {
-									badValues = new TreeSet<>();
-								}
-								badValues.add(lastValue);
-							}
-							values.add(lastValue);
 						}
 
 						// If there are invalid values, then we raise the exception

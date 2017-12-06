@@ -45,8 +45,8 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 			tgt = h.getFile();
 		} catch (IOException e) {
 			// Failed to get the file, so we can't handle this
-			throw new CmfStorageException(String.format("Failed to locate the location for the FOLDER (%s)[%s]",
-				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new CmfStorageException(
+				String.format("Failed to locate the location for the %s", this.cmfObject.getDescription()), e);
 		}
 		File dir = tgt.getParentFile();
 		if (dir != null) {
@@ -72,8 +72,8 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 			XmlImportDelegateFactory.marshalXml(f, out);
 			ok = true;
 		} catch (JAXBException e) {
-			throw new ImportException(String.format("Failed to marshal the XML for folder [%s](%s) to [%s]",
-				this.cmfObject.getLabel(), this.cmfObject.getId(), tgt), e);
+			throw new ImportException(
+				String.format("Failed to marshal the XML for %s to [%s]", this.cmfObject.getDescription(), tgt), e);
 		} finally {
 			IOUtils.closeQuietly(out);
 			if (!ok) {

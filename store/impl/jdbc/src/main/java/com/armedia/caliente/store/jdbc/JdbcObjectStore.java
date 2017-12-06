@@ -50,9 +50,7 @@ import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfTreeScanner;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
@@ -146,8 +144,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> Long storeObject(JdbcOperation operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException {
+	protected Long storeObject(JdbcOperation operation, CmfObject<CmfValue> object) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final CmfType objectType = object.getType();
 		final String objectId = JdbcTools.composeDatabaseId(object);
@@ -157,17 +154,33 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		Collection<Object[]> propertyParameters = new ArrayList<>();
 		Collection<Object[]> propertyValueParameters = new ArrayList<>();
 		Collection<Object[]> parentParameters = new ArrayList<>();
+		Collection<Object[]> secondariesParameters = new ArrayList<>();
 		Object[] attData = new Object[7];
 		Object[] attValue = new Object[5];
 		Object[] propData = new Object[4];
 		Object[] parentData = new Object[3];
+		Object[] secondariesData = new Object[3];
 
 		try {
 			QueryRunner qr = JdbcTools.getQueryRunner();
 
-			// First, set up the parents
-			parentData[0] = objectId;
+			// First, the secondary subtypes
+			secondariesData[0] = objectId;
 			int i = 0;
+			for (String s : object.getSecondarySubtypes()) {
+				s = StringUtils.strip(s);
+				if (StringUtils.isEmpty(s)) {
+					continue;
+				}
+				secondariesData[1] = i;
+				secondariesData[2] = s;
+				secondariesParameters.add(secondariesData.clone());
+				i++;
+			}
+
+			// Then, set up the parents
+			parentData[0] = objectId;
+			i = 0;
 			for (CmfObjectRef parent : object.getParentReferences()) {
 				parentData[1] = i;
 				parentData[2] = JdbcTools.composeDatabaseId(parent);
@@ -181,8 +194,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			attData[5] = false; // Explicitly hardcoded
 			attValue[0] = objectId; // This should never change within the loop
 			final Map<String, String> encodedNames = new HashMap<>();
-			for (final CmfAttribute<V> attribute : object.getAttributes()) {
-				final String name = translator.encodeAttributeName(object.getType(), attribute.getName());
+			for (final CmfAttribute<CmfValue> attribute : object.getAttributes()) {
+				final String name = attribute.getName();
 				final String duplicate = encodedNames.put(name, attribute.getName());
 				if (duplicate != null) {
 					this.log.warn(String.format(
@@ -191,7 +204,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					continue;
 				}
 				final boolean repeating = attribute.isRepeating();
-				final String type = translator.encodeValue(attribute.getType());
+				final String type = attribute.getType().name();
 
 				attData[1] = name;
 				attData[2] = name;
@@ -208,20 +221,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				attValue[1] = name; // This never changes inside this next loop
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				final CmfValueCodec<V> codec = translator.getCodec(attribute.getType());
 				final CmfValueSerializer serializer = CmfValueSerializer.get(attribute.getType());
 				if (serializer != null) {
-					for (V value : attribute) {
-						CmfValue encoded = codec.encodeValue(value);
+					for (CmfValue value : attribute) {
 						attValue[2] = v;
-						attValue[3] = encoded.isNull();
-						if (!encoded.isNull()) {
+						attValue[3] = value.isNull();
+						if (!value.isNull()) {
 							try {
-								attValue[4] = serializer.serialize(encoded);
+								attValue[4] = serializer.serialize(value);
 							} catch (ParseException e) {
 								throw new CmfStorageException(
 									String.format("Failed to encode value #%d for attribute [%s::%s]: %s", v,
-										attValue[0], attValue[1], encoded),
+										attValue[0], attValue[1], value),
 									e);
 							}
 						} else {
@@ -236,7 +247,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			// Then, the properties
 			encodedNames.clear();
 			propData[0] = objectId; // This should never change within the loop
-			for (final CmfProperty<V> property : object.getProperties()) {
+			for (final CmfProperty<CmfValue> property : object.getProperties()) {
 				final String name = property.getName();
 				final String duplicate = encodedNames.put(name, property.getName());
 				if (duplicate != null) {
@@ -245,7 +256,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						name, property.getName(), duplicate));
 					continue;
 				}
-				final String type = translator.encodeValue(property.getType());
+				final String type = property.getType().name();
 
 				propData[1] = name;
 				propData[2] = type;
@@ -257,20 +268,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				attValue[1] = name; // This never changes inside this next loop
 				int v = 0;
 				// No special treatment, simply dump out all the values
-				final CmfValueCodec<V> codec = translator.getCodec(property.getType());
 				final CmfValueSerializer serializer = CmfValueSerializer.get(property.getType());
 				if (serializer != null) {
-					for (V value : property) {
-						CmfValue encoded = codec.encodeValue(value);
+					for (CmfValue value : property) {
 						attValue[2] = v;
-						attValue[3] = encoded.isNull();
-						if (!encoded.isNull()) {
+						attValue[3] = value.isNull();
+						if (!value.isNull()) {
 							try {
-								attValue[4] = serializer.serialize(encoded);
+								attValue[4] = serializer.serialize(value);
 							} catch (ParseException e) {
 								throw new CmfStorageException(
 									String.format("Failed to encode value #%d for property [%s::%s]: %s", v,
-										attValue[0], attValue[1], encoded),
+										attValue[0], attValue[1], value),
 									e);
 							}
 						} else {
@@ -288,6 +297,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
 				object.getDependencyTier(), object.getHistoryId(), object.isHistoryCurrent(), object.getProductName(),
 				object.getProductVersion());
+			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_SECONDARIES), JdbcTools.HANDLER_NULL,
+				secondariesParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_PARENTS), JdbcTools.HANDLER_NULL,
 				parentParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_ATTRIBUTE), JdbcTools.HANDLER_NULL,
@@ -325,38 +336,40 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> CmfObject<V> loadHeadObject(JdbcOperation operation, CmfTypeMapper typeMapper,
-		CmfAttributeTranslator<V> translator, CmfObject<V> sample) throws CmfStorageException {
+	protected CmfObject<CmfValue> loadHeadObject(JdbcOperation operation, CmfType type, String historyId)
+		throws CmfStorageException {
 		final Connection connection = operation.getConnection();
-		final CmfType type = sample.getType();
 		try {
 			PreparedStatement objectPS = null;
+			PreparedStatement secondariesPS = null;
+			PreparedStatement parentsPS = null;
 			PreparedStatement attributePS = null;
 			PreparedStatement attributeValuePS = null;
 			PreparedStatement propertyPS = null;
 			PreparedStatement propertyValuePS = null;
-			PreparedStatement parentsPS = null;
 			try {
 				objectPS = connection
 					.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECT_HISTORY_CURRENT_BY_HISTORY_ID));
+				secondariesPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_SECONDARIES));
+				parentsPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PARENT_IDS));
 				attributePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTES));
 				attributeValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTE_VALUES));
 				propertyPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTIES));
 				propertyValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTY_VALUES));
-				parentsPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PARENT_IDS));
 
 				ResultSet objectRS = null;
+				ResultSet secondariesRS = null;
+				ResultSet parentsRS = null;
 				ResultSet attributeRS = null;
 				ResultSet propertyRS = null;
 				ResultSet valueRS = null;
-				ResultSet parentsRS = null;
 
-				objectPS.setString(1, sample.getType().name());
-				objectPS.setString(2, sample.getHistoryId());
+				objectPS.setString(1, type.name());
+				objectPS.setString(2, historyId);
 				objectRS = objectPS.executeQuery();
 				try {
 					while (objectRS.next()) {
-						final CmfObject<V> obj;
+						final CmfObject<CmfValue> obj;
 						try {
 							final int objNum = objectRS.getInt("object_number");
 							final String objId = objectRS.getString("object_id");
@@ -367,10 +380,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 									objLabel, objId));
 							}
 
+							secondariesPS.setString(1, objId);
+							secondariesRS = secondariesPS.executeQuery();
+
 							parentsPS.setString(1, objId);
 							parentsRS = parentsPS.executeQuery();
 
-							obj = loadObject(translator, objectRS, parentsRS);
+							obj = loadObject(objectRS, parentsRS, secondariesRS);
 							if (this.log.isTraceEnabled()) {
 								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 							} else if (this.log.isDebugEnabled()) {
@@ -382,21 +398,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							attributePS.setString(1, objId);
 							attributeRS = attributePS.executeQuery();
 							try {
-								loadAttributes(translator, attributeRS, obj);
+								loadAttributes(attributeRS, obj);
 							} finally {
 								JdbcTools.closeQuietly(attributeRS);
 							}
 
 							attributeValuePS.clearParameters();
 							attributeValuePS.setString(1, objId);
-							for (CmfAttribute<V> att : obj.getAttributes()) {
-								// We need to re-encode, since that's the value that will be
-								// referenced in the DB
-								attributeValuePS.setString(2, translator.encodeAttributeName(type, att.getName()));
+							for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
+								attributeValuePS.setString(2, att.getName());
 								valueRS = attributeValuePS.executeQuery();
 								try {
-									loadValues(translator.getCodec(att.getType()),
-										CmfValueSerializer.get(att.getType()), valueRS, att);
+									loadValues(CmfValueSerializer.get(att.getType()), valueRS, att);
 								} finally {
 									JdbcTools.closeQuietly(valueRS);
 								}
@@ -406,21 +419,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							propertyPS.setString(1, objId);
 							propertyRS = propertyPS.executeQuery();
 							try {
-								loadProperties(translator, propertyRS, obj);
+								loadProperties(propertyRS, obj);
 							} finally {
 								JdbcTools.closeQuietly(propertyRS);
 							}
 
 							propertyValuePS.clearParameters();
 							propertyValuePS.setString(1, objId);
-							for (CmfProperty<V> prop : obj.getProperties()) {
-								// We need to re-encode, since that's the value that will be
-								// referenced in the DB
+							for (CmfProperty<CmfValue> prop : obj.getProperties()) {
 								propertyValuePS.setString(2, prop.getName());
 								valueRS = propertyValuePS.executeQuery();
 								try {
-									loadValues(translator.getCodec(prop.getType()),
-										CmfValueSerializer.get(prop.getType()), valueRS, prop);
+									loadValues(CmfValueSerializer.get(prop.getType()), valueRS, prop);
 								} finally {
 									JdbcTools.closeQuietly(valueRS);
 								}
@@ -432,15 +442,17 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					}
 					return null;
 				} finally {
-					JdbcTools.closeQuietly(objectRS);
 					JdbcTools.closeQuietly(parentsRS);
+					JdbcTools.closeQuietly(secondariesRS);
+					JdbcTools.closeQuietly(objectRS);
 				}
 			} finally {
-				JdbcTools.closeQuietly(parentsPS);
 				JdbcTools.closeQuietly(propertyValuePS);
 				JdbcTools.closeQuietly(propertyPS);
 				JdbcTools.closeQuietly(attributeValuePS);
 				JdbcTools.closeQuietly(attributePS);
+				JdbcTools.closeQuietly(parentsPS);
+				JdbcTools.closeQuietly(secondariesPS);
 				JdbcTools.closeQuietly(objectPS);
 			}
 		} catch (SQLException e) {
@@ -450,20 +462,20 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> int loadObjects(JdbcOperation operation, CmfAttributeTranslator<V> translator, final CmfType type,
-		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException {
-
+	protected int loadObjects(JdbcOperation operation, final CmfType type, Collection<String> ids,
+		CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
 
 		Connection connection = operation.getConnection();
 		try {
 			PreparedStatement objectPS = null;
+			PreparedStatement secondariesPS = null;
+			PreparedStatement parentsPS = null;
 			PreparedStatement attributePS = null;
 			PreparedStatement attributeValuePS = null;
 			PreparedStatement propertyPS = null;
 			PreparedStatement propertyValuePS = null;
-			PreparedStatement parentsPS = null;
 			try {
 				boolean limitByIDs = false;
 				if (ids == null) {
@@ -473,16 +485,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECTS_BY_ID));
 				}
 
+				secondariesPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_SECONDARIES));
+				parentsPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PARENT_IDS));
 				attributePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTES));
 				attributeValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_ATTRIBUTE_VALUES));
 				propertyPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTIES));
 				propertyValuePS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PROPERTY_VALUES));
-				parentsPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_PARENT_IDS));
 
 				ResultSet objectRS = null;
+				ResultSet secondariesRS = null;
+				ResultSet parentsRS = null;
 				ResultSet attributeRS = null;
 				ResultSet propertyRS = null;
-				ResultSet parentsRS = null;
 				ResultSet valueRS = null;
 
 				if (!limitByIDs) {
@@ -508,7 +522,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				int ret = 0;
 				try {
 					while (objectRS.next()) {
-						final CmfObject<V> obj;
+						final CmfObject<CmfValue> obj;
 						try {
 							final int objNum = objectRS.getInt("object_number");
 							final int tierId = objectRS.getInt("tier_id");
@@ -573,10 +587,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 									objLabel, objId));
 							}
 
+							secondariesPS.setString(1, objId);
+							secondariesRS = secondariesPS.executeQuery();
+
 							parentsPS.setString(1, objId);
 							parentsRS = parentsPS.executeQuery();
 
-							obj = loadObject(translator, objectRS, parentsRS);
+							obj = loadObject(objectRS, parentsRS, secondariesRS);
 							if (this.log.isTraceEnabled()) {
 								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
 							} else if (this.log.isDebugEnabled()) {
@@ -588,21 +605,20 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							attributePS.setString(1, objId);
 							attributeRS = attributePS.executeQuery();
 							try {
-								loadAttributes(translator, attributeRS, obj);
+								loadAttributes(attributeRS, obj);
 							} finally {
 								JdbcTools.closeQuietly(attributeRS);
 							}
 
 							attributeValuePS.clearParameters();
 							attributeValuePS.setString(1, objId);
-							for (CmfAttribute<V> att : obj.getAttributes()) {
+							for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
 								// We need to re-encode, since that's the value that will be
 								// referenced in the DB
-								attributeValuePS.setString(2, translator.encodeAttributeName(type, att.getName()));
+								attributeValuePS.setString(2, att.getName());
 								valueRS = attributeValuePS.executeQuery();
 								try {
-									loadValues(translator.getCodec(att.getType()),
-										CmfValueSerializer.get(att.getType()), valueRS, att);
+									loadValues(CmfValueSerializer.get(att.getType()), valueRS, att);
 								} finally {
 									JdbcTools.closeQuietly(valueRS);
 								}
@@ -612,31 +628,31 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							propertyPS.setString(1, objId);
 							propertyRS = propertyPS.executeQuery();
 							try {
-								loadProperties(translator, propertyRS, obj);
+								loadProperties(propertyRS, obj);
 							} finally {
 								JdbcTools.closeQuietly(propertyRS);
 							}
 
 							propertyValuePS.clearParameters();
 							propertyValuePS.setString(1, objId);
-							for (CmfProperty<V> prop : obj.getProperties()) {
+							for (CmfProperty<CmfValue> prop : obj.getProperties()) {
 								// We need to re-encode, since that's the value that will be
 								// referenced in the DB
 								propertyValuePS.setString(2, prop.getName());
 								valueRS = propertyValuePS.executeQuery();
 								try {
-									loadValues(translator.getCodec(prop.getType()),
-										CmfValueSerializer.get(prop.getType()), valueRS, prop);
+									loadValues(CmfValueSerializer.get(prop.getType()), valueRS, prop);
 								} finally {
 									JdbcTools.closeQuietly(valueRS);
 								}
 							}
 						} catch (SQLException e) {
 							// TODO: WTF?!?! Why is it detecting this when it's clearly impossible?
-							if (!handler.handleException(e)) {
-								handlerExceptionUnhandled(e);
-							}
+							if (!handler.handleException(e)) { throw handlerExceptionUnhandled(e); }
 							continue;
+						} finally {
+							// Just in case...
+							JdbcTools.closeQuietly(valueRS);
 						}
 
 						try {
@@ -679,15 +695,17 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							currentTier = null;
 						}
 					}
-					JdbcTools.closeQuietly(objectRS);
 					JdbcTools.closeQuietly(parentsRS);
+					JdbcTools.closeQuietly(secondariesRS);
+					JdbcTools.closeQuietly(objectRS);
 				}
 			} finally {
-				JdbcTools.closeQuietly(parentsPS);
 				JdbcTools.closeQuietly(propertyValuePS);
 				JdbcTools.closeQuietly(propertyPS);
 				JdbcTools.closeQuietly(attributeValuePS);
 				JdbcTools.closeQuietly(attributePS);
+				JdbcTools.closeQuietly(parentsPS);
+				JdbcTools.closeQuietly(secondariesPS);
 				JdbcTools.closeQuietly(objectPS);
 			}
 		} catch (SQLException e) {
@@ -702,8 +720,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> int fixObjectNames(final JdbcOperation operation, CmfAttributeTranslator<V> translator,
-		final CmfNameFixer<V> nameFixer, CmfType type, Set<String> ids) throws CmfStorageException {
+	protected int fixObjectNames(final JdbcOperation operation, final CmfNameFixer<CmfValue> nameFixer, CmfType type,
+		Set<String> ids) throws CmfStorageException {
 		final AtomicInteger result = new AtomicInteger(0);
 		CmfType[] types = {
 			type
@@ -716,7 +734,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				continue;
 			}
 
-			loadObjects(operation, translator, currentType, ids, new CmfObjectHandler<V>() {
+			loadObjects(operation, currentType, ids, new CmfObjectHandler<CmfValue>() {
 				@Override
 				public boolean newTier(int tierNumber) throws CmfStorageException {
 					return true;
@@ -728,7 +746,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 
 				@Override
-				public boolean handleObject(CmfObject<V> obj) throws CmfStorageException {
+				public boolean handleObject(CmfObject<CmfValue> obj) throws CmfStorageException {
 					final String oldName = obj.getName();
 					final String newName = nameFixer.fixName(obj);
 					if ((newName != null) && !Tools.equals(oldName, newName)) {
@@ -738,9 +756,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							nameFixer.nameFixed(obj, oldName, newName);
 						} catch (Exception e) {
 							// Just log it
-							JdbcObjectStore.this.log.warn(String.format(
-								"Exception caught while invoking the nameFixed() callback for %s [%s](%s)",
-								obj.getType().name(), obj.getLabel(), obj.getId()), e);
+							JdbcObjectStore.this.log
+								.warn(String.format("Exception caught while invoking the nameFixed() callback for %s",
+									obj.getDescription()), e);
 						}
 					}
 					return true;
@@ -1008,7 +1026,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 								continue;
 							}
 							try {
-								ret.put(CmfType.decodeString(t), rs.getLong(2));
+								ret.put(CmfType.valueOf(t), rs.getLong(2));
 							} catch (IllegalArgumentException e) {
 								JdbcObjectStore.this.log
 									.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
@@ -1050,7 +1068,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				CmfType currentType = null;
 				Set<String> names = null;
 				while (rs.next()) {
-					final CmfType newType = CmfType.decodeString(rs.getString("object_type"));
+					final CmfType newType = CmfType.valueOf(rs.getString("object_type"));
 					if (newType != currentType) {
 						names = new TreeSet<>();
 						ret.put(newType, names);
@@ -1116,9 +1134,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected final void clearAllObjects(JdbcOperation operation) throws CmfStorageException {
 		// Allow for subclasses to implement optimized clearing operations
-		if (optimizedClearAllObjects(operation)) { return; }
+		if (optimizedClearAllObjects(operation)) {
+			resetSequences(operation.getConnection());
+			return;
+		}
 		try {
 			clearAllObjects(operation.getConnection());
+			resetSequences(operation.getConnection());
 		} catch (SQLException e) {
 			throw new CmfStorageException("SQLException caught while removing all objects", e);
 		}
@@ -1202,6 +1224,34 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		return truncateTables(operation, tables);
 	}
 
+	private void resetSequences(Connection c) throws CmfStorageException {
+		// Find all the sequences, and reset them to their initial state
+		try {
+			DatabaseMetaData dmd = c.getMetaData();
+			ResultSet rs = null;
+			String sql = translateOptionalQuery(JdbcDialect.Query.RESTART_SEQUENCE);
+			if (sql == null) { return; }
+			Statement s = c.createStatement();
+			try {
+				rs = dmd.getTables(null, null, null, new String[] {
+					"SEQUENCE"
+				});
+				while (rs.next()) {
+					String tn = rs.getString("TABLE_NAME");
+					if (tn.toLowerCase().startsWith("cmf_")) {
+						// Restart this sequence!!
+						s.executeUpdate(String.format(sql, tn));
+					}
+				}
+			} finally {
+				JdbcTools.closeQuietly(rs);
+				JdbcTools.closeQuietly(s);
+			}
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to reset the sequences", e);
+		}
+	}
+
 	private void clearAllObjects(Connection c) throws SQLException {
 		// Allow for subclasses to implement optimized clearing operations
 		QueryRunner qr = JdbcTools.getQueryRunner();
@@ -1216,11 +1266,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	private <V> CmfObject<V> loadObject(CmfAttributeTranslator<V> translator, ResultSet objectRS, ResultSet parentsRS)
+	private CmfObject<CmfValue> loadObject(ResultSet objectRS, ResultSet parentsRS, ResultSet secondariesRS)
 		throws SQLException {
 		if (objectRS == null) { throw new IllegalArgumentException(
 			"Must provide a ResultSet to load the structure from"); }
-		CmfType type = CmfType.decodeString(objectRS.getString("object_type"));
+		CmfType type = CmfType.valueOf(objectRS.getString("object_type"));
 		String id = objectRS.getString("object_id");
 		String name = objectRS.getString("object_name");
 		String newName = objectRS.getString("new_name");
@@ -1248,6 +1298,18 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		String productName = objectRS.getString("product_name");
 		String productVersion = objectRS.getString("product_version");
 
+		Set<String> secondaries = new LinkedHashSet<>();
+		while (secondariesRS.next()) {
+			String secondary = secondariesRS.getString("name");
+			if (secondariesRS.wasNull()) {
+				continue;
+			}
+			secondaries.add(secondary);
+		}
+		if (secondaries.isEmpty()) {
+			secondaries = Collections.emptySet();
+		}
+
 		// Load the parent IDs
 		List<CmfObjectRef> parentIds = new ArrayList<>();
 		while (parentsRS.next()) {
@@ -1261,32 +1323,30 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			parentIds = Collections.emptyList();
 		}
 
-		return new CmfObject<>(translator, type, id, name, parentIds, searchKey, tierId, historyId, historyCurrent,
-			label, subtype, productName, productVersion, number);
+		return new CmfObject<>(CmfAttributeTranslator.CMFVALUE_TRANSLATOR, type, id, name, parentIds, searchKey, tierId,
+			historyId, historyCurrent, label, subtype, secondaries, productName, productVersion, number);
 	}
 
-	private <V> CmfProperty<V> loadProperty(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
-		throws SQLException {
+	private CmfProperty<CmfValue> loadProperty(CmfType objectType, ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
-		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
+		CmfDataType type = CmfDataType.valueOf(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
 		return new CmfProperty<>(name, type, repeating);
 	}
 
-	private <V> CmfAttribute<V> loadAttribute(CmfType objectType, CmfAttributeTranslator<V> translator, ResultSet rs)
-		throws SQLException {
+	private <V> CmfAttribute<CmfValue> loadAttribute(CmfType objectType, ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
-		String name = translator.decodeAttributeName(objectType, rs.getString("name"));
-		CmfDataType type = translator.decodeValue(rs.getString("data_type"));
+		String name = rs.getString("name");
+		CmfDataType type = CmfDataType.valueOf(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
 		return new CmfAttribute<>(name, type, repeating);
 	}
 
-	private <V> void loadValues(CmfValueCodec<V> codec, CmfValueSerializer deserializer, ResultSet rs,
-		CmfProperty<V> property) throws SQLException, CmfStorageException {
+	private void loadValues(CmfValueSerializer deserializer, ResultSet rs, CmfProperty<CmfValue> property)
+		throws SQLException, CmfStorageException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
-		List<V> values = new LinkedList<>();
+		List<CmfValue> values = new LinkedList<>();
 		while (rs.next()) {
 			final boolean nullValue = rs.getBoolean("null_value");
 			final String data = rs.getString("data");
@@ -1301,7 +1361,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				throw new CmfStorageException(
 					String.format("Failed to deserialize value [%s] as a %s", data, property.getType()), e);
 			}
-			values.add(codec.decodeValue(v));
+			values.add(v);
 			if (!property.isRepeating()) {
 				break;
 			}
@@ -1309,22 +1369,20 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		property.setValues(values);
 	}
 
-	private <V> void loadAttributes(CmfAttributeTranslator<V> translator, ResultSet rs, CmfObject<V> obj)
-		throws SQLException {
-		List<CmfAttribute<V>> attributes = new LinkedList<>();
+	private <V> void loadAttributes(ResultSet rs, CmfObject<CmfValue> obj) throws SQLException {
+		List<CmfAttribute<CmfValue>> attributes = new LinkedList<>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
-			attributes.add(loadAttribute(obj.getType(), translator, rs));
+			attributes.add(loadAttribute(obj.getType(), rs));
 		}
 		obj.setAttributes(attributes);
 	}
 
-	private <V> void loadProperties(CmfAttributeTranslator<V> translator, ResultSet rs, CmfObject<V> obj)
-		throws SQLException {
-		List<CmfProperty<V>> properties = new LinkedList<>();
+	private void loadProperties(ResultSet rs, CmfObject<CmfValue> obj) throws SQLException {
+		List<CmfProperty<CmfValue>> properties = new LinkedList<>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
-			properties.add(loadProperty(obj.getType(), translator, rs));
+			properties.add(loadProperty(obj.getType(), rs));
 		}
 		obj.setProperties(properties);
 	}
@@ -1464,8 +1522,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			qr.update(c, translateQuery(JdbcDialect.Query.DELETE_CONTENT), objectId);
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to delete the existing content records for %s [%s](%s)",
-				object.getType(), object.getLabel(), object.getId()), e);
+			throw new CmfStorageException(
+				String.format("Failed to delete the existing content records for %s", object.getDescription()), e);
 		}
 
 		// Step 2: prepare the new content records and properties
@@ -1512,8 +1570,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_CONTENT_PROPERTY), JdbcTools.HANDLER_NULL,
 				properties.toArray(JdbcTools.NO_PARAMS));
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to insert the new content records for %s [%s](%s)",
-				object.getType(), object.getLabel(), object.getId()), e);
+			throw new CmfStorageException(
+				String.format("Failed to insert the new content records for %s", object.getDescription()), e);
 		}
 	}
 
@@ -1583,8 +1641,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 			return new QueryRunner().query(c, translateQuery(JdbcDialect.Query.LOAD_CONTENTS), cHandler, objectId);
 		} catch (SQLException e) {
-			throw new CmfStorageException(String.format("Failed to load the content records for %s [%s](%s)",
-				object.getType(), object.getLabel(), object.getId()), e);
+			throw new CmfStorageException(
+				String.format("Failed to load the content records for %s", object.getDescription()), e);
 		} finally {
 			JdbcTools.closeQuietly(pPS);
 			JdbcTools.closeQuietly(cPS);

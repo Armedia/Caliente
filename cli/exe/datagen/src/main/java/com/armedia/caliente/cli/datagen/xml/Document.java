@@ -30,7 +30,7 @@ public class Document extends FsObject {
 
 	public List<Rendition> getRendition() {
 		if (this.rendition == null) {
-			this.rendition = new ArrayList<Rendition>();
+			this.rendition = new ArrayList<>();
 		}
 		return this.rendition;
 	}

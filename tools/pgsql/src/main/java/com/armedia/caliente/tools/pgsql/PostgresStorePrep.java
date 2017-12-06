@@ -1,8 +1,16 @@
 package com.armedia.caliente.tools.pgsql;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.apache.commons.io.FileUtils;
 
 import com.armedia.caliente.store.CmfStoragePreparationException;
 import com.armedia.caliente.store.CmfStorePrep;
@@ -32,63 +40,121 @@ import ru.yandex.qatools.embed.postgresql.ext.CachedArtifactStoreBuilder;
 
 public class PostgresStorePrep implements CmfStorePrep {
 
+	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private PostgresConfig config = null;
 	private PostgresProcess process = null;
 	private CfgTools settings = null;
 
 	@Override
 	public void prepareStore(StoreConfiguration cfg, boolean cleanData) throws CmfStoragePreparationException {
+		final Lock l = this.rwLock.writeLock();
+		l.lock();
 		try {
 			doPrepareStore(cfg, cleanData);
 		} catch (Exception e) {
 			throw new CmfStoragePreparationException("Failed to prepare the embedded PostgreSQL storage engine", e);
+		} finally {
+			l.unlock();
 		}
 	}
 
 	protected void doPrepareStore(StoreConfiguration cfg, boolean cleanData) throws Exception {
-		// define of retrieve db name and credentials
 		final String dbname = "caliente";
 		final String username = "caliente";
 		final String password = "caliente";
 
 		final Command cmd = Command.Postgres;
 		final IVersion version = Version.Main.V9_6;
-		// TODO: Here is where we set where PostgreSQL will be "installed"
+
+		final CfgTools engineSettings = new CfgTools(cfg.getEffectiveSettings());
+		String metadataStore = engineSettings.getString("dir.metadata");
+
+		// TODO: Here is where we set where PostgreSQL will be "installed" (i.e. the executables
+		// stored) and where the artifacts that are downloaded should be cached
+		// final FixedPath installDir = new FixedPath("/path/to/my/extracted/postgres");
 		final FixedPath cachedDir = new FixedPath("/path/to/my/extracted/postgres");
 		final IPackageResolver packageResolver = new PackagePaths(cmd, cachedDir);
-		final IDownloadConfig downloadConfig = new DownloadConfigBuilder().defaultsForCommand(cmd)
-			.packageResolver(packageResolver).build();
+		final IDownloadConfig downloadConfig = new DownloadConfigBuilder()//
+			.defaultsForCommand(cmd) //
+			.packageResolver(packageResolver) //
+			.artifactStorePath(cachedDir) //
+			.build();
 		final IArtifactStore artifactStore = new CachedArtifactStoreBuilder().defaults(cmd).tempDir(cachedDir)
 			.download(downloadConfig).build();
 		final IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(cmd).artifactStore(artifactStore)
 			.build();
-		final Storage storage = new Storage(dbname, "/home/diego/pgtest");
+
+		// TODO: Determine where the data will be stored
+		final Storage storage = new Storage(dbname, metadataStore);
+		if (cleanData) {
+			// Clean out the data store
+			File storageFile = storage.dbDir();
+			if (storageFile.exists() && storageFile.isDirectory()) {
+				FileUtils.forceDelete(storageFile);
+				FileUtils.forceMkdir(storageFile);
+			}
+		}
+
 		final PostgresStarter<PostgresExecutable, PostgresProcess> runtime = PostgresStarter.getInstance(runtimeConfig);
 		final Credentials credentials = new Credentials(username, password);
 		final PostgresConfig config = new PostgresConfig(version, new Net(), storage, new Timeout(), credentials);
 		final Map<String, Object> settings = new TreeMap<>();
 
+		List<String> args = new ArrayList<>();
 		// pass info regarding encoding, locale, collate, ctype, instead of setting global
 		// environment settings
-		config.args(); // TODO: Add more arguments for memory size, etc...
-		config.getAdditionalInitDbParams().addAll(
+		args.addAll(
 			Arrays.asList("-E", "UTF-8", "--locale=en_US.UTF-8", "--lc-collate=en_US.UTF-8", "--lc-ctype=en_US.UTF-8"));
+		// TODO: Add more arguments for memory size, etc...
+		/*
+			-B NBUFFERS        number of shared buffers
+			-c NAME=VALUE      set run-time parameter
+			-C NAME            print value of run-time parameter, then exit
+			-d 1-5             debugging level
+			-F                 turn fsync off
+			-S WORK-MEM        set amount of memory for sorts (in kB)
+			-V, --version      output version information, then exit
+			--NAME=VALUE       set run-time parameter
+		 */
+		/// args.addAll(Arrays.asList(.....));
+		config.getAdditionalInitDbParams().addAll(args);
 		PostgresExecutable exec = runtime.prepare(config);
-
-		settings.put("jdbc.url", String.format("jdbc:postgresql://%s:%s/%s", this.config.net().host(),
-			this.config.net().port(), this.config.storage().dbName()));
+		settings.put("jdbc.url", String.format("jdbc:postgresql://%s:%s/%s", config.net().host(), config.net().port(),
+			config.storage().dbName()));
 		settings.put("jdbc.user", credentials.username());
 		settings.put("jdbc.password", credentials.password());
 		settings.put("jdbc.driver", "org.postgresql.Driver");
-		// TODO: Add more settings such as the base folder, etc...
 
 		this.process = exec.start();
 		this.config = config;
 		this.settings = new CfgTools(settings);
 	}
 
+	public PostgresConfig getConfig() {
+		Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			return this.config;
+		} finally {
+			l.unlock();
+		}
+	}
+
+	@Override
+	public CfgTools getSettings() {
+		Lock l = this.rwLock.readLock();
+		l.lock();
+		try {
+			return this.settings;
+		} finally {
+			l.unlock();
+		}
+	}
+
 	@Override
 	public void close() {
+		Lock l = this.rwLock.writeLock();
+		l.lock();
 		try {
 			if (this.process != null) {
 				this.process.stop();
@@ -97,11 +163,7 @@ public class PostgresStorePrep implements CmfStorePrep {
 			this.process = null;
 			this.config = null;
 			this.settings = null;
+			l.unlock();
 		}
-	}
-
-	@Override
-	public CfgTools getSettings() {
-		return this.settings;
 	}
 }

@@ -1,0 +1,284 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<transformations xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+
+	<transformation>
+		<if>
+			<and>
+				<or>
+					<is-type>GROUP</is-type>
+
+					<is-subtype comparison="ncn" lang="jexl">
+						<!-- expression -->
+					</is-subtype>
+
+					<has-attribute comparison="eq" lang="jexl">
+						<!-- expression -->
+					</has-attribute>
+					<is-attribute-value comparison="eq" cardinality="any">
+						<name lang="beanshell">
+							<!-- expression -->
+						</name>
+						<value lang="groovy">
+							<!-- expression -->
+						</value>
+					</is-attribute-value>
+
+					<has-caliente-property comparison="eq" lang="javascript">
+						<!-- expression -->
+					</has-caliente-property>
+					<is-caliente-property-value comparison="EQ" cardinality="first">
+						<name lang="jexl">
+							<!-- expression -->
+						</name>
+						<value lang="jexl">
+							<!-- expression -->
+						</value>
+					</is-caliente-property-value>
+					
+					<not>
+						<is-reference />
+					</not>
+
+					<oneof>
+						<is-first-version />
+						<is-latest-version />
+					</oneof>
+
+					<has-secondary-subtype comparison="eq" lang="jexl">
+						<!-- expression -->
+					</has-secondary-subtype>
+
+					<check-expression comparison="eq">
+						<left lang="jexl">
+							<!-- expression -->
+						</left>
+						<right lang="jexl">
+							<!-- expression -->
+						</right>
+					</check-expression>
+
+					<is-variable-set lang="js">
+						<!-- expression -->
+					</is-variable-set>
+
+					<is-variable-value comparison="eq" cardinality="any">
+						<name lang="jexl">
+							<!-- expression -->
+						</name>
+						<value lang="jexl">
+							<!-- expression -->
+						</value>
+					</is-variable-value>
+				</or>
+			</and>
+		</if>
+
+		<group>
+			<if>
+				<is-attribute-empty>sdfasdfsdf</is-attribute-empty>
+			</if>
+			<group>
+				<if>
+					<is-attribute-repeating>12341324</is-attribute-repeating>
+				</if>
+				<end-transformation/>
+			</group>
+			<abort-transformation/>
+		</group>
+
+		<set-subtype>
+			<if>
+				<and>
+					<is-latest-version />
+				</and>
+			</if>
+
+			<value lang="java">
+				<!-- expression -->
+			</value>
+		</set-subtype>
+
+		<replace-subtype>
+			<if>
+				<has-attribute>xGsaWeirdAttribute</has-attribute>
+			</if>
+			<regex lang="js">
+				<!-- expression -->
+			</regex>
+			<replacement lang="ecmascript">
+				<!-- expression -->
+			</replacement>
+		</replace-subtype>
+
+		<add-secondary-subtype>
+			<if>
+			</if>
+			<value lang="rhino">
+				<![CDATA[sdjflk > < DS FASDF SD F<>F ASDF <>ASDF A>SD F<AD FA! & &  && A >  AD>]]>
+			</value>
+		</add-secondary-subtype>
+		<remove-secondary-subtype>
+			<comparison>eq</comparison>
+			<value lang="jexl">
+				<!-- expression -->
+			</value>
+		</remove-secondary-subtype>
+		<replace-secondary-subtype>
+			<regex lang="jexl" caseSensitive="false">
+				<!-- expression -->
+			</regex>
+			<replacement lang="jexl">
+				<!-- expression -->
+			</replacement>
+		</replace-secondary-subtype>
+
+		<set-attribute>
+			<name lang="jexl">
+				<!-- expression -->
+			</name>
+			<value lang="jexl">
+				<!-- expression -->
+			</value>
+		</set-attribute>
+		<remove-attribute>
+			<comparison>eq</comparison>
+			<name lang="jexl">
+				<!-- expression -->
+			</name>
+		</remove-attribute>
+		<replace-attribute>
+			<name lang="jexl">
+				<!-- expression -->
+				replace-name
+			</name>
+			<cardinality>all</cardinality>
+			<regex lang="jexl">
+				<!-- expression -->
+				replace-attribute-regex
+			</regex>
+			<replacement lang="jexl">
+				<!-- expression -->
+				replace-attribute-replacement
+			</replacement>
+		</replace-attribute>
+
+		<map-attribute-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="jexl">
+				<!-- expression -->
+				map-name
+			</name>
+			<cardinality>all</cardinality>
+			<case comparison="eq">
+				<value lang="jexl">
+				case-value-1
+				</value>
+				<replacement lang="jexl">
+				case-replacement-1
+				</replacement>
+			</case>
+			<case comparison="eq">
+				<value lang="jexl">
+				case-value-2
+				</value>
+				<replacement lang="jexl">
+				case-replacement-2
+				</replacement>
+			</case>
+			<default lang="jexl">
+				case-default-value
+			</default>
+		</map-attribute-value>
+
+		<map-attribute-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="jexl">
+				<!-- expression -->
+				map-name
+			</name>
+			<cardinality>all</cardinality>
+			<default lang="jexl">
+				case-default-value
+			</default>
+		</map-attribute-value>
+
+		<map-attribute-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="jexl">
+				<!-- expression -->
+				map-name
+			</name>
+			<cardinality>all</cardinality>
+			<case comparison="eq">
+				<value lang="jexl">
+				case-value-1
+				</value>
+				<replacement lang="jexl">
+				case-replacement-1
+				</replacement>
+			</case>
+		</map-attribute-value>
+
+		<map-variable-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="jexl">
+				<!-- expression -->
+				map-name
+			</name>
+			<cardinality>all</cardinality>
+			<case comparison="eq">
+				<value lang="jexl">
+				case-value-1
+				</value>
+				<replacement lang="jexl">
+				case-replacement-1
+				</replacement>
+			</case>
+		</map-variable-value>
+		
+		<map-attribute-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="jexl">
+				<!-- expression -->
+				map-name
+			</name>
+			<cardinality>all</cardinality>
+		</map-attribute-value>
+		<end-transformation/>
+		<abort-transformation/>
+		
+		<apply-value-mapping>
+			<name>attribute-name</name>
+			<type>ACL</type>
+			<mapping-name>Some-Mapping-Name</mapping-name>
+			<fallback>someExpression</fallback>
+		</apply-value-mapping>
+		
+		<map-principal>
+			<name>attribute-name</name>
+			<name>attribute-name</name>
+			<name>attribute-name</name>
+			<name>attribute-name</name>
+			<name>attribute-name</name>
+			<name>attribute-name</name>
+			<type>USER</type>
+			<fallback>expression</fallback>
+		</map-principal>
+
+		<load-external-metadata>
+			<metadata-set>xxxxxxx</metadata-set>
+		</load-external-metadata>
+	</transformation>
+
+</transformations>

@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfContentStoreFactory;
-import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfPrepInfo;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.dslocator.DataSourceLocator;
@@ -20,8 +20,8 @@ public class JdbcContentStoreFactory extends CmfContentStoreFactory<JdbcContentS
 	}
 
 	@Override
-	protected JdbcContentStore newInstance(StoreConfiguration configuration, boolean cleanData,
-		CmfPrepInfo prepInfo) throws CmfStorageException {
+	protected JdbcContentStore newInstance(StoreConfiguration configuration, boolean cleanData, CmfPrepInfo prepInfo)
+		throws CmfStorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		final String locationType = cfg.getString(Setting.LOCATION_TYPE);

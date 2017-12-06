@@ -34,6 +34,8 @@ public class CalienteLauncher extends AbstractLauncher {
 	private static final String MAIN_CLASS = "com.armedia.caliente.cli.caliente.launcher.%s.Caliente_%s";
 	private static Properties PARAMETER_PROPERTIES = new Properties();
 
+	public static final String DEFAULT_LOG_FORMAT = "caliente-${logEngine}-${logMode}-${logTimeStamp}";
+
 	public static final String VERSION;
 
 	static {
@@ -78,6 +80,18 @@ public class CalienteLauncher extends AbstractLauncher {
 		if (!m.matches()) { throw new IllegalArgumentException(
 			String.format("Invalid --engine parameter value [%s] - must only contain [a-zA-Z_0-9]", engine)); }
 
+		String logMode = mode.toLowerCase();
+		String logEngine = engine.toLowerCase();
+		String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+		String logName = CLIParam.log.getString();
+		if (logName == null) {
+			logName = CalienteLauncher.DEFAULT_LOG_FORMAT;
+		}
+		System.setProperty("logName", logName);
+		System.setProperty("logTimeStamp", logTimeStamp);
+		System.setProperty("logMode", logMode);
+		System.setProperty("logEngine", logEngine);
+
 		String logCfg = CLIParam.log_cfg.getString();
 		boolean customLog = false;
 		if (logCfg != null) {
@@ -88,12 +102,6 @@ public class CalienteLauncher extends AbstractLauncher {
 			}
 		}
 		if (!customLog) {
-			String logName = CLIParam.log.getString();
-			if (logName == null) {
-				String runTime = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-				logName = String.format("caliente-%s-%s-%s", engine.toLowerCase(), mode.toLowerCase(), runTime);
-			}
-			System.setProperty("logName", logName);
 			URL config = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
 			if (config != null) {
 				DOMConfigurator.configure(config);

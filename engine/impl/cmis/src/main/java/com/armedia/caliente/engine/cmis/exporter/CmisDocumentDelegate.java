@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Rendition;
+import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -36,16 +37,17 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	private final List<Document> previous;
 	private final List<Document> successors;
 
-	protected CmisDocumentDelegate(CmisDocumentDelegate rootElement, Document object, String antecedentId)
-		throws Exception {
-		super(rootElement.factory, Document.class, object);
+	protected CmisDocumentDelegate(CmisDocumentDelegate rootElement, Session session, Document object,
+		String antecedentId) throws Exception {
+		super(rootElement.factory, session, Document.class, object);
 		this.previous = Collections.emptyList();
 		this.successors = Collections.emptyList();
 		this.antecedentId = antecedentId;
 	}
 
-	protected CmisDocumentDelegate(CmisExportDelegateFactory factory, Document object) throws Exception {
-		super(factory, Document.class, object);
+	protected CmisDocumentDelegate(CmisExportDelegateFactory factory, Session session, Document object)
+		throws Exception {
+		super(factory, session, Document.class, object);
 		List<Document> all = object.getAllVersions();
 		List<Document> prev = new ArrayList<>(all.size());
 		List<Document> succ = new ArrayList<>(all.size());
@@ -69,16 +71,16 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected String calculatePath(Document d) throws Exception {
-		String path = super.calculatePath(d);
+	protected String calculatePath(Session session, Document d) throws Exception {
+		String path = super.calculatePath(session, d);
 		if ((path == null) && !d.isLatestVersion()) {
-			path = calculatePath(d.getObjectOfLatestVersion(false));
+			path = calculatePath(session, d.getObjectOfLatestVersion(false));
 		}
 		return path;
 	}
 
 	@Override
-	protected String calculateHistoryId(Document object) throws Exception {
+	protected String calculateHistoryId(Session session, Document object) throws Exception {
 		return object.getVersionSeriesId();
 	}
 
@@ -93,7 +95,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		Collection<CmisExportDelegate<?>> ret = super.identifyAntecedents(marshalled, ctx);
 		String prev = null;
 		for (Document d : this.previous) {
-			ret.add(new CmisDocumentDelegate(this, d, prev));
+			ret.add(new CmisDocumentDelegate(this, ctx.getSession(), d, prev));
 			prev = d.getId();
 		}
 		return ret;
@@ -108,7 +110,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			try {
 				antecedentId.setValue(new CmfValue(CmfDataType.ID, Object.class.cast(this.antecedentId)));
 			} catch (ParseException e) {
-				throw new ExportException(String.format("Failed to create an object ID value for [%s] for %s [%s](%s)",
+				throw new ExportException(String.format("Failed to create an object ID value for [%s] for %s",
 					this.antecedentId, getType(), getLabel(), getObjectId()));
 			}
 			object.setAttribute(antecedentId);
@@ -184,19 +186,19 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		Collection<CmisExportDelegate<?>> ret = super.identifySuccessors(marshalled, ctx);
 		String prev = this.object.getId();
 		for (Document d : this.successors) {
-			ret.add(new CmisDocumentDelegate(this, d, prev));
+			ret.add(new CmisDocumentDelegate(this, ctx.getSession(), d, prev));
 			prev = d.getId();
 		}
 		return ret;
 	}
 
 	@Override
-	protected String calculateName(Document document) throws Exception {
+	protected String calculateName(Session session, Document document) throws Exception {
 		return document.getName();
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(Document document) throws Exception {
+	protected boolean calculateHistoryCurrent(Session session, Document document) throws Exception {
 		return document.isLatestVersion();
 	}
 }

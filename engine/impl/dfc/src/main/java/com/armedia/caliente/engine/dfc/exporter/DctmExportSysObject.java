@@ -46,6 +46,7 @@ import com.documentum.fc.client.IDfVirtualDocument;
 import com.documentum.fc.client.IDfVirtualDocumentNode;
 import com.documentum.fc.client.content.IDfStore;
 import com.documentum.fc.client.distributed.IDfReference;
+import com.documentum.fc.client.impl.ISysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
@@ -66,8 +67,22 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	private static final String HISTORY_PATH_IDS = "HISTORY_PATH_IDS_%S";
 	private static final String HISTORY_VDOC_STATUS = "HISTORY_VDOC_STATUS_%S";
 
-	protected DctmExportSysObject(DctmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected DctmExportSysObject(DctmExportDelegateFactory factory, IDfSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
+	}
+
+	@Override
+	protected Set<String> calculateSecondarySubtypes(IDfSession session, CmfType type, String subtype, T object)
+		throws Exception {
+		Set<String> secondaries = super.calculateSecondarySubtypes(session, type, subtype, object);
+		if (object.hasAttr(DctmAttributes.R_ASPECT_NAME)) {
+			final int count = object.getValueCount(DctmAttributes.R_ASPECT_NAME);
+			for (int i = 0; i < count; i++) {
+				secondaries.add(object.getRepeatingString(DctmAttributes.R_ASPECT_NAME, i));
+			}
+		}
+		return secondaries;
 	}
 
 	protected List<String> calculateFullPath(IDfSysObject f) throws DfException {
@@ -195,6 +210,11 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 		IDfSession session = object.getSession();
 
+		CmfProperty<IDfValue> reference = new CmfProperty<>(IntermediateProperty.IS_REFERENCE,
+			DctmDataType.DF_BOOLEAN.getStoredType(), false);
+		properties.add(reference);
+		reference.setValue(DfValueFactory.newBooleanValue(object.isReference()));
+
 		CmfProperty<IDfValue> aclInheritedProp = new CmfProperty<>(IntermediateProperty.ACL_INHERITANCE,
 			DctmDataType.DF_STRING.getStoredType(), false);
 		properties.add(aclInheritedProp);
@@ -274,6 +294,15 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 		IDfReference ref = getReferenceFor(object);
 		if (ref != null) {
+			properties.add(new CmfProperty<>(IntermediateProperty.REF_TARGET, DctmDataType.DF_STRING.getStoredType(),
+				false, DfValueFactory.newStringValue(object.getChronicleId().getId())));
+			String refVersion = ref.getBindingLabel();
+			if (StringUtils.equalsIgnoreCase(ISysObject.CURRENT_VERSION_LABEL, refVersion)) {
+				refVersion = "HEAD";
+			}
+			properties.add(new CmfProperty<>(IntermediateProperty.REF_VERSION, DctmDataType.DF_STRING.getStoredType(),
+				false, DfValueFactory.newStringValue(refVersion)));
+
 			properties.add(new CmfProperty<>(DctmAttributes.BINDING_CONDITION, DctmDataType.DF_STRING.getStoredType(),
 				false, DfValueFactory.newStringValue(ref.getBindingCondition())));
 			properties.add(new CmfProperty<>(DctmAttributes.BINDING_LABEL, DctmDataType.DF_STRING.getStoredType(),
@@ -381,7 +410,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
 		if (!full) { return String.format("%s%s", sysObject.getImplicitVersionLabel(),
-			sysObject.getHasFolder() ? ",CURRENT" : ""); }
+			sysObject.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : ""); }
 		int labelCount = sysObject.getVersionLabelCount();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < labelCount; i++) {
@@ -454,8 +483,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected String calculateLabel(T sysObject) throws Exception {
-		final IDfSession session = sysObject.getSession();
+	protected String calculateLabel(IDfSession session, T sysObject) throws Exception {
 		final int folderCount = sysObject.getFolderIdCount();
 		final String objectName = sysObject.getObjectName();
 		for (int i = 0; i < folderCount; i++) {
@@ -495,7 +523,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 					try {
 						IDfSysObject o = IDfSysObject.class.cast(session.getObject(id));
 
-						IDfVirtualDocument vDoc = o.asVirtualDocument("CURRENT", false);
+						IDfVirtualDocument vDoc = o.asVirtualDocument(ISysObject.CURRENT_VERSION_LABEL, false);
 						final IDfVirtualDocumentNode root = vDoc.getRootNode();
 						final int members = root.getChildCount();
 						for (int i = 0; i < members; i++) {
@@ -532,7 +560,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected final int calculateDependencyTier(T object) throws Exception {
+	protected final int calculateDependencyTier(IDfSession session, T object) throws Exception {
 		int depth = calculateDepth(object, null);
 		if (isDfReference(object)) {
 			depth++;
@@ -541,7 +569,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected final String calculateHistoryId(T object) throws Exception {
+	protected final String calculateHistoryId(IDfSession session, T object) throws Exception {
 		return object.getChronicleId().getId();
 	}
 
@@ -644,12 +672,12 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected String calculateName(T sysObject) throws Exception {
+	protected String calculateName(IDfSession session, T sysObject) throws Exception {
 		return sysObject.getObjectName();
 	}
 
 	@Override
-	protected Collection<CmfObjectRef> calculateParentIds(T sysObject) throws Exception {
+	protected Collection<CmfObjectRef> calculateParentIds(IDfSession session, T sysObject) throws Exception {
 		List<CmfObjectRef> ret = new ArrayList<>();
 		for (IDfValue v : DfValueFactory.getAllRepeatingValues(DctmAttributes.I_FOLDER_ID, sysObject)) {
 			ret.add(new CmfObjectRef(CmfType.FOLDER, v.asId().getId()));
@@ -658,7 +686,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(T sysObject) throws Exception {
+	protected boolean calculateHistoryCurrent(IDfSession session, T sysObject) throws Exception {
 		return sysObject.getHasFolder();
 	}
 }

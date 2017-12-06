@@ -21,4 +21,5 @@
 	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.1.xml" />
 	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.2.xml" />
 	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.3.xml" />
+	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.4.xml" />
 </databaseChangeLog>

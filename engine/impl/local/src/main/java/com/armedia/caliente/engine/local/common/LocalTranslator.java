@@ -10,9 +10,9 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
@@ -68,45 +68,43 @@ public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 		return LocalTranslator.DATA_TYPES_REV.get(t);
 	}
 
-	@Override
-	public CmfObject<CmfValue> decodeObject(CmfObject<CmfValue> rawObject) {
-		return super.decodeObject(rawObject);
-	}
-
-	@Override
-	public CmfObject<CmfValue> encodeObject(CmfObject<CmfValue> rawObject) {
-		return super.encodeObject(rawObject);
-	}
-
-	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
+	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
 		return LocalTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
-	@Override
-	public String encodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			// TODO: normalize the CMS attribute name
-			IntermediateAttribute att = mappings.get(attributeName);
-			if (att != null) { return att.encode(); }
-		}
-		return super.encodeAttributeName(type, attributeName);
-	}
+	@SuppressWarnings("unused")
+	private static final CmfAttributeNameMapper MAPPER = new CmfAttributeNameMapper() {
 
-	@Override
-	public String decodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			String att = null;
-			try {
-				// TODO: normalize the intermediate attribute name
-				att = mappings.getKey(IntermediateAttribute.decode(attributeName));
-			} catch (IllegalArgumentException e) {
-				att = null;
+		@Override
+		public String encodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = LocalTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				// TODO: normalize the CMS attribute name
+				IntermediateAttribute att = mappings.get(attributeName);
+				if (att != null) { return att.encode(); }
 			}
-			if (att != null) { return att; }
+			return super.encodeAttributeName(type, attributeName);
 		}
-		return super.decodeAttributeName(type, attributeName);
+
+		@Override
+		public String decodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = LocalTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				String att = null;
+				try {
+					// TODO: normalize the intermediate attribute name
+					att = mappings.getKey(IntermediateAttribute.decode(attributeName));
+				} catch (IllegalArgumentException e) {
+					att = null;
+				}
+				if (att != null) { return att; }
+			}
+			return super.decodeAttributeName(type, attributeName);
+		}
+	};
+
+	public LocalTranslator() {
+		super(CmfValue.class, null);
 	}
 
 	@Override
@@ -117,10 +115,5 @@ public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 	@Override
 	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
 		return new CmfValue(type, value);
-	}
-
-	@Override
-	public String getDefaultSubtype(CmfType baseType) {
-		return baseType.name();
 	}
 }

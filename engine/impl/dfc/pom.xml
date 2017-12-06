@@ -70,7 +70,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
+			<groupId>com.armedia.commons.datasource</groupId>
 			<artifactId>datasource-locator-pooled</artifactId>
 			<scope>test</scope>
 		</dependency>

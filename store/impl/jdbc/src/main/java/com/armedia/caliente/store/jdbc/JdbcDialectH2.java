@@ -66,6 +66,10 @@ public class JdbcDialectH2 extends JdbcDialect {
 		"     merge into cmf_alt_name (object_id, new_name) key (object_id) values ( ?, ? ) " //
 	;
 
+	private static final String RESTART_SEQUENCE = //
+		"     alter sequence %s restart with 1" //
+	;
+
 	public JdbcDialectH2(DatabaseMetaData md) throws SQLException {
 		super(EngineType.H2, md);
 	}
@@ -92,6 +96,8 @@ public class JdbcDialectH2 extends JdbcDialect {
 				return JdbcDialectH2.DISABLE_REFERENTIAL_INTEGRITY;
 			case UPSERT_ALT_NAME:
 				return JdbcDialectH2.UPSERT_ALT_NAME;
+			case RESTART_SEQUENCE:
+				return JdbcDialectH2.RESTART_SEQUENCE;
 			default:
 				break;
 		}

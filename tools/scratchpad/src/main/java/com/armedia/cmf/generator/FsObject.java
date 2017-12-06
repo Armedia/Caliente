@@ -28,7 +28,7 @@ public class FsObject {
 
 	public List<Attribute> getAttributes() {
 		if (this.attributes == null) {
-			this.attributes = new ArrayList<Attribute>();
+			this.attributes = new ArrayList<>();
 		}
 		return this.attributes;
 	}

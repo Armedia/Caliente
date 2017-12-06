@@ -12,11 +12,11 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
@@ -28,7 +28,7 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		if (o instanceof CmfType) { return CmfType.class.cast(o); }
 		if (o instanceof String) {
 			try {
-				return CmfType.decodeString(String.valueOf(o));
+				return CmfType.valueOf(String.valueOf(o));
 			} catch (IllegalArgumentException e) {
 				// Do nothing...
 			}
@@ -68,12 +68,12 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 	private final String productVersion;
 	private final CmfContentStore<?, ?, ?> contentStore;
 	private final CmfObjectStore<?, ?> objectStore;
-	private final CmfTypeMapper typeMapper;
+	private final Transformer transformer;
 	private final Logger output;
 	private final WarningTracker warningTracker;
 
 	protected TransferContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper, Logger output, WarningTracker tracker)
+		CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output, WarningTracker tracker)
 		throws Exception {
 		if (engine == null) { throw new IllegalArgumentException(
 			"Must provide an engine to which this factory is tied"); }
@@ -98,7 +98,7 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		this.productVersion = calculateProductVersion(session);
 		this.objectStore = objectStore;
 		this.contentStore = contentStore;
-		this.typeMapper = typeMapper;
+		this.transformer = transformer;
 		this.output = output;
 		this.warningTracker = tracker;
 	}
@@ -116,8 +116,8 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		return this.contentStore;
 	}
 
-	protected final CmfTypeMapper getTypeMapper() {
-		return this.typeMapper;
+	protected final Transformer getTransformer() {
+		return this.transformer;
 	}
 
 	protected final Logger getOutput() {

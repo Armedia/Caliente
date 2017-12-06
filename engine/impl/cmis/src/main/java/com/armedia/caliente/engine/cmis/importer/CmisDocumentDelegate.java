@@ -19,7 +19,6 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -27,6 +26,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
@@ -57,8 +57,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		try {
 			info = ctx.getContentInfo(this.cmfObject);
 		} catch (Exception e) {
-			throw new ImportException(String.format("Failed to retrieve the content info for DOCUMENT [%s](%s)",
-				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(
+				String.format("Failed to retrieve the content info for %s", this.cmfObject.getDescription()), e);
 		}
 		if ((info == null) || info.isEmpty()) { return null; }
 		CmfContentInfo content = info.get(0);
@@ -72,8 +72,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		try {
 			return new ContentStreamImpl(fileName, BigInteger.valueOf(h.getStreamSize()), mimeType, h.openInput());
 		} catch (CmfStorageException e) {
-			throw new ImportException(String.format("Failed to access the [%s] content for DOCUMENT [%s](%s)",
-				h.getInfo(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(
+				String.format("Failed to access the [%s] content for %s", h.getInfo(), this.cmfObject.getDescription()),
+				e);
 		}
 	}
 
@@ -108,9 +109,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 				try {
 					newVersion.cancelCheckOut();
 				} catch (Exception e) {
-					this.log.warn(String.format(
-						"Failed to cancel the checkout for [%s], checked out from [%s] (for object [%s](%s))",
-						newVersion.getId(), existing.getId(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+					this.log
+						.warn(String.format("Failed to cancel the checkout for [%s], checked out from [%s] (for %s)",
+							newVersion.getId(), existing.getId(), this.cmfObject.getDescription()), e);
 				}
 			}
 		}
@@ -134,20 +135,18 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 								Document doc = Document.class.cast(obj);
 								for (Document d : doc.getAllVersions()) {
 									Boolean pwc = d.isPrivateWorkingCopy();
-									if ((pwc != null) && pwc.booleanValue()) { throw new ImportException(
-										String.format("The document is already checked out [%s](%s)",
-											this.cmfObject.getLabel(), this.cmfObject.getId())); }
+									if ((pwc != null) && pwc.booleanValue()) { throw new ImportException(String.format(
+										"The document is already checked out %s", this.cmfObject.getDescription())); }
 									Boolean lv = d.isLatestVersion();
 									if ((lv != null) && lv.booleanValue()) { return d; }
 								}
-								throw new ImportException(
-									String.format("Failed to locate the latest version for [%s](%s)",
-										this.cmfObject.getLabel(), this.cmfObject.getId()));
+								throw new ImportException(String.format("Failed to locate the latest version for %s",
+									this.cmfObject.getDescription()));
 							}
 							// If the object isn't a document, we have a problem
-							throw new ImportException(String.format(
-								"Root object for version series [%s] is not a document for %s [%s](%s)", seriesId,
-								this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()));
+							throw new ImportException(
+								String.format("Root object for version series [%s] is not a document for %s", seriesId,
+									this.cmfObject.getDescription()));
 						} catch (CmisObjectNotFoundException e) {
 							// Do nothing...
 						}

@@ -220,16 +220,14 @@ public class DctmCmisACLTools implements DctmACL {
 	public static List<IDfPermit> calculatePermissionsFromCMIS(CmfObject<IDfValue> cmisAcl) throws DfException {
 		CmfProperty<IDfValue> accessors = cmisAcl.getProperty(IntermediateProperty.ACL_ACCESSOR_NAME);
 		CmfProperty<IDfValue> accessorActions = cmisAcl.getProperty(IntermediateProperty.ACL_ACCESSOR_ACTIONS);
-		if (accessors == null) { throw new DfException(
-			String.format("Failed to find the [%s] property for ACL [%s](%s)",
-				IntermediateProperty.ACL_ACCESSOR_NAME.encode(), cmisAcl.getLabel(), cmisAcl.getId())); }
-		if (accessorActions == null) { throw new DfException(
-			String.format("Failed to find the [%s] property for ACL [%s](%s)",
-				IntermediateProperty.ACL_ACCESSOR_ACTIONS.encode(), cmisAcl.getLabel(), cmisAcl.getId())); }
+		if (accessors == null) { throw new DfException(String.format("Failed to find the [%s] property for %s",
+			IntermediateProperty.ACL_ACCESSOR_NAME.encode(), cmisAcl.getDescription())); }
+		if (accessorActions == null) { throw new DfException(String.format("Failed to find the [%s] property for %s",
+			IntermediateProperty.ACL_ACCESSOR_ACTIONS.encode(), cmisAcl.getDescription())); }
 
 		if (accessors.getValueCount() != accessorActions.getValueCount()) { throw new DfException(
-			String.format("Value count mismatches for ACL [%s](%s) (accessors=%d | actions=%d)", cmisAcl.getLabel(),
-				cmisAcl.getId(), accessors.getValueCount(), accessorActions.getValueCount())); }
+			String.format("Value count mismatches for %s (accessors=%d | actions=%d)", cmisAcl.getDescription(),
+				accessors.getValueCount(), accessorActions.getValueCount())); }
 
 		// Ok...we have the triplets, so we start walking...
 		List<IDfPermit> ret = new ArrayList<>();

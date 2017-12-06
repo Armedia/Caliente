@@ -7,9 +7,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.codec.digest.DigestUtils;
+
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
@@ -21,8 +24,9 @@ import com.armedia.caliente.store.CmfValue;
 
 public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal> {
 
-	protected LocalPrincipalExportDelegate(LocalExportDelegateFactory factory, Principal object) throws Exception {
-		super(factory, Principal.class, object);
+	protected LocalPrincipalExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, Principal object)
+		throws Exception {
+		super(factory, root, Principal.class, object);
 	}
 
 	@Override
@@ -32,7 +36,7 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	}
 
 	@Override
-	protected int calculateDependencyTier(Principal p) throws Exception {
+	protected int calculateDependencyTier(LocalRoot root, Principal p) throws Exception {
 		return 0;
 	}
 
@@ -57,34 +61,34 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	}
 
 	@Override
-	protected CmfType calculateType(Principal p) throws Exception {
+	protected CmfType calculateType(LocalRoot root, Principal p) throws Exception {
 		if (GroupPrincipal.class.isInstance(p)) { return CmfType.GROUP; }
 		if (UserPrincipal.class.isInstance(p)) { return CmfType.USER; }
 		throw new ExportException(String.format("Principal object [%s] is of an unknown type or doesn't exist", p));
 	}
 
 	@Override
-	protected String calculateLabel(Principal object) throws Exception {
+	protected String calculateLabel(LocalRoot root, Principal object) throws Exception {
 		return object.getName();
 	}
 
 	@Override
-	protected String calculateObjectId(Principal object) throws Exception {
-		return String.format("%08x", object.hashCode());
+	protected String calculateObjectId(LocalRoot root, Principal object) throws Exception {
+		return DigestUtils.sha256Hex(String.format("%s:%s", object.getClass().getCanonicalName(), object.getName()));
 	}
 
 	@Override
-	protected String calculateSearchKey(Principal object) throws Exception {
+	protected String calculateSearchKey(LocalRoot root, Principal object) throws Exception {
 		return object.getName();
 	}
 
 	@Override
-	protected String calculateName(Principal object) throws Exception {
+	protected String calculateName(LocalRoot root, Principal object) throws Exception {
 		return object.getName();
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(Principal object) throws Exception {
+	protected boolean calculateHistoryCurrent(LocalRoot root, Principal object) throws Exception {
 		// Always true
 		return true;
 	}

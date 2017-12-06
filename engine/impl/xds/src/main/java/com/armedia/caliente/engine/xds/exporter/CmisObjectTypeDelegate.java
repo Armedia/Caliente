@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.ObjectType;
+import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -14,8 +15,9 @@ import com.armedia.caliente.store.CmfValue;
 
 public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 
-	protected CmisObjectTypeDelegate(CmisExportDelegateFactory factory, ObjectType folder) throws Exception {
-		super(factory, ObjectType.class, folder);
+	protected CmisObjectTypeDelegate(CmisExportDelegateFactory factory, Session session, ObjectType folder)
+		throws Exception {
+		super(factory, session, ObjectType.class, folder);
 	}
 
 	@Override
@@ -47,7 +49,7 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 	}
 
 	@Override
-	protected int calculateDependencyTier(ObjectType objectType) throws Exception {
+	protected int calculateDependencyTier(Session session, ObjectType objectType) throws Exception {
 		return calculateDepth(objectType, new LinkedHashSet<String>());
 	}
 
@@ -57,33 +59,33 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		ObjectType objectType = this.object.getParentType();
 		if (!objectType.isBaseType()) {
-			ret.add(new CmisObjectTypeDelegate(this.factory, objectType));
+			ret.add(new CmisObjectTypeDelegate(this.factory, ctx.getSession(), objectType));
 		}
 		return ret;
 	}
 
 	@Override
-	protected CmfType calculateType(ObjectType object) throws Exception {
+	protected CmfType calculateType(Session session, ObjectType object) throws Exception {
 		return CmfType.TYPE;
 	}
 
 	@Override
-	protected String calculateLabel(ObjectType object) throws Exception {
+	protected String calculateLabel(Session session, ObjectType object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateObjectId(ObjectType object) throws Exception {
+	protected String calculateObjectId(Session session, ObjectType object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateSearchKey(ObjectType object) throws Exception {
+	protected String calculateSearchKey(Session session, ObjectType object) throws Exception {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateName(ObjectType object) throws Exception {
+	protected String calculateName(Session session, ObjectType object) throws Exception {
 		return object.getId();
 	}
 }

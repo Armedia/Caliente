@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
+import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.data.Ace;
 import org.apache.chemistry.opencmis.commons.data.Acl;
 import org.apache.chemistry.opencmis.commons.data.Principal;
@@ -22,17 +23,18 @@ import com.armedia.caliente.store.CmfValue;
 
 public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 
-	protected CmisAclDelegate(CmisExportDelegateFactory factory, FileableCmisObject object) throws Exception {
-		super(factory, FileableCmisObject.class, object);
+	protected CmisAclDelegate(CmisExportDelegateFactory factory, Session session, FileableCmisObject object)
+		throws Exception {
+		super(factory, session, FileableCmisObject.class, object);
 	}
 
 	@Override
-	protected CmfType calculateType(FileableCmisObject object) throws Exception {
+	protected CmfType calculateType(Session session, FileableCmisObject object) throws Exception {
 		return CmfType.ACL;
 	}
 
 	@Override
-	protected String calculateLabel(FileableCmisObject object) throws Exception {
+	protected String calculateLabel(Session session, FileableCmisObject object) throws Exception {
 		final String p;
 		List<String> paths = object.getPaths();
 		if ((paths != null) && !paths.isEmpty()) {
@@ -44,12 +46,12 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 	}
 
 	@Override
-	protected String calculateObjectId(FileableCmisObject object) throws Exception {
+	protected String calculateObjectId(Session session, FileableCmisObject object) throws Exception {
 		return String.format("ACL-[%s]", object.getId());
 	}
 
 	@Override
-	protected String calculateSearchKey(FileableCmisObject object) throws Exception {
+	protected String calculateSearchKey(Session session, FileableCmisObject object) throws Exception {
 		return object.getId();
 	}
 
@@ -111,7 +113,7 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 	}
 
 	@Override
-	protected String calculateName(FileableCmisObject aclObject) throws Exception {
+	protected String calculateName(Session session, FileableCmisObject aclObject) throws Exception {
 		return aclObject.getId();
 	}
 }

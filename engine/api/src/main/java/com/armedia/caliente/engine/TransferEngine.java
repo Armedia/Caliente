@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
@@ -16,8 +17,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
+import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
+import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -26,7 +31,7 @@ import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
+import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
@@ -119,13 +124,20 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	protected final CmfCrypt crypto;
 
 	private final boolean supportsDuplicateFileNames;
+	private final String cfgNamePrefix;
 
-	public TransferEngine(CmfCrypt crypto) {
-		this(crypto, false);
+	public TransferEngine(CmfCrypt crypto, String cfgNamePrefix) {
+		this(crypto, cfgNamePrefix, false);
 	}
 
-	public TransferEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
+	public TransferEngine(CmfCrypt crypto, String cfgNamePrefix, boolean supportsDuplicateNames) {
 		this.crypto = crypto;
+		if (!StringUtils.isEmpty(cfgNamePrefix)) {
+			cfgNamePrefix = String.format("%s-", cfgNamePrefix);
+		} else {
+			cfgNamePrefix = "";
+		}
+		this.cfgNamePrefix = cfgNamePrefix;
 		this.supportsDuplicateFileNames = supportsDuplicateNames;
 	}
 
@@ -167,7 +179,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
 
 	protected abstract F newContextFactory(S session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, CmfTypeMapper typeMapper, Logger output, WarningTracker warningTracker)
+		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
 		throws Exception;
 
 	protected abstract D newDelegateFactory(S session, CfgTools cfg) throws Exception;
@@ -188,29 +200,36 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		String id = Tools.toString(referrentId.getValue(), true);
 		String key = Tools.toString(referrentKey.getValue(), true);
 		if ((type == null) || (id == null)) { return null; }
-		return new ExportTarget(CmfType.decodeString(type), id, key);
+		return new ExportTarget(CmfType.valueOf(type), id, key);
 	}
 
 	public final void setReferrent(CmfObject<V> marshaled, ExportTarget referrent) throws ExportException {
 		// Now, add the properties to reference the referrent object
 		if (referrent != null) {
 			final CmfAttributeTranslator<V> translator = getTranslator();
-			CmfProperty<V> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING, false);
 			try {
+				CmfProperty<V> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING,
+					false);
 				referrentType.setValue(translator.getValue(CmfDataType.STRING, referrent.getType().name()));
 				marshaled.setProperty(referrentType);
+
 				CmfProperty<V> referrentId = new CmfProperty<>(TransferEngine.REFERRENT_ID, CmfDataType.STRING, false);
 				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getId()));
 				marshaled.setProperty(referrentId);
+
 				CmfProperty<V> referrentKey = new CmfProperty<>(TransferEngine.REFERRENT_KEY, CmfDataType.STRING,
 					false);
-				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getSearchKey()));
+				referrentKey.setValue(translator.getValue(CmfDataType.STRING, referrent.getSearchKey()));
 				marshaled.setProperty(referrentKey);
 			} catch (ParseException e) {
 				// This should never happen...
 				throw new ExportException("Failed to store the referrent information", e);
 			}
 		}
+	}
+
+	protected final String getCfgNamePrefix() {
+		return this.cfgNamePrefix;
 	}
 
 	public final boolean isSupportsDuplicateFileNames() {
@@ -243,6 +262,39 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 			c.add(settings.get(s));
 		}
 		return Collections.unmodifiableCollection(c);
+	}
+
+	protected final void loadPrincipalMappings(CmfValueMapper mapper, CfgTools cfg) {
+		for (PrincipalType t : PrincipalType.values()) {
+			Properties p = new Properties();
+			if (!MappingTools.loadMap(this.log, cfg, t.getSetting(), p)) {
+				continue;
+			}
+
+			for (String s : p.stringPropertyNames()) {
+				String v = StringUtils.strip(p.getProperty(s));
+				if (!StringUtils.isEmpty(s)) {
+					mapper.setMapping(t.getObjectType(), t.getMappingName(), s, v);
+				}
+			}
+		}
+	}
+
+	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
+		String defaultXform = String.format("%s%s", this.cfgNamePrefix, Transformer.getDefaultLocation());
+		String xform = cfg.getString(TransferSetting.TRANSFORMATION.getLabel(), defaultXform);
+
+		String defaultMeta = String.format("%s%s", this.cfgNamePrefix, ExternalMetadataLoader.getDefaultLocation());
+		String meta = cfg.getString(TransferSetting.EXTERNAL_METADATA.getLabel(), defaultMeta);
+
+		ExternalMetadataLoader emdl = ExternalMetadataLoader.getExternalMetadataLoader(meta, !defaultMeta.equals(meta));
+		return Transformer.getTransformer(xform, emdl, !defaultXform.equals(xform));
+	}
+
+	protected final ObjectFilter getFilter(CfgTools cfg) throws Exception {
+		String defaultFilter = String.format("%s%s", this.cfgNamePrefix, ObjectFilter.getDefaultLocation());
+		String xform = cfg.getString(TransferSetting.FILTER.getLabel(), defaultFilter);
+		return ObjectFilter.getObjectFilter(xform, !defaultFilter.equals(xform));
 	}
 
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {

@@ -68,8 +68,8 @@ public final class FilenameEncoder {
 		try {
 			return URLEncoder.encode(str, FilenameEncoder.ENCODING);
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(String.format("%s encoding isn't supported in this JVM", FilenameEncoder.ENCODING),
-				e);
+			throw new RuntimeException(
+				String.format("%s encoding isn't supported in this JVM", FilenameEncoder.ENCODING), e);
 		}
 	}
 
@@ -77,8 +77,8 @@ public final class FilenameEncoder {
 		try {
 			return URLDecoder.decode(str, FilenameEncoder.ENCODING);
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(String.format("%s encoding isn't supported in this JVM", FilenameEncoder.ENCODING),
-				e);
+			throw new RuntimeException(
+				String.format("%s encoding isn't supported in this JVM", FilenameEncoder.ENCODING), e);
 		}
 	}
 

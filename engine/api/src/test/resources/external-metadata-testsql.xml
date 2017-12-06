@@ -1,0 +1,27 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+	<data-source name="default">
+		<url>jdbc:h2:${h2.test.path};AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096</url>
+		<driver>org.h2.Driver</driver>
+	</data-source>
+	<metadata-set id="primary" failOnError="true" failOnMissing="false">
+		<from-sql dataSource="default">
+			<search-names-query>select distinct name from cmf_attribute order by name</search-names-query>
+
+			<query>
+				<sql>select data, value_number from cmf_attribute_value where name = ${attName} and object_id = ${objectId} order by value_number</sql>
+				<parameter>
+					<name>attName</name>
+					<value lang="jexl">sqlName</value>
+				</parameter>
+				<parameter>
+					<name>objectId</name>
+					<value lang="jexl">`{0${obj.type.ordinal()}-${obj.id}}`</value>
+				</parameter>
+			</query>
+
+			<value-column>data</value-column>
+		</from-sql>
+	</metadata-set>
+</external-metadata>

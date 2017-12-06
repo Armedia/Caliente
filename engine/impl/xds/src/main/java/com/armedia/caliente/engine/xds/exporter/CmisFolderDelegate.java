@@ -9,6 +9,7 @@ import java.util.Set;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
+import org.apache.chemistry.opencmis.client.api.Session;
 
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
@@ -19,8 +20,8 @@ import com.armedia.commons.utilities.Tools;
 
 public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
-	protected CmisFolderDelegate(CmisExportDelegateFactory factory, Folder folder) throws Exception {
-		super(factory, Folder.class, folder);
+	protected CmisFolderDelegate(CmisExportDelegateFactory factory, Session session, Folder folder) throws Exception {
+		super(factory, session, Folder.class, folder);
 	}
 
 	@Override
@@ -46,7 +47,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected int calculateDependencyTier(Folder object) throws Exception {
+	protected int calculateDependencyTier(Session session, Folder object) throws Exception {
 		return calculateDepth(object, new LinkedHashSet<String>());
 	}
 
@@ -65,9 +66,9 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 			// Don't continue if the referrent object is one of this object's children
 			if ((referrent != null) && Tools.equals(referrent.getId(), o.getId())) { return ret; }
 			if (o instanceof Folder) {
-				childFolders.add(new CmisFolderDelegate(this.factory, Folder.class.cast(o)));
+				childFolders.add(new CmisFolderDelegate(this.factory, ctx.getSession(), Folder.class.cast(o)));
 			} else if (o instanceof Document) {
-				childDocs.add(new CmisDocumentDelegate(this.factory, Document.class.cast(o)));
+				childDocs.add(new CmisDocumentDelegate(this.factory, ctx.getSession(), Document.class.cast(o)));
 			}
 		}
 
@@ -83,7 +84,7 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 	}
 
 	@Override
-	protected String calculateName(Folder folder) throws Exception {
+	protected String calculateName(Session session, Folder folder) throws Exception {
 		return folder.getName();
 	}
 }

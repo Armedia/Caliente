@@ -56,7 +56,7 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>utilities</artifactId>
-				<version>0.3.18</version>
+				<version>0.3.24</version>
 			</dependency>
 
 			<dependency>
@@ -68,19 +68,19 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
-				<version>1.1.8</version>
+				<version>1.1.10</version>
 			</dependency>
 
 			<dependency>
-				<groupId>com.armedia.commons</groupId>
+				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-api</artifactId>
-				<version>1.0.5</version>
+				<version>1.1.0</version>
 			</dependency>
 
 			<dependency>
-				<groupId>com.armedia.commons</groupId>
+				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-pooled</artifactId>
-				<version>1.0.5</version>
+				<version>1.1.0</version>
 			</dependency>
 
 			<dependency>
@@ -186,6 +186,24 @@
 			</dependency>
 
 			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-jexl3</artifactId>
+				<version>3.1</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache-extras.beanshell</groupId>
+				<artifactId>bsh</artifactId>
+				<version>2.0b6</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.codehaus.groovy</groupId>
+				<artifactId>groovy-jsr223</artifactId>
+				<version>2.4.12</version>
+			</dependency>
+
+			<dependency>
 				<groupId>com.unboundid</groupId>
 				<artifactId>unboundid-ldapsdk</artifactId>
 				<version>3.2.0</version>
@@ -223,9 +241,15 @@
 			</dependency>
 
 			<dependency>
-				<groupId>com.oracle.ucm</groupId>
-				<artifactId>oracle-ucm-ridc-jars</artifactId>
-				<version>11.1.1</version>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-jcs-core</artifactId>
+				<version>2.0</version>
+			</dependency>
+
+			<dependency>
+				<groupId>com.oracle.ridc</groupId>
+				<artifactId>oracle-ridc-jars</artifactId>
+				<version>11.1.1.0</version>
 				<type>pom</type>
 			</dependency>
 
@@ -350,7 +374,7 @@
 						<archive>
 							<manifestEntries>
 								<SCM-Branch>${scmBranch}</SCM-Branch>
-								<SCM-Revision>${buildNumber}</SCM-Revision>
+								<SCM-Revision>${commitHash}</SCM-Revision>
 								<SCM-Build-Time>${buildTimestamp}</SCM-Build-Time>
 							</manifestEntries>
 						</archive>
@@ -400,6 +424,21 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>buildnumber-maven-plugin</artifactId>
 				<executions>
+					<execution>
+						<id>create-commitHash</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+						<configuration>
+							<doCheck>false</doCheck>
+							<doUpdate>false</doUpdate>
+							<shortRevisionLength>40</shortRevisionLength>
+							<getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+							<revisionOnScmFailure>unknown</revisionOnScmFailure>
+							<buildNumberPropertyName>commitHash</buildNumberPropertyName>
+						</configuration>
+					</execution>
 					<execution>
 						<id>create-buildNumber</id>
 						<phase>generate-sources</phase>

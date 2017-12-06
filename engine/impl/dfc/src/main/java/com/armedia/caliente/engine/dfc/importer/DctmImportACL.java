@@ -192,8 +192,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 			user = DctmMappingUtils.resolveMappableUser(acl.getSession(), user);
 			IDfUser u = DctmImportUser.locateExistingUser(context, user);
-			if (u == null) { throw new ImportException(String.format("Failed to locate the owner [%s] for ACL [%s](%s)",
-				user, this.cmfObject.getLabel(), this.cmfObject.getId())); }
+			if (u == null) { throw new ImportException(
+				String.format("Failed to locate the owner [%s] for %s", user, this.cmfObject.getDescription())); }
 			acl.setDomain(u.getUserName());
 			acl.setObjectName(name);
 			acl.save();
@@ -245,7 +245,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			// If all 3 are null, then we assume an empty list
 			if ((accessors == null) && (permitTypes == null) && (permitValues == null)) {
 				if (this.log.isDebugEnabled()) {
-					this.log.warn("Empty ACL created at [{}]({})", this.cmfObject.getLabel(), this.cmfObject.getId());
+					this.log.warn("Created empty {}", this.cmfObject.getDescription());
 				}
 				return;
 			}
@@ -256,15 +256,14 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			if ((accessors == null) || (permitTypes == null) || (permitValues == null)
 				|| (accessors.getValueCount() != permitTypes.getValueCount())
 				|| (accessors.getValueCount() != permitValues.getValueCount())) { throw new ImportException(
-					String.format(
-						"Irregular ACL data stored for ACL [%s](%s)%naccessors = %s%npermitType = %s%npermitValue = %s",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), accessors, permitTypes, permitValues)); }
+					String.format("Irregular ACL data stored for %s%naccessors = %s%npermitType = %s%npermitValue = %s",
+						this.cmfObject.getDescription(), accessors, permitTypes, permitValues)); }
 
 			// One final check to shortcut and avoid unnecessary processing...
 			final int accessorCount = accessors.getValueCount();
 			if (accessorCount == 0) {
 				if (this.log.isDebugEnabled()) {
-					this.log.warn("Empty ACL created at [{}]({})", this.cmfObject.getLabel(), this.cmfObject.getId());
+					this.log.warn("Created empty []", this.cmfObject.getDescription());
 				}
 				return;
 			}

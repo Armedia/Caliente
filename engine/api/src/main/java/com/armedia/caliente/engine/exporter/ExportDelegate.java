@@ -3,7 +3,9 @@ package com.armedia.caliente.engine.exporter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferDelegate;
@@ -26,31 +28,28 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	protected final String name;
 	protected final Collection<CmfObjectRef> parentIds;
 	protected final String subType;
+	protected final Set<String> secondaries;
 
-	protected ExportDelegate(DF factory, Class<T> objectClass, T object) throws Exception {
+	protected ExportDelegate(DF factory, S session, Class<T> objectClass, T object) throws Exception {
 		super(factory, objectClass);
 		if (object == null) { throw new IllegalArgumentException("Must provide a source object to export"); }
 		this.object = object;
 
 		// Now we invoke everything that needs to be calculated
-		this.exportTarget = new ExportTarget(calculateType(object), calculateObjectId(object),
-			calculateSearchKey(object));
-		this.label = calculateLabel(object);
-		this.dependencyTier = calculateDependencyTier(object);
-		this.historyId = calculateHistoryId(object);
-		this.historyCurrent = calculateHistoryCurrent(object);
-		this.subType = calculateSubType(this.exportTarget.getType(), object);
-		if (factory.getEngine().isSupportsDuplicateFileNames()) {
-			// We only calculate parent IDs
-			Collection<CmfObjectRef> parentIds = calculateParentIds(object);
-			if (parentIds == null) {
-				parentIds = Collections.emptySet();
-			}
-			this.parentIds = Tools.freezeList(new ArrayList<>(parentIds));
-		} else {
-			this.parentIds = Collections.emptyList();
+		this.exportTarget = new ExportTarget(calculateType(session, object), calculateObjectId(session, object),
+			calculateSearchKey(session, object));
+		this.label = calculateLabel(session, object);
+		this.dependencyTier = calculateDependencyTier(session, object);
+		this.historyId = calculateHistoryId(session, object);
+		this.historyCurrent = calculateHistoryCurrent(session, object);
+		this.subType = calculateSubType(session, this.exportTarget.getType(), object);
+		this.secondaries = calculateSecondarySubtypes(session, this.exportTarget.getType(), this.subType, object);
+		Collection<CmfObjectRef> parentIds = calculateParentIds(session, object);
+		if (parentIds == null) {
+			parentIds = Collections.emptySet();
 		}
-		this.name = calculateName(object);
+		this.parentIds = Tools.freezeList(new ArrayList<>(parentIds));
+		this.name = calculateName(session, object);
 		if (this.subType == null) { throw new IllegalStateException("calculateSubType() may not return null"); }
 	}
 
@@ -58,37 +57,37 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.exportTarget;
 	}
 
-	protected abstract CmfType calculateType(T object) throws Exception;
+	protected abstract CmfType calculateType(S session, T object) throws Exception;
 
 	public final CmfType getType() {
 		return this.exportTarget.getType();
 	}
 
-	protected abstract String calculateLabel(T object) throws Exception;
+	protected abstract String calculateLabel(S session, T object) throws Exception;
 
 	public final String getLabel() {
 		return this.label;
 	}
 
-	protected abstract String calculateObjectId(T object) throws Exception;
+	protected abstract String calculateObjectId(S session, T object) throws Exception;
 
 	public final String getObjectId() {
 		return this.exportTarget.getId();
 	}
 
-	protected abstract String calculateSearchKey(T object) throws Exception;
+	protected abstract String calculateSearchKey(S session, T object) throws Exception;
 
 	public final String getSearchKey() {
 		return this.exportTarget.getSearchKey();
 	}
 
-	protected abstract String calculateName(T object) throws Exception;
+	protected abstract String calculateName(S session, T object) throws Exception;
 
 	public final String getName() {
 		return this.name;
 	}
 
-	protected Collection<CmfObjectRef> calculateParentIds(T object) throws Exception {
+	protected Collection<CmfObjectRef> calculateParentIds(S session, T object) throws Exception {
 		return null;
 	}
 
@@ -96,11 +95,11 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.parentIds;
 	}
 
-	protected int calculateDependencyTier(T object) throws Exception {
+	protected int calculateDependencyTier(S session, T object) throws Exception {
 		return 0;
 	}
 
-	protected String calculateHistoryId(T object) throws Exception {
+	protected String calculateHistoryId(S session, T object) throws Exception {
 		return null;
 	}
 
@@ -112,7 +111,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.historyId;
 	}
 
-	protected boolean calculateHistoryCurrent(T object) throws Exception {
+	protected boolean calculateHistoryCurrent(S session, T object) throws Exception {
 		// Default to true...
 		return true;
 	}
@@ -121,8 +120,13 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 		return this.historyCurrent;
 	}
 
-	protected String calculateSubType(CmfType type, T object) throws Exception {
+	protected String calculateSubType(S session, CmfType type, T object) throws Exception {
 		return type.name();
+	}
+
+	protected Set<String> calculateSecondarySubtypes(S session, CmfType type, String subtype, T object)
+		throws Exception {
+		return new LinkedHashSet<>();
 	}
 
 	public final String getSubType() {
@@ -146,7 +150,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 	final CmfObject<V> marshal(C ctx, ExportTarget referrent) throws ExportException {
 		CmfObject<V> marshaled = new CmfObject<>(this.factory.getTranslator(), this.exportTarget.getType(),
 			this.exportTarget.getId(), this.name, this.parentIds, this.exportTarget.getSearchKey(), this.dependencyTier,
-			this.historyId, this.historyCurrent, this.label, this.subType, ctx.getProductName(),
+			this.historyId, this.historyCurrent, this.label, this.subType, this.secondaries, ctx.getProductName(),
 			ctx.getProductVersion(), null);
 		if (!marshal(ctx, marshaled)) { return null; }
 		this.factory.getEngine().setReferrent(marshaled, referrent);

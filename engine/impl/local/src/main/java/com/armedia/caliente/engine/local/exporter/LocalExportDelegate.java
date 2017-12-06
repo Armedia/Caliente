@@ -8,12 +8,13 @@ import com.armedia.caliente.store.CmfValue;
 abstract class LocalExportDelegate<T> extends
 	ExportDelegate<T, LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportDelegateFactory, LocalExportEngine> {
 
-	protected LocalExportDelegate(LocalExportDelegateFactory factory, Class<T> klass, T object) throws Exception {
-		super(factory, klass, object);
+	protected LocalExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, Class<T> klass, T object)
+		throws Exception {
+		super(factory, root, klass, object);
 	}
 
 	@Override
-	protected boolean calculateHistoryCurrent(T object) throws Exception {
+	protected boolean calculateHistoryCurrent(LocalRoot root, T object) throws Exception {
 		// Always true
 		return true;
 	}

@@ -27,7 +27,6 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportReplaceMode;
 import com.armedia.caliente.engine.importer.ImportSetting;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -36,6 +35,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.dfc.util.DctmVersionNumber;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
@@ -51,6 +51,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfVirtualDocument;
 import com.documentum.fc.client.IDfVirtualDocumentNode;
+import com.documentum.fc.client.impl.ISysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.DfTime;
@@ -116,7 +117,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 
 	private String calculateVersionString(IDfSysObject document, boolean full) throws DfException {
 		if (!full) { return String.format("%s%s", document.getImplicitVersionLabel(),
-			document.getHasFolder() ? ",CURRENT" : ""); }
+			document.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : ""); }
 		int labelCount = document.getVersionLabelCount();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < labelCount; i++) {
@@ -216,7 +217,12 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	protected boolean isSameObject(IDfSysObject object, DctmImportContext ctx) throws DfException, ImportException {
 		// If we're a reference, and there's something there already, we don't import...
 		if (isReference()) { return true; }
-		return super.isSameObject(object, ctx);
+		// We only care about the "standard criteria" if we're the root version...
+		if (ctx.getHistoryPosition() == 0) { return super.isSameObject(object, ctx); }
+		// If we're not the root version, then we assume this is the same object since it has the
+		// same version number and is associated to the same chronicle (this has already been
+		// established during the import process)...
+		return true;
 	}
 
 	protected IDfSysObject newDocument(DctmImportContext context) throws DfException, ImportException {
@@ -471,10 +477,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		try {
 			path = contentHandle.getFile();
 		} catch (IOException e) {
-			throw new ImportException(
-				String.format("Failed to get the content file for DOCUMENT (%s)[%s], qualifier [%s]",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getInfo()),
-				e);
+			throw new ImportException(String.format("Failed to get the content file for %s, qualifier [%s]",
+				this.cmfObject.getDescription(), contentHandle.getInfo()), e);
 		}
 
 		if (path == null) {
@@ -489,17 +493,16 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				if (path != null) {
 					path.delete();
 				}
-				throw new ImportException(String.format(
-					"Failed to create and write the temporary content file for DOCUMENT (%s)[%s], qualifier [%s]",
-					this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getInfo()), e);
+				throw new ImportException(
+					String.format("Failed to create and write the temporary content file for %s, qualifier [%s]",
+						this.cmfObject.getDescription(), contentHandle.getInfo()),
+					e);
 			} catch (CmfStorageException e) {
 				if (path != null) {
 					path.delete();
 				}
-				throw new ImportException(
-					String.format("Failed to get the content stream for DOCUMENT (%s)[%s], qualifier [%s]",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), contentHandle.getInfo()),
-					e);
+				throw new ImportException(String.format("Failed to get the content stream for %s, qualifier [%s]",
+					this.cmfObject.getDescription(), contentHandle.getInfo()), e);
 			}
 		}
 
@@ -788,7 +791,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 
 		if (addVdocMembers && document.isCheckedOut()) {
 			CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.VDOC_MEMBER);
-			IDfVirtualDocument vdoc = document.asVirtualDocument("CURRENT", false);
+			IDfVirtualDocument vdoc = document.asVirtualDocument(ISysObject.CURRENT_VERSION_LABEL, false);
 			IDfVirtualDocumentNode root = vdoc.getRootNode();
 
 			// First, remove all the existing nodes
@@ -823,8 +826,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 						"Virtual Document [%s](%s) references a component [%s] which could not be located, but may have failed during import",
 						this.cmfObject.getLabel(), this.cmfObject.getId(), m.getTargetValue())); }
 
-					final String childBinding = (StringUtils.isBlank(member.getBinding()) ? "CURRENT"
-						: member.getBinding());
+					final String childBinding = (StringUtils.isBlank(member.getBinding())
+						? ISysObject.CURRENT_VERSION_LABEL : member.getBinding());
 					final boolean childIsVirtualDoc = (so.isVirtualDocument() || (so.getLinkCount() > 0));
 					final boolean followAssembly = childIsVirtualDoc ? member.isFollowAssembly() : false;
 					final boolean overrideLateBinding = childIsVirtualDoc ? member.isOverrideLateBinding() : false;

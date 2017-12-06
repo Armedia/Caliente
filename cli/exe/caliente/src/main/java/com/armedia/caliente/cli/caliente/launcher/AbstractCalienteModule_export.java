@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.mail.MessagingException;
 
@@ -37,12 +38,19 @@ import com.armedia.commons.utilities.Tools;
 public class AbstractCalienteModule_export extends
 	AbstractCalienteModule<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> implements ExportEngineListener {
 
+	private static final Integer PROGRESS_INTERVAL = 5;
+
 	protected static final String EXPORT_START = "calienteExportStart";
 	protected static final String EXPORT_END = "calienteExportEnd";
 	protected static final String BASE_SELECTOR = "calienteBaseSelector";
 	protected static final String FINAL_SELECTOR = "calienteFinalSelector";
 
 	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<>(ExportResult.class);
+
+	private final AtomicLong start = new AtomicLong(0);
+	private final AtomicLong previous = new AtomicLong(0);
+	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
+	private final AtomicLong objectCounter = new AtomicLong();
 
 	protected AbstractCalienteModule_export(ExportEngine<?, ?, ?, ?, ?, ?> engine) throws Throwable {
 		super(engine, true, true, true);
@@ -65,6 +73,8 @@ public class AbstractCalienteModule_export extends
 			CLIParam.no_versions.isPresent() || CLIParam.direct_fs.isPresent());
 		settings.put(TransferSetting.NO_RENDITIONS.getLabel(),
 			CLIParam.no_renditions.isPresent() || CLIParam.direct_fs.isPresent());
+		settings.put(TransferSetting.TRANSFORMATION.getLabel(), CLIParam.transformations.getString());
+		settings.put(TransferSetting.FILTER.getLabel(), CLIParam.filters.getString());
 		if (this.user != null) {
 			settings.put(CmisSessionSetting.USER.getLabel(), this.user);
 		}
@@ -202,6 +212,7 @@ public class AbstractCalienteModule_export extends
 			try {
 				this.log.info("##### Export Process Started #####");
 				this.counter.reset();
+				this.objectCounter.set(0);
 				this.engine.runExport(this.console, this.warningTracker, this.cmfObjectStore, this.cmfContentStore,
 					settings);
 				final Date exportEnd = new Date();
@@ -326,7 +337,40 @@ public class AbstractCalienteModule_export extends
 
 	@Override
 	public final void exportStarted(ExportState exportState) {
+		this.start.set(System.currentTimeMillis());
 		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportState.cfg));
+	}
+
+	protected final void showProgress() {
+		showProgress(false);
+	}
+
+	protected final void showProgress(boolean forced) {
+		final Long current = this.objectCounter.get();
+		final boolean milestone = (forced || ((current % 1000) == 0));
+
+		// Is it time to show progress? Have 10 seconds passed?
+		long now = System.currentTimeMillis();
+		long last = this.progressReporter.get();
+		boolean shouldDisplay = (milestone || ((now - last) >= TimeUnit.MILLISECONDS
+			.convert(AbstractCalienteModule_export.PROGRESS_INTERVAL, TimeUnit.SECONDS)));
+
+		// This avoids a race condition where we don't show successive progress reports from
+		// different threads
+		if (shouldDisplay && this.progressReporter.compareAndSet(last, now)) {
+			String objectLine = "";
+			final Double prev = this.previous.doubleValue();
+			final Long duration = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - this.start.get());
+			this.previous.set(current.longValue());
+			final long count = (current.longValue() - prev.longValue());
+			final Double itemRate = (count / AbstractCalienteModule_export.PROGRESS_INTERVAL.doubleValue());
+			final Double startRate = (current.doubleValue() / duration.doubleValue());
+
+			objectLine = String.format("Exported %d objects (~%.2f/s, %d since last report, ~%.2f/s average)",
+				current.longValue(), itemRate, count, startRate);
+			this.console.info(
+				String.format("PROGRESS REPORT%n\t%s%n%n%s", objectLine, this.counter.generateCummulativeReport(1)));
+		}
 	}
 
 	@Override
@@ -341,15 +385,18 @@ public class AbstractCalienteModule_export extends
 
 	@Override
 	public final void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber) {
+		this.objectCounter.incrementAndGet();
 		if (objectNumber != null) {
-			this.console.info(String.format("%s export completed for [%s](%s) as object #%d", object.getType().name(),
-				object.getLabel(), object.getId(), objectNumber));
+			this.console
+				.info(String.format("Export completed for %s as object #%d", object.getDescription(), objectNumber));
 			this.counter.increment(object.getType(), ExportResult.EXPORTED);
 		}
+		showProgress();
 	}
 
 	@Override
 	public final void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
+		this.objectCounter.incrementAndGet();
 		switch (reason) {
 			case SKIPPED:
 			case UNSUPPORTED:
@@ -366,12 +413,15 @@ public class AbstractCalienteModule_export extends
 			default:
 				break;
 		}
+		showProgress();
 	}
 
 	@Override
 	public final void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
+		this.objectCounter.incrementAndGet();
 		this.counter.increment(object.getType(), ExportResult.FAILED);
 		this.console.warn(String.format("Object export failed for %s", object.getShortLabel()), thrown);
+		showProgress();
 	}
 
 	@Override
@@ -381,6 +431,7 @@ public class AbstractCalienteModule_export extends
 
 	@Override
 	public final void exportFinished(UUID jobId, Map<CmfType, Long> summary) {
+		showProgress(true);
 		this.console.info("");
 		this.console.info("Export Summary");
 		this.console.info("");

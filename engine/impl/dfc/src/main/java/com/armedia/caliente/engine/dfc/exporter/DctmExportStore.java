@@ -5,6 +5,7 @@
 package com.armedia.caliente.engine.dfc.exporter;
 
 import com.documentum.fc.client.IDfPersistentObject;
+import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.content.IDfStore;
 
 /**
@@ -13,21 +14,21 @@ import com.documentum.fc.client.content.IDfStore;
  */
 public class DctmExportStore extends DctmExportDelegate<IDfStore> {
 
-	protected DctmExportStore(DctmExportDelegateFactory factory, IDfStore store) throws Exception {
-		super(factory, IDfStore.class, store);
+	protected DctmExportStore(DctmExportDelegateFactory factory, IDfSession session, IDfStore store) throws Exception {
+		super(factory, session, IDfStore.class, store);
 	}
 
-	DctmExportStore(DctmExportDelegateFactory factory, IDfPersistentObject store) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfStore.class, store));
+	DctmExportStore(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject store) throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfStore.class, store));
 	}
 
 	@Override
-	protected String calculateLabel(IDfStore store) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfStore store) throws Exception {
 		return store.getName();
 	}
 
 	@Override
-	protected String calculateName(IDfStore store) throws Exception {
+	protected String calculateName(IDfSession session, IDfStore store) throws Exception {
 		return store.getName();
 	}
 }

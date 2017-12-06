@@ -43,16 +43,18 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 	 */
 	private static final String DQL_FIND_GROUPS_WITH_DEFAULT_FOLDER = "SELECT g.group_name FROM dm_group g WHERE g.group_directory_id = '%s'";
 
-	protected DctmExportFolder(DctmExportDelegateFactory factory, IDfFolder folder) throws Exception {
-		super(factory, IDfFolder.class, folder);
+	protected DctmExportFolder(DctmExportDelegateFactory factory, IDfSession session, IDfFolder folder)
+		throws Exception {
+		super(factory, session, IDfFolder.class, folder);
 	}
 
-	DctmExportFolder(DctmExportDelegateFactory factory, IDfPersistentObject folder) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfFolder.class, folder));
+	DctmExportFolder(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject folder)
+		throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfFolder.class, folder));
 	}
 
 	@Override
-	protected String calculateLabel(IDfFolder folder) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfFolder folder) throws Exception {
 		return folder.getFolderPath(0);
 	}
 

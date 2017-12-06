@@ -1,0 +1,186 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<transformations xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+
+	<transformation>
+		<if>
+			<and>
+				<or>
+					<is-type>DOCUMENT</is-type>
+
+					<is-subtype comparison="eq" lang="...">
+						<!-- expression -->
+					</is-subtype>
+
+					<has-attribute comparison="eq" lang="...">
+						<!-- expression -->
+					</has-attribute>
+					<is-attribute-value comparison="eq" cardinality="any">
+						<name lang="...">
+							<!-- expression -->
+						</name>
+						<value lang="...">
+							<!-- expression -->
+						</value>
+					</is-attribute-value>
+
+					<has-caliente-property comparison="eq" lang="...">
+						<!-- expression -->
+					</has-caliente-property>
+					<is-caliente-property-value comparison="EQ" cardinality="first">
+						<name lang="...">
+							<!-- expression -->
+						</name>
+						<value lang="...">
+							<!-- expression -->
+						</value>
+					</is-caliente-property-value>
+
+					<not>
+						<is-reference />
+					</not>
+
+					<oneof>
+						<is-first-version />
+						<is-latest-version />
+					</oneof>
+
+					<has-secondary-subtype comparison="eq" lang="...">
+						<!-- expression -->
+					</has-secondary-subtype>
+
+					<check-expression comparison="eq">
+						<left lang="...">
+							<!-- expression -->
+						</left>
+						<right lang="...">
+							<!-- expression -->
+						</right>
+					</check-expression>
+
+					<is-variable-set lang="...">
+						<!-- expression -->
+					</is-variable-set>
+
+					<is-variable-value comparison="eq" cardinality="any">
+						<name lang="...">
+							<!-- expression -->
+						</name>
+						<value lang="...">
+							<!-- expression -->
+						</value>
+					</is-variable-value>
+				</or>
+			</and>
+		</if>
+
+
+		<set-subtype>
+			<if>
+				<and>
+					<is-latest-version />
+				</and>
+			</if>
+
+			<value lang="asdfasdf">
+				<!-- expression -->
+			</value>
+		</set-subtype>
+
+		<replace-subtype>
+			<regex lang="...">
+				<!-- expression -->
+			</regex>
+			<replacement lang="...">
+				<!-- expression -->
+			</replacement>
+		</replace-subtype>
+
+		<add-secondary-subtype>
+			<if>
+			</if>
+			<value lang="...">
+				<!-- expression -->
+			</value>
+		</add-secondary-subtype>
+		<remove-secondary-subtype>
+			<comparison>eq</comparison>
+			<value lang="...">
+				<!-- expression -->
+			</value>
+		</remove-secondary-subtype>
+		<replace-secondary-subtype>
+			<regex lang="...">
+				<!-- expression -->
+			</regex>
+			<replacement lang="...">
+				<!-- expression -->
+			</replacement>
+		</replace-secondary-subtype>
+
+		<set-attribute>
+			<name lang="...">
+				<!-- expression -->
+			</name>
+			<value lang="...">
+				<!-- expression -->
+			</value>
+		</set-attribute>
+		<remove-attribute>
+			<comparison>eq</comparison>
+			<name lang="...">
+				<!-- expression -->
+			</name>
+		</remove-attribute>
+		<replace-attribute>
+			<name lang="...">
+				<!-- expression -->
+			</name>
+			<cardinality>all</cardinality>
+			<regex lang="...">
+				<!-- expression -->
+			</regex>
+			<replacement lang="...">
+				<!-- expression -->
+			</replacement>
+		</replace-attribute>
+
+		<map-attribute-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="...">
+				<!-- expression -->
+			</name>
+			<cardinality>all</cardinality>
+			<case comparison="eq">
+				<value lang="...">
+					</value>
+				<replacement lang="...">
+					</replacement>
+			</case>
+			<default lang="...">
+				</default>
+		</map-attribute-value>
+
+		<map-variable-value>
+			<if>
+				<is-reference />
+			</if>
+			<name lang="...">
+				<!-- expression -->
+			</name>
+			<cardinality>all</cardinality>
+			<case comparison="eq">
+				<value lang="...">
+					</value>
+				<replacement lang="...">
+					</replacement>
+			</case>
+			<default lang="...">
+				</default>
+		</map-variable-value>
+
+	</transformation>
+
+</transformations>

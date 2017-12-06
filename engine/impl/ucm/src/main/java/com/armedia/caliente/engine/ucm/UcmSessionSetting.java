@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.ucm;
 
+import java.util.concurrent.TimeUnit;
+
 import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum UcmSessionSetting implements ConfigurationSetting {
@@ -8,15 +10,30 @@ public enum UcmSessionSetting implements ConfigurationSetting {
 	PASSWORD, //
 	HOST, //
 	PORT(4444), //
-	SSL_MODE(false),
+	SSL_MODE(SSLMode.NONE.name()),
 	TRUSTSTORE(System.getProperty("javax.net.ssl.trustStore")), //
 	TRUSTSTORE_PASSWORD(System.getProperty("javax.net.ssl.trustStorePassword")), //
 	KEYSTORE(System.getProperty("javax.net.ssl.keyStore")), //
 	KEYSTORE_PASSWORD(System.getProperty("javax.net.ssl.keyStorePassword")), //
 	CLIENT_CERT_ALIAS, //
 	CLIENT_CERT_PASSWORD, //
+	MIN_PING_TIME(TimeUnit.MINUTES.toMillis(2)), //
 	//
 	;
+
+	public static enum SSLMode {
+		//
+		NONE, // No SSL support
+		SERVER, // Only server validation
+		CLIENT, // Both server and client validation
+		//
+		;
+
+		public static SSLMode decode(String str) {
+			if (str == null) { return NONE; }
+			return SSLMode.valueOf(str.toUpperCase());
+		}
+	}
 
 	private final String label;
 	private final Object defaultValue;

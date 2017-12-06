@@ -91,7 +91,7 @@ public class BulkDel {
 					final String parentPath;
 					IDfFolder parent = session.getFolderBySpecification(parentId.getId());
 					if (parent == null) {
-						this.log.warn("Failed to find the parent folder for %s [%s](%s) - folder [%s] not found", type,
+						this.log.warn("Failed to find the parent folder for - folder [%s] not found", type,
 							obj.getObjectName(), obj.getObjectId(), parentId);
 						parentPath = "(unknown)";
 					} else {

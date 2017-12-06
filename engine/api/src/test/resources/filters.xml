@@ -1,0 +1,79 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<filters xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+
+	<filter>
+		<if>
+			<and>
+				<or>
+					<is-type>DOCUMENT</is-type>
+
+					<is-subtype comparison="eq" lang="...">
+						<!-- expression -->
+					</is-subtype>
+
+					<has-attribute comparison="eq" lang="...">
+						<!-- expression -->
+					</has-attribute>
+					<is-attribute-value comparison="eq" cardinality="any">
+						<name lang="...">
+							<!-- expression -->
+						</name>
+						<value lang="...">
+							<!-- expression -->
+						</value>
+					</is-attribute-value>
+
+					<has-caliente-property comparison="eq" lang="...">
+						<!-- expression -->
+					</has-caliente-property>
+					<is-caliente-property-value comparison="EQ" cardinality="first">
+						<name lang="...">
+							<!-- expression -->
+						</name>
+						<value lang="...">
+							<!-- expression -->
+						</value>
+					</is-caliente-property-value>
+
+					<not>
+						<is-reference />
+					</not>
+
+					<oneof>
+						<is-first-version />
+						<is-latest-version />
+					</oneof>
+
+					<has-secondary-subtype comparison="eq" lang="...">
+						<!-- expression -->
+					</has-secondary-subtype>
+
+					<check-expression comparison="eq">
+						<left lang="...">
+							<!-- expression -->
+						</left>
+						<right lang="...">
+							<!-- expression -->
+						</right>
+					</check-expression>
+
+					<is-variable-set lang="...">
+						<!-- expression -->
+					</is-variable-set>
+
+					<is-variable-value comparison="eq" cardinality="any">
+						<name lang="...">
+							<!-- expression -->
+						</name>
+						<value lang="...">
+							<!-- expression -->
+						</value>
+					</is-variable-value>
+				</or>
+			</and>
+		</if>
+		<accept-object/>
+	</filter>
+
+</filters>

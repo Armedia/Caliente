@@ -19,7 +19,6 @@ import org.apache.commons.lang3.text.StrTokenizer;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
@@ -27,6 +26,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {

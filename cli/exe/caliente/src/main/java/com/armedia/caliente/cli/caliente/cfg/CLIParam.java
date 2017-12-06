@@ -17,6 +17,7 @@ import org.apache.commons.cli.Option.Builder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import com.armedia.caliente.cli.caliente.launcher.CalienteLauncher;
 import com.armedia.commons.utilities.Tools;
 
 public enum CLIParam {
@@ -37,7 +38,12 @@ public enum CLIParam {
 	user(null, 1, "The username to connect with"),
 	password(null, 1, "The password to connect with"),
 	domain(null, 1, "The domain the user belongs to"),
-	log(null, 1, "The base name of the log file to use instead of the default (caliente-${action}-${date})"),
+	log(
+		null,
+		1,
+		String.format(
+			"The base name of the log file to use. The default is %s - you can use a similar format with similar placeholders (make sure you escape the $ sign if necessary!)",
+			CalienteLauncher.DEFAULT_LOG_FORMAT)),
 	log_cfg(null, 1, "The Log4j configuration (XML format) to use instead of the default (overrides --log)"),
 	threads(Setting.THREADS, 1, "The number of threads to use while importing or exporting"),
 	non_recursive(null, 0, "Turn off counter recursion (i.e. to count a single folder without descending)"),
@@ -130,7 +136,6 @@ public enum CLIParam {
 	user_map(Setting.USER_MAP, 1, "The Properties (XML) file that contains the group name mappings to apply"),
 	group_map(Setting.GROUP_MAP, 1, "The Properties (XML) file that contains the user name mappings to apply"),
 	role_map(Setting.ROLE_MAP, 1, "The Properties (XML) file that contains the role name mappings to apply"),
-	type_map(Setting.TYPE_MAP, 1, "The Properties (XML) file that contains the type mappings to apply"),
 	no_filename_map(null, 0, "Disable the use of the filename map (even if the default map exists)"),
 	validate_requirements(
 		null,
@@ -142,6 +147,10 @@ public enum CLIParam {
 		"The Properties (XML) file that contains the static filename mappings to be applied"),
 	object_store_config(null, 1, "The properties file to use for Object Store DB configuration"),
 	content_store_config(null, 1, "The properties file to use for Content Store DB configuration"),
+	copy_content(null, 0, "Enable the copying of content for the Local engine"),
+	ignore_empty_folders(null, 0, "Enable the copying of content for the Local engine"),
+	transformations(null, 1, "The object transformations descriptor file"),
+	filters(null, 1, "The object filters descriptor file"),
 	//
 	;
 

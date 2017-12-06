@@ -10,11 +10,11 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.common.DctmSpecialValues;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfSession;
@@ -29,9 +29,9 @@ public class DctmImportContextFactory extends
 	private final DctmSpecialValues specialValues;
 
 	DctmImportContextFactory(DctmImportEngine engine, CfgTools cfg, IDfSession session,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		Logger output, WarningTracker warningTracker) throws Exception {
-		super(engine, cfg, session, objectStore, contentStore, typeMapper, output, warningTracker);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
+		WarningTracker warningTracker) throws Exception {
+		super(engine, cfg, session, objectStore, contentStore, transformer, output, warningTracker);
 		this.specialValues = new DctmSpecialValues(cfg);
 	}
 
@@ -39,7 +39,7 @@ public class DctmImportContextFactory extends
 	protected DctmImportContext constructContext(String rootId, CmfType rootType, IDfSession session,
 		int historyPosition) {
 		return new DctmImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
-			getTypeMapper(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
+			getTransformer(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
 	}
 
 	public final DctmSpecialValues getSpecialValues() {

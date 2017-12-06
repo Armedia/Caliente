@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+	<changeSet author="caliente-jdbc" id="2.4">
+		<preConditions>
+			<changeSetExecuted id="2.0" author="caliente-jdbc" changeLogFile="metadata.changelog.deltas.xml"/>
+		</preConditions>
+
+		<!-- **************************************** -->
+		<!-- Add the secondary_subtypes table         -->
+		<!-- **************************************** -->
+		<createTable tableName="cmf_object_secondary_subtype" remarks="The CMS object secondary subtype data">
+			<column name="object_id" type="varchar(96)" remarks="The object's ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="pos" type="int" remarks="The subtypes's position on the list">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="varchar(256)" remarks="The secondary subtype's name">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_object_secondary_subtype" columnNames="object_id, name" />
+		<addForeignKeyConstraint constraintName="fk_cmf_object_secondary_subtype_object"
+			baseTableName="cmf_object_secondary_subtype" baseColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<createIndex tableName="cmf_object_secondary_subtype" indexName="idx_cmf_object_secondary_subtype_number" unique="true">
+			<column name="object_id" />
+			<column name="pos" />
+		</createIndex>
+
+		<!-- This one covers Documentum, renaming to match the latest code -->
+		<sql>
+			update cmf_attribute set name = 'cmis:secondaryObjectTypeIds' where name = 'dctm:r_aspect_name'
+		</sql>
+		<!-- This one reconstructs the aspects table once everything is in order -->
+		<sql>
+			insert into cmf_object_secondary_subtype 
+			select object_id, value_number, data
+			  from cmf_attribute_value
+			 where name = 'cmis:secondaryObjectTypeIds'
+		  order by object_id, value_number
+		</sql>
+
+	</changeSet>
+</databaseChangeLog>

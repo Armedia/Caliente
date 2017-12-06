@@ -23,7 +23,7 @@ public class Content {
 
 	public List<Page> getPage() {
 		if (this.page == null) {
-			this.page = new ArrayList<Page>();
+			this.page = new ArrayList<>();
 		}
 		return this.page;
 	}

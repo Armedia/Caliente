@@ -40,14 +40,15 @@ public class DctmExportDelegateFactory
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the object"); }
 		if (searchKey == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
-		return newExportDelegate(session.getObject(new DfId(searchKey)), type);
+		return newExportDelegate(session, session.getObject(new DfId(searchKey)), type);
 	}
 
 	DctmExportDelegate<?> newExportDelegate(IDfPersistentObject object) throws Exception {
-		return newExportDelegate(object, null);
+		return newExportDelegate(object.getSession(), object, null);
 	}
 
-	DctmExportDelegate<?> newExportDelegate(IDfPersistentObject object, CmfType type) throws Exception {
+	DctmExportDelegate<?> newExportDelegate(IDfSession session, IDfPersistentObject object, CmfType type)
+		throws Exception {
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...
 		String typeStr = null;
@@ -71,28 +72,28 @@ public class DctmExportDelegateFactory
 			DctmExportDelegate<?> delegate = null;
 			switch (dctmType) {
 				case STORE:
-					delegate = new DctmExportStore(this, object);
+					delegate = new DctmExportStore(this, session, object);
 					break;
 				case USER:
-					delegate = new DctmExportUser(this, object);
+					delegate = new DctmExportUser(this, session, object);
 					break;
 				case GROUP:
-					delegate = new DctmExportGroup(this, object);
+					delegate = new DctmExportGroup(this, session, object);
 					break;
 				case ACL:
-					delegate = new DctmExportACL(this, object);
+					delegate = new DctmExportACL(this, session, object);
 					break;
 				case TYPE:
-					delegate = new DctmExportType(this, object);
+					delegate = new DctmExportType(this, session, object);
 					break;
 				case FORMAT:
-					delegate = new DctmExportFormat(this, object);
+					delegate = new DctmExportFormat(this, session, object);
 					break;
 				case FOLDER:
-					delegate = new DctmExportFolder(this, object);
+					delegate = new DctmExportFolder(this, session, object);
 					break;
 				case DOCUMENT:
-					delegate = new DctmExportDocument(this, object);
+					delegate = new DctmExportDocument(this, session, object);
 					break;
 				default:
 					break;

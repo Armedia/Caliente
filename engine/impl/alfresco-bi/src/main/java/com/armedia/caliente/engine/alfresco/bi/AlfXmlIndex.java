@@ -103,6 +103,11 @@ public class AlfXmlIndex implements Closeable {
 		if (isClosed()) { throw new IllegalStateException("Already closed"); }
 	}
 
+	public synchronized void writeComment(String comment) throws XMLStreamException {
+		init();
+		this.xml.writeComment(comment);
+	}
+
 	public synchronized boolean init() throws XMLStreamException {
 		assertOpen();
 		if (this.initialized) { return false; }

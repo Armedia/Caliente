@@ -21,8 +21,8 @@ import com.independentsoft.share.Folder;
 
 public class ShptFolder extends ShptFSObject<Folder> {
 
-	public ShptFolder(ShptExportDelegateFactory factory, Folder object) throws Exception {
-		super(factory, Folder.class, object);
+	public ShptFolder(ShptExportDelegateFactory factory, ShptSession session, Folder object) throws Exception {
+		super(factory, session, Folder.class, object);
 	}
 
 	public List<String> getContentTypeOrders() {
@@ -30,7 +30,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	public String calculateServerRelativeUrl(Folder f) {
+	public String calculateServerRelativeUrl(ShptSession session, Folder f) {
 		return f.getServerRelativeUrl();
 	}
 
@@ -61,12 +61,12 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	public int calculateDependencyTier(Folder f) {
+	public int calculateDependencyTier(ShptSession session, Folder f) {
 		return FileNameTools.tokenize(f.getServerRelativeUrl(), '/').size();
 	}
 
 	@Override
-	public String calculateLabel(Folder f) {
+	public String calculateLabel(ShptSession session, Folder f) {
 		return this.factory.getRelativePath(f.getServerRelativeUrl());
 	}
 
@@ -99,7 +99,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 			files = Collections.emptyList();
 		}
 		for (File f : files) {
-			ret.add(new ShptFile(this.factory, f));
+			ret.add(new ShptFile(this.factory, service, f));
 		}
 		List<Folder> folders = Collections.emptyList();
 		try {
@@ -108,7 +108,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 			folders = Collections.emptyList();
 		}
 		for (Folder f : folders) {
-			ret.add(new ShptFolder(this.factory, f));
+			ret.add(new ShptFolder(this.factory, service, f));
 		}
 		return ret;
 	}
@@ -123,7 +123,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	}
 
 	@Override
-	protected String calculateName(Folder folder) throws Exception {
+	protected String calculateName(ShptSession session, Folder folder) throws Exception {
 		return folder.getName();
 	}
 }

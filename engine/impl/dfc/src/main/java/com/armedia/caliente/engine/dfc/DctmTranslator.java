@@ -10,6 +10,7 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.dfc.importer.DctmImportContext;
 import com.armedia.caliente.engine.importer.ImportException;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -101,6 +102,7 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.R_FOLDER_PATH, IntermediateAttribute.PATH);
 		am.put(DctmAttributes.ACL_NAME, IntermediateAttribute.ACL_NAME);
 		am.put(DctmAttributes.ACL_DOMAIN, IntermediateAttribute.LOGIN_REALM);
+		am.put(DctmAttributes.R_ASPECT_NAME, IntermediateAttribute.SECONDARY_TYPE_IDS);
 		attributeMappings.put(CmfType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<>();
@@ -132,13 +134,50 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 		am.put(DctmAttributes.LOG_ENTRY, IntermediateAttribute.CHECKIN_COMMENT);
 		am.put(DctmAttributes.I_VSTAMP, IntermediateAttribute.CHANGE_TOKEN);
 		am.put(DctmAttributes.R_IMMUTABLE_FLAG, IntermediateAttribute.IS_IMMUTABLE);
+		am.put(DctmAttributes.R_ASPECT_NAME, IntermediateAttribute.SECONDARY_TYPE_IDS);
 		attributeMappings.put(CmfType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
 	}
 
+	private static final CmfAttributeNameMapper MAPPER = new CmfAttributeNameMapper() {
+		@Override
+		public String encodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = DctmTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				// TODO: normalize the CMS attribute name
+				IntermediateAttribute att = mappings.get(attributeName);
+				if (att != null) { return att.encode(); }
+			}
+			return String.format("%s%s", DctmTranslator.DCTM_PREFIX, attributeName.toLowerCase());
+		}
+
+		@Override
+		public String decodeAttributeName(CmfType type, String attributeName) {
+			BidiMap<String, IntermediateAttribute> mappings = DctmTranslator.getAttributeMappings(type);
+			if (mappings != null) {
+				String att = null;
+				try {
+					// TODO: normalize the intermediate attribute name
+					att = mappings.getKey(IntermediateAttribute.decode(attributeName));
+				} catch (IllegalArgumentException e) {
+					att = null;
+				}
+				if (att != null) { return att; }
+			}
+			if (attributeName.startsWith(
+				DctmTranslator.DCTM_PREFIX)) { return attributeName.substring(DctmTranslator.DCTM_PREFIX.length()); }
+			return super.encodeAttributeName(type, attributeName);
+		}
+	};
+
+	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
+		return DctmTranslator.ATTRIBUTE_MAPPINGS.get(type);
+	}
+
 	private DctmTranslator() {
 		// Nobody can instantiate
+		super(IDfValue.class, DctmTranslator.MAPPER);
 	}
 
 	public static DctmDataType translateType(CmfDataType type) {
@@ -190,60 +229,8 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 
 	public static final CmfAttributeTranslator<IDfValue> INSTANCE = new DctmTranslator();
 
-	private BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
-		return DctmTranslator.ATTRIBUTE_MAPPINGS.get(type);
-	}
-
-	@Override
-	public String encodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			// TODO: normalize the CMS attribute name
-			IntermediateAttribute att = mappings.get(attributeName);
-			if (att != null) { return att.encode(); }
-		}
-		return String.format("%s%s", DctmTranslator.DCTM_PREFIX, attributeName.toLowerCase());
-	}
-
-	@Override
-	public String decodeAttributeName(CmfType type, String attributeName) {
-		BidiMap<String, IntermediateAttribute> mappings = getAttributeMappings(type);
-		if (mappings != null) {
-			String att = null;
-			try {
-				// TODO: normalize the intermediate attribute name
-				att = mappings.getKey(IntermediateAttribute.decode(attributeName));
-			} catch (IllegalArgumentException e) {
-				att = null;
-			}
-			if (att != null) { return att; }
-		}
-		if (attributeName.startsWith(
-			DctmTranslator.DCTM_PREFIX)) { return attributeName.substring(DctmTranslator.DCTM_PREFIX.length()); }
-		return super.decodeAttributeName(type, attributeName);
-	}
-
-	@Override
-	public CmfObject<IDfValue> decodeObject(CmfObject<IDfValue> rawObject) {
-		// TODO: Perhaps perform specific attribute and property processing here?
-		return super.decodeObject(rawObject);
-	}
-
-	@Override
-	public CmfObject<IDfValue> encodeObject(CmfObject<IDfValue> rawObject) {
-		// TODO: Perhaps perform specific attribute and property processing here?
-		return super.encodeObject(rawObject);
-	}
-
 	@Override
 	public IDfValue getValue(CmfDataType type, Object value) {
 		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
-	}
-
-	@Override
-	public String getDefaultSubtype(CmfType baseType) {
-		DctmObjectType type = DctmObjectType.decodeType(baseType);
-		if (type != null) { return type.getDmType(); }
-		return null;
 	}
 }

@@ -33,11 +33,11 @@ import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
@@ -484,10 +484,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-
+		
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-		
+
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/
@@ -852,8 +852,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	}
 
 	protected boolean isReference() {
-		CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.I_IS_REFERENCE);
-		return ((att != null) && att.hasValues() && att.getValue().asBoolean());
+		// Prefer the Documentum attribute over the property...
+		CmfProperty<IDfValue> reference = this.cmfObject.getAttribute(DctmAttributes.I_IS_REFERENCE);
+		if (reference == null) {
+			// No attribute? Possibly doesn't come from Documentum...go for the property
+			reference = this.cmfObject.getProperty(IntermediateProperty.IS_REFERENCE);
+		}
+		return ((reference != null) && reference.hasValues() && reference.getValue().asBoolean());
 	}
 
 	protected boolean isDfReference(T object) throws DfException {
@@ -950,8 +955,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.cmfObject.getSubtype(),
 			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
 
-		final String dqlBase = String.format("%s (ALL) where object_name = %s and folder(%%s)", type.getName(),
-			DfUtils.quoteString(documentName));
+		final String dqlBase = String.format("%s (ALL) where object_name = %%s and folder(%%s)", type.getName());
 
 		final boolean seeksReference = isReference();
 		String existingPath = null;
@@ -959,7 +963,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final Class<T> dfClass = getObjectClass();
 		for (IDfValue p : getTargetPaths()) {
 			final String targetPath = ctx.getTargetPath(p.asString());
-			final String dql = String.format(dqlBase, DfUtils.quoteString(targetPath));
+			final String dql = String.format(dqlBase, DfUtils.quoteString(documentName),
+				DfUtils.quoteString(targetPath));
 			final String currentPath = String.format("%s/%s", targetPath, documentName);
 			IDfPersistentObject current = session.getObjectByQualification(dql);
 			if (current == null) {

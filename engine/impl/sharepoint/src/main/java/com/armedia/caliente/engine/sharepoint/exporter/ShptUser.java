@@ -28,8 +28,8 @@ public class ShptUser extends ShptSecurityObject<User> {
 	private final String userName;
 	private final String userDomain;
 
-	public ShptUser(ShptExportDelegateFactory factory, User user) throws Exception {
-		super(factory, User.class, user);
+	public ShptUser(ShptExportDelegateFactory factory, ShptSession session, User user) throws Exception {
+		super(factory, session, User.class, user);
 		/*
 		List<Integer> roles = this.service.getRoleAssignments(this.object.getId());
 		if ((roles == null) || roles.isEmpty()) {
@@ -66,7 +66,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	public String calculateObjectId(User user) throws Exception {
+	public String calculateObjectId(ShptSession session, User user) throws Exception {
 		UserId uid = user.getUserId();
 		if (uid == null) { throw new IncompleteDataException(
 			String.format("No userId information available for user [%s\\%s]", this.userDomain, this.userName)); }
@@ -75,12 +75,12 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	protected int calculateNumericId(User object) {
+	protected int calculateNumericId(ShptSession session, User object) {
 		return object.getId();
 	}
 
 	@Override
-	protected String calculateLabel(User object) throws Exception {
+	protected String calculateLabel(ShptSession session, User object) throws Exception {
 		String loginName = object.getLoginName();
 		if (loginName == null) { throw new IncompleteDataException(String.format(
 			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }
@@ -188,7 +188,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 		List<Group> l = service.getUserGroups(this.object.getId());
 		if ((l != null) && !l.isEmpty()) {
 			for (Group g : l) {
-				ret.add(new ShptGroup(this.factory, g));
+				ret.add(new ShptGroup(this.factory, service, g));
 			}
 		}
 
@@ -201,7 +201,7 @@ public class ShptUser extends ShptSecurityObject<User> {
 	}
 
 	@Override
-	protected String calculateName(User user) throws Exception {
+	protected String calculateName(ShptSession session, User user) throws Exception {
 		String loginName = user.getLoginName();
 		if (loginName == null) { throw new IncompleteDataException(String.format(
 			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }

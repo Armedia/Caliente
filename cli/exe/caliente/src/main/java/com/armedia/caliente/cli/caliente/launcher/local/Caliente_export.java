@@ -53,6 +53,10 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 		}
 	}
 
+	protected boolean isCopyContent() {
+		return CLIParam.copy_content.isPresent() && !CLIParam.skip_content.isPresent();
+	}
+
 	@Override
 	protected void customizeContentStoreProperties(StoreConfiguration cfg) {
 		super.customizeContentStoreProperties(cfg);
@@ -61,14 +65,15 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 
 	@Override
 	protected File getContentFilesLocation() {
+		if (isCopyContent()) { return super.getContentFilesLocation(); }
 		return new File(CLIParam.source.getString());
 	}
 
 	@Override
 	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		settings.put(LocalSetting.ROOT.getLabel(), this.source.getAbsolutePath());
-		settings.put(LocalSetting.COPY_CONTENT.getLabel(), false);
-		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(), false);
+		settings.put(LocalSetting.COPY_CONTENT.getLabel(), isCopyContent());
+		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(), CLIParam.ignore_empty_folders.isPresent());
 	}
 
 	@Override

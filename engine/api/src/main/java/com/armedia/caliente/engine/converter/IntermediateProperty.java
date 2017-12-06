@@ -39,6 +39,7 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	VERSION_INDEX(CmfDataType.INTEGER),
 	VERSION_PATCHES(CmfDataType.STRING),
 	IS_NEWEST_VERSION(CmfDataType.BOOLEAN),
+	IS_UNFILED(CmfDataType.BOOLEAN),
 	PATCH_ANTECEDENT(CmfDataType.STRING),
 	USERS_WITH_DEFAULT_FOLDER(CmfDataType.STRING),
 	USERS_DEFAULT_FOLDER_PATHS(CmfDataType.STRING),
@@ -52,6 +53,9 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	DEFAULT_ACL(CmfDataType.STRING),
 	DEFAULT_ASPECTS(CmfDataType.STRING),
 	DEFAULT_STORAGE(CmfDataType.STRING),
+	IS_REFERENCE(CmfDataType.BOOLEAN),
+	REF_TARGET(CmfDataType.STRING),
+	REF_VERSION(CmfDataType.STRING),
 	//
 	;
 

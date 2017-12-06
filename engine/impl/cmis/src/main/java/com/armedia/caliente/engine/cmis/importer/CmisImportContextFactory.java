@@ -18,11 +18,11 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.PermissionMapper;
+import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfTypeMapper;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -33,9 +33,9 @@ public class CmisImportContextFactory
 	private final RepositoryInfo repositoryInfo;
 
 	CmisImportContextFactory(CmisImportEngine engine, Session session, CfgTools settings,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CmfTypeMapper typeMapper,
-		Logger output, WarningTracker warningTracker) throws Exception {
-		super(engine, settings, session, objectStore, contentStore, typeMapper, output, warningTracker);
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
+		WarningTracker warningTracker) throws Exception {
+		super(engine, settings, session, objectStore, contentStore, transformer, output, warningTracker);
 		this.repositoryInfo = session.getRepositoryInfo();
 		if (super.isSupported(CmfType.ACL)) {
 			this.permissionMapper = new PermissionMapper(session);
@@ -54,9 +54,10 @@ public class CmisImportContextFactory
 	}
 
 	@Override
-	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session, int historyPosition) {
-		return new CmisImportContext(this, rootId, rootType, session, getOutput(), getWarningTracker(), getTypeMapper(),
-			getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
+	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session,
+		int historyPosition) {
+		return new CmisImportContext(this, rootId, rootType, session, getOutput(), getWarningTracker(),
+			getTransformer(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
 	}
 
 	private boolean isFolderType(ObjectType type) {

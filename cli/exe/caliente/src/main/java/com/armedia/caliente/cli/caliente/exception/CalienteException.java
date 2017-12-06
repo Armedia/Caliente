@@ -7,7 +7,7 @@ package com.armedia.caliente.cli.caliente.exception;
  */
 public class CalienteException extends Exception {
 
-	/** The Constant serialVersionUID. */
+	/** The ValueConstant serialVersionUID. */
 	private static final long serialVersionUID = 1L;
 
 	/**

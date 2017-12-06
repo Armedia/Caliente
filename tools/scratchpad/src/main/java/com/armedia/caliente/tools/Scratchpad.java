@@ -8,6 +8,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import com.armedia.commons.utilities.FileNameTools;
 
 /**
  * This class is used as a testbed to run quick'n'dirty DFC test programs
@@ -37,6 +38,14 @@ public class Scratchpad extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
+		String path = "(unfiled)/some/weird/path/name";
+		while (path != null) {
+			System.out.printf("PATH=[%s]%n", path);
+			path = FileNameTools.dirname(path);
+			if (path.equals(".")) {
+				break;
+			}
+		}
 		// PropertiesTest.test();
 		// DctmTest.test();
 		return 0;
@@ -44,8 +53,13 @@ public class Scratchpad extends AbstractLauncher {
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		return new OptionScheme(getProgramName()) //
-			.add(this.dfcLaunchHelper) //
-		;
+		return null;
+		/*
+					return new OptionScheme(getProgramName()) //
+					.add( //
+					this.dfcLaunchHelper.asGroup() //
+					) //
+					;
+					*/
 	}
 }

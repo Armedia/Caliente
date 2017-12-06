@@ -11,6 +11,21 @@ public enum TransferSetting implements TransferEngineSetting {
 	LATEST_ONLY(CmfDataType.BOOLEAN, false),
 	NO_RENDITIONS(CmfDataType.BOOLEAN, false),
 	RETRY_ATTEMPTS(CmfDataType.INTEGER, 2),
+	TRANSFORMATION(CmfDataType.STRING),
+	FILTER(CmfDataType.STRING),
+	EXTERNAL_METADATA(CmfDataType.STRING),
+	USER_MAP(CmfDataType.STRING) {
+		@Override
+		public Object getDefaultValue() {
+			return PrincipalType.USER.getDefaultMappingFile();
+		}
+	},
+	GROUP_MAP(CmfDataType.STRING) {
+		@Override
+		public Object getDefaultValue() {
+			return PrincipalType.GROUP.getDefaultMappingFile();
+		}
+	},
 	//
 	;
 
@@ -41,7 +56,7 @@ public enum TransferSetting implements TransferEngineSetting {
 	}
 
 	@Override
-	public final Object getDefaultValue() {
+	public Object getDefaultValue() {
 		return this.defaultValue;
 	}
 

@@ -23,7 +23,7 @@ public class GeneratedContent {
 
 	public List<Object> getAny() {
 		if (this.any == null) {
-			this.any = new ArrayList<Object>();
+			this.any = new ArrayList<>();
 		}
 		return this.any;
 	}

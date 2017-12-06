@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<attribute-mappings xmlns="http://www.armedia.com/ns/caliente/engine/alfresco-bi" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/alfresco-bi platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-bi.xsd">
+
+	<common-mappings>
+		<!--
+			This directive tells the engine that if there's no mapping, the
+			attribute should still be preserved as a residual property. This
+			should generally live in the <common-mappings> section though
+			it may make sense to only apply it based on type/secondary or even
+			named rule sets.  This is a flag that's enabled for processing, and
+			can be turned on or off
+		-->
+		<residuals>MANDATORY</residuals>
+	</common-mappings>
+	
+	<named-mappings name="named-mapping-1">
+		<include>named-mapping-1</include>
+	</named-mappings>
+
+	<type-mappings name="sn1">
+		<include>named-mapping-1</include>
+	</type-mappings>
+
+	<!--
+		RULES: 
+			1)	As soon as a target attribute has been written to, it cannot be
+				over-written by another rule
+
+			2)	As soon as a rule matches, the attribute copy is performed with no
+				further attempts to match rules, and no transformation of the content
+				
+				* If the source attribute is multivalued and the target is not,
+				  comma-concatenation is performed
+				* If the source attribute is not multivalued and the target is,
+				  values will be separated using the value of the separator attribute
+				  (the default is the comma)
+
+			3)	Rules are matched in the order declared, with explicitly-defined rules
+				superseding any defaulted rules (i.e. the most specific rule wins)
+
+			4)	Rule set extension loops are forbidden (obviously)
+
+			5)	named-mappings.name, type-mappings.name and secondary-mappings.name must
+				be globally unique, to avoid confusion
+	-->
+	<type-mappings name="sn2">
+
+		<!-- Copy one source attribute to one or more target attributes -->
+		<map tgt="tgtAttName">srcAttName</map>
+
+		<include>named-mapping-1</include>
+
+		<!-- Convert a source namespace to a target namespace -->
+		<nsmap tgt="tgtNs">srcNs</nsmap>
+	</type-mappings>
+
+</attribute-mappings>

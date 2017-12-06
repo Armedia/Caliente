@@ -30,6 +30,7 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -104,6 +105,7 @@ public abstract class LocalImportDelegate extends
 	protected boolean isSameDatesAndOwners(File targetFile, CmfAttributeTranslator<CmfValue> translator)
 		throws IOException, ParseException {
 		Path targetPath = targetFile.toPath();
+		final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
 		final BasicFileAttributeView basicView = Files.getFileAttributeView(targetPath, BasicFileAttributeView.class);
 		final PosixFileAttributeView posixView = Files.getFileAttributeView(targetPath, PosixFileAttributeView.class);
@@ -131,7 +133,7 @@ public abstract class LocalImportDelegate extends
 			}
 
 			CmfAttribute<CmfValue> v = this.cmfObject
-				.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(), att));
+				.getAttribute(nameMapper.decodeAttributeName(this.cmfObject.getType(), att));
 			if ((v == null) || !v.hasValues()) {
 				continue;
 			}
@@ -147,7 +149,7 @@ public abstract class LocalImportDelegate extends
 			UserPrincipal local = ownerView.getOwner();
 			if (local != null) {
 				CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(
-					translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.GROUP));
+					nameMapper.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.GROUP));
 				if ((v != null) && v.hasValues()) {
 					CmfValue sv = v.getValue();
 					if (!sv.isNull()) {
@@ -166,7 +168,7 @@ public abstract class LocalImportDelegate extends
 			GroupPrincipal local = posixView.readAttributes().group();
 			if (local != null) {
 				CmfAttribute<CmfValue> v = this.cmfObject.getAttribute(
-					translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.GROUP));
+					nameMapper.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.GROUP));
 				if ((v != null) && v.hasValues()) {
 					CmfValue sv = v.getValue();
 					if (!sv.isNull()) {
@@ -188,7 +190,7 @@ public abstract class LocalImportDelegate extends
 		throws IOException, ParseException {
 		Path targetPath = targetFile.toPath();
 		final UserPrincipalLookupService userSvc = targetPath.getFileSystem().getUserPrincipalLookupService();
-
+		final CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		final BasicFileAttributeView basicView = Files.getFileAttributeView(targetPath, BasicFileAttributeView.class);
 		final PosixFileAttributeView posixView = Files.getFileAttributeView(targetPath, PosixFileAttributeView.class);
 		final AclFileAttributeView aclView = Files.getFileAttributeView(targetPath, AclFileAttributeView.class);
@@ -216,7 +218,7 @@ public abstract class LocalImportDelegate extends
 		// the blanks assuming the logical order of C<=M<=A (C = creation
 		// date, M = modification date, A = last access date).
 		v = this.cmfObject.getAttribute(
-			translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.LAST_ACCESS_DATE));
+			nameMapper.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.LAST_ACCESS_DATE));
 		if ((v != null) && v.hasValues()) {
 			CmfValue sv = v.getValue();
 			if (!sv.isNull()) {
@@ -226,7 +228,7 @@ public abstract class LocalImportDelegate extends
 		}
 
 		v = this.cmfObject.getAttribute(
-			translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.LAST_MODIFICATION_DATE));
+			nameMapper.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.LAST_MODIFICATION_DATE));
 		if ((v != null) && v.hasValues()) {
 			CmfValue sv = v.getValue();
 			if (!sv.isNull()) {
@@ -236,7 +238,7 @@ public abstract class LocalImportDelegate extends
 		}
 
 		v = this.cmfObject.getAttribute(
-			translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.CREATION_DATE));
+			nameMapper.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.CREATION_DATE));
 		if ((v != null) && v.hasValues()) {
 			CmfValue sv = v.getValue();
 			if (!sv.isNull()) {
@@ -289,7 +291,7 @@ public abstract class LocalImportDelegate extends
 		if (posixView != null) {
 			// Set the group
 			v = this.cmfObject
-				.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.GROUP));
+				.getAttribute(nameMapper.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.GROUP));
 			if ((v != null) && v.hasValues()) {
 				CmfValue sv = v.getValue();
 				if (!sv.isNull()) {
@@ -306,7 +308,7 @@ public abstract class LocalImportDelegate extends
 		if (ownerView != null) {
 			// Set the owner
 			v = this.cmfObject
-				.getAttribute(translator.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.OWNER));
+				.getAttribute(nameMapper.decodeAttributeName(this.cmfObject.getType(), IntermediateAttribute.OWNER));
 			if ((v != null) && v.hasValues()) {
 				CmfValue sv = v.getValue();
 				if (!sv.isNull()) {

@@ -7,12 +7,12 @@ import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfAttribute;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValueCodec;
-import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganizationStrategy {
@@ -32,11 +32,10 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 	@Override
 	protected <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info) {
-		CmfProperty<T> pathProp = object.getProperty(IntermediateProperty.LATEST_PARENT_TREE_IDS);
-		if (pathProp == null) {
-			pathProp = object.getProperty(IntermediateProperty.PARENT_TREE_IDS);
-		}
-		if (pathProp == null) { return super.calculateLocation(translator, object, info); }
+
+		int folderLevels = 3;
+		// A maximum of 7 levels...
+		folderLevels = Tools.ensureBetween(3, folderLevels, 7);
 
 		final boolean primaryContent = (info.isDefaultRendition() && (info.getRenditionPage() == 0));
 
@@ -44,11 +43,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		// Make sure the contents all land in the bulk-import root location, so it's easy to point
 		// the bulk importer at that directory and not import any unwanted crap
 		paths.add(AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
-		if (pathProp.hasValues()) {
-			for (String p : FileNameTools.tokenize(pathProp.getValue().toString(), '/')) {
-				paths.add(p);
-			}
-		}
+		String fullObjectNumber = AlfCommon.addNumericPaths(paths, object.getNumber());
 
 		CmfProperty<T> vdocProp = object.getProperty(IntermediateProperty.VDOC_HISTORY);
 		final boolean vdoc;
@@ -62,23 +57,23 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		String appendix = calculateVersionAppendix(translator, object, info, primaryContent, vdoc);
 
 		if (vdoc) {
-			paths.add(object.getHistoryId());
+			paths.add(fullObjectNumber);
 			paths.add(appendix);
 			appendix = "";
 		}
 
+		String baseName = fullObjectNumber;
 		if (!primaryContent) {
 			// Ok...so this isn't the default rendition, so we have to add the object ID
 			// at the end of the path
-			paths.add(String.format("%s-renditions", object.getId()));
+			paths.add(String.format("%s-renditions", baseName));
 			paths.add(String.format("rendition-[%s]", info.getRenditionIdentifier()));
 		}
 
-		String baseName = object.getId();
 		switch (object.getType()) {
 			case DOCUMENT:
 				if (primaryContent) {
-					baseName = object.getHistoryId();
+					appendix = "";
 				} else {
 					baseName = AlfrescoBaseBulkOrganizationStrategy.generateRenditionName(object, info);
 				}
@@ -91,13 +86,14 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 
 	protected <T> String calculateVersionAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentInfo info, boolean primaryContent, boolean vDoc) {
+		CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		boolean headVersion = false;
 		switch (object.getType()) {
 			case DOCUMENT:
 				// The "latest version" attribute really only says which version is "CURRENT". In
 				// systems like Documentum, the "current" version may not be the "latest" one...
 				CmfProperty<T> p = object.getAttribute(
-					translator.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
+					nameMapper.decodeAttributeName(object.getType(), IntermediateAttribute.IS_LATEST_VERSION));
 				headVersion = ((p != null) && p.hasValues()
 					&& translator.getCodec(p.getType()).encodeValue(p.getValue()).asBoolean());
 				break;
@@ -144,7 +140,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 			} else {
 				// Use the version string
 				CmfAttribute<T> versionString = object.getAttribute(
-					translator.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
+					nameMapper.decodeAttributeName(object.getType(), IntermediateAttribute.VERSION_LABEL));
 				if ((versionString != null) && versionString.hasValues()) {
 					final String v = translator.getCodec(versionString.getType()).encodeValue(versionString.getValue())
 						.asString();

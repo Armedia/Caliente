@@ -24,12 +24,18 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.oracle.ucm</groupId>
-			<artifactId>oracle-ucm-ridc-jars</artifactId>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-jcs-core</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.oracle.ridc</groupId>
+			<artifactId>oracle-ridc-jars</artifactId>
 			<scope>compile</scope>
 			<type>pom</type>
 		</dependency>
-
+ 
 		<dependency>
 			<groupId>org.apache.chemistry.opencmis</groupId>
 			<artifactId>chemistry-opencmis-client-impl</artifactId>
@@ -63,7 +69,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
+			<groupId>com.armedia.commons.datasource</groupId>
 			<artifactId>datasource-locator-pooled</artifactId>
 			<scope>test</scope>
 		</dependency>

@@ -35,8 +35,9 @@ public abstract class ShptExportDelegate<T> extends
 		TYPE_MAP = Tools.freezeMap(m);
 	}
 
-	protected ShptExportDelegate(ShptExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected ShptExportDelegate(ShptExportDelegateFactory factory, ShptSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	@Override
@@ -64,7 +65,7 @@ public abstract class ShptExportDelegate<T> extends
 	}
 
 	@Override
-	protected final CmfType calculateType(T object) throws Exception {
+	protected final CmfType calculateType(ShptSession session, T object) throws Exception {
 		for (Map.Entry<Class<?>, CmfType> e : ShptExportDelegate.TYPE_MAP.entrySet()) {
 			if (e.getKey().isInstance(object)) { return e.getValue(); }
 		}

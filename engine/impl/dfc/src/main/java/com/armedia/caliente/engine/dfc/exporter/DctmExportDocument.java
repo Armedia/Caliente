@@ -48,6 +48,7 @@ import com.documentum.fc.client.IDfSysObject;
 import com.documentum.fc.client.IDfVirtualDocument;
 import com.documentum.fc.client.IDfVirtualDocumentNode;
 import com.documentum.fc.client.content.IDfContent;
+import com.documentum.fc.client.impl.ISysObject;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
@@ -58,12 +59,14 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implements DctmDocument {
 
-	protected DctmExportDocument(DctmExportDelegateFactory factory, IDfSysObject document) throws Exception {
-		super(factory, IDfSysObject.class, document);
+	protected DctmExportDocument(DctmExportDelegateFactory factory, IDfSession session, IDfSysObject document)
+		throws Exception {
+		super(factory, session, IDfSysObject.class, document);
 	}
 
-	DctmExportDocument(DctmExportDelegateFactory factory, IDfPersistentObject document) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfSysObject.class, document));
+	DctmExportDocument(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject document)
+		throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfSysObject.class, document));
 	}
 
 	@Override
@@ -110,7 +113,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			CmfProperty<IDfValue> p = new CmfProperty<>(IntermediateProperty.VDOC_MEMBER,
 				IntermediateProperty.VDOC_MEMBER.type);
 			properties.add(p);
-			final IDfVirtualDocument vDoc = document.asVirtualDocument("CURRENT", false);
+			final IDfVirtualDocument vDoc = document.asVirtualDocument(ISysObject.CURRENT_VERSION_LABEL, false);
 			final IDfVirtualDocumentNode root = vDoc.getRootNode();
 			final int members = root.getChildCount();
 			for (int i = 0; i < members; i++) {
@@ -165,7 +168,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 
 		// If this is a virtual document, we export the document's components first
 		if (document.isVirtualDocument() || (document.getLinkCount() > 0)) {
-			IDfVirtualDocument vDoc = document.asVirtualDocument("CURRENT", false);
+			IDfVirtualDocument vDoc = document.asVirtualDocument(ISysObject.CURRENT_VERSION_LABEL, false);
 			int components = vDoc.getUniqueObjectIdCount();
 			for (int i = 0; i < components; i++) {
 				req.add(this.factory.newExportDelegate(session.getObject(vDoc.getUniqueObjectId(i))));
@@ -212,7 +215,6 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 	@Override
 	protected Collection<DctmExportDelegate<?>> findSuccessors(IDfSession session, CmfObject<IDfValue> marshaled,
 		IDfSysObject document, DctmExportContext ctx) throws Exception {
-		// TODO Auto-generated method stub
 		Collection<DctmExportDelegate<?>> ret = super.findSuccessors(session, marshaled, document, ctx);
 
 		// References need only the ACL as a dependent

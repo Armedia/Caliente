@@ -5,10 +5,10 @@ import java.util.Collection;
 import java.util.List;
 
 import com.armedia.caliente.engine.dfc.DctmAttributeHandlers;
+import com.armedia.caliente.engine.dfc.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.dfc.DctmDataType;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
-import com.armedia.caliente.engine.dfc.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.exporter.ExportDelegate;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
@@ -30,8 +30,9 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 	private final DctmObjectType dctmType;
 
-	protected DctmExportDelegate(DctmExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected DctmExportDelegate(DctmExportDelegateFactory factory, IDfSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 		this.dctmType = DctmObjectType.decodeType(object);
 	}
 
@@ -51,32 +52,32 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected final CmfType calculateType(T object) throws Exception {
+	protected final CmfType calculateType(IDfSession session, T object) throws Exception {
 		return DctmObjectType.decodeType(object).getStoredObjectType();
 	}
 
 	@Override
-	protected final String calculateObjectId(T object) throws Exception {
+	protected final String calculateObjectId(IDfSession session, T object) throws Exception {
 		return object.getObjectId().getId();
 	}
 
 	@Override
-	protected String calculateLabel(T object) throws Exception {
+	protected String calculateLabel(IDfSession session, T object) throws Exception {
 		return String.format("%s[%s]", getDctmType().name(), getObjectId());
 	}
 
 	@Override
-	protected final String calculateSearchKey(T object) throws Exception {
-		return calculateObjectId(object);
+	protected final String calculateSearchKey(IDfSession session, T object) throws Exception {
+		return calculateObjectId(session, object);
 	}
 
 	@Override
-	protected String calculateHistoryId(T object) throws Exception {
+	protected String calculateHistoryId(IDfSession session, T object) throws Exception {
 		return object.getObjectId().getId();
 	}
 
 	@Override
-	protected final String calculateSubType(CmfType type, T object) throws Exception {
+	protected final String calculateSubType(IDfSession session, CmfType type, T object) throws Exception {
 		return object.getType().getName();
 	}
 

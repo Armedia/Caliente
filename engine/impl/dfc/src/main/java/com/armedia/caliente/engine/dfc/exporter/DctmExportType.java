@@ -13,6 +13,7 @@ import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -38,16 +39,16 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportType extends DctmExportDelegate<IDfType> {
 
-	protected DctmExportType(DctmExportDelegateFactory factory, IDfType type) throws Exception {
-		super(factory, IDfType.class, type);
+	protected DctmExportType(DctmExportDelegateFactory factory, IDfSession session, IDfType type) throws Exception {
+		super(factory, session, IDfType.class, type);
 	}
 
-	DctmExportType(DctmExportDelegateFactory factory, IDfPersistentObject type) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfType.class, type));
+	DctmExportType(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject type) throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfType.class, type));
 	}
 
 	@Override
-	protected String calculateLabel(IDfType type) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfType type) throws Exception {
 		String superName = type.getSuperName();
 		if ((superName != null) && (superName.length() > 0)) {
 			superName = String.format(" (extends %s)", superName);
@@ -58,7 +59,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected int calculateDependencyTier(IDfType type) throws Exception {
+	protected int calculateDependencyTier(IDfSession session, IDfType type) throws Exception {
 		return calculateDepth(type.getSession(), type);
 	}
 
@@ -163,10 +164,11 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			final CmfAttributeTranslator<IDfValue> translator = this.factory.getTranslator();
 			CmfProperty<IDfValue> orig = new CmfProperty<>(IntermediateProperty.ORIG_ATTR_NAME, CmfDataType.STRING);
 			CmfProperty<IDfValue> mapped = new CmfProperty<>(IntermediateProperty.MAPPED_ATTR_NAME, CmfDataType.STRING);
+			CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 			for (int i = 0; i < attCount; i++) {
 				IDfValue o = type.getRepeatingValue(DctmAttributes.ATTR_NAME, i);
 				IDfValue m = DfValueFactory.newStringValue(
-					translator.encodeAttributeName(dctmTypeObjectType.getStoredObjectType(), o.asString()));
+					nameMapper.encodeAttributeName(dctmTypeObjectType.getStoredObjectType(), o.asString()));
 				orig.addValue(o);
 				mapped.addValue(m);
 			}
@@ -197,7 +199,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 	}
 
 	@Override
-	protected String calculateName(IDfType type) throws Exception {
+	protected String calculateName(IDfSession session, IDfType type) throws Exception {
 		return type.getName();
 	}
 }

@@ -22,7 +22,7 @@ public interface OptionSchemeExtensionSupport {
 	 *            no command is active)
 	 * @param extender
 	 *            The object through which to extend the underlying option scheme
-	 * 
+	 *
 	 */
 	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
 		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender);

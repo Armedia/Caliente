@@ -1,0 +1,90 @@
+<?xml version="1.1" encoding="UTF-8"?>
+<external-metadata xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine platform:/resource/caliente-engine/src/main/resources/engine.xsd">
+	
+	<!-- Many different datasources can be defined -->
+	<!-- (at this point it starts to make sense to turn Caliente into a Spring application) -->
+	<data-source name="bi.db">
+		<url>${jdbc-url}</url> <!-- supports System properties -->
+		<driver>${jdbc-driver}</driver>
+		<user>${jdbc-user}</user>
+		<password>${jdbc-password}</password> <!-- can be encrypted using Caliente's encrypt function -->
+
+		<setting name="setting1">value1</setting>
+		<setting name="setting2">value2</setting>
+		<setting name="setting3">value3</setting>
+		<setting name="setting4">value4</setting>
+		<setting name="setting5">value5</setting>
+	</data-source>
+
+	<data-source name="bi.db.2">
+		<url>${jdbc-url}</url> <!-- supports System properties -->
+		<driver>${jdbc-driver}</driver>
+		<user>${jdbc-user}</user>
+		<password>${jdbc-password}</password> <!-- can be encrypted using Caliente's encrypt function -->
+
+		<setting name="setting1">value1</setting>
+		<setting name="setting2">value2</setting>
+		<setting name="setting3">value3</setting>
+		<setting name="setting4">value4</setting>
+		<setting name="setting5">value5</setting>
+	</data-source>
+
+	<!-- Many different metadata sets can be defined, each pulling data from multiple databases as required -->
+	<!-- When the transformation engine wishes to pull data from a data set, it references it by its id -->
+	<!-- failOnError = if an error occurs, fail the fetch operation -->
+	<!-- failOnMissing = if a record is not found, fail the fetch operation -->
+	<metadata-set id="bi.leasing" failOnError="true" failOnMissing="false">
+		<!-- from-ddl captures each column as a different metadata field (i.e. tabular mode) -->
+		<from-ddl dataSource="bi.db">
+			<query>
+				<sql>select * from cmf_object where object_id = ${objectId}</sql>
+				<parameter>
+					<name>objectId</name>
+					<value lang="jexl">`{0${obj.type.ordinal()}-${obj.id}}`</value>
+				</parameter>
+			</query>
+
+			<ignore-columns>tier_id</ignore-columns>
+			<transform-names>
+				<map>
+					<from>object_id</from>
+					<to>cmis:objectId</to>
+				</map>
+				<map>
+					<from>object_number</from>
+					<to>cmf:objectIndexWithinExport</to>
+				</map>
+				<map>
+					<from>search_key</from>
+					<to>cmf:someSearchKey</to>
+				</map>
+				<default lang="jexl">`cmf:${sqlName}`</default>
+			</transform-names>
+		</from-ddl>
+		
+		<from-sql dataSource="bi.db.2">
+			<!-- from-sql captures from a query where a single column holds all the attribute values (i.e. columnar mode) -->
+			
+			<!-- The query that lists the names of the attributes we're going to be wanting to retrieve -->
+			<search-names-query>select distinct name from cmf_attribute order by name</search-names-query>
+			<!-- Optionally, we can list the names explicitly, in a comma-separated list -->
+			<!-- <search-names-list></search-names-list> -->
+
+			<query>
+				<sql>select data, value_number from cmf_attribute_value where name = ${attName} and object_id = ${objectId} order by value_number</sql>
+				<parameter>
+					<name>attName</name>
+					<value lang="jexl">sqlName</value>
+				</parameter>
+				<parameter>
+					<name>objectId</name>
+					<value lang="jexl">`{0${obj.type.ordinal()}-${obj.id}}`</value>
+				</parameter>
+			</query>
+
+			<!-- The column from which the attribute value will be retrieved -->
+			<value-column>data</value-column>
+		</from-sql>
+	</metadata-set>
+</external-metadata>

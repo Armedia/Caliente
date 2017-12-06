@@ -24,8 +24,8 @@ public interface OptionSchemeExtender {
 
 	/**
 	 * Check to see if the short option is already defined, to help avoid
-	 * {@link DuplicateOptionException} when invoking {@link #add(OptionGroup)}. If
-	 * {@code option} is {@code null}, this method returns {@code false}.
+	 * {@link DuplicateOptionException} when invoking {@link #add(OptionGroup)}. If {@code option}
+	 * is {@code null}, this method returns {@code false}.
 	 *
 	 * @param option
 	 *            the option to check for
@@ -36,8 +36,8 @@ public interface OptionSchemeExtender {
 
 	/**
 	 * Check to see if the long option is already defined, to help avoid
-	 * {@link DuplicateOptionException} when invoking {@link #add(OptionGroup)}. If
-	 * {@code option} is {@code null}, this method returns {@code false}.
+	 * {@link DuplicateOptionException} when invoking {@link #add(OptionGroup)}. If {@code option}
+	 * is {@code null}, this method returns {@code false}.
 	 *
 	 * @param option
 	 *            the option to check for

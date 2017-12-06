@@ -17,7 +17,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.tools.CollectionObjectHandler;
 import com.armedia.commons.utilities.Tools;
 
@@ -52,7 +52,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	private class Mapper extends CmfAttributeMapper {
+	private class Mapper extends CmfValueMapper {
 
 		private final O operation;
 
@@ -181,17 +181,14 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		return this.operationClass.cast(operation);
 	}
 
-	public final <V> Long storeObject(CmfObject<V> object, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException {
+	public final Long storeObject(CmfObject<CmfValue> object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
-		if (translator == null) { throw new IllegalArgumentException(
-			"Must provide a translator for storing object values"); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				Long ret = storeObject(operation, object, translator);
+				Long ret = storeObject(operation, object);
 				markStoreStatus(operation, object, StoreStatus.STORED, null);
 				object.setNumber(ret);
 				if (tx) {
@@ -204,8 +201,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s [%s](%s)",
-							object.getType(), object.getLabel(), object.getId()), e);
+						this.log.warn(
+							String.format("Failed to rollback the transaction for %s", object.getDescription()), e);
 					}
 				}
 			}
@@ -214,8 +211,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> Long storeObject(O operation, CmfObject<V> object, CmfAttributeTranslator<V> translator)
-		throws CmfStorageException;
+	protected abstract Long storeObject(O operation, CmfObject<CmfValue> object) throws CmfStorageException;
 
 	public final <V> boolean markStoreStatus(CmfObjectRef target, StoreStatus status) throws CmfStorageException {
 		return markStoreStatus(target, status, null);
@@ -273,8 +269,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s [%s](%s)",
-							object.getType(), object.getLabel(), object.getId()), e);
+						this.log.warn(
+							String.format("Failed to rollback the transaction for %s", object.getDescription()), e);
 					}
 				}
 			}
@@ -298,8 +294,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s [%s](%s)",
-							object.getType(), object.getLabel(), object.getId()), e);
+						this.log.warn(
+							String.format("Failed to rollback the transaction for %s", object.getDescription()), e);
 					}
 				}
 			}
@@ -427,38 +423,24 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract boolean lockHistory(O operation, CmfType type, String historyId, String lockId)
 		throws CmfStorageException;
 
-	protected final <V> CmfObject<V> adjustLoadedObject(CmfObject<V> dataObject, CmfTypeMapper typeMapper,
-		CmfAttributeTranslator<V> translator) {
-		// Ensure type mapping takes place, and ensure that translation also takes place
-		// TODO: This should only happen if "necessary" (i.e. target CMS is different from the
-		// source)
-		String altType = typeMapper.mapType(dataObject.getSubtype());
-		if (altType != null) {
-			dataObject = new CmfObject<>(dataObject, altType);
-		}
-		return translator.decodeObject(dataObject);
-	}
-
-	public final <V> CmfObject<V> loadHeadObject(final CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
-		CmfObject<V> sample) throws CmfStorageException {
-		if (typeMapper == null) { throw new IllegalArgumentException("Must provde a type mapper"); }
-		if (translator == null) { throw new IllegalArgumentException(
-			"Must provide a translator for storing object values"); }
-		if (sample == null) { throw new IllegalArgumentException("Must provide a sample to work with"); }
-		if (sample.isHistoryCurrent()) { return sample; }
+	public final CmfObject<CmfValue> loadHeadObject(CmfType type, String historyId) throws CmfStorageException {
+		if (type == null) { throw new IllegalArgumentException("Must provide an object type to work with"); }
+		if (historyId == null) { throw new IllegalArgumentException("Must provide a history ID to work with"); }
 
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return loadHeadObject(operation, typeMapper, translator, sample);
+				return loadHeadObject(operation, type, historyId);
 			} finally {
 				if (tx) {
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for loading the head object for %s", sample), e);
+						this.log.warn(
+							String.format("Failed to rollback the transaction for loading the head object for %s %s",
+								type, historyId),
+							e);
 					}
 				}
 			}
@@ -467,22 +449,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> CmfObject<V> loadHeadObject(O operation, CmfTypeMapper typeMapper,
-		CmfAttributeTranslator<V> translator, CmfObject<V> sample) throws CmfStorageException;
+	protected abstract CmfObject<CmfValue> loadHeadObject(O operation, CmfType type, String historyId)
+		throws CmfStorageException;
 
-	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
-		CmfAttributeTranslator<V> translator, CmfType type, String... ids) throws CmfStorageException {
-		return loadObjects(typeMapper, translator, type, (ids != null ? Arrays.asList(ids) : null));
+	public final Collection<CmfObject<CmfValue>> loadObjects(CmfType type, String... ids) throws CmfStorageException {
+		return loadObjects(type, (ids != null ? Arrays.asList(ids) : null));
 	}
 
-	public final <V> Collection<CmfObject<V>> loadObjects(final CmfTypeMapper typeMapper,
-		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
+	public final Collection<CmfObject<CmfValue>> loadObjects(final CmfType type, Collection<String> ids)
 		throws CmfStorageException {
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return loadObjects(operation, typeMapper, translator, type, ids);
+				return loadObjects(operation, type, ids);
 			} finally {
 				if (tx) {
 					try {
@@ -498,12 +478,9 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected final <V> Collection<CmfObject<V>> loadObjects(final O operation, final CmfTypeMapper typeMapper,
-		final CmfAttributeTranslator<V> translator, final CmfType type, Collection<String> ids)
-		throws CmfStorageException {
+	protected final Collection<CmfObject<CmfValue>> loadObjects(final O operation, final CmfType type,
+		Collection<String> ids) throws CmfStorageException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
-		if (translator == null) { throw new IllegalArgumentException(
-			"Must provide a translator for storing object values"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
 		getReadLock().lock();
 		try {
@@ -511,7 +488,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				ids = Collections.emptyList();
 			}
 			Set<String> actualIds = null;
-			final List<CmfObject<V>> ret = new ArrayList<>(ids.size());
+			final List<CmfObject<CmfValue>> ret = new ArrayList<>(ids.size());
 			if (ids.isEmpty()) { return ret; }
 			actualIds = new HashSet<>();
 			for (String s : ids) {
@@ -520,52 +497,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 				}
 				actualIds.add(s);
 			}
-			final CmfObjectHandler<V> h = new CollectionObjectHandler<>(ret);
-			loadObjects(operation, translator, type, actualIds, new CmfObjectHandler<V>() {
-				@Override
-				public boolean newTier(int tierNumber) throws CmfStorageException {
-					return h.newTier(tierNumber);
-				}
-
-				@Override
-				public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
-					return h.handleObject(adjustLoadedObject(dataObject, typeMapper, translator));
-				}
-
-				@Override
-				public boolean newHistory(String historyId) throws CmfStorageException {
-					return h.newHistory(historyId);
-				}
-
-				@Override
-				public boolean handleException(Exception e) {
-					return h.handleException(e);
-				}
-
-				@Override
-				public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
-					return h.endHistory(historyId, ok);
-				}
-
-				@Override
-				public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
-					return h.endTier(tierNumber, ok);
-				}
-			});
+			final CmfObjectHandler<CmfValue> h = new CollectionObjectHandler<>(ret);
+			loadObjects(operation, type, actualIds, h);
 			return ret;
 		} finally {
 			getReadLock().unlock();
 		}
 	}
 
-	public final <V> int loadObjects(final CmfTypeMapper typeMapper, CmfAttributeTranslator<V> translator,
-		final CmfType type, CmfObjectHandler<V> handler) throws CmfStorageException {
-		return loadObjects(typeMapper, translator, type, null, handler);
+	public final int loadObjects(final CmfType type, CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
+		return loadObjects(type, null, handler);
 	}
 
-	public final <V> int loadObjects(final CmfTypeMapper typeMapper, final CmfAttributeTranslator<V> translator,
-		final CmfType type, Collection<String> ids, final CmfObjectHandler<V> handler) throws CmfStorageException {
-		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
+	public final int loadObjects(final CmfType type, Collection<String> ids, final CmfObjectHandler<CmfValue> handler)
+		throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) { throw new IllegalArgumentException(
 			"Must provide an object handler to handle the deserialized objects"); }
@@ -573,37 +518,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return loadObjects(operation, translator, type, ids, new CmfObjectHandler<V>() {
-					@Override
-					public boolean newTier(int tierNumber) throws CmfStorageException {
-						return handler.newTier(tierNumber);
-					}
-
-					@Override
-					public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
-						return handler.handleObject(adjustLoadedObject(dataObject, typeMapper, translator));
-					}
-
-					@Override
-					public boolean newHistory(String historyId) throws CmfStorageException {
-						return handler.newHistory(historyId);
-					}
-
-					@Override
-					public boolean handleException(Exception e) {
-						return handler.handleException(e);
-					}
-
-					@Override
-					public boolean endHistory(String historyId, boolean ok) throws CmfStorageException {
-						return handler.endHistory(historyId, ok);
-					}
-
-					@Override
-					public boolean endTier(int tierNumber, boolean ok) throws CmfStorageException {
-						return handler.endTier(tierNumber, ok);
-					}
-				});
+				return loadObjects(operation, type, ids, handler);
 			} finally {
 				if (tx) {
 					try {
@@ -619,22 +534,20 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> int loadObjects(O operation, CmfAttributeTranslator<V> translator, CmfType type,
-		Collection<String> ids, CmfObjectHandler<V> handler) throws CmfStorageException;
+	protected abstract int loadObjects(O operation, CmfType type, Collection<String> ids,
+		CmfObjectHandler<CmfValue> handler) throws CmfStorageException;
 
-	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer)
+	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer) throws CmfStorageException {
+		return fixObjectNames(nameFixer, null, null);
+	}
+
+	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfType type)
 		throws CmfStorageException {
-		return fixObjectNames(translator, nameFixer, null, null);
+		return fixObjectNames(nameFixer, type, null);
 	}
 
-	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer,
-		final CmfType type) throws CmfStorageException {
-		return fixObjectNames(translator, nameFixer, type, null);
-	}
-
-	public final <V> int fixObjectNames(final CmfAttributeTranslator<V> translator, final CmfNameFixer<V> nameFixer,
-		final CmfType type, Set<String> ids) throws CmfStorageException {
-		if (translator == null) { throw new IllegalArgumentException("Must provide a translator for the conversions"); }
+	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfType type, Set<String> ids)
+		throws CmfStorageException {
 		if (nameFixer == null) { throw new IllegalArgumentException(
 			"Must provide name fixer to fix the object names"); }
 		if (ids != null) {
@@ -649,7 +562,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		try {
 			final boolean tx = operation.begin();
 			try {
-				int ret = fixObjectNames(operation, translator, nameFixer, type, ids);
+				int ret = fixObjectNames(operation, nameFixer, type, ids);
 				if (tx) {
 					operation.commit();
 				}
@@ -669,8 +582,8 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> int fixObjectNames(O operation, CmfAttributeTranslator<V> translator,
-		CmfNameFixer<V> nameFixer, CmfType type, Set<String> ids) throws CmfStorageException;
+	protected abstract int fixObjectNames(O operation, CmfNameFixer<CmfValue> nameFixer, CmfType type, Set<String> ids)
+		throws CmfStorageException;
 
 	public final void scanObjectTree(final CmfTreeScanner scanner) throws CmfStorageException {
 		if (scanner == null) { throw new IllegalArgumentException("Must provide scanner to process the object tree"); }
@@ -820,11 +733,11 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 
 	protected abstract Map<CmfType, Long> getStoredObjectTypes(O operation) throws CmfStorageException;
 
-	public final CmfAttributeMapper getAttributeMapper() {
+	public final CmfValueMapper getAttributeMapper() {
 		return this.mapper;
 	}
 
-	protected final CmfAttributeMapper getAttributeMapper(O operation) {
+	protected final CmfValueMapper getAttributeMapper(O operation) {
 		return new Mapper(operation);
 	}
 

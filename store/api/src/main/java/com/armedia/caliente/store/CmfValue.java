@@ -1,36 +1,56 @@
 package com.armedia.caliente.store;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.FastDateFormat;
 
 import com.armedia.commons.utilities.Tools;
 
 public final class CmfValue {
 
-	public static final Map<CmfDataType, CmfValue> NULL;
+	private static final List<FastDateFormat> DATE_FORMATS;
 
 	static {
-		Map<CmfDataType, CmfValue> nvl = new EnumMap<>(CmfDataType.class);
-		for (CmfDataType t : CmfDataType.values()) {
+		List<FastDateFormat> dateFormats = new LinkedList<>();
+		dateFormats.add(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_DATETIME_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_DATE_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_DATE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_TIME_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_TIME_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_TIME_NO_T_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_TIME_NO_T_FORMAT);
+		dateFormats.add(DateFormatUtils.SMTP_DATETIME_FORMAT);
+		DATE_FORMATS = Tools.freezeList(dateFormats);
+	}
+
+	public static Date parseDate(String str) throws ParseException {
+		if (str == null) { return null; }
+		for (FastDateFormat fmt : CmfValue.DATE_FORMATS) {
 			try {
-				nvl.put(t, new CmfValue(t, null));
+				return fmt.parse(str);
 			} catch (ParseException e) {
-				throw new RuntimeException(
-					String.format("Failed to create a CMF value with a null value for type [%s]", t), e);
+				// Not in this format...
+				continue;
 			}
 		}
-		NULL = Tools.freezeMap(nvl);
+		return DateFormat.getDateInstance().parse(str);
 	}
 
 	private final CmfDataType type;
 	private final Object value;
 	private final boolean nullValue;
 
-	public CmfValue(int value) {
+	public CmfValue(long value) {
 		this.type = CmfDataType.INTEGER;
 		this.value = value;
 		this.nullValue = false;
@@ -54,6 +74,18 @@ public final class CmfValue {
 		this.nullValue = (value == null);
 	}
 
+	public CmfValue(URI value) {
+		this.type = CmfDataType.URI;
+		this.value = value;
+		this.nullValue = (value == null);
+	}
+
+	public CmfValue(byte[] data) {
+		this.type = CmfDataType.BASE64_BINARY;
+		this.value = Base64.encodeBase64(data);
+		this.nullValue = (this.value == null);
+	}
+
 	public CmfValue(Date value) {
 		this.type = CmfDataType.DATETIME;
 		this.value = value;
@@ -73,25 +105,46 @@ public final class CmfValue {
 			switch (type) {
 				case INTEGER:
 					if (value instanceof Number) {
-						this.value = Number.class.cast(value);
+						this.value = value;
 					} else {
 						this.value = Integer.valueOf(value.toString());
 					}
 					break;
 				case BOOLEAN:
 					if (value instanceof Boolean) {
-						this.value = Boolean.class.cast(value);
+						this.value = value;
 					} else {
 						this.value = Boolean.valueOf(value.toString());
 					}
 					break;
 				case DOUBLE:
 					if (value instanceof Number) {
-						this.value = Number.class.cast(value);
+						this.value = value;
 					} else {
 						this.value = Double.valueOf(value.toString());
 					}
 					break;
+				case BASE64_BINARY:
+					if (value instanceof byte[]) {
+						this.value = ((byte[]) value).clone();
+					} else {
+						this.value = Base64.decodeBase64(value.toString());
+					}
+					break;
+				case URI:
+					if (URI.class.isInstance(value)) {
+						this.value = value;
+					} else {
+						try {
+							this.value = new URI(value.toString());
+						} catch (URISyntaxException e) {
+							ParseException pe = new ParseException(value.toString(), 0);
+							pe.initCause(e);
+							throw pe;
+						}
+					}
+					break;
+				case HTML:
 				case STRING:
 				case ID:
 					this.value = Tools.toString(value);
@@ -102,7 +155,7 @@ public final class CmfValue {
 					} else if (value instanceof Calendar) {
 						this.value = Calendar.class.cast(value).getTime();
 					} else {
-						this.value = DateFormat.getDateInstance().parse(value.toString());
+						this.value = CmfValue.parseDate(value.toString());
 					}
 					break;
 				default:
@@ -127,6 +180,12 @@ public final class CmfValue {
 		return Integer.valueOf(this.value.toString());
 	}
 
+	public long asLong() {
+		if (this.nullValue) { return 0; }
+		if (this.value instanceof Number) { return Number.class.cast(this.value).longValue(); }
+		return Long.valueOf(this.value.toString());
+	}
+
 	public boolean asBoolean() {
 		if (this.nullValue) { return false; }
 		if (this.value instanceof Boolean) { return Boolean.class.cast(this.value).booleanValue(); }
@@ -142,7 +201,19 @@ public final class CmfValue {
 	public Date asTime() throws ParseException {
 		if (this.nullValue) { return null; }
 		if (this.value instanceof Date) { return Date.class.cast(this.value); }
-		return DateFormat.getDateInstance().parse(this.value.toString());
+		return CmfValue.parseDate(this.value.toString());
+	}
+
+	public byte[] asBinary() {
+		if (this.nullValue) { return null; }
+		if (this.value instanceof byte[]) { return ((byte[]) this.value).clone(); }
+		return Base64.decodeBase64(this.value.toString());
+	}
+
+	public URI asURI() throws URISyntaxException {
+		if (this.nullValue) { return null; }
+		if (this.value instanceof URI) { return URI.class.cast(this.value); }
+		return new URI(this.value.toString());
 	}
 
 	public Object asObject() {
@@ -155,6 +226,10 @@ public final class CmfValue {
 
 	public boolean isNull() {
 		return this.nullValue;
+	}
+
+	public String serialize() throws ParseException {
+		return this.type.getSerializer().serialize(this);
 	}
 
 	@Override

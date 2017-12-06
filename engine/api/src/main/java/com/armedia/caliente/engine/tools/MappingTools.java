@@ -4,34 +4,43 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.InvalidPropertiesFormatException;
 import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
+import javax.xml.stream.XMLStreamException;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.armedia.caliente.tools.xml.XmlProperties;
+import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.ConfigurationSetting;
 
 public class MappingTools {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MappingTools.class);
 
 	public static interface MappingValidator {
-		public void validate(String key, String value) throws Exception;
+		public boolean validate(String key, String value) throws Exception;
 	}
 
 	private static final MappingValidator NULL_VALIDATOR = new MappingValidator() {
 		@Override
-		public void validate(String key, String value) throws Exception {
+		public boolean validate(String key, String value) {
+			return true;
 		}
 	};
 
-	public static boolean loadMap(Logger log, String mapFile, Properties properties) {
-		return MappingTools.loadMap(log, mapFile, properties, null);
+	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties) {
+		return MappingTools.loadMap(log, cfg, setting, properties, null);
 	}
 
-	public static boolean loadMap(Logger log, String mapFile, Properties properties, MappingValidator validator) {
+	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties,
+		MappingValidator validator) {
+
+		String mapFile = cfg.getString(setting);
 		if (StringUtils.isEmpty(mapFile)) { return false; }
+
 		if (log == null) {
 			log = MappingTools.LOG;
 		}
@@ -63,47 +72,34 @@ public class MappingTools {
 			validator = MappingTools.NULL_VALIDATOR;
 		}
 
-		Properties p = new Properties();
-		try {
-			InputStream in = new FileInputStream(f);
-			try {
-				// First, try the XML format
-				p.clear();
-				p.loadFromXML(in);
-			} catch (InvalidPropertiesFormatException e) {
-				// Not XML-format, try text format
-				IOUtils.closeQuietly(in);
-				in = new FileInputStream(f);
-
-				p.clear();
-				p.load(in);
-			} finally {
-				IOUtils.closeQuietly(in);
-			}
-
-			MappingTools.copyProperties(log, p, properties, f, validator);
-			return true;
-		} catch (IOException e) {
+		try (InputStream in = new FileInputStream(f)) {
+			Properties p = XmlProperties.loadFromXML(in);
+			return MappingTools.copyProperties(log, p, properties, f, validator);
+		} catch (IOException | XMLStreamException e) {
+			// Not XML-format...
 			log.warn(String.format("Failed to load the properties from file [%s]", mapFile), e);
-			p.clear();
 			return false;
 		}
 	}
 
-	private static void copyProperties(Logger log, Properties p, Properties properties, File mapFile,
+	private static boolean copyProperties(Logger log, Properties p, Properties properties, File mapFile,
 		MappingValidator validator) {
 		if (validator == null) {
 			validator = MappingTools.NULL_VALIDATOR;
 		}
-		for (Object k : p.keySet()) {
-			String v = p.getProperty(k.toString());
+		boolean ret = true;
+		for (String k : p.stringPropertyNames()) {
+			String v = p.getProperty(k);
 			try {
-				validator.validate(k.toString(), v);
+				if (validator.validate(k, v)) {
+					properties.setProperty(k, v);
+				}
 			} catch (Exception e) {
-				log.error(String.format("Mapping error detected in file [%s]: [%s]->[%s]", mapFile.getAbsolutePath(),
-					k.toString(), v.toString()), e);
+				log.error(String.format("Mapping error detected in file [%s]: [%s]->[%s]", mapFile.getAbsolutePath(), k,
+					v.toString()), e);
+				ret = false;
 			}
-			properties.setProperty(k.toString(), v);
 		}
+		return ret;
 	}
 }

@@ -43,16 +43,16 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	 */
 	private static final String DQL_FIND_USERS_WITH_DEFAULT_ACL = "SELECT u.user_name FROM dm_user u, dm_acl a WHERE u.acl_domain = a.owner_name AND u.acl_name = a.object_name AND a.r_object_id = '%s'";
 
-	protected DctmExportACL(DctmExportDelegateFactory factory, IDfACL acl) throws Exception {
-		super(factory, IDfACL.class, acl);
+	protected DctmExportACL(DctmExportDelegateFactory factory, IDfSession session, IDfACL acl) throws Exception {
+		super(factory, session, IDfACL.class, acl);
 	}
 
-	DctmExportACL(DctmExportDelegateFactory factory, IDfPersistentObject acl) throws Exception {
-		this(factory, DctmExportDelegate.staticCast(IDfACL.class, acl));
+	DctmExportACL(DctmExportDelegateFactory factory, IDfSession session, IDfPersistentObject acl) throws Exception {
+		this(factory, session, DctmExportDelegate.staticCast(IDfACL.class, acl));
 	}
 
 	@Override
-	protected String calculateLabel(IDfACL acl) throws Exception {
+	protected String calculateLabel(IDfSession session, IDfACL acl) throws Exception {
 		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
 	}
 
@@ -202,7 +202,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 	}
 
 	@Override
-	protected String calculateName(IDfACL acl) throws Exception {
+	protected String calculateName(IDfSession session, IDfACL acl) throws Exception {
 		return String.format("%s::%s", acl.getDomain(), acl.getObjectName());
 	}
 }

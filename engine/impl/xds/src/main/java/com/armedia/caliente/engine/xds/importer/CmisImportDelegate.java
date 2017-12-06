@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.xds.importer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,17 +14,15 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundExcept
 
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.xds.CmisSessionWrapper;
 import com.armedia.caliente.engine.xds.CmisTranslator;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 
 public abstract class CmisImportDelegate<T> extends
 	ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
@@ -33,12 +30,6 @@ public abstract class CmisImportDelegate<T> extends
 	protected CmisImportDelegate(CmisImportDelegateFactory factory, Class<T> objectClass,
 		CmfObject<CmfValue> storedObject) throws Exception {
 		super(factory, objectClass, storedObject);
-	}
-
-	@Override
-	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
-		throws ImportException, CmfStorageException {
-		return null;
 	}
 
 	protected boolean skipAttribute(String name) {

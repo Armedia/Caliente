@@ -3,10 +3,13 @@ package com.armedia.caliente.engine.cmis.exporter;
 import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.FileableCmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
+import org.apache.chemistry.opencmis.client.api.SecondaryType;
+import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
@@ -19,19 +22,20 @@ import com.armedia.caliente.store.CmfValue;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisObjectDelegate<T> {
 
-	protected CmisFileableDelegate(CmisExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected CmisFileableDelegate(CmisExportDelegateFactory factory, Session session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
-	protected String calculatePath(T f) throws Exception {
+	protected String calculatePath(Session session, T f) throws Exception {
 		List<String> paths = f.getPaths();
 		if (paths.isEmpty()) { return null; }
 		return paths.get(0);
 	}
 
 	@Override
-	protected final String calculateLabel(T f) throws Exception {
-		String path = calculatePath(f);
+	protected final String calculateLabel(Session session, T f) throws Exception {
+		String path = calculatePath(session, f);
 		if (path == null) {
 			path = String.format("${unfiled}:%s:%s", f.getName(), f.getId());
 		}
@@ -40,12 +44,25 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		return String.format("%s#%s", path, version);
 	}
 
+	@Override
+	protected Set<String> calculateSecondarySubtypes(Session session, CmfType type, String subtype, T object)
+		throws Exception {
+		Set<String> secondaries = super.calculateSecondarySubtypes(session, type, subtype, object);
+		List<SecondaryType> t = object.getSecondaryTypes();
+		if ((t != null) && !t.isEmpty()) {
+			for (SecondaryType st : t) {
+				secondaries.add(st.getId());
+			}
+		}
+		return secondaries;
+	}
+
 	protected String calculateVersion(T obj) throws Exception {
 		return null;
 	}
 
 	@Override
-	protected String calculateSubType(CmfType type, T obj) throws Exception {
+	protected String calculateSubType(Session session, CmfType type, T obj) throws Exception {
 		return obj.getType().getId();
 	}
 
@@ -82,16 +99,16 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		CmisExportContext ctx) throws Exception {
 		Collection<CmisExportDelegate<?>> ret = super.identifyRequirements(marshalled, ctx);
 		for (Folder f : this.object.getParents()) {
-			ret.add(new CmisFolderDelegate(this.factory, f));
+			ret.add(new CmisFolderDelegate(this.factory, ctx.getSession(), f));
 		}
-		ret.add(new CmisAclDelegate(this.factory, this.object));
-		ret.add(new CmisObjectTypeDelegate(this.factory, this.object.getType()));
-		ret.add(new CmisUserDelegate(this.factory, this.object));
+		ret.add(new CmisAclDelegate(this.factory, ctx.getSession(), this.object));
+		ret.add(new CmisObjectTypeDelegate(this.factory, ctx.getSession(), this.object.getType()));
+		ret.add(new CmisUserDelegate(this.factory, ctx.getSession(), this.object));
 		return ret;
 	}
 
 	@Override
-	protected final CmfType calculateType(T object) throws Exception {
+	protected final CmfType calculateType(Session session, T object) throws Exception {
 		if (Document.class.isInstance(object)) { return CmfType.DOCUMENT; }
 		if (Folder.class.isInstance(object)) { return CmfType.FOLDER; }
 		throw new Exception(String.format("Can't identify the type for object with ID [%s] of class [%s] and type [%s]",

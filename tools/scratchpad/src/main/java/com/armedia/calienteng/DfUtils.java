@@ -31,8 +31,10 @@ public class DfUtils {
 
 	public static enum DbType {
 		//
-		ORACLE("^.*\\.Oracle$"),
-		MSSQL("^.*\\.SQLServer$");
+		ORACLE("^.*\\.Oracle$"), //
+		MSSQL("^.*\\.SQLServer$"), //
+		//
+		;
 
 		private final Pattern pattern;
 
@@ -94,12 +96,12 @@ public class DfUtils {
 	private static final Map<String, Integer> PERMISSIONS_MAP;
 	private static final Map<String, Integer> PERMIT_TYPES_MAP;
 	static {
-		Map<String, Integer> m = new HashMap<String, Integer>();
+		Map<String, Integer> m = new HashMap<>();
 		for (Permission p : Permission.values()) {
 			m.put(p.str, p.num);
 		}
 		PERMISSIONS_MAP = Collections.unmodifiableMap(m);
-		m = new HashMap<String, Integer>();
+		m = new HashMap<>();
 		for (PermitType p : PermitType.values()) {
 			m.put(p.str, p.num);
 		}
@@ -192,8 +194,8 @@ public class DfUtils {
 		for (DbType type : DbType.values()) {
 			if (type.matches(serverVersion)) { return type; }
 		}
-		throw new UnsupportedOperationException(String.format(
-			"Failed to identify a supported database from the server version string [%s]", serverVersion));
+		throw new UnsupportedOperationException(String
+			.format("Failed to identify a supported database from the server version string [%s]", serverVersion));
 	}
 
 	public static String generateSqlDateClause(Date date, IDfSession session) throws DfException {
@@ -246,7 +248,8 @@ public class DfUtils {
 	public static int decodeAccessPermission(String permission) throws DfException {
 		if (permission == null) { throw new IllegalArgumentException("Must provide a permission to map"); }
 		Integer ret = DfUtils.PERMISSIONS_MAP.get(permission);
-		if (ret == null) { throw new DfException(String.format("Unknown permissions value [%s] detected", permission)); }
+		if (ret == null) { throw new DfException(
+			String.format("Unknown permissions value [%s] detected", permission)); }
 		return ret;
 	}
 
@@ -275,15 +278,16 @@ public class DfUtils {
 	public static int decodePermitType(String permitType) throws DfException {
 		if (permitType == null) { throw new IllegalArgumentException("Must provide a permit type to map"); }
 		Integer ret = DfUtils.PERMIT_TYPES_MAP.get(permitType);
-		if (ret == null) { throw new DfException(String.format("Unknown permit type value [%s] detected", permitType)); }
+		if (ret == null) { throw new DfException(
+			String.format("Unknown permit type value [%s] detected", permitType)); }
 		return ret;
 	}
 
 	public static IDfStore getStore(IDfSession session, String name) throws DfException {
 		if (session == null) { throw new IllegalArgumentException("Must provide a session to seek the store with"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a store name to look for"); }
-		return IDfStore.class.cast(session.getObjectByQualification(String.format("dm_store where name = %s",
-			DfUtils.quoteString(name))));
+		return IDfStore.class.cast(
+			session.getObjectByQualification(String.format("dm_store where name = %s", DfUtils.quoteString(name))));
 	}
 
 	/**

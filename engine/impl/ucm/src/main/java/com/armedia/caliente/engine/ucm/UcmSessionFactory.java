@@ -10,47 +10,56 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.ucm.UcmSessionSetting.SSLMode;
+import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.KeyStoreTools;
 import com.armedia.commons.utilities.CfgTools;
 
 import oracle.stellent.ridc.IdcClientManager;
 import oracle.stellent.ridc.IdcContext;
+import oracle.stellent.ridc.model.DataBinder;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClientConfig;
 
-public class UcmSessionFactory extends SessionFactory<IdcSession> {
+public class UcmSessionFactory extends SessionFactory<UcmSession> {
 
-	public static enum SSLMode {
-		//
-		NONE, // No SSL support
-		SERVER, // Only server validation
-		CLIENT, // Both server and client validation
-		//
-		;
+	private class IdcContextSeed {
+		private final String user;
+		private final String password;
 
-		public static SSLMode decode(String str) {
-			if (str == null) { return NONE; }
-			return SSLMode.valueOf(str.toUpperCase());
+		public IdcContextSeed(String user, String password) {
+			this.user = user;
+			this.password = password;
+		}
+
+		public IdcContext newInstance() {
+			if (this.password == null) { return new IdcContext(this.user); }
+			return new IdcContext(this.user, UcmSessionFactory.this.crypto.decrypt(this.password));
 		}
 	}
 
 	private final IdcClientManager manager;
 	private final String host;
 	private final int port;
-	private final SSLMode ssl;
+	private final UcmSessionSetting.SSLMode ssl;
+	private final String url;
 	private final String trustStore;
 	private final String trustStorePassword;
 	private final String clientStore;
 	private final String clientStorePassword;
 	private final String clientCertAlias;
 	private final String clientCertPassword;
-	private final IdcContext context;
+	private final IdcContextSeed context;
+	private final long minPingTime;
+
+	private final UcmModel model;
 
 	public UcmSessionFactory(CfgTools settings, CmfCrypt crypto) throws Exception {
 		super(settings, crypto);
 
 		this.manager = new IdcClientManager();
+		this.minPingTime = settings.getLong(UcmSessionSetting.MIN_PING_TIME);
 		this.host = settings.getString(UcmSessionSetting.HOST);
 		this.port = settings.getInteger(UcmSessionSetting.PORT);
 		if ((this.port <= 0) || (this.port > 0xffff)) { throw new Exception(
@@ -59,13 +68,7 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 		String userName = settings.getString(UcmSessionSetting.USER);
 		String password = settings.getString(UcmSessionSetting.PASSWORD);
 
-		// TODO: Support Kerberos...get a Credentials object...
-		if (password != null) {
-			// Try to decrypt the password if it's encrypted
-			this.context = new IdcContext(userName, this.crypto.decrypt(password));
-		} else {
-			this.context = new IdcContext(userName);
-		}
+		this.context = new IdcContextSeed(userName, password);
 
 		this.ssl = SSLMode.decode(settings.getString(UcmSessionSetting.SSL_MODE));
 		if (this.ssl != SSLMode.NONE) {
@@ -148,17 +151,19 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 			this.clientCertAlias = null;
 			this.clientCertPassword = null;
 		}
+		// If SSL_MODE, use idcs:// insteaed of idc://
+		// Always tack on the port number at the end
+		this.url = String.format("idc%s://%s:%d", (this.ssl != SSLMode.NONE) ? "s" : "", this.host, this.port);
 
+		// TODO: Get the cache size configuration
+		this.model = new UcmModel();
 	}
 
 	@Override
-	public PooledObject<IdcSession> makeObject() throws Exception {
-		// If SSL_MODE, use idcs:// insteaed of idc://
-		// Always tack on the port number at the end
+	public PooledObject<UcmSession> makeObject() throws Exception {
 
-		final String url = String.format("idc%s://%s:%d", (this.ssl != SSLMode.NONE) ? "s" : "", this.host, this.port);
-		this.log.trace("Setting the IDC connection URL to [{}]...", url);
-		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(url));
+		this.log.trace("UcmSetting the IDC connection URL to [{}]...", this.url);
+		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(this.url));
 
 		IntradocClientConfig config = client.getConfig();
 		config.setConnectionPool("simple");
@@ -172,32 +177,50 @@ public class UcmSessionFactory extends SessionFactory<IdcSession> {
 			config.setKeystoreAlias(this.clientCertAlias);
 			config.setKeystoreAliasPassword(this.clientCertPassword);
 		}
-		return new DefaultPooledObject<>(new IdcSession(client, this.context));
+		client.initialize();
+		return new DefaultPooledObject<>(new UcmSession(this.model, client, this.context.newInstance()));
 	}
 
 	@Override
-	public void destroyObject(PooledObject<IdcSession> p) throws Exception {
+	public void destroyObject(PooledObject<UcmSession> p) throws Exception {
 		p.getObject().logout();
 	}
 
 	@Override
-	public boolean validateObject(PooledObject<IdcSession> p) {
-		// TODO: Check the idle state against max idle...
-		return (p != null) && p.getObject().isInitialized();
+	public boolean validateObject(PooledObject<UcmSession> p) {
+		if (p == null) { return false; }
+		UcmSession session = p.getObject();
+		if (session == null) { return false; }
+		if (!session.isInitialized()) { return false; }
+
+		long now = System.currentTimeMillis();
+		if ((now - p.getLastUsedTime()) <= this.minPingTime) { return true; }
+
+		// Join the binder and the user context and perform the service call
+		try {
+			// Convert the response to a dataBinder
+			DataBinder responseData = session.callService("PING_SERVER").getResponseAsBinder();
+			// Display the status of the service call
+			this.log.debug("Server pinged - status: {}", responseData.getLocal("StatusMessage"));
+			return true;
+		} catch (Exception e) {
+			this.log.debug("Failed to ping the server", e);
+			return false;
+		}
 	}
 
 	@Override
-	public void activateObject(PooledObject<IdcSession> p) throws Exception {
+	public void activateObject(PooledObject<UcmSession> p) throws Exception {
 		// TODO: do we need to do something here?
 	}
 
 	@Override
-	public void passivateObject(PooledObject<IdcSession> p) throws Exception {
+	public void passivateObject(PooledObject<UcmSession> p) throws Exception {
 		// TODO: do we need to do something here?
 	}
 
 	@Override
-	protected UcmSessionWrapper newWrapper(IdcSession session) throws Exception {
+	protected UcmSessionWrapper newWrapper(UcmSession session) throws Exception {
 		return new UcmSessionWrapper(this, session);
 	}
 }

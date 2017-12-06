@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.cmis.importer;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,15 +16,13 @@ import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeMapper.Mapping;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueMapper.Mapping;
 
 public abstract class CmisImportDelegate<T> extends
 	ImportDelegate<T, Session, CmisSessionWrapper, CmfValue, CmisImportContext, CmisImportDelegateFactory, CmisImportEngine> {
@@ -35,11 +32,14 @@ public abstract class CmisImportDelegate<T> extends
 		super(factory, objectClass, storedObject);
 	}
 
+	/*
 	@Override
-	protected Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
+	protected Collection<ImportOutcome> importObject(TypeDescriptor targetType,
+		CmfAttributeTranslator<CmfValue> translator, CmisImportContext ctx)
 		throws ImportException, CmfStorageException {
 		return null;
 	}
+	*/
 
 	protected boolean skipAttribute(String name) {
 		return false;
@@ -54,9 +54,9 @@ public abstract class CmisImportDelegate<T> extends
 		final String finalTypeName;
 		if (m == null) {
 			BaseTypeId id = CmisTranslator.decodeObjectType(this.cmfObject.getType());
-			if (id == null) { throw new ImportException(String.format(
-				"Failed to identify the base type for %s of subtype [%s]  [%s](%s)", this.cmfObject.getType(),
-				this.cmfObject.getSubtype(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+			if (id == null) { throw new ImportException(
+				String.format("Failed to identify the base type for %s of subtype [%s]",
+					this.cmfObject.getDescription(), this.cmfObject.getSubtype())); }
 			finalTypeName = id.value();
 		} else {
 			finalTypeName = m.getTargetValue();
@@ -66,9 +66,10 @@ public abstract class CmisImportDelegate<T> extends
 		try {
 			type = session.getTypeDefinition(finalTypeName);
 		} catch (CmisObjectNotFoundException e) {
-			throw new ImportException(String.format(
-				"Failed to locate the type called [%s] (from source type [%s]) for %s [%s](%s)", finalTypeName,
-				typeName, this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
+			throw new ImportException(
+				String.format("Failed to locate the type called [%s] (from source type [%s]) for %s", finalTypeName,
+					typeName, this.cmfObject.getDescription()),
+				e);
 		}
 
 		Map<String, Object> properties = new HashMap<>();

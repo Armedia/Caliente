@@ -67,6 +67,14 @@ public abstract class JdbcDialect {
 				"   values (?, ?, ?)" //
 		),
 
+		INSERT_OBJECT_SECONDARIES( //
+			"       insert into " + //
+				"          cmf_object_secondary_subtype (" + //
+				"              object_id, pos, name " + //
+				"          ) " + //
+				"   values (?, ?, ?)" //
+		),
+
 		INSERT_ATTRIBUTE( //
 			"       insert into " + //
 				"          cmf_attribute (" + //
@@ -164,6 +172,10 @@ public abstract class JdbcDialect {
 
 		CLEAR_ALL_MAPPINGS( //
 			"     truncate table cmf_mapper" //
+		),
+
+		RESTART_SEQUENCE( //
+			null //
 		),
 
 		LOAD_ALL_MAPPINGS( //
@@ -290,6 +302,13 @@ public abstract class JdbcDialect {
 				"     from cmf_object_tree " + //
 				"    where object_id = ? " + //
 				" order by parent_pos " //
+		),
+
+		LOAD_SECONDARIES( //
+			"       select name " + //
+				"     from cmf_object_secondary_subtype " + //
+				"    where object_id = ? " + //
+				" order by pos " //
 		),
 
 		LOAD_ATTRIBUTES( //

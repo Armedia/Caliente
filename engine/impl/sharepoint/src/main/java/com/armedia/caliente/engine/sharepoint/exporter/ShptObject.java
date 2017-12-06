@@ -35,17 +35,18 @@ public abstract class ShptObject<T> extends ShptExportDelegate<T> {
 	 * @param object
 	 * @throws Exception
 	 */
-	protected ShptObject(ShptExportDelegateFactory factory, Class<T> objectClass, T object) throws Exception {
-		super(factory, objectClass, object);
+	protected ShptObject(ShptExportDelegateFactory factory, ShptSession session, Class<T> objectClass, T object)
+		throws Exception {
+		super(factory, session, objectClass, object);
 	}
 
 	@Override
-	protected String calculateSearchKey(T object) throws Exception {
-		return calculateObjectId(object);
+	protected String calculateSearchKey(ShptSession session, T object) throws Exception {
+		return calculateObjectId(session, object);
 	}
 
 	@Override
-	public int calculateDependencyTier(T object) {
+	public int calculateDependencyTier(ShptSession session, T object) {
 		return 0;
 	}
 
