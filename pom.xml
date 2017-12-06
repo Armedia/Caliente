@@ -374,7 +374,7 @@
 						<archive>
 							<manifestEntries>
 								<SCM-Branch>${scmBranch}</SCM-Branch>
-								<SCM-Revision>${buildNumber}</SCM-Revision>
+								<SCM-Revision>${commitHash}</SCM-Revision>
 								<SCM-Build-Time>${buildTimestamp}</SCM-Build-Time>
 							</manifestEntries>
 						</archive>
@@ -424,6 +424,21 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>buildnumber-maven-plugin</artifactId>
 				<executions>
+					<execution>
+						<id>create-commitHash</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+						<configuration>
+							<doCheck>false</doCheck>
+							<doUpdate>false</doUpdate>
+							<shortRevisionLength>40</shortRevisionLength>
+							<getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+							<revisionOnScmFailure>unknown</revisionOnScmFailure>
+							<buildNumberPropertyName>commitHash</buildNumberPropertyName>
+						</configuration>
+					</execution>
 					<execution>
 						<id>create-buildNumber</id>
 						<phase>generate-sources</phase>
