@@ -176,7 +176,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	@Override
-	public String canonicalizeValue(String value) {
+	private String canonicalizeValue(String value) {
 		if ((value == null) || this.valuesCaseSensitive) { return value; }
 		return value.toUpperCase();
 	}

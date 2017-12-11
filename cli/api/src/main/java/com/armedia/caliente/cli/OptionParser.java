@@ -359,7 +359,7 @@ public class OptionParser {
 									continue nextValue;
 								}
 
-								values.add(currentOption.canonicalizeValue(nextValue));
+								values.add(nextValue);
 							}
 						}
 

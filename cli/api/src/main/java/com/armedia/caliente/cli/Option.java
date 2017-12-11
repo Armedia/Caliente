@@ -41,8 +41,6 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 
 	public abstract boolean isValueAllowed(String value);
 
-	public abstract String canonicalizeValue(String value);
-
 	public abstract String getDefault();
 
 	public abstract List<String> getDefaults();
