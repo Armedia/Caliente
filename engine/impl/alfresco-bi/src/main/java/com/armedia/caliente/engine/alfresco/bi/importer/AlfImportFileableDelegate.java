@@ -26,6 +26,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMappingR
 import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeValue;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
+import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
@@ -313,22 +314,19 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				p.setProperty(currentProperty, this.cmfObject.getHistoryId());
 			}
 
-			/* For now, disable the ACL generation */
-			/*
 			// Map the group attributes
 			String group = null;
 			CmfValue groupValue = getAttributeValue(IntermediateAttribute.GROUP);
 			if (groupValue != null) {
-				group = this.factory.mapGroup(groupValue.asString());
+				group = groupValue.asString();
 			}
-			
+
 			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-			
+
 			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 			if ((aclInherit != null) && !aclInherit.isNull()) {
 				p.setProperty("arm:aclInheritance", aclInherit.asString());
 			}
-			*/
 
 			// Not a reference? Add the caliente aspect
 			if (this.factory.getSchema().hasAspect(AlfImportFileableDelegate.CALIENTE_ASPECT)) {
