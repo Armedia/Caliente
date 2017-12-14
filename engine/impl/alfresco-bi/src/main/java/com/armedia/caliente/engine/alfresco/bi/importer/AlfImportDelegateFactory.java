@@ -617,7 +617,7 @@ public class AlfImportDelegateFactory
 		}
 
 		if (unfiled) {
-			thisMarker.setTargetName(String.format("%08x-%s", cmfObject.getNumber(), thisMarker.getTargetName()));
+			thisMarker.setTargetName(String.format("%s-%s", cmfObject.getHistoryId(), thisMarker.getTargetName()));
 		}
 		thisMarker.setTargetPath(targetPath);
 		thisMarker.setIndex(current);
