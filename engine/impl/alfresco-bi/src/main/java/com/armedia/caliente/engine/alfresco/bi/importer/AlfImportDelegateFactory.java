@@ -617,7 +617,7 @@ public class AlfImportDelegateFactory
 		}
 
 		if (unfiled) {
-			thisMarker.setTargetName(String.format("%s-%s", cmfObject.getHistoryId(), thisMarker.getTargetName()));
+			thisMarker.setTargetName(getUnfiledName(ctx, cmfObject));
 		}
 		thisMarker.setTargetPath(targetPath);
 		thisMarker.setIndex(current);
@@ -840,6 +840,11 @@ public class AlfImportDelegateFactory
 			throw new ImportException(
 				String.format("Failed to serialize the %s to XML: %s", folder ? "folder" : "file", item), e);
 		}
+	}
+
+	final String getUnfiledName(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject) {
+		// Generate a unique name using the history ID and the object's given name
+		return String.format("%s-%s", cmfObject.getHistoryId(), ctx.getObjectName(cmfObject));
 	}
 
 	@Override

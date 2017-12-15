@@ -391,7 +391,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				&& unfiledProp.getValue().asBoolean();
 			if (unfiled) {
 				// This helps protect against duplicate object names
-				name = String.format("%s-%s", this.cmfObject.getHistoryId(), name);
+				name = this.factory.getUnfiledName(ctx, this.cmfObject);
 			}
 			p.setProperty(currentProperty, name);
 		}
