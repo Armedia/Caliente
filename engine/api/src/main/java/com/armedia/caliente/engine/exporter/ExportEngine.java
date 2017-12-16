@@ -842,9 +842,8 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		this.log.debug("Locating export results...");
 		try {
 			// Fire off the workers
-			final ExportTarget terminator = new ExportTarget();
 			listenerDelegator.exportStarted(exportState);
-			worker.start(threadCount, terminator, true);
+			worker.start(threadCount, "Exporter", true);
 			try {
 				output.info("Retrieving the results");
 				final int reportCount = 1000;

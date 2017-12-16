@@ -35,7 +35,6 @@ import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
@@ -259,7 +258,7 @@ public class Caliente_counter extends AbstractCalienteModule<ExportEngineListene
 				final IDfSession session = pool.acquireSession();
 				final Set<IDfId> traversed = new HashSet<>();
 
-				workers.start(Setting.THREADS.getInt(), DfId.DF_NULLID, true);
+				workers.start(Setting.THREADS.getInt(), "Counter", true);
 				try {
 					session.beginTrans();
 

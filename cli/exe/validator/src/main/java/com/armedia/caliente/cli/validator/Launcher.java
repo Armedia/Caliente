@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -115,8 +114,7 @@ public class Launcher extends AbstractLauncher {
 				}
 			};
 
-			final Path endPath = Paths.get("");
-			workers.start(threads, endPath, true);
+			workers.start(threads, "Validator", true);
 
 			try {
 				Files.walkFileTree(validator.getSourceRoot(), validator.new FileVisitor() {
