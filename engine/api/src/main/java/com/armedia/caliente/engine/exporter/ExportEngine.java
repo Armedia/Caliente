@@ -729,10 +729,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(objectCounter);
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<>();
 
-		final PooledWorkers<SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionWrapper<S>, ExportTarget>() {
+		final PooledWorkers<SessionFactory<S>, SessionWrapper<S>, ExportTarget> worker = new PooledWorkers<SessionFactory<S>, SessionWrapper<S>, ExportTarget>() {
 
 			@Override
-			protected SessionWrapper<S> prepare() throws Exception {
+			protected SessionWrapper<S> initialize(SessionFactory<S> sessionFactory) throws Exception {
 				final SessionWrapper<S> s;
 				try {
 					s = sessionFactory.acquireSession();
@@ -843,7 +843,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		try {
 			// Fire off the workers
 			listenerDelegator.exportStarted(exportState);
-			worker.start(threadCount, "Exporter", true);
+			worker.start(sessionFactory, threadCount, "Exporter", true);
 			try {
 				output.info("Retrieving the results");
 				final int reportCount = 1000;

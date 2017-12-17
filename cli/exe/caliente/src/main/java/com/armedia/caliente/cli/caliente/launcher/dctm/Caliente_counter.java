@@ -167,12 +167,12 @@ public class Caliente_counter extends AbstractCalienteModule<ExportEngineListene
 
 			final List<CounterResult> results = Collections.synchronizedList(new ArrayList<CounterResult>());
 
-			final PooledWorkers<IDfSession, IDfId> workers = new PooledWorkers<IDfSession, IDfId>() {
+			final PooledWorkers<DfcSessionPool, IDfSession, IDfId> workers = new PooledWorkers<DfcSessionPool, IDfSession, IDfId>() {
 
 				private IDfLocalTransaction localTx = null;
 
 				@Override
-				protected IDfSession prepare() throws Exception {
+				protected IDfSession initialize(DfcSessionPool pool) throws Exception {
 					IDfSession s = pool.acquireSession();
 					if (s.isTransactionActive()) {
 						this.localTx = s.beginTransEx();
@@ -258,7 +258,7 @@ public class Caliente_counter extends AbstractCalienteModule<ExportEngineListene
 				final IDfSession session = pool.acquireSession();
 				final Set<IDfId> traversed = new HashSet<>();
 
-				workers.start(Setting.THREADS.getInt(), "Counter", true);
+				workers.start(pool, Setting.THREADS.getInt(), "Counter", true);
 				try {
 					session.beginTrans();
 

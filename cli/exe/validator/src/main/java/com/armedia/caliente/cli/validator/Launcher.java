@@ -97,9 +97,9 @@ public class Launcher extends AbstractLauncher {
 			cli.getAllStrings(CLIParam.model), reportMarker);
 		final long start = System.currentTimeMillis();
 		try {
-			final PooledWorkers<Object, Path> workers = new PooledWorkers<Object, Path>() {
+			final PooledWorkers<Object, Object, Path> workers = new PooledWorkers<Object, Object, Path>() {
 				@Override
-				protected Object prepare() throws Exception {
+				protected Object initialize(Object o) throws Exception {
 					return null;
 				}
 
@@ -114,7 +114,7 @@ public class Launcher extends AbstractLauncher {
 				}
 			};
 
-			workers.start(threads, "Validator", true);
+			workers.start(null, threads, "Validator", true);
 
 			try {
 				Files.walkFileTree(validator.getSourceRoot(), validator.new FileVisitor() {
