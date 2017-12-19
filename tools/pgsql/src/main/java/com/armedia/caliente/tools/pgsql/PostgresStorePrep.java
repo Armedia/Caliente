@@ -1,6 +1,7 @@
 package com.armedia.caliente.tools.pgsql;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -84,8 +85,7 @@ public class PostgresStorePrep implements CmfStorePrep {
 		final IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(cmd).artifactStore(artifactStore)
 			.build();
 
-		// TODO: Determine where the data will be stored
-		final Storage storage = new Storage(dbname, metadataStore);
+		final Storage storage = new Storage(dbname, Paths.get(metadataStore, "metadata").toAbsolutePath().toString());
 		if (cleanData) {
 			// Clean out the data store
 			File storageFile = storage.dbDir();
@@ -113,7 +113,6 @@ public class PostgresStorePrep implements CmfStorePrep {
 			-d 1-5             debugging level
 			-F                 turn fsync off
 			-S WORK-MEM        set amount of memory for sorts (in kB)
-			-V, --version      output version information, then exit
 			--NAME=VALUE       set run-time parameter
 		 */
 		/// args.addAll(Arrays.asList(.....));
