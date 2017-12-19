@@ -103,8 +103,13 @@ public class PostgresStorePrep implements CmfStorePrep {
 		List<String> args = new ArrayList<>();
 		// pass info regarding encoding, locale, collate, ctype, instead of setting global
 		// environment settings
-		args.addAll(
-			Arrays.asList("-E", "UTF-8", "--locale=en_US.UTF-8", "--lc-collate=en_US.UTF-8", "--lc-ctype=en_US.UTF-8"));
+		args.addAll(Arrays.asList( //
+			"-E", "UTF-8" //
+			, "--locale=en_US.UTF-8" //
+			, "--lc-collate=en_US.UTF-8" //
+			, "--lc-ctype=en_US.UTF-8" //
+		// TODO: More parameters here? Maybe for RAM allocation, etc?
+		));
 		// TODO: Add more arguments for memory size, etc...
 		/*
 			-B NBUFFERS        number of shared buffers
