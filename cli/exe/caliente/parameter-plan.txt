@@ -16,7 +16,6 @@ Pass 2
 			--no-renditions
 			--no-versions
 			--skip-content
-			--manifest ${manifest-file}
 			-t,--threads ${threads}
 			-d,--db ${db-dir}
 			-c,--content ${content-dir}
@@ -26,8 +25,8 @@ Pass 2
 			--smtp-auth-user ${user}
 			--smtp-auth-pass ${pass}
 			--error-count ${count}
-			--object-store-config ${config}
-			--content-store-config ${config}
+			--metadata-store ${config}
+			--content-store ${config}
 			--manifest-types ${type1,type2,...,typeN}
 			--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
 			--mail-to ${recipient1,recipient2,...,recipientN}
