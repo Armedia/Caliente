@@ -292,7 +292,7 @@
 			<dependency>
 				<groupId>ru.yandex.qatools.embed</groupId>
 				<artifactId>postgresql-embedded</artifactId>
-				<version>1.22</version>
+				<version>1.23</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
