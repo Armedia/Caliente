@@ -118,9 +118,4 @@ public class JdbcDialectH2 extends JdbcDialect {
 	protected ResultSetHandler<Long> getObjectNumberHandler() {
 		return JdbcDialectH2.OBJECT_NUMBER_HANDLER;
 	}
-
-	@Override
-	protected boolean isDuplicateKeyException(SQLException e) {
-		return (e.getErrorCode() == 23505);
-	}
 }

@@ -526,7 +526,9 @@ public abstract class JdbcDialect {
 
 	protected abstract ResultSetHandler<Long> getObjectNumberHandler();
 
-	protected abstract boolean isDuplicateKeyException(SQLException e);
+	protected boolean isDuplicateKeyException(SQLException e) {
+		return StringUtils.equalsIgnoreCase(e.getSQLState(), "23505");
+	}
 
 	final String translateQuery(Query query) {
 		if (query == null) { throw new IllegalArgumentException("Must provide a SQL query to resolve"); }
