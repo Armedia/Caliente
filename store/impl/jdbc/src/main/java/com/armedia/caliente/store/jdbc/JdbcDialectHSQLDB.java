@@ -19,16 +19,16 @@ public class JdbcDialectHSQLDB extends JdbcDialect {
 	private static final String LOAD_OBJECTS_BY_ID = //
 		"       select o.*, n.new_name " + //
 			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
-			"    where o.object_type = ? " + //
-			"      and o.object_id = any ( ? ) " + //
+			"    where o.object_type = cast(? AS varchar(32)) " + //
+			"      and o.object_id in ( unnest( cast(? as varchar(96)) ) ) " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
 	private static final String LOAD_OBJECTS_BY_ID_CURRENT = //
 		"       select o.*, n.new_name " + //
 			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
-			"    where o.object_type = ? " + //
-			"      and o.object_id = any ( ? ) " + //
+			"    where o.object_type = cast(? AS varchar(32)) " + //
+			"      and o.object_id in ( unnest( cast(? as varchar(96)) ) ) " + //
 			"      and o.history_current = true " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
 	;
@@ -36,7 +36,7 @@ public class JdbcDialectHSQLDB extends JdbcDialect {
 	private static final String LOAD_OBJECT_NAMES_BY_ID = //
 		"       select o.object_id, o.object_name, n.new_name " + //
 			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
-			"    where o.object_id = any ( ? ) " + //
+			"    where o.object_id in ( unnest( cast(? as varchar(96)) ) )" + //
 			" order by o.object_id " //
 	;
 
@@ -44,7 +44,7 @@ public class JdbcDialectHSQLDB extends JdbcDialect {
 		"       select o.object_id, o2.object_name, n.new_name " + //
 			"     from cmf_object o, " + //
 			"          cmf_object o2 left outer join cmf_alt_name n on (o2.object_id = n.object_id) " + //
-			"    where o.object_id = any ( ? ) " + //
+			"    where o.object_id in ( unnest( cast(? as varchar(96)) ) ) " + //
 			"      and o.object_type = o2.object_type " + //
 			"      and o.history_id = o2.history_id " + //
 			"      and o2.history_current = true " + //
@@ -56,10 +56,11 @@ public class JdbcDialectHSQLDB extends JdbcDialect {
 	;
 
 	private static final String UPSERT_ALT_NAME = //
-		"     merge into cmf_alt_name " + //
+		"     merge into cmf_alt_name as n " + //
 			" using (values(?, ?)) as vals(object_id, new_name) " + //
-			"  when matched then update set cmf_alt_name.new_name = vals.new_name " + //
-			"  when not matched insert values vals.object_id, vals.new_name " //
+			"    on n.object_id = vals.object_id " + //
+			"  when     matched then update set n.new_name = vals.new_name " + //
+			"  when not matched then insert values vals.object_id, vals.new_name " //
 	;
 
 	private static final String RESTART_SEQUENCE = //
@@ -67,7 +68,7 @@ public class JdbcDialectHSQLDB extends JdbcDialect {
 	;
 
 	public JdbcDialectHSQLDB(DatabaseMetaData md) throws SQLException {
-		super(EngineType.HSQLDB, md);
+		super(EngineType.HSQL, md);
 	}
 
 	@Override
@@ -111,10 +112,5 @@ public class JdbcDialectHSQLDB extends JdbcDialect {
 	@Override
 	protected ResultSetHandler<Long> getObjectNumberHandler() {
 		return JdbcDialectHSQLDB.OBJECT_NUMBER_HANDLER;
-	}
-
-	@Override
-	protected boolean isDuplicateKeyException(SQLException e) {
-		return (e.getErrorCode() == 23505);
 	}
 }
