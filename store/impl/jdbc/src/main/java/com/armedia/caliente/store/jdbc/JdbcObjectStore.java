@@ -509,7 +509,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					}
 					if (this.dialect.isSupportsArrays()) {
 						objectPS.setString(1, type.name());
-						objectPS.setArray(2, connection.createArrayOf("text", arr));
+						objectPS.setArray(2, connection.createArrayOf("varchar", arr));
 					} else {
 						objectPS.setObject(1, arr);
 						objectPS.setString(2, type.name());
@@ -1798,7 +1798,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						arr[i] = JdbcTools.composeDatabaseId(CmfObjectRef.class.cast(arr[i]));
 					}
 					if (this.dialect.isSupportsArrays()) {
-						ps.setArray(1, c.createArrayOf("text", arr));
+						ps.setArray(1, c.createArrayOf("varchar", arr));
 					} else {
 						ps.setObject(1, arr);
 					}
