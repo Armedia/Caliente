@@ -26,7 +26,7 @@ public abstract class JdbcDialect {
 		HSQL("HSQL Database Engine") {
 			@Override
 			protected JdbcDialect newDialect(DatabaseMetaData md) throws SQLException {
-				return new JdbcDialectHSQLDB(md);
+				return new JdbcDialectHSQL(md);
 			}
 		}, //
 		PostgreSQL {

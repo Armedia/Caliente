@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 import org.apache.commons.dbutils.ResultSetHandler;
 
-public class JdbcDialectHSQLDB extends JdbcDialect {
+public class JdbcDialectHSQL extends JdbcDialect {
 
 	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = new ResultSetHandler<Long>() {
 		@Override
@@ -67,7 +67,7 @@ public class JdbcDialectHSQLDB extends JdbcDialect {
 		"     alter sequence %s restart with 1" //
 	;
 
-	public JdbcDialectHSQLDB(DatabaseMetaData md) throws SQLException {
+	public JdbcDialectHSQL(DatabaseMetaData md) throws SQLException {
 		super(EngineType.HSQL, md);
 	}
 
@@ -90,19 +90,19 @@ public class JdbcDialectHSQLDB extends JdbcDialect {
 	protected String doTranslate(Query sql) {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
-				return JdbcDialectHSQLDB.LOAD_OBJECTS_BY_ID;
+				return JdbcDialectHSQL.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_CURRENT:
-				return JdbcDialectHSQLDB.LOAD_OBJECTS_BY_ID_CURRENT;
+				return JdbcDialectHSQL.LOAD_OBJECTS_BY_ID_CURRENT;
 			case LOAD_OBJECT_NAMES_BY_ID:
-				return JdbcDialectHSQLDB.LOAD_OBJECT_NAMES_BY_ID;
+				return JdbcDialectHSQL.LOAD_OBJECT_NAMES_BY_ID;
 			case LOAD_OBJECT_NAMES_BY_ID_CURRENT:
-				return JdbcDialectHSQLDB.LOAD_OBJECT_NAMES_BY_ID_CURRENT;
+				return JdbcDialectHSQL.LOAD_OBJECT_NAMES_BY_ID_CURRENT;
 			case TRUNCATE_TABLE_FMT:
-				return JdbcDialectHSQLDB.TRUNCATE_TABLE_FMT;
+				return JdbcDialectHSQL.TRUNCATE_TABLE_FMT;
 			case UPSERT_ALT_NAME:
-				return JdbcDialectHSQLDB.UPSERT_ALT_NAME;
+				return JdbcDialectHSQL.UPSERT_ALT_NAME;
 			case RESTART_SEQUENCE:
-				return JdbcDialectHSQLDB.RESTART_SEQUENCE;
+				return JdbcDialectHSQL.RESTART_SEQUENCE;
 			default:
 				break;
 		}
@@ -111,6 +111,6 @@ public class JdbcDialectHSQLDB extends JdbcDialect {
 
 	@Override
 	protected ResultSetHandler<Long> getObjectNumberHandler() {
-		return JdbcDialectHSQLDB.OBJECT_NUMBER_HANDLER;
+		return JdbcDialectHSQL.OBJECT_NUMBER_HANDLER;
 	}
 }
