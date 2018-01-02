@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 import org.apache.commons.dbutils.ResultSetHandler;
 
-public class JdbcDialectH2 extends JdbcDialect {
+public class JdbcDialectHSQLDB extends JdbcDialect {
 
 	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = new ResultSetHandler<Long>() {
 		@Override
@@ -18,96 +18,90 @@ public class JdbcDialectH2 extends JdbcDialect {
 
 	private static final String LOAD_OBJECTS_BY_ID = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
-			"          table(x varchar=?) t " + //
-			"    where o.object_id = t.x " + //
-			"      and o.object_type = ? " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"    where o.object_type = ? " + //
+			"      and o.object_id = any ( ? ) " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
 	private static final String LOAD_OBJECTS_BY_ID_CURRENT = //
 		"       select o.*, n.new_name " + //
-			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
-			"          table(x varchar=?) t " + //
-			"    where o.object_id = t.x " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"    where o.object_type = ? " + //
+			"      and o.object_id = any ( ? ) " + //
 			"      and o.history_current = true " + //
-			"      and o.object_type = ? " + //
 			" order by o.tier_id, o.history_id, o.object_number" //
 	;
 
 	private static final String LOAD_OBJECT_NAMES_BY_ID = //
 		"       select o.object_id, o.object_name, n.new_name " + //
-			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
-			"          table(x varchar=?) t " + //
-			"    where o.object_id = t.x " + //
+			"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id)" + //
+			"    where o.object_id = any ( ? ) " + //
 			" order by o.object_id " //
 	;
 
 	private static final String LOAD_OBJECT_NAMES_BY_ID_CURRENT = //
-		"       select o.object_id, o.object_label, o2.object_name, n.new_name " + //
-			"     from cmf_object o, table(x varchar=?) t, " + //
+		"       select o.object_id, o2.object_name, n.new_name " + //
+			"     from cmf_object o, " + //
 			"          cmf_object o2 left outer join cmf_alt_name n on (o2.object_id = n.object_id) " + //
-			"    where o.object_id = t.x " + //
+			"    where o.object_id = any ( ? ) " + //
 			"      and o.object_type = o2.object_type " + //
 			"      and o.history_id = o2.history_id " + //
 			"      and o2.history_current = true " + //
 			" order by o.object_id " //
 	;
 
-	private static final String ENABLE_REFERENTIAL_INTEGRITY = //
-		"          set REFERENTIAL_INTEGRITY true" //
-	;
-
-	private static final String DISABLE_REFERENTIAL_INTEGRITY = //
-		"          set REFERENTIAL_INTEGRITY false" //
+	private static final String TRUNCATE_TABLE_FMT = //
+		"     truncate table %s restart identity no check " //
 	;
 
 	private static final String UPSERT_ALT_NAME = //
-		"     merge into cmf_alt_name (object_id, new_name) key (object_id) values ( ?, ? ) " //
+		"     merge into cmf_alt_name " + //
+			" using (values(?, ?)) as vals(object_id, new_name) " + //
+			"  when matched then update set cmf_alt_name.new_name = vals.new_name " + //
+			"  when not matched insert values vals.object_id, vals.new_name " //
 	;
 
 	private static final String RESTART_SEQUENCE = //
 		"     alter sequence %s restart with 1" //
 	;
 
-	public JdbcDialectH2(DatabaseMetaData md) throws SQLException {
-		super(EngineType.H2, md);
+	public JdbcDialectHSQLDB(DatabaseMetaData md) throws SQLException {
+		super(EngineType.HSQLDB, md);
 	}
 
 	@Override
 	protected boolean isSupportsArrays() {
-		return false;
+		return true;
 	}
 
 	@Override
 	protected boolean isTruncateBypassesConstraints() {
-		return false;
+		return true;
 	}
 
 	@Override
 	protected boolean isTruncateRestartsSequences() {
-		return false;
+		return true;
 	}
 
 	@Override
 	protected String doTranslate(Query sql) {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
-				return JdbcDialectH2.LOAD_OBJECTS_BY_ID;
+				return JdbcDialectHSQLDB.LOAD_OBJECTS_BY_ID;
 			case LOAD_OBJECTS_BY_ID_CURRENT:
-				return JdbcDialectH2.LOAD_OBJECTS_BY_ID_CURRENT;
+				return JdbcDialectHSQLDB.LOAD_OBJECTS_BY_ID_CURRENT;
 			case LOAD_OBJECT_NAMES_BY_ID:
-				return JdbcDialectH2.LOAD_OBJECT_NAMES_BY_ID;
+				return JdbcDialectHSQLDB.LOAD_OBJECT_NAMES_BY_ID;
 			case LOAD_OBJECT_NAMES_BY_ID_CURRENT:
-				return JdbcDialectH2.LOAD_OBJECT_NAMES_BY_ID_CURRENT;
-			case ENABLE_REFERENTIAL_INTEGRITY:
-				return JdbcDialectH2.ENABLE_REFERENTIAL_INTEGRITY;
-			case DISABLE_REFERENTIAL_INTEGRITY:
-				return JdbcDialectH2.DISABLE_REFERENTIAL_INTEGRITY;
+				return JdbcDialectHSQLDB.LOAD_OBJECT_NAMES_BY_ID_CURRENT;
+			case TRUNCATE_TABLE_FMT:
+				return JdbcDialectHSQLDB.TRUNCATE_TABLE_FMT;
 			case UPSERT_ALT_NAME:
-				return JdbcDialectH2.UPSERT_ALT_NAME;
+				return JdbcDialectHSQLDB.UPSERT_ALT_NAME;
 			case RESTART_SEQUENCE:
-				return JdbcDialectH2.RESTART_SEQUENCE;
+				return JdbcDialectHSQLDB.RESTART_SEQUENCE;
 			default:
 				break;
 		}
@@ -116,7 +110,7 @@ public class JdbcDialectH2 extends JdbcDialect {
 
 	@Override
 	protected ResultSetHandler<Long> getObjectNumberHandler() {
-		return JdbcDialectH2.OBJECT_NUMBER_HANDLER;
+		return JdbcDialectHSQLDB.OBJECT_NUMBER_HANDLER;
 	}
 
 	@Override

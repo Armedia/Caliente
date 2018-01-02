@@ -1135,9 +1135,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	protected final void clearAllObjects(JdbcOperation operation) throws CmfStorageException {
 		// Allow for subclasses to implement optimized clearing operations
 		if (optimizedClearAllObjects(operation)) {
-			resetSequences(operation.getConnection());
+			if (!this.dialect.isTruncateRestartsSequences()) {
+				// If the truncation did not restart the sequences, do it manually
+				resetSequences(operation.getConnection());
+			}
 			return;
 		}
+		// Can't do it quickly, so do it the hard way...
 		try {
 			clearAllObjects(operation.getConnection());
 			resetSequences(operation.getConnection());
@@ -1172,6 +1176,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	protected boolean truncateTables(JdbcOperation operation, Iterable<String> tables) throws CmfStorageException {
+		if (tables == null) { return false; }
 		final Connection c = operation.getConnection();
 		Collection<String> truncated = new LinkedHashSet<>();
 		Collection<String> remaining = new LinkedHashSet<>();
@@ -1179,11 +1184,17 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			remaining.add(s);
 		}
 		try {
-			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
-			if (!referentialIntegrityOff) {
-				// If we couldn't turn off referential integrity, then we couldn't perform
-				// the optimized clear
-				return false;
+			final boolean bypassConstraints = this.dialect.isTruncateBypassesConstraints();
+			final boolean constraintsDisabled;
+			if (bypassConstraints) {
+				constraintsDisabled = false;
+			} else {
+				constraintsDisabled = disableReferentialIntegrity(operation);
+				if (!constraintsDisabled) {
+					// If we couldn't turn off referential integrity, then we couldn't perform
+					// the optimized clear
+					return false;
+				}
 			}
 			Statement s = c.createStatement();
 			try {
@@ -1200,13 +1211,19 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 				return true;
 			} finally {
-				enableReferentialIntegrity(operation);
+				if (constraintsDisabled) {
+					enableReferentialIntegrity(operation);
+				}
 				DbUtils.close(s);
 			}
 		} catch (SQLException e) {
 			if (this.log.isDebugEnabled()) {
-				this.log.info("Successfully truncated the tables {}", truncated);
-				this.log.error(String.format("Failed to truncate the remaining tables %s", remaining), e);
+				if (!truncated.isEmpty()) {
+					this.log.info("Successfully truncated the tables {}", truncated);
+				}
+				if (!remaining.isEmpty()) {
+					this.log.error("Failed to truncate the tables {}", remaining, e);
+				}
 			}
 			return false;
 		}

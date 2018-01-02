@@ -2,6 +2,7 @@ package com.armedia.caliente.store.jdbc;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
@@ -13,8 +14,25 @@ public abstract class JdbcDialect {
 
 	public static enum EngineType {
 		//
-		H2, PostgreSQL,
-		//
+		H2 {
+			@Override
+			protected JdbcDialect newDialect(DatabaseMetaData md) throws SQLException {
+				return new JdbcDialectH2(md);
+			}
+		}, //
+		HSQLDB {
+			@Override
+			protected JdbcDialect newDialect(DatabaseMetaData md) throws SQLException {
+				return new JdbcDialectHSQLDB(md);
+			}
+		}, //
+		PostgreSQL {
+			@Override
+			protected JdbcDialect newDialect(DatabaseMetaData md) throws SQLException {
+				return new JdbcDialectPostgreSQL(md);
+			}
+		}, //
+			//
 		;
 
 		private boolean matches(String dbName) {
@@ -22,10 +40,15 @@ public abstract class JdbcDialect {
 			return StringUtils.equalsIgnoreCase(name(), dbName);
 		}
 
-		private static EngineType parse(String dbName) throws CmfStorageException {
-			if (dbName == null) { throw new IllegalArgumentException("Must provide a DB Name to check against"); }
+		protected abstract JdbcDialect newDialect(DatabaseMetaData md) throws SQLException;
+
+		private static JdbcDialect constructDialect(DatabaseMetaData md) throws SQLException, CmfStorageException {
+			Objects.requireNonNull(md, "Must provide a valid DatabaseMetaData instance");
+			final String dbName = md.getDatabaseProductName();
+			if (StringUtils
+				.isEmpty(dbName)) { throw new IllegalArgumentException("Must provide a DB Name to check against"); }
 			for (EngineType t : EngineType.values()) {
-				if (t.matches(dbName)) { return t; }
+				if (t.matches(dbName)) { return t.newDialect(md); }
 			}
 			throw new CmfStorageException(String.format("DB Type [%s] is unsupported", dbName));
 		}
@@ -497,6 +520,10 @@ public abstract class JdbcDialect {
 
 	protected abstract boolean isSupportsArrays();
 
+	protected abstract boolean isTruncateBypassesConstraints();
+
+	protected abstract boolean isTruncateRestartsSequences();
+
 	protected abstract ResultSetHandler<Long> getObjectNumberHandler();
 
 	protected abstract boolean isDuplicateKeyException(SQLException e);
@@ -516,16 +543,6 @@ public abstract class JdbcDialect {
 	}
 
 	public static JdbcDialect getDialect(DatabaseMetaData md) throws CmfStorageException, SQLException {
-		final String dbName = md.getDatabaseProductName();
-		EngineType type = EngineType.parse(dbName);
-
-		switch (type) {
-			case H2:
-				return new JdbcDialectH2(md);
-			case PostgreSQL:
-				return new JdbcDialectPostgreSQL(md);
-			default:
-				throw new CmfStorageException(String.format("Unsupported DB type [%s]", dbName));
-		}
+		return EngineType.constructDialect(md);
 	}
 }
