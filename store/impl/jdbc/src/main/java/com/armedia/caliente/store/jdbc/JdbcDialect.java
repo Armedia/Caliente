@@ -2,7 +2,10 @@ package com.armedia.caliente.store.jdbc;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.lang3.StringUtils;
@@ -20,7 +23,7 @@ public abstract class JdbcDialect {
 				return new JdbcDialectH2(md);
 			}
 		}, //
-		HSQLDB {
+		HSQL("HSQL Database Engine") {
 			@Override
 			protected JdbcDialect newDialect(DatabaseMetaData md) throws SQLException {
 				return new JdbcDialectHSQLDB(md);
@@ -35,9 +38,23 @@ public abstract class JdbcDialect {
 			//
 		;
 
+		private final Set<String> matches;
+
+		private EngineType(String... matches) {
+			Set<String> m = new TreeSet<>();
+			m.add(StringUtils.upperCase(name()));
+			for (String s : matches) {
+				s = StringUtils.strip(s);
+				if (!StringUtils.isEmpty(s)) {
+					m.add(StringUtils.upperCase(s));
+				}
+			}
+			// Keep order, but gain speed
+			this.matches = Tools.freezeSet(new LinkedHashSet<>(m));
+		}
+
 		private boolean matches(String dbName) {
-			if (dbName == null) { throw new IllegalArgumentException("Must provide a string to check against"); }
-			return StringUtils.equalsIgnoreCase(name(), dbName);
+			return this.matches.contains(StringUtils.upperCase(dbName));
 		}
 
 		protected abstract JdbcDialect newDialect(DatabaseMetaData md) throws SQLException;
