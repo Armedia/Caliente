@@ -1497,7 +1497,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 				return false;
 			}
-			throw new CmfStorageException(String.format("Failed to persist the dependency %s", target.getShortLabel()),
+			throw new CmfStorageException(
+				String.format("Failed to persist the dependency %s (errorCode = %d, sqlState = '%s')",
+					target.getShortLabel(), e.getErrorCode(), e.getSQLState()),
 				e);
 		}
 	}
