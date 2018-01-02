@@ -9,7 +9,9 @@ dfc.keystore
 caliente
 test-fs
 *Model.xml
-*map.xml
+usermap*.xml
+groupmap*.xml
+filenamemap*.xml
 *.properties
 *.sh
 import-*.xml
