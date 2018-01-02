@@ -1418,7 +1418,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} catch (SQLException e) {
 			if (this.dialect.isDuplicateKeyException(e)) {
 				// We're good! With the use of savepoints, the transaction will remain valid and
-				// thus we'll be OK to continue using the transaction in other connections
+				// thus we'll be OK to continue using the transaction in other operations
 				JdbcTools.rollbackSavepoint(c, savePoint);
 
 				// Now, instead, we try to increase the counter
