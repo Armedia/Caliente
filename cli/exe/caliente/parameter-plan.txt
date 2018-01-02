@@ -13,24 +13,27 @@ Pass 2
 			--log ${log-file} (default is ${db-dir}/blablabla.log)
 			--log-cfg ${log-cfg-file}
 		*	-e, --engine ${dfc|cmis|shpt|local|...}
-			--no-renditions
-			--no-versions
-			--skip-content
 			-t,--threads ${threads}
-			-d,--db ${db-dir}
-			-c,--content ${content-dir}
-			--mail-from ${sender}
-			--smtp-host ${host}
-			--smtp-port ${port}
-			--smtp-auth-user ${user}
-			--smtp-auth-pass ${pass}
-			--error-count ${count}
-			--metadata-store ${config}
-			--content-store ${config}
-			--manifest-types ${type1,type2,...,typeN}
-			--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
-			--mail-to ${recipient1,recipient2,...,recipientN}
-			--exclude-types ${type1,type2,...,typeN}
+
+		COMMAND: ( EXPORT | IMPORT )
+			(common)
+				--no-renditions
+				--no-versions
+				--skip-content
+				-d,--db ${db-dir}
+				-c,--content ${content-dir}
+				--mail-from ${sender}
+				--smtp-host ${host}
+				--smtp-port ${port}
+				--smtp-auth-user ${user}
+				--smtp-auth-pass ${pass}
+				--error-count ${count}
+				--metadata-store ${config}
+				--content-store ${config}
+				--manifest-types ${type1,type2,...,typeN}
+				--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
+				--mail-to ${recipient1,recipient2,...,recipientN}
+				--exclude-types ${type1,type2,...,typeN}
 
 		COMMAND: ( EXPORT | EXP | EX )
 			(common)
@@ -101,6 +104,7 @@ Pass 2
 
 		COMMAND: ( COUNT | CNT | CN )
 			(common)
+				--no-versions
 				--non-recursive
 				--empty
 				--hidden
