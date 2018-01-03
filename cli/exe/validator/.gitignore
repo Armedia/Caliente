@@ -1,4 +1,4 @@
-target
-cmf-validator-faults.*.csv
-cmf-validator-*.log
-*Model.xml
+/target/
+/cmf-validator-faults.*.csv
+/cmf-validator-*.log
+/*Model.xml

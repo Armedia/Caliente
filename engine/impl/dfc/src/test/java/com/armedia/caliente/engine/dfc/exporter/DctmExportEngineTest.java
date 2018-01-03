@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.documentum.exporter;
+package com.armedia.caliente.engine.dfc.exporter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,9 +6,9 @@ import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.armedia.caliente.engine.dfc.DctmEngineTest;
 import com.armedia.caliente.engine.dfc.DctmSetting;
 import com.armedia.caliente.engine.dfc.common.Setting;
-import com.armedia.caliente.engine.documentum.DctmEngineTest;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 
 public class DctmExportEngineTest extends DctmEngineTest {
