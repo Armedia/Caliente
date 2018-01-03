@@ -494,6 +494,7 @@ public class OptionParser {
 
 							// If there were changes, then we can go back around...
 							if (extender.isModified()) {
+								extensionCount++;
 								mayExtend = false;
 								continue inner;
 							}
