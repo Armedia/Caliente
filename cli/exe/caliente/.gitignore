@@ -6,7 +6,6 @@ dfc.keystore
 *.log
 *.manifest.csv
 *.err
-caliente
 test-fs
 *Model.xml
 usermap*.xml
@@ -19,3 +18,4 @@ export-*.xml
 test-*.xml
 caliente-*.xml
 alfresco-*.xml
+/caliente
