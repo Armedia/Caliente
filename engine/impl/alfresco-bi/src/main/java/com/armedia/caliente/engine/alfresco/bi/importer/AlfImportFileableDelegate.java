@@ -414,17 +414,26 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				CmfProperty<CmfValue> permits = dataObject.getAttribute("dctm:r_accessor_permit");
 				CmfProperty<CmfValue> permitTypes = dataObject.getAttribute("dctm:r_permit_type");
 
-				final int count = Tools.min(accessors.getValueCount(), accessors.getValueCount(),
-					accessorTypes.getValueCount(), permits.getValueCount());
+				final int count = Tools.min(accessors.getValueCount(), accessorTypes.getValueCount(),
+					permits.getValueCount());
 
 				for (int i = 0; i < count; i++) {
 					String accessor = accessors.getValue(i).asString();
 					final boolean is_group = accessorTypes.getValue(i).asBoolean();
 					final int permit = permits.getValue(i).asInteger();
-					final int permitType = permitTypes.getValue(i).asInteger();
+					final int permitType;
+					if (i < permitTypes.getValueCount()) {
+						permitType = permitTypes.getValue(i).asInteger();
+					} else {
+						AlfImportFileableDelegate.this.log.warn(
+							"Assuming permitType value 0 for {} referenced from {}, accessor # {} ({} [{}]), expected {} but only have {} permitType values",
+							dataObject.getDescription(), AlfImportFileableDelegate.this.cmfObject.getDescription(),
+							i + 1, (is_group ? "group" : "user"), accessor, count, permitTypes.getValueCount());
+						permitType = 0;
+					}
 
 					if (permitType != 0) {
-						// We can't handle other permit typespopulatePrimaryAttributes yet...
+						// We can't handle other permit types than AccessPermit yet...
 						continue;
 					}
 
