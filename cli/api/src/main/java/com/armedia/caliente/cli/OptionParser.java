@@ -489,12 +489,11 @@ public class OptionParser {
 
 							// Try to extend the scheme
 							extender.resetModified();
-							extensionSupport.extendScheme(extensionCount, baseValues, command.getName(), commandValues,
-								token, extender);
+							extensionSupport.extendScheme(++extensionCount, baseValues, command.getName(),
+								commandValues, token, extender);
 
 							// If there were changes, then we can go back around...
 							if (extender.isModified()) {
-								extensionCount++;
 								mayExtend = false;
 								continue inner;
 							}
