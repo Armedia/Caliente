@@ -292,9 +292,9 @@ public class DctmCmisACLTools implements DctmACL {
 			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessorName)) {
 				// Accessor not there, skip it...
 				if (missingAccessors.add(accessorName)) {
-					DctmCmisACLTools.LOG
-						.warn(String.format("Missing dependency for ACL [%s] - %s [%s] not exported (as ACL accessor)",
-							acl.getObjectId().getId(), (group ? "group" : "user"), accessorName));
+					DctmCmisACLTools.LOG.warn(
+						"Missing dependency for ACL [{}] - {} [{}] not exported (as ACL accessor)",
+						acl.getObjectId().getId(), (group ? "group" : "user"), accessorName);
 				}
 				continue;
 			}
