@@ -89,4 +89,7 @@ public abstract class StreamTokenSource implements TokenSource {
 		this.tokenStrings = null;
 		this.charset = StreamTokenSource.DEFAULT_CHARSET;
 	}
+
+	@Override
+	public abstract String toString();
 }

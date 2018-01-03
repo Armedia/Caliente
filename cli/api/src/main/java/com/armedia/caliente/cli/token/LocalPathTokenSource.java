@@ -37,4 +37,9 @@ public class LocalPathTokenSource extends StreamTokenSource {
 	protected InputStream openStream() throws IOException {
 		return new FileInputStream(this.sourcePath.toFile());
 	}
+
+	@Override
+	public String toString() {
+		return String.format("LocalPathTokenSource [path=%s]", this.sourcePath);
+	}
 }
