@@ -3,7 +3,6 @@ package com.armedia.caliente.cli.caliente.launcher;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,7 +13,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -42,18 +40,12 @@ public class CalienteLauncher extends AbstractLauncher {
 		String version = null;
 		URL url = Thread.currentThread().getContextClassLoader().getResource("version.properties");
 		if (url != null) {
-			Properties p = new Properties();
-			try {
-				InputStream in = url.openStream();
-				final String str;
-				try {
-					str = IOUtils.toString(in, "UTF-8");
-				} finally {
-					IOUtils.closeQuietly(in);
-				}
-				p.load(new StringReader(str));
+			try (InputStream in = url.openStream()) {
+				Properties p = new Properties();
+				p.load(in);
 				version = p.getProperty("version");
 			} catch (IOException e) {
+				e.printStackTrace(System.err);
 				version = "(failed to load)";
 			}
 		}
