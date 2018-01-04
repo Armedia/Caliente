@@ -281,20 +281,22 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	}
 
 	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
-		String defaultXform = String.format("%s%s", this.cfgNamePrefix, Transformer.getDefaultLocation());
-		String xform = cfg.getString(TransferSetting.TRANSFORMATION.getLabel(), defaultXform);
+		String xformDefault = String.format("%s%s", this.cfgNamePrefix, Transformer.getDefaultLocation());
+		String xform = cfg.getString(TransferSetting.TRANSFORMATION.getLabel());
 
-		String defaultMeta = String.format("%s%s", this.cfgNamePrefix, ExternalMetadataLoader.getDefaultLocation());
-		String meta = cfg.getString(TransferSetting.EXTERNAL_METADATA.getLabel(), defaultMeta);
+		String metaDefault = String.format("%s%s", this.cfgNamePrefix, ExternalMetadataLoader.getDefaultLocation());
+		String meta = cfg.getString(TransferSetting.EXTERNAL_METADATA.getLabel());
 
-		ExternalMetadataLoader emdl = ExternalMetadataLoader.getExternalMetadataLoader(meta, !defaultMeta.equals(meta));
-		return Transformer.getTransformer(xform, emdl, !defaultXform.equals(xform));
+		ExternalMetadataLoader emdl = ExternalMetadataLoader
+			.getExternalMetadataLoader(Tools.coalesce(meta, metaDefault), (meta != null));
+
+		return Transformer.getTransformer(Tools.coalesce(xform, xformDefault), emdl, (xform != null));
 	}
 
 	protected final ObjectFilter getFilter(CfgTools cfg) throws Exception {
-		String defaultFilter = String.format("%s%s", this.cfgNamePrefix, ObjectFilter.getDefaultLocation());
-		String xform = cfg.getString(TransferSetting.FILTER.getLabel(), defaultFilter);
-		return ObjectFilter.getObjectFilter(xform, !defaultFilter.equals(xform));
+		String filterDefault = String.format("%s%s", this.cfgNamePrefix, ObjectFilter.getDefaultLocation());
+		String filter = cfg.getString(TransferSetting.FILTER.getLabel());
+		return ObjectFilter.getObjectFilter(Tools.coalesce(filter, filterDefault), (filter != null));
 	}
 
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
