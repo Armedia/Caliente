@@ -307,6 +307,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		if (this.factory.getSchema().hasAspect(AlfImportFileableDelegate.STATUS_ASPECT)) {
 			values.add(AlfImportFileableDelegate.STATUS_ASPECT);
 		}
+
 		if (!isReference()) {
 			// Set the history ID property
 			currentProperty = "arm:historyId";
@@ -314,18 +315,23 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				p.setProperty(currentProperty, this.cmfObject.getHistoryId());
 			}
 
-			// Map the group attributes
-			String group = null;
-			CmfValue groupValue = getAttributeValue(IntermediateAttribute.GROUP);
-			if (groupValue != null) {
-				group = groupValue.asString();
+			currentProperty = "arm:aclInfo";
+			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+				// Map the group attributes
+				String group = null;
+				CmfValue groupValue = getAttributeValue(IntermediateAttribute.GROUP);
+				if (groupValue != null) {
+					group = groupValue.asString();
+				}
+				p.setProperty(currentProperty, Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
 			}
 
-			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-
-			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
-			if ((aclInherit != null) && !aclInherit.isNull()) {
-				p.setProperty("arm:aclInheritance", aclInherit.asString());
+			currentProperty = "arm:aclInheritance";
+			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+				CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
+				if ((aclInherit != null) && !aclInherit.isNull()) {
+					p.setProperty("arm:aclInheritance", aclInherit.asString());
+				}
 			}
 
 			// Not a reference? Add the caliente aspect
@@ -333,22 +339,27 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				values.add(AlfImportFileableDelegate.CALIENTE_ASPECT);
 			}
 		} else {
-			CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.REF_TARGET);
-			if ((prop == null) || !prop.hasValues()) { throw new ImportException(
-				String.format("Exported object %s doesn't have the required reference target metadata",
-					this.cmfObject.getDescription())); }
+			final String refTarget = "arm:refTarget";
+			final String refVersion = "arm:refVersion";
+			if (includeProperty(includeResiduals, refTarget, targetType)
+				&& includeProperty(includeResiduals, refVersion, targetType)) {
+				CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.REF_TARGET);
+				if ((prop == null) || !prop.hasValues()) { throw new ImportException(
+					String.format("Exported object %s doesn't have the required reference target metadata",
+						this.cmfObject.getDescription())); }
 
-			String refTarget = prop.getValue().asString();
-			if (StringUtils.isEmpty(refTarget)) { throw new ImportException(
-				String.format("Exported object %s has empty reference target metadata (must not be empty)",
-					this.cmfObject.getDescription())); }
-			p.setProperty("arm:refTarget", refTarget);
+				String refTargetValue = prop.getValue().asString();
+				if (StringUtils.isEmpty(refTargetValue)) { throw new ImportException(
+					String.format("Exported object %s has empty reference target metadata (must not be empty)",
+						this.cmfObject.getDescription())); }
+				p.setProperty("arm:refTarget", refTargetValue);
 
-			prop = this.cmfObject.getProperty(IntermediateProperty.REF_VERSION);
-			if ((prop != null) && prop.hasValues()) {
-				String value = prop.getValue().asString();
-				if (!StringUtils.isEmpty(value)) {
-					p.setProperty("arm:refVersion", value);
+				prop = this.cmfObject.getProperty(IntermediateProperty.REF_VERSION);
+				if ((prop != null) && prop.hasValues()) {
+					String value = prop.getValue().asString();
+					if (!StringUtils.isEmpty(value)) {
+						p.setProperty(refVersion, value);
+					}
 				}
 			}
 		}
