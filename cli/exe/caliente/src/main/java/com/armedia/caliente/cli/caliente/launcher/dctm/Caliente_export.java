@@ -307,11 +307,11 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 					String.valueOf(settings.get(AbstractCalienteModule_export.BASE_SELECTOR)));
 			}
 		} else {
-			Object baseSel = settings.get(AbstractCalienteModule_export.BASE_SELECTOR);
-			if (baseSel == null) {
-				baseSel = CLIParam.source.getString();
+			Object dql = settings.get(AbstractCalienteModule_export.BASE_SELECTOR);
+			if (dql == null) {
+				dql = CLIParam.source.getString();
 			}
-			settings.put(AbstractCalienteModule_export.FINAL_SELECTOR, baseSel);
+			settings.put(AbstractCalienteModule_export.FINAL_SELECTOR, dql);
 		}
 
 		settings.put("dql", settings.get(AbstractCalienteModule_export.FINAL_SELECTOR));
