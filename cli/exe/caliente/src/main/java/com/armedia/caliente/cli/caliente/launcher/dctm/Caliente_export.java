@@ -26,6 +26,7 @@ import com.armedia.caliente.engine.dfc.DctmSetting;
 import com.armedia.caliente.engine.dfc.DocumentumOrganizationStrategy;
 import com.armedia.caliente.engine.dfc.exporter.DctmExportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
+import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.documentum.fc.client.IDfCollection;
@@ -387,5 +388,15 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 	@Override
 	protected String getContentStrategyName() {
 		return DocumentumOrganizationStrategy.NAME;
+	}
+
+	@Override
+	protected String getUserSetting() {
+		return DfcSessionFactory.USERNAME;
+	}
+
+	@Override
+	protected String getPasswordSetting() {
+		return DfcSessionFactory.PASSWORD;
 	}
 }

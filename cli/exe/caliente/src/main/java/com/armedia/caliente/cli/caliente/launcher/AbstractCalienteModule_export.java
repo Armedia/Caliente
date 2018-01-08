@@ -20,7 +20,6 @@ import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.utils.EmailUtils;
 import com.armedia.caliente.engine.TransferSetting;
-import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.exporter.ExportResult;
@@ -30,12 +29,10 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public class AbstractCalienteModule_export extends
+public abstract class AbstractCalienteModule_export extends
 	AbstractCalienteModule<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> implements ExportEngineListener {
 
 	private static final Integer PROGRESS_INTERVAL = 5;
@@ -75,16 +72,36 @@ public class AbstractCalienteModule_export extends
 			CLIParam.no_renditions.isPresent() || CLIParam.direct_fs.isPresent());
 		settings.put(TransferSetting.TRANSFORMATION.getLabel(), CLIParam.transformations.getString());
 		settings.put(TransferSetting.FILTER.getLabel(), CLIParam.filters.getString());
-		if (this.user != null) {
-			settings.put(CmisSessionSetting.USER.getLabel(), this.user);
+
+		String setting = null;
+
+		setting = StringUtils.strip(getUserSetting());
+		if ((this.user != null) && !StringUtils.isEmpty(setting)) {
+			settings.put(setting, this.user);
 		}
-		if (this.password != null) {
-			settings.put(CmisSessionSetting.PASSWORD.getLabel(), this.password);
+
+		setting = StringUtils.strip(getPasswordSetting());
+		if ((this.password != null) && !StringUtils.isEmpty(setting)) {
+			settings.put(setting, this.password);
 		}
-		if (this.domain != null) {
-			settings.put(CmisSessionSetting.DOMAIN.getLabel(), this.domain);
+
+		setting = StringUtils.strip(getDomainSetting());
+		if ((this.domain != null) && !StringUtils.isEmpty(setting)) {
+			settings.put(setting, this.domain);
 		}
 		customizeSettings(settings);
+	}
+
+	protected String getUserSetting() {
+		return null;
+	}
+
+	protected String getPasswordSetting() {
+		return null;
+	}
+
+	protected String getDomainSetting() {
+		return null;
 	}
 
 	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
@@ -194,20 +211,6 @@ public class AbstractCalienteModule_export extends
 			}
 
 			processSettings(settings, loaded, resetJob);
-			// Re-encrypt the password
-			String pass = Tools.toString(settings.get(DfcSessionFactory.PASSWORD));
-			CmfCrypt crypto = this.engine.getCrypto();
-			if (pass != null) {
-				pass = crypto.decrypt(pass);
-			} else {
-				pass = "";
-			}
-			try {
-				pass = crypto.encrypt(pass);
-			} catch (Exception e) {
-				// Ignore, use literal
-			}
-			settings.put(DfcSessionFactory.PASSWORD, pass);
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");

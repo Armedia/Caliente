@@ -66,4 +66,19 @@ public class Caliente_export extends AbstractCalienteModule_export {
 			settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), repoName);
 		}
 	}
+
+	@Override
+	protected String getUserSetting() {
+		return CmisSessionSetting.USER.getLabel();
+	}
+
+	@Override
+	protected String getPasswordSetting() {
+		return CmisSessionSetting.PASSWORD.getLabel();
+	}
+
+	@Override
+	protected String getDomainSetting() {
+		return CmisSessionSetting.DOMAIN.getLabel();
+	}
 }

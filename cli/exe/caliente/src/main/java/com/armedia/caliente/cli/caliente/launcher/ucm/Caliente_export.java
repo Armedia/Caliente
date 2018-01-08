@@ -54,9 +54,6 @@ public class Caliente_export extends AbstractCalienteModule_export {
 			settings.put(UcmSessionSetting.SSL_MODE.getLabel(), SSLMode.SERVER.name());
 		}
 
-		settings.put(UcmSessionSetting.USER.getLabel(), this.user);
-		settings.put(UcmSessionSetting.PASSWORD.getLabel(), this.password);
-
 		List<String> paths = new ArrayList<>();
 
 		for (String srcPath : CLIParam.source.getAllString()) {
@@ -70,5 +67,15 @@ public class Caliente_export extends AbstractCalienteModule_export {
 		}
 
 		settings.put(UcmSetting.SOURCE.getLabel(), UcmExportEngine.encodePathList(paths));
+	}
+
+	@Override
+	protected String getUserSetting() {
+		return UcmSessionSetting.USER.getLabel();
+	}
+
+	@Override
+	protected String getPasswordSetting() {
+		return UcmSessionSetting.PASSWORD.getLabel();
 	}
 }

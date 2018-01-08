@@ -69,13 +69,22 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 		} catch (MalformedURLException e) {
 			throw new CalienteException("Bad base URL", e);
 		}
-		if (this.user != null) {
-			settings.put(ShptSetting.USER.getLabel(), this.user);
-		}
-		if (this.password != null) {
-			settings.put(ShptSetting.PASSWORD.getLabel(), this.password);
-		}
 		settings.put(ShptSetting.PATH.getLabel(),
 			String.format("%s/%s", StringUtils.isEmpty(srcPrefix) ? "" : String.format("/%s", srcPrefix), srcPath));
+	}
+
+	@Override
+	protected String getUserSetting() {
+		return ShptSetting.USER.getLabel();
+	}
+
+	@Override
+	protected String getPasswordSetting() {
+		return ShptSetting.PASSWORD.getLabel();
+	}
+
+	@Override
+	protected String getDomainSetting() {
+		return ShptSetting.DOMAIN.getLabel();
 	}
 }
