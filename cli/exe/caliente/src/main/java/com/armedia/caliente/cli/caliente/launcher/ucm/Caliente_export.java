@@ -15,6 +15,7 @@ import com.armedia.caliente.engine.ucm.UcmSessionSetting;
 import com.armedia.caliente.engine.ucm.UcmSessionSetting.SSLMode;
 import com.armedia.caliente.engine.ucm.UcmSetting;
 import com.armedia.caliente.engine.ucm.exporter.UcmExportEngine;
+import com.armedia.commons.utilities.ConfigurationSetting;
 
 public class Caliente_export extends AbstractCalienteModule_export {
 
@@ -70,12 +71,12 @@ public class Caliente_export extends AbstractCalienteModule_export {
 	}
 
 	@Override
-	protected String getUserSetting() {
-		return UcmSessionSetting.USER.getLabel();
+	protected ConfigurationSetting getUserSetting() {
+		return UcmSessionSetting.USER;
 	}
 
 	@Override
-	protected String getPasswordSetting() {
-		return UcmSessionSetting.PASSWORD.getLabel();
+	protected ConfigurationSetting getPasswordSetting() {
+		return UcmSessionSetting.PASSWORD;
 	}
 }

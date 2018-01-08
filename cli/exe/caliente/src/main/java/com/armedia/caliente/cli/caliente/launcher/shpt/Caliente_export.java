@@ -16,6 +16,7 @@ import com.armedia.caliente.cli.caliente.launcher.AbstractCalienteModule_export;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
 import com.armedia.caliente.engine.sharepoint.exporter.ShptExportEngine;
+import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.FileNameTools;
 
 public class Caliente_export extends AbstractCalienteModule_export implements ExportEngineListener {
@@ -74,17 +75,17 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 	}
 
 	@Override
-	protected String getUserSetting() {
-		return ShptSetting.USER.getLabel();
+	protected ConfigurationSetting getUserSetting() {
+		return ShptSetting.USER;
 	}
 
 	@Override
-	protected String getPasswordSetting() {
-		return ShptSetting.PASSWORD.getLabel();
+	protected ConfigurationSetting getPasswordSetting() {
+		return ShptSetting.PASSWORD;
 	}
 
 	@Override
-	protected String getDomainSetting() {
-		return ShptSetting.DOMAIN.getLabel();
+	protected ConfigurationSetting getDomainSetting() {
+		return ShptSetting.DOMAIN;
 	}
 }

@@ -29,6 +29,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
@@ -73,34 +74,34 @@ public abstract class AbstractCalienteModule_export extends
 		settings.put(TransferSetting.TRANSFORMATION.getLabel(), CLIParam.transformations.getString());
 		settings.put(TransferSetting.FILTER.getLabel(), CLIParam.filters.getString());
 
-		String setting = null;
+		ConfigurationSetting setting = null;
 
-		setting = StringUtils.strip(getUserSetting());
-		if ((this.user != null) && !StringUtils.isEmpty(setting)) {
-			settings.put(setting, this.user);
+		setting = getUserSetting();
+		if ((this.user != null) && (setting != null)) {
+			settings.put(setting.getLabel(), this.user);
 		}
 
-		setting = StringUtils.strip(getPasswordSetting());
-		if ((this.password != null) && !StringUtils.isEmpty(setting)) {
-			settings.put(setting, this.password);
+		setting = getPasswordSetting();
+		if ((this.password != null) && (setting != null)) {
+			settings.put(setting.getLabel(), this.password);
 		}
 
-		setting = StringUtils.strip(getDomainSetting());
-		if ((this.domain != null) && !StringUtils.isEmpty(setting)) {
-			settings.put(setting, this.domain);
+		setting = getDomainSetting();
+		if ((this.domain != null) && (setting != null)) {
+			settings.put(setting.getLabel(), this.domain);
 		}
 		customizeSettings(settings);
 	}
 
-	protected String getUserSetting() {
+	protected ConfigurationSetting getUserSetting() {
 		return null;
 	}
 
-	protected String getPasswordSetting() {
+	protected ConfigurationSetting getPasswordSetting() {
 		return null;
 	}
 
-	protected String getDomainSetting() {
+	protected ConfigurationSetting getDomainSetting() {
 		return null;
 	}
 
