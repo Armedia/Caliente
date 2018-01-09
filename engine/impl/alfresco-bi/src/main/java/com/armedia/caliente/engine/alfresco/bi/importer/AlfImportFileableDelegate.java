@@ -127,21 +127,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected final AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {
-		AlfrescoType type = null;
-		if (isReference()) {
-			// If this is a reference - folder or document, doesn't matter...
-			type = this.referenceType;
-		} else {
-			type = calculateTargetType(content);
-		}
-
-		// No match? Error!
-		if (type == null) { throw new ImportException(String.format(
-			"Failed to find a proper type mapping for %s of type [%s] (%s rendition, page #%d)",
-			this.cmfObject.getType(), this.cmfObject.getSubtype(),
-			content.isDefaultRendition() ? "default" : content.getRenditionIdentifier(), content.getRenditionPage())); }
-
-		return type;
+		if (!isReference()) { return calculateTargetType(content); }
+		return this.referenceType;
 	}
 
 	protected final void storeValue(AlfImportContext ctx, CmfProperty<CmfValue> srcAtt, String name, boolean multiple,
@@ -575,6 +562,14 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 			// First things first: identify the type we're going to store into
 			AlfrescoType targetType = getTargetType(content);
+			if (targetType == null) {
+				// No type...so...this is a skip
+				this.log.error(
+					"Failed to identify a target object type for {}, content {} (source type = {}, secondaries = {}, reference = {})",
+					this.cmfObject.getDescription(), content.toString(), this.cmfObject.getSubtype(),
+					this.cmfObject.getSecondarySubtypes(), isReference());
+				continue;
+			}
 
 			final File main;
 			try {
