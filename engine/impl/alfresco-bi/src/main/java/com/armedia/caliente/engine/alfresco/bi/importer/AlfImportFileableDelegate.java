@@ -529,6 +529,20 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		AlfImportContext ctx) throws ImportException, CmfStorageException {
+		boolean ok = false;
+		try {
+			Collection<ImportOutcome> outcomes = doImportObject(translator, ctx);
+			ok = true;
+			return outcomes;
+		} finally {
+			if (!ok) {
+				this.factory.resetIndex();
+			}
+		}
+	}
+
+	protected final Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
+		AlfImportContext ctx) throws ImportException, CmfStorageException {
 
 		if (!ctx.getContentStore()
 			.isSupportsFileAccess()) { throw new ImportException("This engine requires filesystem access"); }

@@ -775,6 +775,14 @@ public class AlfImportDelegateFactory
 		return thisMarker;
 	}
 
+	protected final void resetIndex() {
+		List<ScanIndexItemMarker> markerList = this.currentVersions.get();
+		if (markerList != null) {
+			markerList.clear();
+		}
+		this.currentVersions.set(null);
+	}
+
 	protected final void storeToIndex(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject, File contentFile,
 		File metadataFile, MarkerType type) throws ImportException {
 
