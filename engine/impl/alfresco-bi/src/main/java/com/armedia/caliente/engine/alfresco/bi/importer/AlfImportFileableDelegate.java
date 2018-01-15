@@ -584,11 +584,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			AlfrescoType targetType = getTargetType(content);
 			if (targetType == null) {
 				// No type...so...this is a skip
-				this.log.error(
-					"Failed to identify a target object type for {}, content {} (source type = {}, secondaries = {}, reference = {})",
+				throw new ImportException(String.format(
+					"Failed to identify a target object type for %s, content %s (source type = %s, secondaries = %s, reference = %s)",
 					this.cmfObject.getDescription(), content.toString(), this.cmfObject.getSubtype(),
-					this.cmfObject.getSecondarySubtypes(), isReference());
-				continue;
+					this.cmfObject.getSecondarySubtypes(), isReference()));
 			}
 
 			final File main;
