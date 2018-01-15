@@ -570,7 +570,13 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		Set<String> vdocVersionsIndexed = new HashSet<>();
 		boolean renditionsRootIndexed = false;
 		Set<String> renditionTypesIndexed = new HashSet<>();
+		final boolean skipRenditions = this.factory.isSkipRenditions();
 		for (CmfContentInfo content : contents) {
+			if (skipRenditions && !content.isDefaultRendition()) {
+				// Skip the non-default rendition
+				continue;
+			}
+
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(this.factory.getTranslator(),
 				this.cmfObject, content);
 

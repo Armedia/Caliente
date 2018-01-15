@@ -13,11 +13,13 @@ public abstract class TransferDelegateFactory<S, V, C extends TransferContext<S,
 	private final E engine;
 	private final CmfAttributeTranslator<V> translator;
 	private final CfgTools configuration;
+	private final boolean skipRenditions;
 
 	public TransferDelegateFactory(E engine, CfgTools configuration) {
 		this.engine = engine;
 		this.translator = engine.getTranslator();
 		this.configuration = configuration;
+		this.skipRenditions = configuration.getBoolean(TransferSetting.NO_RENDITIONS);
 	}
 
 	public final E getEngine() {
@@ -30,6 +32,10 @@ public abstract class TransferDelegateFactory<S, V, C extends TransferContext<S,
 
 	public final CmfAttributeTranslator<V> getTranslator() {
 		return this.translator;
+	}
+
+	public final boolean isSkipRenditions() {
+		return this.skipRenditions;
 	}
 
 	public void close() {

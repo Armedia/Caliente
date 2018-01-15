@@ -702,7 +702,12 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		final CmfAttributeTranslator<IDfValue> translator = this.factory.getEngine().getTranslator();
 		String contentType = null;
 		Boolean fromDctm = null;
+		final boolean skipRenditions = this.factory.isSkipRenditions();
 		for (CmfContentInfo info : infoList) {
+			if (skipRenditions && !info.isDefaultRendition()) {
+				// Skip the non-default rendition
+				continue;
+			}
 			CmfContentStore<?, ?, ?>.Handle h = contentStore.getHandle(translator, this.cmfObject, info);
 			CfgTools cfg = info.getCfgTools();
 

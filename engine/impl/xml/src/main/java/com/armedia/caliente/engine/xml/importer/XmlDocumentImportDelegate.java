@@ -84,7 +84,12 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		v.setVersion(getAttributeValue(IntermediateAttribute.VERSION_LABEL).asString());
 
 		int contents = 0;
+		final boolean skipRenditions = this.factory.isSkipRenditions();
 		for (CmfContentInfo info : ctx.getContentInfo(this.cmfObject)) {
+			if (skipRenditions && !info.isDefaultRendition()) {
+				// Skip the non-default rendition
+				continue;
+			}
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
 			final File f;
 			try {
