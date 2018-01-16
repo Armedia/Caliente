@@ -151,7 +151,7 @@ public abstract class JdbcDialect {
 		INSERT_CONTENT( //
 			"       insert into " + //
 				"          cmf_content (" + //
-				"              object_id, rendition_id, rendition_page, modifier, extension, content_number, " + //
+				"              object_id, content_number, rendition_id, rendition_page, modifier, extension, " + //
 				"              stream_length, mime_type, file_name" + //
 				"           ) " + //
 				"    values (?, ?, ?, ?, ?, ?, ?, ?, ?)" //
@@ -165,7 +165,7 @@ public abstract class JdbcDialect {
 		INSERT_CONTENT_PROPERTY( //
 			"       insert into " + //
 				"          cmf_content_property (" + //
-				"              object_id, rendition_id, rendition_page, modifier, name, value" + //
+				"              object_id, content_number, name, value" + //
 				"          ) " + //
 				"   values (?, ?, ?, ?, ?, ?)" //
 		),

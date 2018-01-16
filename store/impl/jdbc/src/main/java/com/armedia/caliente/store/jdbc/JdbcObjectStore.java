@@ -1554,11 +1554,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		for (CmfContentStream i : content) {
 			// First, the content record...
 			cArr[0] = objectId;
-			cArr[1] = i.getRenditionIdentifier();
-			cArr[2] = i.getRenditionPage();
-			cArr[3] = i.getModifier();
-			cArr[4] = i.getExtension();
-			cArr[5] = pos++;
+			cArr[1] = pos;
+			cArr[2] = i.getRenditionIdentifier();
+			cArr[3] = i.getRenditionPage();
+			cArr[4] = i.getModifier();
+			cArr[5] = i.getExtension();
 			cArr[6] = i.getLength();
 			cArr[7] = Tools.toString(Tools.coalesce(i.getMimeType(), MimeTools.DEFAULT_MIME_TYPE));
 			cArr[8] = i.getFileName();
@@ -1566,20 +1566,21 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 			// Then, the properties...
 			pArr[0] = objectId;
-			pArr[1] = i.getRenditionIdentifier();
-			pArr[2] = i.getRenditionPage();
-			pArr[3] = i.getModifier();
+			pArr[1] = pos;
 			for (String s : i.getPropertyNames()) {
 				if (s == null) {
 					continue;
 				}
-				pArr[4] = s;
-				pArr[5] = i.getProperty(s);
+				pArr[2] = s;
+				pArr[3] = i.getProperty(s);
 				if (pArr[5] == null) {
 					continue;
 				}
 				properties.add(pArr.clone());
 			}
+
+			// Next! ;)
+			pos++;
 		}
 
 		// Step 3: execute the batch inserts
