@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -168,14 +168,14 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected final List<CmfContentInfo> storeContent(DctmExportContext ctx,
+	protected final List<CmfContentStream> storeContent(DctmExportContext ctx,
 		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, ExportTarget referrent,
 		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) throws Exception {
 		return doStoreContent(ctx, translator, marshaled, referrent, castObject(this.object), streamStore,
 			includeRenditions);
 	}
 
-	protected List<CmfContentInfo> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
+	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception {
 		return null;

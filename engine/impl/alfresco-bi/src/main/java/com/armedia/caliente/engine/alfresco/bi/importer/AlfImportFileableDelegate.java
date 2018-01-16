@@ -33,7 +33,7 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -107,7 +107,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return this.reference;
 	}
 
-	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
+	protected AlfrescoType calculateTargetType(CmfContentStream content) throws ImportException {
 		Set<String> allAspects = this.factory.schema.getAspectNames();
 		List<String> badAspects = new ArrayList<>();
 		List<String> goodAspects = new ArrayList<>(allAspects.size());
@@ -126,7 +126,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			this.cmfObject.getSubtype(), this.cmfObject.getDescription()));
 	}
 
-	protected final AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {
+	protected final AlfrescoType getTargetType(CmfContentStream content) throws ImportException {
 		if (!isReference()) { return calculateTargetType(content); }
 		return this.referenceType;
 	}
@@ -228,7 +228,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
-		CmfContentInfo content) throws ImportException {
+		CmfContentStream content) throws ImportException {
 
 		AttributeMappingResult mappedAttributes = this.factory.getAttributeMapper().renderMappedAttributes(targetType,
 			this.cmfObject);
@@ -482,7 +482,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return null;
 	}
 
-	protected final void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentInfo content)
+	protected final void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentStream content)
 		throws ImportException {
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
@@ -560,10 +560,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/", this.cmfObject.getId());
 
 		// Step 1: copy over all the attributes that need copying over, un-mapping them as needed
-		Collection<CmfContentInfo> contents = ctx.getContentInfo(this.cmfObject);
+		Collection<CmfContentStream> contents = ctx.getContentStreams(this.cmfObject);
 		if (contents.isEmpty()) {
 			// No content streams, so make one up so we can build the properties file
-			contents = Collections.singleton(new CmfContentInfo());
+			contents = Collections.singleton(new CmfContentStream());
 		}
 
 		boolean vdocRootIndexed = false;
@@ -571,7 +571,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		boolean renditionsRootIndexed = false;
 		Set<String> renditionTypesIndexed = new HashSet<>();
 		final boolean skipRenditions = this.factory.isSkipRenditions();
-		for (CmfContentInfo content : contents) {
+		for (CmfContentStream content : contents) {
 			if (skipRenditions && !content.isDefaultRendition()) {
 				// Skip the non-default rendition
 				continue;

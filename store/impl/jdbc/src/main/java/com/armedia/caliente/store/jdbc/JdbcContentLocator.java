@@ -2,16 +2,16 @@ package com.armedia.caliente.store.jdbc;
 
 import java.io.Serializable;
 
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.commons.utilities.Tools;
 
 public class JdbcContentLocator implements Serializable, Comparable<JdbcContentLocator> {
 	private static final long serialVersionUID = 1L;
 
 	private final String objectId;
-	private final CmfContentInfo info;
+	private final CmfContentStream info;
 
-	JdbcContentLocator(String objectId, CmfContentInfo info) {
+	JdbcContentLocator(String objectId, CmfContentStream info) {
 		if (objectId == null) { throw new IllegalArgumentException("Must provide a non-null object ID"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide a non-null content info object"); }
 		this.objectId = objectId;
@@ -22,7 +22,7 @@ public class JdbcContentLocator implements Serializable, Comparable<JdbcContentL
 		return this.objectId;
 	}
 
-	public CmfContentInfo getInfo() {
+	public CmfContentStream getInfo() {
 		return this.info;
 	}
 

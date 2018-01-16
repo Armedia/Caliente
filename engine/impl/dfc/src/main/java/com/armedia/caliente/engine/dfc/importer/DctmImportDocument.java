@@ -26,7 +26,7 @@ import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -450,7 +450,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		}
 	}
 
-	protected void saveContentStream(DctmImportContext context, IDfSysObject document, CmfContentInfo info,
+	protected void saveContentStream(DctmImportContext context, IDfSysObject document, CmfContentStream info,
 		CmfContentStore<?, ?, ?>.Handle contentHandle, String contentType, String fullFormat, int pageNumber,
 		int renditionNumber, String pageModifier, int currentContent, int totalContentCount)
 		throws DfException, ImportException {
@@ -690,9 +690,9 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 
 	protected boolean loadContent(final IDfSysObject document, boolean newObject, final DctmImportContext context)
 		throws DfException, ImportException {
-		List<CmfContentInfo> infoList;
+		List<CmfContentStream> infoList;
 		try {
-			infoList = context.getContentInfo(this.cmfObject);
+			infoList = context.getContentStreams(this.cmfObject);
 		} catch (Exception e) {
 			throw new ImportException(String.format("Failed to load the content info for %s [%s](%s)",
 				this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
@@ -703,7 +703,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		String contentType = null;
 		Boolean fromDctm = null;
 		final boolean skipRenditions = this.factory.isSkipRenditions();
-		for (CmfContentInfo info : infoList) {
+		for (CmfContentStream info : infoList) {
 			if (skipRenditions && !info.isDefaultRendition()) {
 				// Skip the non-default rendition
 				continue;

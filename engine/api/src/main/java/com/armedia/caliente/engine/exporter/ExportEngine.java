@@ -31,7 +31,7 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
@@ -518,10 +518,10 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 			try {
 				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
-				List<CmfContentInfo> cmfContentInfo = sourceObject.storeContent(ctx, getTranslator(), marshaled,
+				List<CmfContentStream> contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled,
 					referrent, streamStore, includeRenditions);
-				if ((cmfContentInfo != null) && !cmfContentInfo.isEmpty()) {
-					objectStore.setContentInfo(marshaled, cmfContentInfo);
+				if ((contentStreams != null) && !contentStreams.isEmpty()) {
+					objectStore.setContentStreams(marshaled, contentStreams);
 				}
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel), e);

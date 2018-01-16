@@ -8,8 +8,8 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "contentInfoProperty.t", propOrder = {})
-public class ContentInfoPropertyT implements Comparable<ContentInfoPropertyT> {
+@XmlType(name = "contentStreamProperty.t", propOrder = {})
+public class ContentStreamPropertyT implements Comparable<ContentStreamPropertyT> {
 
 	@XmlAttribute(name = "name", required = true)
 	protected String name;
@@ -17,11 +17,11 @@ public class ContentInfoPropertyT implements Comparable<ContentInfoPropertyT> {
 	@XmlAttribute(name = "value", required = true)
 	protected String value;
 
-	public ContentInfoPropertyT() {
+	public ContentStreamPropertyT() {
 		this(null, null);
 	}
 
-	public ContentInfoPropertyT(String name, String value) {
+	public ContentStreamPropertyT(String name, String value) {
 		this.name = name;
 		this.value = value;
 	}
@@ -43,7 +43,7 @@ public class ContentInfoPropertyT implements Comparable<ContentInfoPropertyT> {
 	}
 
 	@Override
-	public int compareTo(ContentInfoPropertyT o) {
+	public int compareTo(ContentStreamPropertyT o) {
 		if (o == null) { return 1; }
 		return Tools.compare(this.name, o.name);
 	}

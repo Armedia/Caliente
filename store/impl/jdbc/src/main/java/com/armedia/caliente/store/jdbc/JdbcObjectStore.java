@@ -37,7 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
@@ -1531,8 +1531,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> void setContentInfo(JdbcOperation operation, CmfObject<V> object, Collection<CmfContentInfo> content)
-		throws CmfStorageException {
+	protected <V> void setContentStreams(JdbcOperation operation, CmfObject<V> object,
+		Collection<CmfContentStream> content) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final String objectId = JdbcTools.composeDatabaseId(object);
 		final QueryRunner qr = new QueryRunner();
@@ -1551,7 +1551,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		Object[] cArr = new Object[9];
 		Object[] pArr = new Object[6];
 		int pos = 0;
-		for (CmfContentInfo i : content) {
+		for (CmfContentStream i : content) {
 			// First, the content record...
 			cArr[0] = objectId;
 			cArr[1] = i.getRenditionIdentifier();
@@ -1595,7 +1595,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> List<CmfContentInfo> getContentInfo(JdbcOperation operation, CmfObject<V> object)
+	protected <V> List<CmfContentStream> getContentStreams(JdbcOperation operation, CmfObject<V> object)
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final String objectId = JdbcTools.composeDatabaseId(object);
@@ -1620,13 +1620,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			};
 
 			// This one will process each content record
-			final ResultSetHandler<List<CmfContentInfo>> cHandler = new ResultSetHandler<List<CmfContentInfo>>() {
+			final ResultSetHandler<List<CmfContentStream>> cHandler = new ResultSetHandler<List<CmfContentStream>>() {
 				@Override
-				public List<CmfContentInfo> handle(ResultSet rs) throws SQLException {
-					final List<CmfContentInfo> ret = new ArrayList<>();
+				public List<CmfContentStream> handle(ResultSet rs) throws SQLException {
+					final List<CmfContentStream> ret = new ArrayList<>();
 					final QueryRunner qr = new QueryRunner();
 					while (rs.next()) {
-						final CmfContentInfo info = new CmfContentInfo(rs.getString("rendition_id"),
+						final CmfContentStream info = new CmfContentStream(rs.getString("rendition_id"),
 							rs.getInt("rendition_page"), rs.getString("modifier"));
 						info.setLength(rs.getLong("stream_length"));
 						String ext = rs.getString("extension");

@@ -11,7 +11,7 @@ import org.apache.commons.io.FileUtils;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
@@ -41,7 +41,7 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 	}
 
 	@Override
-	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
+	protected AlfrescoType calculateTargetType(CmfContentStream content) throws ImportException {
 		AlfrescoType type = super.calculateTargetType(content);
 		if (type == null) {
 			type = this.folderType;

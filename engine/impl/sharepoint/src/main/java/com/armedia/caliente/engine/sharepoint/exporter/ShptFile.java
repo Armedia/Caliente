@@ -28,7 +28,7 @@ import com.armedia.caliente.engine.sharepoint.ShptSessionException;
 import com.armedia.caliente.engine.sharepoint.ShptVersionNumber;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -380,11 +380,11 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	}
 
 	@Override
-	protected List<CmfContentInfo> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentStream> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception {
 		final ShptSession session = ctx.getSession();
-		CmfContentInfo info = new CmfContentInfo();
+		CmfContentStream info = new CmfContentStream();
 		final String name = this.object.getName();
 		info.setFileName(name);
 		info.setExtension(FilenameUtils.getExtension(name));
@@ -417,7 +417,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			Collections.singleton(new CmfValue(type.getBaseType()))));
 		info.setMimeType(MimeTools.resolveMimeType(type.getBaseType()));
 		info.setLength(buf.getCurrentSize());
-		List<CmfContentInfo> ret = new ArrayList<>();
+		List<CmfContentStream> ret = new ArrayList<>();
 		ret.add(info);
 		return ret;
 	}

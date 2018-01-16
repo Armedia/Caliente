@@ -111,7 +111,7 @@ public abstract class CmfOrganizationStrategy {
 
 		@Override
 		public <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-			CmfContentInfo info) {
+			CmfContentStream info) {
 			List<String> path = new ArrayList<>(3);
 			path.add(object.getType().name());
 			path.add(object.getSubtype());
@@ -178,10 +178,10 @@ public abstract class CmfOrganizationStrategy {
 	}
 
 	protected abstract <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info);
+		CmfContentStream info);
 
 	public final <T> Location getLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		if (translator == null) { throw new IllegalArgumentException("Must provide an attribute translator"); }
 		if (object == null) { throw new IllegalArgumentException("Must provide a CMF object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide a valid Content Information object"); }

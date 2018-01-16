@@ -9,7 +9,7 @@ import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfOrganizationStrategy;
 import com.armedia.caliente.store.CmfProperty;
@@ -29,7 +29,7 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 
 	@Override
 	protected <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		final List<String> containerSpec = calculateContainerSpec(translator, object, info);
 		final String baseName = calculateBaseName(translator, object, info);
 		final String descriptor = calculateDescriptor(translator, object, info);
@@ -39,7 +39,7 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	protected <T> List<String> calculateContainerSpec(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		// Put it in the same path as it was in CMIS, but ensure each path component is
 		// of a "universally-valid" format.
 		CmfProperty<T> paths = object.getProperty(IntermediateProperty.PATH);
@@ -54,7 +54,7 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		CmfAttribute<?> name = object.getAttribute(
 			translator.getAttributeNameMapper().decodeAttributeName(object.getType(), IntermediateAttribute.NAME));
 		if (name == null) { return object.getName(); }
@@ -62,12 +62,12 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	protected <T> String calculateExtension(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		return info.getExtension();
 	}
 
 	protected <T> String calculateDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		final String attName = translator.getAttributeNameMapper().decodeAttributeName(object.getType(),
 			IntermediateAttribute.VERSION_LABEL);
 		final CmfAttribute<?> versionLabelAtt = object.getAttribute(attName);
@@ -82,7 +82,7 @@ public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
 	}
 
 	protected <T> String calculateAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		return "";
 	}
 }

@@ -392,12 +392,12 @@
 
 	<xsd:element name="folderIndex" type="tns:folderIndex.t" />
 
-	<xsd:complexType name="contentInfoProperty.t">
+	<xsd:complexType name="contentStreamProperty.t">
 		<xsd:attribute name="name" type="xsd:string" use="required" />
 		<xsd:attribute name="value" type="xsd:string" use="required" />
 	</xsd:complexType>
 
-	<xsd:complexType name="contentInfo.t">
+	<xsd:complexType name="contentStream.t">
 		<xsd:sequence>
 			<xsd:element name="renditionId" type="xsd:string" minOccurs="1" maxOccurs="1"/>
 			<xsd:element name="renditionPage" type="tns:nonNegativeLong.t" minOccurs="1" maxOccurs="1" />
@@ -410,7 +410,7 @@
 			<xsd:element name="properties">
 				<xsd:complexType>
 					<xsd:sequence>
-						<xsd:element name="property" type="tns:contentInfoProperty.t" minOccurs="0" maxOccurs="unbounded" />
+						<xsd:element name="property" type="tns:contentStreamProperty.t" minOccurs="0" maxOccurs="unbounded" />
 					</xsd:sequence>
 				</xsd:complexType>
 			</xsd:element>
@@ -431,7 +431,7 @@
 					<xsd:element name="contents" minOccurs="0" maxOccurs="1">
 						<xsd:complexType>
 							<xsd:sequence>
-								<xsd:element name="content" type="tns:contentInfo.t" minOccurs="0" maxOccurs="unbounded" />
+								<xsd:element name="content" type="tns:contentStream.t" minOccurs="0" maxOccurs="unbounded" />
 							</xsd:sequence>
 						</xsd:complexType>
 					</xsd:element>

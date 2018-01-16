@@ -20,7 +20,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -53,15 +53,15 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 	protected ContentStream getContentStream(CmisImportContext ctx) throws ImportException {
 		CmfContentStore<?, ?, ?> store = ctx.getContentStore();
-		List<CmfContentInfo> info = null;
+		List<CmfContentStream> info = null;
 		try {
-			info = ctx.getContentInfo(this.cmfObject);
+			info = ctx.getContentStreams(this.cmfObject);
 		} catch (Exception e) {
 			throw new ImportException(
 				String.format("Failed to retrieve the content info for %s", this.cmfObject.getDescription()), e);
 		}
 		if ((info == null) || info.isEmpty()) { return null; }
-		CmfContentInfo content = info.get(0);
+		CmfContentStream content = info.get(0);
 		CmfContentStore<?, ?, ?>.Handle h = store.getHandle(this.factory.getEngine().getTranslator(), this.cmfObject,
 			content);
 
