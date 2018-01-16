@@ -167,7 +167,7 @@ public abstract class JdbcDialect {
 				"          cmf_content_property (" + //
 				"              object_id, content_number, name, value" + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?)" //
 		),
 
 		INSERT_HISTORY_LOCK( //
