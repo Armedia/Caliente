@@ -72,6 +72,7 @@ public abstract class AbstractCalienteModule_export extends
 		settings.put(TransferSetting.NO_RENDITIONS.getLabel(),
 			CLIParam.no_renditions.isPresent() || CLIParam.direct_fs.isPresent());
 		settings.put(TransferSetting.TRANSFORMATION.getLabel(), CLIParam.transformations.getString());
+		settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(), CLIParam.external_metadata.getString());
 		settings.put(TransferSetting.FILTER.getLabel(), CLIParam.filters.getString());
 
 		ConfigurationSetting setting = null;
