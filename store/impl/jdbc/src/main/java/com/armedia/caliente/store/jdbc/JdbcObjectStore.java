@@ -1627,6 +1627,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					final List<CmfContentStream> ret = new ArrayList<>();
 					final QueryRunner qr = new QueryRunner();
 					while (rs.next()) {
+						final int contentNumber = rs.getInt("content_number");
 						final CmfContentStream info = new CmfContentStream(rs.getString("rendition_id"),
 							rs.getInt("rendition_page"), rs.getString("modifier"));
 						info.setLength(rs.getLong("stream_length"));
@@ -1646,7 +1647,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 						Map<String, String> props = qr.query(c,
 							translateQuery(JdbcDialect.Query.LOAD_CONTENT_PROPERTIES), pHandler, objectId,
-							info.getRenditionIdentifier(), info.getRenditionPage(), info.getModifier());
+							contentNumber);
 						for (String s : props.keySet()) {
 							String v = props.get(s);
 							if ((s != null) && (v != null)) {

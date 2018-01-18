@@ -385,9 +385,7 @@ public abstract class JdbcDialect {
 			"       select * " + //
 				"     from cmf_content_property " + //
 				"    where object_id = ? " + //
-				"      and rendition_id = ?" + //
-				"      and rendition_page = ?" + //
-				"      and modifier = ?" + //
+				"      and content_number = ?" + //
 				" order by name" //
 		),
 
