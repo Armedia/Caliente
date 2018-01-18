@@ -33,8 +33,8 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
@@ -128,6 +128,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	protected final AlfrescoType getTargetType(CmfContentStream content) throws ImportException {
 		if (!isReference()) { return calculateTargetType(content); }
+		if (this.referenceType == null) { throw new ImportException(
+			String.format("References are not supported for %s", this.cmfObject.getDescription())); }
 		return this.referenceType;
 	}
 
