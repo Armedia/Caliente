@@ -26,7 +26,7 @@ import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
 
-public class CalienteLauncher extends AbstractLauncher {
+public class CalienteLauncher {
 
 	static final Pattern ENGINE_PARSER = Pattern.compile("^\\w+$");
 	private static final String MAIN_CLASS = "com.armedia.caliente.cli.caliente.launcher.%s.Caliente_%s";
