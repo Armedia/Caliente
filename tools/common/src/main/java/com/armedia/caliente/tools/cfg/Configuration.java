@@ -1,5 +1,6 @@
 package com.armedia.caliente.tools.cfg;
 
+import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.Objects;
@@ -31,7 +32,17 @@ public class Configuration {
 		public Object getDefault();
 	}
 
-	public static interface Value {
+	public static final class Value {
+
+		private final Object value;
+		private final Setting setting;
+		private final Value defVal;
+
+		private Value(Object value, Setting setting, Value defVal) {
+			this.value = value;
+			this.setting = setting;
+			this.defVal = defVal;
+		}
 
 		/**
 		 * Return {@code true} if this value is set (i.e. non-{@code null}), {@code false}
@@ -40,7 +51,9 @@ public class Configuration {
 		 * @return {@code true} if this value is set (i.e. non-{@code null}), {@code false}
 		 *         otherwise.
 		 */
-		public boolean isSet();
+		public boolean isSet() {
+			return (this.value != null);
+		}
 
 		/**
 		 * Return {@code true} if a default value is defined for this configuration, or
@@ -51,7 +64,9 @@ public class Configuration {
 		 * @return {@code true} if a default value is defined for this configuration, or
 		 *         {@code false} otherwise
 		 */
-		public boolean hasDefault();
+		public boolean hasDefault() {
+			return (this.defVal != null);
+		}
 
 		/**
 		 * Return this setting's default value, or {@code null} if no default is set. If this method
@@ -59,7 +74,9 @@ public class Configuration {
 		 *
 		 * @return this setting's default value, or {@code null} if no default is set
 		 */
-		public Value getDefault();
+		public Value getDefault() {
+			return this.defVal;
+		}
 
 		/**
 		 * Returns {@code true} if this value <b>is</b> the setting's default value, as distinct
@@ -73,23 +90,42 @@ public class Configuration {
 		 * @return {@code true} if this value <b>is</b> the setting's default value, as distinct
 		 *         from whether the returned value is <b>equal to</b> the established default value
 		 */
-		public boolean isDefault();
+		public boolean isDefault() {
+			// TODO: Implement this!!
+			return false;
+		}
 
-		public Setting getSetting();
+		public Setting getSetting() {
+			return this.setting;
+		}
 
-		public String asString();
+		public String asString() {
+			return Configuration.asString(this.value);
+		}
 
-		public Double asDouble();
+		public Double asDouble() {
+			return Configuration.asDouble(this.value);
+		}
 
-		public Float asFloat();
+		public Float asFloat() {
+			return Configuration.asFloat(this.value);
+		}
 
-		public Long asLong();
+		public Long asLong() {
+			return Configuration.asLong(this.value);
+		}
 
-		public Integer asInteger();
+		public Integer asInteger() {
+			return Configuration.asInteger(this.value);
+		}
 
-		public Object asObject();
+		public Object asObject() {
+			return this.value;
+		}
 
-		public Boolean asBoolean();
+		public Boolean asBoolean() {
+			return Configuration.asBoolean(this.value);
+		}
 
 		/**
 		 * Return the value as a {@link ByteBuffer} if it's a {@code Base-64} decodeable value, an
@@ -100,41 +136,45 @@ public class Configuration {
 		 * @throws DecoderException
 		 *             if the value is not a {@code Base-64} decodeable value
 		 */
-		public ByteBuffer asBinary() throws DecoderException;
+		public ByteArrayInputStream asBinary() throws DecoderException {
+			byte[] data = Configuration.asBinary(this.value);
+			if (data == null) { return null; }
+			return new ByteArrayInputStream(data);
+		}
 	}
 
 	private final Map<String, Value> values;
 
-	public Configuration(Map<String, Object> values) {
+	public Configuration(Map<String, Object> values, Map<String, Object> defaults) {
 		this.values = null;
 	}
 
-	protected String asString(Object value) {
+	protected static String asString(Object value) {
 		return Tools.toString(value);
 	}
 
-	protected Double asDouble(Object value) {
+	protected static Double asDouble(Object value) {
 		return Tools.decodeDouble(value);
 	}
 
-	protected Float asFloat(Object value) {
+	protected static Float asFloat(Object value) {
 		return Tools.decodeFloat(value);
 	}
 
-	protected Long asLong(Object value) {
+	protected static Long asLong(Object value) {
 		return Tools.decodeLong(value);
 	}
 
-	protected Integer asInteger(Object value) {
+	protected static Integer asInteger(Object value) {
 		return Tools.decodeInteger(value);
 	}
 
-	protected Boolean asBoolean(Object value) {
-		return Tools.decodeBoolean(value);
+	protected static Boolean asBoolean(Object value) {
+		return Tools.toBoolean(value);
 	}
 
-	protected byte[] asBinary(Object value) throws DecoderException {
-		String str = asString(value);
+	protected static byte[] asBinary(Object value) throws DecoderException {
+		String str = Configuration.asString(value);
 		if (str == null) { return null; }
 		if (!Base64.isBase64(str)) { throw new DecoderException("The given string is not a valid Base64 string"); }
 		return Base64.decodeBase64(str);
@@ -149,7 +189,7 @@ public class Configuration {
 		Objects.requireNonNull(setting, "Must provide a setting to retrieve");
 		String def = overrideDefault;
 		if (def == null) {
-			def = asString(setting.getDefault());
+			def = Configuration.asString(setting.getDefault());
 		}
 		return getValue(setting.getLabel(), def);
 	}
@@ -158,7 +198,7 @@ public class Configuration {
 		Objects.requireNonNull(setting, "Must provide a setting to retrieve");
 		Double def = overrideDefault;
 		if (def == null) {
-			def = asDouble(setting.getDefault());
+			def = Configuration.asDouble(setting.getDefault());
 		}
 		return getValue(setting.getLabel(), def);
 	}
@@ -167,7 +207,7 @@ public class Configuration {
 		Objects.requireNonNull(setting, "Must provide a setting to retrieve");
 		Float def = overrideDefault;
 		if (def == null) {
-			def = asFloat(setting.getDefault());
+			def = Configuration.asFloat(setting.getDefault());
 		}
 		return getValue(setting.getLabel(), def);
 	}
@@ -176,7 +216,7 @@ public class Configuration {
 		Objects.requireNonNull(setting, "Must provide a setting to retrieve");
 		Long def = overrideDefault;
 		if (def == null) {
-			def = asLong(setting.getDefault());
+			def = Configuration.asLong(setting.getDefault());
 		}
 		return getValue(setting.getLabel(), def);
 	}
@@ -185,7 +225,7 @@ public class Configuration {
 		Objects.requireNonNull(setting, "Must provide a setting to retrieve");
 		Integer def = overrideDefault;
 		if (def == null) {
-			def = asInteger(setting.getDefault());
+			def = Configuration.asInteger(setting.getDefault());
 		}
 		return getValue(setting.getLabel(), def);
 	}
@@ -194,7 +234,7 @@ public class Configuration {
 		Objects.requireNonNull(setting, "Must provide a setting to retrieve");
 		Boolean def = overrideDefault;
 		if (def == null) {
-			def = asBoolean(setting.getDefault());
+			def = Configuration.asBoolean(setting.getDefault());
 		}
 		return getValue(setting.getLabel(), def);
 	}
@@ -203,19 +243,18 @@ public class Configuration {
 		Objects.requireNonNull(setting, "Must provide a setting to retrieve");
 		byte[] def = overrideDefault;
 		if (def == null) {
-			def = asBinary(setting.getDefault());
+			def = Configuration.asBinary(setting.getDefault());
 		}
 		return getValue(setting.getLabel(), def);
 	}
 
-	public Value getValue(Setting setting, ByteBuffer overrideDefault) {
-		Objects.requireNonNull(setting, "Must provide a setting to retrieve");
-		return null;
-	}
-
 	public Value getValue(Setting setting, Object overrideDefault) {
 		Objects.requireNonNull(setting, "Must provide a setting to retrieve");
-		return null;
+		Object def = overrideDefault;
+		if (def == null) {
+			def = setting.getDefault();
+		}
+		return getValue(setting.getLabel(), def);
 	}
 
 	public Value getValue(String label) {
@@ -259,12 +298,6 @@ public class Configuration {
 	}
 
 	public Value getValue(String label, byte[] def) {
-		Value v = this.values.get(label);
-		if (v != null) { return v; }
-		return null;
-	}
-
-	public Value getValue(String label, ByteBuffer def) {
 		Value v = this.values.get(label);
 		if (v != null) { return v; }
 		return null;
