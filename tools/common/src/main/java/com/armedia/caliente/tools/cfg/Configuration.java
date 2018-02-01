@@ -2,8 +2,12 @@ package com.armedia.caliente.tools.cfg;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Base64;
@@ -30,6 +34,26 @@ public class Configuration {
 		 * @return the default value for the configuration setting, in case it's not set at all.
 		 */
 		public Object getDefault();
+	}
+
+	private static class BaseSetting implements Setting {
+		private final String label;
+		private final Object defaultValue;
+
+		private BaseSetting(String label, Object defaultValue) {
+			this.label = label;
+			this.defaultValue = defaultValue;
+		}
+
+		@Override
+		public String getLabel() {
+			return this.label;
+		}
+
+		@Override
+		public Object getDefault() {
+			return this.defaultValue;
+		}
 	}
 
 	public static final class Value {
@@ -143,10 +167,44 @@ public class Configuration {
 		}
 	}
 
+	private final Map<String, Value> defaults;
 	private final Map<String, Value> values;
 
-	public Configuration(Map<String, Object> values, Map<String, Object> defaults) {
-		this.values = null;
+	public Configuration(Map<String, Object> values, Configuration defaults) {
+		if (values == null) {
+			values = Collections.emptyMap();
+		}
+		Map<String, Value> m = new TreeMap<>();
+		if (defaults != null) {
+			for (String k : defaults.getConfigurationNames()) {
+				Object v = defaults.getValue(k);
+				if (v == null) {
+					continue;
+				}
+				m.put(k, new Value(v, new BaseSetting(k, v), null));
+			}
+			this.defaults = Tools.freezeMap(new LinkedHashMap<>(m));
+			m = new TreeMap<>();
+		} else {
+			this.defaults = Collections.emptyMap();
+		}
+
+		for (String k : values.keySet()) {
+			Object v = values.get(k);
+			if (v == null) {
+				continue;
+			}
+			Value def = this.defaults.get(k);
+			m.put(k, new Value(v, new BaseSetting(k, def != null ? def.asObject() : null), def));
+		}
+		if (!m.isEmpty()) {
+			m = new LinkedHashMap<>(m);
+		}
+		this.values = Tools.freezeMap(m);
+	}
+
+	public final Set<String> getConfigurationNames() {
+		return null;
 	}
 
 	protected static String asString(Object value) {
