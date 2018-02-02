@@ -12,9 +12,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.TransferEngineException;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.ConfigurationSetting;
+import com.armedia.commons.utilities.Tools;
 
 public class MappingTools {
 
@@ -31,12 +33,13 @@ public class MappingTools {
 		}
 	};
 
-	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties) {
+	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties)
+		throws TransferEngineException {
 		return MappingTools.loadMap(log, cfg, setting, properties, null);
 	}
 
 	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties,
-		MappingValidator validator) {
+		MappingValidator validator) throws TransferEngineException {
 
 		String mapFile = cfg.getString(setting);
 		if (StringUtils.isEmpty(mapFile)) { return false; }
@@ -45,28 +48,21 @@ public class MappingTools {
 			log = MappingTools.LOG;
 		}
 
-		File f = new File(mapFile);
-		try {
-			f = f.getCanonicalFile();
-		} catch (IOException e) {
-			// Screw it...ignore the problem
-			if (log.isDebugEnabled()) {
-				log.warn(String.format("Failed to canonicalize the file path [%s]", mapFile), e);
-			}
-		}
-
+		File f = Tools.canonicalize(new File(mapFile));
 		if (!f.exists()) {
+			/*
+			// TODO: Detect if it was the default value we got...
+			if (!cfg.isDefault(setting, mapFile)) {
+				throw new TransferEngineException(String.format("The file [%s] does not exist", mapFile));
+			}
+			 */
 			log.warn("The file [{}] does not exist", mapFile);
 			return false;
 		}
-		if (!f.isFile()) {
-			log.warn("The file [{}] is not a regular file", mapFile);
-			return false;
-		}
-		if (!f.canRead()) {
-			log.warn("The file [{}] is not readable", mapFile);
-			return false;
-		}
+		if (!f.isFile()) { throw new TransferEngineException(
+			String.format("The file [%s] is not a regular file", mapFile)); }
+		if (!f
+			.canRead()) { throw new TransferEngineException(String.format("The file [%s] is not readable", mapFile)); }
 
 		if (validator == null) {
 			validator = MappingTools.NULL_VALIDATOR;
@@ -74,20 +70,21 @@ public class MappingTools {
 
 		try (InputStream in = new FileInputStream(f)) {
 			Properties p = XmlProperties.loadFromXML(in);
-			return MappingTools.copyProperties(log, p, properties, f, validator);
+			MappingTools.copyProperties(log, p, properties, f, validator);
 		} catch (IOException | XMLStreamException e) {
-			// Not XML-format...
-			log.warn(String.format("Failed to load the properties from file [%s]", mapFile), e);
-			return false;
+			// Not XML-format or I/O issues...
+			throw new TransferEngineException(String.format("Failed to load the properties from file [%s]", mapFile),
+				e);
 		}
+		return true;
 	}
 
-	private static boolean copyProperties(Logger log, Properties p, Properties properties, File mapFile,
-		MappingValidator validator) {
+	private static void copyProperties(Logger log, Properties p, Properties properties, File mapFile,
+		MappingValidator validator) throws TransferEngineException {
 		if (validator == null) {
 			validator = MappingTools.NULL_VALIDATOR;
 		}
-		boolean ret = true;
+		boolean ok = true;
 		for (String k : p.stringPropertyNames()) {
 			String v = p.getProperty(k);
 			try {
@@ -97,9 +94,10 @@ public class MappingTools {
 			} catch (Exception e) {
 				log.error(String.format("Mapping error detected in file [%s]: [%s]->[%s]", mapFile.getAbsolutePath(), k,
 					v.toString()), e);
-				ret = false;
+				ok = false;
 			}
 		}
-		return ret;
+		if (!ok) { throw new TransferEngineException(
+			String.format("Failed to load the mappings from file [%s]", mapFile)); }
 	}
 }

@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
+import com.armedia.caliente.engine.TransferEngineException;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
@@ -693,7 +694,11 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			objectStore.clearAttributeMappings();
-			loadPrincipalMappings(objectStore.getAttributeMapper(), settings);
+			try {
+				loadPrincipalMappings(objectStore.getAttributeMapper(), settings);
+			} catch (TransferEngineException e) {
+				throw new ImportException(e.getMessage(), e.getCause());
+			}
 			// Ensure the target path exists
 			{
 				final SessionWrapper<S> rootSession;
@@ -725,7 +730,14 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();
-				if (MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p)) {
+				final boolean loaded;
+				try {
+					loaded = MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p);
+				} catch (TransferEngineException e) {
+					throw new ImportException(e.getMessage(), e.getCause());
+				}
+
+				if (loaded) {
 					// Things happen differently here... since we have a limited scope in which
 					// objects require fixing, we don't sweep the whole table, but instead submit
 					// the IDs that we want fixed.

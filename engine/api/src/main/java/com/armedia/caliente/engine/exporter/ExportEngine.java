@@ -24,6 +24,7 @@ import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferEngine;
+import com.armedia.caliente.engine.TransferEngineException;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
@@ -31,8 +32,8 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
@@ -629,7 +630,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		final CfgTools configuration = new CfgTools(settings);
 		objectStore.clearAttributeMappings();
-		loadPrincipalMappings(objectStore.getAttributeMapper(), configuration);
+		try {
+			loadPrincipalMappings(objectStore.getAttributeMapper(), configuration);
+		} catch (TransferEngineException e) {
+			throw new ExportException(e.getMessage(), e.getCause());
+		}
 		final ExportState exportState = new ExportState(output, objectStore, contentStore, configuration);
 
 		final SessionFactory<S> sessionFactory;
