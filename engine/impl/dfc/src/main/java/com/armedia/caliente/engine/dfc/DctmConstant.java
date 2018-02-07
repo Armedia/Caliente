@@ -1,7 +1,7 @@
 package com.armedia.caliente.engine.dfc;
 
 /**
- * The Class Constant. This class contains various constant values used throughout the CMSMF
+ * The Class Constant. This class contains various constant values used throughout the Caliente
  * application.
  *
  * @author Shridev Makim 6/15/2010
