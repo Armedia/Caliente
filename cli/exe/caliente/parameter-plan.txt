@@ -17,16 +17,23 @@ Pass 2
 
 		COMMAND: ( EXPORT | IMPORT )
 			(common)
+				--no-content (implies --no-renditions)
 				--no-renditions
 				--no-versions
-				--skip-content
 				-d,--db ${db-dir}
 				-c,--content ${content-dir}
 				--mail-from ${sender}
-				--smtp-host ${host}
-				--smtp-port ${port}
-				--smtp-auth-user ${user}
-				--smtp-auth-pass ${pass}
+				--mail-to ${recipient1,recipient2,...,recipientN}
+				--mail-cc ${recipient1,recipient2,...,recipientN}
+				--mail-bcc ${recipient1,recipient2,...,recipientN}
+				--mail-host ${host}
+				--mail-port ${port}
+				--mail-ssl ${sslMode}
+				--mail-client-cert ${cert}
+				--mail-server-cert ${cert}
+				--mail-ca ${ca}
+				--mail-auth-user ${user}
+				--mail-auth-pass ${pass}
 				--error-count ${count}
 				--metadata-store ${config}
 				--content-store ${config}
