@@ -17,9 +17,9 @@ Pass 2
 
 		COMMAND: ( EXPORT | IMPORT )
 			(common)
-				--no-content (implies --no-renditions)
 				--no-renditions
 				--no-versions
+				--skip-content
 				-d,--db ${db-dir}
 				-c,--content ${content-dir}
 				--mail-from ${sender}
@@ -32,15 +32,18 @@ Pass 2
 				--mail-client-cert ${cert}
 				--mail-server-cert ${cert}
 				--mail-ca ${ca}
-				--mail-auth-user ${user}
-				--mail-auth-pass ${pass}
+				--mail-user ${user}
+				--mail-pass ${pass}
+				--mail-auth ${mode}
 				--error-count ${count}
 				--metadata-store ${config}
 				--content-store ${config}
 				--manifest-types ${type1,type2,...,typeN}
 				--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
-				--mail-to ${recipient1,recipient2,...,recipientN}
 				--exclude-types ${type1,type2,...,typeN}
+				--filter ${filter}
+				--transformation ${transformation}
+				--external-metadata ${externalMeta}
 
 		COMMAND: ( EXPORT | EXP | EX )
 			(common)
@@ -48,13 +51,13 @@ Pass 2
 				-r,--reset-job
 				--content-strategy ${strategy}
 				--direct-fs (change for strategy = direct?)
+			*	--source ${source}  (either a path, a query predicate if supported, or a URL to an ID/locator list)
 
 			Pass 3 (from --engine)
 				DFC
 				*	--docbase ${docbase}
 				*	--user ${user}
 				*	--password ${password}
-				*	--predicate ${predicate}
 					--dfc ${dfc-dir}
 					--dfc-prop ${dfc-prop-file}
 					--dctm ${dctm-dir}
@@ -69,24 +72,28 @@ Pass 2
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
-				*	--source ${path}
 
 				SHAREPOINT
 				*	--url ${url}
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
-				*	--source ${path}
 					--source-prefix ${prefix}
+
+				LOCAL
+					<none>
 
 		COMMAND: ( IMPORT | IMP | IM )
 			(common)
-				--dedup
 				--filename-map ${file}
 				--name-fix
 				--no-filename-map
 				--trim-prefix ${num}
 				--target-location ${location}
+				--attribute-map ${attributeMap}
+				--user-map ${userMap}
+				--group-map ${groupMap}
+				--role-map ${roleMap}
 
 			Pass 3 (from --engine)
 				DFC
@@ -103,11 +110,10 @@ Pass 2
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
+				
+				Alfresco
+				*	--attribute-map ${mapper}
 				*	--content-model ${model1,model2,...,modelN}
-					--user-map ${map}
-					--group-map ${map}
-					--role-map ${map}
-					--type-map ${map}
 
 		COMMAND: ( COUNT | CNT | CN )
 			(common)
