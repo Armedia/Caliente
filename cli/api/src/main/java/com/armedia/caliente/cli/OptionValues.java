@@ -317,13 +317,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 	}
 
 	public boolean hasValues(Option param) {
-		List<Collection<String>> occurrences = this.occurrences.get(getValidKey(param));
-		if (occurrences == null) { return false; }
-		int v = 0;
-		for (Collection<String> c : occurrences) {
-			v += c.size();
-		}
-		return (v > 0);
+		return (getValueCount(param) > 0);
 	}
 
 	public boolean isDefined(OptionWrapper paramDel) {
