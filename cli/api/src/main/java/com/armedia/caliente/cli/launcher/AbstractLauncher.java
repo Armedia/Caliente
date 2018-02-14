@@ -58,14 +58,14 @@ public abstract class AbstractLauncher {
 
 	protected abstract String getProgramName();
 
-	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValies,
+	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
 		// By default, do nothing...
 		return false;
 	}
 
 	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
-		OptionValues commandValies, Collection<String> positionals) {
+		OptionValues commandValues, Collection<String> positionals) {
 		return Collections.emptyList();
 	}
 
@@ -178,6 +178,6 @@ public abstract class AbstractLauncher {
 		}
 	}
 
-	protected abstract int run(OptionValues baseValues, String command, OptionValues commandValies,
+	protected abstract int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception;
 }
