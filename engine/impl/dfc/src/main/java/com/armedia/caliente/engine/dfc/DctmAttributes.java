@@ -2,7 +2,7 @@ package com.armedia.caliente.engine.dfc;
 
 /**
  * The Class CmsAttributes. This class contains various constant values for attribute names and
- * column names used in CMSMF application.
+ * column names used in Caliente application.
  *
  * @author Shridev Makim 6/15/2010
  */

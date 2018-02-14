@@ -264,7 +264,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		return Collections.unmodifiableCollection(c);
 	}
 
-	protected final void loadPrincipalMappings(CmfValueMapper mapper, CfgTools cfg) {
+	protected final void loadPrincipalMappings(CmfValueMapper mapper, CfgTools cfg) throws TransferEngineException {
 		for (PrincipalType t : PrincipalType.values()) {
 			Properties p = new Properties();
 			if (!MappingTools.loadMap(this.log, cfg, t.getSetting(), p)) {
