@@ -174,4 +174,12 @@ public final class OptionValue extends Option {
 	public List<String> getAllStrings() {
 		return this.values.getAllStrings(this);
 	}
+
+	public int getValueCount() {
+		return this.values.getValueCount(this);
+	}
+
+	public boolean hasValues() {
+		return this.values.hasValues(this);
+	}
 }
