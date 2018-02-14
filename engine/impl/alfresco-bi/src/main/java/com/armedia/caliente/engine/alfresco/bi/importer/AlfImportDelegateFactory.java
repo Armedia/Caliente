@@ -198,7 +198,7 @@ public class AlfImportDelegateFactory
 		if (db != null) {
 			this.db = new File(db).getCanonicalFile();
 		} else {
-			this.db = new File("cmsmf-xml").getCanonicalFile();
+			this.db = new File("caliente-data").getCanonicalFile();
 		}
 		FileUtils.forceMkdir(this.db);
 		String content = configuration.getString(AlfSetting.CONTENT);

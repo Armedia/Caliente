@@ -36,7 +36,7 @@ Pass 2
 				--mail-pass ${pass}
 				--mail-auth ${mode}
 				--error-count ${count}
-				--metadata-store ${config}
+				--object-store ${config}
 				--content-store ${config}
 				--manifest-types ${type1,type2,...,typeN}
 				--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
