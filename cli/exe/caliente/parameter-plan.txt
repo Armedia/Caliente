@@ -2,6 +2,8 @@ Pass 1
 	GLOBALS
 		-?,--help
 		-l,--lib ${libdir1,libdir2,...,libdirN}
+		--log ${log-basename}
+		--log-cfg ${log-cfg-file}
 		command
 
 Pass 2
@@ -10,8 +12,6 @@ Pass 2
 
 	COMMAND: ( EXPORT | IMPORT | COUNT )
 		(common)
-			--log ${log-file} (default is ${db-dir}/blablabla.log)
-			--log-cfg ${log-cfg-file}
 		*	-e, --engine ${dfc|cmis|shpt|local|...}
 			-t,--threads ${threads}
 
