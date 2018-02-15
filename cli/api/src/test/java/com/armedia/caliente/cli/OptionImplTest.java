@@ -518,4 +518,201 @@ public class OptionImplTest {
 		Assert.assertTrue("inverse equivalence test", Option.isIdentical(actual, expected));
 		Assert.assertEquals("key", expected.getKey(), actual.getKey());
 	}
+
+	@Test
+	public void testArgumentLimits() {
+		OptionImpl expected = null;
+
+		for (int min = 255; min >= -255; min--) {
+			for (int max = 255; max >= -255; max--) {
+				expected = new OptionImpl();
+
+				expected.setMinArguments(min);
+				if (min <= 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), min, expected.getMinArguments());
+				}
+
+				expected.setMaxArguments(max);
+				if (max < 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), -1, expected.getMaxArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), max, expected.getMaxArguments());
+				}
+
+				if (max > 0) {
+					if (max < min) {
+						Assert.assertEquals(String.format("min=%d max=%d", min, max), expected.getMaxArguments(),
+							expected.getMinArguments());
+					} else {
+						Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(0, min),
+							expected.getMinArguments());
+					}
+				} else if (max < 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(0, min),
+						expected.getMinArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+				}
+			}
+		}
+
+		for (int min = 255; min >= -255; min--) {
+			for (int max = 255; max >= -255; max--) {
+				expected = new OptionImpl();
+
+				expected.setMaxArguments(max);
+				if (max < 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), -1, expected.getMaxArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), max, expected.getMaxArguments());
+				}
+
+				expected.setMinArguments(min);
+				if (min <= 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), min, expected.getMinArguments());
+				}
+
+				if (min > 0) {
+					if ((min > max) && (max >= 0)) {
+						Assert.assertEquals(String.format("min=%d max=%d", min, max), expected.getMinArguments(),
+							expected.getMaxArguments());
+					} else {
+						Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(-1, max),
+							expected.getMaxArguments());
+					}
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(-1, max),
+						expected.getMaxArguments());
+				}
+			}
+		}
+
+		for (int min = -255; min <= 255; min++) {
+			for (int max = -255; max <= 255; max++) {
+				expected = new OptionImpl();
+
+				expected.setMinArguments(min);
+				if (min <= 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), min, expected.getMinArguments());
+				}
+
+				expected.setMaxArguments(max);
+				if (max < 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), -1, expected.getMaxArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), max, expected.getMaxArguments());
+				}
+
+				if (max > 0) {
+					if (max < min) {
+						Assert.assertEquals(String.format("min=%d max=%d", min, max), expected.getMaxArguments(),
+							expected.getMinArguments());
+					} else {
+						Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(0, min),
+							expected.getMinArguments());
+					}
+				} else if (max < 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(0, min),
+						expected.getMinArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+				}
+			}
+		}
+
+		for (int min = -255; min <= 255; min++) {
+			for (int max = -255; max <= 255; max++) {
+				expected = new OptionImpl();
+
+				expected.setMaxArguments(max);
+				if (max < 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), -1, expected.getMaxArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), max, expected.getMaxArguments());
+				}
+
+				expected.setMinArguments(min);
+				if (min <= 0) {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), 0, expected.getMinArguments());
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), min, expected.getMinArguments());
+				}
+
+				if (min > 0) {
+					if ((min > max) && (max >= 0)) {
+						Assert.assertEquals(String.format("min=%d max=%d", min, max), expected.getMinArguments(),
+							expected.getMaxArguments());
+					} else {
+						Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(-1, max),
+							expected.getMaxArguments());
+					}
+				} else {
+					Assert.assertEquals(String.format("min=%d max=%d", min, max), Math.max(-1, max),
+						expected.getMaxArguments());
+				}
+			}
+		}
+
+		// Reset...
+		for (int min = -255; min <= 255; min++) {
+			for (int max = -255; max <= 255; max++) {
+				expected = new OptionImpl();
+				expected.setArgumentLimits(min, max);
+				if (min <= 0) {
+					Assert.assertEquals(0, expected.getMinArguments());
+				} else {
+					Assert.assertEquals(min, expected.getMinArguments());
+				}
+				if (max < 0) {
+					Assert.assertEquals(-1, expected.getMaxArguments());
+				} else if (min <= max) {
+					Assert.assertEquals(max, expected.getMaxArguments());
+				} else {
+					Assert.assertEquals(expected.getMinArguments(), expected.getMaxArguments());
+				}
+			}
+		}
+
+		// Reset...
+		for (int max = -255; max <= 255; max++) {
+			for (int min = -255; min <= 255; min++) {
+				expected = new OptionImpl();
+				expected.setArgumentLimits(min, max);
+				if (min <= 0) {
+					Assert.assertEquals(0, expected.getMinArguments());
+				} else {
+					Assert.assertEquals(min, expected.getMinArguments());
+				}
+				if (max < 0) {
+					Assert.assertEquals(-1, expected.getMaxArguments());
+				} else if (min <= max) {
+					Assert.assertEquals(max, expected.getMaxArguments());
+				} else {
+					Assert.assertEquals(expected.getMinArguments(), expected.getMaxArguments());
+				}
+			}
+		}
+
+		// Reset...
+		for (int l = -255; l <= 255; l++) {
+			expected = new OptionImpl();
+			expected.setArgumentLimits(l);
+			if (l <= 0) {
+				Assert.assertEquals(0, expected.getMinArguments());
+			} else {
+				Assert.assertEquals(l, expected.getMinArguments());
+			}
+			if (l < 0) {
+				Assert.assertEquals(-1, expected.getMaxArguments());
+			} else {
+				Assert.assertEquals(l, expected.getMaxArguments());
+			}
+		}
+	}
 }
