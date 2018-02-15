@@ -63,8 +63,10 @@ public final class OptionImpl extends Option implements Cloneable {
 
 	public OptionImpl setMinArguments(int count) {
 		this.minArguments = Math.max(0, count);
-		if ((this.minArguments > 0) && (this.maxArguments >= 0) && (this.minArguments > this.maxArguments)) {
-			this.maxArguments = this.minArguments;
+		if ((this.minArguments > 0) && (this.maxArguments >= 0)) {
+			// if the new minimum value is higher than the current maximum,
+			// then we grow the maximum to match
+			this.maxArguments = Math.max(this.minArguments, this.maxArguments);
 		}
 		return this;
 	}
@@ -76,9 +78,30 @@ public final class OptionImpl extends Option implements Cloneable {
 
 	public OptionImpl setMaxArguments(int count) {
 		this.maxArguments = Math.max(Option.UNBOUNDED_MAX_VALUES, count);
-		if ((this.minArguments > 0) && (this.maxArguments >= 0) && (this.minArguments > this.maxArguments)) {
-			this.minArguments = this.maxArguments;
+		if ((this.minArguments > 0) && (this.maxArguments >= 0)) {
+			// if the current minimum value is higher than the new maximum,
+			// then we shrink the minimum to match
+			this.minArguments = Math.min(this.minArguments, this.maxArguments);
 		}
+		return this;
+	}
+
+	public OptionImpl setArgumentLimits(int count) {
+		return setArgumentLimits(count, count);
+	}
+
+	public OptionImpl setArgumentLimits(int min, int max) {
+		// Ensure both values are in the expected ranges
+		min = Math.max(0, min);
+		max = Math.max(Option.UNBOUNDED_MAX_VALUES, max);
+
+		// Ensure that the maximum is never below the minimum
+		if ((min != max) && (min != 0) && (max >= 0)) {
+			max = Math.max(min, max);
+		}
+
+		this.minArguments = min;
+		this.maxArguments = max;
 		return this;
 	}
 
