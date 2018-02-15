@@ -17,8 +17,7 @@ public final class ThreadsLaunchHelper extends Options {
 	public static final Option THREADS = new OptionImpl() //
 		.setShortOpt('t') //
 		.setLongOpt("threads") //
-		.setMinArguments(1) //
-		.setMaxArguments(1) //
+		.setArgumentLimits(1) //
 		.setDefault(String.valueOf(ThreadsLaunchHelper.DEFAULT_DEF_THREADS)) //
 		.setArgumentName("threads") //
 		.setDescription("The number of threads to use") //
