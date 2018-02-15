@@ -14,7 +14,7 @@ public final class ThreadsLaunchHelper extends Options {
 	public static final int DEFAULT_DEF_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
 	public static final int DEFAULT_MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 4);
 
-	private static final Option THREADS = new OptionImpl() //
+	public static final Option THREADS = new OptionImpl() //
 		.setShortOpt('t') //
 		.setLongOpt("threads") //
 		.setMinArguments(1) //
