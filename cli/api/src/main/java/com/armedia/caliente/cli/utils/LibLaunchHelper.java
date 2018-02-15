@@ -20,7 +20,7 @@ import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 
 public final class LibLaunchHelper extends Options implements LaunchClasspathHelper {
 
-	private static final Option LIB = new OptionImpl() //
+	public static final Option LIB = new OptionImpl() //
 		.setShortOpt('l') //
 		.setLongOpt("lib") //
 		.setMinArguments(1) //
