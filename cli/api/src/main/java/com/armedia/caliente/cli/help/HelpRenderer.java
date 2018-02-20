@@ -19,6 +19,7 @@ import com.armedia.caliente.cli.CommandScheme;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;
 import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionValueFilter;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.commons.utilities.Tools;
@@ -244,11 +245,9 @@ public final class HelpRenderer {
 			}
 		}
 
-		Set<String> allowed = o.getAllowedValues();
-		if ((allowed != null) && !allowed.isEmpty()) {
-			Object a = (allowed.size() == 1 ? allowed.iterator().next() : allowed);
-			String plural = (allowed.size() == 1 ? "" : "s");
-			HelpRenderer.printWrapped(pw, width, 12, String.format("Allowed value%s: %s", plural, a));
+		OptionValueFilter filter = o.getValueFilter();
+		if (filter != null) {
+			HelpRenderer.printWrapped(pw, width, 12, String.format("Allowed values: %s", filter.getDefinition()));
 			addLine = true;
 		}
 

@@ -3,6 +3,7 @@ package com.armedia.caliente.cli.bulkdel;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionWrapper;
+import com.armedia.caliente.cli.StringValueFilter;
 
 public enum CLIParam implements OptionWrapper {
 	debug(new OptionImpl() //
@@ -28,7 +29,7 @@ public enum CLIParam implements OptionWrapper {
 		.setMinArguments(1) //
 		.setMaxArguments(1) //
 		.setArgumentName("mode") //
-		.setAllowedValues("selected", "unused", "all")
+		.setValueFilter(new StringValueFilter("selected", "unused", "all"))
 		.setDescription("Select which versions of the objects to delete (default = all)") //
 		.setDefault("all") //
 	), //
@@ -36,7 +37,7 @@ public enum CLIParam implements OptionWrapper {
 		.setMinArguments(1) //
 		.setMaxArguments(1) //
 		.setArgumentName("answer") //
-		.setAllowedValues("yes", "no", "abort", "ask")
+		.setValueFilter(new StringValueFilter("yes", "no", "abort", "ask"))
 		.setDescription("How to answer any yes-no questions posed during the operation") //
 		.setDefault("abort") //
 	), //

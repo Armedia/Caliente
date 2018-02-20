@@ -1,7 +1,6 @@
 package com.armedia.caliente.cli;
 
 import java.util.List;
-import java.util.Set;
 
 public final class OptionValue extends Option {
 	private final OptionValues values;
@@ -77,8 +76,8 @@ public final class OptionValue extends Option {
 	}
 
 	@Override
-	public Set<String> getAllowedValues() {
-		return this.def.getAllowedValues();
+	public OptionValueFilter getValueFilter() {
+		return this.def.getValueFilter();
 	}
 
 	@Override

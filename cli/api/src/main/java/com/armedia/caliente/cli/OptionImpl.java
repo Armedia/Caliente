@@ -5,10 +5,22 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
+
+import com.armedia.commons.utilities.Tools;
 
 public final class OptionImpl extends Option implements Cloneable {
+
+	private static final OptionValueFilter ALLOW_NON_NULL = new OptionValueFilter() {
+		@Override
+		protected boolean checkValue(String value) {
+			return true;
+		}
+
+		@Override
+		public String getDefinition() {
+			return null;
+		}
+	};
 
 	private boolean required = false;
 	private String description = null;
@@ -19,7 +31,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	private String argumentName = null;
 	private Character valueSep = OptionImpl.DEFAULT_VALUE_SEP;
 	private boolean valuesCaseSensitive = false;
-	private final Set<String> allowedValues = new TreeSet<>();
+	private OptionValueFilter valueFilter = OptionImpl.ALLOW_NON_NULL;
 	private final List<String> defaults = new ArrayList<>();
 
 	private String key = null;
@@ -38,10 +50,7 @@ public final class OptionImpl extends Option implements Cloneable {
 			this.maxArguments = other.getMaxArguments();
 			this.argumentName = other.getArgumentName();
 			this.valueSep = other.getValueSep();
-			Set<String> allowedValues = other.getAllowedValues();
-			if (allowedValues != null) {
-				this.allowedValues.addAll(allowedValues);
-			}
+			this.valueFilter = other.getValueFilter();
 			this.key = other.getKey();
 		}
 	}
@@ -193,9 +202,7 @@ public final class OptionImpl extends Option implements Cloneable {
 
 	@Override
 	public boolean isValueAllowed(String value) {
-		if (value == null) { return false; }
-		if (this.allowedValues.isEmpty()) { return true; }
-		return this.allowedValues.contains(canonicalizeValue(value));
+		return Tools.coalesce(this.valueFilter, OptionImpl.ALLOW_NON_NULL).isAllowed(canonicalizeValue(value));
 	}
 
 	private String canonicalizeValue(String value) {
@@ -204,28 +211,12 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	@Override
-	public Set<String> getAllowedValues() {
-		return this.allowedValues;
+	public OptionValueFilter getValueFilter() {
+		return this.valueFilter;
 	}
 
-	public OptionImpl setAllowedValues(Collection<String> allowedValues) {
-		this.allowedValues.clear();
-		if (allowedValues != null) {
-			for (String s : allowedValues) {
-				if (s != null) {
-					this.allowedValues.add(canonicalizeValue(s));
-				}
-			}
-		}
-		return this;
-	}
-
-	public OptionImpl setAllowedValues(String... allowedValues) {
-		if (allowedValues != null) {
-			setAllowedValues(Arrays.asList(allowedValues));
-		} else {
-			this.allowedValues.clear();
-		}
+	public OptionImpl setValueFilter(OptionValueFilter valueFilter) {
+		this.valueFilter = Tools.coalesce(valueFilter, OptionImpl.ALLOW_NON_NULL);
 		return this;
 	}
 
