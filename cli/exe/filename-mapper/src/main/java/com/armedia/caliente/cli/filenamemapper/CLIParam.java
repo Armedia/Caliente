@@ -3,6 +3,7 @@ package com.armedia.caliente.cli.filenamemapper;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionWrapper;
+import com.armedia.caliente.cli.StringValueFilter;
 
 public enum CLIParam implements OptionWrapper {
 	no_fix(new OptionImpl() //
@@ -30,7 +31,7 @@ public enum CLIParam implements OptionWrapper {
 		.setMinArguments(1) //
 		.setMaxArguments(1) //
 		.setArgumentName("WIN") //
-		.setAllowedValues("WIN", "LIN") //
+		.setValueFilter(new StringValueFilter("WIN", "LIN")) //
 		.setDescription("Filename fix mode. Defaults to the current platform") //
 	), //
 	no_dedup(new OptionImpl() //
