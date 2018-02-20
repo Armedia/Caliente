@@ -6,21 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import com.armedia.commons.utilities.Tools;
-
 public final class OptionImpl extends Option implements Cloneable {
-
-	private static final OptionValueFilter ALLOW_NON_NULL = new OptionValueFilter() {
-		@Override
-		protected boolean checkValue(String value) {
-			return true;
-		}
-
-		@Override
-		public String getDefinition() {
-			return null;
-		}
-	};
 
 	private boolean required = false;
 	private String description = null;
@@ -31,7 +17,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	private String argumentName = null;
 	private Character valueSep = OptionImpl.DEFAULT_VALUE_SEP;
 	private boolean valuesCaseSensitive = false;
-	private OptionValueFilter valueFilter = OptionImpl.ALLOW_NON_NULL;
+	private OptionValueFilter valueFilter = null;
 	private final List<String> defaults = new ArrayList<>();
 
 	private String key = null;
@@ -202,7 +188,7 @@ public final class OptionImpl extends Option implements Cloneable {
 
 	@Override
 	public boolean isValueAllowed(String value) {
-		return Tools.coalesce(this.valueFilter, OptionImpl.ALLOW_NON_NULL).isAllowed(canonicalizeValue(value));
+		return (this.valueFilter != null ? this.valueFilter.isAllowed(canonicalizeValue(value)) : true);
 	}
 
 	private String canonicalizeValue(String value) {
@@ -216,7 +202,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	public OptionImpl setValueFilter(OptionValueFilter valueFilter) {
-		this.valueFilter = Tools.coalesce(valueFilter, OptionImpl.ALLOW_NON_NULL);
+		this.valueFilter = valueFilter;
 		return this;
 	}
 
