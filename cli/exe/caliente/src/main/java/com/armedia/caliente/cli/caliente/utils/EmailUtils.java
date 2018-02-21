@@ -100,7 +100,7 @@ public class EmailUtils {
 	 */
 	public static void postCalienteMail(String subject, String message) throws MessagingException {
 
-		String mailRecipients = Setting.MAIL_RECIPIENTS.getString();
+		String mailRecipients = Setting.MAIL_TO.getString();
 		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(mailRecipients);
 		Collection<String> recipients = strTokenizer.getTokenList();
 

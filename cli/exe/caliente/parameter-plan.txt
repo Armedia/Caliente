@@ -1,3 +1,15 @@
+1) getOptionScheme() + getOptionSchemeExtensionSupport()
+	* parse arguments
+		* extendScheme(...)
+	* process arguments
+2) getClasspathHelpers()
+	* apply classpath helpers pre
+	* discover classpath helpers
+	* apply classpath helpers post
+3) init logging (taking options into account)
+4) run()
+
+
 Pass 1
 	GLOBALS
 		-?,--help
