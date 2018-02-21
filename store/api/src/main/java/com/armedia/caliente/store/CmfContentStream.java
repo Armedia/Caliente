@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public final class CmfContentInfo implements Comparable<CmfContentInfo> {
+public final class CmfContentStream implements Comparable<CmfContentStream> {
 
 	public static final String DEFAULT_RENDITION = "$main$";
 
@@ -28,34 +28,34 @@ public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 	private final Map<String, String> properties = new HashMap<>();
 	private final CfgTools cfg = new CfgTools(this.properties);
 
-	public CmfContentInfo() {
+	public CmfContentStream() {
 		this(null, 0, null);
 	}
 
-	public CmfContentInfo(int renditionPage) {
+	public CmfContentStream(int renditionPage) {
 		this(null, renditionPage, null);
 	}
 
-	public CmfContentInfo(int renditionPage, String modifier) {
+	public CmfContentStream(int renditionPage, String modifier) {
 		this(null, renditionPage, modifier);
 	}
 
-	public CmfContentInfo(String renditionIdentifier) {
+	public CmfContentStream(String renditionIdentifier) {
 		this(renditionIdentifier, 0, null);
 	}
 
-	public CmfContentInfo(String renditionIdentifier, int renditionPage) {
+	public CmfContentStream(String renditionIdentifier, int renditionPage) {
 		this(renditionIdentifier, renditionPage, null);
 	}
 
-	public CmfContentInfo(String renditionIdentifier, int renditionPage, String modifier) {
-		this.renditionIdentifier = Tools.coalesce(renditionIdentifier, CmfContentInfo.DEFAULT_RENDITION);
+	public CmfContentStream(String renditionIdentifier, int renditionPage, String modifier) {
+		this.renditionIdentifier = Tools.coalesce(renditionIdentifier, CmfContentStream.DEFAULT_RENDITION);
 		this.renditionPage = renditionPage;
 		this.modifier = Tools.coalesce(modifier, "");
 	}
 
 	public boolean isDefaultRendition() {
-		return Tools.equals(CmfContentInfo.DEFAULT_RENDITION, this.renditionIdentifier);
+		return Tools.equals(CmfContentStream.DEFAULT_RENDITION, this.renditionIdentifier);
 	}
 
 	public String getRenditionIdentifier() {
@@ -156,12 +156,12 @@ public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 	@Override
 	public String toString() {
 		return String.format(
-			"CmfContentInfo [renditionIdentifier=%s, renditionPage=%s, length=%s, mimeType=%s, fileName=%s]",
+			"CmfContentStream [renditionIdentifier=%s, renditionPage=%s, length=%s, mimeType=%s, fileName=%s]",
 			this.renditionIdentifier, this.renditionPage, this.length, this.mimeType, this.fileName);
 	}
 
 	@Override
-	public int compareTo(CmfContentInfo o) {
+	public int compareTo(CmfContentStream o) {
 		if (o == null) { return 1; }
 		int r = 0;
 		r = Tools.compare(this.renditionIdentifier, o.renditionIdentifier);
@@ -179,7 +179,7 @@ public final class CmfContentInfo implements Comparable<CmfContentInfo> {
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		CmfContentInfo other = CmfContentInfo.class.cast(obj);
+		CmfContentStream other = CmfContentStream.class.cast(obj);
 		if (!Tools.equals(this.renditionIdentifier, other.renditionIdentifier)) { return false; }
 		if (this.renditionPage != other.renditionPage) { return false; }
 		return true;

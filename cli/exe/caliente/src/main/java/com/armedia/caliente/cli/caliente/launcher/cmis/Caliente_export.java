@@ -15,6 +15,7 @@ import com.armedia.caliente.cli.caliente.launcher.AbstractCalienteModule_export;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.cmis.CmisSetting;
 import com.armedia.caliente.engine.cmis.exporter.CmisExportEngine;
+import com.armedia.commons.utilities.ConfigurationSetting;
 
 public class Caliente_export extends AbstractCalienteModule_export {
 
@@ -65,5 +66,20 @@ public class Caliente_export extends AbstractCalienteModule_export {
 		if (!StringUtils.isBlank(repoName)) {
 			settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), repoName);
 		}
+	}
+
+	@Override
+	protected ConfigurationSetting getUserSetting() {
+		return CmisSessionSetting.USER;
+	}
+
+	@Override
+	protected ConfigurationSetting getPasswordSetting() {
+		return CmisSessionSetting.PASSWORD;
+	}
+
+	@Override
+	protected ConfigurationSetting getDomainSetting() {
+		return CmisSessionSetting.DOMAIN;
 	}
 }

@@ -77,11 +77,6 @@ public final class OptionValue extends Option {
 	}
 
 	@Override
-	public String canonicalizeValue(String value) {
-		return this.def.canonicalizeValue(value);
-	}
-
-	@Override
 	public Set<String> getAllowedValues() {
 		return this.def.getAllowedValues();
 	}

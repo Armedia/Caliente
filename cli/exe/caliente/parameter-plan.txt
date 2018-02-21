@@ -13,25 +13,32 @@ Pass 2
 			--log ${log-file} (default is ${db-dir}/blablabla.log)
 			--log-cfg ${log-cfg-file}
 		*	-e, --engine ${dfc|cmis|shpt|local|...}
-			--no-renditions
-			--no-versions
-			--skip-content
-			--manifest ${manifest-file}
 			-t,--threads ${threads}
-			-d,--db ${db-dir}
-			-c,--content ${content-dir}
-			--mail-from ${sender}
-			--smtp-host ${host}
-			--smtp-port ${port}
-			--smtp-auth-user ${user}
-			--smtp-auth-pass ${pass}
-			--error-count ${count}
-			--object-store-config ${config}
-			--content-store-config ${config}
-			--manifest-types ${type1,type2,...,typeN}
-			--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
-			--mail-to ${recipient1,recipient2,...,recipientN}
-			--exclude-types ${type1,type2,...,typeN}
+
+		COMMAND: ( EXPORT | IMPORT )
+			(common)
+				--no-renditions
+				--no-versions
+				--skip-content
+				-d,--db ${db-dir}
+				-c,--content ${content-dir}
+				--mail-from ${sender}
+				--mail-to ${recipient1,recipient2,...,recipientN}
+				--mail-cc ${recipient1,recipient2,...,recipientN}
+				--mail-bcc ${recipient1,recipient2,...,recipientN}
+				--smtp-host ${host}
+				--smtp-port ${port}
+				--smtp-auth-user ${user}
+				--smtp-auth-pass ${pass}
+				--error-count ${count}
+				--object-store ${config}
+				--content-store ${config}
+				--manifest-types ${type1,type2,...,typeN}
+				--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
+				--exclude-types ${type1,type2,...,typeN}
+				--filter ${filter}
+				--transformation ${transformation}
+				--external-metadata ${externalMeta}
 
 		COMMAND: ( EXPORT | EXP | EX )
 			(common)
@@ -39,13 +46,13 @@ Pass 2
 				-r,--reset-job
 				--content-strategy ${strategy}
 				--direct-fs (change for strategy = direct?)
+			*	--source ${source}  (either a path, a query predicate if supported, or a URL to an ID/locator list)
 
 			Pass 3 (from --engine)
 				DFC
 				*	--docbase ${docbase}
 				*	--user ${user}
 				*	--password ${password}
-				*	--predicate ${predicate}
 					--dfc ${dfc-dir}
 					--dfc-prop ${dfc-prop-file}
 					--dctm ${dctm-dir}
@@ -60,24 +67,28 @@ Pass 2
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
-				*	--source ${path}
 
 				SHAREPOINT
 				*	--url ${url}
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
-				*	--source ${path}
 					--source-prefix ${prefix}
+
+				LOCAL
+					<none>
 
 		COMMAND: ( IMPORT | IMP | IM )
 			(common)
-				--dedup
 				--filename-map ${file}
 				--name-fix
 				--no-filename-map
 				--trim-prefix ${num}
 				--target-location ${location}
+				--attribute-map ${attributeMap}
+				--user-map ${userMap}
+				--group-map ${groupMap}
+				--role-map ${roleMap}
 
 			Pass 3 (from --engine)
 				DFC
@@ -94,14 +105,14 @@ Pass 2
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
+				
+				Alfresco
+				*	--attribute-map ${mapper}
 				*	--content-model ${model1,model2,...,modelN}
-					--user-map ${map}
-					--group-map ${map}
-					--role-map ${map}
-					--type-map ${map}
 
 		COMMAND: ( COUNT | CNT | CN )
 			(common)
+				--no-versions
 				--non-recursive
 				--empty
 				--hidden

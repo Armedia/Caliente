@@ -24,7 +24,7 @@ import com.armedia.caliente.engine.ucm.model.UcmRenditionInfo;
 import com.armedia.caliente.engine.ucm.model.UcmRevision;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -155,10 +155,10 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 	}
 
 	@Override
-	protected List<CmfContentInfo> storeContent(UcmExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentStream> storeContent(UcmExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception {
-		List<CmfContentInfo> contents = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
+		List<CmfContentStream> contents = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
 		final boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		final Map<String, UcmRenditionInfo> renditions = ctx.getSession().getRenditions(this.object);
@@ -172,10 +172,10 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			renditionLabel = renditionLabel.toUpperCase();
 
 			if (UcmRenditionInfo.DEFAULT.equalsIgnoreCase(renditionLabel)) {
-				renditionLabel = CmfContentInfo.DEFAULT_RENDITION;
+				renditionLabel = CmfContentStream.DEFAULT_RENDITION;
 			}
 
-			CmfContentInfo info = new CmfContentInfo(renditionLabel, 0);
+			CmfContentStream info = new CmfContentStream(renditionLabel, 0);
 			try {
 				info.setMimeType(new MimeType(rendition.getFormat()));
 			} catch (MimeTypeParseException e) {

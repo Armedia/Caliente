@@ -9,7 +9,7 @@ import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValueCodec;
@@ -31,7 +31,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 
 	@Override
 	protected <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 
 		int folderLevels = 3;
 		// A maximum of 7 levels...
@@ -85,7 +85,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 	}
 
 	protected <T> String calculateVersionAppendix(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info, boolean primaryContent, boolean vDoc) {
+		CmfContentStream info, boolean primaryContent, boolean vDoc) {
 		CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 		boolean headVersion = false;
 		switch (object.getType()) {
@@ -151,7 +151,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		return appendix;
 	}
 
-	public static String generateRenditionName(CmfObject<?> object, CmfContentInfo info) {
+	public static String generateRenditionName(CmfObject<?> object, CmfContentStream info) {
 		return String.format("%s-[%s]-%08x-%s", object.getId(), info.getRenditionIdentifier(), info.getRenditionPage(),
 			Tools.coalesce(info.getModifier(), ""));
 	}

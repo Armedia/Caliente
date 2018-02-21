@@ -33,7 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfOrganizationStrategy;
@@ -73,7 +73,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	private class LocalHandle extends Handle {
 
-		protected LocalHandle(CmfObject<?> object, CmfContentInfo info, URI locator) {
+		protected LocalHandle(CmfObject<?> object, CmfContentStream info, URI locator) {
 			super(object, info, locator);
 		}
 
@@ -300,7 +300,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	@Override
 	protected <T> URI doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		final Location location = this.strategy.getLocation(translator, object, info);
 		final List<String> rawPath = new ArrayList<>(location.containerSpec);
 		rawPath.add(constructFileName(location));
@@ -531,7 +531,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected LocalHandle constructHandle(CmfObject<?> object, CmfContentInfo info, URI locator) {
+	protected LocalHandle constructHandle(CmfObject<?> object, CmfContentStream info, URI locator) {
 		return new LocalHandle(object, info, locator);
 	}
 }

@@ -1,5 +1,5 @@
-target
-dfc.keystore
-dfc.properties
-filenamemap.xml
-documentum
+/target/
+/documentum/
+/dfc.keystore
+/dfc.properties
+/filenamemap.xml

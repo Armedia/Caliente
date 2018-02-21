@@ -10,7 +10,7 @@ import java.util.Set;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferDelegate;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
@@ -171,7 +171,7 @@ public abstract class ExportDelegate<T, S, W extends SessionWrapper<S>, V, C ext
 
 	protected abstract boolean marshal(C ctx, CmfObject<V> object) throws ExportException;
 
-	protected abstract List<CmfContentInfo> storeContent(C ctx, CmfAttributeTranslator<V> translator,
+	protected abstract List<CmfContentStream> storeContent(C ctx, CmfAttributeTranslator<V> translator,
 		CmfObject<V> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception;
 

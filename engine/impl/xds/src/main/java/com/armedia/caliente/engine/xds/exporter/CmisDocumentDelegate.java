@@ -22,7 +22,7 @@ import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.xds.CmisCustomAttributes;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -133,13 +133,13 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	@Override
-	protected List<CmfContentInfo> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentStream> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception {
-		List<CmfContentInfo> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
+		List<CmfContentStream> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
 		ContentStream main = this.object.getContentStream();
-		CmfContentInfo mainInfo = new CmfContentInfo();
+		CmfContentStream mainInfo = new CmfContentStream();
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
 		String name = main.getFileName();
 		mainInfo.setFileName(name);
@@ -149,7 +149,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		ret.add(mainInfo);
 		if (includeRenditions) {
 			for (Rendition r : this.object.getRenditions()) {
-				CmfContentInfo info = new CmfContentInfo(r.getKind());
+				CmfContentStream info = new CmfContentStream(r.getKind());
 				ContentStream cs = r.getContentStream();
 				info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
 				name = cs.getFileName();
@@ -170,7 +170,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	protected long storeContentStream(CmfObject<CmfValue> marshalled, CmfAttributeTranslator<CmfValue> translator,
-		Rendition r, ContentStream cs, CmfContentStore<?, ?, ?> streamStore, CmfContentInfo info) throws Exception {
+		Rendition r, ContentStream cs, CmfContentStore<?, ?, ?> streamStore, CmfContentStream info) throws Exception {
 		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
 		InputStream src = cs.getStream();
 		try {

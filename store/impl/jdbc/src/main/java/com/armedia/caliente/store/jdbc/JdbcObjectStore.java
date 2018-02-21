@@ -37,7 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
@@ -509,7 +509,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					}
 					if (this.dialect.isSupportsArrays()) {
 						objectPS.setString(1, type.name());
-						objectPS.setArray(2, connection.createArrayOf("text", arr));
+						objectPS.setArray(2, connection.createArrayOf("varchar", arr));
 					} else {
 						objectPS.setObject(1, arr);
 						objectPS.setString(2, type.name());
@@ -1135,9 +1135,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	protected final void clearAllObjects(JdbcOperation operation) throws CmfStorageException {
 		// Allow for subclasses to implement optimized clearing operations
 		if (optimizedClearAllObjects(operation)) {
-			resetSequences(operation.getConnection());
+			if (!this.dialect.isTruncateRestartsSequences()) {
+				// If the truncation did not restart the sequences, do it manually
+				resetSequences(operation.getConnection());
+			}
 			return;
 		}
+		// Can't do it quickly, so do it the hard way...
 		try {
 			clearAllObjects(operation.getConnection());
 			resetSequences(operation.getConnection());
@@ -1172,6 +1176,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	protected boolean truncateTables(JdbcOperation operation, Iterable<String> tables) throws CmfStorageException {
+		if (tables == null) { return false; }
 		final Connection c = operation.getConnection();
 		Collection<String> truncated = new LinkedHashSet<>();
 		Collection<String> remaining = new LinkedHashSet<>();
@@ -1179,11 +1184,17 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			remaining.add(s);
 		}
 		try {
-			final boolean referentialIntegrityOff = disableReferentialIntegrity(operation);
-			if (!referentialIntegrityOff) {
-				// If we couldn't turn off referential integrity, then we couldn't perform
-				// the optimized clear
-				return false;
+			final boolean bypassConstraints = this.dialect.isTruncateBypassesConstraints();
+			final boolean constraintsDisabled;
+			if (bypassConstraints) {
+				constraintsDisabled = false;
+			} else {
+				constraintsDisabled = disableReferentialIntegrity(operation);
+				if (!constraintsDisabled) {
+					// If we couldn't turn off referential integrity, then we couldn't perform
+					// the optimized clear
+					return false;
+				}
 			}
 			Statement s = c.createStatement();
 			try {
@@ -1200,13 +1211,19 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 				return true;
 			} finally {
-				enableReferentialIntegrity(operation);
+				if (constraintsDisabled) {
+					enableReferentialIntegrity(operation);
+				}
 				DbUtils.close(s);
 			}
 		} catch (SQLException e) {
 			if (this.log.isDebugEnabled()) {
-				this.log.info("Successfully truncated the tables {}", truncated);
-				this.log.error(String.format("Failed to truncate the remaining tables %s", remaining), e);
+				if (!truncated.isEmpty()) {
+					this.log.info("Successfully truncated the tables {}", truncated);
+				}
+				if (!remaining.isEmpty()) {
+					this.log.error("Failed to truncate the tables {}", remaining, e);
+				}
 			}
 			return false;
 		}
@@ -1418,7 +1435,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} catch (SQLException e) {
 			if (this.dialect.isDuplicateKeyException(e)) {
 				// We're good! With the use of savepoints, the transaction will remain valid and
-				// thus we'll be OK to continue using the transaction in other connections
+				// thus we'll be OK to continue using the transaction in other operations
 				JdbcTools.rollbackSavepoint(c, savePoint);
 
 				// Now, instead, we try to increase the counter
@@ -1473,14 +1490,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} catch (SQLException e) {
 			if (this.dialect.isDuplicateKeyException(e)) {
 				// We're good! With the use of savepoints, the transaction will remain valid and
-				// thus we'll be OK to continue using the transaction in other connections
+				// thus we'll be OK to continue using the transaction in other operations
 				JdbcTools.rollbackSavepoint(c, savePoint);
 				if (this.log.isTraceEnabled()) {
 					this.log.trace(String.format("DUPLICATE DEPENDENCY %s", target.getShortLabel()));
 				}
 				return false;
 			}
-			throw new CmfStorageException(String.format("Failed to persist the dependency %s", target.getShortLabel()),
+			throw new CmfStorageException(
+				String.format("Failed to persist the dependency %s (errorCode = %d, sqlState = '%s')",
+					target.getShortLabel(), e.getErrorCode(), e.getSQLState()),
 				e);
 		}
 	}
@@ -1512,8 +1531,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> void setContentInfo(JdbcOperation operation, CmfObject<V> object, Collection<CmfContentInfo> content)
-		throws CmfStorageException {
+	protected <V> void setContentStreams(JdbcOperation operation, CmfObject<V> object,
+		Collection<CmfContentStream> content) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final String objectId = JdbcTools.composeDatabaseId(object);
 		final QueryRunner qr = new QueryRunner();
@@ -1532,14 +1551,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		Object[] cArr = new Object[9];
 		Object[] pArr = new Object[6];
 		int pos = 0;
-		for (CmfContentInfo i : content) {
+		for (CmfContentStream i : content) {
 			// First, the content record...
 			cArr[0] = objectId;
-			cArr[1] = i.getRenditionIdentifier();
-			cArr[2] = i.getRenditionPage();
-			cArr[3] = i.getModifier();
-			cArr[4] = i.getExtension();
-			cArr[5] = pos++;
+			cArr[1] = pos;
+			cArr[2] = i.getRenditionIdentifier();
+			cArr[3] = i.getRenditionPage();
+			cArr[4] = i.getModifier();
+			cArr[5] = i.getExtension();
 			cArr[6] = i.getLength();
 			cArr[7] = Tools.toString(Tools.coalesce(i.getMimeType(), MimeTools.DEFAULT_MIME_TYPE));
 			cArr[8] = i.getFileName();
@@ -1547,20 +1566,21 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 			// Then, the properties...
 			pArr[0] = objectId;
-			pArr[1] = i.getRenditionIdentifier();
-			pArr[2] = i.getRenditionPage();
-			pArr[3] = i.getModifier();
+			pArr[1] = pos;
 			for (String s : i.getPropertyNames()) {
 				if (s == null) {
 					continue;
 				}
-				pArr[4] = s;
-				pArr[5] = i.getProperty(s);
+				pArr[2] = s;
+				pArr[3] = i.getProperty(s);
 				if (pArr[5] == null) {
 					continue;
 				}
 				properties.add(pArr.clone());
 			}
+
+			// Next! ;)
+			pos++;
 		}
 
 		// Step 3: execute the batch inserts
@@ -1576,7 +1596,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> List<CmfContentInfo> getContentInfo(JdbcOperation operation, CmfObject<V> object)
+	protected <V> List<CmfContentStream> getContentStreams(JdbcOperation operation, CmfObject<V> object)
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final String objectId = JdbcTools.composeDatabaseId(object);
@@ -1601,13 +1621,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			};
 
 			// This one will process each content record
-			final ResultSetHandler<List<CmfContentInfo>> cHandler = new ResultSetHandler<List<CmfContentInfo>>() {
+			final ResultSetHandler<List<CmfContentStream>> cHandler = new ResultSetHandler<List<CmfContentStream>>() {
 				@Override
-				public List<CmfContentInfo> handle(ResultSet rs) throws SQLException {
-					final List<CmfContentInfo> ret = new ArrayList<>();
+				public List<CmfContentStream> handle(ResultSet rs) throws SQLException {
+					final List<CmfContentStream> ret = new ArrayList<>();
 					final QueryRunner qr = new QueryRunner();
 					while (rs.next()) {
-						final CmfContentInfo info = new CmfContentInfo(rs.getString("rendition_id"),
+						final int contentNumber = rs.getInt("content_number");
+						final CmfContentStream info = new CmfContentStream(rs.getString("rendition_id"),
 							rs.getInt("rendition_page"), rs.getString("modifier"));
 						info.setLength(rs.getLong("stream_length"));
 						String ext = rs.getString("extension");
@@ -1626,7 +1647,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 						Map<String, String> props = qr.query(c,
 							translateQuery(JdbcDialect.Query.LOAD_CONTENT_PROPERTIES), pHandler, objectId,
-							info.getRenditionIdentifier(), info.getRenditionPage(), info.getModifier());
+							contentNumber);
 						for (String s : props.keySet()) {
 							String v = props.get(s);
 							if ((s != null) && (v != null)) {
@@ -1779,7 +1800,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						arr[i] = JdbcTools.composeDatabaseId(CmfObjectRef.class.cast(arr[i]));
 					}
 					if (this.dialect.isSupportsArrays()) {
-						ps.setArray(1, c.createArrayOf("text", arr));
+						ps.setArray(1, c.createArrayOf("varchar", arr));
 					} else {
 						ps.setObject(1, arr);
 					}

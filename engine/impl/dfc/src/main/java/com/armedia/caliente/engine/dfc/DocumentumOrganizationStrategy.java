@@ -6,7 +6,7 @@ import java.util.List;
 
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 
 public class DocumentumOrganizationStrategy extends LocalOrganizationStrategy {
@@ -19,7 +19,7 @@ public class DocumentumOrganizationStrategy extends LocalOrganizationStrategy {
 
 	@Override
 	protected <T> List<String> calculateContainerSpec(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		final String objectId = object.getId();
 		if (objectId.length() != 16) { return null; }
 
@@ -46,13 +46,13 @@ public class DocumentumOrganizationStrategy extends LocalOrganizationStrategy {
 
 	@Override
 	protected <T> String calculateBaseName(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		return object.getId();
 	}
 
 	@Override
 	protected <T> String calculateDescriptor(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		return String.format("%s.%08x", info.getRenditionIdentifier(), info.getRenditionPage());
 	}
 }

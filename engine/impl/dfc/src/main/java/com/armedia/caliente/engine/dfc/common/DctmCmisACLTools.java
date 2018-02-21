@@ -289,12 +289,14 @@ public class DctmCmisACLTools implements DctmACL {
 			final String extendedPermits = acl.getAccessorXPermitNames(i);
 
 			IDfPersistentObject o = (group ? session.getGroup(accessorName) : session.getUser(accessorName));
-			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessorName)) {
+			if (o == null) {
 				// Accessor not there, skip it...
-				if (missingAccessors.add(accessorName)) {
-					DctmCmisACLTools.LOG
-						.warn(String.format("Missing dependency for ACL [%s] - %s [%s] not exported (as ACL accessor)",
-							acl.getObjectId().getId(), (group ? "group" : "user"), accessorName));
+				// But only warn if it's not a "special name"
+				if (missingAccessors.add(accessorName) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessorName)) {
+					DctmCmisACLTools.LOG.warn(
+						"Missing dependency for ACL [{}] - {} [{}] not exported (as ACL accessor)",
+						acl.getObjectId().getId(), (group ? "group" : "user"), accessorName);
+
 				}
 				continue;
 			}

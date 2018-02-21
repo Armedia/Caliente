@@ -18,10 +18,10 @@ import javax.xml.bind.annotation.XmlType;
 import org.apache.commons.lang3.StringUtils;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "contentInfo.t", propOrder = {
+@XmlType(name = "contentStream.t", propOrder = {
 	"renditionId", "renditionPage", "modifier", "size", "hash", "location", "fileName", "mimeType", "properties"
 })
-public class ContentInfoT {
+public class ContentStreamT {
 
 	@XmlElement(name = "renditionId", required = true)
 	protected String renditionId;
@@ -49,7 +49,7 @@ public class ContentInfoT {
 
 	@XmlElementWrapper(name = "properties", required = false)
 	@XmlElement(name = "property", required = false)
-	protected List<ContentInfoPropertyT> properties;
+	protected List<ContentStreamPropertyT> properties;
 
 	@XmlTransient
 	protected final Map<String, String> props = new TreeMap<>();
@@ -60,13 +60,13 @@ public class ContentInfoT {
 		}
 		this.properties.clear();
 		for (String k : this.props.keySet()) {
-			this.properties.add(new ContentInfoPropertyT(k, this.props.get(k)));
+			this.properties.add(new ContentStreamPropertyT(k, this.props.get(k)));
 		}
 	}
 
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
 		if (this.properties != null) {
-			for (ContentInfoPropertyT p : this.properties) {
+			for (ContentStreamPropertyT p : this.properties) {
 				if (!StringUtils.isBlank(p.getValue())) {
 					this.props.put(p.name, p.value);
 				}
@@ -164,7 +164,7 @@ public class ContentInfoT {
 	@Override
 	public String toString() {
 		return String.format(
-			"ContentInfoT [renditionId=%s, renditionPage=%d, modifier=%s, size=%s, hash=%s, location=%s, fileName=%s, mimeType=%s, properties=%s]",
+			"ContentStreamT [renditionId=%s, renditionPage=%d, modifier=%s, size=%s, hash=%s, location=%s, fileName=%s, mimeType=%s, properties=%s]",
 			this.renditionId, this.renditionPage, this.modifier, this.size, Arrays.toString(this.hash), this.location,
 			this.fileName, this.mimeType, this.props);
 	}

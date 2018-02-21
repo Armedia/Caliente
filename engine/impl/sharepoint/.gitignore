@@ -1,5 +1,5 @@
-target
-.refactorings
-cmf-shpt
-documentum
-cmf
+/target/
+/.refactorings/
+/cmf-shpt/
+/documentum/
+/cmf/

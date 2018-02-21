@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
@@ -129,10 +129,10 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		return this.factory.isPathAltering();
 	}
 
-	public final List<CmfContentInfo> getContentInfo(CmfObject<V> object) throws ImportException {
+	public final List<CmfContentStream> getContentStreams(CmfObject<V> object) throws ImportException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose content to retrieve"); }
 		try {
-			return this.cmfObjectStore.getContentInfo(object);
+			return this.cmfObjectStore.getContentStreams(object);
 		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to load the content info for %s", object.getDescription()),
 				e);

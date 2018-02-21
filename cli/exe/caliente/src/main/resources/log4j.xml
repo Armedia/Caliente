@@ -41,6 +41,9 @@
 	</appender>
 
 	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
+	<logger name="h2database">
+		<level value="WARN" />
+	</logger>
 
 	<logger name="com.armedia.caliente.cli.caliente">
 		<level value="DEBUG" />

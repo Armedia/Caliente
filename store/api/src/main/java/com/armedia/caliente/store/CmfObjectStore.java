@@ -250,7 +250,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 	protected abstract <V> boolean markStoreStatus(O operation, CmfObjectRef target, StoreStatus status, String message)
 		throws CmfStorageException;
 
-	public final <V> void setContentInfo(CmfObject<V> object, Collection<CmfContentInfo> content)
+	public final <V> void setContentStreams(CmfObject<V> object, Collection<CmfContentStream> content)
 		throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		if ((content == null) || content.isEmpty()) { return; }
@@ -259,7 +259,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				setContentInfo(operation, object, content);
+				setContentStreams(operation, object, content);
 				if (tx) {
 					operation.commit();
 				}
@@ -279,16 +279,16 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> void setContentInfo(O operation, CmfObject<V> object, Collection<CmfContentInfo> content)
+	protected abstract <V> void setContentStreams(O operation, CmfObject<V> object, Collection<CmfContentStream> content)
 		throws CmfStorageException;
 
-	public final <V> List<CmfContentInfo> getContentInfo(CmfObject<V> object) throws CmfStorageException {
+	public final <V> List<CmfContentStream> getContentStreams(CmfObject<V> object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		O operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
-				return getContentInfo(operation, object);
+				return getContentStreams(operation, object);
 			} finally {
 				if (tx) {
 					try {
@@ -304,7 +304,7 @@ public abstract class CmfObjectStore<C, O extends CmfStoreOperation<C>> extends 
 		}
 	}
 
-	protected abstract <V> List<CmfContentInfo> getContentInfo(O operation, CmfObject<V> object)
+	protected abstract <V> List<CmfContentStream> getContentStreams(O operation, CmfObject<V> object)
 		throws CmfStorageException;
 
 	public final StoreStatus getStoreStatus(CmfObjectRef target) throws CmfStorageException {

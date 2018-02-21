@@ -16,6 +16,7 @@ import com.armedia.caliente.cli.caliente.launcher.AbstractCalienteModule_export;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
 import com.armedia.caliente.engine.sharepoint.exporter.ShptExportEngine;
+import com.armedia.commons.utilities.ConfigurationSetting;
 import com.armedia.commons.utilities.FileNameTools;
 
 public class Caliente_export extends AbstractCalienteModule_export implements ExportEngineListener {
@@ -69,13 +70,22 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 		} catch (MalformedURLException e) {
 			throw new CalienteException("Bad base URL", e);
 		}
-		if (this.user != null) {
-			settings.put(ShptSetting.USER.getLabel(), this.user);
-		}
-		if (this.password != null) {
-			settings.put(ShptSetting.PASSWORD.getLabel(), this.password);
-		}
 		settings.put(ShptSetting.PATH.getLabel(),
 			String.format("%s/%s", StringUtils.isEmpty(srcPrefix) ? "" : String.format("/%s", srcPrefix), srcPath));
+	}
+
+	@Override
+	protected ConfigurationSetting getUserSetting() {
+		return ShptSetting.USER;
+	}
+
+	@Override
+	protected ConfigurationSetting getPasswordSetting() {
+		return ShptSetting.PASSWORD;
+	}
+
+	@Override
+	protected ConfigurationSetting getDomainSetting() {
+		return ShptSetting.DOMAIN;
 	}
 }

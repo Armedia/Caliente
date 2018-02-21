@@ -151,6 +151,7 @@ public enum CLIParam {
 	ignore_empty_folders(null, 0, "Enable the copying of content for the Local engine"),
 	transformations(null, 1, "The object transformations descriptor file"),
 	filters(null, 1, "The object filters descriptor file"),
+	external_metadata(null, 1, "The external metadata descriptor file"),
 	//
 	;
 

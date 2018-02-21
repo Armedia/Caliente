@@ -1,4 +1,4 @@
-target
-documentum
-*.log
-dfc.properties
+/target/
+/documentum/
+/*.log
+/dfc.properties

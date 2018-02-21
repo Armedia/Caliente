@@ -17,10 +17,14 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.Tools;
 
 public class XmlInstances<T> {
+
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final ConcurrentMap<URL, T> instances = new ConcurrentHashMap<>();
 	private final String defaultFileName;
@@ -130,7 +134,13 @@ public class XmlInstances<T> {
 		}
 
 		// If nothing was returned, then we return no instance...
-		if (url == null) { return null; }
+		if (url == null) {
+			this.log.warn("No {} instance found from location [{}]", this.label,
+				Tools.coalesce(location, this.defaultFileName));
+			return null;
+		}
+		this.log.info("Loading a {} instance from the URL [{}] (location was [{}])...", this.label, url,
+			Tools.coalesce(location, this.defaultFileName));
 		return getInstance(url);
 	}
 
@@ -165,7 +175,9 @@ public class XmlInstances<T> {
 				}
 			});
 		} catch (ConcurrentException e) {
-			throw new XmlInstanceException(e.getMessage(), e.getCause());
+			throw new XmlInstanceException(
+				String.format("Failed to load the XML instance of %s from the URL [%s]", this.label, resource),
+				e.getCause());
 		}
 	}
 

@@ -80,6 +80,16 @@ public class JdbcDialectH2 extends JdbcDialect {
 	}
 
 	@Override
+	protected boolean isTruncateBypassesConstraints() {
+		return false;
+	}
+
+	@Override
+	protected boolean isTruncateRestartsSequences() {
+		return false;
+	}
+
+	@Override
 	protected String doTranslate(Query sql) {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
@@ -107,10 +117,5 @@ public class JdbcDialectH2 extends JdbcDialect {
 	@Override
 	protected ResultSetHandler<Long> getObjectNumberHandler() {
 		return JdbcDialectH2.OBJECT_NUMBER_HANDLER;
-	}
-
-	@Override
-	protected boolean isDuplicateKeyException(SQLException e) {
-		return (e.getErrorCode() == 23505);
 	}
 }

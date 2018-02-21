@@ -41,7 +41,7 @@ public class DocumentVersionT extends SysObjectT {
 
 	@XmlElementWrapper(name = "contents", required = false)
 	@XmlElement(name = "content", required = false)
-	protected List<ContentInfoT> contents;
+	protected List<ContentStreamT> contents;
 
 	public String getFormat() {
 		return this.format;
@@ -99,7 +99,7 @@ public class DocumentVersionT extends SysObjectT {
 		this.antecedentId = value;
 	}
 
-	public List<ContentInfoT> getContents() {
+	public List<ContentStreamT> getContents() {
 		if (this.contents == null) {
 			this.contents = new ArrayList<>();
 		}

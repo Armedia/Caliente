@@ -7,7 +7,7 @@ import org.apache.commons.io.FileUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
@@ -25,9 +25,12 @@ public class AlfImportDocumentDelegate extends AlfImportFileableDelegate {
 	}
 
 	@Override
-	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
+	protected AlfrescoType calculateTargetType(CmfContentStream content) throws ImportException {
 		if (!content.isDefaultRendition() || (content.getRenditionPage() > 0)) {
 			// If this is a rendition or rendition extra page...
+			if (this.renditionType == null) { throw new ImportException(
+				String.format("Renditions are not supported for %s (content = %s)", this.cmfObject.getDescription(),
+					content.toString())); }
 			return this.renditionType;
 		}
 		return super.calculateTargetType(content);

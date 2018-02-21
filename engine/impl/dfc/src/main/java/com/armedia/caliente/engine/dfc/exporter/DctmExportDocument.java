@@ -28,7 +28,7 @@ import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -238,7 +238,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 	}
 
 	@Override
-	protected List<CmfContentInfo> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
+	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfSysObject document,
 		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) throws Exception {
 		if (isDfReference(document)) { return super.doStoreContent(ctx, translator, marshaled, referrent, document,
@@ -258,7 +258,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		final IDfSession session = ctx.getSession();
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
-		List<CmfContentInfo> cmfContentInfo = new ArrayList<>();
+		List<CmfContentStream> cmfContentStream = new ArrayList<>();
 		Set<String> processed = new LinkedHashSet<>();
 		for (int i = 0; i < pageCount; i++) {
 			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
@@ -274,9 +274,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 					}
 
 					final IDfContent content = IDfContent.class.cast(session.getObject(contentId));
-					CmfContentInfo info = storeContentStream(session, translator, marshaled, document, content,
+					CmfContentStream info = storeContentStream(session, translator, marshaled, document, content,
 						streamStore, ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT));
-					cmfContentInfo.add(info);
+					cmfContentStream.add(info);
 				}
 			} finally {
 				DfUtils.closeQuietly(results);
@@ -287,10 +287,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				break;
 			}
 		}
-		return cmfContentInfo;
+		return cmfContentStream;
 	}
 
-	protected CmfContentInfo storeContentStream(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
+	protected CmfContentStream storeContentStream(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, IDfSysObject document, IDfContent content, CmfContentStore<?, ?, ?> streamStore,
 		boolean skipContent) throws Exception {
 		final String contentId = content.getObjectId().getId();
@@ -310,7 +310,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		} else {
 			renditionId = null;
 		}
-		CmfContentInfo info = new CmfContentInfo(renditionId, pageNumber, pageModifier);
+		CmfContentStream info = new CmfContentStream(renditionId, pageNumber, pageModifier);
 		IDfId formatId = content.getFormatId();
 		MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
 		if (!formatId.isNull()) {
