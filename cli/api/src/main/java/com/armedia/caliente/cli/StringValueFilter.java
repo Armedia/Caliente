@@ -7,11 +7,17 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.commons.utilities.Tools;
 
 public class StringValueFilter extends OptionValueFilter {
 
+	private static final boolean DEFAULT_CASE_SENSITIVE = true;
+
+	private final boolean caseSensitive;
 	private final Set<String> allowed;
+	private final Set<String> canonical;
 	private final String description;
 
 	private static Collection<String> toCollection(String[] allowed) {
@@ -20,27 +26,56 @@ public class StringValueFilter extends OptionValueFilter {
 	}
 
 	public StringValueFilter(String... allowed) {
-		this(StringValueFilter.toCollection(allowed));
+		this(StringValueFilter.DEFAULT_CASE_SENSITIVE, StringValueFilter.toCollection(allowed));
+	}
+
+	public StringValueFilter(boolean caseSensitive, String... allowed) {
+		this(caseSensitive, StringValueFilter.toCollection(allowed));
 	}
 
 	public StringValueFilter(Collection<String> allowed) {
-		Set<String> v = new TreeSet<>();
+		this(StringValueFilter.DEFAULT_CASE_SENSITIVE, allowed);
+	}
+
+	public StringValueFilter(boolean caseSensitive, Collection<String> allowed) {
+		this.caseSensitive = caseSensitive;
+		Set<String> defined = new TreeSet<>();
+		Set<String> canonicalized = new TreeSet<>();
 		if ((allowed != null) && !allowed.isEmpty()) {
 			for (String s : allowed) {
+				s = StringUtils.strip(s);
 				if (s == null) {
 					continue;
 				}
-				v.add(s);
+				defined.add(s);
+				canonicalized.add(canon(s));
 			}
 		}
-		if (v.isEmpty()) { throw new IllegalArgumentException("No values are marked as allowed, this is illegal"); }
-		this.allowed = Tools.freezeSet(new LinkedHashSet<>(v));
-		this.description = String.format("one of %s", this.allowed.toString());
+		if (defined.isEmpty()) { throw new IllegalArgumentException(
+			"No values are marked as canonical, this is illegal"); }
+		this.allowed = Tools.freezeSet(new LinkedHashSet<>(defined));
+		this.canonical = (caseSensitive ? this.allowed : Tools.freezeSet(new LinkedHashSet<>(canonicalized)));
+		this.description = String.format("one of%s: %s", (caseSensitive ? "" : " (case insensitive)"),
+			this.allowed.toString());
+	}
+
+	protected String canon(String value) {
+		value = StringUtils.strip(value);
+		if ((value == null) || this.caseSensitive) { return value; }
+		return value.toUpperCase();
+	}
+
+	public boolean isCaseSensitive() {
+		return this.caseSensitive;
+	}
+
+	public Set<String> getAllowed() {
+		return this.allowed;
 	}
 
 	@Override
 	protected boolean checkValue(String value) {
-		return this.allowed.contains(value);
+		return this.canonical.contains(canon(value));
 	}
 
 	@Override

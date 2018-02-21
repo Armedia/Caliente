@@ -36,8 +36,6 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 
 	public abstract OptionValueFilter getValueFilter();
 
-	public abstract boolean isValuesCaseSensitive();
-
 	public abstract boolean isValueAllowed(String value);
 
 	public abstract String getDefault();
