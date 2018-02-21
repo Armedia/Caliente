@@ -3,15 +3,25 @@ package com.armedia.caliente.cli;
 import java.util.regex.Pattern;
 
 public class RegexValueFilter extends OptionValueFilter {
+
 	private final Pattern pattern;
 	private final String description;
 
 	public RegexValueFilter(String regex) {
-		this.pattern = Pattern.compile(regex);
-		this.description = String.format("a string that matches the regex /%s/", this.pattern.pattern());
+		this(true, regex);
 	}
 
-	protected Pattern getPattern() {
+	public RegexValueFilter(boolean caseSensitive, String regex) {
+		this.pattern = Pattern.compile(regex, caseSensitive ? 0 : Pattern.CASE_INSENSITIVE);
+		this.description = String.format("a string that matches the regex /%s/%s", this.pattern.pattern(),
+			caseSensitive ? "" : " (case insensitively)");
+	}
+
+	public boolean isCaseSensitive() {
+		return ((this.pattern.flags() | Pattern.CASE_INSENSITIVE) == 0);
+	}
+
+	public Pattern getPattern() {
 		return this.pattern;
 	}
 

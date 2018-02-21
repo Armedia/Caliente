@@ -66,11 +66,6 @@ public final class OptionValue extends Option {
 	}
 
 	@Override
-	public boolean isValuesCaseSensitive() {
-		return this.def.isValuesCaseSensitive();
-	}
-
-	@Override
 	public boolean isValueAllowed(String value) {
 		return this.def.isValueAllowed(value);
 	}

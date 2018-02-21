@@ -16,7 +16,6 @@ public final class OptionImpl extends Option implements Cloneable {
 	private int maxArguments = 0;
 	private String argumentName = null;
 	private Character valueSep = OptionImpl.DEFAULT_VALUE_SEP;
-	private boolean valuesCaseSensitive = false;
 	private OptionValueFilter valueFilter = null;
 	private final List<String> defaults = new ArrayList<>();
 
@@ -177,23 +176,8 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	@Override
-	public boolean isValuesCaseSensitive() {
-		return this.valuesCaseSensitive;
-	}
-
-	public OptionImpl setValuesCaseSensitive(boolean valuesCaseSensitive) {
-		this.valuesCaseSensitive = valuesCaseSensitive;
-		return this;
-	}
-
-	@Override
 	public boolean isValueAllowed(String value) {
-		return (this.valueFilter != null ? this.valueFilter.isAllowed(canonicalizeValue(value)) : true);
-	}
-
-	private String canonicalizeValue(String value) {
-		if ((value == null) || this.valuesCaseSensitive) { return value; }
-		return value.toUpperCase();
+		return (this.valueFilter != null ? this.valueFilter.isAllowed(value) : true);
 	}
 
 	@Override
