@@ -122,55 +122,55 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return new ArrayList<>(this.optionValues.values()).iterator();
 	}
 
-	public final Iterable<OptionValue> shortOptions() {
+	public Iterable<OptionValue> shortOptions() {
 		return Tools.freezeList(new ArrayList<>(this.shortOptions.values()));
 	}
 
-	public final OptionValue getOption(char shortOpt) {
+	public OptionValue getOption(char shortOpt) {
 		return this.shortOptions.get(shortOpt);
 	}
 
-	public final boolean hasOption(char shortOpt) {
+	public boolean hasOption(char shortOpt) {
 		return this.shortOptions.containsKey(shortOpt);
 	}
 
-	public final Iterable<OptionValue> longOptions() {
+	public Iterable<OptionValue> longOptions() {
 		return Tools.freezeList(new ArrayList<>(this.longOptions.values()));
 	}
 
-	public final OptionValue getOption(String longOpt) {
+	public OptionValue getOption(String longOpt) {
 		return this.longOptions.get(longOpt);
 	}
 
-	public final boolean hasOption(String longOpt) {
+	public boolean hasOption(String longOpt) {
 		return this.longOptions.containsKey(longOpt);
 	}
 
-	public final boolean isDefined(Option option) {
-		return (getOptionValue(option) != null);
+	public boolean isDefined(Option option) {
+		return (getOption(option) != null);
 	}
 
-	public final OptionValue getOptionValue(Option option) {
+	public OptionValue getOption(Option option) {
 		if (option == null) { throw new IllegalArgumentException("Must provide an option definition to retrieve"); }
-		return getOptionByKey(option.getKey());
+		return getOptionValueByKey(option.getKey());
 	}
 
-	protected final OptionValue getOptionByKey(String key) {
+	protected final OptionValue getOptionValueByKey(String key) {
 		if (key == null) { throw new IllegalArgumentException("Must provide a key to search for"); }
 		return this.optionValues.get(key);
 	}
 
-	public final Boolean getBoolean(Option param) {
+	public Boolean getBoolean(Option param) {
 		String s = getString(param);
 		return (s != null ? Tools.toBoolean(s) : null);
 	}
 
-	public final Boolean getBoolean(Option param, Boolean def) {
+	public Boolean getBoolean(Option param, Boolean def) {
 		Boolean v = getBoolean(param);
 		return (v != null ? v.booleanValue() : def);
 	}
 
-	public final List<Boolean> getAllBooleans(Option param) {
+	public List<Boolean> getAllBooleans(Option param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -181,17 +181,17 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return Tools.freezeList(r);
 	}
 
-	public final Integer getInteger(Option param) {
+	public Integer getInteger(Option param) {
 		String s = getString(param);
 		return (s != null ? Integer.valueOf(s) : null);
 	}
 
-	public final Integer getInteger(Option param, Integer def) {
+	public Integer getInteger(Option param, Integer def) {
 		Integer v = getInteger(param);
 		return (v != null ? v.intValue() : def);
 	}
 
-	public final List<Integer> getAllIntegers(Option param) {
+	public List<Integer> getAllIntegers(Option param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -202,17 +202,17 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return Tools.freezeList(r);
 	}
 
-	public final Long getLong(Option param) {
+	public Long getLong(Option param) {
 		String s = getString(param);
 		return (s != null ? Long.valueOf(s) : null);
 	}
 
-	public final Long getLong(Option param, Long def) {
+	public Long getLong(Option param, Long def) {
 		Long v = getLong(param);
 		return (v != null ? v.longValue() : def);
 	}
 
-	public final List<Long> getAllLongs(Option param) {
+	public List<Long> getAllLongs(Option param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -223,17 +223,17 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return Tools.freezeList(r);
 	}
 
-	public final Float getFloat(Option param) {
+	public Float getFloat(Option param) {
 		String s = getString(param);
 		return (s != null ? Float.valueOf(s) : null);
 	}
 
-	public final Float getFloat(Option param, Float def) {
+	public Float getFloat(Option param, Float def) {
 		Float v = getFloat(param);
 		return (v != null ? v.floatValue() : def);
 	}
 
-	public final List<Float> getAllFloats(Option param) {
+	public List<Float> getAllFloats(Option param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -244,17 +244,17 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return Tools.freezeList(r);
 	}
 
-	public final Double getDouble(Option param) {
+	public Double getDouble(Option param) {
 		String s = getString(param);
 		return (s != null ? Double.valueOf(s) : null);
 	}
 
-	public final Double getDouble(Option param, Double def) {
+	public Double getDouble(Option param, Double def) {
 		Double v = getDouble(param);
 		return (v != null ? v.doubleValue() : def);
 	}
 
-	public final List<Double> getAllDoubles(Option param) {
+	public List<Double> getAllDoubles(Option param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
@@ -265,31 +265,31 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return Tools.freezeList(r);
 	}
 
-	public final String getString(Option param) {
+	public String getString(Option param) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return param.getDefault(); }
 		return l.get(0);
 	}
 
-	public final String getString(Option param, String def) {
+	public String getString(Option param, String def) {
 		List<String> l = getAllStrings(param);
 		if (l == null) { return def; }
 		return l.get(0);
 	}
 
-	public final List<String> getAllStrings(Option param) {
+	public List<String> getAllStrings(Option param) {
 		List<String> v = getAllStrings(param, null);
 		if (v == null) { return param.getDefaults(); }
 		return v;
 	}
 
-	public final List<String> getAllStrings(Option param, List<String> def) {
+	public List<String> getAllStrings(Option param, List<String> def) {
 		List<String> v = this.values.get(getValidKey(param));
 		if (v == null) { return def; }
 		return v;
 	}
 
-	public final boolean isPresent(Option param) {
+	public boolean isPresent(Option param) {
 		return this.values.containsKey(getValidKey(param));
 	}
 
@@ -325,7 +325,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 	}
 
 	public OptionValue getOption(OptionWrapper paramDel) {
-		return getOptionValue(Option.unwrap(paramDel));
+		return getOption(Option.unwrap(paramDel));
 	}
 
 	public Boolean getBoolean(OptionWrapper paramDel) {
@@ -418,5 +418,9 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 
 	public int getValueCount(OptionWrapper param) {
 		return getValueCount(Option.unwrap(param));
+	}
+
+	public boolean hasValues(OptionWrapper param) {
+		return hasValues(Option.unwrap(param));
 	}
 }

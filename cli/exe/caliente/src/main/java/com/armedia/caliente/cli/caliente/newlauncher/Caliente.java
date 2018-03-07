@@ -8,8 +8,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
+import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
@@ -36,53 +36,29 @@ public class Caliente {
 		VERSION = Tools.coalesce(version, "(unknown)");
 	}
 
-	int run(String command, OptionValues commandValues, Collection<String> positionals) throws Exception {
-		// Temporary, for debugging
+	int run(@SuppressWarnings("rawtypes") EngineFactory engineFactory, CommandModule command,
+		OptionValues commandValues, Collection<String> positionals) throws Exception {
 
 		// Now, convert the command-line parameters into configuration properties
-		for (CLIParam p : CLIParam.values()) {
-			if (!p.isPresent()) {
-				continue;
-			}
-			List<String> values = p.getAllString();
-			if ((values != null) && !values.isEmpty() && (p.property != null)) {
-				final String key = p.property.name;
-				if ((key != null) && !values.isEmpty()) {
-					// Launcher.PARAMETER_PROPERTIES.setProperty(key, StringUtils.join(values,
-					// ','));
-				}
-			}
-		}
+		for (OptionValue v : commandValues) {
 
-		// Finally, launch the main class
-		// We launch like this because we have to patch the classpath before we link into the rest
-		// of the code. If we don't do it like this, the app will refuse to launch altogether
-		final Class<?> klass;
-		try {
-			klass = Class.forName(String.format(Launcher.MAIN_CLASS, engine, mode));
-		} catch (ClassNotFoundException e) {
-			System.err.printf("ERROR: Failed to locate a class to support [%s] mode from the [%s] engine", mode,
-				engine);
-			return;
-		}
-
-		final CalienteMain main;
-		if (CalienteMain.class.isAssignableFrom(klass)) {
-			main = CalienteMain.class.cast(klass.newInstance());
-		} else {
-			throw new RuntimeException(String.format("Class [%s] is not a valid CalienteMain class", klass.getName()));
+			List<String> values = v.getAllStrings();
+			if ((values != null) && !values.isEmpty()) {
+				// Store this parameter value as a property
+			}
 		}
 
 		// Lock for single execution
-		CmfObjectStore<?, ?> store = main.getObjectStore();
+		CmfObjectStore<?, ?> store = engineFactory.getObjectStore();
 		final boolean writeProperties = (store != null);
-		final String pfx = String.format("caliente.%s.%s", engine, mode);
+		final String pfx = String.format("caliente.%s.%s", engineFactory.getName().toLowerCase(),
+			command.getName().toLowerCase());
 		try {
 			if (writeProperties) {
-				store.setProperty(String.format("%s.version", pfx), new CmfValue(Launcher.VERSION));
+				store.setProperty(String.format("%s.version", pfx), new CmfValue(Caliente.VERSION));
 				store.setProperty(String.format("%s.start", pfx), new CmfValue(new Date()));
 			}
-			main.run();
+			command.run();
 		} catch (Throwable t) {
 			if (writeProperties) {
 				store.setProperty(String.format("%s.error", pfx), new CmfValue(Tools.dumpStackTrace(t)));

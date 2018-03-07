@@ -1,12 +1,17 @@
 package com.armedia.caliente.cli.caliente.cfg;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+
 import com.armedia.caliente.cli.EnumValueFilter;
 import com.armedia.caliente.cli.IntegerValueFilter;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionValue;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.OptionWrapper;
 import com.armedia.caliente.cli.StringValueFilter;
-import com.armedia.caliente.cli.caliente.newlauncher.Launcher;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
@@ -16,10 +21,7 @@ import com.armedia.caliente.store.CmfType;
 public enum CLIParam implements OptionWrapper {
 	//
 	help( //
-		new OptionImpl() //
-			.setShortOpt('h') //
-			.setLongOpt("help") //
-			.setDescription("This help message") //
+		CalienteBaseOptions.HELP //
 	), //
 	dfc( //
 		DfcLaunchHelper.DFC_LOCATION //
@@ -53,18 +55,10 @@ public enum CLIParam implements OptionWrapper {
 			.setArgumentName("engine") //
 	), //
 	log( //
-		new OptionImpl() //
-			.setArgumentLimits(1) //
-			.setDescription("The base name of the log file to use (${logName}).") //
-			.setDefault(Launcher.DEFAULT_LOG_FORMAT) //
-			.setArgumentName("template") //
+		CalienteBaseOptions.LOG //
 	), //
 	log_cfg( //
-		new OptionImpl() //
-			.setArgumentLimits(1) //
-			.setDescription(
-				"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
-			.setArgumentName("configuration") //
+		CalienteBaseOptions.LOG_CFG //
 	), //
 	threads( //
 		Setting.THREADS, //
@@ -460,5 +454,139 @@ public enum CLIParam implements OptionWrapper {
 	@Override
 	public Option getOption() {
 		return this.option;
+	}
+
+	private void assertValuesValid(OptionValues values) {
+		Objects.requireNonNull(values, "Must provide an OptionValues instance");
+	}
+
+	public boolean isDefined(OptionValues values) {
+		assertValuesValid(values);
+		return values.isDefined(this.option);
+	}
+
+	public OptionValue getOption(OptionValues values) {
+		assertValuesValid(values);
+		return values.getOption(this.option);
+	}
+
+	public Boolean getBoolean(OptionValues values) {
+		assertValuesValid(values);
+		return values.getBoolean(this.option);
+	}
+
+	public Boolean getBoolean(OptionValues values, Boolean def) {
+		assertValuesValid(values);
+		return values.getBoolean(this.option, def);
+	}
+
+	public List<Boolean> getAllBooleans(OptionValues values) {
+		assertValuesValid(values);
+		return values.getAllBooleans(this.option);
+	}
+
+	public Integer getInteger(OptionValues values) {
+		assertValuesValid(values);
+		return values.getInteger(this.option);
+	}
+
+	public Integer getInteger(OptionValues values, Integer def) {
+		assertValuesValid(values);
+		return values.getInteger(this.option, def);
+	}
+
+	public List<Integer> getAllIntegers(OptionValues values) {
+		assertValuesValid(values);
+		return values.getAllIntegers(this.option);
+	}
+
+	public Long getLong(OptionValues values) {
+		assertValuesValid(values);
+		return values.getLong(this.option);
+	}
+
+	public Long getLong(OptionValues values, Long def) {
+		assertValuesValid(values);
+		return values.getLong(this.option, def);
+	}
+
+	public List<Long> getAllLongs(OptionValues values) {
+		assertValuesValid(values);
+		return values.getAllLongs(this.option);
+	}
+
+	public Float getFloat(OptionValues values) {
+		assertValuesValid(values);
+		return values.getFloat(this.option);
+	}
+
+	public Float getFloat(OptionValues values, Float def) {
+		assertValuesValid(values);
+		return values.getFloat(this.option, def);
+	}
+
+	public List<Float> getAllFloats(OptionValues values) {
+		assertValuesValid(values);
+		return values.getAllFloats(this.option);
+	}
+
+	public Double getDouble(OptionValues values) {
+		assertValuesValid(values);
+		return values.getDouble(this.option);
+	}
+
+	public Double getDouble(OptionValues values, Double def) {
+		assertValuesValid(values);
+		return values.getDouble(this.option, def);
+	}
+
+	public List<Double> getAllDoubles(OptionValues values) {
+		assertValuesValid(values);
+		return values.getAllDoubles(this.option);
+	}
+
+	public String getString(OptionValues values) {
+		assertValuesValid(values);
+		return values.getString(this.option);
+	}
+
+	public String getString(OptionValues values, String def) {
+		assertValuesValid(values);
+		return values.getString(this.option, def);
+	}
+
+	public List<String> getAllStrings(OptionValues values) {
+		assertValuesValid(values);
+		return values.getAllStrings(this.option);
+	}
+
+	public List<String> getAllStrings(OptionValues values, List<String> def) {
+		assertValuesValid(values);
+		return values.getAllStrings(this.option, def);
+	}
+
+	public boolean isPresent(OptionValues values) {
+		assertValuesValid(values);
+		return values.isPresent(this.option);
+	}
+
+	public int getOccurrences(OptionValues values) {
+		assertValuesValid(values);
+		return values.getOccurrences(this.option);
+	}
+
+	public Collection<String> getOccurrenceValues(OptionValues values, int occurrence) {
+		assertValuesValid(values);
+		return values.getOccurrenceValues(this.option, occurrence);
+	}
+
+	public int getValueCount(OptionValues values) {
+		assertValuesValid(values);
+		return values.getValueCount(this.option);
+	}
+
+	public boolean hasValues(OptionValues values) {
+		assertValuesValid(values);
+		return values.hasValues(this.option);
 	}
 }

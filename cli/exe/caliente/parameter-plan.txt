@@ -2,6 +2,7 @@
 	* parse arguments
 		* extendScheme(...)
 	* process arguments
+		* Identify engine to retrieve its classpath helpers
 2) getClasspathHelpers()
 	* apply classpath helpers pre
 	* discover classpath helpers
@@ -16,6 +17,7 @@ Pass 1
 		-l,--lib ${libdir1,libdir2,...,libdirN}
 		--log ${log-basename}
 		--log-cfg ${log-cfg-file}
+	*	-e, --engine ${dfc|cmis|shpt|local|...}
 		command
 
 Pass 2
@@ -24,7 +26,6 @@ Pass 2
 
 	COMMAND: ( EXPORT | IMPORT | COUNT )
 		(common)
-		*	-e, --engine ${dfc|cmis|shpt|local|...}
 			-t,--threads ${threads}
 
 		COMMAND: ( EXPORT | IMPORT )
