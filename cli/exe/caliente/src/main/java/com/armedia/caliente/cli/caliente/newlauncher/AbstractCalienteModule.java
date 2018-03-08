@@ -72,16 +72,8 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 
 		// If we have command-line parameters, these supersede all other configurations, even if
 		// we have a configuration file explicitly listed.
-		this.console.info(String.format("Caliente CLI v%s", Launcher.VERSION));
+		this.console.info(String.format("Caliente CLI v%s", Caliente.VERSION));
 		this.console.info("Configuring the properties");
-
-		// The catch-all, default configuration
-		SettingManager.addPropertySource(AbstractCalienteModule.DEFAULT_SETTINGS_NAME);
-		// A configuration file has been specified, so use its values ahead of the defaults
-		if (CLIParam.cfg.getString() != null) {
-			SettingManager.addPropertySource(CLIParam.cfg.getString());
-		}
-		SettingManager.addPropertySource(Launcher.getParameterProperties());
 
 		// And we start up the configuration engine...
 		SettingManager.init();
