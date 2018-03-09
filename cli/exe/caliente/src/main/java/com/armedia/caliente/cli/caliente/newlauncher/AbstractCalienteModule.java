@@ -30,7 +30,6 @@ import com.armedia.caliente.tools.xml.XmlProperties;
 
 public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CalienteMain {
 
-	private static final String LEGACY_DB = "cmsmf-data";
 	private static final String CURRENT_DB = "caliente";
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
@@ -60,11 +59,6 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 	protected final String password;
 	protected final String domain;
 
-	private static boolean isLegacyMode(File dbDir) {
-		File legacyDb = new File(dbDir, String.format("%s.mv.db", AbstractCalienteModule.LEGACY_DB));
-		return (legacyDb.exists() && legacyDb.isFile() && legacyDb.canRead() && legacyDb.canWrite());
-	}
-
 	protected AbstractCalienteModule(E engine, boolean requiresStorage, boolean clearMetadata, boolean clearContent)
 		throws Throwable {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to operate with"); }
@@ -85,8 +79,7 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		if (requiresStorage) {
 			final File databaseDirectoryLocation = getMetadataFilesLocation().getCanonicalFile();
 			// Identify whether to use legacy mode or not...
-			final boolean legacyMode = AbstractCalienteModule.isLegacyMode(databaseDirectoryLocation);
-			final String dbName = (legacyMode ? AbstractCalienteModule.LEGACY_DB : AbstractCalienteModule.CURRENT_DB);
+			final String dbName = AbstractCalienteModule.CURRENT_DB;
 			final File contentFilesDirectoryLocation = getContentFilesLocation().getCanonicalFile();
 
 			this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
@@ -95,7 +88,6 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 			commonValues.put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
 			commonValues.put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
 			commonValues.put("db.name", dbName);
-			commonValues.put("legacyMode", String.valueOf(legacyMode));
 
 			CmfStores.initializeConfigurations();
 
@@ -279,7 +271,7 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		Map<String, String> m = cfg.getSettings();
 		for (String s : properties.stringPropertyNames()) {
 			String v = properties.getProperty(s);
-			if (v != null) {
+			if (v != null) {(legacyMode ? AbstractCalienteModule.LEGACY_DB : AbstractCaliente
 				m.put(s, v);
 			}
 		}
