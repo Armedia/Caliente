@@ -75,10 +75,8 @@ public final class XmlProperties {
 		}
 	};
 
-	/*
 	private static final String PROPERTIES_DTD = String
 		.format("<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">%n");
-	*/
 
 	private static final LazyInitializer<XMLOutputFactory> OUTPUT_FACTORY = new LazyInitializer<XMLOutputFactory>() {
 		@Override
@@ -260,7 +258,7 @@ public final class XmlProperties {
 
 			xml.writeStartDocument(charsetName, "1.1");
 			// Remove the DTD declaration - this can cause problems in some environments
-			// xml.writeDTD(XmlProperties.PROPERTIES_DTD);
+			xml.writeDTD(XmlProperties.PROPERTIES_DTD);
 			xml.writeStartElement("properties");
 			xml.flush();
 			out.flush();
