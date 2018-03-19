@@ -1,7 +1,9 @@
 package com.armedia.caliente.cli.caliente.newlauncher;
 
+import java.util.Collection;
 import java.util.Set;
 
+import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.exporter.ExportContext;
 import com.armedia.caliente.engine.exporter.ExportContextFactory;
@@ -29,7 +31,7 @@ public interface EngineFactory
 	ICF extends ImportContextFactory<S, W, V, IC, IE, ?>, //
 	IDF extends ImportDelegateFactory<S, W, V, IC, IE>, //
 	IE extends ImportEngine<S, W, V, IC, ICF, IDF> //
-> extends StorageClient {
+> {
 
 	public String getName();
 
@@ -38,5 +40,7 @@ public interface EngineFactory
 	public EE getExportEngine(Configuration cfg);
 
 	public IE getImportEngine(Configuration cfg);
+
+	public Collection<? extends LaunchClasspathHelper> getClasspathHelpers();
 
 }

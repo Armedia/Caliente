@@ -4,17 +4,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class CommandModule implements AutoCloseable {
 
-	protected final String name;
-	protected final OptionValues commandValues;
-	protected final List<String> positionals;
+	private final String name;
+	private final OptionValues commandValues;
+	private final List<String> positionals;
+	private final boolean requiresStorage;
 
-	protected CommandModule(String name, OptionValues commandValues, Collection<String> positionals) {
+	protected CommandModule(boolean requiresStorage, String name, OptionValues commandValues,
+		Collection<String> positionals) {
 		this.name = name;
 		this.commandValues = commandValues;
 		if ((positionals != null) && !positionals.isEmpty()) {
@@ -22,20 +27,39 @@ public abstract class CommandModule implements AutoCloseable {
 		} else {
 			this.positionals = Collections.emptyList();
 		}
-	}
-
-	public OptionValues getCommandValues() {
-		return this.commandValues;
-	}
-
-	public List<String> getPositionals() {
-		return this.positionals;
+		this.requiresStorage = requiresStorage;
 	}
 
 	public final String getName() {
 		return this.name;
 	}
 
-	public abstract int run() throws Exception;
+	public final OptionValues getCommandValues() {
+		return this.commandValues;
+	}
+
+	public final List<String> getPositionals() {
+		return this.positionals;
+	}
+
+	public final boolean isRequiresStorage() {
+		return this.requiresStorage;
+	}
+
+	public final int run(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore) throws Exception {
+		if (this.requiresStorage) {
+			// Make sure the storage engines are there
+			Objects.requireNonNull(objectStore, String.format("The %s command requires an object store!", this.name));
+			Objects.requireNonNull(contentStore, String.format("The %s command requires a content store!", this.name));
+		} else {
+			// Make sure they always go null downstream
+			objectStore = null;
+			contentStore = null;
+		}
+		return execute(objectStore, contentStore);
+	}
+
+	protected abstract int execute(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore)
+		throws Exception;
 
 }

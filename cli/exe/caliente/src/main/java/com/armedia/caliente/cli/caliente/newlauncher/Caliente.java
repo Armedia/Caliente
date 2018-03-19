@@ -48,8 +48,8 @@ public class Caliente {
 			}
 		}
 
+		final CmfObjectStore<?, ?> store = command.getObjectStore();
 		// Lock for single execution
-		CmfObjectStore<?, ?> store = engineFactory.getObjectStore();
 		final boolean writeProperties = (store != null);
 		final String pfx = String.format("caliente.%s.%s", engineFactory.getName().toLowerCase(),
 			command.getName().toLowerCase());

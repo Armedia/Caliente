@@ -185,7 +185,7 @@
 						<configuration>
 							<transformers>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.armedia.caliente.cli.caliente.launcher.CalienteLauncher</mainClass>
+									<mainClass>com.armedia.caliente.cli.caliente.newlauncher.Launcher</mainClass>
 								</transformer>
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
 								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer">

@@ -18,6 +18,8 @@ Pass 1
 		--log ${log-basename}
 		--log-cfg ${log-cfg-file}
 	*	-e, --engine ${dfc|cmis|shpt|local|...}
+		-d,--db ${dir-or-config}
+		-c,--content ${dir-or-config}
 		command
 
 Pass 2
@@ -33,8 +35,6 @@ Pass 2
 				--no-renditions
 				--no-versions
 				--skip-content
-				-d,--db ${db-dir}
-				-c,--content ${content-dir}
 				--mail-from ${sender}
 				--mail-to ${recipient1,recipient2,...,recipientN}
 				--mail-cc ${recipient1,recipient2,...,recipientN}
@@ -49,8 +49,6 @@ Pass 2
 				--mail-pass ${pass}
 				--mail-auth ${mode}
 				--error-count ${count}
-				--object-store ${config}
-				--content-store ${config}
 				--manifest-types ${type1,type2,...,typeN}
 				--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
 				--exclude-types ${type1,type2,...,typeN}

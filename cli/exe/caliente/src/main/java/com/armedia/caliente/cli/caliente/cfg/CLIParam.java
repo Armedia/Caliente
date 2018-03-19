@@ -37,6 +37,7 @@ public enum CLIParam implements OptionWrapper {
 	), //
 	engine( //
 		new OptionImpl() //
+			.setShortOpt('e') //
 			.setArgumentLimits(1) //
 			.setValueFilter( // TODO: Find a way to make this list dynamic
 				new StringValueFilter( //
@@ -186,28 +187,32 @@ public enum CLIParam implements OptionWrapper {
 	db( //
 		Setting.DB_DIRECTORY, //
 		new OptionImpl() //
+			.setShortOpt('d') //
 			.setArgumentLimits(1) //
-			.setArgumentName("db-directory") //
+			.setArgumentName("metadata-directory-or-config") //
 			.setRequired(true) //
-			.setDescription("The directory into which the metadata database will be stored") //
+			.setDescription(
+				"The directory into which the metadata database will be stored, or the XML file that describes it") //
 			.setDefault("caliente") //
 	), //
 	content(
 		Setting.CONTENT_DIRECTORY, //
 		new OptionImpl() //
+			.setShortOpt('c') //
 			.setArgumentLimits(1) //
-			.setArgumentName("content-directory") //
+			.setArgumentName("content-directory-or-config") //
 			.setRequired(true) //
 			.setDescription(
-				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory)") //
+				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes it") //
 	), //
 	content_strategy(
 		Setting.CONTENT_ORGANIZATION, //
 		new OptionImpl() //
+			.setShortOpt('o') //
 			.setArgumentLimits(1) //
 			.setArgumentName("organization") //
 			.setDescription(
-				"The name of the organization strategy to use in the Content directory (specific engines may use their own defaults)") //
+				"The name of the organization strategy to use in the Content directory (specific engines may override with their own defaults if they require it)") //
 	), //
 	owner_attributes(
 		Setting.OWNER_ATTRIBUTES, //

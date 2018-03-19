@@ -28,6 +28,8 @@ import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
+import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
@@ -52,6 +54,10 @@ public class Launcher extends AbstractLauncher {
 	private EngineFactory engineFactory = null;
 
 	private CommandModule command = null;
+
+	private CmfObjectStore<?, ?> objectStore = null;
+
+	private CmfContentStore<?, ?, ?> contentStore = null;
 
 	private final Map<String, CommandFactory> commandFactories = new TreeMap<>();
 
@@ -110,6 +116,8 @@ public class Launcher extends AbstractLauncher {
 				.add(CLIParam.log) //
 				.add(CLIParam.log_cfg) //
 				.add(CLIParam.engine) //
+				.add(CLIParam.db) //
+				.add(CLIParam.content) //
 		);
 	}
 
@@ -161,6 +169,10 @@ public class Launcher extends AbstractLauncher {
 			throw new CommandLineProcessingException(1,
 				String.format("No implementation was found matching engine name or alias [%s]", engine), e);
 		}
+
+		// Now go try to initialize the stores if required
+		if (!this.command.isRequiresStorage()) { return; }
+
 	}
 
 	@Override
@@ -168,9 +180,11 @@ public class Launcher extends AbstractLauncher {
 		OptionValues commandValues, Collection<String> positionals) {
 		List<LaunchClasspathHelper> l = new ArrayList<>();
 		l.add(this.libLaunchHelper);
+		/*
 		for (LaunchClasspathHelper h : this.engineFactory.getClasspathHelpers()) {
 			l.add(h);
 		}
+		*/
 		return l;
 	}
 
@@ -224,6 +238,7 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		return new Caliente().run(this.engineFactory, this.command, commandValues, positionals);
+		return new Caliente().run(this.objectStore, this.contentStore, this.engineFactory, this.command, commandValues,
+			positionals);
 	}
 }
