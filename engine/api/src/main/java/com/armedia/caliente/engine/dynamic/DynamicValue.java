@@ -131,7 +131,7 @@ public class DynamicValue extends CmfBaseSetting {
 	}
 
 	public DynamicValue setValues(Iterable<?> values) {
-		if (values != null) {
+		if (values == null) {
 			values = Collections.emptyList();
 		}
 		setValues(values.iterator());

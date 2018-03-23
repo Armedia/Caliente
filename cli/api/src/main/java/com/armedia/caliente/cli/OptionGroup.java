@@ -19,6 +19,18 @@ public interface OptionGroup extends OptionContainer {
 	public OptionGroup add(Option option) throws DuplicateOptionException;
 
 	/**
+	 * See {@link #add(Option)}.
+	 *
+	 * @param option
+	 *            the wrapped option to add
+	 * @throws IllegalArgumentException
+	 *             if the given wrapped option collides with any already-existing options (you can
+	 *             check with {@link #hasOption(Character)}, {@link #hasOption(String)}, or
+	 *             {@link #countCollisions(Option)}
+	 */
+	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException;
+
+	/**
 	 * <p>
 	 * Adds the given options to this option scheme, by iterating over the collection and invoking
 	 * {@link #add(Option)} on each non-{@code null} element. If the
@@ -41,6 +53,15 @@ public interface OptionGroup extends OptionContainer {
 	 * @return the options that were removed
 	 */
 	public Collection<Option> remove(Option option);
+
+	/**
+	 * See {@link #remove(Option)}.
+	 *
+	 * @param option
+	 *            the option to check against
+	 * @return the options that were removed
+	 */
+	public Collection<Option> remove(OptionWrapper option);
 
 	/**
 	 * Remove the option which matches the given long option

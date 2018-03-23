@@ -62,4 +62,9 @@ public class AttributeValue implements Iterable<CmfValue> {
 	public Iterator<CmfValue> iterator() {
 		return this.values.iterator();
 	}
+
+	@Override
+	public String toString() {
+		return Tools.toString(this.values);
+	}
 }

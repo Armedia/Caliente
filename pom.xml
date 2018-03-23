@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>3.5.7</version>
+	<version>3.5.9</version>
 	<packaging>pom</packaging>
 
 	<organization>
@@ -56,7 +56,7 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>utilities</artifactId>
-				<version>0.3.25</version>
+				<version>0.3.26</version>
 			</dependency>
 
 			<dependency>
@@ -68,19 +68,19 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
-				<version>1.1.11</version>
+				<version>1.1.12</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-api</artifactId>
-				<version>1.1.1</version>
+				<version>1.1.2</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-pooled</artifactId>
-				<version>1.1.1</version>
+				<version>1.1.2</version>
 			</dependency>
 
 			<dependency>

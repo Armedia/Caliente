@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.dfc.DctmAttributeHandlers;
 import com.armedia.caliente.engine.dfc.DctmAttributeHandlers.AttributeHandler;
 import com.armedia.caliente.engine.dfc.DctmDataType;
@@ -14,8 +15,8 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
@@ -137,6 +138,33 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 				final IDfAttr attr = this.object.getAttr(i);
 				final AttributeHandler handler = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
 				// Get the attribute handler
+				if (handler.includeInExport(this.object, attr)) {
+					CmfAttribute<IDfValue> attribute = new CmfAttribute<>(attr.getName(),
+						DctmDataType.fromAttribute(attr).getStoredType(), attr.isRepeating(),
+						handler.getExportableValues(this.object, attr));
+					object.setAttribute(attribute);
+				}
+			}
+
+			// Then, the CMIS (Intermediate) attributes
+			for (IntermediateAttribute att : IntermediateAttribute.values()) {
+				final String tgtName = att.getMapping();
+				// If the attribute is already encoded, skip it
+				if (object.hasAttribute(tgtName)) {
+					continue;
+				}
+
+				// Identify the source object's attribute for this intermediate attribtue
+				final String srcName = this.factory.getEngine().getTranslator().getAttributeNameMapper()
+					.decodeAttributeName(this.getType(), tgtName);
+				if (!this.object.hasAttr(srcName)) {
+					continue;
+				}
+
+				// Copy srcName into a new attribute called cmisName if it doesn't already exist
+				final int idx = this.object.findAttrIndex(srcName);
+				final IDfAttr attr = this.object.getAttr(idx);
+				final AttributeHandler handler = DctmAttributeHandlers.getAttributeHandler(getDctmType(), attr);
 				if (handler.includeInExport(this.object, attr)) {
 					CmfAttribute<IDfValue> attribute = new CmfAttribute<>(attr.getName(),
 						DctmDataType.fromAttribute(attr).getStoredType(), attr.isRepeating(),

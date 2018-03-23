@@ -183,7 +183,7 @@ public class XmlInstances<T> {
 
 	public T getNewInstance(final URL resource) throws Exception {
 		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
-		this.instances.remove(resource.toURI());
+		this.instances.remove(normalize(resource));
 		return getInstance(resource);
 	}
 }

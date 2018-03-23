@@ -360,6 +360,12 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	@Override
+	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException {
+		this.baseGroup.add(option);
+		return this;
+	}
+
+	@Override
 	public <O extends Option> OptionScheme add(Collection<O> options) throws DuplicateOptionException {
 		this.baseGroup.add(options);
 		return this;
@@ -367,6 +373,11 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 
 	@Override
 	public Collection<Option> remove(Option option) {
+		return this.baseGroup.remove(option);
+	}
+
+	@Override
+	public Collection<Option> remove(OptionWrapper option) {
 		return this.baseGroup.remove(option);
 	}
 

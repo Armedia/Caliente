@@ -1,7 +1,6 @@
 package com.armedia.caliente.cli;
 
 import java.util.List;
-import java.util.Set;
 
 public final class OptionValue extends Option {
 	private final OptionValues values;
@@ -67,18 +66,13 @@ public final class OptionValue extends Option {
 	}
 
 	@Override
-	public boolean isValuesCaseSensitive() {
-		return this.def.isValuesCaseSensitive();
-	}
-
-	@Override
 	public boolean isValueAllowed(String value) {
 		return this.def.isValueAllowed(value);
 	}
 
 	@Override
-	public Set<String> getAllowedValues() {
-		return this.def.getAllowedValues();
+	public OptionValueFilter getValueFilter() {
+		return this.def.getValueFilter();
 	}
 
 	@Override
@@ -173,5 +167,13 @@ public final class OptionValue extends Option {
 
 	public List<String> getAllStrings() {
 		return this.values.getAllStrings(this);
+	}
+
+	public int getValueCount() {
+		return this.values.getValueCount(this);
+	}
+
+	public boolean hasValues() {
+		return this.values.hasValues(this);
 	}
 }

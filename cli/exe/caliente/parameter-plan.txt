@@ -2,6 +2,8 @@ Pass 1
 	GLOBALS
 		-?,--help
 		-l,--lib ${libdir1,libdir2,...,libdirN}
+		--log ${log-basename}
+		--log-cfg ${log-cfg-file}
 		command
 
 Pass 2
@@ -10,8 +12,6 @@ Pass 2
 
 	COMMAND: ( EXPORT | IMPORT | COUNT )
 		(common)
-			--log ${log-file} (default is ${db-dir}/blablabla.log)
-			--log-cfg ${log-cfg-file}
 		*	-e, --engine ${dfc|cmis|shpt|local|...}
 			-t,--threads ${threads}
 
@@ -26,10 +26,15 @@ Pass 2
 				--mail-to ${recipient1,recipient2,...,recipientN}
 				--mail-cc ${recipient1,recipient2,...,recipientN}
 				--mail-bcc ${recipient1,recipient2,...,recipientN}
-				--smtp-host ${host}
-				--smtp-port ${port}
-				--smtp-auth-user ${user}
-				--smtp-auth-pass ${pass}
+				--mail-host ${host}
+				--mail-port ${port}
+				--mail-ssl ${sslMode}
+				--mail-client-cert ${cert}
+				--mail-server-cert ${cert}
+				--mail-ca ${ca}
+				--mail-user ${user}
+				--mail-pass ${pass}
+				--mail-auth ${mode}
 				--error-count ${count}
 				--object-store ${config}
 				--content-store ${config}

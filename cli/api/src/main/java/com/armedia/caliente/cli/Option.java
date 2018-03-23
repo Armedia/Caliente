@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.armedia.commons.utilities.Tools;
@@ -35,9 +34,7 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 
 	public abstract Character getValueSep();
 
-	public abstract Set<String> getAllowedValues();
-
-	public abstract boolean isValuesCaseSensitive();
+	public abstract OptionValueFilter getValueFilter();
 
 	public abstract boolean isValueAllowed(String value);
 
@@ -93,7 +90,7 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 * <li>{@link #getMinArguments()}</li>
 	 * <li>{@link #getMaxArguments()}</li>
 	 * <li>{@link #getValueSep()}</li>
-	 * <li>{@link #getAllowedValues()}</li>
+	 * <li>{@link #getValueFilter()}</li>
 	 * </ul>
 	 *
 	 * @param a
@@ -105,7 +102,7 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 		if (!Tools.equals(a.getMinArguments(), b.getMinArguments())) { return false; }
 		if (!Tools.equals(a.getMaxArguments(), b.getMaxArguments())) { return false; }
 		if (!Tools.equals(a.getValueSep(), b.getValueSep())) { return false; }
-		if (!Tools.equals(a.getAllowedValues(), b.getAllowedValues())) { return false; }
+		if (!Tools.equals(a.getValueFilter(), b.getValueFilter())) { return false; }
 		return true;
 	}
 
@@ -120,7 +117,7 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 * <li>{@link #getMinArguments()}</li>
 	 * <li>{@link #getMaxArguments()}</li>
 	 * <li>{@link #getValueSep()}</li>
-	 * <li>{@link #getAllowedValues()}</li>
+	 * <li>{@link #getValueFilter()}</li>
 	 * </ul>
 	 *
 	 * @param a
@@ -132,7 +129,7 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 		if (!Tools.equals(a.isRequired(), b.isRequired())) { return false; }
 		if (!Tools.equals(a.getDescription(), b.getDescription())) { return false; }
 		if (!Tools.equals(a.getArgumentName(), b.getArgumentName())) { return false; }
-		if (!Tools.equals(a.getAllowedValues(), b.getAllowedValues())) { return false; }
+		if (!Tools.equals(a.getValueFilter(), b.getValueFilter())) { return false; }
 		if (!Tools.equals(a.getDefaults(), b.getDefaults())) { return false; }
 		return true;
 	}

@@ -145,6 +145,11 @@ public class OptionGroupImpl implements OptionGroup {
 	}
 
 	@Override
+	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException {
+		return add(Option.unwrap(option));
+	}
+
+	@Override
 	public <O extends Option> OptionGroupImpl add(Collection<O> options) throws DuplicateOptionException {
 		if ((options != null) && !options.isEmpty()) {
 			Collection<O> added = new ArrayList<>();
@@ -176,6 +181,11 @@ public class OptionGroupImpl implements OptionGroup {
 		final Option oldShort = remove(shortOpt);
 
 		return OptionGroupImpl.buildCollection(oldShort, oldLong);
+	}
+
+	@Override
+	public Collection<Option> remove(OptionWrapper option) {
+		return remove(Option.unwrap(option));
 	}
 
 	@Override

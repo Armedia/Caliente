@@ -5,8 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import java.util.TreeSet;
 
 public final class OptionImpl extends Option implements Cloneable {
 
@@ -18,8 +16,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	private int maxArguments = 0;
 	private String argumentName = null;
 	private Character valueSep = OptionImpl.DEFAULT_VALUE_SEP;
-	private boolean valuesCaseSensitive = false;
-	private final Set<String> allowedValues = new TreeSet<>();
+	private OptionValueFilter valueFilter = null;
 	private final List<String> defaults = new ArrayList<>();
 
 	private String key = null;
@@ -38,10 +35,7 @@ public final class OptionImpl extends Option implements Cloneable {
 			this.maxArguments = other.getMaxArguments();
 			this.argumentName = other.getArgumentName();
 			this.valueSep = other.getValueSep();
-			Set<String> allowedValues = other.getAllowedValues();
-			if (allowedValues != null) {
-				this.allowedValues.addAll(allowedValues);
-			}
+			this.valueFilter = other.getValueFilter();
 			this.key = other.getKey();
 		}
 	}
@@ -63,8 +57,10 @@ public final class OptionImpl extends Option implements Cloneable {
 
 	public OptionImpl setMinArguments(int count) {
 		this.minArguments = Math.max(0, count);
-		if ((this.minArguments > 0) && (this.maxArguments >= 0) && (this.minArguments > this.maxArguments)) {
-			this.maxArguments = this.minArguments;
+		if ((this.minArguments > 0) && (this.maxArguments >= 0)) {
+			// if the new minimum value is higher than the current maximum,
+			// then we grow the maximum to match
+			this.maxArguments = Math.max(this.minArguments, this.maxArguments);
 		}
 		return this;
 	}
@@ -76,9 +72,30 @@ public final class OptionImpl extends Option implements Cloneable {
 
 	public OptionImpl setMaxArguments(int count) {
 		this.maxArguments = Math.max(Option.UNBOUNDED_MAX_VALUES, count);
-		if ((this.minArguments > 0) && (this.maxArguments >= 0) && (this.minArguments > this.maxArguments)) {
-			this.minArguments = this.maxArguments;
+		if ((this.minArguments > 0) && (this.maxArguments >= 0)) {
+			// if the current minimum value is higher than the new maximum,
+			// then we shrink the minimum to match
+			this.minArguments = Math.min(this.minArguments, this.maxArguments);
 		}
+		return this;
+	}
+
+	public OptionImpl setArgumentLimits(int count) {
+		return setArgumentLimits(count, count);
+	}
+
+	public OptionImpl setArgumentLimits(int min, int max) {
+		// Ensure both values are in the expected ranges
+		min = Math.max(0, min);
+		max = Math.max(Option.UNBOUNDED_MAX_VALUES, max);
+
+		// Ensure that the maximum is never below the minimum
+		if ((min != max) && (min != 0) && (max >= 0)) {
+			max = Math.max(min, max);
+		}
+
+		this.minArguments = min;
+		this.maxArguments = max;
 		return this;
 	}
 
@@ -159,50 +176,17 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	@Override
-	public boolean isValuesCaseSensitive() {
-		return this.valuesCaseSensitive;
-	}
-
-	public OptionImpl setValuesCaseSensitive(boolean valuesCaseSensitive) {
-		this.valuesCaseSensitive = valuesCaseSensitive;
-		return this;
-	}
-
-	@Override
 	public boolean isValueAllowed(String value) {
-		if (value == null) { return false; }
-		if (this.allowedValues.isEmpty()) { return true; }
-		return this.allowedValues.contains(canonicalizeValue(value));
-	}
-
-	private String canonicalizeValue(String value) {
-		if ((value == null) || this.valuesCaseSensitive) { return value; }
-		return value.toUpperCase();
+		return (this.valueFilter != null ? this.valueFilter.isAllowed(value) : true);
 	}
 
 	@Override
-	public Set<String> getAllowedValues() {
-		return this.allowedValues;
+	public OptionValueFilter getValueFilter() {
+		return this.valueFilter;
 	}
 
-	public OptionImpl setAllowedValues(Collection<String> allowedValues) {
-		this.allowedValues.clear();
-		if (allowedValues != null) {
-			for (String s : allowedValues) {
-				if (s != null) {
-					this.allowedValues.add(canonicalizeValue(s));
-				}
-			}
-		}
-		return this;
-	}
-
-	public OptionImpl setAllowedValues(String... allowedValues) {
-		if (allowedValues != null) {
-			setAllowedValues(Arrays.asList(allowedValues));
-		} else {
-			this.allowedValues.clear();
-		}
+	public OptionImpl setValueFilter(OptionValueFilter valueFilter) {
+		this.valueFilter = valueFilter;
 		return this;
 	}
 
