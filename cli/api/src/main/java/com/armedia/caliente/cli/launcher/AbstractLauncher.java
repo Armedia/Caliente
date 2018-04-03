@@ -1,9 +1,11 @@
 package com.armedia.caliente.cli.launcher;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +22,7 @@ import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.help.HelpRenderer;
 import com.armedia.caliente.cli.launcher.log.LogConfigurator;
+import com.armedia.commons.utilities.Tools;
 
 public abstract class AbstractLauncher {
 
@@ -36,6 +39,22 @@ public abstract class AbstractLauncher {
 	private static final String[] NO_ARGS = {};
 
 	protected Logger log = AbstractLauncher.BOOT_LOG;
+
+	protected final File userDir;
+	protected final File homeDir;
+
+	protected AbstractLauncher() {
+		String userDir = System.getProperty("user.dir");
+		if (StringUtils.isEmpty(userDir)) {
+			userDir = ".";
+		}
+		this.userDir = Tools.canonicalize(new File(userDir));
+		String homeDir = System.getProperty("user.home");
+		if (StringUtils.isEmpty(homeDir)) {
+			homeDir = ".";
+		}
+		this.homeDir = Tools.canonicalize(new File(homeDir));
+	}
 
 	/**
 	 * <p>
