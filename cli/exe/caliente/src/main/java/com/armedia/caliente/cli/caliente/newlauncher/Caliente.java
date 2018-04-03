@@ -10,6 +10,7 @@ import java.util.Properties;
 
 import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
@@ -36,8 +37,14 @@ public class Caliente {
 		VERSION = Tools.coalesce(version, "(unknown)");
 	}
 
-	int run(@SuppressWarnings("rawtypes") EngineFactory engineFactory, CommandModule command,
-		OptionValues commandValues, Collection<String> positionals) throws Exception {
+	int run( //
+		@SuppressWarnings("rawtypes") final CmfObjectStore objectStore, //
+		@SuppressWarnings("rawtypes") final CmfContentStore contentStore, //
+		@SuppressWarnings("rawtypes") final EngineFactory engineFactory, //
+		final CommandModule command, //
+		final OptionValues commandValues, //
+		final Collection<String> positionals //
+	) throws Exception {
 
 		// Now, convert the command-line parameters into configuration properties
 		for (OptionValue v : commandValues) {
@@ -48,26 +55,25 @@ public class Caliente {
 			}
 		}
 
-		final CmfObjectStore<?, ?> store = command.getObjectStore();
 		// Lock for single execution
-		final boolean writeProperties = (store != null);
+		final boolean writeProperties = (objectStore != null);
 		final String pfx = String.format("caliente.%s.%s", engineFactory.getName().toLowerCase(),
 			command.getName().toLowerCase());
 		try {
 			if (writeProperties) {
-				store.setProperty(String.format("%s.version", pfx), new CmfValue(Caliente.VERSION));
-				store.setProperty(String.format("%s.start", pfx), new CmfValue(new Date()));
+				objectStore.setProperty(String.format("%s.version", pfx), new CmfValue(Caliente.VERSION));
+				objectStore.setProperty(String.format("%s.start", pfx), new CmfValue(new Date()));
 			}
-			command.run();
+			command.run(objectStore, contentStore);
 		} catch (Throwable t) {
 			if (writeProperties) {
-				store.setProperty(String.format("%s.error", pfx), new CmfValue(Tools.dumpStackTrace(t)));
+				objectStore.setProperty(String.format("%s.error", pfx), new CmfValue(Tools.dumpStackTrace(t)));
 			}
 			throw new RuntimeException("Execution failed", t);
 		} finally {
 			// Unlock from single execution
 			if (writeProperties) {
-				store.setProperty(String.format("%s.end", pfx), new CmfValue(new Date()));
+				objectStore.setProperty(String.format("%s.end", pfx), new CmfValue(new Date()));
 			}
 		}
 		return 0;

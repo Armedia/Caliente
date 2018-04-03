@@ -173,6 +173,7 @@ public class Launcher extends AbstractLauncher {
 		// Now go try to initialize the stores if required
 		if (!this.command.isRequiresStorage()) { return; }
 
+		// TODO: Initialize the content and object stores
 	}
 
 	@Override
