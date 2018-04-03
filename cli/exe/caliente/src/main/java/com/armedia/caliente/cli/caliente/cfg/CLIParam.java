@@ -20,20 +20,21 @@ import com.armedia.caliente.store.CmfType;
 
 public enum CLIParam implements OptionWrapper {
 	//
+
+	//
+	// First pass...
+	//
 	help( //
 		CalienteBaseOptions.HELP //
 	), //
-	dfc( //
-		DfcLaunchHelper.DFC_LOCATION //
-	), //
-	dfc_prop( //
-		DfcLaunchHelper.DFC_PROPERTIES //
-	), //
-	dctm( //
-		DfcLaunchHelper.DFC_DOCUMENTUM //
-	), //
 	lib( //
 		LibLaunchHelper.LIB //
+	), //
+	log( //
+		CalienteBaseOptions.LOG //
+	), //
+	log_cfg( //
+		CalienteBaseOptions.LOG_CFG //
 	), //
 	engine( //
 		new OptionImpl() //
@@ -55,11 +56,39 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("The mode of operation") //
 			.setArgumentName("engine") //
 	), //
-	log( //
-		CalienteBaseOptions.LOG //
+	db( //
+		Setting.DB_DIRECTORY, //
+		new OptionImpl() //
+			.setShortOpt('d') //
+			.setArgumentLimits(1) //
+			.setArgumentName("metadata-directory-or-config") //
+			.setRequired(true) //
+			.setDescription(
+				"The directory into which the metadata database will be stored, or the XML file that describes the store configuration") //
+			.setDefault("caliente") //
 	), //
-	log_cfg( //
-		CalienteBaseOptions.LOG_CFG //
+	content(
+		Setting.CONTENT_DIRECTORY, //
+		new OptionImpl() //
+			.setShortOpt('c') //
+			.setArgumentLimits(1) //
+			.setArgumentName("content-directory-or-config") //
+			.setRequired(true) //
+			.setDescription(
+				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes the store configuration") //
+	), //
+
+	//
+	// Second pass
+	//
+	dfc( //
+		DfcLaunchHelper.DFC_LOCATION //
+	), //
+	dfc_prop( //
+		DfcLaunchHelper.DFC_PROPERTIES //
+	), //
+	dctm( //
+		DfcLaunchHelper.DFC_DOCUMENTUM //
 	), //
 	threads( //
 		Setting.THREADS, //
@@ -183,27 +212,6 @@ public enum CLIParam implements OptionWrapper {
 			.setArgumentName("prefix") //
 			.setDescription("The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)") //
 			.setDefault("/sites") //
-	), //
-	db( //
-		Setting.DB_DIRECTORY, //
-		new OptionImpl() //
-			.setShortOpt('d') //
-			.setArgumentLimits(1) //
-			.setArgumentName("metadata-directory-or-config") //
-			.setRequired(true) //
-			.setDescription(
-				"The directory into which the metadata database will be stored, or the XML file that describes it") //
-			.setDefault("caliente") //
-	), //
-	content(
-		Setting.CONTENT_DIRECTORY, //
-		new OptionImpl() //
-			.setShortOpt('c') //
-			.setArgumentLimits(1) //
-			.setArgumentName("content-directory-or-config") //
-			.setRequired(true) //
-			.setDescription(
-				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes it") //
 	), //
 	content_strategy(
 		Setting.CONTENT_ORGANIZATION, //
