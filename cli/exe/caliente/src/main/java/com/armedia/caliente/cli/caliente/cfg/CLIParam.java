@@ -77,6 +77,15 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription(
 				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes the store configuration") //
 	), //
+	content_strategy(
+		Setting.CONTENT_ORGANIZATION, //
+		new OptionImpl() //
+			.setShortOpt('o') //
+			.setArgumentLimits(1) //
+			.setArgumentName("organization") //
+			.setDescription(
+				"The name of the organization strategy to use in the Content directory (specific engines may override with their own defaults if they require it)") //
+	), //
 
 	//
 	// Second pass
@@ -212,15 +221,6 @@ public enum CLIParam implements OptionWrapper {
 			.setArgumentName("prefix") //
 			.setDescription("The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)") //
 			.setDefault("/sites") //
-	), //
-	content_strategy(
-		Setting.CONTENT_ORGANIZATION, //
-		new OptionImpl() //
-			.setShortOpt('o') //
-			.setArgumentLimits(1) //
-			.setArgumentName("organization") //
-			.setDescription(
-				"The name of the organization strategy to use in the Content directory (specific engines may override with their own defaults if they require it)") //
 	), //
 	owner_attributes(
 		Setting.OWNER_ATTRIBUTES, //
