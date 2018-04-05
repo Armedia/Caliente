@@ -17,8 +17,9 @@ public abstract class CommandModule implements AutoCloseable {
 	private final OptionValues commandValues;
 	private final List<String> positionals;
 	private final boolean requiresStorage;
+	private final boolean requiresCleanData;
 
-	protected CommandModule(boolean requiresStorage, String name, OptionValues commandValues,
+	protected CommandModule(boolean requiresStorage, boolean requiresCleanData, String name, OptionValues commandValues,
 		Collection<String> positionals) {
 		this.name = name;
 		this.commandValues = commandValues;
@@ -28,6 +29,7 @@ public abstract class CommandModule implements AutoCloseable {
 			this.positionals = Collections.emptyList();
 		}
 		this.requiresStorage = requiresStorage;
+		this.requiresCleanData = requiresCleanData;
 	}
 
 	public final String getName() {
@@ -44,6 +46,10 @@ public abstract class CommandModule implements AutoCloseable {
 
 	public final boolean isRequiresStorage() {
 		return this.requiresStorage;
+	}
+
+	public final boolean isRequiresCleanData() {
+		return this.requiresCleanData;
 	}
 
 	public final int run(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore) throws Exception {
