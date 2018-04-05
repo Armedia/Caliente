@@ -39,6 +39,7 @@ public abstract class AbstractLauncher {
 	private static final String[] NO_ARGS = {};
 
 	protected Logger log = AbstractLauncher.BOOT_LOG;
+	protected Logger console = AbstractLauncher.BOOT_LOG;
 
 	protected final File userDir;
 	protected final File homeDir;
@@ -187,6 +188,7 @@ public abstract class AbstractLauncher {
 			// Retrieve the logger post-initialization...if nothing was initialized, we stick to the
 			// same log
 			this.log = LoggerFactory.getLogger(getClass());
+			this.console = LoggerFactory.getLogger("console");
 		}
 
 		// The logging is initialized, we can make use of it now.
