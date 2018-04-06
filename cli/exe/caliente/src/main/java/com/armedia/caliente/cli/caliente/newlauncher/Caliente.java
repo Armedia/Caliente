@@ -13,6 +13,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
 
 public class Caliente {
@@ -37,10 +38,12 @@ public class Caliente {
 		VERSION = Tools.coalesce(version, "(unknown)");
 	}
 
+	public static final CmfCrypt CRYPTO = new CmfCrypt();
+
 	int run( //
+		@SuppressWarnings("rawtypes") final EngineFactory engineFactory, //
 		@SuppressWarnings("rawtypes") final CmfObjectStore objectStore, //
 		@SuppressWarnings("rawtypes") final CmfContentStore contentStore, //
-		@SuppressWarnings("rawtypes") final EngineFactory engineFactory, //
 		final CommandModule command, //
 		final OptionValues commandValues, //
 		final Collection<String> positionals //
@@ -58,13 +61,13 @@ public class Caliente {
 		// Lock for single execution
 		final boolean writeProperties = (objectStore != null);
 		final String pfx = String.format("caliente.%s.%s", engineFactory.getName().toLowerCase(),
-			command.getName().toLowerCase());
+			command.getDescriptor().getName().toLowerCase());
 		try {
 			if (writeProperties) {
 				objectStore.setProperty(String.format("%s.version", pfx), new CmfValue(Caliente.VERSION));
 				objectStore.setProperty(String.format("%s.start", pfx), new CmfValue(new Date()));
 			}
-			command.run(objectStore, contentStore);
+			command.run(engineFactory, objectStore, contentStore, commandValues, positionals);
 		} catch (Throwable t) {
 			if (writeProperties) {
 				objectStore.setProperty(String.format("%s.error", pfx), new CmfValue(Tools.dumpStackTrace(t)));

@@ -54,11 +54,6 @@ public class Launcher extends AbstractLauncher {
 		System.exit(new Launcher().launch(CLIParam.help, args));
 	}
 
-	@Override
-	protected OptionSchemeExtensionSupport getSchemeExtensionSupport() {
-		return new CalienteOptionSchemeExtension();
-	}
-
 	public static final String DEFAULT_LOG_FORMAT = CalienteBaseOptions.DEFAULT_LOG_FORMAT;
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
@@ -78,7 +73,7 @@ public class Launcher extends AbstractLauncher {
 
 	private CmfContentStore<?, ?, ?> contentStore = null;
 
-	private final Map<String, CommandFactory> commandFactories = new TreeMap<>();
+	private final Map<String, CommandModule> commandModules = new TreeMap<>();
 
 	@Override
 	protected String getProgramName() {
@@ -87,38 +82,37 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		PluggableServiceLocator<CommandFactory> commandFactories = new PluggableServiceLocator<>(CommandFactory.class);
-		commandFactories.setErrorListener(new PluggableServiceLocator.ErrorListener() {
+		PluggableServiceLocator<CommandModule> commandModules = new PluggableServiceLocator<>(CommandModule.class);
+		commandModules.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 			@Override
 			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				Launcher.this.log.error("Failed to initialize the CommandFactory class {}",
+				Launcher.this.log.error("Failed to initialize the CommandModule class {}",
 					serviceClass.getCanonicalName(), t);
 			}
 		});
-		commandFactories.setHideErrors(false);
+		commandModules.setHideErrors(false);
 
 		Map<String, CommandDescriptor> commands = new TreeMap<>();
-		for (CommandFactory f : commandFactories) {
-			for (CommandDescriptor d : f) {
-				CommandDescriptor od = commands.put(d.getName(), d);
-				if (od != null) {
+		for (CommandModule command : commandModules) {
+			CommandDescriptor newDescriptor = command.getDescriptor();
+			CommandDescriptor oldDescriptor = commands.put(newDescriptor.getName(), newDescriptor);
+			if (oldDescriptor != null) {
+				// ERROR!
+				throw new RuntimeException(String.format(
+					"Duplicate command definition for [%s] (new aliases = %s, old aliases = %s) - this is a code defect",
+					newDescriptor.getName(), newDescriptor.getAliases(), oldDescriptor.getAliases()));
+			}
+			this.commandModules.put(newDescriptor.getName().toLowerCase(), command);
+
+			for (String alias : newDescriptor.getAliases()) {
+				oldDescriptor = commands.put(alias, newDescriptor);
+				if ((oldDescriptor != null) && (oldDescriptor != newDescriptor)) {
 					// ERROR!
 					throw new RuntimeException(String.format(
-						"Duplicate command definition for [%s] (new aliases = %s, old aliases = %s) - this is a code defect",
-						d.getName(), d.getAliases(), od.getAliases()));
+						"Command alias [%s] has a collision between commandModules [%s] and [%s] - this is a code defect",
+						alias, newDescriptor.getName(), oldDescriptor.getName()));
 				}
-				this.commandFactories.put(d.getName().toLowerCase(), f);
-
-				for (String alias : d.getAliases()) {
-					od = commands.put(alias, d);
-					if ((od != null) && (od != d)) {
-						// ERROR!
-						throw new RuntimeException(String.format(
-							"Command alias [%s] has a collision between commands [%s] and [%s] - this is a code defect",
-							alias, d.getName(), od.getName()));
-					}
-					this.commandFactories.put(alias.toLowerCase(), f);
-				}
+				this.commandModules.put(alias.toLowerCase(), command);
 			}
 		}
 
@@ -141,17 +135,20 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	@Override
+	protected OptionSchemeExtensionSupport getSchemeExtensionSupport() {
+		return new CalienteOptionSchemeExtension();
+	}
+
+	@Override
 	protected void processCommandLineResult(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws CommandLineProcessingException {
 
 		// Validate all parameters...make sure everything is kosher, etc...
 
 		// Find the desired command
-		CommandFactory commandFactory = this.commandFactories.get(StringUtils.lowerCase(command));
-		if (commandFactory == null) { throw new CommandLineProcessingException(1,
+		this.command = this.commandModules.get(StringUtils.lowerCase(command));
+		if (this.command == null) { throw new CommandLineProcessingException(1,
 			String.format("No implementation found for command or alias [%s]", command)); }
-
-		this.command = commandFactory.getCommand(command, commandValues, positionals);
 
 		// Find the desired engine, and add its classpath helpers if required
 		final String engine = CLIParam.engine.getString(baseValues);
@@ -451,7 +448,7 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		return new Caliente().run(this.objectStore, this.contentStore, this.engineFactory, this.command, commandValues,
+		return new Caliente().run(this.engineFactory, this.objectStore, this.contentStore, this.command, commandValues,
 			positionals);
 	}
 }

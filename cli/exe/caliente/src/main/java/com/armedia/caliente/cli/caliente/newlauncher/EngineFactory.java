@@ -13,6 +13,7 @@ import com.armedia.caliente.engine.importer.ImportContext;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.cfg.Configuration;
 
 public interface EngineFactory
@@ -36,6 +37,8 @@ public interface EngineFactory
 	public String getName();
 
 	public Set<String> getAliases();
+
+	public CmfCrypt getCrypt();
 
 	public EE getExportEngine(Configuration cfg);
 
