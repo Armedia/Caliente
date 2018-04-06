@@ -17,8 +17,7 @@ import com.armedia.commons.utilities.Tools;
 
 public class EncryptCommandModule extends CommandModule {
 
-	private static final CommandDescriptor DESCRIPTOR = new CommandDescriptor("encrypt", "Encrypt a plaintext password",
-		"enc");
+	private static final Descriptor DESCRIPTOR = new Descriptor("encrypt", "Encrypt a plaintext password", "enc");
 
 	public EncryptCommandModule() {
 		super(false, false, EncryptCommandModule.DESCRIPTOR);

@@ -16,8 +16,7 @@ import com.armedia.commons.utilities.Tools;
 
 public class DecryptCommandModule extends CommandModule {
 
-	private static final CommandDescriptor DESCRIPTOR = new CommandDescriptor("decrypt",
-		"Decrypt an encrypted password", "dec");
+	private static final Descriptor DESCRIPTOR = new Descriptor("decrypt", "Decrypt an encrypted password", "dec");
 
 	public DecryptCommandModule() {
 		super(false, false, DecryptCommandModule.DESCRIPTOR);

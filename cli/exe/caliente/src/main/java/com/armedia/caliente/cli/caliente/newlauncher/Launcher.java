@@ -33,6 +33,7 @@ import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteBaseOptions;
+import com.armedia.caliente.cli.caliente.newlauncher.CommandModule.Descriptor;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
@@ -92,10 +93,10 @@ public class Launcher extends AbstractLauncher {
 		});
 		commandModules.setHideErrors(false);
 
-		Map<String, CommandDescriptor> commands = new TreeMap<>();
+		Map<String, Descriptor> commands = new TreeMap<>();
 		for (CommandModule command : commandModules) {
-			CommandDescriptor newDescriptor = command.getDescriptor();
-			CommandDescriptor oldDescriptor = commands.put(newDescriptor.getName(), newDescriptor);
+			Descriptor newDescriptor = command.getDescriptor();
+			Descriptor oldDescriptor = commands.put(newDescriptor.getName(), newDescriptor);
 			if (oldDescriptor != null) {
 				// ERROR!
 				throw new RuntimeException(String.format(
@@ -117,7 +118,7 @@ public class Launcher extends AbstractLauncher {
 		}
 
 		CommandScheme scheme = new CommandScheme(getProgramName(), true);
-		for (CommandDescriptor d : commands.values()) {
+		for (Descriptor d : commands.values()) {
 			Command c = new Command(d.getName(), d.getAliases());
 			c.setDescription(d.getDescription());
 			scheme.addCommand(c);
