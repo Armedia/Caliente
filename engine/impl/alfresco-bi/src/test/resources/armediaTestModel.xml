@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="armtest:contentModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0 platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd">
+
+	<description>Armedia Caliente Test Object Model</description>
+	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>
+	<version>1.0</version>
+
+	<imports>
+		<!--  Import Alfresco Dictionary Definitions  -->
+		<import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d" />
+
+		<!--  Import Alfresco Content Domain Model Definitions  -->
+		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm" />
+
+		<!-- Import Caliente and Documentum Domain Model Definitions -->
+		<import uri="http://www.armedia.com/model/documentum/1.0" prefix="dctm" />
+		<import uri="http://www.armedia.com/model/armedia/1.0" prefix="arm" />
+	</imports>
+
+	<namespaces>
+		<namespace uri="http://www.armedia.com/model/armedia/test/1.0" prefix="armtest" />
+	</namespaces>
+
+	<types>
+		<!--
+			BEGIN armtest:document
+		-->
+		<type name="armtest:document">
+			<title>Armedia Caliente Test Document</title>
+			<parent>arm:document</parent>
+			<mandatory-aspects>
+				<aspect>dctm:dm_document</aspect>
+			</mandatory-aspects>
+		</type>
+		<!--
+			END armtest:document
+		-->
+
+		<!--
+			BEGIN armtest:customDocument
+		-->
+		<type name="armtest:customDocument">
+			<title>Armedia Caliente Test Custom Document</title>
+			<parent>armtest:document</parent>
+			<properties>
+				<property name="armtest:custom_attribute">
+					<title>Test custom attribute</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END armtest:customDocument
+		-->
+
+		<!--
+			BEGIN armtest:sysObjectChildTest
+		-->
+		<type name="armtest:sysObjectChildTest">
+			<title>Armedia Caliente Test SysObject Child Test</title>
+			<parent>armtest:document</parent>
+			<properties>
+				<property name="armtest:property_one">
+					<title>Property One</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="armtest:property_two">
+					<title>Property Two</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END armtest:sysObjectChildTest
+		-->
+
+		<!--
+			BEGIN armtest:sysObjectGrandchildTest
+		-->
+		<type name="armtest:sysObjectGrandchildTest">
+			<title>Armedia Caliente Test SysObject Grandchild Test</title>
+			<parent>armtest:sysObjectChildTest</parent>
+			<properties>
+				<property name="armtest:property_three">
+					<title>Property Three</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END armtest:sysObjectGrandchildTest
+		-->
+	</types>
+
+	<aspects>
+		<!--
+			BEGIN armtest:folder
+		-->
+		<aspect name="armtest:folder">
+			<title>Armedia Caliente Test Folder</title>
+			<parent>arm:folder</parent>
+			<mandatory-aspects>
+				<aspect>dctm:dm_folder</aspect>
+			</mandatory-aspects>
+		</aspect>
+		<!--
+			BEGIN armtest:folder
+		-->
+
+		<!--
+			BEGIN armtest:customFolder
+		-->
+		<aspect name="armtest:customFolder">
+			<title>Armedia Caliente Test Custom Folder</title>
+			<parent>armtest:folder</parent>
+			<properties>
+				<property name="armtest:custom_info">
+					<title>Test custom info attribute</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END armtest:customFolder
+		-->
+	</aspects>
+</model>
