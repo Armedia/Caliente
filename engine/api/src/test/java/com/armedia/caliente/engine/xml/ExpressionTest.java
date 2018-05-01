@@ -254,4 +254,18 @@ public class ExpressionTest {
 		}
 	}
 
+	@Test
+	public void listEngines() throws Exception {
+		ScriptEngineManager manager = new ScriptEngineManager();
+		for (ScriptEngineFactory f : manager.getEngineFactories()) {
+			String name = f.getEngineName();
+			String ver = f.getEngineVersion();
+			String lang = f.getLanguageName();
+			String lver = f.getLanguageVersion();
+
+			System.out.printf("Engine  : %s %s%n", name, ver);
+			System.out.printf("Language: %s %s%n", lang, lver);
+			System.out.printf("Aliases : %s%n", f.getNames());
+		}
+	}
 }
