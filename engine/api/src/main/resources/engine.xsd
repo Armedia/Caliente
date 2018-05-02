@@ -707,7 +707,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="type" type="tns:cmfType.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmfType.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:choice minOccurs="1" maxOccurs="1">
 						<xsd:element name="from" type="tns:expression.t" />
