@@ -31,8 +31,8 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 	@XmlJavaTypeAdapter(ComparisonAdapter.class)
 	protected Comparison comparison;
 
-	@XmlElement(name = "name", required = true)
-	protected Expression name;
+	@XmlElement(name = "attribute-name", required = true)
+	protected Expression attributeName;
 
 	@XmlElement(name = "cardinality", required = false)
 	@XmlJavaTypeAdapter(CardinalityAdapter.class)
@@ -49,12 +49,12 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 		this.comparison = comparison;
 	}
 
-	public Expression getName() {
-		return this.name;
+	public Expression getAttributeName() {
+		return this.attributeName;
 	}
 
-	public void setName(Expression name) {
-		this.name = name;
+	public void setAttributeName(Expression attributeName) {
+		this.attributeName = attributeName;
 	}
 
 	public Expression getFallback() {
@@ -136,7 +136,7 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
 		final CmfType type = getMappingType(getType());
 		if (type == null) { throw new ActionException("No type name given to find the mapping"); }
-		final String comparand = Tools.toString(ActionTools.eval(getName(), ctx));
+		final String comparand = Tools.toString(ActionTools.eval(getAttributeName(), ctx));
 		if (comparand == null) { throw new ActionException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();
 		final String mappingName = getMappedLabel(ctx);

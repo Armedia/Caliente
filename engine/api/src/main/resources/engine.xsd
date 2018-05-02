@@ -723,9 +723,9 @@
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
 					<xsd:element name="comparison" type="tns:comparison.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
-					<xsd:element name="type" type="tns:cmfType.t" minOccurs="0" maxOccurs="1" />
-					<xsd:element name="mapping-name" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
+					<xsd:element name="attribute-name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="type" type="tns:cmfType.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="mapping-name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 					<xsd:element name="cardinality" type="tns:cardinality.t" minOccurs="0" maxOccurs="1" />
 					<xsd:element name="fallback" type="tns:expression.t" minOccurs="0" maxOccurs="1" />
 				</xsd:sequence>
@@ -977,5 +977,5 @@
 			<xsd:field xpath="@id"/>
 		</xsd:unique>
 	</xsd:element>
-	
+
 </xsd:schema>
