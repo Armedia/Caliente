@@ -134,8 +134,7 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
-		final CmfType type = getMappingType(getType());
-		if (type == null) { throw new ActionException("No type name given to find the mapping"); }
+		final CmfType type = Tools.coalesce(getMappingType(getType()), ctx.getDynamicObject().getType());
 		final String comparand = Tools.toString(ActionTools.eval(getAttributeName(), ctx));
 		if (comparand == null) { throw new ActionException("No comparand given to check the name against"); }
 		final Comparison comparison = getComparison();
