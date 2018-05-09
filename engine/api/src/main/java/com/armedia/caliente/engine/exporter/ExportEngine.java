@@ -745,7 +745,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 					this.log.error("Failed to obtain a worker session", e);
 					return null;
 				}
-				this.log.info(String.format("Worker ready with session [%s]", s.getId()));
+				this.log.info("Worker ready with session [{}]", s.getId());
 				return s;
 			}
 
@@ -758,8 +758,9 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				final String nextKey = target.getSearchKey();
 
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Polled %s", target));
+					this.log.debug("Polled {}", target);
 				}
+				ExportEngine.this.log.info("Worker thread polled {}", target);
 
 				final boolean tx = session.begin();
 				boolean ok = false;
@@ -770,22 +771,21 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						nextType, nextKey);
 					if (exportDelegate == null) {
 						// No object found with that ID...
-						this.log.warn(String.format("No %s object found with searchKey[%s]",
-							(nextType != null ? nextType.name() : "globally unique"), nextKey));
+						this.log.warn("No {} object found with searchKey[{}]",
+							(nextType != null ? nextType.name() : "globally unique"), nextKey);
 						return;
 					}
 					// This allows for object substitutions to take place
 					target = exportDelegate.getExportTarget();
 					nextType = target.getType();
 					if (nextType == null) {
-						this.log.error(String.format(
-							"Failed to determine the object type for target with ID[%s] and searchKey[%s]", nextId,
-							nextKey));
+						this.log.error("Failed to determine the object type for target with ID[{}] and searchKey[{}]",
+							nextId, nextKey);
 						return;
 					}
 
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Exporting the %s object with ID[%s]", nextType, nextId));
+						this.log.debug("Exporting the {} object with ID[{}]", nextType, nextId);
 					}
 
 					// The type mapper parameter is null here because it's only useful
@@ -806,11 +806,11 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						if (result != null) {
 							if (this.log.isDebugEnabled()) {
 								if (result.skipReason != null) {
-									this.log.debug(String.format("Skipped %s [%s](%s) : %s", target.getType(),
-										target.getSearchKey(), target.getId(), result.skipReason));
+									this.log.debug("Skipped {} [{}]({}) : {}", target.getType(), target.getSearchKey(),
+										target.getId(), result.skipReason);
 								} else {
-									this.log.debug(String.format("Exported %s in position %d",
-										result.object.getDescription(), result.objectNumber));
+									this.log.debug("Exported {} in position {}", result.object.getDescription(),
+										result.objectNumber);
 								}
 							}
 						}
@@ -839,6 +839,12 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			@Override
+			protected void processingFailed(SessionWrapper<S> session, ExportTarget target, Throwable thrown) {
+				super.processingFailed(session, target, thrown);
+				ExportEngine.this.log.error("Failed to process {}", target, thrown);
+			}
+
+			@Override
 			protected void cleanup(SessionWrapper<S> session) {
 				session.close();
 			}
@@ -853,6 +859,7 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				output.info("Retrieving the results");
 				final int reportCount = 1000;
 				final AtomicLong targetCounter = new AtomicLong(0);
+				boolean ok = false;
 				try {
 					findExportResults(baseSession.getWrapped(), settings, delegateFactory, new TargetSubmitter() {
 						@Override
@@ -873,13 +880,21 @@ public abstract class ExportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							}
 						}
 					});
+					ok = true;
 				} catch (Exception e) {
 					throw new ExportException("Failed to retrieve the objects to export", e);
 				} finally {
-					output.info("Retrieved a total of {} objects", targetCounter.get());
+					output.info("Retrieved a total of {} objects{}", targetCounter.get(),
+						ok ? "" : " (the load was incomplete)");
 				}
 			} finally {
-				worker.waitForCompletion();
+				List<ExportTarget> l = worker.waitForCompletion();
+				if (!l.isEmpty()) {
+					output.warn("{} items left unprocessed", l.size());
+					for (ExportTarget t : l) {
+						output.warn("Unprocessed item: {}", t);
+					}
+				}
 			}
 
 			setExportProperties(objectStore);

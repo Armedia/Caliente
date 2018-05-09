@@ -140,13 +140,13 @@ public class PrincipalMappingApply extends ConditionalAction {
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
+		final Comparison comparison = getComparison();
+
 		for (Expression name : getNames()) {
 			final String comparand = Tools.toString(ActionTools.eval(name, ctx));
 			if (comparand == null) {
 				continue;
 			}
-			final Comparison comparison = getComparison();
-
 			if (comparison == Comparison.EQ) {
 				// Shortcut!! Look for only one candidate!
 				DynamicValue candidate = ctx.getDynamicObject().getAtt().get(comparand);

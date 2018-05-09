@@ -153,7 +153,7 @@ public class ActionsTest {
 		TestObjectFacade object = ctx.getDynamicObject();
 
 		SecondarySubtypeRemove action = new SecondarySubtypeRemove();
-		action.setValue(new Expression());
+		action.setName(new Expression());
 
 		// First things first: remove by equals
 		Set<String> values = new TreeSet<>();
@@ -163,7 +163,7 @@ public class ActionsTest {
 		object.getSecondarySubtypes().addAll(values);
 		for (String s : values) {
 			Assert.assertTrue(object.getSecondarySubtypes().contains(s));
-			action.setValue(new Expression(s));
+			action.setName(new Expression(s));
 			action.apply(ctx);
 			Assert.assertFalse(object.getSecondarySubtypes().contains(s));
 		}
@@ -172,7 +172,7 @@ public class ActionsTest {
 		object.getSecondarySubtypes().addAll(values);
 		for (String s : values) {
 			Assert.assertTrue(s, object.getSecondarySubtypes().contains(s));
-			action.setValue(new Expression(s.toUpperCase()));
+			action.setName(new Expression(s.toUpperCase()));
 			action.apply(ctx);
 			Assert.assertFalse(s, object.getSecondarySubtypes().contains(s));
 		}
@@ -180,7 +180,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NEQ);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("a"));
+		action.setName(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -189,7 +189,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NEQI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("B"));
+		action.setName(new Expression("B"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("b"));
@@ -198,7 +198,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.LT);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("b"));
+		action.setName(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("b"));
@@ -207,7 +207,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.LTI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("C"));
+		action.setName(new Expression("C"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -216,7 +216,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.GT);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("a"));
+		action.setName(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -225,7 +225,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.GTI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("A"));
+		action.setName(new Expression("A"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -234,7 +234,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NGE);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("b"));
+		action.setName(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("b"));
@@ -243,7 +243,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NGEI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("C"));
+		action.setName(new Expression("C"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -252,7 +252,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NLE);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("a"));
+		action.setName(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -261,7 +261,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NLEI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("A"));
+		action.setName(new Expression("A"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -270,7 +270,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.LE);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("b"));
+		action.setName(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -279,7 +279,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.LEI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("A"));
+		action.setName(new Expression("A"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("b"));
@@ -288,7 +288,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.GE);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("a"));
+		action.setName(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -297,7 +297,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.GEI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("b"));
+		action.setName(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -306,7 +306,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NGT);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("b"));
+		action.setName(new Expression("b"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -315,7 +315,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NGTI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("C"));
+		action.setName(new Expression("C"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -324,7 +324,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NLT);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("a"));
+		action.setName(new Expression("a"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -333,7 +333,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NLTI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("B"));
+		action.setName(new Expression("B"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("a"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("b"));
@@ -347,7 +347,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.SW);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("first_"));
+		action.setName(new Expression("first_"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -357,7 +357,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.SWI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("SeCoNd_"));
+		action.setName(new Expression("SeCoNd_"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
@@ -367,7 +367,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NSW);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("first_"));
+		action.setName(new Expression("first_"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
@@ -377,7 +377,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NSWI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("SeCoNd_"));
+		action.setName(new Expression("SeCoNd_"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -387,7 +387,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.EW);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("_value"));
+		action.setName(new Expression("_value"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -397,7 +397,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.EWI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("_SeCoNdArY"));
+		action.setName(new Expression("_SeCoNdArY"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
@@ -407,7 +407,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NEW);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("_secondary"));
+		action.setName(new Expression("_secondary"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -417,7 +417,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NEWI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("_vAlUe"));
+		action.setName(new Expression("_vAlUe"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
@@ -426,7 +426,7 @@ public class ActionsTest {
 
 		action.setComparison(Comparison.CN);
 		object.getSecondarySubtypes().addAll(values);
-		action.setValue(new Expression("_va"));
+		action.setName(new Expression("_va"));
 		Assert.assertEquals(values, object.getSecondarySubtypes());
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
@@ -437,7 +437,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.CNI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("RsT"));
+		action.setName(new Expression("RsT"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -447,7 +447,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NCN);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("seco"));
+		action.setName(new Expression("seco"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -457,7 +457,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NCNI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("SeCo"));
+		action.setName(new Expression("SeCo"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -467,7 +467,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.RE);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("t_[sv]"));
+		action.setName(new Expression("t_[sv]"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -477,7 +477,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.REI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("T_[Sv]"));
+		action.setName(new Expression("T_[Sv]"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -487,7 +487,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NRE);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("e$"));
+		action.setName(new Expression("e$"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
@@ -497,7 +497,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NREI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("^F"));
+		action.setName(new Expression("^F"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
@@ -507,7 +507,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.GLOB);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("first*"));
+		action.setName(new Expression("first*"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertTrue(object.getSecondarySubtypes().contains("second_secondary"));
@@ -517,7 +517,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.GLOBI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("*sEcO*"));
+		action.setName(new Expression("*sEcO*"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
@@ -527,7 +527,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NGLOB);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("last*"));
+		action.setName(new Expression("last*"));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
@@ -537,7 +537,7 @@ public class ActionsTest {
 		action.setComparison(Comparison.NGLOBI);
 		object.getSecondarySubtypes().addAll(values);
 		Assert.assertEquals(values, object.getSecondarySubtypes());
-		action.setValue(new Expression("*sT_v?L?e"));
+		action.setName(new Expression("*sT_v?L?e"));
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().contains("first_value"));
 		Assert.assertFalse(object.getSecondarySubtypes().contains("second_secondary"));
