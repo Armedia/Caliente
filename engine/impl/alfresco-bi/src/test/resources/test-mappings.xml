@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<attribute-mappings xmlns="http://www.armedia.com/ns/caliente/engine/alfresco-bi" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/alfresco-bi platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-bi.xsd">
+<attribute-mappings xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine  platform:/resource/caliente-engine/src/main/resources/engine.xsd">
 
 	<common-mappings>
 		<!--

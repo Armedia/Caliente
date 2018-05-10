@@ -23,6 +23,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 	"elements"
 })
 @XmlRootElement(name = "transformations")
+@XmlSchema("engine.xsd")
 public final class Transformations implements Action {
 
 	@XmlElement(name = "transformation", type = ActionGroup.class)

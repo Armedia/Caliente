@@ -120,9 +120,9 @@
 		</add-secondary-subtype>
 		<remove-secondary-subtype>
 			<comparison>eq</comparison>
-			<value lang="jexl">
+			<name lang="jexl">
 				<!-- expression -->
-			</value>
+			</name>
 		</remove-secondary-subtype>
 		<replace-secondary-subtype>
 			<regex lang="jexl" caseSensitive="false">

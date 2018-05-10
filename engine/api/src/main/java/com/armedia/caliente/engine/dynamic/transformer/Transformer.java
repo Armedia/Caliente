@@ -10,7 +10,6 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
-import com.armedia.caliente.engine.dynamic.xml.XmlBase;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.store.CmfObject;
@@ -19,8 +18,7 @@ import com.armedia.caliente.store.CmfValueMapper;
 
 public class Transformer {
 
-	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class,
-		XmlBase.DEFAULT_SCHEMA);
+	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class);
 
 	public static Transformer getTransformer(String location, ExternalMetadataLoader metadataLoader,
 		boolean failIfMissing) throws TransformerException {
@@ -78,8 +76,7 @@ public class Transformer {
 					this.transformations.apply(ctx);
 				} catch (ProcessingCompletedException e) {
 					// Do nothing - this is simply our shortcut for stopping the transformation work
-					// in
-					// its tracks
+					// in its tracks
 				}
 
 				return ctx.getDynamicObject().applyChanges(object);

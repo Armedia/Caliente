@@ -125,7 +125,7 @@ public class Expression {
 		language = StringUtils.strip(language);
 		ScriptEngine engine = null;
 		if (language != null) {
-			String actualLanguage = Expression.ENGINE_ALIASES.get(language);
+			String actualLanguage = Expression.ENGINE_ALIASES.get(StringUtils.lowerCase(language));
 			if (!StringUtils.isEmpty(actualLanguage)) {
 				engine = Expression.ENGINE_FACTORY.getEngineByName(actualLanguage);
 			}
