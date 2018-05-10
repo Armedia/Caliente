@@ -78,8 +78,7 @@ public class Transformer {
 					this.transformations.apply(ctx);
 				} catch (ProcessingCompletedException e) {
 					// Do nothing - this is simply our shortcut for stopping the transformation work
-					// in
-					// its tracks
+					// in its tracks
 				}
 
 				return ctx.getDynamicObject().applyChanges(object);
