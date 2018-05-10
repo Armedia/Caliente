@@ -45,11 +45,10 @@ import com.armedia.commons.utilities.Tools;
 public class AttributeMapper {
 
 	private static final Pattern NS_PARSER = Pattern.compile("^([^:]+):(.+)$");
-	private static final String DEFAULT_SCHEMA = "engine.xsd";
 	private static final String DEFAULT_FILENAME = "alfresco-attribute-mappings.xml";
 
 	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class,
-		AttributeMapper.DEFAULT_SCHEMA, AttributeMapper.DEFAULT_FILENAME);
+		AttributeMapper.DEFAULT_FILENAME);
 
 	// Make a cache that doesn't expire items and they don't get GC'd either
 	private final KeyLockableCache<String, MappingRendererSet> cache = new KeyLockableCache<String, MappingRendererSet>(
