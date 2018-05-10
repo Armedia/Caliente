@@ -833,7 +833,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 										String.format("Failed to transform %s", dataObject.getDescription()), e);
 								}
 							}
-							this.contents.add(translator.decodeObject(dataObject));
+
+							CmfObject<V> decoded = translator.decodeObject(dataObject);
+							// TODO: Perform attribute mapping here?
+							this.contents.add(decoded);
 							return true;
 						}
 

@@ -11,8 +11,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.AttributeMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.Model;
+import com.armedia.caliente.engine.dynamic.xml.mapper.AttributeMappings;
 import com.armedia.commons.utilities.XmlTools;
 
 public class JaxbTest {
@@ -93,7 +93,7 @@ public class JaxbTest {
 
 	@Test
 	public void testAttributeMappings() throws Exception {
-		final String schema = "alfresco-bi.xsd";
+		final String schema = "engine.xsd";
 		String[] s = {
 			"test-mappings.xml"
 		};

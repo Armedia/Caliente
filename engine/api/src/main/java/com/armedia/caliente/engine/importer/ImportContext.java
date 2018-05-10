@@ -12,8 +12,8 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectRef;
@@ -80,6 +80,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 					}
 				}
 				CmfObject<V> encoded = ImportContext.this.translator.decodeObject(dataObject);
+				// TODO: Perform attribute mapping here?
 				return handler.handleObject(encoded);
 			}
 

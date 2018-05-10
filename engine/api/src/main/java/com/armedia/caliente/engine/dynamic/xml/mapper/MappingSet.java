@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper;
+package com.armedia.caliente.engine.dynamic.xml.mapper;
 
 import java.util.ArrayList;
 import java.util.List;
