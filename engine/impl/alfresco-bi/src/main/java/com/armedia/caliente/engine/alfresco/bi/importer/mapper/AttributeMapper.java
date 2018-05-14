@@ -18,7 +18,6 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
@@ -59,7 +58,7 @@ public class AttributeMapper {
 		}
 	};
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 	private final Map<String, MappingRendererSet> typedMappings;
 	private final MappingRendererSet commonRenderers;
 	private final String residualsPrefix;
@@ -73,8 +72,7 @@ public class AttributeMapper {
 		return null;
 	}
 
-	public AttributeMapper(AlfrescoSchema schema, String xmlSource, String residualsPrefix)
-		throws XmlInstanceException, XmlNotFoundException {
+	public AttributeMapper(String xmlSource, String residualsPrefix) throws XmlInstanceException, XmlNotFoundException {
 		AttributeMappings xml = AttributeMapper.INSTANCES.getInstance(xmlSource);
 		if (xml == null) {
 			xml = new AttributeMappings();
@@ -133,17 +131,6 @@ public class AttributeMapper {
 
 		Map<String, MappingRendererSet> typedMappings = new TreeMap<>();
 		for (TypeMappings tm : typeMappings) {
-			SchemaMember<?> type = schema.getType(tm.getName());
-			if (type == null) {
-				type = schema.getAspect(tm.getName());
-			}
-			if (type == null) {
-				this.log.warn(
-					"No type or aspect named [{}] was found in the declared Alfresco content model - ignoring this mapping set",
-					tm.getName());
-				continue;
-			}
-
 			// Construct the mapping set for this:
 			renderers = new ArrayList<>();
 			for (MappingElement e : tm.getMappingElements()) {
