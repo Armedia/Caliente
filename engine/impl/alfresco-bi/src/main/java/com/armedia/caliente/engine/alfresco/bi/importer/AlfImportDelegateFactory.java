@@ -251,7 +251,8 @@ public class AlfImportDelegateFactory
 		if (StringUtils.isEmpty(pfx)) {
 			pfx = null;
 		}
-		this.attributeMapper = new AttributeMapper(configuration.getString(AlfSetting.ATTRIBUTE_MAPPING), pfx);
+		this.attributeMapper = new AttributeMapper(this.schema, configuration.getString(AlfSetting.ATTRIBUTE_MAPPING),
+			pfx);
 		String unfiledPath = configuration.getString(AlfSetting.UNFILED_PATH);
 		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
 		unfiledPath = FilenameUtils.normalizeNoEndSeparator(unfiledPath, true);
