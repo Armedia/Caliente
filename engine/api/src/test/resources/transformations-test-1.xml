@@ -94,9 +94,9 @@
 				</and>
 			</if>
 
-			<value lang="java">
+			<name lang="java">
 				<!-- expression -->
-			</value>
+			</name>
 		</set-subtype>
 
 		<replace-subtype>
@@ -114,9 +114,9 @@
 		<add-secondary-subtype>
 			<if>
 			</if>
-			<value lang="rhino">
+			<name lang="rhino">
 				<![CDATA[sdjflk > < DS FASDF SD F<>F ASDF <>ASDF A>SD F<AD FA! & &  && A >  AD>]]>
-			</value>
+			</name>
 		</add-secondary-subtype>
 		<remove-secondary-subtype>
 			<comparison>eq</comparison>

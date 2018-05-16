@@ -454,7 +454,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
@@ -475,7 +475,7 @@
 		<xsd:complexContent>
 			<xsd:extension base="tns:conditionalAction.t">
 				<xsd:sequence>
-					<xsd:element name="value" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
+					<xsd:element name="name" type="tns:expression.t" minOccurs="1" maxOccurs="1" />
 				</xsd:sequence>
 			</xsd:extension>
 		</xsd:complexContent>
