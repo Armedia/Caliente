@@ -18,8 +18,6 @@ Pass 1
 		--log ${log-basename}
 		--log-cfg ${log-cfg-file}
 	*	-e, --engine ${dfc|cmis|shpt|local|...}
-		-d,--db ${dir-or-config}
-		-c,--content ${dir-or-config}
 		command
 
 Pass 2
@@ -32,6 +30,8 @@ Pass 2
 
 		COMMAND: ( EXPORT | IMPORT )
 			(common)
+				-d,--db ${dir-or-config}
+				-c,--content ${dir-or-config}
 				--no-renditions
 				--no-versions
 				--skip-content
@@ -69,6 +69,7 @@ Pass 2
 				*	--docbase ${docbase}
 				*	--user ${user}
 				*	--password ${password}
+					--unified
 					--dfc ${dfc-dir}
 					--dfc-prop ${dfc-prop-file}
 					--dctm ${dctm-dir}
@@ -81,14 +82,14 @@ Pass 2
 				CMIS
 				*	--url ${url}
 				*	--user ${user}
-					--domain ${domain}
 				*	--password ${password}
+					--domain ${domain}
 
 				SHAREPOINT
 				*	--url ${url}
 				*	--user ${user}
-					--domain ${domain}
 				*	--password ${password}
+					--domain ${domain}
 					--source-prefix ${prefix}
 
 				LOCAL
@@ -121,7 +122,7 @@ Pass 2
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
-				
+
 				Alfresco
 				*	--attribute-map ${mapper}
 				*	--content-model ${model1,model2,...,modelN}
