@@ -69,13 +69,13 @@ public class ActionsTest {
 		}
 
 		String value = UUID.randomUUID().toString();
-		action.setValue(new Expression(value));
+		action.setName(new Expression(value));
 
 		action.apply(ctx);
 
 		Assert.assertEquals(value, object.getSubtype());
 
-		action.setValue(new Expression(
+		action.setName(new Expression(
 			"                                                       \n   \t   \n                       \t \t   \n                               "));
 		try {
 			action.apply(ctx);
@@ -84,7 +84,7 @@ public class ActionsTest {
 			// All is well
 		}
 
-		action.setValue(new Expression());
+		action.setName(new Expression());
 		try {
 			action.apply(ctx);
 			Assert.fail("Did not fail with a null-valued expression");
@@ -136,12 +136,12 @@ public class ActionsTest {
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().isEmpty());
 
-		action.setValue(new Expression());
+		action.setName(new Expression());
 		action.apply(ctx);
 		Assert.assertTrue(object.getSecondarySubtypes().isEmpty());
 
 		String testValue = UUID.randomUUID().toString();
-		action.setValue(new Expression(testValue));
+		action.setName(new Expression(testValue));
 		action.apply(ctx);
 		Assert.assertFalse(object.getSecondarySubtypes().isEmpty());
 		Assert.assertTrue(object.getSecondarySubtypes().contains(testValue));

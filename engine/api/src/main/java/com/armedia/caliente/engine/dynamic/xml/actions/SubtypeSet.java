@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionSetSubtype.t", propOrder = {
-	"value"
+	"name"
 })
 public class SubtypeSet extends AbstractSingleValueSet {
 

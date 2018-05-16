@@ -7,28 +7,28 @@
 				<or>
 					<is-type>FOLDER</is-type>
 					<is-subtype comparison="eq" lang="...">
-						
+
 					</is-subtype>
 					<has-attribute comparison="eq" lang="...">
-						
+
 					</has-attribute>
 					<is-attribute-value comparison="eq" cardinality="any">
 						<name lang="...">
-							
+
 						</name>
 						<value lang="...">
-							
+
 						</value>
 					</is-attribute-value>
 					<has-caliente-property comparison="eq" lang="...">
-						
+
 					</has-caliente-property>
 					<is-caliente-property-value comparison="EQ" cardinality="first">
 						<name lang="...">
-							
+
 						</name>
 						<value lang="...">
-							
+
 						</value>
 					</is-caliente-property-value>
 					<not>
@@ -39,25 +39,25 @@
 						<is-latest-version />
 					</oneof>
 					<has-secondary-subtype comparison="eq" lang="...">
-						
+
 					</has-secondary-subtype>
 					<check-expression comparison="eq">
 						<left lang="...">
-							
+
 						</left>
 						<right lang="...">
-							
+
 						</right>
 					</check-expression>
 					<is-variable-set lang="...">
-						
+
 					</is-variable-set>
 					<is-variable-value comparison="eq" cardinality="any">
 						<name lang="...">
-							
+
 						</name>
 						<value lang="...">
-							
+
 						</value>
 					</is-variable-value>
 				</or>
@@ -69,62 +69,62 @@
 					<is-latest-version />
 				</and>
 			</if>
-			<value lang="asdfasdf">
-				
-			</value>
+			<name lang="asdfasdf">
+
+			</name>
 		</set-subtype>
 		<replace-subtype>
 			<regex lang="...">
-				
+
 			</regex>
 			<replacement lang="...">
-				
+
 			</replacement>
 		</replace-subtype>
 		<add-secondary-subtype>
 			<if />
-			<value lang="...">
-				
-			</value>
+			<name lang="...">
+
+			</name>
 		</add-secondary-subtype>
 		<remove-secondary-subtype>
 			<comparison>eq</comparison>
-			<value lang="...">
-				
-			</value>
+			<name lang="...">
+
+			</name>
 		</remove-secondary-subtype>
 		<replace-secondary-subtype>
 			<regex lang="...">
-				
+
 			</regex>
 			<replacement lang="...">
-				
+
 			</replacement>
 		</replace-secondary-subtype>
 		<set-attribute>
 			<name lang="...">
-				
+
 			</name>
 			<value lang="...">
-				
+
 			</value>
 		</set-attribute>
 		<remove-attribute>
 			<comparison>eq</comparison>
 			<name lang="...">
-				
+
 			</name>
 		</remove-attribute>
 		<replace-attribute>
 			<name lang="...">
-				
+
 			</name>
 			<cardinality>all</cardinality>
 			<regex lang="...">
-				
+
 			</regex>
 			<replacement lang="...">
-				
+
 			</replacement>
 		</replace-attribute>
 		<map-attribute-value>
@@ -132,7 +132,7 @@
 				<is-reference />
 			</if>
 			<name lang="...">
-				
+
 			</name>
 			<cardinality>all</cardinality>
 			<case comparison="eq">
