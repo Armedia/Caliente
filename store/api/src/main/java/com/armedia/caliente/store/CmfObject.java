@@ -121,6 +121,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		Objects.requireNonNull(other, "Must provide an object whose number to copy");
 		if (!new CmfObjectSearchSpec(this).equals(new CmfObjectSearchSpec(other))) { throw new IllegalArgumentException(
 			String.format("The given %s is not the same as %s", other.getDescription(), this.getDescription())); }
+		if (this == other) { return; }
 		setNumber(other.getNumber());
 	}
 
