@@ -37,7 +37,6 @@ public enum CmfValueSerializer {
 		public CmfValue doDeserialize(String str) {
 			return new CmfValue(Integer.valueOf(str));
 		}
-
 	},
 	DOUBLE(CmfDataType.DOUBLE) {
 
@@ -51,6 +50,15 @@ public enum CmfValueSerializer {
 			return new CmfValue(Double.longBitsToDouble(Long.decode(str)));
 		}
 
+		@Override
+		protected boolean canSerialize(CmfDataType type) {
+			switch (type) {
+				case INTEGER:
+					return true;
+				default:
+					return super.canSerialize(type);
+			}
+		}
 	},
 	STRING(CmfDataType.STRING) {
 
