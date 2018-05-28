@@ -7,8 +7,6 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.codec.digest.DigestUtils;
-
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -66,13 +64,11 @@ public class LocalFile {
 	}
 
 	public String getId() {
-		return DigestUtils.sha256Hex(getPortableFullPath());
+		return LocalCommon.calculateId(getPortableFullPath());
 	}
 
 	public String getParentId() {
-		String pp = getPortableParentPath();
-		if (Tools.equals("/", pp)) { return null; }
-		return DigestUtils.sha256Hex(pp);
+		return LocalCommon.calculateId(getPortableParentPath());
 	}
 
 	public boolean isFolder() {
