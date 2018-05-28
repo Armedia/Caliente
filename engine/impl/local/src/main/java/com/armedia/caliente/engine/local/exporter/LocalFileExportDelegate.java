@@ -32,8 +32,8 @@ import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -141,7 +141,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 			if (getType() == CmfType.DOCUMENT) {
 				att = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH, CmfDataType.DOUBLE, false);
-				att.setValue(new CmfValue(basicAtts.size()));
+				att.setValue(new CmfValue((double) basicAtts.size()));
 				object.setAttribute(att);
 
 				// All documents are roots...

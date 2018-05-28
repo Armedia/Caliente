@@ -72,7 +72,7 @@ public class LocalFile {
 	public String getParentId() {
 		String pp = getPortableParentPath();
 		if (Tools.equals("/", pp)) { return null; }
-		return String.format("%08x", pp.hashCode());
+		return DigestUtils.sha256Hex(pp);
 	}
 
 	public boolean isFolder() {
