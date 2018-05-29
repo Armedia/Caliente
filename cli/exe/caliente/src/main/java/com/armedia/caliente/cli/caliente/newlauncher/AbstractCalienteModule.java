@@ -2,45 +2,16 @@ package com.armedia.caliente.cli.caliente.newlauncher;
 
 import java.io.File;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
-import com.armedia.caliente.cli.caliente.cfg.SettingManager;
 import com.armedia.caliente.cli.caliente.launcher.CalienteMain;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
-import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
 
 public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CalienteMain {
-
-	private static final String CURRENT_DB = "caliente";
-
-	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
-
-	private static final String DEFAULT_SETTINGS_NAME = "caliente.properties";
-
-	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
-
-	protected static final String ALL = "ALL";
-
-	protected static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-	protected static final String LAST_EXPORT_DATE_PATTERN = AbstractCalienteModule.JAVA_SQL_DATETIME_PATTERN;
-
-	/** The log object used for logging. */
-	protected final Logger log = LoggerFactory.getLogger(getClass());
-	protected final Logger console = LoggerFactory.getLogger("console");
-	protected final CalienteWarningTracker warningTracker;
-
-	private static AbstractCalienteModule<?, ?> instance = null;
-
-	protected final CmfObjectStore<?, ?> cmfObjectStore;
-	protected final CmfContentStore<?, ?, ?> cmfContentStore;
-	protected final E engine;
 
 	protected final String server;
 	protected final String user;
@@ -50,19 +21,6 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 	protected AbstractCalienteModule(E engine, boolean requiresStorage, boolean clearMetadata, boolean clearContent)
 		throws Throwable {
 		if (engine == null) { throw new IllegalArgumentException("Must provide an engine to operate with"); }
-		this.engine = engine;
-
-		// If we have command-line parameters, these supersede all other configurations, even if
-		// we have a configuration file explicitly listed.
-		this.console.info(String.format("Caliente CLI v%s", Caliente.VERSION));
-		this.console.info("Configuring the properties");
-
-		// And we start up the configuration engine...
-		SettingManager.init();
-		this.console.info("Properties ready");
-
-		// First things first...
-		AbstractCalienteModule.instance = this;
 
 		this.server = CLIParam.server.getString();
 		this.user = CLIParam.user.getString();
@@ -70,6 +28,7 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		CmfCrypt crypto = this.engine.getCrypto();
 		this.password = (pass != null ? crypto.encrypt(crypto.decrypt(pass)) : null);
 		this.domain = CLIParam.domain.getString();
+
 		this.warningTracker = new CalienteWarningTracker(this.console, true);
 	}
 
