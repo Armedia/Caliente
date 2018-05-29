@@ -145,15 +145,15 @@ public class JdbcStorePropertyManager {
 		return oldValue;
 	}
 
-	void clearProperties(JdbcOperation operation) throws CmfStorageException {
+	void clearAllProperties(JdbcOperation operation) throws CmfStorageException {
 		try {
-			clearProperties(operation.getConnection());
+			clearAllProperties(operation.getConnection());
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to delete all the store properties", e);
 		}
 	}
 
-	void clearProperties(Connection c) throws SQLException {
+	void clearAllProperties(Connection c) throws SQLException {
 		JdbcTools.getQueryRunner().update(c, getSql(Op.DELETE_ALL));
 	}
 }

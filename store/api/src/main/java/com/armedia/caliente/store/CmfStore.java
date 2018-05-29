@@ -1,6 +1,11 @@
 package com.armedia.caliente.store;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -114,18 +119,70 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 		return doSetProperty(property, value);
 	}
 
+	public final Map<String, CmfValue> setProperties(Map<String, CmfValue> properties) throws CmfStorageException {
+		if (properties == null) { throw new IllegalArgumentException(
+			"Must provide a valid set of properties to store"); }
+		if (properties.isEmpty()) { return properties; }
+		return doSetProperties(properties);
+	}
+
 	public final CmfValue clearProperty(String property) throws CmfStorageException {
 		if (property == null) { throw new IllegalArgumentException("Must provide a valid property to set"); }
 		return doClearProperty(property);
 	}
 
-	public final void clearProperties() throws CmfStorageException {
+	public final Map<String, CmfValue> clearProperties(String... properties) throws CmfStorageException {
+		if (properties == null) { throw new IllegalArgumentException(
+			"Must provide a valid collection of property names to clear"); }
+		return doClearProperties(Arrays.asList(properties));
+	}
+
+	public final Map<String, CmfValue> clearProperties(Collection<String> properties) throws CmfStorageException {
+		if (properties == null) { throw new IllegalArgumentException(
+			"Must provide a valid collection of property names to clear"); }
+		return doClearProperties(properties);
+	}
+
+	protected final Map<String, CmfValue> doClearProperties(Collection<String> properties) throws CmfStorageException {
+		OPERATION operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			Map<String, CmfValue> ret = new TreeMap<>();
+			try {
+				for (String name : properties) {
+					CmfValue value = clearProperty(operation, name);
+					if (value != null) {
+						ret.put(name, value);
+					}
+				}
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return new LinkedHashMap<>(ret);
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format(
+							"Failed to rollback the transaction for setting the properties from %s", properties), e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	public final void clearAllProperties() throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
-				clearProperties(operation);
+				clearAllProperties(operation);
 				if (tx) {
 					operation.commit();
 				}
@@ -144,7 +201,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 		}
 	}
 
-	protected abstract void clearProperties(OPERATION operation) throws CmfStorageException;
+	protected abstract void clearAllProperties(OPERATION operation) throws CmfStorageException;
 
 	protected final CmfValue doGetProperty(String property) throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
@@ -198,7 +255,43 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 		}
 	}
 
-	protected abstract CmfValue setProperty(OPERATION operation, String property, CmfValue value) throws CmfStorageException;
+	protected final Map<String, CmfValue> doSetProperties(Map<String, CmfValue> properties) throws CmfStorageException {
+		OPERATION operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			boolean ok = false;
+			Map<String, CmfValue> ret = new TreeMap<>();
+			try {
+				for (String name : properties.keySet()) {
+					CmfValue value = properties.get(name);
+					if (value == null) {
+						clearProperty(operation, name);
+					} else {
+						ret.put(name, setProperty(operation, name, value));
+					}
+				}
+				if (tx) {
+					operation.commit();
+				}
+				ok = true;
+				return new LinkedHashMap<>(ret);
+			} finally {
+				if (tx && !ok) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(String.format(
+							"Failed to rollback the transaction for setting the properties from %s", properties), e);
+					}
+				}
+			}
+		} finally {
+			endConcurrentInvocation(operation);
+		}
+	}
+
+	protected abstract CmfValue setProperty(OPERATION operation, String property, CmfValue value)
+		throws CmfStorageException;
 
 	public final Set<String> getPropertyNames() throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
@@ -223,7 +316,6 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 	protected abstract Set<String> getPropertyNames(OPERATION operation) throws CmfStorageException;
 
 	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
-
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
