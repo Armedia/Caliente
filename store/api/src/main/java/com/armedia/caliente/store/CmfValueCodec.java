@@ -8,14 +8,14 @@ package com.armedia.caliente.store;
  * @author diego
  *
  */
-public interface CmfValueCodec<V> {
+public interface CmfValueCodec<VALUE> {
 
-	public CmfValue encodeValue(V value);
+	public CmfValue encodeValue(VALUE value);
 
-	public V decodeValue(CmfValue value);
+	public VALUE decodeValue(CmfValue value);
 
-	public boolean isNull(V value);
+	public boolean isNull(VALUE value);
 
-	public V getNull();
+	public VALUE getNull();
 
 }

@@ -1,6 +1,6 @@
 package com.armedia.caliente.store;
 
-public interface CmfObjectHandler<V> {
+public interface CmfObjectHandler<VALUE> {
 	/**
 	 * <p>
 	 * Signal the beginning of a new dependency tier, with the given number. Returns {@code true} if
@@ -43,7 +43,7 @@ public interface CmfObjectHandler<V> {
 	 * @return {@code true} if more objects should be loaded, or {@code false} if this should be the
 	 *         last object load attempted.
 	 */
-	public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException;
+	public boolean handleObject(CmfObject<VALUE> dataObject) throws CmfStorageException;
 
 	/**
 	 * <p>
