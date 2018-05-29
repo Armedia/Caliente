@@ -3,17 +3,17 @@ package com.armedia.caliente.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SessionWrapper<S> {
+public abstract class SessionWrapper<SESSION> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final SessionFactory<S> factory;
-	private final S wrapped;
+	private final SessionFactory<SESSION> factory;
+	private final SESSION wrapped;
 	private boolean valid = true;
 
 	private int openCount = 0;
 
-	protected SessionWrapper(SessionFactory<S> factory, S wrapped) {
+	protected SessionWrapper(SessionFactory<SESSION> factory, SESSION wrapped) {
 		this.factory = factory;
 		this.wrapped = wrapped;
 	}
@@ -28,7 +28,7 @@ public abstract class SessionWrapper<S> {
 
 	protected abstract boolean isSupportsNestedTransactions();
 
-	public final S getWrapped() {
+	public final SESSION getWrapped() {
 		assertValid();
 		return this.wrapped;
 	}

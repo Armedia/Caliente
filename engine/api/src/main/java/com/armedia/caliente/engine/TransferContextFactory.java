@@ -21,7 +21,12 @@ import com.armedia.commons.utilities.ArrayIterator;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class TransferContextFactory<S, V, C extends TransferContext<S, V, ?>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
+public abstract class TransferContextFactory< //
+	SESSION, //
+	VALUE, //
+	CONTEXT_FACTORY extends TransferContext<SESSION, VALUE, ?>, //
+	ENGINE extends TransferEngine<SESSION, VALUE, CONTEXT_FACTORY, ?, ?, ?> //
+> {
 
 	private static CmfType decodeObjectType(Object o) {
 		if (o == null) { return null; }
@@ -62,7 +67,7 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 
 	private final AtomicLong contextId = new AtomicLong(0);
 	private CfgTools settings = CfgTools.EMPTY;
-	private final E engine;
+	private final ENGINE engine;
 	private final Set<CmfType> excludes;
 	private final String productName;
 	private final String productVersion;
@@ -72,9 +77,9 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 	private final Logger output;
 	private final WarningTracker warningTracker;
 
-	protected TransferContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output, WarningTracker tracker)
-		throws Exception {
+	protected TransferContextFactory(ENGINE engine, CfgTools settings, SESSION session,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
+		WarningTracker tracker) throws Exception {
 		if (engine == null) { throw new IllegalArgumentException(
 			"Must provide an engine to which this factory is tied"); }
 		this.engine = engine;
@@ -137,7 +142,7 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		return this.settings;
 	}
 
-	public final E getEngine() {
+	public final ENGINE getEngine() {
 		return this.engine;
 	}
 
@@ -161,9 +166,9 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		}
 	}
 
-	protected abstract String calculateProductName(S session) throws Exception;
+	protected abstract String calculateProductName(SESSION session) throws Exception;
 
-	protected abstract String calculateProductVersion(S session) throws Exception;
+	protected abstract String calculateProductVersion(SESSION session) throws Exception;
 
 	public final String getProductName() {
 		return this.productName;
@@ -173,7 +178,7 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		return this.productVersion;
 	}
 
-	public final C newContext(String rootId, CmfType rootType, S session, int batchPosition) {
+	public final CONTEXT_FACTORY newContext(String rootId, CmfType rootType, SESSION session, int batchPosition) {
 		this.lock.readLock().lock();
 		try {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
@@ -183,7 +188,8 @@ public abstract class TransferContextFactory<S, V, C extends TransferContext<S, 
 		}
 	}
 
-	protected abstract C constructContext(String rootId, CmfType rootType, S session, int batchPosition);
+	protected abstract CONTEXT_FACTORY constructContext(String rootId, CmfType rootType, SESSION session,
+		int batchPosition);
 
 	final String getNextContextId() {
 		return String.format("%s-%016x", getContextLabel(), this.contextId.incrementAndGet());

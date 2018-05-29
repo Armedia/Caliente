@@ -12,11 +12,11 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class SessionFactory<S> implements PooledObjectFactory<S> {
+public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SESSION> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final GenericObjectPool<S> pool;
+	private final GenericObjectPool<SESSION> pool;
 
 	private boolean open = true;
 
@@ -44,7 +44,7 @@ public abstract class SessionFactory<S> implements PooledObjectFactory<S> {
 		this.pool.setConfig(getPoolConfig(settings));
 	}
 
-	public final SessionWrapper<S> acquireSession() throws Exception {
+	public final SessionWrapper<SESSION> acquireSession() throws Exception {
 		this.lock.readLock().lock();
 		if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
 		try {
@@ -54,7 +54,7 @@ public abstract class SessionFactory<S> implements PooledObjectFactory<S> {
 		}
 	}
 
-	final void releaseSession(S session) {
+	final void releaseSession(SESSION session) {
 		// We specifically don't check for openness b/c we don't care...
 		try {
 			this.pool.returnObject(session);
@@ -88,5 +88,5 @@ public abstract class SessionFactory<S> implements PooledObjectFactory<S> {
 		return SessionFactory.getDefaultPoolConfig(settings);
 	}
 
-	protected abstract SessionWrapper<S> newWrapper(S session) throws Exception;
+	protected abstract SessionWrapper<SESSION> newWrapper(SESSION session) throws Exception;
 }
