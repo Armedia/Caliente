@@ -1,7 +1,6 @@
 package com.armedia.caliente.cli.caliente.newlauncher;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,38 +100,5 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 
 	protected String getContentStrategyName() {
 		return LocalOrganizationStrategy.NAME;
-	}
-
-	private File createFile(String path) {
-		File f = new File(path);
-		try {
-			f = f.getCanonicalFile();
-		} catch (IOException e) {
-			// Do nothing
-		} finally {
-			f = f.getAbsoluteFile();
-		}
-		return f;
-	}
-
-	protected File locateFile(String path, boolean required) throws IOException {
-		File f = createFile(path);
-		if (!f.exists()) {
-			if (required) { throw new IOException(String.format("The file [%s] doesn't exist", f.getAbsolutePath())); }
-			return null;
-		}
-
-		// We've found the path we're looking for...verify that it's regular file. Otherwise,
-		// just ignore it. If this is an explicit configuration setting, then we explode!
-		if (!f.isFile()) {
-			if (required) { throw new IOException(
-				String.format("The file [%s] is not a regular file", f.getAbsolutePath())); }
-			return null;
-		}
-
-		// Regardless, if it exists and is a regular file, explode if we can't read it
-		if (!f.canRead()) { throw new IOException(String.format("The file [%s] can't be read", f.getAbsolutePath())); }
-
-		return f;
 	}
 }
