@@ -1,6 +1,6 @@
 package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.ResidualsMode;
+import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.commons.utilities.Tools;
 
 class ResidualsModeTracker {

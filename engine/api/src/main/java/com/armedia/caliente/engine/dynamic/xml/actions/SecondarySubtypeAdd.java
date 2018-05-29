@@ -16,24 +16,24 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionAddSecondarySubtype.t", propOrder = {
-	"value"
+	"name"
 })
 public class SecondarySubtypeAdd extends ConditionalAction {
 
-	@XmlElement(name = "value", required = true)
-	protected Expression value;
+	@XmlElement(name = "name", required = true)
+	protected Expression name;
 
-	public Expression getValue() {
-		return this.value;
+	public Expression getName() {
+		return this.name;
 	}
 
-	public void setValue(Expression value) {
-		this.value = value;
+	public void setName(Expression name) {
+		this.name = name;
 	}
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
-		String secondary = Tools.toString(ActionTools.eval(getValue(), ctx));
+		String secondary = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (StringUtils.isEmpty(secondary)) { return; }
 
 		for (String s : Tools.splitCSVEscaped(secondary)) {

@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
@@ -76,9 +76,9 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		}
 
 		// Copy the contents over...
-		List<CmfContentInfo> contents;
+		List<CmfContentStream> contents;
 		try {
-			contents = ctx.getContentInfo(this.cmfObject);
+			contents = ctx.getContentStreams(this.cmfObject);
 		} catch (Exception e) {
 			throw new ImportException(
 				String.format("Failed to obtain the list of content streams for document [%s](%s)",
@@ -87,7 +87,7 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		}
 
 		if (!contents.isEmpty()) {
-			CmfContentInfo info = contents.get(0);
+			CmfContentStream info = contents.get(0);
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
 			final File src;
 			try {

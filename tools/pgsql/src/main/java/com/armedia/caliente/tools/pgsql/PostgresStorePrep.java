@@ -1,6 +1,7 @@
 package com.armedia.caliente.tools.pgsql;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -84,8 +85,7 @@ public class PostgresStorePrep implements CmfStorePrep {
 		final IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(cmd).artifactStore(artifactStore)
 			.build();
 
-		// TODO: Determine where the data will be stored
-		final Storage storage = new Storage(dbname, metadataStore);
+		final Storage storage = new Storage(dbname, Paths.get(metadataStore, "metadata").toAbsolutePath().toString());
 		if (cleanData) {
 			// Clean out the data store
 			File storageFile = storage.dbDir();
@@ -103,8 +103,13 @@ public class PostgresStorePrep implements CmfStorePrep {
 		List<String> args = new ArrayList<>();
 		// pass info regarding encoding, locale, collate, ctype, instead of setting global
 		// environment settings
-		args.addAll(
-			Arrays.asList("-E", "UTF-8", "--locale=en_US.UTF-8", "--lc-collate=en_US.UTF-8", "--lc-ctype=en_US.UTF-8"));
+		args.addAll(Arrays.asList( //
+			"-E", "UTF-8" //
+			, "--locale=en_US.UTF-8" //
+			, "--lc-collate=en_US.UTF-8" //
+			, "--lc-ctype=en_US.UTF-8" //
+		// TODO: More parameters here? Maybe for RAM allocation, etc?
+		));
 		// TODO: Add more arguments for memory size, etc...
 		/*
 			-B NBUFFERS        number of shared buffers
@@ -113,7 +118,6 @@ public class PostgresStorePrep implements CmfStorePrep {
 			-d 1-5             debugging level
 			-F                 turn fsync off
 			-S WORK-MEM        set amount of memory for sorts (in kB)
-			-V, --version      output version information, then exit
 			--NAME=VALUE       set run-time parameter
 		 */
 		/// args.addAll(Arrays.asList(.....));

@@ -9,6 +9,77 @@
 		</preConditions>
 
 		<!-- **************************************** -->
+		<!-- Replace the contents primary key         -->
+		<!-- **************************************** -->
+
+		<!-- Move the content_number column around -->
+		<addColumn tableName="cmf_content">
+			<column name="new_content_number" afterColumn="object_id" type="int" remarks="The number of item within the object's content list">
+				<constraints nullable="true" />
+			</column>
+		</addColumn>
+		<sql>
+			update cmf_content set new_content_number = content_number
+		</sql>
+		<renameColumn tableName="cmf_content" oldColumnName="content_number" newColumnName="old_content_number"/>
+		<renameColumn tableName="cmf_content" oldColumnName="new_content_number" newColumnName="content_number"/>
+		<addNotNullConstraint tableName="cmf_content" columnName="content_number" columnDataType="int" />
+
+		<!-- Add content_number to the properties table -->
+		<addColumn tableName="cmf_content_property">
+			<column name="content_number" afterColumn="object_id" type="int" remarks="The number of item within the object's content list">
+				<constraints nullable="true" />
+			</column>
+		</addColumn>
+		<sql dbms="postgresql">
+			update cmf_content_property p
+			   set content_number = c.content_number
+			  from cmf_content c
+			 where c.object_id = p.object_id
+			   and c.rendition_id = p.rendition_id
+			   and c.rendition_page = p.rendition_page
+			   and c.modifier = p.modifier
+		</sql>
+		<sql dbms="h2">
+			update cmf_content_property p
+			   set content_number = (
+			           select c.content_number
+			             from cmf_content c
+			            where c.object_id = p.object_id
+			              and c.rendition_id = p.rendition_id
+			              and c.rendition_page = p.rendition_page
+			              and c.modifier = p.modifier
+			       )
+		</sql>
+		<addNotNullConstraint tableName="cmf_content_property" columnName="content_number" columnDataType="int" />
+
+		<!-- Now fix all the constraints -->
+
+		<!-- First, drop... -->
+		<dropForeignKeyConstraint baseTableName="cmf_content_property" constraintName="fk_cmf_content_property_content"/>
+		<dropPrimaryKey tableName="cmf_content_property" />
+		<dropForeignKeyConstraint baseTableName="cmf_content" constraintName="fk_cmf_content_object"/>
+		<dropPrimaryKey tableName="cmf_content" />
+
+		<!-- Then, add... -->
+		<addPrimaryKey tableName="cmf_content" columnNames="object_id, content_number" />
+		<addForeignKeyConstraint constraintName="fk_cmf_content_object"
+			baseTableName="cmf_content" baseColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, content_number, name" />
+		<addForeignKeyConstraint constraintName="fk_cmf_content_property_content"
+			baseTableName="cmf_content_property" baseColumnNames="object_id, content_number"
+			referencedTableName="cmf_content" referencedColumnNames="object_id, content_number"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+
+		<!-- Finally, remove unnecessary crap -->
+		<dropColumn tableName="cmf_content" columnName="old_content_number" />
+		<dropColumn tableName="cmf_content_property" columnName="rendition_id" />
+		<dropColumn tableName="cmf_content_property" columnName="rendition_page" />
+		<dropColumn tableName="cmf_content_property" columnName="modifier" />
+
+		<!-- **************************************** -->
 		<!-- Add the "enabled" column to cmf_object   -->
 		<!-- **************************************** -->
 		<addColumn tableName="cmf_object">

@@ -14,6 +14,7 @@ import com.armedia.caliente.cli.OptionParser;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.OptionWrapper;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
@@ -44,12 +45,12 @@ public abstract class AbstractLauncher {
 	 * getReturnValue()}.
 	 * </p>
 	 *
-	 * @param commandLine
 	 * @throws CommandLineProcessingException
 	 *             if there was an error processing the command line - such as an illegal option
 	 *             combination, illegal option value, etc
 	 */
-	protected void processCommandLineResult(OptionParseResult commandLine) throws CommandLineProcessingException {
+	protected void processCommandLineResult(OptionValues baseValues, String command, OptionValues commandValues,
+		Collection<String> positionals) throws CommandLineProcessingException {
 	}
 
 	protected final int launch(String... args) {
@@ -58,14 +59,14 @@ public abstract class AbstractLauncher {
 
 	protected abstract String getProgramName();
 
-	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValies,
+	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
 		// By default, do nothing...
 		return false;
 	}
 
 	protected Collection<? extends LaunchClasspathHelper> getClasspathHelpers(OptionValues baseValues, String command,
-		OptionValues commandValies, Collection<String> positionals) {
+		OptionValues commandValues, Collection<String> positionals) {
 		return Collections.emptyList();
 	}
 
@@ -80,6 +81,10 @@ public abstract class AbstractLauncher {
 	}
 
 	protected abstract OptionScheme getOptionScheme();
+
+	protected final int launch(OptionWrapper helpOption, String... args) {
+		return launch(Option.unwrap(helpOption), args);
+	}
 
 	protected final int launch(Option helpOption, String... args) {
 		final OptionScheme optionScheme;
@@ -109,7 +114,8 @@ public abstract class AbstractLauncher {
 		}
 
 		try {
-			processCommandLineResult(result);
+			processCommandLineResult(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
+				result.getPositionals());
 		} catch (CommandLineProcessingException e) {
 			this.log.error("Failed to process the command-line values", e);
 			return e.getReturnValue();
@@ -178,6 +184,6 @@ public abstract class AbstractLauncher {
 		}
 	}
 
-	protected abstract int run(OptionValues baseValues, String command, OptionValues commandValies,
+	protected abstract int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception;
 }

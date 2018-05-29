@@ -8,9 +8,11 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Properties;
 
+import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -29,6 +31,8 @@ public class EmailUtils {
 
 	/** The log object used for logging. */
 	private static Logger log = LoggerFactory.getLogger(EmailUtils.class);
+
+	private static final InternetAddress[] NO_ADDRESS = new InternetAddress[0];
 
 	/**
 	 * Post mail.
@@ -52,8 +56,11 @@ public class EmailUtils {
 		Properties props = new Properties();
 		props.put("mail.smtp.host", smtpHost);
 
+		// TODO: Support authenticated SMTP
+		Authenticator auth = null;
+
 		// Get the default Session
-		Session session = Session.getDefaultInstance(props, null);
+		Session session = Session.getDefaultInstance(props, auth);
 		session.setDebug(debug);
 
 		// create a message
@@ -63,13 +70,14 @@ public class EmailUtils {
 		InternetAddress addressFrom = new InternetAddress(from);
 		msg.setFrom(addressFrom);
 
-		InternetAddress[] addressTo = new InternetAddress[recipients.size()];
-		int i = 0;
+		Collection<InternetAddress> addressTo = new ArrayList<>(recipients.size());
 		for (String recipient : recipients) {
-			addressTo[i] = new InternetAddress(recipient);
-			i++;
+			if (!StringUtils.isEmpty(recipient)) {
+				addressTo.add(new InternetAddress(recipient));
+			}
 		}
-		msg.setRecipients(Message.RecipientType.TO, addressTo);
+		if (addressTo.isEmpty()) { throw new MessagingException("No destination addresses given"); }
+		msg.setRecipients(Message.RecipientType.TO, addressTo.toArray(EmailUtils.NO_ADDRESS));
 
 		// Optional : You can also set your custom headers in the Email if you Want
 		msg.addHeader("X-CalienteHeader", "Caliente-Related");

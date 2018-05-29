@@ -3,15 +3,15 @@ package com.armedia.caliente.store;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class CmfStoreOperation<C> {
+public abstract class CmfStoreOperation<CONNECTION> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final C connection;
+	private final CONNECTION connection;
 	private boolean valid = true;
 	private boolean transactionOpen = false;
 
-	protected CmfStoreOperation(C wrapped) {
+	protected CmfStoreOperation(CONNECTION wrapped) {
 		if (wrapped == null) { throw new IllegalArgumentException(
 			"Must provide the connection that this operation is related to"); }
 		this.connection = wrapped;
@@ -23,7 +23,7 @@ public abstract class CmfStoreOperation<C> {
 
 	protected abstract boolean supportsTransactions();
 
-	public final C getConnection() {
+	public final CONNECTION getConnection() {
 		assertValid();
 		return this.connection;
 	}

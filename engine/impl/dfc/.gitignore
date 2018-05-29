@@ -1,4 +1,4 @@
-target
-.refactorings
-documentum
-cmf
+/target/
+/.refactorings/
+/documentum/
+/cmf/

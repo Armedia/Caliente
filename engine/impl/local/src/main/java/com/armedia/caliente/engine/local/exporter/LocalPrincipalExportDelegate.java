@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
@@ -94,7 +94,7 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	}
 
 	@Override
-	protected List<CmfContentInfo> storeContent(LocalExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentStream> storeContent(LocalExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception {
 		return null;

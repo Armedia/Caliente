@@ -257,6 +257,7 @@ public final class XmlProperties {
 			marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
 			xml.writeStartDocument(charsetName, "1.1");
+			// Remove the DTD declaration - this can cause problems in some environments
 			xml.writeDTD(XmlProperties.PROPERTIES_DTD);
 			xml.writeStartElement("properties");
 			xml.flush();

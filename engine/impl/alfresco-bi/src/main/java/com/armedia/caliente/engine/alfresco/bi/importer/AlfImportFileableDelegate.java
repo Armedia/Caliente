@@ -26,14 +26,15 @@ import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMappingR
 import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeValue;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
+import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
@@ -106,7 +107,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return this.reference;
 	}
 
-	protected AlfrescoType calculateTargetType(CmfContentInfo content) throws ImportException {
+	protected AlfrescoType calculateTargetType(CmfContentStream content) throws ImportException {
 		Set<String> allAspects = this.factory.schema.getAspectNames();
 		List<String> badAspects = new ArrayList<>();
 		List<String> goodAspects = new ArrayList<>(allAspects.size());
@@ -125,22 +126,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			this.cmfObject.getSubtype(), this.cmfObject.getDescription()));
 	}
 
-	protected final AlfrescoType getTargetType(CmfContentInfo content) throws ImportException {
-		AlfrescoType type = null;
-		if (isReference()) {
-			// If this is a reference - folder or document, doesn't matter...
-			type = this.referenceType;
-		} else {
-			type = calculateTargetType(content);
-		}
-
-		// No match? Error!
-		if (type == null) { throw new ImportException(String.format(
-			"Failed to find a proper type mapping for %s of type [%s] (%s rendition, page #%d)",
-			this.cmfObject.getType(), this.cmfObject.getSubtype(),
-			content.isDefaultRendition() ? "default" : content.getRenditionIdentifier(), content.getRenditionPage())); }
-
-		return type;
+	protected final AlfrescoType getTargetType(CmfContentStream content) throws ImportException {
+		if (!isReference()) { return calculateTargetType(content); }
+		if (this.referenceType == null) { throw new ImportException(
+			String.format("References are not supported for %s", this.cmfObject.getDescription())); }
+		return this.referenceType;
 	}
 
 	protected final void storeValue(AlfImportContext ctx, CmfProperty<CmfValue> srcAtt, String name, boolean multiple,
@@ -240,7 +230,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	}
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
-		CmfContentInfo content) throws ImportException {
+		CmfContentStream content) throws ImportException {
 
 		AttributeMappingResult mappedAttributes = this.factory.getAttributeMapper().renderMappedAttributes(targetType,
 			this.cmfObject);
@@ -306,6 +296,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		if (this.factory.getSchema().hasAspect(AlfImportFileableDelegate.STATUS_ASPECT)) {
 			values.add(AlfImportFileableDelegate.STATUS_ASPECT);
 		}
+
 		if (!isReference()) {
 			// Set the history ID property
 			currentProperty = "arm:historyId";
@@ -313,44 +304,51 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				p.setProperty(currentProperty, this.cmfObject.getHistoryId());
 			}
 
-			/* For now, disable the ACL generation */
-			/*
-			// Map the group attributes
-			String group = null;
-			CmfValue groupValue = getAttributeValue(IntermediateAttribute.GROUP);
-			if (groupValue != null) {
-				group = this.factory.mapGroup(groupValue.asString());
+			currentProperty = "arm:aclInfo";
+			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+				// Map the group attributes
+				String group = null;
+				CmfValue groupValue = getAttributeValue(IntermediateAttribute.GROUP);
+				if (groupValue != null) {
+					group = groupValue.asString();
+				}
+				p.setProperty(currentProperty, Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
 			}
-			
-			p.setProperty("arm:aclInfo", Tools.coalesce(generateAcl(ctx, p.getProperty("cm:owner"), group), ""));
-			
-			CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
-			if ((aclInherit != null) && !aclInherit.isNull()) {
-				p.setProperty("arm:aclInheritance", aclInherit.asString());
+
+			currentProperty = "arm:aclInheritance";
+			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+				CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
+				if ((aclInherit != null) && !aclInherit.isNull()) {
+					p.setProperty("arm:aclInheritance", aclInherit.asString());
+				}
 			}
-			*/
 
 			// Not a reference? Add the caliente aspect
 			if (this.factory.getSchema().hasAspect(AlfImportFileableDelegate.CALIENTE_ASPECT)) {
 				values.add(AlfImportFileableDelegate.CALIENTE_ASPECT);
 			}
 		} else {
-			CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.REF_TARGET);
-			if ((prop == null) || !prop.hasValues()) { throw new ImportException(
-				String.format("Exported object %s doesn't have the required reference target metadata",
-					this.cmfObject.getDescription())); }
+			final String refTarget = "arm:refTarget";
+			final String refVersion = "arm:refVersion";
+			if (includeProperty(includeResiduals, refTarget, targetType)
+				&& includeProperty(includeResiduals, refVersion, targetType)) {
+				CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.REF_TARGET);
+				if ((prop == null) || !prop.hasValues()) { throw new ImportException(
+					String.format("Exported object %s doesn't have the required reference target metadata",
+						this.cmfObject.getDescription())); }
 
-			String refTarget = prop.getValue().asString();
-			if (StringUtils.isEmpty(refTarget)) { throw new ImportException(
-				String.format("Exported object %s has empty reference target metadata (must not be empty)",
-					this.cmfObject.getDescription())); }
-			p.setProperty("arm:refTarget", refTarget);
+				String refTargetValue = prop.getValue().asString();
+				if (StringUtils.isEmpty(refTargetValue)) { throw new ImportException(
+					String.format("Exported object %s has empty reference target metadata (must not be empty)",
+						this.cmfObject.getDescription())); }
+				p.setProperty("arm:refTarget", refTargetValue);
 
-			prop = this.cmfObject.getProperty(IntermediateProperty.REF_VERSION);
-			if ((prop != null) && prop.hasValues()) {
-				String value = prop.getValue().asString();
-				if (!StringUtils.isEmpty(value)) {
-					p.setProperty("arm:refVersion", value);
+				prop = this.cmfObject.getProperty(IntermediateProperty.REF_VERSION);
+				if ((prop != null) && prop.hasValues()) {
+					String value = prop.getValue().asString();
+					if (!StringUtils.isEmpty(value)) {
+						p.setProperty(refVersion, value);
+					}
 				}
 			}
 		}
@@ -393,7 +391,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				&& unfiledProp.getValue().asBoolean();
 			if (unfiled) {
 				// This helps protect against duplicate object names
-				name = String.format("%s-%s", this.cmfObject.getHistoryId(), name);
+				name = this.factory.getUnfiledName(ctx, this.cmfObject);
 			}
 			p.setProperty(currentProperty, name);
 		}
@@ -416,17 +414,26 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				CmfProperty<CmfValue> permits = dataObject.getAttribute("dctm:r_accessor_permit");
 				CmfProperty<CmfValue> permitTypes = dataObject.getAttribute("dctm:r_permit_type");
 
-				final int count = Tools.min(accessors.getValueCount(), accessors.getValueCount(),
-					accessorTypes.getValueCount(), permits.getValueCount());
+				final int count = Tools.min(accessors.getValueCount(), accessorTypes.getValueCount(),
+					permits.getValueCount());
 
 				for (int i = 0; i < count; i++) {
 					String accessor = accessors.getValue(i).asString();
 					final boolean is_group = accessorTypes.getValue(i).asBoolean();
 					final int permit = permits.getValue(i).asInteger();
-					final int permitType = permitTypes.getValue(i).asInteger();
+					final int permitType;
+					if (i < permitTypes.getValueCount()) {
+						permitType = permitTypes.getValue(i).asInteger();
+					} else {
+						AlfImportFileableDelegate.this.log.warn(
+							"Assuming permitType value 0 for {} referenced from {}, accessor # {} ({} [{}]), expected {} but only have {} permitType values",
+							dataObject.getDescription(), AlfImportFileableDelegate.this.cmfObject.getDescription(),
+							i + 1, (is_group ? "group" : "user"), accessor, count, permitTypes.getValueCount());
+						permitType = 0;
+					}
 
 					if (permitType != 0) {
-						// We can't handle other permit typespopulatePrimaryAttributes yet...
+						// We can't handle other permit types than AccessPermit yet...
 						continue;
 					}
 
@@ -477,7 +484,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return null;
 	}
 
-	protected final void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentInfo content)
+	protected final void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentStream content)
 		throws ImportException {
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
@@ -524,6 +531,20 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	@Override
 	protected final Collection<ImportOutcome> importObject(CmfAttributeTranslator<CmfValue> translator,
 		AlfImportContext ctx) throws ImportException, CmfStorageException {
+		boolean ok = false;
+		try {
+			Collection<ImportOutcome> outcomes = doImportObject(translator, ctx);
+			ok = true;
+			return outcomes;
+		} finally {
+			if (!ok) {
+				this.factory.resetIndex();
+			}
+		}
+	}
+
+	protected final Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
+		AlfImportContext ctx) throws ImportException, CmfStorageException {
 
 		if (!ctx.getContentStore()
 			.isSupportsFileAccess()) { throw new ImportException("This engine requires filesystem access"); }
@@ -541,22 +562,35 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/", this.cmfObject.getId());
 
 		// Step 1: copy over all the attributes that need copying over, un-mapping them as needed
-		Collection<CmfContentInfo> contents = ctx.getContentInfo(this.cmfObject);
+		Collection<CmfContentStream> contents = ctx.getContentStreams(this.cmfObject);
 		if (contents.isEmpty()) {
 			// No content streams, so make one up so we can build the properties file
-			contents = Collections.singleton(new CmfContentInfo());
+			contents = Collections.singleton(new CmfContentStream());
 		}
 
 		boolean vdocRootIndexed = false;
 		Set<String> vdocVersionsIndexed = new HashSet<>();
 		boolean renditionsRootIndexed = false;
 		Set<String> renditionTypesIndexed = new HashSet<>();
-		for (CmfContentInfo content : contents) {
+		final boolean skipRenditions = this.factory.isSkipRenditions();
+		for (CmfContentStream content : contents) {
+			if (skipRenditions && !content.isDefaultRendition()) {
+				// Skip the non-default rendition
+				continue;
+			}
+
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(this.factory.getTranslator(),
 				this.cmfObject, content);
 
 			// First things first: identify the type we're going to store into
 			AlfrescoType targetType = getTargetType(content);
+			if (targetType == null) {
+				// No type...so...this is a skip
+				throw new ImportException(String.format(
+					"Failed to identify a target object type for %s, content %s (source type = %s, secondaries = %s, reference = %s)",
+					this.cmfObject.getDescription(), content.toString(), this.cmfObject.getSubtype(),
+					this.cmfObject.getSecondarySubtypes(), isReference()));
+			}
 
 			final File main;
 			try {

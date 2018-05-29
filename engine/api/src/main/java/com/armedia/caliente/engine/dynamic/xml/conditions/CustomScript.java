@@ -5,12 +5,25 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionCustomScript.t")
 public class CustomScript extends AbstractExpressionCondition {
+
+	private static final String DEFAULT_LANG = "jexl";
+
+	@Override
+	public String getLang() {
+		String lang = super.getLang();
+		if (StringUtils.isEmpty(lang)) {
+			lang = CustomScript.DEFAULT_LANG;
+		}
+		return lang;
+	}
 
 	@Override
 	public boolean check(DynamicElementContext ctx) throws ConditionException {

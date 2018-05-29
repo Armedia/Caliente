@@ -14,7 +14,7 @@ import com.armedia.commons.utilities.XmlTools;
 
 public abstract class XmlBase {
 
-	public static final String DEFAULT_SCHEMA = "engine.xsd";
+	protected static final String DEFAULT_SCHEMA = "engine.xsd";
 	public static final boolean DEFAULT_FORMAT = true;
 
 	public static <T> void storeToXML(T object, OutputStream out) throws JAXBException {

@@ -1,4 +1,4 @@
-delivery
-tmp
+/delivery/
+/tmp/
 **/.*.swp
 **/.swp

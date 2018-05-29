@@ -32,6 +32,7 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfStorageException;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -251,8 +252,19 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				DfUtils.lockObject(this.log, object);
 				object.fetch(null);
 				this.log.info(String.format("Acquired lock on %s", this.cmfObject.getDescription()));
+				// First, store the mapping for the object's exact ID
 				context.getAttributeMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
 					this.cmfObject.getId(), object.getObjectId().getId());
+				// Now, if necessary, store the mapping for the object's chronicle ID
+				if (object.hasAttr(DctmAttributes.I_CHRONICLE_ID)) {
+					final String attName = DctmAttributes.I_CHRONICLE_ID;
+					final String sourceHistoryId = this.cmfObject.getHistoryId();
+					final CmfType type = getDctmType().getStoredObjectType();
+					if (context.getAttributeMapper().getTargetMapping(type, attName, sourceHistoryId) == null) {
+						context.getAttributeMapper().setMapping(type, attName, sourceHistoryId,
+							object.getId(attName).getId());
+					}
+				}
 
 				if (isSameObject(object, context)) {
 					ok = true;

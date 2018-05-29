@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
+import com.armedia.caliente.engine.TransferEngineException;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
@@ -55,25 +56,31 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, CF>, CF extends ImportContextFactory<S, W, V, C, ?, ?>, DF extends ImportDelegateFactory<S, W, V, C, ?>>
-	extends TransferEngine<S, V, C, CF, DF, ImportEngineListener> {
+public abstract class ImportEngine<//
+	SESSION, //
+	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
+	VALUE, //
+	IMPORT_CONTEXT extends ImportContext<SESSION, VALUE, IMPORT_CONTEXT_FACTORY>, //
+	IMPORT_CONTEXT_FACTORY extends ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?>, //
+	IMPORT_DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> //
+> extends TransferEngine<SESSION, VALUE, IMPORT_CONTEXT, IMPORT_CONTEXT_FACTORY, IMPORT_DELEGATE_FACTORY, ImportEngineListener> {
 
 	private class BatchWorker implements Callable<Map<String, Collection<ImportOutcome>>> {
 
 		private final SynchronizedCounter workerCounter;
 
 		private final Logger log = LoggerFactory.getLogger(getClass());
-		private final SessionFactory<S> sessionFactory;
+		private final SessionFactory<SESSION> sessionFactory;
 		private final ImportEngineListener listenerDelegator;
 		private final ImportState importState;
 		private final Batch batch;
-		private final ImportContextFactory<S, W, V, C, ?, ?> contextFactory;
-		private final ImportDelegateFactory<S, W, V, C, ?> delegateFactory;
+		private final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory;
+		private final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory;
 
-		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter, SessionFactory<S> sessionFactory,
+		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter, SessionFactory<SESSION> sessionFactory,
 			ImportEngineListener listenerDelegator, ImportState importState,
-			final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-			final ImportDelegateFactory<S, W, V, C, ?> delegateFactory) {
+			final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory,
+			final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory) {
 			this.sessionFactory = sessionFactory;
 			this.listenerDelegator = listenerDelegator;
 			this.importState = importState;
@@ -102,7 +109,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						this.log.debug(String.format("Polled a batch with %d items", this.batch.contents.size()));
 					}
 
-					final SessionWrapper<S> session;
+					final SessionWrapper<SESSION> session;
 					try {
 						session = this.sessionFactory.acquireSession();
 					} catch (Exception e) {
@@ -119,7 +126,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 						this.listenerDelegator.objectHistoryImportStarted(this.importState.jobId, this.batch.type,
 							this.batch.id, this.batch.contents.size());
 						int i = 0;
-						batch: for (CmfObject<V> next : this.batch.contents) {
+						batch: for (CmfObject<VALUE> next : this.batch.contents) {
 							if (failBatch) {
 								this.log.error(String.format("Batch has been failed - will not process %s (%s)",
 									next.getDescription(), ImportResult.SKIPPED.name()));
@@ -129,7 +136,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								continue batch;
 							}
 
-							final C ctx = this.contextFactory.newContext(next.getId(), next.getType(),
+							final IMPORT_CONTEXT ctx = this.contextFactory.newContext(next.getId(), next.getType(),
 								session.getWrapped(), i);
 							ImportResult result = ImportResult.FAILED;
 							String info = null;
@@ -183,7 +190,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 								}
 								try {
 									this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-									ImportDelegate<?, S, W, V, C, ?, ?> delegate = this.delegateFactory
+									ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> delegate = this.delegateFactory
 										.newImportDelegate(next);
 									final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
 										ctx);
@@ -277,7 +284,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	private class Batch {
 		private final CmfType type;
 		private final String id;
-		private final Collection<CmfObject<V>> contents;
+		private final Collection<CmfObject<VALUE>> contents;
 		private final ImportStrategy strategy;
 		private BatchStatus status = BatchStatus.PENDING;
 
@@ -285,7 +292,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			this(null, null, null, null);
 		}
 
-		private Batch(CmfType type, String id, Collection<CmfObject<V>> contents, ImportStrategy strategy) {
+		private Batch(CmfType type, String id, Collection<CmfObject<VALUE>> contents, ImportStrategy strategy) {
 			this.type = type;
 			this.id = id;
 			this.contents = contents;
@@ -510,7 +517,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 		final CfgTools configuration = new CfgTools(settings);
 		final ImportState importState = new ImportState(output, objectStore, streamStore, configuration);
-		final SessionFactory<S> sessionFactory;
+		final SessionFactory<SESSION> sessionFactory;
 		try {
 			sessionFactory = newSessionFactory(configuration, this.crypto);
 		} catch (Exception e) {
@@ -518,7 +525,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		}
 
 		try {
-			SessionWrapper<S> baseSession = null;
+			SessionWrapper<SESSION> baseSession = null;
 			try {
 				baseSession = sessionFactory.acquireSession();
 			} catch (Exception e) {
@@ -527,8 +534,8 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			Transformer transformer = null;
 			ObjectFilter filter = null;
-			ImportContextFactory<S, W, V, C, ?, ?> contextFactory = null;
-			ImportDelegateFactory<S, W, V, C, ?> delegateFactory = null;
+			ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory = null;
+			ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory = null;
 			try {
 				try {
 					transformer = getTransformer(configuration);
@@ -654,9 +661,9 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 	}
 
 	private final CmfObjectCounter<ImportResult> runImportImpl(final ImportState importState,
-		final SessionFactory<S> sessionFactory, CmfObjectCounter<ImportResult> counter,
-		final ImportContextFactory<S, W, V, C, ?, ?> contextFactory,
-		final ImportDelegateFactory<S, W, V, C, ?> delegateFactory, final Transformer transformer,
+		final SessionFactory<SESSION> sessionFactory, CmfObjectCounter<ImportResult> counter,
+		final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory,
+		final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory, final Transformer transformer,
 		final ObjectFilter filter) throws ImportException, CmfStorageException {
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;
@@ -693,10 +700,14 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			objectStore.clearAttributeMappings();
-			loadPrincipalMappings(objectStore.getAttributeMapper(), settings);
+			try {
+				loadPrincipalMappings(objectStore.getAttributeMapper(), settings);
+			} catch (TransferEngineException e) {
+				throw new ImportException(e.getMessage(), e.getCause());
+			}
 			// Ensure the target path exists
 			{
-				final SessionWrapper<S> rootSession;
+				final SessionWrapper<SESSION> rootSession;
 				try {
 					rootSession = sessionFactory.acquireSession();
 				} catch (Exception e) {
@@ -725,7 +736,14 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 
 			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();
-				if (MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p)) {
+				final boolean loaded;
+				try {
+					loaded = MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p);
+				} catch (TransferEngineException e) {
+					throw new ImportException(e.getMessage(), e.getCause());
+				}
+
+				if (loaded) {
 					// Things happen differently here... since we have a limited scope in which
 					// objects require fixing, we don't sweep the whole table, but instead submit
 					// the IDs that we want fixed.
@@ -736,7 +754,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 			}
 
 			listenerDelegator.importStarted(importState, containedTypes);
-			final CmfAttributeTranslator<V> translator = getTranslator();
+			final CmfAttributeTranslator<VALUE> translator = getTranslator();
 			for (final CmfType type : CmfType.values()) {
 				final Long total = containedTypes.get(type);
 				if (total == null) {
@@ -778,7 +796,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 				try {
 					objectStore.loadObjects(type, new CmfObjectHandler<CmfValue>() {
 						private boolean filtered = false;
-						private List<CmfObject<V>> contents = null;
+						private List<CmfObject<VALUE>> contents = null;
 
 						@Override
 						public boolean newTier(int tier) throws CmfStorageException {
@@ -821,7 +839,10 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 										String.format("Failed to transform %s", dataObject.getDescription()), e);
 								}
 							}
-							this.contents.add(translator.decodeObject(dataObject));
+
+							CmfObject<VALUE> decoded = translator.decodeObject(dataObject);
+							// TODO: Perform attribute mapping here?
+							this.contents.add(decoded);
 							return true;
 						}
 
@@ -833,7 +854,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 							// Was it filtered?
 							if (this.filtered) {
 								// Mark it as filtered in the import status!!
-								for (CmfObject<V> object : this.contents) {
+								for (CmfObject<VALUE> object : this.contents) {
 									objectStore.setImportStatus(object, ImportResult.SKIPPED,
 										"Excluded by filtering logic");
 								}
@@ -950,7 +971,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		return false;
 	}
 
-	protected CmfNameFixer<V> getNameFixer(Logger output) {
+	protected CmfNameFixer<VALUE> getNameFixer(Logger output) {
 		return null;
 	}
 
@@ -958,7 +979,7 @@ public abstract class ImportEngine<S, W extends SessionWrapper<S>, V, C extends 
 		return TransferEngine.getTransferEngine(ImportEngine.class, targetName);
 	}
 
-	protected void initContext(C ctx) {
+	protected void initContext(IMPORT_CONTEXT ctx) {
 	}
 
 	@Override

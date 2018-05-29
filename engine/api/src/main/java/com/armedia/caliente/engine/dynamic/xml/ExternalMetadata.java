@@ -21,6 +21,7 @@ import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 	"metadataSources", "metadataSets"
 })
 @XmlRootElement(name = "external-metadata")
+@XmlSchema("engine.xsd")
 public class ExternalMetadata {
 
 	@XmlElement(name = "data-source", required = false)

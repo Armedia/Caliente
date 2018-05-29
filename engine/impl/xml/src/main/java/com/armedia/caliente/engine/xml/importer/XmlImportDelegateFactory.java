@@ -33,7 +33,7 @@ import com.armedia.caliente.engine.xml.common.XmlSessionWrapper;
 import com.armedia.caliente.engine.xml.common.XmlSetting;
 import com.armedia.caliente.engine.xml.importer.jaxb.AclsT;
 import com.armedia.caliente.engine.xml.importer.jaxb.AggregatorBase;
-import com.armedia.caliente.engine.xml.importer.jaxb.ContentInfoT;
+import com.armedia.caliente.engine.xml.importer.jaxb.ContentStreamT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentIndexEntryT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentIndexT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentIndexVersionT;
@@ -121,7 +121,7 @@ public class XmlImportDelegateFactory
 				} else {
 					// The content's location is in the first version
 					DocumentVersionT first = l.get(0);
-					ContentInfoT content = first.getContents().get(0);
+					ContentStreamT content = first.getContents().get(0);
 					File tgt = new File(XmlImportDelegateFactory.this.content, content.getLocation());
 					File dir = tgt.getParentFile();
 					if (dir != null) {
@@ -284,7 +284,7 @@ public class XmlImportDelegateFactory
 		if (db != null) {
 			this.db = new File(db).getCanonicalFile();
 		} else {
-			this.db = new File("cmsmf-xml").getCanonicalFile();
+			this.db = new File("caliente-data").getCanonicalFile();
 		}
 		FileUtils.forceMkdir(this.db);
 		String content = configuration.getString(XmlSetting.CONTENT);

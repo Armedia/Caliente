@@ -9,12 +9,12 @@ import java.util.NoSuchElementException;
 
 import com.armedia.commons.utilities.Tools;
 
-public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
+public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE> {
 
-	private V singleValue = null;
-	private final List<V> values;
+	private VALUE singleValue = null;
+	private final List<VALUE> values;
 
-	public CmfProperty(CmfProperty<V> pattern) {
+	public CmfProperty(CmfProperty<VALUE> pattern) {
 		super(pattern);
 		if (pattern == null) { throw new IllegalArgumentException("Must provide a pattern to construct from"); }
 		this.singleValue = pattern.singleValue;
@@ -24,50 +24,50 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	}
 
 	public CmfProperty(CmfEncodeableName name, CmfDataType type) {
-		this(name, type, true, (V) null);
+		this(name, type, true, (VALUE) null);
 	}
 
 	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating) {
-		this(name, type, repeating, (V) null);
+		this(name, type, repeating, (VALUE) null);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type, V value) {
+	public CmfProperty(CmfEncodeableName name, CmfDataType type, VALUE value) {
 		this(name, type, false, value);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating, V value) {
+	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating, VALUE value) {
 		this(name, type, repeating, (value != null ? Collections.singleton(value) : null));
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type, Collection<V> values) {
+	public CmfProperty(CmfEncodeableName name, CmfDataType type, Collection<VALUE> values) {
 		this(name, type, true, values);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating, Collection<V> values) {
+	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating, Collection<VALUE> values) {
 		this(name.encode(), type, repeating, values);
 	}
 
 	public CmfProperty(String name, CmfDataType type) {
-		this(name, type, true, (V) null);
+		this(name, type, true, (VALUE) null);
 	}
 
 	public CmfProperty(String name, CmfDataType type, boolean repeating) {
-		this(name, type, repeating, (V) null);
+		this(name, type, repeating, (VALUE) null);
 	}
 
-	public CmfProperty(String name, CmfDataType type, V value) {
+	public CmfProperty(String name, CmfDataType type, VALUE value) {
 		this(name, type, false, value);
 	}
 
-	public CmfProperty(String name, CmfDataType type, boolean repeating, V value) {
+	public CmfProperty(String name, CmfDataType type, boolean repeating, VALUE value) {
 		this(name, type, repeating, (value != null ? Collections.singleton(value) : null));
 	}
 
-	public CmfProperty(String name, CmfDataType type, Collection<V> values) {
+	public CmfProperty(String name, CmfDataType type, Collection<VALUE> values) {
 		this(name, type, true, values);
 	}
 
-	public CmfProperty(String name, CmfDataType type, boolean repeating, Collection<V> values) {
+	public CmfProperty(String name, CmfDataType type, boolean repeating, Collection<VALUE> values) {
 		super(name, type, repeating);
 		if (values == null) {
 			values = Collections.emptyList();
@@ -124,17 +124,17 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 * @param values
 	 *            the values to set.
 	 */
-	public CmfProperty<V> setValues(Collection<V> values) {
+	public CmfProperty<VALUE> setValues(Collection<VALUE> values) {
 		this.values.clear();
 		if (values == null) {
 			values = Collections.emptyList();
 		}
 		if (isRepeating()) {
-			for (V value : values) {
+			for (VALUE value : values) {
 				this.values.add(value);
 			}
 		} else {
-			V value = null;
+			VALUE value = null;
 			if (!values.isEmpty()) {
 				value = values.iterator().next();
 			}
@@ -152,9 +152,9 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 *
 	 * @return a list containing all the values in this instance
 	 */
-	public final List<V> getValues() {
+	public final List<VALUE> getValues() {
 		if (isRepeating()) { return this.values; }
-		List<V> l = new ArrayList<>(1);
+		List<VALUE> l = new ArrayList<>(1);
 		l.add(this.singleValue);
 		return l;
 	}
@@ -167,7 +167,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 *
 	 * @param value
 	 */
-	public CmfProperty<V> addValue(V value) {
+	public CmfProperty<VALUE> addValue(VALUE value) {
 		if (isRepeating()) {
 			this.values.add(value);
 			return this;
@@ -183,8 +183,8 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 *
 	 * @param values
 	 */
-	public CmfProperty<V> addValues(Collection<V> values) {
-		for (V v : values) {
+	public CmfProperty<VALUE> addValues(Collection<VALUE> values) {
+		for (VALUE v : values) {
 			addValue(v);
 		}
 		return this;
@@ -198,7 +198,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 * {@link #clearValue()} instead.
 	 * </p>
 	 */
-	public CmfProperty<V> setValue(V value) {
+	public CmfProperty<VALUE> setValue(VALUE value) {
 		if (isRepeating()) {
 			this.values.clear();
 			this.values.add(value);
@@ -245,10 +245,10 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 * @param idx
 	 * @return the removed value
 	 */
-	public final V removeValue(int idx) {
+	public final VALUE removeValue(int idx) {
 		idx = sanitizeIndex(idx);
 		if (isRepeating()) { return this.values.remove(idx); }
-		V old = this.singleValue;
+		VALUE old = this.singleValue;
 		this.singleValue = null;
 		return old;
 	}
@@ -270,7 +270,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 * @return the removed value
 	 * @throws ArrayIndexOutOfBoundsException
 	 */
-	public final V getValue(int idx) {
+	public final VALUE getValue(int idx) {
 		idx = sanitizeIndex(idx);
 		if (isRepeating()) { return this.values.get(idx); }
 		return this.singleValue;
@@ -283,7 +283,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 *
 	 * @return the 0-th value in this element.
 	 */
-	public final V getValue() {
+	public final VALUE getValue() {
 		return getValue(0);
 	}
 
@@ -324,9 +324,9 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 	 * </p>
 	 */
 	@Override
-	public final Iterator<V> iterator() {
+	public final Iterator<VALUE> iterator() {
 		if (isRepeating()) { return this.values.iterator(); }
-		return new Iterator<V>() {
+		return new Iterator<VALUE>() {
 			boolean retrieved = false;
 			boolean removed = false;
 
@@ -336,7 +336,7 @@ public class CmfProperty<V> extends CmfBaseSetting implements Iterable<V> {
 			}
 
 			@Override
-			public V next() {
+			public VALUE next() {
 				if (this.retrieved) { throw new NoSuchElementException(); }
 				this.retrieved = true;
 				return CmfProperty.this.singleValue;

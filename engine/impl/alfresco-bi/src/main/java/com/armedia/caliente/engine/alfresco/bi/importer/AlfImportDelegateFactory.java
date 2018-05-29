@@ -173,6 +173,7 @@ public class AlfImportDelegateFactory
 	private final File db;
 	private final File content;
 	private final Path biRootPath;
+	private final String unfiledPath;
 
 	private final Properties userLoginMap = new Properties();
 	private final AttributeMapper attributeMapper;
@@ -197,7 +198,7 @@ public class AlfImportDelegateFactory
 		if (db != null) {
 			this.db = new File(db).getCanonicalFile();
 		} else {
-			this.db = new File("cmsmf-xml").getCanonicalFile();
+			this.db = new File("caliente-data").getCanonicalFile();
 		}
 		FileUtils.forceMkdir(this.db);
 		String content = configuration.getString(AlfSetting.CONTENT);
@@ -252,6 +253,10 @@ public class AlfImportDelegateFactory
 		}
 		this.attributeMapper = new AttributeMapper(this.schema, configuration.getString(AlfSetting.ATTRIBUTE_MAPPING),
 			pfx);
+		String unfiledPath = configuration.getString(AlfSetting.UNFILED_PATH);
+		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
+		unfiledPath = FilenameUtils.normalizeNoEndSeparator(unfiledPath, true);
+		this.unfiledPath = unfiledPath.replaceAll("^/+", "");
 	}
 
 	protected AlfrescoSchema getSchema() {
@@ -552,12 +557,13 @@ public class AlfImportDelegateFactory
 			List<String> paths = new ArrayList<>();
 			CmfAttribute<CmfValue> unfiledFolderAtt = cmfObject.getAttribute(IntermediateAttribute.UNFILED_FOLDER);
 			if ((unfiledFolderAtt != null) && unfiledFolderAtt.hasValues()) {
-				CmfValue v = unfiledFolderAtt.getValue();
-				if ((v != null) && !v.isNull()) {
-					paths.add(v.asString());
+				for (CmfValue v : unfiledFolderAtt) {
+					if ((v != null) && !v.isNull()) {
+						paths.add(v.asString());
+					}
 				}
 			} else {
-				paths.add("(unfiled)");
+				paths.add(this.unfiledPath);
 				AlfCommon.addNumericPaths(paths, cmfObject.getNumber());
 			}
 			targetPath = Tools.joinEscaped('/', paths);
@@ -611,7 +617,7 @@ public class AlfImportDelegateFactory
 		}
 
 		if (unfiled) {
-			thisMarker.setTargetName(String.format("%08x-%s", cmfObject.getNumber(), thisMarker.getTargetName()));
+			thisMarker.setTargetName(getUnfiledName(ctx, cmfObject));
 		}
 		thisMarker.setTargetPath(targetPath);
 		thisMarker.setIndex(current);
@@ -769,6 +775,14 @@ public class AlfImportDelegateFactory
 		return thisMarker;
 	}
 
+	protected final void resetIndex() {
+		List<ScanIndexItemMarker> markerList = this.currentVersions.get();
+		if (markerList != null) {
+			markerList.clear();
+		}
+		this.currentVersions.set(null);
+	}
+
 	protected final void storeToIndex(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject, File contentFile,
 		File metadataFile, MarkerType type) throws ImportException {
 
@@ -834,6 +848,11 @@ public class AlfImportDelegateFactory
 			throw new ImportException(
 				String.format("Failed to serialize the %s to XML: %s", folder ? "folder" : "file", item), e);
 		}
+	}
+
+	final String getUnfiledName(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject) {
+		// Generate a unique name using the history ID and the object's given name
+		return String.format("%s-%s", cmfObject.getHistoryId(), ctx.getObjectName(cmfObject));
 	}
 
 	@Override

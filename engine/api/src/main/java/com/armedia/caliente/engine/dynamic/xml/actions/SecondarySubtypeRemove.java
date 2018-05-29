@@ -22,7 +22,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionRemoveSecondarySubtype.t", propOrder = {
-	"comparison", "value"
+	"comparison", "name"
 })
 public class SecondarySubtypeRemove extends ConditionalAction {
 
@@ -30,8 +30,8 @@ public class SecondarySubtypeRemove extends ConditionalAction {
 	@XmlJavaTypeAdapter(ComparisonAdapter.class)
 	protected Comparison comparison;
 
-	@XmlElement(name = "value", required = true)
-	protected Expression value;
+	@XmlElement(name = "name", required = true)
+	protected Expression name;
 
 	public Comparison getComparison() {
 		return Tools.coalesce(this.comparison, Comparison.DEFAULT);
@@ -41,17 +41,17 @@ public class SecondarySubtypeRemove extends ConditionalAction {
 		this.comparison = value;
 	}
 
-	public Expression getValue() {
-		return this.value;
+	public Expression getName() {
+		return this.name;
 	}
 
-	public void setValue(Expression value) {
-		this.value = value;
+	public void setName(Expression name) {
+		this.name = name;
 	}
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
-		String comparand = StringUtils.strip(Tools.toString(ActionTools.eval(getValue(), ctx)));
+		String comparand = StringUtils.strip(Tools.toString(ActionTools.eval(getName(), ctx)));
 		if (StringUtils.isEmpty(comparand)) { return; }
 
 		Comparison comparison = getComparison();

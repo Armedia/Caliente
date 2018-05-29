@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.xml.StoreConfiguration;
 
-public abstract class CmfStoreFactory<S extends CmfStore<?, ?>> {
+public abstract class CmfStoreFactory<STORE extends CmfStore<?, ?>> {
 
 	public static final String CFG_CLEAN_DATA = "clean.data";
 
@@ -54,7 +54,7 @@ public abstract class CmfStoreFactory<S extends CmfStore<?, ?>> {
 		return this.aliases;
 	}
 
-	protected abstract S newInstance(StoreConfiguration cfg, boolean cleanData, CmfPrepInfo prepInfo)
+	protected abstract STORE newInstance(StoreConfiguration cfg, boolean cleanData, CmfPrepInfo prepInfo)
 		throws CmfStorageException;
 
 	protected void close() {

@@ -7,7 +7,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
+import com.armedia.caliente.engine.dynamic.xml.mapper.Mapping;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;

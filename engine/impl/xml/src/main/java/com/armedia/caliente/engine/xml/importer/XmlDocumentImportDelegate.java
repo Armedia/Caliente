@@ -17,10 +17,10 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.xml.importer.jaxb.ContentInfoT;
+import com.armedia.caliente.engine.xml.importer.jaxb.ContentStreamT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentVersionT;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
@@ -84,7 +84,12 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 		v.setVersion(getAttributeValue(IntermediateAttribute.VERSION_LABEL).asString());
 
 		int contents = 0;
-		for (CmfContentInfo info : ctx.getContentInfo(this.cmfObject)) {
+		final boolean skipRenditions = this.factory.isSkipRenditions();
+		for (CmfContentStream info : ctx.getContentStreams(this.cmfObject)) {
+			if (skipRenditions && !info.isDefaultRendition()) {
+				// Skip the non-default rendition
+				continue;
+			}
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
 			final File f;
 			try {
@@ -96,7 +101,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 						this.cmfObject.getDescription(), info),
 					e);
 			}
-			ContentInfoT xml = new ContentInfoT();
+			ContentStreamT xml = new ContentStreamT();
 			xml.setFileName(info.getFileName());
 			// xml.setHash(null);
 			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));
@@ -114,7 +119,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		if (contents == 0) {
 			// Generate a placeholder, empty file
-			CmfContentInfo info = new CmfContentInfo();
+			CmfContentStream info = new CmfContentStream();
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
 			File f = null;
 			try {
@@ -129,7 +134,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 						this.cmfObject.getDescription(), f.getAbsolutePath()),
 					e);
 			}
-			ContentInfoT xml = new ContentInfoT();
+			ContentStreamT xml = new ContentStreamT();
 			xml.setFileName(v.getName());
 			// xml.setHash(null);
 			xml.setLocation(this.factory.relativizeXmlLocation(f.getAbsolutePath()));

@@ -28,6 +28,7 @@ import com.armedia.caliente.engine.dfc.exporter.DctmExportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.commons.utilities.ConfigurationSetting;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfDocument;
 import com.documentum.fc.client.IDfFolder;
@@ -72,12 +73,6 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 	protected void customizeSettings(Map<String, Object> settings) throws CalienteException {
 		if (this.server != null) {
 			settings.put(DctmSetting.DOCBASE.getLabel(), this.server);
-		}
-		if (this.user != null) {
-			settings.put(DctmSetting.USERNAME.getLabel(), this.user);
-		}
-		if (this.password != null) {
-			settings.put(DctmSetting.PASSWORD.getLabel(), this.password);
 		}
 	}
 
@@ -312,11 +307,11 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 					String.valueOf(settings.get(AbstractCalienteModule_export.BASE_SELECTOR)));
 			}
 		} else {
-			Object baseSel = settings.get(AbstractCalienteModule_export.BASE_SELECTOR);
-			if (baseSel == null) {
-				baseSel = CLIParam.source.getString();
+			Object dql = settings.get(AbstractCalienteModule_export.BASE_SELECTOR);
+			if (dql == null) {
+				dql = CLIParam.source.getString();
 			}
-			settings.put(AbstractCalienteModule_export.FINAL_SELECTOR, baseSel);
+			settings.put(AbstractCalienteModule_export.FINAL_SELECTOR, dql);
 		}
 
 		settings.put("dql", settings.get(AbstractCalienteModule_export.FINAL_SELECTOR));
@@ -387,5 +382,15 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 	@Override
 	protected String getContentStrategyName() {
 		return DocumentumOrganizationStrategy.NAME;
+	}
+
+	@Override
+	protected ConfigurationSetting getUserSetting() {
+		return DctmSetting.USERNAME;
+	}
+
+	@Override
+	protected ConfigurationSetting getPasswordSetting() {
+		return DctmSetting.PASSWORD;
 	}
 }

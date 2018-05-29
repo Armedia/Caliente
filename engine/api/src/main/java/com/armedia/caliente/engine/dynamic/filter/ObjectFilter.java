@@ -17,7 +17,6 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.xml.FilterOutcome;
 import com.armedia.caliente.engine.dynamic.xml.Filters;
-import com.armedia.caliente.engine.dynamic.xml.XmlBase;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.engine.dynamic.xml.filter.Filter;
@@ -28,7 +27,7 @@ import com.armedia.commons.utilities.Tools;
 
 public class ObjectFilter {
 
-	private static final XmlInstances<Filters> INSTANCES = new XmlInstances<>(Filters.class, XmlBase.DEFAULT_SCHEMA);
+	private static final XmlInstances<Filters> INSTANCES = new XmlInstances<>(Filters.class);
 
 	public static ObjectFilter getObjectFilter(String location, boolean failIfMissing) throws ObjectFilterException {
 		try {

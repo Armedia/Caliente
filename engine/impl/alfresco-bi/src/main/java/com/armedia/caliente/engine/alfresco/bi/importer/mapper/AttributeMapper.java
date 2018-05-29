@@ -18,17 +18,6 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.AttributeMappings;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.IncludeNamed;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.MappingElement;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.MappingSet;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NameMapping;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NamedMappings;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.NamespaceMapping;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.ResidualsMode;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.SetValue;
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.TypeMappings;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
@@ -36,6 +25,17 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
+import com.armedia.caliente.engine.dynamic.xml.mapper.AttributeMappings;
+import com.armedia.caliente.engine.dynamic.xml.mapper.IncludeNamed;
+import com.armedia.caliente.engine.dynamic.xml.mapper.Mapping;
+import com.armedia.caliente.engine.dynamic.xml.mapper.MappingElement;
+import com.armedia.caliente.engine.dynamic.xml.mapper.MappingSet;
+import com.armedia.caliente.engine.dynamic.xml.mapper.NameMapping;
+import com.armedia.caliente.engine.dynamic.xml.mapper.NamedMappings;
+import com.armedia.caliente.engine.dynamic.xml.mapper.NamespaceMapping;
+import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
+import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
+import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -45,11 +45,10 @@ import com.armedia.commons.utilities.Tools;
 public class AttributeMapper {
 
 	private static final Pattern NS_PARSER = Pattern.compile("^([^:]+):(.+)$");
-	private static final String DEFAULT_SCHEMA = "alfresco-bi.xsd";
 	private static final String DEFAULT_FILENAME = "alfresco-attribute-mappings.xml";
 
 	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class,
-		AttributeMapper.DEFAULT_SCHEMA, AttributeMapper.DEFAULT_FILENAME);
+		AttributeMapper.DEFAULT_FILENAME);
 
 	// Make a cache that doesn't expire items and they don't get GC'd either
 	private final KeyLockableCache<String, MappingRendererSet> cache = new KeyLockableCache<String, MappingRendererSet>(

@@ -13,7 +13,8 @@ import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> extends CmfStore<C, O> {
+public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends CmfStoreOperation<CONNECTION>>
+	extends CmfStore<CONNECTION, OPERATION> {
 
 	protected static final int MIN_BUFFER_SIZE = 4096;
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
@@ -24,10 +25,10 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 	public abstract class Handle {
 		private final CmfType objectType;
 		private final String objectId;
-		private final CmfContentInfo info;
-		private final L locator;
+		private final CmfContentStream info;
+		private final LOCATOR locator;
 
-		protected Handle(CmfObject<?> object, CmfContentInfo info, L locator) {
+		protected Handle(CmfObject<?> object, CmfContentStream info, LOCATOR locator) {
 			if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 			if (info == null) { throw new IllegalArgumentException("Must provide a content info"); }
 			if (locator == null) { throw new IllegalArgumentException(
@@ -67,7 +68,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		 *
 		 * @return the qualifier for this content stream
 		 */
-		public final CmfContentInfo getInfo() {
+		public final CmfContentStream getInfo() {
 			return this.info;
 		}
 
@@ -78,7 +79,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		 *
 		 * @return the {@link CmfContentStore} from which this handle was obtained.
 		 */
-		public final CmfContentStore<L, C, O> getSourceStore() {
+		public final CmfContentStore<LOCATOR, CONNECTION, OPERATION> getSourceStore() {
 			return CmfContentStore.this;
 		}
 
@@ -284,7 +285,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 	}
 
-	protected abstract boolean isSupported(L locator);
+	protected abstract boolean isSupported(LOCATOR locator);
 
 	public abstract boolean isSupportsFileAccess();
 
@@ -296,7 +297,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 
 	protected abstract File doGetRootLocation();
 
-	protected final File getFile(L locator) throws IOException {
+	protected final File getFile(LOCATOR locator) throws IOException {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a locator string"); }
 		// Short-cut, no need to luck if we won't do anything
 		if (!isSupportsFileAccess()) { return null; }
@@ -347,41 +348,42 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 			String.format("The parent location [%s] is not a directory", parent.getAbsoluteFile())); }
 	}
 
-	protected File doGetFile(L locator) throws IOException {
+	protected File doGetFile(LOCATOR locator) throws IOException {
 		return null;
 	}
 
-	protected final void validateLocator(L locator) {
+	protected final void validateLocator(LOCATOR locator) {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a non-null locator"); }
 		if (!isSupported(locator)) { throw new IllegalArgumentException(
 			String.format("The locator [%s] is not supported by CmfContentStore class [%s]", locator,
 				getClass().getCanonicalName())); }
 	}
 
-	protected abstract Handle constructHandle(CmfObject<?> object, CmfContentInfo info, L locator);
+	protected abstract Handle constructHandle(CmfObject<?> object, CmfContentStream info, LOCATOR locator);
 
-	protected final L extractLocator(Handle handle) {
+	protected final LOCATOR extractLocator(Handle handle) {
 		if (handle == null) { throw new IllegalArgumentException("Must provide a handle whose locator to extract"); }
 		return handle.locator;
 	}
 
-	public final <T> Handle getHandle(CmfAttributeTranslator<T> translator, CmfObject<T> object, CmfContentInfo info) {
+	public final <T> Handle getHandle(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to examine"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
 		return constructHandle(object, info, calculateLocator(translator, object, info));
 	}
 
-	protected final <T> L calculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+	protected final <T> LOCATOR calculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentStream info) {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 		if (info == null) { throw new IllegalArgumentException("Must provide content info object"); }
 		return doCalculateLocator(translator, object, info);
 	}
 
-	protected abstract <T> L doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info);
+	protected abstract <T> LOCATOR doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
+		CmfContentStream info);
 
-	protected final InputStream openInput(L locator) throws CmfStorageException {
+	protected final InputStream openInput(LOCATOR locator) throws CmfStorageException {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
 		validateLocator(locator);
 
@@ -402,7 +404,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 
 		// If it doesn't support file access...
-		O operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -422,9 +424,9 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 	}
 
-	protected abstract InputStream openInput(O operation, L locator) throws CmfStorageException;
+	protected abstract InputStream openInput(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
-	protected final long setContents(L locator, InputStream in) throws CmfStorageException {
+	protected final long setContents(LOCATOR locator, InputStream in) throws CmfStorageException {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
 		validateLocator(locator);
 
@@ -459,7 +461,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 
 		// If it doesn't support file access...
-		O operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -485,9 +487,10 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 	}
 
-	protected abstract long setContents(O operation, L locator, InputStream in) throws CmfStorageException;
+	protected abstract long setContents(OPERATION operation, LOCATOR locator, InputStream in)
+		throws CmfStorageException;
 
-	protected final boolean isExists(L locator) throws CmfStorageException {
+	protected final boolean isExists(LOCATOR locator) throws CmfStorageException {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a handle ID"); }
 		validateLocator(locator);
 		// First, let's try a shortcut
@@ -500,7 +503,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 
 		// If it doesn't support file access...
-		O operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -520,9 +523,9 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 	}
 
-	protected abstract boolean isExists(O operation, L locator) throws CmfStorageException;
+	protected abstract boolean isExists(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
-	protected final long getStreamSize(L locator) throws CmfStorageException {
+	protected final long getStreamSize(LOCATOR locator) throws CmfStorageException {
 		validateLocator(locator);
 		// First, let's try a shortcut
 		if (isSupportsFileAccess()) {
@@ -537,7 +540,7 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 
 		// If it doesn't support file access...
-		O operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -558,10 +561,10 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 	}
 
-	protected abstract long getStreamSize(O operation, L locator) throws CmfStorageException;
+	protected abstract long getStreamSize(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
 	public final void clearAllStreams() throws CmfStorageException {
-		O operation = beginExclusiveInvocation();
+		OPERATION operation = beginExclusiveInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -580,5 +583,5 @@ public abstract class CmfContentStore<L, C, O extends CmfStoreOperation<C>> exte
 		}
 	}
 
-	protected abstract void clearAllStreams(O operation) throws CmfStorageException;
+	protected abstract void clearAllStreams(OPERATION operation) throws CmfStorageException;
 }

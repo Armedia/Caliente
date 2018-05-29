@@ -3,12 +3,11 @@ package com.armedia.caliente.engine.dynamic.xml;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -48,7 +47,19 @@ import com.armedia.commons.utilities.Tools;
 	"script"
 })
 public class Expression {
-	private static final ScriptEngineManager ENGINE_FACTORY = new ScriptEngineManager();
+	private static final ScriptEngineManager ENGINE_FACTORY;
+	private static final Map<String, String> ENGINE_ALIASES;
+
+	static {
+		ENGINE_FACTORY = new ScriptEngineManager();
+		Map<String, String> m = new TreeMap<>();
+		for (ScriptEngineFactory f : Expression.ENGINE_FACTORY.getEngineFactories()) {
+			for (String s : f.getNames()) {
+				m.put(StringUtils.lowerCase(s), s);
+			}
+		}
+		ENGINE_ALIASES = Tools.freezeMap(new LinkedHashMap<>(m));
+	}
 
 	private static final LazyInitializer<Object> TOOLS = new LazyInitializer<Object>() {
 		@Override
@@ -114,17 +125,13 @@ public class Expression {
 		language = StringUtils.strip(language);
 		ScriptEngine engine = null;
 		if (language != null) {
-			engine = Expression.ENGINE_FACTORY.getEngineByName(language);
-			if (engine == null) {
-				Set<String> s = new TreeSet<>();
-				for (ScriptEngineFactory f : Expression.ENGINE_FACTORY.getEngineFactories()) {
-					for (String n : f.getNames()) {
-						s.add(StringUtils.lowerCase(n));
-					}
-				}
-				throw new IllegalArgumentException(
-					String.format("Unknown script language [%s] - supported languages are %s", language, s));
+			String actualLanguage = Expression.ENGINE_ALIASES.get(StringUtils.lowerCase(language));
+			if (!StringUtils.isEmpty(actualLanguage)) {
+				engine = Expression.ENGINE_FACTORY.getEngineByName(actualLanguage);
 			}
+			if (engine == null) { throw new IllegalArgumentException(
+				String.format("Unknown script language [%s] - supported languages are (case-insensitive): %s", language,
+					Expression.ENGINE_ALIASES.keySet())); }
 		}
 		return engine;
 	}

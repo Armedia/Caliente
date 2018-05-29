@@ -20,7 +20,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmfObject<V> extends CmfObjectSearchSpec {
+public class CmfObject<VALUE> extends CmfObjectSearchSpec {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -37,9 +37,9 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 	private final Set<String> secondaries;
 	private final String productName;
 	private final String productVersion;
-	private final Map<String, CmfAttribute<V>> attributes = new HashMap<>();
-	private final Map<String, CmfProperty<V>> properties = new HashMap<>();
-	private final CmfAttributeTranslator<V> translator;
+	private final Map<String, CmfAttribute<VALUE>> attributes = new HashMap<>();
+	private final Map<String, CmfProperty<VALUE>> properties = new HashMap<>();
+	private final CmfAttributeTranslator<VALUE> translator;
 
 	/**
 	 * <p>
@@ -48,7 +48,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 	 *
 	 * @param pattern
 	 */
-	public CmfObject(CmfObject<V> pattern) {
+	public CmfObject(CmfObject<VALUE> pattern) {
 		super(pattern);
 		this.number = pattern.getNumber();
 		this.name = pattern.getName();
@@ -60,24 +60,24 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		this.subtype = pattern.getSubtype();
 		this.productName = pattern.getProductName();
 		this.productVersion = pattern.getProductVersion();
-		for (CmfAttribute<V> attribute : pattern.getAttributes()) {
+		for (CmfAttribute<VALUE> attribute : pattern.getAttributes()) {
 			this.attributes.put(attribute.getName(), new CmfAttribute<>(attribute));
 		}
-		for (CmfProperty<V> property : pattern.getProperties()) {
+		for (CmfProperty<VALUE> property : pattern.getProperties()) {
 			this.properties.put(property.getName(), new CmfProperty<>(property));
 		}
 		this.secondaries = Tools.freezeSet(new LinkedHashSet<>(pattern.getSecondarySubtypes()));
 		this.translator = pattern.translator;
 	}
 
-	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
+	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfType type, String id, String name,
 		Collection<CmfObjectRef> parentIds, int dependencyTier, String historyId, boolean historyCurrent, String label,
 		String subtype, Set<String> secondaries, String productName, String productVersion, Long number) {
 		this(translator, type, id, name, parentIds, id, dependencyTier, historyId, historyCurrent, label, subtype,
 			secondaries, productName, productVersion, number);
 	}
 
-	public CmfObject(CmfAttributeTranslator<V> translator, CmfType type, String id, String name,
+	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfType type, String id, String name,
 		Collection<CmfObjectRef> parentIds, String searchKey, int dependencyTier, String historyId,
 		boolean historyCurrent, String label, String subtype, Set<String> secondaries, String productName,
 		String productVersion, Long number) {
@@ -107,7 +107,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		this.translator = translator;
 	}
 
-	public final CmfAttributeTranslator<V> getTranslator() {
+	public final CmfAttributeTranslator<VALUE> getTranslator() {
 		return this.translator;
 	}
 
@@ -121,6 +121,7 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		Objects.requireNonNull(other, "Must provide an object whose number to copy");
 		if (!new CmfObjectSearchSpec(this).equals(new CmfObjectSearchSpec(other))) { throw new IllegalArgumentException(
 			String.format("The given %s is not the same as %s", other.getDescription(), this.getDescription())); }
+		if (this == other) { return; }
 		setNumber(other.getNumber());
 	}
 
@@ -176,12 +177,12 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		return this.secondaries;
 	}
 
-	public final CmfAttribute<V> getAttribute(CmfEncodeableName name) {
+	public final CmfAttribute<VALUE> getAttribute(CmfEncodeableName name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to retrieve"); }
 		return getAttribute(name.encode());
 	}
 
-	public final CmfAttribute<V> getAttribute(String name) {
+	public final CmfAttribute<VALUE> getAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to retrieve"); }
 		return this.attributes.get(name);
 	}
@@ -196,28 +197,28 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		return this.attributes.containsKey(name);
 	}
 
-	public final CmfAttribute<V> setAttribute(CmfAttribute<V> attribute) {
+	public final CmfAttribute<VALUE> setAttribute(CmfAttribute<VALUE> attribute) {
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set"); }
 		return this.attributes.put(attribute.getName(), attribute);
 	}
 
-	public final CmfAttribute<V> removeAttribute(CmfEncodeableName name) {
+	public final CmfAttribute<VALUE> removeAttribute(CmfEncodeableName name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to remove"); }
 		return removeAttribute(name.encode());
 	}
 
-	public final CmfAttribute<V> removeAttribute(String name) {
+	public final CmfAttribute<VALUE> removeAttribute(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide an attribute name to remove"); }
 		return this.attributes.remove(name);
 	}
 
-	public final Collection<CmfAttribute<V>> getAttributes() {
+	public final Collection<CmfAttribute<VALUE>> getAttributes() {
 		return new ArrayList<>(this.attributes.values());
 	}
 
-	public final void setAttributes(Collection<CmfAttribute<V>> attributes) {
+	public final void setAttributes(Collection<CmfAttribute<VALUE>> attributes) {
 		this.attributes.clear();
-		for (CmfAttribute<V> att : attributes) {
+		for (CmfAttribute<VALUE> att : attributes) {
 			setAttribute(att);
 		}
 	}
@@ -230,12 +231,12 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		return new HashSet<>(this.properties.keySet());
 	}
 
-	public final CmfProperty<V> getProperty(CmfEncodeableName name) {
+	public final CmfProperty<VALUE> getProperty(CmfEncodeableName name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
 		return getProperty(name.encode());
 	}
 
-	public final CmfProperty<V> getProperty(String name) {
+	public final CmfProperty<VALUE> getProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to retrieve"); }
 		return this.properties.get(name);
 	}
@@ -250,28 +251,28 @@ public class CmfObject<V> extends CmfObjectSearchSpec {
 		return this.properties.containsKey(name);
 	}
 
-	public final CmfProperty<V> setProperty(CmfProperty<V> property) {
+	public final CmfProperty<VALUE> setProperty(CmfProperty<VALUE> property) {
 		if (property == null) { throw new IllegalArgumentException("Must provide a property to set"); }
 		return this.properties.put(property.getName(), property);
 	}
 
-	public final CmfProperty<V> removeProperty(CmfEncodeableName name) {
+	public final CmfProperty<VALUE> removeProperty(CmfEncodeableName name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to remove"); }
 		return removeProperty(name.encode());
 	}
 
-	public final CmfProperty<V> removeProperty(String name) {
+	public final CmfProperty<VALUE> removeProperty(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a property name to remove"); }
 		return this.properties.remove(name);
 	}
 
-	public final Collection<CmfProperty<V>> getProperties() {
+	public final Collection<CmfProperty<VALUE>> getProperties() {
 		return new ArrayList<>(this.properties.values());
 	}
 
-	public final void setProperties(Collection<CmfProperty<V>> properties) {
+	public final void setProperties(Collection<CmfProperty<VALUE>> properties) {
 		this.properties.clear();
-		for (CmfProperty<V> prop : properties) {
+		for (CmfProperty<VALUE> prop : properties) {
 			setProperty(prop);
 		}
 	}

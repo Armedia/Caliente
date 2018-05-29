@@ -15,7 +15,7 @@ import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionApplyValueMapping.t", propOrder = {
-	"comparison", "name", "type", "mappingName", "cardinality", "fallback"
+	"comparison", "attributeName", "type", "mappingName", "cardinality", "fallback"
 })
 public class ValueMappingApply extends AbstractValueMappingApply<CmfType> {
 

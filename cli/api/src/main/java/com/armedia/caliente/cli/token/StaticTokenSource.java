@@ -44,4 +44,9 @@ public class StaticTokenSource implements TokenSource {
 	public String getKey() {
 		return this.key;
 	}
+
+	@Override
+	public String toString() {
+		return String.format("StaticTokenSource [key=%s]", this.key);
+	}
 }

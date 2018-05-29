@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>3.5.1</version>
+	<version>3.5.10</version>
 	<packaging>pom</packaging>
 
 	<organization>
@@ -56,7 +56,7 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>utilities</artifactId>
-				<version>0.3.24</version>
+				<version>0.3.26</version>
 			</dependency>
 
 			<dependency>
@@ -68,19 +68,19 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
-				<version>1.1.10</version>
+				<version>1.1.12</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-api</artifactId>
-				<version>1.1.0</version>
+				<version>1.1.2</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-pooled</artifactId>
-				<version>1.1.0</version>
+				<version>1.1.2</version>
 			</dependency>
 
 			<dependency>
@@ -212,13 +212,19 @@
 			<dependency>
 				<groupId>com.h2database</groupId>
 				<artifactId>h2</artifactId>
-				<version>1.4.191</version>
+				<version>1.4.196</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.hsqldb</groupId>
+				<artifactId>hsqldb</artifactId>
+				<version>2.3.5</version>
 			</dependency>
 
 			<dependency>
 				<groupId>org.postgresql</groupId>
 				<artifactId>postgresql</artifactId>
-				<version>9.4.1211.jre6</version>
+				<version>42.1.4.jre7</version>
 			</dependency>
 
 			<dependency>
@@ -292,7 +298,7 @@
 			<dependency>
 				<groupId>ru.yandex.qatools.embed</groupId>
 				<artifactId>postgresql-embedded</artifactId>
-				<version>1.22</version>
+				<version>1.23</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -374,7 +380,7 @@
 						<archive>
 							<manifestEntries>
 								<SCM-Branch>${scmBranch}</SCM-Branch>
-								<SCM-Revision>${buildNumber}</SCM-Revision>
+								<SCM-Revision>${commitHash}</SCM-Revision>
 								<SCM-Build-Time>${buildTimestamp}</SCM-Build-Time>
 							</manifestEntries>
 						</archive>
@@ -424,6 +430,21 @@
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>buildnumber-maven-plugin</artifactId>
 				<executions>
+					<execution>
+						<id>create-commitHash</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>create</goal>
+						</goals>
+						<configuration>
+							<doCheck>false</doCheck>
+							<doUpdate>false</doUpdate>
+							<shortRevisionLength>40</shortRevisionLength>
+							<getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+							<revisionOnScmFailure>unknown</revisionOnScmFailure>
+							<buildNumberPropertyName>commitHash</buildNumberPropertyName>
+						</configuration>
+					</execution>
 					<execution>
 						<id>create-buildNumber</id>
 						<phase>generate-sources</phase>

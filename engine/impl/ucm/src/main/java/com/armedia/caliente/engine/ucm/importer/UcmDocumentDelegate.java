@@ -10,7 +10,7 @@ import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.ucm.model.UcmFile;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
@@ -24,15 +24,15 @@ public class UcmDocumentDelegate extends UcmFSObjectDelegate<UcmFile> {
 
 	protected ContentStream getContentStream(UcmImportContext ctx) throws ImportException {
 		CmfContentStore<?, ?, ?> store = ctx.getContentStore();
-		List<CmfContentInfo> info = null;
+		List<CmfContentStream> info = null;
 		try {
-			info = ctx.getContentInfo(this.cmfObject);
+			info = ctx.getContentStreams(this.cmfObject);
 		} catch (Exception e) {
 			throw new ImportException(String.format("Failed to retrieve the content info for DOCUMENT [%s](%s)",
 				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 		if ((info == null) || info.isEmpty()) { return null; }
-		CmfContentInfo content = info.get(0);
+		CmfContentStream content = info.get(0);
 		CmfContentStore<?, ?, ?>.Handle h = store.getHandle(this.factory.getEngine().getTranslator(), this.cmfObject,
 			content);
 

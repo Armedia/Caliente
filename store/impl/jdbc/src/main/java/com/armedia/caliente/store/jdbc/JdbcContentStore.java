@@ -21,8 +21,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfStorageException;
@@ -181,7 +181,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 	private class JdbcHandle extends Handle {
 
-		protected JdbcHandle(CmfObject<?> object, CmfContentInfo info, JdbcContentLocator locator) {
+		protected JdbcHandle(CmfObject<?> object, CmfContentStream info, JdbcContentLocator locator) {
 			super(object, info, locator);
 		}
 
@@ -219,7 +219,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 					this.managedTransactions, new JdbcSchemaManager.Callback() {
 						@Override
 						public void cleanData(JdbcOperation op) throws CmfStorageException {
-							clearProperties(op);
+							clearAllProperties(op);
 						}
 					});
 				op.commit();
@@ -278,13 +278,13 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	}
 
 	@Override
-	protected JdbcHandle constructHandle(CmfObject<?> object, CmfContentInfo info, JdbcContentLocator locator) {
+	protected JdbcHandle constructHandle(CmfObject<?> object, CmfContentStream info, JdbcContentLocator locator) {
 		return new JdbcHandle(object, info, locator);
 	}
 
 	@Override
 	protected <T> JdbcContentLocator doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
-		CmfContentInfo info) {
+		CmfContentStream info) {
 		return new JdbcContentLocator(object.getId(), info);
 	}
 
@@ -319,7 +319,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 					IOUtils.closeQuietly(out);
 				}
 				QueryRunner qr = JdbcTools.getQueryRunner();
-				CmfContentInfo info = locator.getInfo();
+				CmfContentStream info = locator.getInfo();
 				qr.update(c, translateQuery(JdbcDialect.Query.DELETE_STREAM), locator.getObjectId(),
 					info.getRenditionIdentifier(), info.getRenditionPage());
 				qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_STREAM), JdbcTools.HANDLER_NULL,
@@ -336,7 +336,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	@Override
 	protected boolean isExists(JdbcOperation operation, JdbcContentLocator locator) throws CmfStorageException {
 		try {
-			CmfContentInfo info = locator.getInfo();
+			CmfContentStream info = locator.getInfo();
 			return JdbcTools.getQueryRunner().query(operation.getConnection(),
 				translateQuery(JdbcDialect.Query.CHECK_IF_CONTENT_EXISTS), JdbcTools.HANDLER_EXISTS,
 				locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage());
@@ -349,7 +349,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	@Override
 	protected long getStreamSize(JdbcOperation operation, JdbcContentLocator locator) throws CmfStorageException {
 		try {
-			CmfContentInfo info = locator.getInfo();
+			CmfContentStream info = locator.getInfo();
 			return JdbcTools.getQueryRunner().query(operation.getConnection(),
 				translateQuery(JdbcDialect.Query.GET_STREAM_LENGTH), JdbcContentStore.HANDLER_LENGTH,
 				locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage());
@@ -391,8 +391,8 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	}
 
 	@Override
-	protected void clearProperties(JdbcOperation operation) throws CmfStorageException {
-		this.propertyManager.clearProperties(operation);
+	protected void clearAllProperties(JdbcOperation operation) throws CmfStorageException {
+		this.propertyManager.clearAllProperties(operation);
 	}
 
 	protected String translateOptionalQuery(JdbcDialect.Query query) {

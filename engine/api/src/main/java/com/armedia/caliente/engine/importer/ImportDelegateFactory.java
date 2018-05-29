@@ -5,13 +5,18 @@ import com.armedia.caliente.engine.TransferDelegateFactory;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ImportDelegateFactory<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, ?>, E extends ImportEngine<S, W, V, C, ?, ?>>
-	extends TransferDelegateFactory<S, V, C, E> {
+public abstract class ImportDelegateFactory< //
+	SESSION, //
+	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
+	VALUE, //
+	IMPORT_CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
+	IMPORT_ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?>//
+> extends TransferDelegateFactory<SESSION, VALUE, IMPORT_CONTEXT, IMPORT_ENGINE> {
 
-	protected ImportDelegateFactory(E engine, CfgTools configuration) {
+	protected ImportDelegateFactory(IMPORT_ENGINE engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
-	protected abstract ImportDelegate<?, S, W, V, C, ?, E> newImportDelegate(CmfObject<V> storedObject)
+	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, IMPORT_ENGINE> newImportDelegate(CmfObject<VALUE> storedObject)
 		throws Exception;
 }

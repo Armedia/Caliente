@@ -51,8 +51,10 @@ public class PropertiesTest {
 
 	private static final Charset CHARSET = Charset.forName("UTF-8");
 	private static final String CHARSET_NAME = PropertiesTest.CHARSET.name();
+	/*
 	private static final String DTD = String
 		.format("<!DOCTYPE properties SYSTEM \"http://java.sun.com/dtd/properties.dtd\">%n");
+	*/
 	private static final LazyInitializer<XMLOutputFactory> FACTORY = new LazyInitializer<XMLOutputFactory>() {
 		@Override
 		protected XMLOutputFactory initialize() throws ConcurrentException {
@@ -78,7 +80,7 @@ public class PropertiesTest {
 			};
 
 			writer.writeStartDocument(PropertiesTest.CHARSET_NAME, "1.1");
-			writer.writeDTD(PropertiesTest.DTD);
+			// writer.writeDTD(PropertiesTest.DTD);
 			writer.writeStartElement("properties");
 			writer.flush();
 			out.flush();

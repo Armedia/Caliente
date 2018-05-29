@@ -6,21 +6,28 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class TransferDelegateFactory<S, V, C extends TransferContext<S, V, ?>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
+public abstract class TransferDelegateFactory< //
+	SESSION, //
+	VALUE, //
+	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
+	ENGINE extends TransferEngine<SESSION, VALUE, CONTEXT, ?, ?, ?> //
+> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final E engine;
-	private final CmfAttributeTranslator<V> translator;
+	private final ENGINE engine;
+	private final CmfAttributeTranslator<VALUE> translator;
 	private final CfgTools configuration;
+	private final boolean skipRenditions;
 
-	public TransferDelegateFactory(E engine, CfgTools configuration) {
+	public TransferDelegateFactory(ENGINE engine, CfgTools configuration) {
 		this.engine = engine;
 		this.translator = engine.getTranslator();
 		this.configuration = configuration;
+		this.skipRenditions = configuration.getBoolean(TransferSetting.NO_RENDITIONS);
 	}
 
-	public final E getEngine() {
+	public final ENGINE getEngine() {
 		return this.engine;
 	}
 
@@ -28,8 +35,12 @@ public abstract class TransferDelegateFactory<S, V, C extends TransferContext<S,
 		return this.configuration;
 	}
 
-	public final CmfAttributeTranslator<V> getTranslator() {
+	public final CmfAttributeTranslator<VALUE> getTranslator() {
 		return this.translator;
+	}
+
+	public final boolean isSkipRenditions() {
+		return this.skipRenditions;
 	}
 
 	public void close() {

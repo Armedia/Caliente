@@ -5,13 +5,18 @@ import com.armedia.caliente.engine.TransferDelegateFactory;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ExportDelegateFactory<S, W extends SessionWrapper<S>, V, C extends ExportContext<S, V, ?>, E extends ExportEngine<S, W, V, C, ?, ?>>
-	extends TransferDelegateFactory<S, V, C, E> {
+public abstract class ExportDelegateFactory< //
+	SESSION, //
+	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
+	VALUE, //
+	EXPORT_CONTEXT extends ExportContext<SESSION, VALUE, ?>, //
+	EXPORT_ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> //
+> extends TransferDelegateFactory<SESSION, VALUE, EXPORT_CONTEXT, EXPORT_ENGINE> {
 
-	protected ExportDelegateFactory(E engine, CfgTools configuration) {
+	protected ExportDelegateFactory(EXPORT_ENGINE engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
-	protected abstract ExportDelegate<?, S, W, V, C, ?, E> newExportDelegate(S session, CmfType type, String searchKey)
+	protected abstract ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, EXPORT_ENGINE> newExportDelegate(SESSION session, CmfType type, String searchKey)
 		throws Exception;
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<attribute-mappings xmlns="http://www.armedia.com/ns/caliente/engine/alfresco-bi" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine/alfresco-bi platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-bi.xsd">
+<attribute-mappings xmlns="http://www.armedia.com/ns/caliente/engine" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.armedia.com/ns/caliente/engine  platform:/resource/caliente-engine/src/main/resources/engine.xsd">
 
 	<common-mappings>
 		<!--
@@ -13,7 +13,7 @@
 		-->
 		<residuals>MANDATORY</residuals>
 	</common-mappings>
-	
+
 	<named-mappings name="named-mapping-1">
 		<include>named-mapping-1</include>
 	</named-mappings>
@@ -23,13 +23,13 @@
 	</type-mappings>
 
 	<!--
-		RULES: 
+		RULES:
 			1)	As soon as a target attribute has been written to, it cannot be
 				over-written by another rule
 
 			2)	As soon as a rule matches, the attribute copy is performed with no
 				further attempts to match rules, and no transformation of the content
-				
+
 				* If the source attribute is multivalued and the target is not,
 				  comma-concatenation is performed
 				* If the source attribute is not multivalued and the target is,
@@ -41,8 +41,8 @@
 
 			4)	Rule set extension loops are forbidden (obviously)
 
-			5)	named-mappings.name, type-mappings.name and secondary-mappings.name must
-				be globally unique, to avoid confusion
+			5)	named-mappings.name and type-mappings.name must be globally unique,
+				to avoid confusion
 	-->
 	<type-mappings name="sn2">
 

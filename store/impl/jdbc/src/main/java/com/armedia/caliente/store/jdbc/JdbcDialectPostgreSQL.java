@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.commons.dbutils.ResultSetHandler;
-import org.apache.commons.lang3.StringUtils;
 
 public class JdbcDialectPostgreSQL extends JdbcDialect {
 
@@ -54,15 +53,7 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	;
 
 	private static final String TRUNCATE_TABLE_FMT = //
-		"     truncate table %s cascade " //
-	;
-
-	private static final String DISABLE_REFERENTIAL_INTEGRITY = //
-		"     set session_replication_role = replica " //
-	;
-
-	private static final String ENABLE_REFERENTIAL_INTEGRITY = //
-		"     set session_replication_role = DEFAULT " //
+		"     truncate table %s restart identity cascade " //
 	;
 
 	private static final String UPSERT_ALT_NAME = //
@@ -86,6 +77,16 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	}
 
 	@Override
+	protected boolean isTruncateBypassesConstraints() {
+		return true;
+	}
+
+	@Override
+	protected boolean isTruncateRestartsSequences() {
+		return true;
+	}
+
+	@Override
 	protected String doTranslate(Query sql) {
 		switch (sql) {
 			case LOAD_OBJECTS_BY_ID:
@@ -98,10 +99,6 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				return JdbcDialectPostgreSQL.LOAD_OBJECT_NAMES_BY_ID_CURRENT;
 			case TRUNCATE_TABLE_FMT:
 				return JdbcDialectPostgreSQL.TRUNCATE_TABLE_FMT;
-			case ENABLE_REFERENTIAL_INTEGRITY:
-				return JdbcDialectPostgreSQL.ENABLE_REFERENTIAL_INTEGRITY;
-			case DISABLE_REFERENTIAL_INTEGRITY:
-				return JdbcDialectPostgreSQL.DISABLE_REFERENTIAL_INTEGRITY;
 			case UPSERT_ALT_NAME:
 				return JdbcDialectPostgreSQL.UPSERT_ALT_NAME;
 			case RESTART_SEQUENCE:
@@ -115,10 +112,5 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 	@Override
 	protected ResultSetHandler<Long> getObjectNumberHandler() {
 		return JdbcDialectPostgreSQL.OBJECT_NUMBER_HANDLER;
-	}
-
-	@Override
-	protected boolean isDuplicateKeyException(SQLException e) {
-		return StringUtils.equalsIgnoreCase(e.getSQLState(), "23505");
 	}
 }

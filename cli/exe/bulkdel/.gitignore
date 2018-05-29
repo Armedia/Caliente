@@ -1,5 +1,5 @@
-target
-dfc.properties
-dfc.keystore
-documentum
-bulkdel*.log
+/target/
+/dfc.properties
+/dfc.keystore
+/documentum/
+/bulkdel*.log

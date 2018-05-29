@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
 import com.armedia.caliente.engine.ucm.model.UcmModelObject;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentInfo;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
@@ -48,7 +48,7 @@ public abstract class UcmExportDelegate<T extends UcmModelObject> extends
 	}
 
 	@Override
-	protected List<CmfContentInfo> storeContent(UcmExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
+	protected List<CmfContentStream> storeContent(UcmExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception {
 		return new ArrayList<>();

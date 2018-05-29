@@ -7,6 +7,7 @@ import org.junit.Test;
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
 import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 
 public class HelpRendererTest {
@@ -25,7 +26,7 @@ public class HelpRendererTest {
 				.setArgumentName("hi") //
 				.setDescription("The number is 666") //
 				.setDefaults(Arrays.asList("a", "b", "c")) //
-				.setAllowedValues("x", "y", "z"))
+				.setValueFilter(new StringValueFilter("x", "y", "z")))
 			.add( //
 				new OptionImpl() //
 					.setRequired(false) //

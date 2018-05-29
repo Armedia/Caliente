@@ -38,16 +38,6 @@
 			<xsd:maxLength value="1" />
 		</xsd:restriction>
 	</xsd:simpleType>
-	
-	<xsd:simpleType name="residualsMode.t" final="restriction">
-		<xsd:restriction base="xsd:string">
-			<xsd:enumeration value="MANDATORY" />
-			<xsd:enumeration value="INCLUDE" />
-			<xsd:enumeration value="EXCLUDE" />
-			<xsd:enumeration value="REJECT" />
-		</xsd:restriction>
-	</xsd:simpleType>
-
 
 	<xsd:complexType name="version.t">
 		<xsd:sequence>
@@ -83,93 +73,4 @@
 	<xsd:element name="version" type="tns:version.t" />
 	<xsd:element name="item" type="tns:item.t" />
 	<xsd:element name="scan" type="tns:scan.t" />
-
-	<xsd:complexType name="emptyElement.t">
-		<xsd:complexContent>
-			<xsd:restriction base="xsd:anyType" />
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="mapping.t">
-		<xsd:simpleContent>
-			<xsd:extension base="xsd:string">
-				<xsd:attribute name="tgt" type="tns:noSpaces.t" use="required" />
-				<xsd:attribute name="caseSensitive" type="xsd:boolean" use="optional" default="true" />
-				<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="," />
-				<xsd:attribute name="override" type="xsd:boolean" use="optional" default="false" />
-			</xsd:extension>
-		</xsd:simpleContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="includeNamed.t">
-		<xsd:simpleContent>
-			<xsd:extension base="xsd:IDREF" />
-		</xsd:simpleContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="mappingName.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:mapping.t"/>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="setValue.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:mapping.t"/>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="mappingNamespace.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:mapping.t"/>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="mappingSet.t">
-		<xsd:sequence>
-			<xsd:choice minOccurs="0" maxOccurs="unbounded">
-				<xsd:element name="map" type="tns:mappingName.t" />
-				<xsd:element name="include" type="tns:includeNamed.t" />
-				<xsd:element name="set" type="tns:setValue.t" />
-				<xsd:element name="nsmap" type="tns:mappingNamespace.t" />
-			</xsd:choice>
-			<xsd:choice minOccurs="0" maxOccurs="1">
-				<xsd:element name="residuals" type="tns:residualsMode.t" />
-			</xsd:choice>
-		</xsd:sequence>
-		<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="," />
-	</xsd:complexType>
-
-	<xsd:complexType name="namedMappings.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:mappingSet.t">
-				<xsd:attribute name="name" type="xsd:ID" use="required" />
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="typeMappings.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:mappingSet.t">
-				<xsd:attribute name="name" type="tns:noSpaces.t" use="required" />
-			</xsd:extension>
-		</xsd:complexContent>
-	</xsd:complexType>
-
-	<xsd:complexType name="attributeMappings.t">
-		<xsd:sequence>
-			<xsd:element name="common-mappings" type="tns:mappingSet.t" minOccurs="0" maxOccurs="1" />
-			<xsd:choice minOccurs="0" maxOccurs="unbounded">
-				<xsd:element name="named-mappings" type="tns:namedMappings.t" />
-				<xsd:element name="type-mappings" type="tns:typeMappings.t" />
-			</xsd:choice>
-		</xsd:sequence>
-	</xsd:complexType>
-
-	<xsd:element name="attribute-mappings" type="tns:attributeMappings.t">
-		<xsd:unique name="uniqueTypeMappingName">
-			<xsd:selector xpath="tns:type-mappings"/>
-			<xsd:field xpath="@name"/>
-		</xsd:unique>
-	</xsd:element>
 </xsd:schema>
