@@ -72,11 +72,14 @@ public abstract class CommandModule implements AutoCloseable {
 
 	}
 
+	protected final CalienteWarningTracker warningTracker;
 	private final Descriptor descriptor;
 	private final boolean requiresStorage;
 	private final boolean requiresCleanData;
 
-	protected CommandModule(boolean requiresStorage, boolean requiresCleanData, Descriptor descriptor) {
+	protected CommandModule(CalienteWarningTracker warningTracker, boolean requiresStorage, boolean requiresCleanData,
+		Descriptor descriptor) {
+		this.warningTracker = warningTracker;
 		this.descriptor = descriptor;
 		this.requiresStorage = requiresStorage;
 		this.requiresCleanData = (requiresStorage && requiresCleanData);
@@ -94,9 +97,9 @@ public abstract class CommandModule implements AutoCloseable {
 		return this.requiresCleanData;
 	}
 
-	public final int run(final @SuppressWarnings("rawtypes") EngineFactory engineFactory,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, final OptionValues commandValues,
-		final Collection<String> positionals) throws CalienteException {
+	public final int run(EngineProxy engineProxy, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> contentStore, final OptionValues commandValues, final Collection<String> positionals)
+		throws CalienteException {
 		if (this.requiresStorage) {
 			// Make sure the storage engines are there
 			Objects.requireNonNull(objectStore,
@@ -108,11 +111,11 @@ public abstract class CommandModule implements AutoCloseable {
 			objectStore = null;
 			contentStore = null;
 		}
-		return execute(engineFactory, objectStore, contentStore, commandValues, positionals);
+		return execute(engineProxy, objectStore, contentStore, commandValues, positionals);
 	}
 
-	protected abstract int execute(final @SuppressWarnings("rawtypes") EngineFactory engineFactory,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, OptionValues commandValues,
-		Collection<String> positionals) throws CalienteException;
+	protected abstract int execute(EngineProxy engineProxy, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> contentStore, OptionValues commandValues, Collection<String> positionals)
+		throws CalienteException;
 
 }

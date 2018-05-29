@@ -44,7 +44,7 @@ public class Caliente {
 	public static final CmfCrypt CRYPTO = new CmfCrypt();
 
 	int run( //
-		@SuppressWarnings("rawtypes") final EngineFactory engineFactory, //
+		final EngineProxy engineProxy, //
 		final CmfObjectStore<?, ?> objectStore, //
 		final CmfContentStore<?, ?, ?> contentStore, //
 		final CommandModule command, //
@@ -54,7 +54,7 @@ public class Caliente {
 		// TODO: Lock for single execution
 		final Logger log = LoggerFactory.getLogger(getClass());
 		final boolean writeProperties = (objectStore != null);
-		final String pfx = String.format("caliente.%s.%s", engineFactory.getName().toLowerCase(),
+		final String pfx = String.format("caliente.%s.%s", engineProxy.getName().toLowerCase(),
 			command.getDescriptor().getName().toLowerCase());
 		try {
 			if (writeProperties) {
@@ -63,7 +63,7 @@ public class Caliente {
 				properties.put(String.format("%s.start", pfx), new CmfValue(new Date()));
 				objectStore.setProperties(properties);
 			}
-			command.run(engineFactory, objectStore, contentStore, commandValues, positionals);
+			command.run(engineProxy, objectStore, contentStore, commandValues, positionals);
 		} catch (Throwable t) {
 			if (writeProperties) {
 				try {

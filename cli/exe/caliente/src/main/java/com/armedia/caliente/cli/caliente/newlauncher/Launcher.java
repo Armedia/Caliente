@@ -66,8 +66,7 @@ public class Launcher extends AbstractLauncher {
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 
 	// Saves us quite a few keystrokes ;)
-	@SuppressWarnings("rawtypes")
-	private EngineFactory engineFactory = null;
+	private EngineProxy engineProxy = null;
 
 	private CommandModule command = null;
 
@@ -157,21 +156,18 @@ public class Launcher extends AbstractLauncher {
 		// Find the desired engine, and add its classpath helpers if required
 		final String engine = CLIParam.engine.getString(baseValues);
 
-		@SuppressWarnings("rawtypes")
-		final PluggableServiceLocator<EngineFactory> engineFactories = new PluggableServiceLocator<>(
-			EngineFactory.class);
-		engineFactories.setErrorListener(new PluggableServiceLocator.ErrorListener() {
+		final PluggableServiceLocator<EngineProxy> engineProxies = new PluggableServiceLocator<>(EngineProxy.class);
+		engineProxies.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 			@Override
 			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				Launcher.this.log.error("Failed to initialize the EngineFactory class {}",
+				Launcher.this.log.error("Failed to initialize the EngineProxy class {}",
 					serviceClass.getCanonicalName(), t);
 			}
 		});
 
-		@SuppressWarnings("rawtypes")
-		final PluggableServiceSelector<EngineFactory> selector = new PluggableServiceSelector<EngineFactory>() {
+		final PluggableServiceSelector<EngineProxy> selector = new PluggableServiceSelector<EngineProxy>() {
 			@Override
-			public boolean matches(EngineFactory service) {
+			public boolean matches(EngineProxy service) {
 				if (StringUtils.equalsIgnoreCase(engine, service.getName())) { return true; }
 				for (Object alias : service.getAliases()) {
 					if (StringUtils.equalsIgnoreCase(engine, Tools.toString(alias))) { return true; }
@@ -180,11 +176,11 @@ public class Launcher extends AbstractLauncher {
 			}
 		};
 
-		engineFactories.setHideErrors(false);
-		engineFactories.setDefaultSelector(selector);
+		engineProxies.setHideErrors(false);
+		engineProxies.setDefaultSelector(selector);
 
 		try {
-			this.engineFactory = engineFactories.getFirst();
+			this.engineProxy = engineProxies.getFirst();
 		} catch (NoSuchElementException e) {
 			throw new CommandLineProcessingException(1,
 				String.format("No implementation was found matching engine name or alias [%s]", engine), e);
@@ -405,7 +401,7 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
-		final String engine = this.engineFactory.getName();
+		final String engine = this.engineProxy.getName();
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
 		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
@@ -461,7 +457,7 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		return new Caliente().run(this.engineFactory, this.objectStore, this.contentStore, this.command, commandValues,
+		return new Caliente().run(this.engineProxy, this.objectStore, this.contentStore, this.command, commandValues,
 			positionals);
 	}
 }

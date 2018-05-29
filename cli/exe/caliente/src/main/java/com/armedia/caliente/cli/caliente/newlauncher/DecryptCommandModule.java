@@ -19,12 +19,12 @@ public class DecryptCommandModule extends CommandModule {
 	private static final Descriptor DESCRIPTOR = new Descriptor("decrypt", "Decrypt an encrypted password", "dec");
 
 	public DecryptCommandModule() {
-		super(false, false, DecryptCommandModule.DESCRIPTOR);
+		super(null, false, false, DecryptCommandModule.DESCRIPTOR);
 	}
 
-	private final Collection<CmfCrypt> getCrypt(final @SuppressWarnings("rawtypes") EngineFactory engineFactory) {
+	private final Collection<CmfCrypt> getCrypt(EngineProxy engineProxy) {
 		Collection<CmfCrypt> crypt = new ArrayList<>(2);
-		CmfCrypt c = engineFactory.getCrypt();
+		CmfCrypt c = engineProxy.getCrypt();
 		if (c != null) {
 			crypt.add(c);
 		}
@@ -52,10 +52,10 @@ public class DecryptCommandModule extends CommandModule {
 	}
 
 	@Override
-	protected int execute(final @SuppressWarnings("rawtypes") EngineFactory engineFactory,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, OptionValues commandValues,
-		Collection<String> positionals) throws CalienteException {
-		final Collection<CmfCrypt> crypt = getCrypt(engineFactory);
+	protected int execute(EngineProxy engineProxy, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> contentStore, OptionValues commandValues, Collection<String> positionals)
+		throws CalienteException {
+		final Collection<CmfCrypt> crypt = getCrypt(engineProxy);
 		if (!positionals.isEmpty()) {
 			for (String password : positionals) {
 				try {
