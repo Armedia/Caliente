@@ -70,9 +70,11 @@ public class Launcher extends AbstractLauncher {
 
 	private CommandModule command = null;
 
-	private CmfObjectStore<?, ?> objectStore = null;
+	@SuppressWarnings("rawtypes")
+	private CmfObjectStore objectStore = null;
 
-	private CmfContentStore<?, ?, ?> contentStore = null;
+	@SuppressWarnings("rawtypes")
+	private CmfContentStore contentStore = null;
 
 	private final Map<String, CommandModule> commandModules = new TreeMap<>();
 
