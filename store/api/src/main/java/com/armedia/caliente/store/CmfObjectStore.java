@@ -25,7 +25,8 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOperation<CONNECTION>> extends CmfStore<CONNECTION, OPERATION> {
+public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOperation<CONNECTION>>
+	extends CmfStore<CONNECTION, OPERATION> {
 
 	public static enum LockStatus {
 		//
@@ -213,11 +214,11 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 
 	protected abstract Long storeObject(OPERATION operation, CmfObject<CmfValue> object) throws CmfStorageException;
 
-	public final <V> boolean markStoreStatus(CmfObjectRef target, StoreStatus status) throws CmfStorageException {
+	public final boolean markStoreStatus(CmfObjectRef target, StoreStatus status) throws CmfStorageException {
 		return markStoreStatus(target, status, null);
 	}
 
-	public final <V> boolean markStoreStatus(CmfObjectRef target, StoreStatus status, String message)
+	public final boolean markStoreStatus(CmfObjectRef target, StoreStatus status, String message)
 		throws CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide an object target"); }
 		if (status == null) { throw new IllegalArgumentException("Must provide a status to mark the object with"); }
@@ -247,10 +248,10 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract <V> boolean markStoreStatus(OPERATION operation, CmfObjectRef target, StoreStatus status, String message)
-		throws CmfStorageException;
+	protected abstract boolean markStoreStatus(OPERATION operation, CmfObjectRef target, StoreStatus status,
+		String message) throws CmfStorageException;
 
-	public final <V> void setContentStreams(CmfObject<V> object, Collection<CmfContentStream> content)
+	public final <VALUE> void setContentStreams(CmfObject<VALUE> object, Collection<CmfContentStream> content)
 		throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		if ((content == null) || content.isEmpty()) { return; }
@@ -279,10 +280,10 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract <V> void setContentStreams(OPERATION operation, CmfObject<V> object, Collection<CmfContentStream> content)
-		throws CmfStorageException;
+	protected abstract <VALUE> void setContentStreams(OPERATION operation, CmfObject<VALUE> object,
+		Collection<CmfContentStream> content) throws CmfStorageException;
 
-	public final <V> List<CmfContentStream> getContentStreams(CmfObject<V> object) throws CmfStorageException {
+	public final <VALUE> List<CmfContentStream> getContentStreams(CmfObject<VALUE> object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		OPERATION operation = beginConcurrentInvocation();
 		try {
@@ -304,7 +305,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract <V> List<CmfContentStream> getContentStreams(OPERATION operation, CmfObject<V> object)
+	protected abstract <VALUE> List<CmfContentStream> getContentStreams(OPERATION operation, CmfObject<VALUE> object)
 		throws CmfStorageException;
 
 	public final StoreStatus getStoreStatus(CmfObjectRef target) throws CmfStorageException {
@@ -582,8 +583,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract int fixObjectNames(OPERATION operation, CmfNameFixer<CmfValue> nameFixer, CmfType type, Set<String> ids)
-		throws CmfStorageException;
+	protected abstract int fixObjectNames(OPERATION operation, CmfNameFixer<CmfValue> nameFixer, CmfType type,
+		Set<String> ids) throws CmfStorageException;
 
 	public final void scanObjectTree(final CmfTreeScanner scanner) throws CmfStorageException {
 		if (scanner == null) { throw new IllegalArgumentException("Must provide scanner to process the object tree"); }
@@ -606,7 +607,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract void scanObjectTree(final OPERATION operation, final CmfTreeScanner scanner) throws CmfStorageException;
+	protected abstract void scanObjectTree(final OPERATION operation, final CmfTreeScanner scanner)
+		throws CmfStorageException;
 
 	private Mapping createMapping(CmfType type, String name, String source, String target) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
@@ -770,7 +772,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 
 	protected abstract void resetAltNames(OPERATION operation) throws CmfStorageException;
 
-	public final <V> boolean renameObject(final CmfObject<V> object, final String newName) throws CmfStorageException {
+	public final <VALUE> boolean renameObject(final CmfObject<VALUE> object, final String newName)
+		throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to rename"); }
 		if (newName == null) { throw new IllegalArgumentException("Must provide new name for the object"); }
 
@@ -804,8 +807,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract <V> void renameObject(final OPERATION operation, final CmfObject<V> object, final String newName)
-		throws CmfStorageException;
+	protected abstract <VALUE> void renameObject(final OPERATION operation, final CmfObject<VALUE> object,
+		final String newName) throws CmfStorageException;
 
 	public final int clearAttributeMappings() throws CmfStorageException {
 		OPERATION operation = beginExclusiveInvocation();
@@ -960,7 +963,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract Map<CmfType, Map<String, String>> getRenameMappings(OPERATION operation) throws CmfStorageException;
+	protected abstract Map<CmfType, Map<String, String>> getRenameMappings(OPERATION operation)
+		throws CmfStorageException;
 
 	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean latest)
 		throws CmfStorageException {
@@ -1100,8 +1104,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract <T extends Enum<T>> CmfRequirementInfo<T> setImportStatus(OPERATION operation, CmfObjectRef object,
-		T status, String info) throws CmfStorageException;
+	protected abstract <T extends Enum<T>> CmfRequirementInfo<T> setImportStatus(OPERATION operation,
+		CmfObjectRef object, T status, String info) throws CmfStorageException;
 
 	public final <T extends Enum<T>> Collection<CmfRequirementInfo<T>> getRequirementInfo(Class<T> statusClass,
 		CmfObjectRef object) throws CmfStorageException {
