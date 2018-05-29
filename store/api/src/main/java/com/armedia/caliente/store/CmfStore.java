@@ -290,7 +290,8 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 		}
 	}
 
-	protected abstract CmfValue setProperty(OPERATION operation, String property, CmfValue value) throws CmfStorageException;
+	protected abstract CmfValue setProperty(OPERATION operation, String property, CmfValue value)
+		throws CmfStorageException;
 
 	public final Set<String> getPropertyNames() throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
@@ -315,7 +316,6 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 	protected abstract Set<String> getPropertyNames(OPERATION operation) throws CmfStorageException;
 
 	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
-
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
