@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.TreeMap;
 
@@ -47,7 +46,6 @@ import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.PluggableServiceLocator;
-import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
 
 public class Launcher extends AbstractLauncher {
@@ -156,35 +154,9 @@ public class Launcher extends AbstractLauncher {
 		// Find the desired engine, and add its classpath helpers if required
 		final String engine = CLIParam.engine.getString(baseValues);
 
-		final PluggableServiceLocator<EngineProxy> engineProxies = new PluggableServiceLocator<>(EngineProxy.class);
-		engineProxies.setErrorListener(new PluggableServiceLocator.ErrorListener() {
-			@Override
-			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				Launcher.this.log.error("Failed to initialize the EngineProxy class {}",
-					serviceClass.getCanonicalName(), t);
-			}
-		});
-
-		final PluggableServiceSelector<EngineProxy> selector = new PluggableServiceSelector<EngineProxy>() {
-			@Override
-			public boolean matches(EngineProxy service) {
-				if (StringUtils.equalsIgnoreCase(engine, service.getName())) { return true; }
-				for (Object alias : service.getAliases()) {
-					if (StringUtils.equalsIgnoreCase(engine, Tools.toString(alias))) { return true; }
-				}
-				return false;
-			}
-		};
-
-		engineProxies.setHideErrors(false);
-		engineProxies.setDefaultSelector(selector);
-
-		try {
-			this.engineProxy = engineProxies.getFirst();
-		} catch (NoSuchElementException e) {
-			throw new CommandLineProcessingException(1,
-				String.format("No implementation was found matching engine name or alias [%s]", engine), e);
-		}
+		this.engineProxy = EngineProxy.getInstance(engine);
+		if (this.engineProxy == null) { throw new CommandLineProcessingException(1,
+			String.format("No implementation was found matching engine name or alias [%s]", engine)); }
 
 		// Now go try to initialize the stores if required
 		try {
