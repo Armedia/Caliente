@@ -454,7 +454,7 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	@Override
-	protected void showBanner(org.slf4j.Logger log) {
+	protected void showBanner(Logger log) {
 		log.info("Caliente CLI v{}", Caliente.VERSION);
 	}
 
