@@ -1,32 +1,21 @@
 package com.armedia.caliente.cli.caliente.newlauncher;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.InvalidPropertiesFormatException;
-import java.util.Map;
-import java.util.Properties;
 
-import javax.xml.stream.XMLStreamException;
-
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.cfg.SettingManager;
+import com.armedia.caliente.cli.caliente.launcher.CalienteMain;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfStoreFactory;
-import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.caliente.tools.xml.XmlProperties;
 
 public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CalienteMain {
 
@@ -145,85 +134,5 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		if (!f.canRead()) { throw new IOException(String.format("The file [%s] can't be read", f.getAbsolutePath())); }
 
 		return f;
-	}
-
-	protected Properties loadStoreProperties(String type, String jdbcConfig) throws IOException {
-		final boolean usingDefault = (jdbcConfig == null);
-		boolean loadedSettingsFile = false;
-
-		if (usingDefault) {
-			// Follow a default value if it exists
-			jdbcConfig = String.format("caliente-%s-store.properties", type.toLowerCase());
-		}
-
-		// Try to find the file...only explode if it's been explicitly requested
-		File f = locateFile(jdbcConfig, !usingDefault);
-		if ((f == null) && usingDefault) {
-			jdbcConfig = String.format("caliente-%s-store.xml", type.toLowerCase());
-			f = locateFile(jdbcConfig, false);
-		}
-
-		if (f == null) {
-			this.console.info("No special {} store properties set, using defaulted values", type);
-			return new Properties();
-		}
-
-		final boolean supportsFallback = (!StringUtils.endsWithIgnoreCase(jdbcConfig, ".xml"));
-
-		try {
-			// Ok...so we have the file...try to load it!
-			try (InputStream xmlIn = new FileInputStream(f)) {
-				Properties p = XmlProperties.loadFromXML(xmlIn);
-				loadedSettingsFile = true;
-				return p;
-			} catch (InvalidPropertiesFormatException | XMLStreamException e) {
-				if (this.log.isTraceEnabled()) {
-					this.log.trace("The {} store properties at [{}] aren't in XML format{}", type, f.getAbsolutePath(),
-						supportsFallback ? ", trying the classic format" : "", e);
-				}
-				this.console.warn("The {} store properties at [{}] aren't in XML format", type, f.getAbsolutePath(),
-					supportsFallback ? ", trying the classic format" : "");
-			}
-
-			if (supportsFallback) {
-				// We only make it this far if the XML read failed, and the file isn't named "*.xml"
-				try (InputStream textIn = new FileInputStream(f)) {
-					Properties p = new Properties();
-					p.load(textIn);
-					loadedSettingsFile = true;
-					return p;
-				} catch (IllegalArgumentException e) {
-					if (this.log.isTraceEnabled()) {
-						this.log.trace("The {} store properties at [{}] aren't in the legacy format", type,
-							f.getAbsolutePath(), e);
-					}
-					this.console.warn("The {} store properties at [{}] aren't in the legacy format", type,
-						f.getAbsolutePath());
-				}
-			}
-		} finally {
-			if (loadedSettingsFile) {
-				this.console.info("Loaded the {} store properties from [{}]", type, f.getAbsolutePath());
-			}
-		}
-		throw new IOException(String.format(
-			"Failed to load the %s store properties from [%s] - the file is not a properties file (XML or legacy)",
-			type, f.getAbsolutePath()));
-	}
-
-	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
-		if ((properties == null) || properties.isEmpty()) { return false; }
-		String storeType = properties.getProperty(AbstractCalienteModule.STORE_TYPE_PROPERTY);
-		if (!StringUtils.isEmpty(storeType)) {
-			cfg.setType(storeType);
-		}
-		Map<String, String> m = cfg.getSettings();
-		for (String s : properties.stringPropertyNames()) {
-			String v = properties.getProperty(s);
-			if (v != null) {(legacyMode ? AbstractCalienteModule.LEGACY_DB : AbstractCaliente
-				m.put(s, v);
-			}
-		}
-		return true;
 	}
 }
