@@ -76,57 +76,6 @@ public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?
 		// First things first...
 		AbstractCalienteModule.instance = this;
 
-		if (requiresStorage) {
-			final File databaseDirectoryLocation = getMetadataFilesLocation().getCanonicalFile();
-			// Identify whether to use legacy mode or not...
-			final String dbName = AbstractCalienteModule.CURRENT_DB;
-			final File contentFilesDirectoryLocation = getContentFilesLocation().getCanonicalFile();
-
-			this.console.info(String.format("Initializing the object store at [%s]", databaseDirectoryLocation));
-
-			Map<String, String> commonValues = new HashMap<>();
-			commonValues.put("dir.content", contentFilesDirectoryLocation.getAbsolutePath());
-			commonValues.put("dir.metadata", databaseDirectoryLocation.getAbsolutePath());
-			commonValues.put("db.name", dbName);
-
-			CmfStores.initializeConfigurations();
-
-			StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("default");
-			customizeObjectStoreProperties(cfg);
-			applyStoreProperties(cfg, loadStoreProperties("object", CLIParam.object_store_config.getString()));
-			commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearMetadata));
-			cfg.getSettings().putAll(commonValues);
-			this.cmfObjectStore = CmfStores.createObjectStore(cfg);
-
-			final boolean directFsExport = CLIParam.direct_fs.isPresent();
-
-			final String contentStoreName = (directFsExport ? "direct" : "default");
-			cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
-			customizeContentStoreProperties(cfg);
-			if (!directFsExport) {
-				String strategy = CLIParam.content_strategy.getString();
-				if (StringUtils.isBlank(strategy)) {
-					strategy = getContentStrategyName();
-				}
-				if (!StringUtils.isBlank(strategy)) {
-					cfg.getSettings().put("dir.content.strategy", strategy);
-				}
-				applyStoreProperties(cfg, loadStoreProperties("content", CLIParam.content_store_config.getString()));
-			}
-			commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearContent));
-			cfg.getSettings().putAll(commonValues);
-			this.cmfContentStore = CmfStores.createContentStore(cfg);
-
-			// Set the filesystem location where files will be created or read from
-			this.log.info(String.format("Using database directory: [%s]", databaseDirectoryLocation));
-
-			// Set the filesystem location where the content files will be created or read from
-			this.log.info(String.format("Using content directory: [%s]", contentFilesDirectoryLocation));
-		} else {
-			this.cmfObjectStore = null;
-			this.cmfContentStore = null;
-		}
-
 		this.server = CLIParam.server.getString();
 		this.user = CLIParam.user.getString();
 		String pass = CLIParam.password.getString();
