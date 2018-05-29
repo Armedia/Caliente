@@ -405,32 +405,34 @@ public class Launcher extends AbstractLauncher {
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
 		final String engine = this.engineFactory.getName();
-		String logMode = StringUtils.lowerCase(command);
-		String logEngine = StringUtils.lowerCase(engine);
-		String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-		String logName = commandValues.getString(CLIParam.log);
-		if (logName == null) {
-			logName = Launcher.DEFAULT_LOG_FORMAT;
-		}
+		final String logMode = StringUtils.lowerCase(command);
+		final String logEngine = StringUtils.lowerCase(engine);
+		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+		final String logName = Tools.coalesce(CLIParam.log.getString(baseValues), Launcher.DEFAULT_LOG_FORMAT);
+
 		System.setProperty("logName", logName);
 		System.setProperty("logTimeStamp", logTimeStamp);
 		System.setProperty("logMode", logMode);
 		System.setProperty("logEngine", logEngine);
+
 		String logCfg = CLIParam.log_cfg.getString(baseValues);
 		boolean customLog = false;
 		if (logCfg != null) {
 			final File cfg = createFile(logCfg);
 			if (cfg.exists() && cfg.isFile() && cfg.canRead()) {
-				DOMConfigurator.configureAndWatch(Tools.canonicalize(cfg).getAbsolutePath());
+				DOMConfigurator.configure(Tools.canonicalize(cfg).getAbsolutePath());
 				customLog = true;
 			}
 		}
+
 		if (!customLog) {
-			URL config = Thread.currentThread().getContextClassLoader().getResource("log4j.xml");
+			// No custom log is in play, so we just use the default one from the classpath
+			ClassLoader cl = Thread.currentThread().getContextClassLoader();
+			URL config = cl.getResource("log4j.xml");
 			if (config != null) {
 				DOMConfigurator.configure(config);
 			} else {
-				config = Thread.currentThread().getContextClassLoader().getResource("log4j.properties");
+				config = cl.getResource("log4j.properties");
 				if (config != null) {
 					PropertyConfigurator.configure(config);
 				}
