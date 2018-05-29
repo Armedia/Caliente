@@ -10,7 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.exporter.DefaultExportEngineListener;
 import com.armedia.caliente.engine.exporter.ExportResult;
@@ -27,10 +28,20 @@ import com.armedia.commons.utilities.Tools;
  */
 public class ExportManifest extends DefaultExportEngineListener {
 
-	private final Logger manifestLog = Logger.getLogger("manifest");
+	private final Logger manifestLog = LoggerFactory.getLogger("manifest");
 
 	private static final Long NULL = Long.valueOf(-1);
-	private static final String RECORD_FORMAT = "%s,%s,%s,%s,%s,%s,%s,%s,%s";
+
+	private static final ManifestFormatter FORMAT = new ManifestFormatter("NUMBER", //
+		"DATE", //
+		"TYPE", //
+		"TIER", //
+		"RESULT", //
+		"HISTORY_ID", //
+		"SOURCE_ID", //
+		"LABEL", //
+		"ERROR_DATA" //
+	);
 
 	private static final class Record {
 		private final Long number;
@@ -121,16 +132,19 @@ public class ExportManifest extends DefaultExportEngineListener {
 		}
 
 		public void log(Logger log) {
-			final String msg;
-			if (this.result != ExportResult.FAILED) {
-				msg = String.format(ExportManifest.RECORD_FORMAT, this.number, this.date, this.type.name(),
-					(this.tier != null ? this.tier.toString() : ""), this.result.name(), this.historyId, this.sourceId,
-					this.label, Tools.coalesce(this.extraInfo, ""));
-			} else {
-				msg = String.format(ExportManifest.RECORD_FORMAT, this.number, this.date, this.type.name(),
-					(this.tier != null ? this.tier.toString() : ""), this.result.name(), this.historyId, this.sourceId,
-					this.label, getThrownMessage());
-			}
+			final String extraData = (this.result != ExportResult.FAILED) ? Tools.coalesce(this.extraInfo, "")
+				: getThrownMessage();
+			final String msg = ExportManifest.FORMAT.render( //
+				this.number, //
+				this.date, //
+				this.type.name(), //
+				(this.tier != null ? this.tier.toString() : ""), //
+				this.result.name(), //
+				this.historyId, //
+				this.sourceId, //
+				this.label, //
+				extraData //
+			);
 			log.info(msg);
 		}
 	}
@@ -147,8 +161,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 	@Override
 	protected void exportStartedImpl(ExportState exportState) {
 		this.openBatches.clear();
-		this.manifestLog.info(String.format(ExportManifest.RECORD_FORMAT, "NUMBER", "DATE", "TYPE", "TIER", "RESULT",
-			"HISTORY_ID", "SOURCE_ID", "LABEL", "ERROR_DATA"));
+		this.manifestLog.info(ExportManifest.FORMAT.renderHeaders());
 	}
 
 	@Override
