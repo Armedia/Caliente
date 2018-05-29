@@ -117,7 +117,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					this.managedTransactions, new JdbcSchemaManager.Callback() {
 						@Override
 						public void cleanData(JdbcOperation op) throws CmfStorageException {
-							clearProperties(op);
+							clearAllProperties(op);
 							clearAllObjects(op);
 							clearAttributeMappings(op);
 						}
@@ -1526,8 +1526,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void clearProperties(JdbcOperation operation) throws CmfStorageException {
-		this.propertyManager.clearProperties(operation);
+	protected void clearAllProperties(JdbcOperation operation) throws CmfStorageException {
+		this.propertyManager.clearAllProperties(operation);
 	}
 
 	@Override

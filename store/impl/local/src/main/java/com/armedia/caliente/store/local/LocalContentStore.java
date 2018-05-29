@@ -33,8 +33,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfOrganizationStrategy;
 import com.armedia.caliente.store.CmfOrganizationStrategy.Location;
@@ -485,7 +485,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected void clearProperties(LocalStoreOperation operation) throws CmfStorageException {
+	protected void clearAllProperties(LocalStoreOperation operation) throws CmfStorageException {
 		this.modified.set(true);
 		this.properties.clear();
 		this.propertiesFile.delete();
