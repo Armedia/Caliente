@@ -8,19 +8,26 @@ import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 
-public abstract class ImportDelegate<T, S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, ?>, DF extends ImportDelegateFactory<S, W, V, C, E>, E extends ImportEngine<S, W, V, C, ?, DF>>
-	extends TransferDelegate<T, S, V, C, DF, E> {
+public abstract class ImportDelegate< //
+	ECM_OBJECT, //
+	SESSION, //
+	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
+	VALUE, //
+	IMPORT_CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
+	IMPORT_DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, IMPORT_ENGINE>, //
+	IMPORT_ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, IMPORT_DELEGATE_FACTORY> //
+> extends TransferDelegate<ECM_OBJECT, SESSION, VALUE, IMPORT_CONTEXT, IMPORT_DELEGATE_FACTORY, IMPORT_ENGINE> {
 
-	protected final CmfObject<V> cmfObject;
+	protected final CmfObject<VALUE> cmfObject;
 	protected final ImportStrategy strategy;
 
-	protected ImportDelegate(DF factory, Class<T> objectClass, CmfObject<V> storedObject) throws Exception {
+	protected ImportDelegate(IMPORT_DELEGATE_FACTORY factory, Class<ECM_OBJECT> objectClass, CmfObject<VALUE> storedObject) throws Exception {
 		super(factory, objectClass);
 		this.cmfObject = storedObject;
 		this.strategy = factory.getEngine().getImportStrategy(storedObject.getType());
 	}
 
-	protected abstract Collection<ImportOutcome> importObject(CmfAttributeTranslator<V> translator, C ctx)
+	protected abstract Collection<ImportOutcome> importObject(CmfAttributeTranslator<VALUE> translator, IMPORT_CONTEXT ctx)
 		throws ImportException, CmfStorageException;
 
 }

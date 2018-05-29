@@ -18,16 +18,20 @@ import com.armedia.commons.utilities.CfgTools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class TransferContext<S, V, F extends TransferContextFactory<S, V, ?, ?>> implements WarningTracker {
+public abstract class TransferContext< //
+	SESSION, //
+	VALUE, //
+	CONTEXT_FACTORY extends TransferContextFactory<SESSION, VALUE, ?, ?> //
+> implements WarningTracker {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final String id;
-	private final F factory;
+	private final CONTEXT_FACTORY factory;
 	private final String rootId;
 	private final CmfType rootType;
-	private final S session;
-	private final Map<String, V> values = new HashMap<>();
+	private final SESSION session;
+	private final Map<String, VALUE> values = new HashMap<>();
 	private final Map<String, Object> objects = new HashMap<>();
 	private final CfgTools settings;
 	private final Logger output;
@@ -35,8 +39,9 @@ public abstract class TransferContext<S, V, F extends TransferContextFactory<S, 
 	private final String productVersion;
 	private final WarningTracker warningTracker;
 
-	protected <C extends TransferContext<S, V, F>> TransferContext(F factory, CfgTools settings, String rootId,
-		CmfType rootType, S session, Logger output, WarningTracker warningTracker) {
+	protected <C extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY>> TransferContext(CONTEXT_FACTORY factory,
+		CfgTools settings, String rootId, CmfType rootType, SESSION session, Logger output,
+		WarningTracker warningTracker) {
 		this.factory = factory;
 		this.settings = settings;
 		this.rootId = rootId;
@@ -53,7 +58,7 @@ public abstract class TransferContext<S, V, F extends TransferContextFactory<S, 
 		return this.id;
 	}
 
-	protected F getFactory() {
+	protected CONTEXT_FACTORY getFactory() {
 		return this.factory;
 	}
 
@@ -69,7 +74,7 @@ public abstract class TransferContext<S, V, F extends TransferContextFactory<S, 
 		return this.rootType;
 	}
 
-	public final S getSession() {
+	public final SESSION getSession() {
 		return this.session;
 	}
 
@@ -77,18 +82,18 @@ public abstract class TransferContext<S, V, F extends TransferContextFactory<S, 
 		if (name == null) { throw new IllegalArgumentException("Must provide a value name"); }
 	}
 
-	public final V getValue(String name) {
+	public final VALUE getValue(String name) {
 		assertValidName(name);
 		return this.values.get(name);
 	}
 
-	public final V setValue(String name, V value) {
+	public final VALUE setValue(String name, VALUE value) {
 		assertValidName(name);
 		if (value == null) { return clearValue(name); }
 		return this.values.put(name, value);
 	}
 
-	public final V clearValue(String name) {
+	public final VALUE clearValue(String name) {
 		assertValidName(name);
 		return this.values.remove(name);
 	}
