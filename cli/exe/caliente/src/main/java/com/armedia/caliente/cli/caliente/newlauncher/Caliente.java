@@ -5,10 +5,13 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
-import com.armedia.caliente.cli.OptionValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -42,39 +45,36 @@ public class Caliente {
 
 	int run( //
 		@SuppressWarnings("rawtypes") final EngineFactory engineFactory, //
-		@SuppressWarnings("rawtypes") final CmfObjectStore objectStore, //
-		@SuppressWarnings("rawtypes") final CmfContentStore contentStore, //
+		final CmfObjectStore<?, ?> objectStore, //
+		final CmfContentStore<?, ?, ?> contentStore, //
 		final CommandModule command, //
 		final OptionValues commandValues, //
 		final Collection<String> positionals //
 	) throws Exception {
-
-		// Now, convert the command-line parameters into configuration properties
-		for (OptionValue v : commandValues) {
-
-			List<String> values = v.getAllStrings();
-			if ((values != null) && !values.isEmpty()) {
-				// TODO: Store this parameter value as a property
-			}
-		}
-
-		// Lock for single execution
+		// TODO: Lock for single execution
+		final Logger log = LoggerFactory.getLogger(getClass());
 		final boolean writeProperties = (objectStore != null);
 		final String pfx = String.format("caliente.%s.%s", engineFactory.getName().toLowerCase(),
 			command.getDescriptor().getName().toLowerCase());
 		try {
 			if (writeProperties) {
-				objectStore.setProperty(String.format("%s.version", pfx), new CmfValue(Caliente.VERSION));
-				objectStore.setProperty(String.format("%s.start", pfx), new CmfValue(new Date()));
+				Map<String, CmfValue> properties = new TreeMap<>();
+				properties.put(String.format("%s.version", pfx), new CmfValue(Caliente.VERSION));
+				properties.put(String.format("%s.start", pfx), new CmfValue(new Date()));
+				objectStore.setProperties(properties);
 			}
 			command.run(engineFactory, objectStore, contentStore, commandValues, positionals);
 		} catch (Throwable t) {
 			if (writeProperties) {
-				objectStore.setProperty(String.format("%s.error", pfx), new CmfValue(Tools.dumpStackTrace(t)));
+				try {
+					objectStore.setProperty(String.format("%s.error", pfx), new CmfValue(Tools.dumpStackTrace(t)));
+				} catch (Exception e) {
+					log.error("Failed to store the captured error into the properties database", e);
+				}
 			}
 			throw new RuntimeException("Execution failed", t);
 		} finally {
-			// Unlock from single execution
+			// TODO: Unlock from single execution
 			if (writeProperties) {
 				objectStore.setProperty(String.format("%s.end", pfx), new CmfValue(new Date()));
 			}

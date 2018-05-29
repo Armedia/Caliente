@@ -21,9 +21,10 @@ import java.util.TreeMap;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
@@ -439,15 +440,22 @@ public class Launcher extends AbstractLauncher {
 			}
 		}
 
-		// Make sure log4j is configured
-		Logger.getRootLogger().info("Logging active");
-		final Logger console = Logger.getLogger("console");
+		// Make sure log4j is configured by directly invoking the requisite class
+		org.apache.log4j.Logger.getRootLogger().info("Logging active");
+
+		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
+		final Logger console = LoggerFactory.getLogger("console");
 		console
 			.info(String.format("Launching Caliente v%s %s mode for engine %s%n", Caliente.VERSION, command, engine));
 		Runtime runtime = Runtime.getRuntime();
 		console.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
 		console.info(String.format("Maximum heap size: %d MB", runtime.maxMemory() / 1024 / 1024));
 		return true;
+	}
+
+	@Override
+	protected void showBanner(org.slf4j.Logger log) {
+		log.info("Caliente CLI v{}", Caliente.VERSION);
 	}
 
 	@Override

@@ -192,17 +192,32 @@ public abstract class AbstractLauncher {
 		}
 
 		// The logging is initialized, we can make use of it now.
+		showBanner(this.console);
 		for (String s : ClasspathPatcher.getAdditions()) {
 			this.log.info("Classpath addition: [{}]", s);
 		}
 
 		try {
-			return run(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
+			int ret = run(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
 				result.getPositionals());
+			showFooter(this.console, ret);
+			return ret;
 		} catch (Exception e) {
-			this.log.error("Exception caught", e);
+			showError(this.log, e);
 			return 1;
 		}
+	}
+
+	protected void showBanner(Logger log) {
+		// By default, do nothing
+	}
+
+	protected void showFooter(Logger log, int rc) {
+		// By default, do nothing
+	}
+
+	protected void showError(Logger log, Throwable e) {
+		log.error("Exception caught", e);
 	}
 
 	protected abstract int run(OptionValues baseValues, String command, OptionValues commandValues,
