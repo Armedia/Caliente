@@ -37,7 +37,14 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F extends TransferContextFactory<S, V, C, ?>, D extends TransferDelegateFactory<S, V, C, ?>, L> {
+public abstract class TransferEngine< //
+	SESSION, //
+	VALUE, //
+	CONTEXT extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY>, //
+	CONTEXT_FACTORY extends TransferContextFactory<SESSION, VALUE, CONTEXT, ?>, //
+	DELEGATE_FACTORY extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ?>, //
+	LISTENER //
+> {
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
@@ -119,7 +126,7 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 	private static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 	private static final int MAX_THREAD_COUNT = Runtime.getRuntime().availableProcessors() * 2;
 
-	private final List<L> listeners = new ArrayList<>();
+	private final List<LISTENER> listeners = new ArrayList<>();
 
 	protected final CmfCrypt crypto;
 
@@ -145,17 +152,17 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		return !excludes.contains(type);
 	}
 
-	public final synchronized boolean addListener(L listener) {
+	public final synchronized boolean addListener(LISTENER listener) {
 		if (listener != null) { return this.listeners.add(listener); }
 		return false;
 	}
 
-	public final synchronized boolean removeListener(L listener) {
+	public final synchronized boolean removeListener(LISTENER listener) {
 		if (listener != null) { return this.listeners.remove(listener); }
 		return false;
 	}
 
-	protected final synchronized Collection<L> getListeners() {
+	protected final synchronized Collection<LISTENER> getListeners() {
 		return new ArrayList<>(this.listeners);
 	}
 
@@ -172,17 +179,17 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 			TransferEngine.MAX_THREAD_COUNT);
 	}
 
-	protected abstract V getValue(CmfDataType type, Object value);
+	protected abstract VALUE getValue(CmfDataType type, Object value);
 
-	protected abstract CmfAttributeTranslator<V> getTranslator();
+	protected abstract CmfAttributeTranslator<VALUE> getTranslator();
 
-	protected abstract SessionFactory<S> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
+	protected abstract SessionFactory<SESSION> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
 
-	protected abstract F newContextFactory(S session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
-		throws Exception;
+	protected abstract CONTEXT_FACTORY newContextFactory(SESSION session, CfgTools cfg,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		WarningTracker warningTracker) throws Exception;
 
-	protected abstract D newDelegateFactory(S session, CfgTools cfg) throws Exception;
+	protected abstract DELEGATE_FACTORY newDelegateFactory(SESSION session, CfgTools cfg) throws Exception;
 
 	protected abstract Set<String> getTargetNames();
 
@@ -190,11 +197,11 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		return this.crypto;
 	}
 
-	public final ExportTarget getReferrent(CmfObject<V> marshaled) {
+	public final ExportTarget getReferrent(CmfObject<VALUE> marshaled) {
 		if (marshaled == null) { throw new IllegalArgumentException("Must provide a marshaled object to analyze"); }
-		CmfProperty<V> referrentType = marshaled.getProperty(TransferEngine.REFERRENT_TYPE);
-		CmfProperty<V> referrentId = marshaled.getProperty(TransferEngine.REFERRENT_ID);
-		CmfProperty<V> referrentKey = marshaled.getProperty(TransferEngine.REFERRENT_KEY);
+		CmfProperty<VALUE> referrentType = marshaled.getProperty(TransferEngine.REFERRENT_TYPE);
+		CmfProperty<VALUE> referrentId = marshaled.getProperty(TransferEngine.REFERRENT_ID);
+		CmfProperty<VALUE> referrentKey = marshaled.getProperty(TransferEngine.REFERRENT_KEY);
 		if ((referrentType == null) || (referrentId == null) || (referrentKey == null)) { return null; }
 		String type = Tools.toString(referrentType.getValue(), true);
 		String id = Tools.toString(referrentId.getValue(), true);
@@ -203,21 +210,22 @@ public abstract class TransferEngine<S, V, C extends TransferContext<S, V, F>, F
 		return new ExportTarget(CmfType.valueOf(type), id, key);
 	}
 
-	public final void setReferrent(CmfObject<V> marshaled, ExportTarget referrent) throws ExportException {
+	public final void setReferrent(CmfObject<VALUE> marshaled, ExportTarget referrent) throws ExportException {
 		// Now, add the properties to reference the referrent object
 		if (referrent != null) {
-			final CmfAttributeTranslator<V> translator = getTranslator();
+			final CmfAttributeTranslator<VALUE> translator = getTranslator();
 			try {
-				CmfProperty<V> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING,
+				CmfProperty<VALUE> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING,
 					false);
 				referrentType.setValue(translator.getValue(CmfDataType.STRING, referrent.getType().name()));
 				marshaled.setProperty(referrentType);
 
-				CmfProperty<V> referrentId = new CmfProperty<>(TransferEngine.REFERRENT_ID, CmfDataType.STRING, false);
+				CmfProperty<VALUE> referrentId = new CmfProperty<>(TransferEngine.REFERRENT_ID, CmfDataType.STRING,
+					false);
 				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getId()));
 				marshaled.setProperty(referrentId);
 
-				CmfProperty<V> referrentKey = new CmfProperty<>(TransferEngine.REFERRENT_KEY, CmfDataType.STRING,
+				CmfProperty<VALUE> referrentKey = new CmfProperty<>(TransferEngine.REFERRENT_KEY, CmfDataType.STRING,
 					false);
 				referrentKey.setValue(translator.getValue(CmfDataType.STRING, referrent.getSearchKey()));
 				marshaled.setProperty(referrentKey);

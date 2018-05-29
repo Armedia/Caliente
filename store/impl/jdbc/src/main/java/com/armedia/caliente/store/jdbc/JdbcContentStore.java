@@ -21,8 +21,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfStorageException;
@@ -219,7 +219,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 					this.managedTransactions, new JdbcSchemaManager.Callback() {
 						@Override
 						public void cleanData(JdbcOperation op) throws CmfStorageException {
-							clearProperties(op);
+							clearAllProperties(op);
 						}
 					});
 				op.commit();
@@ -391,8 +391,8 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	}
 
 	@Override
-	protected void clearProperties(JdbcOperation operation) throws CmfStorageException {
-		this.propertyManager.clearProperties(operation);
+	protected void clearAllProperties(JdbcOperation operation) throws CmfStorageException {
+		this.propertyManager.clearAllProperties(operation);
 	}
 
 	protected String translateOptionalQuery(JdbcDialect.Query query) {

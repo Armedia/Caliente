@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
@@ -41,12 +42,23 @@ public class XmlInstances<T> {
 		return String.format("%s.xml", name.toLowerCase());
 	}
 
-	public XmlInstances(Class<T> objectClass, String schema) {
-		this(objectClass, schema, null);
+	public XmlInstances(Class<T> objectClass) {
+		this(objectClass, null, null);
 	}
 
-	public XmlInstances(Class<T> objectClass, String schema, String defaultFileName) {
+	public XmlInstances(Class<T> objectClass, String defaultFileName) {
+		this(objectClass, defaultFileName, null);
+	}
+
+	public XmlInstances(Class<T> objectClass, String defaultFileName, String schema) {
 		this.objectClass = objectClass;
+		if (StringUtils.isEmpty(schema)) {
+			// Try to find the schema from an XmlSchema annotation
+			XmlSchema schemaAnn = objectClass.getAnnotation(XmlSchema.class);
+			if (schemaAnn != null) {
+				schema = schemaAnn.value();
+			}
+		}
 		this.schema = schema;
 		this.label = objectClass.getSimpleName();
 		if (defaultFileName != null) {

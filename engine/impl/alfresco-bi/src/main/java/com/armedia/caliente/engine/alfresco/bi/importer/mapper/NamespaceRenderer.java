@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper.Mapping;
+import com.armedia.caliente.engine.dynamic.xml.mapper.Mapping;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 

@@ -2,9 +2,9 @@ package com.armedia.caliente.store;
 
 import java.util.Collection;
 
-public class CmfAttribute<V> extends CmfProperty<V> {
+public class CmfAttribute<VALUE> extends CmfProperty<VALUE> {
 
-	public CmfAttribute(CmfAttribute<V> pattern) {
+	public CmfAttribute(CmfAttribute<VALUE> pattern) {
 		super(pattern);
 	}
 
@@ -12,7 +12,7 @@ public class CmfAttribute<V> extends CmfProperty<V> {
 		super(name, type, repeating);
 	}
 
-	public CmfAttribute(CmfEncodeableName name, CmfDataType type, boolean repeating, Collection<V> values) {
+	public CmfAttribute(CmfEncodeableName name, CmfDataType type, boolean repeating, Collection<VALUE> values) {
 		super(name, type, repeating, values);
 	}
 
@@ -20,30 +20,30 @@ public class CmfAttribute<V> extends CmfProperty<V> {
 		super(name, type, repeating);
 	}
 
-	public CmfAttribute(String name, CmfDataType type, boolean repeating, Collection<V> values) {
+	public CmfAttribute(String name, CmfDataType type, boolean repeating, Collection<VALUE> values) {
 		super(name, type, repeating, values);
 	}
 
 	@Override
-	public CmfAttribute<V> setValues(Collection<V> values) {
+	public CmfAttribute<VALUE> setValues(Collection<VALUE> values) {
 		super.setValues(values);
 		return this;
 	}
 
 	@Override
-	public CmfAttribute<V> addValue(V value) {
+	public CmfAttribute<VALUE> addValue(VALUE value) {
 		super.addValue(value);
 		return this;
 	}
 
 	@Override
-	public CmfAttribute<V> addValues(Collection<V> values) {
+	public CmfAttribute<VALUE> addValues(Collection<VALUE> values) {
 		super.addValues(values);
 		return this;
 	}
 
 	@Override
-	public CmfAttribute<V> setValue(V value) {
+	public CmfAttribute<VALUE> setValue(VALUE value) {
 		super.setValue(value);
 		return this;
 	}

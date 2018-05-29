@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper;
+package com.armedia.caliente.engine.dynamic.xml.mapper;
 
 public enum ResidualsMode {
 

@@ -82,9 +82,9 @@
 				</and>
 			</if>
 
-			<value lang="asdfasdf">
+			<name lang="asdfasdf">
 				<!-- expression -->
-			</value>
+			</name>
 		</set-subtype>
 
 		<replace-subtype>
@@ -99,15 +99,15 @@
 		<add-secondary-subtype>
 			<if>
 			</if>
-			<value lang="...">
+			<name lang="...">
 				<!-- expression -->
-			</value>
+			</name>
 		</add-secondary-subtype>
 		<remove-secondary-subtype>
 			<comparison>eq</comparison>
-			<value lang="...">
+			<name lang="...">
 				<!-- expression -->
-			</value>
+			</name>
 		</remove-secondary-subtype>
 		<replace-secondary-subtype>
 			<regex lang="...">

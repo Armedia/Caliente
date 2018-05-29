@@ -12,8 +12,8 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectRef;
@@ -24,19 +24,22 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, V, ?, ?, ?>>
-	extends TransferContext<S, V, CF> {
+public abstract class ImportContext< //
+	SESSION, //
+	VALUE, //
+	IMPORT_CONTEXT_FACTORY extends ImportContextFactory<SESSION, ?, VALUE, ?, ?, ?> //
+> extends TransferContext<SESSION, VALUE, IMPORT_CONTEXT_FACTORY> {
 
-	private final ImportContextFactory<S, ?, V, ?, ?, ?> factory;
+	private final ImportContextFactory<SESSION, ?, VALUE, ?, ?, ?> factory;
 	private final CmfObjectStore<?, ?> cmfObjectStore;
-	private final CmfAttributeTranslator<V> translator;
+	private final CmfAttributeTranslator<VALUE> translator;
 	private final Transformer transformer;
 	private final CmfContentStore<?, ?, ?> streamStore;
 	private final int historyPosition;
 
-	public <C extends ImportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ImportEngine<S, W, V, C, ?, ?>, F extends ImportContextFactory<S, W, V, C, E, ?>> ImportContext(
-		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
-		WarningTracker tracker, Transformer transformer, CmfAttributeTranslator<V> translator,
+	public <C extends ImportContext<SESSION, VALUE, IMPORT_CONTEXT_FACTORY>, W extends SessionWrapper<SESSION>, E extends ImportEngine<SESSION, W, VALUE, C, ?, ?>, F extends ImportContextFactory<SESSION, W, VALUE, C, E, ?>> ImportContext(
+		IMPORT_CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session, Logger output,
+		WarningTracker tracker, Transformer transformer, CmfAttributeTranslator<VALUE> translator,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
 		this.factory = factory;
@@ -55,7 +58,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		return this.cmfObjectStore.getAttributeMapper();
 	}
 
-	public final int loadObjects(CmfType type, Set<String> ids, final CmfObjectHandler<V> handler)
+	public final int loadObjects(CmfType type, Set<String> ids, final CmfObjectHandler<VALUE> handler)
 		throws CmfStorageException {
 		return this.cmfObjectStore.loadObjects(type, ids, new CmfObjectHandler<CmfValue>() {
 
@@ -79,7 +82,8 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 							String.format("Failed to transform %s", dataObject.getDescription()), e);
 					}
 				}
-				CmfObject<V> encoded = ImportContext.this.translator.decodeObject(dataObject);
+				CmfObject<VALUE> encoded = ImportContext.this.translator.decodeObject(dataObject);
+				// TODO: Perform attribute mapping here?
 				return handler.handleObject(encoded);
 			}
 
@@ -100,7 +104,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		});
 	}
 
-	public final CmfObject<V> getHeadObject(CmfObject<V> sample) throws CmfStorageException {
+	public final CmfObject<VALUE> getHeadObject(CmfObject<VALUE> sample) throws CmfStorageException {
 		if (sample.isHistoryCurrent()) { return sample; }
 		CmfObject<CmfValue> rawObject = this.cmfObjectStore.loadHeadObject(sample.getType(), sample.getHistoryId());
 		if (this.transformer != null) {
@@ -129,7 +133,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		return this.factory.isPathAltering();
 	}
 
-	public final List<CmfContentStream> getContentStreams(CmfObject<V> object) throws ImportException {
+	public final List<CmfContentStream> getContentStreams(CmfObject<VALUE> object) throws ImportException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object whose content to retrieve"); }
 		try {
 			return this.cmfObjectStore.getContentStreams(object);
@@ -139,7 +143,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		}
 	}
 
-	public Collection<CmfObjectRef> getContainers(CmfObject<V> object) throws ImportException {
+	public Collection<CmfObjectRef> getContainers(CmfObject<VALUE> object) throws ImportException {
 		try {
 			return this.cmfObjectStore.getContainers(object);
 		} catch (CmfStorageException e) {
@@ -148,7 +152,7 @@ public abstract class ImportContext<S, V, CF extends ImportContextFactory<S, ?, 
 		}
 	}
 
-	public Collection<CmfObjectRef> getContainedObjects(CmfObject<V> object) throws ImportException {
+	public Collection<CmfObjectRef> getContainedObjects(CmfObject<VALUE> object) throws ImportException {
 		try {
 			return this.cmfObjectStore.getContainedObjects(object);
 		} catch (CmfStorageException e) {

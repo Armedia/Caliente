@@ -20,14 +20,20 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C extends ImportContext<S, V, ?>, E extends ImportEngine<S, W, V, C, ?, ?>, FOLDER>
-	extends TransferContextFactory<S, V, C, E> {
+public abstract class ImportContextFactory< //
+	SESSION, //
+	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
+	VALUE, //
+	IMPORT_CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
+	IMPORT_ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?>, //
+	FOLDER //
+> extends TransferContextFactory<SESSION, VALUE, IMPORT_CONTEXT, IMPORT_ENGINE> {
 
 	private final List<String> rootPath;
 	private final String rootPathStr;
 	private final int pathTrunc;
 
-	protected ImportContextFactory(E engine, CfgTools settings, S session, CmfObjectStore<?, ?> objectStore,
+	protected ImportContextFactory(IMPORT_ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output, WarningTracker tracker)
 		throws Exception {
 		super(engine, settings, session, objectStore, contentStore, transformer, output, tracker);
@@ -41,7 +47,7 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 		}
 	}
 
-	final void ensureTargetPath(S session) throws ImportException {
+	final void ensureTargetPath(SESSION session) throws ImportException {
 		try {
 			ensurePath(session, this.rootPathStr);
 		} catch (Exception e) {
@@ -50,7 +56,7 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 		}
 	}
 
-	private FOLDER ensurePath(S session, String path) throws Exception {
+	private FOLDER ensurePath(SESSION session, String path) throws Exception {
 		if (Tools.equals("/", path)) { return null; }
 		FOLDER target = locateFolder(session, path);
 		if (target == null) {
@@ -60,9 +66,9 @@ public abstract class ImportContextFactory<S, W extends SessionWrapper<S>, V, C 
 		return target;
 	}
 
-	protected abstract FOLDER locateFolder(S session, String path) throws Exception;
+	protected abstract FOLDER locateFolder(SESSION session, String path) throws Exception;
 
-	protected abstract FOLDER createFolder(S session, FOLDER parent, String name) throws Exception;
+	protected abstract FOLDER createFolder(SESSION session, FOLDER parent, String name) throws Exception;
 
 	public final String getTargetPath(String sourcePath) throws ImportException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }

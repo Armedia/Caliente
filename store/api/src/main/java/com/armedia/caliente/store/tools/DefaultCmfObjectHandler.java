@@ -6,7 +6,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfStorageException;
 
-public class DefaultCmfObjectHandler<V> implements CmfObjectHandler<V> {
+public class DefaultCmfObjectHandler<VALUE> implements CmfObjectHandler<VALUE> {
 
 	public static enum Flag {
 		//
@@ -83,7 +83,7 @@ public class DefaultCmfObjectHandler<V> implements CmfObjectHandler<V> {
 	}
 
 	@Override
-	public boolean handleObject(CmfObject<V> dataObject) throws CmfStorageException {
+	public boolean handleObject(CmfObject<VALUE> dataObject) throws CmfStorageException {
 		return this.retHandleObject;
 	}
 

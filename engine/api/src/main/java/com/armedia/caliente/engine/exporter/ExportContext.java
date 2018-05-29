@@ -18,7 +18,11 @@ import com.armedia.commons.utilities.CfgTools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class ExportContext<S, V, CF extends ExportContextFactory<S, ?, V, ?, ?>> extends TransferContext<S, V, CF> {
+public class ExportContext< //
+	SESSION, //
+	VALUE, //
+	EXPORT_CONTEXT_FACTORY extends ExportContextFactory<SESSION, ?, VALUE, ?, ?> //
+> extends TransferContext<SESSION, VALUE, EXPORT_CONTEXT_FACTORY> {
 
 	private final Stack<ExportTarget> referrents = new Stack<>();
 
@@ -28,8 +32,8 @@ public class ExportContext<S, V, CF extends ExportContextFactory<S, ?, V, ?, ?>>
 	 * @param session
 	 * @param output
 	 */
-	public <C extends ExportContext<S, V, CF>, W extends SessionWrapper<S>, E extends ExportEngine<S, W, V, C, ?, ?>> ExportContext(
-		CF factory, CfgTools settings, String rootId, CmfType rootType, S session, Logger output,
+	public <C extends ExportContext<SESSION, VALUE, EXPORT_CONTEXT_FACTORY>, W extends SessionWrapper<SESSION>, E extends ExportEngine<SESSION, W, VALUE, C, ?, ?>> ExportContext(
+		EXPORT_CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session, Logger output,
 		WarningTracker tracker) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
 	}

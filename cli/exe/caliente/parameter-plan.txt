@@ -81,7 +81,7 @@ Pass 2
 					--source-prefix ${prefix}
 
 				LOCAL
-					<none>
+					--copy-content
 
 		COMMAND: ( IMPORT | IMP | IM )
 			(common)
@@ -94,6 +94,7 @@ Pass 2
 				--user-map ${userMap}
 				--group-map ${groupMap}
 				--role-map ${roleMap}
+				--validate-requirements
 
 			Pass 3 (from --engine)
 				DFC
@@ -110,8 +111,8 @@ Pass 2
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
-				
-				Alfresco
+
+				ALFRESCO
 				*	--attribute-map ${mapper}
 				*	--content-model ${model1,model2,...,modelN}
 

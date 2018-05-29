@@ -7,7 +7,7 @@ import java.util.Objects;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class CmfAttributeTranslator<V> {
+public abstract class CmfAttributeTranslator<VALUE> {
 	private static class Codec implements CmfValueCodec<CmfValue> {
 
 		private final CmfDataType type;
@@ -113,14 +113,14 @@ public abstract class CmfAttributeTranslator<V> {
 		return CmfAttributeTranslator.CODECS.get(type);
 	}
 
-	private final Class<V> valueClass;
+	private final Class<VALUE> valueClass;
 	private final CmfAttributeNameMapper nameMapper;
 
-	protected CmfAttributeTranslator(Class<V> valueClass) {
+	protected CmfAttributeTranslator(Class<VALUE> valueClass) {
 		this(valueClass, null);
 	}
 
-	protected CmfAttributeTranslator(Class<V> valueClass, CmfAttributeNameMapper cmfAttributeNameMapper) {
+	protected CmfAttributeTranslator(Class<VALUE> valueClass, CmfAttributeNameMapper cmfAttributeNameMapper) {
 		Objects.requireNonNull(valueClass, "Must provide a value class");
 		this.valueClass = valueClass;
 		this.nameMapper = Tools.coalesce(cmfAttributeNameMapper, CmfAttributeTranslator.NULL_MAPPER);
@@ -130,19 +130,19 @@ public abstract class CmfAttributeTranslator<V> {
 		return this.nameMapper;
 	}
 
-	public abstract CmfValueCodec<V> getCodec(CmfDataType type);
+	public abstract CmfValueCodec<VALUE> getCodec(CmfDataType type);
 
-	public abstract V getValue(CmfDataType type, Object value) throws ParseException;
+	public abstract VALUE getValue(CmfDataType type, Object value) throws ParseException;
 
-	public final CmfObject<V> decodeObject(CmfObject<CmfValue> obj) {
+	public final CmfObject<VALUE> decodeObject(CmfObject<CmfValue> obj) {
 		// Can we optimize this if there are no changes needed?
 		if (this.valueClass.equals(CmfValue.class) && (this.nameMapper == CmfAttributeTranslator.NULL_MAPPER)) {
 			@SuppressWarnings("unchecked")
-			CmfObject<V> ret = (CmfObject<V>) obj;
+			CmfObject<VALUE> ret = (CmfObject<VALUE>) obj;
 			return ret;
 		}
 
-		CmfObject<V> newObj = new CmfObject<>(//
+		CmfObject<VALUE> newObj = new CmfObject<>(//
 			this, //
 			obj.getType(), //
 			obj.getId(), //
@@ -161,8 +161,8 @@ public abstract class CmfAttributeTranslator<V> {
 
 		for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
 			String attName = this.nameMapper.decodeAttributeName(newObj.getType(), att.getName());
-			CmfAttribute<V> newAtt = new CmfAttribute<>(attName, att.getType(), att.isRepeating());
-			CmfValueCodec<V> codec = getCodec(att.getType());
+			CmfAttribute<VALUE> newAtt = new CmfAttribute<>(attName, att.getType(), att.isRepeating());
+			CmfValueCodec<VALUE> codec = getCodec(att.getType());
 			if (newAtt.isRepeating()) {
 				for (CmfValue v : att) {
 					newAtt.addValue(codec.decodeValue(v));
@@ -174,8 +174,8 @@ public abstract class CmfAttributeTranslator<V> {
 		}
 
 		for (CmfProperty<CmfValue> prop : obj.getProperties()) {
-			CmfProperty<V> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isRepeating());
-			CmfValueCodec<V> codec = getCodec(prop.getType());
+			CmfProperty<VALUE> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isRepeating());
+			CmfValueCodec<VALUE> codec = getCodec(prop.getType());
 			if (newProp.isRepeating()) {
 				for (CmfValue v : prop) {
 					newProp.addValue(codec.decodeValue(v));
@@ -189,7 +189,7 @@ public abstract class CmfAttributeTranslator<V> {
 		return newObj;
 	}
 
-	public final CmfObject<CmfValue> encodeObject(CmfObject<V> obj) {
+	public final CmfObject<CmfValue> encodeObject(CmfObject<VALUE> obj) {
 		// Can we optimize this if there are no changes needed?
 		if (this.valueClass.equals(CmfValue.class) && (this.nameMapper == CmfAttributeTranslator.NULL_MAPPER)) {
 			@SuppressWarnings("unchecked")
@@ -214,12 +214,12 @@ public abstract class CmfAttributeTranslator<V> {
 			obj.getNumber() //
 		);
 
-		for (CmfAttribute<V> att : obj.getAttributes()) {
+		for (CmfAttribute<VALUE> att : obj.getAttributes()) {
 			String attName = this.nameMapper.encodeAttributeName(newObj.getType(), att.getName());
 			CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(attName, att.getType(), att.isRepeating());
-			CmfValueCodec<V> codec = getCodec(att.getType());
+			CmfValueCodec<VALUE> codec = getCodec(att.getType());
 			if (newAtt.isRepeating()) {
-				for (V v : att) {
+				for (VALUE v : att) {
 					newAtt.addValue(codec.encodeValue(v));
 				}
 			} else {
@@ -228,11 +228,11 @@ public abstract class CmfAttributeTranslator<V> {
 			newObj.setAttribute(newAtt);
 		}
 
-		for (CmfProperty<V> prop : obj.getProperties()) {
+		for (CmfProperty<VALUE> prop : obj.getProperties()) {
 			CmfProperty<CmfValue> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isRepeating());
-			CmfValueCodec<V> codec = getCodec(prop.getType());
+			CmfValueCodec<VALUE> codec = getCodec(prop.getType());
 			if (newProp.isRepeating()) {
-				for (V v : prop) {
+				for (VALUE v : prop) {
 					newProp.addValue(codec.encodeValue(v));
 				}
 			} else {

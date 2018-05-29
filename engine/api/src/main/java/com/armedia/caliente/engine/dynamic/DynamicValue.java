@@ -81,8 +81,8 @@ public class DynamicValue extends CmfBaseSetting {
 	public boolean isEmpty() {
 		Object value = null;
 		if (isRepeating()) {
-			// it will be empty if and only if it has more than one value, or the first value is a
-			// non-empty value
+			// it will be empty if and only if it has no values, or its first value is a
+			// an empty value in the single-valued sense
 			if (this.values.isEmpty()) { return true; }
 			if (this.values.size() > 1) { return false; }
 			value = this.values.get(0);

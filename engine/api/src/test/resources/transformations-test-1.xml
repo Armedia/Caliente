@@ -35,7 +35,7 @@
 							<!-- expression -->
 						</value>
 					</is-caliente-property-value>
-					
+
 					<not>
 						<is-reference />
 					</not>
@@ -94,9 +94,9 @@
 				</and>
 			</if>
 
-			<value lang="java">
+			<name lang="java">
 				<!-- expression -->
-			</value>
+			</name>
 		</set-subtype>
 
 		<replace-subtype>
@@ -114,15 +114,15 @@
 		<add-secondary-subtype>
 			<if>
 			</if>
-			<value lang="rhino">
+			<name lang="rhino">
 				<![CDATA[sdjflk > < DS FASDF SD F<>F ASDF <>ASDF A>SD F<AD FA! & &  && A >  AD>]]>
-			</value>
+			</name>
 		</add-secondary-subtype>
 		<remove-secondary-subtype>
 			<comparison>eq</comparison>
-			<value lang="jexl">
+			<name lang="jexl">
 				<!-- expression -->
-			</value>
+			</name>
 		</remove-secondary-subtype>
 		<replace-secondary-subtype>
 			<regex lang="jexl" caseSensitive="false">
@@ -244,7 +244,7 @@
 				</replacement>
 			</case>
 		</map-variable-value>
-		
+
 		<map-attribute-value>
 			<if>
 				<is-reference />
@@ -257,14 +257,14 @@
 		</map-attribute-value>
 		<end-transformation/>
 		<abort-transformation/>
-		
+
 		<apply-value-mapping>
-			<name>attribute-name</name>
+			<attribute-name>attribute-name</attribute-name>
 			<type>ACL</type>
 			<mapping-name>Some-Mapping-Name</mapping-name>
 			<fallback>someExpression</fallback>
 		</apply-value-mapping>
-		
+
 		<map-principal>
 			<name>attribute-name</name>
 			<name>attribute-name</name>

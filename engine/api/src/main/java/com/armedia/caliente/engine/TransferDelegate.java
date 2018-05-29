@@ -3,26 +3,33 @@ package com.armedia.caliente.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class TransferDelegate<T, S, V, C extends TransferContext<S, V, ?>, F extends TransferDelegateFactory<S, V, C, E>, E extends TransferEngine<S, V, C, ?, ?, ?>> {
+public abstract class TransferDelegate< //
+	ECM_OBJECT, //
+	SESSION, //
+	VALUE, //
+	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
+	DELEGATE_FACTORY extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ENGINE>, //
+	ENGINE extends TransferEngine<SESSION, VALUE, CONTEXT, ?, ?, ?> //
+> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	protected final F factory;
-	protected final Class<T> objectClass;
+	protected final DELEGATE_FACTORY factory;
+	protected final Class<ECM_OBJECT> objectClass;
 
-	protected TransferDelegate(F factory, Class<T> objectClass) throws Exception {
+	protected TransferDelegate(DELEGATE_FACTORY factory, Class<ECM_OBJECT> objectClass) throws Exception {
 		if (factory == null) { throw new IllegalArgumentException("Must provide a factory to process with"); }
 		if (objectClass == null) { throw new IllegalArgumentException("Must provide an object class to work with"); }
 		this.factory = factory;
 		this.objectClass = objectClass;
 	}
 
-	protected final T castObject(Object o) {
+	protected final ECM_OBJECT castObject(Object o) {
 		// This should NEVER fail...but if it does, it's well-deserved and we make no effort to
 		// catch it or soften the blow
 		return this.objectClass.cast(o);
 	}
 
-	public final Class<T> getObjectClass() {
+	public final Class<ECM_OBJECT> getObjectClass() {
 		return this.objectClass;
 	}
 }

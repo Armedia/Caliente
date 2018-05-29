@@ -117,7 +117,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					this.managedTransactions, new JdbcSchemaManager.Callback() {
 						@Override
 						public void cleanData(JdbcOperation op) throws CmfStorageException {
-							clearProperties(op);
+							clearAllProperties(op);
 							clearAllObjects(op);
 							clearAttributeMappings(op);
 						}
@@ -822,8 +822,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> void renameObject(final JdbcOperation operation, final CmfObject<V> object, final String newName)
-		throws CmfStorageException {
+	protected <VALUE> void renameObject(final JdbcOperation operation, final CmfObject<VALUE> object,
+		final String newName) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		final String objectId = JdbcTools.composeDatabaseId(object);
@@ -955,8 +955,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> boolean markStoreStatus(JdbcOperation operation, CmfObjectRef target, StoreStatus status,
-		String message) throws CmfStorageException {
+	protected boolean markStoreStatus(JdbcOperation operation, CmfObjectRef target, StoreStatus status, String message)
+		throws CmfStorageException {
 		// First things first, we make sure the record exists. It doesn't matter if this operation
 		// fails because we're only doing this to make sure there's something to update. This is
 		// important in order to track failures that happen outside of the scope of an object being
@@ -1352,7 +1352,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		return new CmfProperty<>(name, type, repeating);
 	}
 
-	private <V> CmfAttribute<CmfValue> loadAttribute(CmfType objectType, ResultSet rs) throws SQLException {
+	private <VALUE> CmfAttribute<CmfValue> loadAttribute(CmfType objectType, ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
 		CmfDataType type = CmfDataType.valueOf(rs.getString("data_type"));
@@ -1386,7 +1386,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		property.setValues(values);
 	}
 
-	private <V> void loadAttributes(ResultSet rs, CmfObject<CmfValue> obj) throws SQLException {
+	private <VALUE> void loadAttributes(ResultSet rs, CmfObject<CmfValue> obj) throws SQLException {
 		List<CmfAttribute<CmfValue>> attributes = new LinkedList<>();
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the values from"); }
 		while (rs.next()) {
@@ -1526,12 +1526,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void clearProperties(JdbcOperation operation) throws CmfStorageException {
-		this.propertyManager.clearProperties(operation);
+	protected void clearAllProperties(JdbcOperation operation) throws CmfStorageException {
+		this.propertyManager.clearAllProperties(operation);
 	}
 
 	@Override
-	protected <V> void setContentStreams(JdbcOperation operation, CmfObject<V> object,
+	protected <VALUE> void setContentStreams(JdbcOperation operation, CmfObject<VALUE> object,
 		Collection<CmfContentStream> content) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final String objectId = JdbcTools.composeDatabaseId(object);
@@ -1596,7 +1596,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected <V> List<CmfContentStream> getContentStreams(JdbcOperation operation, CmfObject<V> object)
+	protected <VALUE> List<CmfContentStream> getContentStreams(JdbcOperation operation, CmfObject<VALUE> object)
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final String objectId = JdbcTools.composeDatabaseId(object);

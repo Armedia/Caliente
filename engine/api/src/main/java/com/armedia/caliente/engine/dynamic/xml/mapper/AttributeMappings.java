@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.jaxb.mapper;
+package com.armedia.caliente.engine.dynamic.xml.mapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,11 +10,14 @@ import javax.xml.bind.annotation.XmlElements;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
+import com.armedia.caliente.engine.dynamic.xml.XmlSchema;
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "attributeMappings.t", propOrder = {
 	"commonMappings", "namedMappings"
 })
 @XmlRootElement(name = "attribute-mappings")
+@XmlSchema("engine.xsd")
 public class AttributeMappings {
 
 	@XmlElement(name = "common-mappings")
