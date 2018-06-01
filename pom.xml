@@ -12,7 +12,7 @@
 
 	<organization>
 		<name>Armedia</name>
-		<url>http://www.armedia.com</url> 
+		<url>http://www.armedia.com</url>
 	</organization>
 
 	<scm>
@@ -212,7 +212,7 @@
 			<dependency>
 				<groupId>com.h2database</groupId>
 				<artifactId>h2</artifactId>
-				<version>1.4.196</version>
+				<version>1.4.197</version>
 			</dependency>
 
 			<dependency>
