@@ -225,7 +225,7 @@ public abstract class ExportEngine< //
 						this.log.trace("Locked {} for storage", logLabel);
 						break;
 
-					case LOCK_CONCURRENT:
+					case ALREADY_LOCKED:
 						this.log.trace("{} is already locked for storage by another thread", logLabel);
 						return new Result(ExportSkipReason.ALREADY_LOCKED);
 
