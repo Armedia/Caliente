@@ -31,7 +31,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	public static enum LockStatus {
 		//
 		LOCK_ACQUIRED, // Lock was acquired by the current thread
-		LOCK_CONCURRENT, // Lock is concurrent, but the object's storage outcome is unknown
+		ALREADY_LOCKED, // Lock was not acquired, the object is locked by another thread
 		ALREADY_STORED, // Lock was not acquired, but the object was stored successfully
 		ALREADY_FAILED, // Lock was not acquired, but the object failed to be stored
 		//
@@ -371,7 +371,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					if (storeStatus == null) {
 						// We didn't get the lock, but the object hasn't yet been fully stored by
 						// someone else...
-						ret = LockStatus.LOCK_CONCURRENT;
+						ret = LockStatus.ALREADY_LOCKED;
 					} else {
 						// We didn't get the lock, but someone else already did their thing here
 						ret = storeStatus.lockStatus;
@@ -772,7 +772,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 
 	protected abstract void resetAltNames(OPERATION operation) throws CmfStorageException;
 
-	public final <VALUE> boolean renameObject(final CmfObject<VALUE> object, final String newName) throws CmfStorageException {
+	public final <VALUE> boolean renameObject(final CmfObject<VALUE> object, final String newName)
+		throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to rename"); }
 		if (newName == null) { throw new IllegalArgumentException("Must provide new name for the object"); }
 
@@ -806,8 +807,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract <VALUE> void renameObject(final OPERATION operation, final CmfObject<VALUE> object, final String newName)
-		throws CmfStorageException;
+	protected abstract <VALUE> void renameObject(final OPERATION operation, final CmfObject<VALUE> object,
+		final String newName) throws CmfStorageException;
 
 	public final int clearAttributeMappings() throws CmfStorageException {
 		OPERATION operation = beginExclusiveInvocation();
