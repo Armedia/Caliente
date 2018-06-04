@@ -17,6 +17,7 @@ import java.nio.file.attribute.PosixFileAttributes;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -36,6 +37,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
@@ -46,6 +48,13 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	protected LocalFileExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, LocalFile object)
 		throws Exception {
 		super(factory, root, LocalFile.class, object);
+	}
+
+	@Override
+	protected Collection<CmfObjectRef> calculateParentIds(LocalRoot session, LocalFile object) throws Exception {
+		String parentId = object.getParentId();
+		if (parentId == null) { return Collections.emptyList(); }
+		return Collections.singleton(new CmfObjectRef(CmfType.FOLDER, parentId));
 	}
 
 	protected UserPrincipal getOwner(Path path) {
