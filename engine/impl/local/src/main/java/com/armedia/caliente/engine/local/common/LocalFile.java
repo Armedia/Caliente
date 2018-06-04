@@ -94,11 +94,11 @@ public class LocalFile {
 	public String getPortableParentPath() {
 		String path = getParentPath();
 		if (path == null) { return "/"; }
-		return FileNameTools.reconstitute(FileNameTools.tokenize(path), true, false, '/');
+		return LocalCommon.getPortablePath(path);
 	}
 
 	public String getPortableFullPath() {
-		return FileNameTools.reconstitute(FileNameTools.tokenize(getFullPath()), true, false, '/');
+		return LocalCommon.getPortablePath(getFullPath());
 	}
 
 	/**

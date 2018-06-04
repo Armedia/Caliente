@@ -6,8 +6,10 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
 
 public final class LocalCommon {
@@ -27,5 +29,10 @@ public final class LocalCommon {
 	public static String calculateId(String portablePath) {
 		if ((portablePath == null) || Tools.equals("/", portablePath)) { return null; }
 		return DigestUtils.sha256Hex(portablePath);
+	}
+
+	public static String getPortablePath(String path) {
+		if (StringUtils.isEmpty(path)) { return null; }
+		return FileNameTools.reconstitute(FileNameTools.tokenize(path), true, false, '/');
 	}
 }
