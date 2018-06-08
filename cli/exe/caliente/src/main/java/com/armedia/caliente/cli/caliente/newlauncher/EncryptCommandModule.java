@@ -64,9 +64,6 @@ public class EncryptCommandModule extends CommandModule {
 				} catch (Exception e) {
 					System.err.printf("Failed to encrypt the password value [%s]%n%s%n", password,
 						Tools.dumpStackTrace(e));
-					for (Throwable t : e.getSuppressed()) {
-						System.err.printf("Suppressed Exception: %s%n", Tools.dumpStackTrace(t));
-					}
 				}
 			}
 		} else {
@@ -76,20 +73,39 @@ public class EncryptCommandModule extends CommandModule {
 			if (console != null) {
 				char[] pass = console
 					.readPassword("Enter the password that you would like to encrypt (it will not be shown): ");
-				password = new String(pass);
+				if (pass == null) {
+					password = "";
+				} else {
+					password = new String(pass);
+				}
+				try {
+					System.out.printf("Encrypted Value (in brackets) = [%s]%n", password, encrypt(crypt, password));
+				} catch (CalienteException e) {
+					throw new CalienteException("Failed to encrypt the password value", e);
+				}
 			} else {
 				// Don't output a prompt
 				BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-				try {
-					password = br.readLine();
-				} catch (IOException e) {
-					throw new CalienteException("IOException caught reading the password", e);
+				while (true) {
+					try {
+						password = br.readLine();
+					} catch (IOException e) {
+						throw new CalienteException("IOException caught reading the password", e);
+					}
+					if (password == null) {
+						// End-of-stream
+						break;
+					}
+					try {
+						System.out.printf("%s%n", encrypt(crypt, password));
+					} catch (CalienteException e) {
+						System.err.printf("Failed to encrypt the password value [%s]%n%s%n", password,
+							Tools.dumpStackTrace(e));
+						for (Throwable t : e.getSuppressed()) {
+							System.err.printf("Suppressed Exception: %s%n", Tools.dumpStackTrace(t));
+						}
+					}
 				}
-			}
-			try {
-				System.out.printf("[%s]==[%s]%n", password, encrypt(crypt, password));
-			} catch (Exception e) {
-				System.err.printf("Failed to encrypt the password value [%s]%n%s%n", password, Tools.dumpStackTrace(e));
 			}
 		}
 		return 0;

@@ -72,16 +72,24 @@ public class DecryptCommandModule extends CommandModule {
 			// No positionals, so read from console
 			String password = null;
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-			try {
-				password = br.readLine();
-			} catch (IOException e) {
-				throw new CalienteException("IOException caught cryptoreading the password", e);
-			}
-			try {
-				System.out.printf("[%s]==[%s]%n", password, decrypt(crypt, password));
-			} catch (Exception e) {
-				System.err.printf("Failed to decrypt the encrypted password [%s]%n%s%n", password,
-					Tools.dumpStackTrace(e));
+			while (true) {
+				try {
+					password = br.readLine();
+				} catch (IOException e) {
+					throw new CalienteException("IOException caught reading the password", e);
+				}
+				if (password == null) {
+					break;
+				}
+				try {
+					System.out.printf("[%s]==[%s]%n", password, decrypt(crypt, password));
+				} catch (Exception e) {
+					System.err.printf("Failed to decrypt the encrypted password [%s]%n%s%n", password,
+						Tools.dumpStackTrace(e));
+					for (Throwable t : e.getSuppressed()) {
+						System.err.printf("Suppressed Exception: %s%n", Tools.dumpStackTrace(t));
+					}
+				}
 			}
 		}
 		return 0;
