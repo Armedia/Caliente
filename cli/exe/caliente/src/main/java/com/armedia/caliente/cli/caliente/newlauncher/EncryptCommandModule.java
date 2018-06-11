@@ -73,11 +73,8 @@ public class EncryptCommandModule extends CommandModule {
 			if (console != null) {
 				char[] pass = console
 					.readPassword("Enter the password that you would like to encrypt (it will not be shown): ");
-				if (pass == null) {
-					password = "";
-				} else {
-					password = new String(pass);
-				}
+				if (pass == null) { return 1; }
+				password = new String(pass);
 				try {
 					System.out.printf("Encrypted Value (in brackets) = [%s]%n", password, encrypt(crypt, password));
 				} catch (CalienteException e) {
