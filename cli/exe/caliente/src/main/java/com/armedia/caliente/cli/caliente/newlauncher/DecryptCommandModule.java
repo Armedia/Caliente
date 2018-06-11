@@ -19,7 +19,7 @@ public class DecryptCommandModule extends CommandModule {
 	private static final Descriptor DESCRIPTOR = new Descriptor("decrypt", "Decrypt an encrypted password", "dec");
 
 	public DecryptCommandModule() {
-		super(null, false, false, DecryptCommandModule.DESCRIPTOR);
+		super(false, false, DecryptCommandModule.DESCRIPTOR);
 	}
 
 	private final Collection<CmfCrypt> getCrypt(EngineProxy engineProxy) {

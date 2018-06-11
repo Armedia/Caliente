@@ -20,7 +20,7 @@ public class EncryptCommandModule extends CommandModule {
 	private static final Descriptor DESCRIPTOR = new Descriptor("encrypt", "Encrypt a plaintext password", "enc");
 
 	public EncryptCommandModule() {
-		super(null, false, false, EncryptCommandModule.DESCRIPTOR);
+		super(false, false, EncryptCommandModule.DESCRIPTOR);
 	}
 
 	private final Collection<CmfCrypt> getCrypt(EngineProxy engineProxy) {

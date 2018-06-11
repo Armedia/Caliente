@@ -13,7 +13,7 @@ public class ImportCommandModule extends CommandModule {
 		"Import content from Caliente into an ECM or an intermediate format", "imp", "im");
 
 	public ImportCommandModule(CalienteWarningTracker warningTracker) {
-		super(warningTracker, true, false, ImportCommandModule.DESCRIPTOR);
+		super(true, false, ImportCommandModule.DESCRIPTOR);
 	}
 
 	@Override

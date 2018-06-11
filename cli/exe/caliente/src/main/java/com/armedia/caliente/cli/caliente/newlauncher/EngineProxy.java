@@ -7,7 +7,6 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -25,10 +24,10 @@ public abstract class EngineProxy {
 	public abstract CmfCrypt getCrypt();
 
 	@SuppressWarnings("rawtypes")
-	public abstract ExportEngine getExportEngine(OptionValues commandValues, Collection<String> positionals);
+	public abstract ExportEngine getExportEngine();
 
 	@SuppressWarnings("rawtypes")
-	public abstract ImportEngine getImportEngine(OptionValues commandValues, Collection<String> positionals);
+	public abstract ImportEngine getImportEngine();
 
 	public abstract Collection<? extends LaunchClasspathHelper> getClasspathHelpers();
 

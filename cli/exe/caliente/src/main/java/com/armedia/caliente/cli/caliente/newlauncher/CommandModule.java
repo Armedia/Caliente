@@ -8,6 +8,8 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
@@ -16,6 +18,11 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class CommandModule implements AutoCloseable {
+
+	protected static final String ALL = "ALL";
+	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
+	protected static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+	protected static final String LAST_EXPORT_DATE_PATTERN = CommandModule.JAVA_SQL_DATETIME_PATTERN;
 
 	public static class Descriptor {
 
@@ -72,14 +79,13 @@ public abstract class CommandModule implements AutoCloseable {
 
 	}
 
-	protected final CalienteWarningTracker warningTracker;
+	protected final Logger log = LoggerFactory.getLogger(getClass());
+	protected final Logger console = LoggerFactory.getLogger("console");
 	private final Descriptor descriptor;
 	private final boolean requiresStorage;
 	private final boolean requiresCleanData;
 
-	protected CommandModule(CalienteWarningTracker warningTracker, boolean requiresStorage, boolean requiresCleanData,
-		Descriptor descriptor) {
-		this.warningTracker = warningTracker;
+	protected CommandModule(boolean requiresStorage, boolean requiresCleanData, Descriptor descriptor) {
 		this.descriptor = descriptor;
 		this.requiresStorage = requiresStorage;
 		this.requiresCleanData = (requiresStorage && requiresCleanData);
@@ -111,6 +117,7 @@ public abstract class CommandModule implements AutoCloseable {
 			objectStore = null;
 			contentStore = null;
 		}
+
 		return execute(engineProxy, objectStore, contentStore, commandValues, positionals);
 	}
 
