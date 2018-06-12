@@ -272,7 +272,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 	}
 
 	public String getString(Option param, String def) {
-		List<String> l = getAllStrings(param);
+		List<String> l = getAllStrings(param, null);
 		if (l == null) { return def; }
 		return l.get(0);
 	}
