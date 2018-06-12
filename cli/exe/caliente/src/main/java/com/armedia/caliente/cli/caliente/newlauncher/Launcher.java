@@ -170,7 +170,7 @@ public class Launcher extends AbstractLauncher {
 		if (!this.command.isRequiresStorage()) { return; }
 
 		String path = null;
-		if (CLIParam.content.isPresent(baseValues)) {
+		if (CLIParam.db.isPresent(baseValues)) {
 			path = CLIParam.db.getString(baseValues);
 		} else {
 			path = Launcher.DEFAULT_DB_PATH;
@@ -377,8 +377,13 @@ public class Launcher extends AbstractLauncher {
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
 		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-		final String logName = Tools.coalesce(CLIParam.log.getString(baseValues), Launcher.DEFAULT_LOG_FORMAT);
+		final String logName = baseValues.getString(CLIParam.log);
 
+		// TODO: Write the log out into the DB directory
+		final File logDir = Tools.canonicalize(new File("."));
+
+		// Make sure the log directory always uses forward slashes
+		System.setProperty("logDir", logDir.getAbsolutePath().replace('\\', '/'));
 		System.setProperty("logName", logName);
 		System.setProperty("logTimeStamp", logTimeStamp);
 		System.setProperty("logMode", logMode);
