@@ -3,12 +3,14 @@ package com.armedia.caliente.cli;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.TreeMap;
 
 import com.armedia.commons.utilities.Tools;
@@ -289,6 +291,87 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return v;
 	}
 
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, Option param) {
+		return getEnum(enumClass, true, param);
+	}
+
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, Option param) {
+		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
+		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
+			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
+		String value = getString(param);
+		if (value == null) { return null; }
+		try {
+			return Enum.valueOf(enumClass, value);
+		} catch (final IllegalArgumentException e) {
+			if (failOnInvalid) { throw e; }
+			return null;
+		}
+	}
+
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, Option param, E def) {
+		return getEnum(enumClass, true, param, def);
+	}
+
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, Option param, E def) {
+		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
+		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
+			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
+		String value = getString(param, null);
+		if (value == null) { return def; }
+		try {
+			return Enum.valueOf(enumClass, value);
+		} catch (final IllegalArgumentException e) {
+			if (failOnInvalid) { throw e; }
+			return null;
+		}
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, Option param) {
+		return getAllEnums(enumClass, true, param);
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, Option param) {
+		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
+		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
+			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
+		List<String> v = getAllStrings(param, null);
+		if (v == null) {
+			v = param.getDefaults();
+		}
+		if (v == null) { return null; }
+		Set<E> ret = EnumSet.noneOf(enumClass);
+		for (String s : v) {
+			try {
+				ret.add(Enum.valueOf(enumClass, s));
+			} catch (final IllegalArgumentException e) {
+				if (failOnInvalid) { throw e; }
+			}
+		}
+		return ret;
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, Option param, Set<E> def) {
+		return getAllEnums(enumClass, true, param, def);
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, Option param, Set<E> def) {
+		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
+		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
+			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
+		List<String> v = getAllStrings(param, null);
+		if (v == null) { return def; }
+		Set<E> ret = EnumSet.noneOf(enumClass);
+		for (String s : v) {
+			try {
+				ret.add(Enum.valueOf(enumClass, s));
+			} catch (final IllegalArgumentException e) {
+				if (failOnInvalid) { throw e; }
+			}
+		}
+		return ret;
+	}
+
 	public boolean isPresent(Option param) {
 		return this.values.containsKey(getValidKey(param));
 	}
@@ -402,6 +485,39 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 
 	public List<String> getAllStrings(OptionWrapper paramDel, List<String> def) {
 		return getAllStrings(Option.unwrap(paramDel), def);
+	}
+
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, OptionWrapper paramDel) {
+		return getEnum(enumClass, Option.unwrap(paramDel));
+	}
+
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, OptionWrapper paramDel, E def) {
+		return getEnum(enumClass, Option.unwrap(paramDel), def);
+	}
+
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, OptionWrapper paramDel) {
+		return getEnum(enumClass, failOnInvalid, Option.unwrap(paramDel));
+	}
+
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, OptionWrapper paramDel, E def) {
+		return getEnum(enumClass, failOnInvalid, Option.unwrap(paramDel), def);
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, OptionWrapper paramDel) {
+		return getAllEnums(enumClass, Option.unwrap(paramDel));
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, OptionWrapper paramDel, Set<E> def) {
+		return getAllEnums(enumClass, Option.unwrap(paramDel), def);
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, OptionWrapper paramDel) {
+		return getAllEnums(enumClass, failOnInvalid, Option.unwrap(paramDel));
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, OptionWrapper paramDel,
+		Set<E> def) {
+		return getAllEnums(enumClass, failOnInvalid, Option.unwrap(paramDel), def);
 	}
 
 	public boolean isPresent(OptionWrapper paramDel) {
