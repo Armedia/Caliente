@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.caliente.launcher.alfresco;
+package com.armedia.caliente.cli.caliente.newlauncher.alfresco;
 
 import java.io.File;
 import java.util.Collection;
