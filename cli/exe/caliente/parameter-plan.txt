@@ -17,8 +17,10 @@ Pass 1
 		-l,--lib ${libdir1,libdir2,...,libdirN}
 		--log ${log-basename}
 		--log-cfg ${log-cfg-file}
+		--list-engines
+		--list-commands
 	*	-e, --engine ${dfc|cmis|shpt|local|...}
-		command
+		command [parameters...]
 
 Pass 2
 	COMMAND: ( ENCRYPT | ENC | DECRYPT | DEC )
