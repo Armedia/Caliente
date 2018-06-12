@@ -28,12 +28,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.armedia.commons</groupId>
-			<artifactId>dfc-session-pool</artifactId>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>javax.mail</groupId>
 			<artifactId>mailapi</artifactId>
 			<scope>compile</scope>
@@ -130,6 +124,12 @@
 		<dependency>
 			<groupId>com.armedia.commons.datasource</groupId>
 			<artifactId>datasource-locator-pooled</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.armedia.commons</groupId>
+			<artifactId>dfc-session-pool</artifactId>
 			<scope>compile</scope>
 		</dependency>
 
