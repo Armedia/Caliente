@@ -43,11 +43,11 @@ public abstract class EngineProxy {
 			this.engine = engine;
 		}
 
-		public boolean addListener(LISTENER listener) {
+		public final boolean addListener(LISTENER listener) {
 			return this.engine.addListener(listener);
 		}
 
-		public boolean removeListener(LISTENER listener) {
+		public final boolean removeListener(LISTENER listener) {
 			return this.engine.removeListener(listener);
 		}
 
@@ -116,7 +116,7 @@ public abstract class EngineProxy {
 		}
 	}
 
-	public class Exporter extends ProxyBase<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
+	protected class Exporter extends ProxyBase<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
 
 		protected Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 			super(engine);
@@ -169,7 +169,7 @@ public abstract class EngineProxy {
 		}
 	}
 
-	public class Importer extends ProxyBase<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> {
+	protected class Importer extends ProxyBase<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> {
 
 		protected Importer(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 			super(engine);
@@ -196,7 +196,9 @@ public abstract class EngineProxy {
 	public abstract CmfCrypt getCrypt();
 
 	public final Exporter getExporter() {
-		return newExporter(getExportEngine());
+		ExportEngine<?, ?, ?, ?, ?, ?> engine = getExportEngine();
+		if (engine == null) { throw new IllegalStateException("This proxy does not support an Export engine"); }
+		return newExporter(engine);
 	}
 
 	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
@@ -206,7 +208,9 @@ public abstract class EngineProxy {
 	protected abstract ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine();
 
 	public final Importer getImporter() {
-		return newImporter(getImportEngine());
+		ImportEngine<?, ?, ?, ?, ?, ?> engine = getImportEngine();
+		if (engine == null) { throw new IllegalStateException("This proxy does not support an Export engine"); }
+		return newImporter(engine);
 	}
 
 	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
