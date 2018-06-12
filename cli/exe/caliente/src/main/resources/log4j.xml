@@ -13,7 +13,7 @@
 	</appender>
 
 	<appender name="default" class="org.apache.log4j.FileAppender">
-		<param name="File" value="${logName}.log" />
+		<param name="File" value="${logDir}/${logName}.log" />
 		<param name="ImmediateFlush" value="true" />
 		<param name="Append" value="true" />
 		<param name="Threshold" value="trace" />
@@ -27,7 +27,7 @@
 	</appender>
 
 	<appender name="manifest" class="org.apache.log4j.FileAppender">
-		<param name="File" value="${logName}.manifest.csv" />
+		<param name="File" value="${logDir}/${logName}.manifest.csv" />
 		<param name="ImmediateFlush" value="true" />
 		<param name="Append" value="false" />
 		<param name="Threshold" value="trace" />
