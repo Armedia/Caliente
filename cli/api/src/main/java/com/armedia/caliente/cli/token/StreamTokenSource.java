@@ -3,21 +3,15 @@ package com.armedia.caliente.cli.token;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.armedia.commons.utilities.Tools;
 
 public abstract class StreamTokenSource implements TokenSource {
 
 	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
-
-	private static final Pattern JOIN_LINE = Pattern.compile("\\\\\\s*$");
 
 	private Throwable thrown = null;
 	private List<String> tokenStrings = null;
@@ -34,36 +28,7 @@ public abstract class StreamTokenSource implements TokenSource {
 	protected abstract InputStream openStream() throws IOException;
 
 	protected List<String> retrieveTokens(Reader r) throws IOException {
-		LineNumberReader lr = new LineNumberReader(r);
-		List<String> l = new LinkedList<>();
-		StringBuilder sb = new StringBuilder();
-		boolean continuing = false;
-		while (true) {
-			String s = lr.readLine();
-			if (s == null) {
-				break;
-			}
-			Matcher m = StreamTokenSource.JOIN_LINE.matcher(s);
-			if (m.find()) {
-				// This line ends with a backslash, so queue it up
-				continuing = true;
-				sb.append(s.substring(0, m.start()));
-				continue;
-			}
-
-			// No continuation...
-			if (continuing) {
-				// If we have accumulated continuations, then finish it off
-				// and store the resulting accummulation
-				sb.append(s);
-				s = sb.toString();
-				sb.setLength(0);
-				continuing = false;
-			}
-
-			l.add(s);
-		}
-		return l;
+		return StreamSplitter.tokenize(r);
 	}
 
 	@Override
