@@ -15,17 +15,13 @@ public class StreamSplitter {
 		return buf[0];
 	}
 
-	private static String resolveEscaped(char c, boolean supportSpaces, Reader in) throws IOException {
+	private static String resolveQuotedEscaped(final char c, Reader in) throws IOException {
 		switch (c) {
 			case '"':
 				return "\"";
 
 			case '\'':
 				return "'";
-
-			case ' ':
-				if (supportSpaces) { return " "; }
-				break;
 
 			case 'r':
 				return "\r";
@@ -51,6 +47,21 @@ public class StreamSplitter {
 				break;
 		}
 		return String.format("\\%s", c);
+	}
+
+	private static String resolveEscaped(final char c, Reader in) throws IOException {
+		switch (c) {
+			case ' ':
+				return " ";
+
+			case '#':
+				return "#";
+
+			default:
+				// Invalid sequence... so just replicate it
+				break;
+		}
+		return StreamSplitter.resolveQuotedEscaped(c, in);
 	}
 
 	/**
@@ -86,12 +97,21 @@ public class StreamSplitter {
 					escaped = false;
 				} else if (escaped) {
 					escaped = false;
-					b.append(StreamSplitter.resolveEscaped(current, false, r));
+					b.append(StreamSplitter.resolveQuotedEscaped(current, r));
 					continue nextChar;
 				}
 			}
 
 			b.append(current);
+		}
+	}
+
+	protected static void readComment(Reader r) throws IOException {
+		// Read until the next end-of-line, or end-of-file
+		while (true) {
+			Character current = StreamSplitter.readNext(r);
+			if (current == null) { return; }
+			if (current.charValue() == '\n') { return; }
 		}
 	}
 
@@ -103,7 +123,13 @@ public class StreamSplitter {
 		boolean escaped = false;
 		nextChar: while (true) {
 			Character current = StreamSplitter.readNext(r);
-			if (current == null) { return ret; }
+			if (current == null) {
+				if (tokenOpen) {
+					ret.add(b.toString());
+					tokenOpen = false;
+				}
+				return ret;
+			}
 
 			if (current == '\\') {
 				if (!escaped) {
@@ -116,33 +142,40 @@ public class StreamSplitter {
 			} else if (escaped) {
 				escaped = false;
 				tokenOpen = true;
-				b.append(StreamSplitter.resolveEscaped(current, true, r));
+				b.append(StreamSplitter.resolveEscaped(current, r));
 				continue nextChar;
 			} else {
 				selector: switch (current) {
+					case '#':
+						if (tokenOpen) {
+							ret.add(b.toString());
+							b.setLength(0);
+							tokenOpen = false;
+						}
+						StreamSplitter.readComment(r);
+						continue nextChar;
+
 					case ' ':
 					case '\t':
 					case '\r':
 					case '\n':
 					case '\f':
-						if (!escaped) {
-							if (tokenOpen) {
-								ret.add(b.toString());
-								b.setLength(0);
-								tokenOpen = false;
-							}
-							continue nextChar;
+						if (tokenOpen) {
+							ret.add(b.toString());
+							b.setLength(0);
+							tokenOpen = false;
 						}
-						break selector;
+						continue nextChar;
 
 					case '"':
 					case '\'':
-						if (!escaped) {
-							ret.add(StreamSplitter.readQuoted(r, current));
-							continue nextChar;
+						String quoted = StreamSplitter.readQuoted(r, current);
+						if (tokenOpen) {
+							b.append(quoted);
+						} else {
+							ret.add(quoted);
 						}
-						tokenOpen = true;
-						break selector;
+						continue nextChar;
 
 					default:
 						tokenOpen = true;
