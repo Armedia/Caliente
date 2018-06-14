@@ -124,7 +124,7 @@ public class TokenLoader implements Iterable<Token> {
 
 				// There are still strings in the current state's list, so we
 				// parse them out...
-				final String rawArg = getRawValue(it.next(), atRoot);
+				final String rawArg = Tools.coalesce(it.next(), "");
 				final String current = (atRoot ? rawArg : rawArg.trim());
 				state.position++;
 
@@ -197,6 +197,7 @@ public class TokenLoader implements Iterable<Token> {
 			return next;
 		}
 
+		/*
 		private String getRawValue(String rawArg, boolean atRoot) {
 			rawArg = Tools.coalesce(rawArg, StringUtils.EMPTY);
 			if (atRoot) { return rawArg; }
@@ -209,6 +210,7 @@ public class TokenLoader implements Iterable<Token> {
 			}
 			return rawArg.replaceAll("\\\\#", "#");
 		}
+		*/
 
 		private State recurse(String current, TokenSource source) throws IOException {
 			// Remove the file marker
