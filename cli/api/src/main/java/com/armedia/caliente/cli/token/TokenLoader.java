@@ -124,7 +124,7 @@ public class TokenLoader implements Iterable<Token> {
 
 				// There are still strings in the current state's list, so we
 				// parse them out...
-				final String rawArg = getRawValue(it.next(), atRoot);
+				final String rawArg = Tools.coalesce(it.next(), "");
 				final String current = (atRoot ? rawArg : rawArg.trim());
 				state.position++;
 
@@ -197,19 +197,6 @@ public class TokenLoader implements Iterable<Token> {
 			return next;
 		}
 
-		private String getRawValue(String rawArg, boolean atRoot) {
-			rawArg = Tools.coalesce(rawArg, StringUtils.EMPTY);
-			if (atRoot) { return rawArg; }
-			// If we're not on the root, then we need to remove everything to the right of the
-			// first unescaped #, and remove the backslashes from it...
-			Matcher commentMatcher = TokenLoader.COMMENT.matcher(rawArg);
-			if (commentMatcher.find()) {
-				// Strip everything past the first comment character
-				rawArg = rawArg.substring(0, commentMatcher.start());
-			}
-			return rawArg.replaceAll("\\\\#", "#");
-		}
-
 		private State recurse(String current, TokenSource source) throws IOException {
 			// Remove the file marker
 			String fileName = current.substring(TokenLoader.this.fileMarker.length());
@@ -265,8 +252,6 @@ public class TokenLoader implements Iterable<Token> {
 	private static final String TERMINATOR_FMT = "%1$s%1$s";
 	private static final String SHORT_FMT = "^%1$s(\\S)$";
 	private static final String LONG_FMT = "^%1$s%1$s(\\S{2,})$";
-
-	private static final Pattern COMMENT = Pattern.compile("(?<!\\\\)#");
 
 	public static final Character DEFAULT_VALUE_SEPARATOR = ',';
 

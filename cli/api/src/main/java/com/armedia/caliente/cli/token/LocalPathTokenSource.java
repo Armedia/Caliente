@@ -2,11 +2,12 @@ package com.armedia.caliente.cli.token;
 
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-public class LocalPathTokenSource extends StreamTokenSource {
+public class LocalPathTokenSource extends ReaderTokenSource {
 
 	private static Path resolveCanonicalPath(Path p) throws IOException {
 		return p.toFile().getCanonicalFile().toPath();
@@ -34,8 +35,8 @@ public class LocalPathTokenSource extends StreamTokenSource {
 	}
 
 	@Override
-	protected InputStream openStream() throws IOException {
-		return new FileInputStream(this.sourcePath.toFile());
+	protected Reader openReader() throws IOException {
+		return new InputStreamReader(new FileInputStream(this.sourcePath.toFile()), getCharset());
 	}
 
 	@Override
