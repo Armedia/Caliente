@@ -2,20 +2,38 @@ package com.armedia.caliente.cli.token;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StreamSplitter {
+import com.armedia.commons.utilities.Tools;
 
-	private static Character readNext(Reader r) throws IOException {
+public abstract class ReaderTokenSource implements TokenSource {
+
+	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+
+	private Throwable thrown = null;
+	private List<String> tokenStrings = null;
+	private Charset charset = ReaderTokenSource.DEFAULT_CHARSET;
+
+	public synchronized Charset getCharset() {
+		return Tools.coalesce(this.charset, ReaderTokenSource.DEFAULT_CHARSET);
+	}
+
+	public synchronized void setCharset(Charset charset) {
+		this.charset = charset;
+	}
+
+	protected abstract Reader openReader() throws IOException;
+
+	protected final Character readNext(Reader r) throws IOException {
 		char[] buf = new char[1];
 		int read = r.read(buf);
 		if (read < 1) { return null; }
 		return buf[0];
 	}
 
-	private static String resolveQuotedEscaped(final char c, Reader in) throws IOException {
+	protected String resolveQuotedEscaped(final char c, Reader in) throws IOException {
 		switch (c) {
 			case '"':
 				return "\"";
@@ -49,7 +67,7 @@ public class StreamSplitter {
 		return String.format("\\%s", c);
 	}
 
-	private static String resolveEscaped(final char c, Reader in) throws IOException {
+	protected String resolveEscaped(final char c, Reader in) throws IOException {
 		switch (c) {
 			case ' ':
 				return " ";
@@ -61,7 +79,7 @@ public class StreamSplitter {
 				// Invalid sequence... so just replicate it
 				break;
 		}
-		return StreamSplitter.resolveQuotedEscaped(c, in);
+		return resolveQuotedEscaped(c, in);
 	}
 
 	/**
@@ -76,11 +94,11 @@ public class StreamSplitter {
 	 * @throws IOException
 	 *             forwarded from the reader
 	 */
-	protected static String readQuoted(Reader r, final char endQuote) throws IOException {
+	protected final String readQuoted(Reader r, final char endQuote) throws IOException {
 		StringBuilder b = new StringBuilder();
 		boolean escaped = false;
 		nextChar: while (true) {
-			Character current = StreamSplitter.readNext(r);
+			Character current = readNext(r);
 			if (current == null) { return b.toString(); }
 
 			if (current == endQuote) {
@@ -97,7 +115,7 @@ public class StreamSplitter {
 					escaped = false;
 				} else if (escaped) {
 					escaped = false;
-					b.append(StreamSplitter.resolveQuotedEscaped(current, r));
+					b.append(resolveQuotedEscaped(current, r));
 					continue nextChar;
 				}
 			}
@@ -106,23 +124,23 @@ public class StreamSplitter {
 		}
 	}
 
-	protected static void readComment(Reader r) throws IOException {
+	protected final void readComment(Reader r) throws IOException {
 		// Read until the next end-of-line, or end-of-file
 		while (true) {
-			Character current = StreamSplitter.readNext(r);
+			Character current = readNext(r);
 			if (current == null) { return; }
 			if (current.charValue() == '\n') { return; }
 		}
 	}
 
-	public static List<String> tokenize(Reader r) throws IOException {
+	protected List<String> tokenize(Reader r) throws IOException {
 		List<String> ret = new ArrayList<>();
 
 		StringBuilder b = new StringBuilder();
 		boolean tokenOpen = false;
 		boolean escaped = false;
 		nextChar: while (true) {
-			Character current = StreamSplitter.readNext(r);
+			Character current = readNext(r);
 			if (current == null) {
 				if (tokenOpen) {
 					ret.add(b.toString());
@@ -142,7 +160,7 @@ public class StreamSplitter {
 			} else if (escaped) {
 				escaped = false;
 				tokenOpen = true;
-				b.append(StreamSplitter.resolveEscaped(current, r));
+				b.append(resolveEscaped(current, r));
 				continue nextChar;
 			} else {
 				selector: switch (current) {
@@ -152,7 +170,7 @@ public class StreamSplitter {
 							b.setLength(0);
 							tokenOpen = false;
 						}
-						StreamSplitter.readComment(r);
+						readComment(r);
 						continue nextChar;
 
 					case ' ':
@@ -169,7 +187,7 @@ public class StreamSplitter {
 
 					case '"':
 					case '\'':
-						String quoted = StreamSplitter.readQuoted(r, current);
+						String quoted = readQuoted(r, current);
 						if (tokenOpen) {
 							b.append(quoted);
 						} else {
@@ -186,11 +204,29 @@ public class StreamSplitter {
 		}
 	}
 
-	public static List<String> tokenize(String str) {
-		try {
-			return StreamSplitter.tokenize(new StringReader(str));
-		} catch (IOException e) {
-			throw new RuntimeException("Unexpected IOException while reading from memory", e);
+	@Override
+	public final synchronized List<String> getTokenStrings() throws IOException {
+		if (this.thrown != null) { throw new IOException("An exception has already been raised", this.thrown); }
+		if (this.tokenStrings != null) { return this.tokenStrings; }
+
+		// The class is reset, so we perform the read read...
+		try (Reader in = openReader()) {
+			this.tokenStrings = Tools.freezeList(tokenize(in), true);
+			this.thrown = null;
+		} catch (final IOException e) {
+			this.thrown = e;
+			this.tokenStrings = null;
+			throw e;
 		}
+		return this.tokenStrings;
 	}
+
+	public final synchronized void reset() {
+		this.thrown = null;
+		this.tokenStrings = null;
+		this.charset = ReaderTokenSource.DEFAULT_CHARSET;
+	}
+
+	@Override
+	public abstract String toString();
 }
