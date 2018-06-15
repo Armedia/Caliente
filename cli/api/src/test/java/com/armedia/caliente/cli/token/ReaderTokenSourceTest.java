@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class StreamSplitterTest {
+public class ReaderTokenSourceTest {
 
 	@Test
 	public void testTokenize() throws Exception {
@@ -29,7 +29,8 @@ public class StreamSplitterTest {
 			" single \"quote   ", //
 			"quoted ' stuff", //
 		});
-		List<String> actual = StreamSplitter.tokenize(str);
+		ReaderTokenSource source = new CharacterSequenceTokenSource(str);
+		List<String> actual = source.getTokenStrings();
 		Assert.assertEquals("Token counts", expected.size(), actual.size());
 		for (int i = 0; i < actual.size(); i++) {
 			Assert.assertEquals(String.format("Mismatch found at token %d", i), expected.get(i), actual.get(i));
@@ -40,7 +41,8 @@ public class StreamSplitterTest {
 	public void testReadQuoted() throws Exception {
 		String str = "abc c d asd fa sdf  fa\\\\ sdf\\ asdf\\r\\n\\r\\n\\t\\f\\\" rest of the stuff ' ' ' \"";
 		String expected = "abc c d asd fa sdf  fa\\ sdf\\ asdf\r\n\r\n\t\f\" rest of the stuff ' ' ' ";
-		String actual = StreamSplitter.readQuoted(new StringReader(str), '"');
+		ReaderTokenSource source = new CharacterSequenceTokenSource(str);
+		String actual = source.readQuoted(new StringReader(str), '"');
 		Assert.assertEquals(expected, actual);
 	}
 }
