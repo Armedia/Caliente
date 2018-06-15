@@ -2,11 +2,13 @@ package com.armedia.caliente.cli.token;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class UriTokenSource extends StreamTokenSource {
+public class UriTokenSource extends ReaderTokenSource {
 
 	private static final String CLASSPATH = "classpath";
 
@@ -34,8 +36,9 @@ public class UriTokenSource extends StreamTokenSource {
 	}
 
 	@Override
-	protected InputStream openStream() throws IOException {
+	protected Reader openReader() throws IOException {
 		final String scheme = this.sourceUri.getScheme();
+		InputStream in = null;
 		if (UriTokenSource.CLASSPATH.equalsIgnoreCase(scheme) && !UriTokenSource.supportsClasspath()) {
 			// It's a classpath URL... let's use the rest of it as the classpath resource to get
 			String resource = this.sourceUri.getSchemeSpecificPart();
@@ -43,9 +46,12 @@ public class UriTokenSource extends StreamTokenSource {
 			while (resource.startsWith("/")) {
 				resource = resource.substring(1);
 			}
-			return Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
+			in = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
 		}
-		return this.sourceUri.toURL().openStream();
+		if (in == null) {
+			in = this.sourceUri.toURL().openStream();
+		}
+		return new InputStreamReader(in, getCharset());
 	}
 
 	@Override
