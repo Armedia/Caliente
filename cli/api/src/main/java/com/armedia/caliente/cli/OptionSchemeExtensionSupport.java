@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli;
 
+import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.token.Token;
 
 public interface OptionSchemeExtensionSupport {
@@ -25,6 +26,7 @@ public interface OptionSchemeExtensionSupport {
 	 *
 	 */
 	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
-		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender);
+		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
+		throws CommandLineExtensionException;
 
 }
