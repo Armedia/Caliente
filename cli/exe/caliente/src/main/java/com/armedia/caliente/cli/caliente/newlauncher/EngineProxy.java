@@ -3,10 +3,12 @@ package com.armedia.caliente.cli.caliente.newlauncher;
 import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
@@ -42,6 +44,7 @@ public abstract class EngineProxy {
 		protected final ENGINE engine;
 
 		private ProxyBase(ENGINE engine) {
+			Objects.requireNonNull(engine, "Must provide a valid engine instance");
 			this.engine = engine;
 		}
 
@@ -218,6 +221,8 @@ public abstract class EngineProxy {
 
 	}
 
+	protected final Logger log = LoggerFactory.getLogger(getClass());
+
 	public abstract String getName();
 
 	public abstract Set<String> getAliases();
@@ -238,7 +243,7 @@ public abstract class EngineProxy {
 
 	public final Importer getImporter() {
 		ImportEngine<?, ?, ?, ?, ?, ?> engine = getImportEngine();
-		if (engine == null) { throw new IllegalStateException("This proxy does not support an Export engine"); }
+		if (engine == null) { throw new IllegalStateException("This proxy does not support an Import engine"); }
 		return newImporter(engine);
 	}
 

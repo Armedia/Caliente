@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.caliente.newlauncher.alfresco;
+package com.armedia.caliente.cli.caliente.newlauncher.xml;
 
 import java.io.File;
 import java.util.Collection;
@@ -12,17 +12,17 @@ import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.newlauncher.EngineProxy;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
-import com.armedia.caliente.engine.alfresco.bi.importer.AlfImportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.xml.common.XmlSetting;
+import com.armedia.caliente.engine.xml.importer.XmlImportEngine;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
 
-public class AlfrescoEngineProxy extends EngineProxy {
+public class XmlEngineProxy extends EngineProxy {
 
-	private class AlfrescoImporter extends Importer {
-		private AlfrescoImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	private class XmlImporter extends Importer {
+		private XmlImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 			super(engine);
 		}
 
@@ -68,11 +68,9 @@ public class AlfrescoEngineProxy extends EngineProxy {
 			if (!targetDir.isDirectory()) { throw new CalienteException(
 				String.format("A non-directory already exists at the location [%s] - can't continue", targetDir)); }
 
-			settings.put(AlfSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
-			settings.put(AlfSetting.DB.getLabel(), Setting.DB_DIRECTORY.getString());
-			settings.put(AlfSetting.CONTENT.getLabel(), Setting.CONTENT_DIRECTORY.getString());
-			settings.put(AlfSetting.CONTENT_MODEL.getLabel(),
-				Tools.joinCSVEscaped(commandValues.getAllStrings(CLIParam.content_model)));
+			settings.put(XmlSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
+			settings.put(XmlSetting.DB.getLabel(), Setting.DB_DIRECTORY.getString());
+			settings.put(XmlSetting.CONTENT.getLabel(), Setting.CONTENT_DIRECTORY.getString());
 
 			return true;
 		}
@@ -89,12 +87,12 @@ public class AlfrescoEngineProxy extends EngineProxy {
 		}
 	}
 
-	public AlfrescoEngineProxy() {
+	public XmlEngineProxy() {
 	}
 
 	@Override
 	public String getName() {
-		return "alfrescobi";
+		return "xml";
 	}
 
 	@Override
@@ -114,12 +112,12 @@ public class AlfrescoEngineProxy extends EngineProxy {
 
 	@Override
 	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return AlfImportEngine.getImportEngine();
+		return XmlImportEngine.getImportEngine();
 	}
 
 	@Override
 	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new AlfrescoImporter(engine);
+		return new XmlImporter(engine);
 	}
 
 	@Override

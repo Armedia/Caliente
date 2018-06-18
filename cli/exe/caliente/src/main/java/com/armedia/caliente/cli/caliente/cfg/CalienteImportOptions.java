@@ -12,7 +12,7 @@ import com.armedia.caliente.cli.Options;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 
-public class CalienteOptions_EXPORT extends Options implements LaunchClasspathHelper {
+public class CalienteImportOptions extends Options implements LaunchClasspathHelper {
 
 	public static final String DEFAULT_LOG_FORMAT = "caliente-${logEngine}-${logMode}-${logTimeStamp}";
 
@@ -26,7 +26,7 @@ public class CalienteOptions_EXPORT extends Options implements LaunchClasspathHe
 	public static final Option LOG = new OptionImpl() //
 		.setArgumentLimits(1) //
 		.setDescription("The base name of the log file to use (${logName}).") //
-		.setDefault(CalienteOptions_EXPORT.DEFAULT_LOG_FORMAT) //
+		.setDefault(CalienteImportOptions.DEFAULT_LOG_FORMAT) //
 		.setArgumentName("log-name-template");
 
 	public static final Option LOG_CFG = new OptionImpl() //
@@ -39,12 +39,12 @@ public class CalienteOptions_EXPORT extends Options implements LaunchClasspathHe
 
 	private final OptionGroup group;
 
-	public CalienteOptions_EXPORT() {
+	public CalienteImportOptions() {
 		this.group = new OptionGroupImpl("Base Options") //
-			.add(CalienteOptions_EXPORT.HELP) //
-			.add(CalienteOptions_EXPORT.LIB) //
-			.add(CalienteOptions_EXPORT.LOG) //
-			.add(CalienteOptions_EXPORT.LOG_CFG) //
+			.add(CalienteImportOptions.HELP) //
+			.add(CalienteImportOptions.LIB) //
+			.add(CalienteImportOptions.LOG) //
+			.add(CalienteImportOptions.LOG_CFG) //
 		;
 	}
 

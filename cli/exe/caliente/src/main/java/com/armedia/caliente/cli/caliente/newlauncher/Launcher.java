@@ -152,7 +152,7 @@ public class Launcher extends AbstractLauncher {
 			String.format("No implementation found for command or alias [%s]", command)); }
 
 		// Find the desired engine, and add its classpath helpers if required
-		final String engine = CLIParam.engine.getString(baseValues);
+		final String engine = baseValues.getString(CLIParam.engine);
 
 		this.engineProxy = EngineProxy.getInstance(engine);
 		if (this.engineProxy == null) { throw new CommandLineProcessingException(1,
@@ -170,8 +170,8 @@ public class Launcher extends AbstractLauncher {
 		if (!this.command.isRequiresStorage()) { return; }
 
 		String path = null;
-		if (CLIParam.db.isPresent(baseValues)) {
-			path = CLIParam.db.getString(baseValues);
+		if (baseValues.isPresent(CLIParam.db)) {
+			path = baseValues.getString(CLIParam.db);
 		} else {
 			path = Launcher.DEFAULT_DB_PATH;
 		}
@@ -188,8 +188,8 @@ public class Launcher extends AbstractLauncher {
 		// the either object store's destination is a folder (existent or not), configure the
 		// content store relative to the object store
 
-		if (CLIParam.content.isPresent(baseValues)) {
-			path = CLIParam.content.getString(baseValues);
+		if (baseValues.isPresent(CLIParam.content)) {
+			path = baseValues.getString(CLIParam.content);
 		} else {
 			if (!objectStore.isFile()) {
 				path = null;
@@ -226,12 +226,12 @@ public class Launcher extends AbstractLauncher {
 		cfg.getSettings().putAll(commonValues);
 		this.objectStore = CmfStores.createObjectStore(cfg);
 
-		final boolean directFsExport = CLIParam.direct_fs.isPresent(baseValues);
+		final boolean directFsExport = baseValues.isPresent(CLIParam.direct_fs);
 
 		final String contentStoreName = (directFsExport ? "direct" : "default");
 		cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 		if (!directFsExport) {
-			String strategy = CLIParam.content_strategy.getString(baseValues);
+			String strategy = baseValues.getString(CLIParam.content_strategy);
 			if (StringUtils.isBlank(strategy)) {
 				strategy = Launcher.DEFAULT_CONTENT_STRATEGY;
 			}
@@ -389,7 +389,7 @@ public class Launcher extends AbstractLauncher {
 		System.setProperty("logMode", logMode);
 		System.setProperty("logEngine", logEngine);
 
-		String logCfg = CLIParam.log_cfg.getString(baseValues);
+		String logCfg = baseValues.getString(CLIParam.log_cfg);
 		boolean customLog = false;
 		if (logCfg != null) {
 			final File cfg = createFile(logCfg);
