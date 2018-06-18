@@ -148,16 +148,44 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
 		throws CommandLineExtensionException {
 
-		// Find the desired engine, and add its classpath helpers if required
-		final String engine = baseValues.getString(CLIParam.engine);
+		// Has an engine been selected already?
+		if (this.engineProxy == null) {
 
-		this.engineProxy = EngineProxy.getInstance(engine);
-		if (this.engineProxy == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
-			currentCommand, commandValues, currentToken,
-			String.format("No implementation found for engine [%s]", engine)); }
+			if (!baseValues.isPresent(CLIParam.engine)) { throw new CommandLineExtensionException(currentNumber,
+				baseValues, currentCommand, commandValues, currentToken,
+				"No engine has been selected in the base options yet (option order is important!)"); }
 
-		if (this.engineProxy == null) { throw new IllegalStateException("No engine proxy selected yet");
-		// TODO Auto-generated method stub
+			// Find the desired engine
+			final String engine = baseValues.getString(CLIParam.engine);
+			this.engineProxy = EngineProxy.getInstance(engine);
+			if (this.engineProxy == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
+				currentCommand, commandValues, currentToken,
+				String.format("No engine was found with the name or alias [%s]", engine)); }
+		}
+
+		// Has a command been given yet?
+		if (this.command == null) {
+
+			if (StringUtils.isBlank(
+				currentCommand)) { throw new CommandLineExtensionException(currentNumber, baseValues, currentCommand,
+					commandValues, currentToken, "No command has been given yet (option order is important!)"); }
+
+			// Find the desired command
+			this.command = this.commandModules.get(StringUtils.lowerCase(currentCommand));
+			if (this.command == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
+				currentCommand, commandValues, currentToken,
+				String.format("No command was found with the name or alias [%s]", this.command)); }
+		}
+
+		// Extend the command lines as per the engine and command
+		if (OptionSchemeExtensionSupport.class.isInstance(this.engineProxy)) {
+			OptionSchemeExtensionSupport.class.cast(this.engineProxy).extendScheme(currentNumber, baseValues,
+				currentCommand, commandValues, currentToken, extender);
+		}
+
+		if (OptionSchemeExtensionSupport.class.isInstance(this.command)) {
+			OptionSchemeExtensionSupport.class.cast(this.command).extendScheme(currentNumber, baseValues,
+				currentCommand, commandValues, currentToken, extender);
 		}
 	}
 
@@ -166,18 +194,6 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		Collection<String> positionals) throws CommandLineProcessingException {
 
 		// Validate all parameters...make sure everything is kosher, etc...
-
-		// Find the desired command
-		this.command = this.commandModules.get(StringUtils.lowerCase(command));
-		if (this.command == null) { throw new CommandLineProcessingException(1,
-			String.format("No implementation found for command or alias [%s]", command)); }
-
-		// Find the desired engine, and add its classpath helpers if required
-		final String engine = baseValues.getString(CLIParam.engine);
-
-		this.engineProxy = EngineProxy.getInstance(engine);
-		if (this.engineProxy == null) { throw new CommandLineProcessingException(1,
-			String.format("No implementation was found matching engine name or alias [%s]", engine)); }
 
 		// Now go try to initialize the stores if required
 		try {
