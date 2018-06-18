@@ -166,6 +166,10 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		// Has a command been given yet?
 		if (this.command == null) {
 
+			if (!this.engineProxy.isCommandSupported(currentCommand)) { throw new CommandLineExtensionException(
+				currentNumber, baseValues, currentCommand, commandValues, currentToken, String
+					.format("Engine [%s] does not support command [%s]", this.engineProxy.getName(), currentCommand)); }
+
 			if (StringUtils.isBlank(
 				currentCommand)) { throw new CommandLineExtensionException(currentNumber, baseValues, currentCommand,
 					commandValues, currentToken, "No command has been given yet (option order is important!)"); }

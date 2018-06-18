@@ -292,6 +292,8 @@ public abstract class EngineProxy implements AutoCloseable {
 		}
 	}
 
+	protected abstract boolean isCommandSupported(String command);
+
 	@Override
 	public void close() throws Exception {
 		// By default, do nothing...
