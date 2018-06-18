@@ -37,7 +37,7 @@ import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class EngineProxy {
+public abstract class EngineProxy implements AutoCloseable {
 
 	abstract class ProxyBase<LISTENER, ENGINE extends TransferEngine<?, ?, ?, ?, ?, LISTENER>> {
 
@@ -290,5 +290,10 @@ public abstract class EngineProxy {
 		} catch (NoSuchElementException e) {
 			return null;
 		}
+	}
+
+	@Override
+	public void close() throws Exception {
+		// By default, do nothing...
 	}
 }

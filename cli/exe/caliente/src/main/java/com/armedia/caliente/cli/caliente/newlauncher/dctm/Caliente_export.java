@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.caliente.launcher.dctm;
+package com.armedia.caliente.cli.caliente.newlauncher.dctm;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -120,7 +120,8 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 					InputStream in = doc.getContent();
 					Properties props = new Properties();
 					try {
-						props.loadFromXML(in);
+						props.loadFromXML(in); // TODO Auto-generated method stub
+
 					} finally {
 						IOUtils.closeQuietly(in);
 					}
@@ -227,7 +228,8 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 			return true;
 		} catch (Exception e) {
 			throw new CalienteException("Exception caught storing the export metadata", e);
-		}
+		} // TODO Auto-generated method stub
+
 	}
 
 	@Override

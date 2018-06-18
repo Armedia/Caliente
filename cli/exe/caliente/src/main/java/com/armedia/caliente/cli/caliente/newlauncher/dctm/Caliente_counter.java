@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.caliente.launcher.dctm;
+package com.armedia.caliente.cli.caliente.newlauncher.dctm;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

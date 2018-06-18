@@ -90,6 +90,12 @@ public class ImportCommandModule extends CommandModule {
 				report.append(String.format("%n%nException caught while attempting an import%n%n"));
 				t.printStackTrace(pw);
 				exceptionReport = sw.toString();
+			} finally {
+				try {
+					engineProxy.close();
+				} catch (Exception e) {
+					this.log.error("Exception caught while closing the proxy", e);
+				}
 			}
 		} finally {
 			// unlock

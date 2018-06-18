@@ -1,20 +1,23 @@
-package com.armedia.caliente.cli.caliente.launcher.dctm;
+package com.armedia.caliente.cli.caliente.newlauncher.dctm;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
-import com.armedia.caliente.cli.caliente.utils.ClasspathPatcher;
+import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 
-public class DctmClasspathPatcher extends ClasspathPatcher {
+public class DctmClasspathPatcher implements LaunchClasspathHelper {
 
 	protected static final String DFC_PROPERTIES_PROP = "dfc.properties.file";
 	protected static final String ENV_DOCUMENTUM_SHARED = "DOCUMENTUM_SHARED";
@@ -23,10 +26,6 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 	protected static final String DFC_TEST_CLASS = "com.documentum.fc.client.IDfFolder";
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
-
-	public DctmClasspathPatcher() {
-		super("dctm");
-	}
 
 	private File createFile(String path) {
 		return createFile(null, path);
@@ -44,7 +43,7 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 	}
 
 	@Override
-	public List<URL> getPatches(String engine) {
+	public Collection<URL> getClasspathPatchesPre(OptionValues values) {
 		final boolean dfcFound;
 		{
 			boolean dfc = false;
@@ -59,7 +58,7 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 
 		List<URL> ret = new ArrayList<>(3);
 		try {
-			String var = CLIParam.dfc_prop.getString("dfc.properties");
+			String var = values.getString(CLIParam.dfc_prop, "dfc.properties");
 			if (var != null) {
 				File f = createFile(var);
 				if (f.exists() && f.isFile() && f.canRead()) {
@@ -68,7 +67,7 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 			}
 
 			// Next, add ${DOCUMENTUM}/config to the classpath
-			var = CLIParam.dctm.getString(System.getenv(DctmClasspathPatcher.ENV_DOCUMENTUM));
+			var = values.getString(CLIParam.dctm, System.getenv(DctmClasspathPatcher.ENV_DOCUMENTUM));
 			// Go with the environment
 			if (var == null) {
 				String msg = String.format("The environment variable [%s] is not set",
@@ -89,7 +88,7 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 			}
 
 			// Next, identify the DOCUMENTUM_SHARED location, and if dctm.jar is in there
-			var = CLIParam.dfc.getString(System.getenv(DctmClasspathPatcher.ENV_DOCUMENTUM_SHARED));
+			var = values.getString(CLIParam.dfc, System.getenv(DctmClasspathPatcher.ENV_DOCUMENTUM_SHARED));
 			// Go with the environment
 			if (var == null) {
 				String msg = String.format("The environment variable [%s] is not set",
@@ -116,9 +115,13 @@ public class DctmClasspathPatcher extends ClasspathPatcher {
 				}
 			}
 		} catch (IOException e) {
-			throw new RuntimeException(
-				String.format("Failed to configure the dynamic classpath for engine [%s]", engine), e);
+			throw new RuntimeException("Failed to configure the dynamic classpath for Documentum", e);
 		}
 		return ret;
+	}
+
+	@Override
+	public Collection<URL> getClasspathPatchesPost(OptionValues values) {
+		return Collections.emptyList();
 	}
 }
