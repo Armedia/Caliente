@@ -16,42 +16,26 @@ import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
 
-public class ExportCommandListener implements ExportEngineListener {
+public class ExportCommandListener extends AbstractCommandListener implements ExportEngineListener {
 
-	private static final Integer PROGRESS_INTERVAL = 5;
-
-	private final Logger console;
-	private final CalienteWarningTracker warningTracker;
-	private final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<>(ExportResult.class);
-	private final AtomicLong start = new AtomicLong(0);
-	private final AtomicLong previous = new AtomicLong(0);
-	private final AtomicLong progressReporter = new AtomicLong(System.currentTimeMillis());
-	private final AtomicLong objectCounter = new AtomicLong();
+	protected final CmfObjectCounter<ExportResult> counter = new CmfObjectCounter<>(ExportResult.class);
+	protected final AtomicLong start = new AtomicLong(0);
+	protected final AtomicLong previous = new AtomicLong(0);
+	protected final AtomicLong objectCounter = new AtomicLong();
 
 	public ExportCommandListener(Logger console) {
-		this.console = console;
-		this.warningTracker = new CalienteWarningTracker(console, true);
-	}
-
-	public final CalienteWarningTracker getWarningTracker() {
-		return this.warningTracker;
+		super(console);
 	}
 
 	public final CmfObjectCounter<ExportResult> getCounter() {
 		return this.counter;
 	}
 
-	@Override
-	public final void exportStarted(ExportState exportState) {
-		this.start.set(System.currentTimeMillis());
-		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportState.cfg));
-	}
-
-	protected final void showProgress() {
+	private void showProgress() {
 		showProgress(false);
 	}
 
-	protected final void showProgress(boolean forced) {
+	private void showProgress(boolean forced) {
 		final Long current = this.objectCounter.get();
 		final boolean milestone = (forced || ((current % 1000) == 0));
 
@@ -59,7 +43,7 @@ public class ExportCommandListener implements ExportEngineListener {
 		long now = System.currentTimeMillis();
 		long last = this.progressReporter.get();
 		boolean shouldDisplay = (milestone || ((now - last) >= TimeUnit.MILLISECONDS
-			.convert(ExportCommandListener.PROGRESS_INTERVAL, TimeUnit.SECONDS)));
+			.convert(AbstractCommandListener.PROGRESS_INTERVAL, TimeUnit.SECONDS)));
 
 		// This avoids a race condition where we don't show successive progress reports from
 		// different threads
@@ -69,7 +53,7 @@ public class ExportCommandListener implements ExportEngineListener {
 			final Long duration = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - this.start.get());
 			this.previous.set(current.longValue());
 			final long count = (current.longValue() - prev.longValue());
-			final Double itemRate = (count / ExportCommandListener.PROGRESS_INTERVAL.doubleValue());
+			final Double itemRate = (count / AbstractCommandListener.PROGRESS_INTERVAL.doubleValue());
 			final Double startRate = (current.doubleValue() / duration.doubleValue());
 
 			objectLine = String.format("Exported %d objects (~%.2f/s, %d since last report, ~%.2f/s average)",
@@ -80,7 +64,13 @@ public class ExportCommandListener implements ExportEngineListener {
 	}
 
 	@Override
-	public final void objectExportStarted(UUID jobId, CmfObjectRef object, CmfObjectRef referrent) {
+	public void exportStarted(ExportState exportState) {
+		this.start.set(System.currentTimeMillis());
+		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportState.cfg));
+	}
+
+	@Override
+	public void objectExportStarted(UUID jobId, CmfObjectRef object, CmfObjectRef referrent) {
 		if (referrent == null) {
 			this.console.info(String.format("Object export started for %s", object.getShortLabel()));
 		} else {
@@ -90,7 +80,7 @@ public class ExportCommandListener implements ExportEngineListener {
 	}
 
 	@Override
-	public final void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber) {
+	public void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber) {
 		this.objectCounter.incrementAndGet();
 		if (objectNumber != null) {
 			this.console
@@ -101,7 +91,7 @@ public class ExportCommandListener implements ExportEngineListener {
 	}
 
 	@Override
-	public final void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
+	public void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
 		this.objectCounter.incrementAndGet();
 		switch (reason) {
 			case SKIPPED:
@@ -123,7 +113,7 @@ public class ExportCommandListener implements ExportEngineListener {
 	}
 
 	@Override
-	public final void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
+	public void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
 		this.objectCounter.incrementAndGet();
 		this.counter.increment(object.getType(), ExportResult.FAILED);
 		this.console.warn(String.format("Object export failed for %s", object.getShortLabel()), thrown);
@@ -132,8 +122,7 @@ public class ExportCommandListener implements ExportEngineListener {
 
 	@Override
 	public void consistencyWarning(UUID jobId, CmfObjectRef object, String fmt, Object... args) {
-		// TODO Auto-generated method stub
-
+		// TODO: Raise a warning
 	}
 
 	@Override

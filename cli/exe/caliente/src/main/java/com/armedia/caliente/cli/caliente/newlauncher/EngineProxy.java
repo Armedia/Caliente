@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
@@ -24,6 +25,7 @@ import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportResult;
+import com.armedia.caliente.engine.importer.ImportSetting;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -99,6 +101,15 @@ public abstract class EngineProxy {
 
 		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
 			throws CalienteException {
+			settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
+			settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));
+			settings.put(TransferSetting.THREAD_COUNT.getLabel(),
+				Setting.THREADS.getInt(CommandModule.DEFAULT_THREADS));
+			settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
+			settings.put(TransferSetting.TRANSFORMATION.getLabel(), commandValues.getString(CLIParam.transformations));
+			settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(),
+				commandValues.getString(CLIParam.external_metadata));
+			settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CLIParam.filters));
 			return true;
 		}
 
@@ -135,18 +146,20 @@ public abstract class EngineProxy {
 		}
 
 		@Override
+		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
+			throws CalienteException {
+			boolean ret = super.preConfigure(commandValues, settings);
+			if (ret) {
+				settings.put(TransferSetting.LATEST_ONLY.getLabel(),
+					commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
+			}
+			return ret;
+		}
+
+		@Override
 		protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
 			throws CalienteException {
 			/*
-			settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
-			settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), CLIParam.skip_content.isPresent());
-			settings.put(TransferSetting.LATEST_ONLY.getLabel(),
-				CLIParam.no_versions.isPresent() || CLIParam.direct_fs.isPresent());
-			settings.put(TransferSetting.NO_RENDITIONS.getLabel(),
-				CLIParam.no_renditions.isPresent() || CLIParam.direct_fs.isPresent());
-			settings.put(TransferSetting.TRANSFORMATION.getLabel(), CLIParam.transformations.getString());
-			settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(), CLIParam.external_metadata.getString());
-			settings.put(TransferSetting.FILTER.getLabel(), CLIParam.filters.getString());
 			
 			ConfigurationSetting setting = null;
 			
@@ -173,6 +186,22 @@ public abstract class EngineProxy {
 
 		protected Importer(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 			super(engine);
+		}
+
+		@Override
+		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
+			throws CalienteException {
+			settings.put(ImportSetting.NO_FILENAME_MAP.getLabel(), commandValues.isPresent(CLIParam.no_filename_map));
+			settings.put(ImportSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
+			settings.put(ImportSetting.VALIDATE_REQUIREMENTS.getLabel(),
+				commandValues.isPresent(CLIParam.validate_requirements));
+			return super.preConfigure(commandValues, settings);
+		}
+
+		@Override
+		protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
+			throws CalienteException {
+			return super.doConfigure(commandValues, settings);
 		}
 
 		public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker,

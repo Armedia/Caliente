@@ -75,11 +75,11 @@ public class ExportCommandModule extends CommandModule {
 		Map<String, Object> settings = new TreeMap<>();
 		exporter.initialize(settings);
 
-		Date end = null;
+		final Date start;
+		final Date end;
 		Map<CmfType, Long> summary = null;
 		String exceptionReport = null;
-		StringBuilder report = new StringBuilder();
-		Date start = null;
+		final StringBuilder report = new StringBuilder();
 		try {
 
 			exporter.configure(commandValues, settings);
