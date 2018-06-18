@@ -29,14 +29,17 @@ import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
 import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionSchemeExtender;
 import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteBaseOptions;
 import com.armedia.caliente.cli.caliente.newlauncher.CommandModule.Descriptor;
+import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfContentStore;
@@ -48,7 +51,7 @@ import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public class Launcher extends AbstractLauncher {
+public class Launcher extends AbstractLauncher implements OptionSchemeExtensionSupport {
 
 	public static final void main(String... args) {
 		System.exit(new Launcher().launch(CLIParam.help, args));
@@ -137,7 +140,25 @@ public class Launcher extends AbstractLauncher {
 
 	@Override
 	protected OptionSchemeExtensionSupport getSchemeExtensionSupport() {
-		return new CalienteOptionSchemeExtension();
+		return this;
+	}
+
+	@Override
+	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
+		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
+		throws CommandLineExtensionException {
+
+		// Find the desired engine, and add its classpath helpers if required
+		final String engine = baseValues.getString(CLIParam.engine);
+
+		this.engineProxy = EngineProxy.getInstance(engine);
+		if (this.engineProxy == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
+			currentCommand, commandValues, currentToken,
+			String.format("No implementation found for engine [%s]", engine)); }
+
+		if (this.engineProxy == null) { throw new IllegalStateException("No engine proxy selected yet");
+		// TODO Auto-generated method stub
+		}
 	}
 
 	@Override
