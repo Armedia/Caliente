@@ -462,4 +462,8 @@ public enum CLIParam implements OptionWrapper {
 	public Option getOption() {
 		return this.option;
 	}
+
+	public OptionImpl getOptionImpl() {
+		return this.option;
+	}
 }
