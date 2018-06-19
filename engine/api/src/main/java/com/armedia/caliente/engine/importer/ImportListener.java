@@ -4,10 +4,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
 
+import com.armedia.caliente.engine.TransferListener;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfType;
 
-public interface ImportListener {
+public interface ImportListener extends TransferListener {
 
 	/**
 	 * <p>

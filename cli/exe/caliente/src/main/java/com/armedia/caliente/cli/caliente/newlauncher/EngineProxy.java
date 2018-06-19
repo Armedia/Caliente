@@ -15,28 +15,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
-import com.armedia.caliente.cli.caliente.cfg.Setting;
-import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.command.CalienteCommand;
+import com.armedia.caliente.cli.caliente.command.CommandModule;
+import com.armedia.caliente.cli.caliente.command.DecryptCommandModule;
+import com.armedia.caliente.cli.caliente.command.EncryptCommandModule;
+import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
+import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.engine.TransferSetting;
-import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.exporter.ExportEngineListener;
-import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.caliente.engine.importer.ImportEngineListener;
-import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.importer.ImportSetting;
-import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfObjectCounter;
-import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
@@ -85,7 +73,7 @@ public abstract class EngineProxy implements AutoCloseable {
 							if (proxies.containsKey(canonicalName)) {
 								EngineProxy oldProxy = proxies.get(canonicalName);
 								String msg = String.format(
-									"EngineProxy name conflict on canonical name [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
+									"EngineProxy title conflict on canonical title [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
 									canonicalName, oldProxy.getClass().getCanonicalName(), oldProxy.getName(),
 									proxy.getClass().getCanonicalName(), proxy.getName());
 								if (log != null) {
@@ -138,7 +126,8 @@ public abstract class EngineProxy implements AutoCloseable {
 	}
 
 	public static EngineProxy get(final Logger log, final String engine) {
-		if (StringUtils.isEmpty(engine)) { throw new IllegalArgumentException("Must provide a non-empty engine name"); }
+		if (StringUtils
+			.isEmpty(engine)) { throw new IllegalArgumentException("Must provide a non-empty engine title"); }
 
 		EngineProxy.initializeProxies(log);
 
@@ -160,188 +149,6 @@ public abstract class EngineProxy implements AutoCloseable {
 		return EngineProxy.PROXY_ALIASES.keySet();
 	}
 
-	abstract class ProxyBase<LISTENER, ENGINE extends TransferEngine<?, ?, ?, ?, ?, LISTENER>> {
-
-		protected final ENGINE engine;
-
-		private ProxyBase(ENGINE engine) {
-			Objects.requireNonNull(engine, "Must provide a valid engine instance");
-			this.engine = engine;
-		}
-
-		public final boolean addListener(LISTENER listener) {
-			return this.engine.addListener(listener);
-		}
-
-		public final boolean removeListener(LISTENER listener) {
-			return this.engine.removeListener(listener);
-		}
-
-		public final CmfCrypt getCrypto() {
-			return this.engine.getCrypto();
-		}
-
-		public final boolean isSupportsDuplicateFileNames() {
-			return this.engine.isSupportsDuplicateFileNames();
-		}
-
-		public final Collection<TransferEngineSetting> getSupportedSettings() {
-			return this.engine.getSupportedSettings();
-		}
-
-		public final void initialize(Map<String, Object> settings) {
-			// By default, do nothing...maybe do threading configurations? Common stuff?
-			if (!preInitialize(settings)) { return; }
-			if (!doInitialize(settings)) { return; }
-			if (!postInitialize(settings)) { return; }
-		}
-
-		protected boolean preInitialize(Map<String, Object> settings) {
-			settings.put(TransferSetting.THREAD_COUNT.getLabel(),
-				Setting.THREADS.getInt(CommandModule.DEFAULT_THREADS));
-			return true;
-		}
-
-		protected boolean doInitialize(Map<String, Object> settings) {
-			return true;
-		}
-
-		protected boolean postInitialize(Map<String, Object> settings) {
-			return true;
-		}
-
-		public final void configure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-			preValidateSettings(settings);
-			if (preConfigure(commandValues, settings)) {
-				if (doConfigure(commandValues, settings)) {
-					postConfigure(commandValues, settings);
-				}
-			}
-			postValidateSettings(settings);
-		}
-
-		protected void preValidateSettings(Map<String, Object> settings) throws CalienteException {
-		}
-
-		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
-			settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));
-			settings.put(TransferSetting.THREAD_COUNT.getLabel(),
-				Setting.THREADS.getInt(CommandModule.DEFAULT_THREADS));
-			settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
-			settings.put(TransferSetting.TRANSFORMATION.getLabel(), commandValues.getString(CLIParam.transformations));
-			settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(),
-				commandValues.getString(CLIParam.external_metadata));
-			settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CLIParam.filters));
-			return true;
-		}
-
-		protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			return true;
-		}
-
-		protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-		}
-
-		protected void postValidateSettings(Map<String, Object> settings) throws CalienteException {
-
-		}
-	}
-
-	protected class Exporter extends ProxyBase<ExportEngineListener, ExportEngine<?, ?, ?, ?, ?, ?>> {
-
-		protected Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
-			super(engine);
-		}
-
-		public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker,
-			CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
-			throws ExportException, CmfStorageException {
-			return this.engine.runExport(output, warningTracker, objectStore, contentStore, settings);
-		}
-
-		public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker,
-			CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings,
-			CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
-			return this.engine.runExport(output, warningTracker, objectStore, contentStore, settings, counter);
-		}
-
-		@Override
-		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			boolean ret = super.preConfigure(commandValues, settings);
-			if (ret) {
-				settings.put(TransferSetting.LATEST_ONLY.getLabel(),
-					commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
-			}
-			return ret;
-		}
-
-		@Override
-		protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			/*
-			
-			ConfigurationSetting setting = null;
-			
-			setting = getUserSetting();
-			if ((this.user != null) && (setting != null)) {
-				settings.put(setting.getLabel(), this.user);
-			}
-			
-			setting = getPasswordSetting();
-			if ((this.password != null) && (setting != null)) {
-				settings.put(setting.getLabel(), this.password);
-			}
-			
-			setting = getDomainSetting();
-			if ((this.domain != null) && (setting != null)) {
-				settings.put(setting.getLabel(), this.domain);
-			}
-			*/
-			return true;
-		}
-	}
-
-	protected class Importer extends ProxyBase<ImportEngineListener, ImportEngine<?, ?, ?, ?, ?, ?>> {
-
-		protected Importer(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-			super(engine);
-		}
-
-		@Override
-		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			settings.put(ImportSetting.NO_FILENAME_MAP.getLabel(), commandValues.isPresent(CLIParam.no_filename_map));
-			settings.put(ImportSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
-			settings.put(ImportSetting.VALIDATE_REQUIREMENTS.getLabel(),
-				commandValues.isPresent(CLIParam.validate_requirements));
-			return super.preConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			return super.doConfigure(commandValues, settings);
-		}
-
-		public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker,
-			CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings)
-			throws ImportException, CmfStorageException {
-			return this.engine.runImport(output, warningTracker, objectStore, streamStore, settings);
-		}
-
-		public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker,
-			CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings,
-			CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
-			return this.engine.runImport(output, warningTracker, objectStore, streamStore, settings, counter);
-		}
-
-	}
-
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	public abstract String getName();
@@ -350,33 +157,58 @@ public abstract class EngineProxy implements AutoCloseable {
 
 	public abstract CmfCrypt getCrypt();
 
-	public final Exporter getExporter() {
-		ExportEngine<?, ?, ?, ?, ?, ?> engine = getExportEngine();
-		if (engine == null) { throw new IllegalStateException("This proxy does not support an Export engine"); }
-		return newExporter(engine);
+	public final CommandModule<?> getCommandModule(CalienteCommand command) {
+		Objects.requireNonNull(command, "Must provide a non-null command");
+		switch (command) {
+			case COUNT:
+				break;
+
+			case EXPORT:
+				ExportEngine<?, ?, ?, ?, ?, ?> exportEngine = getExportEngine();
+				if (exportEngine == null) { throw new IllegalStateException(
+					"This proxy does not support an Export engine"); }
+				return newExporter(exportEngine);
+
+			case IMPORT:
+				ImportEngine<?, ?, ?, ?, ?, ?> importEngine = getImportEngine();
+				if (importEngine == null) { throw new IllegalStateException(
+					"This proxy does not support an Import engine"); }
+				return newImporter(importEngine);
+
+			default:
+				break;
+		}
+
+		TransferEngine<?, ?, ?, ?, ?, ?> transferEngine = getImportEngine();
+		if (transferEngine == null) {
+			transferEngine = getExportEngine();
+		}
+		switch (command) {
+			case ENCRYPT:
+				return new EncryptCommandModule(transferEngine);
+			case DECRYPT:
+				return new DecryptCommandModule(transferEngine);
+			default:
+				break;
+		}
+
+		throw new IllegalArgumentException(
+			String.format("The command [%s] is unsupported at this time", command.title));
 	}
 
-	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new Exporter(engine);
+	protected ExportCommandModule newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new ExportCommandModule(engine);
 	}
 
 	protected abstract ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine();
 
-	public final Importer getImporter() {
-		ImportEngine<?, ?, ?, ?, ?, ?> engine = getImportEngine();
-		if (engine == null) { throw new IllegalStateException("This proxy does not support an Import engine"); }
-		return newImporter(engine);
-	}
-
-	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new Importer(engine);
+	protected ImportCommandModule newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new ImportCommandModule(engine);
 	}
 
 	protected abstract ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine();
 
 	public abstract Collection<? extends LaunchClasspathHelper> getClasspathHelpers();
-
-	protected abstract boolean isCommandSupported(String command);
 
 	@Override
 	public void close() throws Exception {

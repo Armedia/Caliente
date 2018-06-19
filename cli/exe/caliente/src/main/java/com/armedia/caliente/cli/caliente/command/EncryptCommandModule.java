@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.caliente.newlauncher;
+package com.armedia.caliente.cli.caliente.command;
 
 import java.io.BufferedReader;
 import java.io.Console;
@@ -10,22 +10,21 @@ import java.util.List;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.newlauncher.Caliente;
+import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
 
-public class EncryptCommandModule extends CommandModule {
-
-	private static final Descriptor DESCRIPTOR = new Descriptor("encrypt", "Encrypt a plaintext password", "enc");
-
-	public EncryptCommandModule() {
-		super(false, false, EncryptCommandModule.DESCRIPTOR);
+public class EncryptCommandModule extends CommandModule<TransferEngine<?, ?, ?, ?, ?, ?>> {
+	public EncryptCommandModule(TransferEngine<?, ?, ?, ?, ?, ?> engine) {
+		super(CalienteCommand.ENCRYPT, engine);
 	}
 
-	private final Collection<CmfCrypt> getCrypt(EngineProxy engineProxy) {
+	private final Collection<CmfCrypt> getCrypt() {
 		Collection<CmfCrypt> crypt = new ArrayList<>(2);
-		CmfCrypt c = engineProxy.getCrypt();
+		CmfCrypt c = this.engine.getCrypto();
 		if (c != null) {
 			crypt.add(c);
 		}
@@ -53,10 +52,9 @@ public class EncryptCommandModule extends CommandModule {
 	}
 
 	@Override
-	protected int execute(EngineProxy engineProxy, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, OptionValues commandValues, Collection<String> positionals)
-		throws CalienteException {
-		final Collection<CmfCrypt> crypt = getCrypt(engineProxy);
+	protected int execute(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
+		OptionValues commandValues, Collection<String> positionals) throws CalienteException {
+		final Collection<CmfCrypt> crypt = getCrypt();
 		if (!positionals.isEmpty()) {
 			for (String password : positionals) {
 				try {

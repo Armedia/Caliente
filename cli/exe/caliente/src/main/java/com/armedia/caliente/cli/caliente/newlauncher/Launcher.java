@@ -15,7 +15,6 @@ import java.util.InvalidPropertiesFormatException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.TreeMap;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -35,7 +34,8 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteBaseOptions;
-import com.armedia.caliente.cli.caliente.newlauncher.CommandModule.Descriptor;
+import com.armedia.caliente.cli.caliente.command.CalienteCommand;
+import com.armedia.caliente.cli.caliente.command.CommandModule;
 import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
@@ -49,7 +49,6 @@ import com.armedia.caliente.store.CmfStoreFactory;
 import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.xml.XmlProperties;
-import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
 public class Launcher extends AbstractLauncher implements OptionSchemeExtensionSupport {
@@ -70,15 +69,13 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	// Saves us quite a few keystrokes ;)
 	private EngineProxy engineProxy = null;
 
-	private CommandModule command = null;
+	private CommandModule<?> command = null;
 
 	@SuppressWarnings("rawtypes")
 	private CmfObjectStore objectStore = null;
 
 	@SuppressWarnings("rawtypes")
 	private CmfContentStore contentStore = null;
-
-	private final Map<String, CommandModule> commandModules = new TreeMap<>();
 
 	@Override
 	protected String getProgramName() {
@@ -87,44 +84,11 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 	@Override
 	protected OptionScheme getOptionScheme() {
-		PluggableServiceLocator<CommandModule> commandModules = new PluggableServiceLocator<>(CommandModule.class);
-		commandModules.setErrorListener(new PluggableServiceLocator.ErrorListener() {
-			@Override
-			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				Launcher.this.log.error("Failed to initialize the CommandModule class {}",
-					serviceClass.getCanonicalName(), t);
-			}
-		});
-		commandModules.setHideErrors(false);
-
-		Map<String, Descriptor> commands = new TreeMap<>();
-		for (CommandModule command : commandModules) {
-			Descriptor newDescriptor = command.getDescriptor();
-			Descriptor oldDescriptor = commands.put(newDescriptor.getName(), newDescriptor);
-			if (oldDescriptor != null) {
-				// ERROR!
-				throw new RuntimeException(String.format(
-					"Duplicate command definition for [%s] (new aliases = %s, old aliases = %s) - this is a code defect",
-					newDescriptor.getName(), newDescriptor.getAliases(), oldDescriptor.getAliases()));
-			}
-			this.commandModules.put(newDescriptor.getName().toLowerCase(), command);
-
-			for (String alias : newDescriptor.getAliases()) {
-				oldDescriptor = commands.put(alias, newDescriptor);
-				if ((oldDescriptor != null) && (oldDescriptor != newDescriptor)) {
-					// ERROR!
-					throw new RuntimeException(String.format(
-						"Command alias [%s] has a collision between commandModules [%s] and [%s] - this is a code defect",
-						alias, newDescriptor.getName(), oldDescriptor.getName()));
-				}
-				this.commandModules.put(alias.toLowerCase(), command);
-			}
-		}
 
 		CommandScheme scheme = new CommandScheme(getProgramName(), true);
-		for (Descriptor d : commands.values()) {
-			Command c = new Command(d.getName(), d.getAliases());
-			c.setDescription(d.getDescription());
+		for (CalienteCommand d : CalienteCommand.values()) {
+			Command c = new Command(d.title, d.aliases);
+			c.setDescription(d.description);
 			scheme.addCommand(c);
 		}
 
@@ -160,7 +124,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			this.engineProxy = EngineProxy.get(engine);
 			if (this.engineProxy == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken,
-				String.format("No engine was found with the name or alias [%s]", engine)); }
+				String.format("No engine was found with the title or alias [%s]", engine)); }
 		}
 
 		// Has a command been given yet?
@@ -177,7 +141,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			this.command = this.commandModules.get(StringUtils.lowerCase(currentCommand));
 			if (this.command == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken,
-				String.format("No command was found with the name or alias [%s]", this.command)); }
+				String.format("No command was found with the title or alias [%s]", this.command)); }
 		}
 
 		// Extend the command lines as per the engine and command

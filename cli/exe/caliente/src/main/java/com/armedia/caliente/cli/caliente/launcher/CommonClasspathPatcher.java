@@ -72,7 +72,7 @@ public class CommonClasspathPatcher extends ClasspathPatcher {
 					ret.add(classesDir.toURI().toURL());
 				}
 
-				// Make sure they're sorted by name
+				// Make sure they're sorted by title
 				Map<String, URL> urls = new TreeMap<>();
 				for (File jar : f.listFiles(CommonClasspathPatcher.LIB_FILTER)) {
 					urls.put(jar.getName(), jar.toURI().toURL());

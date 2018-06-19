@@ -25,9 +25,9 @@ public class CalienteCommonOptions extends Options implements LaunchClasspathHel
 
 	public static final Option LOG = new OptionImpl() //
 		.setArgumentLimits(1) //
-		.setDescription("The base name of the log file to use (${logName}).") //
+		.setDescription("The base title of the log file to use (${logName}).") //
 		.setDefault(CalienteCommonOptions.DEFAULT_LOG_FORMAT) //
-		.setArgumentName("log-name-template");
+		.setArgumentName("log-title-template");
 
 	public static final Option LOG_CFG = new OptionImpl() //
 		.setArgumentLimits(1) //

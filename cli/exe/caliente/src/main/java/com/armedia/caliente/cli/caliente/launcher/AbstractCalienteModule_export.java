@@ -111,13 +111,13 @@ public abstract class AbstractCalienteModule_export extends
 
 	/**
 	 * <p>
-	 * Loads the stored settings for the given job name. If no settings are stored for the given job
+	 * Loads the stored settings for the given job title. If no settings are stored for the given job
 	 * (i.e. no settings file found), then {@code null} is returned. Otherwise, the found settings
 	 * (whatever they may be) will be returned.
 	 * </p>
 	 *
 	 * @param jobName
-	 * @return the settings stored for the given job name, or {@code null} if there are none
+	 * @return the settings stored for the given job title, or {@code null} if there are none
 	 * @throws CalienteException
 	 */
 	protected Map<String, Object> loadSettings(String jobName) throws CalienteException {

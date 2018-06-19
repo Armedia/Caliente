@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.caliente.newlauncher;
+package com.armedia.caliente.cli.caliente.command;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -13,50 +13,99 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.newlauncher.EngineProxy.Exporter;
+import com.armedia.caliente.cli.caliente.newlauncher.CalienteWarningTracker;
+import com.armedia.caliente.cli.caliente.newlauncher.ExportCommandListener;
+import com.armedia.caliente.cli.caliente.newlauncher.ExportManifest;
 import com.armedia.caliente.cli.caliente.utils.EmailUtils;
+import com.armedia.caliente.engine.TransferSetting;
+import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
+import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
-public class ExportCommandModule extends CommandModule {
+public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, ?, ?>> {
 
 	protected static final String EXPORT_START = "calienteExportStart";
 	protected static final String EXPORT_END = "calienteExportEnd";
 	protected static final String BASE_SELECTOR = "calienteBaseSelector";
 	protected static final String FINAL_SELECTOR = "calienteFinalSelector";
 
-	private static final Descriptor DESCRIPTOR = new Descriptor("export",
-		"Extract content from an ECM or Local Filesystem", "exp", "ex");
+	public ExportCommandModule(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+		super(CalienteCommand.EXPORT, engine);
+	}
 
-	public ExportCommandModule() {
-		super(true, true, ExportCommandModule.DESCRIPTOR);
+	public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+		throws ExportException, CmfStorageException {
+		return this.engine.runExport(output, warningTracker, objectStore, contentStore, settings);
+	}
+
+	public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings,
+		CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
+		return this.engine.runExport(output, warningTracker, objectStore, contentStore, settings, counter);
 	}
 
 	@Override
-	protected int execute(EngineProxy engineProxy, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> contentStore, OptionValues commandValues, Collection<String> positionals)
-		throws CalienteException {
+	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+		boolean ret = super.preConfigure(commandValues, settings);
+		if (ret) {
+			settings.put(TransferSetting.LATEST_ONLY.getLabel(),
+				commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
+		}
+		return ret;
+	}
+
+	@Override
+	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+		/*
+		
+		ConfigurationSetting setting = null;
+		
+		setting = getUserSetting();
+		if ((this.user != null) && (setting != null)) {
+			settings.put(setting.getLabel(), this.user);
+		}
+		
+		setting = getPasswordSetting();
+		if ((this.password != null) && (setting != null)) {
+			settings.put(setting.getLabel(), this.password);
+		}
+		
+		setting = getDomainSetting();
+		if ((this.domain != null) && (setting != null)) {
+			settings.put(setting.getLabel(), this.domain);
+		}
+		*/
+		return true;
+	}
+
+	@Override
+	protected int execute(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
+		OptionValues commandValues, Collection<String> positionals) throws CalienteException {
 
 		Set<ExportResult> outcomes = commandValues.getAllEnums(ExportResult.class, false, CLIParam.manifest_outcomes);
 		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, false, CLIParam.manifest_types);
 
-		final Exporter exporter = engineProxy.getExporter();
 		final ExportCommandListener mainListener = new ExportCommandListener(this.console);
 		final CalienteWarningTracker warningTracker = mainListener.getWarningTracker();
 		final CmfObjectCounter<ExportResult> counter = mainListener.getCounter();
 
-		exporter.addListener(mainListener);
-		exporter.addListener(new ExportManifest(outcomes, types));
+		this.engine.addListener(mainListener);
+		this.engine.addListener(new ExportManifest(outcomes, types));
 
 		PluggableServiceLocator<ExportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ExportEngineListener.class);
@@ -69,11 +118,11 @@ public class ExportCommandModule extends CommandModule {
 		});
 		extraListeners.setHideErrors(false);
 		for (ExportEngineListener l : extraListeners) {
-			exporter.addListener(l);
+			this.engine.addListener(l);
 		}
 
 		Map<String, Object> settings = new TreeMap<>();
-		exporter.initialize(settings);
+		this.initialize(settings);
 
 		final Date start;
 		final Date end;
@@ -82,11 +131,11 @@ public class ExportCommandModule extends CommandModule {
 		final StringBuilder report = new StringBuilder();
 		try {
 
-			exporter.configure(commandValues, settings);
+			this.configure(commandValues, settings);
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");
-				exporter.runExport(this.console, warningTracker, objectStore, contentStore, settings);
+				runExport(this.console, warningTracker, objectStore, contentStore, settings);
 				this.log.info("##### Export Process Finished #####");
 				summary = objectStore.getStoredObjectTypes();
 			} catch (Throwable t) {
@@ -97,7 +146,7 @@ public class ExportCommandModule extends CommandModule {
 				exceptionReport = sw.toString();
 			} finally {
 				try {
-					engineProxy.close();
+					close();
 				} catch (Exception e) {
 					this.log.error("Exception caught while closing the proxy", e);
 				}

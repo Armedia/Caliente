@@ -83,12 +83,12 @@ public class ShptEngineProxy extends EngineProxy {
 
 			String srcPath = commandValues.getString(CLIParam.source);
 			if (srcPath == null) { throw new CalienteException(
-				"Must provide the name of the sharepoint site to export"); }
+				"Must provide the title of the sharepoint site to export"); }
 			List<String> l = FileNameTools.tokenize(srcPath, '/');
-			if (l.isEmpty()) { throw new CalienteException("Must provide the name of the sharepoint site to export"); }
+			if (l.isEmpty()) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
 			final String site = l.get(0);
 			if (StringUtils.isEmpty(
-				site)) { throw new CalienteException("Must provide the name of the sharepoint site to export"); }
+				site)) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
 
 			srcPath = FileNameTools.reconstitute(l, false, false, '/');
 

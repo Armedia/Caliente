@@ -2,10 +2,11 @@ package com.armedia.caliente.engine.exporter;
 
 import java.util.UUID;
 
+import com.armedia.caliente.engine.TransferListener;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 
-public interface ExportListener {
+public interface ExportListener extends TransferListener {
 
 	/**
 	 * <p>
