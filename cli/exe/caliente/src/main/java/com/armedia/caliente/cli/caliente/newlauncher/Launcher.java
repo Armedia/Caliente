@@ -27,11 +27,12 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
-import com.armedia.caliente.cli.OptionGroupImpl;
+import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionSchemeExtender;
 import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteBaseOptions;
 import com.armedia.caliente.cli.caliente.newlauncher.CommandModule.Descriptor;
@@ -54,7 +55,7 @@ import com.armedia.commons.utilities.Tools;
 public class Launcher extends AbstractLauncher implements OptionSchemeExtensionSupport {
 
 	public static final void main(String... args) {
-		System.exit(new Launcher().launch(CLIParam.help, args));
+		System.exit(new Launcher().launch(CalienteBaseOptions.HELP, args));
 	}
 
 	public static final String DEFAULT_LOG_FORMAT = CalienteBaseOptions.DEFAULT_LOG_FORMAT;
@@ -127,14 +128,14 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			scheme.addCommand(c);
 		}
 
+		// Now, find the engines available
+		OptionImpl impl = OptionImpl.cast(CalienteBaseOptions.ENGINE);
+		if (impl != null) {
+			impl.setValueFilter(new StringValueFilter(false, EngineProxy.getAliases(this.log)));
+		}
+
 		return scheme.add( //
-			new OptionGroupImpl("Base Options") //
-				.add(CLIParam.lib) //
-				.add(CLIParam.log) //
-				.add(CLIParam.log_cfg) //
-				.add(CLIParam.engine) //
-				.add(CLIParam.db) //
-				.add(CLIParam.content) //
+			new CalienteBaseOptions().asGroup() //
 		);
 	}
 
@@ -150,14 +151,13 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		// Has an engine been selected already?
 		if (this.engineProxy == null) {
-
-			if (!baseValues.isPresent(CLIParam.engine)) { throw new CommandLineExtensionException(currentNumber,
-				baseValues, currentCommand, commandValues, currentToken,
+			if (!baseValues.isPresent(CalienteBaseOptions.ENGINE)) { throw new CommandLineExtensionException(
+				currentNumber, baseValues, currentCommand, commandValues, currentToken,
 				"No engine has been selected in the base options yet (option order is important!)"); }
 
 			// Find the desired engine
-			final String engine = baseValues.getString(CLIParam.engine);
-			this.engineProxy = EngineProxy.getInstance(engine);
+			final String engine = baseValues.getString(CalienteBaseOptions.ENGINE);
+			this.engineProxy = EngineProxy.get(engine);
 			if (this.engineProxy == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken,
 				String.format("No engine was found with the name or alias [%s]", engine)); }
@@ -165,7 +165,6 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		// Has a command been given yet?
 		if (this.command == null) {
-
 			if (!this.engineProxy.isCommandSupported(currentCommand)) { throw new CommandLineExtensionException(
 				currentNumber, baseValues, currentCommand, commandValues, currentToken, String
 					.format("Engine [%s] does not support command [%s]", this.engineProxy.getName(), currentCommand)); }
@@ -210,12 +209,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	private void initializeStores(OptionValues baseValues) throws Exception {
 		if (!this.command.isRequiresStorage()) { return; }
 
-		String path = null;
-		if (baseValues.isPresent(CLIParam.db)) {
-			path = baseValues.getString(CLIParam.db);
-		} else {
-			path = Launcher.DEFAULT_DB_PATH;
-		}
+		String path = baseValues.getString(CalienteBaseOptions.DB);
 
 		final File objectStore = createFile(path);
 		if (objectStore.exists() && !objectStore.isFile() && !objectStore.isDirectory()) {
@@ -229,8 +223,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		// the either object store's destination is a folder (existent or not), configure the
 		// content store relative to the object store
 
-		if (baseValues.isPresent(CLIParam.content)) {
-			path = baseValues.getString(CLIParam.content);
+		if (baseValues.isPresent(CalienteBaseOptions.CONTENT)) {
+			path = baseValues.getString(CalienteBaseOptions.CONTENT);
 		} else {
 			if (!objectStore.isFile()) {
 				path = null;
@@ -418,7 +412,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
 		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-		final String logName = baseValues.getString(CLIParam.log);
+		final String logName = baseValues.getString(CalienteBaseOptions.LOG);
 
 		// TODO: Write the log out into the DB directory
 		final File logDir = Tools.canonicalize(new File("."));
@@ -430,7 +424,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		System.setProperty("logMode", logMode);
 		System.setProperty("logEngine", logEngine);
 
-		String logCfg = baseValues.getString(CLIParam.log_cfg);
+		String logCfg = baseValues.getString(CalienteBaseOptions.LOG_CFG);
 		boolean customLog = false;
 		if (logCfg != null) {
 			final File cfg = createFile(logCfg);

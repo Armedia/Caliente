@@ -225,6 +225,15 @@ public final class OptionImpl extends Option implements Cloneable {
 		return this;
 	}
 
+	public static OptionImpl cast(Option o) {
+		if (OptionImpl.class.isInstance(o)) { return OptionImpl.class.cast(o); }
+		return null;
+	}
+
+	public static OptionImpl cast(OptionWrapper o) {
+		return OptionImpl.cast(Option.unwrap(o));
+	}
+
 	@Override
 	public String toString() {
 		return String.format(

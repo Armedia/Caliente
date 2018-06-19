@@ -70,7 +70,7 @@ public class LocalEngineProxy extends EngineProxy {
 		
 		protected File getContentFilesLocation() {
 			if (isCopyContent()) { return super.getContentFilesLocation(); }
-			return new File(CLIParam.source.getString());
+			return new File(BaseParam.source.getString());
 		}
 		
 		protected String getContentStrategyName() {

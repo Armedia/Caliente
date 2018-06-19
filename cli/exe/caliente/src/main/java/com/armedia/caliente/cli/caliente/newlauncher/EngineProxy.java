@@ -1,10 +1,15 @@
 package com.armedia.caliente.cli.caliente.newlauncher;
 
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -34,10 +39,126 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.PluggableServiceLocator;
-import com.armedia.commons.utilities.PluggableServiceSelector;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class EngineProxy implements AutoCloseable {
+
+	private static final ReadWriteLock PROXIES_LOCK = new ReentrantReadWriteLock();
+	private static final AtomicBoolean PROXIES_INITIALIZED = new AtomicBoolean(false);
+	private static Map<String, String> PROXY_ALIASES = null;
+	private static Map<String, EngineProxy> PROXIES = null;
+
+	private static String canonicalizeName(String name) {
+		Objects.requireNonNull(name, "Name may not be null");
+		name = StringUtils.strip(name);
+		name = StringUtils.lowerCase(name);
+		return name;
+	}
+
+	private static void initializeProxies(final Logger log) {
+		final Lock read = EngineProxy.PROXIES_LOCK.readLock();
+		final Lock write = EngineProxy.PROXIES_LOCK.writeLock();
+
+		read.lock();
+		try {
+			if (!EngineProxy.PROXIES_INITIALIZED.get()) {
+				read.unlock();
+				write.lock();
+				try {
+					if (!EngineProxy.PROXIES_INITIALIZED.get()) {
+						final PluggableServiceLocator<EngineProxy> proxyInstances = new PluggableServiceLocator<>(
+							EngineProxy.class);
+						proxyInstances.setHideErrors(log == null);
+						if (!proxyInstances.isHideErrors()) {
+							proxyInstances.setErrorListener(new PluggableServiceLocator.ErrorListener() {
+								@Override
+								public void errorRaised(Class<?> serviceClass, Throwable t) {
+									log.error("Failed to initialize the EngineProxy class {}",
+										serviceClass.getCanonicalName(), t);
+								}
+							});
+						}
+						Map<String, String> proxyAliases = new TreeMap<>();
+						Map<String, EngineProxy> proxies = new TreeMap<>();
+						for (EngineProxy proxy : proxyInstances) {
+							final String canonicalName = EngineProxy.canonicalizeName(proxy.getName());
+							if (proxies.containsKey(canonicalName)) {
+								EngineProxy oldProxy = proxies.get(canonicalName);
+								String msg = String.format(
+									"EngineProxy name conflict on canonical name [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
+									canonicalName, oldProxy.getClass().getCanonicalName(), oldProxy.getName(),
+									proxy.getClass().getCanonicalName(), proxy.getName());
+								if (log != null) {
+									log.warn(msg);
+								} else {
+									throw new IllegalStateException(msg);
+								}
+							}
+							// Add the proxy
+							proxies.put(canonicalName, proxy);
+							// Add the identity alias mapping
+							proxyAliases.put(canonicalName, canonicalName);
+
+							for (String alias : proxy.getAliases()) {
+								alias = EngineProxy.canonicalizeName(alias);
+								if (StringUtils.equals(canonicalName, alias)) {
+									continue;
+								}
+
+								if (proxyAliases.containsKey(alias)) {
+									EngineProxy oldProxy = proxies.get(proxyAliases.get(alias));
+									String msg = String.format(
+										"EngineProxy alias conflict on alias [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
+										alias, oldProxy.getClass().getCanonicalName(), oldProxy.getName(),
+										proxy.getClass().getCanonicalName(), proxy.getName());
+									if (log != null) {
+										log.warn(msg);
+									} else {
+										throw new IllegalStateException(msg);
+									}
+								}
+								// Add the alias mapping
+								proxyAliases.put(alias, canonicalName);
+							}
+							EngineProxy.PROXIES = Tools.freezeMap(new LinkedHashMap<>(proxies));
+							EngineProxy.PROXY_ALIASES = Tools.freezeMap(new LinkedHashMap<>(proxyAliases));
+						}
+
+						EngineProxy.PROXIES_INITIALIZED.set(true);
+					}
+					read.lock();
+				} finally {
+					write.unlock();
+				}
+			}
+		} finally {
+			read.unlock();
+		}
+
+	}
+
+	public static EngineProxy get(final Logger log, final String engine) {
+		if (StringUtils.isEmpty(engine)) { throw new IllegalArgumentException("Must provide a non-empty engine name"); }
+
+		EngineProxy.initializeProxies(log);
+
+		String canonicalEngine = EngineProxy.PROXY_ALIASES.get(EngineProxy.canonicalizeName(engine));
+		if (canonicalEngine == null) {
+			// No such engine!
+			return null;
+		}
+
+		return EngineProxy.PROXIES.get(canonicalEngine);
+	}
+
+	public static EngineProxy get(final String engine) {
+		return EngineProxy.get(null, engine);
+	}
+
+	public static Collection<String> getAliases(final Logger log) {
+		EngineProxy.initializeProxies(log);
+		return EngineProxy.PROXY_ALIASES.keySet();
+	}
 
 	abstract class ProxyBase<LISTENER, ENGINE extends TransferEngine<?, ?, ?, ?, ?, LISTENER>> {
 
@@ -254,43 +375,6 @@ public abstract class EngineProxy implements AutoCloseable {
 	protected abstract ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine();
 
 	public abstract Collection<? extends LaunchClasspathHelper> getClasspathHelpers();
-
-	public static EngineProxy getInstance(final String engine) {
-		return EngineProxy.get(null, engine);
-	}
-
-	public static EngineProxy get(final Logger log, final String engine) {
-		if (StringUtils.isEmpty(engine)) { throw new IllegalArgumentException("Must provide a non-empty engine name"); }
-
-		final PluggableServiceLocator<EngineProxy> engineProxies = new PluggableServiceLocator<>(EngineProxy.class);
-		engineProxies.setHideErrors(log == null);
-		if (!engineProxies.isHideErrors()) {
-			engineProxies.setErrorListener(new PluggableServiceLocator.ErrorListener() {
-				@Override
-				public void errorRaised(Class<?> serviceClass, Throwable t) {
-					log.error("Failed to initialize the EngineProxy class {}", serviceClass.getCanonicalName(), t);
-				}
-			});
-		}
-
-		engineProxies.setDefaultSelector(new PluggableServiceSelector<EngineProxy>() {
-
-			@Override
-			public boolean matches(EngineProxy service) {
-				if (StringUtils.equalsIgnoreCase(engine, service.getName())) { return true; }
-				for (Object alias : service.getAliases()) {
-					if (StringUtils.equalsIgnoreCase(engine, Tools.toString(alias))) { return true; }
-				}
-				return false;
-			}
-		});
-
-		try {
-			return engineProxies.getFirst();
-		} catch (NoSuchElementException e) {
-			return null;
-		}
-	}
 
 	protected abstract boolean isCommandSupported(String command);
 
