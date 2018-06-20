@@ -17,11 +17,13 @@ import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.commons.utilities.Tools;
 
 public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?, ?>> implements AutoCloseable {
 
 	protected static final String ALL = "ALL";
 	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
+	protected static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 8);
 	protected static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 	protected static final String LAST_EXPORT_DATE_PATTERN = CommandModule.JAVA_SQL_DATETIME_PATTERN;
 
@@ -89,7 +91,11 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));
-		settings.put(TransferSetting.THREAD_COUNT.getLabel(), Setting.THREADS.getInt(CommandModule.DEFAULT_THREADS));
+
+		int threads = commandValues.getInteger(CLIParam.threads, CommandModule.DEFAULT_THREADS);
+		threads = Tools.ensureBetween(1, threads, CommandModule.MAX_THREADS);
+		settings.put(TransferSetting.THREAD_COUNT.getLabel(), threads);
+
 		settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
 		settings.put(TransferSetting.TRANSFORMATION.getLabel(), commandValues.getString(CLIParam.transformations));
 		settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(), commandValues.getString(CLIParam.external_metadata));

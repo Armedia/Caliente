@@ -16,7 +16,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.newlauncher.EngineProxy;
+import com.armedia.caliente.cli.caliente.newlauncher.EngineInterface;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -25,7 +25,7 @@ import com.armedia.caliente.engine.sharepoint.exporter.ShptExportEngine;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.FileNameTools;
 
-public class ShptEngineProxy extends EngineProxy {
+public class ShptEngineProxy extends EngineInterface {
 
 	private class ShptExporter extends Exporter {
 		private ShptExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {

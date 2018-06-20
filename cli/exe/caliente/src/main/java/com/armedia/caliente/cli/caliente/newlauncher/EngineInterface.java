@@ -25,16 +25,15 @@ import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class EngineProxy implements AutoCloseable {
+public abstract class EngineInterface implements AutoCloseable {
 
-	private static final ReadWriteLock PROXIES_LOCK = new ReentrantReadWriteLock();
-	private static final AtomicBoolean PROXIES_INITIALIZED = new AtomicBoolean(false);
-	private static Map<String, String> PROXY_ALIASES = null;
-	private static Map<String, EngineProxy> PROXIES = null;
+	private static final ReadWriteLock INTERFACES_LOCK = new ReentrantReadWriteLock();
+	private static final AtomicBoolean INTERFACES_INITIALIZED = new AtomicBoolean(false);
+	private static Map<String, String> ENGINE_ALIASES = null;
+	private static Map<String, EngineInterface> INTERFACES = null;
 
 	private static String canonicalizeName(String name) {
 		Objects.requireNonNull(name, "Name may not be null");
@@ -43,39 +42,39 @@ public abstract class EngineProxy implements AutoCloseable {
 		return name;
 	}
 
-	private static void initializeProxies(final Logger log) {
-		final Lock read = EngineProxy.PROXIES_LOCK.readLock();
-		final Lock write = EngineProxy.PROXIES_LOCK.writeLock();
+	private static void initializeInterfaces(final Logger log) {
+		final Lock read = EngineInterface.INTERFACES_LOCK.readLock();
+		final Lock write = EngineInterface.INTERFACES_LOCK.writeLock();
 
 		read.lock();
 		try {
-			if (!EngineProxy.PROXIES_INITIALIZED.get()) {
+			if (!EngineInterface.INTERFACES_INITIALIZED.get()) {
 				read.unlock();
 				write.lock();
 				try {
-					if (!EngineProxy.PROXIES_INITIALIZED.get()) {
-						final PluggableServiceLocator<EngineProxy> proxyInstances = new PluggableServiceLocator<>(
-							EngineProxy.class);
-						proxyInstances.setHideErrors(log == null);
-						if (!proxyInstances.isHideErrors()) {
-							proxyInstances.setErrorListener(new PluggableServiceLocator.ErrorListener() {
+					if (!EngineInterface.INTERFACES_INITIALIZED.get()) {
+						final PluggableServiceLocator<EngineInterface> engineInterfaces = new PluggableServiceLocator<>(
+							EngineInterface.class);
+						engineInterfaces.setHideErrors(log == null);
+						if (!engineInterfaces.isHideErrors()) {
+							engineInterfaces.setErrorListener(new PluggableServiceLocator.ErrorListener() {
 								@Override
 								public void errorRaised(Class<?> serviceClass, Throwable t) {
-									log.error("Failed to initialize the EngineProxy class {}",
+									log.error("Failed to initialize the EngineInterface class {}",
 										serviceClass.getCanonicalName(), t);
 								}
 							});
 						}
-						Map<String, String> proxyAliases = new TreeMap<>();
-						Map<String, EngineProxy> proxies = new TreeMap<>();
-						for (EngineProxy proxy : proxyInstances) {
-							final String canonicalName = EngineProxy.canonicalizeName(proxy.getName());
-							if (proxies.containsKey(canonicalName)) {
-								EngineProxy oldProxy = proxies.get(canonicalName);
+						Map<String, String> engineAliases = new TreeMap<>();
+						Map<String, EngineInterface> interfaces = new TreeMap<>();
+						for (EngineInterface engineInterface : engineInterfaces) {
+							final String canonicalName = EngineInterface.canonicalizeName(engineInterface.getName());
+							if (interfaces.containsKey(canonicalName)) {
+								EngineInterface oldInterface = interfaces.get(canonicalName);
 								String msg = String.format(
-									"EngineProxy title conflict on canonical title [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
-									canonicalName, oldProxy.getClass().getCanonicalName(), oldProxy.getName(),
-									proxy.getClass().getCanonicalName(), proxy.getName());
+									"EngineInterface title conflict on canonical title [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
+									canonicalName, oldInterface.getClass().getCanonicalName(), oldInterface.getName(),
+									engineInterface.getClass().getCanonicalName(), engineInterface.getName());
 								if (log != null) {
 									log.warn(msg);
 								} else {
@@ -83,22 +82,22 @@ public abstract class EngineProxy implements AutoCloseable {
 								}
 							}
 							// Add the proxy
-							proxies.put(canonicalName, proxy);
+							interfaces.put(canonicalName, engineInterface);
 							// Add the identity alias mapping
-							proxyAliases.put(canonicalName, canonicalName);
+							engineAliases.put(canonicalName, canonicalName);
 
-							for (String alias : proxy.getAliases()) {
-								alias = EngineProxy.canonicalizeName(alias);
+							for (String alias : engineInterface.getAliases()) {
+								alias = EngineInterface.canonicalizeName(alias);
 								if (StringUtils.equals(canonicalName, alias)) {
 									continue;
 								}
 
-								if (proxyAliases.containsKey(alias)) {
-									EngineProxy oldProxy = proxies.get(proxyAliases.get(alias));
+								if (engineAliases.containsKey(alias)) {
+									EngineInterface oldInterface = interfaces.get(engineAliases.get(alias));
 									String msg = String.format(
-										"EngineProxy alias conflict on alias [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
-										alias, oldProxy.getClass().getCanonicalName(), oldProxy.getName(),
-										proxy.getClass().getCanonicalName(), proxy.getName());
+										"EngineInterface alias conflict on alias [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
+										alias, oldInterface.getClass().getCanonicalName(), oldInterface.getName(),
+										engineInterface.getClass().getCanonicalName(), engineInterface.getName());
 									if (log != null) {
 										log.warn(msg);
 									} else {
@@ -106,13 +105,13 @@ public abstract class EngineProxy implements AutoCloseable {
 									}
 								}
 								// Add the alias mapping
-								proxyAliases.put(alias, canonicalName);
+								engineAliases.put(alias, canonicalName);
 							}
-							EngineProxy.PROXIES = Tools.freezeMap(new LinkedHashMap<>(proxies));
-							EngineProxy.PROXY_ALIASES = Tools.freezeMap(new LinkedHashMap<>(proxyAliases));
+							EngineInterface.INTERFACES = Tools.freezeMap(new LinkedHashMap<>(interfaces));
+							EngineInterface.ENGINE_ALIASES = Tools.freezeMap(new LinkedHashMap<>(engineAliases));
 						}
 
-						EngineProxy.PROXIES_INITIALIZED.set(true);
+						EngineInterface.INTERFACES_INITIALIZED.set(true);
 					}
 					read.lock();
 				} finally {
@@ -125,28 +124,28 @@ public abstract class EngineProxy implements AutoCloseable {
 
 	}
 
-	public static EngineProxy get(final Logger log, final String engine) {
+	public static EngineInterface get(final Logger log, final String engine) {
 		if (StringUtils
 			.isEmpty(engine)) { throw new IllegalArgumentException("Must provide a non-empty engine title"); }
 
-		EngineProxy.initializeProxies(log);
+		EngineInterface.initializeInterfaces(log);
 
-		String canonicalEngine = EngineProxy.PROXY_ALIASES.get(EngineProxy.canonicalizeName(engine));
+		String canonicalEngine = EngineInterface.ENGINE_ALIASES.get(EngineInterface.canonicalizeName(engine));
 		if (canonicalEngine == null) {
 			// No such engine!
 			return null;
 		}
 
-		return EngineProxy.PROXIES.get(canonicalEngine);
+		return EngineInterface.INTERFACES.get(canonicalEngine);
 	}
 
-	public static EngineProxy get(final String engine) {
-		return EngineProxy.get(null, engine);
+	public static EngineInterface get(final String engine) {
+		return EngineInterface.get(null, engine);
 	}
 
 	public static Collection<String> getAliases(final Logger log) {
-		EngineProxy.initializeProxies(log);
-		return EngineProxy.PROXY_ALIASES.keySet();
+		EngineInterface.initializeInterfaces(log);
+		return EngineInterface.ENGINE_ALIASES.keySet();
 	}
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
@@ -154,8 +153,6 @@ public abstract class EngineProxy implements AutoCloseable {
 	public abstract String getName();
 
 	public abstract Set<String> getAliases();
-
-	public abstract CmfCrypt getCrypt();
 
 	public final CommandModule<?> getCommandModule(CalienteCommand command) {
 		Objects.requireNonNull(command, "Must provide a non-null command");

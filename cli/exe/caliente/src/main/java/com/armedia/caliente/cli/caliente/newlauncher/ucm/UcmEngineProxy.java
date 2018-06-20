@@ -14,7 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.newlauncher.EngineProxy;
+import com.armedia.caliente.cli.caliente.newlauncher.EngineInterface;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -25,7 +25,7 @@ import com.armedia.caliente.engine.ucm.exporter.UcmExportEngine;
 import com.armedia.caliente.engine.ucm.importer.UcmImportEngine;
 import com.armedia.caliente.tools.CmfCrypt;
 
-public class UcmEngineProxy extends EngineProxy {
+public class UcmEngineProxy extends EngineInterface {
 
 	private boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 

@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.newlauncher.EngineProxy;
+import com.armedia.caliente.cli.caliente.newlauncher.EngineInterface;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.dfc.exporter.DctmExportEngine;
 import com.armedia.caliente.engine.dfc.importer.DctmImportEngine;
@@ -21,7 +21,7 @@ import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfTime;
 
-public class DctmEngineProxy extends EngineProxy {
+public class DctmEngineProxy extends EngineInterface {
 
 	private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss";
 	private static final String DATE_FORMAT_DQL = IDfTime.DF_TIME_PATTERN26; // DQL-friendly syntax

@@ -10,7 +10,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.newlauncher.EngineProxy;
+import com.armedia.caliente.cli.caliente.newlauncher.EngineInterface;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -19,7 +19,7 @@ import com.armedia.caliente.engine.xml.importer.XmlImportEngine;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
 
-public class XmlEngineProxy extends EngineProxy {
+public class XmlEngineProxy extends EngineInterface {
 
 	private class XmlImporter extends Importer {
 		private XmlImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {

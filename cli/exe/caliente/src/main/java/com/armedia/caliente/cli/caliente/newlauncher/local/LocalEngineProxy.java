@@ -10,7 +10,7 @@ import java.util.Set;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.newlauncher.EngineProxy;
+import com.armedia.caliente.cli.caliente.newlauncher.EngineInterface;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -20,7 +20,7 @@ import com.armedia.caliente.engine.local.importer.LocalImportEngine;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
 
-public class LocalEngineProxy extends EngineProxy {
+public class LocalEngineProxy extends EngineInterface {
 
 	private boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 

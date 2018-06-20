@@ -67,7 +67,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 
 	// Saves us quite a few keystrokes ;)
-	private EngineProxy engineProxy = null;
+	private EngineInterface engineInterface = null;
 
 	private CommandModule<?> command = null;
 
@@ -95,7 +95,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		// Now, find the engines available
 		OptionImpl impl = OptionImpl.cast(CalienteBaseOptions.ENGINE);
 		if (impl != null) {
-			impl.setValueFilter(new StringValueFilter(false, EngineProxy.getAliases(this.log)));
+			impl.setValueFilter(new StringValueFilter(false, EngineInterface.getAliases(this.log)));
 		}
 
 		return scheme.add( //
@@ -114,42 +114,41 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		throws CommandLineExtensionException {
 
 		// Has an engine been selected already?
-		if (this.engineProxy == null) {
+		if (this.engineInterface == null) {
 			if (!baseValues.isPresent(CalienteBaseOptions.ENGINE)) { throw new CommandLineExtensionException(
 				currentNumber, baseValues, currentCommand, commandValues, currentToken,
 				"No engine has been selected in the base options yet (option order is important!)"); }
 
 			// Find the desired engine
 			final String engine = baseValues.getString(CalienteBaseOptions.ENGINE);
-			this.engineProxy = EngineProxy.get(engine);
-			if (this.engineProxy == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
+			this.engineInterface = EngineInterface.get(engine);
+			if (this.engineInterface == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken,
 				String.format("No engine was found with the title or alias [%s]", engine)); }
 		}
 
 		// Has a command been given yet?
 		if (this.command == null) {
-			if (!this.engineProxy.isCommandSupported(currentCommand)) { throw new CommandLineExtensionException(
-				currentNumber, baseValues, currentCommand, commandValues, currentToken, String
-					.format("Engine [%s] does not support command [%s]", this.engineProxy.getName(), currentCommand)); }
-
 			if (StringUtils.isBlank(
 				currentCommand)) { throw new CommandLineExtensionException(currentNumber, baseValues, currentCommand,
 					commandValues, currentToken, "No command has been given yet (option order is important!)"); }
 
-			// Find the desired command
-			this.command = this.commandModules.get(StringUtils.lowerCase(currentCommand));
-			if (this.command == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
+			final CalienteCommand calienteCommand = CalienteCommand.get(currentCommand);
+			if (calienteCommand == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken,
-				String.format("No command was found with the title or alias [%s]", this.command)); }
+				String.format("Command [%s] is not a valid Caliente command or command alias", currentCommand)); }
+
+			this.command = this.engineInterface.getCommandModule(calienteCommand);
+			if (this.command == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
+				currentCommand, commandValues, currentToken, String.format("Engine [%s] does not support command [%s]",
+					this.engineInterface.getName(), calienteCommand.title)); }
 		}
 
 		// Extend the command lines as per the engine and command
-		if (OptionSchemeExtensionSupport.class.isInstance(this.engineProxy)) {
-			OptionSchemeExtensionSupport.class.cast(this.engineProxy).extendScheme(currentNumber, baseValues,
+		if (OptionSchemeExtensionSupport.class.isInstance(this.engineInterface)) {
+			OptionSchemeExtensionSupport.class.cast(this.engineInterface).extendScheme(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken, extender);
 		}
-
 		if (OptionSchemeExtensionSupport.class.isInstance(this.command)) {
 			OptionSchemeExtensionSupport.class.cast(this.command).extendScheme(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken, extender);
@@ -171,7 +170,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	}
 
 	private void initializeStores(OptionValues baseValues) throws Exception {
-		if (!this.command.isRequiresStorage()) { return; }
+		if (!this.command.getDescriptor().requiresStorage) { return; }
 
 		String path = baseValues.getString(CalienteBaseOptions.DB);
 
@@ -216,7 +215,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			commonValues.put("dir.metadata", contentStore.getAbsolutePath());
 		}
 		commonValues.put("db.name", "caliente");
-		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(this.command.isRequiresCleanData()));
+		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA,
+			String.valueOf(this.command.getDescriptor().requiresCleanData));
 
 		StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("default");
 		if (objectStore.isFile()) {
@@ -372,7 +372,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	@Override
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
-		final String engine = this.engineProxy.getName();
+		final String engine = this.engineInterface.getName();
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
 		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
@@ -433,7 +433,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		return new Caliente().run(this.engineProxy, this.objectStore, this.contentStore, this.command, commandValues,
-			positionals);
+		return new Caliente().run(this.engineInterface.getName(), this.objectStore, this.contentStore, this.command,
+			commandValues, positionals);
 	}
 }
