@@ -347,7 +347,7 @@ public class Caliente_export extends AbstractCalienteModule_export implements Ex
 			}
 
 			// We must subtract the server's UTC offset from this date, and we get our target. Since
-			// it's a subtraction, we must sign-flip the adjustment value
+			// it's a subtraction, we must sign-flip the adjustmenDctmt value
 			adjusted.add(Calendar.MINUTE, (int) adjustmentMinutes);
 			return DateFormatUtils.format(adjusted, Caliente_export.DATE_FORMAT);
 		} finally {

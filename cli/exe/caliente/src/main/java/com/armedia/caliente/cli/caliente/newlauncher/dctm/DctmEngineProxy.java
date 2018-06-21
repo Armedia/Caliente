@@ -14,9 +14,6 @@ import com.armedia.caliente.engine.dfc.exporter.DctmExportEngine;
 import com.armedia.caliente.engine.dfc.importer.DctmImportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.caliente.tools.dfc.DctmCrypto;
-import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfTime;
@@ -46,135 +43,17 @@ public class DctmEngineProxy extends EngineInterface {
 	private static final String DEFAULT_PREDICATE = "dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
 		+ "and not folder('/System', descend) and not folder('/Temp', descend) ";
 
-	private DfcSessionPool pool = null;
-	private IDfSession session = null;
+	private static DfcSessionPool pool = null;
+	private static IDfSession session = null;
 
-	private boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		try {
-			this.pool = new DfcSessionPool(settings);
-			this.session = this.pool.acquireSession();
+			DctmEngineProxy.pool = new DfcSessionPool(settings);
+			DctmEngineProxy.session = DctmEngineProxy.pool.acquireSession();
 		} catch (Exception e) {
 			throw new CalienteException("Failed to initialize the connection pool or get the primary session", e);
 		}
 		return true;
-	}
-
-	private class DctmExporter extends Exporter {
-
-		private DctmExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
-			super(engine);
-		}
-
-		@Override
-		protected boolean preInitialize(Map<String, Object> settings) {
-			return super.preInitialize(settings);
-		}
-
-		@Override
-		protected boolean doInitialize(Map<String, Object> settings) {
-			return super.doInitialize(settings);
-		}
-
-		@Override
-		protected boolean postInitialize(Map<String, Object> settings) {
-			return super.postInitialize(settings);
-		}
-
-		@Override
-		protected void preValidateSettings(Map<String, Object> settings) throws CalienteException {
-			super.preValidateSettings(settings);
-		}
-
-		@Override
-		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			return super.preConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			if (!super.doConfigure(commandValues, settings)) { return false; }
-			if (!commonConfigure(commandValues, settings)) { return false; }
-			return true;
-		}
-
-		@Override
-		protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			super.postConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected void postValidateSettings(Map<String, Object> settings) throws CalienteException {
-			super.postValidateSettings(settings);
-		}
-	}
-
-	private class DctmImporter extends Importer {
-		private DctmImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-			super(engine);
-		}
-
-		@Override
-		protected boolean preInitialize(Map<String, Object> settings) {
-			return super.preInitialize(settings);
-		}
-
-		@Override
-		protected boolean doInitialize(Map<String, Object> settings) {
-			return super.doInitialize(settings);
-		}
-
-		@Override
-		protected boolean postInitialize(Map<String, Object> settings) {
-			return super.postInitialize(settings);
-		}
-
-		@Override
-		protected void preValidateSettings(Map<String, Object> settings) throws CalienteException {
-			super.preValidateSettings(settings);
-		}
-
-		@Override
-		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			return super.preConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			if (!super.doConfigure(commandValues, settings)) { return false; }
-			if (!commonConfigure(commandValues, settings)) { return false; }
-
-			String server = null;
-			String user = null;
-			String password = null;
-
-			if (server != null) {
-				settings.put(DfcSessionFactory.DOCBASE, server);
-			}
-			if (user != null) {
-				settings.put(DfcSessionFactory.USERNAME, user);
-			}
-			if (password != null) {
-				settings.put(DfcSessionFactory.PASSWORD, password);
-			}
-
-			return true;
-		}
-
-		@Override
-		protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			super.postConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected void postValidateSettings(Map<String, Object> settings) throws CalienteException {
-			super.postValidateSettings(settings);
-		}
 	}
 
 	public DctmEngineProxy() {
@@ -191,17 +70,12 @@ public class DctmEngineProxy extends EngineInterface {
 	}
 
 	@Override
-	public CmfCrypt getCrypt() {
-		return new DctmCrypto();
-	}
-
-	@Override
 	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return DctmExportEngine.getExportEngine();
 	}
 
 	@Override
-	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected DctmExporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		return new DctmExporter(engine);
 	}
 
@@ -211,7 +85,7 @@ public class DctmEngineProxy extends EngineInterface {
 	}
 
 	@Override
-	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected DctmImporter newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 		return new DctmImporter(engine);
 	}
 
@@ -222,11 +96,11 @@ public class DctmEngineProxy extends EngineInterface {
 
 	@Override
 	public void close() throws Exception {
-		if (this.session != null) {
-			this.pool.releaseSession(this.session);
+		if (DctmEngineProxy.session != null) {
+			DctmEngineProxy.pool.releaseSession(DctmEngineProxy.session);
 		}
-		if (this.pool != null) {
-			this.pool.close();
+		if (DctmEngineProxy.pool != null) {
+			DctmEngineProxy.pool.close();
 		}
 	}
 }

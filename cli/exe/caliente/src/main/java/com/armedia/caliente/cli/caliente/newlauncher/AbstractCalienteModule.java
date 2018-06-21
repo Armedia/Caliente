@@ -5,11 +5,13 @@ import java.io.File;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.launcher.CalienteMain;
 import com.armedia.caliente.engine.TransferEngine;
+import com.armedia.caliente.engine.TransferListener;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 
-public abstract class AbstractCalienteModule<L, E extends TransferEngine<?, ?, ?, ?, ?, L>> implements CalienteMain {
+public abstract class AbstractCalienteModule<L extends TransferListener, E extends TransferEngine<?, ?, ?, ?, ?, L>>
+	implements CalienteMain {
 
 	protected AbstractCalienteModule(E engine, boolean requiresStorage, boolean clearMetadata, boolean clearContent)
 		throws Throwable {
