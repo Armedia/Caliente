@@ -23,11 +23,11 @@ import com.armedia.caliente.engine.ucm.UcmSessionSetting.SSLMode;
 import com.armedia.caliente.engine.ucm.UcmSetting;
 import com.armedia.caliente.engine.ucm.exporter.UcmExportEngine;
 import com.armedia.caliente.engine.ucm.importer.UcmImportEngine;
-import com.armedia.caliente.tools.CmfCrypt;
 
 public class UcmEngineProxy extends EngineInterface {
 
-	private boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
 
 		// TODO: Identify the server info
 		String server = null;
@@ -79,106 +79,6 @@ public class UcmEngineProxy extends EngineInterface {
 		return true;
 	}
 
-	private class UcmExporter extends Exporter {
-		private UcmExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
-			super(engine);
-		}
-
-		@Override
-		protected boolean preInitialize(Map<String, Object> settings) {
-			return super.preInitialize(settings);
-		}
-
-		@Override
-		protected boolean doInitialize(Map<String, Object> settings) {
-			return super.doInitialize(settings);
-		}
-
-		@Override
-		protected boolean postInitialize(Map<String, Object> settings) {
-			return super.postInitialize(settings);
-		}
-
-		@Override
-		protected void preValidateSettings(Map<String, Object> settings) throws CalienteException {
-			super.preValidateSettings(settings);
-		}
-
-		@Override
-		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			return super.preConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			if (!super.doConfigure(commandValues, settings)) { return false; }
-			return commonConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			super.postConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected void postValidateSettings(Map<String, Object> settings) throws CalienteException {
-			super.postValidateSettings(settings);
-		}
-	}
-
-	private class UcmImporter extends Importer {
-		private UcmImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-			super(engine);
-		}
-
-		@Override
-		protected boolean preInitialize(Map<String, Object> settings) {
-			return super.preInitialize(settings);
-		}
-
-		@Override
-		protected boolean doInitialize(Map<String, Object> settings) {
-			return super.doInitialize(settings);
-		}
-
-		@Override
-		protected boolean postInitialize(Map<String, Object> settings) {
-			return super.postInitialize(settings);
-		}
-
-		@Override
-		protected void preValidateSettings(Map<String, Object> settings) throws CalienteException {
-			super.preValidateSettings(settings);
-		}
-
-		@Override
-		protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			return super.preConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			if (!super.doConfigure(commandValues, settings)) { return false; }
-			return commonConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-			throws CalienteException {
-			super.postConfigure(commandValues, settings);
-		}
-
-		@Override
-		protected void postValidateSettings(Map<String, Object> settings) throws CalienteException {
-			super.postValidateSettings(settings);
-		}
-	}
-
 	public UcmEngineProxy() {
 	}
 
@@ -193,17 +93,12 @@ public class UcmEngineProxy extends EngineInterface {
 	}
 
 	@Override
-	public CmfCrypt getCrypt() {
-		return new CmfCrypt();
-	}
-
-	@Override
 	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return UcmExportEngine.getExportEngine();
 	}
 
 	@Override
-	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected UcmExporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		return new UcmExporter(engine);
 	}
 
@@ -213,7 +108,7 @@ public class UcmEngineProxy extends EngineInterface {
 	}
 
 	@Override
-	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected UcmImporter newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 		return new UcmImporter(engine);
 	}
 

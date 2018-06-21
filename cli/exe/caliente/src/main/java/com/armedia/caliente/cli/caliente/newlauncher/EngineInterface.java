@@ -158,6 +158,7 @@ public abstract class EngineInterface implements AutoCloseable {
 		Objects.requireNonNull(command, "Must provide a non-null command");
 		switch (command) {
 			case COUNT:
+				// TODO: add a counter interface
 				break;
 
 			case EXPORT:
@@ -180,17 +181,26 @@ public abstract class EngineInterface implements AutoCloseable {
 		if (transferEngine == null) {
 			transferEngine = getExportEngine();
 		}
+		if (transferEngine == null) { throw new IllegalStateException("This proxy does not support an Import engine"); }
 		switch (command) {
 			case ENCRYPT:
-				return new EncryptCommandModule(transferEngine);
+				return newEncryptor(transferEngine);
 			case DECRYPT:
-				return new DecryptCommandModule(transferEngine);
+				return newDecryptor(transferEngine);
 			default:
 				break;
 		}
 
 		throw new IllegalArgumentException(
 			String.format("The command [%s] is unsupported at this time", command.title));
+	}
+
+	protected EncryptCommandModule newEncryptor(TransferEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new EncryptCommandModule(engine);
+	}
+
+	protected DecryptCommandModule newDecryptor(TransferEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new DecryptCommandModule(engine);
 	}
 
 	protected ExportCommandModule newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
