@@ -160,6 +160,9 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		Collection<String> positionals) throws CommandLineProcessingException {
 
 		// Validate all parameters...make sure everything is kosher, etc...
+		if (this.command == null) { throw new CommandLineProcessingException(1,
+			String.format("No command was given. The command must be one of %s (case-insensitive)",
+				CalienteCommand.getAllAliases())); }
 
 		// Now go try to initialize the stores if required
 		try {
@@ -172,7 +175,14 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	private void initializeStores(OptionValues baseValues) throws Exception {
 		if (!this.command.getDescriptor().requiresStorage) { return; }
 
-		String path = baseValues.getString(CalienteBaseOptions.DB);
+		String path = null;
+
+		File storeLocation = Tools.canonicalize(this.command.getMetadataFilesLocation());
+		if (storeLocation != null) {
+			path = storeLocation.getAbsolutePath();
+		} else {
+			path = baseValues.getString(CalienteBaseOptions.DB);
+		}
 
 		final File objectStore = createFile(path);
 		if (objectStore.exists() && !objectStore.isFile() && !objectStore.isDirectory()) {
@@ -185,14 +195,18 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		// Now we build the content store. If there is no explicit configuration or location, and
 		// the either object store's destination is a folder (existent or not), configure the
 		// content store relative to the object store
-
-		if (baseValues.isPresent(CalienteBaseOptions.CONTENT)) {
-			path = baseValues.getString(CalienteBaseOptions.CONTENT);
+		storeLocation = Tools.canonicalize(this.command.getContentFilesLocation());
+		if (storeLocation != null) {
+			path = storeLocation.getAbsolutePath();
 		} else {
-			if (!objectStore.isFile()) {
-				path = null;
+			if (baseValues.isPresent(CalienteBaseOptions.CONTENT)) {
+				path = baseValues.getString(CalienteBaseOptions.CONTENT);
 			} else {
-				path = Launcher.DEFAULT_CONTENT_PATH;
+				if (!objectStore.isFile()) {
+					path = null;
+				} else {
+					path = Launcher.DEFAULT_CONTENT_PATH;
+				}
 			}
 		}
 
@@ -223,6 +237,10 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			applyStoreProperties(cfg, loadStoreProperties("object", objectStore.getAbsolutePath()));
 		}
 		cfg.getSettings().putAll(commonValues);
+		this.command.customizeObjectStoreProperties(cfg);
+		applyStoreProperties(cfg, loadStoreProperties("object", CLIParam.object_store_config.getString()));
+		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearMetadata));
+		cfg.getSettings().putAll(commonValues);
 		this.objectStore = CmfStores.createObjectStore(cfg);
 
 		final boolean directFsExport = baseValues.isPresent(CLIParam.direct_fs);
@@ -241,6 +259,18 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 				applyStoreProperties(cfg, loadStoreProperties("content", contentStore.getAbsolutePath()));
 			}
 		}
+		this.command.customizeContentStoreProperties(cfg);
+		if (!directFsExport) {
+			String strategy = CLIParam.content_strategy.getString();
+			if (StringUtils.isBlank(strategy)) {
+				strategy = this.command.getContentStrategyName();
+			}
+			if (!StringUtils.isBlank(strategy)) {
+				cfg.getSettings().put("dir.content.strategy", strategy);
+			}
+			applyStoreProperties(cfg, loadStoreProperties("content", CLIParam.content_store_config.getString()));
+		}
+		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA, String.valueOf(clearContent));
 		cfg.getSettings().putAll(commonValues);
 		this.contentStore = CmfStores.createContentStore(cfg);
 
@@ -433,7 +463,11 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		return new Caliente().run(this.engineInterface.getName(), this.objectStore, this.contentStore, this.command,
-			commandValues, positionals);
+		try {
+			return new Caliente().run(this.engineInterface.getName(), this.objectStore, this.contentStore, this.command,
+				commandValues, positionals);
+		} finally {
+			this.command.close();
+		}
 	}
 }

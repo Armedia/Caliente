@@ -84,12 +84,6 @@ public enum CalienteCommand {
 		return s;
 	}
 
-	public static CalienteCommand get(String s) {
-		s = CalienteCommand.canonicalize(s);
-		if (s == null) { return null; }
-		return CalienteCommand.MAP.get(s);
-	}
-
 	private static final Map<String, CalienteCommand> MAP;
 
 	static {
@@ -112,5 +106,15 @@ public enum CalienteCommand {
 			}
 		}
 		MAP = Tools.freezeMap(new LinkedHashMap<>(m));
+	}
+
+	public static CalienteCommand get(String s) {
+		s = CalienteCommand.canonicalize(s);
+		if (s == null) { return null; }
+		return CalienteCommand.MAP.get(s);
+	}
+
+	public static Set<String> getAllAliases() {
+		return CalienteCommand.MAP.keySet();
 	}
 }

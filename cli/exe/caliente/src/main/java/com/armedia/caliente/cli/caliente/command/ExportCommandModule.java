@@ -38,11 +38,6 @@ import com.armedia.commons.utilities.PluggableServiceLocator;
 
 public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, ?, ?>> {
 
-	protected static final String EXPORT_START = "calienteExportStart";
-	protected static final String EXPORT_END = "calienteExportEnd";
-	protected static final String BASE_SELECTOR = "calienteBaseSelector";
-	protected static final String FINAL_SELECTOR = "calienteFinalSelector";
-
 	public ExportCommandModule(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(CalienteCommand.EXPORT, engine);
 	}
@@ -61,35 +56,15 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 
 	@Override
 	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		boolean ret = super.preConfigure(commandValues, settings);
-		if (ret) {
-			settings.put(TransferSetting.LATEST_ONLY.getLabel(),
-				commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
-		}
-		return ret;
+		if (!super.preConfigure(commandValues, settings)) { return false; }
+		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
+			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
+
+		return true;
 	}
 
 	@Override
 	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		/*
-		
-		ConfigurationSetting setting = null;
-		
-		setting = getUserSetting();
-		if ((this.user != null) && (setting != null)) {
-			settings.put(setting.getLabel(), this.user);
-		}
-		
-		setting = getPasswordSetting();
-		if ((this.password != null) && (setting != null)) {
-			settings.put(setting.getLabel(), this.password);
-		}
-		
-		setting = getDomainSetting();
-		if ((this.domain != null) && (setting != null)) {
-			settings.put(setting.getLabel(), this.domain);
-		}
-		*/
 		return true;
 	}
 
@@ -122,7 +97,7 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 		}
 
 		Map<String, Object> settings = new TreeMap<>();
-		this.initialize(settings);
+		initialize(settings);
 
 		final Date start;
 		final Date end;
@@ -131,7 +106,7 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 		final StringBuilder report = new StringBuilder();
 		try {
 
-			this.configure(commandValues, settings);
+			configure(commandValues, settings);
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");

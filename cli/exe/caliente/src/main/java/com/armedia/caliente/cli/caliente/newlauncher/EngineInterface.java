@@ -28,7 +28,7 @@ import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class EngineInterface implements AutoCloseable {
+public abstract class EngineInterface {
 
 	private static final ReadWriteLock INTERFACES_LOCK = new ReentrantReadWriteLock();
 	private static final AtomicBoolean INTERFACES_INITIALIZED = new AtomicBoolean(false);
@@ -216,9 +216,4 @@ public abstract class EngineInterface implements AutoCloseable {
 	protected abstract ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine();
 
 	public abstract Collection<? extends LaunchClasspathHelper> getClasspathHelpers();
-
-	@Override
-	public void close() throws Exception {
-		// By default, do nothing...
-	}
 }

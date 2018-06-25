@@ -46,6 +46,9 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 
 	@Override
 	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), Setting.CMF_IMPORT_TARGET_LOCATION.getString("/"));
+		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), Setting.CMF_IMPORT_TRIM_PREFIX.getInt(0));
+
 		settings.put(ImportSetting.NO_FILENAME_MAP.getLabel(), commandValues.isPresent(CLIParam.no_filename_map));
 		settings.put(ImportSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
 		settings.put(ImportSetting.VALIDATE_REQUIREMENTS.getLabel(),

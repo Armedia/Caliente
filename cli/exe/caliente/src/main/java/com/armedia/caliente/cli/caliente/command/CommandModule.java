@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.caliente.command;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -14,8 +15,10 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
+import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
 
@@ -128,6 +131,26 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		}
 
 		return execute(objectStore, contentStore, commandValues, positionals);
+	}
+
+	public String getContentStrategyName() {
+		return LocalOrganizationStrategy.NAME;
+	}
+
+	public void customizeObjectStoreProperties(StoreConfiguration cfg) {
+		// Do nothing by default
+	}
+
+	public void customizeContentStoreProperties(StoreConfiguration cfg) {
+		// Do nothing by default
+	}
+
+	public File getMetadataFilesLocation() {
+		return null;
+	}
+
+	public File getContentFilesLocation() {
+		return null;
 	}
 
 	protected abstract int execute(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
