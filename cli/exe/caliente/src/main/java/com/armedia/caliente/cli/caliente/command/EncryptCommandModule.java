@@ -10,7 +10,7 @@ import java.util.List;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.newlauncher.Caliente;
+import com.armedia.caliente.cli.caliente.launcher.Caliente;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;

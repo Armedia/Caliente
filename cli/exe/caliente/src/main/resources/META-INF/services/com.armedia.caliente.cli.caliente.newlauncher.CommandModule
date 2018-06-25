@@ -1,5 +1,5 @@
-com.armedia.caliente.cli.caliente.newlauncher.EncryptCommandModule
-com.armedia.caliente.cli.caliente.newlauncher.DecryptCommandModule
-com.armedia.caliente.cli.caliente.newlauncher.ExportCommandModule
-com.armedia.caliente.cli.caliente.newlauncher.ImportCommandModule
-com.armedia.caliente.cli.caliente.newlauncher.CountCommandModule
+com.armedia.caliente.cli.caliente.launcher.EncryptCommandModule
+com.armedia.caliente.cli.caliente.launcher.DecryptCommandModule
+com.armedia.caliente.cli.caliente.launcher.ExportCommandModule
+com.armedia.caliente.cli.caliente.launcher.ImportCommandModule
+com.armedia.caliente.cli.caliente.launcher.CountCommandModule

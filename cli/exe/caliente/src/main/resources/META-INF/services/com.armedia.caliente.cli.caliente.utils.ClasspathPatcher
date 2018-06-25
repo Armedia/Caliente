@@ -1,2 +1,2 @@
 com.armedia.caliente.cli.caliente.launcher.CommonClasspathPatcher
-com.armedia.caliente.cli.caliente.newlauncher.dctm.DctmClasspathPatcher
+com.armedia.caliente.cli.caliente.launcher.dctm.DctmClasspathPatcher
