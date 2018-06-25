@@ -28,6 +28,7 @@ import com.armedia.caliente.store.CmfOperationException;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connection, JdbcOperation> {
@@ -178,6 +179,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	private final JdbcStorePropertyManager propertyManager;
 	private final JdbcDialect dialect;
 	private final Map<JdbcDialect.Query, String> queries;
+	private final CfgTools cfg;
 
 	private class JdbcHandle extends Handle {
 
@@ -187,13 +189,14 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 	}
 
-	public JdbcContentStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
-		throws CmfStorageException {
+	public JdbcContentStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData,
+		CfgTools cfg) throws CmfStorageException {
 		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
 			"Must provide a valid DataSource instance"); }
 		this.dataSourceDescriptor = dataSourceDescriptor;
 		this.managedTransactions = dataSourceDescriptor.isManagedTransactions();
 		this.dataSource = dataSourceDescriptor.getDataSource();
+		this.cfg = cfg;
 
 		Connection c = null;
 		try {
@@ -247,6 +250,11 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 		} finally {
 			JdbcTools.closeQuietly(c);
 		}
+	}
+
+	@Override
+	public File getStoreLocation() {
+		return Tools.canonicalize(new File(this.cfg.getString("dir.content")));
 	}
 
 	protected final DataSourceDescriptor<?> getDataSourceDescriptor() {

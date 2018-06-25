@@ -31,16 +31,14 @@ public class JdbcContentStoreFactory extends CmfContentStoreFactory<JdbcContentS
 				ds = locator.locateDataSource(cfg);
 			} catch (Exception e) {
 				if (JdbcContentStoreFactory.LOG.isTraceEnabled()) {
-					JdbcContentStoreFactory.LOG.warn(
-						String.format(
-							"Exception caught attempting to locate a DataSource via %s for CmfContentStore %s[%s]",
-							locator.getClass().getCanonicalName(), configuration.getType(), configuration.getId()),
-						e);
+					JdbcContentStoreFactory.LOG.warn(String.format(
+						"Exception caught attempting to locate a DataSource via %s for CmfContentStore %s[%s]",
+						locator.getClass().getCanonicalName(), configuration.getType(), configuration.getId()), e);
 				}
 				continue;
 			}
 			try {
-				return new JdbcContentStore(ds, cfg.getBoolean(Setting.UPDATE_SCHEMA), cleanData);
+				return new JdbcContentStore(ds, cfg.getBoolean(Setting.UPDATE_SCHEMA), cleanData, cfg);
 			} catch (Exception e) {
 				throw new CmfStorageException(String.format("Failed to initialize the CmfContentStore %s[%s]",
 					configuration.getType(), configuration.getId()), e);

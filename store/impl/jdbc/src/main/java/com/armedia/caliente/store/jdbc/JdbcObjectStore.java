@@ -4,6 +4,7 @@
 
 package com.armedia.caliente.store.jdbc;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -54,6 +55,7 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.commons.dslocator.DataSourceDescriptor;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -73,15 +75,17 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private final JdbcStorePropertyManager propertyManager;
 	private final JdbcDialect dialect;
 	private final Map<JdbcDialect.Query, String> queries;
+	private final CfgTools cfg;
 
-	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData)
-		throws CmfStorageException {
+	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData,
+		CfgTools cfg) throws CmfStorageException {
 		super(JdbcOperation.class, true);
 		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
 			"Must provide a valid DataSource instance"); }
 		this.dataSourceDescriptor = dataSourceDescriptor;
 		this.managedTransactions = dataSourceDescriptor.isManagedTransactions();
 		this.dataSource = dataSourceDescriptor.getDataSource();
+		this.cfg = cfg;
 
 		Connection c = null;
 		try {
@@ -137,6 +141,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} finally {
 			JdbcTools.closeQuietly(c);
 		}
+	}
+
+	@Override
+	public File getStoreLocation() {
+		return Tools.canonicalize(new File(this.cfg.getString("dir.metadata")));
 	}
 
 	protected final DataSourceDescriptor<?> getDataSourceDescriptor() {

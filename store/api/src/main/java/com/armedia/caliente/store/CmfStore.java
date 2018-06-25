@@ -1,5 +1,6 @@
 package com.armedia.caliente.store;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -106,6 +107,19 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 
 	protected boolean doClose(boolean cleanupIfEmpty) {
 		return true;
+	}
+
+	/**
+	 * <p>
+	 * Returns the {@link File} which can be used to locate the all of the store's files, if
+	 * applicable for this store. If this store does not support this functionality, {@code null}
+	 * should be returned.
+	 * </p>
+	 *
+	 * @return the {@link File} which can be used to locate the content files, if applicable
+	 */
+	public File getStoreLocation() {
+		return null;
 	}
 
 	public final CmfValue getProperty(String property) throws CmfStorageException {
