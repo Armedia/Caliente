@@ -10,9 +10,9 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.xml.importer.XmlImportEngine;
 
-public class XmlEngineProxy extends EngineInterface {
+public class XmlEngineInterface extends EngineInterface {
 
-	public XmlEngineProxy() {
+	public XmlEngineInterface() {
 	}
 
 	@Override

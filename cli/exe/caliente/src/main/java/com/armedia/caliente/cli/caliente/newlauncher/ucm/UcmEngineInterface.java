@@ -24,7 +24,7 @@ import com.armedia.caliente.engine.ucm.UcmSetting;
 import com.armedia.caliente.engine.ucm.exporter.UcmExportEngine;
 import com.armedia.caliente.engine.ucm.importer.UcmImportEngine;
 
-public class UcmEngineProxy extends EngineInterface {
+public class UcmEngineInterface extends EngineInterface {
 
 	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
@@ -79,7 +79,7 @@ public class UcmEngineProxy extends EngineInterface {
 		return true;
 	}
 
-	public UcmEngineProxy() {
+	public UcmEngineInterface() {
 	}
 
 	@Override

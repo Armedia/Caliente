@@ -18,11 +18,11 @@ import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfTime;
 
-public class DctmEngineProxy extends EngineInterface {
+public class DctmEngineInterface extends EngineInterface {
 
 	private static final String DATE_FORMAT = "yyyy/MM/dd HH:mm:ss";
 	private static final String DATE_FORMAT_DQL = IDfTime.DF_TIME_PATTERN26; // DQL-friendly syntax
-	private static final String DATE_FORMAT_UTC = String.format("%s 'UTC'", DctmEngineProxy.DATE_FORMAT);
+	private static final String DATE_FORMAT_UTC = String.format("%s 'UTC'", DctmEngineInterface.DATE_FORMAT);
 
 	private static final String JOB_EXTENSION = "cmf.xml";
 	private static final Pattern OBJECT_TYPE_FINDER = Pattern.compile("(?:\\bselect\\s+\\w+\\s+from\\s+(\\w+)\\b)",
@@ -48,15 +48,15 @@ public class DctmEngineProxy extends EngineInterface {
 
 	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		try {
-			DctmEngineProxy.pool = new DfcSessionPool(settings);
-			DctmEngineProxy.session = DctmEngineProxy.pool.acquireSession();
+			DctmEngineInterface.pool = new DfcSessionPool(settings);
+			DctmEngineInterface.session = DctmEngineInterface.pool.acquireSession();
 		} catch (Exception e) {
 			throw new CalienteException("Failed to initialize the connection pool or get the primary session", e);
 		}
 		return true;
 	}
 
-	public DctmEngineProxy() {
+	public DctmEngineInterface() {
 	}
 
 	@Override
@@ -96,11 +96,11 @@ public class DctmEngineProxy extends EngineInterface {
 
 	@Override
 	public void close() throws Exception {
-		if (DctmEngineProxy.session != null) {
-			DctmEngineProxy.pool.releaseSession(DctmEngineProxy.session);
+		if (DctmEngineInterface.session != null) {
+			DctmEngineInterface.pool.releaseSession(DctmEngineInterface.session);
 		}
-		if (DctmEngineProxy.pool != null) {
-			DctmEngineProxy.pool.close();
+		if (DctmEngineInterface.pool != null) {
+			DctmEngineInterface.pool.close();
 		}
 	}
 }

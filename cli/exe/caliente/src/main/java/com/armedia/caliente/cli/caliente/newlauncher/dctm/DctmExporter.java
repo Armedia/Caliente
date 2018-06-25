@@ -43,7 +43,7 @@ class DctmExporter extends ExportCommandModule {
 	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		if (!super.doConfigure(commandValues, settings)) { return false; }
-		if (!DctmEngineProxy.commonConfigure(commandValues, settings)) { return false; }
+		if (!DctmEngineInterface.commonConfigure(commandValues, settings)) { return false; }
 		return true;
 	}
 

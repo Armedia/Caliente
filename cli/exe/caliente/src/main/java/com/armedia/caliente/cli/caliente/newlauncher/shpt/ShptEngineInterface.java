@@ -10,9 +10,9 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.sharepoint.exporter.ShptExportEngine;
 
-public class ShptEngineProxy extends EngineInterface {
+public class ShptEngineInterface extends EngineInterface {
 
-	public ShptEngineProxy() {
+	public ShptEngineInterface() {
 	}
 
 	@Override

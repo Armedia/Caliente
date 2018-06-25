@@ -80,8 +80,8 @@ class CmisExporter extends ExportCommandModule {
 			settings.put(CmisSetting.EXPORT_PATH.getLabel(), FilenameUtils.normalize(srcPath, true));
 		} else
 		// If it has a leading "id:", it's an object ID
-		if (srcPath.startsWith(CmisEngineProxy.ID_PREFIX)) {
-			srcPath = srcPath.substring(CmisEngineProxy.ID_PREFIX.length());
+		if (srcPath.startsWith(CmisEngineInterface.ID_PREFIX)) {
+			srcPath = srcPath.substring(CmisEngineInterface.ID_PREFIX.length());
 			if (StringUtils
 				.isEmpty(srcPath)) { throw new CalienteException("Must provide a non-empty CMIS object ID"); }
 			settings.put(CmisSetting.EXPORT_ID.getLabel(), srcPath);

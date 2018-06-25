@@ -101,7 +101,7 @@ class LocalExporter extends ExportCommandModule {
 		settings.put(LocalSetting.COPY_CONTENT.getLabel(), isCopyContent(commandValues));
 		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
 			commandValues.isPresent(CLIParam.ignore_empty_folders));
-		return LocalEngineProxy.commonConfigure(commandValues, settings);
+		return LocalEngineInterface.commonConfigure(commandValues, settings);
 	}
 
 	@Override

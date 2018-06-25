@@ -42,7 +42,7 @@ class UcmImporter extends ImportCommandModule {
 	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		if (!super.doConfigure(commandValues, settings)) { return false; }
-		return UcmEngineProxy.commonConfigure(commandValues, settings);
+		return UcmEngineInterface.commonConfigure(commandValues, settings);
 	}
 
 	@Override

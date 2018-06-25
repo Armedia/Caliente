@@ -10,9 +10,9 @@ import com.armedia.caliente.engine.alfresco.bi.importer.AlfImportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 
-public class AlfrescoEngineProxy extends EngineInterface {
+public class AlfrescoEngineInterface extends EngineInterface {
 
-	public AlfrescoEngineProxy() {
+	public AlfrescoEngineInterface() {
 	}
 
 	@Override

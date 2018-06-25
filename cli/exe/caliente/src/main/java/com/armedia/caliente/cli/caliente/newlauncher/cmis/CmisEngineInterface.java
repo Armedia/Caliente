@@ -11,11 +11,11 @@ import com.armedia.caliente.engine.cmis.importer.CmisImportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 
-public class CmisEngineProxy extends EngineInterface {
+public class CmisEngineInterface extends EngineInterface {
 
 	static final String ID_PREFIX = "id:";
 
-	public CmisEngineProxy() {
+	public CmisEngineInterface() {
 	}
 
 	@Override

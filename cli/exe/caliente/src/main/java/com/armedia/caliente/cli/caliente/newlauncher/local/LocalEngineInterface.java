@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
 import com.armedia.caliente.engine.local.importer.LocalImportEngine;
 
-public class LocalEngineProxy extends EngineInterface {
+public class LocalEngineInterface extends EngineInterface {
 
 	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
@@ -22,7 +22,7 @@ public class LocalEngineProxy extends EngineInterface {
 		return true;
 	}
 
-	public LocalEngineProxy() {
+	public LocalEngineInterface() {
 	}
 
 	@Override
