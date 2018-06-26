@@ -57,11 +57,11 @@ public enum CalienteCommand {
 		//
 	;
 
-	public final String title;
-	public final String description;
-	public final Set<String> aliases;
-	public final boolean requiresStorage;
-	public final boolean requiresCleanData;
+	private final String title;
+	private final String description;
+	private final Set<String> aliases;
+	private final boolean requiresStorage;
+	private final boolean requiresCleanData;
 
 	private CalienteCommand(String description, String[] aliases, boolean requiresStorage, boolean requiresCleanData) {
 		this.description = description;
@@ -76,6 +76,26 @@ public enum CalienteCommand {
 		this.aliases = Tools.freezeSet(new LinkedHashSet<>(a));
 		this.requiresStorage = requiresStorage;
 		this.requiresCleanData = requiresCleanData;
+	}
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public String getDescription() {
+		return this.description;
+	}
+
+	public Set<String> getAliases() {
+		return this.aliases;
+	}
+
+	public boolean isRequiresStorage() {
+		return this.requiresStorage;
+	}
+
+	public boolean isRequiresCleanData() {
+		return this.requiresCleanData;
 	}
 
 	private static String canonicalize(String s) {

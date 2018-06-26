@@ -55,7 +55,7 @@ public class Caliente {
 		final Logger log = LoggerFactory.getLogger(getClass());
 		final boolean writeProperties = (objectStore != null);
 		final String pfx = String.format("caliente.%s.%s", engineName.toLowerCase(),
-			command.getDescriptor().title.toLowerCase());
+			command.getDescriptor().getTitle().toLowerCase());
 		try {
 			if (writeProperties) {
 				Map<String, CmfValue> properties = new TreeMap<>();

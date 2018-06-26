@@ -118,12 +118,12 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 
 	public final int run(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
 		final OptionValues commandValues, final Collection<String> positionals) throws CalienteException {
-		if (this.descriptor.requiresStorage) {
+		if (this.descriptor.isRequiresStorage()) {
 			// Make sure the storage engines are there
 			Objects.requireNonNull(objectStore,
-				String.format("The %s command requires an object store!", this.descriptor.title));
+				String.format("The %s command requires an object store!", this.descriptor.getTitle()));
 			Objects.requireNonNull(contentStore,
-				String.format("The %s command requires a content store!", this.descriptor.title));
+				String.format("The %s command requires a content store!", this.descriptor.getTitle()));
 		} else {
 			// Make sure they always go null downstream
 			objectStore = null;

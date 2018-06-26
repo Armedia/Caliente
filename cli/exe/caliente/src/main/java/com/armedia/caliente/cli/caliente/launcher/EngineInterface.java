@@ -192,7 +192,7 @@ public abstract class EngineInterface {
 		}
 
 		throw new IllegalArgumentException(
-			String.format("The command [%s] is unsupported at this time", command.title));
+			String.format("The command [%s] is unsupported at this time", command.getTitle()));
 	}
 
 	protected EncryptCommandModule newEncryptor(TransferEngine<?, ?, ?, ?, ?, ?> engine) {

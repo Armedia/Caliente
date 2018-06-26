@@ -86,8 +86,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		CommandScheme scheme = new CommandScheme(getProgramName(), true);
 		for (CalienteCommand d : CalienteCommand.values()) {
-			Command c = new Command(d.title, d.aliases);
-			c.setDescription(d.description);
+			Command c = new Command(d.getTitle(), d.getAliases());
+			c.setDescription(d.getDescription());
 			scheme.addCommand(c);
 		}
 
@@ -140,7 +140,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			this.command = this.engineInterface.getCommandModule(calienteCommand);
 			if (this.command == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken, String.format("Engine [%s] does not support command [%s]",
-					this.engineInterface.getName(), calienteCommand.title)); }
+					this.engineInterface.getName(), calienteCommand.getTitle())); }
 		}
 
 		// Extend the command lines as per the engine and command
@@ -204,7 +204,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		cfg.getSettings().putAll(commonValues);
 		this.command.customizeObjectStoreProperties(cfg);
 		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA,
-			String.valueOf(this.command.getDescriptor().requiresCleanData));
+			String.valueOf(this.command.getDescriptor().isRequiresCleanData()));
 		cfg.getSettings().putAll(commonValues);
 		return cfg;
 	}
@@ -272,13 +272,13 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			}
 		}
 		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA,
-			String.valueOf(this.command.getDescriptor().requiresCleanData));
+			String.valueOf(this.command.getDescriptor().isRequiresCleanData()));
 		cfg.getSettings().putAll(commonValues);
 		return cfg;
 	}
 
 	private void initializeStores(OptionValues baseValues) throws Exception {
-		if (!this.command.getDescriptor().requiresStorage) { return; }
+		if (!this.command.getDescriptor().isRequiresStorage()) { return; }
 
 		CmfStores.initializeConfigurations();
 
