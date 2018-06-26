@@ -188,12 +188,34 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		return f;
 	}
 
+	private StoreConfiguration configureObjectStore(OptionValues baseValues)
+		throws IOException, CommandLineProcessingException {
+		final File metadataLocation = getMetadataLocation(baseValues);
+		final Map<String, String> commonValues = new HashMap<>();
+		if (!metadataLocation.exists() || metadataLocation.isDirectory()) {
+			commonValues.put("dir.metadata", metadataLocation.getAbsolutePath());
+		}
+		commonValues.put("db.name", "caliente");
+
+		StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("default");
+		applyStoreProperties(cfg,
+			loadStoreProperties("object", metadataLocation.isFile() ? metadataLocation.getAbsolutePath() : null));
+
+		cfg.getSettings().putAll(commonValues);
+		this.command.customizeObjectStoreProperties(cfg);
+		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA,
+			String.valueOf(this.command.getDescriptor().requiresCleanData));
+		cfg.getSettings().putAll(commonValues);
+		return cfg;
+	}
+
 	private File getContentLocation(OptionValues baseValues, File metadataLocation)
 		throws CommandLineProcessingException {
 		// Step 1: Does this engine use a special location for content?
 		File f = Tools.canonicalize(this.command.getContentFilesLocation());
 		if (f != null) { return f; }
 
+		// Step 2: There is no special location used by the engine, so see what the user wants to do
 		String path = null;
 		if (baseValues.isPresent(CalienteBaseOptions.CONTENT)) {
 			path = baseValues.getString(CalienteBaseOptions.CONTENT);
@@ -217,32 +239,17 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		return f;
 	}
 
-	private StoreConfiguration configureObjectStore(OptionValues baseValues, File metadataLocation) throws IOException {
-		Map<String, String> commonValues = new HashMap<>();
-		if (!metadataLocation.exists() || metadataLocation.isDirectory()) {
-			commonValues.put("dir.metadata", metadataLocation.getAbsolutePath());
-		}
-		commonValues.put("db.name", "caliente");
+	private StoreConfiguration configureContentStore(OptionValues baseValues)
+		throws IOException, CommandLineProcessingException {
 
-		StoreConfiguration cfg = CmfStores.getObjectStoreConfiguration("default");
-		applyStoreProperties(cfg,
-			loadStoreProperties("object", metadataLocation.isFile() ? metadataLocation.getAbsolutePath() : null));
-
-		cfg.getSettings().putAll(commonValues);
-		this.command.customizeObjectStoreProperties(cfg);
-		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA,
-			String.valueOf(this.command.getDescriptor().requiresCleanData));
-		cfg.getSettings().putAll(commonValues);
-		return cfg;
-	}
-
-	private StoreConfiguration configureContentStore(OptionValues baseValues, File contentLocation) throws IOException {
 		final boolean directFsExport = baseValues.isPresent(CLIParam.direct_fs);
+		final File contentLocation = getContentLocation(baseValues, this.objectStore.getStoreLocation());
 
 		Map<String, String> commonValues = new HashMap<>();
 		if (!contentLocation.exists() || contentLocation.isDirectory()) {
 			commonValues.put("dir.content", contentLocation.getAbsolutePath());
 		}
+		commonValues.put("db.name", "caliente");
 
 		final String contentStoreName = (directFsExport ? "direct" : "default");
 		StoreConfiguration cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
@@ -275,19 +282,27 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		CmfStores.initializeConfigurations();
 
-		final File metadataLocation = getMetadataLocation(baseValues);
-		StoreConfiguration cfg = configureObjectStore(baseValues, metadataLocation);
+		StoreConfiguration cfg = null;
+
+		cfg = configureObjectStore(baseValues);
 		this.objectStore = CmfStores.createObjectStore(cfg);
 
-		final File contentLocation = getContentLocation(baseValues, this.objectStore.getStoreLocation());
-		cfg = configureContentStore(baseValues, contentLocation);
+		cfg = configureContentStore(baseValues);
 		this.contentStore = CmfStores.createContentStore(cfg);
 
 		// Set the filesystem location where files will be created or read from
-		this.log.info(String.format("Using database directory: [%s]", metadataLocation.getAbsolutePath()));
+		File storeLocation = null;
+
+		storeLocation = this.objectStore.getStoreLocation();
+		if (storeLocation != null) {
+			this.log.info(String.format("Using database directory: [%s]", storeLocation.getAbsolutePath()));
+		}
 
 		// Set the filesystem location where the content files will be created or read from
-		this.log.info(String.format("Using content directory: [%s]", contentLocation.getAbsolutePath()));
+		storeLocation = this.contentStore.getStoreLocation();
+		if (storeLocation != null) {
+			this.log.info(String.format("Using content directory: [%s]", storeLocation.getAbsolutePath()));
+		}
 	}
 
 	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
