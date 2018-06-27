@@ -1,29 +1,11 @@
 package com.armedia.caliente.cli.caliente.cfg;
 
-import java.io.File;
-
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.importer.ImportSetting;
 
 public enum Setting {
 	//
-	EXPORT_PREDICATE("export.predicate"),
 	IMPORT_MAX_ERRORS("import.max.errors"),
-	CONTENT_DIRECTORY("content.directory") {
-
-		// By default, this goes to a subdirectory of the database
-		// directory.
-		@Override
-		public String getString() {
-			String str = super.getString(null);
-			if (str != null) { return str; }
-			str = DB_DIRECTORY.getString();
-			return new File(new File(str), "content").getPath();
-		}
-
-	},
-	CONTENT_ORGANIZATION("content.organization"),
-	DB_DIRECTORY("db.directory"),
 	DEFAULT_USER_PASSWORD("default.user.password"),
 	OWNER_ATTRIBUTES("owner.attributes"),
 	MAIL_TO("mail.recipients"),
@@ -32,19 +14,10 @@ public enum Setting {
 	MAIL_FROM_ADDX("mail.from"),
 	MAIL_SMTP_HOST("mail.smtp.host"),
 	MAIL_SMTP_PORT("mail.smtp.port"),
-	THREADS("threads"),
-	SKIP_ACLS("skip.acls"),
-	SKIP_USERS("skip.users"),
-	SKIP_GROUPS("skip.groups"),
 	SPECIAL_USERS("special.users"),
 	SPECIAL_GROUPS("special.groups"),
 	SPECIAL_TYPES("special.types"),
-	POST_PROCESS_IMPORT("import.postprocess"),
 	SHPT_SOURCE_PREFIX("shpt.source.prefix"),
-	STATE_FOLDER("state.folder"),
-	EXPORT_BATCH_SIZE("export.batch.size"),
-	MANIFEST_OUTCOMES("manifest.outcomes"),
-	MANIFEST_TYPES("manifest.types"),
 
 	USER_MAP("user.map"),
 	GROUP_MAP("group.map"),

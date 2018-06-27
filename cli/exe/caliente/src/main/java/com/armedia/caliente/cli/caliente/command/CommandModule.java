@@ -67,7 +67,7 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 	}
 
 	protected boolean preInitialize(Map<String, Object> settings) {
-		settings.put(TransferSetting.THREAD_COUNT.getLabel(), Setting.THREADS.getInt(CommandModule.DEFAULT_THREADS));
+		settings.put(TransferSetting.THREAD_COUNT.getLabel(), CommandModule.DEFAULT_THREADS);
 		return true;
 	}
 

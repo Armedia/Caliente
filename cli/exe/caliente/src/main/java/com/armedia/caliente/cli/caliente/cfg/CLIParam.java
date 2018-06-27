@@ -118,14 +118,14 @@ public enum CLIParam implements OptionWrapper {
 			.setValueSep(',') //
 	), //
 	batch_size( //
-		Setting.EXPORT_BATCH_SIZE, //
+		null, //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
 			.setArgumentName("batch-size") //
 			.setDescription("The batch size to use when exporting objects from Documentum") //
 	), //
 	post_process( //
-		Setting.POST_PROCESS_IMPORT, //
+		null, //
 		new OptionImpl() //
 			.setDescription("Whether to post-process the imported content") //
 	), //
@@ -160,7 +160,7 @@ public enum CLIParam implements OptionWrapper {
 				"The default password to use for users being copied over (the default is to use the same login name)") //
 	), //
 	manifest_types(
-		Setting.MANIFEST_TYPES, //
+		null, //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
 			.setArgumentName("types") //
@@ -168,7 +168,7 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("The object types to include in the manifest (not specified = all types)") //
 	), //
 	manifest_outcomes(
-		Setting.MANIFEST_OUTCOMES,
+		null,
 		new OptionImpl() //
 			.setArgumentLimits(1) //
 			.setArgumentName("outcomes") //
@@ -226,17 +226,17 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("The port SMTP server is listening on") //
 	), //
 	skip_users(
-		Setting.SKIP_USERS, //
+		null, //
 		new OptionImpl() //
 			.setDescription("Skip exporting users") //
 	), //
 	skip_groups(
-		Setting.SKIP_GROUPS, //
+		null, //
 		new OptionImpl() //
 			.setDescription("Skip exporting groups") //
 	), //
 	skip_acls(
-		Setting.SKIP_ACLS, //
+		null, //
 		new OptionImpl() //
 			.setDescription("Skip exporting acls") //
 	), //

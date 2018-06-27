@@ -36,7 +36,6 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.PluggableServiceLocator;
-import com.armedia.commons.utilities.Tools;
 
 public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, ?, ?>> {
 
@@ -76,10 +75,10 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 	@Override
 	protected int execute(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
 		OptionValues commandValues, Collection<String> positionals) throws CalienteException {
-		Set<ImportResult> outcomes = Tools.parseEnumCSV(ImportResult.class, Setting.MANIFEST_OUTCOMES.getString(),
-			CommandModule.ALL, false);
-		Set<CmfType> types = Tools.parseEnumCSV(CmfType.class, Setting.MANIFEST_TYPES.getString(), CommandModule.ALL,
-			false);
+		Set<ImportResult> outcomes = commandValues.getAllEnums(ImportResult.class, CommandModule.ALL, false,
+			CLIParam.manifest_outcomes);
+		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, CommandModule.ALL, false,
+			CLIParam.manifest_types);
 
 		final ImportCommandListener mainListener = new ImportCommandListener(this.console);
 		final CalienteWarningTracker warningTracker = mainListener.getWarningTracker();
