@@ -6,6 +6,7 @@ import java.util.Map;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
+import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -38,8 +39,7 @@ class LocalExporter extends ExportCommandModule {
 	}
 
 	@Override
-	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		return super.preConfigure(commandValues, settings);
 	}
 
@@ -64,11 +64,10 @@ class LocalExporter extends ExportCommandModule {
 	*/
 
 	@Override
-	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		if (!super.doConfigure(commandValues, settings)) { return false; }
 
-		File source = Tools.canonicalize(new File(commandValues.getString(CLIParam.source)));
+		File source = Tools.canonicalize(new File(commandValues.getString(CalienteExportOptions.SOURCE)));
 
 		// Make sure a source has been specified
 		if (source == null) { throw new CalienteException("Must specify a source to export from"); }
@@ -105,8 +104,7 @@ class LocalExporter extends ExportCommandModule {
 	}
 
 	@Override
-	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		super.postConfigure(commandValues, settings);
 	}
 

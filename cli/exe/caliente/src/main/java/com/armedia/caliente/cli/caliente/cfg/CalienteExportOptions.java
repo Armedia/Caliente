@@ -1,61 +1,31 @@
 package com.armedia.caliente.cli.caliente.cfg;
 
-import java.net.URL;
-import java.util.Collection;
-
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;
 import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.Options;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.utils.LibLaunchHelper;
 
-public class CalienteExportOptions extends Options implements LaunchClasspathHelper {
+public class CalienteExportOptions extends Options {
 
-	public static final String DEFAULT_LOG_FORMAT = "caliente-${logEngine}-${logMode}-${logTimeStamp}";
+	public static final Option DIRECT_FS = new OptionImpl() //
+		.setDescription("Export files to local FS duplicating the CMS's path") //
+	;
 
-	public static final Option HELP = new OptionImpl() //
-		.setShortOpt('h') //
-		.setLongOpt("help") //
-		.setDescription("This help message");
-
-	public static final Option LIB = LibLaunchHelper.LIB;
-
-	public static final Option LOG = new OptionImpl() //
+	public static final Option SOURCE = new OptionImpl() //
 		.setArgumentLimits(1) //
-		.setDescription("The base name of the log file to use (${logName}).") //
-		.setDefault(CalienteExportOptions.DEFAULT_LOG_FORMAT) //
-		.setArgumentName("log-name-template");
-
-	public static final Option LOG_CFG = new OptionImpl() //
-		.setArgumentLimits(1) //
-		.setDescription(
-			"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
-		.setArgumentName("configuration");
-
-	private final LibLaunchHelper lib = new LibLaunchHelper();
+		.setRequired(true) //
+		.setArgumentName("source-spec") //
+		.setDescription("The source specification identifying which content to extract") //
+	;
 
 	private final OptionGroup group;
 
 	public CalienteExportOptions() {
-		this.group = new OptionGroupImpl("Base Options") //
-			.add(CalienteExportOptions.HELP) //
-			.add(CalienteExportOptions.LIB) //
-			.add(CalienteExportOptions.LOG) //
-			.add(CalienteExportOptions.LOG_CFG) //
+		this.group = new OptionGroupImpl("Common Export Options") //
+			.add(CalienteExportOptions.DIRECT_FS) //
+			.add(CalienteExportOptions.SOURCE) //
 		;
-	}
-
-	@Override
-	public Collection<URL> getClasspathPatchesPre(OptionValues values) {
-		return this.lib.getClasspathPatchesPre(values);
-	}
-
-	@Override
-	public Collection<URL> getClasspathPatchesPost(OptionValues values) {
-		return this.lib.getClasspathPatchesPost(values);
 	}
 
 	@Override

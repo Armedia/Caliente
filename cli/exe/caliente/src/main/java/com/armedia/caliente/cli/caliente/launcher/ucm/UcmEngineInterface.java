@@ -12,7 +12,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
+import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
@@ -26,8 +26,7 @@ import com.armedia.caliente.engine.ucm.importer.UcmImportEngine;
 
 public class UcmEngineInterface extends EngineInterface {
 
-	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 
 		// TODO: Identify the server info
 		String server = null;
@@ -64,7 +63,7 @@ public class UcmEngineInterface extends EngineInterface {
 
 		List<String> paths = new ArrayList<>();
 
-		for (String srcPath : commandValues.getAllStrings(CLIParam.source)) {
+		for (String srcPath : commandValues.getAllStrings(CalienteExportOptions.SOURCE)) {
 			if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Empty paths are not allowed"); }
 			if (!srcPath.startsWith("/")) {
 				srcPath = StringUtils.strip(srcPath);

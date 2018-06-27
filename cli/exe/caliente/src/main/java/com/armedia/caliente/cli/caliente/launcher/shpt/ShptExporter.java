@@ -10,7 +10,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
+import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
@@ -44,14 +44,12 @@ class ShptExporter extends ExportCommandModule {
 	}
 
 	@Override
-	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		return super.preConfigure(commandValues, settings);
 	}
 
 	@Override
-	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		if (!super.doConfigure(commandValues, settings)) { return false; }
 
 		// TODO: Read this
@@ -72,14 +70,13 @@ class ShptExporter extends ExportCommandModule {
 			throw new CalienteException(String.format("Bad URL for Sharepoint: [%s]", server), e);
 		}
 
-		String srcPath = commandValues.getString(CLIParam.source);
-		if (srcPath == null) { throw new CalienteException(
-			"Must provide the title of the sharepoint site to export"); }
+		String srcPath = commandValues.getString(CalienteExportOptions.SOURCE);
+		if (srcPath == null) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
 		List<String> l = FileNameTools.tokenize(srcPath, '/');
 		if (l.isEmpty()) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
 		final String site = l.get(0);
-		if (StringUtils.isEmpty(
-			site)) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
+		if (StringUtils
+			.isEmpty(site)) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
 
 		srcPath = FileNameTools.reconstitute(l, false, false, '/');
 
@@ -94,9 +91,10 @@ class ShptExporter extends ExportCommandModule {
 		try {
 			// We don't use a leading slash here in "sites" because the URL *SHOULD* contain a
 			// trailing slash
-			settings.put(ShptSetting.URL.getLabel(), new URL(baseUrl,
-				String.format("%s%s", StringUtils.isEmpty(srcPrefix) ? "" : String.format("%s/", srcPrefix), site))
-					.toString());
+			settings.put(ShptSetting.URL.getLabel(),
+				new URL(baseUrl,
+					String.format("%s%s", StringUtils.isEmpty(srcPrefix) ? "" : String.format("%s/", srcPrefix), site))
+						.toString());
 		} catch (MalformedURLException e) {
 			throw new CalienteException("Bad base URL", e);
 		}
@@ -106,8 +104,7 @@ class ShptExporter extends ExportCommandModule {
 	}
 
 	@Override
-	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		super.postConfigure(commandValues, settings);
 	}
 

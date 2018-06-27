@@ -7,79 +7,11 @@ import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionWrapper;
 import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
-import com.armedia.caliente.cli.utils.LibLaunchHelper;
-import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.store.CmfType;
 
 public enum CLIParam implements OptionWrapper {
 	//
-
-	//
-	// First pass...
-	//
-	help( //
-		CalienteBaseOptions.HELP //
-	), //
-	lib( //
-		LibLaunchHelper.LIB //
-	), //
-	log( //
-		CalienteBaseOptions.LOG //
-	), //
-	log_cfg( //
-		CalienteBaseOptions.LOG_CFG //
-	), //
-	engine( //
-		new OptionImpl() //
-			.setShortOpt('e') //
-			.setArgumentLimits(1) //
-			.setValueFilter( // TODO: Find a way to make this list dynamic
-				new StringValueFilter( //
-					false, // Case-insensitive
-					"dctm", //
-					"alfresco", //
-					"cmis", //
-					"sharepoint", //
-					"ucm", //
-					"xml", //
-					"local" //
-				) //
-			) //
-			.setRequired(true) //
-			.setDescription("The mode of operation") //
-			.setArgumentName("engine") //
-	), //
-	db( //
-		Setting.DB_DIRECTORY, //
-		new OptionImpl() //
-			.setShortOpt('d') //
-			.setArgumentLimits(1) //
-			.setArgumentName("metadata-directory-or-config") //
-			.setRequired(true) //
-			.setDescription(
-				"The directory into which the metadata database will be stored, or the XML file that describes the store configuration") //
-			.setDefault("caliente") //
-	), //
-	content(
-		Setting.CONTENT_DIRECTORY, //
-		new OptionImpl() //
-			.setShortOpt('c') //
-			.setArgumentLimits(1) //
-			.setArgumentName("content-directory-or-config") //
-			.setRequired(true) //
-			.setDescription(
-				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes the store configuration") //
-	), //
-	content_strategy(
-		Setting.CONTENT_ORGANIZATION, //
-		new OptionImpl() //
-			.setShortOpt('o') //
-			.setArgumentLimits(1) //
-			.setArgumentName("organization") //
-			.setDescription(
-				"The name of the organization strategy to use in the Content directory (specific engines may override with their own defaults if they require it)") //
-	), //
 
 	//
 	// Second pass
@@ -92,10 +24,6 @@ public enum CLIParam implements OptionWrapper {
 	), //
 	dctm( //
 		DfcLaunchHelper.DFC_DOCUMENTUM //
-	), //
-	threads( //
-		Setting.THREADS, //
-		ThreadsLaunchHelper.THREADS //
 	), //
 	non_recursive( //
 		new OptionImpl() //
@@ -200,13 +128,6 @@ public enum CLIParam implements OptionWrapper {
 		Setting.POST_PROCESS_IMPORT, //
 		new OptionImpl() //
 			.setDescription("Whether to post-process the imported content") //
-	), //
-	source( //
-		Setting.EXPORT_PREDICATE, //
-		new OptionImpl() //
-			.setArgumentLimits(1) //
-			.setArgumentName("source-spec") //
-			.setDescription("The DQL 'from-where' predicate, or the name of the Sharepoint site, to use for exporting") //
 	), //
 	shpt_source_prefix(
 		Setting.SHPT_SOURCE_PREFIX, //
@@ -323,10 +244,6 @@ public enum CLIParam implements OptionWrapper {
 		new OptionImpl() //
 			.setDescription("Skip importing document contents (only create \"empty\" documents)") //
 	), //
-	direct_fs( //
-		new OptionImpl() //
-			.setDescription("Export files to local FS duplicating the CMS's path") //
-	), //
 	no_renditions( //
 		new OptionImpl() //
 			.setDescription(
@@ -412,24 +329,6 @@ public enum CLIParam implements OptionWrapper {
 	ignore_empty_folders( //
 		new OptionImpl() //
 			.setDescription("Enable the copying of content for the Local engine") //
-	), //
-	transformations( //
-		new OptionImpl() //
-			.setArgumentName("transformations-file") //
-			.setArgumentLimits(1) //
-			.setDescription("The object transformations descriptor file") //
-	), //
-	filters( //
-		new OptionImpl() //
-			.setArgumentName("filters-file") //
-			.setArgumentLimits(1) //
-			.setDescription("The object filters descriptor file") //
-	), //
-	external_metadata( //
-		new OptionImpl() //
-			.setArgumentName("external-metadata-file") //
-			.setArgumentLimits(1) //
-			.setDescription("The external metadata descriptor file") //
 	), //
 		//
 	;

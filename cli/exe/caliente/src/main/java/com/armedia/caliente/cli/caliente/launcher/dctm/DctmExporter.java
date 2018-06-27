@@ -3,7 +3,7 @@ package com.armedia.caliente.cli.caliente.launcher.dctm;
 import java.util.Map;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
+import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.dfc.common.Setting;
@@ -66,8 +66,8 @@ class DctmExporter extends ExportCommandModule {
 		}
 
 		String dql = DctmExporter.DEFAULT_PREDICATE;
-		if (commandValues.isPresent(CLIParam.source)) {
-			dql = commandValues.getString(CLIParam.source);
+		if (commandValues.isPresent(CalienteExportOptions.SOURCE)) {
+			dql = commandValues.getString(CalienteExportOptions.SOURCE);
 		}
 		settings.put(Setting.DQL.getLabel(), dql);
 

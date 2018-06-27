@@ -10,7 +10,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
+import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
@@ -43,14 +43,12 @@ class CmisExporter extends ExportCommandModule {
 	}
 
 	@Override
-	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		return super.preConfigure(commandValues, settings);
 	}
 
 	@Override
-	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		if (!super.doConfigure(commandValues, settings)) { return false; }
 
 		final String server = null;
@@ -71,9 +69,8 @@ class CmisExporter extends ExportCommandModule {
 			throw new CalienteException(String.format("Bad URL for the CMIS repository: [%s]", server), e);
 		}
 
-		String srcPath = commandValues.getString(CLIParam.source);
-		if (StringUtils
-			.isEmpty(srcPath)) { throw new CalienteException("Must provide the CMIS source path or ID"); }
+		String srcPath = commandValues.getString(CalienteExportOptions.SOURCE);
+		if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Must provide the CMIS source path or ID"); }
 
 		// If it has a leading slash, it's a path
 		if (srcPath.startsWith("/")) {
@@ -100,8 +97,7 @@ class CmisExporter extends ExportCommandModule {
 	}
 
 	@Override
-	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		super.postConfigure(commandValues, settings);
 	}
 

@@ -18,6 +18,7 @@ import org.slf4j.Logger;
 import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
+import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ExportCommandListener;
@@ -58,7 +59,7 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		if (!super.preConfigure(commandValues, settings)) { return false; }
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
-			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
+			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CalienteExportOptions.DIRECT_FS));
 
 		return true;
 	}

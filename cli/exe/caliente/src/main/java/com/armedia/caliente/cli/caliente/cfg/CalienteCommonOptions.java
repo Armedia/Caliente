@@ -1,61 +1,43 @@
 package com.armedia.caliente.cli.caliente.cfg;
 
-import java.net.URL;
-import java.util.Collection;
-
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;
 import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.Options;
-import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.utils.LibLaunchHelper;
+import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 
-public class CalienteCommonOptions extends Options implements LaunchClasspathHelper {
+public class CalienteCommonOptions extends Options {
 
-	public static final String DEFAULT_LOG_FORMAT = "caliente-${logEngine}-${logMode}-${logTimeStamp}";
+	public static final Option THREADS = ThreadsLaunchHelper.THREADS;
 
-	public static final Option HELP = new OptionImpl() //
-		.setShortOpt('h') //
-		.setLongOpt("help") //
-		.setDescription("This help message");
-
-	public static final Option LIB = LibLaunchHelper.LIB;
-
-	public static final Option LOG = new OptionImpl() //
+	public static final Option TRANSFORMATIONS = new OptionImpl() //
+		.setArgumentName("transformations-file") //
 		.setArgumentLimits(1) //
-		.setDescription("The base title of the log file to use (${logName}).") //
-		.setDefault(CalienteCommonOptions.DEFAULT_LOG_FORMAT) //
-		.setArgumentName("log-title-template");
+		.setDescription("The object transformations descriptor file") //
+	;
 
-	public static final Option LOG_CFG = new OptionImpl() //
+	public static final Option FILTERS = new OptionImpl() //
+		.setArgumentName("filters-file") //
 		.setArgumentLimits(1) //
-		.setDescription(
-			"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
-		.setArgumentName("configuration");
+		.setDescription("The object filters descriptor file") //
+	;
 
-	private final LibLaunchHelper lib = new LibLaunchHelper();
+	public static final Option EXTERNAL_METADATA = new OptionImpl() //
+		.setArgumentName("external-metadata-file") //
+		.setArgumentLimits(1) //
+		.setDescription("The external metadata descriptor file") //
+	;
 
 	private final OptionGroup group;
 
 	public CalienteCommonOptions() {
-		this.group = new OptionGroupImpl("Base Options") //
-			.add(CalienteCommonOptions.HELP) //
-			.add(CalienteCommonOptions.LIB) //
-			.add(CalienteCommonOptions.LOG) //
-			.add(CalienteCommonOptions.LOG_CFG) //
+		this.group = new OptionGroupImpl("Common Engine Options") //
+			.add(CalienteCommonOptions.THREADS) //
+			.add(CalienteCommonOptions.TRANSFORMATIONS) //
+			.add(CalienteCommonOptions.FILTERS) //
+			.add(CalienteCommonOptions.EXTERNAL_METADATA) //
 		;
-	}
-
-	@Override
-	public Collection<URL> getClasspathPatchesPre(OptionValues values) {
-		return this.lib.getClasspathPatchesPre(values);
-	}
-
-	@Override
-	public Collection<URL> getClasspathPatchesPost(OptionValues values) {
-		return this.lib.getClasspathPatchesPost(values);
 	}
 
 	@Override

@@ -33,8 +33,9 @@ import com.armedia.caliente.cli.OptionSchemeExtender;
 import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.StringValueFilter;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteBaseOptions;
+import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
+import com.armedia.caliente.cli.caliente.cfg.CalienteStoreOptions;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
 import com.armedia.caliente.cli.exception.CommandLineExtensionException;
@@ -177,7 +178,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		if (f != null) { return f; }
 
 		// Step 2: There is no special location used by the engine, so see what the user wants to do
-		String path = baseValues.getString(CalienteBaseOptions.DB);
+		String path = baseValues.getString(CalienteStoreOptions.DB);
 		f = createFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
@@ -217,8 +218,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		// Step 2: There is no special location used by the engine, so see what the user wants to do
 		String path = null;
-		if (baseValues.isPresent(CalienteBaseOptions.CONTENT)) {
-			path = baseValues.getString(CalienteBaseOptions.CONTENT);
+		if (baseValues.isPresent(CalienteStoreOptions.CONTENT)) {
+			path = baseValues.getString(CalienteStoreOptions.CONTENT);
 		} else {
 			if (metadataLocation != null) {
 				path = new File(metadataLocation, Launcher.DEFAULT_CONTENT_PATH).getAbsolutePath();
@@ -242,7 +243,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	private StoreConfiguration configureContentStore(OptionValues baseValues)
 		throws IOException, CommandLineProcessingException {
 
-		final boolean directFsExport = baseValues.isPresent(CLIParam.direct_fs);
+		final boolean directFsExport = baseValues.isPresent(CalienteExportOptions.DIRECT_FS);
 		final File contentLocation = getContentLocation(baseValues, this.objectStore.getStoreLocation());
 
 		Map<String, String> commonValues = new HashMap<>();
@@ -254,7 +255,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		final String contentStoreName = (directFsExport ? "direct" : "default");
 		StoreConfiguration cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 		if (!directFsExport) {
-			String strategy = baseValues.getString(CLIParam.content_strategy);
+			String strategy = baseValues.getString(CalienteStoreOptions.CONTENT_STRATEGY);
 			if (StringUtils.isBlank(strategy)) {
 				strategy = Launcher.DEFAULT_CONTENT_STRATEGY;
 			}

@@ -60,8 +60,6 @@ Pass 2
 
 		COMMAND: ( EXPORT | EXP | EX )
 			(common)
-				-j,--job-name ${name}
-				-r,--reset-job
 				--content-strategy ${strategy}
 				--direct-fs (change for strategy = direct?)
 			*	--source ${source}  (either a path, a query predicate if supported, or a URL to an ID/locator list)
@@ -155,4 +153,4 @@ Pass 2
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
-				*	--source ${path|nodeRef}
+				*	--root ${path|nodeRef}

@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
+import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
@@ -38,17 +39,15 @@ class AlfrescoImporter extends ImportCommandModule {
 	}
 
 	@Override
-	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		return super.preConfigure(commandValues, settings);
 	}
 
 	@Override
-	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		if (!super.doConfigure(commandValues, settings)) { return false; }
 
-		String target = commandValues.getString(CLIParam.source);
+		String target = commandValues.getString(CalienteExportOptions.SOURCE);
 		if (target == null) {
 			target = ".";
 		}
@@ -69,8 +68,7 @@ class AlfrescoImporter extends ImportCommandModule {
 	}
 
 	@Override
-	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		super.postConfigure(commandValues, settings);
 	}
 
