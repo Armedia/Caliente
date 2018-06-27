@@ -104,11 +104,6 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	}
 
 	@Override
-	protected OptionSchemeExtensionSupport getSchemeExtensionSupport() {
-		return this;
-	}
-
-	@Override
 	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
 		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
 		throws CommandLineExtensionException {
