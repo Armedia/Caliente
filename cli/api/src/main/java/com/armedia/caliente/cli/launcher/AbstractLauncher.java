@@ -72,12 +72,11 @@ public abstract class AbstractLauncher {
 
 	private OptionParseResult parseArguments(Option helpOption, final OptionScheme baseScheme, String... args)
 		throws CommandLineSyntaxException, HelpRequestedException {
-		return new OptionParser().parse(helpOption, baseScheme, getSchemeExtensionSupport(), args);
-	}
-
-	protected OptionSchemeExtensionSupport getSchemeExtensionSupport() {
-		// By default return nothing...
-		return null;
+		OptionSchemeExtensionSupport extensionSupport = null;
+		if (OptionSchemeExtensionSupport.class.isInstance(this)) {
+			extensionSupport = OptionSchemeExtensionSupport.class.cast(this);
+		}
+		return new OptionParser().parse(helpOption, baseScheme, extensionSupport, args);
 	}
 
 	protected abstract OptionScheme getOptionScheme();
