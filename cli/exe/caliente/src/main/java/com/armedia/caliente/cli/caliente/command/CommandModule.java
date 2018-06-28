@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteCommonOptions;
-import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
@@ -93,7 +92,7 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 	}
 
 	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(""));
+		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), commandValues.getAllStrings(CLIParam.exclude_types));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));
 
 		int threads = CommandModule.DEFAULT_THREADS;

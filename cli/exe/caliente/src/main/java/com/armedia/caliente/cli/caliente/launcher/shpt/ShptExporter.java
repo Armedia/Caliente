@@ -10,8 +10,8 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
-import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -80,7 +80,7 @@ class ShptExporter extends ExportCommandModule {
 
 		srcPath = FileNameTools.reconstitute(l, false, false, '/');
 
-		l = FileNameTools.tokenize(Setting.SHPT_SOURCE_PREFIX.getString(), '/');
+		l = FileNameTools.tokenize(commandValues.getString(CLIParam.shpt_source_prefix, "/"));
 		final String srcPrefix;
 		if (l.isEmpty()) {
 			srcPrefix = "";

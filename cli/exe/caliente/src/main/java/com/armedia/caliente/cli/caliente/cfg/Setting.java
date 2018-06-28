@@ -37,36 +37,4 @@ public enum Setting {
 	private Setting(String name) {
 		this.name = name;
 	}
-
-	public int getInt() {
-		return SettingManager.getInteger(this.name);
-	}
-
-	public int getInt(int altDefault) {
-		return SettingManager.getInteger(this.name, altDefault);
-	}
-
-	public long getLong() {
-		return SettingManager.getLong(this.name);
-	}
-
-	public long getLong(long altDefault) {
-		return SettingManager.getLong(this.name, altDefault);
-	}
-
-	public boolean getBoolean() {
-		return SettingManager.getBoolean(this.name);
-	}
-
-	public boolean getBoolean(boolean altDefault) {
-		return SettingManager.getBoolean(this.name, altDefault);
-	}
-
-	public String getString() {
-		return SettingManager.getString(this.name);
-	}
-
-	public String getString(String altDefault) {
-		return SettingManager.getString(this.name, altDefault);
-	}
 }

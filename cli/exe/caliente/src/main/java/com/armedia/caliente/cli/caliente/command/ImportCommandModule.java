@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
-import com.armedia.caliente.cli.caliente.cfg.Setting;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ImportCommandListener;
@@ -45,8 +44,10 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 
 	@Override
 	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), Setting.CMF_IMPORT_TARGET_LOCATION.getString("/"));
-		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), Setting.CMF_IMPORT_TRIM_PREFIX.getInt(0));
+		settings.put(ImportSetting.TARGET_LOCATION.getLabel(),
+			commandValues.getString(CLIParam.cmf_import_target_location, "/"));
+		settings.put(ImportSetting.TRIM_PREFIX.getLabel(),
+			commandValues.getInteger(CLIParam.cmf_import_trim_prefix, 0));
 
 		settings.put(ImportSetting.NO_FILENAME_MAP.getLabel(), commandValues.isPresent(CLIParam.no_filename_map));
 		settings.put(ImportSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
@@ -159,11 +160,6 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 			} else {
 				report.append(String.format("%n\t%s", key));
 			}
-		}
-
-		report.append(String.format("%n%n%nSettings in use:%n")).append(StringUtils.repeat("=", 30));
-		for (Setting s : Setting.values()) {
-			report.append(String.format("%n\t%s = [%s]", s.name, s.getString()));
 		}
 
 		report.append(String.format("%n%nAction Summary:%n%s%n", StringUtils.repeat("=", 30)));

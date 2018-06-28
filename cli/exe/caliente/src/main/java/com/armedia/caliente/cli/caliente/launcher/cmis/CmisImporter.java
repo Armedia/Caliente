@@ -7,7 +7,7 @@ import java.net.URL;
 import java.util.Map;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.Setting;
+import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.TransferSetting;
@@ -41,14 +41,12 @@ class CmisImporter extends ImportCommandModule {
 	}
 
 	@Override
-	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		return super.preConfigure(commandValues, settings);
 	}
 
 	@Override
-	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		if (!super.doConfigure(commandValues, settings)) { return false; }
 
 		final String server = null;
@@ -81,14 +79,14 @@ class CmisImporter extends ImportCommandModule {
 		// TODO: Make this a CLI setting
 		String repoName = "-default-";
 		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), Tools.coalesce(repoName, "-default-"));
-		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), Setting.CMF_EXCLUDE_TYPES.getString(null));
+		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(),
+			Tools.joinCSVEscaped(commandValues.getAllStrings(CLIParam.exclude_types)));
 
 		return true;
 	}
 
 	@Override
-	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings)
-		throws CalienteException {
+	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 		super.postConfigure(commandValues, settings);
 	}
 
