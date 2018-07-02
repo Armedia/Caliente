@@ -25,6 +25,7 @@ public class CalienteBaseOptions extends Options implements LaunchClasspathHelpe
 	public static final Option LIB = LibLaunchHelper.LIB;
 
 	public static final Option LOG = new OptionImpl() //
+		.setLongOpt("log-name") //
 		.setArgumentLimits(1) //
 		.setDescription("The base name of the log file to use (${logName}).") //
 		.setDefault(CalienteBaseOptions.DEFAULT_LOG_FORMAT) //
@@ -32,6 +33,7 @@ public class CalienteBaseOptions extends Options implements LaunchClasspathHelpe
 	;
 
 	public static final Option LOG_CFG = new OptionImpl() //
+		.setLongOpt("log-cfg") //
 		.setArgumentLimits(1) //
 		.setDescription(
 			"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //

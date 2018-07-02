@@ -15,7 +15,6 @@ public class CalienteStoreOptions extends Options {
 		.setRequired(true) //
 		.setDescription(
 			"The directory into which the metadata database will be stored, or the XML file that describes the store configuration") //
-		.setDefault("caliente") //
 	;
 
 	public static final Option CONTENT = new OptionImpl() //

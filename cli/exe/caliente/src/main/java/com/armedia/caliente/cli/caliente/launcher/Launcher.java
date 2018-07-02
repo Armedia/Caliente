@@ -170,12 +170,22 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		this.objectStoreLocation = getMetadataLocation(baseValues);
 		this.contentStoreLocation = getContentLocation(baseValues);
 
-		if (this.objectStoreLocation == null) {
-			this.logLocation = Tools.canonicalize(new File("."));
-		} else if (!this.objectStoreLocation.exists() || this.objectStoreLocation.isDirectory()) {
-			// If the object store is a directory (i.e. not a file configuring the object store),
-			// then we put the logs in alongside it
+		this.logLocation = null;
+
+		if ((this.logLocation == null) && (this.objectStoreLocation != null)
+			&& (!this.objectStoreLocation.exists() || this.objectStoreLocation.isDirectory())) {
 			this.logLocation = this.objectStoreLocation;
+		}
+		if ((this.logLocation == null) && (this.contentStoreLocation != null)
+			&& (!this.contentStoreLocation.exists() || this.contentStoreLocation.isDirectory())) {
+			// If there's no object store location, then use the content location as the log
+			// location
+			this.logLocation = this.contentStoreLocation;
+		}
+
+		// If no log location has been selected, use the default
+		if (this.logLocation == null) {
+			this.logLocation = Tools.canonicalize(new File("."));
 		}
 
 		this.directFsMode = baseValues.isPresent(CalienteExportOptions.DIRECT_FS);
@@ -189,7 +199,13 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		if (f != null) { return f; }
 
 		// Step 2: There is no special location used by the engine, so see what the user wants to do
-		String path = baseValues.getString(CalienteStoreOptions.DB);
+		String path = null;
+		if (baseValues.isPresent(CalienteStoreOptions.DB)) {
+			path = baseValues.getString(CalienteStoreOptions.DB);
+		} else {
+			path = Launcher.DEFAULT_DB_PATH.toString();
+		}
+
 		f = createFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
@@ -244,7 +260,6 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			throw new CommandLineProcessingException(1, String.format(
 				"The object at path [%s] is neither a file nor a directory - can't use it to describe the content store",
 				f));
-
 		}
 		return f;
 	}
