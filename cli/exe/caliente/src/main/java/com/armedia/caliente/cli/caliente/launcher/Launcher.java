@@ -73,9 +73,17 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 	private CommandModule<?> command = null;
 
+	private File objectStoreLocation = null;
 	private CmfObjectStore<?, ?> objectStore = null;
 
+	private File contentStoreLocation = null;
 	private CmfContentStore<?, ?, ?> contentStore = null;
+
+	private File logLocation = null;
+
+	private boolean directFsMode = false;
+
+	private String contentStrategy = Launcher.DEFAULT_CONTENT_STRATEGY;
 
 	@Override
 	protected String getProgramName() {
@@ -159,12 +167,20 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			String.format("No command was given. The command must be one of %s (case-insensitive)",
 				CalienteCommand.getAllAliases())); }
 
-		// Now go try to initialize the stores if required
-		try {
-			initializeStores(baseValues);
-		} catch (Exception e) {
-			throw new CommandLineProcessingException(1, "Failed to initialize the metadata/content stores", e);
+		this.objectStoreLocation = getMetadataLocation(baseValues);
+		this.contentStoreLocation = getContentLocation(baseValues);
+
+		if (this.objectStoreLocation == null) {
+			this.logLocation = Tools.canonicalize(new File("."));
+		} else if (!this.objectStoreLocation.exists() || this.objectStoreLocation.isDirectory()) {
+			// If the object store is a directory (i.e. not a file configuring the object store),
+			// then we put the logs in alongside it
+			this.logLocation = this.objectStoreLocation;
 		}
+
+		this.directFsMode = baseValues.isPresent(CalienteExportOptions.DIRECT_FS);
+		this.contentStrategy = baseValues.getString(CalienteStoreOptions.CONTENT_STRATEGY,
+			Launcher.DEFAULT_CONTENT_STRATEGY);
 	}
 
 	private File getMetadataLocation(OptionValues baseValues) throws CommandLineProcessingException {
@@ -184,9 +200,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		return f;
 	}
 
-	private StoreConfiguration configureObjectStore(OptionValues baseValues)
-		throws IOException, CommandLineProcessingException {
-		final File metadataLocation = getMetadataLocation(baseValues);
+	private StoreConfiguration configureObjectStore() throws IOException, CommandLineProcessingException {
+		final File metadataLocation = this.objectStoreLocation;
 		final Map<String, String> commonValues = new HashMap<>();
 		if (!metadataLocation.exists() || metadataLocation.isDirectory()) {
 			commonValues.put("dir.metadata", metadataLocation.getAbsolutePath());
@@ -205,8 +220,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		return cfg;
 	}
 
-	private File getContentLocation(OptionValues baseValues, File metadataLocation)
-		throws CommandLineProcessingException {
+	private File getContentLocation(OptionValues baseValues) throws CommandLineProcessingException {
 		// Step 1: Does this engine use a special location for content?
 		File f = Tools.canonicalize(this.command.getContentFilesLocation());
 		if (f != null) { return f; }
@@ -216,8 +230,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		if (baseValues.isPresent(CalienteStoreOptions.CONTENT)) {
 			path = baseValues.getString(CalienteStoreOptions.CONTENT);
 		} else {
-			if (metadataLocation != null) {
-				path = new File(metadataLocation, Launcher.DEFAULT_CONTENT_PATH).getAbsolutePath();
+			if (this.objectStoreLocation != null) {
+				path = new File(this.objectStoreLocation, Launcher.DEFAULT_CONTENT_PATH).getAbsolutePath();
 			} else {
 				path = Launcher.DEFAULT_DB_PATH.resolve(Launcher.DEFAULT_CONTENT_PATH).toString();
 			}
@@ -235,11 +249,10 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		return f;
 	}
 
-	private StoreConfiguration configureContentStore(OptionValues baseValues)
-		throws IOException, CommandLineProcessingException {
+	private StoreConfiguration configureContentStore() throws IOException, CommandLineProcessingException {
 
-		final boolean directFsExport = baseValues.isPresent(CalienteExportOptions.DIRECT_FS);
-		final File contentLocation = getContentLocation(baseValues, this.objectStore.getStoreLocation());
+		final boolean directFsExport = this.directFsMode;
+		final File contentLocation = this.contentStoreLocation;
 
 		Map<String, String> commonValues = new HashMap<>();
 		if (!contentLocation.exists() || contentLocation.isDirectory()) {
@@ -250,7 +263,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		final String contentStoreName = (directFsExport ? "direct" : "default");
 		StoreConfiguration cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 		if (!directFsExport) {
-			String strategy = baseValues.getString(CalienteStoreOptions.CONTENT_STRATEGY);
+			String strategy = this.contentStrategy;
 			if (StringUtils.isBlank(strategy)) {
 				strategy = Launcher.DEFAULT_CONTENT_STRATEGY;
 			}
@@ -273,17 +286,17 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		return cfg;
 	}
 
-	private void initializeStores(OptionValues baseValues) throws Exception {
+	private void initializeStores() throws Exception {
 		if (!this.command.getDescriptor().isRequiresStorage()) { return; }
 
 		CmfStores.initializeConfigurations();
 
 		StoreConfiguration cfg = null;
 
-		cfg = configureObjectStore(baseValues);
+		cfg = configureObjectStore();
 		this.objectStore = CmfStores.createObjectStore(cfg);
 
-		cfg = configureContentStore(baseValues);
+		cfg = configureContentStore();
 		this.contentStore = CmfStores.createContentStore(cfg);
 
 		// Set the filesystem location where files will be created or read from
@@ -429,7 +442,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		final String logName = baseValues.getString(CalienteBaseOptions.LOG);
 
 		// TODO: Write the log out into the DB directory
-		final File logDir = Tools.canonicalize(new File("."));
+		final File logDir = this.logLocation;
 
 		// Make sure the log directory always uses forward slashes
 		System.setProperty("logDir", logDir.getAbsolutePath().replace('\\', '/'));
@@ -484,6 +497,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
 		try {
+			// Now go try to initialize the stores
+			initializeStores();
 			return new Caliente().run(this.engineInterface.getName(), this.objectStore, this.contentStore, this.command,
 				commandValues, positionals);
 		} finally {

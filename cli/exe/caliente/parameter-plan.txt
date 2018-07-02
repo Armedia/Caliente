@@ -9,6 +9,8 @@
 	* apply classpath helpers post
 3) init logging (taking options into account)
 4) run()
+	* Initialize stores
+	* Execute the selected command
 
 
 Pass 1
