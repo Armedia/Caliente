@@ -11,13 +11,12 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteCommonOptions;
+import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
-import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
@@ -58,40 +57,42 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		return this.engine.getSupportedSettings();
 	}
 
-	public final void initialize(Map<String, Object> settings) {
+	public final void initialize(CalienteState state, Map<String, Object> settings) {
 		// By default, do nothing...maybe do threading configurations? Common stuff?
-		if (!preInitialize(settings)) { return; }
-		if (!doInitialize(settings)) { return; }
-		if (!postInitialize(settings)) { return; }
+		if (!preInitialize(state, settings)) { return; }
+		if (!doInitialize(state, settings)) { return; }
+		if (!postInitialize(state, settings)) { return; }
 	}
 
-	protected boolean preInitialize(Map<String, Object> settings) {
+	protected boolean preInitialize(CalienteState state, Map<String, Object> settings) {
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(), CommandModule.DEFAULT_THREADS);
 		return true;
 	}
 
-	protected boolean doInitialize(Map<String, Object> settings) {
+	protected boolean doInitialize(CalienteState state, Map<String, Object> settings) {
 		return true;
 	}
 
-	protected boolean postInitialize(Map<String, Object> settings) {
+	protected boolean postInitialize(CalienteState state, Map<String, Object> settings) {
 		return true;
 	}
 
-	public final void configure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		preValidateSettings(settings);
-		if (preConfigure(commandValues, settings)) {
-			if (doConfigure(commandValues, settings)) {
-				postConfigure(commandValues, settings);
+	public final void configure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
+		preValidateSettings(state, settings);
+		if (preConfigure(state, commandValues, settings)) {
+			if (doConfigure(state, commandValues, settings)) {
+				postConfigure(state, commandValues, settings);
 			}
 		}
-		postValidateSettings(settings);
+		postValidateSettings(state, settings);
 	}
 
-	protected void preValidateSettings(Map<String, Object> settings) throws CalienteException {
+	protected void preValidateSettings(CalienteState state, Map<String, Object> settings) throws CalienteException {
 	}
 
-	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+	protected boolean preConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), commandValues.getAllStrings(CLIParam.exclude_types));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));
 
@@ -111,31 +112,28 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		return true;
 	}
 
-	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
 		return true;
 	}
 
-	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+	protected void postConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
 	}
 
-	protected void postValidateSettings(Map<String, Object> settings) throws CalienteException {
+	protected void postValidateSettings(CalienteState state, Map<String, Object> settings) throws CalienteException {
 	}
 
-	public final int run(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		final OptionValues commandValues, final Collection<String> positionals) throws CalienteException {
+	public final int run(CalienteState state, final OptionValues commandValues, final Collection<String> positionals)
+		throws CalienteException {
 		if (this.descriptor.isRequiresStorage()) {
 			// Make sure the storage engines are there
-			Objects.requireNonNull(objectStore,
+			Objects.requireNonNull(state.getObjectStore(),
 				String.format("The %s command requires an object store!", this.descriptor.getTitle()));
-			Objects.requireNonNull(contentStore,
+			Objects.requireNonNull(state.getContentStore(),
 				String.format("The %s command requires a content store!", this.descriptor.getTitle()));
-		} else {
-			// Make sure they always go null downstream
-			objectStore = null;
-			contentStore = null;
 		}
-
-		return execute(objectStore, contentStore, commandValues, positionals);
+		return execute(state, commandValues, positionals);
 	}
 
 	public String getContentStrategyName() {
@@ -158,7 +156,7 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		return null;
 	}
 
-	protected abstract int execute(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		OptionValues commandValues, Collection<String> positionals) throws CalienteException;
+	protected abstract int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
+		throws CalienteException;
 
 }

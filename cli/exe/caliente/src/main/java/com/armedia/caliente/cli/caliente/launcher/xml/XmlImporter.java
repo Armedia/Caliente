@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
-import com.armedia.caliente.cli.caliente.cfg.Setting;
+import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -18,33 +18,35 @@ class XmlImporter extends ImportCommandModule {
 	}
 
 	@Override
-	protected boolean preInitialize(Map<String, Object> settings) {
-		return super.preInitialize(settings);
+	protected boolean preInitialize(CalienteState state, Map<String, Object> settings) {
+		return super.preInitialize(state, settings);
 	}
 
 	@Override
-	protected boolean doInitialize(Map<String, Object> settings) {
-		return super.doInitialize(settings);
+	protected boolean doInitialize(CalienteState state, Map<String, Object> settings) {
+		return super.doInitialize(state, settings);
 	}
 
 	@Override
-	protected boolean postInitialize(Map<String, Object> settings) {
-		return super.postInitialize(settings);
+	protected boolean postInitialize(CalienteState state, Map<String, Object> settings) {
+		return super.postInitialize(state, settings);
 	}
 
 	@Override
-	protected void preValidateSettings(Map<String, Object> settings) throws CalienteException {
-		super.preValidateSettings(settings);
+	protected void preValidateSettings(CalienteState state, Map<String, Object> settings) throws CalienteException {
+		super.preValidateSettings(state, settings);
 	}
 
 	@Override
-	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		return super.preConfigure(commandValues, settings);
+	protected boolean preConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
+		return super.preConfigure(state, commandValues, settings);
 	}
 
 	@Override
-	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		if (!super.doConfigure(commandValues, settings)) { return false; }
+	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
+		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
 		String target = commandValues.getString(CalienteExportOptions.SOURCE);
 		if (target == null) {
@@ -58,19 +60,20 @@ class XmlImporter extends ImportCommandModule {
 			String.format("A non-directory already exists at the location [%s] - can't continue", targetDir)); }
 
 		settings.put(XmlSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
-		settings.put(XmlSetting.DB.getLabel(), Setting.DB_DIRECTORY.getString());
-		settings.put(XmlSetting.CONTENT.getLabel(), Setting.CONTENT_DIRECTORY.getString());
+		settings.put(XmlSetting.DB.getLabel(), state.getObjectStoreLocation().toString());
+		settings.put(XmlSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
 
 		return true;
 	}
 
 	@Override
-	protected void postConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		super.postConfigure(commandValues, settings);
+	protected void postConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
+		super.postConfigure(state, commandValues, settings);
 	}
 
 	@Override
-	protected void postValidateSettings(Map<String, Object> settings) throws CalienteException {
-		super.postValidateSettings(settings);
+	protected void postValidateSettings(CalienteState state, Map<String, Object> settings) throws CalienteException {
+		super.postValidateSettings(state, settings);
 	}
 }

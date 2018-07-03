@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import javax.mail.MessagingException;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
@@ -18,11 +16,11 @@ import org.slf4j.Logger;
 import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
+import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ImportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ImportManifest;
-import com.armedia.caliente.cli.caliente.utils.EmailUtils;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportEngineListener;
@@ -43,7 +41,8 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 	}
 
 	@Override
-	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+	protected boolean preConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
 		settings.put(ImportSetting.TARGET_LOCATION.getLabel(),
 			commandValues.getString(CLIParam.cmf_import_target_location, "/"));
 		settings.put(ImportSetting.TRIM_PREFIX.getLabel(),
@@ -53,12 +52,13 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 		settings.put(ImportSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
 		settings.put(ImportSetting.VALIDATE_REQUIREMENTS.getLabel(),
 			commandValues.isPresent(CLIParam.validate_requirements));
-		return super.preConfigure(commandValues, settings);
+		return super.preConfigure(state, commandValues, settings);
 	}
 
 	@Override
-	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		return super.doConfigure(commandValues, settings);
+	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
+		return super.doConfigure(state, commandValues, settings);
 	}
 
 	public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker,
@@ -74,8 +74,8 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 	}
 
 	@Override
-	protected int execute(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		OptionValues commandValues, Collection<String> positionals) throws CalienteException {
+	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
+		throws CalienteException {
 		Set<ImportResult> outcomes = commandValues.getAllEnums(ImportResult.class, CommandModule.ALL, false,
 			CLIParam.manifest_outcomes);
 		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, CommandModule.ALL, false,
@@ -103,15 +103,17 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 
 		// lock
 		Map<String, Object> settings = new HashMap<>();
-		initialize(settings);
+		initialize(state, settings);
 
+		final CmfObjectStore<?, ?> objectStore = state.getObjectStore();
+		final CmfContentStore<?, ?, ?> contentStore = state.getContentStore();
 		final Date start;
 		final Date end;
 		String exceptionReport = null;
 		final StringBuilder report = new StringBuilder();
 		final CmfObjectCounter<ImportResult> results = new CmfObjectCounter<>(ImportResult.class);
 		try {
-			configure(commandValues, settings);
+			configure(state, commandValues, settings);
 			start = new Date();
 			try {
 				this.log.info("##### Import Process Started #####");
@@ -177,12 +179,15 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 		String reportString = report.toString();
 		this.log.info(String.format("Action report for import operation:%n%n%s%n", reportString));
 		this.console.info(String.format("Action report for import operation:%n%n%s%n", reportString));
+		// TODO: Send the e-mail report
+		/*
 		try {
 			EmailUtils.postCalienteMail(String.format("Action report for Caliente Import"), reportString);
 		} catch (MessagingException e) {
 			this.log.error("Exception caught attempting to send the report e-mail", e);
 			this.console.error("Exception caught attempting to send the report e-mail", e);
 		}
+		*/
 		return 0;
 	}
 

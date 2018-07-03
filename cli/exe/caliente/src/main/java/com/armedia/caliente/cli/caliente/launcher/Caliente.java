@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
-import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -45,14 +45,14 @@ public class Caliente {
 	public static final CmfCrypt CRYPTO = new CmfCrypt();
 
 	int run( //
-		final String engineName, final CmfObjectStore<?, ?> objectStore, //
-		final CmfContentStore<?, ?, ?> contentStore, //
-		final CommandModule<?> command, //
+		final String engineName, //
+		final CalienteState state, final CommandModule<?> command, //
 		final OptionValues commandValues, //
 		final Collection<String> positionals //
 	) throws Exception {
 		// TODO: Lock for single execution
 		final Logger log = LoggerFactory.getLogger(getClass());
+		final CmfObjectStore<?, ?> objectStore = state.getObjectStore();
 		final boolean writeProperties = (objectStore != null);
 		final String pfx = String.format("caliente.%s.%s", engineName.toLowerCase(),
 			command.getDescriptor().getTitle().toLowerCase());
@@ -63,7 +63,7 @@ public class Caliente {
 				properties.put(String.format("%s.start", pfx), new CmfValue(new Date()));
 				objectStore.setProperties(properties);
 			}
-			command.run(objectStore, contentStore, commandValues, positionals);
+			command.run(state, commandValues, positionals);
 		} catch (Throwable t) {
 			if (writeProperties) {
 				try {

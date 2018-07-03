@@ -9,8 +9,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import javax.mail.MessagingException;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
@@ -19,11 +17,11 @@ import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
+import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ExportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ExportManifest;
-import com.armedia.caliente.cli.caliente.utils.EmailUtils;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -56,8 +54,9 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 	}
 
 	@Override
-	protected boolean preConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-		if (!super.preConfigure(commandValues, settings)) { return false; }
+	protected boolean preConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
+		if (!super.preConfigure(state, commandValues, settings)) { return false; }
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
 			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CalienteExportOptions.DIRECT_FS));
 
@@ -65,13 +64,14 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 	}
 
 	@Override
-	protected boolean doConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
+	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
+		throws CalienteException {
 		return true;
 	}
 
 	@Override
-	protected int execute(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		OptionValues commandValues, Collection<String> positionals) throws CalienteException {
+	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
+		throws CalienteException {
 
 		Set<ExportResult> outcomes = commandValues.getAllEnums(ExportResult.class, false, CLIParam.manifest_outcomes);
 		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, false, CLIParam.manifest_types);
@@ -98,7 +98,10 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 		}
 
 		Map<String, Object> settings = new TreeMap<>();
-		initialize(settings);
+		initialize(state, settings);
+
+		final CmfObjectStore<?, ?> objectStore = state.getObjectStore();
+		final CmfContentStore<?, ?, ?> contentStore = state.getContentStore();
 
 		final Date start;
 		final Date end;
@@ -107,7 +110,7 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 		final StringBuilder report = new StringBuilder();
 		try {
 
-			configure(commandValues, settings);
+			configure(state, commandValues, settings);
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");
@@ -198,11 +201,14 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 
 		String reportString = report.toString();
 		this.log.info(String.format("Action report for export operation:%n%n%s%n", reportString));
+		// TODO: Send the e-mail report
+		/*
 		try {
 			EmailUtils.postCalienteMail(String.format("Action report for Caliente Export"), reportString);
 		} catch (MessagingException e) {
 			this.log.error("Exception caught attempting to send the report e-mail", e);
 		}
+		*/
 
 		return 0;
 	}

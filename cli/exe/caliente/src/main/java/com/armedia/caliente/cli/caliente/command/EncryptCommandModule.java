@@ -9,11 +9,10 @@ import java.util.Collection;
 import java.util.List;
 
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.Caliente;
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
 
@@ -52,8 +51,8 @@ public class EncryptCommandModule extends CommandModule<TransferEngine<?, ?, ?, 
 	}
 
 	@Override
-	protected int execute(CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		OptionValues commandValues, Collection<String> positionals) throws CalienteException {
+	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
+		throws CalienteException {
 		final Collection<CmfCrypt> crypt = getCrypt();
 		if (!positionals.isEmpty()) {
 			for (String password : positionals) {

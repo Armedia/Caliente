@@ -35,6 +35,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.cfg.CalienteBaseOptions;
 import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
+import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.cfg.CalienteStoreOptions;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
@@ -514,8 +515,9 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		try {
 			// Now go try to initialize the stores
 			initializeStores();
-			return new Caliente().run(this.engineInterface.getName(), this.objectStore, this.contentStore, this.command,
-				commandValues, positionals);
+			return new Caliente().run(this.engineInterface.getName(), new CalienteState(this.objectStoreLocation,
+				this.objectStore, this.contentStoreLocation, this.contentStore), this.command, commandValues,
+				positionals);
 		} finally {
 			this.command.close();
 		}
