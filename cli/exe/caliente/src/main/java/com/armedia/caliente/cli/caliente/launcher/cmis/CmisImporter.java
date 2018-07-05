@@ -11,6 +11,7 @@ import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.options.CalienteUrlOptions;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -52,7 +53,7 @@ class CmisImporter extends ImportCommandModule {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		final String server = null;
+		final String server = commandValues.getString(CalienteUrlOptions.URL);
 
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later
@@ -69,8 +70,8 @@ class CmisImporter extends ImportCommandModule {
 			throw new CalienteException(String.format("Bad URL for the CMIS repository: [%s]", server), e);
 		}
 
-		String user = null;
-		String password = null;
+		String user = commandValues.getString(CalienteUrlOptions.USER);
+		String password = commandValues.getString(CalienteUrlOptions.PASSWORD);
 
 		settings.put(CmisSessionSetting.ATOMPUB_URL.getLabel(), baseUrl);
 		if (user != null) {
@@ -79,8 +80,7 @@ class CmisImporter extends ImportCommandModule {
 		if (password != null) {
 			settings.put(CmisSessionSetting.PASSWORD.getLabel(), password);
 		}
-		// TODO: Make this a CLI setting
-		String repoName = "-default-";
+		String repoName = commandValues.getString(CalienteUrlOptions.DOMAIN, "-default-");
 		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), Tools.coalesce(repoName, "-default-"));
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(),
 			Tools.joinCSVEscaped(commandValues.getAllStrings(CLIParam.exclude_types)));

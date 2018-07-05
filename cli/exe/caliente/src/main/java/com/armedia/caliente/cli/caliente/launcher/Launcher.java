@@ -36,8 +36,8 @@ import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
+import com.armedia.caliente.cli.caliente.options.CLIOptions;
 import com.armedia.caliente.cli.caliente.options.CalienteBaseOptions;
-import com.armedia.caliente.cli.caliente.options.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.options.CalienteStoreOptions;
 import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
@@ -57,7 +57,7 @@ import com.armedia.commons.utilities.Tools;
 public class Launcher extends AbstractLauncher implements OptionSchemeExtensionSupport {
 
 	public static final void main(String... args) {
-		System.exit(new Launcher().launch(CalienteBaseOptions.HELP, args));
+		System.exit(new Launcher().launch(CLIOptions.HELP, args));
 	}
 
 	public static final String DEFAULT_LOG_FORMAT = CalienteBaseOptions.DEFAULT_LOG_FORMAT;
@@ -102,7 +102,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		}
 
 		// Now, find the engines available
-		OptionImpl impl = OptionImpl.cast(CalienteBaseOptions.ENGINE);
+		OptionImpl impl = OptionImpl.cast(CLIOptions.ENGINE);
 		if (impl != null) {
 			impl.setValueFilter(new StringValueFilter(false, EngineInterface.getAliases(this.log)));
 		}
@@ -119,12 +119,12 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		// Has an engine been selected already?
 		if (this.engineInterface == null) {
-			if (!baseValues.isPresent(CalienteBaseOptions.ENGINE)) { throw new CommandLineExtensionException(
-				currentNumber, baseValues, currentCommand, commandValues, currentToken,
+			if (!baseValues.isPresent(CLIOptions.ENGINE)) { throw new CommandLineExtensionException(currentNumber,
+				baseValues, currentCommand, commandValues, currentToken,
 				"No engine has been selected in the base options yet (option order is important!)"); }
 
 			// Find the desired engine
-			final String engine = baseValues.getString(CalienteBaseOptions.ENGINE);
+			final String engine = baseValues.getString(CLIOptions.ENGINE);
 			this.engineInterface = EngineInterface.get(engine);
 			if (this.engineInterface == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken,
@@ -189,7 +189,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			this.logLocation = Tools.canonicalize(new File("."));
 		}
 
-		this.directFsMode = baseValues.isPresent(CalienteExportOptions.DIRECT_FS);
+		this.directFsMode = baseValues.isPresent(CLIOptions.DIRECT_FS);
 		this.contentStrategy = baseValues.getString(CalienteStoreOptions.CONTENT_STRATEGY,
 			Launcher.DEFAULT_CONTENT_STRATEGY);
 	}
@@ -455,7 +455,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
 		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-		final String logName = baseValues.getString(CalienteBaseOptions.LOG);
+		final String logName = baseValues.getString(CLIOptions.LOG);
 
 		// TODO: Write the log out into the DB directory
 		final File logDir = this.logLocation;
@@ -467,7 +467,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		System.setProperty("logMode", logMode);
 		System.setProperty("logEngine", logEngine);
 
-		String logCfg = baseValues.getString(CalienteBaseOptions.LOG_CFG);
+		String logCfg = baseValues.getString(CLIOptions.LOG_CFG);
 		boolean customLog = false;
 		if (logCfg != null) {
 			final File cfg = createFile(logCfg);

@@ -39,6 +39,13 @@ Pass 2
 				--no-renditions
 				--no-versions
 				--skip-content
+				--error-count ${count}
+				--manifest-types ${type1,type2,...,typeN}
+				--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
+				--exclude-types ${type1,type2,...,typeN}
+				--filter ${filter}
+				--transformation ${transformation}
+				--external-metadata ${externalMeta}
 				--mail-from ${sender}
 				--mail-to ${recipient1,recipient2,...,recipientN}
 				--mail-cc ${recipient1,recipient2,...,recipientN}
@@ -52,13 +59,6 @@ Pass 2
 				--mail-user ${user}
 				--mail-pass ${pass}
 				--mail-auth ${mode}
-				--error-count ${count}
-				--manifest-types ${type1,type2,...,typeN}
-				--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
-				--exclude-types ${type1,type2,...,typeN}
-				--filter ${filter}
-				--transformation ${transformation}
-				--external-metadata ${externalMeta}
 
 		COMMAND: ( EXPORT | EXP | EX )
 			(common)
@@ -68,7 +68,7 @@ Pass 2
 
 			Pass 3 (from --engine)
 				DFC
-				*	--docbase ${docbase}
+				*	--server ${docbase}
 				*	--user ${user}
 				*	--password ${password}
 					--unified
@@ -82,13 +82,13 @@ Pass 2
 					--owner-attributes ${att1,att2,...,attN}
 
 				CMIS
-				*	--url ${url}
+				*	--server ${url}
 				*	--user ${user}
 				*	--password ${password}
 					--domain ${domain}
 
 				SHAREPOINT
-				*	--url ${url}
+				*	--server ${url}
 				*	--user ${user}
 				*	--password ${password}
 					--domain ${domain}
@@ -112,7 +112,7 @@ Pass 2
 
 			Pass 3 (from --engine)
 				DFC
-				*	--docbase ${docbase}
+				*	--server ${docbase}
 				*	--user ${user}
 				*	--password ${password}
 					--dfc ${dfc-dir}
@@ -121,7 +121,7 @@ Pass 2
 					--default-password
 
 				CMIS
-				*	--url ${url}
+				*	--server ${url}
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
@@ -151,7 +151,7 @@ Pass 2
 				*	--predicate ${predicate}
 
 				CMIS
-				*	--url ${url}
+				*	--server ${url}
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}

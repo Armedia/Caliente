@@ -12,7 +12,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.options.CalienteCommonOptions;
+import com.armedia.caliente.cli.caliente.options.CLIOptions;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
@@ -97,18 +97,17 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));
 
 		int threads = CommandModule.DEFAULT_THREADS;
-		if (commandValues.isPresent(CalienteCommonOptions.THREADS)) {
-			threads = commandValues.getInteger(CalienteCommonOptions.THREADS);
+		if (commandValues.isPresent(CLIOptions.THREADS)) {
+			threads = commandValues.getInteger(CLIOptions.THREADS);
 		}
 		threads = Tools.ensureBetween(1, threads, CommandModule.MAX_THREADS);
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(), threads);
 
 		settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
-		settings.put(TransferSetting.TRANSFORMATION.getLabel(),
-			commandValues.getString(CalienteCommonOptions.TRANSFORMATIONS));
+		settings.put(TransferSetting.TRANSFORMATION.getLabel(), commandValues.getString(CLIOptions.TRANSFORMATIONS));
 		settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(),
-			commandValues.getString(CalienteCommonOptions.EXTERNAL_METADATA));
-		settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CalienteCommonOptions.FILTERS));
+			commandValues.getString(CLIOptions.EXTERNAL_METADATA));
+		settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CLIOptions.FILTERS));
 		return true;
 	}
 

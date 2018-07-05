@@ -7,7 +7,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.options.CalienteExportOptions;
+import com.armedia.caliente.cli.caliente.options.CLIOptions;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.xml.common.XmlSetting;
 import com.armedia.commons.utilities.Tools;
@@ -48,7 +48,7 @@ class XmlImporter extends ImportCommandModule {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		String target = commandValues.getString(CalienteExportOptions.SOURCE);
+		String target = commandValues.getString(CLIOptions.SOURCE);
 		if (target == null) {
 			target = ".";
 		}

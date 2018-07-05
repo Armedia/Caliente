@@ -247,7 +247,10 @@ public final class HelpRenderer {
 
 		OptionValueFilter filter = o.getValueFilter();
 		if (filter != null) {
-			HelpRenderer.printWrapped(pw, width, 12, String.format("Allowed values: %s", filter.getDefinition()));
+			String definition = filter.getDefinition();
+			if (!StringUtils.isBlank(definition)) {
+				HelpRenderer.printWrapped(pw, width, 12, String.format("Allowed values: %s", definition));
+			}
 			addLine = true;
 		}
 

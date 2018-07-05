@@ -4,14 +4,31 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
+import com.armedia.caliente.cli.OptionGroup;
+import com.armedia.caliente.cli.OptionGroupImpl;
+import com.armedia.caliente.cli.OptionSchemeExtender;
+import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
+import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
+import com.armedia.caliente.cli.caliente.options.CalienteCommonOptions;
+import com.armedia.caliente.cli.caliente.options.CalienteUrlOptions;
+import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.engine.cmis.exporter.CmisExportEngine;
 import com.armedia.caliente.engine.cmis.importer.CmisImportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 
-public class CmisEngineInterface extends EngineInterface {
+public class CmisEngineInterface extends EngineInterface implements OptionSchemeExtensionSupport {
+
+	private static final OptionGroup CONNECTIVITY = //
+		new OptionGroupImpl("CMIS Connectivity Options") //
+			.add(CalienteUrlOptions.URL) //
+			.add(CalienteUrlOptions.USER) //
+			.add(CalienteUrlOptions.PASSWORD) //
+			.add(CalienteUrlOptions.DOMAIN) //
+	;
 
 	static final String ID_PREFIX = "id:";
 
@@ -51,6 +68,17 @@ public class CmisEngineInterface extends EngineInterface {
 	@Override
 	public Collection<? extends LaunchClasspathHelper> getClasspathHelpers() {
 		return Collections.emptyList();
+	}
+
+	@Override
+	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
+		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
+		throws CommandLineExtensionException {
+
+		extender //
+			.add(new CalienteCommonOptions().asGroup()) //
+			.add(CmisEngineInterface.CONNECTIVITY) //
+		;
 	}
 
 }

@@ -21,7 +21,7 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ExportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ExportManifest;
-import com.armedia.caliente.cli.caliente.options.CalienteExportOptions;
+import com.armedia.caliente.cli.caliente.options.CLIOptions;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -58,7 +58,7 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 		throws CalienteException {
 		if (!super.preConfigure(state, commandValues, settings)) { return false; }
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
-			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CalienteExportOptions.DIRECT_FS));
+			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIOptions.DIRECT_FS));
 
 		return true;
 	}

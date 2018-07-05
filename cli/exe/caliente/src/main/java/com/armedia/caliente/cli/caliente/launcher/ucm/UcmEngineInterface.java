@@ -14,7 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
-import com.armedia.caliente.cli.caliente.options.CalienteExportOptions;
+import com.armedia.caliente.cli.caliente.options.CLIOptions;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -63,7 +63,7 @@ public class UcmEngineInterface extends EngineInterface {
 
 		List<String> paths = new ArrayList<>();
 
-		for (String srcPath : commandValues.getAllStrings(CalienteExportOptions.SOURCE)) {
+		for (String srcPath : commandValues.getAllStrings(CLIOptions.SOURCE)) {
 			if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Empty paths are not allowed"); }
 			if (!srcPath.startsWith("/")) {
 				srcPath = StringUtils.strip(srcPath);
