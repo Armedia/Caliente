@@ -12,9 +12,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
+import com.armedia.caliente.cli.caliente.options.CalienteExportOptions;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;

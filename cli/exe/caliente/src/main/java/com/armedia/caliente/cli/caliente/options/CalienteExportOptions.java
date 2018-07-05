@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.caliente.cfg;
+package com.armedia.caliente.cli.caliente.options;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;

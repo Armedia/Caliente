@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.caliente.cfg;
+package com.armedia.caliente.cli.caliente.options;
 
 import java.net.URL;
 import java.util.Collection;

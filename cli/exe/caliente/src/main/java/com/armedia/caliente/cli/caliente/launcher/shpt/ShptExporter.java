@@ -11,10 +11,10 @@ import org.apache.commons.lang.StringUtils;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
-import com.armedia.caliente.cli.caliente.cfg.CalienteExportOptions;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.options.CalienteExportOptions;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
 import com.armedia.commons.utilities.FileNameTools;

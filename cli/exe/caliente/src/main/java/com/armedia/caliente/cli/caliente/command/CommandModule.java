@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CLIParam;
-import com.armedia.caliente.cli.caliente.cfg.CalienteCommonOptions;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.options.CalienteCommonOptions;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
