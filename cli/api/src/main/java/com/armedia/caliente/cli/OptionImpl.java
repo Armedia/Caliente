@@ -22,7 +22,23 @@ public final class OptionImpl extends Option implements Cloneable {
 	private String key = null;
 
 	public OptionImpl() {
-		this(null);
+	}
+
+	public OptionImpl(char shortOpt) {
+		this(shortOpt, null);
+	}
+
+	public OptionImpl(String longOpt) {
+		this(null, longOpt);
+	}
+
+	public OptionImpl(Character shortOpt, String longOpt) {
+		if (shortOpt != null) {
+			setShortOpt(shortOpt);
+		}
+		if (longOpt != null) {
+			setLongOpt(longOpt);
+		}
 	}
 
 	public OptionImpl(Option other) {
