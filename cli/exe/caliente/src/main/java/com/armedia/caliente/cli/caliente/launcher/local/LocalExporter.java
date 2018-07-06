@@ -5,11 +5,10 @@ import java.io.IOException;
 import java.util.Map;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.options.CLIOptions;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.commons.utilities.Tools;
@@ -70,7 +69,7 @@ class LocalExporter extends ExportCommandModule {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		File source = Tools.canonicalize(new File(commandValues.getString(CLIOptions.SOURCE)));
+		File source = Tools.canonicalize(new File(commandValues.getString(CLIParam.source)));
 
 		// Make sure a source has been specified
 		if (source == null) { throw new CalienteException("Must specify a source to export from"); }

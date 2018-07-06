@@ -15,13 +15,12 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ExportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ExportManifest;
-import com.armedia.caliente.cli.caliente.options.CLIOptions;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -58,7 +57,7 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 		throws CalienteException {
 		if (!super.preConfigure(state, commandValues, settings)) { return false; }
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
-			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIOptions.DIRECT_FS));
+			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
 
 		return true;
 	}
@@ -73,7 +72,8 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
 		throws CalienteException {
 
-		Set<ExportResult> outcomes = commandValues.getAllEnums(ExportResult.class, false, CLIParam.manifest_outcomes);
+		Set<ExportResult> outcomes = commandValues.getAllEnums(ExportResult.class, false,
+			CLIParam.manifest_outcomes_export);
 		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, false, CLIParam.manifest_types);
 
 		final ExportCommandListener mainListener = new ExportCommandListener(this.console);

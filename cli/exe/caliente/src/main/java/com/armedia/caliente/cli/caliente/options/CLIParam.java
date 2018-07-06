@@ -1,0 +1,515 @@
+package com.armedia.caliente.cli.caliente.options;
+
+import com.armedia.caliente.cli.EnumValueFilter;
+import com.armedia.caliente.cli.IntegerValueFilter;
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionWrapper;
+import com.armedia.caliente.cli.StringValueFilter;
+import com.armedia.caliente.cli.caliente.utils.SmtpServer.SslMode;
+import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import com.armedia.caliente.cli.utils.LibLaunchHelper;
+import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
+import com.armedia.caliente.engine.exporter.ExportResult;
+import com.armedia.caliente.engine.importer.ImportResult;
+import com.armedia.caliente.store.CmfType;
+
+public enum CLIParam implements OptionWrapper {
+	batch_size( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("batch-size") //
+			.setDescription("The batch size to use when exporting objects from Documentum") //
+	), //
+
+	content( //
+		new OptionImpl() //
+			.setShortOpt('c') //
+			.setArgumentLimits(1) //
+			.setArgumentName("content-directory-or-config") //
+			.setRequired(true) //
+			.setDescription(
+				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes the store configuration") //
+	), //
+
+	content_model( //
+		new OptionImpl() //
+			.setArgumentName("content-model-file") //
+			.setArgumentLimits(0, -1) //
+			.setDescription("The XML files that make up the Alfresco content model to use on import") //
+	), //
+
+	content_strategy( //
+		new OptionImpl() //
+			.setShortOpt('o') //
+			.setArgumentLimits(1) //
+			.setArgumentName("organization") //
+			.setDescription(
+				"The name of the organization strategy to use in the Content directory (specific engines may override with their own defaults if they require it)") //
+	), //
+
+	copy_content( //
+		new OptionImpl() //
+			.setDescription("Enable the copying of content for the Local engine") //
+	), //
+
+	count_empty( //
+		new OptionImpl() //
+			.setDescription("Enable reporting of empty folders (i.e. folders with 0 non-folder children)") //
+	), //
+
+	count_exclude( //
+		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
+			.setDescription(
+				"Exclude the folder in the count (defaults to ALL except these, may be specified multiple times) - path or object ID is valid") //
+			.setArgumentName("path-or-id") //
+	), //
+
+	count_hidden( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setDescription(
+				"For any folders encountered, evaluate their hidden status and include or exclude the hidden ones. The special value 'any' (default) causes the status to not be taken into account") //
+			.setDefault("any") //
+			.setValueFilter(new StringValueFilter( //
+				false, // Case-insensitive
+				"true", "yes", "on", "1", "false", "off", "no", "0", "any" //
+		)) //
+	), //
+
+	count_include( //
+		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
+			.setDescription(
+				"Include the folder in the count (defaults to only these, may be specified multiple times) - path or object ID is valid") //
+			.setArgumentName("path-or-id") //
+	), //
+
+	count_private( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setDescription(
+				"For any cabinets encountered, evaluate their private status and include or exclude the private ones. The special value 'any' (default) causes the status to not be taken into account") //
+			.setDefault("any") //
+			.setValueFilter(new StringValueFilter( //
+				false, // Case-insensitive
+				"true", "yes", "on", "1", "false", "off", "no", "0", "any" //
+		)) //
+	), //
+
+	db( //
+		new OptionImpl() //
+			.setShortOpt('d') //
+			.setArgumentLimits(1) //
+			.setArgumentName("metadata-directory-or-config") //
+			.setRequired(true) //
+			.setDescription(
+				"The directory into which the metadata database will be stored, or the XML file that describes the store configuration") //
+	), //
+
+	dctm( //
+		DfcLaunchHelper.DFC_DOCUMENTUM //
+	), //
+
+	default_password( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("password") //
+			.setDescription(
+				"The default password to use for users being copied over (the default is to use the same login name)") //
+	), //
+
+	dfc( //
+		DfcLaunchHelper.DFC_LOCATION //
+	), //
+
+	dfc_prop( //
+		DfcLaunchHelper.DFC_PROPERTIES //
+	), //
+
+	direct_fs( //
+		new OptionImpl() //
+			.setDescription("Export files to local FS duplicating the CMS's path") //
+	), //
+
+	domain( //
+		new OptionImpl() //
+			.setArgumentName("domain") //
+			.setArgumentLimits(1) //
+			.setDescription("The domain the user should authenticate against") //
+	), //
+
+	engine( //
+		new OptionImpl() //
+			.setShortOpt('e') //
+			.setArgumentLimits(1) //
+			.setRequired(true) //
+			.setDescription("The ECM engine to use") //
+			.setArgumentName("engine") //
+	), //
+
+	error_count( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("number") //
+			.setDescription("The number of errors to accept before aborting an import") //
+	), //
+
+	exclude_types( //
+		new OptionImpl() //
+			.setArgumentName("object-type(s)") //
+			.setValueFilter(new EnumValueFilter<>(false, CmfType.class)) //
+			.setArgumentLimits(1, -1) //
+			.setDescription("Disable renditions processing") //
+	), //
+
+	external_metadata( //
+		new OptionImpl() //
+			.setArgumentName("external-metadata-file") //
+			.setArgumentLimits(1) //
+			.setDescription("The external metadata descriptor file") //
+	), //
+
+	filename_map( //
+		new OptionImpl() //
+			.setArgumentName("filename-map-file") //
+			.setDefault("filenamemap.xml") //
+			.setArgumentLimits(1) //
+			.setDescription("The Properties (XML) file that contains the static filename mappings to be applied") //
+
+	), //
+
+	filters( //
+		new OptionImpl() //
+			.setArgumentName("filters-file") //
+			.setArgumentLimits(1) //
+			.setDescription("The object filters descriptor file") //
+	), //
+
+	group_map( //
+		new OptionImpl() //
+			.setArgumentName("group-map-file") //
+			.setDefault("groupmap.xml") //
+			.setArgumentLimits(1) //
+			.setDescription("The Properties (XML) file that contains the group name mappings to apply") //
+	), //
+
+	help( //
+		new OptionImpl() //
+			.setShortOpt('h') //
+			.setDescription("This help message") //
+	), //
+
+	ignore_empty_folders( //
+		new OptionImpl() //
+			.setDescription("Enable the copying of content for the Local engine") //
+	), //
+
+	job_name( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setDescription("The name of the synchronization job this export is to define") //
+	), //
+
+	lib( //
+		LibLaunchHelper.LIB //
+	), //
+
+	log( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setDescription("The base name of the log file to use (${logName}).") //
+			.setDefault(CLIConst.DEFAULT_LOG_FORMAT) //
+			.setArgumentName("log-name-template") //
+	), //
+
+	log_cfg( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setDescription(
+				"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
+			.setArgumentName("configuration") //
+	), //
+	mail_auth( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setDescription("The authentication mode to use when connecting to the SMTP host") //
+	), //
+
+	mail_bcc( //
+		new OptionImpl() //
+			.setValueFilter(CLIFilters.EMAIL_FILTER) //
+			.setMinArguments(1) //
+			.setDescription("Blind Carbon Copy Recipients for the status e-mail") //
+	), //
+
+	mail_cc( //
+		new OptionImpl() //
+			.setValueFilter(CLIFilters.EMAIL_FILTER) //
+			.setMinArguments(1) //
+			.setDescription("Carbon Copy Recipients for the status e-mail") //
+	), //
+
+	mail_from( //
+		new OptionImpl() //
+			.setValueFilter(CLIFilters.EMAIL_FILTER) //
+			.setArgumentLimits(1) //
+			.setDescription("Sender for the status e-mail") //
+	), //
+
+	mail_host( //
+		new OptionImpl() //
+			.setValueFilter(CLIFilters.INET_ADDX_FILTER) //
+			.setMinArguments(1) //
+			.setDefault("127.0.0.1") //
+			.setDescription("SMTP host to post the status e-mail to") //
+	), //
+
+	mail_password( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setDescription("The password with which to authenticate to the SMTP host") //
+	), //
+
+	mail_port( //
+		new OptionImpl() //
+			.setValueFilter(new IntegerValueFilter(1, 65535)) //
+			.setMinArguments(1) //
+			.setDefault("25") //
+			.setDescription("The port at which the mail-host is listening") //
+	), //
+
+	mail_ssl( //
+		new OptionImpl() //
+			.setValueFilter(new EnumValueFilter<>(false, SslMode.class)) //
+			.setMinArguments(1) //
+			.setDefault(SslMode.NONE.name()) //
+			.setDescription("The SSL mode to use when connecting to the server") //
+	), //
+
+	mail_to( //
+		new OptionImpl() //
+			.setValueFilter(CLIFilters.EMAIL_FILTER) //
+			.setMinArguments(1) //
+			.setDescription("Recipients for the status e-mail") //
+	), //
+
+	mail_user( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setDescription("The user with which to authenticate to the SMTP host") //
+	), //
+
+	manifest_outcomes_export( //
+		new OptionImpl() //
+			.setLongOpt("manifest-outcomes") //
+			.setArgumentLimits(1) //
+			.setArgumentName("export-outcomes") //
+			.setValueFilter(new EnumValueFilter<>(false, ExportResult.class)) //
+			.setDescription("The outcomes to include in the manifest (not specified = all outcomes)") //
+	), //
+
+	manifest_outcomes_import( //
+		new OptionImpl() //
+			.setLongOpt("manifest-outcomes") //
+			.setArgumentLimits(1) //
+			.setArgumentName("import-outcomes") //
+			.setValueFilter(new EnumValueFilter<>(false, ImportResult.class)) //
+			.setDescription("The outcomes to include in the manifest (not specified = all outcomes)") //
+	), //
+
+	manifest_types( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("types") //
+			.setValueFilter(new EnumValueFilter<>(false, CmfType.class)) //
+			.setDescription("The object types to include in the manifest (not specified = all types)") //
+	), //
+
+	no_filename_map( //
+		new OptionImpl() //
+			.setDescription("Disable the use of the filename map (even if the default map exists)") //
+	), //
+
+	no_renditions( //
+		new OptionImpl() //
+			.setDescription("Disable renditions processing") //
+	), //
+
+	no_versions( //
+		new OptionImpl() //
+			.setDescription("Only operate on the objects' current versions") //
+	), //
+
+	non_recursive( //
+		new OptionImpl() //
+			.setDescription("Turn off counter recursion (i.e. to count a single folder without descending)") //
+	), //
+
+	owner_attributes( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("attribute-name") //
+			.setDescription("The owner_attributes to check for") //
+	), //
+
+	password( //
+		new OptionImpl() //
+			.setArgumentName("password") //
+			.setArgumentLimits(1) //
+			.setDescription("The password to authenticate with") //
+	), //
+
+	reset_job( //
+		new OptionImpl() //
+			.setDescription("Reset any existing synchronization job settings with this export's") //
+	), //
+
+	role_map( //
+		new OptionImpl() //
+			.setArgumentName("role-map-file") //
+			.setDefault("rolemap.xml") //
+			.setArgumentLimits(1) //
+			.setDescription("The Properties (XML) file that contains the role name mappings to apply") //
+	), //
+
+	shpt_source_prefix( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("prefix") //
+			.setDescription("The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)") //
+			.setDefault("/sites") //
+	), //
+
+	skip_acls( //
+		new OptionImpl() //
+			.setDescription("Skip exporting acls") //
+	), //
+
+	skip_content( //
+		new OptionImpl() //
+			.setDescription("Don't process the actual content streams") //
+	), //
+
+	skip_groups( //
+		new OptionImpl() //
+			.setDescription("Skip exporting groups") //
+	), //
+
+	skip_users( //
+		new OptionImpl() //
+			.setDescription("Skip exporting users") //
+	), //
+
+	source( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setRequired(true) //
+			.setArgumentName("source-spec") //
+			.setDescription("The source specification identifying which content to extract") //
+	), //
+
+	special_groups( //
+		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
+			.setArgumentName("group") //
+			.setDescription("The special users that should not be imported into the target instance") //
+			.setValueSep(',') //
+	), //
+
+	special_types( //
+		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
+			.setArgumentName("type") //
+			.setDescription("The special types that should not be imported into the target instance") //
+			.setValueSep(',') //
+	), //
+
+	special_users( //
+		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
+			.setArgumentName("user") //
+			.setDescription("The special users that should not be imported into the target instance") //
+			.setValueSep(',') //
+	), //
+
+	target( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("target-path") //
+			.setDescription("The path location into which to import the contents") //
+	), //
+
+	threads( //
+		ThreadsLaunchHelper.THREADS //
+	), //
+
+	transformations( //
+		new OptionImpl() //
+			.setArgumentName("transformations-file") //
+			.setArgumentLimits(1) //
+			.setDescription("The object transformations descriptor file") //
+	), //
+
+	trim_path( //
+		new OptionImpl() //
+			.setArgumentLimits(0, 1) //
+			.setArgumentName("number") //
+			.setDescription("The number of leading path components to trim from the content being imported") //
+	), //
+
+	url( //
+		new OptionImpl() //
+			.setArgumentName("url") //
+			.setArgumentLimits(1) //
+			.setRequired(true) //
+			.setDescription("The server URL for the connection") //
+	), //
+
+	user( //
+		new OptionImpl() //
+			.setArgumentName("user") //
+			.setArgumentLimits(1) //
+			.setDescription("The user to authenticate as") //
+	), //
+
+	user_map( //
+		new OptionImpl() //
+			.setArgumentName("user-map-file") //
+			.setDefault("usermap.xml") //
+			.setArgumentLimits(1) //
+			.setDescription("The Properties (XML) file that contains the user name mappings to apply") //
+	), //
+
+	validate_requirements( //
+		new OptionImpl() //
+			.setDescription(
+				"Activate the validation of an object's requirements' import success during object import (object is skipped if any of its requirements fails to import properly)") //
+	), //
+
+	//
+	;
+
+	public final OptionImpl option;
+
+	private CLIParam(Option option) {
+		this(new OptionImpl(option));
+	}
+
+	private CLIParam(OptionImpl option) {
+		if (option.getLongOpt() == null) {
+			option.setLongOpt(name().replace('_', '-'));
+		}
+		this.option = option;
+	}
+
+	@Override
+	public Option getOption() {
+		return this.option;
+	}
+
+	public OptionImpl getOptionImpl() {
+		return this.option;
+	}
+}

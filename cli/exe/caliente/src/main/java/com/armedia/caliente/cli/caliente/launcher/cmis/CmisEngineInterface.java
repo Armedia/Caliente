@@ -10,8 +10,8 @@ import com.armedia.caliente.cli.OptionSchemeExtender;
 import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
-import com.armedia.caliente.cli.caliente.options.CalienteCommonOptions;
-import com.armedia.caliente.cli.caliente.options.CalienteUrlOptions;
+import com.armedia.caliente.cli.caliente.options.CLIGroup;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.token.Token;
@@ -24,10 +24,10 @@ public class CmisEngineInterface extends EngineInterface implements OptionScheme
 
 	private static final OptionGroup CONNECTIVITY = //
 		new OptionGroupImpl("CMIS Connectivity Options") //
-			.add(CalienteUrlOptions.URL) //
-			.add(CalienteUrlOptions.USER) //
-			.add(CalienteUrlOptions.PASSWORD) //
-			.add(CalienteUrlOptions.DOMAIN) //
+			.add(CLIParam.url) //
+			.add(CLIParam.user) //
+			.add(CLIParam.password) //
+			.add(CLIParam.domain) //
 	;
 
 	static final String ID_PREFIX = "id:";
@@ -76,7 +76,7 @@ public class CmisEngineInterface extends EngineInterface implements OptionScheme
 		throws CommandLineExtensionException {
 
 		extender //
-			.add(new CalienteCommonOptions().asGroup()) //
+			.add(CLIGroup.COMMON) //
 			.add(CmisEngineInterface.CONNECTIVITY) //
 		;
 	}

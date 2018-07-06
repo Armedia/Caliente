@@ -15,12 +15,12 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ImportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ImportManifest;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportEngineListener;
@@ -43,10 +43,8 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 	@Override
 	protected boolean preConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
-		settings.put(ImportSetting.TARGET_LOCATION.getLabel(),
-			commandValues.getString(CLIParam.cmf_import_target_location, "/"));
-		settings.put(ImportSetting.TRIM_PREFIX.getLabel(),
-			commandValues.getInteger(CLIParam.cmf_import_trim_prefix, 0));
+		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), commandValues.getString(CLIParam.target, "/"));
+		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), commandValues.getInteger(CLIParam.trim_path, 0));
 
 		settings.put(ImportSetting.NO_FILENAME_MAP.getLabel(), commandValues.isPresent(CLIParam.no_filename_map));
 		settings.put(ImportSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
@@ -77,7 +75,7 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
 		throws CalienteException {
 		Set<ImportResult> outcomes = commandValues.getAllEnums(ImportResult.class, CommandModule.ALL, false,
-			CLIParam.manifest_outcomes);
+			CLIParam.manifest_outcomes_import);
 		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, CommandModule.ALL, false,
 			CLIParam.manifest_types);
 

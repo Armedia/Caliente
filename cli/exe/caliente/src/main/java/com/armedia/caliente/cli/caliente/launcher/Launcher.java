@@ -36,9 +36,9 @@ import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
-import com.armedia.caliente.cli.caliente.options.CLIOptions;
-import com.armedia.caliente.cli.caliente.options.CalienteBaseOptions;
-import com.armedia.caliente.cli.caliente.options.CalienteStoreOptions;
+import com.armedia.caliente.cli.caliente.options.CLIConst;
+import com.armedia.caliente.cli.caliente.options.CLIGroup;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
@@ -57,10 +57,10 @@ import com.armedia.commons.utilities.Tools;
 public class Launcher extends AbstractLauncher implements OptionSchemeExtensionSupport {
 
 	public static final void main(String... args) {
-		System.exit(new Launcher().launch(CLIOptions.HELP, args));
+		System.exit(new Launcher().launch(CLIParam.help, args));
 	}
 
-	public static final String DEFAULT_LOG_FORMAT = CalienteBaseOptions.DEFAULT_LOG_FORMAT;
+	public static final String DEFAULT_LOG_FORMAT = CLIConst.DEFAULT_LOG_FORMAT;
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
 	private static final Path DEFAULT_DB_PATH = Paths.get("caliente");
@@ -102,13 +102,13 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		}
 
 		// Now, find the engines available
-		OptionImpl impl = OptionImpl.cast(CLIOptions.ENGINE);
+		OptionImpl impl = OptionImpl.cast(CLIParam.engine);
 		if (impl != null) {
 			impl.setValueFilter(new StringValueFilter(false, EngineInterface.getAliases(this.log)));
 		}
 
 		return scheme.add( //
-			new CalienteBaseOptions().asGroup() //
+			CLIGroup.BASE //
 		);
 	}
 
@@ -119,12 +119,12 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		// Has an engine been selected already?
 		if (this.engineInterface == null) {
-			if (!baseValues.isPresent(CLIOptions.ENGINE)) { throw new CommandLineExtensionException(currentNumber,
+			if (!baseValues.isPresent(CLIParam.engine)) { throw new CommandLineExtensionException(currentNumber,
 				baseValues, currentCommand, commandValues, currentToken,
 				"No engine has been selected in the base options yet (option order is important!)"); }
 
 			// Find the desired engine
-			final String engine = baseValues.getString(CLIOptions.ENGINE);
+			final String engine = baseValues.getString(CLIParam.engine);
 			this.engineInterface = EngineInterface.get(engine);
 			if (this.engineInterface == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
 				currentCommand, commandValues, currentToken,
@@ -189,9 +189,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			this.logLocation = Tools.canonicalize(new File("."));
 		}
 
-		this.directFsMode = baseValues.isPresent(CLIOptions.DIRECT_FS);
-		this.contentStrategy = baseValues.getString(CalienteStoreOptions.CONTENT_STRATEGY,
-			Launcher.DEFAULT_CONTENT_STRATEGY);
+		this.directFsMode = baseValues.isPresent(CLIParam.direct_fs);
+		this.contentStrategy = baseValues.getString(CLIParam.content_strategy, Launcher.DEFAULT_CONTENT_STRATEGY);
 	}
 
 	private File getMetadataLocation(OptionValues baseValues) throws CommandLineProcessingException {
@@ -201,8 +200,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		// Step 2: There is no special location used by the engine, so see what the user wants to do
 		String path = null;
-		if (baseValues.isPresent(CalienteStoreOptions.DB)) {
-			path = baseValues.getString(CalienteStoreOptions.DB);
+		if (baseValues.isPresent(CLIParam.db)) {
+			path = baseValues.getString(CLIParam.db);
 		} else {
 			path = Launcher.DEFAULT_DB_PATH.toString();
 		}
@@ -244,8 +243,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		// Step 2: There is no special location used by the engine, so see what the user wants to do
 		String path = null;
-		if (baseValues.isPresent(CalienteStoreOptions.CONTENT)) {
-			path = baseValues.getString(CalienteStoreOptions.CONTENT);
+		if (baseValues.isPresent(CLIParam.content)) {
+			path = baseValues.getString(CLIParam.content);
 		} else {
 			if (this.objectStoreLocation != null) {
 				path = new File(this.objectStoreLocation, Launcher.DEFAULT_CONTENT_PATH).getAbsolutePath();
@@ -455,7 +454,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
 		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
-		final String logName = baseValues.getString(CLIOptions.LOG);
+		final String logName = baseValues.getString(CLIParam.log);
 
 		// TODO: Write the log out into the DB directory
 		final File logDir = this.logLocation;
@@ -467,7 +466,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		System.setProperty("logMode", logMode);
 		System.setProperty("logEngine", logEngine);
 
-		String logCfg = baseValues.getString(CLIOptions.LOG_CFG);
+		String logCfg = baseValues.getString(CLIParam.log_cfg);
 		boolean customLog = false;
 		if (logCfg != null) {
 			final File cfg = createFile(logCfg);

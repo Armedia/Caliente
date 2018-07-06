@@ -13,7 +13,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.options.CLIOptions;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.cmis.CmisSetting;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -72,7 +72,7 @@ class CmisExporter extends ExportCommandModule {
 			throw new CalienteException(String.format("Bad URL for the CMIS repository: [%s]", server), e);
 		}
 
-		String srcPath = commandValues.getString(CLIOptions.SOURCE);
+		String srcPath = commandValues.getString(CLIParam.source);
 		if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Must provide the CMIS source path or ID"); }
 
 		// If it has a leading slash, it's a path

@@ -10,11 +10,10 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.cfg.CLIParam;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.options.CLIOptions;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
 import com.armedia.commons.utilities.FileNameTools;
@@ -73,7 +72,7 @@ class ShptExporter extends ExportCommandModule {
 			throw new CalienteException(String.format("Bad URL for Sharepoint: [%s]", server), e);
 		}
 
-		String srcPath = commandValues.getString(CLIOptions.SOURCE);
+		String srcPath = commandValues.getString(CLIParam.source);
 		if (srcPath == null) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
 		List<String> l = FileNameTools.tokenize(srcPath, '/');
 		if (l.isEmpty()) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
