@@ -105,7 +105,7 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
 		settings.put(TransferSetting.TRANSFORMATION.getLabel(), commandValues.getString(CLIParam.transformations));
 		settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(), commandValues.getString(CLIParam.external_metadata));
-		settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CLIParam.filters));
+		settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CLIParam.filter));
 		return true;
 	}
 

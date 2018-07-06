@@ -14,7 +14,7 @@
 
 
 Pass 1
-	GLOBALS
+	BASE OPTIONS:
 		-?,--help
 		-l,--lib ${libdir1,libdir2,...,libdirN}
 		--log ${log-basename}
@@ -34,31 +34,38 @@ Pass 2
 
 		COMMAND: ( EXPORT | IMPORT )
 			(common)
-				-d,--db ${dir-or-config}
-				-c,--content ${dir-or-config}
+				STORE
+					-d,--db ${dir-or-config}
+					-c,--content ${dir-or-config}
+					--content-strategy ${content-strategy}
+
 				--no-renditions
 				--no-versions
 				--skip-content
+
 				--error-count ${count}
+
 				--manifest-types ${type1,type2,...,typeN}
 				--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
 				--exclude-types ${type1,type2,...,typeN}
 				--filter ${filter}
 				--transformation ${transformation}
 				--external-metadata ${externalMeta}
-				--mail-from ${sender}
-				--mail-to ${recipient1,recipient2,...,recipientN}
-				--mail-cc ${recipient1,recipient2,...,recipientN}
-				--mail-bcc ${recipient1,recipient2,...,recipientN}
-				--mail-host ${host}
-				--mail-port ${port}
-				--mail-ssl ${sslMode}
-				--mail-client-cert ${cert}
-				--mail-server-cert ${cert}
-				--mail-ca ${ca}
-				--mail-user ${user}
-				--mail-pass ${pass}
-				--mail-auth ${mode}
+
+				MAIL
+					--mail-from ${sender}
+					--mail-to ${recipient1,recipient2,...,recipientN}
+					--mail-cc ${recipient1,recipient2,...,recipientN}
+					--mail-bcc ${recipient1,recipient2,...,recipientN}
+					--mail-host ${host}
+					--mail-port ${port}
+					--mail-ssl ${sslMode}
+					--mail-client-cert ${cert}
+					--mail-server-cert ${cert}
+					--mail-ca ${ca}
+					--mail-user ${user}
+					--mail-pass ${pass}
+					--mail-auth ${mode}
 
 		COMMAND: ( EXPORT | EXP | EX )
 			(common)
@@ -148,7 +155,7 @@ Pass 2
 					--dfc ${dfc-dir}
 					--dfc-prop ${dfc-prop-file}
 					--dctm ${dctm-dir}
-				*	--predicate ${predicate}
+				*	--source ${predicate}
 
 				CMIS
 				*	--server ${url}

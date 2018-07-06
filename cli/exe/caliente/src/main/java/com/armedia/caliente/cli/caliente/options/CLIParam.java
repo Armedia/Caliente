@@ -180,11 +180,11 @@ public enum CLIParam implements OptionWrapper {
 
 	), //
 
-	filters( //
+	filter( //
 		new OptionImpl() //
-			.setArgumentName("filters-file") //
+			.setArgumentName("filter-file") //
 			.setArgumentLimits(1) //
-			.setDescription("The object filters descriptor file") //
+			.setDescription("The object filter descriptor file") //
 	), //
 
 	group_map( //
