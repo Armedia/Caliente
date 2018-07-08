@@ -224,6 +224,13 @@ public enum CLIParam implements OptionWrapper {
 			.setArgumentName("log-name-template") //
 	), //
 
+	log_dir( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setDescription("The directory into which the logs will be output, instead of the default") //
+			.setArgumentName("log-directory") //
+	), //
+
 	log_cfg( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //

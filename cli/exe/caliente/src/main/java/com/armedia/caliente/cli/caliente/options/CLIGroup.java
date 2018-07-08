@@ -11,6 +11,7 @@ public class CLIGroup {
 		.add(CLIParam.lib) //
 		.add(CLIParam.log) //
 		.add(CLIParam.log_cfg) //
+		.add(CLIParam.log_dir) //
 	;
 
 	public static final OptionGroup IMPORT_EXPORT_COMMON = new OptionGroupImpl("Common Export/Import Options") //

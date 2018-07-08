@@ -36,7 +36,6 @@ import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
-import com.armedia.caliente.cli.caliente.options.CLIConst;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.exception.CommandLineExtensionException;
@@ -59,8 +58,6 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	public static final void main(String... args) {
 		System.exit(new Launcher().launch(CLIParam.help, args));
 	}
-
-	public static final String DEFAULT_LOG_FORMAT = CLIConst.DEFAULT_LOG_FORMAT;
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
 	private static final Path DEFAULT_DB_PATH = Paths.get("caliente");
@@ -107,9 +104,9 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			impl.setValueFilter(new StringValueFilter(false, EngineInterface.getAliases(this.log)));
 		}
 
-		return scheme.add( //
-			CLIGroup.BASE //
-		);
+		return scheme //
+			.add(CLIGroup.BASE) //
+		;
 	}
 
 	@Override
@@ -170,8 +167,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 
 		this.objectStoreLocation = getMetadataLocation(baseValues);
 		this.contentStoreLocation = getContentLocation(baseValues);
-
-		this.logLocation = null;
+		this.logLocation = getLogLocation(baseValues);
 
 		if ((this.logLocation == null) && (this.objectStoreLocation != null)
 			&& (!this.objectStoreLocation.exists() || this.objectStoreLocation.isDirectory())) {
@@ -299,6 +295,12 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 			String.valueOf(this.command.getDescriptor().isRequiresCleanData()));
 		cfg.getSettings().putAll(commonValues);
 		return cfg;
+	}
+
+	private File getLogLocation(OptionValues baseValues) throws CommandLineProcessingException {
+		// Step 1: Does this engine use a special location for content?
+		if (!baseValues.isPresent(CLIParam.log_dir)) { return null; }
+		return Tools.canonicalize(new File(baseValues.getString(CLIParam.log_dir)));
 	}
 
 	private void initializeStores() throws Exception {
