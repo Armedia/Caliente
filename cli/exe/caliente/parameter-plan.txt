@@ -19,6 +19,7 @@ Pass 1
 		-l,--lib ${libdir1,libdir2,...,libdirN}
 		--log ${log-basename}
 		--log-cfg ${log-cfg-file}
+		--log-dir ${log-dir}
 		--list-engines
 		--list-commands
 	*	-e, --engine ${dfc|cmis|shpt|local|...}
@@ -149,7 +150,7 @@ Pass 2
 
 			Pass 3 (from --engine)
 				DFC
-				*	--docbase ${docbase}
+				*	--server ${docbase}
 				*	--user ${user}
 				*	--password ${password}
 					--dfc ${dfc-dir}

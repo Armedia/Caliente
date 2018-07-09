@@ -1,6 +1,10 @@
 package com.armedia.caliente.cli.caliente.options;
 
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.UnknownHostException;
 
 import javax.mail.internet.AddressException;
@@ -47,9 +51,8 @@ public class CLIFilters {
 
 	};
 
-	/*
 	static final OptionValueFilter URI_FILTER = new OptionValueFilter() {
-	
+
 		@Override
 		protected boolean checkValue(String value) {
 			try {
@@ -59,16 +62,16 @@ public class CLIFilters {
 			}
 			return false;
 		}
-	
+
 		@Override
 		public String getDefinition() {
 			return "A URI (as per java.net.URI)";
 		}
-	
+
 	};
-	
+
 	static final OptionValueFilter URL_FILTER = new OptionValueFilter() {
-	
+
 		@Override
 		protected boolean checkValue(String value) {
 			try {
@@ -78,12 +81,25 @@ public class CLIFilters {
 			}
 			return false;
 		}
-	
+
 		@Override
 		public String getDefinition() {
 			return "A URL (as per java.net.URL)";
 		}
-	
+
 	};
-	*/
+
+	static final OptionValueFilter MAIL_AUTH_FILTER = new OptionValueFilter() {
+
+		@Override
+		protected boolean checkValue(String value) {
+			return false;
+		}
+
+		@Override
+		public String getDefinition() {
+			return "An SMTP authentication mode";
+		}
+
+	};
 }

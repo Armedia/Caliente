@@ -34,8 +34,8 @@ public enum CLIParam implements OptionWrapper {
 
 	content_model( //
 		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
 			.setArgumentName("content-model-file") //
-			.setArgumentLimits(0, -1) //
 			.setDescription("The XML files that make up the Alfresco content model to use on import") //
 	), //
 
@@ -61,9 +61,9 @@ public enum CLIParam implements OptionWrapper {
 	count_exclude( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
+			.setArgumentName("path-or-id") //
 			.setDescription(
 				"Exclude the folder in the count (defaults to ALL except these, may be specified multiple times) - path or object ID is valid") //
-			.setArgumentName("path-or-id") //
 	), //
 
 	count_hidden( //
@@ -81,9 +81,9 @@ public enum CLIParam implements OptionWrapper {
 	count_include( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
+			.setArgumentName("path-or-id") //
 			.setDescription(
 				"Include the folder in the count (defaults to only these, may be specified multiple times) - path or object ID is valid") //
-			.setArgumentName("path-or-id") //
 	), //
 
 	count_private( //
@@ -135,18 +135,18 @@ public enum CLIParam implements OptionWrapper {
 
 	domain( //
 		new OptionImpl() //
-			.setArgumentName("domain") //
 			.setArgumentLimits(1) //
+			.setArgumentName("domain") //
 			.setDescription("The domain the user should authenticate against") //
 	), //
 
 	engine( //
 		new OptionImpl() //
 			.setShortOpt('e') //
-			.setArgumentLimits(1) //
 			.setRequired(true) //
-			.setDescription("The ECM engine to use") //
+			.setArgumentLimits(1) //
 			.setArgumentName("engine") //
+			.setDescription("The ECM engine to use") //
 	), //
 
 	error_count( //
@@ -158,40 +158,40 @@ public enum CLIParam implements OptionWrapper {
 
 	exclude_types( //
 		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
 			.setArgumentName("object-type(s)") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfType.class)) //
-			.setArgumentLimits(1, -1) //
 			.setDescription("Disable renditions processing") //
 	), //
 
 	external_metadata( //
 		new OptionImpl() //
-			.setArgumentName("external-metadata-file") //
 			.setArgumentLimits(1) //
+			.setArgumentName("external-metadata-file") //
 			.setDescription("The external metadata descriptor file") //
 	), //
 
 	filename_map( //
 		new OptionImpl() //
+			.setArgumentLimits(1) //
 			.setArgumentName("filename-map-file") //
 			.setDefault("filenamemap.xml") //
-			.setArgumentLimits(1) //
 			.setDescription("The Properties (XML) file that contains the static filename mappings to be applied") //
 
 	), //
 
 	filter( //
 		new OptionImpl() //
-			.setArgumentName("filter-file") //
 			.setArgumentLimits(1) //
+			.setArgumentName("filter-file") //
 			.setDescription("The object filter descriptor file") //
 	), //
 
 	group_map( //
 		new OptionImpl() //
+			.setArgumentLimits(1) //
 			.setArgumentName("group-map-file") //
 			.setDefault("groupmap.xml") //
-			.setArgumentLimits(1) //
 			.setDescription("The Properties (XML) file that contains the group name mappings to apply") //
 	), //
 
@@ -219,99 +219,109 @@ public enum CLIParam implements OptionWrapper {
 	log( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
-			.setDescription("The base name of the log file to use (${logName}).") //
-			.setDefault(CLIConst.DEFAULT_LOG_FORMAT) //
 			.setArgumentName("log-name-template") //
+			.setDefault(CLIConst.DEFAULT_LOG_FORMAT) //
+			.setDescription("The base name of the log file to use (${logName}).") //
 	), //
 
 	log_dir( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
-			.setDescription("The directory into which the logs will be output, instead of the default") //
 			.setArgumentName("log-directory") //
+			.setDescription("The directory into which the logs will be output, instead of the default") //
 	), //
 
 	log_cfg( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
+			.setArgumentName("configuration") //
 			.setDescription(
 				"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
-			.setArgumentName("configuration") //
 	), //
 	mail_auth( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
+			.setArgumentName("authentication-mode") //
+			.setValueFilter(CLIFilters.MAIL_AUTH_FILTER) //
 			.setDescription("The authentication mode to use when connecting to the SMTP host") //
 	), //
 
 	mail_bcc( //
 		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
+			.setArgumentName("email") //
 			.setValueFilter(CLIFilters.EMAIL_FILTER) //
-			.setMinArguments(1) //
 			.setDescription("Blind Carbon Copy Recipients for the status e-mail") //
 	), //
 
 	mail_cc( //
 		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
+			.setArgumentName("email") //
 			.setValueFilter(CLIFilters.EMAIL_FILTER) //
-			.setMinArguments(1) //
 			.setDescription("Carbon Copy Recipients for the status e-mail") //
 	), //
 
 	mail_from( //
 		new OptionImpl() //
-			.setValueFilter(CLIFilters.EMAIL_FILTER) //
 			.setArgumentLimits(1) //
+			.setArgumentName("email") //
+			.setValueFilter(CLIFilters.EMAIL_FILTER) //
 			.setDescription("Sender for the status e-mail") //
 	), //
 
 	mail_host( //
 		new OptionImpl() //
-			.setValueFilter(CLIFilters.INET_ADDX_FILTER) //
-			.setMinArguments(1) //
+			.setArgumentLimits(1) //
 			.setDefault("127.0.0.1") //
+			.setValueFilter(CLIFilters.INET_ADDX_FILTER) //
 			.setDescription("SMTP host to post the status e-mail to") //
 	), //
 
 	mail_password( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
+			.setArgumentName("password") //
 			.setDescription("The password with which to authenticate to the SMTP host") //
 	), //
 
 	mail_port( //
 		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("port") //
 			.setValueFilter(new IntegerValueFilter(1, 65535)) //
-			.setMinArguments(1) //
 			.setDefault("25") //
 			.setDescription("The port at which the mail-host is listening") //
 	), //
 
 	mail_ssl( //
 		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("ssl-mode") //
 			.setValueFilter(new EnumValueFilter<>(false, SslMode.class)) //
-			.setMinArguments(1) //
 			.setDefault(SslMode.NONE.name()) //
 			.setDescription("The SSL mode to use when connecting to the server") //
 	), //
 
 	mail_to( //
 		new OptionImpl() //
+			.setArgumentLimits(1, -1) //
+			.setArgumentName("email") //
 			.setValueFilter(CLIFilters.EMAIL_FILTER) //
-			.setMinArguments(1) //
 			.setDescription("Recipients for the status e-mail") //
 	), //
 
 	mail_user( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
+			.setArgumentName("user") //
 			.setDescription("The user with which to authenticate to the SMTP host") //
 	), //
 
 	manifest_outcomes_export( //
 		new OptionImpl() //
 			.setLongOpt("manifest-outcomes") //
-			.setArgumentLimits(1) //
+			.setArgumentLimits(1, -1) //
 			.setArgumentName("export-outcomes") //
 			.setValueFilter(new EnumValueFilter<>(false, ExportResult.class)) //
 			.setDescription("The outcomes to include in the manifest (not specified = all outcomes)") //
@@ -320,7 +330,7 @@ public enum CLIParam implements OptionWrapper {
 	manifest_outcomes_import( //
 		new OptionImpl() //
 			.setLongOpt("manifest-outcomes") //
-			.setArgumentLimits(1) //
+			.setArgumentLimits(1, -1) //
 			.setArgumentName("import-outcomes") //
 			.setValueFilter(new EnumValueFilter<>(false, ImportResult.class)) //
 			.setDescription("The outcomes to include in the manifest (not specified = all outcomes)") //
@@ -328,7 +338,7 @@ public enum CLIParam implements OptionWrapper {
 
 	manifest_types( //
 		new OptionImpl() //
-			.setArgumentLimits(1) //
+			.setArgumentLimits(1, -1) //
 			.setArgumentName("types") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfType.class)) //
 			.setDescription("The object types to include in the manifest (not specified = all types)") //
@@ -356,15 +366,15 @@ public enum CLIParam implements OptionWrapper {
 
 	owner_attributes( //
 		new OptionImpl() //
-			.setArgumentLimits(1) //
+			.setArgumentLimits(1, -1) //
 			.setArgumentName("attribute-name") //
 			.setDescription("The owner_attributes to check for") //
 	), //
 
 	password( //
 		new OptionImpl() //
-			.setArgumentName("password") //
 			.setArgumentLimits(1) //
+			.setArgumentName("password") //
 			.setDescription("The password to authenticate with") //
 	), //
 
@@ -375,13 +385,13 @@ public enum CLIParam implements OptionWrapper {
 
 	role_map( //
 		new OptionImpl() //
+			.setArgumentLimits(1) //
 			.setArgumentName("role-map-file") //
 			.setDefault("rolemap.xml") //
-			.setArgumentLimits(1) //
 			.setDescription("The Properties (XML) file that contains the role name mappings to apply") //
 	), //
 
-	shpt_source_prefix( //
+	shpt_prefix( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
 			.setArgumentName("prefix") //
@@ -411,8 +421,8 @@ public enum CLIParam implements OptionWrapper {
 
 	source( //
 		new OptionImpl() //
-			.setArgumentLimits(1) //
 			.setRequired(true) //
+			.setArgumentLimits(1) //
 			.setArgumentName("source-spec") //
 			.setDescription("The source specification identifying which content to extract") //
 	), //
@@ -454,38 +464,38 @@ public enum CLIParam implements OptionWrapper {
 
 	transformations( //
 		new OptionImpl() //
-			.setArgumentName("transformations-file") //
 			.setArgumentLimits(1) //
+			.setArgumentName("transformations-file") //
 			.setDescription("The object transformations descriptor file") //
 	), //
 
 	trim_path( //
 		new OptionImpl() //
-			.setArgumentLimits(0, 1) //
+			.setArgumentLimits(1) //
 			.setArgumentName("number") //
 			.setDescription("The number of leading path components to trim from the content being imported") //
 	), //
 
 	url( //
 		new OptionImpl() //
-			.setArgumentName("url") //
-			.setArgumentLimits(1) //
 			.setRequired(true) //
+			.setArgumentLimits(1) //
+			.setArgumentName("url") //
 			.setDescription("The server URL for the connection") //
 	), //
 
 	user( //
 		new OptionImpl() //
-			.setArgumentName("user") //
 			.setArgumentLimits(1) //
+			.setArgumentName("user") //
 			.setDescription("The user to authenticate as") //
 	), //
 
 	user_map( //
 		new OptionImpl() //
+			.setArgumentLimits(1) //
 			.setArgumentName("user-map-file") //
 			.setDefault("usermap.xml") //
-			.setArgumentLimits(1) //
 			.setDescription("The Properties (XML) file that contains the user name mappings to apply") //
 	), //
 
