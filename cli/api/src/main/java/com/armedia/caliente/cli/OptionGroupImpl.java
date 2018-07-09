@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -150,17 +151,10 @@ public class OptionGroupImpl implements OptionGroup {
 	}
 
 	@Override
-	public OptionGroupImpl addGroup(OptionGroup optionGroup) throws DuplicateOptionException {
-		if (optionGroup != null) {
-			add(optionGroup.getOptions());
-		}
-		return this;
-	}
-
-	@Override
-	public <O extends Option> OptionGroupImpl add(Collection<O> options) throws DuplicateOptionException {
-		if ((options != null) && !options.isEmpty()) {
-			Collection<O> added = new ArrayList<>();
+	public <O extends Option> OptionGroupImpl addFrom(Iterable<O> options) throws DuplicateOptionException {
+		if (options != null) {
+			Collection<O> added = new LinkedList<>();
+			boolean ok = false;
 			try {
 				for (O o : options) {
 					if (o != null) {
@@ -168,12 +162,14 @@ public class OptionGroupImpl implements OptionGroup {
 						added.add(o);
 					}
 				}
-			} catch (final DuplicateOptionException e) {
-				// Roll back the changes...
-				for (O o : added) {
-					remove(o);
+				ok = true;
+			} finally {
+				if (!ok) {
+					// Roll back the changes...
+					for (O o : added) {
+						remove(o);
+					}
 				}
-				throw e;
 			}
 		}
 		return this;
@@ -316,10 +312,10 @@ public class OptionGroupImpl implements OptionGroup {
 	}
 
 	@Override
-	public Collection<Option> findCollisions(OptionGroup optionGroup) {
-		if (optionGroup == null) { return null; }
+	public <O extends Option> Collection<Option> findCollisions(Iterable<O> options) {
+		if (options == null) { return null; }
 		Map<String, Option> ret = new TreeMap<>();
-		for (Option o : optionGroup.getOptions()) {
+		for (O o : options) {
 			Collection<Option> C = findCollisions(o);
 			if (C != null) {
 				for (Option c : C) {

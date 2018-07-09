@@ -7,27 +7,18 @@ import com.armedia.caliente.cli.exception.DuplicateOptionException;
 public interface OptionGroup extends OptionContainer {
 
 	/**
-	 * Adds all the options from the given group
+	 * Adds the given options to this option scheme, by iterating over the given {@link Iterable}
+	 * and invoking {@link #add(Option)} on each non-{@code null} element. If the
+	 * {@link DuplicateOptionException} is raised, then all the incoming changes will be rolled
+	 * back.
 	 *
-	 * @param optionGroup
-	 *            the option group from which to add the options
+	 * @param options
+	 *            the options to add
 	 * @throws IllegalArgumentException
-	 *             if the given option collides with any already-existing options (you can check
-	 *             with {@link #findCollisions(OptionGroup)})
+	 *             if any of the given options collides with any already-existing options (you can
+	 *             check with {@link #findCollisions(Iterable)})
 	 */
-	public OptionGroup addGroup(OptionGroup optionGroup) throws DuplicateOptionException;
-
-	/**
-	 * Returns the options incoming from the given option group that would collide with existing
-	 * collisions in this group, based on short or long options. If no collisions are found,
-	 * {@code null} is returned.
-	 *
-	 * @param optionGroup
-	 *            the option group whose options should be checked for
-	 * @return the options in the incoming group that would collide with options already in this
-	 *         group based on short or long options, or {@code null} if none collide
-	 */
-	public Collection<Option> findCollisions(OptionGroup optionGroup);
+	public <O extends Option> OptionGroup addFrom(Iterable<O> options) throws DuplicateOptionException;
 
 	/**
 	 * Adds the given option to this option group.
@@ -52,20 +43,6 @@ public interface OptionGroup extends OptionContainer {
 	 *             {@link #countCollisions(Option)}
 	 */
 	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException;
-
-	/**
-	 * <p>
-	 * Adds the given options to this option scheme, by iterating over the collection and invoking
-	 * {@link #add(Option)} on each non-{@code null} element. If the
-	 * {@link DuplicateOptionException} is raised, then all the incoming options will have added
-	 * correctly up to the one first one that generated a conflict.
-	 * </p>
-	 *
-	 * @param options
-	 *            the options to add
-	 * @throws DuplicateOptionException
-	 */
-	public <O extends Option> OptionGroup add(Collection<O> options) throws DuplicateOptionException;
 
 	/**
 	 * Remove any and all options (a maximum of 2) that may collide with the given option's short or

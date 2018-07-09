@@ -230,17 +230,19 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 		if (this.groups.containsKey(key)) { throw new DuplicateOptionGroupException(group.getName()); }
 
 		List<Option> added = new LinkedList<>();
+		boolean ok = false;
 		try {
 			for (Option o : group) {
 				this.aggregate.add(o);
 				added.add(o);
 			}
-		} catch (final DuplicateOptionException e) {
-			throw e;
+			ok = true;
 		} finally {
-			// Roll back the changes, as they'll be re-done below...
-			for (Option o : added) {
-				this.aggregate.remove(o);
+			if (!ok) {
+				// Roll back the changes, as they'll be re-done below...
+				for (Option o : added) {
+					this.aggregate.remove(o);
+				}
 			}
 		}
 
@@ -349,13 +351,19 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	@Override
-	public Collection<Option> findCollisions(OptionGroup optionGroup) {
-		return this.aggregate.findCollisions(optionGroup);
+	public <O extends Option> Collection<Option> findCollisions(Iterable<O> options) {
+		return this.aggregate.findCollisions(options);
 	}
 
 	@Override
 	public final Collection<Option> findCollisions(Character shortOpt, String longOpt) {
 		return this.aggregate.findCollisions(shortOpt, longOpt);
+	}
+
+	@Override
+	public <O extends Option> OptionScheme addFrom(Iterable<O> options) throws DuplicateOptionException {
+		this.baseGroup.addFrom(options);
+		return this;
 	}
 
 	@Override
@@ -367,12 +375,6 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	@Override
 	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException {
 		this.baseGroup.add(option);
-		return this;
-	}
-
-	@Override
-	public <O extends Option> OptionScheme add(Collection<O> options) throws DuplicateOptionException {
-		this.baseGroup.add(options);
 		return this;
 	}
 

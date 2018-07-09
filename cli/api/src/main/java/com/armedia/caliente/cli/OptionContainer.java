@@ -145,6 +145,17 @@ public interface OptionContainer extends Iterable<Option> {
 	public Collection<Option> findCollisions(Option option);
 
 	/**
+	 * Returns the options already in this scheme that would collide with the given option, based on
+	 * short or long options. If no collisions are found, {@code null} is returned.
+	 *
+	 * @param options
+	 *            the options to check for
+	 * @return the options already in this scheme that would collide with the given option, based on
+	 *         short or long options, or {@code null} if none collide
+	 */
+	public <O extends Option> Collection<Option> findCollisions(Iterable<O> options);
+
+	/**
 	 * Returns the Option already in this scheme that would collide with the given short or long
 	 * options. If no collisions are found, {@code null} is returned. This means that the collection
 	 * may contain either 1 or 2 elements.

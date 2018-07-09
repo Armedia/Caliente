@@ -47,14 +47,14 @@ public class CLIGroup {
 	;
 
 	public static final OptionGroup EXPORT_COMMON = new OptionGroupImpl("Common Export Options") //
-		.addGroup(CLIGroup.IMPORT_EXPORT_COMMON) //
+		.addFrom(CLIGroup.IMPORT_EXPORT_COMMON) //
 		.add(CLIParam.direct_fs) //
 		.add(CLIParam.manifest_outcomes_export) //
 		.add(CLIParam.source) //
 	;
 
 	public static final OptionGroup IMPORT_COMMON = new OptionGroupImpl("Common Import Options") //
-		.add(CLIGroup.IMPORT_EXPORT_COMMON.getOptions()) //
+		.addFrom(CLIGroup.IMPORT_EXPORT_COMMON.getOptions()) //
 		.add(CLIParam.filename_map) //
 		.add(CLIParam.group_map) //
 		.add(CLIParam.manifest_outcomes_import) //
