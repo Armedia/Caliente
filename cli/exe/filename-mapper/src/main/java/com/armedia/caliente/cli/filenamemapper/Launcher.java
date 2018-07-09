@@ -35,7 +35,7 @@ public class Launcher extends AbstractLauncher {
 			.addGroup( //
 				this.dfcLaunchHelper.asGroup() //
 			) //
-			.add( //
+			.addFrom( //
 				Option.unwrap(CLIParam.values()) //
 		) //
 		;

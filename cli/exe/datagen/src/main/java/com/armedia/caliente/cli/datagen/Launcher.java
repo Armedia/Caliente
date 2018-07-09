@@ -50,7 +50,7 @@ public class Launcher extends AbstractLauncher {
 			.addGroup( //
 				this.threadsLaunchHelper.asGroup() //
 			) //
-			.add(Option.unwrap(CLIParam.values())) //
+			.addFrom(Option.unwrap(CLIParam.values())) //
 		;
 	}
 

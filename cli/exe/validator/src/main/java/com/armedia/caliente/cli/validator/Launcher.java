@@ -151,7 +151,7 @@ public class Launcher extends AbstractLauncher {
 			.addGroup( //
 				this.threadsLaunchHelper.asGroup() //
 			) //
-			.add( //
+			.addFrom( //
 				Option.unwrap(CLIParam.values()) //
 		) //
 		;
