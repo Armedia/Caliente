@@ -458,11 +458,8 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
 		final String logName = baseValues.getString(CLIParam.log);
 
-		// TODO: Write the log out into the DB directory
-		final File logDir = this.logLocation;
-
 		// Make sure the log directory always uses forward slashes
-		System.setProperty("logDir", logDir.getAbsolutePath().replace('\\', '/'));
+		System.setProperty("logDir", this.logLocation.getAbsolutePath().replace('\\', '/'));
 		System.setProperty("logName", logName);
 		System.setProperty("logTimeStamp", logTimeStamp);
 		System.setProperty("logMode", logMode);
