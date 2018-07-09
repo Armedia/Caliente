@@ -7,7 +7,30 @@ import com.armedia.caliente.cli.exception.DuplicateOptionException;
 public interface OptionGroup extends OptionContainer {
 
 	/**
-	 * Adds the given option to this option scheme.
+	 * Adds all the options from the given group
+	 *
+	 * @param optionGroup
+	 *            the option group from which to add the options
+	 * @throws IllegalArgumentException
+	 *             if the given option collides with any already-existing options (you can check
+	 *             with {@link #findCollisions(OptionGroup)})
+	 */
+	public OptionGroup addGroup(OptionGroup optionGroup) throws DuplicateOptionException;
+
+	/**
+	 * Returns the options incoming from the given option group that would collide with existing
+	 * collisions in this group, based on short or long options. If no collisions are found,
+	 * {@code null} is returned.
+	 *
+	 * @param optionGroup
+	 *            the option group whose options should be checked for
+	 * @return the options in the incoming group that would collide with options already in this
+	 *         group based on short or long options, or {@code null} if none collide
+	 */
+	public Collection<Option> findCollisions(OptionGroup optionGroup);
+
+	/**
+	 * Adds the given option to this option group.
 	 *
 	 * @param option
 	 *            the option to add

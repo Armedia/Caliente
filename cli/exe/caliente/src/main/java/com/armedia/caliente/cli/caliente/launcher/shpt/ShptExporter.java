@@ -82,7 +82,7 @@ class ShptExporter extends ExportCommandModule {
 
 		srcPath = FileNameTools.reconstitute(l, false, false, '/');
 
-		l = FileNameTools.tokenize(commandValues.getString(CLIParam.shpt_source_prefix, "/"));
+		l = FileNameTools.tokenize(commandValues.getString(CLIParam.shpt_prefix, "/"));
 		final String srcPrefix;
 		if (l.isEmpty()) {
 			srcPrefix = "";

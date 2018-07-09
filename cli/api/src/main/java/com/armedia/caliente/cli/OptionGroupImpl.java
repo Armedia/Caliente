@@ -150,6 +150,14 @@ public class OptionGroupImpl implements OptionGroup {
 	}
 
 	@Override
+	public OptionGroupImpl addGroup(OptionGroup optionGroup) throws DuplicateOptionException {
+		if (optionGroup != null) {
+			add(optionGroup.getOptions());
+		}
+		return this;
+	}
+
+	@Override
 	public <O extends Option> OptionGroupImpl add(Collection<O> options) throws DuplicateOptionException {
 		if ((options != null) && !options.isEmpty()) {
 			Collection<O> added = new ArrayList<>();
@@ -305,6 +313,21 @@ public class OptionGroupImpl implements OptionGroup {
 			shortParam = this.shortKeys.get(OptionGroupImpl.canonicalizeOption(shortOpt));
 		}
 		return OptionGroupImpl.buildCollection(longParam, shortParam);
+	}
+
+	@Override
+	public Collection<Option> findCollisions(OptionGroup optionGroup) {
+		if (optionGroup == null) { return null; }
+		Map<String, Option> ret = new TreeMap<>();
+		for (Option o : optionGroup.getOptions()) {
+			Collection<Option> C = findCollisions(o);
+			if (C != null) {
+				for (Option c : C) {
+					ret.put(c.getKey(), c);
+				}
+			}
+		}
+		return ret.values();
 	}
 
 	@Override

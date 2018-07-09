@@ -14,36 +14,10 @@ public class CLIGroup {
 		.add(CLIParam.log_dir) //
 	;
 
-	public static final OptionGroup IMPORT_EXPORT_COMMON = new OptionGroupImpl("Common Export/Import Options") //
-		.add(CLIParam.error_count) //
-		.add(CLIParam.exclude_types) //
-		.add(CLIParam.external_metadata) //
-		.add(CLIParam.filter) //
-		.add(CLIParam.manifest_types) //
-		.add(CLIParam.no_renditions) //
-		.add(CLIParam.no_versions) //
-		.add(CLIParam.skip_content) //
-		.add(CLIParam.threads) //
-		.add(CLIParam.transformations) //
-	;
-
-	public static final OptionGroup EXPORT_COMMON = new OptionGroupImpl("Common Export Options") //
-		.add(CLIParam.direct_fs) //
-		.add(CLIParam.manifest_outcomes_export) //
-		.add(CLIParam.source) //
-	;
-
-	public static final OptionGroup IMPORT_COMMON = new OptionGroupImpl("Common Import Options") //
-		.add(CLIParam.direct_fs) //
-		.add(CLIParam.filename_map) //
-		.add(CLIParam.group_map) //
-		.add(CLIParam.manifest_outcomes_import) //
-		.add(CLIParam.no_filename_map) //
-		.add(CLIParam.role_map) //
-		.add(CLIParam.target) //
-		.add(CLIParam.trim_path) //
-		.add(CLIParam.user_map) //
-		.add(CLIParam.validate_requirements) //
+	public static final OptionGroup STORE = new OptionGroupImpl("Data Store Options") //
+		.add(CLIParam.content) //
+		.add(CLIParam.content_strategy) //
+		.add(CLIParam.db) //
 	;
 
 	public static final OptionGroup MAIL = new OptionGroupImpl("SMTP Options") //
@@ -59,10 +33,37 @@ public class CLIGroup {
 		.add(CLIParam.mail_user) //
 	;
 
-	public static final OptionGroup STORE = new OptionGroupImpl("Data Store Options") //
-		.add(CLIParam.content) //
-		.add(CLIParam.content_strategy) //
-		.add(CLIParam.db) //
+	public static final OptionGroup IMPORT_EXPORT_COMMON = new OptionGroupImpl("Common Export/Import Options") //
+		.add(CLIParam.error_count) //
+		.add(CLIParam.exclude_types) //
+		.add(CLIParam.external_metadata) //
+		.add(CLIParam.filter) //
+		.add(CLIParam.manifest_types) //
+		.add(CLIParam.no_renditions) //
+		.add(CLIParam.no_versions) //
+		.add(CLIParam.skip_content) //
+		.add(CLIParam.threads) //
+		.add(CLIParam.transformations) //
+	;
+
+	public static final OptionGroup EXPORT_COMMON = new OptionGroupImpl("Common Export Options") //
+		.addGroup(CLIGroup.IMPORT_EXPORT_COMMON) //
+		.add(CLIParam.direct_fs) //
+		.add(CLIParam.manifest_outcomes_export) //
+		.add(CLIParam.source) //
+	;
+
+	public static final OptionGroup IMPORT_COMMON = new OptionGroupImpl("Common Import Options") //
+		.add(CLIGroup.IMPORT_EXPORT_COMMON.getOptions()) //
+		.add(CLIParam.filename_map) //
+		.add(CLIParam.group_map) //
+		.add(CLIParam.manifest_outcomes_import) //
+		.add(CLIParam.no_filename_map) //
+		.add(CLIParam.role_map) //
+		.add(CLIParam.target) //
+		.add(CLIParam.trim_path) //
+		.add(CLIParam.user_map) //
+		.add(CLIParam.validate_requirements) //
 	;
 
 	public static final OptionGroup URL = new OptionGroupImpl("Common URL Options") //

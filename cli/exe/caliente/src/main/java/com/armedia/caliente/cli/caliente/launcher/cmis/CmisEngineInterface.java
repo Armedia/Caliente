@@ -76,8 +76,8 @@ public class CmisEngineInterface extends EngineInterface implements OptionScheme
 		throws CommandLineExtensionException {
 
 		extender //
-			.add(CLIGroup.IMPORT_EXPORT_COMMON) //
-			.add(CmisEngineInterface.CONNECTIVITY) //
+			.addGroup(CLIGroup.IMPORT_EXPORT_COMMON) //
+			.addGroup(CmisEngineInterface.CONNECTIVITY) //
 		;
 	}
 

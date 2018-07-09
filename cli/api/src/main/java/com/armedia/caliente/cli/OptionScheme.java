@@ -224,7 +224,7 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	@Override
-	public OptionScheme add(OptionGroup group) {
+	public OptionScheme addGroup(OptionGroup group) {
 		if (group == null) { return this; }
 		String key = OptionScheme.canonicalizeGroupName(group.getName());
 		if (this.groups.containsKey(key)) { throw new DuplicateOptionGroupException(group.getName()); }
@@ -346,6 +346,11 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	@Override
 	public final Collection<Option> findCollisions(Option option) {
 		return this.aggregate.findCollisions(option);
+	}
+
+	@Override
+	public Collection<Option> findCollisions(OptionGroup optionGroup) {
+		return this.aggregate.findCollisions(optionGroup);
 	}
 
 	@Override

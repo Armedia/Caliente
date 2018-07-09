@@ -105,7 +105,7 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		}
 
 		return scheme //
-			.add(CLIGroup.BASE) //
+			.addGroup(CLIGroup.BASE) //
 		;
 	}
 

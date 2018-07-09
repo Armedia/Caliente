@@ -148,7 +148,7 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected OptionScheme getOptionScheme() {
 		return new OptionScheme(getProgramName()) //
-			.add( //
+			.addGroup( //
 				this.threadsLaunchHelper.asGroup() //
 			) //
 			.add( //

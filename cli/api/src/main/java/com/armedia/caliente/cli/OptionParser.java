@@ -57,9 +57,9 @@ public class OptionParser {
 		}
 
 		@Override
-		public Extender add(OptionGroup group) {
+		public Extender addGroup(OptionGroup group) {
 			if ((group == null) || (group.getOptionCount() == 0)) { return this; }
-			getScheme().add(group);
+			getScheme().addGroup(group);
 			this.modified = true;
 			return this;
 		}

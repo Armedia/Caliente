@@ -70,7 +70,6 @@ Pass 2
 
 		COMMAND: ( EXPORT | EXP | EX )
 			(common)
-				--content-strategy ${strategy}
 				--direct-fs (change for strategy = direct?)
 			*	--source ${source}  (either a path, a query predicate if supported, or a URL to an ID/locator list)
 
@@ -108,15 +107,15 @@ Pass 2
 		COMMAND: ( IMPORT | IMP | IM )
 			(common)
 				--filename-map ${file}
+				--group-map ${groupMap}
 				--name-fix
 				--no-filename-map
-				--trim-prefix ${num}
-				--target-location ${location}
-				--attribute-map ${attributeMap}
-				--user-map ${userMap}
-				--group-map ${groupMap}
 				--role-map ${roleMap}
+				--target-location ${location}
+				--trim-prefix ${num}
+				--user-map ${userMap}
 				--validate-requirements
+
 
 			Pass 3 (from --engine)
 				DFC
