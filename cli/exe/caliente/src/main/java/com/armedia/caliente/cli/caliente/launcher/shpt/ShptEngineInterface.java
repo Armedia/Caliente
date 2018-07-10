@@ -23,7 +23,7 @@ public class ShptEngineInterface extends EngineInterface implements OptionScheme
 
 	@Override
 	public String getName() {
-		return "alfrescobi";
+		return "shpt";
 	}
 
 	@Override
