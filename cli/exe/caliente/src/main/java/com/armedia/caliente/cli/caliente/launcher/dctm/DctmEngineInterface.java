@@ -9,16 +9,14 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.OptionGroup;
 import com.armedia.caliente.cli.OptionGroupImpl;
-import com.armedia.caliente.cli.OptionSchemeExtender;
-import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
+import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.engine.dfc.exporter.DctmExportEngine;
 import com.armedia.caliente.engine.dfc.importer.DctmImportEngine;
@@ -26,7 +24,7 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 
-public class DctmEngineInterface extends EngineInterface implements OptionSchemeExtensionSupport {
+public class DctmEngineInterface extends EngineInterface implements DynamicOptions {
 
 	static final DfcLaunchHelper DFC_HELPER = new DfcLaunchHelper(true);
 
@@ -104,10 +102,8 @@ public class DctmEngineInterface extends EngineInterface implements OptionScheme
 	}
 
 	@Override
-	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
-		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
-		throws CommandLineExtensionException {
-		extender //
+	public void getDynamicOptions(OptionScheme command) {
+		command //
 			.addGroup(CLIGroup.STORE) //
 			.addGroup(CLIGroup.MAIL) //
 			.addGroup(CLIGroup.CONNECTION) //

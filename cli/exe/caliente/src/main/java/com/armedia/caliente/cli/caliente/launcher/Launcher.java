@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
@@ -20,7 +21,6 @@ import java.util.Properties;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +29,6 @@ import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionSchemeExtender;
-import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
@@ -38,11 +36,11 @@ import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.cli.exception.CommandLineExtensionException;
+import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
+import com.armedia.caliente.cli.exception.MissingRequiredOptionsException;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfContentStore;
@@ -53,7 +51,7 @@ import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 
-public class Launcher extends AbstractLauncher implements OptionSchemeExtensionSupport {
+public class Launcher extends AbstractLauncher {
 
 	public static final void main(String... args) {
 		System.exit(new Launcher().launch(CLIParam.help, args));
@@ -91,9 +89,25 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	@Override
 	protected OptionScheme getOptionScheme() {
 
-		CommandScheme scheme = new CommandScheme(getProgramName(), true);
+		final CommandScheme scheme = new CommandScheme(getProgramName(), true);
 		for (CalienteCommand d : CalienteCommand.values()) {
-			Command c = new Command(d.getTitle(), d.getAliases());
+			Command c = new Command(true, d.getTitle(), d.getAliases()) {
+
+				@Override
+				public void getDynamicOptions(OptionValues baseValues) throws CommandLineSyntaxException {
+					String err = initializeEngineAndCommand(baseValues, getName());
+					if (err != null) { throw new MissingRequiredOptionsException(scheme,
+						Collections.singleton(CLIParam.engine.getOption()), null, null); }
+
+					if (DynamicOptions.class.isInstance(Launcher.this.engineInterface)) {
+						DynamicOptions.class.cast(Launcher.this.engineInterface).getDynamicOptions(this);
+					}
+					if (DynamicOptions.class.isInstance(Launcher.this.command)) {
+						DynamicOptions.class.cast(Launcher.this.command).getDynamicOptions(this);
+					}
+				}
+
+			};
 			c.setDescription(d.getDescription());
 			scheme.addCommand(c);
 		}
@@ -136,26 +150,6 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		}
 
 		return null;
-	}
-
-	@Override
-	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
-		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
-		throws CommandLineExtensionException {
-
-		String error = initializeEngineAndCommand(baseValues, currentCommand);
-		if (error != null) { throw new CommandLineExtensionException(currentNumber, baseValues, currentCommand,
-			commandValues, currentToken, error); }
-
-		// Extend the command lines as per the engine and command
-		if (OptionSchemeExtensionSupport.class.isInstance(this.engineInterface)) {
-			OptionSchemeExtensionSupport.class.cast(this.engineInterface).extendScheme(currentNumber, baseValues,
-				currentCommand, commandValues, currentToken, extender);
-		}
-		if (OptionSchemeExtensionSupport.class.isInstance(this.command)) {
-			OptionSchemeExtensionSupport.class.cast(this.command).extendScheme(currentNumber, baseValues,
-				currentCommand, commandValues, currentToken, extender);
-		}
 	}
 
 	@Override

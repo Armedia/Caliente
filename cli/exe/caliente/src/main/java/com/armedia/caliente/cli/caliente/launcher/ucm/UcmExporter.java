@@ -2,18 +2,16 @@ package com.armedia.caliente.cli.caliente.launcher.ucm;
 
 import java.util.Map;
 
-import com.armedia.caliente.cli.OptionSchemeExtender;
-import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
+import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
-import com.armedia.caliente.cli.exception.CommandLineExtensionException;
-import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 
-class UcmExporter extends ExportCommandModule implements OptionSchemeExtensionSupport {
+class UcmExporter extends ExportCommandModule implements DynamicOptions {
 	UcmExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
@@ -63,10 +61,8 @@ class UcmExporter extends ExportCommandModule implements OptionSchemeExtensionSu
 	}
 
 	@Override
-	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
-		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
-		throws CommandLineExtensionException {
-		extender //
+	public void getDynamicOptions(OptionScheme command) {
+		command //
 			.addGroup(CLIGroup.EXPORT_COMMON) //
 		;
 	}

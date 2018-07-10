@@ -7,21 +7,19 @@ import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;
 import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.OptionSchemeExtender;
-import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
+import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.cli.exception.CommandLineExtensionException;
-import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.commons.utilities.Tools;
 
-class AlfrescoImporter extends ImportCommandModule implements OptionSchemeExtensionSupport {
+class AlfrescoImporter extends ImportCommandModule implements DynamicOptions {
 
 	private static final Option ATTRIBUTE_MAP = new OptionImpl() //
 		.setLongOpt("attribute-map") //
@@ -118,10 +116,8 @@ class AlfrescoImporter extends ImportCommandModule implements OptionSchemeExtens
 	}
 
 	@Override
-	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
-		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
-		throws CommandLineExtensionException {
-		extender //
+	public void getDynamicOptions(OptionScheme command) {
+		command //
 			.addGroup(CLIGroup.IMPORT_COMMON) //
 			.addGroup(AlfrescoImporter.OPTIONS) //
 		;

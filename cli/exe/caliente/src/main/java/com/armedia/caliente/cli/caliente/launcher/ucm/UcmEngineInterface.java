@@ -11,16 +11,14 @@ import java.util.Set;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.cli.OptionSchemeExtender;
-import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
+import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.ucm.UcmSessionSetting;
@@ -29,7 +27,7 @@ import com.armedia.caliente.engine.ucm.UcmSetting;
 import com.armedia.caliente.engine.ucm.exporter.UcmExportEngine;
 import com.armedia.caliente.engine.ucm.importer.UcmImportEngine;
 
-public class UcmEngineInterface extends EngineInterface implements OptionSchemeExtensionSupport {
+public class UcmEngineInterface extends EngineInterface implements DynamicOptions {
 
 	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 
@@ -131,11 +129,8 @@ public class UcmEngineInterface extends EngineInterface implements OptionSchemeE
 	}
 
 	@Override
-	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
-		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
-		throws CommandLineExtensionException {
-
-		extender //
+	public void getDynamicOptions(OptionScheme command) {
+		command //
 			.addGroup(CLIGroup.STORE) //
 			.addGroup(CLIGroup.MAIL) //
 			.addGroup(CLIGroup.CONNECTION) //

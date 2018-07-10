@@ -401,9 +401,14 @@ public class OptionParser {
 							// search
 							currentScheme = command = findCommand(extensible ? baseValues : null, commandScheme,
 								token.getRawString());
+
 							// If there is no command
 							if (command != null) {
 								commandName = command.getName();
+
+								if (command.isDynamic()) {
+									command.getDynamicOptions(baseValues);
+								}
 
 								if (helpOption != null) {
 									// If there's a command option that conflicts with the help
