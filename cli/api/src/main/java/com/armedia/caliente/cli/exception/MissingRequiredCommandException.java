@@ -1,5 +1,10 @@
 package com.armedia.caliente.cli.exception;
 
+import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
 
 public class MissingRequiredCommandException extends CommandLineSyntaxException {
@@ -18,7 +23,29 @@ public class MissingRequiredCommandException extends CommandLineSyntaxException 
 
 	@Override
 	protected String renderMessage() {
-		return String.format("A command name is required, please use one of these: %s", getToken().getRawString(),
-			this.commandScheme.getAliases());
+		StringBuilder msg = new StringBuilder();
+		final String nl = String.format("%n");
+		for (Command c : this.commandScheme.getCommands()) {
+			String name = c.getName();
+			Set<String> aliases = c.getAliases();
+			msg.append(nl).append('\t').append(name);
+			if (!aliases.isEmpty()) {
+				msg.append(" (");
+				boolean firstAlias = true;
+				for (String a : aliases) {
+					if (StringUtils.equalsIgnoreCase(name, a)) {
+						continue;
+					}
+					if (!firstAlias) {
+						msg.append(", ");
+					}
+					msg.append(a);
+					firstAlias = false;
+				}
+				msg.append(')');
+			}
+		}
+
+		return String.format("A command name is required, please use one of%s", msg);
 	}
 }
