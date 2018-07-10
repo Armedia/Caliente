@@ -165,11 +165,6 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		final String error = initializeEngineAndCommand(baseValues, command);
 		if (error != null) { throw new CommandLineProcessingException(1, error); }
 
-		// Validate all parameters...make sure everything is kosher, etc...
-		if (this.command == null) { throw new CommandLineProcessingException(1,
-			String.format("No command was given. The command must be one of %s (case-insensitive)",
-				CalienteCommand.getAllAliases())); }
-
 		this.objectStoreLocation = getMetadataLocation(baseValues);
 		this.contentStoreLocation = getContentLocation(baseValues);
 		this.logLocation = getLogLocation(baseValues);
