@@ -52,7 +52,7 @@ class CmisImporter extends ImportCommandModule {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		final String server = commandValues.getString(CLIParam.url);
+		final String server = commandValues.getString(CLIParam.server);
 
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later
