@@ -66,10 +66,25 @@ public class CLIGroup {
 		.add(CLIParam.validate_requirements) //
 	;
 
-	public static final OptionGroup URL = new OptionGroupImpl("Common URL Options") //
-		.add(CLIParam.domain) //
-		.add(CLIParam.password) //
-		.add(CLIParam.url) //
+	public static final OptionGroup COUNT_COMMON = new OptionGroupImpl("Common Count Options") //
+		.add(CLIParam.count_empty) //
+		.add(CLIParam.count_exclude) //
+		.add(CLIParam.count_include) //
+		.add(CLIParam.count_hidden) //
+		.add(CLIParam.non_recursive) //
+		.add(CLIParam.no_versions) //
+		.add(CLIParam.count_private) //
+		.add(CLIParam.threads) //
+	;
+
+	public static final OptionGroup CONNECTION = new OptionGroupImpl("Common Connection Options") //
 		.add(CLIParam.user) //
+		.add(CLIParam.server) //
+		.add(CLIParam.password) //
+	;
+
+	public static final OptionGroup DOMAIN_CONNECTION = new OptionGroupImpl("Domain Connection Options") //
+		.addFrom(CLIGroup.CONNECTION) //
+		.add(CLIParam.domain) //
 	;
 }

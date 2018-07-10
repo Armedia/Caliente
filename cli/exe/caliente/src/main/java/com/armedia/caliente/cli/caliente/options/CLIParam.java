@@ -391,6 +391,14 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("The Properties (XML) file that contains the role name mappings to apply") //
 	), //
 
+	server( //
+		new OptionImpl() //
+			.setRequired(true) //
+			.setArgumentLimits(1) //
+			.setArgumentName("server-connection-info") //
+			.setDescription("The server CONNECTION for the connection") //
+	), //
+
 	shpt_prefix( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
@@ -475,14 +483,6 @@ public enum CLIParam implements OptionWrapper {
 			.setArgumentLimits(1) //
 			.setArgumentName("number") //
 			.setDescription("The number of leading path components to trim from the content being imported") //
-	), //
-
-	url( //
-		new OptionImpl() //
-			.setRequired(true) //
-			.setArgumentLimits(1) //
-			.setArgumentName("url") //
-			.setDescription("The server URL for the connection") //
 	), //
 
 	user( //

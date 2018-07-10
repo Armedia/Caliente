@@ -24,7 +24,7 @@ public class CmisEngineInterface extends EngineInterface implements OptionScheme
 
 	private static final OptionGroup CONNECTIVITY = //
 		new OptionGroupImpl("CMIS Connectivity Options") //
-			.add(CLIParam.url) //
+			.add(CLIParam.server) //
 			.add(CLIParam.user) //
 			.add(CLIParam.password) //
 			.add(CLIParam.domain) //
