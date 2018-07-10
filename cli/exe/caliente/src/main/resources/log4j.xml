@@ -4,7 +4,7 @@
 
 	<appender name="stdout" class="org.apache.log4j.ConsoleAppender">
 		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d{ISO8601} [%-16t] %m%n" />
+			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %m%n" />
 		</layout>
 	</appender>
 	<appender name="stdout.async" class="org.apache.log4j.AsyncAppender">
@@ -12,57 +12,13 @@
 		<appender-ref ref="stdout" />
 	</appender>
 
-	<appender name="default" class="org.apache.log4j.FileAppender">
-		<param name="File" value="${logDir}/${logName}.log" />
-		<param name="ImmediateFlush" value="true" />
-		<param name="Append" value="true" />
-		<param name="Threshold" value="trace" />
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n" />
-		</layout>
-	</appender>
-	<appender name="default.async" class="org.apache.log4j.AsyncAppender">
-		<param name="BufferSize" value="10240" />
-		<appender-ref ref="default" />
-	</appender>
-
-	<appender name="manifest" class="org.apache.log4j.FileAppender">
-		<param name="File" value="${logDir}/${logName}.manifest.csv" />
-		<param name="ImmediateFlush" value="true" />
-		<param name="Append" value="false" />
-		<param name="Threshold" value="trace" />
-		<layout class="org.apache.log4j.PatternLayout">
-			<param name="ConversionPattern" value="%m%n" />
-		</layout>
-	</appender>
-	<appender name="manifest.async" class="org.apache.log4j.AsyncAppender">
-		<param name="BufferSize" value="10240" />
-		<appender-ref ref="manifest" />
-	</appender>
-
-	<!-- DO NOT MODIFY ANYTHING ABOVE THIS LINE -->
-	<logger name="h2database">
-		<level value="WARN" />
-	</logger>
-
-	<logger name="com.armedia.caliente.cli.caliente">
-		<level value="DEBUG" />
-	</logger>
-
-	<!-- DO NOT MODIFY ANYTHING BELOW THIS LINE -->
 	<logger name="console" additivity="false">
 		<level value="INFO" />
 		<appender-ref ref="stdout.async" />
-		<appender-ref ref="default.async" />
-	</logger>
-
-	<logger name="manifest" additivity="false">
-		<level value="INFO" />
-		<appender-ref ref="manifest.async" />
 	</logger>
 
 	<root>
 		<level value="INFO" />
-		<appender-ref ref="default.async" />
+		<appender-ref ref="stdout.async" />
 	</root>
 </log4j:configuration>

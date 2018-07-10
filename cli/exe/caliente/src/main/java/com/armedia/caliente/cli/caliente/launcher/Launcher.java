@@ -472,14 +472,9 @@ public class Launcher extends AbstractLauncher {
 		if (!customLog) {
 			// No custom log is in play, so we just use the default one from the classpath
 			ClassLoader cl = Thread.currentThread().getContextClassLoader();
-			URL config = cl.getResource("log4j.xml");
+			URL config = cl.getResource("log4j-full.xml");
 			if (config != null) {
 				DOMConfigurator.configure(config);
-			} else {
-				config = cl.getResource("log4j.properties");
-				if (config != null) {
-					PropertyConfigurator.configure(config);
-				}
 			}
 		}
 
