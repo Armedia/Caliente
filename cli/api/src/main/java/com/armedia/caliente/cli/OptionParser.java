@@ -407,7 +407,7 @@ public class OptionParser {
 								commandName = command.getName();
 
 								if (command.isDynamic()) {
-									command.getDynamicOptions(baseValues);
+									command.getDynamicOptions(helpRequested, baseValues);
 								}
 
 								if (helpOption != null) {

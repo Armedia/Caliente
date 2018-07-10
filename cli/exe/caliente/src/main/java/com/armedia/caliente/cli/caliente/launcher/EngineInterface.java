@@ -162,12 +162,7 @@ public abstract class EngineInterface {
 
 	public abstract Set<String> getAliases();
 
-	private RuntimeException unsupportedCommand(CalienteCommand command) {
-		return new IllegalStateException(
-			String.format("The %s engine doesn't support the %s command", getName(), command.getTitle()));
-	}
-
-	public final CommandModule<?> getCommandModule(CalienteCommand command) {
+	final CommandModule<?> getCommandModule(CalienteCommand command) {
 		Objects.requireNonNull(command, "Must provide a non-null command");
 		switch (command) {
 			case COUNT:
@@ -176,12 +171,12 @@ public abstract class EngineInterface {
 
 			case EXPORT:
 				ExportEngine<?, ?, ?, ?, ?, ?> exportEngine = getExportEngine();
-				if (exportEngine == null) { throw unsupportedCommand(command); }
+				if (exportEngine == null) { return null; }
 				return newExporter(exportEngine);
 
 			case IMPORT:
 				ImportEngine<?, ?, ?, ?, ?, ?> importEngine = getImportEngine();
-				if (importEngine == null) { throw unsupportedCommand(command); }
+				if (importEngine == null) { return null; }
 				return newImporter(importEngine);
 
 			default:
@@ -203,7 +198,7 @@ public abstract class EngineInterface {
 			}
 		}
 
-		throw unsupportedCommand(command);
+		return null;
 	}
 
 	protected EncryptCommandModule newEncryptor(TransferEngine<?, ?, ?, ?, ?, ?> engine) {

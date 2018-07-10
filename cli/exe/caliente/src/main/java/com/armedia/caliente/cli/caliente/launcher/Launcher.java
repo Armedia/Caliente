@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.InvalidPropertiesFormatException;
@@ -37,7 +36,7 @@ import com.armedia.caliente.cli.caliente.command.CommandModule;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
-import com.armedia.caliente.cli.exception.MissingRequiredOptionsException;
+import com.armedia.caliente.cli.exception.DynamicOptionsException;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
@@ -94,10 +93,12 @@ public class Launcher extends AbstractLauncher {
 			Command c = new Command(true, d.getTitle(), d.getAliases()) {
 
 				@Override
-				public void getDynamicOptions(OptionValues baseValues) throws CommandLineSyntaxException {
+				public void getDynamicOptions(boolean helpRequested, OptionValues baseValues)
+					throws CommandLineSyntaxException {
 					String err = initializeEngineAndCommand(baseValues, getName());
-					if (err != null) { throw new MissingRequiredOptionsException(scheme,
-						Collections.singleton(CLIParam.engine.getOption()), null, null); }
+					if (err != null) {
+						if (!helpRequested) { throw new DynamicOptionsException(this, err); }
+					}
 
 					if (DynamicOptions.class.isInstance(Launcher.this.engineInterface)) {
 						DynamicOptions.class.cast(Launcher.this.engineInterface).getDynamicOptions(this);

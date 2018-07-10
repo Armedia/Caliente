@@ -49,7 +49,7 @@ public class Command extends OptionScheme {
 		return this.dynamic;
 	}
 
-	public void getDynamicOptions(OptionValues baseValues) throws CommandLineSyntaxException {
+	public void getDynamicOptions(boolean helpRequested, OptionValues baseValues) throws CommandLineSyntaxException {
 		// by default, do nothing
 	}
 
