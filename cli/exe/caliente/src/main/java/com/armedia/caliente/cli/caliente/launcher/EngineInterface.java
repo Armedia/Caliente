@@ -162,6 +162,11 @@ public abstract class EngineInterface {
 
 	public abstract Set<String> getAliases();
 
+	private RuntimeException unsupportedCommand(CalienteCommand command) {
+		return new IllegalStateException(
+			String.format("The %s engine doesn't support the %s command", getName(), command.getTitle()));
+	}
+
 	public final CommandModule<?> getCommandModule(CalienteCommand command) {
 		Objects.requireNonNull(command, "Must provide a non-null command");
 		switch (command) {
@@ -171,14 +176,12 @@ public abstract class EngineInterface {
 
 			case EXPORT:
 				ExportEngine<?, ?, ?, ?, ?, ?> exportEngine = getExportEngine();
-				if (exportEngine == null) { throw new IllegalStateException(
-					"This proxy does not support an Export engine"); }
+				if (exportEngine == null) { throw unsupportedCommand(command); }
 				return newExporter(exportEngine);
 
 			case IMPORT:
 				ImportEngine<?, ?, ?, ?, ?, ?> importEngine = getImportEngine();
-				if (importEngine == null) { throw new IllegalStateException(
-					"This proxy does not support an Import engine"); }
+				if (importEngine == null) { throw unsupportedCommand(command); }
 				return newImporter(importEngine);
 
 			default:
@@ -189,18 +192,18 @@ public abstract class EngineInterface {
 		if (transferEngine == null) {
 			transferEngine = getExportEngine();
 		}
-		if (transferEngine == null) { throw new IllegalStateException("This proxy does not support an Import engine"); }
-		switch (command) {
-			case ENCRYPT:
-				return newEncryptor(transferEngine);
-			case DECRYPT:
-				return newDecryptor(transferEngine);
-			default:
-				break;
+		if (transferEngine != null) {
+			switch (command) {
+				case ENCRYPT:
+					return newEncryptor(transferEngine);
+				case DECRYPT:
+					return newDecryptor(transferEngine);
+				default:
+					break;
+			}
 		}
 
-		throw new IllegalArgumentException(
-			String.format("The command [%s] is unsupported at this time", command.getTitle()));
+		throw unsupportedCommand(command);
 	}
 
 	protected EncryptCommandModule newEncryptor(TransferEngine<?, ?, ?, ?, ?, ?> engine) {
