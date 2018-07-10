@@ -9,16 +9,38 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroup;
+import com.armedia.caliente.cli.OptionGroupImpl;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionSchemeExtender;
+import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.cli.exception.CommandLineExtensionException;
+import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
 import com.armedia.commons.utilities.FileNameTools;
 
-class ShptExporter extends ExportCommandModule {
+class ShptExporter extends ExportCommandModule implements OptionSchemeExtensionSupport {
+
+	private static final Option SOURCE_PREFIX = new OptionImpl() //
+		.setLongOpt("source-prefix") //
+		.setArgumentLimits(1) //
+		.setArgumentName("prefix") //
+		.setDescription("The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)") //
+		.setDefault("/sites") //
+	;
+
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("SharePoint Export Options") //
+		.add(ShptExporter.SOURCE_PREFIX) //
+	;
+
 	ShptExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
@@ -82,7 +104,7 @@ class ShptExporter extends ExportCommandModule {
 
 		srcPath = FileNameTools.reconstitute(l, false, false, '/');
 
-		l = FileNameTools.tokenize(commandValues.getString(CLIParam.shpt_prefix, "/"));
+		l = FileNameTools.tokenize(commandValues.getString(ShptExporter.SOURCE_PREFIX, "/"));
 		final String srcPrefix;
 		if (l.isEmpty()) {
 			srcPrefix = "";
@@ -114,5 +136,17 @@ class ShptExporter extends ExportCommandModule {
 	@Override
 	protected void postValidateSettings(CalienteState state, Map<String, Object> settings) throws CalienteException {
 		super.postValidateSettings(state, settings);
+	}
+
+	@Override
+	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
+		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
+		throws CommandLineExtensionException {
+
+		extender //
+			.addGroup(CLIGroup.EXPORT_COMMON) //
+			.addGroup(ShptExporter.OPTIONS) //
+		;
+
 	}
 }

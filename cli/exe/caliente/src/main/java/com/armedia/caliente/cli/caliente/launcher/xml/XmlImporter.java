@@ -3,16 +3,21 @@ package com.armedia.caliente.cli.caliente.launcher.xml;
 import java.io.File;
 import java.util.Map;
 
+import com.armedia.caliente.cli.OptionSchemeExtender;
+import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.cli.exception.CommandLineExtensionException;
+import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.xml.common.XmlSetting;
 import com.armedia.commons.utilities.Tools;
 
-class XmlImporter extends ImportCommandModule {
+class XmlImporter extends ImportCommandModule implements OptionSchemeExtensionSupport {
 	XmlImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
@@ -75,5 +80,14 @@ class XmlImporter extends ImportCommandModule {
 	@Override
 	protected void postValidateSettings(CalienteState state, Map<String, Object> settings) throws CalienteException {
 		super.postValidateSettings(state, settings);
+	}
+
+	@Override
+	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
+		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
+		throws CommandLineExtensionException {
+		extender //
+			.addGroup(CLIGroup.IMPORT_COMMON) //
+		;
 	}
 }

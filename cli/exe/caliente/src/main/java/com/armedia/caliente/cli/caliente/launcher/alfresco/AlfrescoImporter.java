@@ -3,16 +3,46 @@ package com.armedia.caliente.cli.caliente.launcher.alfresco;
 import java.io.File;
 import java.util.Map;
 
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroup;
+import com.armedia.caliente.cli.OptionGroupImpl;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionSchemeExtender;
+import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.cli.exception.CommandLineExtensionException;
+import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.commons.utilities.Tools;
 
-class AlfrescoImporter extends ImportCommandModule {
+class AlfrescoImporter extends ImportCommandModule implements OptionSchemeExtensionSupport {
+
+	private static final Option ATTRIBUTE_MAP = new OptionImpl() //
+		.setLongOpt("attribute-map") //
+		.setArgumentLimits(1) //
+		.setArgumentName("mapping-file") //
+		.setDescription(
+			"The XML file that describes how attributes should be mapped from the source data into Alfresco attributes") //
+	;
+
+	private static final Option CONTENT_MODEL = new OptionImpl() //
+		.setLongOpt("content-model") //
+		.setArgumentLimits(1, -1) //
+		.setArgumentName("content-model-file") //
+		.setDescription("The XML files that make up the Alfresco content model to use on import") //
+	;
+
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("Alfresco BI Generator Options") //
+		.add(AlfrescoImporter.ATTRIBUTE_MAP) //
+		.add(AlfrescoImporter.CONTENT_MODEL) //
+	;
+
 	AlfrescoImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
@@ -62,8 +92,16 @@ class AlfrescoImporter extends ImportCommandModule {
 		settings.put(AlfSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
 		settings.put(AlfSetting.DB.getLabel(), state.getObjectStoreLocation().toString());
 		settings.put(AlfSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
+
+		if (!commandValues.isPresent(AlfrescoImporter.CONTENT_MODEL)) { throw new CalienteException(
+			"No content models were given - these are required in order to properly generate the Alfresco metadata"); }
 		settings.put(AlfSetting.CONTENT_MODEL.getLabel(),
-			Tools.joinCSVEscaped(commandValues.getAllStrings(CLIParam.content_model)));
+			Tools.joinCSVEscaped(commandValues.getAllStrings(AlfrescoImporter.CONTENT_MODEL)));
+
+		if (commandValues.isPresent(AlfrescoImporter.ATTRIBUTE_MAP)) {
+			settings.put(AlfSetting.ATTRIBUTE_MAPPING.getLabel(),
+				commandValues.getString(AlfrescoImporter.ATTRIBUTE_MAP));
+		}
 
 		return true;
 	}
@@ -77,5 +115,15 @@ class AlfrescoImporter extends ImportCommandModule {
 	@Override
 	protected void postValidateSettings(CalienteState state, Map<String, Object> settings) throws CalienteException {
 		super.postValidateSettings(state, settings);
+	}
+
+	@Override
+	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
+		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
+		throws CommandLineExtensionException {
+		extender //
+			.addGroup(CLIGroup.IMPORT_COMMON) //
+			.addGroup(AlfrescoImporter.OPTIONS) //
+		;
 	}
 }

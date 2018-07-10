@@ -77,10 +77,14 @@ public class CLIGroup {
 		.add(CLIParam.threads) //
 	;
 
-	public static final OptionGroup CONNECTION = new OptionGroupImpl("Common Connection Options") //
+	public static final OptionGroup AUTHENTICATION = new OptionGroupImpl("Common Authentication Options") //
 		.add(CLIParam.user) //
-		.add(CLIParam.server) //
 		.add(CLIParam.password) //
+	;
+
+	public static final OptionGroup CONNECTION = new OptionGroupImpl("Common Connection Options") //
+		.addFrom(CLIGroup.AUTHENTICATION) //
+		.add(CLIParam.server) //
 	;
 
 	public static final OptionGroup DOMAIN_CONNECTION = new OptionGroupImpl("Domain Connection Options") //

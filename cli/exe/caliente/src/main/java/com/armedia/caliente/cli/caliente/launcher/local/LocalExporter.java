@@ -4,16 +4,38 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroup;
+import com.armedia.caliente.cli.OptionGroupImpl;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionSchemeExtender;
+import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.cli.exception.CommandLineExtensionException;
+import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.commons.utilities.Tools;
 
-class LocalExporter extends ExportCommandModule {
+class LocalExporter extends ExportCommandModule implements OptionSchemeExtensionSupport {
+
+	private static final Option COPY_CONTENT = new OptionImpl() //
+		.setDescription("Enable the copying of content for the Local engine") //
+	;
+
+	private static final Option IGNORE_EMPTY_FOLDERS = new OptionImpl() //
+		.setDescription("Ignore empty folders during extraction") //
+	;
+
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("Local Export Options") //
+		.add(LocalExporter.COPY_CONTENT) //
+	;
+
 	LocalExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
@@ -45,7 +67,7 @@ class LocalExporter extends ExportCommandModule {
 	}
 
 	protected boolean isCopyContent(OptionValues commandValues) {
-		return commandValues.isPresent(CLIParam.copy_content) && !commandValues.isPresent(CLIParam.skip_content);
+		return commandValues.isPresent(LocalExporter.COPY_CONTENT) && !commandValues.isPresent(CLIParam.skip_content);
 	}
 
 	/*
@@ -101,7 +123,7 @@ class LocalExporter extends ExportCommandModule {
 		settings.put(LocalSetting.ROOT.getLabel(), source.getAbsolutePath());
 		settings.put(LocalSetting.COPY_CONTENT.getLabel(), isCopyContent(commandValues));
 		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
-			commandValues.isPresent(CLIParam.ignore_empty_folders));
+			commandValues.isPresent(LocalExporter.IGNORE_EMPTY_FOLDERS));
 		return LocalEngineInterface.commonConfigure(commandValues, settings);
 	}
 
@@ -114,5 +136,15 @@ class LocalExporter extends ExportCommandModule {
 	@Override
 	protected void postValidateSettings(CalienteState state, Map<String, Object> settings) throws CalienteException {
 		super.postValidateSettings(state, settings);
+	}
+
+	@Override
+	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
+		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
+		throws CommandLineExtensionException {
+		extender //
+			.addGroup(CLIGroup.EXPORT_COMMON) //
+			.addGroup(LocalExporter.OPTIONS) //
+		;
 	}
 }

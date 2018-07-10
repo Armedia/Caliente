@@ -4,14 +4,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import com.armedia.caliente.cli.OptionGroup;
-import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionSchemeExtender;
 import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
-import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.token.Token;
@@ -21,14 +18,6 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 
 public class CmisEngineInterface extends EngineInterface implements OptionSchemeExtensionSupport {
-
-	private static final OptionGroup CONNECTIVITY = //
-		new OptionGroupImpl("CMIS Connectivity Options") //
-			.add(CLIParam.server) //
-			.add(CLIParam.user) //
-			.add(CLIParam.password) //
-			.add(CLIParam.domain) //
-	;
 
 	static final String ID_PREFIX = "id:";
 
@@ -76,8 +65,9 @@ public class CmisEngineInterface extends EngineInterface implements OptionScheme
 		throws CommandLineExtensionException {
 
 		extender //
-			.addGroup(CLIGroup.IMPORT_EXPORT_COMMON) //
-			.addGroup(CmisEngineInterface.CONNECTIVITY) //
+			.addGroup(CLIGroup.STORE) //
+			.addGroup(CLIGroup.MAIL) //
+			.addGroup(CLIGroup.DOMAIN_CONNECTION) //
 		;
 	}
 

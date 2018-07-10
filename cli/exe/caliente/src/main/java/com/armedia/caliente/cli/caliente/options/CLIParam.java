@@ -7,7 +7,6 @@ import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionWrapper;
 import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.utils.SmtpServer.SslMode;
-import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.engine.exporter.ExportResult;
@@ -15,13 +14,6 @@ import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfType;
 
 public enum CLIParam implements OptionWrapper {
-	batch_size( //
-		new OptionImpl() //
-			.setArgumentLimits(1) //
-			.setArgumentName("batch-size") //
-			.setDescription("The batch size to use when exporting objects from Documentum") //
-	), //
-
 	content( //
 		new OptionImpl() //
 			.setShortOpt('c') //
@@ -32,13 +24,6 @@ public enum CLIParam implements OptionWrapper {
 				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes the store configuration") //
 	), //
 
-	content_model( //
-		new OptionImpl() //
-			.setArgumentLimits(1, -1) //
-			.setArgumentName("content-model-file") //
-			.setDescription("The XML files that make up the Alfresco content model to use on import") //
-	), //
-
 	content_strategy( //
 		new OptionImpl() //
 			.setShortOpt('o') //
@@ -46,11 +31,6 @@ public enum CLIParam implements OptionWrapper {
 			.setArgumentName("organization") //
 			.setDescription(
 				"The name of the organization strategy to use in the Content directory (specific engines may override with their own defaults if they require it)") //
-	), //
-
-	copy_content( //
-		new OptionImpl() //
-			.setDescription("Enable the copying of content for the Local engine") //
 	), //
 
 	count_empty( //
@@ -106,26 +86,6 @@ public enum CLIParam implements OptionWrapper {
 			.setRequired(true) //
 			.setDescription(
 				"The directory into which the metadata database will be stored, or the XML file that describes the store configuration") //
-	), //
-
-	dctm( //
-		DfcLaunchHelper.DFC_DOCUMENTUM //
-	), //
-
-	default_password( //
-		new OptionImpl() //
-			.setArgumentLimits(1) //
-			.setArgumentName("password") //
-			.setDescription(
-				"The default password to use for users being copied over (the default is to use the same login name)") //
-	), //
-
-	dfc( //
-		DfcLaunchHelper.DFC_LOCATION //
-	), //
-
-	dfc_prop( //
-		DfcLaunchHelper.DFC_PROPERTIES //
 	), //
 
 	direct_fs( //
@@ -199,17 +159,6 @@ public enum CLIParam implements OptionWrapper {
 		new OptionImpl() //
 			.setShortOpt('h') //
 			.setDescription("This help message") //
-	), //
-
-	ignore_empty_folders( //
-		new OptionImpl() //
-			.setDescription("Enable the copying of content for the Local engine") //
-	), //
-
-	job_name( //
-		new OptionImpl() //
-			.setArgumentLimits(1) //
-			.setDescription("The name of the synchronization job this export is to define") //
 	), //
 
 	lib( //
@@ -364,23 +313,11 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("Turn off counter recursion (i.e. to count a single folder without descending)") //
 	), //
 
-	owner_attributes( //
-		new OptionImpl() //
-			.setArgumentLimits(1, -1) //
-			.setArgumentName("attribute-name") //
-			.setDescription("The owner_attributes to check for") //
-	), //
-
 	password( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
 			.setArgumentName("password") //
 			.setDescription("The password to authenticate with") //
-	), //
-
-	reset_job( //
-		new OptionImpl() //
-			.setDescription("Reset any existing synchronization job settings with this export's") //
 	), //
 
 	role_map( //
@@ -399,32 +336,9 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("The server CONNECTION for the connection") //
 	), //
 
-	shpt_prefix( //
-		new OptionImpl() //
-			.setArgumentLimits(1) //
-			.setArgumentName("prefix") //
-			.setDescription("The prefix to pre-pend to Sharepoint source paths (i.e. /sites is the default)") //
-			.setDefault("/sites") //
-	), //
-
-	skip_acls( //
-		new OptionImpl() //
-			.setDescription("Skip exporting acls") //
-	), //
-
 	skip_content( //
 		new OptionImpl() //
 			.setDescription("Don't process the actual content streams") //
-	), //
-
-	skip_groups( //
-		new OptionImpl() //
-			.setDescription("Skip exporting groups") //
-	), //
-
-	skip_users( //
-		new OptionImpl() //
-			.setDescription("Skip exporting users") //
 	), //
 
 	source( //
@@ -433,30 +347,6 @@ public enum CLIParam implements OptionWrapper {
 			.setArgumentLimits(1) //
 			.setArgumentName("source-spec") //
 			.setDescription("The source specification identifying which content to extract") //
-	), //
-
-	special_groups( //
-		new OptionImpl() //
-			.setArgumentLimits(1, -1) //
-			.setArgumentName("group") //
-			.setDescription("The special users that should not be imported into the target instance") //
-			.setValueSep(',') //
-	), //
-
-	special_types( //
-		new OptionImpl() //
-			.setArgumentLimits(1, -1) //
-			.setArgumentName("type") //
-			.setDescription("The special types that should not be imported into the target instance") //
-			.setValueSep(',') //
-	), //
-
-	special_users( //
-		new OptionImpl() //
-			.setArgumentLimits(1, -1) //
-			.setArgumentName("user") //
-			.setDescription("The special users that should not be imported into the target instance") //
-			.setValueSep(',') //
 	), //
 
 	target( //

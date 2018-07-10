@@ -2,17 +2,26 @@ package com.armedia.caliente.cli.caliente.launcher.dctm;
 
 import java.util.Map;
 
+import com.armedia.caliente.cli.Option;
+import com.armedia.caliente.cli.OptionGroup;
+import com.armedia.caliente.cli.OptionGroupImpl;
+import com.armedia.caliente.cli.OptionImpl;
+import com.armedia.caliente.cli.OptionSchemeExtender;
+import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
+import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.cli.exception.CommandLineExtensionException;
+import com.armedia.caliente.cli.token.Token;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 
-class DctmExporter extends ExportCommandModule {
+class DctmExporter extends ExportCommandModule implements OptionSchemeExtensionSupport {
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
 	 * combine the select clause listed above with this from and where clauses to build the complete
@@ -21,6 +30,52 @@ class DctmExporter extends ExportCommandModule {
 	 */
 	private static final String DEFAULT_PREDICATE = "dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
 		+ "and not folder('/System', descend) and not folder('/Temp', descend) ";
+
+	private static final Option BATCH_SIZE = new OptionImpl() //
+		.setLongOpt("batch-size") //
+		.setArgumentLimits(1) //
+		.setArgumentName("batch-size") //
+		.setDescription("The batch size to use when exporting objects from Documentum") //
+	;
+
+	private static final Option OWNER_ATTRIBUTES = new OptionImpl() //
+		.setLongOpt("owner-attributes") //
+		.setArgumentLimits(1, -1) //
+		.setArgumentName("attribute-name") //
+		.setDescription("The owner_attributes to check for") //
+	;
+
+	private static final Option SPECIAL_GROUPS = new OptionImpl() //
+		.setLongOpt("special-groups") //
+		.setArgumentLimits(1, -1) //
+		.setArgumentName("group") //
+		.setDescription("The special users that should not be imported into the target instance") //
+		.setValueSep(',') //
+	;
+
+	private static final Option SPECIAL_TYPES = new OptionImpl() //
+		.setLongOpt("special-types") //
+		.setArgumentLimits(1, -1) //
+		.setArgumentName("type") //
+		.setDescription("The special types that should not be imported into the target instance") //
+		.setValueSep(',') //
+	;
+
+	private static final Option SPECIAL_USERS = new OptionImpl() //
+		.setLongOpt("special-users") //
+		.setArgumentLimits(1, -1) //
+		.setArgumentName("user") //
+		.setDescription("The special users that should not be imported into the target instance") //
+		.setValueSep(',') //
+	;
+
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("DFC Export Options") //
+		.add(DctmExporter.BATCH_SIZE) //
+		.add(DctmExporter.OWNER_ATTRIBUTES) //
+		.add(DctmExporter.SPECIAL_GROUPS) //
+		.add(DctmExporter.SPECIAL_TYPES) //
+		.add(DctmExporter.SPECIAL_USERS) //
+	;
 
 	private DfcSessionPool pool = null;
 	private IDfSession session = null;
@@ -74,7 +129,7 @@ class DctmExporter extends ExportCommandModule {
 		}
 		settings.put(Setting.DQL.getLabel(), dql);
 
-		// TODO: What other settings need to go here?
+		// TODO: process the other parameters
 
 		return true;
 	}
@@ -98,5 +153,15 @@ class DctmExporter extends ExportCommandModule {
 		if (this.pool != null) {
 			this.pool.close();
 		}
+	}
+
+	@Override
+	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
+		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
+		throws CommandLineExtensionException {
+		extender //
+			.addGroup(CLIGroup.EXPORT_COMMON) //
+			.addGroup(DctmExporter.OPTIONS) //
+		;
 	}
 }
