@@ -109,41 +109,43 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 		;
 	}
 
+	private String initializeEngineAndCommand(OptionValues baseValues, String currentCommand) {
+		// Has an engine been selected already?
+		if (this.engineInterface == null) {
+			if (!baseValues.isPresent(
+				CLIParam.engine)) { return "No engine was selected in the base options (option order is important!)"; }
+
+			// Find the desired engine
+			final String engine = baseValues.getString(CLIParam.engine);
+			this.engineInterface = EngineInterface.get(engine);
+			if (this.engineInterface == null) { return String.format("No engine was found with the name or alias [%s]",
+				engine); }
+		}
+
+		// Has a command been given yet?
+		if (this.command == null) {
+			if (StringUtils.isBlank(currentCommand)) { return "No command was given (option order is important!)"; }
+
+			final CalienteCommand calienteCommand = CalienteCommand.get(currentCommand);
+			if (calienteCommand == null) { return String
+				.format("Command [%s] is not a valid Caliente command or command alias", currentCommand); }
+
+			this.command = this.engineInterface.getCommandModule(calienteCommand);
+			if (this.command == null) { return String.format("Engine [%s] does not support command [%s]",
+				this.engineInterface.getName(), calienteCommand.getTitle()); }
+		}
+
+		return null;
+	}
+
 	@Override
 	public void extendScheme(int currentNumber, OptionValues baseValues, String currentCommand,
 		OptionValues commandValues, Token currentToken, OptionSchemeExtender extender)
 		throws CommandLineExtensionException {
 
-		// Has an engine been selected already?
-		if (this.engineInterface == null) {
-			if (!baseValues.isPresent(CLIParam.engine)) { throw new CommandLineExtensionException(currentNumber,
-				baseValues, currentCommand, commandValues, currentToken,
-				"No engine has been selected in the base options yet (option order is important!)"); }
-
-			// Find the desired engine
-			final String engine = baseValues.getString(CLIParam.engine);
-			this.engineInterface = EngineInterface.get(engine);
-			if (this.engineInterface == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
-				currentCommand, commandValues, currentToken,
-				String.format("No engine was found with the title or alias [%s]", engine)); }
-		}
-
-		// Has a command been given yet?
-		if (this.command == null) {
-			if (StringUtils.isBlank(
-				currentCommand)) { throw new CommandLineExtensionException(currentNumber, baseValues, currentCommand,
-					commandValues, currentToken, "No command has been given yet (option order is important!)"); }
-
-			final CalienteCommand calienteCommand = CalienteCommand.get(currentCommand);
-			if (calienteCommand == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
-				currentCommand, commandValues, currentToken,
-				String.format("Command [%s] is not a valid Caliente command or command alias", currentCommand)); }
-
-			this.command = this.engineInterface.getCommandModule(calienteCommand);
-			if (this.command == null) { throw new CommandLineExtensionException(currentNumber, baseValues,
-				currentCommand, commandValues, currentToken, String.format("Engine [%s] does not support command [%s]",
-					this.engineInterface.getName(), calienteCommand.getTitle())); }
-		}
+		String error = initializeEngineAndCommand(baseValues, currentCommand);
+		if (error != null) { throw new CommandLineExtensionException(currentNumber, baseValues, currentCommand,
+			commandValues, currentToken, error); }
 
 		// Extend the command lines as per the engine and command
 		if (OptionSchemeExtensionSupport.class.isInstance(this.engineInterface)) {
@@ -159,6 +161,9 @@ public class Launcher extends AbstractLauncher implements OptionSchemeExtensionS
 	@Override
 	protected void processCommandLineResult(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws CommandLineProcessingException {
+
+		final String error = initializeEngineAndCommand(baseValues, command);
+		if (error != null) { throw new CommandLineProcessingException(1, error); }
 
 		// Validate all parameters...make sure everything is kosher, etc...
 		if (this.command == null) { throw new CommandLineProcessingException(1,
