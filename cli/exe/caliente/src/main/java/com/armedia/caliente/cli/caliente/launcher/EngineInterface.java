@@ -1,6 +1,7 @@
 package com.armedia.caliente.cli.caliente.launcher;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -13,7 +14,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
@@ -107,10 +107,18 @@ public abstract class EngineInterface {
 								// Add the alias mapping
 								engineAliases.put(alias, canonicalName);
 							}
+						}
+
+						if (interfaces.isEmpty()) {
+							EngineInterface.INTERFACES = Collections.emptyMap();
+							EngineInterface.ENGINE_ALIASES = Collections.emptyMap();
+							log.warn(
+								"No engine interfaces were located. Please check the contents of the service file for {}",
+								EngineInterface.class.getCanonicalName());
+						} else {
 							EngineInterface.INTERFACES = Tools.freezeMap(new LinkedHashMap<>(interfaces));
 							EngineInterface.ENGINE_ALIASES = Tools.freezeMap(new LinkedHashMap<>(engineAliases));
 						}
-
 						EngineInterface.INTERFACES_INITIALIZED.set(true);
 					}
 					read.lock();
@@ -148,7 +156,7 @@ public abstract class EngineInterface {
 		return EngineInterface.ENGINE_ALIASES.keySet();
 	}
 
-	protected final Logger log = LoggerFactory.getLogger(getClass());
+	// protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	public abstract String getName();
 
