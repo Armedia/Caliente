@@ -12,6 +12,7 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
@@ -23,8 +24,6 @@ import com.armedia.commons.utilities.Tools;
 public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?, ?>> implements AutoCloseable {
 
 	protected static final String ALL = "ALL";
-	protected static final int DEFAULT_THREADS = (Runtime.getRuntime().availableProcessors() * 2);
-	protected static final int MAX_THREADS = (Runtime.getRuntime().availableProcessors() * 8);
 	protected static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 	protected static final String LAST_EXPORT_DATE_PATTERN = CommandModule.JAVA_SQL_DATETIME_PATTERN;
 
@@ -64,7 +63,6 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 	}
 
 	protected boolean preInitialize(CalienteState state, Map<String, Object> settings) {
-		settings.put(TransferSetting.THREAD_COUNT.getLabel(), CommandModule.DEFAULT_THREADS);
 		return true;
 	}
 
@@ -95,11 +93,9 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), commandValues.getAllStrings(CLIParam.exclude_types));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));
 
-		int threads = CommandModule.DEFAULT_THREADS;
-		if (commandValues.isPresent(CLIParam.threads)) {
-			threads = commandValues.getInteger(CLIParam.threads);
-		}
-		threads = Tools.ensureBetween(1, threads, CommandModule.MAX_THREADS);
+		int threads = commandValues.getInteger(CLIParam.threads);
+		threads = Tools.ensureBetween(ThreadsLaunchHelper.DEFAULT_MIN_THREADS, threads,
+			ThreadsLaunchHelper.DEFAULT_MAX_THREADS);
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(), threads);
 
 		settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
