@@ -120,9 +120,9 @@ public enum CLIParam implements OptionWrapper {
 	exclude_types( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
-			.setArgumentName("object-type(s)") //
+			.setArgumentName("object-type") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfType.class)) //
-			.setDescription("Disable renditions processing") //
+			.setDescription("Object types to exclude from processing") //
 	), //
 
 	external_metadata( //
@@ -272,24 +272,24 @@ public enum CLIParam implements OptionWrapper {
 		new OptionImpl() //
 			.setLongOpt("manifest-outcomes") //
 			.setArgumentLimits(1, -1) //
-			.setArgumentName("export-outcomes") //
+			.setArgumentName("export-outcome") //
 			.setValueFilter(new EnumValueFilter<>(false, ExportResult.class)) //
-			.setDescription("The outcomes to include in the manifest (not specified = all outcomes)") //
+			.setDescription("The export outcomes to include in the manifest (not specified = all outcomes)") //
 	), //
 
 	manifest_outcomes_import( //
 		new OptionImpl() //
 			.setLongOpt("manifest-outcomes") //
 			.setArgumentLimits(1, -1) //
-			.setArgumentName("import-outcomes") //
+			.setArgumentName("import-outcome") //
 			.setValueFilter(new EnumValueFilter<>(false, ImportResult.class)) //
-			.setDescription("The outcomes to include in the manifest (not specified = all outcomes)") //
+			.setDescription("The import outcomes to include in the manifest (not specified = all outcomes)") //
 	), //
 
 	manifest_types( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
-			.setArgumentName("types") //
+			.setArgumentName("type") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfType.class)) //
 			.setDescription("The object types to include in the manifest (not specified = all types)") //
 	), //
