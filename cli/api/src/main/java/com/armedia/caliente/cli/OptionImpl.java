@@ -54,6 +54,10 @@ public final class OptionImpl extends Option implements Cloneable {
 			this.argumentName = other.getArgumentName();
 			this.valueSep = other.getValueSep();
 			this.valueFilter = other.getValueFilter();
+			List<String> defaults = other.getDefaults();
+			if (defaults != null) {
+				this.defaults.addAll(defaults);
+			}
 			this.key = other.getKey();
 		}
 	}
