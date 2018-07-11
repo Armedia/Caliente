@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import com.armedia.commons.utilities.Tools;
+
 public final class OptionImpl extends Option implements Cloneable {
 
 	private boolean required = false;
@@ -211,8 +213,8 @@ public final class OptionImpl extends Option implements Cloneable {
 		return this.defaults.isEmpty() ? null : this.defaults.get(0);
 	}
 
-	public OptionImpl setDefault(String value) {
-		return setDefaults(value);
+	public OptionImpl setDefault(Object value) {
+		return setDefaults(Tools.toString(value));
 	}
 
 	@Override
