@@ -113,7 +113,8 @@ public enum CLIParam implements OptionWrapper {
 		new OptionImpl() //
 			.setArgumentLimits(1) //
 			.setArgumentName("number") //
-			.setValueFilter(new IntegerValueFilter(0, null)) //
+			.setValueFilter(new IntegerValueFilter(-1, null)) //
+			.setDefault(-1) //
 			.setDescription("The number of errors to accept before aborting an import") //
 	), //
 
