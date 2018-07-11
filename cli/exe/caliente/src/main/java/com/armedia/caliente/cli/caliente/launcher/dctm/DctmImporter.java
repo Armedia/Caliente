@@ -13,6 +13,8 @@ import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.importer.ImportEngine;
 
 class DctmImporter extends ImportCommandModule implements DynamicOptions {
@@ -65,6 +67,11 @@ class DctmImporter extends ImportCommandModule implements DynamicOptions {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 		if (!DctmEngineInterface.commonConfigure(commandValues, settings)) { return false; }
 
+		settings.put(Setting.IMPORT_MAX_ERRORS.getLabel(), commandValues.getString(CLIParam.error_count));
+		if (commandValues.isPresent(DctmImporter.DEFAULT_PASSWORD)) {
+			settings.put(Setting.DEFAULT_USER_PASSWORD.getLabel(),
+				commandValues.getString(DctmImporter.DEFAULT_PASSWORD));
+		}
 		return true;
 	}
 

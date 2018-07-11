@@ -18,6 +18,7 @@ import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
 
 class DctmExporter extends ExportCommandModule implements DynamicOptions {
@@ -197,8 +198,25 @@ class DctmExporter extends ExportCommandModule implements DynamicOptions {
 		}
 		settings.put(Setting.DQL.getLabel(), dql);
 
-		// TODO: process the other parameters
-
+		if (commandValues.isPresent(DctmExporter.OWNER_ATTRIBUTES)) {
+			settings.put(Setting.OWNER_ATTRIBUTES.getLabel(),
+				Tools.joinCSVEscaped(commandValues.getAllStrings(DctmExporter.OWNER_ATTRIBUTES)));
+		}
+		if (commandValues.isPresent(DctmExporter.SPECIAL_USERS)) {
+			settings.put(Setting.SPECIAL_USERS.getLabel(),
+				Tools.joinCSVEscaped(commandValues.getAllStrings(DctmExporter.SPECIAL_USERS)));
+		}
+		if (commandValues.isPresent(DctmExporter.SPECIAL_GROUPS)) {
+			settings.put(Setting.SPECIAL_GROUPS.getLabel(),
+				Tools.joinCSVEscaped(commandValues.getAllStrings(DctmExporter.SPECIAL_GROUPS)));
+		}
+		if (commandValues.isPresent(DctmExporter.SPECIAL_TYPES)) {
+			settings.put(Setting.SPECIAL_TYPES.getLabel(),
+				Tools.joinCSVEscaped(commandValues.getAllStrings(DctmExporter.SPECIAL_TYPES)));
+		}
+		if (commandValues.isPresent(DctmExporter.BATCH_SIZE)) {
+			settings.put(Setting.EXPORT_BATCH_SIZE.getLabel(), commandValues.getString(DctmExporter.BATCH_SIZE));
+		}
 		return true;
 	}
 
