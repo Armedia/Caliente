@@ -28,7 +28,7 @@ public class DctmEngineInterface extends EngineInterface implements DynamicOptio
 
 	static final DfcLaunchHelper DFC_HELPER = new DfcLaunchHelper(true);
 
-	private static final OptionGroup DFC_OPTIONS = new OptionGroupImpl("DFC Options") //
+	private static final OptionGroup DFC_OPTIONS = new OptionGroupImpl("DFC Configuration") //
 		.add(DfcLaunchHelper.DFC_DOCUMENTUM) //
 		.add(DfcLaunchHelper.DFC_LOCATION) //
 		.add(DfcLaunchHelper.DFC_PROPERTIES) //

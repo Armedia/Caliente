@@ -5,22 +5,21 @@ import com.armedia.caliente.cli.OptionGroupImpl;
 
 public class CLIGroup {
 
-	public static final OptionGroup BASE = new OptionGroupImpl("Base Options") //
+	public static final OptionGroup BASE = new OptionGroupImpl("Base") //
 		.add(CLIParam.engine) //
-		.add(CLIParam.help) //
 		.add(CLIParam.lib) //
 		.add(CLIParam.log) //
 		.add(CLIParam.log_cfg) //
 		.add(CLIParam.log_dir) //
 	;
 
-	public static final OptionGroup STORE = new OptionGroupImpl("Data Store Options") //
+	public static final OptionGroup STORE = new OptionGroupImpl("Data Store") //
 		.add(CLIParam.content) //
 		.add(CLIParam.content_strategy) //
 		.add(CLIParam.db) //
 	;
 
-	public static final OptionGroup MAIL = new OptionGroupImpl("SMTP Options") //
+	public static final OptionGroup MAIL = new OptionGroupImpl("SMTP") //
 		.add(CLIParam.mail_auth) //
 		.add(CLIParam.mail_bcc) //
 		.add(CLIParam.mail_cc) //
@@ -33,7 +32,7 @@ public class CLIGroup {
 		.add(CLIParam.mail_user) //
 	;
 
-	public static final OptionGroup IMPORT_EXPORT_COMMON = new OptionGroupImpl("Common Export/Import Options") //
+	public static final OptionGroup IMPORT_EXPORT_COMMON = new OptionGroupImpl("Common Export/Import") //
 		.add(CLIParam.error_count) //
 		.add(CLIParam.exclude_types) //
 		.add(CLIParam.external_metadata) //
@@ -46,14 +45,14 @@ public class CLIGroup {
 		.add(CLIParam.transformations) //
 	;
 
-	public static final OptionGroup EXPORT_COMMON = new OptionGroupImpl("Common Export Options") //
+	public static final OptionGroup EXPORT_COMMON = new OptionGroupImpl("Common Export") //
 		.addFrom(CLIGroup.IMPORT_EXPORT_COMMON) //
 		.add(CLIParam.direct_fs) //
 		.add(CLIParam.manifest_outcomes_export) //
 		.add(CLIParam.source) //
 	;
 
-	public static final OptionGroup IMPORT_COMMON = new OptionGroupImpl("Common Import Options") //
+	public static final OptionGroup IMPORT_COMMON = new OptionGroupImpl("Common Import") //
 		.addFrom(CLIGroup.IMPORT_EXPORT_COMMON.getOptions()) //
 		.add(CLIParam.filename_map) //
 		.add(CLIParam.group_map) //
@@ -66,7 +65,7 @@ public class CLIGroup {
 		.add(CLIParam.validate_requirements) //
 	;
 
-	public static final OptionGroup COUNT_COMMON = new OptionGroupImpl("Common Count Options") //
+	public static final OptionGroup COUNT_COMMON = new OptionGroupImpl("Common Count") //
 		.add(CLIParam.count_empty) //
 		.add(CLIParam.count_exclude) //
 		.add(CLIParam.count_include) //
@@ -77,17 +76,17 @@ public class CLIGroup {
 		.add(CLIParam.threads) //
 	;
 
-	public static final OptionGroup AUTHENTICATION = new OptionGroupImpl("Common Authentication Options") //
+	public static final OptionGroup AUTHENTICATION = new OptionGroupImpl("Basic Authentication") //
 		.add(CLIParam.user) //
 		.add(CLIParam.password) //
 	;
 
-	public static final OptionGroup CONNECTION = new OptionGroupImpl("Common Connection Options") //
+	public static final OptionGroup CONNECTION = new OptionGroupImpl("Common Connection") //
 		.addFrom(CLIGroup.AUTHENTICATION) //
 		.add(CLIParam.server) //
 	;
 
-	public static final OptionGroup DOMAIN_CONNECTION = new OptionGroupImpl("Domain Connection Options") //
+	public static final OptionGroup DOMAIN_CONNECTION = new OptionGroupImpl("Domain Connection") //
 		.addFrom(CLIGroup.CONNECTION) //
 		.add(CLIParam.domain) //
 	;

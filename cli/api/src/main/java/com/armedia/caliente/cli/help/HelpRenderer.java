@@ -279,7 +279,7 @@ public final class HelpRenderer {
 			} else {
 				desc = String.format(" %s", desc);
 			}
-			HelpRenderer.printWrapped(pw, width, String.format("Options for %s:%s", g.getName(), desc));
+			HelpRenderer.printWrapped(pw, width, String.format("%s options:%s", g.getName(), desc));
 			HelpRenderer.printWrapped(pw, width, StringUtils.repeat('-', (3 * width) / 4));
 			for (Option o : g) {
 				HelpRenderer.formatOption(pw, width, o);
@@ -302,7 +302,7 @@ public final class HelpRenderer {
 			}
 			aliases = String.format("%s)", aliases);
 		}
-		HelpRenderer.printWrapped(pw, width, String.format("Command Options for '%s'%s:", command.getName(), aliases));
+		HelpRenderer.printWrapped(pw, width, String.format("%s%s command options:", command.getName(), aliases));
 		HelpRenderer.printWrapped(pw, width, StringUtils.repeat('=', width));
 		HelpRenderer.formatScheme(pw, width, command);
 	}
@@ -359,7 +359,7 @@ public final class HelpRenderer {
 
 		if (baseScheme.getOptionCount() > 0) {
 			HelpRenderer.printWrapped(pw, width,
-				String.format("%s Options:", (commandScheme != null ? "Global" : "Available")));
+				String.format("%s options:", (commandScheme != null ? "Global" : "Available")));
 			HelpRenderer.printWrapped(pw, width, line);
 			HelpRenderer.formatScheme(pw, width, baseScheme);
 		}

@@ -36,7 +36,7 @@ class AlfrescoImporter extends ImportCommandModule implements DynamicOptions {
 		.setDescription("The XML files that make up the Alfresco content model to use on import") //
 	;
 
-	private static final OptionGroup OPTIONS = new OptionGroupImpl("Alfresco BI Generator Options") //
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("Alfresco BI Generator") //
 		.add(AlfrescoImporter.ATTRIBUTE_MAP) //
 		.add(AlfrescoImporter.CONTENT_MODEL) //
 	;

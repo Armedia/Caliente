@@ -25,7 +25,7 @@ class DctmImporter extends ImportCommandModule implements DynamicOptions {
 			"The default password to use for users being copied over (if not specified, the default is to use the same login name)") //
 	;
 
-	private static final OptionGroup OPTIONS = new OptionGroupImpl("DFC Import Options") //
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("DFC Import") //
 		.add(DctmImporter.DEFAULT_PASSWORD) //
 	;
 

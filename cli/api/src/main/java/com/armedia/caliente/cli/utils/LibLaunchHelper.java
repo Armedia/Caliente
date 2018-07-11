@@ -58,7 +58,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 	public LibLaunchHelper(String defaultLib, String libEnvVar) {
 		this.defaultLib = defaultLib;
 		this.libEnvVar = libEnvVar;
-		this.group = new OptionGroupImpl("Classpath Extension") //
+		this.group = new OptionGroupImpl("Classpath Extender") //
 			.add(LibLaunchHelper.LIB) //
 		;
 	}

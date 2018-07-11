@@ -35,7 +35,7 @@ class ShptExporter extends ExportCommandModule implements DynamicOptions {
 		.setDefault("/sites") //
 	;
 
-	private static final OptionGroup OPTIONS = new OptionGroupImpl("SharePoint Export Options") //
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("SharePoint Export") //
 		.add(ShptExporter.SOURCE_PREFIX) //
 	;
 

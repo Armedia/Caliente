@@ -67,7 +67,7 @@ class DctmExporter extends ExportCommandModule implements DynamicOptions {
 		.setValueSep(',') //
 	;
 
-	private static final OptionGroup OPTIONS = new OptionGroupImpl("DFC Export Options") //
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("DFC Export") //
 		.add(DctmExporter.BATCH_SIZE) //
 		.add(DctmExporter.OWNER_ATTRIBUTES) //
 		.add(DctmExporter.SPECIAL_GROUPS) //

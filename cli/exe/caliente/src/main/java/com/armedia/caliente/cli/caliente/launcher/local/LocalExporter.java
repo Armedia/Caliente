@@ -30,7 +30,7 @@ class LocalExporter extends ExportCommandModule implements DynamicOptions {
 		.setDescription("Ignore empty folders during extraction") //
 	;
 
-	private static final OptionGroup OPTIONS = new OptionGroupImpl("Local Export Options") //
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("Local Export") //
 		.add(LocalExporter.COPY_CONTENT) //
 	;
 

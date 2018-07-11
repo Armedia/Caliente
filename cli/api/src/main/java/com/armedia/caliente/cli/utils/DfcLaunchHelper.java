@@ -88,10 +88,11 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 		this.paramDfcProp = DfcLaunchHelper.DFC_PROPERTIES;
 		this.includesConnectionInfo = includesConnectionInfo;
 
-		OptionGroupImpl group = new OptionGroupImpl("Documentum DFC") //
-			.add(this.paramDfcProp) //
-			.add(this.paramDfc) //
-			.add(this.paramDctm) //
+		OptionGroupImpl group = new OptionGroupImpl(
+			String.format("DFC%s", includesConnectionInfo ? " connectivity" : "")) //
+				.add(this.paramDfcProp) //
+				.add(this.paramDfc) //
+				.add(this.paramDctm) //
 		;
 
 		if (includesConnectionInfo) {
