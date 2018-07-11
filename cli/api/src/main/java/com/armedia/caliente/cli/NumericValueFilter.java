@@ -25,16 +25,16 @@ public abstract class NumericValueFilter<N extends Number> extends OptionValueFi
 		this.max = max;
 		this.maxInc = maxInclusive;
 		String prefix = "a";
-		if (StringUtils.startsWithAny("aeiou", label.toLowerCase())) {
+		if (StringUtils.startsWithAny(label.toLowerCase(), "a", "e", "i", "o", "u")) {
 			prefix = "an";
 		}
 		String lorange = null;
 		if (min != null) {
-			lorange = String.format("greater than%s %s", (minInclusive ? " or equal to" : ""), min);
+			lorange = String.format(" greater than%s %s", (minInclusive ? " or equal to" : ""), min);
 		}
 		String hirange = null;
 		if (max != null) {
-			hirange = String.format("less than%s %s", (maxInclusive ? " or equal to" : ""), max);
+			hirange = String.format(" less than%s %s", (maxInclusive ? " or equal to" : ""), max);
 		}
 
 		String range = null;
