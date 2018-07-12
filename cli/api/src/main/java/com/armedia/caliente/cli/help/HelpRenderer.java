@@ -70,6 +70,10 @@ public final class HelpRenderer {
 
 	private static void renderPositionals(StringBuilder sb, String label, Character sep, int min, int max) {
 		if (max == 0) { return; }
+		if (sep == null) {
+			// No separator means only a single string...
+			min = max = 1;
+		}
 
 		sb.append(" ");
 
