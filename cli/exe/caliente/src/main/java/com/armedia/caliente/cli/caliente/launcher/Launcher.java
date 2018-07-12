@@ -160,8 +160,8 @@ public class Launcher extends AbstractLauncher {
 		final String error = initializeEngineAndCommand(baseValues, command);
 		if (error != null) { throw new CommandLineProcessingException(1, error); }
 
-		this.objectStoreLocation = getMetadataLocation(baseValues);
-		this.contentStoreLocation = getContentLocation(baseValues);
+		this.objectStoreLocation = getMetadataLocation(commandValues);
+		this.contentStoreLocation = getContentLocation(commandValues);
 		this.logLocation = getLogLocation(baseValues);
 
 		if ((this.logLocation == null) && (this.objectStoreLocation != null)
@@ -180,8 +180,8 @@ public class Launcher extends AbstractLauncher {
 			this.logLocation = Tools.canonicalize(new File("."));
 		}
 
-		this.directFsMode = baseValues.isPresent(CLIParam.direct_fs);
-		this.contentStrategy = baseValues.getString(CLIParam.content_strategy, Launcher.DEFAULT_CONTENT_STRATEGY);
+		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
+		this.contentStrategy = commandValues.getString(CLIParam.content_strategy, Launcher.DEFAULT_CONTENT_STRATEGY);
 	}
 
 	private File getMetadataLocation(OptionValues baseValues) throws CommandLineProcessingException {
@@ -242,7 +242,6 @@ public class Launcher extends AbstractLauncher {
 			} else {
 				path = Launcher.DEFAULT_DB_PATH.resolve(Launcher.DEFAULT_CONTENT_PATH).toString();
 			}
-			path = null;
 		}
 
 		f = createFile(path);
