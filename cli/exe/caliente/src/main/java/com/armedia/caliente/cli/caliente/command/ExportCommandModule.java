@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -74,7 +75,13 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 
 		Set<ExportResult> outcomes = commandValues.getAllEnums(ExportResult.class, false,
 			CLIParam.manifest_outcomes_export);
+		if (outcomes == null) {
+			outcomes = EnumSet.allOf(ExportResult.class);
+		}
 		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, false, CLIParam.manifest_types);
+		if (types == null) {
+			types = EnumSet.allOf(CmfType.class);
+		}
 
 		final ExportCommandListener mainListener = new ExportCommandListener(this.console);
 		final CalienteWarningTracker warningTracker = mainListener.getWarningTracker();
