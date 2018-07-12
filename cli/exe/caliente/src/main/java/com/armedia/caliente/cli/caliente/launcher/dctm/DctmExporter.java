@@ -45,6 +45,7 @@ class DctmExporter extends ExportCommandModule implements DynamicOptions {
 		.setArgumentLimits(1, -1) //
 		.setArgumentName("attribute-name") //
 		.setDescription("The owner_attributes to check for") //
+		.setValueSep(',') //
 		.setDefaults("group_admin", "owner_name", "users_names", "owner", "r_creator_name", "r_modifier_name",
 			"acl_domain") //
 	;
