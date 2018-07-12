@@ -19,7 +19,6 @@ public enum CLIParam implements OptionWrapper {
 			.setShortOpt('c') //
 			.setArgumentLimits(1) //
 			.setArgumentName("content-directory-or-config") //
-			.setRequired(true) //
 			.setDescription(
 				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes the store configuration") //
 	), //
