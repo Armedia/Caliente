@@ -238,6 +238,11 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
+	public File getStoreLocation() {
+		return this.baseDir;
+	}
+
+	@Override
 	protected boolean isSupported(URI locator) {
 		return LocalContentStore.SUPPORTED.contains(locator.getScheme());
 	}
