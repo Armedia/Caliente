@@ -21,9 +21,9 @@ public class DecryptCommandModule extends CommandModule<TransferEngine<?, ?, ?, 
 		super(CalienteCommand.DECRYPT, engine);
 	}
 
-	private final Collection<CmfCrypt> getCrypt() {
+	private final Collection<CmfCrypt> getCryptoOptions() {
 		Collection<CmfCrypt> crypt = new ArrayList<>(2);
-		CmfCrypt c = this.engine.getCrypto();
+		CmfCrypt c = getCrypto();
 		if (c != null) {
 			crypt.add(c);
 		}
@@ -53,7 +53,7 @@ public class DecryptCommandModule extends CommandModule<TransferEngine<?, ?, ?, 
 	@Override
 	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
 		throws CalienteException {
-		final Collection<CmfCrypt> crypt = getCrypt();
+		final Collection<CmfCrypt> crypt = getCryptoOptions();
 		if (!positionals.isEmpty()) {
 			for (String password : positionals) {
 				try {

@@ -14,7 +14,6 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.xml.StoreConfiguration;
@@ -43,16 +42,13 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		return this.descriptor;
 	}
 
+	public final ENGINE getEngine() {
+		return this.engine;
+	}
+
 	public final CmfCrypt getCrypto() {
+		if (this.engine == null) { return null; }
 		return this.engine.getCrypto();
-	}
-
-	public final boolean isSupportsDuplicateFileNames() {
-		return this.engine.isSupportsDuplicateFileNames();
-	}
-
-	public final Collection<TransferEngineSetting> getSupportedSettings() {
-		return this.engine.getSupportedSettings();
 	}
 
 	public final void initialize(CalienteState state, Map<String, Object> settings) {
