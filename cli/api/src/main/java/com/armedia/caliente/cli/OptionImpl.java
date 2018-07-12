@@ -17,7 +17,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	private int minArguments = 0;
 	private int maxArguments = 0;
 	private String argumentName = null;
-	private Character valueSep = OptionImpl.DEFAULT_VALUE_SEP;
+	private Character valueSep = null;
 	private OptionValueFilter valueFilter = null;
 	private final List<String> defaults = new ArrayList<>();
 
