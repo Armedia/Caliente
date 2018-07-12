@@ -90,18 +90,20 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 
 	protected boolean preConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
+
 		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), commandValues.getAllStrings(CLIParam.exclude_types));
+		settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(), commandValues.getString(CLIParam.external_metadata));
+		settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CLIParam.filter));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));
+		settings.put(TransferSetting.LATEST_ONLY.getLabel(), commandValues.isPresent(CLIParam.no_versions));
+		settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
+		settings.put(TransferSetting.TRANSFORMATION.getLabel(), commandValues.getString(CLIParam.transformations));
 
 		int threads = commandValues.getInteger(CLIParam.threads);
 		threads = Tools.ensureBetween(ThreadsLaunchHelper.DEFAULT_MIN_THREADS, threads,
 			ThreadsLaunchHelper.DEFAULT_MAX_THREADS);
 		settings.put(TransferSetting.THREAD_COUNT.getLabel(), threads);
 
-		settings.put(TransferSetting.NO_RENDITIONS.getLabel(), commandValues.isPresent(CLIParam.no_renditions));
-		settings.put(TransferSetting.TRANSFORMATION.getLabel(), commandValues.getString(CLIParam.transformations));
-		settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(), commandValues.getString(CLIParam.external_metadata));
-		settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CLIParam.filter));
 		return true;
 	}
 
