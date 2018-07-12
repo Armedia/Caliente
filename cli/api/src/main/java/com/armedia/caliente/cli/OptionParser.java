@@ -473,7 +473,7 @@ public class OptionParser {
 						// If we're already processing a command, then the remaining options belong
 						// to it
 						if (command != null) {
-							p = findOption(commandScheme, token);
+							p = findOption(command, token);
 							fromCommand = true;
 						}
 						// If we're not processing a command, then the options are still part of the
