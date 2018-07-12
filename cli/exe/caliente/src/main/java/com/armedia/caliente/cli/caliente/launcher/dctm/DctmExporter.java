@@ -197,7 +197,7 @@ class DctmExporter extends ExportCommandModule implements DynamicOptions {
 		if (commandValues.isPresent(CLIParam.source)) {
 			dql = commandValues.getString(CLIParam.source);
 		}
-		settings.put(Setting.DQL.getLabel(), dql);
+		settings.put(Setting.DQL.getLabel(), String.format("select r_object_id from %s", dql));
 
 		if (commandValues.isPresent(DctmExporter.OWNER_ATTRIBUTES)) {
 			settings.put(Setting.OWNER_ATTRIBUTES.getLabel(),
