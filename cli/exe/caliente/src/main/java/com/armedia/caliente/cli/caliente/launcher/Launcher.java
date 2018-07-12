@@ -435,11 +435,9 @@ public class Launcher extends AbstractLauncher {
 		OptionValues commandValues, Collection<String> positionals) {
 		List<LaunchClasspathHelper> l = new ArrayList<>();
 		l.add(this.libLaunchHelper);
-		/*
-		for (LaunchClasspathHelper h : this.engineFactory.getClasspathHelpers()) {
-			l.add(h);
+		if (this.engineInterface != null) {
+			l.addAll(this.engineInterface.getClasspathHelpers());
 		}
-		*/
 		return l;
 	}
 
