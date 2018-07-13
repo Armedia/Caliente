@@ -49,6 +49,7 @@ import com.armedia.caliente.store.CmfStoreFactory;
 import com.armedia.caliente.store.CmfStores;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.StoreConfiguration;
+import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 
@@ -73,6 +74,8 @@ public class Caliente extends AbstractLauncher {
 		}
 		VERSION = Tools.coalesce(version, "(unknown)");
 	}
+
+	public static final CmfCrypt CRYPTO = new CmfCrypt();
 
 	public static final void main(String... args) {
 		System.exit(new Caliente().launch(CLIParam.help, args));
