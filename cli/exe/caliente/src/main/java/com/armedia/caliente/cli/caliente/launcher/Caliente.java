@@ -292,24 +292,22 @@ public class Caliente extends AbstractLauncher {
 
 		final String contentStoreName = (directFsExport ? "direct" : "default");
 		StoreConfiguration cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
+
+		String contentStrategy = this.contentStrategy;
 		if (!directFsExport) {
-			String strategy = this.contentStrategy;
-			if (StringUtils.isBlank(strategy)) {
-				strategy = Caliente.DEFAULT_CONTENT_STRATEGY;
+			if (StringUtils.isBlank(contentStrategy)) {
+				contentStrategy = Tools.coalesce(this.command.getContentStrategyName(),
+					Caliente.DEFAULT_CONTENT_STRATEGY);
 			}
-			if (!StringUtils.isBlank(strategy)) {
-				cfg.getSettings().put("dir.content.strategy", strategy);
-			}
+			this.contentStrategy = contentStrategy;
 			applyStoreProperties(cfg,
 				loadStoreProperties("content", contentLocation.isFile() ? contentLocation.getAbsolutePath() : null));
 		}
 		this.command.customizeContentStoreProperties(cfg);
 		if (!directFsExport) {
-			String strategy = this.command.getContentStrategyName();
-			if (!StringUtils.isBlank(strategy)) {
-				cfg.getSettings().put("dir.content.strategy", strategy);
-			}
+			cfg.getSettings().put("dir.content.strategy", this.contentStrategy);
 		}
+
 		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA,
 			String.valueOf(this.command.getDescriptor().isRequiresCleanData()));
 		cfg.getSettings().putAll(commonValues);
