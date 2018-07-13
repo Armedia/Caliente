@@ -352,7 +352,6 @@ public enum CLIParam implements OptionWrapper {
 
 	target( //
 		new OptionImpl() //
-			.setRequired(true) //
 			.setArgumentLimits(1) //
 			.setArgumentName("target-path") //
 			.setDescription("The path location into which to import the contents") //
