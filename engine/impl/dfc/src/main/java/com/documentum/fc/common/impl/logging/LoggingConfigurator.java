@@ -2,6 +2,7 @@ package com.documentum.fc.common.impl.logging;
 
 import java.io.File;
 import java.net.URL;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.log4j.Level;
 
@@ -14,7 +15,7 @@ import com.documentum.fc.common.impl.preferences.TypedPreferences;
 
 public class LoggingConfigurator {
 	public static Level getLevelToForceStack() {
-		return LoggingConfigurator.s_levelToForceStack;
+		return LoggingConfigurator.s_levelToForceStack.get();
 	}
 
 	public static void performInitialConfiguration() {
@@ -51,8 +52,8 @@ public class LoggingConfigurator {
 
 		@Override
 		public void update(TypedPreferences preferences, String preferenceName) {
-			LoggingConfigurator.s_levelToForceStack = Level
-				.toLevel(DfPreferences.getInstance().getLoggingLevelToForceStack(), Level.OFF);
+			LoggingConfigurator.s_levelToForceStack
+				.set(Level.toLevel(DfPreferences.getInstance().getLoggingLevelToForceStack(), Level.OFF));
 		}
 	}
 
@@ -64,6 +65,6 @@ public class LoggingConfigurator {
 	}
 
 	private static URL s_log4jConfiguration = null;
-	private static Level s_levelToForceStack = Level.OFF;
+	private static AtomicReference<Level> s_levelToForceStack = new AtomicReference<>(Level.OFF);
 	private static IPreferencesObserver s_preferenceObserver;
 }
