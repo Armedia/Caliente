@@ -512,6 +512,7 @@ public class Caliente extends AbstractLauncher {
 		Runtime runtime = Runtime.getRuntime();
 		console.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
 		console.info(String.format("Maximum heap size: %d MB", runtime.maxMemory() / 1024 / 1024));
+
 		return true;
 	}
 
@@ -523,11 +524,12 @@ public class Caliente extends AbstractLauncher {
 	@Override
 	protected int run(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) throws Exception {
-		final CalienteState state = new CalienteState(this.objectStoreLocation, this.objectStore,
-			this.contentStoreLocation, this.contentStore);
 
 		try {
 			initializeStores();
+
+			final CalienteState state = new CalienteState(this.objectStoreLocation, this.objectStore,
+				this.contentStoreLocation, this.contentStore);
 
 			final String engineName = this.engineInterface.getName();
 			final Logger log = LoggerFactory.getLogger(getClass());
