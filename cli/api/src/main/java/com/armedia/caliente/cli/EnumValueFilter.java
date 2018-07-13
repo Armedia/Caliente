@@ -59,7 +59,7 @@ public class EnumValueFilter<E extends Enum<E>> extends OptionValueFilter {
 		}
 		this.allowed = Tools.freezeSet(allowed);
 		this.canon = Tools.freezeMap(new LinkedHashMap<>(canon));
-		this.description = String.format("one of %s", v.toString());
+		this.description = String.format("one of%s: %s", (caseSensitive ? "" : " (case insensitive)"), v);
 	}
 
 	public Set<E> getAllowed() {
