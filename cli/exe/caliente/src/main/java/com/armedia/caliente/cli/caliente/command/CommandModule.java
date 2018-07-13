@@ -15,7 +15,6 @@ import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferSetting;
-import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
@@ -128,7 +127,7 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 	}
 
 	public String getContentStrategyName() {
-		return LocalOrganizationStrategy.NAME;
+		return null;
 	}
 
 	public void customizeObjectStoreProperties(StoreConfiguration cfg) {
