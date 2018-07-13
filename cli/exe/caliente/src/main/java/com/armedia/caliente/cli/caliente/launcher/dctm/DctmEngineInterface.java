@@ -23,6 +23,8 @@ import com.armedia.caliente.engine.dfc.importer.DctmImportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
+import com.documentum.fc.common.DfLoggerDisabled;
+import com.documentum.fc.common.impl.logging.LoggingConfigurator;
 
 public class DctmEngineInterface extends EngineInterface implements DynamicOptions {
 
@@ -36,6 +38,9 @@ public class DctmEngineInterface extends EngineInterface implements DynamicOptio
 	;
 
 	public DctmEngineInterface() {
+		// Load the logging-related patch classes
+		DfLoggerDisabled.class.hashCode();
+		LoggingConfigurator.class.hashCode();
 	}
 
 	@Override
