@@ -53,7 +53,7 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.Tools;
 
-public class Caliente extends AbstractLauncher {
+public class Launcher extends AbstractLauncher {
 
 	/**
 	 * Read the Caliente version... is this the cleanest way?
@@ -78,7 +78,7 @@ public class Caliente extends AbstractLauncher {
 	public static final CmfCrypt CRYPTO = new CmfCrypt();
 
 	public static final void main(String... args) {
-		System.exit(new Caliente().launch(CLIParam.help, args));
+		System.exit(new Launcher().launch(CLIParam.help, args));
 	}
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
@@ -103,7 +103,7 @@ public class Caliente extends AbstractLauncher {
 
 	private boolean directFsMode = false;
 
-	private String contentStrategy = Caliente.DEFAULT_CONTENT_STRATEGY;
+	private String contentStrategy = Launcher.DEFAULT_CONTENT_STRATEGY;
 
 	@Override
 	protected String getProgramName() {
@@ -125,11 +125,11 @@ public class Caliente extends AbstractLauncher {
 						if (!helpRequested) { throw new DynamicOptionsException(this, err); }
 					}
 
-					if (DynamicOptions.class.isInstance(Caliente.this.engineInterface)) {
-						DynamicOptions.class.cast(Caliente.this.engineInterface).getDynamicOptions(this);
+					if (DynamicOptions.class.isInstance(Launcher.this.engineInterface)) {
+						DynamicOptions.class.cast(Launcher.this.engineInterface).getDynamicOptions(this);
 					}
-					if (DynamicOptions.class.isInstance(Caliente.this.command)) {
-						DynamicOptions.class.cast(Caliente.this.command).getDynamicOptions(this);
+					if (DynamicOptions.class.isInstance(Launcher.this.command)) {
+						DynamicOptions.class.cast(Launcher.this.command).getDynamicOptions(this);
 					}
 				}
 
@@ -206,7 +206,7 @@ public class Caliente extends AbstractLauncher {
 		}
 
 		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
-		this.contentStrategy = commandValues.getString(CLIParam.content_strategy, Caliente.DEFAULT_CONTENT_STRATEGY);
+		this.contentStrategy = commandValues.getString(CLIParam.content_strategy, Launcher.DEFAULT_CONTENT_STRATEGY);
 	}
 
 	private File getMetadataLocation(OptionValues baseValues) throws CommandLineProcessingException {
@@ -219,7 +219,7 @@ public class Caliente extends AbstractLauncher {
 		if (baseValues.isPresent(CLIParam.db)) {
 			path = baseValues.getString(CLIParam.db);
 		} else {
-			path = Caliente.DEFAULT_DB_PATH.toString();
+			path = Launcher.DEFAULT_DB_PATH.toString();
 		}
 
 		f = createFile(path);
@@ -263,9 +263,9 @@ public class Caliente extends AbstractLauncher {
 			path = baseValues.getString(CLIParam.content);
 		} else {
 			if (this.objectStoreLocation != null) {
-				path = new File(this.objectStoreLocation, Caliente.DEFAULT_CONTENT_PATH).getAbsolutePath();
+				path = new File(this.objectStoreLocation, Launcher.DEFAULT_CONTENT_PATH).getAbsolutePath();
 			} else {
-				path = Caliente.DEFAULT_DB_PATH.resolve(Caliente.DEFAULT_CONTENT_PATH).toString();
+				path = Launcher.DEFAULT_DB_PATH.resolve(Launcher.DEFAULT_CONTENT_PATH).toString();
 			}
 		}
 
@@ -297,7 +297,7 @@ public class Caliente extends AbstractLauncher {
 		if (!directFsExport) {
 			if (StringUtils.isBlank(contentStrategy)) {
 				contentStrategy = Tools.coalesce(this.command.getContentStrategyName(),
-					Caliente.DEFAULT_CONTENT_STRATEGY);
+					Launcher.DEFAULT_CONTENT_STRATEGY);
 			}
 			this.contentStrategy = contentStrategy;
 			applyStoreProperties(cfg,
@@ -351,7 +351,7 @@ public class Caliente extends AbstractLauncher {
 
 	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
 		if ((properties == null) || properties.isEmpty()) { return false; }
-		String storeType = properties.getProperty(Caliente.STORE_TYPE_PROPERTY);
+		String storeType = properties.getProperty(Launcher.STORE_TYPE_PROPERTY);
 		if (!StringUtils.isEmpty(storeType)) {
 			cfg.setType(storeType);
 		}
@@ -506,7 +506,7 @@ public class Caliente extends AbstractLauncher {
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
 		final Logger console = LoggerFactory.getLogger("console");
 		console
-			.info(String.format("Launching Caliente v%s %s mode for engine %s%n", Caliente.VERSION, command, engine));
+			.info(String.format("Launching Caliente v%s %s mode for engine %s%n", Launcher.VERSION, command, engine));
 		Runtime runtime = Runtime.getRuntime();
 		console.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
 		console.info(String.format("Maximum heap size: %d MB", runtime.maxMemory() / 1024 / 1024));
@@ -516,7 +516,7 @@ public class Caliente extends AbstractLauncher {
 
 	@Override
 	protected void showBanner(Logger log) {
-		log.info("Caliente CLI v{}", Caliente.VERSION);
+		log.info("Caliente CLI v{}", Launcher.VERSION);
 	}
 
 	@Override
@@ -538,7 +538,7 @@ public class Caliente extends AbstractLauncher {
 			try {
 				if (writeProperties) {
 					Map<String, CmfValue> properties = new TreeMap<>();
-					properties.put(String.format("%s.version", pfx), new CmfValue(Caliente.VERSION));
+					properties.put(String.format("%s.version", pfx), new CmfValue(Launcher.VERSION));
 					properties.put(String.format("%s.start", pfx), new CmfValue(new Date()));
 					objectStore.setProperties(properties);
 				}
