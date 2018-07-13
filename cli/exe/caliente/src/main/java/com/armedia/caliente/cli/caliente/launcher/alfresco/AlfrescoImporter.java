@@ -33,6 +33,7 @@ class AlfrescoImporter extends ImportCommandModule implements DynamicOptions {
 		.setLongOpt("content-model") //
 		.setArgumentLimits(1, -1) //
 		.setArgumentName("content-model-file") //
+		.setValueSep(',') //
 		.setDescription("The XML files that make up the Alfresco content model to use on import") //
 	;
 
