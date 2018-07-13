@@ -336,18 +336,18 @@ public class Caliente extends AbstractLauncher {
 		this.objectStore = CmfStores.createObjectStore(cfg);
 		storeLocation = this.objectStore.getStoreLocation();
 		if (storeLocation != null) {
-			this.log.info(String.format("Using metadata directory: [%s]", storeLocation.getAbsolutePath()));
+			this.console.info(String.format("Using metadata directory: [%s]", storeLocation.getAbsolutePath()));
 		} else {
-			this.log.info("The Metadata Store does not support local storage");
+			this.console.info("The Metadata Store does not support local storage");
 		}
 
 		cfg = configureContentStore();
 		this.contentStore = CmfStores.createContentStore(cfg);
 		storeLocation = this.contentStore.getStoreLocation();
 		if (storeLocation != null) {
-			this.log.info(String.format("Using content directory: [%s]", storeLocation.getAbsolutePath()));
+			this.console.info(String.format("Using content directory: [%s]", storeLocation.getAbsolutePath()));
 		} else {
-			this.log.info("The Content Store does not support local storage");
+			this.console.info("The Content Store does not support local storage");
 		}
 	}
 
