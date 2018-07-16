@@ -54,7 +54,7 @@
 		<addNotNullConstraint tableName="cmf_content_property" columnName="content_number" columnDataType="int" />
 
 		<!-- Now fix all the constraints -->
-		
+
 		<!-- First, drop... -->
 		<dropForeignKeyConstraint baseTableName="cmf_content_property" constraintName="fk_cmf_content_property_content"/>
 		<dropPrimaryKey tableName="cmf_content_property" />
@@ -79,5 +79,13 @@
 		<dropColumn tableName="cmf_content_property" columnName="rendition_page" />
 		<dropColumn tableName="cmf_content_property" columnName="modifier" />
 
+		<!-- **************************************** -->
+		<!-- Add the "enabled" column to cmf_object   -->
+		<!-- **************************************** -->
+		<addColumn tableName="cmf_object">
+			<column name="object_enabled" type="boolean" remarks="Is this object enabled to be processed?" defaultValueBoolean="true">
+				<constraints nullable="false" />
+			</column>
+		</addColumn>
 	</changeSet>
 </databaseChangeLog>
