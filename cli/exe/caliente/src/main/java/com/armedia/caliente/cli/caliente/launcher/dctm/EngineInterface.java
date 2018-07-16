@@ -13,7 +13,7 @@ import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
-import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
@@ -26,7 +26,7 @@ import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.documentum.fc.common.DfLoggerDisabled;
 import com.documentum.fc.common.impl.logging.LoggingConfigurator;
 
-public class DctmEngineInterface extends EngineInterface implements DynamicOptions {
+public class EngineInterface extends AbstractEngineInterface implements DynamicOptions {
 
 	static final DfcLaunchHelper DFC_HELPER = new DfcLaunchHelper(true);
 
@@ -37,7 +37,7 @@ public class DctmEngineInterface extends EngineInterface implements DynamicOptio
 		.add(DfcLaunchHelper.DFC_UNIFIED) //
 	;
 
-	public DctmEngineInterface() {
+	public EngineInterface() {
 		// Load the logging-related patch classes
 		DfLoggerDisabled.class.hashCode();
 		LoggingConfigurator.class.hashCode();
@@ -87,8 +87,8 @@ public class DctmEngineInterface extends EngineInterface implements DynamicOptio
 	}
 
 	@Override
-	protected DctmExporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new DctmExporter(engine);
+	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new Exporter(engine);
 	}
 
 	@Override
@@ -97,13 +97,13 @@ public class DctmEngineInterface extends EngineInterface implements DynamicOptio
 	}
 
 	@Override
-	protected DctmImporter newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new DctmImporter(engine);
+	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new Importer(engine);
 	}
 
 	@Override
 	public Collection<? extends LaunchClasspathHelper> getClasspathHelpers() {
-		return Collections.singleton(DctmEngineInterface.DFC_HELPER);
+		return Collections.singleton(EngineInterface.DFC_HELPER);
 	}
 
 	@Override
@@ -112,7 +112,7 @@ public class DctmEngineInterface extends EngineInterface implements DynamicOptio
 			.addGroup(CLIGroup.STORE) //
 			.addGroup(CLIGroup.MAIL) //
 			.addGroup(CLIGroup.CONNECTION) //
-			.addGroup(DctmEngineInterface.DFC_OPTIONS) //
+			.addGroup(EngineInterface.DFC_OPTIONS) //
 		;
 	}
 

@@ -15,7 +15,7 @@ import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
-import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
@@ -27,7 +27,7 @@ import com.armedia.caliente.engine.ucm.UcmSetting;
 import com.armedia.caliente.engine.ucm.exporter.UcmExportEngine;
 import com.armedia.caliente.engine.ucm.importer.UcmImportEngine;
 
-public class UcmEngineInterface extends EngineInterface implements DynamicOptions {
+public class EngineInterface extends AbstractEngineInterface implements DynamicOptions {
 
 	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 
@@ -90,7 +90,7 @@ public class UcmEngineInterface extends EngineInterface implements DynamicOption
 		return true;
 	}
 
-	public UcmEngineInterface() {
+	public EngineInterface() {
 	}
 
 	@Override
@@ -109,8 +109,8 @@ public class UcmEngineInterface extends EngineInterface implements DynamicOption
 	}
 
 	@Override
-	protected UcmExporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new UcmExporter(engine);
+	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new Exporter(engine);
 	}
 
 	@Override
@@ -119,8 +119,8 @@ public class UcmEngineInterface extends EngineInterface implements DynamicOption
 	}
 
 	@Override
-	protected UcmImporter newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new UcmImporter(engine);
+	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new Importer(engine);
 	}
 
 	@Override

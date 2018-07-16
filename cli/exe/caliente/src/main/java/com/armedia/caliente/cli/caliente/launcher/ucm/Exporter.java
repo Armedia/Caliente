@@ -5,14 +5,14 @@ import java.util.Map;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
-import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
+import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
-import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngine;
 
-class UcmImporter extends ImportCommandModule implements DynamicOptions {
-	UcmImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+class Exporter extends ExportCommandModule implements DynamicOptions {
+	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 
@@ -46,7 +46,7 @@ class UcmImporter extends ImportCommandModule implements DynamicOptions {
 	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
-		return UcmEngineInterface.commonConfigure(commandValues, settings);
+		return EngineInterface.commonConfigure(commandValues, settings);
 	}
 
 	@Override
@@ -63,7 +63,7 @@ class UcmImporter extends ImportCommandModule implements DynamicOptions {
 	@Override
 	public void getDynamicOptions(OptionScheme command) {
 		command //
-			.addGroup(CLIGroup.IMPORT_COMMON) //
+			.addGroup(CLIGroup.EXPORT_COMMON) //
 		;
 	}
 }

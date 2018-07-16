@@ -1,29 +1,35 @@
-package com.armedia.caliente.cli.caliente.launcher.cmis;
+package com.armedia.caliente.cli.caliente.launcher.local;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
+import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
-import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.engine.cmis.exporter.CmisExportEngine;
-import com.armedia.caliente.engine.cmis.importer.CmisImportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
+import com.armedia.caliente.engine.local.importer.LocalImportEngine;
 
-public class CmisEngineInterface extends EngineInterface implements DynamicOptions {
+public class EngineInterface extends AbstractEngineInterface implements DynamicOptions {
 
-	static final String ID_PREFIX = "id:";
+	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 
-	public CmisEngineInterface() {
+		return true;
+	}
+
+	public EngineInterface() {
 	}
 
 	@Override
 	public String getName() {
-		return "cmis";
+		return "local";
 	}
 
 	@Override
@@ -33,22 +39,22 @@ public class CmisEngineInterface extends EngineInterface implements DynamicOptio
 
 	@Override
 	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return CmisExportEngine.getExportEngine();
+		return LocalExportEngine.getExportEngine();
 	}
 
 	@Override
-	protected CmisExporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new CmisExporter(engine);
+	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new Exporter(engine);
 	}
 
 	@Override
 	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return CmisImportEngine.getImportEngine();
+		return LocalImportEngine.getImportEngine();
 	}
 
 	@Override
-	protected CmisImporter newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new CmisImporter(engine);
+	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new Importer(engine);
 	}
 
 	@Override
@@ -61,7 +67,6 @@ public class CmisEngineInterface extends EngineInterface implements DynamicOptio
 		command //
 			.addGroup(CLIGroup.STORE) //
 			.addGroup(CLIGroup.MAIL) //
-			.addGroup(CLIGroup.DOMAIN_CONNECTION) //
 		;
 	}
 

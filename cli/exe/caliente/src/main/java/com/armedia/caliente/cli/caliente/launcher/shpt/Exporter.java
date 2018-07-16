@@ -25,7 +25,7 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
 import com.armedia.commons.utilities.FileNameTools;
 
-class ShptExporter extends ExportCommandModule implements DynamicOptions {
+class Exporter extends ExportCommandModule implements DynamicOptions {
 
 	private static final Option SOURCE_PREFIX = new OptionImpl() //
 		.setLongOpt("source-prefix") //
@@ -36,10 +36,10 @@ class ShptExporter extends ExportCommandModule implements DynamicOptions {
 	;
 
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("SharePoint Export") //
-		.add(ShptExporter.SOURCE_PREFIX) //
+		.add(Exporter.SOURCE_PREFIX) //
 	;
 
-	ShptExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 
@@ -102,7 +102,7 @@ class ShptExporter extends ExportCommandModule implements DynamicOptions {
 
 		srcPath = FileNameTools.reconstitute(l, false, false, '/');
 
-		l = FileNameTools.tokenize(commandValues.getString(ShptExporter.SOURCE_PREFIX, "/"));
+		l = FileNameTools.tokenize(commandValues.getString(Exporter.SOURCE_PREFIX, "/"));
 		final String srcPrefix;
 		if (l.isEmpty()) {
 			srcPrefix = "";
@@ -140,7 +140,7 @@ class ShptExporter extends ExportCommandModule implements DynamicOptions {
 	public void getDynamicOptions(OptionScheme command) {
 		command //
 			.addGroup(CLIGroup.EXPORT_COMMON) //
-			.addGroup(ShptExporter.OPTIONS) //
+			.addGroup(Exporter.OPTIONS) //
 		;
 
 	}

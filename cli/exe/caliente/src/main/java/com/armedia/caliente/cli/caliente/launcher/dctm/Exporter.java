@@ -21,7 +21,7 @@ import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
 
-class DctmExporter extends ExportCommandModule implements DynamicOptions {
+class Exporter extends ExportCommandModule implements DynamicOptions {
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
 	 * combine the select clause listed above with this from and where clauses to build the complete
@@ -140,17 +140,17 @@ class DctmExporter extends ExportCommandModule implements DynamicOptions {
 	;
 
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("DFC Export") //
-		.add(DctmExporter.BATCH_SIZE) //
-		.add(DctmExporter.OWNER_ATTRIBUTES) //
-		.add(DctmExporter.SPECIAL_GROUPS) //
-		.add(DctmExporter.SPECIAL_TYPES) //
-		.add(DctmExporter.SPECIAL_USERS) //
+		.add(Exporter.BATCH_SIZE) //
+		.add(Exporter.OWNER_ATTRIBUTES) //
+		.add(Exporter.SPECIAL_GROUPS) //
+		.add(Exporter.SPECIAL_TYPES) //
+		.add(Exporter.SPECIAL_USERS) //
 	;
 
 	private DfcSessionPool pool = null;
 	private IDfSession session = null;
 
-	DctmExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 
@@ -184,7 +184,7 @@ class DctmExporter extends ExportCommandModule implements DynamicOptions {
 	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
-		if (!DctmEngineInterface.commonConfigure(commandValues, settings)) { return false; }
+		if (!EngineInterface.commonConfigure(commandValues, settings)) { return false; }
 
 		try {
 			this.pool = new DfcSessionPool(settings);
@@ -193,30 +193,30 @@ class DctmExporter extends ExportCommandModule implements DynamicOptions {
 			throw new CalienteException("Failed to initialize the connection pool or get the primary session", e);
 		}
 
-		String dql = DctmExporter.DEFAULT_PREDICATE;
+		String dql = Exporter.DEFAULT_PREDICATE;
 		if (commandValues.isPresent(CLIParam.source)) {
 			dql = commandValues.getString(CLIParam.source);
 		}
 		settings.put(Setting.DQL.getLabel(), String.format("select r_object_id from %s", dql));
 
-		if (commandValues.isPresent(DctmExporter.OWNER_ATTRIBUTES)) {
+		if (commandValues.isPresent(Exporter.OWNER_ATTRIBUTES)) {
 			settings.put(Setting.OWNER_ATTRIBUTES.getLabel(),
-				Tools.joinCSVEscaped(commandValues.getAllStrings(DctmExporter.OWNER_ATTRIBUTES)));
+				Tools.joinCSVEscaped(commandValues.getAllStrings(Exporter.OWNER_ATTRIBUTES)));
 		}
-		if (commandValues.isPresent(DctmExporter.SPECIAL_USERS)) {
+		if (commandValues.isPresent(Exporter.SPECIAL_USERS)) {
 			settings.put(Setting.SPECIAL_USERS.getLabel(),
-				Tools.joinCSVEscaped(commandValues.getAllStrings(DctmExporter.SPECIAL_USERS)));
+				Tools.joinCSVEscaped(commandValues.getAllStrings(Exporter.SPECIAL_USERS)));
 		}
-		if (commandValues.isPresent(DctmExporter.SPECIAL_GROUPS)) {
+		if (commandValues.isPresent(Exporter.SPECIAL_GROUPS)) {
 			settings.put(Setting.SPECIAL_GROUPS.getLabel(),
-				Tools.joinCSVEscaped(commandValues.getAllStrings(DctmExporter.SPECIAL_GROUPS)));
+				Tools.joinCSVEscaped(commandValues.getAllStrings(Exporter.SPECIAL_GROUPS)));
 		}
-		if (commandValues.isPresent(DctmExporter.SPECIAL_TYPES)) {
+		if (commandValues.isPresent(Exporter.SPECIAL_TYPES)) {
 			settings.put(Setting.SPECIAL_TYPES.getLabel(),
-				Tools.joinCSVEscaped(commandValues.getAllStrings(DctmExporter.SPECIAL_TYPES)));
+				Tools.joinCSVEscaped(commandValues.getAllStrings(Exporter.SPECIAL_TYPES)));
 		}
-		if (commandValues.isPresent(DctmExporter.BATCH_SIZE)) {
-			settings.put(Setting.EXPORT_BATCH_SIZE.getLabel(), commandValues.getString(DctmExporter.BATCH_SIZE));
+		if (commandValues.isPresent(Exporter.BATCH_SIZE)) {
+			settings.put(Setting.EXPORT_BATCH_SIZE.getLabel(), commandValues.getString(Exporter.BATCH_SIZE));
 		}
 		return true;
 	}
@@ -246,7 +246,7 @@ class DctmExporter extends ExportCommandModule implements DynamicOptions {
 	public void getDynamicOptions(OptionScheme command) {
 		command //
 			.addGroup(CLIGroup.EXPORT_COMMON) //
-			.addGroup(DctmExporter.OPTIONS) //
+			.addGroup(Exporter.OPTIONS) //
 		;
 	}
 }

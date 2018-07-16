@@ -15,8 +15,8 @@ import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.commons.utilities.Tools;
 
-class LocalImporter extends ImportCommandModule implements DynamicOptions {
-	LocalImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+class Importer extends ImportCommandModule implements DynamicOptions {
+	Importer(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 

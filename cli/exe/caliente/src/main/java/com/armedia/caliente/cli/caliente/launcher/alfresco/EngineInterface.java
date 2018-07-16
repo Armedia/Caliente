@@ -1,35 +1,26 @@
-package com.armedia.caliente.cli.caliente.launcher.local;
+package com.armedia.caliente.cli.caliente.launcher.alfresco;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
-import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.caliente.engine.alfresco.bi.importer.AlfImportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
-import com.armedia.caliente.engine.local.importer.LocalImportEngine;
 
-public class LocalEngineInterface extends EngineInterface implements DynamicOptions {
+public class EngineInterface extends AbstractEngineInterface implements DynamicOptions {
 
-	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
-
-		return true;
-	}
-
-	public LocalEngineInterface() {
+	public EngineInterface() {
 	}
 
 	@Override
 	public String getName() {
-		return "local";
+		return "alfrescobi";
 	}
 
 	@Override
@@ -39,22 +30,17 @@ public class LocalEngineInterface extends EngineInterface implements DynamicOpti
 
 	@Override
 	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return LocalExportEngine.getExportEngine();
-	}
-
-	@Override
-	protected LocalExporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new LocalExporter(engine);
+		return null;
 	}
 
 	@Override
 	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return LocalImportEngine.getImportEngine();
+		return AlfImportEngine.getImportEngine();
 	}
 
 	@Override
-	protected LocalImporter newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new LocalImporter(engine);
+	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new Importer(engine);
 	}
 
 	@Override

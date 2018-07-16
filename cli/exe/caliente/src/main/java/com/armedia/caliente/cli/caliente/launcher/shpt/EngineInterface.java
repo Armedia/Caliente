@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli.caliente.launcher.xml;
+package com.armedia.caliente.cli.caliente.launcher.shpt;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -6,21 +6,21 @@ import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
-import com.armedia.caliente.cli.caliente.launcher.EngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.caliente.engine.xml.importer.XmlImportEngine;
+import com.armedia.caliente.engine.sharepoint.exporter.ShptExportEngine;
 
-public class XmlEngineInterface extends EngineInterface implements DynamicOptions {
+public class EngineInterface extends AbstractEngineInterface implements DynamicOptions {
 
-	public XmlEngineInterface() {
+	public EngineInterface() {
 	}
 
 	@Override
 	public String getName() {
-		return "xml";
+		return "shpt";
 	}
 
 	@Override
@@ -30,17 +30,17 @@ public class XmlEngineInterface extends EngineInterface implements DynamicOption
 
 	@Override
 	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return null;
+		return ShptExportEngine.getExportEngine();
+	}
+
+	@Override
+	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+		return new Exporter(engine);
 	}
 
 	@Override
 	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return XmlImportEngine.getImportEngine();
-	}
-
-	@Override
-	protected XmlImporter newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new XmlImporter(engine);
+		return null;
 	}
 
 	@Override
@@ -53,6 +53,7 @@ public class XmlEngineInterface extends EngineInterface implements DynamicOption
 		command //
 			.addGroup(CLIGroup.STORE) //
 			.addGroup(CLIGroup.MAIL) //
+			.addGroup(CLIGroup.DOMAIN_CONNECTION) //
 		;
 	}
 

@@ -20,7 +20,7 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.commons.utilities.Tools;
 
-class LocalExporter extends ExportCommandModule implements DynamicOptions {
+class Exporter extends ExportCommandModule implements DynamicOptions {
 
 	private static final Option COPY_CONTENT = new OptionImpl() //
 		.setLongOpt("copy-content") //
@@ -33,10 +33,10 @@ class LocalExporter extends ExportCommandModule implements DynamicOptions {
 	;
 
 	private static final OptionGroup OPTIONS = new OptionGroupImpl("Local Export") //
-		.add(LocalExporter.COPY_CONTENT) //
+		.add(Exporter.COPY_CONTENT) //
 	;
 
-	LocalExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 
@@ -67,7 +67,7 @@ class LocalExporter extends ExportCommandModule implements DynamicOptions {
 	}
 
 	protected boolean isCopyContent(OptionValues commandValues) {
-		return commandValues.isPresent(LocalExporter.COPY_CONTENT) && !commandValues.isPresent(CLIParam.skip_content);
+		return commandValues.isPresent(Exporter.COPY_CONTENT) && !commandValues.isPresent(CLIParam.skip_content);
 	}
 
 	/*
@@ -123,8 +123,8 @@ class LocalExporter extends ExportCommandModule implements DynamicOptions {
 		settings.put(LocalSetting.ROOT.getLabel(), source.getAbsolutePath());
 		settings.put(LocalSetting.COPY_CONTENT.getLabel(), isCopyContent(commandValues));
 		settings.put(LocalSetting.IGNORE_EMPTY_FOLDERS.getLabel(),
-			commandValues.isPresent(LocalExporter.IGNORE_EMPTY_FOLDERS));
-		return LocalEngineInterface.commonConfigure(commandValues, settings);
+			commandValues.isPresent(Exporter.IGNORE_EMPTY_FOLDERS));
+		return EngineInterface.commonConfigure(commandValues, settings);
 	}
 
 	@Override
@@ -142,7 +142,7 @@ class LocalExporter extends ExportCommandModule implements DynamicOptions {
 	public void getDynamicOptions(OptionScheme command) {
 		command //
 			.addGroup(CLIGroup.EXPORT_COMMON) //
-			.addGroup(LocalExporter.OPTIONS) //
+			.addGroup(Exporter.OPTIONS) //
 		;
 	}
 }

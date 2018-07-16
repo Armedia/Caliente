@@ -1,18 +1,22 @@
-package com.armedia.caliente.cli.caliente.launcher.ucm;
+package com.armedia.caliente.cli.caliente.launcher.xml;
 
+import java.io.File;
 import java.util.Map;
 
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
-import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
+import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
-import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.cli.caliente.options.CLIParam;
+import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.xml.common.XmlSetting;
+import com.armedia.commons.utilities.Tools;
 
-class UcmExporter extends ExportCommandModule implements DynamicOptions {
-	UcmExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+class Importer extends ImportCommandModule implements DynamicOptions {
+	Importer(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 
@@ -46,7 +50,23 @@ class UcmExporter extends ExportCommandModule implements DynamicOptions {
 	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
-		return UcmEngineInterface.commonConfigure(commandValues, settings);
+
+		String target = commandValues.getString(CLIParam.source);
+		if (target == null) {
+			target = ".";
+		}
+		final File targetDir = Tools.canonicalize(new File(target));
+		targetDir.mkdirs();
+		if (!targetDir.exists()) { throw new CalienteException(
+			String.format("The target directory [%s] does not exist, and could not be created", targetDir)); }
+		if (!targetDir.isDirectory()) { throw new CalienteException(
+			String.format("A non-directory already exists at the location [%s] - can't continue", targetDir)); }
+
+		settings.put(XmlSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
+		settings.put(XmlSetting.DB.getLabel(), state.getObjectStoreLocation().toString());
+		settings.put(XmlSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
+
+		return true;
 	}
 
 	@Override
@@ -63,7 +83,7 @@ class UcmExporter extends ExportCommandModule implements DynamicOptions {
 	@Override
 	public void getDynamicOptions(OptionScheme command) {
 		command //
-			.addGroup(CLIGroup.EXPORT_COMMON) //
+			.addGroup(CLIGroup.IMPORT_COMMON) //
 		;
 	}
 }

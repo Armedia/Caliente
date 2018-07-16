@@ -1,6 +1,5 @@
-package com.armedia.caliente.cli.caliente.launcher.alfresco;
+package com.armedia.caliente.cli.caliente.launcher.dctm;
 
-import java.io.File;
 import java.util.Map;
 
 import com.armedia.caliente.cli.Option;
@@ -15,34 +14,24 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
+import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.commons.utilities.Tools;
 
-class AlfrescoImporter extends ImportCommandModule implements DynamicOptions {
+class Importer extends ImportCommandModule implements DynamicOptions {
 
-	private static final Option ATTRIBUTE_MAP = new OptionImpl() //
-		.setLongOpt("attribute-map") //
+	private static final Option DEFAULT_PASSWORD = new OptionImpl() //
+		.setLongOpt("default-password") //
 		.setArgumentLimits(1) //
-		.setArgumentName("mapping-file") //
+		.setArgumentName("password") //
 		.setDescription(
-			"The XML file that describes how attributes should be mapped from the source data into Alfresco attributes") //
+			"The default password to use for users being copied over (if not specified, the default is to use the same login name)") //
 	;
 
-	private static final Option CONTENT_MODEL = new OptionImpl() //
-		.setLongOpt("content-model") //
-		.setArgumentLimits(1, -1) //
-		.setArgumentName("content-model-file") //
-		.setValueSep(',') //
-		.setDescription("The XML files that make up the Alfresco content model to use on import") //
+	private static final OptionGroup OPTIONS = new OptionGroupImpl("DFC Import") //
+		.add(Importer.DEFAULT_PASSWORD) //
 	;
 
-	private static final OptionGroup OPTIONS = new OptionGroupImpl("Alfresco BI Generator") //
-		.add(AlfrescoImporter.ATTRIBUTE_MAP) //
-		.add(AlfrescoImporter.CONTENT_MODEL) //
-	;
-
-	AlfrescoImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Importer(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 
@@ -76,32 +65,13 @@ class AlfrescoImporter extends ImportCommandModule implements DynamicOptions {
 	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
+		if (!EngineInterface.commonConfigure(commandValues, settings)) { return false; }
 
-		String target = commandValues.getString(CLIParam.source);
-		if (target == null) {
-			target = ".";
+		settings.put(Setting.IMPORT_MAX_ERRORS.getLabel(), commandValues.getString(CLIParam.error_count));
+		if (commandValues.isPresent(Importer.DEFAULT_PASSWORD)) {
+			settings.put(Setting.DEFAULT_USER_PASSWORD.getLabel(),
+				commandValues.getString(Importer.DEFAULT_PASSWORD));
 		}
-		final File targetDir = Tools.canonicalize(new File(target));
-		targetDir.mkdirs();
-		if (!targetDir.exists()) { throw new CalienteException(
-			String.format("The target directory [%s] does not exist, and could not be created", targetDir)); }
-		if (!targetDir.isDirectory()) { throw new CalienteException(
-			String.format("A non-directory already exists at the location [%s] - can't continue", targetDir)); }
-
-		settings.put(AlfSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
-		settings.put(AlfSetting.DB.getLabel(), state.getObjectStoreLocation().toString());
-		settings.put(AlfSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
-
-		if (!commandValues.isPresent(AlfrescoImporter.CONTENT_MODEL)) { throw new CalienteException(
-			"No content models were given - these are required in order to properly generate the Alfresco metadata"); }
-		settings.put(AlfSetting.CONTENT_MODEL.getLabel(),
-			Tools.joinCSVEscaped(commandValues.getAllStrings(AlfrescoImporter.CONTENT_MODEL)));
-
-		if (commandValues.isPresent(AlfrescoImporter.ATTRIBUTE_MAP)) {
-			settings.put(AlfSetting.ATTRIBUTE_MAPPING.getLabel(),
-				commandValues.getString(AlfrescoImporter.ATTRIBUTE_MAP));
-		}
-
 		return true;
 	}
 
@@ -120,7 +90,7 @@ class AlfrescoImporter extends ImportCommandModule implements DynamicOptions {
 	public void getDynamicOptions(OptionScheme command) {
 		command //
 			.addGroup(CLIGroup.IMPORT_COMMON) //
-			.addGroup(AlfrescoImporter.OPTIONS) //
+			.addGroup(Importer.OPTIONS) //
 		;
 	}
 }
