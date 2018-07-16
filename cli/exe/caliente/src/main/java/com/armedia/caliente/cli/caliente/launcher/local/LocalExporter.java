@@ -23,10 +23,12 @@ import com.armedia.commons.utilities.Tools;
 class LocalExporter extends ExportCommandModule implements DynamicOptions {
 
 	private static final Option COPY_CONTENT = new OptionImpl() //
+		.setLongOpt("copy-content") //
 		.setDescription("Enable the copying of content for the Local engine") //
 	;
 
 	private static final Option IGNORE_EMPTY_FOLDERS = new OptionImpl() //
+		.setLongOpt("ignore-empty-folders") //
 		.setDescription("Ignore empty folders during extraction") //
 	;
 
