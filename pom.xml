@@ -526,8 +526,8 @@
 								<requireProperty>
 									<property>betaNumber</property>
 									<message>Must provide a valid betaNumber property (-DbetaNumber=...) for this build</message>
-									<regex>^[1-9][0-9]*$</regex>
-									<regexMessage>The beta number [${betaNumber}] is not composed of all digits, or starts with a 0</regexMessage>
+									<regex>^[0-9]*[1-9]0?$</regex>
+									<regexMessage>The beta number [${betaNumber}] is not composed of all digits, or is not a valid number (it may not be all-zeros, but may have leading zeros)</regexMessage>
 								</requireProperty>
 							</rules>
 						</configuration>
