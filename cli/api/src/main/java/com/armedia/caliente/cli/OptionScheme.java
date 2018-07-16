@@ -224,43 +224,41 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	@Override
-	public OptionScheme add(OptionGroup group) {
+	public OptionScheme addGroup(OptionGroup group) {
 		if (group == null) { return this; }
 		String key = OptionScheme.canonicalizeGroupName(group.getName());
 		if (this.groups.containsKey(key)) { throw new DuplicateOptionGroupException(group.getName()); }
 
+		// Create the copy of the group that will contain the incoming options
+		OptionSchemeGroup newGroup = new OptionSchemeGroup(group.getName());
 		List<Option> added = new LinkedList<>();
+		boolean ok = false;
 		try {
 			for (Option o : group) {
-				this.aggregate.add(o);
+				o = o.clone();
+				newGroup.add(o);
+
 				added.add(o);
+				Character shortOpt = o.getShortOpt();
+				if (shortOpt != null) {
+					this.shortGroups.put(OptionGroupImpl.canonicalizeOption(shortOpt), newGroup);
+				}
+				String longOpt = o.getLongOpt();
+				if (longOpt != null) {
+					this.longGroups.put(OptionGroupImpl.canonicalizeOption(longOpt), newGroup);
+				}
 			}
-		} catch (final DuplicateOptionException e) {
-			throw e;
+			ok = true;
 		} finally {
-			// Roll back the changes, as they'll be re-done below...
-			for (Option o : added) {
-				this.aggregate.remove(o);
+			if (!ok) {
+				// Roll back the changes, as they'll be re-done below...
+				for (Option o : added) {
+					newGroup.remove(o);
+				}
 			}
 		}
 
-		// At this point, all the incoming options are OK, and the group name is also unique, so we
-		// go ahead and create a copy of the group and add it
-		OptionSchemeGroup newGroup = new OptionSchemeGroup(group.getName());
-		for (Option o : group) {
-			// Also make a copy of the options, so they can't be modified
-			o = o.clone();
-			newGroup.add(o);
-			Character shortOpt = o.getShortOpt();
-			if (shortOpt != null) {
-				this.shortGroups.put(OptionGroupImpl.canonicalizeOption(shortOpt), newGroup);
-			}
-			String longOpt = o.getLongOpt();
-			if (longOpt != null) {
-				this.longGroups.put(OptionGroupImpl.canonicalizeOption(longOpt), newGroup);
-			}
-		}
-		this.groups.put(key, group);
+		this.groups.put(key, newGroup);
 		return this;
 	}
 
@@ -349,8 +347,19 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	@Override
+	public <O extends Option> Collection<Option> findCollisions(Iterable<O> options) {
+		return this.aggregate.findCollisions(options);
+	}
+
+	@Override
 	public final Collection<Option> findCollisions(Character shortOpt, String longOpt) {
 		return this.aggregate.findCollisions(shortOpt, longOpt);
+	}
+
+	@Override
+	public <O extends Option> OptionScheme addFrom(Iterable<O> options) throws DuplicateOptionException {
+		this.baseGroup.addFrom(options);
+		return this;
 	}
 
 	@Override
@@ -362,12 +371,6 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	@Override
 	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException {
 		this.baseGroup.add(option);
-		return this;
-	}
-
-	@Override
-	public <O extends Option> OptionScheme add(Collection<O> options) throws DuplicateOptionException {
-		this.baseGroup.add(options);
 		return this;
 	}
 

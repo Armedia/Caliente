@@ -7,7 +7,21 @@ import com.armedia.caliente.cli.exception.DuplicateOptionException;
 public interface OptionGroup extends OptionContainer {
 
 	/**
-	 * Adds the given option to this option scheme.
+	 * Adds the given options to this option scheme, by iterating over the given {@link Iterable}
+	 * and invoking {@link #add(Option)} on each non-{@code null} element. If the
+	 * {@link DuplicateOptionException} is raised, then all the incoming changes will be rolled
+	 * back.
+	 *
+	 * @param options
+	 *            the options to add
+	 * @throws IllegalArgumentException
+	 *             if any of the given options collides with any already-existing options (you can
+	 *             check with {@link #findCollisions(Iterable)})
+	 */
+	public <O extends Option> OptionGroup addFrom(Iterable<O> options) throws DuplicateOptionException;
+
+	/**
+	 * Adds the given option to this option group.
 	 *
 	 * @param option
 	 *            the option to add
@@ -29,20 +43,6 @@ public interface OptionGroup extends OptionContainer {
 	 *             {@link #countCollisions(Option)}
 	 */
 	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException;
-
-	/**
-	 * <p>
-	 * Adds the given options to this option scheme, by iterating over the collection and invoking
-	 * {@link #add(Option)} on each non-{@code null} element. If the
-	 * {@link DuplicateOptionException} is raised, then all the incoming options will have added
-	 * correctly up to the one first one that generated a conflict.
-	 * </p>
-	 *
-	 * @param options
-	 *            the options to add
-	 * @throws DuplicateOptionException
-	 */
-	public <O extends Option> OptionGroup add(Collection<O> options) throws DuplicateOptionException;
 
 	/**
 	 * Remove any and all options (a maximum of 2) that may collide with the given option's short or

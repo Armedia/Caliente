@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.utils;
 
+import com.armedia.caliente.cli.IntegerValueFilter;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;
 import com.armedia.caliente.cli.OptionGroupImpl;
@@ -21,6 +22,8 @@ public final class ThreadsLaunchHelper extends Options {
 		.setDefault(String.valueOf(ThreadsLaunchHelper.DEFAULT_DEF_THREADS)) //
 		.setArgumentName("threads") //
 		.setDescription("The number of threads to use") //
+		.setValueFilter(
+			new IntegerValueFilter(ThreadsLaunchHelper.DEFAULT_MIN_THREADS, ThreadsLaunchHelper.DEFAULT_MAX_THREADS)) //
 	;
 
 	private final int min;

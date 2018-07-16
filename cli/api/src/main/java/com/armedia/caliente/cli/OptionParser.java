@@ -57,9 +57,9 @@ public class OptionParser {
 		}
 
 		@Override
-		public Extender add(OptionGroup group) {
+		public Extender addGroup(OptionGroup group) {
 			if ((group == null) || (group.getOptionCount() == 0)) { return this; }
-			getScheme().add(group);
+			getScheme().addGroup(group);
 			this.modified = true;
 			return this;
 		}
@@ -401,9 +401,14 @@ public class OptionParser {
 							// search
 							currentScheme = command = findCommand(extensible ? baseValues : null, commandScheme,
 								token.getRawString());
+
 							// If there is no command
 							if (command != null) {
 								commandName = command.getName();
+
+								if (command.isDynamic()) {
+									command.getDynamicOptions(helpRequested, baseValues);
+								}
 
 								if (helpOption != null) {
 									// If there's a command option that conflicts with the help
@@ -468,7 +473,7 @@ public class OptionParser {
 						// If we're already processing a command, then the remaining options belong
 						// to it
 						if (command != null) {
-							p = findOption(commandScheme, token);
+							p = findOption(command, token);
 							fromCommand = true;
 						}
 						// If we're not processing a command, then the options are still part of the

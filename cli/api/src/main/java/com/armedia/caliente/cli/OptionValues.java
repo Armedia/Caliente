@@ -13,6 +13,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.commons.utilities.Tools;
 
 public final class OptionValues implements Iterable<OptionValue>, Cloneable {
@@ -332,6 +334,11 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 	}
 
 	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, Option param) {
+		return getAllEnums(enumClass, null, failOnInvalid, param);
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+		Option param) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
 		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
 			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
@@ -342,6 +349,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (v == null) { return null; }
 		Set<E> ret = EnumSet.noneOf(enumClass);
 		for (String s : v) {
+			if (StringUtils.equalsIgnoreCase(allString, s)) { return EnumSet.allOf(enumClass); }
 			try {
 				ret.add(Enum.valueOf(enumClass, s));
 			} catch (final IllegalArgumentException e) {
@@ -356,6 +364,11 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 	}
 
 	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, Option param, Set<E> def) {
+		return getAllEnums(enumClass, null, failOnInvalid, param, def);
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+		Option param, Set<E> def) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
 		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
 			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
@@ -363,6 +376,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (v == null) { return def; }
 		Set<E> ret = EnumSet.noneOf(enumClass);
 		for (String s : v) {
+			if (StringUtils.equalsIgnoreCase(allString, s)) { return EnumSet.allOf(enumClass); }
 			try {
 				ret.add(Enum.valueOf(enumClass, s));
 			} catch (final IllegalArgumentException e) {
@@ -515,9 +529,19 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return getAllEnums(enumClass, failOnInvalid, Option.unwrap(paramDel));
 	}
 
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+		OptionWrapper paramDel) {
+		return getAllEnums(enumClass, allString, failOnInvalid, Option.unwrap(paramDel));
+	}
+
 	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, OptionWrapper paramDel,
 		Set<E> def) {
 		return getAllEnums(enumClass, failOnInvalid, Option.unwrap(paramDel), def);
+	}
+
+	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+		OptionWrapper paramDel, Set<E> def) {
+		return getAllEnums(enumClass, allString, failOnInvalid, Option.unwrap(paramDel), def);
 	}
 
 	public boolean isPresent(OptionWrapper paramDel) {

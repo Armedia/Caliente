@@ -70,6 +70,10 @@ public final class HelpRenderer {
 
 	private static void renderPositionals(StringBuilder sb, String label, Character sep, int min, int max) {
 		if (max == 0) { return; }
+		if (sep == null) {
+			// No separator means only a single string...
+			min = max = 1;
+		}
 
 		sb.append(" ");
 
@@ -247,7 +251,10 @@ public final class HelpRenderer {
 
 		OptionValueFilter filter = o.getValueFilter();
 		if (filter != null) {
-			HelpRenderer.printWrapped(pw, width, 12, String.format("Allowed values: %s", filter.getDefinition()));
+			String definition = filter.getDefinition();
+			if (!StringUtils.isBlank(definition)) {
+				HelpRenderer.printWrapped(pw, width, 12, String.format("Allowed values: %s", definition));
+			}
 			addLine = true;
 		}
 
@@ -276,7 +283,7 @@ public final class HelpRenderer {
 			} else {
 				desc = String.format(" %s", desc);
 			}
-			HelpRenderer.printWrapped(pw, width, String.format("Options for %s:%s", g.getName(), desc));
+			HelpRenderer.printWrapped(pw, width, String.format("%s options:%s", g.getName(), desc));
 			HelpRenderer.printWrapped(pw, width, StringUtils.repeat('-', (3 * width) / 4));
 			for (Option o : g) {
 				HelpRenderer.formatOption(pw, width, o);
@@ -299,7 +306,7 @@ public final class HelpRenderer {
 			}
 			aliases = String.format("%s)", aliases);
 		}
-		HelpRenderer.printWrapped(pw, width, String.format("Command Options for '%s'%s:", command.getName(), aliases));
+		HelpRenderer.printWrapped(pw, width, String.format("%s%s command options:", command.getName(), aliases));
 		HelpRenderer.printWrapped(pw, width, StringUtils.repeat('=', width));
 		HelpRenderer.formatScheme(pw, width, command);
 	}
@@ -356,7 +363,7 @@ public final class HelpRenderer {
 
 		if (baseScheme.getOptionCount() > 0) {
 			HelpRenderer.printWrapped(pw, width,
-				String.format("%s Options:", (commandScheme != null ? "Global" : "Available")));
+				String.format("%s options:", (commandScheme != null ? "Global" : "Available")));
 			HelpRenderer.printWrapped(pw, width, line);
 			HelpRenderer.formatScheme(pw, width, baseScheme);
 		}
@@ -372,7 +379,7 @@ public final class HelpRenderer {
 		CommandLineSyntaxException e = help.getCause();
 		if (e != null) {
 			pw.println();
-			HelpRenderer.renderError("Syntax Error: ", e, width, w);
+			HelpRenderer.renderError("Syntax Error", e, width, w);
 			pw.println();
 		}
 

@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import com.armedia.commons.utilities.Tools;
+
 public final class OptionImpl extends Option implements Cloneable {
 
 	private boolean required = false;
@@ -15,14 +17,30 @@ public final class OptionImpl extends Option implements Cloneable {
 	private int minArguments = 0;
 	private int maxArguments = 0;
 	private String argumentName = null;
-	private Character valueSep = OptionImpl.DEFAULT_VALUE_SEP;
+	private Character valueSep = null;
 	private OptionValueFilter valueFilter = null;
 	private final List<String> defaults = new ArrayList<>();
 
 	private String key = null;
 
 	public OptionImpl() {
-		this(null);
+	}
+
+	public OptionImpl(char shortOpt) {
+		this(shortOpt, null);
+	}
+
+	public OptionImpl(String longOpt) {
+		this(null, longOpt);
+	}
+
+	public OptionImpl(Character shortOpt, String longOpt) {
+		if (shortOpt != null) {
+			setShortOpt(shortOpt);
+		}
+		if (longOpt != null) {
+			setLongOpt(longOpt);
+		}
 	}
 
 	public OptionImpl(Option other) {
@@ -36,6 +54,10 @@ public final class OptionImpl extends Option implements Cloneable {
 			this.argumentName = other.getArgumentName();
 			this.valueSep = other.getValueSep();
 			this.valueFilter = other.getValueFilter();
+			List<String> defaults = other.getDefaults();
+			if (defaults != null) {
+				this.defaults.addAll(defaults);
+			}
 			this.key = other.getKey();
 		}
 	}
@@ -195,8 +217,8 @@ public final class OptionImpl extends Option implements Cloneable {
 		return this.defaults.isEmpty() ? null : this.defaults.get(0);
 	}
 
-	public OptionImpl setDefault(String value) {
-		return setDefaults(value);
+	public OptionImpl setDefault(Object value) {
+		return setDefaults(Tools.toString(value));
 	}
 
 	@Override
@@ -223,6 +245,15 @@ public final class OptionImpl extends Option implements Cloneable {
 			this.defaults.clear();
 		}
 		return this;
+	}
+
+	public static OptionImpl cast(Option o) {
+		if (OptionImpl.class.isInstance(o)) { return OptionImpl.class.cast(o); }
+		return null;
+	}
+
+	public static OptionImpl cast(OptionWrapper o) {
+		return OptionImpl.cast(Option.unwrap(o));
 	}
 
 	@Override

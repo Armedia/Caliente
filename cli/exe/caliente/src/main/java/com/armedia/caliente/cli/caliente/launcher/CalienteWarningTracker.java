@@ -12,6 +12,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfObjectCounter;
@@ -93,7 +94,7 @@ public class CalienteWarningTracker implements WarningTracker {
 
 	public CalienteWarningTracker(Logger output, boolean persistent) {
 		if (output == null) {
-			output = org.slf4j.LoggerFactory.getLogger("warnings");
+			output = LoggerFactory.getLogger("warnings");
 		}
 		if (persistent) {
 			this.warnings = new LinkedList<>();

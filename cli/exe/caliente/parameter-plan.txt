@@ -1,10 +1,29 @@
+1) getOptionScheme() + getOptionSchemeExtensionSupport()
+	* parse arguments
+		* extendScheme(...)
+	* process arguments
+		* Identify engine to retrieve its classpath helpers
+2) getClasspathHelpers()
+	* apply classpath helpers pre
+	* discover classpath helpers
+	* apply classpath helpers post
+3) init logging (taking options into account)
+4) run()
+	* Initialize stores
+	* Execute the selected command
+
+
 Pass 1
-	GLOBALS
+	BASE OPTIONS:
 		-?,--help
 		-l,--lib ${libdir1,libdir2,...,libdirN}
 		--log ${log-basename}
 		--log-cfg ${log-cfg-file}
-		command
+		--log-dir ${log-dir}
+		--list-engines
+		--list-commands
+	*	-e, --engine ${dfc|cmis|shpt|local|...}
+		command [parameters...]
 
 Pass 2
 	COMMAND: ( ENCRYPT | ENC | DECRYPT | DEC )
@@ -12,32 +31,21 @@ Pass 2
 
 	COMMAND: ( EXPORT | IMPORT | COUNT )
 		(common)
-		*	-e, --engine ${dfc|cmis|shpt|local|...}
 			-t,--threads ${threads}
 
 		COMMAND: ( EXPORT | IMPORT )
 			(common)
+				STORE
+					-d,--db ${dir-or-config}
+					-c,--content ${dir-or-config}
+					--content-strategy ${content-strategy}
+
 				--no-renditions
 				--no-versions
 				--skip-content
-				-d,--db ${db-dir}
-				-c,--content ${content-dir}
-				--mail-from ${sender}
-				--mail-to ${recipient1,recipient2,...,recipientN}
-				--mail-cc ${recipient1,recipient2,...,recipientN}
-				--mail-bcc ${recipient1,recipient2,...,recipientN}
-				--mail-host ${host}
-				--mail-port ${port}
-				--mail-ssl ${sslMode}
-				--mail-client-cert ${cert}
-				--mail-server-cert ${cert}
-				--mail-ca ${ca}
-				--mail-user ${user}
-				--mail-pass ${pass}
-				--mail-auth ${mode}
+
 				--error-count ${count}
-				--object-store ${config}
-				--content-store ${config}
+
 				--manifest-types ${type1,type2,...,typeN}
 				--manifest-outcomes  ${outcome1,outcome2,...,outcomeN}
 				--exclude-types ${type1,type2,...,typeN}
@@ -45,19 +53,32 @@ Pass 2
 				--transformation ${transformation}
 				--external-metadata ${externalMeta}
 
+				MAIL
+					--mail-from ${sender}
+					--mail-to ${recipient1,recipient2,...,recipientN}
+					--mail-cc ${recipient1,recipient2,...,recipientN}
+					--mail-bcc ${recipient1,recipient2,...,recipientN}
+					--mail-host ${host}
+					--mail-port ${port}
+					--mail-ssl ${sslMode}
+					--mail-client-cert ${cert}
+					--mail-server-cert ${cert}
+					--mail-ca ${ca}
+					--mail-user ${user}
+					--mail-pass ${pass}
+					--mail-auth ${mode}
+
 		COMMAND: ( EXPORT | EXP | EX )
 			(common)
-				-j,--job-name ${name}
-				-r,--reset-job
-				--content-strategy ${strategy}
 				--direct-fs (change for strategy = direct?)
 			*	--source ${source}  (either a path, a query predicate if supported, or a URL to an ID/locator list)
 
 			Pass 3 (from --engine)
 				DFC
-				*	--docbase ${docbase}
+				*	--server ${docbase}
 				*	--user ${user}
 				*	--password ${password}
+					--unified
 					--dfc ${dfc-dir}
 					--dfc-prop ${dfc-prop-file}
 					--dctm ${dctm-dir}
@@ -68,16 +89,16 @@ Pass 2
 					--owner-attributes ${att1,att2,...,attN}
 
 				CMIS
-				*	--url ${url}
+				*	--server ${url}
 				*	--user ${user}
-					--domain ${domain}
 				*	--password ${password}
+					--domain ${domain}
 
 				SHAREPOINT
-				*	--url ${url}
+				*	--server ${url}
 				*	--user ${user}
-					--domain ${domain}
 				*	--password ${password}
+					--domain ${domain}
 					--source-prefix ${prefix}
 
 				LOCAL
@@ -86,19 +107,19 @@ Pass 2
 		COMMAND: ( IMPORT | IMP | IM )
 			(common)
 				--filename-map ${file}
+				--group-map ${groupMap}
 				--name-fix
 				--no-filename-map
-				--trim-prefix ${num}
-				--target-location ${location}
-				--attribute-map ${attributeMap}
-				--user-map ${userMap}
-				--group-map ${groupMap}
 				--role-map ${roleMap}
+				--target-location ${location}
+				--trim-prefix ${num}
+				--user-map ${userMap}
 				--validate-requirements
+
 
 			Pass 3 (from --engine)
 				DFC
-				*	--docbase ${docbase}
+				*	--server ${docbase}
 				*	--user ${user}
 				*	--password ${password}
 					--dfc ${dfc-dir}
@@ -107,7 +128,7 @@ Pass 2
 					--default-password
 
 				CMIS
-				*	--url ${url}
+				*	--server ${url}
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
@@ -128,17 +149,17 @@ Pass 2
 
 			Pass 3 (from --engine)
 				DFC
-				*	--docbase ${docbase}
+				*	--server ${docbase}
 				*	--user ${user}
 				*	--password ${password}
 					--dfc ${dfc-dir}
 					--dfc-prop ${dfc-prop-file}
 					--dctm ${dctm-dir}
-				*	--predicate ${predicate}
+				*	--source ${predicate}
 
 				CMIS
-				*	--url ${url}
+				*	--server ${url}
 				*	--user ${user}
 					--domain ${domain}
 				*	--password ${password}
-				*	--source ${path|nodeRef}
+				*	--root ${path|nodeRef}

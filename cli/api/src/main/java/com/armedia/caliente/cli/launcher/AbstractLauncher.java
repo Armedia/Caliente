@@ -1,9 +1,11 @@
 package com.armedia.caliente.cli.launcher;
 
+import java.io.File;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +22,7 @@ import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
 import com.armedia.caliente.cli.help.HelpRenderer;
 import com.armedia.caliente.cli.launcher.log.LogConfigurator;
+import com.armedia.commons.utilities.Tools;
 
 public abstract class AbstractLauncher {
 
@@ -36,6 +39,23 @@ public abstract class AbstractLauncher {
 	private static final String[] NO_ARGS = {};
 
 	protected Logger log = AbstractLauncher.BOOT_LOG;
+	protected Logger console = AbstractLauncher.BOOT_LOG;
+
+	protected final File userDir;
+	protected final File homeDir;
+
+	protected AbstractLauncher() {
+		String userDir = System.getProperty("user.dir");
+		if (StringUtils.isEmpty(userDir)) {
+			userDir = ".";
+		}
+		this.userDir = Tools.canonicalize(new File(userDir));
+		String homeDir = System.getProperty("user.home");
+		if (StringUtils.isEmpty(homeDir)) {
+			homeDir = ".";
+		}
+		this.homeDir = Tools.canonicalize(new File(homeDir));
+	}
 
 	/**
 	 * <p>
@@ -167,20 +187,36 @@ public abstract class AbstractLauncher {
 			// Retrieve the logger post-initialization...if nothing was initialized, we stick to the
 			// same log
 			this.log = LoggerFactory.getLogger(getClass());
+			this.console = LoggerFactory.getLogger("console");
 		}
 
 		// The logging is initialized, we can make use of it now.
+		showBanner(this.console);
 		for (String s : ClasspathPatcher.getAdditions()) {
 			this.log.info("Classpath addition: [{}]", s);
 		}
 
 		try {
-			return run(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
+			int ret = run(result.getOptionValues(), result.getCommand(), result.getCommandValues(),
 				result.getPositionals());
+			showFooter(this.console, ret);
+			return ret;
 		} catch (Exception e) {
-			this.log.error("Exception caught", e);
+			showError(this.log, e);
 			return 1;
 		}
+	}
+
+	protected void showBanner(Logger log) {
+		// By default, do nothing
+	}
+
+	protected void showFooter(Logger log, int rc) {
+		// By default, do nothing
+	}
+
+	protected void showError(Logger log, Throwable e) {
+		log.error("Exception caught", e);
 	}
 
 	protected abstract int run(OptionValues baseValues, String command, OptionValues commandValues,

@@ -65,6 +65,10 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 		.setArgumentName("password") //
 		.setDescription("The password to connect to Documentum with") //
 	;
+	public static final Option DFC_UNIFIED = new OptionImpl() //
+		.setLongOpt("dctm-unified") //
+		.setDescription("Utilize unified login mode") //
+	;
 
 	private final Option paramDfc;
 	private final Option paramDctm;
@@ -74,6 +78,7 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 	private final Option paramDocbase;
 	private final Option paramUser;
 	private final Option paramPassword;
+	private final Option paramUnified;
 
 	private final OptionGroupImpl group;
 
@@ -83,20 +88,23 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 		this.paramDfcProp = DfcLaunchHelper.DFC_PROPERTIES;
 		this.includesConnectionInfo = includesConnectionInfo;
 
-		OptionGroupImpl group = new OptionGroupImpl("Documentum DFC") //
-			.add(this.paramDfcProp) //
-			.add(this.paramDfc) //
-			.add(this.paramDctm) //
+		OptionGroupImpl group = new OptionGroupImpl(
+			String.format("DFC%s", includesConnectionInfo ? " connectivity" : "")) //
+				.add(this.paramDfcProp) //
+				.add(this.paramDfc) //
+				.add(this.paramDctm) //
 		;
 
 		if (includesConnectionInfo) {
 			this.paramDocbase = DfcLaunchHelper.DFC_DOCBASE;
 			this.paramUser = DfcLaunchHelper.DFC_USER;
 			this.paramPassword = DfcLaunchHelper.DFC_PASSWORD;
+			this.paramUnified = DfcLaunchHelper.DFC_UNIFIED;
 		} else {
 			this.paramDocbase = null;
 			this.paramUser = null;
 			this.paramPassword = null;
+			this.paramUnified = null;
 		}
 
 		if (this.includesConnectionInfo) {
@@ -104,6 +112,7 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 				.add(this.paramDocbase) //
 				.add(this.paramUser) //
 				.add(this.paramPassword) //
+				.add(this.paramUnified) //
 			;
 		}
 		this.group = group;

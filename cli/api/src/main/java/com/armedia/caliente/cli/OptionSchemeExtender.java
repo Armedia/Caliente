@@ -20,11 +20,11 @@ public interface OptionSchemeExtender {
 	 * @throws DuplicateOptionException
 	 *             if one of the group's options conflicts with an already-defined option
 	 */
-	public OptionSchemeExtender add(OptionGroup group);
+	public OptionSchemeExtender addGroup(OptionGroup group);
 
 	/**
 	 * Check to see if the short option is already defined, to help avoid
-	 * {@link DuplicateOptionException} when invoking {@link #add(OptionGroup)}. If {@code option}
+	 * {@link DuplicateOptionException} when invoking {@link #addGroup(OptionGroup)}. If {@code option}
 	 * is {@code null}, this method returns {@code false}.
 	 *
 	 * @param option
@@ -36,7 +36,7 @@ public interface OptionSchemeExtender {
 
 	/**
 	 * Check to see if the long option is already defined, to help avoid
-	 * {@link DuplicateOptionException} when invoking {@link #add(OptionGroup)}. If {@code option}
+	 * {@link DuplicateOptionException} when invoking {@link #addGroup(OptionGroup)}. If {@code option}
 	 * is {@code null}, this method returns {@code false}.
 	 *
 	 * @param option
@@ -49,7 +49,7 @@ public interface OptionSchemeExtender {
 	/**
 	 * Check to see if either the short or long options (or both) from the given option object are
 	 * already defined, to avoid {@link DuplicateOptionException} when invoking
-	 * {@link #add(OptionGroup)}. If {@code option} is {@code null}, this method returns
+	 * {@link #addGroup(OptionGroup)}. If {@code option} is {@code null}, this method returns
 	 * {@code false}.
 	 *
 	 * @param option
@@ -62,7 +62,7 @@ public interface OptionSchemeExtender {
 
 	/**
 	 * Check to see if a group with the given name is already defined, to avoid
-	 * {@link DuplicateOptionGroupException} when invoking {@link #add(OptionGroup)}. If
+	 * {@link DuplicateOptionGroupException} when invoking {@link #addGroup(OptionGroup)}. If
 	 * {@code name} is {@code null}, this method returns {@code false}.
 	 *
 	 * @param name

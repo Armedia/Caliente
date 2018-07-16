@@ -292,7 +292,7 @@ public class OptionSchemeTest {
 				switch (currentNumber) {
 					case 1:
 						// Add -b
-						extender.add(new OptionGroupImpl("Letter-B").add(new OptionImpl() //
+						extender.addGroup(new OptionGroupImpl("Letter-B").add(new OptionImpl() //
 							.setMinArguments(1) //
 							.setMaxArguments(1) //
 							.setShortOpt('b') //
@@ -300,7 +300,7 @@ public class OptionSchemeTest {
 						return;
 					case 2:
 						// Add -c
-						extender.add(new OptionGroupImpl("Letter-C").add(new OptionImpl() //
+						extender.addGroup(new OptionGroupImpl("Letter-C").add(new OptionImpl() //
 							.setShortOpt('c') //
 						));
 						return;
