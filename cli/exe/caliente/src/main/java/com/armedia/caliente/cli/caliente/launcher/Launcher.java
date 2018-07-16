@@ -145,7 +145,7 @@ public class Launcher extends AbstractLauncher {
 		}
 
 		return scheme //
-			.addGroup(CLIGroup.BASE) //
+			.addFrom(CLIGroup.BASE) //
 		;
 	}
 
