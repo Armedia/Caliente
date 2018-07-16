@@ -54,7 +54,7 @@ class DctmExporter extends ExportCommandModule implements DynamicOptions {
 		.setLongOpt("special-groups") //
 		.setArgumentLimits(1, -1) //
 		.setArgumentName("group") //
-		.setDescription("The special users that should not be imported into the target instance") //
+		.setDescription("The special groups that should not be imported into the target instance") //
 		.setValueSep(',') //
 		.setDefaults("admingroup", "dm_assume_user", "dm_assume_user_role", "dm_browse_all", "dm_browse_all_dynamic",
 			"dm_create_cabinet", "dm_create_group", "dm_create_table", "dm_create_type", "dm_create_user",
