@@ -6,21 +6,23 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
-import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
+import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
-import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.commons.utilities.Tools;
+import com.armedia.caliente.engine.cmis.CmisSetting;
+import com.armedia.caliente.engine.exporter.ExportEngine;
 
-class CmisImporter extends ImportCommandModule implements DynamicOptions {
-	CmisImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+class Exporter extends ExportCommandModule implements DynamicOptions {
+	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 
@@ -55,12 +57,13 @@ class CmisImporter extends ImportCommandModule implements DynamicOptions {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		final String server = commandValues.getString(CLIParam.server);
+		final String server = null;
 
 		URI baseUri;
 		// Ensure it has a trailing slash...this will be useful later
 		try {
-			baseUri = new URI(String.format("%s/", server));
+			// baseUri = new URI(String.format("%s/", this.server));
+			baseUri = new URI(server);
 		} catch (URISyntaxException e) {
 			throw new CalienteException(String.format("Bad URL for the the CMIS repository: [%s]", server), e);
 		}
@@ -72,20 +75,29 @@ class CmisImporter extends ImportCommandModule implements DynamicOptions {
 			throw new CalienteException(String.format("Bad URL for the CMIS repository: [%s]", server), e);
 		}
 
-		String user = commandValues.getString(CLIParam.user);
-		String password = commandValues.getString(CLIParam.password);
+		String srcPath = commandValues.getString(CLIParam.source);
+		if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Must provide the CMIS source path or ID"); }
+
+		// If it has a leading slash, it's a path
+		if (srcPath.startsWith("/")) {
+			settings.put(CmisSetting.EXPORT_PATH.getLabel(), FilenameUtils.normalize(srcPath, true));
+		} else
+		// If it has a leading "id:", it's an object ID
+		if (srcPath.startsWith(EngineInterface.ID_PREFIX)) {
+			srcPath = srcPath.substring(EngineInterface.ID_PREFIX.length());
+			if (StringUtils
+				.isEmpty(srcPath)) { throw new CalienteException("Must provide a non-empty CMIS object ID"); }
+			settings.put(CmisSetting.EXPORT_ID.getLabel(), srcPath);
+		} else {
+			// If it's neither a path or an ID, it's a query
+			settings.put(CmisSetting.EXPORT_QUERY.getLabel(), srcPath);
+		}
 
 		settings.put(CmisSessionSetting.ATOMPUB_URL.getLabel(), baseUrl);
-		if (user != null) {
-			settings.put(CmisSessionSetting.USER.getLabel(), user);
+		String repoName = null;
+		if (!StringUtils.isBlank(repoName)) {
+			settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), repoName);
 		}
-		if (password != null) {
-			settings.put(CmisSessionSetting.PASSWORD.getLabel(), password);
-		}
-		String repoName = commandValues.getString(CLIParam.domain, "-default-");
-		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), Tools.coalesce(repoName, "-default-"));
-		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(),
-			Tools.joinCSVEscaped(commandValues.getAllStrings(CLIParam.exclude_types)));
 
 		return true;
 	}
@@ -104,7 +116,7 @@ class CmisImporter extends ImportCommandModule implements DynamicOptions {
 	@Override
 	public void getDynamicOptions(OptionScheme command) {
 		command //
-			.addGroup(CLIGroup.IMPORT_COMMON) //
+			.addGroup(CLIGroup.EXPORT_COMMON) //
 		;
 	}
 }

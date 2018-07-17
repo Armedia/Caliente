@@ -89,7 +89,7 @@ public class Launcher extends AbstractLauncher {
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 
 	// Saves us quite a few keystrokes ;)
-	private EngineInterface engineInterface = null;
+	private AbstractEngineInterface abstractEngineInterface = null;
 
 	private CommandModule<?> command = null;
 
@@ -115,18 +115,18 @@ public class Launcher extends AbstractLauncher {
 
 		final CommandScheme scheme = new CommandScheme(getProgramName(), true);
 		for (CalienteCommand d : CalienteCommand.values()) {
-			Command c = new Command(true, d.getTitle(), d.getAliases()) {
+			Command c = new Command(d.getTitle(), d.getAliases()) {
 
 				@Override
-				public void getDynamicOptions(boolean helpRequested, OptionValues baseValues)
+				public void initializeDynamicOptions(boolean helpRequested, OptionValues baseValues)
 					throws CommandLineSyntaxException {
 					String err = initializeEngineAndCommand(baseValues, getName());
 					if (err != null) {
 						if (!helpRequested) { throw new DynamicOptionsException(this, err); }
 					}
 
-					if (DynamicOptions.class.isInstance(Launcher.this.engineInterface)) {
-						DynamicOptions.class.cast(Launcher.this.engineInterface).getDynamicOptions(this);
+					if (DynamicOptions.class.isInstance(Launcher.this.abstractEngineInterface)) {
+						DynamicOptions.class.cast(Launcher.this.abstractEngineInterface).getDynamicOptions(this);
 					}
 					if (DynamicOptions.class.isInstance(Launcher.this.command)) {
 						DynamicOptions.class.cast(Launcher.this.command).getDynamicOptions(this);
@@ -141,25 +141,25 @@ public class Launcher extends AbstractLauncher {
 		// Now, find the engines available
 		OptionImpl impl = OptionImpl.cast(CLIParam.engine);
 		if (impl != null) {
-			impl.setValueFilter(new StringValueFilter(false, EngineInterface.getAliases(this.log)));
+			impl.setValueFilter(new StringValueFilter(false, AbstractEngineInterface.getAliases(this.log)));
 		}
 
 		return scheme //
-			.addGroup(CLIGroup.BASE) //
+			.addFrom(CLIGroup.BASE) //
 		;
 	}
 
 	private String initializeEngineAndCommand(OptionValues baseValues, String currentCommand) {
 		// Has an engine been selected already?
-		if (this.engineInterface == null) {
+		if (this.abstractEngineInterface == null) {
 			if (!baseValues.isPresent(
 				CLIParam.engine)) { return "No engine was selected in the base options (option order is important!)"; }
 
 			// Find the desired engine
 			final String engine = baseValues.getString(CLIParam.engine);
-			this.engineInterface = EngineInterface.get(engine);
-			if (this.engineInterface == null) { return String.format("No engine was found with the name or alias [%s]",
-				engine); }
+			this.abstractEngineInterface = AbstractEngineInterface.get(engine);
+			if (this.abstractEngineInterface == null) { return String
+				.format("No engine was found with the name or alias [%s]", engine); }
 		}
 
 		// Has a command been given yet?
@@ -170,9 +170,9 @@ public class Launcher extends AbstractLauncher {
 			if (calienteCommand == null) { return String
 				.format("Command [%s] is not a valid Caliente command or command alias", currentCommand); }
 
-			this.command = this.engineInterface.getCommandModule(calienteCommand);
+			this.command = this.abstractEngineInterface.getCommandModule(calienteCommand);
 			if (this.command == null) { return String.format("Engine [%s] does not support command [%s]",
-				this.engineInterface.getName(), calienteCommand.getTitle()); }
+				this.abstractEngineInterface.getName(), calienteCommand.getTitle()); }
 		}
 
 		return null;
@@ -459,8 +459,8 @@ public class Launcher extends AbstractLauncher {
 		OptionValues commandValues, Collection<String> positionals) {
 		List<LaunchClasspathHelper> l = new ArrayList<>();
 		l.add(this.libLaunchHelper);
-		if (this.engineInterface != null) {
-			l.addAll(this.engineInterface.getClasspathHelpers());
+		if (this.abstractEngineInterface != null) {
+			l.addAll(this.abstractEngineInterface.getClasspathHelpers());
 		}
 		return l;
 	}
@@ -468,7 +468,7 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
-		final String engine = this.engineInterface.getName();
+		final String engine = this.abstractEngineInterface.getName();
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
 		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
@@ -529,7 +529,7 @@ public class Launcher extends AbstractLauncher {
 			final CalienteState state = new CalienteState(this.objectStoreLocation, this.objectStore,
 				this.contentStoreLocation, this.contentStore);
 
-			final String engineName = this.engineInterface.getName();
+			final String engineName = this.abstractEngineInterface.getName();
 			final Logger log = LoggerFactory.getLogger(getClass());
 			final CmfObjectStore<?, ?> objectStore = state.getObjectStore();
 			final boolean writeProperties = (objectStore != null);

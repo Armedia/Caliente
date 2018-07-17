@@ -1,6 +1,5 @@
-package com.armedia.caliente.cli.caliente.launcher.xml;
+package com.armedia.caliente.cli.caliente.launcher.ucm;
 
-import java.io.File;
 import java.util.Map;
 
 import com.armedia.caliente.cli.OptionScheme;
@@ -10,13 +9,10 @@ import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
-import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.caliente.engine.xml.common.XmlSetting;
-import com.armedia.commons.utilities.Tools;
 
-class XmlImporter extends ImportCommandModule implements DynamicOptions {
-	XmlImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+class Importer extends ImportCommandModule implements DynamicOptions {
+	Importer(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 
@@ -50,23 +46,7 @@ class XmlImporter extends ImportCommandModule implements DynamicOptions {
 	protected boolean doConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
-
-		String target = commandValues.getString(CLIParam.source);
-		if (target == null) {
-			target = ".";
-		}
-		final File targetDir = Tools.canonicalize(new File(target));
-		targetDir.mkdirs();
-		if (!targetDir.exists()) { throw new CalienteException(
-			String.format("The target directory [%s] does not exist, and could not be created", targetDir)); }
-		if (!targetDir.isDirectory()) { throw new CalienteException(
-			String.format("A non-directory already exists at the location [%s] - can't continue", targetDir)); }
-
-		settings.put(XmlSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
-		settings.put(XmlSetting.DB.getLabel(), state.getObjectStoreLocation().toString());
-		settings.put(XmlSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
-
-		return true;
+		return EngineInterface.commonConfigure(commandValues, settings);
 	}
 
 	@Override

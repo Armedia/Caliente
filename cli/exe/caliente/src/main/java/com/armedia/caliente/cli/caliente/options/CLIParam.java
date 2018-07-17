@@ -334,7 +334,7 @@ public enum CLIParam implements OptionWrapper {
 			.setRequired(true) //
 			.setArgumentLimits(1) //
 			.setArgumentName("server-connection-info") //
-			.setDescription("The server CONNECTION for the connection") //
+			.setDescription("The server information for the connection") //
 	), //
 
 	skip_content( //
