@@ -405,10 +405,7 @@ public class OptionParser {
 							// If there is no command
 							if (command != null) {
 								commandName = command.getName();
-
-								if (command.isDynamic()) {
-									command.getDynamicOptions(helpRequested, baseValues);
-								}
+								command.initializeDynamicOptions(helpRequested, baseValues);
 
 								if (helpOption != null) {
 									// If there's a command option that conflicts with the help

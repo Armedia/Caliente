@@ -115,10 +115,10 @@ public class Launcher extends AbstractLauncher {
 
 		final CommandScheme scheme = new CommandScheme(getProgramName(), true);
 		for (CalienteCommand d : CalienteCommand.values()) {
-			Command c = new Command(true, d.getTitle(), d.getAliases()) {
+			Command c = new Command(d.getTitle(), d.getAliases()) {
 
 				@Override
-				public void getDynamicOptions(boolean helpRequested, OptionValues baseValues)
+				public void initializeDynamicOptions(boolean helpRequested, OptionValues baseValues)
 					throws CommandLineSyntaxException {
 					String err = initializeEngineAndCommand(baseValues, getName());
 					if (err != null) {
@@ -158,8 +158,8 @@ public class Launcher extends AbstractLauncher {
 			// Find the desired engine
 			final String engine = baseValues.getString(CLIParam.engine);
 			this.abstractEngineInterface = AbstractEngineInterface.get(engine);
-			if (this.abstractEngineInterface == null) { return String.format("No engine was found with the name or alias [%s]",
-				engine); }
+			if (this.abstractEngineInterface == null) { return String
+				.format("No engine was found with the name or alias [%s]", engine); }
 		}
 
 		// Has a command been given yet?
