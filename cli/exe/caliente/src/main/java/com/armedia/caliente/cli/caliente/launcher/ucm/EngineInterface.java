@@ -14,8 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
@@ -25,7 +25,6 @@ import com.armedia.caliente.engine.ucm.UcmSessionSetting;
 import com.armedia.caliente.engine.ucm.UcmSessionSetting.SSLMode;
 import com.armedia.caliente.engine.ucm.UcmSetting;
 import com.armedia.caliente.engine.ucm.exporter.UcmExportEngine;
-import com.armedia.caliente.engine.ucm.importer.UcmImportEngine;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicOptions {
 
@@ -115,12 +114,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicO
 
 	@Override
 	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return UcmImportEngine.getImportEngine();
-	}
-
-	@Override
-	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
-		return new Importer(engine);
+		return null;
 	}
 
 	@Override
