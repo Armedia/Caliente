@@ -86,12 +86,9 @@ public class UcmAccountAccessInfo {
 	private final Access access;
 
 	public UcmAccountAccessInfo(Type type, String name, Access access) {
-		Objects.requireNonNull(type, "Must provide a valid account object type");
-		Objects.requireNonNull(name, "Must provide a valid name");
-		Objects.requireNonNull(access, "Must provide a valid level of access");
-		this.type = type;
-		this.name = name;
-		this.access = access;
+		this.type = Objects.requireNonNull(type, "Must provide a valid account object type");
+		this.name = Objects.requireNonNull(name, "Must provide a valid name");
+		this.access = Objects.requireNonNull(access, "Must provide a valid level of access");
 	}
 
 	public Type getType() {

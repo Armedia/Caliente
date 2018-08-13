@@ -31,10 +31,8 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 	protected final ENGINE engine;
 
 	protected CommandModule(CalienteCommand descriptor, ENGINE engine) {
-		Objects.requireNonNull(descriptor, "Must provide a valid descriptor instance");
-		Objects.requireNonNull(engine, "Must provide a valid engine instance");
-		this.descriptor = descriptor;
-		this.engine = engine;
+		this.descriptor = Objects.requireNonNull(descriptor, "Must provide a valid descriptor instance");
+		this.engine = Objects.requireNonNull(engine, "Must provide a valid engine instance");
 	}
 
 	public CalienteCommand getDescriptor() {

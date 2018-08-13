@@ -12,10 +12,8 @@ public abstract class UcmModelObject {
 	protected final AtomicLong revision = new AtomicLong(0);
 
 	UcmModelObject(UcmModel model, URI uri) {
-		Objects.requireNonNull(model, "Must provide a model to associate this object with");
-		Objects.requireNonNull(uri, "Must provide a URI to identify this object with");
-		this.model = model;
-		this.uri = uri;
+		this.model = Objects.requireNonNull(model, "Must provide a model to associate this object with");
+		this.uri = Objects.requireNonNull(uri, "Must provide a URI to identify this object with");
 	}
 
 	public final UcmModel getModel() {

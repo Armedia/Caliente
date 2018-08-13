@@ -121,8 +121,7 @@ public abstract class CmfAttributeTranslator<VALUE> {
 	}
 
 	protected CmfAttributeTranslator(Class<VALUE> valueClass, CmfAttributeNameMapper cmfAttributeNameMapper) {
-		Objects.requireNonNull(valueClass, "Must provide a value class");
-		this.valueClass = valueClass;
+		this.valueClass = Objects.requireNonNull(valueClass, "Must provide a value class");
 		this.nameMapper = Tools.coalesce(cmfAttributeNameMapper, CmfAttributeTranslator.NULL_MAPPER);
 	}
 

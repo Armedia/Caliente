@@ -192,8 +192,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	}
 
 	public OptionImpl setValueSep(Character valueSep) {
-		Objects.requireNonNull(valueSep, "Must provide a non-null value separator");
-		this.valueSep = valueSep;
+		this.valueSep = Objects.requireNonNull(valueSep, "Must provide a non-null value separator");
 		return this;
 	}
 

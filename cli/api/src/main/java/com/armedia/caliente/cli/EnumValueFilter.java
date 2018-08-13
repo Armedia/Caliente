@@ -33,11 +33,10 @@ public class EnumValueFilter<E extends Enum<E>> extends OptionValueFilter {
 	}
 
 	public EnumValueFilter(boolean caseSensitive, Class<E> enumClass, Set<E> excluded) {
-		Objects.requireNonNull(enumClass, "Must provide an enum class");
+		this.klass = Objects.requireNonNull(enumClass, "Must provide an enum class");
 		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
 			String.format("The class %s is not an Enum", enumClass.getCanonicalName())); }
 		this.caseSensitive = caseSensitive;
-		this.klass = enumClass;
 
 		// Limit to only the non-excluded (allowed) values
 		Set<E> allowed = EnumSet.allOf(this.klass);

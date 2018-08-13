@@ -29,8 +29,7 @@ public class OptionGroupImpl implements OptionGroup {
 	}
 
 	public OptionGroupImpl(String name) {
-		Objects.requireNonNull(name, "Must provide a non-null name");
-		this.name = name.trim();
+		this.name = Objects.requireNonNull(name, "Must provide a non-null name").trim();
 	}
 
 	private OptionGroupImpl(String altName, OptionGroupImpl other) {

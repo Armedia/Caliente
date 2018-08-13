@@ -126,8 +126,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 
 		public DirectCacheItem(K key, V value) {
 			super(key);
-			Objects.requireNonNull(value, "Must provide a non-null value");
-			this.value = value;
+			this.value = Objects.requireNonNull(value, "Must provide a non-null value");
 		}
 
 		@Override
@@ -146,8 +145,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 
 		public ReferenceCacheItem(K key, Reference<V> value) {
 			super(key);
-			Objects.requireNonNull(value, "Must provide a non-null Reference object");
-			this.value = value;
+			this.value = Objects.requireNonNull(value, "Must provide a non-null Reference object");
 		}
 
 		@Override

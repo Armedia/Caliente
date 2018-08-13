@@ -13,8 +13,7 @@ public class CharacterSequenceTokenSource extends ReaderTokenSource {
 	private final String hash;
 
 	public CharacterSequenceTokenSource(CharSequence characters) {
-		Objects.requireNonNull(characters, "Must provide a non-null character sequence");
-		this.characters = characters;
+		this.characters = Objects.requireNonNull(characters, "Must provide a non-null character sequence");
 		this.hash = DigestUtils.sha256Hex(characters.toString());
 	}
 
