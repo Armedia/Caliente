@@ -15,17 +15,25 @@
 		<url>http://www.armedia.com</url>
 	</organization>
 
+	<developers>
+		<developer>
+			<id>drivera</id>
+			<name>Diego Rivera</name>
+			<email>diego.rivera@armedia.com</email>
+			<url>http://www.armedia.com</url>
+			<organization>Armedia, LLC</organization>
+			<organizationUrl>http://www.armedia.com</organizationUrl>
+			<roles>
+				<role>Architect</role>
+				<role>Developer</role>
+			</roles>
+			<timezone>-6</timezone>
+		</developer>
+	</developers>
+
 	<scm>
 		<connection>scm:git:git@gitlab.armedia.com:caliente/caliente.git</connection>
 	</scm>
-
-	<distributionManagement>
-		<repository>
-			<id>armedia-nexus</id>
-			<name>Armedia Nexus Repository</name>
-			<url>https://project.armedia.com/nexus/content/repositories/armedia.release/</url>
-		</repository>
-	</distributionManagement>
 
 	<properties>
 		<maven.min-version>3.2.2</maven.min-version>
@@ -34,6 +42,14 @@
 		<dfc.version>6.7-SP1</dfc.version>
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 	</properties>
+
+	<distributionManagement>
+		<repository>
+			<id>armedia-nexus</id>
+			<name>Armedia Nexus Repository</name>
+			<url>https://project.armedia.com/nexus/content/repositories/armedia.release/</url>
+		</repository>
+	</distributionManagement>
 
 	<repositories>
 		<repository>
@@ -56,25 +72,25 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>utilities</artifactId>
-				<version>0.3.27</version>
+				<version>0.3.28</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
-				<version>1.1.13</version>
+				<version>1.1.14</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-api</artifactId>
-				<version>1.1.3</version>
+				<version>1.1.4</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-pooled</artifactId>
-				<version>1.1.3</version>
+				<version>1.1.4</version>
 			</dependency>
 
 			<dependency>
