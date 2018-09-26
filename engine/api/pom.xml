@@ -38,6 +38,7 @@
 			<artifactId>datasource-locator-api</artifactId>
 			<scope>compile</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>com.armedia.commons.datasource</groupId>
 			<artifactId>datasource-locator-pooled</artifactId>
@@ -83,12 +84,6 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>com.armedia.commons.datasource</groupId>
-			<artifactId>datasource-locator-pooled</artifactId>
 			<scope>test</scope>
 		</dependency>
 
