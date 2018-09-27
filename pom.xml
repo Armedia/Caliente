@@ -253,7 +253,8 @@
 				<groupId>com.documentum.dfc</groupId>
 				<artifactId>dfc-jars</artifactId>
 				<version>${dfc.version}</version>
-				<type>pom</type>
+				<scope>system</scope>
+				<systemPath>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</systemPath>
 			</dependency>
 
 			<dependency>
@@ -325,6 +326,16 @@
 							<requireMavenVersion>
 								<version>${maven.min-version}</version>
 							</requireMavenVersion>
+							<requireEnvironmentVariable>
+								<variableName>DOCUMENTUM_SHARED</variableName>
+								<message>Please ensure the DOCUMENTUM_SHARED environment variable is set</message>
+							</requireEnvironmentVariable>
+							<requireFilesExist>
+								<files>
+									<file>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</file>
+								</files>
+								<message>Failed to find the primary DFC JAR file in DOCUMENTUM_SHARED</message>
+							</requireFilesExist>
 						</rules>
 					</configuration>
 				</plugin>

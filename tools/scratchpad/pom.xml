@@ -74,8 +74,7 @@
 		<dependency>
 			<groupId>com.documentum.dfc</groupId>
 			<artifactId>dfc-jars</artifactId>
-			<type>pom</type>
-			<scope>provided</scope>
+			<scope>system</scope>
 		</dependency>
 
 		<dependency>
