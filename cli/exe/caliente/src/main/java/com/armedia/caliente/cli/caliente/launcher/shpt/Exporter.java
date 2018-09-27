@@ -7,7 +7,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;
