@@ -4,6 +4,7 @@
 
 package com.armedia.caliente.engine.importer;
 
+import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -42,6 +43,7 @@ import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectHandler;
+import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
@@ -63,7 +65,8 @@ public abstract class ImportEngine<//
 	IMPORT_CONTEXT extends ImportContext<SESSION, VALUE, IMPORT_CONTEXT_FACTORY>, //
 	IMPORT_CONTEXT_FACTORY extends ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?>, //
 	IMPORT_DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> //
-> extends TransferEngine<SESSION, VALUE, IMPORT_CONTEXT, IMPORT_CONTEXT_FACTORY, IMPORT_DELEGATE_FACTORY, ImportEngineListener> {
+> extends
+	TransferEngine<SESSION, VALUE, IMPORT_CONTEXT, IMPORT_CONTEXT_FACTORY, IMPORT_DELEGATE_FACTORY, ImportEngineListener> {
 
 	private class BatchWorker implements Callable<Map<String, Collection<ImportOutcome>>> {
 
@@ -77,8 +80,8 @@ public abstract class ImportEngine<//
 		private final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory;
 		private final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory;
 
-		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter, SessionFactory<SESSION> sessionFactory,
-			ImportEngineListener listenerDelegator, ImportState importState,
+		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter,
+			SessionFactory<SESSION> sessionFactory, ImportEngineListener listenerDelegator, ImportState importState,
 			final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory,
 			final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory) {
 			this.sessionFactory = sessionFactory;
@@ -320,168 +323,51 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	private class ImportListenerDelegator extends ListenerDelegator<ImportResult> implements ImportEngineListener {
+	private class ImportListenerPropagator extends ListenerPropagator<ImportResult, ImportEngineListener>
+		implements InvocationHandler {
 
-		private final Collection<ImportEngineListener> listeners = getListeners();
-
-		private ImportListenerDelegator(CmfObjectCounter<ImportResult> counter) {
-			super(counter);
+		private ImportListenerPropagator(CmfObjectCounter<ImportResult> counter) {
+			super(counter, getListeners(), ImportEngineListener.class);
 		}
 
 		@Override
-		public void importStarted(ImportState importState, Map<CmfType, Long> summary) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.importStarted(importState, summary);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
+		protected void handleMethod(String name, Object[] args) throws Throwable {
+			CmfObjectRef object = null;
+			for (Object o : args) {
+				if (CmfObjectRef.class.isInstance(o)) {
+					object = CmfObjectRef.class.cast(o);
+					break;
 				}
 			}
-		}
 
-		@Override
-		public void objectTypeImportStarted(UUID jobId, CmfType objectType, long totalObjects) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectTypeImportStarted(jobId, objectType, totalObjects);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
+			switch (name) {
+				case "importStarted":
+					getStoredObjectCounter().reset();
+					break;
+				case "objectImportCompleted":
+					ImportOutcome outcome = null;
+					for (Object o : args) {
+						if (ImportOutcome.class.isInstance(o)) {
+							outcome = ImportOutcome.class.cast(o);
+							break;
+						}
 					}
-				}
-			}
-		}
-
-		@Override
-		public void objectTierImportStarted(UUID jobId, CmfType objectType, int tier) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectTierImportStarted(jobId, objectType, tier);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectHistoryImportStarted(jobId, objectType, batchId, count);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectImportStarted(UUID jobId, CmfObject<?> object) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectImportStarted(jobId, object);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectImportCompleted(UUID jobId, CmfObject<?> object, ImportOutcome outcome) {
-			getStoredObjectCounter().increment(object.getType(), outcome.getResult());
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectImportCompleted(jobId, object, outcome);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectImportFailed(UUID jobId, CmfObject<?> object, Throwable thrown) {
-			getStoredObjectCounter().increment(object.getType(), ImportResult.FAILED);
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectImportFailed(jobId, object, thrown);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String batchId,
-			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectHistoryImportFinished(jobId, objectType, batchId, outcomes, failed);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectTierImportFinished(UUID jobId, CmfType objectType, int tier, boolean failed) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectTierImportFinished(jobId, objectType, tier, failed);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Long> counters) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.objectTypeImportFinished(jobId, objectType, counters);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void importFinished(UUID jobId, Map<ImportResult, Long> counters) {
-			for (ImportEngineListener l : this.listeners) {
-				try {
-					l.importFinished(jobId, counters);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
+					getStoredObjectCounter().increment(object.getType(), outcome.getResult());
+					break;
+				case "objectImportFailed":
+					getStoredObjectCounter().increment(object.getType(), ImportResult.FAILED);
+					break;
 			}
 		}
 
 		private void objectTypeImportFinished(UUID jobId, CmfType objectType) {
-			objectTypeImportFinished(jobId, objectType, getStoredObjectCounter().getCounters(objectType));
+			this.listenerProxy.objectTypeImportFinished(jobId, objectType,
+				getStoredObjectCounter().getCounters(objectType));
 		}
 
 		private void importFinished(UUID jobId) {
-			importFinished(jobId, getStoredObjectCounter().getCummulative());
+			this.listenerProxy.importFinished(jobId, getStoredObjectCounter().getCummulative());
 		}
-
 	}
 
 	protected ImportEngine(CmfCrypt crypto) {
@@ -663,8 +549,8 @@ public abstract class ImportEngine<//
 	private final CmfObjectCounter<ImportResult> runImportImpl(final ImportState importState,
 		final SessionFactory<SESSION> sessionFactory, CmfObjectCounter<ImportResult> counter,
 		final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory,
-		final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory, final Transformer transformer,
-		final ObjectFilter filter) throws ImportException, CmfStorageException {
+		final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory,
+		final Transformer transformer, final ObjectFilter filter) throws ImportException, CmfStorageException {
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;
 		final CmfObjectStore<?, ?> objectStore = importState.objectStore;
@@ -682,7 +568,8 @@ public abstract class ImportEngine<//
 		if (counter == null) {
 			counter = new CmfObjectCounter<>(ImportResult.class);
 		}
-		final ImportListenerDelegator listenerDelegator = new ImportListenerDelegator(counter);
+		final ImportListenerPropagator listenerDelegator = new ImportListenerPropagator(counter);
+		final ImportEngineListener listener = listenerDelegator.getListenerProxy();
 
 		try {
 			Map<CmfType, Long> containedTypes;
@@ -753,7 +640,7 @@ public abstract class ImportEngine<//
 				}
 			}
 
-			listenerDelegator.importStarted(importState, containedTypes);
+			listener.importStarted(importState, containedTypes);
 			final CmfAttributeTranslator<VALUE> translator = getTranslator();
 			for (final CmfType type : CmfType.values()) {
 				final Long total = containedTypes.get(type);
@@ -782,7 +669,7 @@ public abstract class ImportEngine<//
 					}
 					continue;
 				}
-				listenerDelegator.objectTypeImportStarted(jobId, type, total);
+				listener.objectTypeImportStarted(jobId, type, total);
 
 				// Start the workers
 				// If we don't support parallelization at any level, then we simply use a
@@ -870,7 +757,7 @@ public abstract class ImportEngine<//
 							try {
 								executor.submit(new BatchWorker(
 									new Batch(storedType, historyId, this.contents, strategy), workerCounter,
-									sessionFactory, listenerDelegator, importState, contextFactory, delegateFactory));
+									sessionFactory, listener, importState, contextFactory, delegateFactory));
 							} finally {
 								this.contents = null;
 							}
