@@ -12,7 +12,8 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
+import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.dfc.common.Setting;
@@ -21,7 +22,7 @@ import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
 
-class Exporter extends ExportCommandModule implements DynamicOptions {
+class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	/**
 	 * The from and where clause of the export query that runs periodically. The application will
 	 * combine the select clause listed above with this from and where clauses to build the complete
@@ -243,8 +244,8 @@ class Exporter extends ExportCommandModule implements DynamicOptions {
 	}
 
 	@Override
-	public void getDynamicOptions(OptionScheme command) {
-		command //
+	public void getDynamicOptions(AbstractEngineInterface engine, OptionScheme scheme) {
+		scheme //
 			.addGroup(CLIGroup.EXPORT_COMMON) //
 			.addGroup(Exporter.OPTIONS) //
 		;

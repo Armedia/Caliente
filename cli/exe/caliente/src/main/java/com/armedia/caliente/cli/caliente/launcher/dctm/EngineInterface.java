@@ -11,9 +11,10 @@ import com.armedia.caliente.cli.OptionGroup;
 import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.caliente.command.CommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
@@ -26,15 +27,19 @@ import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.documentum.fc.common.DfLoggerDisabled;
 import com.documentum.fc.common.impl.logging.LoggingConfigurator;
 
-public class EngineInterface extends AbstractEngineInterface implements DynamicOptions {
+public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
 	static final DfcLaunchHelper DFC_HELPER = new DfcLaunchHelper(true);
 
 	private static final OptionGroup DFC_OPTIONS = new OptionGroupImpl("DFC Configuration") //
 		.add(DfcLaunchHelper.DFC_DOCUMENTUM) //
 		.add(DfcLaunchHelper.DFC_LOCATION) //
-		.add(DfcLaunchHelper.DFC_PROPERTIES) //
+	;
+
+	private static final OptionGroup DFC_CONNECTION = new OptionGroupImpl("DFC Connection") //
+		.addFrom(CLIGroup.CONNECTION) //
 		.add(DfcLaunchHelper.DFC_UNIFIED) //
+		.add(DfcLaunchHelper.DFC_PROPERTIES) //
 	;
 
 	public EngineInterface() {
@@ -107,11 +112,16 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicO
 	}
 
 	@Override
-	public void getDynamicOptions(OptionScheme command) {
-		command //
-			.addGroup(CLIGroup.STORE) //
-			.addGroup(CLIGroup.MAIL) //
-			.addGroup(CLIGroup.CONNECTION) //
+	public void getDynamicOptions(CommandModule<?> command, OptionScheme scheme) {
+		if (command.getDescriptor().isRequiresStorage()) {
+			scheme //
+				.addGroup(CLIGroup.STORE) //
+				.addGroup(CLIGroup.MAIL) //
+				.addGroup(EngineInterface.DFC_CONNECTION) //
+			;
+		}
+
+		scheme //
 			.addGroup(EngineInterface.DFC_OPTIONS) //
 		;
 	}

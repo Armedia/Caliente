@@ -89,7 +89,7 @@ public class Launcher extends AbstractLauncher {
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 
 	// Saves us quite a few keystrokes ;)
-	private AbstractEngineInterface abstractEngineInterface = null;
+	private AbstractEngineInterface engineInterface = null;
 
 	private CommandModule<?> command = null;
 
@@ -125,11 +125,13 @@ public class Launcher extends AbstractLauncher {
 						if (!helpRequested) { throw new DynamicOptionsException(this, err); }
 					}
 
-					if (DynamicOptions.class.isInstance(Launcher.this.abstractEngineInterface)) {
-						DynamicOptions.class.cast(Launcher.this.abstractEngineInterface).getDynamicOptions(this);
+					if (DynamicEngineOptions.class.isInstance(Launcher.this.engineInterface)) {
+						DynamicEngineOptions.class.cast(Launcher.this.engineInterface)
+							.getDynamicOptions(Launcher.this.command, this);
 					}
-					if (DynamicOptions.class.isInstance(Launcher.this.command)) {
-						DynamicOptions.class.cast(Launcher.this.command).getDynamicOptions(this);
+					if (DynamicCommandOptions.class.isInstance(Launcher.this.command)) {
+						DynamicCommandOptions.class.cast(Launcher.this.command)
+							.getDynamicOptions(Launcher.this.engineInterface, this);
 					}
 				}
 
@@ -151,15 +153,15 @@ public class Launcher extends AbstractLauncher {
 
 	private String initializeEngineAndCommand(OptionValues baseValues, String currentCommand) {
 		// Has an engine been selected already?
-		if (this.abstractEngineInterface == null) {
+		if (this.engineInterface == null) {
 			if (!baseValues.isPresent(
 				CLIParam.engine)) { return "No engine was selected in the base options (option order is important!)"; }
 
 			// Find the desired engine
 			final String engine = baseValues.getString(CLIParam.engine);
-			this.abstractEngineInterface = AbstractEngineInterface.get(engine);
-			if (this.abstractEngineInterface == null) { return String
-				.format("No engine was found with the name or alias [%s]", engine); }
+			this.engineInterface = AbstractEngineInterface.get(engine);
+			if (this.engineInterface == null) { return String.format("No engine was found with the name or alias [%s]",
+				engine); }
 		}
 
 		// Has a command been given yet?
@@ -170,9 +172,9 @@ public class Launcher extends AbstractLauncher {
 			if (calienteCommand == null) { return String
 				.format("Command [%s] is not a valid Caliente command or command alias", currentCommand); }
 
-			this.command = this.abstractEngineInterface.getCommandModule(calienteCommand);
+			this.command = this.engineInterface.getCommandModule(calienteCommand);
 			if (this.command == null) { return String.format("Engine [%s] does not support command [%s]",
-				this.abstractEngineInterface.getName(), calienteCommand.getTitle()); }
+				this.engineInterface.getName(), calienteCommand.getTitle()); }
 		}
 
 		return null;
@@ -459,8 +461,8 @@ public class Launcher extends AbstractLauncher {
 		OptionValues commandValues, Collection<String> positionals) {
 		List<LaunchClasspathHelper> l = new ArrayList<>();
 		l.add(this.libLaunchHelper);
-		if (this.abstractEngineInterface != null) {
-			l.addAll(this.abstractEngineInterface.getClasspathHelpers());
+		if (this.engineInterface != null) {
+			l.addAll(this.engineInterface.getClasspathHelpers());
 		}
 		return l;
 	}
@@ -468,7 +470,7 @@ public class Launcher extends AbstractLauncher {
 	@Override
 	protected boolean initLogging(OptionValues baseValues, String command, OptionValues commandValues,
 		Collection<String> positionals) {
-		final String engine = this.abstractEngineInterface.getName();
+		final String engine = this.engineInterface.getName();
 		final String logMode = StringUtils.lowerCase(command);
 		final String logEngine = StringUtils.lowerCase(engine);
 		final String logTimeStamp = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
@@ -529,7 +531,7 @@ public class Launcher extends AbstractLauncher {
 			final CalienteState state = new CalienteState(this.objectStoreLocation, this.objectStore,
 				this.contentStoreLocation, this.contentStore);
 
-			final String engineName = this.abstractEngineInterface.getName();
+			final String engineName = this.engineInterface.getName();
 			final Logger log = LoggerFactory.getLogger(getClass());
 			final CmfObjectStore<?, ?> objectStore = state.getObjectStore();
 			final boolean writeProperties = (objectStore != null);

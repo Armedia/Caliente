@@ -5,15 +5,16 @@ import java.util.Collections;
 import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
-import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
+import com.armedia.caliente.cli.caliente.command.CommandModule;
 import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.sharepoint.exporter.ShptExportEngine;
 
-public class EngineInterface extends AbstractEngineInterface implements DynamicOptions {
+public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
 	public EngineInterface() {
 	}
@@ -49,12 +50,14 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicO
 	}
 
 	@Override
-	public void getDynamicOptions(OptionScheme command) {
-		command //
-			.addGroup(CLIGroup.STORE) //
-			.addGroup(CLIGroup.MAIL) //
-			.addGroup(CLIGroup.DOMAIN_CONNECTION) //
-		;
+	public void getDynamicOptions(CommandModule<?> command, OptionScheme scheme) {
+		if (command.getDescriptor().isRequiresStorage()) {
+			scheme //
+				.addGroup(CLIGroup.STORE) //
+				.addGroup(CLIGroup.MAIL) //
+				.addGroup(CLIGroup.DOMAIN_CONNECTION) //
+			;
+		}
 	}
 
 }

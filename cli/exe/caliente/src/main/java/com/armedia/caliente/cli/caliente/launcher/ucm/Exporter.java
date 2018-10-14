@@ -7,11 +7,12 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
+import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 
-class Exporter extends ExportCommandModule implements DynamicOptions {
+class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
@@ -61,8 +62,8 @@ class Exporter extends ExportCommandModule implements DynamicOptions {
 	}
 
 	@Override
-	public void getDynamicOptions(OptionScheme command) {
-		command //
+	public void getDynamicOptions(AbstractEngineInterface engine, OptionScheme scheme) {
+		scheme //
 			.addGroup(CLIGroup.EXPORT_COMMON) //
 		;
 	}
