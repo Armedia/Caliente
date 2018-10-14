@@ -8,7 +8,6 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
@@ -82,7 +81,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 	}
 
 	@Override
-	public void getDynamicOptions(AbstractEngineInterface engine, OptionScheme scheme) {
+	public void getDynamicOptions(String engine, OptionScheme scheme) {
 		scheme //
 			.addGroup(CLIGroup.IMPORT_COMMON) //
 		;

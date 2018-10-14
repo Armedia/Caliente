@@ -7,7 +7,7 @@ import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.caliente.command.CommandModule;
+import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
@@ -64,8 +64,8 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	public void getDynamicOptions(CommandModule<?> command, OptionScheme scheme) {
-		if (command.getDescriptor().isRequiresStorage()) {
+	public void getDynamicOptions(CalienteCommand command, OptionScheme scheme) {
+		if (command.isRequiresStorage()) {
 			scheme //
 				.addGroup(CLIGroup.STORE) //
 				.addGroup(CLIGroup.MAIL) //

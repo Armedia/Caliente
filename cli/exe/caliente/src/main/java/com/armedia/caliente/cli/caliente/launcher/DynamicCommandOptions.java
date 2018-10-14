@@ -4,6 +4,6 @@ import com.armedia.caliente.cli.OptionScheme;
 
 public interface DynamicCommandOptions {
 
-	public void getDynamicOptions(AbstractEngineInterface engine, OptionScheme scheme);
+	public void getDynamicOptions(String engine, OptionScheme scheme);
 
 }

@@ -127,11 +127,11 @@ public class Launcher extends AbstractLauncher {
 
 					if (DynamicEngineOptions.class.isInstance(Launcher.this.engineInterface)) {
 						DynamicEngineOptions.class.cast(Launcher.this.engineInterface)
-							.getDynamicOptions(Launcher.this.command, this);
+							.getDynamicOptions(Launcher.this.command.getDescriptor(), this);
 					}
 					if (DynamicCommandOptions.class.isInstance(Launcher.this.command)) {
 						DynamicCommandOptions.class.cast(Launcher.this.command)
-							.getDynamicOptions(Launcher.this.engineInterface, this);
+							.getDynamicOptions(Launcher.this.engineInterface.getName(), this);
 					}
 				}
 
