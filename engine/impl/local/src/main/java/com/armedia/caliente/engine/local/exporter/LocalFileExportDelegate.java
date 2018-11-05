@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.AclFileAttributeView;
@@ -13,6 +14,7 @@ import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.DosFileAttributeView;
 import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.FileOwnerAttributeView;
 import java.nio.file.attribute.GroupPrincipal;
 import java.nio.file.attribute.PosixFileAttributeView;
@@ -23,7 +25,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.activation.MimeType;
 
@@ -50,13 +54,30 @@ import com.armedia.caliente.store.tools.MimeTools;
 public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 	private static final String EXT_ATT_PREFIX = "cmfext";
-	private static final String EXT_ATT_FORMAT = String.format("%s:%%s", LocalFileExportDelegate.EXT_ATT_PREFIX);;
+	private static final String EXT_ATT_FORMAT = String.format("%s:%%s", LocalFileExportDelegate.EXT_ATT_PREFIX);
 	private static final String DOS_ATT_PREFIX = "cmfdos";
 	private static final String DOS_ATT_FORMAT = String.format("%s:%%s", LocalFileExportDelegate.DOS_ATT_PREFIX);
+
+	private final Map<Class<? extends FileAttributeView>, FileAttributeView> attributeViews = new HashMap<>();
 
 	protected LocalFileExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, LocalFile object)
 		throws Exception {
 		super(factory, root, LocalFile.class, object);
+	}
+
+	protected <T extends FileAttributeView> T getFileAttributeView(Path path, Class<T> klazz) {
+		if (this.attributeViews.containsKey(klazz)) { return klazz.cast(this.attributeViews.get(klazz)); }
+		T view = null;
+		if (this.object.isSymbolicLink()) {
+			view = Files.getFileAttributeView(path, klazz, LinkOption.NOFOLLOW_LINKS);
+		} else {
+			Files.getFileAttributeView(path, klazz);
+		}
+
+		if (view != null) {
+			this.attributeViews.put(klazz, view);
+		}
+		return null;
 	}
 
 	@Override
@@ -67,10 +88,22 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	protected UserPrincipal getOwner(Path path) {
-		FileOwnerAttributeView owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
+		FileOwnerAttributeView owner = getFileAttributeView(path, FileOwnerAttributeView.class);
 		if (owner != null) {
 			try {
 				return owner.getOwner();
+			} catch (IOException e) {
+				this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
+			}
+		}
+		return null;
+	}
+
+	protected GroupPrincipal getGroup(Path path) {
+		PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
+		if (posix != null) {
+			try {
+				return posix.readAttributes().group();
 			} catch (IOException e) {
 				this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
 			}
@@ -95,7 +128,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		}
 
 		Path path = this.object.getAbsolute().toPath();
-		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
+		PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
 
 		UserPrincipal owner = getOwner(path);
 		if (owner != null) {
@@ -142,11 +175,11 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		object.setAttribute(att);
 
 		Path path = file.toPath();
-		final BasicFileAttributeView basic = Files.getFileAttributeView(path, BasicFileAttributeView.class);
-		final DosFileAttributeView dos = Files.getFileAttributeView(path, DosFileAttributeView.class);
-		final AclFileAttributeView acl = Files.getFileAttributeView(path, AclFileAttributeView.class);
-		final PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
-		final UserDefinedFileAttributeView extendedAtts = Files.getFileAttributeView(path,
+		final BasicFileAttributeView basic = getFileAttributeView(path, BasicFileAttributeView.class);
+		final DosFileAttributeView dos = getFileAttributeView(path, DosFileAttributeView.class);
+		final AclFileAttributeView acl = getFileAttributeView(path, AclFileAttributeView.class);
+		final PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
+		final UserDefinedFileAttributeView extendedAtts = getFileAttributeView(path,
 			UserDefinedFileAttributeView.class);
 
 		// Ok... we have the attribute views, export the information
@@ -176,10 +209,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 					ByteBuffer buf = ByteBuffer.allocate(bytes);
 					extendedAtts.read(name, buf);
 					buf.flip();
-					// TODO: How to encode?
-					// String value? Encode as Base64? Encode as...?
-					// String value = Charset.defaultCharset().decode(buf).toString();
-					// We may need a rule mechanism here...
 					att = new CmfAttribute<>(String.format(LocalFileExportDelegate.EXT_ATT_FORMAT, name),
 						CmfDataType.BASE64_BINARY, false);
 					byte[] data = null;
