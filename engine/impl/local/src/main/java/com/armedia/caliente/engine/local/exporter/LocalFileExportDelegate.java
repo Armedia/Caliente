@@ -4,16 +4,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.AclFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.DosFileAttributeView;
+import java.nio.file.attribute.DosFileAttributes;
 import java.nio.file.attribute.FileOwnerAttributeView;
 import java.nio.file.attribute.GroupPrincipal;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +48,11 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.MimeTools;
 
 public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
+
+	private static final String EXT_ATT_PREFIX = "cmfext";
+	private static final String EXT_ATT_FORMAT = String.format("%s:%%s", LocalFileExportDelegate.EXT_ATT_PREFIX);;
+	private static final String DOS_ATT_PREFIX = "cmfdos";
+	private static final String DOS_ATT_FORMAT = String.format("%s:%%s", LocalFileExportDelegate.DOS_ATT_PREFIX);
 
 	protected LocalFileExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, LocalFile object)
 		throws Exception {
@@ -133,9 +142,12 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		object.setAttribute(att);
 
 		Path path = file.toPath();
-		BasicFileAttributeView basic = Files.getFileAttributeView(path, BasicFileAttributeView.class);
-		AclFileAttributeView acl = Files.getFileAttributeView(path, AclFileAttributeView.class);
-		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
+		final BasicFileAttributeView basic = Files.getFileAttributeView(path, BasicFileAttributeView.class);
+		final DosFileAttributeView dos = Files.getFileAttributeView(path, DosFileAttributeView.class);
+		final AclFileAttributeView acl = Files.getFileAttributeView(path, AclFileAttributeView.class);
+		final PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
+		final UserDefinedFileAttributeView extendedAtts = Files.getFileAttributeView(path,
+			UserDefinedFileAttributeView.class);
 
 		// Ok... we have the attribute views, export the information
 		try {
@@ -152,6 +164,58 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			att = new CmfAttribute<>(IntermediateAttribute.LAST_ACCESS_DATE, CmfDataType.DATETIME, false);
 			att.setValue(new CmfValue(new Date(basicAtts.lastAccessTime().toMillis())));
 			object.setAttribute(att);
+
+			if (extendedAtts != null) {
+				for (String name : extendedAtts.list()) {
+					int bytes = extendedAtts.size(name);
+					if (bytes == 0) {
+						// TODO: Do we want to include empty-valued attributes?
+						continue;
+					}
+
+					ByteBuffer buf = ByteBuffer.allocate(bytes);
+					extendedAtts.read(name, buf);
+					buf.flip();
+					// TODO: How to encode?
+					// String value? Encode as Base64? Encode as...?
+					// String value = Charset.defaultCharset().decode(buf).toString();
+					// We may need a rule mechanism here...
+					att = new CmfAttribute<>(String.format(LocalFileExportDelegate.EXT_ATT_FORMAT, name),
+						CmfDataType.BASE64_BINARY, false);
+					byte[] data = null;
+					if (buf.hasArray()) {
+						data = buf.array();
+					} else {
+						data = new byte[bytes];
+						buf.get(data);
+					}
+					att.setValue(new CmfValue(data));
+					object.setAttribute(att);
+				}
+			}
+
+			if (dos != null) {
+				DosFileAttributes atts = dos.readAttributes();
+				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "hidden"),
+					CmfDataType.BOOLEAN, false);
+				att.setValue(new CmfValue(atts.isHidden()));
+				object.setAttribute(att);
+
+				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "system"),
+					CmfDataType.BOOLEAN, false);
+				att.setValue(new CmfValue(atts.isSystem()));
+				object.setAttribute(att);
+
+				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "archive"),
+					CmfDataType.BOOLEAN, false);
+				att.setValue(new CmfValue(atts.isArchive()));
+				object.setAttribute(att);
+
+				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "readonly"),
+					CmfDataType.BOOLEAN, false);
+				att.setValue(new CmfValue(atts.isReadOnly()));
+				object.setAttribute(att);
+			}
 
 			if (getType() == CmfType.DOCUMENT) {
 				att = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH, CmfDataType.DOUBLE, false);
@@ -190,6 +254,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				// quite the conundrum to say the least...
 				/*
 				for (AclEntry e : acl.getAcl()) {
+					AclEntryType type = e.type();
 					UserPrincipal principal = e.principal();
 					for (AclEntryFlag f : e.flags()) {
 					}
