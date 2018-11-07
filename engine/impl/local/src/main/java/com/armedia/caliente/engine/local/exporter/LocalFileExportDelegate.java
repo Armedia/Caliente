@@ -202,7 +202,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				for (String name : extendedAtts.list()) {
 					int bytes = extendedAtts.size(name);
 					if (bytes == 0) {
-						// TODO: Do we want to include empty-valued attributes?
 						continue;
 					}
 
