@@ -9,6 +9,10 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclEntryFlag;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
 import java.nio.file.attribute.AclFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -280,7 +284,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				// TODO: Before we can do this, we have to come up with a neutral, portable
 				// mechanism to describe an ACL such that it works for ALL CMS engines...and this is
 				// quite the conundrum to say the least...
-				/*
 				for (AclEntry e : acl.getAcl()) {
 					AclEntryType type = e.type();
 					UserPrincipal principal = e.principal();
@@ -289,7 +292,6 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 					for (AclEntryPermission p : e.permissions()) {
 					}
 				}
-				*/
 			}
 		} catch (IOException e) {
 			throw new ExportException(String.format("Failed to collect the attribute information for [%s]", file), e);
