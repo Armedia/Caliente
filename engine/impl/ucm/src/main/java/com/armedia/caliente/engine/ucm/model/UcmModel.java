@@ -592,7 +592,7 @@ public class UcmModel {
 							if (attributes == null) { throw new UcmServiceException(
 								String.format("%s GUID [%s] was found via %s(%s=%s), didn't contain any data?!?",
 									type.name(), guid, serviceName, identifierAtt.name(), guid)); }
-							String uriIdentifier = data.get().getString(identifierAtt);
+							String uriIdentifier = attributes.getString(identifierAtt);
 							if (uriIdentifier != null) {
 								URI uri = UcmModel.getURI(attributes);
 								data.set(newFSObject(uri, attributes));
