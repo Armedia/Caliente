@@ -18,6 +18,7 @@ public enum UcmSessionSetting implements ConfigurationSetting {
 	CLIENT_CERT_ALIAS, //
 	CLIENT_CERT_PASSWORD, //
 	MIN_PING_TIME(TimeUnit.MINUTES.toMillis(2)), //
+	SOCKET_TIMEOUT, //
 	//
 	;
 

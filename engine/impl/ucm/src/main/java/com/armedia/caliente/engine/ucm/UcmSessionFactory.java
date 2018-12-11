@@ -4,6 +4,7 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.PooledObject;
@@ -15,6 +16,7 @@ import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.KeyStoreTools;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.IdcClientManager;
 import oracle.stellent.ridc.IdcContext;
@@ -23,6 +25,8 @@ import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClientConfig;
 
 public class UcmSessionFactory extends SessionFactory<UcmSession> {
+
+	public static final long MAX_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
 
 	private class IdcContextSeed {
 		private final String user;
@@ -50,6 +54,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	private final String clientStorePassword;
 	private final String clientCertAlias;
 	private final String clientCertPassword;
+	private final Long socketTimeout;
 	private final IdcContextSeed context;
 	private final long minPingTime;
 
@@ -64,6 +69,17 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		this.port = settings.getInteger(UcmSessionSetting.PORT);
 		if ((this.port <= 0) || (this.port > 0xffff)) { throw new Exception(
 			String.format("Port number must be a number between 1 and 65535 (got %d)", this.port)); }
+
+		Integer socketTimeout = settings.getInteger(UcmSessionSetting.SOCKET_TIMEOUT);
+		if (socketTimeout != null) {
+			this.socketTimeout = Tools.ensureBetween( //
+				0L, //
+				TimeUnit.SECONDS.toMillis(socketTimeout.longValue()), //
+				UcmSessionFactory.MAX_SOCKET_TIMEOUT //
+			);
+		} else {
+			this.socketTimeout = null;
+		}
 
 		String userName = settings.getString(UcmSessionSetting.USER);
 		String password = settings.getString(UcmSessionSetting.PASSWORD);
@@ -164,7 +180,6 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 
 		this.log.trace("UcmSetting the IDC connection URL to [{}]...", this.url);
 		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(this.url));
-
 		IntradocClientConfig config = client.getConfig();
 		config.setConnectionPool("simple");
 		if (this.trustStore != null) {
@@ -176,6 +191,9 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 			config.setKeystorePassword(this.clientStorePassword);
 			config.setKeystoreAlias(this.clientCertAlias);
 			config.setKeystoreAliasPassword(this.clientCertPassword);
+		}
+		if (this.socketTimeout != null) {
+			config.setSocketTimeout(this.socketTimeout.intValue());
 		}
 		client.initialize();
 		return new DefaultPooledObject<>(new UcmSession(this.model, client, this.context.newInstance()));
