@@ -209,7 +209,7 @@ public class UcmModel {
 		if (data.hasAttribute(UcmAtt.fFolderGUID)) { return UcmModel.newFolderURI(data.getString(UcmAtt.fFolderGUID)); }
 		throw new UcmRuntimeException(
 			String.format("Could not find either dDocName or fFolderGUID in the given attribute set: %s", data));
-	}
+		}
 
 	protected static final UcmUniqueURI getUniqueURI(UcmAttributes data) {
 		if (data == null) { return null; }
@@ -1169,8 +1169,9 @@ public class UcmModel {
 										name = o.getString(UcmAtt.fFolderName);
 									}
 									children.put(name, childUri);
-									dataObjects.put(name, newFSObject(childUri, o));
-									handler.handleObject(s, it.getCurrentPos(), childUri, newFSObject(childUri, o));
+									UcmFSObject childObject = newFSObject(childUri, o);
+									dataObjects.put(name, childObject);
+									handler.handleObject(s, it.getCurrentPos(), childUri, childObject);
 								}
 								rawChildren.set(dataObjects);
 								UcmAttributes folderAtts = it.getFolder();
