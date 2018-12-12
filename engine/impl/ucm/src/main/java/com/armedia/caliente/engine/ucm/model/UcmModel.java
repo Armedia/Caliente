@@ -545,15 +545,15 @@ public class UcmModel {
 							ServiceResponse response = null;
 							DataBinder responseData = null;
 							final UcmAtt identifierAtt;
-							final String serviceName;
+							final UcmAtt uriAtt;
+							final String serviceName = "FLD_INFO";
 							switch (type) {
 								case FILE:
-									identifierAtt = UcmAtt.dDocName;
-									serviceName = "DOC_INFO_BY_NAME";
+									identifierAtt = UcmAtt.fFileGUID;
+									uriAtt = UcmAtt.dDocName;
 									break;
 								case FOLDER:
-									identifierAtt = UcmAtt.fFolderGUID;
-									serviceName = "FLD_INFO";
+									uriAtt = identifierAtt = UcmAtt.fFolderGUID;
 									break;
 
 								default:
@@ -583,16 +583,11 @@ public class UcmModel {
 								throw e;
 							}
 
-							final UcmAttributes attributes;
-							if (type == UcmObjectType.FILE) {
-								attributes = buildAttributesFromDocInfo(responseData, history, renditions);
-							} else {
-								attributes = buildAttributesFromFldInfo(responseData);
-							}
+							final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
 							if (attributes == null) { throw new UcmServiceException(
 								String.format("%s GUID [%s] was found via %s(%s=%s), didn't contain any data?!?",
 									type.name(), guid, serviceName, identifierAtt.name(), guid)); }
-							String uriIdentifier = attributes.getString(identifierAtt);
+							String uriIdentifier = attributes.getString(uriAtt);
 							if (uriIdentifier != null) {
 								URI uri = UcmModel.getURI(attributes);
 								data.set(newFSObject(uri, attributes));
@@ -1612,4 +1607,5 @@ public class UcmModel {
 		}
 		return new TreeMap<>(renditions);
 	}
+
 }
