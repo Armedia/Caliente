@@ -26,6 +26,7 @@ import oracle.stellent.ridc.protocol.intradoc.IntradocClientConfig;
 
 public class UcmSessionFactory extends SessionFactory<UcmSession> {
 
+	public static final int MAX_PING_TIME = (int) TimeUnit.MINUTES.toSeconds(15);
 	public static final long MAX_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
 
 	private class IdcContextSeed {
@@ -56,7 +57,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	private final String clientCertPassword;
 	private final Long socketTimeout;
 	private final IdcContextSeed context;
-	private final long minPingTime;
+	private final int minPingTime;
 
 	private final UcmModel model;
 
@@ -64,7 +65,8 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		super(settings, crypto);
 
 		this.manager = new IdcClientManager();
-		this.minPingTime = settings.getLong(UcmSessionSetting.MIN_PING_TIME);
+		this.minPingTime = Tools.ensureBetween(0, settings.getInteger(UcmSessionSetting.MIN_PING_TIME),
+			UcmSessionFactory.MAX_PING_TIME);
 		this.host = settings.getString(UcmSessionSetting.HOST);
 		this.port = settings.getInteger(UcmSessionSetting.PORT);
 		if ((this.port <= 0) || (this.port > 0xffff)) { throw new Exception(
@@ -211,10 +213,14 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		if (session == null) { return false; }
 		if (!session.isInitialized()) { return false; }
 
-		long now = System.currentTimeMillis();
-		if ((now - p.getLastUsedTime()) <= this.minPingTime) { return true; }
+		// If ping has been disabled, assume it's OK...
+		if (this.minPingTime <= 0) { return true; }
 
-		// Join the binder and the user context and perform the service call
+		// If we have a ping interval, compare it
+		if ((System.currentTimeMillis() - p.getLastUsedTime()) <= TimeUnit.SECONDS
+			.toMillis(this.minPingTime)) { return true; }
+
+		// It's time to ping the server, so do it!
 		try {
 			// Convert the response to a dataBinder
 			DataBinder responseData = session.callService("PING_SERVER").getResponseAsBinder();
