@@ -40,13 +40,64 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 			String.format("Bad URL format for UCM connectivity: [%s]", baseUri)); }
 
 		String scheme = baseUri.getScheme().toLowerCase();
-		boolean ssl = false;
+		UcmSessionSetting.SSLMode sslMode = UcmSessionSetting.SSLMode.NONE;
 		if ("idc".equalsIgnoreCase(scheme)) {
-			ssl = false;
+			sslMode = UcmSessionSetting.SSLMode.NONE;
 		} else if ("idcs".equalsIgnoreCase(scheme)) {
-			ssl = true;
+			sslMode = UcmSessionSetting.SSLMode.SERVER;
 		} else {
 			throw new CalienteException(String.format("Unknown URL scheme [%s] in [%s]", scheme, baseUri));
+		}
+
+		String minPingTime = commandValues.getString(Exporter.MIN_PING_TIME);
+		if (!StringUtils.isEmpty(minPingTime)) {
+			try {
+				settings.put(UcmSessionSetting.MIN_PING_TIME.getLabel(), Integer.valueOf(minPingTime));
+			} catch (NumberFormatException e) {
+				throw new CalienteException(
+					String.format("Bad value for min ping time: [%s] is not a valid integer", minPingTime));
+			}
+		}
+
+		String socketTimeout = commandValues.getString(Exporter.SOCKET_TIMEOUT);
+		if (!StringUtils.isEmpty(socketTimeout)) {
+			try {
+				settings.put(UcmSessionSetting.SOCKET_TIMEOUT.getLabel(), Integer.valueOf(socketTimeout));
+			} catch (NumberFormatException e) {
+				throw new CalienteException(
+					String.format("Bad value for socket timeout: [%s] is not a valid integer", socketTimeout));
+			}
+		}
+
+		String clientCert = commandValues.getString(Exporter.CLIENT_CERT);
+		if (!StringUtils.isEmpty(clientCert)) {
+			sslMode = UcmSessionSetting.SSLMode.CLIENT;
+			settings.put(UcmSessionSetting.CLIENT_CERT_ALIAS.getLabel(), clientCert);
+
+			String clientCertPass = commandValues.getString(Exporter.CLIENT_CERT_PASSWORD);
+			if (!StringUtils.isEmpty(clientCertPass)) {
+				settings.put(UcmSessionSetting.CLIENT_CERT_PASSWORD.getLabel(), clientCertPass);
+			}
+		}
+
+		if (sslMode != UcmSessionSetting.SSLMode.NONE) {
+			String truststore = commandValues.getString(Exporter.TRUSTSTORE);
+			if (!StringUtils.isEmpty(truststore)) {
+				settings.put(UcmSessionSetting.TRUSTSTORE.getLabel(), truststore);
+				String truststorePass = commandValues.getString(Exporter.TRUSTSTORE_PASSWORD);
+				if (!StringUtils.isEmpty(truststorePass)) {
+					settings.put(UcmSessionSetting.TRUSTSTORE_PASSWORD.getLabel(), truststorePass);
+				}
+			}
+
+			String keystore = commandValues.getString(Exporter.KEYSTORE);
+			if (!StringUtils.isEmpty(keystore)) {
+				settings.put(UcmSessionSetting.KEYSTORE.getLabel(), keystore);
+				String keystorePass = commandValues.getString(Exporter.KEYSTORE_PASSWORD);
+				if (!StringUtils.isEmpty(keystorePass)) {
+					settings.put(UcmSessionSetting.KEYSTORE_PASSWORD.getLabel(), keystorePass);
+				}
+			}
 		}
 
 		String host = baseUri.getHost();
@@ -59,8 +110,8 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 			settings.put(UcmSessionSetting.PORT.getLabel(), port);
 		}
 
-		if (ssl) {
-			settings.put(UcmSessionSetting.SSL_MODE.getLabel(), SSLMode.SERVER.name());
+		if (sslMode != SSLMode.NONE) {
+			settings.put(UcmSessionSetting.SSL_MODE.getLabel(), sslMode.name());
 		}
 
 		List<String> paths = new ArrayList<>();
@@ -84,7 +135,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 
 		String password = commandValues.getString(CLIParam.password);
 		if (password != null) {
-			settings.put(UcmSessionSetting.USER.getLabel(), user);
+			settings.put(UcmSessionSetting.PASSWORD.getLabel(), password);
 		}
 
 		return true;
