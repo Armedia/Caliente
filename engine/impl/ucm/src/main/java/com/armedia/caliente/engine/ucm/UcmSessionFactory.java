@@ -47,7 +47,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	private final IdcClientManager manager;
 	private final String host;
 	private final int port;
-	private final UcmSessionSetting.SSLMode ssl;
+	private final UcmSessionSetting.SSLMode sslMode;
 	private final String url;
 	private final String trustStore;
 	private final String trustStorePassword;
@@ -55,6 +55,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	private final String clientStorePassword;
 	private final String clientCertAlias;
 	private final String clientCertPassword;
+	private final String sslAlgorithm;
 	private final Long socketTimeout;
 	private final IdcContextSeed context;
 	private final int minPingTime;
@@ -88,8 +89,9 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 
 		this.context = new IdcContextSeed(userName, password);
 
-		this.ssl = SSLMode.decode(settings.getString(UcmSessionSetting.SSL_MODE));
-		if (this.ssl != SSLMode.NONE) {
+		this.sslMode = SSLMode.decode(settings.getString(UcmSessionSetting.SSL_MODE));
+		this.sslAlgorithm = Tools.toTrimmedString(settings.getString(UcmSessionSetting.SSL_ALGORITHM), true);
+		if (this.sslMode != SSLMode.NONE) {
 
 			KeyStore trustKs = null;
 			String trustStore = settings.getString(UcmSessionSetting.TRUSTSTORE);
@@ -103,7 +105,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 				trustKs = KeyStoreTools.loadKeyStore(this.trustStore, this.trustStorePassword);
 			}
 
-			if (this.ssl == SSLMode.CLIENT) {
+			if (this.sslMode == SSLMode.CLIENT) {
 				KeyStore clientKs = null;
 
 				String clientStore = settings.getString(UcmSessionSetting.KEYSTORE);
@@ -171,7 +173,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		}
 		// If SSL_MODE, use idcs:// insteaed of idc://
 		// Always tack on the port number at the end
-		this.url = String.format("idc%s://%s:%d", (this.ssl != SSLMode.NONE) ? "s" : "", this.host, this.port);
+		this.url = String.format("idc%s://%s:%d", (this.sslMode != SSLMode.NONE) ? "s" : "", this.host, this.port);
 
 		// TODO: Get the cache size configuration
 		this.model = new UcmModel();
@@ -184,15 +186,20 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(this.url));
 		IntradocClientConfig config = client.getConfig();
 		config.setConnectionPool("simple");
-		if (this.trustStore != null) {
-			config.setTrustManagerFile(this.trustStore);
-			config.setTrustManagerPassword(this.trustStorePassword);
-		}
-		if (this.clientStore != null) {
-			config.setKeystoreFile(this.clientStore);
-			config.setKeystorePassword(this.clientStorePassword);
-			config.setKeystoreAlias(this.clientCertAlias);
-			config.setKeystoreAliasPassword(this.clientCertPassword);
+		if (this.sslMode != SSLMode.NONE) {
+			if (!StringUtils.isBlank(this.sslAlgorithm)) {
+				config.setAlgorithm(this.sslAlgorithm);
+			}
+			if (this.trustStore != null) {
+				config.setTrustManagerFile(this.trustStore);
+				config.setTrustManagerPassword(this.trustStorePassword);
+			}
+			if (this.clientStore != null) {
+				config.setKeystoreFile(this.clientStore);
+				config.setKeystorePassword(this.clientStorePassword);
+				config.setKeystoreAlias(this.clientCertAlias);
+				config.setKeystoreAliasPassword(this.clientCertPassword);
+			}
 		}
 		if (this.socketTimeout != null) {
 			config.setSocketTimeout(this.socketTimeout.intValue());
