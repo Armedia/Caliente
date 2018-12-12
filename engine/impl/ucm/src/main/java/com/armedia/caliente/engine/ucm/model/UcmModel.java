@@ -208,13 +208,15 @@ public class UcmModel {
 	protected static final URI getURI(UcmAttributes data) {
 		// Folders are handled first - easiest case
 		if (data.hasAttribute(UcmAtt.fFolderGUID)) { return UcmModel.newFolderURI(data.getString(UcmAtt.fFolderGUID)); }
-		// Next are file shortcuts...
-		if (data.hasAttribute(UcmAtt.fTargetGUID)) {
-			"".hashCode();
-			return UcmModel.newFileLinkURI(data.getString(UcmAtt.fTargetGUID));
-		}
+
+		// Next are file shortcuts, because we need to handle them differently...
+		final String fTargetGUID = data.getString(UcmAtt.fTargetGUID);
+		if (!StringUtils.isBlank(fTargetGUID)) { return UcmModel.newFileLinkURI(fTargetGUID); }
+
 		// Finally, regular files
 		if (data.hasAttribute(UcmAtt.dDocName)) { return UcmModel.newFileURI(data.getString(UcmAtt.dDocName)); }
+
+		// And, of course, when we don't know what to do...
 		throw new UcmRuntimeException(String
 			.format("Could not find either fFolderGUID, dDocName or fTargetGUID in the given attribute set: %s", data));
 	}
