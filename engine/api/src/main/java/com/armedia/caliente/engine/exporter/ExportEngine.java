@@ -4,6 +4,7 @@
 
 package com.armedia.caliente.engine.exporter;
 
+import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -11,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -59,7 +59,8 @@ public abstract class ExportEngine< //
 	EXPORT_CONTEXT extends ExportContext<SESSION, VALUE, EXPORT_CONTEXT_FACTORY>, //
 	EXPORT_CONTEXT_FACTORY extends ExportContextFactory<SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?>, //
 	EXPORT_DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?> //
-> extends TransferEngine<SESSION, VALUE, EXPORT_CONTEXT, EXPORT_CONTEXT_FACTORY, EXPORT_DELEGATE_FACTORY, ExportEngineListener> {
+> extends
+	TransferEngine<SESSION, VALUE, EXPORT_CONTEXT, EXPORT_CONTEXT_FACTORY, EXPORT_DELEGATE_FACTORY, ExportEngineListener> {
 
 	protected static interface TargetSubmitter {
 		public void submit(ExportTarget target) throws ExportException;
@@ -92,106 +93,35 @@ public abstract class ExportEngine< //
 
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
 
-	private class ExportListenerDelegator extends ListenerDelegator<ExportResult> implements ExportEngineListener {
+	private class ExportListenerPropagator extends ListenerPropagator<ExportResult, ExportEngineListener>
+		implements InvocationHandler {
 
-		private final Collection<ExportEngineListener> listeners = getListeners();
-
-		private ExportListenerDelegator(CmfObjectCounter<ExportResult> counter) {
-			super(counter);
+		private ExportListenerPropagator(CmfObjectCounter<ExportResult> counter) {
+			super(counter, getListeners(), ExportEngineListener.class);
 		}
 
 		@Override
-		public void exportStarted(ExportState exportState) {
-			getStoredObjectCounter().reset();
-			for (ExportEngineListener l : this.listeners) {
-				try {
-					l.exportStarted(exportState);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
+		protected void handleMethod(String name, Object[] args) throws Throwable {
+			CmfObjectRef object = null;
+			for (Object o : args) {
+				if (CmfObjectRef.class.isInstance(o)) {
+					object = CmfObjectRef.class.cast(o);
+					break;
 				}
 			}
-		}
-
-		@Override
-		public void objectExportStarted(UUID jobId, CmfObjectRef object, CmfObjectRef referrent) {
-			for (ExportEngineListener l : this.listeners) {
-				try {
-					l.objectExportStarted(jobId, object, referrent);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber) {
-			getStoredObjectCounter().increment(object.getType(), ExportResult.EXPORTED);
-			for (ExportEngineListener l : this.listeners) {
-				try {
-					l.objectExportCompleted(jobId, object, objectNumber);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
-			getStoredObjectCounter().increment(object.getType(), ExportResult.SKIPPED);
-			for (ExportEngineListener l : this.listeners) {
-				try {
-					l.objectSkipped(jobId, object, reason, extraInfo);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
-			getStoredObjectCounter().increment(object.getType(), ExportResult.FAILED);
-			for (ExportEngineListener l : this.listeners) {
-				try {
-					l.objectExportFailed(jobId, object, thrown);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void exportFinished(UUID jobId, Map<CmfType, Long> summary) {
-			for (ExportEngineListener l : this.listeners) {
-				try {
-					l.exportFinished(jobId, summary);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
-			}
-		}
-
-		@Override
-		public void consistencyWarning(UUID jobId, CmfObjectRef object, String fmt, Object... args) {
-			for (ExportEngineListener l : this.listeners) {
-				try {
-					l.consistencyWarning(jobId, object, fmt, args);
-				} catch (Exception e) {
-					if (this.log.isDebugEnabled()) {
-						this.log.error("Exception caught during listener propagation", e);
-					}
-				}
+			switch (name) {
+				case "exportStarted":
+					getStoredObjectCounter().reset();
+					break;
+				case "objectExportCompleted":
+					getStoredObjectCounter().increment(object.getType(), ExportResult.EXPORTED);
+					break;
+				case "objectSkipped":
+					getStoredObjectCounter().increment(object.getType(), ExportResult.SKIPPED);
+					break;
+				case "objectExportFailed":
+					getStoredObjectCounter().increment(object.getType(), ExportResult.FAILED);
+					break;
 			}
 		}
 	}
@@ -205,8 +135,9 @@ public abstract class ExportEngine< //
 	}
 
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
-		final ExportTarget referrent, final ExportTarget target, final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> sourceObject,
-		final EXPORT_CONTEXT ctx, final ExportListenerDelegator listenerDelegator,
+		final ExportTarget referrent, final ExportTarget target,
+		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> sourceObject,
+		final EXPORT_CONTEXT ctx, final ExportListener listener,
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws ExportException, CmfStorageException {
 		try {
 			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
@@ -243,12 +174,12 @@ public abstract class ExportEngine< //
 					String.format("Exception caught attempting to lock a %s for storage", logLabel), e);
 			}
 
-			listenerDelegator.objectExportStarted(exportState.jobId, target, referrent);
+			listener.objectExportStarted(exportState.jobId, target, referrent);
 
 			final Result result = doExportObject(exportState, transformer, filter, referrent, target, sourceObject, ctx,
-				listenerDelegator, statusMap);
+				listener, statusMap);
 			if ((result.objectNumber != null) && (result.object != null)) {
-				listenerDelegator.objectExportCompleted(exportState.jobId, result.object, result.objectNumber);
+				listener.objectExportCompleted(exportState.jobId, result.object, result.objectNumber);
 			} else {
 				switch (result.skipReason) {
 					case ALREADY_STORED:
@@ -266,8 +197,7 @@ public abstract class ExportEngine< //
 					case DEPENDENCY_FAILED: // fall-through
 					case UNSUPPORTED:
 						if (exportState.objectStore.markStoreStatus(target, StoreStatus.SKIPPED, result.extraInfo)) {
-							listenerDelegator.objectSkipped(exportState.jobId, target, result.skipReason,
-								result.extraInfo);
+							listener.objectSkipped(exportState.jobId, target, result.skipReason, result.extraInfo);
 						}
 						break;
 				}
@@ -275,7 +205,7 @@ public abstract class ExportEngine< //
 			return result;
 		} catch (Exception e) {
 			try {
-				listenerDelegator.objectExportFailed(exportState.jobId, target, e);
+				listener.objectExportFailed(exportState.jobId, target, e);
 			} finally {
 				exportState.objectStore.markStoreStatus(target, StoreStatus.FAILED, Tools.dumpStackTrace(e));
 			}
@@ -286,8 +216,9 @@ public abstract class ExportEngine< //
 	}
 
 	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
-		final ExportTarget referrent, final ExportTarget target, final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> sourceObject,
-		final EXPORT_CONTEXT ctx, final ExportListenerDelegator listenerDelegator,
+		final ExportTarget referrent, final ExportTarget target,
+		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> sourceObject,
+		final EXPORT_CONTEXT ctx, final ExportListener listener,
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws ExportException, CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
@@ -373,7 +304,7 @@ public abstract class ExportEngine< //
 				final Result r;
 				try {
 					r = exportObject(exportState, transformer, filter, target, requirement.getExportTarget(),
-						requirement, ctx, listenerDelegator, statusMap);
+						requirement, ctx, listener, statusMap);
 				} catch (Exception e) {
 					// This exception will already be logged...so we simply accept the failure and
 					// report it upwards, without bubbling up the exception to be reported 1000
@@ -464,7 +395,7 @@ public abstract class ExportEngine< //
 				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> antecedent : referenced) {
 					try {
 						exportObject(exportState, transformer, filter, target, antecedent.getExportTarget(), antecedent,
-							ctx, listenerDelegator, statusMap);
+							ctx, listener, statusMap);
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
@@ -557,7 +488,7 @@ public abstract class ExportEngine< //
 				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> successor : referenced) {
 					try {
 						exportObject(exportState, transformer, filter, target, successor.getExportTarget(), successor,
-							ctx, listenerDelegator, statusMap);
+							ctx, listener, statusMap);
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
@@ -593,7 +524,7 @@ public abstract class ExportEngine< //
 			for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> dependent : referenced) {
 				try {
 					exportObject(exportState, transformer, filter, target, dependent.getExportTarget(), dependent, ctx,
-						listenerDelegator, statusMap);
+						listener, statusMap);
 				} catch (Exception e) {
 					// Contrary to previous cases, this isn't a failure because this doesn't
 					// stop the object from being properly represented...
@@ -717,7 +648,8 @@ public abstract class ExportEngine< //
 
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
 		CmfObjectCounter<ExportResult> objectCounter, final SessionFactory<SESSION> sessionFactory,
-		final SessionWrapper<SESSION> baseSession, final TransferContextFactory<SESSION, VALUE, EXPORT_CONTEXT, ?> contextFactory,
+		final SessionWrapper<SESSION> baseSession,
+		final TransferContextFactory<SESSION, VALUE, EXPORT_CONTEXT, ?> contextFactory,
 		final EXPORT_DELEGATE_FACTORY delegateFactory, final Transformer transformer, final ObjectFilter filter)
 		throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
@@ -737,7 +669,8 @@ public abstract class ExportEngine< //
 		if (objectCounter == null) {
 			objectCounter = new CmfObjectCounter<>(ExportResult.class);
 		}
-		final ExportListenerDelegator listenerDelegator = new ExportListenerDelegator(objectCounter);
+		final ExportListenerPropagator listenerDelegator = new ExportListenerPropagator(objectCounter);
+		final ExportEngineListener listener = listenerDelegator.getListenerProxy();
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<>();
 
 		final PooledWorkers<SessionFactory<SESSION>, SessionWrapper<SESSION>, ExportTarget> worker = new PooledWorkers<SessionFactory<SESSION>, SessionWrapper<SESSION>, ExportTarget>() {
@@ -773,8 +706,8 @@ public abstract class ExportEngine< //
 				try {
 					// Begin transaction
 
-					final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> exportDelegate = delegateFactory.newExportDelegate(s,
-						nextType, nextKey);
+					final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> exportDelegate = delegateFactory
+						.newExportDelegate(s, nextType, nextKey);
 					if (exportDelegate == null) {
 						// No object found with that ID...
 						this.log.warn("No {} object found with searchKey[{}]",
@@ -802,7 +735,7 @@ public abstract class ExportEngine< //
 						Result result = null;
 						try {
 							result = exportObject(exportState, transformer, filter, null, target, exportDelegate, ctx,
-								listenerDelegator, statusMap);
+								listener, statusMap);
 						} catch (Exception e) {
 							// Any and all Exceptions have already been processed in exportObject,
 							// so we safely absorb them here. We leave all other Throwables intact
@@ -831,7 +764,7 @@ public abstract class ExportEngine< //
 					// Don't let these failures go unnoticed
 					try {
 						try {
-							listenerDelegator.objectExportFailed(exportState.jobId, target, t);
+							listener.objectExportFailed(exportState.jobId, target, t);
 						} finally {
 							exportState.objectStore.markStoreStatus(target, StoreStatus.FAILED,
 								Tools.dumpStackTrace(t));
@@ -859,7 +792,7 @@ public abstract class ExportEngine< //
 		this.log.debug("Locating export results...");
 		try {
 			// Fire off the workers
-			listenerDelegator.exportStarted(exportState);
+			listener.exportStarted(exportState);
 			worker.start(sessionFactory, threadCount, "Exporter", true);
 			try {
 				output.info("Retrieving the results");
@@ -914,7 +847,7 @@ public abstract class ExportEngine< //
 			} catch (CmfStorageException e) {
 				this.log.warn("Exception caught attempting to get the work summary", e);
 			}
-			listenerDelegator.exportFinished(exportState.jobId, summary);
+			listener.exportFinished(exportState.jobId, summary);
 		}
 	}
 
@@ -928,8 +861,8 @@ public abstract class ExportEngine< //
 		// By default, do nothing...
 	}
 
-	protected abstract void findExportResults(SESSION session, CfgTools configuration, EXPORT_DELEGATE_FACTORY factory, TargetSubmitter handler)
-		throws Exception;
+	protected abstract void findExportResults(SESSION session, CfgTools configuration, EXPORT_DELEGATE_FACTORY factory,
+		TargetSubmitter handler) throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine(String targetName) {
 		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);

@@ -96,10 +96,9 @@ class FolderTreeIterator {
 	}
 
 	private FolderTreeIterator(UcmSession session, FolderLocatorMode searchMode, Object key, Config config) {
-		Objects.requireNonNull(session, "Must provide a non-null session");
+		this.session = Objects.requireNonNull(session, "Must provide a non-null session");
 		this.searchKey = searchMode.sanitizeKey(key);
 		this.searchMode = searchMode;
-		this.session = session;
 		if (config == null) {
 			config = FolderTreeIterator.DEFAULT_CONFIG;
 		}

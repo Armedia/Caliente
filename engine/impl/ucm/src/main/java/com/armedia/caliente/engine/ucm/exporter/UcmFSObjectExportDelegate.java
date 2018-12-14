@@ -147,9 +147,9 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 			UcmFSObject target = null;
 			try {
 				if (getType() == CmfType.DOCUMENT) {
-					target = ctx.getSession().getFolderByGUID(targetGuid);
-				} else {
 					target = ctx.getSession().getFileByGUID(targetGuid);
+				} else {
+					target = ctx.getSession().getFolderByGUID(targetGuid);
 				}
 			} catch (UcmObjectNotFoundException | UcmServiceException e) {
 				throw new ExportException(

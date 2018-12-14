@@ -101,11 +101,10 @@ public class FolderContentsIterator {
 
 	FolderContentsIterator(UcmSession session, FolderLocatorMode folderLocatorMode, Object searchKey,
 		FolderIteratorMode folderIteratorMode, int pageSize) {
-		Objects.requireNonNull(session, "Must provide a non-null session");
-		Objects.requireNonNull(searchKey, "Must provide a non-null search criterion");
+		this.session = Objects.requireNonNull(session, "Must provide a non-null session");
+		this.searchKey = folderLocatorMode
+			.sanitizeKey(Objects.requireNonNull(searchKey, "Must provide a non-null search criterion"));
 		this.folderLocatorMode = folderLocatorMode;
-		this.searchKey = folderLocatorMode.sanitizeKey(searchKey);
-		this.session = session;
 		this.pageSize = Tools.ensureBetween(UcmConstants.MINIMUM_PAGE_SIZE, pageSize, UcmConstants.MAXIMUM_PAGE_SIZE);
 		this.folderIteratorMode = Tools.coalesce(folderIteratorMode, FolderContentsIterator.DEFAULT_MODE);
 	}

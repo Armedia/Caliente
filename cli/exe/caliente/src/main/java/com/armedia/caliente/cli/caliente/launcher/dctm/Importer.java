@@ -11,13 +11,13 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
+import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.importer.ImportEngine;
 
-class Importer extends ImportCommandModule implements DynamicOptions {
+class Importer extends ImportCommandModule implements DynamicCommandOptions {
 
 	private static final Option DEFAULT_PASSWORD = new OptionImpl() //
 		.setLongOpt("default-password") //
@@ -69,8 +69,7 @@ class Importer extends ImportCommandModule implements DynamicOptions {
 
 		settings.put(Setting.IMPORT_MAX_ERRORS.getLabel(), commandValues.getString(CLIParam.error_count));
 		if (commandValues.isPresent(Importer.DEFAULT_PASSWORD)) {
-			settings.put(Setting.DEFAULT_USER_PASSWORD.getLabel(),
-				commandValues.getString(Importer.DEFAULT_PASSWORD));
+			settings.put(Setting.DEFAULT_USER_PASSWORD.getLabel(), commandValues.getString(Importer.DEFAULT_PASSWORD));
 		}
 		return true;
 	}
@@ -87,8 +86,8 @@ class Importer extends ImportCommandModule implements DynamicOptions {
 	}
 
 	@Override
-	public void getDynamicOptions(OptionScheme command) {
-		command //
+	public void getDynamicOptions(String engine, OptionScheme scheme) {
+		scheme //
 			.addGroup(CLIGroup.IMPORT_COMMON) //
 			.addGroup(Importer.OPTIONS) //
 		;

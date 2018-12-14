@@ -65,6 +65,7 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	USER_SOURCE(CmfDataType.STRING),
 	GROUP_SOURCE(CmfDataType.STRING),
 	UNFILED_FOLDER(CmfDataType.STRING),
+	IS_REFERENCE(CmfDataType.BOOLEAN),
 	//
 	;
 

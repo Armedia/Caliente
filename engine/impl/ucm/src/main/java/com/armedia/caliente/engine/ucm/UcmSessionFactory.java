@@ -4,6 +4,7 @@ import java.security.Key;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.PooledObject;
@@ -15,6 +16,7 @@ import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.KeyStoreTools;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.IdcClientManager;
 import oracle.stellent.ridc.IdcContext;
@@ -23,6 +25,9 @@ import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 import oracle.stellent.ridc.protocol.intradoc.IntradocClientConfig;
 
 public class UcmSessionFactory extends SessionFactory<UcmSession> {
+
+	public static final int MAX_PING_TIME = (int) TimeUnit.MINUTES.toSeconds(15);
+	public static final long MAX_SOCKET_TIMEOUT = TimeUnit.MINUTES.toMillis(15);
 
 	private class IdcContextSeed {
 		private final String user;
@@ -42,7 +47,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	private final IdcClientManager manager;
 	private final String host;
 	private final int port;
-	private final UcmSessionSetting.SSLMode ssl;
+	private final UcmSessionSetting.SSLMode sslMode;
 	private final String url;
 	private final String trustStore;
 	private final String trustStorePassword;
@@ -50,8 +55,10 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	private final String clientStorePassword;
 	private final String clientCertAlias;
 	private final String clientCertPassword;
+	private final String sslAlgorithm;
+	private final Long socketTimeout;
 	private final IdcContextSeed context;
-	private final long minPingTime;
+	private final int minPingTime;
 
 	private final UcmModel model;
 
@@ -59,19 +66,32 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		super(settings, crypto);
 
 		this.manager = new IdcClientManager();
-		this.minPingTime = settings.getLong(UcmSessionSetting.MIN_PING_TIME);
+		this.minPingTime = Tools.ensureBetween(0, settings.getInteger(UcmSessionSetting.MIN_PING_TIME),
+			UcmSessionFactory.MAX_PING_TIME);
 		this.host = settings.getString(UcmSessionSetting.HOST);
 		this.port = settings.getInteger(UcmSessionSetting.PORT);
 		if ((this.port <= 0) || (this.port > 0xffff)) { throw new Exception(
 			String.format("Port number must be a number between 1 and 65535 (got %d)", this.port)); }
+
+		Integer socketTimeout = settings.getInteger(UcmSessionSetting.SOCKET_TIMEOUT);
+		if (socketTimeout != null) {
+			this.socketTimeout = Tools.ensureBetween( //
+				0L, //
+				TimeUnit.SECONDS.toMillis(socketTimeout.longValue()), //
+				UcmSessionFactory.MAX_SOCKET_TIMEOUT //
+			);
+		} else {
+			this.socketTimeout = null;
+		}
 
 		String userName = settings.getString(UcmSessionSetting.USER);
 		String password = settings.getString(UcmSessionSetting.PASSWORD);
 
 		this.context = new IdcContextSeed(userName, password);
 
-		this.ssl = SSLMode.decode(settings.getString(UcmSessionSetting.SSL_MODE));
-		if (this.ssl != SSLMode.NONE) {
+		this.sslMode = SSLMode.decode(settings.getString(UcmSessionSetting.SSL_MODE));
+		this.sslAlgorithm = Tools.toTrimmedString(settings.getString(UcmSessionSetting.SSL_ALGORITHM), true);
+		if (this.sslMode != SSLMode.NONE) {
 
 			KeyStore trustKs = null;
 			String trustStore = settings.getString(UcmSessionSetting.TRUSTSTORE);
@@ -85,7 +105,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 				trustKs = KeyStoreTools.loadKeyStore(this.trustStore, this.trustStorePassword);
 			}
 
-			if (this.ssl == SSLMode.CLIENT) {
+			if (this.sslMode == SSLMode.CLIENT) {
 				KeyStore clientKs = null;
 
 				String clientStore = settings.getString(UcmSessionSetting.KEYSTORE);
@@ -153,7 +173,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		}
 		// If SSL_MODE, use idcs:// insteaed of idc://
 		// Always tack on the port number at the end
-		this.url = String.format("idc%s://%s:%d", (this.ssl != SSLMode.NONE) ? "s" : "", this.host, this.port);
+		this.url = String.format("idc%s://%s:%d", (this.sslMode != SSLMode.NONE) ? "s" : "", this.host, this.port);
 
 		// TODO: Get the cache size configuration
 		this.model = new UcmModel();
@@ -164,18 +184,25 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 
 		this.log.trace("UcmSetting the IDC connection URL to [{}]...", this.url);
 		IntradocClient client = IntradocClient.class.cast(this.manager.createClient(this.url));
-
 		IntradocClientConfig config = client.getConfig();
 		config.setConnectionPool("simple");
-		if (this.trustStore != null) {
-			config.setTrustManagerFile(this.trustStore);
-			config.setTrustManagerPassword(this.trustStorePassword);
+		if (this.sslMode != SSLMode.NONE) {
+			if (!StringUtils.isBlank(this.sslAlgorithm)) {
+				config.setAlgorithm(this.sslAlgorithm);
+			}
+			if (this.trustStore != null) {
+				config.setTrustManagerFile(this.trustStore);
+				config.setTrustManagerPassword(this.trustStorePassword);
+			}
+			if (this.clientStore != null) {
+				config.setKeystoreFile(this.clientStore);
+				config.setKeystorePassword(this.clientStorePassword);
+				config.setKeystoreAlias(this.clientCertAlias);
+				config.setKeystoreAliasPassword(this.clientCertPassword);
+			}
 		}
-		if (this.clientStore != null) {
-			config.setKeystoreFile(this.clientStore);
-			config.setKeystorePassword(this.clientStorePassword);
-			config.setKeystoreAlias(this.clientCertAlias);
-			config.setKeystoreAliasPassword(this.clientCertPassword);
+		if (this.socketTimeout != null) {
+			config.setSocketTimeout(this.socketTimeout.intValue());
 		}
 		client.initialize();
 		return new DefaultPooledObject<>(new UcmSession(this.model, client, this.context.newInstance()));
@@ -193,10 +220,14 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		if (session == null) { return false; }
 		if (!session.isInitialized()) { return false; }
 
-		long now = System.currentTimeMillis();
-		if ((now - p.getLastUsedTime()) <= this.minPingTime) { return true; }
+		// If ping has been disabled, assume it's OK...
+		if (this.minPingTime <= 0) { return true; }
 
-		// Join the binder and the user context and perform the service call
+		// If we have a ping interval, compare it
+		if ((System.currentTimeMillis() - p.getLastUsedTime()) <= TimeUnit.SECONDS
+			.toMillis(this.minPingTime)) { return true; }
+
+		// It's time to ping the server, so do it!
 		try {
 			// Convert the response to a dataBinder
 			DataBinder responseData = session.callService("PING_SERVER").getResponseAsBinder();

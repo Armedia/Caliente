@@ -16,7 +16,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
 
-import org.apache.chemistry.opencmis.commons.impl.IOUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
 

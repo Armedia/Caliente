@@ -13,14 +13,14 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
+import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.commons.utilities.Tools;
 
-class Exporter extends ExportCommandModule implements DynamicOptions {
+class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 
 	private static final Option COPY_CONTENT = new OptionImpl() //
 		.setLongOpt("copy-content") //
@@ -139,8 +139,8 @@ class Exporter extends ExportCommandModule implements DynamicOptions {
 	}
 
 	@Override
-	public void getDynamicOptions(OptionScheme command) {
-		command //
+	public void getDynamicOptions(String engine, OptionScheme scheme) {
+		scheme //
 			.addGroup(CLIGroup.EXPORT_COMMON) //
 			.addGroup(Exporter.OPTIONS) //
 		;

@@ -1,5 +1,8 @@
 package com.armedia.caliente.engine;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -93,14 +96,25 @@ public abstract class TransferEngine< //
 		return subclass.cast(m.get(targetName));
 	}
 
-	protected class ListenerDelegator<R extends Enum<R>> {
+	protected abstract class ListenerPropagator<R extends Enum<R>, L> implements InvocationHandler {
 		protected final Logger log = TransferEngine.this.log;
 
 		private final CmfObjectCounter<R> counter;
+		private final Collection<L> listeners;
+		protected final L listenerProxy;
 
-		protected ListenerDelegator(CmfObjectCounter<R> counter) {
+		protected ListenerPropagator(CmfObjectCounter<R> counter, Collection<L> listeners, Class<L> listenerClass) {
 			if (counter == null) { throw new IllegalArgumentException("Must provide a counter"); }
 			this.counter = counter;
+			this.listeners = listeners;
+			this.listenerProxy = listenerClass
+				.cast(Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {
+					listenerClass
+			}, this));
+		}
+
+		public final L getListenerProxy() {
+			return this.listenerProxy;
 		}
 
 		public final CmfObjectCounter<R> getStoredObjectCounter() {
@@ -117,6 +131,28 @@ public abstract class TransferEngine< //
 
 		public final Map<R, Long> getCounters(CmfType type) {
 			return this.counter.getCounters(type);
+		}
+
+		@Override
+		public final Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			handleMethod(method.getName(), args);
+			propagate(method, args);
+			return null;
+		}
+
+		protected void handleMethod(String name, Object[] args) throws Throwable {
+		}
+
+		protected final void propagate(Method method, Object[] args) {
+			for (L l : this.listeners) {
+				try {
+					method.invoke(l, args);
+				} catch (Throwable t) {
+					if (this.log.isDebugEnabled()) {
+						this.log.error("Exception caught during listener propagation", t);
+					}
+				}
+			}
 		}
 	}
 

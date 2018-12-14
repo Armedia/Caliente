@@ -4,22 +4,34 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclEntryFlag;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
 import java.nio.file.attribute.AclFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.DosFileAttributeView;
+import java.nio.file.attribute.DosFileAttributes;
+import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.FileOwnerAttributeView;
 import java.nio.file.attribute.GroupPrincipal;
 import java.nio.file.attribute.PosixFileAttributeView;
 import java.nio.file.attribute.PosixFileAttributes;
+import java.nio.file.attribute.UserDefinedFileAttributeView;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.activation.MimeType;
 
@@ -45,9 +57,31 @@ import com.armedia.caliente.store.tools.MimeTools;
 
 public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
+	private static final String EXT_ATT_PREFIX = "cmfext";
+	private static final String EXT_ATT_FORMAT = String.format("%s:%%s", LocalFileExportDelegate.EXT_ATT_PREFIX);
+	private static final String DOS_ATT_PREFIX = "cmfdos";
+	private static final String DOS_ATT_FORMAT = String.format("%s:%%s", LocalFileExportDelegate.DOS_ATT_PREFIX);
+
+	private final Map<Class<? extends FileAttributeView>, FileAttributeView> attributeViews = new HashMap<>();
+
 	protected LocalFileExportDelegate(LocalExportDelegateFactory factory, LocalRoot root, LocalFile object)
 		throws Exception {
 		super(factory, root, LocalFile.class, object);
+	}
+
+	protected <T extends FileAttributeView> T getFileAttributeView(Path path, Class<T> klazz) {
+		if (this.attributeViews.containsKey(klazz)) { return klazz.cast(this.attributeViews.get(klazz)); }
+		T view = null;
+		if (this.object.isSymbolicLink()) {
+			view = Files.getFileAttributeView(path, klazz, LinkOption.NOFOLLOW_LINKS);
+		} else {
+			Files.getFileAttributeView(path, klazz);
+		}
+
+		if (view != null) {
+			this.attributeViews.put(klazz, view);
+		}
+		return null;
 	}
 
 	@Override
@@ -58,10 +92,22 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	}
 
 	protected UserPrincipal getOwner(Path path) {
-		FileOwnerAttributeView owner = Files.getFileAttributeView(path, FileOwnerAttributeView.class);
+		FileOwnerAttributeView owner = getFileAttributeView(path, FileOwnerAttributeView.class);
 		if (owner != null) {
 			try {
 				return owner.getOwner();
+			} catch (IOException e) {
+				this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
+			}
+		}
+		return null;
+	}
+
+	protected GroupPrincipal getGroup(Path path) {
+		PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
+		if (posix != null) {
+			try {
+				return posix.readAttributes().group();
 			} catch (IOException e) {
 				this.log.warn("Unexpected exception reading ownership information from [{}]", path, e);
 			}
@@ -86,7 +132,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		}
 
 		Path path = this.object.getAbsolute().toPath();
-		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
+		PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
 
 		UserPrincipal owner = getOwner(path);
 		if (owner != null) {
@@ -110,9 +156,14 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 
 	@Override
 	protected int calculateDependencyTier(LocalRoot root, LocalFile file) throws Exception {
-		if (file.isFolder()) { return file.getPathCount() - 1; }
-		// TODO: Symbolic links should be handled properly here
-		return 0;
+		int ret = 0;
+		if (file.isFolder()) {
+			ret = file.getPathCount() - 1;
+		}
+		if (file.isSymbolicLink()) {
+			ret++;
+		}
+		return ret;
 	}
 
 	@Override
@@ -128,9 +179,12 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		object.setAttribute(att);
 
 		Path path = file.toPath();
-		BasicFileAttributeView basic = Files.getFileAttributeView(path, BasicFileAttributeView.class);
-		AclFileAttributeView acl = Files.getFileAttributeView(path, AclFileAttributeView.class);
-		PosixFileAttributeView posix = Files.getFileAttributeView(path, PosixFileAttributeView.class);
+		final BasicFileAttributeView basic = getFileAttributeView(path, BasicFileAttributeView.class);
+		final DosFileAttributeView dos = getFileAttributeView(path, DosFileAttributeView.class);
+		final AclFileAttributeView acl = getFileAttributeView(path, AclFileAttributeView.class);
+		final PosixFileAttributeView posix = getFileAttributeView(path, PosixFileAttributeView.class);
+		final UserDefinedFileAttributeView extendedAtts = getFileAttributeView(path,
+			UserDefinedFileAttributeView.class);
 
 		// Ok... we have the attribute views, export the information
 		try {
@@ -147,6 +201,53 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			att = new CmfAttribute<>(IntermediateAttribute.LAST_ACCESS_DATE, CmfDataType.DATETIME, false);
 			att.setValue(new CmfValue(new Date(basicAtts.lastAccessTime().toMillis())));
 			object.setAttribute(att);
+
+			if (extendedAtts != null) {
+				for (String name : extendedAtts.list()) {
+					int bytes = extendedAtts.size(name);
+					if (bytes == 0) {
+						continue;
+					}
+
+					ByteBuffer buf = ByteBuffer.allocate(bytes);
+					extendedAtts.read(name, buf);
+					buf.flip();
+					att = new CmfAttribute<>(String.format(LocalFileExportDelegate.EXT_ATT_FORMAT, name),
+						CmfDataType.BASE64_BINARY, false);
+					byte[] data = null;
+					if (buf.hasArray()) {
+						data = buf.array();
+					} else {
+						data = new byte[bytes];
+						buf.get(data);
+					}
+					att.setValue(new CmfValue(data));
+					object.setAttribute(att);
+				}
+			}
+
+			if (dos != null) {
+				DosFileAttributes atts = dos.readAttributes();
+				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "hidden"),
+					CmfDataType.BOOLEAN, false);
+				att.setValue(new CmfValue(atts.isHidden()));
+				object.setAttribute(att);
+
+				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "system"),
+					CmfDataType.BOOLEAN, false);
+				att.setValue(new CmfValue(atts.isSystem()));
+				object.setAttribute(att);
+
+				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "archive"),
+					CmfDataType.BOOLEAN, false);
+				att.setValue(new CmfValue(atts.isArchive()));
+				object.setAttribute(att);
+
+				att = new CmfAttribute<>(String.format(LocalFileExportDelegate.DOS_ATT_FORMAT, "readonly"),
+					CmfDataType.BOOLEAN, false);
+				att.setValue(new CmfValue(atts.isReadOnly()));
+				object.setAttribute(att);
+			}
 
 			if (getType() == CmfType.DOCUMENT) {
 				att = new CmfAttribute<>(IntermediateAttribute.CONTENT_STREAM_LENGTH, CmfDataType.DOUBLE, false);
@@ -183,15 +284,14 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				// TODO: Before we can do this, we have to come up with a neutral, portable
 				// mechanism to describe an ACL such that it works for ALL CMS engines...and this is
 				// quite the conundrum to say the least...
-				/*
 				for (AclEntry e : acl.getAcl()) {
+					AclEntryType type = e.type();
 					UserPrincipal principal = e.principal();
 					for (AclEntryFlag f : e.flags()) {
 					}
 					for (AclEntryPermission p : e.permissions()) {
 					}
 				}
-				*/
 			}
 		} catch (IOException e) {
 			throw new ExportException(String.format("Failed to collect the attribute information for [%s]", file), e);

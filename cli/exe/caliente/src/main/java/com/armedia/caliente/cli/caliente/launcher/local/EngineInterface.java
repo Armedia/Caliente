@@ -7,9 +7,10 @@ import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
+import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
 import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
+import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -17,7 +18,7 @@ import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
 import com.armedia.caliente.engine.local.importer.LocalImportEngine;
 
-public class EngineInterface extends AbstractEngineInterface implements DynamicOptions {
+public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
 	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {
 
@@ -63,11 +64,13 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicO
 	}
 
 	@Override
-	public void getDynamicOptions(OptionScheme command) {
-		command //
-			.addGroup(CLIGroup.STORE) //
-			.addGroup(CLIGroup.MAIL) //
-		;
+	public void getDynamicOptions(CalienteCommand command, OptionScheme scheme) {
+		if (command.isRequiresStorage()) {
+			scheme //
+				.addGroup(CLIGroup.STORE) //
+				.addGroup(CLIGroup.MAIL) //
+			;
+		}
 	}
 
 }
