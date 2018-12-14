@@ -12,14 +12,14 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
-import com.armedia.caliente.cli.caliente.launcher.DynamicOptions;
+import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.commons.utilities.Tools;
 
-class Importer extends ImportCommandModule implements DynamicOptions {
+class Importer extends ImportCommandModule implements DynamicCommandOptions {
 
 	private static final Option ATTRIBUTE_MAP = new OptionImpl() //
 		.setLongOpt("attribute-map") //
@@ -98,8 +98,7 @@ class Importer extends ImportCommandModule implements DynamicOptions {
 			Tools.joinCSVEscaped(commandValues.getAllStrings(Importer.CONTENT_MODEL)));
 
 		if (commandValues.isPresent(Importer.ATTRIBUTE_MAP)) {
-			settings.put(AlfSetting.ATTRIBUTE_MAPPING.getLabel(),
-				commandValues.getString(Importer.ATTRIBUTE_MAP));
+			settings.put(AlfSetting.ATTRIBUTE_MAPPING.getLabel(), commandValues.getString(Importer.ATTRIBUTE_MAP));
 		}
 
 		return true;
@@ -117,8 +116,8 @@ class Importer extends ImportCommandModule implements DynamicOptions {
 	}
 
 	@Override
-	public void getDynamicOptions(OptionScheme command) {
-		command //
+	public void getDynamicOptions(String engine, OptionScheme scheme) {
+		scheme //
 			.addGroup(CLIGroup.IMPORT_COMMON) //
 			.addGroup(Importer.OPTIONS) //
 		;

@@ -11,13 +11,15 @@ public enum UcmSessionSetting implements ConfigurationSetting {
 	HOST, //
 	PORT(4444), //
 	SSL_MODE(SSLMode.NONE.name()),
+	SSL_ALGORITHM, //
 	TRUSTSTORE(System.getProperty("javax.net.ssl.trustStore")), //
 	TRUSTSTORE_PASSWORD(System.getProperty("javax.net.ssl.trustStorePassword")), //
 	KEYSTORE(System.getProperty("javax.net.ssl.keyStore")), //
 	KEYSTORE_PASSWORD(System.getProperty("javax.net.ssl.keyStorePassword")), //
 	CLIENT_CERT_ALIAS, //
 	CLIENT_CERT_PASSWORD, //
-	MIN_PING_TIME(TimeUnit.MINUTES.toMillis(2)), //
+	MIN_PING_TIME(TimeUnit.MINUTES.toSeconds(1)), //
+	SOCKET_TIMEOUT, //
 	//
 	;
 

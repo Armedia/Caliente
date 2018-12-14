@@ -21,36 +21,36 @@ public class CmisExportDelegateFactory
 		super(engine, configuration);
 	}
 
+	protected final <T> T checkedCast(CmisObject obj, Class<T> klazz, CmfType type, String searchKey)
+		throws ExportException {
+		if (klazz.isInstance(obj)) { return klazz.cast(obj); }
+		throw new ExportException(String.format("Object with ID [%s] (class %s) is not a %s-type (%s archetype)",
+			searchKey, obj.getClass().getCanonicalName(), klazz.getSimpleName(), type));
+	}
+
 	@Override
 	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfType type, String searchKey)
 		throws Exception {
 		CmisObject obj = session.getObject(searchKey);
 		switch (type) {
 			case FOLDER:
-				if (obj instanceof Folder) { return new CmisFolderDelegate(this, session, Folder.class.cast(obj)); }
-				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Folder-type",
-					searchKey, obj.getClass().getCanonicalName()));
+				return new CmisFolderDelegate(this, session, checkedCast(obj, Folder.class, type, searchKey));
+
 			case DOCUMENT:
-				if (obj instanceof Document) {
-					// Is this the PWC? If so, then don't include it...
-					Document doc = Document.class.cast(obj);
-					if ((doc.isPrivateWorkingCopy() == Boolean.TRUE) || Tools.equals("pwc", doc.getVersionLabel())) {
-						// We will not include the PWC in an export
-						doc = doc.getObjectOfLatestVersion(false);
-						if (doc == null) { return null; }
-					}
-					return new CmisDocumentDelegate(this, session, doc);
+				// Is this the PWC? If so, then don't include it...
+				Document doc = checkedCast(obj, Document.class, type, searchKey);
+				if ((doc.isPrivateWorkingCopy() == Boolean.TRUE) || Tools.equals("pwc", doc.getVersionLabel())) {
+					// We will not include the PWC in an export
+					doc = doc.getObjectOfLatestVersion(false);
+					if (doc == null) { return null; }
 				}
-				throw new ExportException(String.format("Object with ID [%s] (class %s) is not a Document-type",
-					searchKey, obj.getClass().getCanonicalName()));
+				return new CmisDocumentDelegate(this, session, doc);
+
 			case TYPE:
-				if (obj instanceof ObjectType) {
-					ObjectType objectType = ObjectType.class.cast(obj);
-					if (objectType.isBaseType()) { return null; }
-					return new CmisObjectTypeDelegate(this, session, objectType);
-				}
-				throw new ExportException(String.format("Object with ID [%s] (class %s) is not an ObjectType-type",
-					searchKey, obj.getClass().getCanonicalName()));
+				ObjectType objectType = checkedCast(obj, ObjectType.class, type, searchKey);
+				if (objectType.isBaseType()) { return null; }
+				return new CmisObjectTypeDelegate(this, session, objectType);
+
 			case USER:
 			case GROUP:
 			default:

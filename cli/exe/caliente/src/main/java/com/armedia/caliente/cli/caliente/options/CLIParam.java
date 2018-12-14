@@ -120,6 +120,7 @@ public enum CLIParam implements OptionWrapper {
 	exclude_types( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
+			.setValueSep(',') //
 			.setArgumentName("object-type") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfType.class)) //
 			.setDescription("Object types to exclude from processing") //
@@ -199,6 +200,7 @@ public enum CLIParam implements OptionWrapper {
 	mail_bcc( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
+			.setValueSep(',') //
 			.setArgumentName("email") //
 			.setValueFilter(CLIFilters.EMAIL_FILTER) //
 			.setDescription("Blind Carbon Copy Recipients for the status e-mail") //
@@ -207,6 +209,7 @@ public enum CLIParam implements OptionWrapper {
 	mail_cc( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
+			.setValueSep(',') //
 			.setArgumentName("email") //
 			.setValueFilter(CLIFilters.EMAIL_FILTER) //
 			.setDescription("Carbon Copy Recipients for the status e-mail") //
@@ -256,6 +259,7 @@ public enum CLIParam implements OptionWrapper {
 	mail_to( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
+			.setValueSep(',') //
 			.setArgumentName("email") //
 			.setValueFilter(CLIFilters.EMAIL_FILTER) //
 			.setDescription("Recipients for the status e-mail") //
@@ -272,6 +276,7 @@ public enum CLIParam implements OptionWrapper {
 		new OptionImpl() //
 			.setLongOpt("manifest-outcomes") //
 			.setArgumentLimits(1, -1) //
+			.setValueSep(',') //
 			.setArgumentName("export-outcome") //
 			.setValueFilter(new EnumValueFilter<>(false, ExportResult.class)) //
 			.setDescription("The export outcomes to include in the manifest (not specified = all outcomes)") //
@@ -281,6 +286,7 @@ public enum CLIParam implements OptionWrapper {
 		new OptionImpl() //
 			.setLongOpt("manifest-outcomes") //
 			.setArgumentLimits(1, -1) //
+			.setValueSep(',') //
 			.setArgumentName("import-outcome") //
 			.setValueFilter(new EnumValueFilter<>(false, ImportResult.class)) //
 			.setDescription("The import outcomes to include in the manifest (not specified = all outcomes)") //
@@ -289,6 +295,7 @@ public enum CLIParam implements OptionWrapper {
 	manifest_types( //
 		new OptionImpl() //
 			.setArgumentLimits(1, -1) //
+			.setValueSep(',') //
 			.setArgumentName("type") //
 			.setValueFilter(new EnumValueFilter<>(false, CmfType.class)) //
 			.setDescription("The object types to include in the manifest (not specified = all types)") //

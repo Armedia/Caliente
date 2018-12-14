@@ -64,6 +64,7 @@ public class UcmModel {
 	private static final int MAX_OBJECT_COUNT = 1000000;
 
 	private static final String FILE_SCHEME = "file";
+	private static final String FILELINK_SCHEME = "filelink";
 	private static final String FOLDER_SCHEME = "folder";
 	private static final String NULL_SCHEME = "null";
 
@@ -205,16 +206,26 @@ public class UcmModel {
 	}
 
 	protected static final URI getURI(UcmAttributes data) {
-		if (data.hasAttribute(UcmAtt.dDocName)) { return UcmModel.newFileURI(data.getString(UcmAtt.dDocName)); }
+		// Folders are handled first - easiest case
 		if (data.hasAttribute(UcmAtt.fFolderGUID)) { return UcmModel.newFolderURI(data.getString(UcmAtt.fFolderGUID)); }
-		throw new UcmRuntimeException(
-			String.format("Could not find either dDocName or fFolderGUID in the given attribute set: %s", data));
+
+		// Next are file shortcuts, because we need to handle them differently...
+		final String fTargetGUID = data.getString(UcmAtt.fTargetGUID);
+		if (!StringUtils.isBlank(fTargetGUID)) { return UcmModel.newFileLinkURI(fTargetGUID); }
+
+		// Finally, regular files
+		if (data.hasAttribute(UcmAtt.dDocName)) { return UcmModel.newFileURI(data.getString(UcmAtt.dDocName)); }
+
+		// And, of course, when we don't know what to do...
+		throw new UcmRuntimeException(String
+			.format("Could not find either fFolderGUID, dDocName or fTargetGUID in the given attribute set: %s", data));
 	}
 
 	protected static final UcmUniqueURI getUniqueURI(UcmAttributes data) {
 		if (data == null) { return null; }
 		URI uri = UcmModel.getURI(data);
 		if (uri == null) { return null; }
+		if (UcmModel.isShortcut(data)) { return new UcmUniqueURI(uri); }
 		if (UcmModel.isFileURI(uri)) {
 			final String dID = data.getString(UcmAtt.dID);
 			try {
@@ -234,6 +245,11 @@ public class UcmModel {
 	protected static final URI newFileURI(String ssp) {
 		if (StringUtils.isEmpty(ssp)) { return null; }
 		return UcmModel.newURI(UcmModel.FILE_SCHEME, ssp, null);
+	}
+
+	protected static final URI newFileLinkURI(String ssp) {
+		if (StringUtils.isEmpty(ssp)) { return null; }
+		return UcmModel.newURI(UcmModel.FILELINK_SCHEME, ssp, "0");
 	}
 
 	protected static final URI newFolderURI(String ssp) {
@@ -338,7 +354,13 @@ public class UcmModel {
 
 	public static final boolean isFileURI(URI uri) {
 		Objects.requireNonNull(uri, "Must provide a non-null URI to check");
-		return UcmModel.FILE_SCHEME.equals(uri.getScheme());
+		final String scheme = uri.getScheme();
+		return UcmModel.FILE_SCHEME.equals(scheme) || UcmModel.FILELINK_SCHEME.equals(scheme);
+	}
+
+	public static final boolean isFileLinkURI(URI uri) {
+		Objects.requireNonNull(uri, "Must provide a non-null URI to check");
+		return UcmModel.FILELINK_SCHEME.equals(uri.getScheme());
 	}
 
 	public static final boolean isFolderURI(URI uri) {
@@ -545,15 +567,15 @@ public class UcmModel {
 							ServiceResponse response = null;
 							DataBinder responseData = null;
 							final UcmAtt identifierAtt;
-							final String serviceName;
+							final UcmAtt uriAtt;
+							final String serviceName = "FLD_INFO";
 							switch (type) {
 								case FILE:
-									identifierAtt = UcmAtt.dDocName;
-									serviceName = "DOC_INFO_BY_NAME";
+									identifierAtt = UcmAtt.fFileGUID;
+									uriAtt = UcmAtt.dDocName;
 									break;
 								case FOLDER:
-									identifierAtt = UcmAtt.fFolderGUID;
-									serviceName = "FLD_INFO";
+									uriAtt = identifierAtt = UcmAtt.fFolderGUID;
 									break;
 
 								default:
@@ -583,16 +605,11 @@ public class UcmModel {
 								throw e;
 							}
 
-							final UcmAttributes attributes;
-							if (type == UcmObjectType.FILE) {
-								attributes = buildAttributesFromDocInfo(responseData, history, renditions);
-							} else {
-								attributes = buildAttributesFromFldInfo(responseData);
-							}
+							final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
 							if (attributes == null) { throw new UcmServiceException(
 								String.format("%s GUID [%s] was found via %s(%s=%s), didn't contain any data?!?",
 									type.name(), guid, serviceName, identifierAtt.name(), guid)); }
-							String uriIdentifier = data.get().getString(identifierAtt);
+							String uriIdentifier = attributes.getString(uriAtt);
 							if (uriIdentifier != null) {
 								URI uri = UcmModel.getURI(attributes);
 								data.set(newFSObject(uri, attributes));
@@ -656,12 +673,15 @@ public class UcmModel {
 		}
 
 		final boolean file;
+		final boolean link;
 		if (UcmModel.isFileURI(uri)) {
 			// The SSP is the dDocName
 			file = true;
+			link = UcmModel.isFileLinkURI(uri);
 		} else if (UcmModel.isFolderURI(uri)) {
 			// The SSP is the fFolderGUID
 			file = false;
+			link = false;
 		} else {
 			// WTF?? Invalid URI
 			throw new IllegalArgumentException(String.format("The URI [%s] doesn't point to a valid object", uri));
@@ -683,7 +703,7 @@ public class UcmModel {
 							final UcmAtt identifierAtt;
 							final String serviceName;
 							final String searchKey;
-							if (file) {
+							if (file && !link) {
 								String id = uri.getFragment();
 								if (id != null) {
 									serviceName = "DOC_INFO";
@@ -695,7 +715,7 @@ public class UcmModel {
 									searchKey = uri.getSchemeSpecificPart();
 								}
 							} else {
-								identifierAtt = UcmAtt.fFolderGUID;
+								identifierAtt = (file ? UcmAtt.fFileGUID : UcmAtt.fFolderGUID);
 								serviceName = "FLD_INFO";
 								searchKey = uri.getSchemeSpecificPart();
 							}
@@ -722,7 +742,7 @@ public class UcmModel {
 							}
 
 							final UcmAttributes attributes;
-							if (file) {
+							if (file && !link) {
 								attributes = buildAttributesFromDocInfo(responseData, history, renditions);
 							} else {
 								attributes = buildAttributesFromFldInfo(responseData);
@@ -1174,8 +1194,9 @@ public class UcmModel {
 										name = o.getString(UcmAtt.fFolderName);
 									}
 									children.put(name, childUri);
-									dataObjects.put(name, newFSObject(childUri, o));
-									handler.handleObject(s, it.getCurrentPos(), childUri, newFSObject(childUri, o));
+									UcmFSObject childObject = newFSObject(childUri, o);
+									dataObjects.put(name, childObject);
+									handler.handleObject(s, it.getCurrentPos(), childUri, childObject);
 								}
 								rawChildren.set(dataObjects);
 								UcmAttributes folderAtts = it.getFolder();
@@ -1612,4 +1633,5 @@ public class UcmModel {
 		}
 		return new TreeMap<>(renditions);
 	}
+
 }

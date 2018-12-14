@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +45,8 @@ public class LocalFile {
 	private final String name;
 	private final int pathCount;
 	private final boolean folder;
+	private final boolean regularFile;
+	private final boolean symbolicLink;
 
 	public LocalFile(LocalRoot root, String path) throws IOException {
 		this.root = root;
@@ -60,7 +64,11 @@ public class LocalFile {
 		File parentFile = f.getParentFile();
 		this.parentPath = (parentFile != null ? parentFile.getPath() : null);
 		this.name = f.getName();
-		this.folder = this.absoluteFile.isDirectory();
+
+		Path p = this.absoluteFile.toPath();
+		this.symbolicLink = Files.isSymbolicLink(p);
+		this.regularFile = Files.isRegularFile(p);
+		this.folder = Files.isDirectory(p);
 	}
 
 	public String getId() {
@@ -73,6 +81,14 @@ public class LocalFile {
 
 	public boolean isFolder() {
 		return this.folder;
+	}
+
+	public boolean isRegularFile() {
+		return this.regularFile;
+	}
+
+	public boolean isSymbolicLink() {
+		return this.symbolicLink;
 	}
 
 	public String getFullPath() {
