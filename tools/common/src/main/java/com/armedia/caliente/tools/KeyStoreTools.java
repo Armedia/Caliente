@@ -42,10 +42,11 @@ public class KeyStoreTools {
 				if (m == null) {
 					continue;
 				}
-				c = m.get(s.getAlgorithm().toUpperCase());
+				String key = s.getAlgorithm();
+				c = m.get(key);
 				if (c == null) {
 					c = new TreeSet<>();
-					m.put(s.getAlgorithm(), c);
+					m.put(key, c);
 				}
 				c.add(p.getName());
 			}
