@@ -124,7 +124,12 @@ public class KeyStoreTools {
 	 * @param pass
 	 * @param type
 	 * @return an open keystore loaded from the given path
-	 * @throws KeyStoreException
+	 * @throws FileExistsException
+	 *             if the file exists, but is not a regular file
+	 * @throws FileNotFoundException
+	 *             if the file doesn't exist
+	 * @throws AccessDeniedException
+	 *             if the file exists, is a regular file, but can't be read
 	 */
 	public static KeyStore loadKeyStore(String path, String pass, String type) throws IOException, KeyStoreException {
 		File f = new File(path);
