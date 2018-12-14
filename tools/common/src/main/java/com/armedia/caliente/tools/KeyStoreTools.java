@@ -1,6 +1,5 @@
 package com.armedia.caliente.tools;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -21,6 +20,9 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.io.FileExistsException;
+import org.apache.commons.io.IOUtils;
+
+import com.armedia.commons.utilities.BinaryMemoryBuffer;
 
 public class KeyStoreTools {
 
@@ -92,20 +94,32 @@ public class KeyStoreTools {
 		}
 
 		final char[] passChars = (pass != null ? pass.toCharArray() : null);
-		// Use a 1MB buffer...just in case...
-		final int bufSize = 1024 * 1024;
-		in = new BufferedInputStream(in, bufSize);
+		BinaryMemoryBuffer buf = null;
+		if (types.size() > 1) {
+			// Pull the entire KeyStore into memory, so it's easier to scan
+			// over it repeatedly if necessary
+			buf = new BinaryMemoryBuffer();
+			try {
+				IOUtils.copy(in, buf);
+			} finally {
+				buf.close();
+			}
+		}
 		for (String t : types) {
+			if (buf != null) {
+				// If we're having to scan over the keystore repeatedly...
+				in = buf.getInputStream();
+			}
 			final KeyStore ks = KeyStore.getInstance(t);
-			in.mark(bufSize);
 			try {
 				ks.load(in, passChars);
 				return ks;
 			} catch (Exception e) {
-				in.reset();
 				// This type failed... try another?
 				// TODO: Should I analyze this exception more in depth to identify if this is a
 				// finalizing error?
+			} finally {
+				in.close();
 			}
 		}
 		throw new KeyStoreException(String.format("Failed to load the keystore using types %s and %s password", types,
