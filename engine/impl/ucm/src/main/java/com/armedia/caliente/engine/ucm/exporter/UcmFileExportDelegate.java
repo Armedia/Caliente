@@ -24,8 +24,8 @@ import com.armedia.caliente.engine.ucm.model.UcmRenditionInfo;
 import com.armedia.caliente.engine.ucm.model.UcmRevision;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -81,8 +81,13 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 	protected boolean marshal(UcmExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 
-		UcmFileHistory history = getHistory(ctx);
-		boolean latest = (history.getLastRevision().getRevisionId() == this.object.getRevisionNumber());
+		final boolean latest;
+		if (this.object.isShortcut()) {
+			latest = true;
+		} else {
+			UcmFileHistory history = getHistory(ctx);
+			latest = (history.getLastRevision().getRevisionId() == this.object.getRevisionNumber());
+		}
 		CmfAttribute<CmfValue> latestVersion = new CmfAttribute<>(UcmAtt.cmfLatestVersion.name(), CmfDataType.BOOLEAN,
 			false, Collections.singleton(new CmfValue(latest)));
 		object.setAttribute(latestVersion);
@@ -96,25 +101,39 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 		if (!super.getDataProperties(ctx, properties, object)) { return false; }
 		CmfProperty<CmfValue> p = null;
 
-		UcmFileHistory history = getHistory(ctx);
-
-		p = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfDataType.BOOLEAN,
-			new CmfValue(object.isLatestRevision()));
-		properties.add(p);
-
 		p = new CmfProperty<>(IntermediateProperty.IS_UNFILED, CmfDataType.BOOLEAN, new CmfValue(object.isUnfiled()));
 		properties.add(p);
 
+		final boolean newestVersion;
+		final int versionCount;
+		final int versionIndex;
+		final int versionHeadIndex;
+		if (this.object.isShortcut()) {
+			newestVersion = true;
+			versionCount = 1;
+			versionIndex = 1;
+			versionHeadIndex = 1;
+		} else {
+			UcmFileHistory history = getHistory(ctx);
+			newestVersion = object.isLatestRevision();
+			versionCount = history.getRevisionCount();
+			versionIndex = this.object.getRevisionNumber();
+			versionHeadIndex = history.getLastRevision().getRevisionId();
+		}
+
+		p = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfDataType.BOOLEAN, new CmfValue(newestVersion));
+		properties.add(p);
+
 		p = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,
-			new CmfValue(history.getRevisionCount()));
+			new CmfValue(versionCount));
 		properties.add(p);
 
 		p = new CmfProperty<>(IntermediateProperty.VERSION_INDEX, IntermediateProperty.VERSION_INDEX.type,
-			new CmfValue(this.object.getRevisionNumber()));
+			new CmfValue(versionIndex));
 		properties.add(p);
 
 		p = new CmfProperty<>(IntermediateProperty.VERSION_HEAD_INDEX, IntermediateProperty.VERSION_HEAD_INDEX.type,
-			new CmfValue(history.getLastRevision().getRevisionId()));
+			new CmfValue(versionHeadIndex));
 		properties.add(p);
 
 		return true;
@@ -124,6 +143,10 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 	protected Collection<UcmExportDelegate<?>> identifyAntecedents(CmfObject<CmfValue> marshalled, UcmExportContext ctx)
 		throws Exception {
 		Collection<UcmExportDelegate<?>> antecedents = super.identifyAntecedents(marshalled, ctx);
+
+		// If this is a shortcut, don't scan the history...
+		if (this.object.isShortcut()) { return antecedents; }
+
 		// Harvest all revisions until we reach this one, then stop harvesting altogether
 		for (UcmRevision r : getHistory(ctx)) {
 			if (r.getRevisionId() == this.object.getRevisionNumber()) {
@@ -139,6 +162,10 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 	protected Collection<UcmExportDelegate<?>> identifySuccessors(CmfObject<CmfValue> marshalled, UcmExportContext ctx)
 		throws Exception {
 		Collection<UcmExportDelegate<?>> successors = super.identifySuccessors(marshalled, ctx);
+
+		// If this is a shortcut, don't scan the history...
+		if (this.object.isShortcut()) { return successors; }
+
 		boolean harvest = false;
 		// Skip all revisions until we find this one, then harvest whatever remains afterwards
 		for (UcmRevision r : getHistory(ctx)) {
@@ -160,6 +187,10 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 		boolean includeRenditions) throws Exception {
 		List<CmfContentStream> contents = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
+
+		// Don't export content streams for shortcuts...
+		if (this.object.isShortcut()) { return contents; }
+
 		final boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		final Map<String, UcmRenditionInfo> renditions = ctx.getSession().getRenditions(this.object);
 		for (String renditionLabel : renditions.keySet()) {
