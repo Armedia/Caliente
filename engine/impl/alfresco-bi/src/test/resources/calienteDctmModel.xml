@@ -1,0 +1,1052 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="dctm:calienteModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0  platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd ">
+	<description>Armedia Caliente Documentum Object Model</description>
+	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>
+	<version>1.1</version>
+
+	<imports>
+		<!--  Import Alfresco Dictionary Definitions  -->
+		<import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d" />
+
+		<!--  Import Alfresco Content Domain Model Definitions  -->
+		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm" />
+
+		<!--  Import Caliente Domain Model Definitions  -->
+		<import uri="http://www.armedia.com/model/armedia/1.0" prefix="arm" />
+	</imports>
+
+	<namespaces>
+		<namespace uri="http://www.armedia.com/model/documentum/1.0" prefix="dctm" />
+	</namespaces>
+
+	<types>
+		<!--
+			BEGIN dctm:document
+		-->
+		<type name="dctm:document">
+			<title>Documentum Base Document Object</title>
+			<parent>arm:document</parent>
+			<mandatory-aspects>
+				<aspect>dctm:dm_document</aspect>
+			</mandatory-aspects>
+		</type>
+		<!--
+			END dctm:document
+		-->
+
+		<!--
+			BEGIN dctm:vdocReference
+		-->
+		<type name="dctm:vdocReference">
+			<title>Documentum Virtual Document Object Reference</title>
+			<parent>arm:reference</parent>
+			<properties>
+				<property name="dctm:vdocReferenceId">
+					<title>Original ID for the reference object itself</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END dctm:vdocReference
+		-->
+	</types>
+
+	<aspects>
+		<!--
+			BEGIN dctm:dm_object_id
+		-->
+		<aspect name="dctm:dm_object_id">
+			<title>Documentum Object</title>
+			<properties>
+				<property name="dctm:r_object_id">
+					<!-- preserve -->
+					<title>Documentum Object ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_folder_id">
+					<!-- preserve -->
+					<title>Parent Folder IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_parent_path_ids">
+					<!-- preserve from source id-paths -->
+					<title>Parent Path IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END dctm:dm_object_id
+		-->
+
+		<!--
+			BEGIN dctm:dm_sysobject
+		-->
+		<aspect name="dctm:dm_sysobject">
+			<title>Documentum Migrated Object</title>
+			<parent>dctm:dm_object_id</parent>
+			<properties>
+				<property name="dctm:object_name">
+					<!-- preserved, and converted into cmis:name -->
+					<title>Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_object_type">
+					<!-- preserved, and converted into cmis:objectTypeId and cmis:baseTypeId -->
+					<title>Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:title">
+					<!-- map to cm:title -->
+					<title>Title</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:subject">
+					<!-- map to cmis:description -->
+					<title>Subject</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:authors">
+					<!-- map to cm:author -->
+					<title>Authors</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:keywords">
+					<!-- preserve -->
+					<title>Keywords</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_application_type">
+					<!-- preserve -->
+					<title>Application Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_status">
+					<!-- preserve -->
+					<title>Status</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_creation_date">
+					<!-- map to cmis:creationDate -->
+					<title>Created</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_modify_date">
+					<!-- map to cmis:lastModificationDate -->
+					<title>Modified</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_modifier">
+					<!-- map to cmis:lastModifiedBy -->
+					<title>Modified By</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_access_date">
+					<!-- map to cm:accessed -->
+					<title>Accessed</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_is_hidden">
+					<!-- preserve -->
+					<title>Hidden</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_is_deleted">
+					<!-- preserve -->
+					<title>Root Deleted</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_retention_date">
+					<!-- preserve -->
+					<title>Retained</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_archive">
+					<!-- preserve -->
+					<title>Archive</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_compound_architecture">
+					<!-- preserve -->
+					<title>Compound Architecture</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_link_resolved">
+					<!-- preserve -->
+					<title>Link Resolved</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_reference_cnt">
+					<!-- preserve -->
+					<title>Reference Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_has_folder">
+					<!-- preserve -->
+					<title>In Folder</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_composite_id">
+					<!-- preserve -->
+					<title>Composite IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_composite_label">
+					<!-- preserve -->
+					<title>Composite Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_component_label">
+					<!-- preserve -->
+					<title>Component Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_order_no">
+					<!-- preserve -->
+					<title>Position</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:r_link_cnt">
+					<!-- preserve -->
+					<title>Link Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_link_high_cnt">
+					<!-- preserve -->
+					<title>Maximum Link Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_assembled_from_id">
+					<!-- preserve -->
+					<title>Assembled From</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_frzn_assembly_cnt">
+					<!-- preserve -->
+					<title>Frozen Assembly Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_has_frzn_assembly">
+					<!-- preserve -->
+					<title>Has Frozen Assembly</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:resolution_label">
+					<!-- preserve -->
+					<title>Resolution Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_is_virtual_doc">
+					<!-- preserve -->
+					<title>Virtual Document</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_contents_id">
+					<!-- preserve -->
+					<title>Content ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_content_type">
+					<!-- convert into cmis:contentStreamMimeType -->
+					<title>Format</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_page_cnt">
+					<!-- preserve -->
+					<title>Content File Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_content_size">
+					<!-- preserve -->
+					<title>Size</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_full_text">
+					<!-- preserve -->
+					<title>Full Text Indexed</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_storage_type">
+					<!-- preserve -->
+					<title>Storage Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_cabinet_id">
+					<!-- preserve -->
+					<title>Primary Cabinet</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:owner_name">
+					<!-- map to cm:owner -->
+					<title>Owner Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:owner_permit">
+					<!-- preserve -->
+					<title>Owner Permission</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:group_name">
+					<!-- preserve -->
+					<title>Group Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:group_permit">
+					<!-- preserve -->
+					<title>Group Permit</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:world_permit">
+					<!-- preserve -->
+					<title>World Permissions</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_antecedent_id">
+					<!-- preserve -->
+					<title>Parent Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_chronicle_id">
+					<!-- preserve -->
+					<title>Version Tree Root Object</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_latest_flag">
+					<!-- map to cmis:isLatestMajorVersion -->
+					<title>Latest Version on Branch</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_lock_owner">
+					<!-- preserve -->
+					<title>Checked Out By</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_lock_date">
+					<!-- preserve -->
+					<title>Checkout Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_lock_machine">
+					<!-- preserve -->
+					<title>Lock Owner's Host</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:log_entry">
+					<!-- map to cmis:checkinComment -->
+					<title>User Comments</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_version_label">
+					<!-- preserve -->
+					<title>Version Label</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:i_branch_cnt">
+					<!-- preserve -->
+					<title>Branch Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_direct_dsc">
+					<!-- preserve -->
+					<title>Has Versions</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_immutable_flag">
+					<!-- map to cmis:isImmutable -->
+					<title>Is Immutable</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_frozen_flag">
+					<!-- preserve -->
+					<title>Frozen</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_has_events">
+					<!-- preserve -->
+					<title>Has Events</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:acl_domain">
+					<!-- preserve -->
+					<title>ACL Domain</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:acl_name">
+					<!-- preserve -->
+					<title>ACL Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_special_app">
+					<!-- preserve -->
+					<title>Special Application</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_is_reference">
+					<!-- preserve -->
+					<title>Reference</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_creator_name">
+					<!-- map to cmis:createdBy -->
+					<title>Creator Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_is_public">
+					<!-- preserve -->
+					<title>Public</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_policy_id">
+					<!-- preserve -->
+					<title>Lifecycle ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_resume_state">
+					<!-- preserve -->
+					<title>Resume to state</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_current_state">
+					<!-- preserve -->
+					<title>Current State</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_alias_set_id">
+					<!-- preserve -->
+					<title>Alias Set</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_effective_date">
+					<!-- preserve -->
+					<title>Effective Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_expiration_date">
+					<!-- preserve -->
+					<title>Expiration Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_publish_formats">
+					<!-- preserve -->
+					<title>Publish Formats</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_effective_label">
+					<!-- preserve -->
+					<title>Effective Label</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_effective_flag">
+					<!-- preserve -->
+					<title>Effective Flag</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_category">
+					<!-- preserve -->
+					<title>Category</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:language_code">
+					<!-- preserve -->
+					<title>Language Code</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_is_template">
+					<!-- preserve -->
+					<title>Template</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_controlling_app">
+					<!-- preserve -->
+					<title>Controlling Application</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_full_content_size">
+					<!-- map to cmis:contentStreamLength -->
+					<title>Full Content Size</title>
+					<type>d:double</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_extended_properties">
+					<!-- preserve -->
+					<title>Extended Properties</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:a_is_signed">
+					<!-- preserve -->
+					<title>Is Signed</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:a_last_review_date">
+					<!-- preserve -->
+					<title>Last Review Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_retain_until">
+					<!-- preserve -->
+					<title>Retain Content Until</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:r_aspect_name">
+					<!-- preserve -->
+					<title>Aspect Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:i_retainer_id">
+					<!-- preserve -->
+					<title>Retainer ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:i_partition">
+					<!-- preserve -->
+					<title>i_partition</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_is_replica">
+					<!-- preserve -->
+					<title>Is Replica</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_vstamp">
+					<!-- preserve -->
+					<title>Version Stamp</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+			<mandatory-aspects>
+				<aspect>cm:ownable</aspect>
+				<aspect>cm:auditable</aspect>
+				<aspect>cm:author</aspect>
+				<aspect>cm:titled</aspect>
+			</mandatory-aspects>
+		</aspect>
+		<!--
+			END dctm:dm_sysobject
+		-->
+
+		<!--
+			BEGIN dctm:dm_document
+		-->
+		<aspect name="dctm:dm_document">
+			<title>Documentum Migrated Document</title>
+			<parent>dctm:dm_sysobject</parent>
+		</aspect>
+		<!--
+			END dctm:dm_document
+		-->
+
+		<!--
+			BEGIN dctm:dm_reference
+		-->
+		<aspect name="dctm:dm_reference">
+			<title>Documentum Reference</title>
+			<parent>dctm:dm_object_id</parent>
+			<properties>
+				<property name="dctm:reference_by_id">
+					<!-- preserve -->
+					<title>Documentum Object or Chronicle ID Referenced</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:binding_label">
+					<!-- preserve -->
+					<title>Version Label Referenced</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:binding_condition">
+					<!-- preserve -->
+					<title>Reference Binding Condition</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+					<constraints>
+						<constraint type="LIST">
+							<parameter name="allowedValues">
+								<list>
+									<value>EXACT_ID</value>
+									<value>VERSION_LABEL</value>
+								</list>
+							</parameter>
+						</constraint>
+					</constraints>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END dctm:dm_reference
+		-->
+
+		<!--
+			BEGIN dctm:dm_folder
+		-->
+		<aspect name="dctm:dm_folder">
+			<title>Documentum Migrated Folder</title>
+			<parent>dctm:dm_sysobject</parent>
+			<properties>
+				<property name="dctm:r_folder_path">
+					<!-- map to cmis:path -->
+					<title>Folder Path</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:i_ancestor_id">
+					<!-- preserve -->
+					<title>Containing Folders</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:usersWithDefaultFolder">
+					<!-- preserve -->
+					<title>Users with this folder as their Home Folder</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:groupsWithDefaultFolder">
+					<!-- preserve -->
+					<title>Groups with this folder as their Home Folder</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+			<mandatory-aspects>
+				<aspect>arm:folder</aspect>
+			</mandatory-aspects>
+		</aspect>
+		<!--
+			END dctm:dm_folder
+		-->
+
+		<!--
+			BEGIN dctm:dm_message_container
+		-->
+		<aspect name="dctm:dm_message_container">
+			<title>dm_message_container</title>
+			<parent>dctm:dm_document</parent>
+			<properties>
+				<property name="dctm:is_archive_message">
+					<!-- preserve -->
+					<title>Is archive message</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_class">
+					<!-- preserve -->
+					<title>Message Class</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_doctype">
+					<!-- preserve -->
+					<title>Message Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:datamodel_version">
+					<!-- preserve -->
+					<title>Data Model Version</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_sharing_type">
+					<!-- preserve -->
+					<title>Sharing Type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_orig_parent">
+					<!-- preserve -->
+					<title>Original Parent</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:allow_propagating_changes">
+					<!-- preserve -->
+					<title>Allow Propagating Changes</title>
+					<type>d:boolean</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:retention_start_date">
+					<!-- preserve -->
+					<title>Retention Start Date</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END dctm:dm_message_container
+		-->
+
+		<!--
+			BEGIN dctm:dm_message_archive
+		-->
+		<aspect name="dctm:dm_message_archive">
+			<title>dm_message_archive</title>
+			<parent>dctm:dm_message_container</parent>
+			<properties>
+				<property name="dctm:message_id">
+					<!-- preserved -->
+					<title>Message ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_subject">
+					<!-- map to cm:subjectline -->
+					<title>Message subject</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_size">
+					<!-- preserve -->
+					<title>Message Size</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_link_count">
+					<!-- preserve -->
+					<title>Message Link Count</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:sent_date">
+					<!-- map to cm:sentdate -->
+					<title>Sent</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:receive_date">
+					<!-- preserve -->
+					<title>Received</title>
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_sensitivity">
+					<!-- preserve -->
+					<title>Message Sensitivity</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_importance">
+					<!-- preserve -->
+					<title>Message Importance</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:attachment_count">
+					<!-- preserve -->
+					<title>Total Attachments</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:parent_message_id">
+					<!-- preserve -->
+					<title>Parent Message ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:tracking_id">
+					<!-- preserve -->
+					<title>Tracking ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:conversation_id">
+					<!-- preserve -->
+					<title>Conversation ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:message_id_timestamp">
+					<!-- preserve -->
+					<title>Message ID Time Stamp</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:is_encrypted">
+					<!-- preserve -->
+					<title>Is Encrypted</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="dctm:i_sharing_parent">
+					<!-- preserve -->
+					<title>Sharing Parent</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+			<mandatory-aspects>
+				<aspect>cm:emailed</aspect>
+			</mandatory-aspects>
+		</aspect>
+		<!--
+			END dctm:dm_message_archive
+		-->
+
+		<!--
+			BEGIN dctm:dmc_rm_formal_rec_folder
+		-->
+		<aspect name="dctm:dmc_rm_formal_rec_folder">
+			<title>dmc_rm_formal_rec_folder</title>
+			<parent>dctm:dm_folder</parent>
+		</aspect>
+		<!--
+			END dctm:dmc_rm_formal_rec_folder
+		-->
+
+		<!--
+			BEGIN dctm:vdoc
+		-->
+		<aspect name="dctm:vdoc">
+			<title>Virtual Document Metadata</title>
+			<properties>
+				<property name="dctm:memberChronicleId">
+					<title>VDoc Member Chronicle IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="dctm:memberVersion">
+					<title>VDoc Member Versions</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END dctm:vdoc
+		-->
+
+		<!--
+			BEGIN dctm:vdocRoot
+		-->
+		<aspect name="dctm:vdocRoot">
+			<title>Documentum Virtual Document Root Folder Object</title>
+			<parent>dctm:dm_folder</parent>
+		</aspect>
+		<!--
+			END dctm:vdocRoot
+		-->
+
+		<!--
+			BEGIN dctm:vdocVersion
+		-->
+		<aspect name="dctm:vdocVersion">
+			<title>Documentum Virtual Document Version Folder Object</title>
+			<parent>dctm:dm_folder</parent>
+		</aspect>
+		<!--
+			END dctm:vdocVersion
+		-->
+	</aspects>
+</model>

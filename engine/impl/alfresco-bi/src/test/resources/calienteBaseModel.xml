@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="arm:calienteModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0  platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd ">
+	<description>Armedia Caliente Base Object Model</description>
+	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>
+	<version>1.1</version>
+
+	<imports>
+		<!--  Import Alfresco Dictionary Definitions  -->
+		<import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d" />
+
+		<!--  Import Alfresco Content Domain Model Definitions  -->
+		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm" />
+	</imports>
+
+	<namespaces>
+		<namespace uri="http://www.armedia.com/model/armedia/1.0" prefix="arm" />
+	</namespaces>
+
+	<constraints>
+		<constraint name="arm:calienteProcessingStatus" type="LIST">
+			<parameter name="allowedValues">
+				<list>
+					<value>Success</value>
+					<value>Fail</value>
+					<value>N/A</value>
+					<value>Remediate</value>
+					<value>Unprocessed</value>
+				</list>
+			</parameter>
+		</constraint>
+	</constraints>
+
+	<types>
+		<!--
+			BEGIN arm:document
+		-->
+		<type name="arm:document">
+			<title>Armedia Caliente Base Document Object</title>
+			<parent>cm:content</parent>
+			<mandatory-aspects>
+				<aspect>arm:caliente</aspect>
+			</mandatory-aspects>
+		</type>
+		<!--
+			END arm:document
+		-->
+
+		<!--
+			BEGIN arm:rendition
+		-->
+		<type name="arm:rendition">
+			<title>Armedia Caliente Extra Rendition Object</title>
+			<parent>cm:content</parent>
+			<properties>
+				<property name="arm:renditionObjectId">
+					<title>Rendition's Parent Object's ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionName">
+					<title>Rendition's Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionPage">
+					<title>Rendition's Page Number</title>
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionModifier">
+					<title>Rendition's Name</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:renditionFormat">
+					<title>Rendition's MIME type</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END arm:rendition
+		-->
+
+		<!--
+			BEGIN arm:reference
+		-->
+		<type name="arm:reference">
+			<title>Armedia Caliente Object Reference</title>
+			<parent>cm:content</parent>
+			<properties>
+				<property name="arm:refTarget">
+					<!-- preserve -->
+					<title>History ID for this reference's target object</title>
+					<type>d:text</type>
+					<mandatory enforced="true">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:refVersion">
+					<!-- preserve -->
+					<title>Version Tag for this reference's target object - if this is absent (or "HEAD"), then target the head revision</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</type>
+		<!--
+			END arm:reference
+		-->
+	</types>
+
+	<aspects>
+		<!--
+			BEGIN arm:caliente
+		-->
+		<aspect name="arm:caliente">
+			<title>Caliente Base Object Info</title>
+			<properties>
+				<property name="arm:objectId">
+					<title>Object ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:historyId">
+					<title>Object History ID</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:parentPathIDs">
+					<title>Parent Path IDs</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="arm:parentPaths">
+					<!-- preserve from source paths -->
+					<title>Parent Paths</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="arm:aclInfo">
+					<!-- The object's ACL (inspired by Documentum, for now)    -->
+					<!-- strings in the format (g|u|r)|${name}|(N|B|R|L|V|W|D) -->
+					<!-- Where g|u|r -> group|user|role                        -->
+					<!--       ${name} -> accessor name                        -->
+					<!--       N|B|R|L|V|W|D -> None, Browse, Read, reLate,    -->
+					<!--                        Version, Write, Delete         -->
+					<title>ACL Information (in Caliente syntax)</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+				<property name="arm:aclInheritance">
+					<!-- The object's ACL Inheritance mode                     -->
+					<!-- * FOLDER[${folderId}]                                 -->
+					<!-- * TYPE[${typeName}]                                   -->
+					<!-- * USER[${userName}]                                   -->
+					<!-- * NONE[]                                              -->
+					<title>ACL Inheritance</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="arm:aspects">
+					<!-- The list of aspects that were added to preserve metadata -->
+					<title>Extra Aspects</title>
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>true</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END arm:caliente
+		-->
+
+		<!--
+			BEGIN arm:calienteStatus
+		-->
+		<aspect name="arm:calienteStatus">
+			<title>Armedia Caliente Ingested Content</title>
+			<properties>
+				<property name="arm:appliedAcls">
+					<title>AppliedAcls</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+				<property name="arm:appliedRenditions">
+					<title>AppliedRenditions</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+				<property name="arm:appliedReferences">
+					<title>AppliedReferences</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+				<property name="arm:appliedParents">
+					<title>AppliedParents</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+				<property name="arm:appliedVdocs">
+					<title>AppliedAcls</title>
+					<type>d:text</type>
+					<default>Unprocessed</default>
+					<constraints>
+						<constraint ref="arm:calienteProcessingStatus" />
+					</constraints>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			BEGIN arm:calienteStatus
+		-->
+
+		<!--
+			BEGIN arm:folder
+		-->
+		<aspect name="arm:folder">
+			<title>Armedia Caliente Base Folder Aspect</title>
+			<parent>arm:caliente</parent>
+		</aspect>
+		<!--
+			END arm:folder
+		-->
+	</aspects>
+</model>
