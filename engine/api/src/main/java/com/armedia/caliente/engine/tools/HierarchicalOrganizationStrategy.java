@@ -11,8 +11,6 @@ import com.armedia.commons.utilities.Tools;
 public class HierarchicalOrganizationStrategy extends LocalOrganizationStrategy {
 	public static final String NAME = "hierarchical";
 
-	public static final String BASE_DIR = "streams";
-
 	public HierarchicalOrganizationStrategy() {
 		this(HierarchicalOrganizationStrategy.NAME);
 	}
@@ -32,7 +30,6 @@ public class HierarchicalOrganizationStrategy extends LocalOrganizationStrategy 
 		List<String> paths = new ArrayList<>();
 		// Make sure the contents all land in the bulk-import root location, so it's easy to point
 		// the bulk importer at that directory and not import any unwanted crap
-		paths.add(HierarchicalOrganizationStrategy.BASE_DIR);
 		String fullObjectNumber = PathTools.addNumericPaths(paths, object.getNumber());
 
 		String appendix = String.format("%08x", info.getIndex());

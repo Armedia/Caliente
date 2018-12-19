@@ -84,7 +84,7 @@ public class Launcher extends AbstractLauncher {
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
 	private static final Path DEFAULT_DATA_PATH = Paths.get("caliente");
 	private static final String DEFAULT_DB_PATH = "db";
-	private static final String DEFAULT_STREAMS_PATH = "caliente";
+	private static final String DEFAULT_STREAMS_PATH = "streams";
 	private static final String DEFAULT_LOG_PATH = "logs";
 
 	private static final String DEFAULT_STREAMS_ORGANIZATION = HierarchicalOrganizationStrategy.NAME;
