@@ -14,24 +14,6 @@ import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfType;
 
 public enum CLIParam implements OptionWrapper {
-	content( //
-		new OptionImpl() //
-			.setShortOpt('c') //
-			.setArgumentLimits(1) //
-			.setArgumentName("content-directory-or-config") //
-			.setDescription(
-				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes the store configuration") //
-	), //
-
-	content_strategy( //
-		new OptionImpl() //
-			.setShortOpt('o') //
-			.setArgumentLimits(1) //
-			.setArgumentName("organization") //
-			.setDescription(
-				"The name of the organization strategy to use in the Content directory (specific engines may override with their own defaults if they require it)") //
-	), //
-
 	count_empty( //
 		new OptionImpl() //
 			.setDescription("Enable reporting of empty folders (i.e. folders with 0 non-folder children)") //
@@ -77,12 +59,19 @@ public enum CLIParam implements OptionWrapper {
 		)) //
 	), //
 
-	db( //
+	data( //
 		new OptionImpl() //
 			.setShortOpt('d') //
 			.setArgumentLimits(1) //
-			.setArgumentName("metadata-directory-or-config") //
+			.setArgumentName("base-data-directory") //
 			.setRequired(true) //
+			.setDescription("The directory to use as the root for all storage (except if --db or --content are used)") //
+	), //
+
+	db( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("metadata-directory-or-config") //
 			.setDescription(
 				"The directory into which the metadata database will be stored, or the XML file that describes the store configuration") //
 	), //
@@ -189,6 +178,7 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription(
 				"The Log4j configuration (XML format) to use instead of the default (can reference ${logName} from --log)") //
 	), //
+
 	mail_auth( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
@@ -321,6 +311,15 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("Turn off counter recursion (i.e. to count a single folder without descending)") //
 	), //
 
+	organization( //
+		new OptionImpl() //
+			.setShortOpt('o') //
+			.setArgumentLimits(1) //
+			.setArgumentName("organization") //
+			.setDescription(
+				"The name of the organization strategy to use in the Content directory (specific engines may override with their own defaults if they require it)") //
+	), //
+
 	password( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
@@ -355,6 +354,14 @@ public enum CLIParam implements OptionWrapper {
 			.setArgumentLimits(1) //
 			.setArgumentName("source-spec") //
 			.setDescription("The source specification identifying which content to extract") //
+	), //
+
+	streams( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("stream-directory-or-config") //
+			.setDescription(
+				"The directory into which the content streams will be stored (if omitted, it will be placed in the 'content' subdirectory of the Database directory), or the XML file that describes the store configuration") //
 	), //
 
 	target( //

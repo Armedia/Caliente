@@ -14,8 +14,9 @@ public class CLIGroup {
 	;
 
 	public static final OptionGroup STORE = new OptionGroupImpl("Data Store") //
-		.add(CLIParam.content) //
-		.add(CLIParam.content_strategy) //
+		.add(CLIParam.data) //
+		.add(CLIParam.streams) //
+		.add(CLIParam.organization) //
 		.add(CLIParam.db) //
 	;
 

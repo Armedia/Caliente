@@ -82,9 +82,12 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
-	private static final Path DEFAULT_DB_PATH = Paths.get("caliente");
-	private static final String DEFAULT_CONTENT_PATH = "content";
-	private static final String DEFAULT_CONTENT_STRATEGY = HierarchicalOrganizationStrategy.NAME;
+	private static final Path DEFAULT_DATA_PATH = Paths.get("caliente");
+	private static final String DEFAULT_DB_PATH = "db";
+	private static final String DEFAULT_STREAMS_PATH = "caliente";
+	private static final String DEFAULT_LOG_PATH = "logs";
+
+	private static final String DEFAULT_STREAMS_ORGANIZATION = HierarchicalOrganizationStrategy.NAME;
 
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 
@@ -92,6 +95,8 @@ public class Launcher extends AbstractLauncher {
 	private AbstractEngineInterface engineInterface = null;
 
 	private CommandModule<?> command = null;
+
+	private File baseDataLocation = null;
 
 	private File objectStoreLocation = null;
 	private CmfObjectStore<?, ?> objectStore = null;
@@ -103,7 +108,7 @@ public class Launcher extends AbstractLauncher {
 
 	private boolean directFsMode = false;
 
-	private String contentStrategy = Launcher.DEFAULT_CONTENT_STRATEGY;
+	private String contentStrategy = Launcher.DEFAULT_STREAMS_ORGANIZATION;
 
 	@Override
 	protected String getProgramName() {
@@ -187,48 +192,49 @@ public class Launcher extends AbstractLauncher {
 		final String error = initializeEngineAndCommand(baseValues, command);
 		if (error != null) { throw new CommandLineProcessingException(1, error); }
 
+		this.baseDataLocation = getBaseDataLocation(commandValues);
+
 		this.objectStoreLocation = getMetadataLocation(commandValues);
 		this.contentStoreLocation = getContentLocation(commandValues);
 		this.logLocation = getLogLocation(baseValues);
 
-		if ((this.logLocation == null) && (this.objectStoreLocation != null)
-			&& (!this.objectStoreLocation.exists() || this.objectStoreLocation.isDirectory())) {
-			this.logLocation = this.objectStoreLocation;
-		}
-		if ((this.logLocation == null) && (this.contentStoreLocation != null)
-			&& (!this.contentStoreLocation.exists() || this.contentStoreLocation.isDirectory())) {
-			// If there's no object store location, then use the content location as the log
-			// location
-			this.logLocation = this.contentStoreLocation;
-		}
-
-		// If no log location has been selected, use the default
-		if (this.logLocation == null) {
-			this.logLocation = Tools.canonicalize(new File("."));
-		}
-
 		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
-		this.contentStrategy = commandValues.getString(CLIParam.content_strategy, Launcher.DEFAULT_CONTENT_STRATEGY);
+		this.contentStrategy = commandValues.getString(CLIParam.organization, Launcher.DEFAULT_STREAMS_ORGANIZATION);
+	}
+
+	private File getBaseDataLocation(OptionValues baseValues) throws CommandLineProcessingException {
+		// Step 2: There is no special location used by the engine, so see what the user wants to do
+		String path = null;
+		if (baseValues.isPresent(CLIParam.data)) {
+			path = baseValues.getString(CLIParam.data);
+		} else {
+			path = Launcher.DEFAULT_DATA_PATH.toString();
+		}
+
+		File f = createFile(path);
+		if (f.exists() && !f.isFile() && !f.isDirectory()) {
+			// ERROR! Not a file or directory! What is this?
+			throw new CommandLineProcessingException(1, String.format(
+				"The object at path [%s] is neither a file nor a directory - can't use it to describe the data store root",
+				f));
+		}
+		return f;
 	}
 
 	private File getMetadataLocation(OptionValues baseValues) throws CommandLineProcessingException {
-		// Step 1: Does this engine use a special location for metadata?
-		File f = Tools.canonicalize(this.command.getMetadataFilesLocation());
-		if (f != null) { return f; }
-
 		// Step 2: There is no special location used by the engine, so see what the user wants to do
 		String path = null;
 		if (baseValues.isPresent(CLIParam.db)) {
 			path = baseValues.getString(CLIParam.db);
 		} else {
-			path = Launcher.DEFAULT_DB_PATH.toString();
+			path = new File(this.baseDataLocation, Launcher.DEFAULT_DB_PATH).getAbsolutePath();
 		}
 
-		f = createFile(path);
+		File f = createFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
-				"The object at path [%s] is neither a file nor a directory - can't use it to describe the metadata store",
+				"The object at path [%s] is neither a file nor a directory - can't use it to describe the metadata db store",
 				f));
 		}
 		return f;
@@ -255,23 +261,15 @@ public class Launcher extends AbstractLauncher {
 	}
 
 	private File getContentLocation(OptionValues baseValues) throws CommandLineProcessingException {
-		// Step 1: Does this engine use a special location for content?
-		File f = Tools.canonicalize(this.command.getContentFilesLocation());
-		if (f != null) { return f; }
-
 		// Step 2: There is no special location used by the engine, so see what the user wants to do
 		String path = null;
-		if (baseValues.isPresent(CLIParam.content)) {
-			path = baseValues.getString(CLIParam.content);
+		if (baseValues.isPresent(CLIParam.streams)) {
+			path = baseValues.getString(CLIParam.streams);
 		} else {
-			if (this.objectStoreLocation != null) {
-				path = new File(this.objectStoreLocation, Launcher.DEFAULT_CONTENT_PATH).getAbsolutePath();
-			} else {
-				path = Launcher.DEFAULT_DB_PATH.resolve(Launcher.DEFAULT_CONTENT_PATH).toString();
-			}
+			path = new File(this.baseDataLocation, Launcher.DEFAULT_STREAMS_PATH).getAbsolutePath();
 		}
 
-		f = createFile(path);
+		File f = createFile(path);
 		if (f.exists() && !f.isFile() && !f.isDirectory()) {
 			// ERROR! Not a file or directory! What is this?
 			throw new CommandLineProcessingException(1, String.format(
@@ -299,7 +297,7 @@ public class Launcher extends AbstractLauncher {
 		if (!directFsExport) {
 			if (StringUtils.isBlank(contentStrategy)) {
 				contentStrategy = Tools.coalesce(this.command.getContentStrategyName(),
-					Launcher.DEFAULT_CONTENT_STRATEGY);
+					Launcher.DEFAULT_STREAMS_ORGANIZATION);
 			}
 			this.contentStrategy = contentStrategy;
 			applyStoreProperties(cfg,
@@ -318,8 +316,21 @@ public class Launcher extends AbstractLauncher {
 
 	private File getLogLocation(OptionValues baseValues) throws CommandLineProcessingException {
 		// Step 1: Does this engine use a special location for content?
-		if (!baseValues.isPresent(CLIParam.log_dir)) { return null; }
-		return Tools.canonicalize(new File(baseValues.getString(CLIParam.log_dir)));
+		String path = null;
+		if (baseValues.isPresent(CLIParam.log_dir)) {
+			path = baseValues.getString(CLIParam.log_dir);
+		} else {
+			path = new File(this.baseDataLocation, Launcher.DEFAULT_LOG_PATH).getAbsolutePath();
+		}
+
+		File f = createFile(path);
+		if (f.exists() && !f.isFile() && !f.isDirectory()) {
+			// ERROR! Not a file or directory! What is this?
+			throw new CommandLineProcessingException(1, String.format(
+				"The object at path [%s] is neither a file nor a directory - can't use it to describe the log directory",
+				f));
+		}
+		return f;
 	}
 
 	private void initializeStores() throws Exception {
