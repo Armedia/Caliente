@@ -1,11 +1,13 @@
-package com.armedia.caliente.engine.alfresco.bi;
+package com.armedia.caliente.engine.tools;
 
 import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-public class AlfCommonTest {
+import com.armedia.caliente.engine.tools.PathTools;
+
+public class PathToolsTest {
 
 	@Test
 	public void testGetNumericPathsLong() {
@@ -28,7 +30,7 @@ public class AlfCommonTest {
 			},
 		};
 		for (int i = 1; i < 8; i++) {
-			List<String> actual = AlfCommon.getNumericPaths(n, i);
+			List<String> actual = PathTools.getNumericPaths(n, i);
 			Assert.assertArrayEquals(data[i], actual.toArray());
 		}
 	}

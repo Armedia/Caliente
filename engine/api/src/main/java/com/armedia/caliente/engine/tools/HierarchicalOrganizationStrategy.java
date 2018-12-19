@@ -1,11 +1,10 @@
-package com.armedia.caliente.engine.alfresco.bi;
+package com.armedia.caliente.engine.tools;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
-import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -15,18 +14,17 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganizationStrategy {
+public class HierarchicalOrganizationStrategy extends LocalOrganizationStrategy {
+	public static final String NAME = "hierarchical";
 
-	public static final String BASE_DIR = "bulk-import-root";
+	public static final String BASE_DIR = "streams";
 
-	private final String versionPrefix;
+	public HierarchicalOrganizationStrategy() {
+		this(HierarchicalOrganizationStrategy.NAME);
+	}
 
-	protected AlfrescoBaseBulkOrganizationStrategy(String name, String versionPrefix) {
+	protected HierarchicalOrganizationStrategy(String name) {
 		super(name);
-		if (versionPrefix == null) {
-			versionPrefix = "";
-		}
-		this.versionPrefix = versionPrefix;
 	}
 
 	@Override
@@ -42,8 +40,8 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 		List<String> paths = new ArrayList<>();
 		// Make sure the contents all land in the bulk-import root location, so it's easy to point
 		// the bulk importer at that directory and not import any unwanted crap
-		paths.add(AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
-		String fullObjectNumber = AlfCommon.addNumericPaths(paths, object.getNumber());
+		paths.add(HierarchicalOrganizationStrategy.BASE_DIR);
+		String fullObjectNumber = PathTools.addNumericPaths(paths, object.getNumber());
 
 		CmfProperty<T> vdocProp = object.getProperty(IntermediateProperty.VDOC_HISTORY);
 		final boolean vdoc;
@@ -75,7 +73,7 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 				if (primaryContent) {
 					appendix = "";
 				} else {
-					baseName = AlfrescoBaseBulkOrganizationStrategy.generateRenditionName(object, info);
+					baseName = HierarchicalOrganizationStrategy.generateRenditionName(object, info);
 				}
 			default:
 				break;
@@ -127,11 +125,11 @@ public abstract class AlfrescoBaseBulkOrganizationStrategy extends LocalOrganiza
 					final int offset = (lastIsHead ? 1 : 0);
 					final int width = String.format("%d", (counter - offset)).length();
 
-					String format = "v%s%d";
+					String format = "v%d";
 					if (width > 1) {
-						format = String.format("v%%s%%0%dd", width);
+						format = String.format("v%%0%dd", width);
 					}
-					appendix = String.format(format, this.versionPrefix, index);
+					appendix = String.format(format, index);
 				}
 
 				if (vDoc && headVersion) {

@@ -42,7 +42,7 @@ import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
-import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
+import com.armedia.caliente.engine.tools.HierarchicalOrganizationStrategy;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStoreFactory;
@@ -84,7 +84,7 @@ public class Launcher extends AbstractLauncher {
 	private static final String STORE_TYPE_PROPERTY = "caliente.store.type";
 	private static final Path DEFAULT_DB_PATH = Paths.get("caliente");
 	private static final String DEFAULT_CONTENT_PATH = "content";
-	private static final String DEFAULT_CONTENT_STRATEGY = LocalOrganizationStrategy.NAME;
+	private static final String DEFAULT_CONTENT_STRATEGY = HierarchicalOrganizationStrategy.NAME;
 
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 

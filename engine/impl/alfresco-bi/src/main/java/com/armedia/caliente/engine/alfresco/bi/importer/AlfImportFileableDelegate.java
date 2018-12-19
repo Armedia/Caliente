@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMappingResult;
 import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeValue;
@@ -32,6 +31,7 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
+import com.armedia.caliente.engine.tools.HierarchicalOrganizationStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
@@ -488,7 +488,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		throws ImportException {
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
-		p.setProperty("cm:name", AlfrescoBaseBulkOrganizationStrategy.generateRenditionName(this.cmfObject, content));
+		p.setProperty("cm:name", HierarchicalOrganizationStrategy.generateRenditionName(this.cmfObject, content));
 		p.setProperty("arm:renditionObjectId", this.cmfObject.getId());
 		p.setProperty("arm:renditionName", content.getRenditionIdentifier());
 		p.setProperty("arm:renditionPage", String.valueOf(content.getRenditionPage()));

@@ -8,6 +8,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -17,7 +18,7 @@ public class AlfSessionFactory extends SessionFactory<AlfRoot> {
 
 	public AlfSessionFactory(CfgTools settings, CmfCrypt crypto) throws IOException {
 		super(settings, crypto);
-		File root = AlfCommon.getRootDirectory(settings);
+		File root = PathTools.getRootDirectory(settings);
 		if (root == null) { throw new IllegalArgumentException(
 			"Must provide a root directory to base the local engine off of"); }
 		root = root.getCanonicalFile();

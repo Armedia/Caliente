@@ -21,7 +21,6 @@ import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionFactory;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfTranslator;
-import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -30,6 +29,7 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.engine.importer.ImportStrategy;
+import com.armedia.caliente.engine.tools.HierarchicalOrganizationStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -214,7 +214,7 @@ public class AlfImportEngine extends
 			File rootLocation = importState.streamStore.getRootLocation();
 			if (rootLocation != null) {
 				// Initialize the manifest for this job
-				File biRoot = new File(rootLocation, AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
+				File biRoot = new File(rootLocation, HierarchicalOrganizationStrategy.BASE_DIR);
 				File manifest = new File(biRoot, AlfImportEngine.MANIFEST_NAME);
 				try {
 					manifest = manifest.getCanonicalFile();

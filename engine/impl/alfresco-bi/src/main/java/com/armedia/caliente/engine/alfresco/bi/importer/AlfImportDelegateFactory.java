@@ -41,12 +41,10 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 
-import com.armedia.caliente.engine.alfresco.bi.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.alfresco.bi.AlfXmlIndex;
-import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndex;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItem;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker;
@@ -60,6 +58,8 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
+import com.armedia.caliente.engine.tools.HierarchicalOrganizationStrategy;
+import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
@@ -211,7 +211,7 @@ public class AlfImportDelegateFactory
 		final File modelDir = new File(this.content, AlfImportDelegateFactory.MODEL_DIR_NAME);
 		FileUtils.forceMkdir(modelDir);
 
-		final File biRootFile = new File(this.content, AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
+		final File biRootFile = new File(this.content, HierarchicalOrganizationStrategy.BASE_DIR);
 		this.biRootPath = biRootFile.toPath();
 		Class<?>[] idxClasses = {
 			ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class
@@ -564,7 +564,7 @@ public class AlfImportDelegateFactory
 				}
 			} else {
 				paths.add(this.unfiledPath);
-				AlfCommon.addNumericPaths(paths, cmfObject.getNumber());
+				PathTools.addNumericPaths(paths, cmfObject.getNumber());
 			}
 			targetPath = Tools.joinEscaped('/', paths);
 			storeArtificialFolderToIndex(targetPath);
@@ -703,7 +703,7 @@ public class AlfImportDelegateFactory
 			final File baseFile;
 			{
 				List<String> paths = new ArrayList<>();
-				String name = AlfCommon.addNumericPaths(paths, number.getAndIncrement());
+				String name = PathTools.addNumericPaths(paths, number.getAndIncrement());
 				name = String.format("folder-patch.%s", name);
 				// Concatenate them into a path
 				String path = FileNameTools.reconstitute(paths, false, false);
