@@ -131,7 +131,16 @@ public abstract class CmfOrganizationStrategy {
 		Map<String, CmfOrganizationStrategy> strategies = new HashMap<>();
 		PluggableServiceLocator<CmfOrganizationStrategy> l = new PluggableServiceLocator<>(
 			CmfOrganizationStrategy.class);
-		l.setHideErrors(true);
+		l.setHideErrors(false);
+		l.setErrorListener(new PluggableServiceLocator.ErrorListener() {
+			@Override
+			public void errorRaised(Class<?> serviceClass, Throwable t) {
+				if (CmfOrganizationStrategy.LOG.isDebugEnabled()) {
+					CmfOrganizationStrategy.LOG.warn("Failed to instantiate CmfOrganizationStrategy class [{}]",
+						serviceClass.getCanonicalName(), t);
+				}
+			}
+		});
 		for (CmfOrganizationStrategy s : l) {
 			String name = s.getName();
 			if (name == null) {
