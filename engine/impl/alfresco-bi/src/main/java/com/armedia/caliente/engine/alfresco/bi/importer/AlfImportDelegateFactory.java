@@ -274,16 +274,6 @@ public class AlfImportDelegateFactory
 		return this.schema.buildType(name, aspects);
 	}
 
-	String relativizeXmlLocation(String absolutePath) {
-		String base = String.format("%s/", this.contentPath.toString().replace(File.separatorChar, '/'));
-		absolutePath = absolutePath.replace(File.separatorChar, '/');
-		return absolutePath.substring(base.length());
-	}
-
-	File getLocation(String relativePath) {
-		return new File(this.contentPath.toFile(), relativePath);
-	}
-
 	boolean initializeVdocSupport() {
 		if (this.initializedVdocs.get() == null) {
 			synchronized (this) {
