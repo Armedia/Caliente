@@ -311,13 +311,13 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("Turn off counter recursion (i.e. to count a single folder without descending)") //
 	), //
 
-	organization( //
+	organizer( //
 		new OptionImpl() //
 			.setShortOpt('o') //
 			.setArgumentLimits(1) //
-			.setArgumentName("organization") //
+			.setArgumentName("organizer-name") //
 			.setDescription(
-				"The name of the organization strategy to use in the Content directory (specific engines may override with their own defaults if they require it)") //
+				"The name of the content organizer to use in the Content directory (specific engines may override with their own defaults if they require it)") //
 	), //
 
 	password( //

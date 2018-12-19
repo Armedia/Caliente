@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.armedia.caliente.engine.tools.LocalOrganizationStrategy;
+import com.armedia.caliente.engine.tools.LocalOrganizer;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 
-public class DocumentumOrganizationStrategy extends LocalOrganizationStrategy {
+public class DocumentumOrganizer extends LocalOrganizer {
 
 	public static final String NAME = "documentum";
 
-	public DocumentumOrganizationStrategy() {
-		super(DocumentumOrganizationStrategy.NAME);
+	public DocumentumOrganizer() {
+		super(DocumentumOrganizer.NAME);
 	}
 
 	@Override

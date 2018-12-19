@@ -42,7 +42,7 @@ import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.launcher.CommandLineProcessingException;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
-import com.armedia.caliente.engine.tools.HierarchicalOrganizationStrategy;
+import com.armedia.caliente.engine.tools.HierarchicalOrganizer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStoreFactory;
@@ -87,7 +87,7 @@ public class Launcher extends AbstractLauncher {
 	private static final String DEFAULT_STREAMS_PATH = "streams";
 	private static final String DEFAULT_LOG_PATH = "logs";
 
-	private static final String DEFAULT_STREAMS_ORGANIZATION = HierarchicalOrganizationStrategy.NAME;
+	private static final String DEFAULT_STREAMS_ORGANIZER = HierarchicalOrganizer.NAME;
 
 	private final LibLaunchHelper libLaunchHelper = new LibLaunchHelper();
 
@@ -108,7 +108,7 @@ public class Launcher extends AbstractLauncher {
 
 	private boolean directFsMode = false;
 
-	private String contentStrategy = Launcher.DEFAULT_STREAMS_ORGANIZATION;
+	private String contentOrganizer = Launcher.DEFAULT_STREAMS_ORGANIZER;
 
 	@Override
 	protected String getProgramName() {
@@ -199,7 +199,7 @@ public class Launcher extends AbstractLauncher {
 		this.logLocation = getLogLocation(baseValues);
 
 		this.directFsMode = commandValues.isPresent(CLIParam.direct_fs);
-		this.contentStrategy = commandValues.getString(CLIParam.organization, Launcher.DEFAULT_STREAMS_ORGANIZATION);
+		this.contentOrganizer = commandValues.getString(CLIParam.organizer, Launcher.DEFAULT_STREAMS_ORGANIZER);
 	}
 
 	private File getBaseDataLocation(OptionValues baseValues) throws CommandLineProcessingException {
@@ -293,19 +293,19 @@ public class Launcher extends AbstractLauncher {
 		final String contentStoreName = (directFsExport ? "direct" : "default");
 		StoreConfiguration cfg = CmfStores.getContentStoreConfiguration(contentStoreName);
 
-		String contentStrategy = this.contentStrategy;
+		String contentOrganizer = this.contentOrganizer;
 		if (!directFsExport) {
-			if (StringUtils.isBlank(contentStrategy)) {
-				contentStrategy = Tools.coalesce(this.command.getContentStrategyName(),
-					Launcher.DEFAULT_STREAMS_ORGANIZATION);
+			if (StringUtils.isBlank(contentOrganizer)) {
+				contentOrganizer = Tools.coalesce(this.command.getContentOrganizerName(),
+					Launcher.DEFAULT_STREAMS_ORGANIZER);
 			}
-			this.contentStrategy = contentStrategy;
+			this.contentOrganizer = contentOrganizer;
 			applyStoreProperties(cfg,
 				loadStoreProperties("content", contentLocation.isFile() ? contentLocation.getAbsolutePath() : null));
 		}
 		this.command.customizeContentStoreProperties(cfg);
 		if (!directFsExport) {
-			cfg.getSettings().put("dir.content.strategy", this.contentStrategy);
+			cfg.getSettings().put("dir.content.organizer", this.contentOrganizer);
 		}
 
 		commonValues.put(CmfStoreFactory.CFG_CLEAN_DATA,

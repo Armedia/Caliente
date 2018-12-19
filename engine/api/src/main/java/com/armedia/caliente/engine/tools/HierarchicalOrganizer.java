@@ -8,14 +8,14 @@ import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 
-public class HierarchicalOrganizationStrategy extends LocalOrganizationStrategy {
+public class HierarchicalOrganizer extends LocalOrganizer {
 	public static final String NAME = "hierarchical";
 
-	public HierarchicalOrganizationStrategy() {
-		this(HierarchicalOrganizationStrategy.NAME);
+	public HierarchicalOrganizer() {
+		this(HierarchicalOrganizer.NAME);
 	}
 
-	protected HierarchicalOrganizationStrategy(String name) {
+	protected HierarchicalOrganizer(String name) {
 		super(name);
 	}
 

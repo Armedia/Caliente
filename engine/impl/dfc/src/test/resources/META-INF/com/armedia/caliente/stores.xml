@@ -7,7 +7,7 @@
 		<setting name="db.name">dfc-test</setting>
 		<setting name="dir.metadata">${target}</setting>
 		<setting name="dir.content">${target}/content</setting>
-		<setting name="dir.content.strategy">documentum</setting>
+		<setting name="dir.content.organizer">documentum</setting>
 	</settings>
 
 	<objectstore id="default">
@@ -23,7 +23,7 @@
 		<type>local</type>
 		<settings>
 			<setting name="base.dir">${dir.content}</setting>
-			<setting name="uri.strategy">${dir.content.strategy}</setting>
+			<setting name="uri.organizer">${dir.content.organizer}</setting>
 			<setting name="force.safe.filenames">false</setting>
 			<setting name="safe.filename.encoding">UTF-8</setting>
 			<setting name="fix.filenames">true</setting>

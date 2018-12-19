@@ -123,7 +123,7 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		return execute(state, commandValues, positionals);
 	}
 
-	public String getContentStrategyName() {
+	public String getContentOrganizerName() {
 		return null;
 	}
 
