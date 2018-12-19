@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.caliente.command;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
@@ -59,16 +60,16 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 		return super.doConfigure(state, commandValues, settings);
 	}
 
-	public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker,
+	public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings)
 		throws ImportException, CmfStorageException {
-		return this.engine.runImport(output, warningTracker, objectStore, streamStore, settings);
+		return this.engine.runImport(output, warningTracker, baseData, objectStore, streamStore, settings);
 	}
 
-	public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker,
+	public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings,
 		CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
-		return this.engine.runImport(output, warningTracker, objectStore, streamStore, settings, counter);
+		return this.engine.runImport(output, warningTracker, baseData, objectStore, streamStore, settings, counter);
 	}
 
 	@Override
@@ -115,7 +116,8 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 			start = new Date();
 			try {
 				this.log.info("##### Import Process Started #####");
-				this.engine.runImport(this.console, warningTracker, objectStore, contentStore, settings, results);
+				this.engine.runImport(this.console, warningTracker, state.getBaseDataLocation(), objectStore,
+					contentStore, settings, results);
 				this.log.info("##### Import Process Completed #####");
 			} catch (Throwable t) {
 				StringWriter sw = new StringWriter();

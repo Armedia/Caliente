@@ -539,8 +539,8 @@ public class Launcher extends AbstractLauncher {
 		try {
 			initializeStores();
 
-			final CalienteState state = new CalienteState(this.objectStoreLocation, this.objectStore,
-				this.contentStoreLocation, this.contentStore);
+			final CalienteState state = new CalienteState(this.baseDataLocation, this.objectStoreLocation,
+				this.objectStore, this.contentStoreLocation, this.contentStore);
 
 			final String engineName = this.engineInterface.getName();
 			final Logger log = LoggerFactory.getLogger(getClass());

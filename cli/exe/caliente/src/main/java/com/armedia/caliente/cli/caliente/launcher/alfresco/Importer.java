@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.caliente.launcher.alfresco;
 
-import java.io.File;
 import java.util.Map;
 
 import com.armedia.caliente.cli.Option;
@@ -14,7 +13,6 @@ import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
-import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.commons.utilities.Tools;
@@ -77,19 +75,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		String target = commandValues.getString(CLIParam.source);
-		if (target == null) {
-			target = ".";
-		}
-		final File targetDir = Tools.canonicalize(new File(target));
-		targetDir.mkdirs();
-		if (!targetDir.exists()) { throw new CalienteException(
-			String.format("The target directory [%s] does not exist, and could not be created", targetDir)); }
-		if (!targetDir.isDirectory()) { throw new CalienteException(
-			String.format("A non-directory already exists at the location [%s] - can't continue", targetDir)); }
-
-		settings.put(AlfSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
-		settings.put(AlfSetting.DB.getLabel(), state.getObjectStoreLocation().toString());
+		settings.put(AlfSetting.ROOT.getLabel(), state.getBaseDataLocation().getAbsolutePath());
 		settings.put(AlfSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
 
 		if (!commandValues.isPresent(Importer.CONTENT_MODEL)) { throw new CalienteException(
