@@ -337,7 +337,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		if (getType() != CmfType.DOCUMENT) { return null; }
 
 		List<CmfContentStream> ret = new ArrayList<>(1);
-		CmfContentStream info = new CmfContentStream("");
+		CmfContentStream info = new CmfContentStream(0, "");
 		File src = this.object.getAbsolute();
 		MimeType type = null;
 		try {

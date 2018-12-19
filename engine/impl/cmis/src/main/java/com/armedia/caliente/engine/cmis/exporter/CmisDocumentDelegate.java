@@ -22,8 +22,8 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -139,7 +139,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		List<CmfContentStream> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
 		ContentStream main = this.object.getContentStream();
-		CmfContentStream mainInfo = new CmfContentStream();
+		CmfContentStream mainInfo = new CmfContentStream(0);
 		mainInfo.setMimeType(MimeTools.resolveMimeType(main.getMimeType()));
 		String name = main.getFileName();
 		mainInfo.setFileName(name);
@@ -148,8 +148,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		mainInfo.setLength(length);
 		ret.add(mainInfo);
 		if (includeRenditions) {
+			int i = 0;
 			for (Rendition r : this.object.getRenditions()) {
-				CmfContentStream info = new CmfContentStream(r.getKind());
+				CmfContentStream info = new CmfContentStream(++i, r.getKind());
 				ContentStream cs = r.getContentStream();
 				info.setMimeType(MimeTools.resolveMimeType(r.getMimeType()));
 				name = cs.getFileName();

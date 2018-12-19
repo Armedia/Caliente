@@ -28,8 +28,8 @@ import com.armedia.caliente.engine.sharepoint.ShptSessionException;
 import com.armedia.caliente.engine.sharepoint.ShptVersionNumber;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -384,7 +384,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception {
 		final ShptSession session = ctx.getSession();
-		CmfContentStream info = new CmfContentStream();
+		CmfContentStream info = new CmfContentStream(0);
 		final String name = this.object.getName();
 		info.setFileName(name);
 		info.setExtension(FilenameUtils.getExtension(name));

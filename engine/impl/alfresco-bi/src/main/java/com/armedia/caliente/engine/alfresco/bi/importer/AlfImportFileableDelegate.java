@@ -31,7 +31,6 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
-import com.armedia.caliente.engine.tools.HierarchicalOrganizationStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
@@ -484,11 +483,16 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		return null;
 	}
 
+	protected String generateRenditionName(CmfContentStream info) {
+		return String.format("%s-[%s]-%08x-%s", this.cmfObject.getId(), info.getRenditionIdentifier(),
+			info.getRenditionPage(), Tools.coalesce(info.getModifier(), ""));
+	}
+
 	protected final void populateRenditionAttributes(Properties p, AlfrescoType targetType, CmfContentStream content)
 		throws ImportException {
 		// Set the type property
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
-		p.setProperty("cm:name", HierarchicalOrganizationStrategy.generateRenditionName(this.cmfObject, content));
+		p.setProperty("cm:name", generateRenditionName(content));
 		p.setProperty("arm:renditionObjectId", this.cmfObject.getId());
 		p.setProperty("arm:renditionName", content.getRenditionIdentifier());
 		p.setProperty("arm:renditionPage", String.valueOf(content.getRenditionPage()));
@@ -565,7 +569,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		Collection<CmfContentStream> contents = ctx.getContentStreams(this.cmfObject);
 		if (contents.isEmpty()) {
 			// No content streams, so make one up so we can build the properties file
-			contents = Collections.singleton(new CmfContentStream());
+			contents = Collections.singleton(new CmfContentStream(0));
 		}
 
 		boolean vdocRootIndexed = false;
