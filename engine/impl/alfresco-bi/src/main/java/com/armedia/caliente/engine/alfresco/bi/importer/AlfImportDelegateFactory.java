@@ -441,10 +441,9 @@ public class AlfImportDelegateFactory
 		return path.toString();
 	}
 
-	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx,
+	protected final ScanIndexItemMarker generateItemMarker(final AlfImportContext ctx, final boolean folder,
 		final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile, MarkerType type)
 		throws ImportException {
-		final boolean folder = type.isFolder(contentFile);
 		final int head;
 		final int count;
 		final int current;
@@ -774,12 +773,14 @@ public class AlfImportDelegateFactory
 		this.currentVersions.set(null);
 	}
 
-	protected final void storeToIndex(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject, File contentFile,
-		File metadataFile, MarkerType type) throws ImportException {
+	protected final void storeToIndex(final AlfImportContext ctx, final boolean folder,
+		final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile, MarkerType type)
+		throws ImportException {
 
 		storeIngestionIndexToScanIndex();
 
-		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, cmfObject, contentFile, metadataFile, type);
+		final ScanIndexItemMarker thisMarker = generateItemMarker(ctx, folder, cmfObject, contentFile, metadataFile,
+			type);
 		List<ScanIndexItemMarker> markerList = null;
 		switch (type) {
 			case VDOC_ROOT:
@@ -809,8 +810,6 @@ public class AlfImportDelegateFactory
 		}
 
 		markerList.add(thisMarker);
-
-		final boolean folder = thisMarker.isDirectory();
 
 		if (!thisMarker.isLastVersion()) {
 			// more versions to come, so we simply keep going...
