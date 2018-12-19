@@ -29,7 +29,6 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.engine.importer.ImportStrategy;
-import com.armedia.caliente.engine.tools.HierarchicalOrganizationStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -211,10 +210,10 @@ public class AlfImportEngine extends
 
 		@Override
 		protected void importStartedImpl(ImportState importState, Map<CmfType, Long> summary) {
-			File rootLocation = importState.streamStore.getRootLocation();
+			File rootLocation = importState.baseData;
 			if (rootLocation != null) {
 				// Initialize the manifest for this job
-				File biRoot = new File(rootLocation, HierarchicalOrganizationStrategy.BASE_DIR);
+				File biRoot = new File(rootLocation, AlfCommon.METADATA_ROOT);
 				File manifest = new File(biRoot, AlfImportEngine.MANIFEST_NAME);
 				try {
 					manifest = manifest.getCanonicalFile();

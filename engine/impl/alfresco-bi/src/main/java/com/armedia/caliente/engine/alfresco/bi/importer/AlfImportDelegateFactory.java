@@ -41,6 +41,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 
+import com.armedia.caliente.engine.alfresco.bi.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
@@ -58,7 +59,6 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.engine.tools.HierarchicalOrganizationStrategy;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -75,7 +75,7 @@ import com.armedia.commons.utilities.XmlTools;
 public class AlfImportDelegateFactory
 	extends ImportDelegateFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine> {
 
-	static final String METADATA_SUFFIX = ".metadata.properties.xml";
+	static final String METADATA_SUFFIX = ".xml";
 
 	private final class VirtualDocument {
 		private final String historyId;
@@ -170,8 +170,8 @@ public class AlfImportDelegateFactory
 		}
 	}
 
-	private final File db;
-	private final File content;
+	private final Path baseData;
+	private final Path contentPath;
 	private final Path biRootPath;
 	private final String unfiledPath;
 
@@ -194,30 +194,27 @@ public class AlfImportDelegateFactory
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {
 		super(engine, configuration);
-		String db = configuration.getString(AlfSetting.DB);
-		if (db != null) {
-			this.db = new File(db).getCanonicalFile();
-		} else {
-			this.db = new File("caliente-data").getCanonicalFile();
-		}
-		FileUtils.forceMkdir(this.db);
+		String baseData = configuration.getString(AlfSetting.ROOT);
+		if (baseData == null) { throw new IOException("Can't proceed without a root directory to store artifacts in"); }
+		this.baseData = Tools.canonicalize(new File(baseData)).toPath();
+
 		String content = configuration.getString(AlfSetting.CONTENT);
-		if (content != null) {
-			this.content = new File(content).getCanonicalFile();
-		} else {
-			this.content = new File(db, "content").getCanonicalFile();
-		}
-		FileUtils.forceMkdir(this.content);
-		final File modelDir = new File(this.content, AlfImportDelegateFactory.MODEL_DIR_NAME);
+		if (content == null) { throw new IOException(
+			"Can't proceed without a content directory to store artifacts in"); }
+		File contentFile = Tools.canonicalize(new File(content));
+		FileUtils.forceMkdir(contentFile);
+		this.contentPath = contentFile.toPath();
+
+		this.biRootPath = this.baseData.resolve(AlfCommon.METADATA_ROOT);
+		final File modelDir = this.biRootPath.resolve(AlfImportDelegateFactory.MODEL_DIR_NAME).toFile();
 		FileUtils.forceMkdir(modelDir);
 
-		final File biRootFile = new File(this.content, HierarchicalOrganizationStrategy.BASE_DIR);
-		this.biRootPath = biRootFile.toPath();
 		Class<?>[] idxClasses = {
 			ScanIndex.class, ScanIndexItem.class, ScanIndexItemVersion.class
 		};
-		this.fileIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FILE_CACHE_FILE), idxClasses);
-		this.folderIndex = new AlfXmlIndex(new File(biRootFile, AlfImportDelegateFactory.FOLDER_CACHE_FILE),
+		this.fileIndex = new AlfXmlIndex(this.biRootPath.resolve(AlfImportDelegateFactory.FILE_CACHE_FILE).toFile(),
+			idxClasses);
+		this.folderIndex = new AlfXmlIndex(this.biRootPath.resolve(AlfImportDelegateFactory.FOLDER_CACHE_FILE).toFile(),
 			idxClasses);
 
 		String contentModels = configuration.getString(AlfSetting.CONTENT_MODEL);
@@ -278,13 +275,13 @@ public class AlfImportDelegateFactory
 	}
 
 	String relativizeXmlLocation(String absolutePath) {
-		String base = String.format("%s/", this.content.getAbsolutePath().replace(File.separatorChar, '/'));
+		String base = String.format("%s/", this.contentPath.toString().replace(File.separatorChar, '/'));
 		absolutePath = absolutePath.replace(File.separatorChar, '/');
 		return absolutePath.substring(base.length());
 	}
 
 	File getLocation(String relativePath) {
-		return new File(this.content, relativePath);
+		return new File(this.contentPath.toFile(), relativePath);
 	}
 
 	boolean initializeVdocSupport() {
@@ -323,10 +320,6 @@ public class AlfImportDelegateFactory
 				break;
 		}
 		return null;
-	}
-
-	protected File calculateConsolidatedFile(CmfType t) {
-		return new File(this.db, String.format("%ss.xml", t.name().toLowerCase()));
 	}
 
 	boolean mapUserLogin(String userName, String login) {
@@ -378,16 +371,16 @@ public class AlfImportDelegateFactory
 		}
 
 		final String name = AlfImportEngine.MANIFEST_NAME;
-		final Path relativeContentPath = Paths.get(name);
+		final Path contentPath = this.baseData.relativize(this.biRootPath.resolve(name));
 
 		ScanIndexItemMarker thisMarker = new ScanIndexItemMarker();
 		thisMarker.setDirectory(false);
-		thisMarker.setContent(relativeContentPath);
+		thisMarker.setContent(contentPath);
 		thisMarker.setMetadata(null);
-		thisMarker.setSourcePath(Paths.get(""));
-		thisMarker.setSourceName(name);
+		thisMarker.setSourcePath(contentPath.getParent());
+		thisMarker.setSourceName(contentPath.getFileName().toString());
 		thisMarker.setTargetPath("");
-		thisMarker.setTargetName(name);
+		thisMarker.setTargetName(contentPath.getFileName().toString());
 		thisMarker.setNumber(AlfImportDelegateFactory.LAST_INDEX);
 
 		List<ScanIndexItemMarker> markerList = new ArrayList<>(1);
@@ -520,8 +513,8 @@ public class AlfImportDelegateFactory
 		metadataFile = AlfImportDelegateFactory.normalizeAbsolute(metadataFile);
 
 		// basePath is the base path within which the entire import resides
-		final Path relativeContentPath = this.biRootPath.relativize(contentFile.toPath());
-		final Path relativeMetadataPath = (metadataFile != null ? this.biRootPath.relativize(metadataFile.toPath())
+		final Path relativeContentPath = this.baseData.relativize(contentFile.toPath());
+		final Path relativeMetadataPath = (metadataFile != null ? this.baseData.relativize(metadataFile.toPath())
 			: null);
 		Path relativeMetadataParent = (metadataFile != null ? relativeMetadataPath.getParent() : null);
 		if (relativeMetadataParent == null) {
@@ -658,12 +651,20 @@ public class AlfImportDelegateFactory
 
 	final File generateMetadataFile(final Properties p, final CmfObject<CmfValue> cmfObject, final File main)
 		throws ImportException {
-		String mainName = main.getName();
-		final String suffix = AlfImportDelegateFactory.parseVersionSuffix(mainName);
-		mainName = mainName.substring(0, mainName.length() - suffix.length());
-		final File meta = new File(main.getParentFile(),
-			String.format("%s%s%s", mainName, AlfImportDelegateFactory.METADATA_SUFFIX, suffix));
+		Path relativePath = this.contentPath.relativize(main.toPath());
+
+		Path target = this.biRootPath.resolve(relativePath);
+		String targetName = String.format("%s%s", target.getFileName(), AlfImportDelegateFactory.METADATA_SUFFIX);
+		target = target.getParent();
+
+		final File meta = target.resolve(targetName).toFile();
 		if (p == null) { return meta; }
+
+		try {
+			FileUtils.forceMkdirParent(meta);
+		} catch (IOException e) {
+			throw new ImportException(String.format("Failed to create the directory at [%s]", target), e);
+		}
 
 		final OutputStream out;
 		try {
