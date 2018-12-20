@@ -14,9 +14,9 @@ import org.slf4j.LoggerFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class CmfOrganizationStrategy {
+public abstract class CmfContentOrganizer {
 
-	private static final Logger LOG = LoggerFactory.getLogger(CmfOrganizationStrategy.class);
+	private static final Logger LOG = LoggerFactory.getLogger(CmfContentOrganizer.class);
 
 	public static final class Location implements Comparable<Location>, Serializable {
 		private static final long serialVersionUID = 1L;
@@ -94,11 +94,14 @@ public abstract class CmfOrganizationStrategy {
 						containerSpec = b.toString();
 						final String baseName = (!StringUtils.isEmpty(this.baseName) ? this.baseName : "");
 						final String descriptor = (!StringUtils.isEmpty(this.descriptor)
-							? String.format("[%s]", this.descriptor) : "");
+							? String.format("[%s]", this.descriptor)
+							: "");
 						final String extension = (!StringUtils.isEmpty(this.extension)
-							? String.format(".%s", this.extension) : "");
+							? String.format(".%s", this.extension)
+							: "");
 						final String appendix = (!StringUtils.isEmpty(this.appendix)
-							? String.format(".%s", this.appendix) : "");
+							? String.format(".%s", this.appendix)
+							: "");
 						return String.format("%s/%s%s%s%s", containerSpec, baseName, descriptor, extension, appendix);
 					}
 				}
@@ -107,7 +110,7 @@ public abstract class CmfOrganizationStrategy {
 		}
 	}
 
-	private static final CmfOrganizationStrategy DEFAULT_STRATEGY = new CmfOrganizationStrategy() {
+	private static final CmfContentOrganizer DEFAULT_ORGANIZER = new CmfContentOrganizer() {
 
 		@Override
 		public <T> Location calculateLocation(CmfAttributeTranslator<T> translator, CmfObject<T> object,
@@ -122,54 +125,62 @@ public abstract class CmfOrganizationStrategy {
 	private static final Pattern VALIDATOR = Pattern.compile("^[a-zA-Z_$][a-zA-Z\\d_$]*$");
 
 	private static final boolean isValidName(String name) {
-		return (name != null) && CmfOrganizationStrategy.VALIDATOR.matcher(name).matches();
+		return (name != null) && CmfContentOrganizer.VALIDATOR.matcher(name).matches();
 	}
 
-	private static final Map<String, CmfOrganizationStrategy> STRATEGIES;
+	private static final Map<String, CmfContentOrganizer> ORGANIZERS;
 
 	static {
-		Map<String, CmfOrganizationStrategy> strategies = new HashMap<>();
-		PluggableServiceLocator<CmfOrganizationStrategy> l = new PluggableServiceLocator<>(
-			CmfOrganizationStrategy.class);
-		l.setHideErrors(true);
-		for (CmfOrganizationStrategy s : l) {
+		Map<String, CmfContentOrganizer> strategies = new HashMap<>();
+		PluggableServiceLocator<CmfContentOrganizer> l = new PluggableServiceLocator<>(CmfContentOrganizer.class);
+		l.setHideErrors(false);
+		l.setErrorListener(new PluggableServiceLocator.ErrorListener() {
+			@Override
+			public void errorRaised(Class<?> serviceClass, Throwable t) {
+				if (CmfContentOrganizer.LOG.isDebugEnabled()) {
+					CmfContentOrganizer.LOG.warn("Failed to instantiate the content organizer class [{}]",
+						serviceClass.getCanonicalName(), t);
+				}
+			}
+		});
+		for (CmfContentOrganizer s : l) {
 			String name = s.getName();
 			if (name == null) {
-				CmfOrganizationStrategy.LOG
-					.warn(String.format("Path Strategy [%s] did not provide a name, so it won't be registered",
+				CmfContentOrganizer.LOG.warn(
+					String.format("The content organizer class [%s] did not provide a name, so it won't be registered",
 						s.getClass().getCanonicalName()));
 				continue;
 			}
-			CmfOrganizationStrategy old = strategies.get(name);
+			CmfContentOrganizer old = strategies.get(name);
 			if (old != null) {
-				CmfOrganizationStrategy.LOG.warn(String.format(
-					"CmfOrganizationStrategy [%s] provides the name [%s], but this collides with already-registered strategy [%s]. The newcomer will be ignored.",
+				CmfContentOrganizer.LOG.warn(String.format(
+					"The content organizer class [%s] provides the name [%s], but this collides with already-registered organizer class [%s]. The newcomer will be ignored.",
 					s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
 				continue;
 			}
-			CmfOrganizationStrategy.LOG.debug("Registering CmfOrganizationStrategy [{}] as [{}]",
+			CmfContentOrganizer.LOG.debug("Registering the content organizer class [{}] as [{}]",
 				s.getClass().getCanonicalName(), name);
 			strategies.put(name, s);
 		}
-		STRATEGIES = Tools.freezeMap(strategies);
+		ORGANIZERS = Tools.freezeMap(strategies);
 	}
 
-	public static CmfOrganizationStrategy getStrategy(String name) {
-		if (name == null) { return CmfOrganizationStrategy.DEFAULT_STRATEGY; }
-		return Tools.coalesce(CmfOrganizationStrategy.STRATEGIES.get(name), CmfOrganizationStrategy.DEFAULT_STRATEGY);
+	public static CmfContentOrganizer getOrganizer(String name) {
+		if (name == null) { return CmfContentOrganizer.DEFAULT_ORGANIZER; }
+		return Tools.coalesce(CmfContentOrganizer.ORGANIZERS.get(name), CmfContentOrganizer.DEFAULT_ORGANIZER);
 	}
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final String name;
 
-	CmfOrganizationStrategy() {
+	CmfContentOrganizer() {
 		this.name = null;
 	}
 
-	protected CmfOrganizationStrategy(String name) {
-		if (!CmfOrganizationStrategy.isValidName(name)) { throw new IllegalArgumentException(
-			String.format("The string [%s] is not valid for a strategy name", name)); }
+	protected CmfContentOrganizer(String name) {
+		if (!CmfContentOrganizer.isValidName(name)) { throw new IllegalArgumentException(
+			String.format("The string [%s] is not valid for a content organizer name", name)); }
 		this.name = name;
 	}
 

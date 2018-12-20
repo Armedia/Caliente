@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
@@ -67,18 +66,18 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 		private Record(CmfObject<?> object, String targetId, ImportResult result, Throwable thrown) {
 			this.number = object.getNumber();
-			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
+			this.date = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date());
 			this.type = object.getType();
 			this.tier = object.getDependencyTier();
-			this.historyId = StringEscapeUtils.escapeCsv(object.getHistoryId());
-			this.sourceId = StringEscapeUtils.escapeCsv(object.getId());
-			this.label = StringEscapeUtils.escapeCsv(object.getLabel());
+			this.historyId = object.getHistoryId();
+			this.sourceId = object.getId();
+			this.label = object.getLabel();
 			this.result = result;
 			if (result != ImportResult.FAILED) {
-				this.targetId = StringEscapeUtils.escapeCsv(Tools.coalesce(targetId, ""));
+				this.targetId = Tools.coalesce(targetId, "");
 				this.thrown = null;
 			} else {
-				this.targetId = StringEscapeUtils.escapeCsv("");
+				this.targetId = "";
 				this.thrown = thrown;
 				if (thrown == null) { throw new IllegalArgumentException("Must provide a reason for the failure"); }
 			}
@@ -96,7 +95,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 			if (cause != null) {
 				base = String.format("%s (%s)", base, formatThrown(cause));
 			}
-			return StringEscapeUtils.escapeCsv(base);
+			return base;
 		}
 
 		public void log(Logger log) {

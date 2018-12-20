@@ -4,6 +4,7 @@
 
 package com.armedia.caliente.engine.exporter;
 
+import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.Collections;
@@ -555,14 +556,14 @@ public abstract class ExportEngine< //
 	}
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
-		throws ExportException, CmfStorageException {
-		return runExport(output, warningTracker, objectStore, contentStore, settings, null);
+		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore,
+		Map<String, ?> settings) throws ExportException, CmfStorageException {
+		return runExport(output, warningTracker, baseData, objectStore, contentStore, settings, null);
 	}
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings,
-		CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
+		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore,
+		Map<String, ?> settings, CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = new CfgTools(settings);
@@ -572,7 +573,7 @@ public abstract class ExportEngine< //
 		} catch (TransferEngineException e) {
 			throw new ExportException(e.getMessage(), e.getCause());
 		}
-		final ExportState exportState = new ExportState(output, objectStore, contentStore, configuration);
+		final ExportState exportState = new ExportState(output, baseData, objectStore, contentStore, configuration);
 
 		final SessionFactory<SESSION> sessionFactory;
 		try {

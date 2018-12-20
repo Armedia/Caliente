@@ -33,7 +33,7 @@ public class ScanIndexItemMarker implements Cloneable {
 
 		public boolean isFolder(File contentFile) {
 			if (this.staticValue != null) { return this.staticValue.booleanValue(); }
-			return contentFile.isDirectory();
+			return !contentFile.exists() || contentFile.isDirectory();
 		}
 	}
 

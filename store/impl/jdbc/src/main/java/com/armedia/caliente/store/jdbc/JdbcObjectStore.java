@@ -1559,11 +1559,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		List<Object[]> properties = new ArrayList<>();
 		Object[] cArr = new Object[9];
 		Object[] pArr = new Object[6];
-		int pos = 0;
 		for (CmfContentStream i : content) {
 			// First, the content record...
 			cArr[0] = objectId;
-			cArr[1] = pos;
+			cArr[1] = i.getIndex();
 			cArr[2] = i.getRenditionIdentifier();
 			cArr[3] = i.getRenditionPage();
 			cArr[4] = i.getModifier();
@@ -1575,7 +1574,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 			// Then, the properties...
 			pArr[0] = objectId;
-			pArr[1] = pos;
+			pArr[1] = i.getIndex();
 			for (String s : i.getPropertyNames()) {
 				if (s == null) {
 					continue;
@@ -1587,9 +1586,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 				properties.add(pArr.clone());
 			}
-
-			// Next! ;)
-			pos++;
 		}
 
 		// Step 3: execute the batch inserts
@@ -1637,7 +1633,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					final QueryRunner qr = new QueryRunner();
 					while (rs.next()) {
 						final int contentNumber = rs.getInt("content_number");
-						final CmfContentStream info = new CmfContentStream(rs.getString("rendition_id"),
+						final CmfContentStream info = new CmfContentStream(contentNumber, rs.getString("rendition_id"),
 							rs.getInt("rendition_page"), rs.getString("modifier"));
 						info.setLength(rs.getLong("stream_length"));
 						String ext = rs.getString("extension");

@@ -21,7 +21,6 @@ import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionFactory;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfTranslator;
-import com.armedia.caliente.engine.alfresco.bi.AlfrescoBaseBulkOrganizationStrategy;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -211,10 +210,10 @@ public class AlfImportEngine extends
 
 		@Override
 		protected void importStartedImpl(ImportState importState, Map<CmfType, Long> summary) {
-			File rootLocation = importState.streamStore.getRootLocation();
+			File rootLocation = importState.baseData;
 			if (rootLocation != null) {
 				// Initialize the manifest for this job
-				File biRoot = new File(rootLocation, AlfrescoBaseBulkOrganizationStrategy.BASE_DIR);
+				File biRoot = new File(rootLocation, AlfCommon.METADATA_ROOT);
 				File manifest = new File(biRoot, AlfImportEngine.MANIFEST_NAME);
 				try {
 					manifest = manifest.getCanonicalFile();

@@ -28,8 +28,8 @@ import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.tools.MimeTools;
@@ -260,6 +260,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		final int pageCount = document.getPageCount();
 		List<CmfContentStream> cmfContentStream = new ArrayList<>();
 		Set<String> processed = new LinkedHashSet<>();
+		int index = 0;
 		for (int i = 0; i < pageCount; i++) {
 			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
 				IDfQuery.DF_EXECREAD_QUERY);
@@ -275,7 +276,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 
 					final IDfContent content = IDfContent.class.cast(session.getObject(contentId));
 					CmfContentStream info = storeContentStream(session, translator, marshaled, document, content,
-						streamStore, ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT));
+						index++, streamStore, ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT));
 					cmfContentStream.add(info);
 				}
 			} finally {
@@ -291,8 +292,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 	}
 
 	protected CmfContentStream storeContentStream(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, IDfSysObject document, IDfContent content, CmfContentStore<?, ?, ?> streamStore,
-		boolean skipContent) throws Exception {
+		CmfObject<IDfValue> marshaled, IDfSysObject document, IDfContent content, int index,
+		CmfContentStore<?, ?, ?> streamStore, boolean skipContent) throws Exception {
 		final String contentId = content.getObjectId().getId();
 		if (document == null) { throw new Exception(String
 			.format("Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
@@ -310,7 +311,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		} else {
 			renditionId = null;
 		}
-		CmfContentStream info = new CmfContentStream(renditionId, pageNumber, pageModifier);
+		CmfContentStream info = new CmfContentStream(index, renditionId, pageNumber, pageModifier);
 		IDfId formatId = content.getFormatId();
 		MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
 		if (!formatId.isNull()) {

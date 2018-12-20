@@ -5,7 +5,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 public enum LocalContentStoreSetting implements ConfigurationSetting {
 	//
 	BASE_DIR,
-	URI_STRATEGY,
+	URI_ORGANIZER,
 	FORCE_SAFE_FILENAMES(true),
 	SAFE_FILENAME_ENCODING("UTF-8"),
 	FIX_FILENAMES(false),

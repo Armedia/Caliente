@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.caliente.command;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
@@ -41,16 +42,16 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 		super(CalienteCommand.EXPORT, engine);
 	}
 
-	public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker,
+	public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
 		throws ExportException, CmfStorageException {
-		return this.engine.runExport(output, warningTracker, objectStore, contentStore, settings);
+		return this.engine.runExport(output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
-	public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker,
+	public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings,
 		CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
-		return this.engine.runExport(output, warningTracker, objectStore, contentStore, settings, counter);
+		return this.engine.runExport(output, warningTracker, baseData, objectStore, contentStore, settings, counter);
 	}
 
 	@Override
@@ -121,7 +122,8 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 			start = new Date();
 			try {
 				this.log.info("##### Export Process Started #####");
-				runExport(this.console, warningTracker, objectStore, contentStore, settings);
+				runExport(this.console, warningTracker, state.getBaseDataLocation(), objectStore, contentStore,
+					settings);
 				this.log.info("##### Export Process Finished #####");
 				summary = objectStore.getStoredObjectTypes();
 			} catch (Throwable t) {

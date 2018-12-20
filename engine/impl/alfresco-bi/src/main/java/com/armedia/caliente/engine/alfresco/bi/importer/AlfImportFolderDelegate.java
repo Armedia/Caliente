@@ -1,12 +1,9 @@
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
-
-import org.apache.commons.io.FileUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
@@ -90,12 +87,14 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 
 		// The folder is either not empty, or not a user's or group's home, so we
 		// include it to avoid problems with its children
+		/*
 		try {
 			FileUtils.forceMkdir(target);
-			return true;
 		} catch (IOException e) {
 			throw new ImportException(String.format("Failed to create the folder for %s at [%s]",
 				this.cmfObject.getDescription(), target.getAbsolutePath()), e);
 		}
+		*/
+		return true;
 	}
 }

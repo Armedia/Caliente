@@ -33,11 +33,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
+import com.armedia.caliente.store.CmfContentOrganizer;
+import com.armedia.caliente.store.CmfContentOrganizer.Location;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfOrganizationStrategy;
-import com.armedia.caliente.store.CmfOrganizationStrategy.Location;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
@@ -81,7 +81,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	private final File baseDir;
 	private final boolean storeProperties;
-	private final CmfOrganizationStrategy strategy;
+	private final CmfContentOrganizer organizer;
 	private final File propertiesFile;
 	private final AtomicBoolean modified = new AtomicBoolean(false);
 	private final CfgTools settings;
@@ -98,7 +98,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		return f.exists() && f.isFile() && f.canRead();
 	}
 
-	public LocalContentStore(CfgTools settings, File baseDir, CmfOrganizationStrategy strategy, boolean cleanData)
+	public LocalContentStore(CfgTools settings, File baseDir, CmfContentOrganizer organizer, boolean cleanData)
 		throws CmfStorageException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
@@ -128,7 +128,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			this.propertiesFile = oldPropertiesFile;
 		}
 
-		boolean storeStrategyName = true;
+		boolean storeOrganizerName = true;
 		if (cleanData) {
 			this.propertiesLoaded = false;
 			clearProperties();
@@ -152,20 +152,24 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 			this.propertiesLoaded = propertiesLoaded;
 
-			CmfValue currentStrategyName = getProperty("strategy");
-			if ((currentStrategyName != null) && !currentStrategyName.isNull()) {
-				CmfOrganizationStrategy currentStrategy = CmfOrganizationStrategy
-					.getStrategy(currentStrategyName.asString());
-				if (currentStrategy != null) {
-					strategy = currentStrategy;
-					storeStrategyName = false;
+			CmfValue currentOrganizerName = getProperty("organizer");
+			if ((currentOrganizerName == null) || currentOrganizerName.isNull()) {
+				// For backwards compatibility
+				currentOrganizerName = getProperty("strategy");
+			}
+			if ((currentOrganizerName != null) && !currentOrganizerName.isNull()) {
+				CmfContentOrganizer currentOrganizer = CmfContentOrganizer
+					.getOrganizer(currentOrganizerName.asString());
+				if (currentOrganizer != null) {
+					organizer = currentOrganizer;
+					storeOrganizerName = false;
 				}
 			}
 		}
-		this.strategy = strategy;
-		if (this.strategy == null) { throw new IllegalArgumentException("Must provide a path strategy"); }
-		if (storeStrategyName) {
-			setProperty("strategy", new CmfValue(strategy.getName()));
+		this.organizer = organizer;
+		if (this.organizer == null) { throw new IllegalArgumentException("Must provide a content organizer"); }
+		if (storeOrganizerName) {
+			setProperty("organizer", new CmfValue(organizer.getName()));
 		}
 
 		// This seems clunky but it's actually very useful - it allows us to load properties
@@ -306,7 +310,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	@Override
 	protected <T> URI doCalculateLocator(CmfAttributeTranslator<T> translator, CmfObject<T> object,
 		CmfContentStream info) {
-		final Location location = this.strategy.getLocation(translator, object, info);
+		final Location location = this.organizer.getLocation(translator, object, info);
 		final List<String> rawPath = new ArrayList<>(location.containerSpec);
 		rawPath.add(constructFileName(location));
 

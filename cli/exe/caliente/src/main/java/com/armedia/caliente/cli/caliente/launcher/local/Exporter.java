@@ -81,8 +81,8 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		return new File(BaseParam.source.getString());
 	}
 	
-	protected String getContentStrategyName() {
-		return LocalOrganizationStrategy.NAME;
+	protected String getContentOrganizerName() {
+		return LocalOrganizer.NAME;
 	}
 	*/
 

@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model name="ucm:contentModel" xmlns="http://www.alfresco.org/model/dictionary/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.alfresco.org/model/dictionary/1.0  platform:/resource/caliente-engine-alfresco-bi/src/main/resources/alfresco-model.xsd ">
+	<description>Armedia Caliente Object Model</description>
+	<author>Diego Rivera &lt;diego.rivera@armedia.com&gt;</author>
+	<version>1.1</version>
+
+	<imports>
+		<!-- Import Alfresco Dictionary Definitions -->
+		<import uri="http://www.alfresco.org/model/dictionary/1.0" prefix="d" />
+
+		<!-- Import Alfresco Content Domain Model Definitions -->
+		<import uri="http://www.alfresco.org/model/content/1.0" prefix="cm" />
+
+		<!-- Import CMIS Data Model -->
+    	<import uri="http://www.alfresco.org/model/cmis/1.0/cs01" prefix="cmis" />
+
+		<!-- Import Caliente Domain Model Definitions -->
+		<import uri="http://www.armedia.com/model/armedia/1.0" prefix="arm" />
+	</imports>
+
+	<namespaces>
+		<namespace uri="http://www.armedia.com/model/ucm/1.0" prefix="ucm" />
+	</namespaces>
+
+	<aspects>
+		<!--
+			BEGIN ucm:common
+		-->
+		<aspect name="ucm:common">
+			<title>Caliente UCM Common metadata</title>
+			<parent>arm:caliente</parent>
+			<properties>
+				<property name="cmis:creationDate">
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="cmis:lastModificationDate">
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="cmis:name">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:cmfParentPath">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fClbraAliasList">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fClbraUserList">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fDocAccount">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fInhibitPropagation">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fOwner">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fRealItemGUID">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fTargetGUID">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:itemType">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END ucm:common
+		-->
+
+		<!--
+			BEGIN ucm:document
+		-->
+		<aspect name="ucm:document">
+			<title>Caliente UCM Document metadata</title>
+			<parent>ucm:common</parent>
+			<properties>
+				<property name="cmis:contentStreamLength">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="cmis:contentStreamMimeType">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dDocType">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="cmis:versionSeriesCheckedOutBy">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dCharacterSet">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dCreateDate">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dDocName">
+					<type>d:text</type>
+					<mandatory enforced="true">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dRevisionID">
+					<type>d:int</type>
+					<mandatory enforced="true">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dRevLabel">
+					<type>d:int</type>
+					<mandatory enforced="true">true</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dDocAuthor">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dDocCreatedDate">
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dDocCreator">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dDocID">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dDocLastModifiedDate">
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dDocLastModifier">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dDocOwner">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dExtension">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dID">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dInDate">
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dIndexedID">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dIndexerState">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dIsCheckedOut">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dIsPrimary">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dIsWebFormat">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dLocation">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dOriginalName">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dProcessingState">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dPublishState">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dReleaseDate">
+					<type>d:datetime</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dReleaseState">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dRendition2">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dRevClassID">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dRevRank">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dSecurityGroup">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:dWebExtension">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fDocClass">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fFileGUID">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fFileType">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:permissions">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:xIdcProfile">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:xPartitionId">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:xWebFlag">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			BEGIN ucm:document
+		-->
+
+		<!--
+			BEGIN ucm:folder
+		-->
+		<aspect name="ucm:folder">
+			<title>Caliente UCM Folder metadata</title>
+			<parent>ucm:common</parent>
+			<properties>
+				<property name="ucm:fAllocatorParentFolderGUID">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fChildFilesCount">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fDisplayDescription">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fFolderGUID">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fIsBrokenShortcut">
+					<type>d:text</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fIsLibrary">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fLibraryType">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+				<property name="ucm:fPromptForMetadata">
+					<type>d:int</type>
+					<mandatory enforced="false">false</mandatory>
+					<multiple>false</multiple>
+				</property>
+			</properties>
+		</aspect>
+		<!--
+			END ucm:folder
+		-->
+	</aspects>
+</model>

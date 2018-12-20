@@ -37,6 +37,6 @@ public class BaseTest {
 		CmfContentStore<?, ?, ?> contentStore = CmfStores.getContentStore("default");
 		contentStore.clearProperties();
 		contentStore.clearAllStreams();
-		engine.runExport(output, null, objectStore, contentStore, settings);
+		engine.runExport(output, null, null, objectStore, contentStore, settings);
 	}
 }

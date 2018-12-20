@@ -98,7 +98,7 @@ public abstract class CmfValueMapper {
 
 		@Override
 		public String toString() {
-			return String.format("Mapping [objectType=%s, mappingName=%s, sourceValue=%s, targetValue=%s]",
+			return String.format("Mapping [objectType=%s, mappingName=[%s], sourceValue=[%s], targetValue=[%s]]",
 				this.objectType, this.mappingName, this.sourceValue, this.targetValue);
 		}
 	}

@@ -57,6 +57,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 
 		private final OPERATION operation;
 
+		private final Logger log = LoggerFactory.getLogger(getClass());
+
 		private Mapper() {
 			this.operation = null;
 		}
@@ -75,15 +77,31 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
 			if ((source == null) && (target == null)) { throw new IllegalArgumentException(
 				"Must provide either a source or a target value for the mapping"); }
+
+			this.log.debug("Creating a {} mapping for attribute [{}] from [{}] to [{}]{}", type, name, source, target,
+				(this.operation != null ? " within a transaction" : ""));
 			try {
-				if (this.operation == null) { return CmfObjectStore.this.createMapping(type, name, source, target); }
-				CmfObjectStore.this.createMapping(this.operation, type, name, source, target);
 				Mapping ret = null;
-				if ((source != null) && (target != null)) {
-					ret = constructMapping(type, name, source, target);
+				if (this.operation == null) {
+					ret = CmfObjectStore.this.createMapping(type, name, source, target);
+				} else {
+					CmfObjectStore.this.createMapping(this.operation, type, name, source, target);
+					if ((source != null) && (target != null)) {
+						ret = constructMapping(type, name, source, target);
+					}
+				}
+				if (ret != null) {
+					this.log.debug("Created {}", ret);
+				} else {
+					this.log.debug("Deleted the {} mapping(s) for [{}] {} [{}] ", type, name,
+						(source != null ? "from" : "to"), Tools.coalesce(source, target));
 				}
 				return ret;
 			} catch (CmfStorageException e) {
+				if (this.log.isDebugEnabled()) {
+					this.log.error("Failed to create a {} mapping for attribute [{}] from [{}] to [{}]", type, name,
+						source, target, e);
+				}
 				throw new RuntimeException(String.format(
 					"Exception caught attempting to get the target mapping for [%s/%s/%s]", type, name, source), e);
 			}

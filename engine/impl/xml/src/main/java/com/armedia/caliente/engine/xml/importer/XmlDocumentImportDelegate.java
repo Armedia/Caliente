@@ -20,8 +20,8 @@ import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.xml.importer.jaxb.ContentStreamT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DocumentVersionT;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
@@ -119,7 +119,7 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 
 		if (contents == 0) {
 			// Generate a placeholder, empty file
-			CmfContentStream info = new CmfContentStream();
+			CmfContentStream info = new CmfContentStream(0);
 			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(translator, this.cmfObject, info);
 			File f = null;
 			try {

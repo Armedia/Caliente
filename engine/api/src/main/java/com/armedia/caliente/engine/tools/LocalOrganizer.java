@@ -11,19 +11,19 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfOrganizationStrategy;
+import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.commons.utilities.FileNameTools;
 
-public class LocalOrganizationStrategy extends CmfOrganizationStrategy {
+public class LocalOrganizer extends CmfContentOrganizer {
 
 	public static final String NAME = "localfs";
 
-	public LocalOrganizationStrategy() {
-		super(LocalOrganizationStrategy.NAME);
+	public LocalOrganizer() {
+		super(LocalOrganizer.NAME);
 	}
 
-	protected LocalOrganizationStrategy(String name) {
+	protected LocalOrganizer(String name) {
 		super(name);
 	}
 
