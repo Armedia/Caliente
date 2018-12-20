@@ -4,6 +4,7 @@
 
 package com.armedia.caliente.engine.importer;
 
+import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -386,14 +387,14 @@ public abstract class ImportEngine<//
 	}
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final WarningTracker warningTracker,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings)
-		throws ImportException, CmfStorageException {
-		return runImport(output, warningTracker, objectStore, streamStore, settings, null);
+		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
+		Map<String, ?> settings) throws ImportException, CmfStorageException {
+		return runImport(output, warningTracker, baseData, objectStore, streamStore, settings, null);
 	}
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final WarningTracker warningTracker,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings,
-		CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
+		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
+		Map<String, ?> settings, CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -402,7 +403,7 @@ public abstract class ImportEngine<//
 		// objectStore.clearAllMappings();Object
 
 		final CfgTools configuration = new CfgTools(settings);
-		final ImportState importState = new ImportState(output, objectStore, streamStore, configuration);
+		final ImportState importState = new ImportState(output, baseData, objectStore, streamStore, configuration);
 		final SessionFactory<SESSION> sessionFactory;
 		try {
 			sessionFactory = newSessionFactory(configuration, this.crypto);

@@ -20,6 +20,7 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 	private final int renditionPage;
 	private final String modifier;
 
+	private final int index;
 	private long length = 0;
 	private MimeType mimeType = null;
 	private String extension = null;
@@ -28,30 +29,35 @@ public final class CmfContentStream implements Comparable<CmfContentStream> {
 	private final Map<String, String> properties = new HashMap<>();
 	private final CfgTools cfg = new CfgTools(this.properties);
 
-	public CmfContentStream() {
-		this(null, 0, null);
+	public CmfContentStream(int index) {
+		this(index, null, 0, null);
 	}
 
-	public CmfContentStream(int renditionPage) {
-		this(null, renditionPage, null);
+	public CmfContentStream(int index, int renditionPage) {
+		this(index, null, renditionPage, null);
 	}
 
-	public CmfContentStream(int renditionPage, String modifier) {
-		this(null, renditionPage, modifier);
+	public CmfContentStream(int index, int renditionPage, String modifier) {
+		this(index, null, renditionPage, modifier);
 	}
 
-	public CmfContentStream(String renditionIdentifier) {
-		this(renditionIdentifier, 0, null);
+	public CmfContentStream(int index, String renditionIdentifier) {
+		this(index, renditionIdentifier, 0, null);
 	}
 
-	public CmfContentStream(String renditionIdentifier, int renditionPage) {
-		this(renditionIdentifier, renditionPage, null);
+	public CmfContentStream(int index, String renditionIdentifier, int renditionPage) {
+		this(index, renditionIdentifier, renditionPage, null);
 	}
 
-	public CmfContentStream(String renditionIdentifier, int renditionPage, String modifier) {
+	public CmfContentStream(int index, String renditionIdentifier, int renditionPage, String modifier) {
+		this.index = (index < 0 ? 0 : index);
 		this.renditionIdentifier = Tools.coalesce(renditionIdentifier, CmfContentStream.DEFAULT_RENDITION);
 		this.renditionPage = renditionPage;
 		this.modifier = Tools.coalesce(modifier, "");
+	}
+
+	public int getIndex() {
+		return this.index;
 	}
 
 	public boolean isDefaultRendition() {

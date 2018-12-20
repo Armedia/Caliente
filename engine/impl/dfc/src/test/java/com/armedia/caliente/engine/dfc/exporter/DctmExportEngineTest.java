@@ -30,7 +30,7 @@ public class DctmExportEngineTest extends DctmEngineTest {
 		settings.put(Setting.DQL.getLabel(),
 			"select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)");
 
-		exporter.runExport(this.output, null, this.cmfObjectStore, this.streamStore, settings);
+		exporter.runExport(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore, settings);
 	}
 
 }

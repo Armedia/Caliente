@@ -2,8 +2,8 @@ package com.armedia.caliente.store.local;
 
 import java.io.File;
 
+import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfContentStoreFactory;
-import com.armedia.caliente.store.CmfOrganizationStrategy;
 import com.armedia.caliente.store.CmfPrepInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.xml.StoreConfiguration;
@@ -25,12 +25,12 @@ public class LocalContentStoreFactory extends CmfContentStoreFactory<LocalConten
 			String.format("No setting [%s] specified", LocalContentStoreSetting.BASE_DIR.getLabel())); }
 		// Resolve system properties
 
-		CmfOrganizationStrategy strategy = CmfOrganizationStrategy
-			.getStrategy(cfg.getString(LocalContentStoreSetting.URI_STRATEGY));
+		CmfContentOrganizer organizer = CmfContentOrganizer
+			.getOrganizer(cfg.getString(LocalContentStoreSetting.URI_ORGANIZER));
 		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Creating a new local file store with base path [%s], and strategy [%s]",
-				basePath, strategy.getName()));
+			this.log.debug(String.format("Creating a new local file store with base path [%s], and organizer [%s]",
+				basePath, organizer.getName()));
 		}
-		return new LocalContentStore(cfg, new File(basePath), strategy, cleanData);
+		return new LocalContentStore(cfg, new File(basePath), organizer, cleanData);
 	}
 }

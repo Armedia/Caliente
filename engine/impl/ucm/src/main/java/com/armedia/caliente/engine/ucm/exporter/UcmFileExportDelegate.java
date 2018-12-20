@@ -193,6 +193,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 
 		final boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
 		final Map<String, UcmRenditionInfo> renditions = ctx.getSession().getRenditions(this.object);
+		int index = contents.size();
 		for (String renditionLabel : renditions.keySet()) {
 			if (!UcmRenditionInfo.DEFAULT.equalsIgnoreCase(renditionLabel) && !includeRenditions) {
 				// If this isn't the primary renditon and we're not interested in pulling
@@ -206,7 +207,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 				renditionLabel = CmfContentStream.DEFAULT_RENDITION;
 			}
 
-			CmfContentStream info = new CmfContentStream(renditionLabel, 0);
+			CmfContentStream info = new CmfContentStream(index++, renditionLabel, 0);
 			try {
 				info.setMimeType(new MimeType(rendition.getFormat()));
 			} catch (MimeTypeParseException e) {

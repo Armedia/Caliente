@@ -6,7 +6,7 @@
 		<setting name="target">${user.dir}/caliente</setting>
 		<setting name="dir.metadata">${target}</setting>
 		<setting name="dir.content">${target}/content</setting>
-		<setting name="dir.content.strategy">caliente</setting>
+		<setting name="dir.content.organizer">caliente</setting>
 
 		<!-- H2 Support -->
 		<setting name="db.driver">org.h2.Driver</setting>
@@ -34,7 +34,7 @@
 		<type>local</type>
 		<settings>
 			<setting name="base.dir">${dir.content}</setting>
-			<setting name="uri.strategy">${dir.content.strategy}</setting>
+			<setting name="uri.organizer">${dir.content.organizer}</setting>
 			<setting name="force.safe.filenames">false</setting>
 			<setting name="safe.filename.encoding">UTF-8</setting>
 			<setting name="fix.filenames">true</setting>
@@ -57,7 +57,7 @@
 		<type>local</type>
 		<settings>
 			<setting name="base.dir">${dir.content}</setting>
-			<setting name="uri.strategy">localfs</setting>
+			<setting name="uri.organizer">localfs</setting>
 			<setting name="force.safe.filenames">false</setting>
 			<setting name="safe.filename.encoding">UTF-8</setting>
 			<setting name="fix.filenames">true</setting>

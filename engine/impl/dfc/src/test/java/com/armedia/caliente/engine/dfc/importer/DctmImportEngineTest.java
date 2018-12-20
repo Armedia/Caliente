@@ -26,7 +26,7 @@ public class DctmImportEngineTest extends DctmEngineTest {
 		settings.put(DctmSetting.USERNAME.getLabel(), "dctmadmin");
 		settings.put(DctmSetting.PASSWORD.getLabel(), "123");
 
-		importer.runImport(this.output, null, this.cmfObjectStore, this.streamStore, settings);
+		importer.runImport(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore, settings);
 	}
 
 }

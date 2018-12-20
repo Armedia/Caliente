@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
@@ -73,14 +72,14 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 		private Record(CmfObject<?> object, ExportResult result, Throwable thrown, String extraInfo) {
 			this.number = object.getNumber();
-			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
+			this.date = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date());
 			this.type = object.getType();
 			this.tier = object.getDependencyTier();
-			this.historyId = StringEscapeUtils.escapeCsv(object.getHistoryId());
-			this.sourceId = StringEscapeUtils.escapeCsv(object.getId());
-			this.label = StringEscapeUtils.escapeCsv(object.getLabel());
+			this.historyId = object.getHistoryId();
+			this.sourceId = object.getId();
+			this.label = object.getLabel();
 			this.result = result;
-			this.extraInfo = StringEscapeUtils.escapeCsv(extraInfo);
+			this.extraInfo = extraInfo;
 			if (result != ExportResult.FAILED) {
 				this.thrown = null;
 			} else {
@@ -100,14 +99,14 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 		private Record(CmfType type, String objectId, ExportResult result, Throwable thrown, String extraInfo) {
 			this.number = ExportManifest.NULL;
-			this.date = StringEscapeUtils.escapeCsv(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date()));
+			this.date = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date());
 			this.type = type;
 			this.tier = null;
 			this.historyId = "";
-			this.sourceId = StringEscapeUtils.escapeCsv(objectId);
+			this.sourceId = objectId;
 			this.label = "";
 			this.result = result;
-			this.extraInfo = StringEscapeUtils.escapeCsv(extraInfo);
+			this.extraInfo = extraInfo;
 			if (result != ExportResult.FAILED) {
 				this.thrown = null;
 			} else {
@@ -128,7 +127,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 			if (cause != null) {
 				base = String.format("%s (%s)", base, formatThrown(cause));
 			}
-			return StringEscapeUtils.escapeCsv(base);
+			return base;
 		}
 
 		public void log(Logger log) {

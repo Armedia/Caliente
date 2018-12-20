@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.caliente.command;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -124,7 +123,7 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 		return execute(state, commandValues, positionals);
 	}
 
-	public String getContentStrategyName() {
+	public String getContentOrganizerName() {
 		return null;
 	}
 
@@ -134,14 +133,6 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 
 	public void customizeContentStoreProperties(StoreConfiguration cfg) {
 		// Do nothing by default
-	}
-
-	public File getMetadataFilesLocation() {
-		return null;
-	}
-
-	public File getContentFilesLocation() {
-		return null;
 	}
 
 	protected abstract int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)

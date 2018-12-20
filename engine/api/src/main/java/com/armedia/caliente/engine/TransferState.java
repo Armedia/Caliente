@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -15,6 +16,7 @@ import com.armedia.commons.utilities.CfgTools;
 public abstract class TransferState {
 	public final UUID jobId = UUID.randomUUID();
 	public final Logger output;
+	public final File baseData;
 	public final CmfObjectStore<?, ?> objectStore;
 	public final CmfContentStore<?, ?, ?> streamStore;
 	public final CfgTools cfg;
@@ -27,9 +29,10 @@ public abstract class TransferState {
 	 * @param streamStore
 	 * @param settings
 	 */
-	protected TransferState(Logger output, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore,
-		CfgTools settings) {
+	protected TransferState(Logger output, File baseData, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> streamStore, CfgTools settings) {
 		this.output = output;
+		this.baseData = baseData;
 		this.objectStore = objectStore;
 		this.streamStore = streamStore;
 		this.cfg = settings;
