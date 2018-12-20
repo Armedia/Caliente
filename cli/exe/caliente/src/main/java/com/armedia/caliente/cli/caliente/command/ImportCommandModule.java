@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -76,9 +77,9 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
 		throws CalienteException {
 		Set<ImportResult> outcomes = commandValues.getAllEnums(ImportResult.class, CommandModule.ALL, false,
-			CLIParam.manifest_outcomes_import);
-		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, CommandModule.ALL, false,
-			CLIParam.manifest_types);
+			CLIParam.manifest_outcomes_import, EnumSet.allOf(ImportResult.class));
+		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, CommandModule.ALL, false, CLIParam.manifest_types,
+			EnumSet.allOf(CmfType.class));
 
 		final ImportCommandListener mainListener = new ImportCommandListener(this.console);
 		final CalienteWarningTracker warningTracker = mainListener.getWarningTracker();
