@@ -117,14 +117,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			boolean ok = false;
 			op.begin();
 			try {
-				JdbcSchemaManager.prepareSchema(JdbcObjectStore.SCHEMA_CHANGE_LOG, op, updateSchema, cleanData,
-					this.managedTransactions, new JdbcSchemaManager.Callback() {
-						@Override
-						public void cleanData(JdbcOperation op) throws CmfStorageException {
-							clearAllProperties(op);
-							clearAllObjects(op);
-							clearAttributeMappings(op);
+				JdbcSchemaManager.prepareSchema(JdbcObjectStore.SCHEMA_CHANGE_LOG, op, updateSchema,
+					this.managedTransactions, (o) -> {
+						if (cleanData) {
+							clearAllProperties(o);
+							clearAllObjects(o);
 						}
+						clearAttributeMappings(o);
 					});
 				op.commit();
 				ok = true;
