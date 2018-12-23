@@ -38,7 +38,7 @@
 	<properties>
 		<maven.min-version>3.2.2</maven.min-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.build.target>1.7</project.build.target>
+		<project.build.target>1.8</project.build.target>
 		<dfc.version>6.7-SP1</dfc.version>
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 	</properties>
