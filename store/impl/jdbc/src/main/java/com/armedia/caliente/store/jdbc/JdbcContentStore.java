@@ -218,13 +218,8 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 			boolean ok = false;
 			op.begin();
 			try {
-				JdbcSchemaManager.prepareSchema(JdbcContentStore.SCHEMA_CHANGE_LOG, op, updateSchema, cleanData,
-					this.managedTransactions, new JdbcSchemaManager.Callback() {
-						@Override
-						public void cleanData(JdbcOperation op) throws CmfStorageException {
-							clearAllProperties(op);
-						}
-					});
+				JdbcSchemaManager.prepareSchema(JdbcContentStore.SCHEMA_CHANGE_LOG, op, updateSchema,
+					this.managedTransactions, (o) -> clearAllProperties(op));
 				op.commit();
 				ok = true;
 			} finally {

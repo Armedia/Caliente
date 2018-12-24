@@ -12,15 +12,16 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 
 class JdbcSchemaManager {
 
-	static interface Callback {
-		void cleanData(JdbcOperation op) throws CmfStorageException;
+	@FunctionalInterface
+	static interface SchemaPreparation {
+		void prepareSchema(JdbcOperation op) throws CmfStorageException;
 	}
 
 	private JdbcSchemaManager() {
 	}
 
-	static void prepareSchema(String changeLog, JdbcOperation op, boolean updateSchema, boolean cleanData,
-		boolean managedTx, Callback callback) throws CmfStorageException {
+	static void prepareSchema(String changeLog, JdbcOperation op, boolean updateSchema, boolean managedTx,
+		SchemaPreparation... schemaPreparations) throws CmfStorageException {
 		try {
 			Database database = DatabaseFactory.getInstance()
 				.findCorrectDatabaseImplementation(new JdbcConnection(op.getConnection()));
@@ -39,8 +40,12 @@ class JdbcSchemaManager {
 			throw new CmfStorageException(String.format(fmt, changeLog), e);
 		}
 
-		if (cleanData && (callback != null)) {
-			callback.cleanData(op);
+		if (schemaPreparations != null) {
+			for (SchemaPreparation p : schemaPreparations) {
+				if (p != null) {
+					p.prepareSchema(op);
+				}
+			}
 		}
 	}
 }

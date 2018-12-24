@@ -4,10 +4,10 @@
       <attribute name="package" value="com.armedia.caliente.engine.newxml"/>
     </node>
     <node name="libprov">
-      <attribute name="provider-id" value="jaxb-jre-library-provider"/>
+      <attribute name="provider-id" value="jaxb-user-library-provider"/>
     </node>
     <node name="platform">
-      <attribute name="platform-id" value="generic_2_1"/>
+      <attribute name="platform-id" value="generic_2_2"/>
     </node>
     <node name="schemas">
       <node name="schema-1">
