@@ -33,7 +33,6 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.schema.ObjectType;
-import com.armedia.caliente.engine.schema.SchemaAttribute;
 import com.armedia.caliente.engine.schema.SchemaMember;
 import com.armedia.caliente.engine.schema.TypeSchema;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
@@ -262,8 +261,7 @@ public class AttributeMapper {
 		for (AttributeValue attribute : renderer.render(object, tracker)) {
 			final String targetName = attribute.getTargetName();
 			// First things first: is this attribute residual?
-			final SchemaAttribute schemaAttribute = type.getAttribute(targetName);
-			if (schemaAttribute == null) {
+			if (!type.hasAttribute(targetName)) {
 				residuals.put(targetName, attribute);
 				continue;
 			}
@@ -284,13 +282,13 @@ public class AttributeMapper {
 				continue;
 			}
 
-			final SchemaAttribute schemaAttribute = type.getAttribute(sourceAttribute);
+			final boolean declared = type.hasAttribute(sourceAttribute);
 			final CmfAttribute<CmfValue> att = object.getAttribute(sourceAttribute);
 			final AttributeValue value = new AttributeValue(att, sourceAttribute, ',', false);
 
 			// If the attribute is declared, then copy it directly...otherwise, it's should be
 			// treated as a residual
-			(schemaAttribute != null ? finalValues : residuals).put(sourceAttribute, value);
+			(declared ? finalValues : residuals).put(sourceAttribute, value);
 		}
 
 		boolean residualsEnabled = false;
