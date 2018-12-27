@@ -148,6 +148,6 @@ public class ObjectType {
 
 	@Override
 	public String toString() {
-		return String.format("AlfrescoType [name=%s, aspects=%s]", this.name, this.aspects);
+		return String.format("ObjectType [name=%s, aspects=%s]", this.name, this.aspects);
 	}
 }
