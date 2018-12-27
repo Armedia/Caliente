@@ -1,21 +1,20 @@
-package com.armedia.caliente.engine.schema;
+package com.armedia.caliente.engine.importer.schema.decl;
 
 import java.util.Objects;
 
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
-public final class ObjectAttribute {
+public final class AttributeDeclaration<T extends AttributeContainerDeclaration<T>> {
 
-	public final SchemaMember<?> declaration;
+	public final T declaration;
 	public final String name;
 	public final CmfDataType type;
 	public final boolean multiple;
 	public final boolean required;
 
-	ObjectAttribute(SchemaMember<?> declaration, String name, CmfDataType type, boolean required, boolean multiple) {
-		this.declaration = Objects.requireNonNull(declaration,
-			"Must provide the SchemaMember that declares this attribute");
+	public AttributeDeclaration(T declaration, String name, CmfDataType type, boolean required, boolean multiple) {
+		this.declaration = Objects.requireNonNull(declaration, "Must provide a type");
 		this.name = name;
 		this.type = type;
 		this.required = required;
@@ -30,7 +29,7 @@ public final class ObjectAttribute {
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		ObjectAttribute other = ObjectAttribute.class.cast(obj);
+		AttributeDeclaration<?> other = AttributeDeclaration.class.cast(obj);
 		if (!Tools.equals(this.name, other.name)) { return false; }
 		if (this.type != other.type) { return false; }
 		if (this.required != other.required) { return false; }
@@ -40,7 +39,7 @@ public final class ObjectAttribute {
 
 	@Override
 	public String toString() {
-		return String.format("ObjectAttribute [name=%s, type=%s, required=%s, multiple=%s]", this.name, this.type,
-			this.required, this.multiple);
+		return String.format("ObjectAttribute [name=%s, type=%s, required=%s, multiple=%s, declaration=%s]", this.name,
+			this.type, this.required, this.multiple, this.declaration.getName());
 	}
 }

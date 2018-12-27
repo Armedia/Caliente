@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.schema;
+package com.armedia.caliente.engine.importer.schema;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -10,8 +10,9 @@ import java.util.TreeSet;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-import com.armedia.caliente.engine.schema.SchemaContentModel.Aspect;
-import com.armedia.caliente.engine.schema.decl.AttributeDeclaration;
+import com.armedia.caliente.engine.importer.schema.SchemaContentModel.Aspect;
+import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class SchemaMember<T extends SchemaMember<T>> {
@@ -27,7 +28,7 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 	protected final Set<String> allAttributeNames;
 	protected final String signature;
 
-	SchemaMember(SchemaService schemaService, String name, Collection<String> secondaries, T parent) {
+	SchemaMember(SchemaDeclarationService schemaService, String name, Collection<String> secondaries, T parent) {
 		this.parent = parent;
 		this.name = name;
 

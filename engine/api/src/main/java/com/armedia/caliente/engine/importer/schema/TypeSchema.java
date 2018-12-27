@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.schema;
+package com.armedia.caliente.engine.importer.schema;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,8 +14,8 @@ import java.util.TreeMap;
 
 import javax.xml.bind.JAXBException;
 
-import com.armedia.caliente.engine.schema.SchemaContentModel.Aspect;
-import com.armedia.caliente.engine.schema.SchemaContentModel.Type;
+import com.armedia.caliente.engine.importer.schema.SchemaContentModel.Aspect;
+import com.armedia.caliente.engine.importer.schema.SchemaContentModel.Type;
 import com.armedia.commons.utilities.Tools;
 
 public class TypeSchema {

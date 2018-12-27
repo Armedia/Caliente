@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.schema;
+package com.armedia.caliente.engine.importer.schema;
 
 import java.io.IOException;
 import java.io.InputStream;

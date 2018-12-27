@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.schema.decl;
+package com.armedia.caliente.engine.importer.schema.decl;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -14,7 +14,7 @@ import com.armedia.commons.utilities.Tools;
 public class AttributeContainerDeclaration<T extends AttributeContainerDeclaration<T>> {
 
 	private final String name;
-	private final Map<String, AttributeDeclaration> attributes;
+	private final Map<String, AttributeDeclaration<T>> attributes;
 	private final Set<String> secondaries;
 	private final T parent;
 
@@ -23,25 +23,25 @@ public class AttributeContainerDeclaration<T extends AttributeContainerDeclarati
 		return attName.replaceAll("^\\w+:", "");
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes) {
+	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes) {
 		this(name, attributes, null, null);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes,
+	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes,
 		Collection<String> secondaries) {
 		this(name, attributes, secondaries, null);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes, T parent) {
+	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes, T parent) {
 		this(name, attributes, null, parent);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes,
+	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes,
 		Collection<String> secondaries, T parent) {
 		this.name = name;
 		if (attributes != null) {
-			Map<String, AttributeDeclaration> m = new TreeMap<>();
-			for (AttributeDeclaration attribute : attributes) {
+			Map<String, AttributeDeclaration<T>> m = new TreeMap<>();
+			for (AttributeDeclaration<T> attribute : attributes) {
 				m.put(attribute.name, attribute);
 			}
 			this.attributes = Tools.freezeMap(new LinkedHashMap<>(m));
@@ -68,7 +68,7 @@ public class AttributeContainerDeclaration<T extends AttributeContainerDeclarati
 		return this.parent;
 	}
 
-	public final AttributeDeclaration getAttribute(String name) {
+	public final AttributeDeclaration<T> getAttribute(String name) {
 		return this.attributes.get(name);
 	}
 

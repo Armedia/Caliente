@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.schema;
+package com.armedia.caliente.engine.importer.schema;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -11,10 +11,10 @@ import java.util.TreeSet;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-import com.armedia.caliente.engine.schema.SchemaContentModel.Aspect;
+import com.armedia.caliente.engine.importer.schema.SchemaContentModel.Aspect;
 import com.armedia.commons.utilities.Tools;
 
-public class ObjectType extends SchemaMember<ObjectType> {
+public class SecondaryType extends SchemaMember<SecondaryType> {
 
 	private final SchemaMember<?> type;
 	private final String name;
@@ -29,7 +29,7 @@ public class ObjectType extends SchemaMember<ObjectType> {
 		return attName.replaceAll("^\\w+:", "");
 	}
 
-	ObjectType(SchemaMember<?> type, Collection<Aspect> appliedAspects) {
+	SecondaryType(SchemaMember<?> type, Collection<Aspect> appliedAspects) {
 		this.type = type;
 		if (appliedAspects == null) {
 			appliedAspects = Collections.emptyList();

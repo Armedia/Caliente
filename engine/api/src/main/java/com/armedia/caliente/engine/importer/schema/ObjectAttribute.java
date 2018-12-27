@@ -1,21 +1,21 @@
-package com.armedia.caliente.engine.schema.decl;
+package com.armedia.caliente.engine.importer.schema;
 
 import java.util.Objects;
 
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
-public final class AttributeDeclaration {
+public final class ObjectAttribute {
 
-	public final AttributeContainerDeclaration<?> declaration;
+	public final SchemaMember<?> declaration;
 	public final String name;
 	public final CmfDataType type;
 	public final boolean multiple;
 	public final boolean required;
 
-	public AttributeDeclaration(AttributeContainerDeclaration<?> declaration, String name, CmfDataType type,
-		boolean required, boolean multiple) {
-		this.declaration = Objects.requireNonNull(declaration, "Must provide a type");
+	ObjectAttribute(SchemaMember<?> declaration, String name, CmfDataType type, boolean required, boolean multiple) {
+		this.declaration = Objects.requireNonNull(declaration,
+			"Must provide the SchemaMember that declares this attribute");
 		this.name = name;
 		this.type = type;
 		this.required = required;
@@ -30,7 +30,7 @@ public final class AttributeDeclaration {
 	@Override
 	public boolean equals(Object obj) {
 		if (!Tools.baseEquals(this, obj)) { return false; }
-		AttributeDeclaration other = AttributeDeclaration.class.cast(obj);
+		ObjectAttribute other = ObjectAttribute.class.cast(obj);
 		if (!Tools.equals(this.name, other.name)) { return false; }
 		if (this.type != other.type) { return false; }
 		if (this.required != other.required) { return false; }
