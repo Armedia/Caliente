@@ -1,9 +1,10 @@
 package com.armedia.caliente.engine.importer.schema;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -11,53 +12,74 @@ import java.util.TreeSet;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import com.armedia.caliente.engine.importer.schema.SchemaContentModel.Aspect;
+import com.armedia.caliente.engine.importer.schema.decl.AttributeContainerDeclaration;
 import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
+import com.armedia.caliente.engine.importer.schema.decl.SecondaryTypeDeclaration;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class SchemaMember<T extends SchemaMember<T>> {
+public abstract class SchemaMember<T extends SchemaMember<T, D>, D extends AttributeContainerDeclaration<D>> {
 
-	protected final T parent;
 	protected final String name;
+	protected final D declaration;
+	protected final String parentName;
+	protected final T parent;
 
 	protected final Map<String, T> ancestors;
 	protected final Map<String, SecondaryType> secondaries;
 	protected final Map<String, SecondaryType> allSecondaries;
-	protected final Map<String, ObjectAttribute> attributes;
-	protected final Map<String, ObjectAttribute> allAttributes;
+	protected final Map<String, AttributeDeclaration<D>> attributes;
+	protected final Map<String, AttributeDeclaration<D>> allAttributes;
 	protected final Set<String> allAttributeNames;
 	protected final String signature;
 
-	SchemaMember(SchemaDeclarationService schemaService, String name, Collection<String> secondaries, T parent) {
-		this.parent = parent;
-		this.name = name;
+	protected SchemaMember(String nothing) {
+		this.declaration = null;
+		this.name = null;
+		this.parentName = null;
+		this.parent = null;
+		this.ancestors = Collections.emptyMap();
+		this.secondaries = this.allSecondaries = Collections.emptyMap();
+		this.attributes = this.allAttributes = Collections.emptyMap();
+		this.allAttributeNames = Collections.emptySet();
+		this.signature = null;
+	}
 
-		Map<String, ObjectAttribute> localAttributes = new TreeMap<>();
-		for (AttributeDeclaration property : schemaService.getAttributes(name)) {
-			String propertyName = property.name;
+	SchemaMember(D declaration, Map<String, D> hierarchy, Map<String, SecondaryTypeDeclaration> secondaries) {
+		this.declaration = Objects.requireNonNull(declaration, "Must provide a non-null declaration");
+		this.name = declaration.getName();
+		this.parentName = declaration.getParentName();
+
+		Map<String, AttributeDeclaration<D>> localAttributes = new TreeMap<>();
+		for (AttributeDeclaration<D> attribute : declaration.getAttributes()) {
+			String attributeName = attribute.name;
 			// Is this a duplicate at this level?
-			if (localAttributes.containsKey(propertyName)) { throw new IllegalStateException(
-				String.format("Duplicate attribute name [%s] on type [%s]", propertyName, this.name)); }
+			if (localAttributes.containsKey(attributeName)) { throw new IllegalStateException(
+				String.format("Duplicate attribute name [%s] on type [%s]", attributeName, this.name)); }
 
 			// Is this a duplicate at my parent's level?
-			if ((parent != null) && (parent.getAttribute(propertyName) != null)) { throw new IllegalStateException(
-				String.format("Duplicate attribute name [%s] on type [%s] - already defined by a supertype",
-					propertyName, this.name)); }
+			if ((this.parent != null)
+				&& (this.parent.getAttribute(attributeName) != null)) { throw new IllegalStateException(
+					String.format("Duplicate attribute name [%s] on type [%s] - already defined by supertype",
+						attributeName, this.name)); }
 
 			// No dupes, add the attribute
-			ObjectAttribute objectAttribute = new ObjectAttribute(this, name, property.type, property.required,
-				property.multiple);
-			localAttributes.put(objectAttribute.name, objectAttribute);
+			localAttributes.put(attribute.name, attribute);
 		}
 
 		// Next, apply the attributes from the mandatory aspects as our own
-		Map<String, Aspect> ma = new LinkedHashMap<>();
-		for (Aspect aspect : this.mandatoryAspects) {
-			ma.put(aspect.name, aspect);
+		Map<String, SecondaryType> includedSecondaries = new LinkedHashMap<>();
+		if (secondaries == null) {
+			secondaries = Collections.emptyMap();
+		}
+		for (String secondaryName : secondaries.keySet()) {
+			SecondaryTypeDeclaration secondaryDeclaration = secondaries.get(secondaryName);
+
+			SecondaryType st = schemaService.getSecondaryType(secondaryName);
+			includedSecondaries.put(st.getName(), st);
 
 			// Add the aspect's attributes
-			for (String attributeName : aspect.getAllAttributeNames()) {
-				ObjectAttribute attribute = aspect.getAttribute(attributeName);
+			for (String attributeName : st.getAllAttributeNames()) {
+				AttributeDeclaration<D> attribute = st.getAttribute(attributeName);
 				// If this attribute isn't declared on this type, or it's not declared in a
 				// parent type, or it's not declared in another mandatory aspect, we add it...
 				if (!localAttributes.containsKey(attributeName)) {
@@ -94,8 +116,8 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		// Finally, create the list of all the attributes this object supports
 		Set<String> allAttributeNames = new TreeSet<>();
 		allAttributeNames.addAll(this.localAttributes.keySet());
-		if (parent != null) {
-			allAttributeNames.addAll(parent.getAllAttributeNames());
+		if (this.parent != null) {
+			allAttributeNames.addAll(this.parent.getAllAttributeNames());
 		}
 		this.allAttributeNames = Tools.freezeSet(new LinkedHashSet<>(allAttributeNames));
 
@@ -142,9 +164,9 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		return this.ancestors.containsKey(name);
 	}
 
-	public ObjectAttribute getAttribute(String name) {
+	public AttributeDeclaration<D> getAttribute(String name) {
 		if (!this.allAttributeNames.contains(name)) { return null; }
-		ObjectAttribute objectAttribute = this.localAttributes.get(name);
+		AttributeDeclaration<D> objectAttribute = this.localAttributes.get(name);
 		if (objectAttribute == null) {
 			objectAttribute = this.parent.getAttribute(name);
 		}

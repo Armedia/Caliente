@@ -4,8 +4,14 @@ import java.util.Collection;
 
 public class SecondaryTypeDeclaration extends AttributeContainerDeclaration<SecondaryTypeDeclaration> {
 
+	public static final SecondaryTypeDeclaration NULL = new SecondaryTypeDeclaration();
+
+	private SecondaryTypeDeclaration() {
+		super(null);
+	}
+
 	public SecondaryTypeDeclaration(String name, Collection<AttributeDeclaration<SecondaryTypeDeclaration>> attributes,
-		Collection<String> secondaries, SecondaryTypeDeclaration parent) {
+		Collection<String> secondaries, String parent) {
 		super(name, attributes, secondaries, parent);
 	}
 
@@ -15,7 +21,7 @@ public class SecondaryTypeDeclaration extends AttributeContainerDeclaration<Seco
 	}
 
 	public SecondaryTypeDeclaration(String name, Collection<AttributeDeclaration<SecondaryTypeDeclaration>> attributes,
-		SecondaryTypeDeclaration parent) {
+		String parent) {
 		super(name, attributes, parent);
 	}
 

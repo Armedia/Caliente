@@ -13,16 +13,13 @@ import org.apache.commons.codec.digest.DigestUtils;
 
 import com.armedia.caliente.engine.importer.schema.SchemaContentModel.Aspect;
 import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
+import com.armedia.caliente.engine.importer.schema.decl.TypeDeclaration;
 import com.armedia.commons.utilities.Tools;
 
-public class ObjectType extends SchemaMember<ObjectType> {
+public class ObjectType extends SchemaMember<ObjectType, TypeDeclaration> {
 
-	private final SchemaMember<?> type;
-	private final String name;
-	private final Map<String, SecondaryType> secondaries;
-	private final Map<String, SecondaryType> extraSecondaries;
-	private final Set<String> declaredSecondaries;
-	private final Map<String, ObjectAttribute> attributes;
+	public static final ObjectType NULL = new ObjectType();
+
 	private final String signature;
 
 	public static String stripNamespace(String attName) {
@@ -30,18 +27,25 @@ public class ObjectType extends SchemaMember<ObjectType> {
 		return attName.replaceAll("^\\w+:", "");
 	}
 
-	ObjectType(SchemaDeclarationService schemaService, SchemaMember<?> type, Collection<String> secondaries) {
-		super(schemaService, type.name, secondaries, type.parent);
-		this.type = type;
+	private ObjectType() {
+		super("");
+		this.signature = null;
+	}
+
+	ObjectType(SchemaDeclarationService schemaService, TypeDeclaration declaration, Collection<String> secondaries) {
+		super(schemaService, declaration, secondaries);
+		this.declaration = declaration;
 		if (secondaries == null) {
 			secondaries = Collections.emptyList();
 		}
-		this.name = type.name;
-		Set<String> declaredAspects = new HashSet<>();
-		if (type.parent != null) {
-			declaredAspects.addAll(type.parent.getAllAspects());
+		this.name = declaration.getName();
+		Set<String> declaredSecondaries = new HashSet<>();
+		if (declaration.getParentName() != null) {
+			String parentName = declaration.getParentName();
+			declaredSecondaries.addAll(type.parent.getAllAspects());
 		}
-		declaredAspects.addAll(type.mandatoryAspects.keySet());
+
+		this.declaredSecondaries.addAll(declaration.getSecondaries());
 		Map<String, Aspect> aspects = new LinkedHashMap<>(type.mandatoryAspects);
 
 		Map<String, ObjectAttribute> attributes = new TreeMap<>();
@@ -55,7 +59,7 @@ public class ObjectType extends SchemaMember<ObjectType> {
 		Map<String, Aspect> extraAspects = new TreeMap<>();
 		for (Aspect aspect : secondaries) {
 			aspects.put(aspect.name, aspect);
-			if (!declaredAspects.contains(aspect.name)) {
+			if (!declaredSecondaries.contains(aspect.name)) {
 				extraAspects.put(aspect.name, aspect);
 			}
 			for (String attribute : aspect.getAllAttributeNames()) {

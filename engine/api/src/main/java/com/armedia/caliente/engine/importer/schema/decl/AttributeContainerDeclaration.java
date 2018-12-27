@@ -16,11 +16,15 @@ public class AttributeContainerDeclaration<T extends AttributeContainerDeclarati
 	private final String name;
 	private final Map<String, AttributeDeclaration<T>> attributes;
 	private final Set<String> secondaries;
-	private final T parent;
+	private final String parentName;
 
 	public static String stripNamespace(String attName) {
 		if (attName == null) { return null; }
 		return attName.replaceAll("^\\w+:", "");
+	}
+
+	protected AttributeContainerDeclaration(String name) {
+		this(name, null, null, null);
 	}
 
 	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes) {
@@ -32,12 +36,13 @@ public class AttributeContainerDeclaration<T extends AttributeContainerDeclarati
 		this(name, attributes, secondaries, null);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes, T parent) {
-		this(name, attributes, null, parent);
+	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes,
+		String parentName) {
+		this(name, attributes, null, parentName);
 	}
 
 	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes,
-		Collection<String> secondaries, T parent) {
+		Collection<String> secondaries, String parentName) {
 		this.name = name;
 		if (attributes != null) {
 			Map<String, AttributeDeclaration<T>> m = new TreeMap<>();
@@ -53,7 +58,7 @@ public class AttributeContainerDeclaration<T extends AttributeContainerDeclarati
 		} else {
 			this.secondaries = Collections.emptySet();
 		}
-		this.parent = parent;
+		this.parentName = parentName;
 	}
 
 	public final String getName() {
@@ -64,8 +69,12 @@ public class AttributeContainerDeclaration<T extends AttributeContainerDeclarati
 		return this.secondaries;
 	}
 
-	public final T getParent() {
-		return this.parent;
+	public final String getParentName() {
+		return this.parentName;
+	}
+
+	public final Collection<AttributeDeclaration<T>> getAttributes() {
+		return this.attributes.values();
 	}
 
 	public final AttributeDeclaration<T> getAttribute(String name) {
@@ -87,6 +96,6 @@ public class AttributeContainerDeclaration<T extends AttributeContainerDeclarati
 	@Override
 	public String toString() {
 		return String.format("%s [name=%s, secondaries=%s, parent=%s]", getClass().getSimpleName(), this.name,
-			this.secondaries, this.parent);
+			this.secondaries, this.parentName);
 	}
 }

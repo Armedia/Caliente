@@ -4,8 +4,14 @@ import java.util.Collection;
 
 public class TypeDeclaration extends AttributeContainerDeclaration<TypeDeclaration> {
 
+	public static final TypeDeclaration NULL = new TypeDeclaration();
+
+	private TypeDeclaration() {
+		super(null);
+	}
+
 	public TypeDeclaration(String name, Collection<AttributeDeclaration<TypeDeclaration>> attributes,
-		Collection<String> secondaries, TypeDeclaration parent) {
+		Collection<String> secondaries, String parent) {
 		super(name, attributes, secondaries, parent);
 	}
 
@@ -14,8 +20,7 @@ public class TypeDeclaration extends AttributeContainerDeclaration<TypeDeclarati
 		super(name, attributes, secondaries);
 	}
 
-	public TypeDeclaration(String name, Collection<AttributeDeclaration<TypeDeclaration>> attributes,
-		TypeDeclaration parent) {
+	public TypeDeclaration(String name, Collection<AttributeDeclaration<TypeDeclaration>> attributes, String parent) {
 		super(name, attributes, parent);
 	}
 

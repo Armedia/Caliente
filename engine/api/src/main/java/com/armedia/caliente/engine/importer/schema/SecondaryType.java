@@ -12,16 +12,15 @@ import java.util.TreeSet;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import com.armedia.caliente.engine.importer.schema.SchemaContentModel.Aspect;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
+import com.armedia.caliente.engine.importer.schema.decl.SecondaryTypeDeclaration;
+import com.armedia.caliente.engine.importer.schema.decl.TypeDeclaration;
 import com.armedia.commons.utilities.Tools;
 
-public class SecondaryType extends SchemaMember<SecondaryType> {
+public class SecondaryType extends SchemaMember<SecondaryType, SecondaryTypeDeclaration> {
 
-	private final SchemaMember<?> type;
-	private final String name;
-	private final Map<String, Aspect> aspects;
-	private final Map<String, Aspect> extraAspects;
-	private final Set<String> declaredAspects;
-	private final Map<String, ObjectAttribute> attributes;
+	public static final SecondaryType NULL = new SecondaryType();
+
 	private final String signature;
 
 	public static String stripNamespace(String attName) {
@@ -29,7 +28,13 @@ public class SecondaryType extends SchemaMember<SecondaryType> {
 		return attName.replaceAll("^\\w+:", "");
 	}
 
-	SecondaryType(SchemaMember<?> type, Collection<Aspect> appliedAspects) {
+	private SecondaryType() {
+		super("");
+		this.signature = null;
+	}
+
+	SecondaryType(SchemaDeclarationService schemaService, TypeDeclaration declaration, Collection<String> secondaries) {
+		super(schemaService, declaration, secondaries);
 		this.type = type;
 		if (appliedAspects == null) {
 			appliedAspects = Collections.emptyList();
