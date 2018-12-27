@@ -14,14 +14,14 @@ import org.apache.commons.codec.digest.DigestUtils;
 import com.armedia.caliente.engine.schema.SchemaContentModel.Aspect;
 import com.armedia.commons.utilities.Tools;
 
-public class ObjectType {
+public class ObjectType extends SchemaMember<ObjectType> {
 
 	private final SchemaMember<?> type;
 	private final String name;
 	private final Map<String, Aspect> aspects;
 	private final Map<String, Aspect> extraAspects;
 	private final Set<String> declaredAspects;
-	private final Map<String, SchemaMember<?>> attributes;
+	private final Map<String, ObjectAttribute> attributes;
 	private final String signature;
 
 	public static String stripNamespace(String attName) {
@@ -42,11 +42,11 @@ public class ObjectType {
 		declaredAspects.addAll(type.mandatoryAspects.keySet());
 		Map<String, Aspect> aspects = new LinkedHashMap<>(type.mandatoryAspects);
 
-		Map<String, SchemaMember<?>> attributes = new TreeMap<>();
+		Map<String, ObjectAttribute> attributes = new TreeMap<>();
 		// Go through the parent's attributes
 		if (type.parent != null) {
 			for (String attribute : type.parent.getAllAttributeNames()) {
-				attributes.put(attribute, type.parent.getAttribute(attribute).declaration);
+				attributes.put(attribute, type.parent.getAttribute(attribute));
 			}
 		}
 
@@ -57,13 +57,13 @@ public class ObjectType {
 				extraAspects.put(aspect.name, aspect);
 			}
 			for (String attribute : aspect.getAllAttributeNames()) {
-				attributes.put(attribute, aspect);
+				attributes.put(attribute, aspect.getAttribute(attribute));
 			}
 		}
 
 		// Override any aspect's attributes with our own
 		for (String attribute : type.getAllAttributeNames()) {
-			attributes.put(attribute, type);
+			attributes.put(attribute, type.getAttribute(attribute));
 		}
 		this.attributes = Tools.freezeMap(new LinkedHashMap<>(attributes));
 
@@ -91,14 +91,17 @@ public class ObjectType {
 		return this.type;
 	}
 
+	@Override
 	public String getSignature() {
 		return this.signature;
 	}
 
+	@Override
 	public String getName() {
 		return this.name;
 	}
 
+	@Override
 	public boolean isDescendedOf(String typeName) {
 		if (this.aspects.containsKey(typeName)) { return true; }
 		if (this.type.isDescendedOf(typeName)) { return true; }
@@ -120,28 +123,31 @@ public class ObjectType {
 		return this.declaredAspects;
 	}
 
+	@Override
 	public boolean isAttributeInherited(String name) {
 		return this.type.isAttributeInherited(name);
 	}
 
+	@Override
 	public boolean isAspectInherited(String aspect) {
 		return this.type.isAspectInherited(this.name);
 	}
 
-	public SchemaAttribute getAttribute(String name) {
-		SchemaMember<?> m = this.attributes.get(name);
-		if (m == null) { return null; }
-		return m.getAttribute(name);
+	@Override
+	public ObjectAttribute getAttribute(String name) {
+		return this.attributes.get(name);
 	}
 
 	public boolean hasAttribute(String name) {
 		return this.attributes.containsKey(name);
 	}
 
+	@Override
 	public Set<String> getAttributeNames() {
 		return this.attributes.keySet();
 	}
 
+	@Override
 	public int getAttributeCount() {
 		return this.attributes.size();
 	}

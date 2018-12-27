@@ -10,8 +10,8 @@ import java.util.TreeSet;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.ClassElement;
 import com.armedia.caliente.engine.schema.SchemaContentModel.Aspect;
+import com.armedia.caliente.engine.schema.decl.AttributeDeclaration;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class SchemaMember<T extends SchemaMember<T>> {
@@ -19,44 +19,44 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 	protected final T parent;
 	protected final String name;
 
-	protected final Map<String, com.armedia.caliente.engine.schema.SchemaContentModel.Aspect> mandatoryAspects;
-	protected final Map<String, Aspect> allAspects;
-	protected final Map<String, SchemaMember<?>> ancestors;
-	protected final Map<String, SchemaAttribute> localAttributes;
+	protected final Map<String, T> ancestors;
+	protected final Map<String, SecondaryType> secondaries;
+	protected final Map<String, SecondaryType> allSecondaries;
+	protected final Map<String, ObjectAttribute> attributes;
+	protected final Map<String, ObjectAttribute> allAttributes;
 	protected final Set<String> allAttributeNames;
 	protected final String signature;
 
-	SchemaMember(T parent, ClassElement e, Collection<Aspect> mandatoryAspects) {
+	SchemaMember(SchemaService schemaService, String name, Collection<String> secondaries, T parent) {
 		this.parent = parent;
-		this.name = e.getName();
+		this.name = name;
 
-		Map<String, SchemaAttribute> localAttributes = new TreeMap<>();
-		for (Property property : e.getProperties()) {
-			String name = property.getName();
+		Map<String, ObjectAttribute> localAttributes = new TreeMap<>();
+		for (AttributeDeclaration property : schemaService.getAttributes(name)) {
+			String propertyName = property.name;
 			// Is this a duplicate at this level?
-			if (localAttributes.containsKey(name)) { throw new IllegalStateException(
-				String.format("Duplicate attribute name [%s] on type [%s]", name, this.name)); }
+			if (localAttributes.containsKey(propertyName)) { throw new IllegalStateException(
+				String.format("Duplicate attribute name [%s] on type [%s]", propertyName, this.name)); }
 
 			// Is this a duplicate at my parent's level?
-			if ((parent != null)
-				&& (parent.getAttribute(name) != null)) { throw new IllegalStateException(String.format(
-					"Duplicate attribute name [%s] on type [%s] - already defined by a supertype", name, this.name)); }
+			if ((parent != null) && (parent.getAttribute(propertyName) != null)) { throw new IllegalStateException(
+				String.format("Duplicate attribute name [%s] on type [%s] - already defined by a supertype",
+					propertyName, this.name)); }
 
 			// No dupes, add the attribute
-			Boolean mult = Tools.coalesce(property.getMultiple(), Boolean.FALSE);
-			SchemaAttribute schemaAttribute = new SchemaAttribute(this, name, property.getType(),
-				property.getMandatory(), mult.booleanValue());
-			localAttributes.put(schemaAttribute.name, schemaAttribute);
+			ObjectAttribute objectAttribute = new ObjectAttribute(this, name, property.type, property.required,
+				property.multiple);
+			localAttributes.put(objectAttribute.name, objectAttribute);
 		}
 
 		// Next, apply the attributes from the mandatory aspects as our own
 		Map<String, Aspect> ma = new LinkedHashMap<>();
-		for (Aspect aspect : mandatoryAspects) {
+		for (Aspect aspect : this.mandatoryAspects) {
 			ma.put(aspect.name, aspect);
 
 			// Add the aspect's attributes
 			for (String attributeName : aspect.getAllAttributeNames()) {
-				SchemaAttribute attribute = aspect.getAttribute(attributeName);
+				ObjectAttribute attribute = aspect.getAttribute(attributeName);
 				// If this attribute isn't declared on this type, or it's not declared in a
 				// parent type, or it's not declared in another mandatory aspect, we add it...
 				if (!localAttributes.containsKey(attributeName)) {
@@ -141,13 +141,13 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		return this.ancestors.containsKey(name);
 	}
 
-	public SchemaAttribute getAttribute(String name) {
+	public ObjectAttribute getAttribute(String name) {
 		if (!this.allAttributeNames.contains(name)) { return null; }
-		SchemaAttribute schemaAttribute = this.localAttributes.get(name);
-		if (schemaAttribute == null) {
-			schemaAttribute = this.parent.getAttribute(name);
+		ObjectAttribute objectAttribute = this.localAttributes.get(name);
+		if (objectAttribute == null) {
+			objectAttribute = this.parent.getAttribute(name);
 		}
-		return schemaAttribute;
+		return objectAttribute;
 	}
 
 	public Set<String> getAttributeNames() {

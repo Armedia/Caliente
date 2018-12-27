@@ -180,9 +180,17 @@ public class AttributeMapper {
 		return this.residualsPrefix;
 	}
 
+	protected String getSignature(final ObjectType type) {
+		return type.getSignature();
+	}
+
+	protected Set<String> getImplicitSecondaries(final ObjectType type) {
+		return type.getExtraAspects();
+	}
+
 	private MappingRendererSet getMappingRendererSet(final ObjectType type) {
 		if (type == null) { return this.commonRenderers; }
-		final String signature = type.getSignature();
+		final String signature = getSignature(type);
 		try {
 			return this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
 				@Override
@@ -213,7 +221,7 @@ public class AttributeMapper {
 						// 3) find the mappings for the type's undeclared (extra-attached) aspects.
 						// We only do this for the first iteration (i.e. the leaf type)
 						if (typeDecl == type.getDeclaration()) {
-							for (String aspect : type.getExtraAspects()) {
+							for (String aspect : getImplicitSecondaries(type)) {
 								if (!aspectsAdded.add(aspect)) {
 									// If this aspect is already being processed, we skip it
 									continue;
