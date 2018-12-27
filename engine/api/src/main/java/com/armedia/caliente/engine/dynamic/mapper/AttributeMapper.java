@@ -137,7 +137,7 @@ public class AttributeMapper {
 			}
 			if (type == null) {
 				this.log.warn(
-					"No type or aspect named [{}] was found in the declared Alfresco content model - ignoring this mapping set",
+					"No type or aspect named [{}] was found in the declared content model - ignoring this mapping set",
 					tm.getName());
 				continue;
 			}
