@@ -12,4 +12,12 @@ public class SchemaService {
 		return null;
 	}
 
+	public boolean hasType(String name) {
+		return false;
+	}
+
+	public boolean hasSecondaryType(String name) {
+		return false;
+	}
+
 }

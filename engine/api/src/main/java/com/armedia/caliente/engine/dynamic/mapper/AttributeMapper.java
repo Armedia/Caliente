@@ -34,7 +34,7 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.importer.schema.ObjectType;
 import com.armedia.caliente.engine.importer.schema.SchemaMember;
-import com.armedia.caliente.engine.importer.schema.TypeSchema;
+import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -70,7 +70,7 @@ public class AttributeMapper {
 		return null;
 	}
 
-	public AttributeMapper(TypeSchema schema, String xmlSource, String residualsPrefix)
+	public AttributeMapper(SchemaService schemaService, String xmlSource, String residualsPrefix)
 		throws XmlInstanceException, XmlNotFoundException {
 		AttributeMappings xml = AttributeMapper.INSTANCES.getInstance(xmlSource);
 		if (xml == null) {
@@ -130,13 +130,9 @@ public class AttributeMapper {
 
 		Map<String, MappingRendererSet> typedMappings = new TreeMap<>();
 		for (TypeMappings tm : typeMappings) {
-			SchemaMember<?> type = schema.getType(tm.getName());
-			if (type == null) {
-				type = schema.getAspect(tm.getName());
-			}
-			if (type == null) {
+			if (!schemaService.hasType(tm.getName()) && !schemaService.hasSecondaryType(tm.getName())) {
 				this.log.warn(
-					"No type or aspect named [{}] was found in the declared content model - ignoring this mapping set",
+					"No primary or secondary type named [{}] was found in the available schema - ignoring this mapping set",
 					tm.getName());
 				continue;
 			}
