@@ -30,7 +30,7 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.NamespaceMapping;
 import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
-import com.armedia.caliente.engine.importer.schema.ObjectType;
+import com.armedia.caliente.engine.importer.schema.ConstructedType;
 import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfAttribute;
@@ -173,7 +173,7 @@ public class AttributeMapper {
 		return this.residualsPrefix;
 	}
 
-	private MappingRendererSet getMappingRendererSet(final ObjectType type) {
+	private MappingRendererSet getMappingRendererSet(final ConstructedType type) {
 		if (type == null) { return this.commonRenderers; }
 		final String signature = type.getSignature();
 		try {
@@ -224,7 +224,7 @@ public class AttributeMapper {
 		return String.format("%s:%s", this.residualsPrefix, (m.matches() ? m.group(2) : attributeName));
 	}
 
-	public AttributeMappingResult renderMappedAttributes(final ObjectType type, CmfObject<CmfValue> object) {
+	public AttributeMappingResult renderMappedAttributes(final ConstructedType type, CmfObject<CmfValue> object) {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		Map<String, AttributeValue> finalValues = new TreeMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);

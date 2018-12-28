@@ -36,7 +36,7 @@ public class SchemaService {
 
 	private final Map<String, LazyInitializer<ObjectTypeDeclaration>> objectTypeDeclarations;
 	private final Map<String, LazyInitializer<SecondaryTypeDeclaration>> secondaryTypeDeclarations;
-	private final ConcurrentMap<String, LazyInitializer<ObjectType>> objectTypes = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, LazyInitializer<ConstructedType>> constructedTypes = new ConcurrentHashMap<>();
 
 	public SchemaService(SchemaDeclarationService declarationService) throws SchemaDeclarationServiceException {
 		this.declarationService = declarationService;
@@ -161,7 +161,7 @@ public class SchemaService {
 		}
 	}
 
-	public final ObjectType constructType(final String typeName, Collection<String> secondaries)
+	public final ConstructedType constructType(final String typeName, Collection<String> secondaries)
 		throws SchemaDeclarationServiceException {
 		if (StringUtils
 			.isBlank(typeName)) { throw new IllegalArgumentException("Must provide a non-null, non-empty type name"); }
@@ -179,10 +179,10 @@ public class SchemaService {
 		harvestData(mainType, null, null, allSecondaries);
 		final String signature = getSignature(mainType, allSecondaries);
 
-		LazyInitializer<ObjectType> ret = ConcurrentUtils.createIfAbsentUnchecked(this.objectTypes, signature,
-			new ConcurrentInitializer<LazyInitializer<ObjectType>>() {
+		LazyInitializer<ConstructedType> ret = ConcurrentUtils.createIfAbsentUnchecked(this.constructedTypes, signature,
+			new ConcurrentInitializer<LazyInitializer<ConstructedType>>() {
 				@Override
-				public LazyInitializer<ObjectType> get() {
+				public LazyInitializer<ConstructedType> get() {
 					return new LazyInitializer<>(() -> {
 						try {
 							return newObjectType(mainType, allSecondaries, signature);
@@ -216,7 +216,7 @@ public class SchemaService {
 		}
 	}
 
-	protected ObjectType newObjectType(ObjectTypeDeclaration mainType, Collection<String> secondaries, String signature)
+	protected ConstructedType newObjectType(ObjectTypeDeclaration mainType, Collection<String> secondaries, String signature)
 		throws SchemaDeclarationServiceException {
 
 		final Map<String, AttributeDeclaration> attributes = new TreeMap<>();
@@ -230,7 +230,7 @@ public class SchemaService {
 
 		// At this point we have all the secondaries in *visited*, and we have
 		// harvested all the attributes associated to this type...
-		return new ObjectType(mainType, ancestors, visited, attributes, signature);
+		return new ConstructedType(mainType, ancestors, visited, attributes, signature);
 	}
 
 	public boolean hasType(String name) {

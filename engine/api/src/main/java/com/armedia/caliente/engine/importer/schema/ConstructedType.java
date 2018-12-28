@@ -9,13 +9,15 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.armedia.caliente.engine.importer.schema.decl.AttributeContainerDeclaration;
 import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
+import com.armedia.caliente.engine.importer.schema.decl.ObjectTypeDeclaration;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class SchemaMember<T extends SchemaMember<T, D>, D extends AttributeContainerDeclaration> {
+public class ConstructedType {
 
-	private final D declaration;
+	public static final ConstructedType NULL = new ConstructedType();
+
+	private final ObjectTypeDeclaration declaration;
 	private final String name;
 	private final Set<String> ancestors;
 	private final Set<String> secondaries;
@@ -23,7 +25,7 @@ public abstract class SchemaMember<T extends SchemaMember<T, D>, D extends Attri
 
 	private final String signature;
 
-	protected SchemaMember() {
+	protected ConstructedType() {
 		this.declaration = null;
 		this.name = null;
 		this.ancestors = Collections.emptySet();
@@ -32,7 +34,7 @@ public abstract class SchemaMember<T extends SchemaMember<T, D>, D extends Attri
 		this.signature = null;
 	}
 
-	SchemaMember(D declaration, Set<String> ancestors, Set<String> secondaries,
+	ConstructedType(ObjectTypeDeclaration declaration, Set<String> ancestors, Set<String> secondaries,
 		Map<String, AttributeDeclaration> attributes, String signature) {
 		this.declaration = Objects.requireNonNull(declaration, "Must provide a non-null declaration");
 		this.name = declaration.getName();
@@ -42,7 +44,7 @@ public abstract class SchemaMember<T extends SchemaMember<T, D>, D extends Attri
 		this.signature = signature;
 	}
 
-	public D getDeclaration() {
+	public ObjectTypeDeclaration getDeclaration() {
 		return this.declaration;
 	}
 
