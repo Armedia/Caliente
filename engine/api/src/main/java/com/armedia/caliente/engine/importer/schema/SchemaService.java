@@ -174,6 +174,15 @@ public class SchemaService {
 		}
 
 		final Set<String> allSecondaries = new HashSet<>();
+
+		// First, go through the explicitly added secondaries
+		for (String s : secondaries) {
+			SecondaryTypeDeclaration S = getSecondaryTypeDeclaration(s);
+			if (S != null) {
+				harvestData(S, null, null, allSecondaries);
+			}
+		}
+
 		// We specifically don't harvest attributes in this pass because we're just looking
 		// for the complete list of secondaries that decorate this type
 		harvestData(mainType, null, null, allSecondaries);
@@ -211,17 +220,24 @@ public class SchemaService {
 				.isInstance(t)) { throw SchemaDeclarationServiceException.class.cast(t); }
 			throw new SchemaDeclarationServiceException(
 				String.format("Unexpected initializer exception trying to construct the type [%s] with secondaries %s",
-					typeName, secondaries),
+					typeName, allSecondaries),
 				e);
 		}
 	}
 
-	protected ConstructedType newObjectType(ObjectTypeDeclaration mainType, Collection<String> secondaries, String signature)
-		throws SchemaDeclarationServiceException {
+	protected ConstructedType newObjectType(ObjectTypeDeclaration mainType, Collection<String> secondaries,
+		String signature) throws SchemaDeclarationServiceException {
 
 		final Map<String, AttributeDeclaration> attributes = new TreeMap<>();
 		final Set<String> ancestors = new LinkedHashSet<>();
 		final Set<String> visited = new HashSet<>();
+
+		for (String s : secondaries) {
+			SecondaryTypeDeclaration S = getSecondaryTypeDeclaration(s);
+			if (S != null) {
+				harvestData(S, attributes, null, visited);
+			}
+		}
 
 		harvestData(mainType, attributes, ancestors, visited);
 
