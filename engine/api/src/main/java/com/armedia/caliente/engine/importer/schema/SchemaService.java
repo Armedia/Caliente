@@ -1,12 +1,11 @@
 package com.armedia.caliente.engine.importer.schema;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Queue;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,15 +16,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.importer.schema.decl.AttributeContainerDeclaration;
+import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
+import com.armedia.caliente.engine.importer.schema.decl.ObjectTypeDeclaration;
 import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
 import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
 import com.armedia.caliente.engine.importer.schema.decl.SecondaryTypeDeclaration;
-import com.armedia.caliente.engine.importer.schema.decl.TypeDeclaration;
 import com.armedia.commons.utilities.LazyInitializer;
 import com.armedia.commons.utilities.Tools;
 
@@ -35,44 +34,92 @@ public class SchemaService {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final ConcurrentMap<String, LazyInitializer<ObjectType>> constructedTypes = new ConcurrentHashMap<>();
-	private final ConcurrentMap<String, LazyInitializer<TypeDeclaration>> typeDeclarations = new ConcurrentHashMap<>();
-	private final ConcurrentMap<String, LazyInitializer<SecondaryTypeDeclaration>> secondaryTypeDeclarations = new ConcurrentHashMap<>();
+	private final Map<String, LazyInitializer<ObjectTypeDeclaration>> objectTypeDeclarations;
+	private final Map<String, LazyInitializer<SecondaryTypeDeclaration>> secondaryTypeDeclarations;
+	private final ConcurrentMap<String, LazyInitializer<ObjectType>> objectTypes = new ConcurrentHashMap<>();
 
-	public SchemaService(SchemaDeclarationService declarationService) {
+	public SchemaService(SchemaDeclarationService declarationService) throws SchemaDeclarationServiceException {
 		this.declarationService = declarationService;
+
+		Map<String, LazyInitializer<ObjectTypeDeclaration>> objectTypeDeclarations = new TreeMap<>();
+		for (String typeName : declarationService.getObjectTypeNames()) {
+			objectTypeDeclarations.put(typeName, new LazyInitializer<>(() -> {
+				try {
+					return SchemaService.this.declarationService.getObjectTypeDeclaration(typeName);
+				} catch (SchemaDeclarationServiceException e) {
+					throw new SchemaServiceException(
+						String.format("Failed to get the declaration for type [%s]", typeName), e);
+				}
+			}));
+		}
+		this.objectTypeDeclarations = Tools.freezeMap(objectTypeDeclarations);
+
+		Map<String, LazyInitializer<SecondaryTypeDeclaration>> secondaryTypeDeclarations = new TreeMap<>();
+		for (String typeName : declarationService.getSecondaryTypeNames()) {
+			secondaryTypeDeclarations.put(typeName, new LazyInitializer<>(() -> {
+				try {
+					return SchemaService.this.declarationService.getSecondaryTypeDeclaration(typeName);
+				} catch (SchemaDeclarationServiceException e) {
+					throw new SchemaServiceException(
+						String.format("Failed to get the declaration for type [%s]", typeName), e);
+				}
+			}));
+		}
+		this.secondaryTypeDeclarations = Tools.freezeMap(secondaryTypeDeclarations);
 	}
 
-	protected String getSignature(TypeDeclaration type, Map<String, SecondaryTypeDeclaration> secondaries) {
-		String s = String.format("{%s}:%s", type.getName(), new TreeSet<>(secondaries.keySet()));
+	private void harvestData(AttributeContainerDeclaration base, Map<String, AttributeDeclaration> attributes,
+		final Set<String> hierarchy, final Set<String> secondariesVisited) throws SchemaDeclarationServiceException {
+		// Short-circuit - avoid recursion if already visited
+		if (base == null) { return; }
+
+		if (SecondaryTypeDeclaration.class.isInstance(base)) {
+			// Ensure we add the current secondary to the visited secondaries set
+			secondariesVisited.add(base.getName());
+		}
+
+		if (attributes != null) {
+			for (AttributeDeclaration att : base.getAttributes()) {
+				if (!attributes.containsKey(att.name)) {
+					attributes.put(att.name, att);
+				}
+			}
+		}
+
+		for (String s : base.getSecondaries()) {
+			// Only recurse if this is a new avenue not yet explored.
+			if (!secondariesVisited.add(s)) {
+				continue;
+			}
+			harvestData(getSecondaryTypeDeclaration(s), attributes, null, secondariesVisited);
+		}
+
+		final AttributeContainerDeclaration parent;
+		if (SecondaryTypeDeclaration.class.isInstance(base)) {
+			parent = getSecondaryTypeDeclaration(base.getParentName());
+		} else if (ObjectTypeDeclaration.class.isInstance(base)) {
+			parent = getObjectTypeDeclaration(base.getParentName());
+		} else {
+			parent = null;
+		}
+
+		if ((parent != null) && ((hierarchy == null) || hierarchy.add(parent.getName()))) {
+			harvestData(parent, attributes, hierarchy, secondariesVisited);
+		}
+	}
+
+	protected String getSignature(ObjectTypeDeclaration type, Set<String> secondaries) {
+		String s = String.format("{%s}:%s", type.getName(), new TreeSet<>(secondaries));
 		return DigestUtils.sha256Hex(s);
 	}
 
-	protected final TypeDeclaration getTypeDeclaration(final String typeName) throws SchemaDeclarationServiceException {
+	protected final ObjectTypeDeclaration getObjectTypeDeclaration(final String typeName)
+		throws SchemaDeclarationServiceException {
 		if (StringUtils.isBlank(typeName)) { return null; }
-		LazyInitializer<TypeDeclaration> ret = ConcurrentUtils.createIfAbsentUnchecked(this.typeDeclarations, typeName,
-			new ConcurrentInitializer<LazyInitializer<TypeDeclaration>>() {
-				@Override
-				public LazyInitializer<TypeDeclaration> get() {
-					return new LazyInitializer<>(() -> {
-						try {
-							TypeDeclaration declaration = SchemaService.this.declarationService
-								.getTypeDeclaration(typeName);
-							if (declaration == null) {
-								declaration = TypeDeclaration.NULL;
-							}
-							return declaration;
-						} catch (SchemaDeclarationServiceException e) {
-							throw new SchemaServiceException(
-								String.format("Failed to get the declaration for type [%s]", typeName), e);
-						}
-					});
-				}
-			});
-
-		TypeDeclaration declaration = null;
+		LazyInitializer<ObjectTypeDeclaration> ret = this.objectTypeDeclarations.get(typeName);
+		if (ret == null) { return null; }
 		try {
-			declaration = ret.get();
+			return ret.get();
 		} catch (ConcurrentException e) {
 			Throwable t = e.getCause();
 			// Recurse...just in case...
@@ -87,36 +134,16 @@ public class SchemaService {
 			throw new SchemaDeclarationServiceException(String.format(
 				"Unexpected initializer exception trying to retrieve the type declaration for [%s]", typeName), e);
 		}
-		return (declaration != TypeDeclaration.NULL ? declaration : null);
 	}
 
 	protected final SecondaryTypeDeclaration getSecondaryTypeDeclaration(final String secondaryTypeName)
 		throws SchemaDeclarationServiceException {
 		if (StringUtils.isBlank(secondaryTypeName)) { return null; }
-		LazyInitializer<SecondaryTypeDeclaration> ret = ConcurrentUtils.createIfAbsentUnchecked(
-			this.secondaryTypeDeclarations, secondaryTypeName,
-			new ConcurrentInitializer<LazyInitializer<SecondaryTypeDeclaration>>() {
-				@Override
-				public LazyInitializer<SecondaryTypeDeclaration> get() {
-					return new LazyInitializer<>(() -> {
-						try {
-							SecondaryTypeDeclaration declaration = SchemaService.this.declarationService
-								.getSecondaryTypeDeclaration(secondaryTypeName);
-							if (declaration == null) {
-								declaration = SecondaryTypeDeclaration.NULL;
-							}
-							return declaration;
-						} catch (SchemaDeclarationServiceException e) {
-							throw new SchemaServiceException(
-								String.format("Failed to get the declaration for type [%s]", secondaryTypeName), e);
-						}
-					});
-				}
-			});
+		LazyInitializer<SecondaryTypeDeclaration> ret = this.secondaryTypeDeclarations.get(secondaryTypeName);
+		if (ret == null) { return null; }
 
-		SecondaryTypeDeclaration declaration = null;
 		try {
-			declaration = ret.get();
+			return ret.get();
 		} catch (ConcurrentException e) {
 			Throwable t = e.getCause();
 			// Recurse...just in case...
@@ -132,131 +159,45 @@ public class SchemaService {
 				"Unexpected initializer exception trying to retrieve the secondary type declaration for [%s]",
 				secondaryTypeName), e);
 		}
-		return (declaration != SecondaryTypeDeclaration.NULL ? declaration : null);
 	}
 
-	public final ObjectType constructType(final String typeName, final Collection<String> secondaryTypeNames)
+	public final ObjectType constructType(final String typeName, Collection<String> secondaries)
 		throws SchemaDeclarationServiceException {
 		if (StringUtils
 			.isBlank(typeName)) { throw new IllegalArgumentException("Must provide a non-null, non-empty type name"); }
 
-		final TypeDeclaration mainDeclaration = getTypeDeclaration(typeName);
-		if (mainDeclaration == null) { return null; }
+		final ObjectTypeDeclaration mainType = getObjectTypeDeclaration(typeName);
+		if (mainType == null) { return null; }
 
-		final Collection<String> secondaries;
-		if ((secondaryTypeNames == null) || secondaryTypeNames.isEmpty()) {
-			secondaries = Collections.emptyList();
-		} else {
-			secondaries = Tools.freezeCollection(new ArrayList<>(secondaryTypeNames));
+		if ((secondaries == null) || secondaries.isEmpty()) {
+			secondaries = Collections.emptySet();
 		}
 
-		final Queue<Pair<String, String>> typeQueue = new LinkedList<>();
-		final Queue<Triple<String, Boolean, String>> secondaryTypeQueue = new LinkedList<>();
+		final Set<String> allSecondaries = new HashSet<>();
+		// We specifically don't harvest attributes in this pass because we're just looking
+		// for the complete list of secondaries that decorate this type
+		harvestData(mainType, null, null, allSecondaries);
+		final String signature = getSignature(mainType, allSecondaries);
 
-		for (String s : mainDeclaration.getSecondaries()) {
-			typeQueue.add(Pair.of(mainDeclaration.getName(), s));
-		}
-
-		for (String s : secondaries) {
-			secondaryTypeQueue.add(Triple.of(null, false, s));
-		}
-
-		final Map<String, TypeDeclaration> typeHierarchy = new LinkedHashMap<>();
-		typeHierarchy.put(mainDeclaration.getName(), mainDeclaration);
-
-		typeQueue.add(Pair.of(mainDeclaration.getName(), mainDeclaration.getParentName()));
-		while (!typeQueue.isEmpty()) {
-			final Pair<String, String> next = typeQueue.poll();
-			final String prevTypeName = next.getLeft();
-			final String nextTypeName = next.getRight();
-			if (StringUtils.isBlank(nextTypeName)) {
-				continue;
-			}
-
-			if (typeHierarchy.containsKey(nextTypeName)) {
-				// Avoid duplicate searches, though they shouldn't be too expensive...
-				continue;
-			}
-
-			TypeDeclaration nextTypeDeclaration = getTypeDeclaration(nextTypeName);
-			if (nextTypeDeclaration == null) {
-				this.log.debug(
-					"The type [{}] references the missing type [{}] as its parent, this may lead to errant behavior during transformation and mapping",
-					prevTypeName, nextTypeName);
-				continue;
-			}
-
-			typeHierarchy.put(nextTypeDeclaration.getName(), nextTypeDeclaration);
-			if (!StringUtils.isBlank(nextTypeDeclaration.getParentName())) {
-				typeQueue.add(Pair.of(nextTypeDeclaration.getName(), nextTypeDeclaration.getParentName()));
-			}
-			for (String s : nextTypeDeclaration.getSecondaries()) {
-				if (!StringUtils.isBlank(s)) {
-					secondaryTypeQueue.add(Triple.of(nextTypeDeclaration.getName(), true, s));
-				}
-			}
-		}
-
-		final Map<String, SecondaryTypeDeclaration> secondaryDeclarations = new TreeMap<>();
-		while (!secondaryTypeQueue.isEmpty()) {
-			final Triple<String, Boolean, String> next = secondaryTypeQueue.poll();
-			final String refName = next.getLeft();
-			final boolean isType = next.getMiddle();
-			final String nextSecondaryName = next.getRight();
-
-			if (StringUtils.isBlank(nextSecondaryName)) {
-				continue;
-			}
-
-			if (secondaryDeclarations.containsKey(nextSecondaryName)) {
-				// Avoid duplicate searches, though they shouldn't be too expensive...
-				continue;
-			}
-
-			final SecondaryTypeDeclaration declaration = getSecondaryTypeDeclaration(nextSecondaryName);
-			if (declaration == null) {
-				this.log.debug(
-					"The {}type [{}] references the missing secondary type [{}], this may lead to errant behavior during transformation and mapping",
-					isType ? "" : "secondary ", refName, nextSecondaryName);
-				continue;
-			}
-
-			secondaryDeclarations.put(declaration.getName(), declaration);
-			if (!StringUtils.isBlank(declaration.getParentName())) {
-				secondaryTypeQueue.add(Triple.of(declaration.getName(), false, declaration.getParentName()));
-			}
-			for (String s : declaration.getSecondaries()) {
-				if (!StringUtils.isBlank(s)) {
-					secondaryTypeQueue.add(Triple.of(declaration.getName(), false, s));
-				}
-			}
-		}
-
-		// At this point we can start traversing the tree upwards to build out the hierarchy
-		final String signature = getSignature(mainDeclaration, secondaryDeclarations);
-		LazyInitializer<ObjectType> ret = ConcurrentUtils.createIfAbsentUnchecked(this.constructedTypes, signature,
+		LazyInitializer<ObjectType> ret = ConcurrentUtils.createIfAbsentUnchecked(this.objectTypes, signature,
 			new ConcurrentInitializer<LazyInitializer<ObjectType>>() {
 				@Override
 				public LazyInitializer<ObjectType> get() {
 					return new LazyInitializer<>(() -> {
 						try {
-							ObjectType constructedType = constructType(mainDeclaration, typeHierarchy,
-								secondaryDeclarations);
-							if (constructedType == null) {
-								constructedType = ObjectType.NULL;
-							}
-							return constructedType;
+							return newObjectType(mainType, allSecondaries, signature);
 						} catch (SchemaDeclarationServiceException e) {
-							throw new SchemaServiceException(String.format(
-								"Failed to get construct the type [%s] with secondaries %s", typeName, secondaries), e);
+							throw new SchemaServiceException(
+								String.format("Failed to get construct the type [%s] with secondaries %s", typeName,
+									allSecondaries),
+								e);
 						}
 					});
 				}
 			});
 
-		ObjectType constructedType = null;
 		try {
-			constructedType = ret.get();
+			return ret.get();
 		} catch (ConcurrentException e) {
 			Throwable t = e.getCause();
 			// Recurse...just in case...
@@ -273,42 +214,30 @@ public class SchemaService {
 					typeName, secondaries),
 				e);
 		}
-		return (constructedType != ObjectType.NULL ? constructedType : null);
 	}
 
-	public final SecondaryType constructSecondaryType(String name) throws SchemaDeclarationServiceException {
-		SecondaryTypeDeclaration declaration = getSecondaryTypeDeclaration(name);
-		if (declaration == null) { return null; }
-		return constructSecondaryType(declaration);
-	}
-
-	protected SecondaryType constructSecondaryType(SecondaryTypeDeclaration declaration)
+	protected ObjectType newObjectType(ObjectTypeDeclaration mainType, Collection<String> secondaries, String signature)
 		throws SchemaDeclarationServiceException {
-		if (declaration == null) { return null; }
-		final SecondaryType parent = constructSecondaryType(declaration.getParentName());
-		final Queue<String> queue = new LinkedList<>();
-		if (parent != null) {
-			queue.add(parent.getName());
-		}
-		queue.addAll(declaration.getSecondaries());
-		while (!queue.isEmpty()) {
 
-		}
+		final Map<String, AttributeDeclaration> attributes = new TreeMap<>();
+		final Set<String> ancestors = new LinkedHashSet<>();
+		final Set<String> visited = new HashSet<>();
 
-		return null;
-	}
+		harvestData(mainType, attributes, ancestors, visited);
 
-	protected ObjectType constructType(TypeDeclaration type, Map<String, TypeDeclaration> typeHierarchy,
-		Map<String, SecondaryTypeDeclaration> secondaries) throws SchemaDeclarationServiceException {
+		// Make sure...just in case ;)
+		ancestors.remove(mainType.getName());
 
-		return null;
+		// At this point we have all the secondaries in *visited*, and we have
+		// harvested all the attributes associated to this type...
+		return new ObjectType(mainType, ancestors, visited, attributes, signature);
 	}
 
 	public boolean hasType(String name) {
-		return false;
+		return this.objectTypeDeclarations.containsKey(name);
 	}
 
 	public boolean hasSecondaryType(String name) {
-		return false;
+		return this.secondaryTypeDeclarations.containsKey(name);
 	}
 }

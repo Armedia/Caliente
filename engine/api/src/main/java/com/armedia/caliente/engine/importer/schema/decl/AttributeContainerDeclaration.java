@@ -11,10 +11,10 @@ import java.util.TreeSet;
 
 import com.armedia.commons.utilities.Tools;
 
-public class AttributeContainerDeclaration<T extends AttributeContainerDeclaration<T>> {
+public class AttributeContainerDeclaration {
 
 	private final String name;
-	private final Map<String, AttributeDeclaration<T>> attributes;
+	private final Map<String, AttributeDeclaration> attributes;
 	private final Set<String> secondaries;
 	private final String parentName;
 
@@ -27,26 +27,26 @@ public class AttributeContainerDeclaration<T extends AttributeContainerDeclarati
 		this(name, null, null, null);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes) {
+	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes) {
 		this(name, attributes, null, null);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes,
+	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes,
 		Collection<String> secondaries) {
 		this(name, attributes, secondaries, null);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes,
+	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes,
 		String parentName) {
 		this(name, attributes, null, parentName);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration<T>> attributes,
+	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes,
 		Collection<String> secondaries, String parentName) {
 		this.name = name;
 		if (attributes != null) {
-			Map<String, AttributeDeclaration<T>> m = new TreeMap<>();
-			for (AttributeDeclaration<T> attribute : attributes) {
+			Map<String, AttributeDeclaration> m = new TreeMap<>();
+			for (AttributeDeclaration attribute : attributes) {
 				m.put(attribute.name, attribute);
 			}
 			this.attributes = Tools.freezeMap(new LinkedHashMap<>(m));
@@ -73,11 +73,11 @@ public class AttributeContainerDeclaration<T extends AttributeContainerDeclarati
 		return this.parentName;
 	}
 
-	public final Collection<AttributeDeclaration<T>> getAttributes() {
+	public final Collection<AttributeDeclaration> getAttributes() {
 		return this.attributes.values();
 	}
 
-	public final AttributeDeclaration<T> getAttribute(String name) {
+	public final AttributeDeclaration getAttribute(String name) {
 		return this.attributes.get(name);
 	}
 

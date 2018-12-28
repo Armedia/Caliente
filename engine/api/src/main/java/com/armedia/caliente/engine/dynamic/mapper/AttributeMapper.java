@@ -1,12 +1,10 @@
 package com.armedia.caliente.engine.dynamic.mapper;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -33,7 +31,6 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.importer.schema.ObjectType;
-import com.armedia.caliente.engine.importer.schema.SchemaMember;
 import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfAttribute;
@@ -176,68 +173,43 @@ public class AttributeMapper {
 		return this.residualsPrefix;
 	}
 
-	protected String getSignature(final ObjectType type) {
-		return type.getSignature();
-	}
-
-	protected Set<String> getImplicitSecondaries(final ObjectType type) {
-		return type.getExtraAspects();
-	}
-
 	private MappingRendererSet getMappingRendererSet(final ObjectType type) {
 		if (type == null) { return this.commonRenderers; }
-		final String signature = getSignature(type);
+		final String signature = type.getSignature();
 		try {
 			return this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
 				@Override
 				public MappingRendererSet get() throws ConcurrentException {
-					List<MappingRenderer> renderers = new ArrayList<>();
-					SchemaMember<?> typeDecl = type.getDeclaration();
-					Set<String> aspectsAdded = new HashSet<>();
-					while (typeDecl != null) {
-						// 1) find the mappings for the specific type
-						MappingRendererSet rendererSet = AttributeMapper.this.typedMappings.get(typeDecl.getName());
-						if (rendererSet != null) {
-							// There's a specific renderer for this type, so add it!
-							renderers.add(rendererSet);
-						}
+					Map<String, MappingRenderer> renderers = new LinkedHashMap<>();
 
-						// 2) find the mappings for the type's mandatory aspects
-						for (String aspect : typeDecl.getMandatoryAspects()) {
-							if (!aspectsAdded.add(aspect)) {
-								// If this aspect is already being processed, we skip it
-								continue;
-							}
-							rendererSet = AttributeMapper.this.typedMappings.get(aspect);
-							if (rendererSet != null) {
-								renderers.add(rendererSet);
-							}
-						}
+					// First, the type itself
+					MappingRendererSet set = AttributeMapper.this.typedMappings.get(type.getName());
+					if (set != null) {
+						renderers.put(type.getName(), set);
+					}
 
-						// 3) find the mappings for the type's undeclared (extra-attached) aspects.
-						// We only do this for the first iteration (i.e. the leaf type)
-						if (typeDecl == type.getDeclaration()) {
-							for (String aspect : getImplicitSecondaries(type)) {
-								if (!aspectsAdded.add(aspect)) {
-									// If this aspect is already being processed, we skip it
-									continue;
-								}
-								rendererSet = AttributeMapper.this.typedMappings.get(aspect);
-								if (rendererSet != null) {
-									renderers.add(rendererSet);
-								}
-							}
+					// Next, all of its hierarchical parents
+					for (String a : type.getAncestors()) {
+						set = AttributeMapper.this.typedMappings.get(a);
+						if ((set != null) && !renderers.containsKey(a)) {
+							renderers.put(a, set);
 						}
+					}
 
-						// 4) Recurse upward through the parent type...
-						typeDecl = typeDecl.getParent();
+					// Finally, all its secondaries
+					for (String s : type.getSecondaries()) {
+						set = AttributeMapper.this.typedMappings.get(s);
+						if ((set != null) && !renderers.containsKey(s)) {
+							renderers.put(s, set);
+						}
 					}
 
 					// Finally, add the common renderers
 					if (AttributeMapper.this.commonRenderers != null) {
-						renderers.add(AttributeMapper.this.commonRenderers);
+						renderers.put(null, AttributeMapper.this.commonRenderers);
 					}
-					return new MappingRendererSet(type.toString(), null, null, renderers);
+
+					return new MappingRendererSet(type.toString(), null, null, new ArrayList<>(renderers.values()));
 				}
 			});
 		} catch (ConcurrentException e) {
