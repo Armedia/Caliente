@@ -82,7 +82,7 @@ public class AlfrescoSchema {
 		return this.typeIndex.keySet();
 	}
 
-	public SchemaMember<?> getType(String name) {
+	public Type getType(String name) {
 		return this.typeIndex.get(name);
 	}
 
@@ -90,7 +90,7 @@ public class AlfrescoSchema {
 		return this.aspectIndex.keySet();
 	}
 
-	public SchemaMember<?> getAspect(String name) {
+	public Aspect getAspect(String name) {
 		return this.aspectIndex.get(name);
 	}
 }
