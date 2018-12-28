@@ -51,7 +51,7 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItem
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemVersion;
-import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMapper;
+import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AlfrescoAttributeMapper;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
@@ -176,7 +176,7 @@ public class AlfImportDelegateFactory
 	private final String unfiledPath;
 
 	private final Properties userLoginMap = new Properties();
-	private final AttributeMapper attributeMapper;
+	private final AlfrescoAttributeMapper alfrescoAttributeMapper;
 
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
@@ -248,7 +248,7 @@ public class AlfImportDelegateFactory
 		if (StringUtils.isEmpty(pfx)) {
 			pfx = null;
 		}
-		this.attributeMapper = new AttributeMapper(this.schema, configuration.getString(AlfSetting.ATTRIBUTE_MAPPING),
+		this.alfrescoAttributeMapper = new AlfrescoAttributeMapper(this.schema, configuration.getString(AlfSetting.ATTRIBUTE_MAPPING),
 			pfx);
 		String unfiledPath = configuration.getString(AlfSetting.UNFILED_PATH);
 		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
@@ -260,8 +260,8 @@ public class AlfImportDelegateFactory
 		return this.schema;
 	}
 
-	public AttributeMapper getAttributeMapper() {
-		return this.attributeMapper;
+	public AlfrescoAttributeMapper getAttributeMapper() {
+		return this.alfrescoAttributeMapper;
 	}
 
 	protected AlfrescoType getType(String name, String... aspects) {

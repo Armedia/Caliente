@@ -42,13 +42,13 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
-public class AttributeMapper {
+public class AlfrescoAttributeMapper {
 
 	private static final Pattern NS_PARSER = Pattern.compile("^([^:]+):(.+)$");
 	private static final String DEFAULT_FILENAME = "alfresco-attribute-mappings.xml";
 
 	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class,
-		AttributeMapper.DEFAULT_FILENAME);
+		AlfrescoAttributeMapper.DEFAULT_FILENAME);
 
 	// Make a cache that doesn't expire items and they don't get GC'd either
 	private final KeyLockableCache<String, MappingRendererSet> cache = new KeyLockableCache<String, MappingRendererSet>(
@@ -73,9 +73,9 @@ public class AttributeMapper {
 		return null;
 	}
 
-	public AttributeMapper(AlfrescoSchema schema, String xmlSource, String residualsPrefix)
+	public AlfrescoAttributeMapper(AlfrescoSchema schema, String xmlSource, String residualsPrefix)
 		throws XmlInstanceException, XmlNotFoundException {
-		AttributeMappings xml = AttributeMapper.INSTANCES.getInstance(xmlSource);
+		AttributeMappings xml = AlfrescoAttributeMapper.INSTANCES.getInstance(xmlSource);
 		if (xml == null) {
 			xml = new AttributeMappings();
 		}
@@ -85,7 +85,7 @@ public class AttributeMapper {
 		MappingRendererSet commonRenderers = null;
 		if (commonMappings != null) {
 			for (MappingElement e : commonMappings.getMappingElements()) {
-				MappingRenderer r = AttributeMapper.buildRenderer(e, commonMappings.getSeparator());
+				MappingRenderer r = AlfrescoAttributeMapper.buildRenderer(e, commonMappings.getSeparator());
 				if (r != null) {
 					renderers.add(r);
 				}
@@ -122,7 +122,7 @@ public class AttributeMapper {
 					}
 					renderers.add(mappings);
 				} else {
-					MappingRenderer renderer = AttributeMapper.buildRenderer(e, nm.getSeparator());
+					MappingRenderer renderer = AlfrescoAttributeMapper.buildRenderer(e, nm.getSeparator());
 					if (renderer != null) {
 						renderers.add(renderer);
 					}
@@ -147,7 +147,7 @@ public class AttributeMapper {
 			// Construct the mapping set for this:
 			renderers = new ArrayList<>();
 			for (MappingElement e : tm.getMappingElements()) {
-				MappingRenderer renderer = AttributeMapper.buildRenderer(e, tm.getSeparator());
+				MappingRenderer renderer = AlfrescoAttributeMapper.buildRenderer(e, tm.getSeparator());
 				if ((renderer == null) && IncludeNamed.class.isInstance(e)) {
 					// If this is an <include>, then get the element and add it to the rendering
 					// pipeline!
@@ -195,7 +195,7 @@ public class AttributeMapper {
 					Set<String> aspectsAdded = new HashSet<>();
 					while (typeDecl != null) {
 						// 1) find the mappings for the specific type
-						MappingRendererSet rendererSet = AttributeMapper.this.typedMappings.get(typeDecl.getName());
+						MappingRendererSet rendererSet = AlfrescoAttributeMapper.this.typedMappings.get(typeDecl.getName());
 						if (rendererSet != null) {
 							// There's a specific renderer for this type, so add it!
 							renderers.add(rendererSet);
@@ -207,7 +207,7 @@ public class AttributeMapper {
 								// If this aspect is already being processed, we skip it
 								continue;
 							}
-							rendererSet = AttributeMapper.this.typedMappings.get(aspect);
+							rendererSet = AlfrescoAttributeMapper.this.typedMappings.get(aspect);
 							if (rendererSet != null) {
 								renderers.add(rendererSet);
 							}
@@ -221,7 +221,7 @@ public class AttributeMapper {
 									// If this aspect is already being processed, we skip it
 									continue;
 								}
-								rendererSet = AttributeMapper.this.typedMappings.get(aspect);
+								rendererSet = AlfrescoAttributeMapper.this.typedMappings.get(aspect);
 								if (rendererSet != null) {
 									renderers.add(rendererSet);
 								}
@@ -233,8 +233,8 @@ public class AttributeMapper {
 					}
 
 					// Finally, add the common renderers
-					if (AttributeMapper.this.commonRenderers != null) {
-						renderers.add(AttributeMapper.this.commonRenderers);
+					if (AlfrescoAttributeMapper.this.commonRenderers != null) {
+						renderers.add(AlfrescoAttributeMapper.this.commonRenderers);
 					}
 					return new MappingRendererSet(type.toString(), null, null, renderers);
 				}
@@ -247,7 +247,7 @@ public class AttributeMapper {
 
 	private String getResidualName(String attributeName) {
 		// If if lacks a prefix, just pre-pend it...
-		Matcher m = AttributeMapper.NS_PARSER.matcher(attributeName);
+		Matcher m = AlfrescoAttributeMapper.NS_PARSER.matcher(attributeName);
 		return String.format("%s:%s", this.residualsPrefix, (m.matches() ? m.group(2) : attributeName));
 	}
 
