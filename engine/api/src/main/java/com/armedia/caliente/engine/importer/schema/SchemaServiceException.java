@@ -1,8 +1,6 @@
-package com.armedia.caliente.engine.importer.schema.decl;
+package com.armedia.caliente.engine.importer.schema;
 
-import com.armedia.caliente.engine.importer.ImportException;
-
-public class SchemaServiceException extends ImportException {
+public class SchemaServiceException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	public SchemaServiceException() {

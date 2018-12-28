@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.importer.schema;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -22,10 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaServiceException;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
 import com.armedia.caliente.engine.importer.schema.decl.SecondaryTypeDeclaration;
 import com.armedia.caliente.engine.importer.schema.decl.TypeDeclaration;
-import com.armedia.commons.utilities.LockDispenser;
+import com.armedia.commons.utilities.LazyInitializer;
+import com.armedia.commons.utilities.Tools;
 
 public class SchemaService {
 
@@ -33,100 +35,119 @@ public class SchemaService {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final LockDispenser<String, Object> constructedLocks = LockDispenser.getSynchronized();
-	private final ConcurrentMap<String, ObjectType> constructedTypes = new ConcurrentHashMap<>();
-
-	private final LockDispenser<String, Object> typeLocks = LockDispenser.getSynchronized();
-	private final ConcurrentMap<String, TypeDeclaration> typeDeclarations = new ConcurrentHashMap<>();
-
-	private final LockDispenser<String, Object> secondaryLocks = LockDispenser.getSynchronized();
-	private final ConcurrentMap<String, SecondaryTypeDeclaration> secondaryTypeDeclarations = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, LazyInitializer<ObjectType>> constructedTypes = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, LazyInitializer<TypeDeclaration>> typeDeclarations = new ConcurrentHashMap<>();
+	private final ConcurrentMap<String, LazyInitializer<SecondaryTypeDeclaration>> secondaryTypeDeclarations = new ConcurrentHashMap<>();
 
 	public SchemaService(SchemaDeclarationService declarationService) {
 		this.declarationService = declarationService;
 	}
 
 	protected String getSignature(TypeDeclaration type, Map<String, SecondaryTypeDeclaration> secondaries) {
-		String s = String.format("%s|%s", type.getName(), new TreeSet<>(secondaries.keySet()));
+		String s = String.format("{%s}:%s", type.getName(), new TreeSet<>(secondaries.keySet()));
 		return DigestUtils.sha256Hex(s);
 	}
 
-	protected final TypeDeclaration getTypeDeclaration(String typeName) throws SchemaServiceException {
-		final TypeDeclaration ret;
+	protected final TypeDeclaration getTypeDeclaration(final String typeName) throws SchemaDeclarationServiceException {
 		if (StringUtils.isBlank(typeName)) { return null; }
-		synchronized (this.typeLocks.getLock(typeName)) {
-			try {
-				ret = ConcurrentUtils.createIfAbsent(this.typeDeclarations, typeName,
-					new ConcurrentInitializer<TypeDeclaration>() {
-						@Override
-						public TypeDeclaration get() throws ConcurrentException {
-							try {
-								TypeDeclaration declaration = SchemaService.this.declarationService
-									.getTypeDeclaration(typeName);
-								if (declaration == null) {
-									declaration = TypeDeclaration.NULL;
-								}
-								return declaration;
-							} catch (SchemaServiceException e) {
-								throw new ConcurrentException(
-									String.format("Failed to get the declaration for type [%s]", typeName), e);
+		LazyInitializer<TypeDeclaration> ret = ConcurrentUtils.createIfAbsentUnchecked(this.typeDeclarations, typeName,
+			new ConcurrentInitializer<LazyInitializer<TypeDeclaration>>() {
+				@Override
+				public LazyInitializer<TypeDeclaration> get() {
+					return new LazyInitializer<>(() -> {
+						try {
+							TypeDeclaration declaration = SchemaService.this.declarationService
+								.getTypeDeclaration(typeName);
+							if (declaration == null) {
+								declaration = TypeDeclaration.NULL;
 							}
+							return declaration;
+						} catch (SchemaDeclarationServiceException e) {
+							throw new SchemaServiceException(
+								String.format("Failed to get the declaration for type [%s]", typeName), e);
 						}
 					});
-			} catch (ConcurrentException e) {
-				Throwable t = e.getCause();
-				if (SchemaServiceException.class.isInstance(t)) { throw SchemaServiceException.class.cast(t); }
-				throw new SchemaServiceException(String.format(
-					"Unexpected initializer exception trying to retrieve the type declaration for [%s]", typeName), e);
+				}
+			});
+
+		TypeDeclaration declaration = null;
+		try {
+			declaration = ret.get();
+		} catch (ConcurrentException e) {
+			Throwable t = e.getCause();
+			// Recurse...just in case...
+			while (ConcurrentException.class.isInstance(t)) {
+				t = t.getCause();
 			}
+			while (SchemaServiceException.class.isInstance(t)) {
+				t = t.getCause();
+			}
+			if (SchemaDeclarationServiceException.class
+				.isInstance(t)) { throw SchemaDeclarationServiceException.class.cast(t); }
+			throw new SchemaDeclarationServiceException(String.format(
+				"Unexpected initializer exception trying to retrieve the type declaration for [%s]", typeName), e);
 		}
-		return (ret != TypeDeclaration.NULL ? ret : null);
+		return (declaration != TypeDeclaration.NULL ? declaration : null);
 	}
 
-	protected final SecondaryTypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName)
-		throws SchemaServiceException {
+	protected final SecondaryTypeDeclaration getSecondaryTypeDeclaration(final String secondaryTypeName)
+		throws SchemaDeclarationServiceException {
 		if (StringUtils.isBlank(secondaryTypeName)) { return null; }
-		final SecondaryTypeDeclaration ret;
-		synchronized (this.secondaryLocks.getLock(secondaryTypeName)) {
-			try {
-				ret = ConcurrentUtils.createIfAbsent(this.secondaryTypeDeclarations, secondaryTypeName,
-					new ConcurrentInitializer<SecondaryTypeDeclaration>() {
-						@Override
-						public SecondaryTypeDeclaration get() throws ConcurrentException {
-							try {
-								SecondaryTypeDeclaration declaration = SchemaService.this.declarationService
-									.getSecondaryTypeDeclaration(secondaryTypeName);
-								if (declaration == null) {
-									declaration = SecondaryTypeDeclaration.NULL;
-								}
-								return declaration;
-							} catch (SchemaServiceException e) {
-								throw new ConcurrentException(String.format(
-									"Failed to get the declaration for secondary type [%s]", secondaryTypeName), e);
+		LazyInitializer<SecondaryTypeDeclaration> ret = ConcurrentUtils.createIfAbsentUnchecked(
+			this.secondaryTypeDeclarations, secondaryTypeName,
+			new ConcurrentInitializer<LazyInitializer<SecondaryTypeDeclaration>>() {
+				@Override
+				public LazyInitializer<SecondaryTypeDeclaration> get() {
+					return new LazyInitializer<>(() -> {
+						try {
+							SecondaryTypeDeclaration declaration = SchemaService.this.declarationService
+								.getSecondaryTypeDeclaration(secondaryTypeName);
+							if (declaration == null) {
+								declaration = SecondaryTypeDeclaration.NULL;
 							}
+							return declaration;
+						} catch (SchemaDeclarationServiceException e) {
+							throw new SchemaServiceException(
+								String.format("Failed to get the declaration for type [%s]", secondaryTypeName), e);
 						}
 					});
-			} catch (ConcurrentException e) {
-				Throwable t = e.getCause();
-				if (SchemaServiceException.class.isInstance(t)) { throw SchemaServiceException.class.cast(t); }
-				throw new SchemaServiceException(String.format(
-					"Unexpected initializer exception trying to retrieve the secondary type declaration for [%s]",
-					secondaryTypeName), e);
+				}
+			});
+
+		SecondaryTypeDeclaration declaration = null;
+		try {
+			declaration = ret.get();
+		} catch (ConcurrentException e) {
+			Throwable t = e.getCause();
+			// Recurse...just in case...
+			while (ConcurrentException.class.isInstance(t)) {
+				t = t.getCause();
 			}
+			while (SchemaServiceException.class.isInstance(t)) {
+				t = t.getCause();
+			}
+			if (SchemaDeclarationServiceException.class
+				.isInstance(t)) { throw SchemaDeclarationServiceException.class.cast(t); }
+			throw new SchemaDeclarationServiceException(String.format(
+				"Unexpected initializer exception trying to retrieve the secondary type declaration for [%s]",
+				secondaryTypeName), e);
 		}
-		return (ret != SecondaryTypeDeclaration.NULL ? ret : null);
+		return (declaration != SecondaryTypeDeclaration.NULL ? declaration : null);
 	}
 
-	public final ObjectType constructType(final String typeName, Collection<String> secondaries)
-		throws SchemaServiceException {
+	public final ObjectType constructType(final String typeName, final Collection<String> secondaryTypeNames)
+		throws SchemaDeclarationServiceException {
 		if (StringUtils
 			.isBlank(typeName)) { throw new IllegalArgumentException("Must provide a non-null, non-empty type name"); }
 
 		final TypeDeclaration mainDeclaration = getTypeDeclaration(typeName);
 		if (mainDeclaration == null) { return null; }
 
-		if ((secondaries == null) || secondaries.isEmpty()) {
+		final Collection<String> secondaries;
+		if ((secondaryTypeNames == null) || secondaryTypeNames.isEmpty()) {
 			secondaries = Collections.emptyList();
+		} else {
+			secondaries = Tools.freezeCollection(new ArrayList<>(secondaryTypeNames));
 		}
 
 		final Queue<Pair<String, String>> typeQueue = new LinkedList<>();
@@ -213,50 +234,56 @@ public class SchemaService {
 
 		// At this point we can start traversing the tree upwards to build out the hierarchy
 		final String signature = getSignature(mainDeclaration, secondaryDeclarations);
-		final Object constructedLock = this.constructedLocks.getLock(signature);
-		final ObjectType constructedType;
-		synchronized (constructedLock) {
-			try {
-				constructedType = ConcurrentUtils.createIfAbsent(this.constructedTypes, signature,
-					new ConcurrentInitializer<ObjectType>() {
-						@Override
-						public ObjectType get() throws ConcurrentException {
-							try {
-								ObjectType constructedType = constructType(mainDeclaration, typeHierarchy,
-									secondaryDeclarations);
-								if (constructedType == null) {
-									constructedType = ObjectType.NULL;
-								}
-								return constructedType;
-							} catch (SchemaServiceException e) {
-								throw new ConcurrentException(
-									String.format("Failed to construct the object type for [%s] with secondaries %s",
-										mainDeclaration.getName(), secondaryDeclarations.keySet()),
-									e);
+		LazyInitializer<ObjectType> ret = ConcurrentUtils.createIfAbsentUnchecked(this.constructedTypes, signature,
+			new ConcurrentInitializer<LazyInitializer<ObjectType>>() {
+				@Override
+				public LazyInitializer<ObjectType> get() {
+					return new LazyInitializer<>(() -> {
+						try {
+							ObjectType constructedType = constructType(mainDeclaration, typeHierarchy,
+								secondaryDeclarations);
+							if (constructedType == null) {
+								constructedType = ObjectType.NULL;
 							}
+							return constructedType;
+						} catch (SchemaDeclarationServiceException e) {
+							throw new SchemaServiceException(String.format(
+								"Failed to get construct the type [%s] with secondaries %s", typeName, secondaries), e);
 						}
 					});
-			} catch (ConcurrentException e) {
-				Throwable t = e.getCause();
-				if (SchemaServiceException.class.isInstance(t)) { throw SchemaServiceException.class.cast(t); }
-				throw new SchemaServiceException(String.format(
-					"Unexpected initializer exception constructing the object type for [%s] with secondaries %s",
-					mainDeclaration.getName(), secondaryDeclarations.keySet()), e);
-			}
-		}
+				}
+			});
 
-		// No main type? Can't continue...
-		if (ObjectType.NULL == constructedType) { return null; }
-		return constructedType;
+		ObjectType constructedType = null;
+		try {
+			constructedType = ret.get();
+		} catch (ConcurrentException e) {
+			Throwable t = e.getCause();
+			// Recurse...just in case...
+			while (ConcurrentException.class.isInstance(t)) {
+				t = t.getCause();
+			}
+			while (SchemaServiceException.class.isInstance(t)) {
+				t = t.getCause();
+			}
+			if (SchemaDeclarationServiceException.class
+				.isInstance(t)) { throw SchemaDeclarationServiceException.class.cast(t); }
+			throw new SchemaDeclarationServiceException(
+				String.format("Unexpected initializer exception trying to construct the type [%s] with secondaries %s",
+					typeName, secondaries),
+				e);
+		}
+		return (constructedType != ObjectType.NULL ? constructedType : null);
 	}
 
-	public final SecondaryType constructSecondaryType(String name) throws SchemaServiceException {
+	public final SecondaryType constructSecondaryType(String name) throws SchemaDeclarationServiceException {
 		SecondaryTypeDeclaration declaration = getSecondaryTypeDeclaration(name);
 		if (declaration == null) { return null; }
 		return constructSecondaryType(declaration);
 	}
 
-	protected SecondaryType constructSecondaryType(SecondaryTypeDeclaration declaration) throws SchemaServiceException {
+	protected SecondaryType constructSecondaryType(SecondaryTypeDeclaration declaration)
+		throws SchemaDeclarationServiceException {
 		if (declaration == null) { return null; }
 		final SecondaryType parent = constructSecondaryType(declaration.getParentName());
 		final Queue<String> queue = new LinkedList<>();
@@ -264,11 +291,15 @@ public class SchemaService {
 			queue.add(parent.getName());
 		}
 		queue.addAll(declaration.getSecondaries());
+		while (!queue.isEmpty()) {
+
+		}
+
 		return null;
 	}
 
 	protected ObjectType constructType(TypeDeclaration type, Map<String, TypeDeclaration> typeHierarchy,
-		Map<String, SecondaryTypeDeclaration> secondaries) throws SchemaServiceException {
+		Map<String, SecondaryTypeDeclaration> secondaries) throws SchemaDeclarationServiceException {
 
 		return null;
 	}

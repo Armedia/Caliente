@@ -4,12 +4,12 @@ import java.util.Collection;
 
 public interface SchemaDeclarationService {
 
-	public Collection<String> getTypeNames() throws SchemaServiceException;
+	public Collection<String> getTypeNames() throws SchemaDeclarationServiceException;
 
-	public TypeDeclaration getTypeDeclaration(String typeName) throws SchemaServiceException;
+	public TypeDeclaration getTypeDeclaration(String typeName) throws SchemaDeclarationServiceException;
 
-	public Collection<String> getSecondaryTypeNames() throws SchemaServiceException;
+	public Collection<String> getSecondaryTypeNames() throws SchemaDeclarationServiceException;
 
-	public SecondaryTypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName) throws SchemaServiceException;
+	public SecondaryTypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName) throws SchemaDeclarationServiceException;
 
 }
