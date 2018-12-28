@@ -74,7 +74,7 @@ public abstract class SchemaMember<T extends SchemaMember<T, D>, D extends Attri
 		for (String secondaryName : secondaries.keySet()) {
 			SecondaryTypeDeclaration secondaryDeclaration = secondaries.get(secondaryName);
 
-			SecondaryType st = schemaService.getSecondaryType(secondaryName);
+			SecondaryType st = schemaService.getSecondaryTypeDeclaration(secondaryName);
 			includedSecondaries.put(st.getName(), st);
 
 			// Add the aspect's attributes

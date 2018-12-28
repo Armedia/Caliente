@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -15,6 +16,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
 import com.armedia.caliente.engine.importer.schema.decl.SchemaServiceException;
@@ -26,13 +31,25 @@ public class SchemaService {
 
 	private final SchemaDeclarationService declarationService;
 
-	private final LockDispenser<String, Object> constructedLocks = LockDispenser.getBasic();
+	protected final Logger log = LoggerFactory.getLogger(getClass());
+
+	private class SyncInit<T> {
+		private T value = null;
+	}
+
+	private final LockDispenser<String, SyncInit<ObjectType>> constructedLocks = new LockDispenser<String, SchemaService.SyncInit<ObjectType>>() {
+		@Override
+		protected SyncInit<ObjectType> newLock(String key) {
+			return new SyncInit<>();
+		}
+	};
+
 	private final ConcurrentMap<String, ObjectType> constructedTypes = new ConcurrentHashMap<>();
 
-	private final LockDispenser<String, Object> typeLocks = LockDispenser.getBasic();
+	private final LockDispenser<String, SyncInit<TypeDeclaration>> typeLocks = LockDispenser.getBasic();
 	private final ConcurrentMap<String, TypeDeclaration> typeDeclarations = new ConcurrentHashMap<>();
 
-	private final LockDispenser<String, Object> secondaryLocks = LockDispenser.getBasic();
+	private final LockDispenser<String, SyncInit<SecondaryTypeDeclaration>> secondaryLocks = LockDispenser.getBasic();
 	private final ConcurrentMap<String, SecondaryTypeDeclaration> secondaryTypeDeclarations = new ConcurrentHashMap<>();
 
 	public SchemaService(SchemaDeclarationService declarationService) {
@@ -40,7 +57,7 @@ public class SchemaService {
 	}
 
 	protected String getSignature(TypeDeclaration type, Map<String, SecondaryTypeDeclaration> secondaries) {
-		String s = String.format("%s|%s", type.getName(), secondaries.keySet());
+		String s = String.format("%s|%s", type.getName(), new TreeSet<>(secondaries.keySet()));
 		return DigestUtils.sha256Hex(s);
 	}
 
@@ -54,7 +71,8 @@ public class SchemaService {
 						@Override
 						public TypeDeclaration get() throws ConcurrentException {
 							try {
-								TypeDeclaration declaration = SchemaService.this.declarationService.getType(typeName);
+								TypeDeclaration declaration = SchemaService.this.declarationService
+									.getTypeDeclaration(typeName);
 								if (declaration == null) {
 									declaration = TypeDeclaration.NULL;
 								}
@@ -87,7 +105,7 @@ public class SchemaService {
 						public SecondaryTypeDeclaration get() throws ConcurrentException {
 							try {
 								SecondaryTypeDeclaration declaration = SchemaService.this.declarationService
-									.getSecondaryType(secondaryTypeName);
+									.getSecondaryTypeDeclaration(secondaryTypeName);
 								if (declaration == null) {
 									declaration = SecondaryTypeDeclaration.NULL;
 								}
@@ -121,18 +139,25 @@ public class SchemaService {
 			secondaries = Collections.emptyList();
 		}
 
-		final Queue<String> typeQueue = new LinkedList<>();
-		final Queue<String> secondaryTypeQueue = new LinkedList<>();
+		final Queue<Pair<String, String>> typeQueue = new LinkedList<>();
+		final Queue<Triple<String, Boolean, String>> secondaryTypeQueue = new LinkedList<>();
 
-		secondaryTypeQueue.addAll(mainDeclaration.getSecondaries());
-		secondaryTypeQueue.addAll(secondaries);
+		for (String s : mainDeclaration.getSecondaries()) {
+			typeQueue.add(Pair.of(mainDeclaration.getName(), s));
+		}
+
+		for (String s : secondaries) {
+			secondaryTypeQueue.add(Triple.of(null, false, s));
+		}
 
 		final Map<String, TypeDeclaration> typeHierarchy = new LinkedHashMap<>();
 		typeHierarchy.put(mainDeclaration.getName(), mainDeclaration);
 
-		typeQueue.add(mainDeclaration.getParentName());
+		typeQueue.add(Pair.of(mainDeclaration.getName(), mainDeclaration.getParentName()));
 		while (!typeQueue.isEmpty()) {
-			String nextTypeName = typeQueue.poll();
+			final Pair<String, String> next = typeQueue.poll();
+			final String prevTypeName = next.getLeft();
+			final String nextTypeName = next.getRight();
 			if (StringUtils.isBlank(nextTypeName)) {
 				continue;
 			}
@@ -144,17 +169,30 @@ public class SchemaService {
 
 			TypeDeclaration nextTypeDeclaration = getTypeDeclaration(nextTypeName);
 			if (nextTypeDeclaration == null) {
+				this.log.debug(
+					"The type [{}] references the missing type [{}] as its parent, this may lead to errant behavior during transformation and mapping",
+					prevTypeName, nextTypeName);
 				continue;
 			}
 
 			typeHierarchy.put(nextTypeDeclaration.getName(), nextTypeDeclaration);
-			typeQueue.add(nextTypeDeclaration.getParentName());
-			secondaryTypeQueue.addAll(nextTypeDeclaration.getSecondaries());
+			if (!StringUtils.isBlank(nextTypeDeclaration.getParentName())) {
+				typeQueue.add(Pair.of(nextTypeDeclaration.getName(), nextTypeDeclaration.getParentName()));
+			}
+			for (String s : nextTypeDeclaration.getSecondaries()) {
+				if (!StringUtils.isBlank(s)) {
+					secondaryTypeQueue.add(Triple.of(nextTypeDeclaration.getName(), true, s));
+				}
+			}
 		}
 
 		final Map<String, SecondaryTypeDeclaration> secondaryDeclarations = new TreeMap<>();
 		while (!secondaryTypeQueue.isEmpty()) {
-			final String nextSecondaryName = secondaryTypeQueue.poll();
+			final Triple<String, Boolean, String> next = secondaryTypeQueue.poll();
+			final String refName = next.getLeft();
+			final boolean isType = next.getMiddle();
+			final String nextSecondaryName = next.getRight();
+
 			if (StringUtils.isBlank(nextSecondaryName)) {
 				continue;
 			}
@@ -166,12 +204,21 @@ public class SchemaService {
 
 			final SecondaryTypeDeclaration declaration = getSecondaryTypeDeclaration(nextSecondaryName);
 			if (declaration == null) {
+				this.log.debug(
+					"The {}type [{}] references the missing secondary type [{}], this may lead to errant behavior during transformation and mapping",
+					isType ? "" : "secondary ", refName, nextSecondaryName);
 				continue;
 			}
 
 			secondaryDeclarations.put(declaration.getName(), declaration);
-			secondaryTypeQueue.add(declaration.getParentName());
-			secondaryTypeQueue.addAll(declaration.getSecondaries());
+			if (!StringUtils.isBlank(declaration.getParentName())) {
+				secondaryTypeQueue.add(Triple.of(declaration.getName(), false, declaration.getParentName()));
+			}
+			for (String s : declaration.getSecondaries()) {
+				if (!StringUtils.isBlank(s)) {
+					secondaryTypeQueue.add(Triple.of(declaration.getName(), false, s));
+				}
+			}
 		}
 
 		// At this point we can start traversing the tree upwards to build out the hierarchy
