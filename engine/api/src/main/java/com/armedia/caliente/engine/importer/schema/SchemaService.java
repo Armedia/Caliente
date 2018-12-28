@@ -33,23 +33,13 @@ public class SchemaService {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	private class SyncInit<T> {
-		private T value = null;
-	}
-
-	private final LockDispenser<String, SyncInit<ObjectType>> constructedLocks = new LockDispenser<String, SchemaService.SyncInit<ObjectType>>() {
-		@Override
-		protected SyncInit<ObjectType> newLock(String key) {
-			return new SyncInit<>();
-		}
-	};
-
+	private final LockDispenser<String, Object> constructedLocks = LockDispenser.getSynchronized();
 	private final ConcurrentMap<String, ObjectType> constructedTypes = new ConcurrentHashMap<>();
 
-	private final LockDispenser<String, SyncInit<TypeDeclaration>> typeLocks = LockDispenser.getBasic();
+	private final LockDispenser<String, Object> typeLocks = LockDispenser.getSynchronized();
 	private final ConcurrentMap<String, TypeDeclaration> typeDeclarations = new ConcurrentHashMap<>();
 
-	private final LockDispenser<String, SyncInit<SecondaryTypeDeclaration>> secondaryLocks = LockDispenser.getBasic();
+	private final LockDispenser<String, Object> secondaryLocks = LockDispenser.getSynchronized();
 	private final ConcurrentMap<String, SecondaryTypeDeclaration> secondaryTypeDeclarations = new ConcurrentHashMap<>();
 
 	public SchemaService(SchemaDeclarationService declarationService) {
