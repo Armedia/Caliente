@@ -242,8 +242,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				if (!isTransitoryObject(object)) {
 					// DO NOT override mappings...we don't know the new object's ID until checkin is
 					// completed
-					context.getAttributeMapper().setMapping(getDctmType().getStoredObjectType(),
-						DctmAttributes.R_OBJECT_ID, this.cmfObject.getId(), object.getObjectId().getId());
+					context.getValueMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
+						this.cmfObject.getId(), object.getObjectId().getId());
 				}
 			} else {
 				// Is this correct?
@@ -253,15 +253,15 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				object.fetch(null);
 				this.log.info(String.format("Acquired lock on %s", this.cmfObject.getDescription()));
 				// First, store the mapping for the object's exact ID
-				context.getAttributeMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
+				context.getValueMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
 					this.cmfObject.getId(), object.getObjectId().getId());
 				// Now, if necessary, store the mapping for the object's chronicle ID
 				if (object.hasAttr(DctmAttributes.I_CHRONICLE_ID)) {
 					final String attName = DctmAttributes.I_CHRONICLE_ID;
 					final String sourceHistoryId = this.cmfObject.getHistoryId();
 					final CmfType type = getDctmType().getStoredObjectType();
-					if (context.getAttributeMapper().getTargetMapping(type, attName, sourceHistoryId) == null) {
-						context.getAttributeMapper().setMapping(type, attName, sourceHistoryId,
+					if (context.getValueMapper().getTargetMapping(type, attName, sourceHistoryId) == null) {
+						context.getValueMapper().setMapping(type, attName, sourceHistoryId,
 							object.getId(attName).getId());
 					}
 				}
@@ -394,7 +394,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				}
 			} else {
 				// Clear the mapping
-				context.getAttributeMapper().clearSourceMapping(getDctmType().getStoredObjectType(),
+				context.getValueMapper().clearSourceMapping(getDctmType().getStoredObjectType(),
 					DctmAttributes.R_OBJECT_ID, this.cmfObject.getId());
 			}
 		}
@@ -593,7 +593,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		// being set is repeating type.
 		clearAttributeFromObject(attrName, object);
 		final int truncateLength = (dataType == DctmDataType.DF_STRING
-			? object.getAttr(object.findAttrIndex(attrName)).getLength() : 0);
+			? object.getAttr(object.findAttrIndex(attrName)).getLength()
+			: 0);
 		int i = 0;
 		for (IDfValue value : values) {
 			if ((i > 0) && !repeating) {
@@ -706,7 +707,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			throw new ImportException(
 				String.format("Failed to decode the object type for [%s]", targetObject.getType().getName()), e);
 		}
-		Mapping m = context.getAttributeMapper().getSourceMapping(targetType.getStoredObjectType(),
+		Mapping m = context.getValueMapper().getSourceMapping(targetType.getStoredObjectType(),
 			DctmAttributes.R_OBJECT_ID, objectId);
 		if (m == null) { return false; }
 
