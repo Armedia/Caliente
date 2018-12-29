@@ -297,7 +297,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	private void setMapping(CmisImportContext ctx, T existing) {
-		ctx.getAttributeMapper().setMapping(this.cmfObject.getType(), PropertyIds.OBJECT_ID, this.cmfObject.getId(),
+		ctx.getValueMapper().setMapping(this.cmfObject.getType(), PropertyIds.OBJECT_ID, this.cmfObject.getId(),
 			existing.getId());
 	}
 

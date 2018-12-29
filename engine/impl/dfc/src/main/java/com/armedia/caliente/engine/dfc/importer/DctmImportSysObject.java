@@ -487,7 +487,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-
+		
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/
@@ -519,8 +519,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final IDfSession session = ctx.getSession();
 
 		if ("FOLDER".equalsIgnoreCase(type)) {
-			Mapping map = ctx.getAttributeMapper().getTargetMapping(CmfType.FOLDER, DctmAttributes.R_OBJECT_ID,
-				reference);
+			Mapping map = ctx.getValueMapper().getTargetMapping(CmfType.FOLDER, DctmAttributes.R_OBJECT_ID, reference);
 			if (map == null) {
 				String msg = String.format(
 					"Can't inherit an ACL from a parent folder for %s [%s](%s) - the source parent ID [%s] couldn't be mapped to a target object",
@@ -634,7 +633,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// old format - acl ID
 				String aclId = aclIdProp.getValue().asString();
 				// Find the mapped ACL
-				Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID, aclId);
+				Mapping m = ctx.getValueMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID, aclId);
 				if (m != null) {
 					final String dql = String.format(
 						"select owner_name, object_name from dm_acl where r_object_id = %s",
@@ -710,7 +709,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected IDfId persistChanges(T sysObject, DctmImportContext context) throws DfException, ImportException {
 		if (!sysObject.isCheckedOut()) { return super.persistChanges(sysObject, context); }
 		IDfId newId = persistNewVersion(sysObject, null, context);
-		context.getAttributeMapper().setMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
+		context.getValueMapper().setMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
 			this.cmfObject.getId(), newId.getId());
 		return newId;
 	}
@@ -873,7 +872,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		IDfValue referenceById = this.cmfObject.getProperty(DctmAttributes.REFERENCE_BY_ID).getValue();
 
 		// First, try to map the ID...
-		Mapping m = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
+		Mapping m = context.getValueMapper().getTargetMapping(this.cmfObject.getType(), DctmAttributes.R_OBJECT_ID,
 			referenceById.asString());
 		if (m != null) {
 			referenceById = DfValueFactory.newIdValue(m.getTargetValue());
@@ -1040,7 +1039,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()));
 			}
 		}
-		Mapping m = context.getAttributeMapper().getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
+		Mapping m = context.getValueMapper().getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
 			DctmAttributes.R_OBJECT_ID, mainFolderId.getId());
 		if (m != null) { return new DfId(m.getTargetValue()); }
 		return null;

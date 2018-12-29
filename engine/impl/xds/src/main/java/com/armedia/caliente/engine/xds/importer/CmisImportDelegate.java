@@ -41,7 +41,7 @@ public abstract class CmisImportDelegate<T> extends
 		final Session session = ctx.getSession();
 		final String typeName = this.cmfObject.getSubtype();
 
-		Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.TYPE, PropertyIds.NAME, typeName);
+		Mapping m = ctx.getValueMapper().getTargetMapping(CmfType.TYPE, PropertyIds.NAME, typeName);
 		final String finalTypeName;
 		if (m == null) {
 			BaseTypeId id = CmisTranslator.decodeObjectType(this.cmfObject.getType());
