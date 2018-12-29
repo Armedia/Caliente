@@ -267,7 +267,7 @@ public abstract class ExportEngine< //
 			// dependency causes the export "failure" of its dependent object tree.
 			if ((filter != null) && (referrent == null)) {
 				try {
-					if (!filter.acceptRaw(marshaled, objectStore.getAttributeMapper())) { return new Result(
+					if (!filter.acceptRaw(marshaled, objectStore.getValueMapper())) { return new Result(
 						ExportSkipReason.SKIPPED, "Excluded by filtering logic"); }
 				} catch (ObjectFilterException e) {
 					throw new ExportException(String.format("Filtering logic exception while processing %s", logLabel),
@@ -434,7 +434,7 @@ public abstract class ExportEngine< //
 			CmfObject<CmfValue> encoded = getTranslator().encodeObject(marshaled);
 			if (transformer != null) {
 				try {
-					encoded = transformer.transform(objectStore.getAttributeMapper(), encoded);
+					encoded = transformer.transform(objectStore.getValueMapper(), encoded);
 				} catch (TransformerException e) {
 					throw new ExportException(String.format("Transformation failed for %s", marshaled.getDescription()),
 						e);
@@ -569,7 +569,7 @@ public abstract class ExportEngine< //
 		final CfgTools configuration = new CfgTools(settings);
 		objectStore.clearAttributeMappings();
 		try {
-			loadPrincipalMappings(objectStore.getAttributeMapper(), configuration);
+			loadPrincipalMappings(objectStore.getValueMapper(), configuration);
 		} catch (TransferEngineException e) {
 			throw new ExportException(e.getMessage(), e.getCause());
 		}

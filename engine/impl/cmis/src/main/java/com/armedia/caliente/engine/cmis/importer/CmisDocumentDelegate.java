@@ -20,8 +20,8 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
@@ -125,7 +125,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			if (!vsi.isNull()) {
 				CmfProperty<CmfValue> rootProp = this.cmfObject.getProperty(IntermediateProperty.VERSION_TREE_ROOT);
 				if ((rootProp == null) || !rootProp.hasValues() || !rootProp.getValue().asBoolean()) {
-					Mapping m = ctx.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
+					Mapping m = ctx.getValueMapper().getTargetMapping(this.cmfObject.getType(),
 						PropertyIds.VERSION_SERIES_ID, vsi.asString());
 					if (m != null) {
 						String seriesId = m.getTargetValue();
@@ -177,7 +177,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			Document document = parent.createDocument(properties, content, state);
 			CmfAttribute<CmfValue> versionSeriesId = this.cmfObject.getAttribute(PropertyIds.VERSION_SERIES_ID);
 			if ((versionSeriesId != null) && versionSeriesId.hasValues()) {
-				ctx.getAttributeMapper().setMapping(this.cmfObject.getType(), PropertyIds.VERSION_SERIES_ID,
+				ctx.getValueMapper().setMapping(this.cmfObject.getType(), PropertyIds.VERSION_SERIES_ID,
 					versionSeriesId.getValue().asString(), document.getVersionSeriesId());
 			}
 			return document;
