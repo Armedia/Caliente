@@ -21,8 +21,6 @@ import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionFactory;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfTranslator;
-import com.armedia.caliente.engine.alfresco.bi.AlfrescoSchemaDeclarationService;
-import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -331,8 +329,8 @@ public class AlfImportEngine extends
 
 	@Override
 	protected AlfImportContextFactory newContextFactory(AlfRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, AttributeMapper attributeMapper, Logger output,
-		WarningTracker warningTracker) throws Exception {
+		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
+		throws Exception {
 		return new AlfImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);
 	}
@@ -365,8 +363,8 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected AlfrescoSchemaDeclarationService getSchemaDeclarationService(AlfRoot session)
+	protected AlfSchemaService getSchemaService(AlfRoot session)
 		throws SchemaDeclarationServiceException {
-		return new AlfrescoSchemaDeclarationService(this.schema);
+		return new AlfSchemaService(this.schema);
 	}
 }

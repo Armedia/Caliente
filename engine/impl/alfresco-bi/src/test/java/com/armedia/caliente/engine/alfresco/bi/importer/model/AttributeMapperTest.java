@@ -16,9 +16,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.alfresco.bi.AlfrescoSchemaDeclarationService;
+import com.armedia.caliente.engine.alfresco.bi.importer.AlfSchemaService;
 import com.armedia.caliente.engine.importer.schema.ConstructedType;
-import com.armedia.caliente.engine.importer.schema.SchemaService;
+import com.armedia.caliente.engine.importer.schema.ConstructedTypeFactory;
 import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
 
 public class AttributeMapperTest {
@@ -141,9 +141,9 @@ public class AttributeMapperTest {
 		}
 		*/
 
-		AlfrescoSchemaDeclarationService alfrescoSchemaDeclarationService = new AlfrescoSchemaDeclarationService(
+		AlfSchemaService alfSchemaService = new AlfSchemaService(
 			alfrescoSchema);
-		SchemaService schemaService = new SchemaService(alfrescoSchemaDeclarationService);
+		ConstructedTypeFactory constructedTypeFactory = new ConstructedTypeFactory(alfSchemaService);
 
 		Collection<String> secondaries = Arrays.asList("cm:titled", "cm:versionable");
 
@@ -163,7 +163,7 @@ public class AttributeMapperTest {
 				attribute.declaration.getClass().getSimpleName().toLowerCase(), attribute.declaration.name);
 		}
 
-		ConstructedType ct = schemaService.constructType("cm:content", secondaries);
+		ConstructedType ct = constructedTypeFactory.constructType("cm:content", secondaries);
 		System.out.printf("\tConstructed Schema for type %s%n", ct.getName());
 		if (!ct.getSecondaries().isEmpty()) {
 			System.out.printf("\t\tAspects : %s%n", new TreeSet<>(ct.getSecondaries()));

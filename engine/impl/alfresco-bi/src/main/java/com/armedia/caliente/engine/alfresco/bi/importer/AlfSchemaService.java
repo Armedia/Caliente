@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi;
+package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -10,17 +10,16 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentMod
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
-import com.armedia.caliente.engine.importer.schema.decl.ObjectTypeDeclaration;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
-import com.armedia.caliente.engine.importer.schema.decl.SecondaryTypeDeclaration;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
+import com.armedia.caliente.engine.importer.schema.decl.TypeDeclaration;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
-public class AlfrescoSchemaDeclarationService implements SchemaDeclarationService {
+public class AlfSchemaService implements SchemaService {
 
 	private final AlfrescoSchema schema;
 
-	public AlfrescoSchemaDeclarationService(AlfrescoSchema schema) {
+	public AlfSchemaService(AlfrescoSchema schema) {
 		this.schema = schema;
 	}
 
@@ -31,7 +30,7 @@ public class AlfrescoSchemaDeclarationService implements SchemaDeclarationServic
 	}
 
 	@Override
-	public ObjectTypeDeclaration getObjectTypeDeclaration(String typeName) {
+	public TypeDeclaration getObjectTypeDeclaration(String typeName) {
 		if (this.schema == null) { return null; }
 		Type type = this.schema.getType(typeName);
 		if (type == null) { return null; }
@@ -47,7 +46,7 @@ public class AlfrescoSchemaDeclarationService implements SchemaDeclarationServic
 			attributes.add(new AttributeDeclaration(a, dataType, (att.mandatory == SchemaAttribute.Mandatory.ENFORCED),
 				att.multiple));
 		}
-		return new ObjectTypeDeclaration(type.getName(), attributes, type.getMandatoryAspects(), parentName);
+		return new TypeDeclaration(type.getName(), attributes, type.getMandatoryAspects(), parentName);
 	}
 
 	@Override
@@ -57,7 +56,7 @@ public class AlfrescoSchemaDeclarationService implements SchemaDeclarationServic
 	}
 
 	@Override
-	public SecondaryTypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName) {
+	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName) {
 		if (this.schema == null) { return null; }
 		if (this.schema == null) { return null; }
 		Aspect aspect = this.schema.getAspect(secondaryTypeName);
@@ -74,7 +73,7 @@ public class AlfrescoSchemaDeclarationService implements SchemaDeclarationServic
 			attributes.add(new AttributeDeclaration(a, dataType, (att.mandatory == SchemaAttribute.Mandatory.ENFORCED),
 				att.multiple));
 		}
-		return new SecondaryTypeDeclaration(aspect.getName(), attributes, aspect.getMandatoryAspects(), parentName);
+		return new TypeDeclaration(aspect.getName(), attributes, aspect.getMandatoryAspects(), parentName);
 	}
 
 	@Override

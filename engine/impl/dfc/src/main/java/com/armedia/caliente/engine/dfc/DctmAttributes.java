@@ -352,4 +352,10 @@ public class DctmAttributes {
 
 	/** the description attribute */
 	public static final String DESCRIPTION = "description";
+
+	/** the tables in which aspect attributes are stored */
+	public static final String I_ATTR_DEF = "i_attr_def";
+
+	/** the attribute position within a repeating list */
+	public static final String I_POSITION = "i_position";
 }

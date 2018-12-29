@@ -10,10 +10,11 @@ import com.armedia.caliente.engine.cmis.CmisCommon;
 import com.armedia.caliente.engine.cmis.CmisSessionFactory;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.CmisTranslator;
-import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -129,8 +130,8 @@ public class CmisImportEngine extends
 
 	@Override
 	protected CmisImportContextFactory newContextFactory(Session session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer,
-		AttributeMapper attributeMapper, Logger output, WarningTracker warningTracker) throws Exception {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		WarningTracker warningTracker) throws Exception {
 		return new CmisImportContextFactory(this, session, cfg, objectStore, streamStore, transformer, output,
 			warningTracker);
 	}
@@ -147,6 +148,11 @@ public class CmisImportEngine extends
 
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(CmisCommon.TARGET_NAME);
+	}
+
+	@Override
+	protected SchemaService getSchemaService(Session session) throws SchemaDeclarationServiceException {
+		return new CmisSchemaService(session);
 	}
 
 }

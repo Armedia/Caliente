@@ -38,8 +38,8 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
 import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -389,17 +389,16 @@ public abstract class ImportEngine<//
 			new LinkedBlockingQueue<Runnable>());
 	}
 
-	protected abstract SchemaDeclarationService getSchemaDeclarationService(SESSION session)
-		throws SchemaDeclarationServiceException;
+	protected abstract SchemaService getSchemaService(SESSION session) throws SchemaDeclarationServiceException;
 
 	protected final AttributeMapper getAttributeMapper(CfgTools cfg, SESSION session) throws Exception {
 		String mapperDefault = String.format("%s%s", this.cfgNamePrefix, AttributeMapper.getDefaultLocation());
 		String mapper = cfg.getString(ImportSetting.ATTRIBUTE_MAPPING.getLabel());
 		String residualsPrefix = cfg.getString(ImportSetting.RESIDUALS_PREFIX.getLabel());
 
-		try (SchemaDeclarationService sds = getSchemaDeclarationService(session)) {
-			return AttributeMapper.getAttributeMapper(sds, Tools.coalesce(mapper, mapperDefault), residualsPrefix,
-				false);
+		try (SchemaService schemaService = getSchemaService(session)) {
+			return AttributeMapper.getAttributeMapper(schemaService, Tools.coalesce(mapper, mapperDefault),
+				residualsPrefix, false);
 		}
 	}
 
@@ -449,7 +448,7 @@ public abstract class ImportEngine<//
 				}
 
 				try {
-					transformer = getTransformer(configuration);
+					transformer = getTransformer(configuration, attributeMapper);
 				} catch (Exception e) {
 					throw new ImportException("Failed to initialize the configured object transformations", e);
 				}
@@ -462,7 +461,7 @@ public abstract class ImportEngine<//
 
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
-						streamStore, transformer, attributeMapper, output, warningTracker);
+						streamStore, transformer, output, warningTracker);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}
@@ -497,7 +496,6 @@ public abstract class ImportEngine<//
 				if (transformer != null) {
 					transformer.close();
 				}
-				// No need to close the attribute mapper
 			}
 		} finally {
 			sessionFactory.close();

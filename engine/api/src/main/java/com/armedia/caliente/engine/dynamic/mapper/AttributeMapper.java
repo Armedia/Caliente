@@ -31,8 +31,9 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.importer.schema.ConstructedType;
-import com.armedia.caliente.engine.importer.schema.SchemaService;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
+import com.armedia.caliente.engine.importer.schema.ConstructedTypeFactory;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -45,13 +46,13 @@ public class AttributeMapper {
 
 	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class);
 
-	public static AttributeMapper getAttributeMapper(SchemaDeclarationService schemaDeclarationService, String location,
+	public static AttributeMapper getAttributeMapper(SchemaService schemaService, String location,
 		String residualsPrefix, boolean failIfMissing) throws AttributeMappingException {
 		try {
 			try {
 				AttributeMappings attributeMappings = AttributeMapper.INSTANCES.getInstance(location);
 				if (attributeMappings == null) { return null; }
-				return new AttributeMapper(new SchemaService(schemaDeclarationService), location, residualsPrefix);
+				return new AttributeMapper(new ConstructedTypeFactory(schemaService), location, residualsPrefix);
 			} catch (final XmlNotFoundException e) {
 				if (!failIfMissing) { return null; }
 				throw e;
@@ -85,6 +86,7 @@ public class AttributeMapper {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final Map<String, MappingRendererSet> typedMappings;
 	private final MappingRendererSet commonRenderers;
+	private final ConstructedTypeFactory constructedTypeFactory;
 	private final String residualsPrefix;
 
 	private static MappingRenderer buildRenderer(MappingElement e, Character parentSeparator) {
@@ -96,8 +98,10 @@ public class AttributeMapper {
 		return null;
 	}
 
-	public AttributeMapper(SchemaService schemaService, String xmlSource, String residualsPrefix)
+	public AttributeMapper(ConstructedTypeFactory constructedTypeFactory, String xmlSource, String residualsPrefix)
 		throws XmlInstanceException, XmlNotFoundException {
+		this.constructedTypeFactory = Objects.requireNonNull(constructedTypeFactory,
+			"Must provide a non-null SchemaService instance");
 		AttributeMappings xml = AttributeMapper.INSTANCES.getInstance(xmlSource);
 		if (xml == null) {
 			xml = new AttributeMappings();
@@ -156,7 +160,8 @@ public class AttributeMapper {
 
 		Map<String, MappingRendererSet> typedMappings = new TreeMap<>();
 		for (TypeMappings tm : typeMappings) {
-			if (!schemaService.hasType(tm.getName()) && !schemaService.hasSecondaryType(tm.getName())) {
+			if (!constructedTypeFactory.hasType(tm.getName())
+				&& !constructedTypeFactory.hasSecondaryType(tm.getName())) {
 				this.log.warn(
 					"No primary or secondary type named [{}] was found in the available schema - ignoring this mapping set",
 					tm.getName());
@@ -253,8 +258,11 @@ public class AttributeMapper {
 		return String.format("%s:%s", this.residualsPrefix, (m.matches() ? m.group(2) : attributeName));
 	}
 
-	public AttributeMappingResult renderMappedAttributes(final ConstructedType type, CmfObject<CmfValue> object) {
+	public AttributeMappingResult renderMappedAttributes(final SchemaService schemaService, CmfObject<CmfValue> object)
+		throws SchemaDeclarationServiceException {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
+		final ConstructedType type = this.constructedTypeFactory.constructType(schemaService, object.getSubtype(),
+			object.getSecondarySubtypes());
 		Map<String, AttributeValue> finalValues = new TreeMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
 

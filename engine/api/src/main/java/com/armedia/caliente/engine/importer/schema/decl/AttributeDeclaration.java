@@ -34,7 +34,7 @@ public final class AttributeDeclaration {
 
 	@Override
 	public String toString() {
-		return String.format("ObjectAttribute [name=%s, type=%s, required=%s, multiple=%s]", this.name, this.type,
+		return String.format("AttributeDeclaration [name=%s, type=%s, required=%s, multiple=%s]", this.name, this.type,
 			this.required, this.multiple);
 	}
 }

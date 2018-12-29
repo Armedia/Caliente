@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
-public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SESSION> {
+public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SESSION>, AutoCloseable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -66,6 +66,7 @@ public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SES
 	protected void doClose() {
 	}
 
+	@Override
 	public final void close() {
 		this.lock.writeLock().lock();
 		try {

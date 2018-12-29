@@ -10,14 +10,14 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
-import com.armedia.caliente.engine.importer.schema.decl.ObjectTypeDeclaration;
+import com.armedia.caliente.engine.importer.schema.decl.TypeDeclaration;
 import com.armedia.commons.utilities.Tools;
 
 public class ConstructedType {
 
 	public static final ConstructedType NULL = new ConstructedType();
 
-	private final ObjectTypeDeclaration declaration;
+	private final TypeDeclaration declaration;
 	private final String name;
 	private final Set<String> ancestors;
 	private final Set<String> secondaries;
@@ -34,7 +34,7 @@ public class ConstructedType {
 		this.signature = null;
 	}
 
-	ConstructedType(ObjectTypeDeclaration declaration, Set<String> ancestors, Set<String> secondaries,
+	ConstructedType(TypeDeclaration declaration, Set<String> ancestors, Set<String> secondaries,
 		Map<String, AttributeDeclaration> attributes, String signature) {
 		this.declaration = Objects.requireNonNull(declaration, "Must provide a non-null declaration");
 		this.name = declaration.getName();
@@ -44,7 +44,7 @@ public class ConstructedType {
 		this.signature = signature;
 	}
 
-	public ObjectTypeDeclaration getDeclaration() {
+	public TypeDeclaration getDeclaration() {
 		return this.declaration;
 	}
 

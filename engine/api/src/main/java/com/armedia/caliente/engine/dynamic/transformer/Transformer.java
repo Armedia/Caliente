@@ -8,6 +8,7 @@ import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
+import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
@@ -21,12 +22,12 @@ public class Transformer {
 	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class);
 
 	public static Transformer getTransformer(String location, ExternalMetadataLoader metadataLoader,
-		boolean failIfMissing) throws TransformerException {
+		AttributeMapper attributeMapper, boolean failIfMissing) throws TransformerException {
 		try {
 			try {
 				Transformations transformations = Transformer.INSTANCES.getInstance(location);
 				if (transformations == null) { return null; }
-				return new Transformer(location, transformations, metadataLoader);
+				return new Transformer(location, transformations, metadataLoader, attributeMapper);
 			} catch (final XmlNotFoundException e) {
 				if (!failIfMissing) { return null; }
 				throw e;
@@ -51,12 +52,14 @@ public class Transformer {
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private final Transformations transformations;
 	private final ExternalMetadataLoader metadataLoader;
+	private final AttributeMapper attributeMapper;
 	private boolean closed = false;
 
-	private Transformer(String location, Transformations transformations, ExternalMetadataLoader metadataLoader)
-		throws TransformerException {
+	private Transformer(String location, Transformations transformations, ExternalMetadataLoader metadataLoader,
+		AttributeMapper attributeMapper) throws TransformerException {
 		this.transformations = transformations;
 		this.metadataLoader = metadataLoader;
+		this.attributeMapper = attributeMapper;
 	}
 
 	private DynamicElementContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {

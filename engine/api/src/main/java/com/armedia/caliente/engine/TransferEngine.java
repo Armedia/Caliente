@@ -223,8 +223,8 @@ public abstract class TransferEngine< //
 	protected abstract SessionFactory<SESSION> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
 
 	protected abstract CONTEXT_FACTORY newContextFactory(SESSION session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer,
-		AttributeMapper attributeMapper, Logger output, WarningTracker warningTracker) throws Exception;
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		WarningTracker warningTracker) throws Exception;
 
 	protected abstract DELEGATE_FACTORY newDelegateFactory(SESSION session, CfgTools cfg) throws Exception;
 
@@ -325,7 +325,7 @@ public abstract class TransferEngine< //
 		}
 	}
 
-	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
+	protected final Transformer getTransformer(CfgTools cfg, AttributeMapper attributeMapper) throws Exception {
 		String xformDefault = String.format("%s%s", this.cfgNamePrefix, Transformer.getDefaultLocation());
 		String xform = cfg.getString(TransferSetting.TRANSFORMATION.getLabel());
 
@@ -335,7 +335,7 @@ public abstract class TransferEngine< //
 		ExternalMetadataLoader emdl = ExternalMetadataLoader
 			.getExternalMetadataLoader(Tools.coalesce(meta, metaDefault), (meta != null));
 
-		return Transformer.getTransformer(Tools.coalesce(xform, xformDefault), emdl, (xform != null));
+		return Transformer.getTransformer(Tools.coalesce(xform, xformDefault), emdl, attributeMapper, (xform != null));
 	}
 
 	protected final ObjectFilter getFilter(CfgTools cfg) throws Exception {

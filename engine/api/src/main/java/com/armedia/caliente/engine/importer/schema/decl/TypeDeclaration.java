@@ -11,7 +11,7 @@ import java.util.TreeSet;
 
 import com.armedia.commons.utilities.Tools;
 
-public class AttributeContainerDeclaration {
+public class TypeDeclaration {
 
 	private final String name;
 	private final Map<String, AttributeDeclaration> attributes;
@@ -23,26 +23,24 @@ public class AttributeContainerDeclaration {
 		return attName.replaceAll("^\\w+:", "");
 	}
 
-	protected AttributeContainerDeclaration(String name) {
+	public TypeDeclaration(String name) {
 		this(name, null, null, null);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes) {
+	public TypeDeclaration(String name, Collection<AttributeDeclaration> attributes) {
 		this(name, attributes, null, null);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes,
-		Collection<String> secondaries) {
+	public TypeDeclaration(String name, Collection<AttributeDeclaration> attributes, Collection<String> secondaries) {
 		this(name, attributes, secondaries, null);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes,
-		String parentName) {
+	public TypeDeclaration(String name, Collection<AttributeDeclaration> attributes, String parentName) {
 		this(name, attributes, null, parentName);
 	}
 
-	protected AttributeContainerDeclaration(String name, Collection<AttributeDeclaration> attributes,
-		Collection<String> secondaries, String parentName) {
+	public TypeDeclaration(String name, Collection<AttributeDeclaration> attributes, Collection<String> secondaries,
+		String parentName) {
 		this.name = name;
 		if (attributes != null) {
 			Map<String, AttributeDeclaration> m = new TreeMap<>();
