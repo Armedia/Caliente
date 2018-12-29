@@ -38,8 +38,8 @@ public abstract class ImportContext< //
 	private final int historyPosition;
 
 	public <C extends ImportContext<SESSION, VALUE, IMPORT_CONTEXT_FACTORY>, W extends SessionWrapper<SESSION>, E extends ImportEngine<SESSION, W, VALUE, C, ?, ?>, F extends ImportContextFactory<SESSION, W, VALUE, C, E, ?>> ImportContext(
-		IMPORT_CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session, Logger output,
-		WarningTracker tracker, Transformer transformer, CmfAttributeTranslator<VALUE> translator,
+		IMPORT_CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session,
+		Logger output, WarningTracker tracker, Transformer transformer, CmfAttributeTranslator<VALUE> translator,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
 		this.factory = factory;
@@ -54,8 +54,8 @@ public abstract class ImportContext< //
 		return this.historyPosition;
 	}
 
-	public final CmfValueMapper getAttributeMapper() {
-		return this.cmfObjectStore.getAttributeMapper();
+	public final CmfValueMapper getValueMapper() {
+		return this.cmfObjectStore.getValueMapper();
 	}
 
 	public final int loadObjects(CmfType type, Set<String> ids, final CmfObjectHandler<VALUE> handler)
@@ -76,7 +76,7 @@ public abstract class ImportContext< //
 			public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
 				if (ImportContext.this.transformer != null) {
 					try {
-						dataObject = ImportContext.this.transformer.transform(getAttributeMapper(), dataObject);
+						dataObject = ImportContext.this.transformer.transform(getValueMapper(), dataObject);
 					} catch (TransformerException e) {
 						throw new CmfStorageException(
 							String.format("Failed to transform %s", dataObject.getDescription()), e);
@@ -109,7 +109,7 @@ public abstract class ImportContext< //
 		CmfObject<CmfValue> rawObject = this.cmfObjectStore.loadHeadObject(sample.getType(), sample.getHistoryId());
 		if (this.transformer != null) {
 			try {
-				rawObject = this.transformer.transform(getAttributeMapper(), rawObject);
+				rawObject = this.transformer.transform(getValueMapper(), rawObject);
 			} catch (TransformerException e) {
 				throw new CmfStorageException(String.format("Failed to transform %s", sample.getDescription()), e);
 			}

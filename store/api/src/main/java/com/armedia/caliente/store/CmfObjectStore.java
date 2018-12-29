@@ -753,11 +753,11 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 
 	protected abstract Map<CmfType, Long> getStoredObjectTypes(OPERATION operation) throws CmfStorageException;
 
-	public final CmfValueMapper getAttributeMapper() {
+	public final CmfValueMapper getValueMapper() {
 		return this.mapper;
 	}
 
-	protected final CmfValueMapper getAttributeMapper(OPERATION operation) {
+	protected final CmfValueMapper getValueMapper(OPERATION operation) {
 		return new Mapper(operation);
 	}
 

@@ -26,8 +26,8 @@ import com.armedia.caliente.engine.dfc.common.DctmSysObject;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -143,7 +143,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		if (chronicleAtt != null) {
 			String sourceChronicleId = chronicleAtt.getValue().asId().getId();
 			// Map to the new chronicle ID, from the old one...try for the quick win
-			chronicleMapping = ctx.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
+			chronicleMapping = ctx.getValueMapper().getTargetMapping(this.cmfObject.getType(),
 				DctmAttributes.I_CHRONICLE_ID, sourceChronicleId);
 		} else {
 			chronicleMapping = null;
@@ -228,7 +228,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		if (root) {
 			// This is the start of a new chronicle
 			final IDfSysObject newDoc = newDocument(context);
-			context.getAttributeMapper().setMapping(this.cmfObject.getType(), DctmAttributes.I_CHRONICLE_ID,
+			context.getValueMapper().setMapping(this.cmfObject.getType(), DctmAttributes.I_CHRONICLE_ID,
 				sourceChronicleId, newDoc.getChronicleId().getId());
 			return newDoc;
 		}
@@ -240,7 +240,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		// and continue normally
 		if ((antecedentAtt != null) && antecedentAtt.hasValues()) {
 			IDfId aid = antecedentAtt.getValue().asId();
-			Mapping mapping = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
+			Mapping mapping = context.getValueMapper().getTargetMapping(this.cmfObject.getType(),
 				DctmAttributes.R_OBJECT_ID, aid.getId());
 			// This mapping can only exist (i.e. be non-null) if we actually processed the
 			// antecedent during this run
@@ -260,7 +260,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				antecedentId = aid;
 			} else {
 				antecedentId = null;
-				Mapping mapping = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
+				Mapping mapping = context.getValueMapper().getTargetMapping(this.cmfObject.getType(),
 					DctmAttributes.I_CHRONICLE_ID, sourceChronicleId);
 				if (mapping != null) {
 					// Find the antecedent using the expected antecedent version number, which
@@ -277,7 +277,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 		if (antecedentVersion == null) {
 			Mapping mapping = null;
 			if (antecedentId != null) {
-				mapping = context.getAttributeMapper().getTargetMapping(this.cmfObject.getType(),
+				mapping = context.getValueMapper().getTargetMapping(this.cmfObject.getType(),
 					DctmAttributes.R_OBJECT_ID, antecedentId.getId());
 			}
 			if (mapping == null) {
@@ -803,7 +803,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 					this.cmfObject.getLabel(), this.cmfObject.getId());
 				for (IDfValue v : p) {
 					DctmVdocMember member = new DctmVdocMember(v.asString());
-					Mapping m = context.getAttributeMapper().getTargetMapping(CmfType.DOCUMENT,
+					Mapping m = context.getValueMapper().getTargetMapping(CmfType.DOCUMENT,
 						DctmAttributes.I_CHRONICLE_ID, member.getChronicleId().getId());
 					if (m == null) { throw new ImportException(String.format(
 						"Virtual Document [%s](%s) references a component [%s] which could not be located (maybe it hasn't been imported yet?)",
@@ -815,7 +815,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 						this.cmfObject.getLabel(), this.cmfObject.getId(), m.getTargetValue())); }
 
 					final String childBinding = (StringUtils.isBlank(member.getBinding())
-						? ISysObject.CURRENT_VERSION_LABEL : member.getBinding());
+						? ISysObject.CURRENT_VERSION_LABEL
+						: member.getBinding());
 					final boolean childIsVirtualDoc = (so.isVirtualDocument() || (so.getLinkCount() > 0));
 					final boolean followAssembly = childIsVirtualDoc ? member.isFollowAssembly() : false;
 					final boolean overrideLateBinding = childIsVirtualDoc ? member.isOverrideLateBinding() : false;

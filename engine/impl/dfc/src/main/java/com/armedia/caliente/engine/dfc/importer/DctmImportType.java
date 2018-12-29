@@ -68,7 +68,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 
 		// Step 1: is the ACL there?
 		IDfId aclId = prop.getValue().asId();
-		Mapping m = ctx.getAttributeMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID, aclId.getId());
+		Mapping m = ctx.getValueMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID, aclId.getId());
 		if (m == null) {
 			// The mapping isn't there...we can't set it...
 			this.log.warn("The ACL with ID[{}], specified as default for type [{}] was not imported", aclId.getId(),

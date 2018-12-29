@@ -84,7 +84,6 @@ public class SettingContainer implements Cloneable {
 		return this.settings;
 	}
 
-	@SuppressWarnings("unchecked")
 	public final Map<String, String> getEffectiveSettings() {
 		final Map<String, String> m = new HashMap<>();
 		Tools.overlayMaps(m, getSettings(), (this.parent != null ? this.parent.getEffectiveSettings() : null));

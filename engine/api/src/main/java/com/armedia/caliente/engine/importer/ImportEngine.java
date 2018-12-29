@@ -589,7 +589,7 @@ public abstract class ImportEngine<//
 
 			objectStore.clearAttributeMappings();
 			try {
-				loadPrincipalMappings(objectStore.getAttributeMapper(), settings);
+				loadPrincipalMappings(objectStore.getValueMapper(), settings);
 			} catch (TransferEngineException e) {
 				throw new ImportException(e.getMessage(), e.getCause());
 			}
@@ -707,7 +707,7 @@ public abstract class ImportEngine<//
 
 							if (filter != null) {
 								try {
-									if (!filter.accept(dataObject, objectStore.getAttributeMapper())) {
+									if (!filter.accept(dataObject, objectStore.getValueMapper())) {
 										this.filtered = true;
 										return true;
 									}
@@ -721,7 +721,7 @@ public abstract class ImportEngine<//
 
 							if (transformer != null) {
 								try {
-									dataObject = transformer.transform(objectStore.getAttributeMapper(), dataObject);
+									dataObject = transformer.transform(objectStore.getValueMapper(), dataObject);
 								} catch (TransformerException e) {
 									throw new CmfStorageException(
 										String.format("Failed to transform %s", dataObject.getDescription()), e);
