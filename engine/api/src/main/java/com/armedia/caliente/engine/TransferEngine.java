@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
+import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -167,7 +168,7 @@ public abstract class TransferEngine< //
 	protected final CmfCrypt crypto;
 
 	private final boolean supportsDuplicateFileNames;
-	private final String cfgNamePrefix;
+	protected final String cfgNamePrefix;
 
 	public TransferEngine(CmfCrypt crypto, String cfgNamePrefix) {
 		this(crypto, cfgNamePrefix, false);
@@ -222,8 +223,8 @@ public abstract class TransferEngine< //
 	protected abstract SessionFactory<SESSION> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
 
 	protected abstract CONTEXT_FACTORY newContextFactory(SESSION session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
-		WarningTracker warningTracker) throws Exception;
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer,
+		AttributeMapper attributeMapper, Logger output, WarningTracker warningTracker) throws Exception;
 
 	protected abstract DELEGATE_FACTORY newDelegateFactory(SESSION session, CfgTools cfg) throws Exception;
 

@@ -5,6 +5,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
@@ -185,8 +186,8 @@ public class XmlImportEngine extends
 
 	@Override
 	protected XmlImportContextFactory newContextFactory(XmlRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
-		throws Exception {
+		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, AttributeMapper attributeMapper, Logger output,
+		WarningTracker warningTracker) throws Exception {
 		return new XmlImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);
 	}

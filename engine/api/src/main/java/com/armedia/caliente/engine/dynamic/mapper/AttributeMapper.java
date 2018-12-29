@@ -32,6 +32,7 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.importer.schema.ConstructedType;
 import com.armedia.caliente.engine.importer.schema.SchemaService;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationService;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -43,6 +44,34 @@ public class AttributeMapper {
 	private static final Pattern NS_PARSER = Pattern.compile("^([^:]+):(.+)$");
 
 	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class);
+
+	public static AttributeMapper getAttributeMapper(SchemaDeclarationService schemaDeclarationService, String location,
+		String residualsPrefix, boolean failIfMissing) throws AttributeMappingException {
+		try {
+			try {
+				AttributeMappings attributeMappings = AttributeMapper.INSTANCES.getInstance(location);
+				if (attributeMappings == null) { return null; }
+				return new AttributeMapper(new SchemaService(schemaDeclarationService), location, residualsPrefix);
+			} catch (final XmlNotFoundException e) {
+				if (!failIfMissing) { return null; }
+				throw e;
+			}
+		} catch (Exception e) {
+			String pre = "";
+			String post = "";
+			if (location == null) {
+				pre = "default ";
+			} else {
+				post = String.format(" from [%s]", location);
+			}
+			throw new AttributeMappingException(
+				String.format("Failed to load the %sattribute mapping configuration%s", pre, post), e);
+		}
+	}
+
+	public static String getDefaultLocation() {
+		return AttributeMapper.INSTANCES.getDefaultFileName();
+	}
 
 	// Make a cache that doesn't expire items and they don't get GC'd either
 	private final KeyLockableCache<String, MappingRendererSet> cache = new KeyLockableCache<String, MappingRendererSet>(

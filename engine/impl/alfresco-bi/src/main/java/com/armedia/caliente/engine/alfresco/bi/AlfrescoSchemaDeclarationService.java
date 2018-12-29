@@ -77,4 +77,8 @@ public class AlfrescoSchemaDeclarationService implements SchemaDeclarationServic
 		return new SecondaryTypeDeclaration(aspect.getName(), attributes, aspect.getMandatoryAspects(), parentName);
 	}
 
+	@Override
+	public void close() {
+	}
+
 }

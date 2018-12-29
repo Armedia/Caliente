@@ -21,6 +21,8 @@ import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionFactory;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfTranslator;
+import com.armedia.caliente.engine.alfresco.bi.AlfrescoSchemaDeclarationService;
+import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -29,6 +31,7 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.engine.importer.ImportStrategy;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -328,8 +331,8 @@ public class AlfImportEngine extends
 
 	@Override
 	protected AlfImportContextFactory newContextFactory(AlfRoot session, CfgTools cfg, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output, WarningTracker warningTracker)
-		throws Exception {
+		CmfContentStore<?, ?, ?> streamStore, Transformer transformer, AttributeMapper attributeMapper, Logger output,
+		WarningTracker warningTracker) throws Exception {
 		return new AlfImportContextFactory(this, cfg, session, objectStore, streamStore, transformer, output,
 			warningTracker);
 	}
@@ -359,5 +362,11 @@ public class AlfImportEngine extends
 			finalName = object.getHistoryId();
 		}
 		return finalName;
+	}
+
+	@Override
+	protected AlfrescoSchemaDeclarationService getSchemaDeclarationService(AlfRoot session)
+		throws SchemaDeclarationServiceException {
+		return new AlfrescoSchemaDeclarationService(this.schema);
 	}
 }

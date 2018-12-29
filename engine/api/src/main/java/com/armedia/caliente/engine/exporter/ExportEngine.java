@@ -612,7 +612,7 @@ public abstract class ExportEngine< //
 
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
-						contentStore, null, output, warningTracker);
+						contentStore, transformer, null, output, warningTracker);
 				} catch (Exception e) {
 					throw new ExportException("Failed to configure the context factory to carry out the export", e);
 				}

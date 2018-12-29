@@ -2,7 +2,7 @@ package com.armedia.caliente.engine.importer.schema.decl;
 
 import java.util.Collection;
 
-public interface SchemaDeclarationService {
+public interface SchemaDeclarationService extends AutoCloseable {
 
 	public Collection<String> getObjectTypeNames() throws SchemaDeclarationServiceException;
 
