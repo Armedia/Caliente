@@ -9,6 +9,8 @@ import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
+import com.armedia.caliente.engine.dynamic.mapper.AttributeMappingResult;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
@@ -80,6 +82,21 @@ public class Transformer {
 				} catch (ProcessingCompletedException e) {
 					// Do nothing - this is simply our shortcut for stopping the transformation work
 					// in its tracks
+				}
+
+				if ((schemaService != null) && (this.attributeMapper != null)) {
+					AttributeMappingResult result = null;
+					try {
+						result = this.attributeMapper.renderMappedAttributes(schemaService, object);
+					} catch (SchemaServiceException e) {
+						throw new TransformerException(String.format(
+							"Failed to apply the configured attribute mappings for %s", object.getDescription()), e);
+					}
+					if (result != null) {
+						// TODO: Apply the result ... make it work directly on the dynamic object,
+						// since it's mutable and we haven't yet converted it to its final
+						// representation
+					}
 				}
 
 				return ctx.getDynamicObject().applyChanges(object);
