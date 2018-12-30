@@ -38,7 +38,7 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
+import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;

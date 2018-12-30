@@ -9,8 +9,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
-import com.armedia.caliente.engine.importer.schema.decl.TypeDeclaration;
 import com.armedia.commons.utilities.Tools;
 
 public class ConstructedType {

@@ -3,8 +3,8 @@ package com.armedia.caliente.engine.local.importer;
 import java.io.IOException;
 
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
+import com.armedia.caliente.engine.importer.schema.SchemaServiceException;
+import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalSetting;
@@ -45,7 +45,7 @@ public class LocalImportDelegateFactory
 	}
 
 	@Override
-	protected SchemaService newSchemaService(LocalRoot session) throws SchemaDeclarationServiceException {
+	protected SchemaService newSchemaService(LocalRoot session) throws SchemaServiceException {
 		return null;
 	}
 }

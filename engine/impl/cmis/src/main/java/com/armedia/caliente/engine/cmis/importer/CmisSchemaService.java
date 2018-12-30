@@ -16,10 +16,10 @@ import org.apache.chemistry.opencmis.commons.enums.Cardinality;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
 import com.armedia.caliente.engine.cmis.CmisTranslator;
-import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
-import com.armedia.caliente.engine.importer.schema.decl.TypeDeclaration;
+import com.armedia.caliente.engine.importer.schema.AttributeDeclaration;
+import com.armedia.caliente.engine.importer.schema.SchemaServiceException;
+import com.armedia.caliente.engine.importer.schema.SchemaService;
+import com.armedia.caliente.engine.importer.schema.TypeDeclaration;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 
@@ -39,7 +39,7 @@ public class CmisSchemaService implements SchemaService {
 		}
 	}
 
-	private Collection<String> getTypeNames(boolean secondary) throws SchemaDeclarationServiceException {
+	private Collection<String> getTypeNames(boolean secondary) throws SchemaServiceException {
 		Set<String> objectTypes = new TreeSet<>();
 		for (Tree<ObjectType> tree : this.session.getTypeDescendants(null, -1, false)) {
 			// The first level are the base types...consider them for now, eventually we may just
@@ -55,7 +55,7 @@ public class CmisSchemaService implements SchemaService {
 	}
 
 	private TypeDeclaration getTypeDeclaration(String typeName, boolean secondary)
-		throws SchemaDeclarationServiceException {
+		throws SchemaServiceException {
 
 		final ObjectType type;
 		try {
@@ -88,23 +88,23 @@ public class CmisSchemaService implements SchemaService {
 	}
 
 	@Override
-	public Collection<String> getObjectTypeNames() throws SchemaDeclarationServiceException {
+	public Collection<String> getObjectTypeNames() throws SchemaServiceException {
 		return getTypeNames(false);
 	}
 
 	@Override
-	public TypeDeclaration getObjectTypeDeclaration(String typeName) throws SchemaDeclarationServiceException {
+	public TypeDeclaration getObjectTypeDeclaration(String typeName) throws SchemaServiceException {
 		return getTypeDeclaration(typeName, false);
 	}
 
 	@Override
-	public Collection<String> getSecondaryTypeNames() throws SchemaDeclarationServiceException {
+	public Collection<String> getSecondaryTypeNames() throws SchemaServiceException {
 		return getTypeNames(true);
 	}
 
 	@Override
 	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName)
-		throws SchemaDeclarationServiceException {
+		throws SchemaServiceException {
 		return getTypeDeclaration(secondaryTypeName, true);
 	}
 

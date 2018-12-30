@@ -32,8 +32,8 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.importer.schema.ConstructedType;
 import com.armedia.caliente.engine.importer.schema.ConstructedTypeFactory;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
+import com.armedia.caliente.engine.importer.schema.SchemaServiceException;
+import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -259,7 +259,7 @@ public class AttributeMapper {
 	}
 
 	public AttributeMappingResult renderMappedAttributes(final SchemaService schemaService, CmfObject<CmfValue> object)
-		throws SchemaDeclarationServiceException {
+		throws SchemaServiceException {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		final ConstructedType type = this.constructedTypeFactory.constructType(schemaService, object.getSubtype(),
 			object.getSecondarySubtypes());

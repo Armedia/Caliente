@@ -12,10 +12,10 @@ import org.apache.commons.lang3.tuple.Triple;
 
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmDataType;
-import com.armedia.caliente.engine.importer.schema.decl.AttributeDeclaration;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
-import com.armedia.caliente.engine.importer.schema.decl.TypeDeclaration;
+import com.armedia.caliente.engine.importer.schema.AttributeDeclaration;
+import com.armedia.caliente.engine.importer.schema.SchemaServiceException;
+import com.armedia.caliente.engine.importer.schema.SchemaService;
+import com.armedia.caliente.engine.importer.schema.TypeDeclaration;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.documentum.fc.client.IDfCollection;
@@ -48,7 +48,7 @@ public class DctmSchemaService implements SchemaService {
 	}
 
 	protected Collection<String> getTypeNames(Triple<String, String, String> dql)
-		throws SchemaDeclarationServiceException {
+		throws SchemaServiceException {
 		IDfCollection c = null;
 		try {
 			c = DfUtils.executeQuery(this.session, dql.getMiddle(), IDfQuery.DF_READ_QUERY);
@@ -58,7 +58,7 @@ public class DctmSchemaService implements SchemaService {
 			}
 			return names;
 		} catch (DfException e) {
-			throw new SchemaDeclarationServiceException(
+			throw new SchemaServiceException(
 				String.format("Failed to enumerate the existing %s types", dql.getLeft()), e);
 		} finally {
 			DfUtils.closeQuietly(c);
@@ -66,12 +66,12 @@ public class DctmSchemaService implements SchemaService {
 	}
 
 	@Override
-	public Collection<String> getObjectTypeNames() throws SchemaDeclarationServiceException {
+	public Collection<String> getObjectTypeNames() throws SchemaServiceException {
 		return getTypeNames(DctmSchemaService.TYPE_DQL);
 	}
 
 	@Override
-	public TypeDeclaration getObjectTypeDeclaration(String typeName) throws SchemaDeclarationServiceException {
+	public TypeDeclaration getObjectTypeDeclaration(String typeName) throws SchemaServiceException {
 		try {
 			IDfType type = this.session.getType(typeName);
 			if (type == null) { return null; }
@@ -94,19 +94,19 @@ public class DctmSchemaService implements SchemaService {
 			}
 			return new TypeDeclaration(type.getName(), attributes.values(), secondaries, type.getSuperName());
 		} catch (DfException e) {
-			throw new SchemaDeclarationServiceException(
+			throw new SchemaServiceException(
 				String.format("Failed to build the object type declaration for [%s]", typeName), e);
 		}
 	}
 
 	@Override
-	public Collection<String> getSecondaryTypeNames() throws SchemaDeclarationServiceException {
+	public Collection<String> getSecondaryTypeNames() throws SchemaServiceException {
 		return getTypeNames(DctmSchemaService.ASPECT_DQL);
 	}
 
 	@Override
 	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName)
-		throws SchemaDeclarationServiceException {
+		throws SchemaServiceException {
 		IDfCollection c = null;
 		try {
 			String dql = String.format(DctmSchemaService.ASPECT_TABLE_DQL, DfUtils.quoteString(secondaryTypeName));
@@ -161,7 +161,7 @@ public class DctmSchemaService implements SchemaService {
 			// TODO: How to get the parent name? Is there such a thing in Documentum beyond Java?
 			return new TypeDeclaration(secondaryTypeName, attributes.values(), null, null);
 		} catch (DfException e) {
-			throw new SchemaDeclarationServiceException(
+			throw new SchemaServiceException(
 				String.format("Failed to build the secondary type declaration for [%s]", secondaryTypeName), e);
 		} finally {
 			if (c != null) {

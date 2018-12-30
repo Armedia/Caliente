@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.importer.schema.decl;
+package com.armedia.caliente.engine.importer.schema;
 
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;

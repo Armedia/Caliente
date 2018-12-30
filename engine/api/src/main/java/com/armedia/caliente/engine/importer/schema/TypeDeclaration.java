@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.importer.schema.decl;
+package com.armedia.caliente.engine.importer.schema;
 
 import java.util.Collection;
 import java.util.Collections;

@@ -2,7 +2,7 @@ package com.armedia.caliente.engine.importer;
 
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferDelegateFactory;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
+import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.CfgTools;
 

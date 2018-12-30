@@ -59,7 +59,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
+import com.armedia.caliente.engine.importer.schema.SchemaServiceException;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -847,7 +847,7 @@ public class AlfImportDelegateFactory
 	}
 
 	@Override
-	protected AlfSchemaService newSchemaService(AlfRoot session) throws SchemaDeclarationServiceException {
+	protected AlfSchemaService newSchemaService(AlfRoot session) throws SchemaServiceException {
 		return new AlfSchemaService(this.schema);
 	}
 
