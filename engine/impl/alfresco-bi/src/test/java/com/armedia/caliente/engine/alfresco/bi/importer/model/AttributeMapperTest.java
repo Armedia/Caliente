@@ -141,8 +141,7 @@ public class AttributeMapperTest {
 		}
 		*/
 
-		AlfSchemaService alfSchemaService = new AlfSchemaService(
-			alfrescoSchema);
+		AlfSchemaService alfSchemaService = new AlfSchemaService(alfrescoSchema);
 		ConstructedTypeFactory constructedTypeFactory = new ConstructedTypeFactory(alfSchemaService);
 
 		Collection<String> secondaries = Arrays.asList("cm:titled", "cm:versionable");
@@ -163,7 +162,7 @@ public class AttributeMapperTest {
 				attribute.declaration.getClass().getSimpleName().toLowerCase(), attribute.declaration.name);
 		}
 
-		ConstructedType ct = constructedTypeFactory.constructType("cm:content", secondaries);
+		ConstructedType ct = constructedTypeFactory.constructType(alfSchemaService, "cm:content", secondaries);
 		System.out.printf("\tConstructed Schema for type %s%n", ct.getName());
 		if (!ct.getSecondaries().isEmpty()) {
 			System.out.printf("\t\tAspects : %s%n", new TreeSet<>(ct.getSecondaries()));

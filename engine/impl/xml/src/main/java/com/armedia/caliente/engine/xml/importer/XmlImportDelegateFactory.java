@@ -28,6 +28,8 @@ import com.armedia.caliente.engine.importer.ImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.engine.xml.common.XmlSessionWrapper;
 import com.armedia.caliente.engine.xml.common.XmlSetting;
@@ -375,6 +377,11 @@ public class XmlImportDelegateFactory
 
 	protected File calculateConsolidatedFile(CmfType t) {
 		return new File(this.db, String.format("%ss.xml", t.name().toLowerCase()));
+	}
+
+	@Override
+	protected SchemaService newSchemaService(XmlRoot session) throws SchemaDeclarationServiceException {
+		return null;
 	}
 
 	@Override

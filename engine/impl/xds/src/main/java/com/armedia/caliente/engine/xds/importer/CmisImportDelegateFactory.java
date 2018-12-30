@@ -3,6 +3,8 @@ package com.armedia.caliente.engine.xds.importer;
 import org.apache.chemistry.opencmis.client.api.Session;
 
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
 import com.armedia.caliente.engine.xds.CmisSessionWrapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
@@ -25,6 +27,11 @@ public class CmisImportDelegateFactory
 			default:
 				break;
 		}
+		return null;
+	}
+
+	@Override
+	protected SchemaService newSchemaService(Session session) throws SchemaDeclarationServiceException {
 		return null;
 	}
 }

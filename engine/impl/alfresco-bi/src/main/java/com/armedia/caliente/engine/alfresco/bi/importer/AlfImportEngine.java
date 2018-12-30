@@ -29,7 +29,6 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.engine.importer.ImportStrategy;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -360,10 +359,5 @@ public class AlfImportEngine extends
 			finalName = object.getHistoryId();
 		}
 		return finalName;
-	}
-
-	@Override
-	protected AlfSchemaService getSchemaService(AlfRoot session) throws SchemaDeclarationServiceException {
-		return new AlfSchemaService(this.schema);
 	}
 }

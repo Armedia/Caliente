@@ -38,7 +38,6 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
 import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -53,6 +52,7 @@ import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.Closer;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
@@ -389,21 +389,15 @@ public abstract class ImportEngine<//
 			new LinkedBlockingQueue<Runnable>());
 	}
 
-	protected abstract SchemaService getSchemaService(SESSION session) throws SchemaDeclarationServiceException;
+	protected final AttributeMapper getAttributeMapper(CfgTools cfg, SchemaService schemaService) throws Exception {
+		if (schemaService == null) { return null; }
 
-	protected final AttributeMapper getAttributeMapper(CfgTools cfg, SESSION session) throws Exception {
 		String mapperDefault = String.format("%s%s", this.cfgNamePrefix, AttributeMapper.getDefaultLocation());
 		String mapper = cfg.getString(ImportSetting.ATTRIBUTE_MAPPING.getLabel());
 		String residualsPrefix = cfg.getString(ImportSetting.RESIDUALS_PREFIX.getLabel());
 
-		final SchemaService schemaService = getSchemaService(session);
-		if (schemaService == null) { return null; }
-		try {
-			return AttributeMapper.getAttributeMapper(schemaService, Tools.coalesce(mapper, mapperDefault),
-				residualsPrefix, false);
-		} finally {
-			schemaService.close();
-		}
+		return AttributeMapper.getAttributeMapper(schemaService, Tools.coalesce(mapper, mapperDefault), residualsPrefix,
+			false);
 	}
 
 	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final WarningTracker warningTracker,
@@ -439,16 +433,33 @@ public abstract class ImportEngine<//
 				throw new ImportException("Failed to obtain the import initialization session", e);
 			}
 
+			ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory = null;
 			AttributeMapper attributeMapper = null;
 			Transformer transformer = null;
 			ObjectFilter filter = null;
 			ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory = null;
-			ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory = null;
 			try {
 				try {
-					attributeMapper = getAttributeMapper(configuration, baseSession.getWrapped());
+					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
 				} catch (Exception e) {
-					throw new ImportException("Failed to initialize the configured attribute mappings", e);
+					throw new ImportException("Failed to configure the delegate factory to carry out the import", e);
+				}
+
+				SchemaService schemaService = null;
+				try {
+					schemaService = delegateFactory.newSchemaService(baseSession.getWrapped());
+				} catch (Exception e) {
+					throw new ImportException("Failed to initialize the required schema service", e);
+				}
+
+				if (schemaService != null) {
+					try {
+						attributeMapper = getAttributeMapper(configuration, schemaService);
+					} catch (Exception e) {
+						throw new ImportException("Failed to initialize the configured attribute mappings", e);
+					} finally {
+						Closer.closeQuietly(schemaService);
+					}
 				}
 
 				try {
@@ -471,12 +482,6 @@ public abstract class ImportEngine<//
 				}
 
 				try {
-					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
-				} catch (Exception e) {
-					throw new ImportException("Failed to configure the delegate factory to carry out the import", e);
-				}
-
-				try {
 					baseSession.close();
 				} finally {
 					baseSession = null;
@@ -491,14 +496,14 @@ public abstract class ImportEngine<//
 				if (contextFactory != null) {
 					contextFactory.close();
 				}
-				if (delegateFactory != null) {
-					delegateFactory.close();
-				}
 				if (filter != null) {
 					filter.close();
 				}
 				if (transformer != null) {
 					transformer.close();
+				}
+				if (delegateFactory != null) {
+					delegateFactory.close();
 				}
 			}
 		} finally {

@@ -19,8 +19,6 @@ import com.armedia.caliente.engine.dfc.common.DctmCommon;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
-import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -119,10 +117,5 @@ public class DctmImportEngine extends
 
 	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
 		return ImportEngine.getImportEngine(DctmCommon.TARGET_NAME);
-	}
-
-	@Override
-	protected SchemaService getSchemaService(IDfSession session) throws SchemaDeclarationServiceException {
-		return new DctmSchemaService(session);
 	}
 }

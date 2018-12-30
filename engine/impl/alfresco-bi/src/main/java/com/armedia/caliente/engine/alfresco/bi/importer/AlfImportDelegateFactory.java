@@ -59,6 +59,7 @@ import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
 import com.armedia.caliente.engine.tools.PathTools;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
@@ -248,8 +249,8 @@ public class AlfImportDelegateFactory
 		if (StringUtils.isEmpty(pfx)) {
 			pfx = null;
 		}
-		this.alfrescoAttributeMapper = new AlfrescoAttributeMapper(this.schema, configuration.getString(AlfSetting.ATTRIBUTE_MAPPING),
-			pfx);
+		this.alfrescoAttributeMapper = new AlfrescoAttributeMapper(this.schema,
+			configuration.getString(AlfSetting.ATTRIBUTE_MAPPING), pfx);
 		String unfiledPath = configuration.getString(AlfSetting.UNFILED_PATH);
 		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
 		unfiledPath = FilenameUtils.normalizeNoEndSeparator(unfiledPath, true);
@@ -843,6 +844,11 @@ public class AlfImportDelegateFactory
 	final String getUnfiledName(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject) {
 		// Generate a unique name using the history ID and the object's given name
 		return String.format("%s-%s", cmfObject.getHistoryId(), ctx.getObjectName(cmfObject));
+	}
+
+	@Override
+	protected AlfSchemaService newSchemaService(AlfRoot session) throws SchemaDeclarationServiceException {
+		return new AlfSchemaService(this.schema);
 	}
 
 	@Override
