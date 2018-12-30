@@ -24,8 +24,8 @@ import com.armedia.commons.utilities.Tools;
 public abstract class TransferContextFactory< //
 	SESSION, //
 	VALUE, //
-	CONTEXT_FACTORY extends TransferContext<SESSION, VALUE, ?>, //
-	ENGINE extends TransferEngine<SESSION, VALUE, CONTEXT_FACTORY, ?, ?, ?> //
+	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
+	ENGINE extends TransferEngine<SESSION, VALUE, CONTEXT, ?, ?, ?> //
 > {
 
 	private static CmfType decodeObjectType(Object o) {
@@ -178,7 +178,7 @@ public abstract class TransferContextFactory< //
 		return this.productVersion;
 	}
 
-	public final CONTEXT_FACTORY newContext(String rootId, CmfType rootType, SESSION session, int batchPosition) {
+	public final CONTEXT newContext(String rootId, CmfType rootType, SESSION session, int batchPosition) {
 		this.lock.readLock().lock();
 		try {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
@@ -188,7 +188,7 @@ public abstract class TransferContextFactory< //
 		}
 	}
 
-	protected abstract CONTEXT_FACTORY constructContext(String rootId, CmfType rootType, SESSION session,
+	protected abstract CONTEXT constructContext(String rootId, CmfType rootType, SESSION session,
 		int batchPosition);
 
 	final String getNextContextId() {
