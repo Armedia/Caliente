@@ -20,9 +20,9 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
+import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineException;
 import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
@@ -873,7 +873,7 @@ public abstract class ExportEngine<//
 	}
 
 	@Override
-	protected void work(Collection<ExportEngineListener> listeners, CmfObjectCounter<ExportResult> counter)
+	protected final void work(Collection<ExportEngineListener> listeners, CmfObjectCounter<ExportResult> counter)
 		throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 

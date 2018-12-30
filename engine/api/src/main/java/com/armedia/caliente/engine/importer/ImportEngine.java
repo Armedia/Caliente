@@ -386,7 +386,7 @@ public abstract class ImportEngine<//
 	}
 
 	@Override
-	protected void work(Collection<ImportEngineListener> listeners, CmfObjectCounter<ImportResult> counter)
+	protected final void work(Collection<ImportEngineListener> listeners, CmfObjectCounter<ImportResult> counter)
 		throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
