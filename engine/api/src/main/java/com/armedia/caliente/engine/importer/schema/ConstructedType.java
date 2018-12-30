@@ -1,6 +1,5 @@
 package com.armedia.caliente.engine.importer.schema;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -13,8 +12,6 @@ import com.armedia.commons.utilities.Tools;
 
 public class ConstructedType {
 
-	public static final ConstructedType NULL = new ConstructedType();
-
 	private final TypeDeclaration declaration;
 	private final String name;
 	private final Set<String> ancestors;
@@ -22,15 +19,6 @@ public class ConstructedType {
 	private final Map<String, AttributeDeclaration> attributes;
 
 	private final String signature;
-
-	protected ConstructedType() {
-		this.declaration = null;
-		this.name = null;
-		this.ancestors = Collections.emptySet();
-		this.secondaries = Collections.emptySet();
-		this.attributes = Collections.emptyMap();
-		this.signature = null;
-	}
 
 	ConstructedType(TypeDeclaration declaration, Set<String> ancestors, Set<String> secondaries,
 		Map<String, AttributeDeclaration> attributes, String signature) {
