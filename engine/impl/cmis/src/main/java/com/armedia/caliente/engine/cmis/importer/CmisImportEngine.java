@@ -1,12 +1,12 @@
 package com.armedia.caliente.engine.cmis.importer;
 
-import java.util.Set;
+import java.io.File;
+import java.util.Map;
 
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
-import com.armedia.caliente.engine.cmis.CmisCommon;
 import com.armedia.caliente.engine.cmis.CmisSessionFactory;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.CmisTranslator;
@@ -94,8 +94,9 @@ public class CmisImportEngine extends
 		}
 	};
 
-	public CmisImportEngine() {
-		super(new CmfCrypt());
+	public CmisImportEngine(Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
 	}
 
 	@Override
@@ -137,14 +138,5 @@ public class CmisImportEngine extends
 	@Override
 	protected CmisImportDelegateFactory newDelegateFactory(Session session, CfgTools cfg) throws Exception {
 		return new CmisImportDelegateFactory(this, session, cfg);
-	}
-
-	@Override
-	protected Set<String> getTargetNames() {
-		return CmisCommon.TARGETS;
-	}
-
-	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return ImportEngine.getImportEngine(CmisCommon.TARGET_NAME);
 	}
 }

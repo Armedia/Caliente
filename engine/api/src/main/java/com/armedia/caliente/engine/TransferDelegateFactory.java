@@ -10,7 +10,7 @@ public abstract class TransferDelegateFactory< //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
-	ENGINE extends TransferEngine<SESSION, VALUE, CONTEXT, ?, ?, ?> //
+	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?> //
 > {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());

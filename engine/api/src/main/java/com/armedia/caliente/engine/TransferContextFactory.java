@@ -25,7 +25,7 @@ public abstract class TransferContextFactory< //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
-	ENGINE extends TransferEngine<SESSION, VALUE, CONTEXT, ?, ?, ?> //
+	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?> //
 > {
 
 	private static CmfType decodeObjectType(Object o) {
@@ -188,8 +188,7 @@ public abstract class TransferContextFactory< //
 		}
 	}
 
-	protected abstract CONTEXT constructContext(String rootId, CmfType rootType, SESSION session,
-		int batchPosition);
+	protected abstract CONTEXT constructContext(String rootId, CmfType rootType, SESSION session, int batchPosition);
 
 	final String getNextContextId() {
 		return String.format("%s-%016x", getContextLabel(), this.contextId.incrementAndGet());

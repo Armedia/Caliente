@@ -25,6 +25,7 @@ import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportEngineListener;
+import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
@@ -276,9 +277,12 @@ public class AlfImportEngine extends
 		}
 	};
 
-	public AlfImportEngine() {
-		super(new CmfCrypt());
+	public AlfImportEngine(Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+		throws ImportException {
+		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
 		addListener(this.listener);
+		// TODO: Initialize the schema and all that jazz
 	}
 
 	@Override
@@ -342,15 +346,6 @@ public class AlfImportEngine extends
 	@Override
 	protected CmfNameFixer<CmfValue> getNameFixer(Logger output) {
 		return new NameFixer(output);
-	}
-
-	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return ImportEngine.getImportEngine(AlfCommon.TARGET_NAME);
-	}
-
-	@Override
-	protected Set<String> getTargetNames() {
-		return AlfCommon.TARGETS;
 	}
 
 	protected String getObjectName(CmfObject<CmfValue> object) {

@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine;
 
+import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -7,9 +8,9 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
@@ -33,68 +34,29 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class TransferEngine< //
+	LISTENER extends TransferListener, //
+	RESULT extends Enum<RESULT>, //
+	EXCEPTION extends TransferEngineException, //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY>, //
 	CONTEXT_FACTORY extends TransferContextFactory<SESSION, VALUE, CONTEXT, ?>, //
-	DELEGATE_FACTORY extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ?>, //
-	LISTENER extends TransferListener //
+	DELEGATE_FACTORY extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ?> //
 > {
+
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
 
 	private static final Pattern SETTING_NAME_PATTERN = Pattern.compile("^[\\w&&[^\\d]][\\w]*$");
-
-	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<>();
-	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<>();
-
-	private static synchronized <E extends TransferEngine<?, ?, ?, ?, ?, ?>> void registerSubclass(Class<E> subclass) {
-
-		final String key = subclass.getCanonicalName();
-		Map<String, Object> m = TransferEngine.REGISTRY.get(key);
-		if (m != null) { return; }
-
-		m = new HashMap<>();
-		PluggableServiceLocator<E> locator = new PluggableServiceLocator<>(subclass);
-		locator.setHideErrors(true);
-		for (E e : locator) {
-			boolean empty = true;
-			for (String s : e.getTargetNames()) {
-				empty = false;
-				Object first = m.get(s);
-				if (first != null) {
-					// Log the error, and skip the dupe
-					continue;
-				}
-				m.put(s, e);
-			}
-			if (empty) {
-				// Log a warning, then continue
-			}
-		}
-		TransferEngine.REGISTRY.put(key, m);
-		TransferEngine.LOCATORS.put(key, locator);
-	}
-
-	protected static synchronized <E extends TransferEngine<?, ?, ?, ?, ?, ?>> E getTransferEngine(Class<E> subclass,
-		String targetName) {
-		if (subclass == null) { throw new IllegalArgumentException("Must provide a valid engine subclass"); }
-		if (StringUtils.isEmpty(
-			targetName)) { throw new IllegalArgumentException("Must provide a non-empty, non-null target name"); }
-		TransferEngine.registerSubclass(subclass);
-		Map<String, Object> m = TransferEngine.REGISTRY.get(subclass.getCanonicalName());
-		if (m == null) { return null; }
-		return subclass.cast(m.get(targetName));
-	}
 
 	protected abstract class ListenerPropagator<R extends Enum<R>, L> implements InvocationHandler {
 		protected final Logger log = TransferEngine.this.log;
@@ -164,16 +126,23 @@ public abstract class TransferEngine< //
 
 	private final List<LISTENER> listeners = new ArrayList<>();
 
+	protected final boolean supportsDuplicateFileNames;
 	protected final CmfCrypt crypto;
+	protected final String cfgNamePrefix;
 
-	private final boolean supportsDuplicateFileNames;
-	private final String cfgNamePrefix;
+	protected final Class<RESULT> resultClass;
 
-	public TransferEngine(CmfCrypt crypto, String cfgNamePrefix) {
-		this(crypto, cfgNamePrefix, false);
-	}
+	protected final Logger output;
+	protected final WarningTracker warningTracker;
+	protected final File baseData;
+	protected final CmfObjectStore<?, ?> objectStore;
+	protected final CmfContentStore<?, ?, ?> contentStore;
+	protected final CfgTools settings;
 
-	public TransferEngine(CmfCrypt crypto, String cfgNamePrefix, boolean supportsDuplicateNames) {
+	protected TransferEngine(Class<RESULT> resultClass, final Logger output, final WarningTracker warningTracker,
+		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore,
+		Map<String, ?> settings, CmfCrypt crypto, String cfgNamePrefix, boolean supportsDuplicateNames) {
+		this.resultClass = Objects.requireNonNull(resultClass, "Must provide a valid RESULT class");
 		this.crypto = crypto;
 		if (!StringUtils.isEmpty(cfgNamePrefix)) {
 			cfgNamePrefix = String.format("%s-", cfgNamePrefix);
@@ -182,6 +151,12 @@ public abstract class TransferEngine< //
 		}
 		this.cfgNamePrefix = cfgNamePrefix;
 		this.supportsDuplicateFileNames = supportsDuplicateNames;
+		this.output = output;
+		this.warningTracker = warningTracker;
+		this.baseData = baseData;
+		this.objectStore = objectStore;
+		this.contentStore = contentStore;
+		this.settings = new CfgTools(new TreeMap<>(settings));
 	}
 
 	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
@@ -227,8 +202,6 @@ public abstract class TransferEngine< //
 
 	protected abstract DELEGATE_FACTORY newDelegateFactory(SESSION session, CfgTools cfg) throws Exception;
 
-	protected abstract Set<String> getTargetNames();
-
 	public final CmfCrypt getCrypto() {
 		return this.crypto;
 	}
@@ -251,18 +224,18 @@ public abstract class TransferEngine< //
 		if (referrent != null) {
 			final CmfAttributeTranslator<VALUE> translator = getTranslator();
 			try {
-				CmfProperty<VALUE> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE, CmfDataType.STRING,
-					false);
+				CmfProperty<VALUE> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE,
+					CmfDataType.STRING, false);
 				referrentType.setValue(translator.getValue(CmfDataType.STRING, referrent.getType().name()));
 				marshaled.setProperty(referrentType);
 
-				CmfProperty<VALUE> referrentId = new CmfProperty<>(TransferEngine.REFERRENT_ID, CmfDataType.STRING,
-					false);
+				CmfProperty<VALUE> referrentId = new CmfProperty<>(TransferEngine.REFERRENT_ID,
+					CmfDataType.STRING, false);
 				referrentId.setValue(translator.getValue(CmfDataType.STRING, referrent.getId()));
 				marshaled.setProperty(referrentId);
 
-				CmfProperty<VALUE> referrentKey = new CmfProperty<>(TransferEngine.REFERRENT_KEY, CmfDataType.STRING,
-					false);
+				CmfProperty<VALUE> referrentKey = new CmfProperty<>(TransferEngine.REFERRENT_KEY,
+					CmfDataType.STRING, false);
 				referrentKey.setValue(translator.getValue(CmfDataType.STRING, referrent.getSearchKey()));
 				marshaled.setProperty(referrentKey);
 			} catch (ParseException e) {
@@ -274,6 +247,34 @@ public abstract class TransferEngine< //
 
 	protected final String getCfgNamePrefix() {
 		return this.cfgNamePrefix;
+	}
+
+	public final Class<RESULT> getResultClass() {
+		return this.resultClass;
+	}
+
+	public final Logger getOutput() {
+		return this.output;
+	}
+
+	public final WarningTracker getWarningTracker() {
+		return this.warningTracker;
+	}
+
+	public final File getBaseData() {
+		return this.baseData;
+	}
+
+	public final CmfObjectStore<?, ?> getObjectStore() {
+		return this.objectStore;
+	}
+
+	public final CmfContentStore<?, ?, ?> getContentStore() {
+		return this.contentStore;
+	}
+
+	public final CfgTools getSettings() {
+		return this.settings;
 	}
 
 	public final boolean isSupportsDuplicateFileNames() {
@@ -345,4 +346,27 @@ public abstract class TransferEngine< //
 
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
 	}
+
+	public final CmfObjectCounter<RESULT> run(Collection<LISTENER> listeners) throws EXCEPTION, CmfStorageException {
+		CmfObjectCounter<RESULT> counter = new CmfObjectCounter<>(this.resultClass);
+		run(listeners, counter);
+		return counter;
+	}
+
+	public final synchronized void run(Collection<LISTENER> listeners, CmfObjectCounter<RESULT> counter)
+		throws EXCEPTION, CmfStorageException {
+		if (counter == null) {
+			counter = new CmfObjectCounter<>(this.resultClass);
+		}
+		work(listeners, counter);
+	}
+
+	protected final EXCEPTION newException(String message) {
+		return newException(message, null);
+	}
+
+	protected abstract EXCEPTION newException(String message, Throwable cause);
+
+	protected abstract void work(Collection<LISTENER> listeners, CmfObjectCounter<RESULT> counter)
+		throws EXCEPTION, CmfStorageException;
 }
