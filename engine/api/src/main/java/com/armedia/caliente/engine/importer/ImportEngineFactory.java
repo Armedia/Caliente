@@ -11,4 +11,8 @@ public abstract class ImportEngineFactory< //
 	WORKER extends ImportEngine<SESSION, ?, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY> //
 > extends
 	TransferEngineFactory<ImportEngineListener, ImportResult, ImportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, WORKER> {
+
+	public static ImportEngineFactory<?, ?, ?, ?, ?, ?> getImportEngineFactory(String targetName) {
+		return TransferEngineFactory.getEngineFactory(ImportEngineFactory.class, targetName);
+	}
 }

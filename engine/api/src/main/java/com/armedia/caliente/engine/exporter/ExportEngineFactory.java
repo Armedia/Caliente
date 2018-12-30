@@ -12,4 +12,7 @@ public abstract class ExportEngineFactory< //
 > extends
 	TransferEngineFactory<ExportEngineListener, ExportResult, ExportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, WORKER> {
 
+	public static ExportEngineFactory<?, ?, ?, ?, ?, ?> getExportEngineFactory(String targetName) {
+		return TransferEngineFactory.getEngineFactory(ExportEngineFactory.class, targetName);
+	}
 }
