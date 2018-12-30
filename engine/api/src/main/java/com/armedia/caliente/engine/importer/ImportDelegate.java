@@ -13,21 +13,21 @@ public abstract class ImportDelegate< //
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
-	IMPORT_CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
-	IMPORT_DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, IMPORT_ENGINE>, //
-	IMPORT_ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, IMPORT_DELEGATE_FACTORY> //
-> extends TransferDelegate<ECM_OBJECT, SESSION, VALUE, IMPORT_CONTEXT, IMPORT_DELEGATE_FACTORY, IMPORT_ENGINE> {
+	CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
+	DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ENGINE>, //
+	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, DELEGATE_FACTORY> //
+> extends TransferDelegate<ECM_OBJECT, SESSION, VALUE, CONTEXT, DELEGATE_FACTORY, ENGINE> {
 
 	protected final CmfObject<VALUE> cmfObject;
 	protected final ImportStrategy strategy;
 
-	protected ImportDelegate(IMPORT_DELEGATE_FACTORY factory, Class<ECM_OBJECT> objectClass, CmfObject<VALUE> storedObject) throws Exception {
+	protected ImportDelegate(DELEGATE_FACTORY factory, Class<ECM_OBJECT> objectClass, CmfObject<VALUE> storedObject) throws Exception {
 		super(factory, objectClass);
 		this.cmfObject = storedObject;
 		this.strategy = factory.getEngine().getImportStrategy(storedObject.getType());
 	}
 
-	protected abstract Collection<ImportOutcome> importObject(CmfAttributeTranslator<VALUE> translator, IMPORT_CONTEXT ctx)
+	protected abstract Collection<ImportOutcome> importObject(CmfAttributeTranslator<VALUE> translator, CONTEXT ctx)
 		throws ImportException, CmfStorageException;
 
 }

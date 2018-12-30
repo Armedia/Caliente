@@ -13,11 +13,11 @@ public abstract class ExportContextFactory< //
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
-	EXPORT_CONTEXT extends ExportContext<SESSION, VALUE, ?>, //
-	EXPORT_ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> //
-> extends TransferContextFactory<SESSION, VALUE, EXPORT_CONTEXT, EXPORT_ENGINE> {
+	CONTEXT extends ExportContext<SESSION, VALUE, ?>, //
+	ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> //
+> extends TransferContextFactory<SESSION, VALUE, CONTEXT, ENGINE> {
 
-	protected ExportContextFactory(EXPORT_ENGINE engine, CfgTools settings, SESSION session,
+	protected ExportContextFactory(ENGINE engine, CfgTools settings, SESSION session,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Logger output, WarningTracker tracker)
 		throws Exception {
 		super(engine, settings, session, objectStore, contentStore, null, output, tracker);

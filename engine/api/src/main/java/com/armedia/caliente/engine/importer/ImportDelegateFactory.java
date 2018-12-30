@@ -10,17 +10,16 @@ public abstract class ImportDelegateFactory< //
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
-	IMPORT_CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
-	IMPORT_ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?>//
-> extends TransferDelegateFactory<SESSION, VALUE, IMPORT_CONTEXT, IMPORT_ENGINE> {
+	CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
+	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?>//
+> extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ENGINE> {
 
-	protected ImportDelegateFactory(IMPORT_ENGINE engine, CfgTools configuration) {
+	protected ImportDelegateFactory(ENGINE engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
-	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, IMPORT_ENGINE> newImportDelegate(
+	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newImportDelegate(
 		CmfObject<VALUE> storedObject) throws Exception;
 
 	protected abstract SchemaService newSchemaService(SESSION session) throws Exception;
-
 }
