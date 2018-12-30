@@ -324,8 +324,7 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	private class ImportListenerPropagator extends ListenerPropagator<ImportResult, ImportEngineListener>
-		implements InvocationHandler {
+	private class ImportListenerPropagator extends ListenerPropagator<ImportResult> implements InvocationHandler {
 
 		private ImportListenerPropagator(CmfObjectCounter<ImportResult> counter) {
 			super(counter, getListeners(), ImportEngineListener.class);
@@ -386,8 +385,7 @@ public abstract class ImportEngine<//
 	}
 
 	@Override
-	protected final void work(Collection<ImportEngineListener> listeners, CmfObjectCounter<ImportResult> counter)
-		throws ImportException, CmfStorageException {
+	protected final void work(CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by

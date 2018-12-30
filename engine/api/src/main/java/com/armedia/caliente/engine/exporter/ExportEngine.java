@@ -91,8 +91,7 @@ public abstract class ExportEngine<//
 
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
 
-	private class ExportListenerPropagator extends ListenerPropagator<ExportResult, ExportEngineListener>
-		implements InvocationHandler {
+	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> implements InvocationHandler {
 
 		private ExportListenerPropagator(CmfObjectCounter<ExportResult> counter) {
 			super(counter, getListeners(), ExportEngineListener.class);
@@ -873,8 +872,7 @@ public abstract class ExportEngine<//
 	}
 
 	@Override
-	protected final void work(Collection<ExportEngineListener> listeners, CmfObjectCounter<ExportResult> counter)
-		throws ExportException, CmfStorageException {
+	protected final void work(CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
 		final CfgTools configuration = getSettings();
