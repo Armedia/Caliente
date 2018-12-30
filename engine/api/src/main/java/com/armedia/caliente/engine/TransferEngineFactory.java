@@ -21,7 +21,7 @@ public abstract class TransferEngineFactory< //
 	CONTEXT extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY>, //
 	CONTEXT_FACTORY extends TransferContextFactory<SESSION, VALUE, CONTEXT, ?>, //
 	DELEGATE_FACTORY extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ?>, //
-	WORKER extends TransferEngine<LISTENER, RESULT, EXCEPTION, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY> //
+	ENGINE extends TransferEngine<LISTENER, RESULT, EXCEPTION, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY> //
 > {
 	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<>();
 	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<>();
@@ -55,7 +55,7 @@ public abstract class TransferEngineFactory< //
 		TransferEngineFactory.LOCATORS.put(key, locator);
 	}
 
-	protected static synchronized <FACTORY extends TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>> FACTORY getTransferEngineWorkerFactory(
+	protected static synchronized <FACTORY extends TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>> FACTORY getEngineFactory(
 		Class<FACTORY> subclass, String targetName) {
 		if (subclass == null) { throw new IllegalArgumentException("Must provide a valid engine subclass"); }
 		if (StringUtils.isEmpty(
@@ -66,7 +66,7 @@ public abstract class TransferEngineFactory< //
 		return subclass.cast(m.get(targetName));
 	}
 
-	public abstract WORKER newInstance(final Logger output, final WarningTracker warningTracker, final File baseData,
+	public abstract ENGINE newInstance(final Logger output, final WarningTracker warningTracker, final File baseData,
 		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
 		throws EXCEPTION;
 
