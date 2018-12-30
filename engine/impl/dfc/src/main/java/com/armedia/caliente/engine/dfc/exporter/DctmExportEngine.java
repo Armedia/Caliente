@@ -4,8 +4,8 @@
 
 package com.armedia.caliente.engine.dfc.exporter;
 
-import java.util.Collections;
-import java.util.Set;
+import java.io.File;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -15,7 +15,6 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dfc.DctmSessionFactory;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.DctmTranslator;
-import com.armedia.caliente.engine.dfc.common.DctmCommon;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -41,10 +40,9 @@ import com.documentum.fc.common.IDfValue;
 public class DctmExportEngine extends
 	ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportContextFactory, DctmExportDelegateFactory> {
 
-	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
-
-	public DctmExportEngine() {
-		super(new DctmCrypto(), true);
+	public DctmExportEngine(Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(output, warningTracker, baseData, objectStore, contentStore, settings, new DctmCrypto(), true);
 	}
 
 	@Override
@@ -89,16 +87,7 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected Set<String> getTargetNames() {
-		return DctmExportEngine.TARGETS;
-	}
-
-	@Override
 	protected IDfValue getValue(CmfDataType type, Object value) {
 		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
-	}
-
-	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return ExportEngine.getExportEngine(DctmCommon.TARGET_NAME);
 	}
 }

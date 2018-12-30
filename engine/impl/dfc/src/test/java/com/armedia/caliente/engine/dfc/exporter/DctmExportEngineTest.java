@@ -9,7 +9,6 @@ import org.junit.Test;
 import com.armedia.caliente.engine.dfc.DctmEngineTest;
 import com.armedia.caliente.engine.dfc.DctmSetting;
 import com.armedia.caliente.engine.dfc.common.Setting;
-import com.armedia.caliente.engine.exporter.ExportEngine;
 
 public class DctmExportEngineTest extends DctmEngineTest {
 
@@ -21,7 +20,7 @@ public class DctmExportEngineTest extends DctmEngineTest {
 
 	@Test
 	public void test() throws Exception {
-		ExportEngine<?, ?, ?, ?, ?, ?> exporter = ExportEngine.getExportEngine("dctm");
+		DctmExportEngineFactory factory = new DctmExportEngineFactory();
 
 		Map<String, String> settings = new HashMap<>();
 		settings.put(DctmSetting.DOCBASE.getLabel(), "documentum");
@@ -30,7 +29,8 @@ public class DctmExportEngineTest extends DctmEngineTest {
 		settings.put(Setting.DQL.getLabel(),
 			"select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)");
 
-		exporter.runExport(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore, settings);
+		factory.newInstance(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore, settings)
+			.run(null);
 	}
 
 }

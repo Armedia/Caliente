@@ -4,8 +4,8 @@
 
 package com.armedia.caliente.engine.dfc.importer;
 
-import java.util.Collections;
-import java.util.Set;
+import java.io.File;
+import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -15,7 +15,6 @@ import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionFactory;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.DctmTranslator;
-import com.armedia.caliente.engine.dfc.common.DctmCommon;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
@@ -60,10 +59,9 @@ public class DctmImportEngine extends
 		}
 	};
 
-	private static final Set<String> TARGETS = Collections.singleton(DctmCommon.TARGET_NAME);
-
-	public DctmImportEngine() {
-		super(new DctmCrypto(), true);
+	public DctmImportEngine(Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(output, warningTracker, baseData, objectStore, contentStore, settings, new DctmCrypto(), true);
 	}
 
 	@Override
@@ -102,20 +100,11 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected Set<String> getTargetNames() {
-		return DctmImportEngine.TARGETS;
-	}
-
-	@Override
 	protected boolean abortImport(CmfType type, long errors) {
 		if (type == CmfType.DATASTORE) {
 			// We MUST have all datastores present
 			return (errors > 0);
 		}
 		return super.abortImport(type, errors);
-	}
-
-	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return ImportEngine.getImportEngine(DctmCommon.TARGET_NAME);
 	}
 }
