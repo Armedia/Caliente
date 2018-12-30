@@ -1,7 +1,8 @@
 package com.armedia.caliente.engine.local.exporter;
 
+import java.io.File;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -9,7 +10,6 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportTarget;
-import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionFactory;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
@@ -26,8 +26,9 @@ import com.armedia.commons.utilities.CfgTools;
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory> {
 
-	public LocalExportEngine() {
-		super(new CmfCrypt());
+	public LocalExportEngine(Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
 	}
 
 	@Override
@@ -65,14 +66,5 @@ public class LocalExportEngine extends
 	@Override
 	protected LocalExportDelegateFactory newDelegateFactory(LocalRoot session, CfgTools cfg) throws Exception {
 		return new LocalExportDelegateFactory(this, cfg);
-	}
-
-	@Override
-	protected Set<String> getTargetNames() {
-		return LocalCommon.TARGETS;
-	}
-
-	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return ExportEngine.getExportEngine(LocalCommon.TARGET_NAME);
 	}
 }

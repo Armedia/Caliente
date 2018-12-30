@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.local.importer;
 
-import java.util.Set;
+import java.io.File;
+import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -8,7 +9,6 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
-import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionFactory;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
@@ -25,8 +25,9 @@ import com.armedia.commons.utilities.CfgTools;
 public class LocalImportEngine extends
 	ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory> {
 
-	public LocalImportEngine() {
-		super(new CmfCrypt());
+	public LocalImportEngine(Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
 	}
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
@@ -136,14 +137,5 @@ public class LocalImportEngine extends
 	@Override
 	protected LocalImportDelegateFactory newDelegateFactory(LocalRoot session, CfgTools cfg) throws Exception {
 		return new LocalImportDelegateFactory(this, cfg);
-	}
-
-	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return ImportEngine.getImportEngine(LocalCommon.TARGET_NAME);
-	}
-
-	@Override
-	protected Set<String> getTargetNames() {
-		return LocalCommon.TARGETS;
 	}
 }
