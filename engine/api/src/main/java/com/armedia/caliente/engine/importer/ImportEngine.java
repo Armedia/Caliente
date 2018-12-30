@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.engine.TransferEngineException;
+import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
@@ -582,7 +582,7 @@ public abstract class ImportEngine<//
 			objectStore.clearAttributeMappings();
 			try {
 				loadPrincipalMappings(objectStore.getValueMapper(), settings);
-			} catch (TransferEngineException e) {
+			} catch (TransferException e) {
 				throw new ImportException(e.getMessage(), e.getCause());
 			}
 			// Ensure the target path exists
@@ -619,7 +619,7 @@ public abstract class ImportEngine<//
 				final boolean loaded;
 				try {
 					loaded = MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p);
-				} catch (TransferEngineException e) {
+				} catch (TransferException e) {
 					throw new ImportException(e.getMessage(), e.getCause());
 				}
 

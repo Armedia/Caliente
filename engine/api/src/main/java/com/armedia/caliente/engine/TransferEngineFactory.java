@@ -15,7 +15,7 @@ import com.armedia.commons.utilities.PluggableServiceLocator;
 public abstract class TransferEngineFactory< //
 	LISTENER extends TransferListener, //
 	RESULT extends Enum<RESULT>, //
-	EXCEPTION extends TransferEngineException, //
+	EXCEPTION extends TransferException, //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY>, //

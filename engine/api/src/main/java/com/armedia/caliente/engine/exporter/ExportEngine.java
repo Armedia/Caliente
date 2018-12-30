@@ -21,7 +21,7 @@ import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.engine.TransferEngineException;
+import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferEngineSetting;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
@@ -568,7 +568,7 @@ public abstract class ExportEngine<//
 		objectStore.clearAttributeMappings();
 		try {
 			loadPrincipalMappings(objectStore.getValueMapper(), configuration);
-		} catch (TransferEngineException e) {
+		} catch (TransferException e) {
 			throw new ExportException(e.getMessage(), e.getCause());
 		}
 		final ExportState exportState = new ExportState(output, baseData, objectStore, contentStore, configuration);
@@ -879,7 +879,7 @@ public abstract class ExportEngine<//
 		getObjectStore().clearAttributeMappings();
 		try {
 			loadPrincipalMappings(getObjectStore().getValueMapper(), configuration);
-		} catch (TransferEngineException e) {
+		} catch (TransferException e) {
 			throw new ExportException(e.getMessage(), e.getCause());
 		}
 		final ExportState exportState = new ExportState(getOutput(), getBaseData(), getObjectStore(), getContentStore(),
