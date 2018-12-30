@@ -8,6 +8,8 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
 import com.armedia.caliente.engine.local.common.LocalCommon;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionFactory;
@@ -145,5 +147,10 @@ public class LocalImportEngine extends
 	@Override
 	protected Set<String> getTargetNames() {
 		return LocalCommon.TARGETS;
+	}
+
+	@Override
+	protected SchemaService getSchemaService(LocalRoot session) throws SchemaDeclarationServiceException {
+		return null;
 	}
 }

@@ -8,6 +8,8 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaDeclarationServiceException;
+import com.armedia.caliente.engine.importer.schema.decl.SchemaService;
 import com.armedia.caliente.engine.xml.common.XmlCommon;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.engine.xml.common.XmlSessionFactory;
@@ -203,5 +205,10 @@ public class XmlImportEngine extends
 	@Override
 	protected Set<String> getTargetNames() {
 		return XmlCommon.TARGETS;
+	}
+
+	@Override
+	protected SchemaService getSchemaService(XmlRoot session) throws SchemaDeclarationServiceException {
+		return null;
 	}
 }

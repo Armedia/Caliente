@@ -396,9 +396,13 @@ public abstract class ImportEngine<//
 		String mapper = cfg.getString(ImportSetting.ATTRIBUTE_MAPPING.getLabel());
 		String residualsPrefix = cfg.getString(ImportSetting.RESIDUALS_PREFIX.getLabel());
 
-		try (SchemaService schemaService = getSchemaService(session)) {
+		final SchemaService schemaService = getSchemaService(session);
+		if (schemaService == null) { return null; }
+		try {
 			return AttributeMapper.getAttributeMapper(schemaService, Tools.coalesce(mapper, mapperDefault),
 				residualsPrefix, false);
+		} finally {
+			schemaService.close();
 		}
 	}
 
