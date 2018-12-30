@@ -22,14 +22,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.engine.importer.schema.SchemaServiceException;
-import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.engine.xml.common.XmlSessionWrapper;
 import com.armedia.caliente.engine.xml.common.XmlSetting;

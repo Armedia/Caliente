@@ -2,9 +2,9 @@ package com.armedia.caliente.engine.xds.importer;
 
 import org.apache.chemistry.opencmis.client.api.Session;
 
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
-import com.armedia.caliente.engine.importer.schema.SchemaServiceException;
-import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.engine.xds.CmisSessionWrapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;

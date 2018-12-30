@@ -2,9 +2,9 @@ package com.armedia.caliente.engine.local.importer;
 
 import java.io.IOException;
 
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
-import com.armedia.caliente.engine.importer.schema.SchemaServiceException;
-import com.armedia.caliente.engine.importer.schema.SchemaService;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalSetting;

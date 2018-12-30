@@ -16,10 +16,10 @@ import org.apache.chemistry.opencmis.commons.enums.Cardinality;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 
 import com.armedia.caliente.engine.cmis.CmisTranslator;
-import com.armedia.caliente.engine.importer.schema.AttributeDeclaration;
-import com.armedia.caliente.engine.importer.schema.SchemaServiceException;
-import com.armedia.caliente.engine.importer.schema.SchemaService;
-import com.armedia.caliente.engine.importer.schema.TypeDeclaration;
+import com.armedia.caliente.engine.dynamic.mapper.schema.AttributeDeclaration;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
+import com.armedia.caliente.engine.dynamic.mapper.schema.TypeDeclaration;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.commons.utilities.Tools;
 

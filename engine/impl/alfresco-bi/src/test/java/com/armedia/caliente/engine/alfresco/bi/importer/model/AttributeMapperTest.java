@@ -17,9 +17,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.AlfSchemaService;
-import com.armedia.caliente.engine.importer.schema.AttributeDeclaration;
-import com.armedia.caliente.engine.importer.schema.ConstructedType;
-import com.armedia.caliente.engine.importer.schema.ConstructedTypeFactory;
+import com.armedia.caliente.engine.dynamic.mapper.schema.AttributeDeclaration;
+import com.armedia.caliente.engine.dynamic.mapper.schema.ConstructedType;
+import com.armedia.caliente.engine.dynamic.mapper.schema.ConstructedTypeFactory;
 
 public class AttributeMapperTest {
 

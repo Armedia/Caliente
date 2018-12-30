@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.importer.schema;
+package com.armedia.caliente.engine.dynamic.mapper.schema;
 
 import com.armedia.caliente.engine.importer.ImportException;
 
