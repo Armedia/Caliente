@@ -39,9 +39,8 @@ public abstract class TransferContext< //
 	private final String productVersion;
 	private final WarningTracker warningTracker;
 
-	protected <C extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY>> TransferContext(CONTEXT_FACTORY factory,
-		CfgTools settings, String rootId, CmfType rootType, SESSION session, Logger output,
-		WarningTracker warningTracker) {
+	protected TransferContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType,
+		SESSION session, Logger output, WarningTracker warningTracker) {
 		this.factory = factory;
 		this.settings = settings;
 		this.rootId = rootId;

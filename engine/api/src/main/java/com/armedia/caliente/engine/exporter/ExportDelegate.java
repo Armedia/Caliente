@@ -18,15 +18,15 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class ExportDelegate< //
-	T, //
+	ECM_OBJECT, //
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
-	EXPORT_CONTEXT extends ExportContext<SESSION, VALUE, ?>, //
-	EXPORT_DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, EXPORT_ENGINE>, //
-	EXPORT_ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, EXPORT_DELEGATE_FACTORY> //
-> extends TransferDelegate<T, SESSION, VALUE, EXPORT_CONTEXT, EXPORT_DELEGATE_FACTORY, EXPORT_ENGINE> {
-	protected final T object;
+	CONTEXT extends ExportContext<SESSION, VALUE, ?>, //
+	DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ENGINE>, //
+	ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, DELEGATE_FACTORY> //
+> extends TransferDelegate<ECM_OBJECT, SESSION, VALUE, CONTEXT, DELEGATE_FACTORY, ENGINE> {
+	protected final ECM_OBJECT object;
 	protected final ExportTarget exportTarget;
 	protected final String label;
 	protected final int dependencyTier;
@@ -37,7 +37,7 @@ public abstract class ExportDelegate< //
 	protected final String subType;
 	protected final Set<String> secondaries;
 
-	protected ExportDelegate(EXPORT_DELEGATE_FACTORY factory, SESSION session, Class<T> objectClass, T object) throws Exception {
+	protected ExportDelegate(DELEGATE_FACTORY factory, SESSION session, Class<ECM_OBJECT> objectClass, ECM_OBJECT object) throws Exception {
 		super(factory, objectClass);
 		if (object == null) { throw new IllegalArgumentException("Must provide a source object to export"); }
 		this.object = object;
@@ -64,37 +64,37 @@ public abstract class ExportDelegate< //
 		return this.exportTarget;
 	}
 
-	protected abstract CmfType calculateType(SESSION session, T object) throws Exception;
+	protected abstract CmfType calculateType(SESSION session, ECM_OBJECT object) throws Exception;
 
 	public final CmfType getType() {
 		return this.exportTarget.getType();
 	}
 
-	protected abstract String calculateLabel(SESSION session, T object) throws Exception;
+	protected abstract String calculateLabel(SESSION session, ECM_OBJECT object) throws Exception;
 
 	public final String getLabel() {
 		return this.label;
 	}
 
-	protected abstract String calculateObjectId(SESSION session, T object) throws Exception;
+	protected abstract String calculateObjectId(SESSION session, ECM_OBJECT object) throws Exception;
 
 	public final String getObjectId() {
 		return this.exportTarget.getId();
 	}
 
-	protected abstract String calculateSearchKey(SESSION session, T object) throws Exception;
+	protected abstract String calculateSearchKey(SESSION session, ECM_OBJECT object) throws Exception;
 
 	public final String getSearchKey() {
 		return this.exportTarget.getSearchKey();
 	}
 
-	protected abstract String calculateName(SESSION session, T object) throws Exception;
+	protected abstract String calculateName(SESSION session, ECM_OBJECT object) throws Exception;
 
 	public final String getName() {
 		return this.name;
 	}
 
-	protected Collection<CmfObjectRef> calculateParentIds(SESSION session, T object) throws Exception {
+	protected Collection<CmfObjectRef> calculateParentIds(SESSION session, ECM_OBJECT object) throws Exception {
 		return null;
 	}
 
@@ -102,11 +102,11 @@ public abstract class ExportDelegate< //
 		return this.parentIds;
 	}
 
-	protected int calculateDependencyTier(SESSION session, T object) throws Exception {
+	protected int calculateDependencyTier(SESSION session, ECM_OBJECT object) throws Exception {
 		return 0;
 	}
 
-	protected String calculateHistoryId(SESSION session, T object) throws Exception {
+	protected String calculateHistoryId(SESSION session, ECM_OBJECT object) throws Exception {
 		return null;
 	}
 
@@ -118,7 +118,7 @@ public abstract class ExportDelegate< //
 		return this.historyId;
 	}
 
-	protected boolean calculateHistoryCurrent(SESSION session, T object) throws Exception {
+	protected boolean calculateHistoryCurrent(SESSION session, ECM_OBJECT object) throws Exception {
 		// Default to true...
 		return true;
 	}
@@ -127,11 +127,11 @@ public abstract class ExportDelegate< //
 		return this.historyCurrent;
 	}
 
-	protected String calculateSubType(SESSION session, CmfType type, T object) throws Exception {
+	protected String calculateSubType(SESSION session, CmfType type, ECM_OBJECT object) throws Exception {
 		return type.name();
 	}
 
-	protected Set<String> calculateSecondarySubtypes(SESSION session, CmfType type, String subtype, T object)
+	protected Set<String> calculateSecondarySubtypes(SESSION session, CmfType type, String subtype, ECM_OBJECT object)
 		throws Exception {
 		return new LinkedHashSet<>();
 	}
@@ -140,21 +140,21 @@ public abstract class ExportDelegate< //
 		return this.subType;
 	}
 
-	protected abstract Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, EXPORT_DELEGATE_FACTORY, ?>> identifyRequirements(
-		CmfObject<VALUE> marshalled, EXPORT_CONTEXT ctx) throws Exception;
+	protected abstract Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifyRequirements(
+		CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception;
 
-	protected void requirementsExported(CmfObject<VALUE> marshalled, EXPORT_CONTEXT ctx) throws Exception {
+	protected void requirementsExported(CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception {
 	}
 
-	protected Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, EXPORT_DELEGATE_FACTORY, ?>> identifyAntecedents(CmfObject<VALUE> marshalled,
-		EXPORT_CONTEXT ctx) throws Exception {
+	protected Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifyAntecedents(CmfObject<VALUE> marshalled,
+		CONTEXT ctx) throws Exception {
 		return new ArrayList<>();
 	}
 
-	protected void antecedentsExported(CmfObject<VALUE> marshalled, EXPORT_CONTEXT ctx) throws Exception {
+	protected void antecedentsExported(CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception {
 	}
 
-	final CmfObject<VALUE> marshal(EXPORT_CONTEXT ctx, ExportTarget referrent) throws ExportException {
+	final CmfObject<VALUE> marshal(CONTEXT ctx, ExportTarget referrent) throws ExportException {
 		CmfObject<VALUE> marshaled = new CmfObject<>(this.factory.getTranslator(), this.exportTarget.getType(),
 			this.exportTarget.getId(), this.name, this.parentIds, this.exportTarget.getSearchKey(), this.dependencyTier,
 			this.historyId, this.historyCurrent, this.label, this.subType, this.secondaries, ctx.getProductName(),
@@ -164,27 +164,27 @@ public abstract class ExportDelegate< //
 		return marshaled;
 	}
 
-	protected void prepareForStorage(EXPORT_CONTEXT ctx, CmfObject<VALUE> object) throws Exception {
+	protected void prepareForStorage(CONTEXT ctx, CmfObject<VALUE> object) throws Exception {
 		// By default, do nothing.
 	}
 
-	protected Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, EXPORT_DELEGATE_FACTORY, ?>> identifySuccessors(CmfObject<VALUE> marshalled,
-		EXPORT_CONTEXT ctx) throws Exception {
+	protected Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifySuccessors(CmfObject<VALUE> marshalled,
+		CONTEXT ctx) throws Exception {
 		return new ArrayList<>();
 	}
 
-	protected void successorsExported(CmfObject<VALUE> marshalled, EXPORT_CONTEXT ctx) throws Exception {
+	protected void successorsExported(CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception {
 	}
 
-	protected abstract boolean marshal(EXPORT_CONTEXT ctx, CmfObject<VALUE> object) throws ExportException;
+	protected abstract boolean marshal(CONTEXT ctx, CmfObject<VALUE> object) throws ExportException;
 
-	protected abstract List<CmfContentStream> storeContent(EXPORT_CONTEXT ctx, CmfAttributeTranslator<VALUE> translator,
+	protected abstract List<CmfContentStream> storeContent(CONTEXT ctx, CmfAttributeTranslator<VALUE> translator,
 		CmfObject<VALUE> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
 		boolean includeRenditions) throws Exception;
 
-	protected abstract Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, EXPORT_DELEGATE_FACTORY, ?>> identifyDependents(
-		CmfObject<VALUE> marshalled, EXPORT_CONTEXT ctx) throws Exception;
+	protected abstract Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifyDependents(
+		CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception;
 
-	protected void dependentsExported(CmfObject<VALUE> marshalled, EXPORT_CONTEXT ctx) throws Exception {
+	protected void dependentsExported(CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception {
 	}
 }

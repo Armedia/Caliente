@@ -8,7 +8,6 @@ import java.util.Stack;
 
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.store.CmfType;
@@ -21,8 +20,8 @@ import com.armedia.commons.utilities.CfgTools;
 public class ExportContext< //
 	SESSION, //
 	VALUE, //
-	EXPORT_CONTEXT_FACTORY extends ExportContextFactory<SESSION, ?, VALUE, ?, ?> //
-> extends TransferContext<SESSION, VALUE, EXPORT_CONTEXT_FACTORY> {
+	CONTEXT_FACTORY extends ExportContextFactory<SESSION, ?, VALUE, ?, ?> //
+> extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY> {
 
 	private final Stack<ExportTarget> referrents = new Stack<>();
 
@@ -32,9 +31,8 @@ public class ExportContext< //
 	 * @param session
 	 * @param output
 	 */
-	public <C extends ExportContext<SESSION, VALUE, EXPORT_CONTEXT_FACTORY>, W extends SessionWrapper<SESSION>, E extends ExportEngine<SESSION, W, VALUE, C, ?, ?>> ExportContext(
-		EXPORT_CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session, Logger output,
-		WarningTracker tracker) {
+	public ExportContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session,
+		Logger output, WarningTracker tracker) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
 	}
 
