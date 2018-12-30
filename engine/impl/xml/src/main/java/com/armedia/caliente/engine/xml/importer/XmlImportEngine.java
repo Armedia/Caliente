@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.xml.importer;
 
-import java.util.Set;
+import java.io.File;
+import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -8,7 +9,6 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
-import com.armedia.caliente.engine.xml.common.XmlCommon;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.engine.xml.common.XmlSessionFactory;
 import com.armedia.caliente.engine.xml.common.XmlSessionWrapper;
@@ -140,8 +140,9 @@ public class XmlImportEngine extends
 		}
 	};
 
-	public XmlImportEngine() {
-		super(new CmfCrypt());
+	public XmlImportEngine(Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
 	}
 
 	@Override
@@ -194,14 +195,5 @@ public class XmlImportEngine extends
 	@Override
 	protected XmlImportDelegateFactory newDelegateFactory(XmlRoot session, CfgTools cfg) throws Exception {
 		return new XmlImportDelegateFactory(this, cfg);
-	}
-
-	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return ImportEngine.getImportEngine(XmlCommon.TARGET_NAME);
-	}
-
-	@Override
-	protected Set<String> getTargetNames() {
-		return XmlCommon.TARGETS;
 	}
 }
