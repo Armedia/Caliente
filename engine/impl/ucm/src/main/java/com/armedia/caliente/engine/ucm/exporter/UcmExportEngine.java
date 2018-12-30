@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.ucm.exporter;
 
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
@@ -13,7 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,7 +26,6 @@ import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
-import com.armedia.caliente.engine.ucm.UcmCommon;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
 import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
@@ -64,8 +64,9 @@ public class UcmExportEngine extends
 		}
 	}
 
-	public UcmExportEngine() {
-		super(new CmfCrypt());
+	public UcmExportEngine(Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
 	}
 
 	@Override
@@ -215,15 +216,6 @@ public class UcmExportEngine extends
 	@Override
 	protected UcmExportDelegateFactory newDelegateFactory(UcmSession session, CfgTools cfg) throws Exception {
 		return new UcmExportDelegateFactory(this, cfg);
-	}
-
-	@Override
-	protected Set<String> getTargetNames() {
-		return UcmCommon.TARGETS;
-	}
-
-	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return ExportEngine.getExportEngine(UcmCommon.TARGET_NAME);
 	}
 
 	@Override
