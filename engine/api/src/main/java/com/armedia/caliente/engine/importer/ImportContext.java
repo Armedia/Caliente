@@ -27,8 +27,8 @@ import com.armedia.commons.utilities.CfgTools;
 public abstract class ImportContext< //
 	SESSION, //
 	VALUE, //
-	IMPORT_CONTEXT_FACTORY extends ImportContextFactory<SESSION, ?, VALUE, ?, ?, ?> //
-> extends TransferContext<SESSION, VALUE, IMPORT_CONTEXT_FACTORY> {
+	CONTEXT_FACTORY extends ImportContextFactory<SESSION, ?, VALUE, ?, ?, ?> //
+> extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY> {
 
 	private final ImportContextFactory<SESSION, ?, VALUE, ?, ?, ?> factory;
 	private final CmfObjectStore<?, ?> cmfObjectStore;
@@ -37,8 +37,8 @@ public abstract class ImportContext< //
 	private final CmfContentStore<?, ?, ?> streamStore;
 	private final int historyPosition;
 
-	public <C extends ImportContext<SESSION, VALUE, IMPORT_CONTEXT_FACTORY>, W extends SessionWrapper<SESSION>, E extends ImportEngine<SESSION, W, VALUE, C, ?, ?>, F extends ImportContextFactory<SESSION, W, VALUE, C, E, ?>> ImportContext(
-		IMPORT_CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session,
+	public <C extends ImportContext<SESSION, VALUE, CONTEXT_FACTORY>, W extends SessionWrapper<SESSION>, E extends ImportEngine<SESSION, W, VALUE, C, ?, ?>, F extends ImportContextFactory<SESSION, W, VALUE, C, E, ?>> ImportContext(
+		CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session,
 		Logger output, WarningTracker tracker, Transformer transformer, CmfAttributeTranslator<VALUE> translator,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker);

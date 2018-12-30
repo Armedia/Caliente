@@ -24,16 +24,16 @@ public abstract class ImportContextFactory< //
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
-	IMPORT_CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
-	IMPORT_ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?>, //
+	CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
+	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?>, //
 	FOLDER //
-> extends TransferContextFactory<SESSION, VALUE, IMPORT_CONTEXT, IMPORT_ENGINE> {
+> extends TransferContextFactory<SESSION, VALUE, CONTEXT, ENGINE> {
 
 	private final List<String> rootPath;
 	private final String rootPathStr;
 	private final int pathTrunc;
 
-	protected ImportContextFactory(IMPORT_ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?, ?> objectStore,
+	protected ImportContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output, WarningTracker tracker)
 		throws Exception {
 		super(engine, settings, session, objectStore, contentStore, transformer, output, tracker);
