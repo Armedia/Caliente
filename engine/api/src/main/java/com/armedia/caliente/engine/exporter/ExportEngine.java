@@ -60,9 +60,9 @@ public abstract class ExportEngine< //
 	CONTEXT extends ExportContext<SESSION, VALUE, CONTEXT_FACTORY>, //
 	CONTEXT_FACTORY extends ExportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?>, //
 	DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> //
-> extends
-	TransferEngine<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ExportEngineListener> {
+> extends TransferEngine<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ExportEngineListener> {
 
+	@FunctionalInterface
 	protected static interface TargetSubmitter {
 		public void submit(ExportTarget target) throws ExportException;
 	}
@@ -137,9 +137,9 @@ public abstract class ExportEngine< //
 
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportTarget referrent, final ExportTarget target,
-		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject,
-		final CONTEXT ctx, final ExportListener listener,
-		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws ExportException, CmfStorageException {
+		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
+		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
+		throws ExportException, CmfStorageException {
 		try {
 			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
 
@@ -218,9 +218,9 @@ public abstract class ExportEngine< //
 
 	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportTarget referrent, final ExportTarget target,
-		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject,
-		final CONTEXT ctx, final ExportListener listener,
-		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws ExportException, CmfStorageException {
+		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
+		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
+		throws ExportException, CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
@@ -650,9 +650,8 @@ public abstract class ExportEngine< //
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
 		CmfObjectCounter<ExportResult> objectCounter, final SessionFactory<SESSION> sessionFactory,
 		final SessionWrapper<SESSION> baseSession,
-		final TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory,
-		final DELEGATE_FACTORY delegateFactory, final Transformer transformer, final ObjectFilter filter)
-		throws ExportException, CmfStorageException {
+		final TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory, final DELEGATE_FACTORY delegateFactory,
+		final Transformer transformer, final ObjectFilter filter) throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
 		final CfgTools settings = exportState.cfg;
@@ -801,23 +800,20 @@ public abstract class ExportEngine< //
 				final AtomicLong targetCounter = new AtomicLong(0);
 				boolean ok = false;
 				try {
-					findExportResults(baseSession.getWrapped(), settings, delegateFactory, new TargetSubmitter() {
-						@Override
-						public void submit(ExportTarget target) throws ExportException {
-							if (target == null) { return; }
-							if (target.isNull()) {
-								ExportEngine.this.log.warn("Skipping a null target: {}", target);
-								return;
-							}
-							if ((targetCounter.incrementAndGet() % reportCount) == 0) {
-								output.info("Retrieved {} object references for export", targetCounter.get());
-							}
-							try {
-								worker.addWorkItem(target);
-							} catch (InterruptedException e) {
-								throw new ExportException(
-									String.format("Interrupted while trying to queue up %s", target), e);
-							}
+					findExportResults(baseSession.getWrapped(), settings, delegateFactory, (target) -> {
+						if (target == null) { return; }
+						if (target.isNull()) {
+							ExportEngine.this.log.warn("Skipping a null target: {}", target);
+							return;
+						}
+						if ((targetCounter.incrementAndGet() % reportCount) == 0) {
+							output.info("Retrieved {} object references for export", targetCounter.get());
+						}
+						try {
+							worker.addWorkItem(target);
+						} catch (InterruptedException e) {
+							throw new ExportException(String.format("Interrupted while trying to queue up %s", target),
+								e);
 						}
 					});
 					ok = true;
