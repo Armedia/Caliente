@@ -63,11 +63,11 @@ public abstract class ImportEngine<//
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
-	IMPORT_CONTEXT extends ImportContext<SESSION, VALUE, IMPORT_CONTEXT_FACTORY>, //
-	IMPORT_CONTEXT_FACTORY extends ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?>, //
-	IMPORT_DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> //
+	CONTEXT extends ImportContext<SESSION, VALUE, CONTEXT_FACTORY>, //
+	CONTEXT_FACTORY extends ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?>, //
+	DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> //
 > extends
-	TransferEngine<SESSION, VALUE, IMPORT_CONTEXT, IMPORT_CONTEXT_FACTORY, IMPORT_DELEGATE_FACTORY, ImportEngineListener> {
+	TransferEngine<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ImportEngineListener> {
 
 	private class BatchWorker implements Callable<Map<String, Collection<ImportOutcome>>> {
 
@@ -78,13 +78,13 @@ public abstract class ImportEngine<//
 		private final ImportEngineListener listenerDelegator;
 		private final ImportState importState;
 		private final Batch batch;
-		private final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory;
-		private final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory;
+		private final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> contextFactory;
+		private final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> delegateFactory;
 
 		private BatchWorker(Batch batch, SynchronizedCounter synchronizedCounter,
 			SessionFactory<SESSION> sessionFactory, ImportEngineListener listenerDelegator, ImportState importState,
-			final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory,
-			final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory) {
+			final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> contextFactory,
+			final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> delegateFactory) {
 			this.sessionFactory = sessionFactory;
 			this.listenerDelegator = listenerDelegator;
 			this.importState = importState;
@@ -140,7 +140,7 @@ public abstract class ImportEngine<//
 								continue batch;
 							}
 
-							final IMPORT_CONTEXT ctx = this.contextFactory.newContext(next.getId(), next.getType(),
+							final CONTEXT ctx = this.contextFactory.newContext(next.getId(), next.getType(),
 								session.getWrapped(), i);
 							ImportResult result = ImportResult.FAILED;
 							String info = null;
@@ -194,7 +194,7 @@ public abstract class ImportEngine<//
 								}
 								try {
 									this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
-									ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> delegate = this.delegateFactory
+									ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> delegate = this.delegateFactory
 										.newImportDelegate(next);
 									final Collection<ImportOutcome> outcome = delegate.importObject(getTranslator(),
 										ctx);
@@ -421,8 +421,8 @@ public abstract class ImportEngine<//
 
 			Transformer transformer = null;
 			ObjectFilter filter = null;
-			ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory = null;
-			ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory = null;
+			ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> contextFactory = null;
+			ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> delegateFactory = null;
 			try {
 				try {
 					transformer = getTransformer(configuration);
@@ -549,8 +549,8 @@ public abstract class ImportEngine<//
 
 	private final CmfObjectCounter<ImportResult> runImportImpl(final ImportState importState,
 		final SessionFactory<SESSION> sessionFactory, CmfObjectCounter<ImportResult> counter,
-		final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?, ?> contextFactory,
-		final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, IMPORT_CONTEXT, ?> delegateFactory,
+		final ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> contextFactory,
+		final ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> delegateFactory,
 		final Transformer transformer, final ObjectFilter filter) throws ImportException, CmfStorageException {
 		final UUID jobId = importState.jobId;
 		final Logger output = importState.output;
@@ -867,7 +867,7 @@ public abstract class ImportEngine<//
 		return TransferEngine.getTransferEngine(ImportEngine.class, targetName);
 	}
 
-	protected void initContext(IMPORT_CONTEXT ctx) {
+	protected void initContext(CONTEXT ctx) {
 	}
 
 	@Override

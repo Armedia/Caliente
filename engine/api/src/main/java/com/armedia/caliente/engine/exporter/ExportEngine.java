@@ -57,11 +57,11 @@ public abstract class ExportEngine< //
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
-	EXPORT_CONTEXT extends ExportContext<SESSION, VALUE, EXPORT_CONTEXT_FACTORY>, //
-	EXPORT_CONTEXT_FACTORY extends ExportContextFactory<SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?>, //
-	EXPORT_DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?> //
+	CONTEXT extends ExportContext<SESSION, VALUE, CONTEXT_FACTORY>, //
+	CONTEXT_FACTORY extends ExportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?>, //
+	DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> //
 > extends
-	TransferEngine<SESSION, VALUE, EXPORT_CONTEXT, EXPORT_CONTEXT_FACTORY, EXPORT_DELEGATE_FACTORY, ExportEngineListener> {
+	TransferEngine<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ExportEngineListener> {
 
 	protected static interface TargetSubmitter {
 		public void submit(ExportTarget target) throws ExportException;
@@ -137,8 +137,8 @@ public abstract class ExportEngine< //
 
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportTarget referrent, final ExportTarget target,
-		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> sourceObject,
-		final EXPORT_CONTEXT ctx, final ExportListener listener,
+		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject,
+		final CONTEXT ctx, final ExportListener listener,
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws ExportException, CmfStorageException {
 		try {
 			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
@@ -218,8 +218,8 @@ public abstract class ExportEngine< //
 
 	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportTarget referrent, final ExportTarget target,
-		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> sourceObject,
-		final EXPORT_CONTEXT ctx, final ExportListener listener,
+		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject,
+		final CONTEXT ctx, final ExportListener listener,
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws ExportException, CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
@@ -275,7 +275,7 @@ public abstract class ExportEngine< //
 				}
 			}
 
-			Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?>> referenced;
+			Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?>> referenced;
 			try {
 				referenced = sourceObject.identifyRequirements(marshaled, ctx);
 				if (referenced == null) {
@@ -293,7 +293,7 @@ public abstract class ExportEngine< //
 			// order, to avoid deadlocks.
 			Collection<ExportTarget> waitTargets = new TreeSet<>();
 			Set<CmfObjectRef> requirements = new LinkedHashSet<>();
-			for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> requirement : referenced) {
+			for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> requirement : referenced) {
 				if (requirement.getExportTarget().equals(target)) {
 					// Loop - avoid it!
 					continue;
@@ -393,7 +393,7 @@ public abstract class ExportEngine< //
 						referenced.size()));
 				}
 				CmfObjectRef prev = null;
-				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> antecedent : referenced) {
+				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> antecedent : referenced) {
 					try {
 						exportObject(exportState, transformer, filter, target, antecedent.getExportTarget(), antecedent,
 							ctx, listener, statusMap);
@@ -486,7 +486,7 @@ public abstract class ExportEngine< //
 						logLabel, referenced.size()));
 				}
 				CmfObjectRef prev = marshaled;
-				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> successor : referenced) {
+				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> successor : referenced) {
 					try {
 						exportObject(exportState, transformer, filter, target, successor.getExportTarget(), successor,
 							ctx, listener, statusMap);
@@ -522,7 +522,7 @@ public abstract class ExportEngine< //
 				this.log.debug(String.format("%s has %d dependent objects to store", logLabel, referenced.size()));
 			}
 			int dependentsExported = 0;
-			for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> dependent : referenced) {
+			for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> dependent : referenced) {
 				try {
 					exportObject(exportState, transformer, filter, target, dependent.getExportTarget(), dependent, ctx,
 						listener, statusMap);
@@ -590,8 +590,8 @@ public abstract class ExportEngine< //
 				throw new ExportException("Failed to obtain the main export session", e);
 			}
 
-			TransferContextFactory<SESSION, VALUE, EXPORT_CONTEXT, ?> contextFactory = null;
-			EXPORT_DELEGATE_FACTORY delegateFactory = null;
+			TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory = null;
+			DELEGATE_FACTORY delegateFactory = null;
 			Transformer transformer = null;
 			ObjectFilter filter = null;
 			try {
@@ -650,8 +650,8 @@ public abstract class ExportEngine< //
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
 		CmfObjectCounter<ExportResult> objectCounter, final SessionFactory<SESSION> sessionFactory,
 		final SessionWrapper<SESSION> baseSession,
-		final TransferContextFactory<SESSION, VALUE, EXPORT_CONTEXT, ?> contextFactory,
-		final EXPORT_DELEGATE_FACTORY delegateFactory, final Transformer transformer, final ObjectFilter filter)
+		final TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory,
+		final DELEGATE_FACTORY delegateFactory, final Transformer transformer, final ObjectFilter filter)
 		throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
@@ -707,7 +707,7 @@ public abstract class ExportEngine< //
 				try {
 					// Begin transaction
 
-					final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, EXPORT_CONTEXT, ?, ?> exportDelegate = delegateFactory
+					final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> exportDelegate = delegateFactory
 						.newExportDelegate(s, nextType, nextKey);
 					if (exportDelegate == null) {
 						// No object found with that ID...
@@ -730,7 +730,7 @@ public abstract class ExportEngine< //
 
 					// The type mapper parameter is null here because it's only useful
 					// for imports
-					final EXPORT_CONTEXT ctx = contextFactory.newContext(nextId, nextType, s, 0);
+					final CONTEXT ctx = contextFactory.newContext(nextId, nextType, s, 0);
 					try {
 						initContext(ctx);
 						Result result = null;
@@ -852,7 +852,7 @@ public abstract class ExportEngine< //
 		}
 	}
 
-	protected void initContext(EXPORT_CONTEXT ctx) {
+	protected void initContext(CONTEXT ctx) {
 	}
 
 	protected void setExportProperties(CmfObjectStore<?, ?> store) {
@@ -862,7 +862,7 @@ public abstract class ExportEngine< //
 		// By default, do nothing...
 	}
 
-	protected abstract void findExportResults(SESSION session, CfgTools configuration, EXPORT_DELEGATE_FACTORY factory,
+	protected abstract void findExportResults(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
 		TargetSubmitter handler) throws Exception;
 
 	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine(String targetName) {
