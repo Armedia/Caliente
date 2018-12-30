@@ -363,8 +363,7 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected AlfSchemaService getSchemaService(AlfRoot session)
-		throws SchemaDeclarationServiceException {
+	protected AlfSchemaService getSchemaService(AlfRoot session) throws SchemaDeclarationServiceException {
 		return new AlfSchemaService(this.schema);
 	}
 }
