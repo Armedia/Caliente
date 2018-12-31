@@ -39,7 +39,7 @@ class AttributeRenderer implements MappingRenderer {
 	}
 
 	@Override
-	public Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
+	public Collection<AttributeMapping> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
 		if (this.caseSensitive) {
 			// If the mapping is case sensitive, we don't need to do a scanning search
 			for (final String sourceName : this.sourceValues) {
@@ -50,7 +50,7 @@ class AttributeRenderer implements MappingRenderer {
 
 				// Match!!! Return it!!
 				return Collections.singletonList(
-					new AttributeValue(object.getAttribute(sourceName), this.target, this.separator, this.override));
+					new AttributeMapping(object.getAttribute(sourceName), this.target, this.separator, this.override));
 			}
 			return Collections.emptyList();
 		}
@@ -65,7 +65,7 @@ class AttributeRenderer implements MappingRenderer {
 
 			// Match!!! Return it!!
 			return Collections.singletonList(
-				new AttributeValue(object.getAttribute(sourceName), this.target, this.separator, this.override));
+				new AttributeMapping(object.getAttribute(sourceName), this.target, this.separator, this.override));
 		}
 
 		// No match!! Return an empty list!

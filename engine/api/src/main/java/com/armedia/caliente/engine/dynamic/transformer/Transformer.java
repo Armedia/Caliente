@@ -1,5 +1,8 @@
 package com.armedia.caliente.engine.dynamic.transformer;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -7,6 +10,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicObject;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMappingResult;
@@ -85,6 +90,8 @@ public class Transformer {
 					// in its tracks
 				}
 
+				final DynamicObject dynamic = ctx.getDynamicObject();
+
 				if ((schemaService != null) && (this.attributeMapper != null)) {
 					AttributeMappingResult result = null;
 					try {
@@ -93,14 +100,44 @@ public class Transformer {
 						throw new TransformerException(String.format(
 							"Failed to apply the configured attribute mappings for %s", object.getDescription()), e);
 					}
+
 					if (result != null) {
 						// TODO: Apply the result ... make it work directly on the dynamic object,
 						// since it's mutable and we haven't yet converted it to its final
 						// representation
+						Map<String, DynamicValue> dynamicValues = dynamic.getAtt();
+						result.forEach((mapping) -> {
+							String origName = mapping.getSourceName();
+							if (origName == null) {
+								// This is an assignment
+								// TODO: Create the new DynamicValue, put it in the map
+								return;
+							}
+
+							// This is a rename
+							String newName = mapping.getTargetName();
+							if (newName == null) {
+								// This is a removal...
+								dynamicValues.remove(origName);
+								return;
+							}
+
+							DynamicValue dynamicValue = dynamicValues.get(origName);
+							if (dynamicValue == null) {
+								dynamicValue = new DynamicValue(newName, mapping.getType(), mapping.isRepeating());
+								dynamicValues.put(newName, dynamicValue);
+							}
+
+							Collection<Object> newValues = new ArrayList<>(mapping.getValueCount());
+							mapping.forEach((value) -> {
+								newValues.add(value.asObject());
+							});
+							dynamicValue.setValues(newValues);
+						});
 					}
 				}
 
-				return ctx.getDynamicObject().applyChanges(object);
+				return dynamic.applyChanges(object);
 			} catch (ActionException e) {
 				throw new TransformerException(String
 					.format("Exception caught while performing the transformation for %s", object.getDescription()), e);

@@ -12,7 +12,7 @@ import com.armedia.commons.utilities.Tools;
 
 class ConstantRenderer extends AttributeRenderer {
 
-	private final Collection<AttributeValue> value;
+	private final Collection<AttributeMapping> value;
 
 	public ConstantRenderer(Mapping m, Character parentSeparator) {
 		super(m, parentSeparator);
@@ -20,11 +20,11 @@ class ConstantRenderer extends AttributeRenderer {
 		for (String v : Tools.splitEscaped(this.separator, m.getValue())) {
 			values.add(new CmfValue(v));
 		}
-		this.value = Collections.singleton(new AttributeValue(m.getTgt(), this.separator, m.isOverride(), values));
+		this.value = Collections.singleton(new AttributeMapping(m.getTgt(), this.separator, m.isOverride(), values));
 	}
 
 	@Override
-	public Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
+	public Collection<AttributeMapping> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
 		return this.value;
 	}
 }

@@ -20,10 +20,10 @@ class NamespaceRenderer extends AttributeRenderer {
 	}
 
 	@Override
-	public Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
+	public Collection<AttributeMapping> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
 		Objects.requireNonNull(object, "Must provide a source object to map against");
 
-		Collection<AttributeValue> ret = new ArrayList<>();
+		Collection<AttributeMapping> ret = new ArrayList<>();
 		for (final String sourceName : object.getAttributeNames()) {
 			// First, get the source attribute's namespace
 			Matcher m = NamespaceRenderer.NSPARSER.matcher(sourceName);
@@ -45,7 +45,7 @@ class NamespaceRenderer extends AttributeRenderer {
 
 			final String attributeBaseName = m.group(2);
 			final String targetName = String.format("%s:%s", this.target, attributeBaseName);
-			ret.add(new AttributeValue(object.getAttribute(sourceName), targetName, this.separator, this.override));
+			ret.add(new AttributeMapping(object.getAttribute(sourceName), targetName, this.separator, this.override));
 		}
 		return ret;
 	}

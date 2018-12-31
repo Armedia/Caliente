@@ -263,15 +263,15 @@ public class AttributeMapper {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		final ConstructedType type = this.constructedTypeFactory.constructType(schemaService, object.getSubtype(),
 			object.getSecondarySubtypes());
-		Map<String, AttributeValue> finalValues = new TreeMap<>();
+		Map<String, AttributeMapping> finalValues = new TreeMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
 
 		// Render the mapped values
 		// The rendering will contain all attributes mapped. Time to filter out residuals from
 		// declared attributes...
-		final Map<String, AttributeValue> residuals = new TreeMap<>();
+		final Map<String, AttributeMapping> residuals = new TreeMap<>();
 		final ResidualsModeTracker tracker = new ResidualsModeTracker();
-		for (AttributeValue attribute : renderer.render(object, tracker)) {
+		for (AttributeMapping attribute : renderer.render(object, tracker)) {
 			final String targetName = attribute.getTargetName();
 			// First things first: is this attribute residual?
 			if (!type.hasAttribute(targetName)) {
@@ -297,7 +297,7 @@ public class AttributeMapper {
 
 			final boolean declared = type.hasAttribute(sourceAttribute);
 			final CmfAttribute<CmfValue> att = object.getAttribute(sourceAttribute);
-			final AttributeValue value = new AttributeValue(att, sourceAttribute, ',', false);
+			final AttributeMapping value = new AttributeMapping(att, sourceAttribute, ',', false);
 
 			// If the attribute is declared, then copy it directly...otherwise, it's should be
 			// treated as a residual
@@ -310,7 +310,7 @@ public class AttributeMapper {
 			case INCLUDE:
 				residualsEnabled = true;
 				// Process residuals we've already identified
-				for (AttributeValue residual : residuals.values()) {
+				for (AttributeMapping residual : residuals.values()) {
 					finalValues.put(getResidualName(residual.getTargetName()), residual);
 				}
 
