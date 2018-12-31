@@ -1,6 +1,6 @@
 package com.armedia.caliente.engine.importer;
 
-import java.io.File;
+import java.nio.file.Path;
 
 import org.slf4j.Logger;
 
@@ -11,7 +11,7 @@ import com.armedia.commons.utilities.CfgTools;
 
 public final class ImportState extends TransferState {
 
-	ImportState(Logger output, File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore,
+	ImportState(Logger output, Path baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore,
 		CfgTools settings) {
 		super(output, baseData, objectStore, streamStore, settings);
 	}

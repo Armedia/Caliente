@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -142,14 +143,14 @@ public abstract class TransferEngine< //
 	protected final ENGINE_FACTORY factory;
 	protected final Logger output;
 	protected final WarningTracker warningTracker;
-	protected final File baseData;
+	protected final Path baseData;
 	protected final CmfObjectStore<?, ?> objectStore;
 	protected final CmfContentStore<?, ?, ?> contentStore;
 	protected final CfgTools settings;
 
 	protected TransferEngine(ENGINE_FACTORY factory, Class<RESULT> resultClass, final Logger output,
 		final WarningTracker warningTracker, final File baseData, final CmfObjectStore<?, ?> objectStore,
-		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings, String cfgNamePrefix) {
+		final CmfContentStore<?, ?, ?> contentStore, CfgTools settings, String cfgNamePrefix) {
 		this.factory = Objects.requireNonNull(factory,
 			"Must provide a handle to the factory that created this instance");
 		this.resultClass = Objects.requireNonNull(resultClass, "Must provide a valid RESULT class");
@@ -165,10 +166,10 @@ public abstract class TransferEngine< //
 		this.cfgNamePrefix = cfgNamePrefix;
 		this.output = output;
 		this.warningTracker = warningTracker;
-		this.baseData = baseData;
+		this.baseData = Tools.canonicalize(baseData).toPath();
 		this.objectStore = objectStore;
 		this.contentStore = contentStore;
-		this.settings = new CfgTools(new TreeMap<>(settings));
+		this.settings = settings;
 	}
 
 	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
@@ -273,7 +274,7 @@ public abstract class TransferEngine< //
 		return this.warningTracker;
 	}
 
-	public final File getBaseData() {
+	public final Path getBaseData() {
 		return this.baseData;
 	}
 

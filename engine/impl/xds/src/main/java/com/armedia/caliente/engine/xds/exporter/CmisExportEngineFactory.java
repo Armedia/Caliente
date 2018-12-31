@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.xds.exporter;
 
 import java.io.File;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.chemistry.opencmis.client.api.Session;
@@ -15,6 +14,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.commons.utilities.CfgTools;
 
 public class CmisExportEngineFactory extends
 	ExportEngineFactory<Session, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory, CmisExportEngine> {
@@ -25,7 +25,7 @@ public class CmisExportEngineFactory extends
 
 	@Override
 	public CmisExportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
 		throws ExportException {
 		return new CmisExportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}

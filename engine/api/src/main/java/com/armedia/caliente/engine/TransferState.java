@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,10 +30,10 @@ public abstract class TransferState {
 	 * @param streamStore
 	 * @param settings
 	 */
-	protected TransferState(Logger output, File baseData, CmfObjectStore<?, ?> objectStore,
+	protected TransferState(Logger output, Path baseData, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?, ?, ?> streamStore, CfgTools settings) {
 		this.output = output;
-		this.baseData = baseData;
+		this.baseData = baseData.toFile();
 		this.objectStore = objectStore;
 		this.streamStore = streamStore;
 		this.cfg = settings;

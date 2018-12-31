@@ -11,6 +11,7 @@ import com.armedia.caliente.engine.xds.exporter.CmisExportEngineFactory;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStores;
+import com.armedia.commons.utilities.CfgTools;
 
 public class BaseTest {
 
@@ -36,6 +37,6 @@ public class BaseTest {
 		CmfContentStore<?, ?, ?> contentStore = CmfStores.getContentStore("default");
 		contentStore.clearProperties();
 		contentStore.clearAllStreams();
-		factory.newInstance(output, null, null, objectStore, contentStore, settings).run(null);
+		factory.newInstance(output, null, null, objectStore, contentStore, new CfgTools(settings)).run(null);
 	}
 }

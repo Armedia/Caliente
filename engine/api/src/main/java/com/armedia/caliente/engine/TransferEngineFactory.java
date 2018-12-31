@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
 public abstract class TransferEngineFactory< //
@@ -84,7 +85,7 @@ public abstract class TransferEngineFactory< //
 	}
 
 	public abstract ENGINE newInstance(final Logger output, final WarningTracker warningTracker, final File baseData,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
 		throws EXCEPTION;
 
 	protected abstract Set<String> getTargetNames();

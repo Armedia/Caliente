@@ -120,7 +120,7 @@ public abstract class ExportEngine<//
 	}
 
 	protected ExportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, ExportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"export");
 	}
@@ -550,23 +550,23 @@ public abstract class ExportEngine<//
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
 		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore,
-		Map<String, ?> settings) throws ExportException, CmfStorageException {
+		CfgTools settings) throws ExportException, CmfStorageException {
 		return runExport(output, warningTracker, baseData, objectStore, contentStore, settings, null);
 	}
 
 	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
 		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore,
-		Map<String, ?> settings, CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
+		CfgTools configuration, CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
 		// We get this at the very top because if this fails, there's no point in continuing.
 
-		final CfgTools configuration = new CfgTools(settings);
 		objectStore.clearAttributeMappings();
 		try {
 			loadPrincipalMappings(objectStore.getValueMapper(), configuration);
 		} catch (TransferException e) {
 			throw new ExportException(e.getMessage(), e.getCause());
 		}
-		final ExportState exportState = new ExportState(output, baseData, objectStore, contentStore, configuration);
+		final ExportState exportState = new ExportState(output, baseData.toPath(), objectStore, contentStore,
+			configuration);
 
 		final SessionFactory<SESSION> sessionFactory;
 		try {

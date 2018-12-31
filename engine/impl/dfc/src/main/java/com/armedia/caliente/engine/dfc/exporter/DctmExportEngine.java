@@ -5,7 +5,6 @@
 package com.armedia.caliente.engine.dfc.exporter;
 
 import java.io.File;
-import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -40,8 +39,7 @@ public class DctmExportEngine extends
 	ExportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportContextFactory, DctmExportDelegateFactory, DctmExportEngineFactory> {
 
 	public DctmExportEngine(DctmExportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		Map<String, ?> settings) {
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 

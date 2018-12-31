@@ -3,7 +3,6 @@ package com.armedia.caliente.engine.xds.exporter;
 import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
@@ -56,8 +55,7 @@ public class CmisExportEngine extends
 	};
 
 	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		Map<String, ?> settings) {
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 

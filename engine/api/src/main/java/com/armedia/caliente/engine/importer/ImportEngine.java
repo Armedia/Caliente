@@ -367,7 +367,7 @@ public abstract class ImportEngine<//
 	}
 
 	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"import");
 	}

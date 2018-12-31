@@ -6,13 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +39,6 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.text.StrTokenizer;
 
-import com.armedia.caliente.engine.alfresco.bi.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
@@ -194,18 +191,15 @@ public class AlfImportDelegateFactory
 	public AlfImportDelegateFactory(AlfImportEngine engine, CfgTools configuration)
 		throws IOException, JAXBException, XMLStreamException, DynamicElementException {
 		super(engine, configuration);
-		String baseData = configuration.getString(AlfSetting.ROOT);
-		if (baseData == null) { throw new IOException("Can't proceed without a root directory to store artifacts in"); }
-		this.baseData = Tools.canonicalize(new File(baseData)).toPath();
+		this.baseData = engine.getBaseData();
+		this.biRootPath = engine.getBiRootPath();
+		this.contentPath = engine.getContentPath();
+		this.unfiledPath = engine.getUnfiledPath();
+		this.schema = engine.getSchema();
+		this.defaultTypes = engine.getDefaultTypes();
 
-		String content = configuration.getString(AlfSetting.CONTENT);
-		if (content == null) { throw new IOException(
-			"Can't proceed without a content directory to store artifacts in"); }
-		File contentFile = Tools.canonicalize(new File(content));
-		FileUtils.forceMkdir(contentFile);
-		this.contentPath = contentFile.toPath();
+		FileUtils.forceMkdir(this.contentPath.toFile());
 
-		this.biRootPath = this.baseData.resolve(AlfCommon.METADATA_ROOT);
 		final File modelDir = this.biRootPath.resolve(AlfImportDelegateFactory.MODEL_DIR_NAME).toFile();
 		FileUtils.forceMkdir(modelDir);
 
@@ -221,28 +215,6 @@ public class AlfImportDelegateFactory
 		if (contentModels == null) { throw new IllegalStateException(
 			"Must provide a valid set of content model XML files"); }
 
-		List<URI> modelUrls = new ArrayList<>();
-		for (String s : contentModels.split(",")) {
-			File f = new File(s).getCanonicalFile();
-			if (!f.exists()) { throw new FileNotFoundException(f.getAbsolutePath()); }
-			if (!f.isFile()) { throw new IOException(
-				String.format("File [%s] is not a regular file", f.getAbsolutePath())); }
-			if (!f
-				.canRead()) { throw new IOException(String.format("File [%s] is not readable", f.getAbsolutePath())); }
-			modelUrls.add(f.toURI());
-			FileUtils.copyFile(f, new File(modelDir, f.getName()));
-		}
-
-		this.schema = new AlfrescoSchema(modelUrls);
-
-		Map<String, AlfrescoType> m = new TreeMap<>();
-		// First, we build all the base types, to have them cached and ready to go
-		for (String t : this.schema.getTypeNames()) {
-			m.put(t, this.schema.buildType(t));
-		}
-
-		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<>(m));
-
 		String pfx = configuration.getString(AlfSetting.RESIDUALS_PREFIX);
 		pfx = StringUtils.strip(pfx);
 		if (StringUtils.isEmpty(pfx)) {
@@ -250,10 +222,6 @@ public class AlfImportDelegateFactory
 		}
 		this.alfrescoAttributeMapper = new AlfrescoAttributeMapper(this.schema,
 			configuration.getString(AlfSetting.ATTRIBUTE_MAPPING), pfx);
-		String unfiledPath = configuration.getString(AlfSetting.UNFILED_PATH);
-		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
-		unfiledPath = FilenameUtils.normalizeNoEndSeparator(unfiledPath, true);
-		this.unfiledPath = unfiledPath.replaceAll("^/+", "");
 	}
 
 	protected AlfrescoSchema getSchema() {
