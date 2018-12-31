@@ -48,7 +48,6 @@ import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItem
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemVersion;
-import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AlfrescoAttributeMapper;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
@@ -173,7 +172,6 @@ public class AlfImportDelegateFactory
 	private final String unfiledPath;
 
 	private final Properties userLoginMap = new Properties();
-	private final AlfrescoAttributeMapper alfrescoAttributeMapper;
 
 	protected final AlfrescoSchema schema;
 	private final Map<String, AlfrescoType> defaultTypes;
@@ -220,16 +218,10 @@ public class AlfImportDelegateFactory
 		if (StringUtils.isEmpty(pfx)) {
 			pfx = null;
 		}
-		this.alfrescoAttributeMapper = new AlfrescoAttributeMapper(this.schema,
-			configuration.getString(AlfSetting.ATTRIBUTE_MAPPING), pfx);
 	}
 
 	protected AlfrescoSchema getSchema() {
 		return this.schema;
-	}
-
-	public AlfrescoAttributeMapper getAttributeMapper() {
-		return this.alfrescoAttributeMapper;
 	}
 
 	protected AlfrescoType getType(String name, String... aspects) {

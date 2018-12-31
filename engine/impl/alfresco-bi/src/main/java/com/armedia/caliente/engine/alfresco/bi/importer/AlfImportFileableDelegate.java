@@ -21,8 +21,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.index.ScanIndexItemMarker.MarkerType;
-import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeMappingResult;
-import com.armedia.caliente.engine.alfresco.bi.importer.mapper.AttributeValue;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
@@ -191,93 +189,70 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	protected abstract boolean createStub(AlfImportContext ctx, File target, String content) throws ImportException;
 
-	private String renderValue(boolean multiple, AttributeValue attribute) {
-		return renderValue(multiple, attribute.getSeparator(), attribute);
-	}
-
-	private String renderValue(boolean multiple, char separator, Iterable<CmfValue> srcValues) {
-		List<String> values = new ArrayList<>();
-		for (CmfValue v : srcValues) {
-			String s = StringUtils.EMPTY;
-			if ((v != null) && !v.isNull()) {
-				try {
-					s = v.serialize();
-				} catch (ParseException e) {
-					throw new RuntimeException(
-						String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
-				}
-			}
-			values.add(s);
-			if (!multiple) {
-				// Avoid processing more than one value if this isn't a multivalued attribute
-				break;
-			}
-		}
-		// TODO: Temporary patch - when BI 2.2.7 becomes the norm, we can remove it b/c it will
-		// handle things more intelligently
-		if (values.isEmpty()) { return null; }
-		if (values.size() == 1) {
-			String ret = values.get(0);
-			// Make sure we return a null value if the only value to be returned is an empty string
-			return StringUtils.isEmpty(ret) ? null : ret;
-		}
-		return Tools.joinEscaped(separator, values);
-	}
-
-	private boolean includeProperty(boolean includeResiduals, String propertyName, AlfrescoType targetType) {
-		return includeResiduals || targetType.hasAttribute(propertyName);
+	private boolean includeProperty(String propertyName, AlfrescoType targetType) {
+		return targetType.hasAttribute(propertyName);
 	}
 
 	protected final void populatePrimaryAttributes(AlfImportContext ctx, Properties p, AlfrescoType targetType,
 		CmfContentStream content) throws ImportException {
 
-		AttributeMappingResult mappedAttributes = this.factory.getAttributeMapper().renderMappedAttributes(targetType,
-			this.cmfObject);
-		for (String targetName : mappedAttributes.getAttributeNames()) {
-			final SchemaAttribute targetAttribute = targetType.getAttribute(targetName);
-			final AttributeValue attributeValue = mappedAttributes.getAttributeValue(targetName);
-			// For residuals, which are always treated as multivalued
-			final boolean multiple = (targetAttribute != null ? targetAttribute.multiple : true);
-			final String renderedValue = renderValue(multiple, attributeValue);
-			if (!StringUtils.isEmpty(renderedValue)) {
-				p.setProperty(targetName, renderedValue);
+		this.cmfObject.forEach((attribute) -> {
+			List<String> newValues = new ArrayList<>();
+			attribute.forEach((v) -> {
+				if (v == null) {
+					v = attribute.getType().getNull();
+				}
+				try {
+					newValues.add(v.serialize());
+				} catch (ParseException e) {
+					throw new AlfRenderingException(
+						String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
+				}
+			});
+			if (newValues.isEmpty()) { return; }
+			String propertyValue = null;
+			if (newValues.size() == 1) {
+				String ret = newValues.get(0);
+				// Make sure we return a null value if the only value to be returned is an empty
+				// string
+				propertyValue = StringUtils.isEmpty(ret) ? null : ret;
+			} else {
+				propertyValue = Tools.joinEscaped(',', newValues);
 			}
-		}
-		final boolean includeResiduals = mappedAttributes.isResidualsEnabled();
+			p.setProperty(attribute.getName(), propertyValue);
+		});
 
 		// Now handle the special properties
 		Set<String> values = new LinkedHashSet<>();
 		String currentProperty = null;
 
 		currentProperty = "arm:parentPathIDs";
-		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+		if (includeProperty(currentProperty, targetType)) {
 			values.clear();
-			for (CmfValue v : getPropertyValues(IntermediateProperty.PARENT_TREE_IDS)) {
+			getPropertyValues(IntermediateProperty.PARENT_TREE_IDS).forEach((v) -> {
 				String s = v.asString();
-				if (StringUtils.isEmpty(s)) {
-					continue;
+				if (!StringUtils.isEmpty(s)) {
+					values.add(s);
 				}
-				values.add(s);
-			}
+			});
 			if (!values.isEmpty()) {
 				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
 			}
 		}
 
 		currentProperty = "arm:parentPaths";
-		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+		if (includeProperty(currentProperty, targetType)) {
 			values.clear();
-			for (CmfValue v : getPropertyValues(IntermediateProperty.PATH)) {
+			getPropertyValues(IntermediateProperty.PATH).forEach((v) -> {
 				String s = v.asString();
 				if (StringUtils.isEmpty(s)) {
-					continue;
+					try {
+						values.add(URLEncoder.encode(s, "UTF-8"));
+					} catch (UnsupportedEncodingException e) {
+						throw new AlfRenderingException("Unsupported encoding UTF-8...what?!?!?", e);
+					}
 				}
-				try {
-					values.add(URLEncoder.encode(s, "UTF-8"));
-				} catch (UnsupportedEncodingException e) {
-					throw new ImportException("Unsupported encoding UTF-8...what?!?!?", e);
-				}
-			}
+			});
 			if (!values.isEmpty()) {
 				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
 			}
@@ -287,7 +262,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		p.setProperty(AlfImportFileableDelegate.TYPE_PROPERTY, targetType.getName());
 
 		currentProperty = "arm:objectId";
-		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+		if (includeProperty(currentProperty, targetType)) {
 			p.setProperty(currentProperty, this.cmfObject.getId());
 		}
 
@@ -299,12 +274,12 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		if (!isReference()) {
 			// Set the history ID property
 			currentProperty = "arm:historyId";
-			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			if (includeProperty(currentProperty, targetType)) {
 				p.setProperty(currentProperty, this.cmfObject.getHistoryId());
 			}
 
 			currentProperty = "arm:aclInfo";
-			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			if (includeProperty(currentProperty, targetType)) {
 				// Map the group attributes
 				String group = null;
 				CmfValue groupValue = getAttributeValue(IntermediateAttribute.GROUP);
@@ -315,7 +290,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 
 			currentProperty = "arm:aclInheritance";
-			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			if (includeProperty(currentProperty, targetType)) {
 				CmfValue aclInherit = getPropertyValue(IntermediateProperty.ACL_INHERITANCE);
 				if ((aclInherit != null) && !aclInherit.isNull()) {
 					p.setProperty("arm:aclInheritance", aclInherit.asString());
@@ -329,8 +304,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		} else {
 			final String refTarget = "arm:refTarget";
 			final String refVersion = "arm:refVersion";
-			if (includeProperty(includeResiduals, refTarget, targetType)
-				&& includeProperty(includeResiduals, refVersion, targetType)) {
+			if (includeProperty(refTarget, targetType) && includeProperty(refVersion, targetType)) {
 				CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.REF_TARGET);
 				if ((prop == null) || !prop.hasValues()) { throw new ImportException(
 					String.format("Exported object %s doesn't have the required reference target metadata",
@@ -352,30 +326,29 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			}
 		}
 
-		for (String s : targetType.getExtraAspects()) {
-			if (StringUtils.isEmpty(s)) {
-				continue;
+		targetType.getExtraAspects().forEach((s) -> {
+			if (!StringUtils.isEmpty(s)) {
+				if (!this.factory.getSchema()
+					.hasAspect(s)) { throw new AlfRenderingException(String.format(
+						"No aspect named [%s] is defined in the current content model schema, while importing %s", s,
+						this.cmfObject.getDescription())); }
+				values.add(s);
 			}
-			if (!this.factory.getSchema()
-				.hasAspect(s)) { throw new ImportException(String.format(
-					"No aspect named [%s] is defined in the current content model schema, while importing %s", s,
-					this.cmfObject.getDescription())); }
-			values.add(s);
-		}
+		});
 
 		if (!values.isEmpty()) {
 			String aspectList = StringUtils.join(values, ',');
 			p.setProperty(AlfImportFileableDelegate.ASPECT_PROPERTY, aspectList);
 
 			currentProperty = "arm:aspects";
-			if (includeProperty(includeResiduals, currentProperty, targetType)) {
+			if (includeProperty(currentProperty, targetType)) {
 				p.setProperty(currentProperty, aspectList);
 			}
 		}
 
 		// Now, get the head object
 		currentProperty = "cm:name";
-		if (includeProperty(includeResiduals, currentProperty, targetType)) {
+		if (includeProperty(currentProperty, targetType)) {
 			CmfObject<CmfValue> head = this.cmfObject;
 			try {
 				head = ctx.getHeadObject(this.cmfObject);
@@ -624,7 +597,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			if (primaryRendition) {
 				// First page of the default rendition gets ALL the metadata. Everything
 				// else only gets supplementary metadata
-				populatePrimaryAttributes(ctx, p, targetType, content);
+				try {
+					populatePrimaryAttributes(ctx, p, targetType, content);
+				} catch (AlfRenderingException e) {
+					throw new ImportException(e.getMessage(), e);
+				}
 			} else {
 				// This is a supplementary rendition, and thus will need some minimal
 				// metadata set on it
@@ -644,7 +621,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				if (vdocVersionsIndexed.add(vdocVersion.getName())) {
 					// Does the reference home already have properties? If not, then add them...
 					Properties versionProps = new Properties();
-					populatePrimaryAttributes(ctx, versionProps, this.vdocRoot, content);
+					try {
+						populatePrimaryAttributes(ctx, versionProps, this.vdocRoot, content);
+					} catch (AlfRenderingException e) {
+						throw new ImportException(e.getMessage(), e);
+					}
 
 					if (this.cmfObject.isHistoryCurrent() && !vdocRootIndexed) {
 						final File vdocRootMeta = this.factory.generateMetadataFile(versionProps, this.cmfObject,
