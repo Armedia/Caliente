@@ -16,7 +16,7 @@ import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.dfc.common.Setting;
-import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfSession;
@@ -150,7 +150,7 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	private DfcSessionPool pool = null;
 	private IDfSession session = null;
 
-	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Exporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 

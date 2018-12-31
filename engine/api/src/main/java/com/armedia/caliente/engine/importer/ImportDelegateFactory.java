@@ -11,7 +11,7 @@ public abstract class ImportDelegateFactory< //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
 	CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
-	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?>//
+	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?, ?>//
 > extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ENGINE> {
 
 	protected ImportDelegateFactory(ENGINE engine, CfgTools configuration) {

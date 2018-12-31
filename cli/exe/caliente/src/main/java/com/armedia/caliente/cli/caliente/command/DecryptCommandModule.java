@@ -11,13 +11,13 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.Launcher;
-import com.armedia.caliente.engine.TransferEngine;
+import com.armedia.caliente.engine.TransferEngineFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
 
-public class DecryptCommandModule extends CommandModule<TransferEngine<?, ?, ?, ?, ?, ?>> {
+public class DecryptCommandModule extends CommandModule<TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>> {
 
-	public DecryptCommandModule(TransferEngine<?, ?, ?, ?, ?, ?> engine) {
+	public DecryptCommandModule(TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?> engine) {
 		super(CalienteCommand.DECRYPT, engine);
 	}
 

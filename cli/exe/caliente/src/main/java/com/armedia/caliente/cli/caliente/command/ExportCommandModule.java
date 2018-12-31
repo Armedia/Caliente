@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.caliente.command;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
@@ -13,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
@@ -24,34 +22,20 @@ import com.armedia.caliente.cli.caliente.launcher.ExportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ExportManifest;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.TransferSetting;
-import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
-import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
-public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, ?, ?>> {
+public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?, ?, ?, ?, ?>> {
 
-	public ExportCommandModule(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	public ExportCommandModule(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(CalienteCommand.EXPORT, engine);
-	}
-
-	public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
-		throws ExportException, CmfStorageException {
-		return this.engine.runExport(output, warningTracker, baseData, objectStore, contentStore, settings);
-	}
-
-	public final CmfObjectCounter<ExportResult> runExport(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings,
-		CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
-		return this.engine.runExport(output, warningTracker, baseData, objectStore, contentStore, settings, counter);
 	}
 
 	@Override
@@ -88,9 +72,6 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 		final CalienteWarningTracker warningTracker = mainListener.getWarningTracker();
 		final CmfObjectCounter<ExportResult> counter = mainListener.getCounter();
 
-		this.engine.addListener(mainListener);
-		this.engine.addListener(new ExportManifest(outcomes, types));
-
 		PluggableServiceLocator<ExportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ExportEngineListener.class);
 		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
@@ -101,9 +82,6 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 			}
 		});
 		extraListeners.setHideErrors(false);
-		for (ExportEngineListener l : extraListeners) {
-			this.engine.addListener(l);
-		}
 
 		Map<String, Object> settings = new TreeMap<>();
 		initialize(state, settings);
@@ -121,9 +99,15 @@ public class ExportCommandModule extends CommandModule<ExportEngine<?, ?, ?, ?, 
 			configure(state, commandValues, settings);
 			start = new Date();
 			try {
+				ExportEngine<?, ?, ?, ?, ?, ?, ?> engine = this.engineFactory.newInstance(this.console, warningTracker,
+					state.getBaseDataLocation(), objectStore, contentStore, settings);
+				engine.addListener(mainListener);
+				engine.addListener(new ExportManifest(outcomes, types));
+				for (ExportEngineListener l : extraListeners) {
+					engine.addListener(l);
+				}
 				this.log.info("##### Export Process Started #####");
-				runExport(this.console, warningTracker, state.getBaseDataLocation(), objectStore, contentStore,
-					settings);
+				engine.run();
 				this.log.info("##### Export Process Finished #####");
 				summary = objectStore.getStoredObjectTypes();
 			} catch (Throwable t) {

@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package com.armedia.caliente.engine.exporter;
 
 import java.io.File;
@@ -25,8 +21,8 @@ import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.engine.TransferEngineException;
 import com.armedia.caliente.engine.TransferEngineSetting;
+import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
@@ -44,23 +40,20 @@ import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
 
-/**
- * @author diego
- *
- */
-public abstract class ExportEngine< //
+public abstract class ExportEngine<//
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
 	CONTEXT extends ExportContext<SESSION, VALUE, CONTEXT_FACTORY>, //
 	CONTEXT_FACTORY extends ExportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?>, //
-	DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> //
-> extends TransferEngine<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ExportEngineListener> {
+	DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?>, //
+	ENGINE_FACTORY extends ExportEngineFactory<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ?> //
+> extends
+	TransferEngine<ExportEngineListener, ExportResult, ExportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ENGINE_FACTORY> {
 
 	@FunctionalInterface
 	protected static interface TargetSubmitter {
@@ -94,8 +87,7 @@ public abstract class ExportEngine< //
 
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
 
-	private class ExportListenerPropagator extends ListenerPropagator<ExportResult, ExportEngineListener>
-		implements InvocationHandler {
+	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> implements InvocationHandler {
 
 		private ExportListenerPropagator(CmfObjectCounter<ExportResult> counter) {
 			super(counter, getListeners(), ExportEngineListener.class);
@@ -127,12 +119,10 @@ public abstract class ExportEngine< //
 		}
 	}
 
-	protected ExportEngine(CmfCrypt crypto) {
-		super(crypto, "export");
-	}
-
-	protected ExportEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
-		super(crypto, "export", supportsDuplicateNames);
+	protected ExportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(factory, ExportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
+			"export");
 	}
 
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
@@ -231,7 +221,10 @@ public abstract class ExportEngine< //
 		final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
 
 		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format("Attempting export of %s", logLabel));
+			this.log.trace(String.format(
+				"Attemp	public ExportEngineWorker() {\n" + "		super(ExportResult.class);\n"
+					+ "		// TODO Auto-generated constructor stub\n" + "	}\n" + "\n" + "ting export of %s",
+				logLabel));
 		}
 
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
@@ -570,7 +563,7 @@ public abstract class ExportEngine< //
 		objectStore.clearAttributeMappings();
 		try {
 			loadPrincipalMappings(objectStore.getValueMapper(), configuration);
-		} catch (TransferEngineException e) {
+		} catch (TransferException e) {
 			throw new ExportException(e.getMessage(), e.getCause());
 		}
 		final ExportState exportState = new ExportState(output, baseData, objectStore, contentStore, configuration);
@@ -699,7 +692,7 @@ public abstract class ExportEngine< //
 				if (this.log.isDebugEnabled()) {
 					this.log.debug("Polled {}", target);
 				}
-				ExportEngine.this.log.info("Worker thread polled {}", target);
+				this.log.info("Worker thread polled {}", target);
 
 				final boolean tx = session.begin();
 				boolean ok = false;
@@ -861,14 +854,101 @@ public abstract class ExportEngine< //
 	protected abstract void findExportResults(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
 		TargetSubmitter handler) throws Exception;
 
-	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine(String targetName) {
-		return TransferEngine.getTransferEngine(ExportEngine.class, targetName);
-	}
-
 	@Override
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
 		for (ExportSetting s : ExportSetting.values()) {
 			settings.add(s);
+		}
+	}
+
+	@Override
+	protected ExportException newException(String message, Throwable cause) {
+		return new ExportException(message, cause);
+	}
+
+	@Override
+	protected final void work(CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
+		// We get this at the very top because if this fails, there's no point in continuing.
+
+		final CfgTools configuration = getSettings();
+		getObjectStore().clearAttributeMappings();
+		try {
+			loadPrincipalMappings(getObjectStore().getValueMapper(), configuration);
+		} catch (TransferException e) {
+			throw new ExportException(e.getMessage(), e.getCause());
+		}
+		final ExportState exportState = new ExportState(getOutput(), getBaseData(), getObjectStore(), getContentStore(),
+			configuration);
+
+		final SessionFactory<SESSION> sessionFactory;
+		try {
+			sessionFactory = newSessionFactory(configuration, this.crypto);
+		} catch (Exception e) {
+			throw new ExportException("Failed to configure the session factory to carry out the export", e);
+		}
+
+		try {
+			SessionWrapper<SESSION> baseSession = null;
+			try {
+				baseSession = sessionFactory.acquireSession();
+			} catch (Exception e) {
+				throw new ExportException("Failed to obtain the main export session", e);
+			}
+
+			TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory = null;
+			DELEGATE_FACTORY delegateFactory = null;
+			Transformer transformer = null;
+			ObjectFilter filter = null;
+			try {
+
+				validateEngine(baseSession.getWrapped());
+
+				try {
+					transformer = getTransformer(configuration, null);
+				} catch (Exception e) {
+					throw new ExportException("Failed to initialize the configured object transformations", e);
+				}
+
+				try {
+					filter = getFilter(configuration);
+				} catch (Exception e) {
+					throw new ExportException("Failed to initialize the configured object filters", e);
+				}
+
+				try {
+					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, getObjectStore(),
+						getContentStore(), transformer, getOutput(), getWarningTracker());
+				} catch (Exception e) {
+					throw new ExportException("Failed to configure the context factory to carry out the export", e);
+				}
+
+				try {
+					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
+				} catch (Exception e) {
+					throw new ExportException("Failed to configure the delegate factory to carry out the export", e);
+				}
+
+				runExportImpl(exportState, counter, sessionFactory, baseSession, contextFactory, delegateFactory,
+					transformer, filter);
+			} finally {
+				if (delegateFactory != null) {
+					delegateFactory.close();
+				}
+				if (contextFactory != null) {
+					contextFactory.close();
+				}
+				if (filter != null) {
+					filter.close();
+				}
+				if (transformer != null) {
+					transformer.close();
+				}
+				if (baseSession != null) {
+					baseSession.close();
+				}
+			}
+		} finally {
+			sessionFactory.close();
 		}
 	}
 }

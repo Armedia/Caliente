@@ -12,13 +12,14 @@ import com.armedia.caliente.cli.caliente.cfg.CalienteState;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
-import com.armedia.caliente.engine.TransferEngine;
+import com.armedia.caliente.engine.TransferEngineFactory;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.Tools;
 
-public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?, ?>> implements AutoCloseable {
+public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>>
+	implements AutoCloseable {
 
 	protected static final String ALL = "ALL";
 	protected static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
@@ -27,24 +28,24 @@ public abstract class CommandModule<ENGINE extends TransferEngine<?, ?, ?, ?, ?,
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 	protected final Logger console = LoggerFactory.getLogger("console");
 	protected final CalienteCommand descriptor;
-	protected final ENGINE engine;
+	protected final ENGINE_FACTORY engineFactory;
 
-	protected CommandModule(CalienteCommand descriptor, ENGINE engine) {
+	protected CommandModule(CalienteCommand descriptor, ENGINE_FACTORY engine) {
 		this.descriptor = Objects.requireNonNull(descriptor, "Must provide a valid descriptor instance");
-		this.engine = Objects.requireNonNull(engine, "Must provide a valid engine instance");
+		this.engineFactory = Objects.requireNonNull(engine, "Must provide a valid engine instance");
 	}
 
 	public CalienteCommand getDescriptor() {
 		return this.descriptor;
 	}
 
-	public final ENGINE getEngine() {
-		return this.engine;
+	public final ENGINE_FACTORY getEngineFactory() {
+		return this.engineFactory;
 	}
 
 	public final CmfCrypt getCrypto() {
-		if (this.engine == null) { return null; }
-		return this.engine.getCrypto();
+		if (this.engineFactory == null) { return null; }
+		return this.engineFactory.getCrypto();
 	}
 
 	public final void initialize(CalienteState state, Map<String, Object> settings) {

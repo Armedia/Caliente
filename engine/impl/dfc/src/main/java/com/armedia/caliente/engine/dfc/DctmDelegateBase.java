@@ -10,7 +10,7 @@ import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
 import com.documentum.fc.common.IDfValue;
 
-public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferEngine<IDfSession, IDfValue, ?, ?, ?, ?>> {
+public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferEngine<?, ?, ?, IDfSession, IDfValue, ?, ?, ?, ?>> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final Class<T> dfClass;

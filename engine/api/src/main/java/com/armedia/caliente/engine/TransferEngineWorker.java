@@ -45,7 +45,7 @@ import com.armedia.commons.utilities.Tools;
 public abstract class TransferEngineWorker< //
 	LISTENER extends TransferListener, //
 	RESULT extends Enum<RESULT>, //
-	EXCEPTION extends TransferEngineException, //
+	EXCEPTION extends TransferException, //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY>, //
@@ -310,7 +310,7 @@ public abstract class TransferEngineWorker< //
 		return Collections.unmodifiableCollection(c);
 	}
 
-	protected final void loadPrincipalMappings(CmfValueMapper mapper, CfgTools cfg) throws TransferEngineException {
+	protected final void loadPrincipalMappings(CmfValueMapper mapper, CfgTools cfg) throws TransferException {
 		for (PrincipalType t : PrincipalType.values()) {
 			Properties p = new Properties();
 			if (!MappingTools.loadMap(this.log, cfg, t.getSetting(), p)) {
