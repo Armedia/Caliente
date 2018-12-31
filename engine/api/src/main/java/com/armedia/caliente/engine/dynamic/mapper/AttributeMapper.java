@@ -319,6 +319,6 @@ public class AttributeMapper {
 				break;
 		}
 
-		return new AttributeMappingResult(finalValues, residualsEnabled);
+		return new AttributeMappingResult(type, finalValues, residualsEnabled);
 	}
 }

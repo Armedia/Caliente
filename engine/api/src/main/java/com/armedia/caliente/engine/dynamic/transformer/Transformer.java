@@ -15,6 +15,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMappingResult;
+import com.armedia.caliente.engine.dynamic.mapper.schema.ConstructedType;
 import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
 import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
@@ -102,37 +103,45 @@ public class Transformer {
 					}
 
 					if (result != null) {
-						// TODO: Apply the result ... make it work directly on the dynamic object,
-						// since it's mutable and we haven't yet converted it to its final
-						// representation
+						final ConstructedType type = result.getType();
+						final boolean includeResiduals = result.isResidualsEnabled();
+
 						Map<String, DynamicValue> dynamicValues = dynamic.getAtt();
 						result.forEach((mapping) -> {
-							String origName = mapping.getSourceName();
-							if (origName == null) {
-								// This is an assignment
-								// TODO: Create the new DynamicValue, put it in the map
-								return;
+							DynamicValue oldValue = null;
+							DynamicValue newValue = null;
+
+							final String origName = mapping.getSourceName();
+							final String newName = mapping.getTargetName();
+
+							if (origName != null) {
+								// This is a rename or a removal...
+								oldValue = dynamicValues.remove(origName);
+
+								if ((newName == null) || (oldValue == null)) {
+									// This is just a removal, or there's nothing to rename
+									return;
+								}
 							}
 
-							// This is a rename
-							String newName = mapping.getTargetName();
-							if (newName == null) {
-								// This is a removal...
-								dynamicValues.remove(origName);
-								return;
-							}
+							// Ok...so this is either a rename or an assignment, so we
+							// check if it's a residual and skip it as required
+							if (!includeResiduals && !type.hasAttribute(newName)) { return; }
 
-							DynamicValue dynamicValue = dynamicValues.get(origName);
-							if (dynamicValue == null) {
-								dynamicValue = new DynamicValue(newName, mapping.getType(), mapping.isRepeating());
-								dynamicValues.put(newName, dynamicValue);
-							}
+							newValue = new DynamicValue(newName, mapping.getType(), mapping.isRepeating());
+							dynamicValues.put(newName, newValue);
 
-							Collection<Object> newValues = new ArrayList<>(mapping.getValueCount());
-							mapping.forEach((value) -> {
-								newValues.add(value.asObject());
-							});
-							dynamicValue.setValues(newValues);
+							if (oldValue != null) {
+								// It's a rename, so just copy the old values
+								newValue.setValues(oldValue.getValues());
+							} else {
+								// It's an assignment, so copy the mapped values
+								Collection<Object> newValues = new ArrayList<>(mapping.getValueCount());
+								mapping.forEach((value) -> {
+									newValues.add(value.asObject());
+								});
+								newValue.setValues(newValues);
+							}
 						});
 					}
 				}
