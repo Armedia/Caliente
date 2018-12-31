@@ -3,7 +3,7 @@ package com.armedia.caliente.engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SessionWrapper<SESSION> {
+public abstract class SessionWrapper<SESSION> implements AutoCloseable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -93,6 +93,7 @@ public abstract class SessionWrapper<SESSION> {
 		end(false);
 	}
 
+	@Override
 	public final void close() {
 		close(false);
 	}
