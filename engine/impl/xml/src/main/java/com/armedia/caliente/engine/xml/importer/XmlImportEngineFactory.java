@@ -14,15 +14,20 @@ import com.armedia.caliente.engine.xml.common.XmlRoot;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.CmfCrypt;
 
 public class XmlImportEngineFactory extends
 	ImportEngineFactory<XmlRoot, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory, XmlImportEngine> {
+
+	public XmlImportEngineFactory() {
+		super(false, new CmfCrypt());
+	}
 
 	@Override
 	public XmlImportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
 		throws ImportException {
-		return new XmlImportEngine(output, warningTracker, baseData, objectStore, contentStore, settings);
+		return new XmlImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	@Override

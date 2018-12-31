@@ -21,8 +21,8 @@ import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferEngineSetting;
+import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
@@ -40,7 +40,6 @@ import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
@@ -51,13 +50,10 @@ public abstract class ExportEngine<//
 	VALUE, //
 	CONTEXT extends ExportContext<SESSION, VALUE, CONTEXT_FACTORY>, //
 	CONTEXT_FACTORY extends ExportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?>, //
-	DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> //
-> extends TransferEngine<ExportEngineListener, ExportResult, ExportException, SESSION, //
-	VALUE, //
-	CONTEXT, //
-	CONTEXT_FACTORY, //
-	DELEGATE_FACTORY //
-> {
+	DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?>, //
+	ENGINE_FACTORY extends ExportEngineFactory<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ?> //
+> extends
+	TransferEngine<ExportEngineListener, ExportResult, ExportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ENGINE_FACTORY> {
 
 	@FunctionalInterface
 	protected static interface TargetSubmitter {
@@ -123,11 +119,10 @@ public abstract class ExportEngine<//
 		}
 	}
 
-	protected ExportEngine(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings,
-		CmfCrypt crypto, boolean supportsDuplicateNames) {
-		super(ExportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings, crypto,
-			"export", supportsDuplicateNames);
+	protected ExportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(factory, ExportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
+			"export");
 	}
 
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,

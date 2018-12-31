@@ -24,7 +24,6 @@ import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.tools.CmfCrypt;
-import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
@@ -35,7 +34,7 @@ import com.documentum.fc.common.IDfValue;
  *
  */
 public class DctmImportEngine extends
-	ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportContextFactory, DctmImportDelegateFactory> {
+	ImportEngine<IDfSession, DctmSessionWrapper, IDfValue, DctmImportContext, DctmImportContextFactory, DctmImportDelegateFactory, DctmImportEngineFactory> {
 
 	private static final ImportStrategy NOT_SUPPORTED = new ImportStrategy() {
 		@Override
@@ -59,9 +58,10 @@ public class DctmImportEngine extends
 		}
 	};
 
-	public DctmImportEngine(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
-		super(output, warningTracker, baseData, objectStore, contentStore, settings, new DctmCrypto(), true);
+	public DctmImportEngine(DctmImportEngineFactory factory, Logger output, WarningTracker warningTracker,
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
+		Map<String, ?> settings) {
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	@Override

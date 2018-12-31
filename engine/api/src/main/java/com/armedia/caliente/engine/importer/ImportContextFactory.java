@@ -25,7 +25,7 @@ public abstract class ImportContextFactory< //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
 	CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
-	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?>, //
+	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?, ?>, //
 	FOLDER //
 > extends TransferContextFactory<SESSION, VALUE, CONTEXT, ENGINE> {
 

@@ -44,7 +44,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfImportEngine extends
-	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory> {
+	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory, AlfImportEngineFactory> {
 
 	static final String MANIFEST_NAME = "CALIENTE_INGESTION_INDEX.txt";
 
@@ -277,10 +277,10 @@ public class AlfImportEngine extends
 		}
 	};
 
-	public AlfImportEngine(Logger output, WarningTracker warningTracker, File baseData,
+	public AlfImportEngine(AlfImportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
 		throws ImportException {
-		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 		addListener(this.listener);
 		// TODO: Initialize the schema and all that jazz
 	}

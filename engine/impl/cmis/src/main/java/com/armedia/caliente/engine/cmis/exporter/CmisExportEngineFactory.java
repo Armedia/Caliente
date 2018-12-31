@@ -14,15 +14,20 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.CmfCrypt;
 
 public class CmisExportEngineFactory extends
 	ExportEngineFactory<Session, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory, CmisExportEngine> {
+
+	public CmisExportEngineFactory() {
+		super(false, new CmfCrypt());
+	}
 
 	@Override
 	public CmisExportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
 		throws ExportException {
-		return new CmisExportEngine(output, warningTracker, baseData, objectStore, contentStore, settings);
+		return new CmisExportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	@Override

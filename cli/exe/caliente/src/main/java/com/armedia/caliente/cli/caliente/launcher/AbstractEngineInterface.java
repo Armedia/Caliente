@@ -22,9 +22,9 @@ import com.armedia.caliente.cli.caliente.command.EncryptCommandModule;
 import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.command.ImportCommandModule;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.TransferEngineFactory;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
@@ -68,13 +68,15 @@ public abstract class AbstractEngineInterface {
 						Map<String, String> engineAliases = new TreeMap<>();
 						Map<String, AbstractEngineInterface> interfaces = new TreeMap<>();
 						for (AbstractEngineInterface abstractEngineInterface : abstractEngineInterfaces) {
-							final String canonicalName = AbstractEngineInterface.canonicalizeName(abstractEngineInterface.getName());
+							final String canonicalName = AbstractEngineInterface
+								.canonicalizeName(abstractEngineInterface.getName());
 							if (interfaces.containsKey(canonicalName)) {
 								AbstractEngineInterface oldInterface = interfaces.get(canonicalName);
 								String msg = String.format(
 									"EngineInterface title conflict on canonical title [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
 									canonicalName, oldInterface.getClass().getCanonicalName(), oldInterface.getName(),
-									abstractEngineInterface.getClass().getCanonicalName(), abstractEngineInterface.getName());
+									abstractEngineInterface.getClass().getCanonicalName(),
+									abstractEngineInterface.getName());
 								if (log != null) {
 									log.warn(msg);
 								} else {
@@ -97,7 +99,8 @@ public abstract class AbstractEngineInterface {
 									String msg = String.format(
 										"EngineInterface alias conflict on alias [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
 										alias, oldInterface.getClass().getCanonicalName(), oldInterface.getName(),
-										abstractEngineInterface.getClass().getCanonicalName(), abstractEngineInterface.getName());
+										abstractEngineInterface.getClass().getCanonicalName(),
+										abstractEngineInterface.getName());
 									if (log != null) {
 										log.warn(msg);
 									} else {
@@ -117,7 +120,8 @@ public abstract class AbstractEngineInterface {
 								AbstractEngineInterface.class.getCanonicalName());
 						} else {
 							AbstractEngineInterface.INTERFACES = Tools.freezeMap(new LinkedHashMap<>(interfaces));
-							AbstractEngineInterface.ENGINE_ALIASES = Tools.freezeMap(new LinkedHashMap<>(engineAliases));
+							AbstractEngineInterface.ENGINE_ALIASES = Tools
+								.freezeMap(new LinkedHashMap<>(engineAliases));
 						}
 						AbstractEngineInterface.INTERFACES_INITIALIZED.set(true);
 					}
@@ -138,7 +142,8 @@ public abstract class AbstractEngineInterface {
 
 		AbstractEngineInterface.initializeInterfaces(log);
 
-		String canonicalEngine = AbstractEngineInterface.ENGINE_ALIASES.get(AbstractEngineInterface.canonicalizeName(engine));
+		String canonicalEngine = AbstractEngineInterface.ENGINE_ALIASES
+			.get(AbstractEngineInterface.canonicalizeName(engine));
 		if (canonicalEngine == null) {
 			// No such engine!
 			return null;
@@ -170,12 +175,12 @@ public abstract class AbstractEngineInterface {
 				break;
 
 			case EXPORT:
-				ExportEngine<?, ?, ?, ?, ?, ?> exportEngine = getExportEngine();
+				ExportEngineFactory<?, ?, ?, ?, ?, ?> exportEngine = getExportEngine();
 				if (exportEngine == null) { return null; }
 				return newExporter(exportEngine);
 
 			case IMPORT:
-				ImportEngine<?, ?, ?, ?, ?, ?> importEngine = getImportEngine();
+				ImportEngineFactory<?, ?, ?, ?, ?, ?> importEngine = getImportEngine();
 				if (importEngine == null) { return null; }
 				return newImporter(importEngine);
 
@@ -183,16 +188,16 @@ public abstract class AbstractEngineInterface {
 				break;
 		}
 
-		TransferEngine<?, ?, ?, ?, ?, ?> transferEngine = getImportEngine();
-		if (transferEngine == null) {
-			transferEngine = getExportEngine();
+		TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?> transferEngineFactory = getImportEngine();
+		if (transferEngineFactory == null) {
+			transferEngineFactory = getExportEngine();
 		}
-		if (transferEngine != null) {
+		if (transferEngineFactory != null) {
 			switch (command) {
 				case ENCRYPT:
-					return newEncryptor(transferEngine);
+					return newEncryptor(transferEngineFactory);
 				case DECRYPT:
-					return newDecryptor(transferEngine);
+					return newDecryptor(transferEngineFactory);
 				default:
 					break;
 			}
@@ -201,25 +206,25 @@ public abstract class AbstractEngineInterface {
 		return null;
 	}
 
-	protected EncryptCommandModule newEncryptor(TransferEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected EncryptCommandModule newEncryptor(TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?> engine) {
 		return new EncryptCommandModule(engine);
 	}
 
-	protected DecryptCommandModule newDecryptor(TransferEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected DecryptCommandModule newDecryptor(TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?> engine) {
 		return new DecryptCommandModule(engine);
 	}
 
-	protected ExportCommandModule newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected ExportCommandModule newExporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new ExportCommandModule(engine);
 	}
 
-	protected abstract ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine();
+	protected abstract ExportEngineFactory<?, ?, ?, ?, ?, ?> getExportEngine();
 
-	protected ImportCommandModule newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected ImportCommandModule newImporter(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new ImportCommandModule(engine);
 	}
 
-	protected abstract ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine();
+	protected abstract ImportEngineFactory<?, ?, ?, ?, ?, ?> getImportEngine();
 
 	public abstract Collection<? extends LaunchClasspathHelper> getClasspathHelpers();
 }

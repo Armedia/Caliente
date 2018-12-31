@@ -10,9 +10,10 @@ import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.engine.alfresco.bi.importer.AlfImportEngine;
-import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.alfresco.bi.AlfCommon;
+import com.armedia.caliente.engine.alfresco.bi.importer.AlfImportEngineFactory;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
@@ -21,7 +22,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 
 	@Override
 	public String getName() {
-		return "alfrescobi";
+		return AlfCommon.TARGET_NAME;
 	}
 
 	@Override
@@ -30,17 +31,17 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
+	protected ExportEngineFactory<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return null;
 	}
 
 	@Override
-	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return AlfImportEngine.getImportEngine();
+	protected AlfImportEngineFactory getImportEngine() {
+		return new AlfImportEngineFactory();
 	}
 
 	@Override
-	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Importer newImporter(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Importer(engine);
 	}
 

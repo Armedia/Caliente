@@ -14,15 +14,20 @@ import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.CmfCrypt;
 
 public class ShptExportEngineFactory extends
 	ExportEngineFactory<ShptSession, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory, ShptExportEngine> {
+
+	public ShptExportEngineFactory() {
+		super(false, new CmfCrypt());
+	}
 
 	@Override
 	public ShptExportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
 		throws ExportException {
-		return new ShptExportEngine(output, warningTracker, baseData, objectStore, contentStore, settings);
+		return new ShptExportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	@Override

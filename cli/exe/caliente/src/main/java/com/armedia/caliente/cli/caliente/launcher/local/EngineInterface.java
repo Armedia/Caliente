@@ -13,10 +13,11 @@ import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.caliente.engine.local.exporter.LocalExportEngine;
-import com.armedia.caliente.engine.local.importer.LocalImportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
+import com.armedia.caliente.engine.local.common.LocalCommon;
+import com.armedia.caliente.engine.local.exporter.LocalExportEngineFactory;
+import com.armedia.caliente.engine.local.importer.LocalImportEngineFactory;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
@@ -25,12 +26,15 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 		return true;
 	}
 
+	private final LocalExportEngineFactory exportFactory = new LocalExportEngineFactory();
+	private final LocalImportEngineFactory importFactory = new LocalImportEngineFactory();
+
 	public EngineInterface() {
 	}
 
 	@Override
 	public String getName() {
-		return "local";
+		return LocalCommon.TARGET_NAME;
 	}
 
 	@Override
@@ -39,22 +43,22 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return LocalExportEngine.getExportEngine();
+	protected LocalExportEngineFactory getExportEngine() {
+		return this.exportFactory;
 	}
 
 	@Override
-	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Exporter newExporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Exporter(engine);
 	}
 
 	@Override
-	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return LocalImportEngine.getImportEngine();
+	protected LocalImportEngineFactory getImportEngine() {
+		return this.importFactory;
 	}
 
 	@Override
-	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Importer newImporter(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Importer(engine);
 	}
 

@@ -34,11 +34,12 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public class ShptExportEngine extends
-	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory> {
+	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory, ShptExportEngineFactory> {
 
-	public ShptExportEngine(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
-		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
+	public ShptExportEngine(ShptExportEngineFactory factory, Logger output, WarningTracker warningTracker,
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
+		Map<String, ?> settings) {
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	@Override

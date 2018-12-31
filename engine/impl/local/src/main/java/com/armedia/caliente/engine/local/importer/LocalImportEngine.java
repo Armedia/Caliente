@@ -23,11 +23,12 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
 public class LocalImportEngine extends
-	ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory> {
+	ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory, LocalImportEngineFactory> {
 
-	public LocalImportEngine(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
-		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
+	public LocalImportEngine(LocalImportEngineFactory factory, Logger output, WarningTracker warningTracker,
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
+		Map<String, ?> settings) {
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {

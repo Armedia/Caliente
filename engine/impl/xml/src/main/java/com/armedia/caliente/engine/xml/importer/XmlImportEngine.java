@@ -23,7 +23,7 @@ import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
 public class XmlImportEngine extends
-	ImportEngine<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory> {
+	ImportEngine<XmlRoot, XmlSessionWrapper, CmfValue, XmlImportContext, XmlImportContextFactory, XmlImportDelegateFactory, XmlImportEngineFactory> {
 
 	private static final ImportStrategy IGNORE_STRATEGY = new ImportStrategy() {
 
@@ -140,9 +140,9 @@ public class XmlImportEngine extends
 		}
 	};
 
-	public XmlImportEngine(Logger output, WarningTracker warningTracker, File baseData,
+	public XmlImportEngine(XmlImportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
-		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	@Override

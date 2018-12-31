@@ -39,7 +39,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
-	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory> {
+	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory, CmisExportEngineFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> queryResultTransformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
@@ -55,9 +55,10 @@ public class CmisExportEngine extends
 		}
 	};
 
-	public CmisExportEngine(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
-		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
+	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
+		Map<String, ?> settings) {
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {

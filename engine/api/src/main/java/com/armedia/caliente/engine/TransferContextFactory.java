@@ -25,7 +25,7 @@ public abstract class TransferContextFactory< //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
-	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?> //
+	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?, ?> //
 > {
 
 	private static CmfType decodeObjectType(Object o) {

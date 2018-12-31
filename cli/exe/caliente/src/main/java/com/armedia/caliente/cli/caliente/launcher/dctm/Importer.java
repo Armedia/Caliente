@@ -15,7 +15,7 @@ import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.dfc.common.Setting;
-import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
 
 class Importer extends ImportCommandModule implements DynamicCommandOptions {
 
@@ -31,7 +31,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		.add(Importer.DEFAULT_PASSWORD) //
 	;
 
-	Importer(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 

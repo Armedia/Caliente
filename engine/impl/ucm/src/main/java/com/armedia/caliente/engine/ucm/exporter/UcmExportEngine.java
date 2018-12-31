@@ -48,7 +48,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class UcmExportEngine extends
-	ExportEngine<UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory> {
+	ExportEngine<UcmSession, UcmSessionWrapper, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory, UcmExportEngineFactory> {
 
 	private static final Pattern STATIC_COMMENT_MARKER = Pattern.compile("(?<!\\\\)#");
 	private static final Pattern STATIC_PARSER = Pattern.compile("^(file|folder)\\s*:\\s*(.+)$",
@@ -64,9 +64,9 @@ public class UcmExportEngine extends
 		}
 	}
 
-	public UcmExportEngine(Logger output, WarningTracker warningTracker, File baseData,
+	public UcmExportEngine(UcmExportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
-		super(output, warningTracker, baseData, objectStore, contentStore, settings, new CmfCrypt(), false);
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	@Override

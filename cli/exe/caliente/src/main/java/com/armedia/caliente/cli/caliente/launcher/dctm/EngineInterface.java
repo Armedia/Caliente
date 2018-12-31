@@ -19,10 +19,11 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
-import com.armedia.caliente.engine.dfc.exporter.DctmExportEngine;
-import com.armedia.caliente.engine.dfc.importer.DctmImportEngine;
-import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.dfc.common.DctmCommon;
+import com.armedia.caliente.engine.dfc.exporter.DctmExportEngineFactory;
+import com.armedia.caliente.engine.dfc.importer.DctmImportEngineFactory;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.documentum.fc.common.DfLoggerDisabled;
 import com.documentum.fc.common.impl.logging.LoggingConfigurator;
@@ -42,6 +43,9 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 		.add(DfcLaunchHelper.DFC_PROPERTIES) //
 	;
 
+	private final DctmExportEngineFactory exportFactory = new DctmExportEngineFactory();
+	private final DctmImportEngineFactory importFactory = new DctmImportEngineFactory();
+
 	public EngineInterface() {
 		// Load the logging-related patch classes
 		DfLoggerDisabled.class.hashCode();
@@ -50,7 +54,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 
 	@Override
 	public String getName() {
-		return "dctm";
+		return DctmCommon.TARGET_NAME;
 	}
 
 	@Override
@@ -87,22 +91,22 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return DctmExportEngine.getExportEngine();
+	protected DctmExportEngineFactory getExportEngine() {
+		return this.exportFactory;
 	}
 
 	@Override
-	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Exporter newExporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Exporter(engine);
 	}
 
 	@Override
-	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return DctmImportEngine.getImportEngine();
+	protected DctmImportEngineFactory getImportEngine() {
+		return this.importFactory;
 	}
 
 	@Override
-	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Importer newImporter(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Importer(engine);
 	}
 

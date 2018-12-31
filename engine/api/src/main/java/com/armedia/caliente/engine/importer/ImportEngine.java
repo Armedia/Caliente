@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package com.armedia.caliente.engine.importer;
 
 import java.io.File;
@@ -30,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.TransferEngineSetting;
+import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
@@ -50,24 +46,20 @@ import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
 
-/**
- * @author diego
- *
- */
 public abstract class ImportEngine<//
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
 	CONTEXT extends ImportContext<SESSION, VALUE, CONTEXT_FACTORY>, //
 	CONTEXT_FACTORY extends ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?>, //
-	DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> //
+	DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?>, //
+	ENGINE_FACTORY extends ImportEngineFactory<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ?> //
 > extends
-	TransferEngine<ImportEngineListener, ImportResult, ImportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY> {
+	TransferEngine<ImportEngineListener, ImportResult, ImportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ENGINE_FACTORY> {
 
 	private class BatchWorker implements Callable<Map<String, Collection<ImportOutcome>>> {
 
@@ -370,11 +362,10 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	protected ImportEngine(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings,
-		CmfCrypt crypto, boolean supportsDuplicateNames) {
-		super(ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings, crypto,
-			"import", supportsDuplicateNames);
+	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
+			"import");
 	}
 
 	protected abstract ImportStrategy getImportStrategy(CmfType type);

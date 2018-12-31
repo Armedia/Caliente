@@ -13,7 +13,7 @@ import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
-import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 
 class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 	static final Option SOCKET_TIMEOUT = new OptionImpl() //
@@ -93,7 +93,7 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		.add(Exporter.CLIENT_CERT_PASSWORD) //
 	;
 
-	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Exporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 

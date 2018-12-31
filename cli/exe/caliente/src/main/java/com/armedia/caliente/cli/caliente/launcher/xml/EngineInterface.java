@@ -10,11 +10,13 @@ import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.caliente.engine.xml.importer.XmlImportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
+import com.armedia.caliente.engine.xml.importer.XmlImportEngineFactory;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
+
+	private final XmlImportEngineFactory importFactory = new XmlImportEngineFactory();
 
 	public EngineInterface() {
 	}
@@ -30,17 +32,17 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
+	protected ExportEngineFactory<?, ?, ?, ?, ?, ?> getExportEngine() {
 		return null;
 	}
 
 	@Override
-	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return XmlImportEngine.getImportEngine();
+	protected XmlImportEngineFactory getImportEngine() {
+		return this.importFactory;
 	}
 
 	@Override
-	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Importer newImporter(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Importer(engine);
 	}
 

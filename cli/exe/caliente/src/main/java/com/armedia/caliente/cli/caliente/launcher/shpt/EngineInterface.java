@@ -10,18 +10,21 @@ import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.importer.ImportEngine;
-import com.armedia.caliente.engine.sharepoint.exporter.ShptExportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
+import com.armedia.caliente.engine.sharepoint.ShptCommon;
+import com.armedia.caliente.engine.sharepoint.exporter.ShptExportEngineFactory;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
+
+	private final ShptExportEngineFactory exportFactory = new ShptExportEngineFactory();
 
 	public EngineInterface() {
 	}
 
 	@Override
 	public String getName() {
-		return "shpt";
+		return ShptCommon.TARGET_NAME;
 	}
 
 	@Override
@@ -30,17 +33,17 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return ShptExportEngine.getExportEngine();
+	protected ShptExportEngineFactory getExportEngine() {
+		return this.exportFactory;
 	}
 
 	@Override
-	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Exporter newExporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Exporter(engine);
 	}
 
 	@Override
-	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
+	protected ImportEngineFactory<?, ?, ?, ?, ?, ?> getImportEngine() {
 		return null;
 	}
 

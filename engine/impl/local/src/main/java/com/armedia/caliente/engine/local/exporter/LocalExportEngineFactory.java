@@ -14,15 +14,20 @@ import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.CmfCrypt;
 
 public class LocalExportEngineFactory extends
 	ExportEngineFactory<LocalRoot, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngine> {
+
+	public LocalExportEngineFactory() {
+		super(false, new CmfCrypt());
+	}
 
 	@Override
 	public LocalExportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
 		throws ExportException {
-		return new LocalExportEngine(output, warningTracker, baseData, objectStore, contentStore, settings);
+		return new LocalExportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	@Override

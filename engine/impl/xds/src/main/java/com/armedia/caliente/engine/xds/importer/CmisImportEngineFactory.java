@@ -14,15 +14,21 @@ import com.armedia.caliente.engine.xds.CmisCommon;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.CmfCrypt;
 
 public class CmisImportEngineFactory extends
 	ImportEngineFactory<Session, CmfValue, CmisImportContext, CmisImportContextFactory, CmisImportDelegateFactory, CmisImportEngine> {
+
+	public CmisImportEngineFactory() {
+		super(false, new CmfCrypt());
+		// TODO Auto-generated constructor stub
+	}
 
 	@Override
 	public CmisImportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
 		throws ImportException {
-		return new CmisImportEngine(output, warningTracker, baseData, objectStore, contentStore, settings);
+		return new CmisImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	@Override
