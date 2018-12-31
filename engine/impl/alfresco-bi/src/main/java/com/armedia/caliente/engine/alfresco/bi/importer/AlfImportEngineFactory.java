@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -15,6 +14,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.commons.utilities.CfgTools;
 
 public class AlfImportEngineFactory extends
 	ImportEngineFactory<AlfRoot, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory, AlfImportEngine> {
@@ -30,7 +30,7 @@ public class AlfImportEngineFactory extends
 
 	@Override
 	public AlfImportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
 		throws ImportException {
 		return new AlfImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}

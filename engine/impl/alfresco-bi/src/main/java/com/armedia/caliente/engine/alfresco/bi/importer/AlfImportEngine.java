@@ -278,7 +278,7 @@ public class AlfImportEngine extends
 	};
 
 	public AlfImportEngine(AlfImportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
 		throws ImportException {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 		addListener(this.listener);

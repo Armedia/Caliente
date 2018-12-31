@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.dfc.DctmEngineTest;
 import com.armedia.caliente.engine.dfc.DctmSetting;
+import com.armedia.commons.utilities.CfgTools;
 
 public class DctmImportEngineTest extends DctmEngineTest {
 
@@ -25,8 +26,8 @@ public class DctmImportEngineTest extends DctmEngineTest {
 		settings.put(DctmSetting.USERNAME.getLabel(), "dctmadmin");
 		settings.put(DctmSetting.PASSWORD.getLabel(), "123");
 
-		factory.newInstance(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore, settings)
-			.run(null);
+		factory.newInstance(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore,
+			new CfgTools(settings)).run(null);
 	}
 
 }
