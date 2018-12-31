@@ -159,7 +159,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected UcmExportEngineFactory getExportEngine() {
+	protected UcmExportEngineFactory getExportEngineFactory() {
 		return this.exportFactory;
 	}
 
@@ -169,7 +169,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected ImportEngineFactory<?, ?, ?, ?, ?, ?> getImportEngine() {
+	protected ImportEngineFactory<?, ?, ?, ?, ?, ?> getImportEngineFactory() {
 		return null;
 	}
 

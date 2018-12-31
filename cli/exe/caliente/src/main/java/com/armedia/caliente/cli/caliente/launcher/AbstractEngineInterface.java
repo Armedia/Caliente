@@ -175,22 +175,22 @@ public abstract class AbstractEngineInterface {
 				break;
 
 			case EXPORT:
-				ExportEngineFactory<?, ?, ?, ?, ?, ?> exportEngine = getExportEngine();
-				if (exportEngine == null) { return null; }
-				return newExporter(exportEngine);
+				ExportEngineFactory<?, ?, ?, ?, ?, ?> exportEngineFactory = getExportEngineFactory();
+				if (exportEngineFactory == null) { return null; }
+				return newExporter(exportEngineFactory);
 
 			case IMPORT:
-				ImportEngineFactory<?, ?, ?, ?, ?, ?> importEngine = getImportEngine();
-				if (importEngine == null) { return null; }
-				return newImporter(importEngine);
+				ImportEngineFactory<?, ?, ?, ?, ?, ?> importEngineFactory = getImportEngineFactory();
+				if (importEngineFactory == null) { return null; }
+				return newImporter(importEngineFactory);
 
 			default:
 				break;
 		}
 
-		TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?> transferEngineFactory = getImportEngine();
+		TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?> transferEngineFactory = getImportEngineFactory();
 		if (transferEngineFactory == null) {
-			transferEngineFactory = getExportEngine();
+			transferEngineFactory = getExportEngineFactory();
 		}
 		if (transferEngineFactory != null) {
 			switch (command) {
@@ -218,13 +218,13 @@ public abstract class AbstractEngineInterface {
 		return new ExportCommandModule(engine);
 	}
 
-	protected abstract ExportEngineFactory<?, ?, ?, ?, ?, ?> getExportEngine();
+	protected abstract ExportEngineFactory<?, ?, ?, ?, ?, ?> getExportEngineFactory();
 
 	protected ImportCommandModule newImporter(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new ImportCommandModule(engine);
 	}
 
-	protected abstract ImportEngineFactory<?, ?, ?, ?, ?, ?> getImportEngine();
+	protected abstract ImportEngineFactory<?, ?, ?, ?, ?, ?> getImportEngineFactory();
 
 	public abstract Collection<? extends LaunchClasspathHelper> getClasspathHelpers();
 }

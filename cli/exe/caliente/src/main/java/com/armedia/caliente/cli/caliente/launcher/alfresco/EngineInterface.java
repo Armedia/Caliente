@@ -31,12 +31,12 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected ExportEngineFactory<?, ?, ?, ?, ?, ?> getExportEngine() {
+	protected ExportEngineFactory<?, ?, ?, ?, ?, ?> getExportEngineFactory() {
 		return null;
 	}
 
 	@Override
-	protected AlfImportEngineFactory getImportEngine() {
+	protected AlfImportEngineFactory getImportEngineFactory() {
 		return new AlfImportEngineFactory();
 	}
 

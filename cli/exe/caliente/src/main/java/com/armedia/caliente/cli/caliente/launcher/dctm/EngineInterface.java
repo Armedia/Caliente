@@ -91,7 +91,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected DctmExportEngineFactory getExportEngine() {
+	protected DctmExportEngineFactory getExportEngineFactory() {
 		return this.exportFactory;
 	}
 
@@ -101,7 +101,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected DctmImportEngineFactory getImportEngine() {
+	protected DctmImportEngineFactory getImportEngineFactory() {
 		return this.importFactory;
 	}
 
