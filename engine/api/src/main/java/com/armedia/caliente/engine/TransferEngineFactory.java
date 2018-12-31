@@ -1,9 +1,11 @@
 package com.armedia.caliente.engine;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
@@ -87,6 +89,17 @@ public abstract class TransferEngineFactory< //
 	public abstract ENGINE newInstance(final Logger output, final WarningTracker warningTracker, final File baseData,
 		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
 		throws EXCEPTION;
+
+	public final ENGINE newInstance(final Logger output, final WarningTracker warningTracker, final File baseData,
+		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+		throws EXCEPTION {
+		if (settings == null) {
+			settings = Collections.emptyMap();
+		} else {
+			settings = new TreeMap<>(settings);
+		}
+		return newInstance(output, warningTracker, baseData, objectStore, contentStore, new CfgTools(settings));
+	}
 
 	protected abstract Set<String> getTargetNames();
 
