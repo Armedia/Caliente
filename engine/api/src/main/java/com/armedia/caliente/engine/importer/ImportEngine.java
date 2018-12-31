@@ -33,6 +33,7 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.engine.tools.MappingTools;
@@ -430,8 +431,8 @@ public abstract class ImportEngine<//
 
 				SchemaService schemaService = null;
 				try {
-					schemaService = delegateFactory.newSchemaService(baseSession.getWrapped());
-				} catch (Exception e) {
+					schemaService = newSchemaService(baseSession.getWrapped());
+				} catch (SchemaServiceException e) {
 					throw new ImportException("Failed to initialize the required schema service", e);
 				}
 
@@ -697,7 +698,8 @@ public abstract class ImportEngine<//
 				final ExecutorService executor = (strategy.isParallelCapable() ? parallelExecutor : singleExecutor);
 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
-				try {
+
+				try (final SessionWrapper<SESSION> loaderSession = sessionFactory.acquireSession()) {
 					objectStore.loadObjects(type, new CmfObjectHandler<CmfValue>() {
 						private boolean filtered = false;
 						private List<CmfObject<VALUE>> contents = null;
@@ -736,11 +738,23 @@ public abstract class ImportEngine<//
 							}
 
 							if (transformer != null) {
+								SchemaService schemaService = null;
 								try {
-									dataObject = transformer.transform(objectStore.getValueMapper(), dataObject);
+									schemaService = newSchemaService(loaderSession.getWrapped());
+								} catch (SchemaServiceException e) {
+									throw new CmfStorageException(String.format(
+										"Failed to initialize the required schema service while processing %s",
+										dataObject.getDescription()), e);
+								}
+
+								try {
+									dataObject = transformer.transform(objectStore.getValueMapper(), schemaService,
+										dataObject);
 								} catch (TransformerException e) {
 									throw new CmfStorageException(
 										String.format("Failed to transform %s", dataObject.getDescription()), e);
+								} finally {
+									Closer.closeQuietly(schemaService);
 								}
 							}
 
@@ -878,6 +892,8 @@ public abstract class ImportEngine<//
 	protected CmfNameFixer<VALUE> getNameFixer(Logger output) {
 		return null;
 	}
+
+	protected abstract SchemaService newSchemaService(SESSION session) throws SchemaServiceException;
 
 	protected void initContext(CONTEXT ctx) {
 	}

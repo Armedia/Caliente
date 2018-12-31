@@ -3,7 +3,6 @@ package com.armedia.caliente.engine.dfc.importer;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
-import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.UnsupportedCmfTypeException;
@@ -43,10 +42,5 @@ public class DctmImportDelegateFactory
 				break;
 		}
 		throw new UnsupportedDctmObjectTypeException(String.format("Type [%s] is not supported", type.name()));
-	}
-
-	@Override
-	protected DctmSchemaService newSchemaService(IDfSession session) throws SchemaServiceException {
-		return new DctmSchemaService(session);
 	}
 }

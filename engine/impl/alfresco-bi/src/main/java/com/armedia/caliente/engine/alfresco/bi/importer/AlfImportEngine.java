@@ -21,6 +21,7 @@ import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionFactory;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.alfresco.bi.AlfTranslator;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportEngine;
@@ -354,5 +355,10 @@ public class AlfImportEngine extends
 			finalName = object.getHistoryId();
 		}
 		return finalName;
+	}
+
+	@Override
+	protected AlfSchemaService newSchemaService(AlfRoot session) throws SchemaServiceException {
+		return new AlfSchemaService(this.schema);
 	}
 }

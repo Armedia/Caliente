@@ -427,7 +427,7 @@ public abstract class ExportEngine<//
 			CmfObject<CmfValue> encoded = getTranslator().encodeObject(marshaled);
 			if (transformer != null) {
 				try {
-					encoded = transformer.transform(objectStore.getValueMapper(), encoded);
+					encoded = transformer.transform(objectStore.getValueMapper(), null, encoded);
 				} catch (TransformerException e) {
 					throw new ExportException(String.format("Transformation failed for %s", marshaled.getDescription()),
 						e);

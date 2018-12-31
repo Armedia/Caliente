@@ -10,7 +10,8 @@ public interface SchemaService extends AutoCloseable {
 
 	public Collection<String> getSecondaryTypeNames() throws SchemaServiceException;
 
-	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName)
-		throws SchemaServiceException;
+	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName) throws SchemaServiceException;
 
+	@Override
+	public void close() throws SchemaServiceException;
 }

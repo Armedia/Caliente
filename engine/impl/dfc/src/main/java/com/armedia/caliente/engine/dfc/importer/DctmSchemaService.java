@@ -47,8 +47,7 @@ public class DctmSchemaService implements SchemaService {
 		this.session = Objects.requireNonNull(session, "Must provide a non-null IDfSession instance");
 	}
 
-	protected Collection<String> getTypeNames(Triple<String, String, String> dql)
-		throws SchemaServiceException {
+	protected Collection<String> getTypeNames(Triple<String, String, String> dql) throws SchemaServiceException {
 		IDfCollection c = null;
 		try {
 			c = DfUtils.executeQuery(this.session, dql.getMiddle(), IDfQuery.DF_READ_QUERY);
@@ -58,8 +57,8 @@ public class DctmSchemaService implements SchemaService {
 			}
 			return names;
 		} catch (DfException e) {
-			throw new SchemaServiceException(
-				String.format("Failed to enumerate the existing %s types", dql.getLeft()), e);
+			throw new SchemaServiceException(String.format("Failed to enumerate the existing %s types", dql.getLeft()),
+				e);
 		} finally {
 			DfUtils.closeQuietly(c);
 		}
@@ -105,8 +104,7 @@ public class DctmSchemaService implements SchemaService {
 	}
 
 	@Override
-	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName)
-		throws SchemaServiceException {
+	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName) throws SchemaServiceException {
 		IDfCollection c = null;
 		try {
 			String dql = String.format(DctmSchemaService.ASPECT_TABLE_DQL, DfUtils.quoteString(secondaryTypeName));
@@ -171,6 +169,6 @@ public class DctmSchemaService implements SchemaService {
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() {
 	}
 }

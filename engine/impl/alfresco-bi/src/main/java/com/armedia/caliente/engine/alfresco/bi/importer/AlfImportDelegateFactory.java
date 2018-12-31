@@ -57,7 +57,6 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dynamic.DynamicElementException;
-import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.tools.PathTools;
@@ -844,11 +843,6 @@ public class AlfImportDelegateFactory
 	final String getUnfiledName(final AlfImportContext ctx, final CmfObject<CmfValue> cmfObject) {
 		// Generate a unique name using the history ID and the object's given name
 		return String.format("%s-%s", cmfObject.getHistoryId(), ctx.getObjectName(cmfObject));
-	}
-
-	@Override
-	protected AlfSchemaService newSchemaService(AlfRoot session) throws SchemaServiceException {
-		return new AlfSchemaService(this.schema);
 	}
 
 	@Override

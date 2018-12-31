@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -21,6 +23,7 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
+import com.armedia.caliente.tools.Closer;
 import com.armedia.commons.utilities.CfgTools;
 
 public abstract class ImportContext< //
@@ -73,15 +76,27 @@ public abstract class ImportContext< //
 			@Override
 			public boolean handleObject(CmfObject<CmfValue> dataObject) throws CmfStorageException {
 				if (ImportContext.this.transformer != null) {
+					SchemaService schemaService = null;
 					try {
-						dataObject = ImportContext.this.transformer.transform(getValueMapper(), dataObject);
+						schemaService = ImportContext.this.factory.getEngine().newSchemaService(getSession());
+					} catch (SchemaServiceException e) {
+						throw new CmfStorageException(
+							String.format("Failed to build a new SchemaService instance while processing %s",
+								dataObject.getDescription()),
+							e);
+					}
+					try {
+						dataObject = ImportContext.this.transformer.transform(getValueMapper(), schemaService,
+							dataObject);
 					} catch (TransformerException e) {
 						throw new CmfStorageException(
 							String.format("Failed to transform %s", dataObject.getDescription()), e);
+					} finally {
+						Closer.closeQuietly(schemaService);
 					}
 				}
+
 				CmfObject<VALUE> encoded = ImportContext.this.translator.decodeObject(dataObject);
-				// TODO: Perform attribute mapping here?
 				return handler.handleObject(encoded);
 			}
 
@@ -104,12 +119,23 @@ public abstract class ImportContext< //
 
 	public final CmfObject<VALUE> getHeadObject(CmfObject<VALUE> sample) throws CmfStorageException {
 		if (sample.isHistoryCurrent()) { return sample; }
+
 		CmfObject<CmfValue> rawObject = this.cmfObjectStore.loadHeadObject(sample.getType(), sample.getHistoryId());
 		if (this.transformer != null) {
+			SchemaService schemaService = null;
 			try {
-				rawObject = this.transformer.transform(getValueMapper(), rawObject);
+				schemaService = ImportContext.this.factory.getEngine().newSchemaService(getSession());
+			} catch (SchemaServiceException e) {
+				throw new CmfStorageException(String.format(
+					"Failed to build a new SchemaService instance while retrieving the HEAD object for %s",
+					sample.getDescription()), e);
+			}
+			try {
+				rawObject = this.transformer.transform(getValueMapper(), schemaService, rawObject);
 			} catch (TransformerException e) {
 				throw new CmfStorageException(String.format("Failed to transform %s", sample.getDescription()), e);
+			} finally {
+				Closer.closeQuietly(schemaService);
 			}
 		}
 		return this.translator.decodeObject(rawObject);

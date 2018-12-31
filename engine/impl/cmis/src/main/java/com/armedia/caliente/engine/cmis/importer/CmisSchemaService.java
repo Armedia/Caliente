@@ -54,8 +54,7 @@ public class CmisSchemaService implements SchemaService {
 		return objectTypes;
 	}
 
-	private TypeDeclaration getTypeDeclaration(String typeName, boolean secondary)
-		throws SchemaServiceException {
+	private TypeDeclaration getTypeDeclaration(String typeName, boolean secondary) throws SchemaServiceException {
 
 		final ObjectType type;
 		try {
@@ -103,12 +102,11 @@ public class CmisSchemaService implements SchemaService {
 	}
 
 	@Override
-	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName)
-		throws SchemaServiceException {
+	public TypeDeclaration getSecondaryTypeDeclaration(String secondaryTypeName) throws SchemaServiceException {
 		return getTypeDeclaration(secondaryTypeName, true);
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() {
 	}
 }

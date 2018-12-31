@@ -10,6 +10,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMappingResult;
+import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
 import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
@@ -68,7 +69,7 @@ public class Transformer {
 		return new DynamicElementContext(object, new DefaultDynamicObject(object), mapper, this.metadataLoader);
 	}
 
-	public CmfObject<CmfValue> transform(CmfValueMapper mapper, CmfObject<CmfValue> object)
+	public CmfObject<CmfValue> transform(CmfValueMapper mapper, SchemaService schemaService, CmfObject<CmfValue> object)
 		throws TransformerException {
 		Lock l = this.rwLock.readLock();
 		l.lock();

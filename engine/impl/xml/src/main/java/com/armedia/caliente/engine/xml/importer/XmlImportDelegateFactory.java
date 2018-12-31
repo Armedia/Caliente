@@ -22,8 +22,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 
-import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
-import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.engine.importer.ImportEngineListener;
@@ -377,15 +375,5 @@ public class XmlImportDelegateFactory
 
 	protected File calculateConsolidatedFile(CmfType t) {
 		return new File(this.db, String.format("%ss.xml", t.name().toLowerCase()));
-	}
-
-	@Override
-	protected SchemaService newSchemaService(XmlRoot session) throws SchemaServiceException {
-		return null;
-	}
-
-	@Override
-	public void close() {
-		super.close();
 	}
 }
