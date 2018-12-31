@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.armedia.caliente.engine.dfc.DctmEngineTest;
 import com.armedia.caliente.engine.dfc.DctmSetting;
 import com.armedia.caliente.engine.dfc.common.Setting;
+import com.armedia.commons.utilities.CfgTools;
 
 public class DctmExportEngineTest extends DctmEngineTest {
 
@@ -29,8 +30,8 @@ public class DctmExportEngineTest extends DctmEngineTest {
 		settings.put(Setting.DQL.getLabel(),
 			"select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)");
 
-		factory.newInstance(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore, settings)
-			.run(null);
+		factory.newInstance(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore,
+			new CfgTools(settings)).run(null);
 	}
 
 }

@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.ucm.exporter;
 
 import java.io.File;
-import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -15,6 +14,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.commons.utilities.CfgTools;
 
 public class UcmExportEngineFactory extends
 	ExportEngineFactory<UcmSession, CmfValue, UcmExportContext, UcmExportContextFactory, UcmExportDelegateFactory, UcmExportEngine> {
@@ -25,7 +25,7 @@ public class UcmExportEngineFactory extends
 
 	@Override
 	public UcmExportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
 		throws ExportException {
 		return new UcmExportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}

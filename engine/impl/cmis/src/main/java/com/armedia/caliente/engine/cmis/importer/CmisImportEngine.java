@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.cmis.importer;
 
 import java.io.File;
-import java.util.Map;
 
 import org.apache.chemistry.opencmis.client.api.Session;
 import org.slf4j.Logger;
@@ -95,8 +94,7 @@ public class CmisImportEngine extends
 	};
 
 	public CmisImportEngine(CmisImportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		Map<String, ?> settings) {
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
