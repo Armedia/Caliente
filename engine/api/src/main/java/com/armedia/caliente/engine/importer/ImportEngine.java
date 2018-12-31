@@ -417,18 +417,12 @@ public abstract class ImportEngine<//
 				throw new ImportException("Failed to obtain the import initialization session", e);
 			}
 
-			ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> delegateFactory = null;
 			AttributeMapper attributeMapper = null;
 			Transformer transformer = null;
 			ObjectFilter filter = null;
 			ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> contextFactory = null;
+			ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> delegateFactory = null;
 			try {
-				try {
-					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
-				} catch (Exception e) {
-					throw new ImportException("Failed to configure the delegate factory to carry out the import", e);
-				}
-
 				SchemaService schemaService = null;
 				try {
 					schemaService = newSchemaService(baseSession.getWrapped());
@@ -466,6 +460,12 @@ public abstract class ImportEngine<//
 				}
 
 				try {
+					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
+				} catch (Exception e) {
+					throw new ImportException("Failed to configure the delegate factory to carry out the import", e);
+				}
+
+				try {
 					baseSession.close();
 				} finally {
 					baseSession = null;
@@ -477,6 +477,9 @@ public abstract class ImportEngine<//
 				if (baseSession != null) {
 					baseSession.close();
 				}
+				if (delegateFactory != null) {
+					delegateFactory.close();
+				}
 
 				if (contextFactory != null) {
 					contextFactory.close();
@@ -486,9 +489,6 @@ public abstract class ImportEngine<//
 				}
 				if (transformer != null) {
 					transformer.close();
-				}
-				if (delegateFactory != null) {
-					delegateFactory.close();
 				}
 			}
 		} finally {
