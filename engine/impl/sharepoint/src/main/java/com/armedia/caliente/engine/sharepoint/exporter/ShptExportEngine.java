@@ -6,7 +6,6 @@ package com.armedia.caliente.engine.sharepoint.exporter;
 
 import java.io.File;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -37,8 +36,7 @@ public class ShptExportEngine extends
 	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory, ShptExportEngineFactory> {
 
 	public ShptExportEngine(ShptExportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		Map<String, ?> settings) {
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 

@@ -30,6 +30,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfType;
+import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
 public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?, ?, ?, ?, ?>> {
@@ -100,7 +101,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 			start = new Date();
 			try {
 				ExportEngine<?, ?, ?, ?, ?, ?, ?> engine = this.engineFactory.newInstance(this.console, warningTracker,
-					state.getBaseDataLocation(), objectStore, contentStore, settings);
+					state.getBaseDataLocation(), objectStore, contentStore, new CfgTools(settings));
 				engine.addListener(mainListener);
 				engine.addListener(new ExportManifest(outcomes, types));
 				for (ExportEngineListener l : extraListeners) {

@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.local.importer;
 
 import java.io.File;
-import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -26,8 +25,7 @@ public class LocalImportEngine extends
 	ImportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalImportContext, LocalImportContextFactory, LocalImportDelegateFactory, LocalImportEngineFactory> {
 
 	public LocalImportEngine(LocalImportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		Map<String, ?> settings) {
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 

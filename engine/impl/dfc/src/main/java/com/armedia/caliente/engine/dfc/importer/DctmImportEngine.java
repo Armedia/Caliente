@@ -5,7 +5,6 @@
 package com.armedia.caliente.engine.dfc.importer;
 
 import java.io.File;
-import java.util.Map;
 
 import org.slf4j.Logger;
 
@@ -59,8 +58,7 @@ public class DctmImportEngine extends
 	};
 
 	public DctmImportEngine(DctmImportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
-		Map<String, ?> settings) {
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
