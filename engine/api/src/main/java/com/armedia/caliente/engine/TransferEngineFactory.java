@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -56,8 +57,8 @@ public abstract class TransferEngineFactory< //
 		TransferEngineFactory.LOCATORS.put(key, locator);
 	}
 
-	protected static synchronized <FACTORY extends TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>> FACTORY getEngineFactory(
-		Class<FACTORY> subclass, String targetName) {
+	public static synchronized <ENGINE_FACTORY extends TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>> ENGINE_FACTORY getEngineFactory(
+		Class<ENGINE_FACTORY> subclass, String targetName) {
 		if (subclass == null) { throw new IllegalArgumentException("Must provide a valid engine subclass"); }
 		if (StringUtils.isEmpty(
 			targetName)) { throw new IllegalArgumentException("Must provide a non-empty, non-null target name"); }
@@ -65,6 +66,13 @@ public abstract class TransferEngineFactory< //
 		Map<String, Object> m = TransferEngineFactory.REGISTRY.get(subclass.getCanonicalName());
 		if (m == null) { return null; }
 		return subclass.cast(m.get(targetName));
+	}
+
+	public static synchronized <ENGINE_FACTORY extends TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>> Set<String> getAvailableEngineFactories(
+		Class<ENGINE_FACTORY> subclass) {
+		if (subclass == null) { throw new IllegalArgumentException("Must provide a valid engine subclass"); }
+		TransferEngineFactory.registerSubclass(subclass);
+		return new TreeSet<>(TransferEngineFactory.REGISTRY.keySet());
 	}
 
 	protected final boolean supportsDuplicateFileNames;

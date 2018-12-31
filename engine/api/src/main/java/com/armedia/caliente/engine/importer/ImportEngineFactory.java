@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.importer;
 
+import java.util.Set;
+
 import com.armedia.caliente.engine.TransferEngineFactory;
 import com.armedia.caliente.tools.CmfCrypt;
 
@@ -15,6 +17,10 @@ public abstract class ImportEngineFactory< //
 
 	protected ImportEngineFactory(boolean supportsDuplicateFileNames, CmfCrypt crypto) {
 		super(supportsDuplicateFileNames, crypto);
+	}
+
+	public static Set<String> getAvailableImportEngineFactories() {
+		return TransferEngineFactory.getAvailableEngineFactories(ImportEngineFactory.class);
 	}
 
 	public static ImportEngineFactory<?, ?, ?, ?, ?, ?> getImportEngineFactory(String targetName) {
