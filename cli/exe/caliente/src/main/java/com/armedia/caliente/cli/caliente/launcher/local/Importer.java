@@ -11,12 +11,12 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.commons.utilities.Tools;
 
 class Importer extends ImportCommandModule implements DynamicCommandOptions {
-	Importer(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Importer(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 

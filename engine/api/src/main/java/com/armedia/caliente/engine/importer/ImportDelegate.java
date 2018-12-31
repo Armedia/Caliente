@@ -15,13 +15,14 @@ public abstract class ImportDelegate< //
 	VALUE, //
 	CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
 	DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ENGINE>, //
-	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, DELEGATE_FACTORY> //
+	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, DELEGATE_FACTORY, ?> //
 > extends TransferDelegate<ECM_OBJECT, SESSION, VALUE, CONTEXT, DELEGATE_FACTORY, ENGINE> {
 
 	protected final CmfObject<VALUE> cmfObject;
 	protected final ImportStrategy strategy;
 
-	protected ImportDelegate(DELEGATE_FACTORY factory, Class<ECM_OBJECT> objectClass, CmfObject<VALUE> storedObject) throws Exception {
+	protected ImportDelegate(DELEGATE_FACTORY factory, Class<ECM_OBJECT> objectClass, CmfObject<VALUE> storedObject)
+		throws Exception {
 		super(factory, objectClass);
 		this.cmfObject = storedObject;
 		this.strategy = factory.getEngine().getImportStrategy(storedObject.getType());

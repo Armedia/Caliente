@@ -14,8 +14,8 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
@@ -24,8 +24,6 @@ import com.armedia.caliente.store.CmfValue;
  *
  */
 public abstract class ShptObject<T> extends ShptExportDelegate<T> {
-
-	public static final String TARGET_NAME = "shpt";
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 

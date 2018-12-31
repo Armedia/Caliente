@@ -1,7 +1,3 @@
-/**
- *
- */
-
 package com.armedia.caliente.engine.importer;
 
 import java.io.File;
@@ -30,8 +26,8 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.engine.TransferEngineException;
 import com.armedia.caliente.engine.TransferEngineSetting;
+import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
@@ -50,24 +46,20 @@ import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
 
-/**
- * @author diego
- *
- */
 public abstract class ImportEngine<//
 	SESSION, //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
 	CONTEXT extends ImportContext<SESSION, VALUE, CONTEXT_FACTORY>, //
 	CONTEXT_FACTORY extends ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?>, //
-	DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> //
+	DELEGATE_FACTORY extends ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?>, //
+	ENGINE_FACTORY extends ImportEngineFactory<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ?> //
 > extends
-	TransferEngine<SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ImportEngineListener> {
+	TransferEngine<ImportEngineListener, ImportResult, ImportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ENGINE_FACTORY> {
 
 	private class BatchWorker implements Callable<Map<String, Collection<ImportOutcome>>> {
 
@@ -324,8 +316,7 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	private class ImportListenerPropagator extends ListenerPropagator<ImportResult, ImportEngineListener>
-		implements InvocationHandler {
+	private class ImportListenerPropagator extends ListenerPropagator<ImportResult> implements InvocationHandler {
 
 		private ImportListenerPropagator(CmfObjectCounter<ImportResult> counter) {
 			super(counter, getListeners(), ImportEngineListener.class);
@@ -371,12 +362,10 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	protected ImportEngine(CmfCrypt crypto) {
-		super(crypto, "import");
-	}
-
-	protected ImportEngine(CmfCrypt crypto, boolean supportsDuplicateNames) {
-		super(crypto, "import", supportsDuplicateNames);
+	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings) {
+		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
+			"import");
 	}
 
 	protected abstract ImportStrategy getImportStrategy(CmfType type);
@@ -386,15 +375,8 @@ public abstract class ImportEngine<//
 			new LinkedBlockingQueue<Runnable>());
 	}
 
-	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final WarningTracker warningTracker,
-		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
-		Map<String, ?> settings) throws ImportException, CmfStorageException {
-		return runImport(output, warningTracker, baseData, objectStore, streamStore, settings, null);
-	}
-
-	public final CmfObjectCounter<ImportResult> runImport(final Logger output, final WarningTracker warningTracker,
-		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> streamStore,
-		Map<String, ?> settings, CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
+	@Override
+	protected final void work(CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
 
 		// First things first...we should only do this if the target repo ID
 		// is not the same as the previous target repo - we can tell this by
@@ -402,8 +384,9 @@ public abstract class ImportEngine<//
 		// this.log.info("Clearing all previous mappings");
 		// objectStore.clearAllMappings();Object
 
-		final CfgTools configuration = new CfgTools(settings);
-		final ImportState importState = new ImportState(output, baseData, objectStore, streamStore, configuration);
+		final CfgTools configuration = this.settings;
+		final ImportState importState = new ImportState(this.output, this.baseData, this.objectStore, this.contentStore,
+			configuration);
 		final SessionFactory<SESSION> sessionFactory;
 		try {
 			sessionFactory = newSessionFactory(configuration, this.crypto);
@@ -437,8 +420,8 @@ public abstract class ImportEngine<//
 				}
 
 				try {
-					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
-						streamStore, transformer, output, warningTracker);
+					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, this.objectStore,
+						this.contentStore, transformer, this.output, this.warningTracker);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}
@@ -455,17 +438,17 @@ public abstract class ImportEngine<//
 					baseSession = null;
 				}
 
-				return runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory, transformer,
+				runImportImpl(importState, sessionFactory, counter, contextFactory, delegateFactory, transformer,
 					filter);
 			} finally {
 				if (baseSession != null) {
 					baseSession.close();
 				}
-				if (contextFactory != null) {
-					contextFactory.close();
-				}
 				if (delegateFactory != null) {
 					delegateFactory.close();
+				}
+				if (contextFactory != null) {
+					contextFactory.close();
 				}
 				if (filter != null) {
 					filter.close();
@@ -590,7 +573,7 @@ public abstract class ImportEngine<//
 			objectStore.clearAttributeMappings();
 			try {
 				loadPrincipalMappings(objectStore.getValueMapper(), settings);
-			} catch (TransferEngineException e) {
+			} catch (TransferException e) {
 				throw new ImportException(e.getMessage(), e.getCause());
 			}
 			// Ensure the target path exists
@@ -627,7 +610,7 @@ public abstract class ImportEngine<//
 				final boolean loaded;
 				try {
 					loaded = MappingTools.loadMap(this.log, settings, ImportSetting.FILENAME_MAP, p);
-				} catch (TransferEngineException e) {
+				} catch (TransferException e) {
 					throw new ImportException(e.getMessage(), e.getCause());
 				}
 
@@ -863,10 +846,6 @@ public abstract class ImportEngine<//
 		return null;
 	}
 
-	public static ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine(String targetName) {
-		return TransferEngine.getTransferEngine(ImportEngine.class, targetName);
-	}
-
 	protected void initContext(CONTEXT ctx) {
 	}
 
@@ -875,5 +854,10 @@ public abstract class ImportEngine<//
 		for (ImportSetting s : ImportSetting.values()) {
 			settings.add(s);
 		}
+	}
+
+	@Override
+	protected ImportException newException(String message, Throwable cause) {
+		return new ImportException(message, cause);
 	}
 }

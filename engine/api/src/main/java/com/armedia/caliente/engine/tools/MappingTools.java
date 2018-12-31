@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.TransferEngineException;
+import com.armedia.caliente.engine.TransferException;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.ConfigurationSetting;
@@ -34,12 +34,12 @@ public class MappingTools {
 	};
 
 	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties)
-		throws TransferEngineException {
+		throws TransferException {
 		return MappingTools.loadMap(log, cfg, setting, properties, null);
 	}
 
 	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties,
-		MappingValidator validator) throws TransferEngineException {
+		MappingValidator validator) throws TransferException {
 
 		String mapFile = cfg.getString(setting);
 		if (StringUtils.isEmpty(mapFile)) { return false; }
@@ -59,10 +59,10 @@ public class MappingTools {
 			log.warn("The file [{}] does not exist", mapFile);
 			return false;
 		}
-		if (!f.isFile()) { throw new TransferEngineException(
+		if (!f.isFile()) { throw new TransferException(
 			String.format("The file [%s] is not a regular file", mapFile)); }
 		if (!f
-			.canRead()) { throw new TransferEngineException(String.format("The file [%s] is not readable", mapFile)); }
+			.canRead()) { throw new TransferException(String.format("The file [%s] is not readable", mapFile)); }
 
 		if (validator == null) {
 			validator = MappingTools.NULL_VALIDATOR;
@@ -73,14 +73,14 @@ public class MappingTools {
 			MappingTools.copyProperties(log, p, properties, f, validator);
 		} catch (IOException | XMLStreamException e) {
 			// Not XML-format or I/O issues...
-			throw new TransferEngineException(String.format("Failed to load the properties from file [%s]", mapFile),
+			throw new TransferException(String.format("Failed to load the properties from file [%s]", mapFile),
 				e);
 		}
 		return true;
 	}
 
 	private static void copyProperties(Logger log, Properties p, Properties properties, File mapFile,
-		MappingValidator validator) throws TransferEngineException {
+		MappingValidator validator) throws TransferException {
 		if (validator == null) {
 			validator = MappingTools.NULL_VALIDATOR;
 		}
@@ -97,7 +97,7 @@ public class MappingTools {
 				ok = false;
 			}
 		}
-		if (!ok) { throw new TransferEngineException(
+		if (!ok) { throw new TransferException(
 			String.format("Failed to load the mappings from file [%s]", mapFile)); }
 	}
 }

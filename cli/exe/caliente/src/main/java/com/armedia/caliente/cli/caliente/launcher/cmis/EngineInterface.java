@@ -10,21 +10,25 @@ import com.armedia.caliente.cli.caliente.launcher.AbstractEngineInterface;
 import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.engine.cmis.exporter.CmisExportEngine;
-import com.armedia.caliente.engine.cmis.importer.CmisImportEngine;
-import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.cmis.CmisCommon;
+import com.armedia.caliente.engine.cmis.exporter.CmisExportEngineFactory;
+import com.armedia.caliente.engine.cmis.importer.CmisImportEngineFactory;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
 	static final String ID_PREFIX = "id:";
+
+	private final CmisExportEngineFactory exportFactory = new CmisExportEngineFactory();
+	private final CmisImportEngineFactory importFactory = new CmisImportEngineFactory();
 
 	public EngineInterface() {
 	}
 
 	@Override
 	public String getName() {
-		return "cmis";
+		return CmisCommon.TARGET_NAME;
 	}
 
 	@Override
@@ -33,22 +37,22 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return CmisExportEngine.getExportEngine();
+	protected CmisExportEngineFactory getExportEngineFactory() {
+		return this.exportFactory;
 	}
 
 	@Override
-	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Exporter newExporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Exporter(engine);
 	}
 
 	@Override
-	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
-		return CmisImportEngine.getImportEngine();
+	protected CmisImportEngineFactory getImportEngineFactory() {
+		return this.importFactory;
 	}
 
 	@Override
-	protected Importer newImporter(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Importer newImporter(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Importer(engine);
 	}
 

@@ -21,7 +21,7 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.sharepoint.ShptSetting;
 import com.armedia.commons.utilities.FileNameTools;
 
@@ -39,7 +39,7 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		.add(Exporter.SOURCE_PREFIX) //
 	;
 
-	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Exporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 

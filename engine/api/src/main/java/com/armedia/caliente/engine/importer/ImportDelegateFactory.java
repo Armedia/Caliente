@@ -10,13 +10,13 @@ public abstract class ImportDelegateFactory< //
 	SESSION_WRAPPER extends SessionWrapper<SESSION>, //
 	VALUE, //
 	CONTEXT extends ImportContext<SESSION, VALUE, ?>, //
-	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?>//
+	ENGINE extends ImportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?, ?>//
 > extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ENGINE> {
 
 	protected ImportDelegateFactory(ENGINE engine, CfgTools configuration) {
 		super(engine, configuration);
 	}
 
-	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newImportDelegate(CmfObject<VALUE> storedObject)
-		throws Exception;
+	protected abstract ImportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ENGINE> newImportDelegate(
+		CmfObject<VALUE> storedObject) throws Exception;
 }

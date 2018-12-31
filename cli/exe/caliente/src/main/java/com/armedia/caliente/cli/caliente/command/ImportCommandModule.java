@@ -1,6 +1,5 @@
 package com.armedia.caliente.cli.caliente.command;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collection;
@@ -13,7 +12,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.slf4j.Logger;
 
 import com.armedia.caliente.cli.OptionValue;
 import com.armedia.caliente.cli.OptionValues;
@@ -23,22 +21,20 @@ import com.armedia.caliente.cli.caliente.launcher.CalienteWarningTracker;
 import com.armedia.caliente.cli.caliente.launcher.ImportCommandListener;
 import com.armedia.caliente.cli.caliente.launcher.ImportManifest;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineListener;
-import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportSetting;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
-public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, ?, ?>> {
+public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?, ?, ?, ?, ?>> {
 
-	public ImportCommandModule(ImportEngine<?, ?, ?, ?, ?, ?> engine) {
+	public ImportCommandModule(ImportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(CalienteCommand.IMPORT, engine);
 	}
 
@@ -61,18 +57,6 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 		return super.doConfigure(state, commandValues, settings);
 	}
 
-	public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings)
-		throws ImportException, CmfStorageException {
-		return this.engine.runImport(output, warningTracker, baseData, objectStore, streamStore, settings);
-	}
-
-	public final CmfObjectCounter<ImportResult> runImport(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Map<String, ?> settings,
-		CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
-		return this.engine.runImport(output, warningTracker, baseData, objectStore, streamStore, settings, counter);
-	}
-
 	@Override
 	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
 		throws CalienteException {
@@ -84,8 +68,6 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 		final ImportCommandListener mainListener = new ImportCommandListener(this.console);
 		final CalienteWarningTracker warningTracker = mainListener.getWarningTracker();
 
-		this.engine.addListener(mainListener);
-		this.engine.addListener(new ImportManifest(outcomes, types));
 		PluggableServiceLocator<ImportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ImportEngineListener.class);
 		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
@@ -96,10 +78,6 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 			}
 		});
 		extraListeners.setHideErrors(false);
-
-		for (ImportEngineListener l : extraListeners) {
-			this.engine.addListener(l);
-		}
 
 		// lock
 		Map<String, Object> settings = new HashMap<>();
@@ -116,9 +94,15 @@ public class ImportCommandModule extends CommandModule<ImportEngine<?, ?, ?, ?, 
 			configure(state, commandValues, settings);
 			start = new Date();
 			try {
+				ImportEngine<?, ?, ?, ?, ?, ?, ?> engine = this.engineFactory.newInstance(this.console, warningTracker,
+					state.getBaseDataLocation(), objectStore, contentStore, settings);
+				engine.addListener(mainListener);
+				engine.addListener(new ImportManifest(outcomes, types));
+				for (ImportEngineListener l : extraListeners) {
+					engine.addListener(l);
+				}
 				this.log.info("##### Import Process Started #####");
-				this.engine.runImport(this.console, warningTracker, state.getBaseDataLocation(), objectStore,
-					contentStore, settings, results);
+				engine.run();
 				this.log.info("##### Import Process Completed #####");
 			} catch (Throwable t) {
 				StringWriter sw = new StringWriter();

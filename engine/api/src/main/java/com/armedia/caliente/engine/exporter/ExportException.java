@@ -4,13 +4,13 @@
 
 package com.armedia.caliente.engine.exporter;
 
-import com.armedia.caliente.engine.TransferEngineException;
+import com.armedia.caliente.engine.TransferException;
 
 /**
  * @author diego
  *
  */
-public class ExportException extends TransferEngineException {
+public class ExportException extends TransferException {
 	private static final long serialVersionUID = 1L;
 
 	public ExportException() {
