@@ -6,7 +6,6 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
@@ -37,8 +36,7 @@ public abstract class ImportContext< //
 	private final CmfContentStore<?, ?, ?> streamStore;
 	private final int historyPosition;
 
-	public <C extends ImportContext<SESSION, VALUE, CONTEXT_FACTORY>, W extends SessionWrapper<SESSION>, E extends ImportEngine<SESSION, W, VALUE, C, ?, ?>, F extends ImportContextFactory<SESSION, W, VALUE, C, E, ?>> ImportContext(
-		CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session,
+	public ImportContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session,
 		Logger output, WarningTracker tracker, Transformer transformer, CmfAttributeTranslator<VALUE> translator,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker);

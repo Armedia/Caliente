@@ -4,13 +4,12 @@
 
 package com.armedia.caliente.engine.sharepoint.exporter;
 
-import java.util.Collections;
+import java.io.File;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
 import org.slf4j.Logger;
 
-import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
@@ -35,13 +34,13 @@ import com.armedia.commons.utilities.CfgTools;
  *
  */
 public class ShptExportEngine extends
-	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory> {
+	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory, ShptExportEngineFactory> {
 
-	public ShptExportEngine() {
-		super(new CmfCrypt());
+	public ShptExportEngine(ShptExportEngineFactory factory, Logger output, WarningTracker warningTracker,
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
+		Map<String, ?> settings) {
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
-
-	private static final Set<String> TARGETS = Collections.singleton(ShptObject.TARGET_NAME);
 
 	@Override
 	protected void findExportResults(ShptSession service, CfgTools configuration, ShptExportDelegateFactory factory,
@@ -90,14 +89,5 @@ public class ShptExportEngine extends
 	@Override
 	protected ShptExportDelegateFactory newDelegateFactory(ShptSession session, CfgTools cfg) throws Exception {
 		return new ShptExportDelegateFactory(this, cfg);
-	}
-
-	@Override
-	protected Set<String> getTargetNames() {
-		return ShptExportEngine.TARGETS;
-	}
-
-	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return TransferEngine.getTransferEngine(ExportEngine.class, ShptExportEngine.TARGETS.iterator().next());
 	}
 }

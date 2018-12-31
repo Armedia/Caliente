@@ -20,12 +20,14 @@ import com.armedia.caliente.cli.caliente.launcher.DynamicEngineOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
-import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.importer.ImportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.importer.ImportEngineFactory;
+import com.armedia.caliente.engine.ucm.UcmCommon;
 import com.armedia.caliente.engine.ucm.UcmSessionSetting;
 import com.armedia.caliente.engine.ucm.UcmSessionSetting.SSLMode;
 import com.armedia.caliente.engine.ucm.UcmSetting;
 import com.armedia.caliente.engine.ucm.exporter.UcmExportEngine;
+import com.armedia.caliente.engine.ucm.exporter.UcmExportEngineFactory;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
@@ -141,12 +143,14 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 		return true;
 	}
 
+	private final UcmExportEngineFactory exportFactory = new UcmExportEngineFactory();
+
 	public EngineInterface() {
 	}
 
 	@Override
 	public String getName() {
-		return "ucm";
+		return UcmCommon.TARGET_NAME;
 	}
 
 	@Override
@@ -155,17 +159,17 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	}
 
 	@Override
-	protected ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return UcmExportEngine.getExportEngine();
+	protected UcmExportEngineFactory getExportEngineFactory() {
+		return this.exportFactory;
 	}
 
 	@Override
-	protected Exporter newExporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	protected Exporter newExporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		return new Exporter(engine);
 	}
 
 	@Override
-	protected ImportEngine<?, ?, ?, ?, ?, ?> getImportEngine() {
+	protected ImportEngineFactory<?, ?, ?, ?, ?, ?> getImportEngineFactory() {
 		return null;
 	}
 

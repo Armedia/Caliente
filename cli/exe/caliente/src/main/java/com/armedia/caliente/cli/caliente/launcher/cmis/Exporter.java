@@ -19,10 +19,10 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.cmis.CmisSetting;
-import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 
 class Exporter extends ExportCommandModule implements DynamicCommandOptions {
-	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Exporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 

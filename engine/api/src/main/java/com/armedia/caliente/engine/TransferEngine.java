@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine;
 
+import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -7,12 +8,16 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,77 +38,40 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class TransferEngine< //
+	LISTENER extends TransferListener, //
+	RESULT extends Enum<RESULT>, //
+	EXCEPTION extends TransferException, //
 	SESSION, //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY>, //
 	CONTEXT_FACTORY extends TransferContextFactory<SESSION, VALUE, CONTEXT, ?>, //
 	DELEGATE_FACTORY extends TransferDelegateFactory<SESSION, VALUE, CONTEXT, ?>, //
-	LISTENER extends TransferListener //
-> {
+	ENGINE_FACTORY extends TransferEngineFactory<LISTENER, RESULT, EXCEPTION, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ?> //
+> implements Callable<CmfObjectCounter<RESULT>> {
+
 	private static final String REFERRENT_ID = "${REFERRENT_ID}$";
 	private static final String REFERRENT_KEY = "${REFERRENT_KEY}$";
 	private static final String REFERRENT_TYPE = "${REFERRENT_TYPE}$";
 
 	private static final Pattern SETTING_NAME_PATTERN = Pattern.compile("^[\\w&&[^\\d]][\\w]*$");
 
-	private static final Map<String, Map<String, Object>> REGISTRY = new HashMap<>();
-	private static final Map<String, PluggableServiceLocator<?>> LOCATORS = new HashMap<>();
-
-	private static synchronized <E extends TransferEngine<?, ?, ?, ?, ?, ?>> void registerSubclass(Class<E> subclass) {
-
-		final String key = subclass.getCanonicalName();
-		Map<String, Object> m = TransferEngine.REGISTRY.get(key);
-		if (m != null) { return; }
-
-		m = new HashMap<>();
-		PluggableServiceLocator<E> locator = new PluggableServiceLocator<>(subclass);
-		locator.setHideErrors(true);
-		for (E e : locator) {
-			boolean empty = true;
-			for (String s : e.getTargetNames()) {
-				empty = false;
-				Object first = m.get(s);
-				if (first != null) {
-					// Log the error, and skip the dupe
-					continue;
-				}
-				m.put(s, e);
-			}
-			if (empty) {
-				// Log a warning, then continue
-			}
-		}
-		TransferEngine.REGISTRY.put(key, m);
-		TransferEngine.LOCATORS.put(key, locator);
-	}
-
-	protected static synchronized <E extends TransferEngine<?, ?, ?, ?, ?, ?>> E getTransferEngine(Class<E> subclass,
-		String targetName) {
-		if (subclass == null) { throw new IllegalArgumentException("Must provide a valid engine subclass"); }
-		if (StringUtils.isEmpty(
-			targetName)) { throw new IllegalArgumentException("Must provide a non-empty, non-null target name"); }
-		TransferEngine.registerSubclass(subclass);
-		Map<String, Object> m = TransferEngine.REGISTRY.get(subclass.getCanonicalName());
-		if (m == null) { return null; }
-		return subclass.cast(m.get(targetName));
-	}
-
-	protected abstract class ListenerPropagator<R extends Enum<R>, L> implements InvocationHandler {
+	protected abstract class ListenerPropagator<R extends Enum<R>> implements InvocationHandler {
 		protected final Logger log = TransferEngine.this.log;
 
 		private final CmfObjectCounter<R> counter;
-		private final Collection<L> listeners;
-		protected final L listenerProxy;
+		private final Collection<LISTENER> listeners;
+		protected final LISTENER listenerProxy;
 
-		protected ListenerPropagator(CmfObjectCounter<R> counter, Collection<L> listeners, Class<L> listenerClass) {
+		protected ListenerPropagator(CmfObjectCounter<R> counter, Collection<LISTENER> listeners,
+			Class<LISTENER> listenerClass) {
 			if (counter == null) { throw new IllegalArgumentException("Must provide a counter"); }
 			this.counter = counter;
 			this.listeners = listeners;
@@ -113,7 +81,7 @@ public abstract class TransferEngine< //
 			}, this));
 		}
 
-		public final L getListenerProxy() {
+		public final LISTENER getListenerProxy() {
 			return this.listenerProxy;
 		}
 
@@ -144,7 +112,7 @@ public abstract class TransferEngine< //
 		}
 
 		protected final void propagate(Method method, Object[] args) {
-			for (L l : this.listeners) {
+			for (LISTENER l : this.listeners) {
 				try {
 					method.invoke(l, args);
 				} catch (Throwable t) {
@@ -162,43 +130,61 @@ public abstract class TransferEngine< //
 	private static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors();
 	private static final int MAX_THREAD_COUNT = Runtime.getRuntime().availableProcessors() * 2;
 
-	private final List<LISTENER> listeners = new ArrayList<>();
+	private final List<LISTENER> listeners = new CopyOnWriteArrayList<>();
+	private final Lock runLock = new ReentrantLock();
 
+	protected final boolean supportsDuplicateFileNames;
 	protected final CmfCrypt crypto;
+	protected final String cfgNamePrefix;
 
-	private final boolean supportsDuplicateFileNames;
-	private final String cfgNamePrefix;
+	protected final Class<RESULT> resultClass;
+	protected final ENGINE_FACTORY factory;
+	protected final Logger output;
+	protected final WarningTracker warningTracker;
+	protected final File baseData;
+	protected final CmfObjectStore<?, ?> objectStore;
+	protected final CmfContentStore<?, ?, ?> contentStore;
+	protected final CfgTools settings;
 
-	public TransferEngine(CmfCrypt crypto, String cfgNamePrefix) {
-		this(crypto, cfgNamePrefix, false);
-	}
+	protected TransferEngine(ENGINE_FACTORY factory, Class<RESULT> resultClass, final Logger output,
+		final WarningTracker warningTracker, final File baseData, final CmfObjectStore<?, ?> objectStore,
+		final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings, String cfgNamePrefix) {
+		this.factory = Objects.requireNonNull(factory,
+			"Must provide a handle to the factory that created this instance");
+		this.resultClass = Objects.requireNonNull(resultClass, "Must provide a valid RESULT class");
 
-	public TransferEngine(CmfCrypt crypto, String cfgNamePrefix, boolean supportsDuplicateNames) {
-		this.crypto = crypto;
+		this.crypto = factory.getCrypto();
+		this.supportsDuplicateFileNames = factory.isSupportsDuplicateFileNames();
+
 		if (!StringUtils.isEmpty(cfgNamePrefix)) {
 			cfgNamePrefix = String.format("%s-", cfgNamePrefix);
 		} else {
 			cfgNamePrefix = "";
 		}
 		this.cfgNamePrefix = cfgNamePrefix;
-		this.supportsDuplicateFileNames = supportsDuplicateNames;
+		this.output = output;
+		this.warningTracker = warningTracker;
+		this.baseData = baseData;
+		this.objectStore = objectStore;
+		this.contentStore = contentStore;
+		this.settings = new CfgTools(new TreeMap<>(settings));
 	}
 
 	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
 		return !excludes.contains(type);
 	}
 
-	public final synchronized boolean addListener(LISTENER listener) {
+	public final boolean addListener(LISTENER listener) {
 		if (listener != null) { return this.listeners.add(listener); }
 		return false;
 	}
 
-	public final synchronized boolean removeListener(LISTENER listener) {
+	public final boolean removeListener(LISTENER listener) {
 		if (listener != null) { return this.listeners.remove(listener); }
 		return false;
 	}
 
-	protected final synchronized Collection<LISTENER> getListeners() {
+	protected final Collection<LISTENER> getListeners() {
 		return new ArrayList<>(this.listeners);
 	}
 
@@ -226,8 +212,6 @@ public abstract class TransferEngine< //
 		WarningTracker warningTracker) throws Exception;
 
 	protected abstract DELEGATE_FACTORY newDelegateFactory(SESSION session, CfgTools cfg) throws Exception;
-
-	protected abstract Set<String> getTargetNames();
 
 	public final CmfCrypt getCrypto() {
 		return this.crypto;
@@ -276,6 +260,34 @@ public abstract class TransferEngine< //
 		return this.cfgNamePrefix;
 	}
 
+	public final Class<RESULT> getResultClass() {
+		return this.resultClass;
+	}
+
+	public final Logger getOutput() {
+		return this.output;
+	}
+
+	public final WarningTracker getWarningTracker() {
+		return this.warningTracker;
+	}
+
+	public final File getBaseData() {
+		return this.baseData;
+	}
+
+	public final CmfObjectStore<?, ?> getObjectStore() {
+		return this.objectStore;
+	}
+
+	public final CmfContentStore<?, ?, ?> getContentStore() {
+		return this.contentStore;
+	}
+
+	public final CfgTools getSettings() {
+		return this.settings;
+	}
+
 	public final boolean isSupportsDuplicateFileNames() {
 		return this.supportsDuplicateFileNames;
 	}
@@ -308,7 +320,7 @@ public abstract class TransferEngine< //
 		return Collections.unmodifiableCollection(c);
 	}
 
-	protected final void loadPrincipalMappings(CmfValueMapper mapper, CfgTools cfg) throws TransferEngineException {
+	protected final void loadPrincipalMappings(CmfValueMapper mapper, CfgTools cfg) throws TransferException {
 		for (PrincipalType t : PrincipalType.values()) {
 			Properties p = new Properties();
 			if (!MappingTools.loadMap(this.log, cfg, t.getSetting(), p)) {
@@ -345,4 +357,36 @@ public abstract class TransferEngine< //
 
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
 	}
+
+	public final CmfObjectCounter<RESULT> run() throws EXCEPTION, CmfStorageException {
+		CmfObjectCounter<RESULT> counter = new CmfObjectCounter<>(this.resultClass);
+		run(counter);
+		return counter;
+	}
+
+	@Override
+	public CmfObjectCounter<RESULT> call() throws EXCEPTION, CmfStorageException {
+		return run();
+	}
+
+	public final void run(CmfObjectCounter<RESULT> counter) throws EXCEPTION, CmfStorageException {
+		if (!this.runLock.tryLock()) { throw newException(String.format(
+			"This %s instance is already running a job - can't run a second one", getClass().getSimpleName())); }
+		try {
+			if (counter == null) {
+				counter = new CmfObjectCounter<>(this.resultClass);
+			}
+			work(counter);
+		} finally {
+			this.runLock.unlock();
+		}
+	}
+
+	protected final EXCEPTION newException(String message) {
+		return newException(message, null);
+	}
+
+	protected abstract EXCEPTION newException(String message, Throwable cause);
+
+	protected abstract void work(CmfObjectCounter<RESULT> counter) throws EXCEPTION, CmfStorageException;
 }

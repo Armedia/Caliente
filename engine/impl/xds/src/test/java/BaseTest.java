@@ -5,10 +5,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.xds.CmisSessionSetting;
 import com.armedia.caliente.engine.xds.CmisSetting;
-import com.armedia.caliente.engine.xds.exporter.CmisExportEngine;
+import com.armedia.caliente.engine.xds.exporter.CmisExportEngineFactory;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStores;
@@ -17,7 +16,7 @@ public class BaseTest {
 
 	@Test
 	public void test() throws Exception {
-		final ExportEngine<?, ?, ?, ?, ?, ?> engine = CmisExportEngine.getExportEngine();
+		CmisExportEngineFactory factory = new CmisExportEngineFactory();
 		Logger output = LoggerFactory.getLogger("console");
 
 		Map<String, String> settings = new TreeMap<>();
@@ -37,6 +36,6 @@ public class BaseTest {
 		CmfContentStore<?, ?, ?> contentStore = CmfStores.getContentStore("default");
 		contentStore.clearProperties();
 		contentStore.clearAllStreams();
-		engine.runExport(output, null, null, objectStore, contentStore, settings);
+		factory.newInstance(output, null, null, objectStore, contentStore, settings).run(null);
 	}
 }

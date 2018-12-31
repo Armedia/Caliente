@@ -1,8 +1,9 @@
 package com.armedia.caliente.engine.xds.exporter;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.Set;
+import java.util.Map;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
@@ -20,7 +21,6 @@ import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
-import com.armedia.caliente.engine.xds.CmisCommon;
 import com.armedia.caliente.engine.xds.CmisPagingTransformerIterator;
 import com.armedia.caliente.engine.xds.CmisRecursiveIterator;
 import com.armedia.caliente.engine.xds.CmisResultTransformer;
@@ -39,7 +39,7 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
-	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory> {
+	ExportEngine<Session, CmisSessionWrapper, CmfValue, CmisExportContext, CmisExportContextFactory, CmisExportDelegateFactory, CmisExportEngineFactory> {
 
 	private final CmisResultTransformer<QueryResult, ExportTarget> queryResultTransformer = new CmisResultTransformer<QueryResult, ExportTarget>() {
 		@Override
@@ -55,8 +55,10 @@ public class CmisExportEngine extends
 		}
 	};
 
-	public CmisExportEngine() {
-		super(new CmfCrypt());
+	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
+		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore,
+		Map<String, ?> settings) {
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
 	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {
@@ -197,15 +199,6 @@ public class CmisExportEngine extends
 	@Override
 	protected CmisExportDelegateFactory newDelegateFactory(Session session, CfgTools cfg) throws Exception {
 		return new CmisExportDelegateFactory(this, cfg);
-	}
-
-	@Override
-	protected Set<String> getTargetNames() {
-		return CmisCommon.TARGETS;
-	}
-
-	public static ExportEngine<?, ?, ?, ?, ?, ?> getExportEngine() {
-		return ExportEngine.getExportEngine(CmisCommon.TARGET_NAME);
 	}
 
 	@Override

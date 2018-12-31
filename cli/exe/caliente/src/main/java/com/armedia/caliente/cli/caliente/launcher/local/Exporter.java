@@ -16,7 +16,7 @@ import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
-import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.commons.utilities.Tools;
 
@@ -36,7 +36,7 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		.add(Exporter.COPY_CONTENT) //
 	;
 
-	Exporter(ExportEngine<?, ?, ?, ?, ?, ?> engine) {
+	Exporter(ExportEngineFactory<?, ?, ?, ?, ?, ?> engine) {
 		super(engine);
 	}
 

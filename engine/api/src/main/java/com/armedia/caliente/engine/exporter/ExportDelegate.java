@@ -24,7 +24,7 @@ public abstract class ExportDelegate< //
 	VALUE, //
 	CONTEXT extends ExportContext<SESSION, VALUE, ?>, //
 	DELEGATE_FACTORY extends ExportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ENGINE>, //
-	ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, DELEGATE_FACTORY> //
+	ENGINE extends ExportEngine<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, DELEGATE_FACTORY, ?> //
 > extends TransferDelegate<ECM_OBJECT, SESSION, VALUE, CONTEXT, DELEGATE_FACTORY, ENGINE> {
 	protected final ECM_OBJECT object;
 	protected final ExportTarget exportTarget;
@@ -37,7 +37,8 @@ public abstract class ExportDelegate< //
 	protected final String subType;
 	protected final Set<String> secondaries;
 
-	protected ExportDelegate(DELEGATE_FACTORY factory, SESSION session, Class<ECM_OBJECT> objectClass, ECM_OBJECT object) throws Exception {
+	protected ExportDelegate(DELEGATE_FACTORY factory, SESSION session, Class<ECM_OBJECT> objectClass,
+		ECM_OBJECT object) throws Exception {
 		super(factory, objectClass);
 		if (object == null) { throw new IllegalArgumentException("Must provide a source object to export"); }
 		this.object = object;
@@ -146,8 +147,8 @@ public abstract class ExportDelegate< //
 	protected void requirementsExported(CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception {
 	}
 
-	protected Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifyAntecedents(CmfObject<VALUE> marshalled,
-		CONTEXT ctx) throws Exception {
+	protected Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifyAntecedents(
+		CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception {
 		return new ArrayList<>();
 	}
 
@@ -168,8 +169,8 @@ public abstract class ExportDelegate< //
 		// By default, do nothing.
 	}
 
-	protected Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifySuccessors(CmfObject<VALUE> marshalled,
-		CONTEXT ctx) throws Exception {
+	protected Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifySuccessors(
+		CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception {
 		return new ArrayList<>();
 	}
 
