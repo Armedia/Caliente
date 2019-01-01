@@ -1,6 +1,5 @@
 package com.armedia.caliente.engine.dynamic.mapper;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,10 +22,10 @@ class ConstantRenderer extends AttributeRenderer {
 		Tools.splitEscaped(this.separator, m.getValue()).forEach((v) -> {
 			try {
 				values.add(dataType.getSerializer().deserialize(v));
-			} catch (ParseException e) {
-				throw new RuntimeException(
-					String.format("Failed to deserialize the value [%s] as a %s for the constant mapping [%s]", v,
-						dataType.name(), m.getTgt()));
+			} catch (Exception e) {
+				throw new RuntimeException(String.format(
+					"Failed to deserialize the value [%s] as a %s for the constant mapping named [%s] (separator = [%s], full value = [%s])",
+					v, dataType.name(), m.getTgt(), this.separator, m.getValue()));
 			}
 		});
 		this.value = Collections.singleton(new AttributeMapping(m.getTgt(), this.separator, m.isOverride(), values));

@@ -15,7 +15,7 @@
 	</common-mappings>
 
 	<named-mappings name="named-mapping-1">
-		<include>named-mapping-1</include>
+		<!-- ... -->
 	</named-mappings>
 
 	<type-mappings name="sn1">
@@ -49,10 +49,11 @@
 		<!-- Copy one source attribute to one or more target attributes -->
 		<map tgt="tgtAttName">srcAttName</map>
 
-		<include>named-mapping-1</include>
-
 		<!-- Convert a source namespace to a target namespace -->
 		<nsmap tgt="tgtNs">srcNs</nsmap>
+
+		<!-- Set an attribute to a specific value -->
+		<set tgt="constantValue" type="INTEGER">1,3,4,5x,9</set>
 	</type-mappings>
 
 </attribute-mappings>
