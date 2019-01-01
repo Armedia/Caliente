@@ -2,7 +2,6 @@ package com.armedia.caliente.cli.caliente.launcher.alfresco;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
@@ -17,17 +16,10 @@ import com.armedia.caliente.engine.importer.ImportEngineFactory;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
 
+	private final AlfImportEngineFactory importFactory = new AlfImportEngineFactory();
+
 	public EngineInterface() {
-	}
-
-	@Override
-	public String getName() {
-		return AlfCommon.TARGET_NAME;
-	}
-
-	@Override
-	public Set<String> getAliases() {
-		return Collections.emptySet();
+		super(AlfCommon.TARGET_NAME);
 	}
 
 	@Override
@@ -37,7 +29,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 
 	@Override
 	protected AlfImportEngineFactory getImportEngineFactory() {
-		return new AlfImportEngineFactory();
+		return this.importFactory;
 	}
 
 	@Override

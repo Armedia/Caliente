@@ -2,7 +2,6 @@ package com.armedia.caliente.cli.caliente.launcher.xml;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
@@ -12,6 +11,7 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
+import com.armedia.caliente.engine.xml.common.XmlCommon;
 import com.armedia.caliente.engine.xml.importer.XmlImportEngineFactory;
 
 public class EngineInterface extends AbstractEngineInterface implements DynamicEngineOptions {
@@ -19,16 +19,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	private final XmlImportEngineFactory importFactory = new XmlImportEngineFactory();
 
 	public EngineInterface() {
-	}
-
-	@Override
-	public String getName() {
-		return "xml";
-	}
-
-	@Override
-	public Set<String> getAliases() {
-		return Collections.emptySet();
+		super(XmlCommon.TARGET_NAME);
 	}
 
 	@Override

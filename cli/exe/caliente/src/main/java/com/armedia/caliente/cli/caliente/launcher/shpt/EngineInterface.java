@@ -2,7 +2,6 @@ package com.armedia.caliente.cli.caliente.launcher.shpt;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
@@ -20,16 +19,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	private final ShptExportEngineFactory exportFactory = new ShptExportEngineFactory();
 
 	public EngineInterface() {
-	}
-
-	@Override
-	public String getName() {
-		return ShptCommon.TARGET_NAME;
-	}
-
-	@Override
-	public Set<String> getAliases() {
-		return Collections.emptySet();
+		super(ShptCommon.TARGET_NAME);
 	}
 
 	@Override
