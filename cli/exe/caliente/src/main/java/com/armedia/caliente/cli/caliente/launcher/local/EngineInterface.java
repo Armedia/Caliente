@@ -3,7 +3,6 @@ package com.armedia.caliente.cli.caliente.launcher.local;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
@@ -30,16 +29,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	private final LocalImportEngineFactory importFactory = new LocalImportEngineFactory();
 
 	public EngineInterface() {
-	}
-
-	@Override
-	public String getName() {
-		return LocalCommon.TARGET_NAME;
-	}
-
-	@Override
-	public Set<String> getAliases() {
-		return Collections.emptySet();
+		super(LocalCommon.TARGET_NAME);
 	}
 
 	@Override
