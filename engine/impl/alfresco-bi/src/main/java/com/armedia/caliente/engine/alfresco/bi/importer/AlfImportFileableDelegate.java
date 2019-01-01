@@ -202,11 +202,15 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				if (v == null) {
 					v = attribute.getType().getNull();
 				}
+				final String s;
 				try {
-					newValues.add(v.serialize());
+					s = v.serialize();
 				} catch (ParseException e) {
 					throw new AlfRenderingException(
 						String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
+				}
+				if (attribute.isRepeating() && !StringUtils.isEmpty(s)) {
+					newValues.add(s);
 				}
 			});
 			if (newValues.isEmpty()) { return; }
@@ -219,7 +223,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			} else {
 				propertyValue = Tools.joinEscaped(',', newValues);
 			}
-			p.setProperty(attribute.getName(), propertyValue);
+			if (propertyValue != null) {
+				p.setProperty(attribute.getName(), propertyValue);
+			}
 		});
 
 		// Now handle the special properties
