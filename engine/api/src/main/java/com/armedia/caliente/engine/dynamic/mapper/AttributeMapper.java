@@ -92,9 +92,11 @@ public class AttributeMapper {
 	private static MappingRenderer buildRenderer(MappingElement e, Character parentSeparator) {
 		if (!Mapping.class.isInstance(e)) { return null; }
 		Mapping m = Mapping.class.cast(e);
-		if (NameMapping.class.isInstance(m)) { return new AttributeRenderer(m, parentSeparator); }
-		if (NamespaceMapping.class.isInstance(m)) { return new NamespaceRenderer(m, parentSeparator); }
-		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(m, parentSeparator); }
+		if (NameMapping.class
+			.isInstance(m)) { return new AttributeRenderer(NameMapping.class.cast(m), parentSeparator); }
+		if (NamespaceMapping.class
+			.isInstance(m)) { return new NamespaceRenderer(NamespaceMapping.class.cast(m), parentSeparator); }
+		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(SetValue.class.cast(m), parentSeparator); }
 		return null;
 	}
 

@@ -8,14 +8,14 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.dynamic.xml.mapper.Mapping;
+import com.armedia.caliente.engine.dynamic.xml.mapper.NamespaceMapping;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
 class NamespaceRenderer extends AttributeRenderer {
 	private static final Pattern NSPARSER = Pattern.compile("^([^:]+):(.+)$");
 
-	public NamespaceRenderer(Mapping m, Character parentSeparator) {
+	public NamespaceRenderer(NamespaceMapping m, Character parentSeparator) {
 		super(m, parentSeparator);
 	}
 

@@ -32,16 +32,25 @@ public class AttributeMapping implements Iterable<CmfValue> {
 	}
 
 	AttributeMapping(String targetName, char separator, boolean override, Collection<CmfValue> values) {
+		this(targetName, separator, override, null, values);
+	}
+
+	AttributeMapping(String targetName, char separator, boolean override, CmfDataType type,
+		Collection<CmfValue> values) {
 		this.sourceName = null;
 		this.targetName = targetName;
 		this.values = Tools.freezeList(new ArrayList<>(values));
 		this.override = override;
 		this.separator = separator;
 		this.repeating = (values.size() > 1);
-		if ((values != null) && !values.isEmpty()) {
-			this.type = values.iterator().next().getDataType();
+		if (type == null) {
+			if ((values != null) && !values.isEmpty()) {
+				this.type = values.iterator().next().getDataType();
+			} else {
+				this.type = CmfDataType.STRING;
+			}
 		} else {
-			this.type = CmfDataType.STRING;
+			this.type = type;
 		}
 	}
 
