@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -146,16 +145,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	private final UcmExportEngineFactory exportFactory = new UcmExportEngineFactory();
 
 	public EngineInterface() {
-	}
-
-	@Override
-	public String getName() {
-		return UcmCommon.TARGET_NAME;
-	}
-
-	@Override
-	public Set<String> getAliases() {
-		return Collections.emptySet();
+		super(UcmCommon.TARGET_NAME);
 	}
 
 	@Override

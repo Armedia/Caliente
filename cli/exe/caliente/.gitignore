@@ -14,8 +14,8 @@
 /*-filenamemap*.xml
 /*.properties
 /*.sh
-/*-import-*.xml
-/*-export-*.xml
+/import-*.xml
+/export-*.xml
 /test-*.xml
 /*-caliente-*.xml
 /*-alfresco-*.xml

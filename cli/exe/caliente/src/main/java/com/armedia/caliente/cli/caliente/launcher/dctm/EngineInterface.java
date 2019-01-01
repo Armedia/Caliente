@@ -3,7 +3,6 @@ package com.armedia.caliente.cli.caliente.launcher.dctm;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -47,19 +46,10 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 	private final DctmImportEngineFactory importFactory = new DctmImportEngineFactory();
 
 	public EngineInterface() {
+		super(DctmCommon.TARGET_NAME);
 		// Load the logging-related patch classes
 		DfLoggerDisabled.class.hashCode();
 		LoggingConfigurator.class.hashCode();
-	}
-
-	@Override
-	public String getName() {
-		return DctmCommon.TARGET_NAME;
-	}
-
-	@Override
-	public Set<String> getAliases() {
-		return Collections.emptySet();
 	}
 
 	static boolean commonConfigure(OptionValues commandValues, Map<String, Object> settings) throws CalienteException {

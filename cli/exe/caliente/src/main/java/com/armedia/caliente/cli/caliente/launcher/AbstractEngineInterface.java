@@ -3,10 +3,12 @@ package com.armedia.caliente.cli.caliente.launcher;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -14,6 +16,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.caliente.command.CalienteCommand;
 import com.armedia.caliente.cli.caliente.command.CommandModule;
@@ -67,7 +70,7 @@ public abstract class AbstractEngineInterface {
 						}
 						Map<String, String> engineAliases = new TreeMap<>();
 						Map<String, AbstractEngineInterface> interfaces = new TreeMap<>();
-						for (AbstractEngineInterface abstractEngineInterface : abstractEngineInterfaces) {
+						abstractEngineInterfaces.forEach((abstractEngineInterface) -> {
 							final String canonicalName = AbstractEngineInterface
 								.canonicalizeName(abstractEngineInterface.getName());
 							if (interfaces.containsKey(canonicalName)) {
@@ -110,7 +113,7 @@ public abstract class AbstractEngineInterface {
 								// Add the alias mapping
 								engineAliases.put(alias, canonicalName);
 							}
-						}
+						});
 
 						if (interfaces.isEmpty()) {
 							AbstractEngineInterface.INTERFACES = Collections.emptyMap();
@@ -161,11 +164,44 @@ public abstract class AbstractEngineInterface {
 		return AbstractEngineInterface.ENGINE_ALIASES.keySet();
 	}
 
-	// protected final Logger log = LoggerFactory.getLogger(getClass());
+	protected final Logger log = LoggerFactory.getLogger(getClass());
 
-	public abstract String getName();
+	private final String name;
+	private final Set<String> aliases;
 
-	public abstract Set<String> getAliases();
+	protected AbstractEngineInterface(String name) {
+		this(name, null);
+	}
+
+	protected AbstractEngineInterface(String name, Set<String> aliases) {
+		name = StringUtils.strip(name);
+		if (StringUtils
+			.isBlank(name)) { throw new IllegalArgumentException("Must provide a non-null, non-blank engine name"); }
+		this.name = name;
+		if ((aliases == null) || aliases.isEmpty()) {
+			this.aliases = Collections.emptySet();
+		} else {
+			final Set<String> newAliases = new TreeSet<>();
+			aliases.forEach((a) -> {
+				a = StringUtils.strip(a);
+				if (StringUtils.isBlank(a)) { throw new IllegalArgumentException(
+					String.format("Engine aliases must be non-null, and non-empty (engine = %s)", this.name)); }
+				if (!StringUtils.equals(a, this.name)) {
+					newAliases.add(a);
+				}
+			});
+			this.aliases = Tools.freezeSet(new LinkedHashSet<>(newAliases));
+		}
+	}
+
+	public final String getName() {
+		return this.name;
+
+	}
+
+	public final Set<String> getAliases() {
+		return this.aliases;
+	}
 
 	final CommandModule<?> getCommandModule(CalienteCommand command) {
 		Objects.requireNonNull(command, "Must provide a non-null command");
