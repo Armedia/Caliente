@@ -995,7 +995,7 @@
 
 	<xsd:complexType name="mapping.t">
 		<xsd:simpleContent>
-			<xsd:extension base="xsd:string">
+			<xsd:extension base="tns:noSpaces.t">
 				<xsd:attribute name="tgt" type="tns:noSpaces.t" use="required" />
 				<xsd:attribute name="caseSensitive" type="xsd:boolean" use="optional" default="true" />
 				<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="," />
