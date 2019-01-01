@@ -265,6 +265,8 @@ public class AttributeMapper {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		final ConstructedType type = this.constructedTypeFactory.constructType(schemaService, object.getSubtype(),
 			object.getSecondarySubtypes());
+		// If there's no type to map against, we simply skip it...
+		if (type == null) { return null; }
 		Map<String, AttributeMapping> finalValues = new TreeMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
 
