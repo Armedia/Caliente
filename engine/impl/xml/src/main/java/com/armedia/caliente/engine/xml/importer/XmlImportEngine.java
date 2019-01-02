@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.engine.xml.common.XmlRoot;
@@ -194,5 +196,10 @@ public class XmlImportEngine extends
 	@Override
 	protected XmlImportDelegateFactory newDelegateFactory(XmlRoot session, CfgTools cfg) throws Exception {
 		return new XmlImportDelegateFactory(this, cfg);
+	}
+
+	@Override
+	protected SchemaService newSchemaService(XmlRoot session) throws SchemaServiceException {
+		return null;
 	}
 }

@@ -1,14 +1,25 @@
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.xml.bind.JAXBException;
+import javax.xml.validation.Schema;
+
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -20,8 +31,12 @@ import com.armedia.caliente.engine.alfresco.bi.AlfCommon;
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionFactory;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
+import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.alfresco.bi.AlfTranslator;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportEngineListener;
@@ -42,6 +57,7 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.XmlTools;
 
 public class AlfImportEngine extends
 	ImportEngine<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportContextFactory, AlfImportDelegateFactory, AlfImportEngineFactory> {
@@ -277,12 +293,94 @@ public class AlfImportEngine extends
 		}
 	};
 
+	private static final String SCHEMA_NAME = "alfresco-model.xsd";
+
+	private static final String MODEL_DIR_NAME = "content-models";
+
+	static final Schema SCHEMA;
+
+	static {
+		try {
+			SCHEMA = XmlTools.loadSchema(AlfImportEngine.SCHEMA_NAME);
+		} catch (JAXBException e) {
+			throw new RuntimeException(
+				String.format("Failed to load the required schema resource [%s]", AlfImportEngine.SCHEMA_NAME));
+		}
+	}
+
+	private final Path contentPath;
+	private final Path biRootPath;
+	private final String unfiledPath;
+
+	protected final AlfrescoSchema schema;
+	private final Map<String, AlfrescoType> defaultTypes;
+
 	public AlfImportEngine(AlfImportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
-		throws ImportException {
+		throws ImportException, IOException, JAXBException {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 		addListener(this.listener);
-		// TODO: Initialize the schema and all that jazz
+
+		String content = settings.getString(AlfSetting.CONTENT);
+		if (content == null) { throw new IOException(
+			"Can't proceed without a content directory to store artifacts in"); }
+		File contentFile = Tools.canonicalize(new File(content));
+		FileUtils.forceMkdir(contentFile);
+		this.contentPath = contentFile.toPath();
+
+		this.biRootPath = this.baseData.resolve(AlfCommon.METADATA_ROOT);
+		final File modelDir = this.biRootPath.resolve(AlfImportEngine.MODEL_DIR_NAME).toFile();
+		FileUtils.forceMkdir(modelDir);
+
+		String contentModels = settings.getString(AlfSetting.CONTENT_MODEL);
+		if (contentModels == null) { throw new IllegalStateException(
+			"Must provide a valid set of content model XML files"); }
+
+		List<URI> modelUrls = new ArrayList<>();
+		for (String s : contentModels.split(",")) {
+			File f = new File(s).getCanonicalFile();
+			if (!f.exists()) { throw new FileNotFoundException(f.getAbsolutePath()); }
+			if (!f.isFile()) { throw new IOException(
+				String.format("File [%s] is not a regular file", f.getAbsolutePath())); }
+			if (!f
+				.canRead()) { throw new IOException(String.format("File [%s] is not readable", f.getAbsolutePath())); }
+			modelUrls.add(f.toURI());
+			FileUtils.copyFile(f, new File(modelDir, f.getName()));
+		}
+
+		this.schema = new AlfrescoSchema(modelUrls);
+
+		Map<String, AlfrescoType> m = new TreeMap<>();
+		// First, we build all the base types, to have them cached and ready to go
+		for (String t : this.schema.getTypeNames()) {
+			m.put(t, this.schema.buildType(t));
+		}
+		this.defaultTypes = Tools.freezeMap(new LinkedHashMap<>(m));
+
+		String unfiledPath = settings.getString(AlfSetting.UNFILED_PATH);
+		unfiledPath = FilenameUtils.separatorsToUnix(unfiledPath);
+		unfiledPath = FilenameUtils.normalizeNoEndSeparator(unfiledPath, true);
+		this.unfiledPath = unfiledPath.replaceAll("^/+", "");
+	}
+
+	public final Path getContentPath() {
+		return this.contentPath;
+	}
+
+	public final Path getBiRootPath() {
+		return this.biRootPath;
+	}
+
+	public final String getUnfiledPath() {
+		return this.unfiledPath;
+	}
+
+	public final AlfrescoSchema getSchema() {
+		return this.schema;
+	}
+
+	public final Map<String, AlfrescoType> getDefaultTypes() {
+		return this.defaultTypes;
 	}
 
 	@Override
@@ -354,5 +452,10 @@ public class AlfImportEngine extends
 			finalName = object.getHistoryId();
 		}
 		return finalName;
+	}
+
+	@Override
+	protected AlfSchemaService newSchemaService(AlfRoot session) throws SchemaServiceException {
+		return new AlfSchemaService(this.schema);
 	}
 }

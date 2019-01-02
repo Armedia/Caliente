@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.AttributeMapper;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.tools.MappingTools;
@@ -141,7 +143,7 @@ public abstract class TransferEngine< //
 	protected final ENGINE_FACTORY factory;
 	protected final Logger output;
 	protected final WarningTracker warningTracker;
-	protected final File baseData;
+	protected final Path baseData;
 	protected final CmfObjectStore<?, ?> objectStore;
 	protected final CmfContentStore<?, ?, ?> contentStore;
 	protected final CfgTools settings;
@@ -164,7 +166,7 @@ public abstract class TransferEngine< //
 		this.cfgNamePrefix = cfgNamePrefix;
 		this.output = output;
 		this.warningTracker = warningTracker;
-		this.baseData = baseData;
+		this.baseData = Tools.canonicalize(baseData).toPath();
 		this.objectStore = objectStore;
 		this.contentStore = contentStore;
 		this.settings = settings;
@@ -272,7 +274,7 @@ public abstract class TransferEngine< //
 		return this.warningTracker;
 	}
 
-	public final File getBaseData() {
+	public final Path getBaseData() {
 		return this.baseData;
 	}
 
@@ -336,7 +338,7 @@ public abstract class TransferEngine< //
 		}
 	}
 
-	protected final Transformer getTransformer(CfgTools cfg) throws Exception {
+	protected final Transformer getTransformer(CfgTools cfg, AttributeMapper attributeMapper) throws Exception {
 		String xformDefault = String.format("%s%s", this.cfgNamePrefix, Transformer.getDefaultLocation());
 		String xform = cfg.getString(TransferSetting.TRANSFORMATION.getLabel());
 
@@ -346,7 +348,7 @@ public abstract class TransferEngine< //
 		ExternalMetadataLoader emdl = ExternalMetadataLoader
 			.getExternalMetadataLoader(Tools.coalesce(meta, metaDefault), (meta != null));
 
-		return Transformer.getTransformer(Tools.coalesce(xform, xformDefault), emdl, (xform != null));
+		return Transformer.getTransformer(Tools.coalesce(xform, xformDefault), emdl, attributeMapper, (xform != null));
 	}
 
 	protected final ObjectFilter getFilter(CfgTools cfg) throws Exception {

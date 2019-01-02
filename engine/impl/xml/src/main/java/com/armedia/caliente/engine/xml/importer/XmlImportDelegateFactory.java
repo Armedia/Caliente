@@ -376,9 +376,4 @@ public class XmlImportDelegateFactory
 	protected File calculateConsolidatedFile(CmfType t) {
 		return new File(this.db, String.format("%ss.xml", t.name().toLowerCase()));
 	}
-
-	@Override
-	public void close() {
-		super.close();
-	}
 }

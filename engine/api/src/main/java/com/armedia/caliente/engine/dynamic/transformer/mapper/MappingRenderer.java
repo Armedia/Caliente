@@ -1,11 +1,10 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
+package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 import java.util.Collection;
 
 import org.apache.commons.lang3.tuple.Triple;
 
-import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.engine.dynamic.DynamicObject;
 
 interface MappingRenderer {
 
@@ -28,6 +27,6 @@ interface MappingRenderer {
 	 * @param tracker
 	 * @return the set of target attributes that were rendered
 	 */
-	Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker);
+	Collection<AttributeMapping> render(DynamicObject object, ResidualsModeTracker tracker);
 
 }

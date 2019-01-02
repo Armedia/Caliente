@@ -15,6 +15,7 @@ import com.armedia.caliente.engine.dfc.DctmSessionFactory;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.DctmTranslator;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -104,5 +105,10 @@ public class DctmImportEngine extends
 			return (errors > 0);
 		}
 		return super.abortImport(type, errors);
+	}
+
+	@Override
+	protected DctmSchemaService newSchemaService(IDfSession session) throws SchemaServiceException {
+		return new DctmSchemaService(session);
 	}
 }

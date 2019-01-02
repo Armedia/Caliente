@@ -1,12 +1,11 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
+package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -18,10 +17,12 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaMember;
+import com.armedia.caliente.engine.dynamic.DynamicObject;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.ConstructedType;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.ConstructedTypeFactory;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
@@ -37,18 +38,41 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
-import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
 
 	private static final Pattern NS_PARSER = Pattern.compile("^([^:]+):(.+)$");
-	private static final String DEFAULT_FILENAME = "alfresco-attribute-mappings.xml";
 
-	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class,
-		AttributeMapper.DEFAULT_FILENAME);
+	private static final XmlInstances<AttributeMappings> INSTANCES = new XmlInstances<>(AttributeMappings.class);
+
+	public static AttributeMapper getAttributeMapper(SchemaService schemaService, String location,
+		String residualsPrefix, boolean failIfMissing) throws AttributeMappingException {
+		try {
+			try {
+				AttributeMappings attributeMappings = AttributeMapper.INSTANCES.getInstance(location);
+				if (attributeMappings == null) { return null; }
+				return new AttributeMapper(new ConstructedTypeFactory(schemaService), location, residualsPrefix);
+			} catch (final XmlNotFoundException e) {
+				if (!failIfMissing) { return null; }
+				throw e;
+			}
+		} catch (Exception e) {
+			String pre = "";
+			String post = "";
+			if (location == null) {
+				pre = "default ";
+			} else {
+				post = String.format(" from [%s]", location);
+			}
+			throw new AttributeMappingException(
+				String.format("Failed to load the %sattribute mapping configuration%s", pre, post), e);
+		}
+	}
+
+	public static String getDefaultLocation() {
+		return AttributeMapper.INSTANCES.getDefaultFileName();
+	}
 
 	// Make a cache that doesn't expire items and they don't get GC'd either
 	private final KeyLockableCache<String, MappingRendererSet> cache = new KeyLockableCache<String, MappingRendererSet>(
@@ -62,19 +86,24 @@ public class AttributeMapper {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final Map<String, MappingRendererSet> typedMappings;
 	private final MappingRendererSet commonRenderers;
+	private final ConstructedTypeFactory constructedTypeFactory;
 	private final String residualsPrefix;
 
 	private static MappingRenderer buildRenderer(MappingElement e, Character parentSeparator) {
 		if (!Mapping.class.isInstance(e)) { return null; }
 		Mapping m = Mapping.class.cast(e);
-		if (NameMapping.class.isInstance(m)) { return new AttributeRenderer(m, parentSeparator); }
-		if (NamespaceMapping.class.isInstance(m)) { return new NamespaceRenderer(m, parentSeparator); }
-		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(m, parentSeparator); }
+		if (NameMapping.class
+			.isInstance(m)) { return new AttributeRenderer(NameMapping.class.cast(m), parentSeparator); }
+		if (NamespaceMapping.class
+			.isInstance(m)) { return new NamespaceRenderer(NamespaceMapping.class.cast(m), parentSeparator); }
+		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(SetValue.class.cast(m), parentSeparator); }
 		return null;
 	}
 
-	public AttributeMapper(AlfrescoSchema schema, String xmlSource, String residualsPrefix)
+	public AttributeMapper(ConstructedTypeFactory constructedTypeFactory, String xmlSource, String residualsPrefix)
 		throws XmlInstanceException, XmlNotFoundException {
+		this.constructedTypeFactory = Objects.requireNonNull(constructedTypeFactory,
+			"Must provide a non-null SchemaService instance");
 		AttributeMappings xml = AttributeMapper.INSTANCES.getInstance(xmlSource);
 		if (xml == null) {
 			xml = new AttributeMappings();
@@ -133,13 +162,10 @@ public class AttributeMapper {
 
 		Map<String, MappingRendererSet> typedMappings = new TreeMap<>();
 		for (TypeMappings tm : typeMappings) {
-			SchemaMember<?> type = schema.getType(tm.getName());
-			if (type == null) {
-				type = schema.getAspect(tm.getName());
-			}
-			if (type == null) {
+			if (!constructedTypeFactory.hasType(tm.getName())
+				&& !constructedTypeFactory.hasSecondaryType(tm.getName())) {
 				this.log.warn(
-					"No type or aspect named [{}] was found in the declared Alfresco content model - ignoring this mapping set",
+					"No primary or secondary type named [{}] was found in the available schema - ignoring this mapping set",
 					tm.getName());
 				continue;
 			}
@@ -183,60 +209,43 @@ public class AttributeMapper {
 		return this.residualsPrefix;
 	}
 
-	private MappingRendererSet getMappingRendererSet(final AlfrescoType type) {
+	private MappingRendererSet getMappingRendererSet(final ConstructedType type) {
 		if (type == null) { return this.commonRenderers; }
 		final String signature = type.getSignature();
 		try {
 			return this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
 				@Override
 				public MappingRendererSet get() throws ConcurrentException {
-					List<MappingRenderer> renderers = new ArrayList<>();
-					SchemaMember<?> typeDecl = type.getDeclaration();
-					Set<String> aspectsAdded = new HashSet<>();
-					while (typeDecl != null) {
-						// 1) find the mappings for the specific type
-						MappingRendererSet rendererSet = AttributeMapper.this.typedMappings.get(typeDecl.getName());
-						if (rendererSet != null) {
-							// There's a specific renderer for this type, so add it!
-							renderers.add(rendererSet);
-						}
+					Map<String, MappingRenderer> renderers = new LinkedHashMap<>();
 
-						// 2) find the mappings for the type's mandatory aspects
-						for (String aspect : typeDecl.getMandatoryAspects()) {
-							if (!aspectsAdded.add(aspect)) {
-								// If this aspect is already being processed, we skip it
-								continue;
-							}
-							rendererSet = AttributeMapper.this.typedMappings.get(aspect);
-							if (rendererSet != null) {
-								renderers.add(rendererSet);
-							}
-						}
+					// First, the type itself
+					MappingRendererSet set = AttributeMapper.this.typedMappings.get(type.getName());
+					if (set != null) {
+						renderers.put(type.getName(), set);
+					}
 
-						// 3) find the mappings for the type's undeclared (extra-attached) aspects.
-						// We only do this for the first iteration (i.e. the leaf type)
-						if (typeDecl == type.getDeclaration()) {
-							for (String aspect : type.getExtraAspects()) {
-								if (!aspectsAdded.add(aspect)) {
-									// If this aspect is already being processed, we skip it
-									continue;
-								}
-								rendererSet = AttributeMapper.this.typedMappings.get(aspect);
-								if (rendererSet != null) {
-									renderers.add(rendererSet);
-								}
-							}
+					// Next, all of its hierarchical parents
+					for (String a : type.getAncestors()) {
+						set = AttributeMapper.this.typedMappings.get(a);
+						if ((set != null) && !renderers.containsKey(a)) {
+							renderers.put(a, set);
 						}
+					}
 
-						// 4) Recurse upward through the parent type...
-						typeDecl = typeDecl.getParent();
+					// Finally, all its secondaries
+					for (String s : type.getSecondaries()) {
+						set = AttributeMapper.this.typedMappings.get(s);
+						if ((set != null) && !renderers.containsKey(s)) {
+							renderers.put(s, set);
+						}
 					}
 
 					// Finally, add the common renderers
 					if (AttributeMapper.this.commonRenderers != null) {
-						renderers.add(AttributeMapper.this.commonRenderers);
+						renderers.put(null, AttributeMapper.this.commonRenderers);
 					}
-					return new MappingRendererSet(type.toString(), null, null, renderers);
+
+					return new MappingRendererSet(type.toString(), null, null, new ArrayList<>(renderers.values()));
 				}
 			});
 		} catch (ConcurrentException e) {
@@ -251,23 +260,71 @@ public class AttributeMapper {
 		return String.format("%s:%s", this.residualsPrefix, (m.matches() ? m.group(2) : attributeName));
 	}
 
-	public AttributeMappingResult renderMappedAttributes(final AlfrescoType type, CmfObject<CmfValue> object) {
+	protected void applyResult(final ConstructedType type, final Map<String, AttributeMapping> mappings,
+		final boolean includeResiduals, DynamicObject object) {
+		final Map<String, DynamicValue> dynamicValues = object.getAtt();
+		if (!includeResiduals) {
+			// Remove all residuals
+			dynamicValues.keySet().retainAll(mappings.keySet());
+		}
+		mappings.forEach((name, mapping) -> {
+			DynamicValue oldValue = null;
+			DynamicValue newValue = null;
+
+			final String origName = mapping.getSourceName();
+			final String newName = mapping.getTargetName();
+
+			if (origName != null) {
+				// This is a rename or a removal...
+				oldValue = dynamicValues.remove(origName);
+
+				if ((newName == null) || (oldValue == null)) {
+					// This is just a removal, or there's nothing to rename
+					return;
+				}
+			}
+
+			// Ok...so this is either a rename or an assignment, so we
+			// check if it's a residual and skip it as required
+			if (!includeResiduals && !type.hasAttribute(newName)) { return; }
+
+			newValue = new DynamicValue(newName, mapping.getType(), mapping.isRepeating());
+			dynamicValues.put(newName, newValue);
+
+			if (oldValue != null) {
+				// It's a rename, so just copy the old values
+				newValue.setValues(oldValue.getValues());
+			} else {
+				// It's a new attribute, so copy the constant values
+				newValue.setValues(mapping.getValues());
+			}
+		});
+	}
+
+	public void renderMappedAttributes(final SchemaService schemaService, DynamicObject object)
+		throws SchemaServiceException {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
-		Map<String, AttributeValue> finalValues = new TreeMap<>();
+
+		final ConstructedType type = this.constructedTypeFactory.constructType(schemaService, object.getSubtype(),
+			object.getSecondarySubtypes());
+		// If there's no type to map against, we simply skip it...
+		if (type == null) { return; }
+
+		Map<String, AttributeMapping> finalValues = new HashMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
 
 		// Render the mapped values
 		// The rendering will contain all attributes mapped. Time to filter out residuals from
 		// declared attributes...
-		final Map<String, AttributeValue> residuals = new TreeMap<>();
+		final Map<String, AttributeMapping> residuals = new HashMap<>();
 		final ResidualsModeTracker tracker = new ResidualsModeTracker();
-		for (AttributeValue attribute : renderer.render(object, tracker)) {
+		renderer.render(object, tracker).forEach((attribute) -> {
 			final String targetName = attribute.getTargetName();
+
 			// First things first: is this attribute residual?
-			final SchemaAttribute schemaAttribute = type.getAttribute(targetName);
-			if (schemaAttribute == null) {
+			if (!type.hasAttribute(targetName)) {
 				residuals.put(targetName, attribute);
-				continue;
+				return;
 			}
 
 			// This attribute is a declared attribute, so we render it!
@@ -275,25 +332,22 @@ public class AttributeMapper {
 			if (attribute.isOverride() || !finalValues.containsKey(targetName)) {
 				finalValues.put(targetName, attribute);
 			}
-		}
+		});
 
 		// Now, scan through the source object's attributes for any values that have not yet
 		// been processed and should be included as direct mappings
-		for (String sourceAttribute : object.getAttributeNames()) {
-			if (finalValues.containsKey(sourceAttribute)) {
-				// This is attribute has already been rendered, so skip it! Direct mappings
+		object.getAtt().forEach((name, attribute) -> {
+			if (finalValues.containsKey(name)) {
+				// This is attribute has already been rendered, so skip it! Implicit mappings
 				// cannot override explicit mappings
-				continue;
+				return;
 			}
-
-			final SchemaAttribute schemaAttribute = type.getAttribute(sourceAttribute);
-			final CmfAttribute<CmfValue> att = object.getAttribute(sourceAttribute);
-			final AttributeValue value = new AttributeValue(att, sourceAttribute, ',', false);
 
 			// If the attribute is declared, then copy it directly...otherwise, it's should be
 			// treated as a residual
-			(schemaAttribute != null ? finalValues : residuals).put(sourceAttribute, value);
-		}
+			(type.hasAttribute(name) ? finalValues : residuals).put(name,
+				new AttributeMapping(attribute, name, ',', false));
+		});
 
 		boolean residualsEnabled = false;
 		switch (tracker.getActiveResidualsMode()) {
@@ -301,7 +355,7 @@ public class AttributeMapper {
 			case INCLUDE:
 				residualsEnabled = true;
 				// Process residuals we've already identified
-				for (AttributeValue residual : residuals.values()) {
+				for (AttributeMapping residual : residuals.values()) {
 					finalValues.put(getResidualName(residual.getTargetName()), residual);
 				}
 
@@ -310,6 +364,6 @@ public class AttributeMapper {
 				break;
 		}
 
-		return new AttributeMappingResult(finalValues, residualsEnabled);
+		applyResult(type, finalValues, residualsEnabled, object);
 	}
 }
