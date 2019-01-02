@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
+package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,28 +8,27 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.engine.dynamic.xml.mapper.Mapping;
-import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.engine.dynamic.DynamicObject;
+import com.armedia.caliente.engine.dynamic.xml.mapper.NamespaceMapping;
 
 class NamespaceRenderer extends AttributeRenderer {
 	private static final Pattern NSPARSER = Pattern.compile("^([^:]+):(.+)$");
 
-	public NamespaceRenderer(Mapping m, Character parentSeparator) {
+	public NamespaceRenderer(NamespaceMapping m, Character parentSeparator) {
 		super(m, parentSeparator);
 	}
 
 	@Override
-	public Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
+	public Collection<AttributeMapping> render(DynamicObject object, ResidualsModeTracker tracker) {
 		Objects.requireNonNull(object, "Must provide a source object to map against");
 
-		Collection<AttributeValue> ret = new ArrayList<>();
-		for (final String sourceName : object.getAttributeNames()) {
+		Collection<AttributeMapping> ret = new ArrayList<>();
+		object.getAtt().forEach((sourceName, attribute) -> {
 			// First, get the source attribute's namespace
 			Matcher m = NamespaceRenderer.NSPARSER.matcher(sourceName);
 			if (!m.matches()) {
 				// No namespace!! Not applicable
-				continue;
+				return;
 			}
 
 			// We have a namespace...so should it be mapped?
@@ -40,13 +39,13 @@ class NamespaceRenderer extends AttributeRenderer {
 
 			if (!this.sourceValues.contains(srcNs)) {
 				// No match...skip it!
-				continue;
+				return;
 			}
 
 			final String attributeBaseName = m.group(2);
 			final String targetName = String.format("%s:%s", this.target, attributeBaseName);
-			ret.add(new AttributeValue(object.getAttribute(sourceName), targetName, this.separator, this.override));
-		}
+			ret.add(new AttributeMapping(attribute, targetName, this.separator, this.override));
+		});
 		return ret;
 	}
 }

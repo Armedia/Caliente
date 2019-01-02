@@ -103,7 +103,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 					engine.addListener(l);
 				}
 				this.log.info("##### Import Process Started #####");
-				engine.run();
+				engine.run(results);
 				this.log.info("##### Import Process Completed #####");
 			} catch (Throwable t) {
 				StringWriter sw = new StringWriter();

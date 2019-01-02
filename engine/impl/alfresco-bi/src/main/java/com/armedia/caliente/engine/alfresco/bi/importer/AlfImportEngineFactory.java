@@ -1,7 +1,10 @@
 package com.armedia.caliente.engine.alfresco.bi.importer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Set;
+
+import javax.xml.bind.JAXBException;
 
 import org.slf4j.Logger;
 
@@ -32,7 +35,11 @@ public class AlfImportEngineFactory extends
 	public AlfImportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
 		throws ImportException {
-		return new AlfImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
+		try {
+			return new AlfImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
+		} catch (IOException | JAXBException e) {
+			throw new ImportException("Failed to build a new AlfImportEngine instance", e);
+		}
 	}
 
 }

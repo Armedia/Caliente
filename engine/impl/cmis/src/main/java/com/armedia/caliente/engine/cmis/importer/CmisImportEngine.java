@@ -10,6 +10,7 @@ import com.armedia.caliente.engine.cmis.CmisSessionFactory;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
@@ -137,5 +138,10 @@ public class CmisImportEngine extends
 	@Override
 	protected CmisImportDelegateFactory newDelegateFactory(Session session, CfgTools cfg) throws Exception {
 		return new CmisImportDelegateFactory(this, session, cfg);
+	}
+
+	@Override
+	protected CmisSchemaService newSchemaService(Session session) throws SchemaServiceException {
+		return new CmisSchemaService(session);
 	}
 }

@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
+package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 public class MapByType {
 

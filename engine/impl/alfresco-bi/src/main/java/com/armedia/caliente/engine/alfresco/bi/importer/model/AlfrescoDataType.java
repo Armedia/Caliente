@@ -36,15 +36,20 @@ public enum AlfrescoDataType {
 	//
 	;
 
+	public final CmfDataType cmfDataType;
 	private final Set<CmfDataType> mappedTypes;
 	public final String nameString;
 
 	private AlfrescoDataType(CmfDataType... types) {
-		if (types != null) {
+		CmfDataType cmfDataType = null;
+		if ((types != null) && (types.length > 0)) {
 			EnumSet<CmfDataType> s = EnumSet.noneOf(CmfDataType.class);
 			for (CmfDataType t : types) {
 				if (t == null) {
 					continue;
+				}
+				if (cmfDataType == null) {
+					cmfDataType = t;
 				}
 				s.add(t);
 			}
@@ -52,6 +57,7 @@ public enum AlfrescoDataType {
 		} else {
 			this.mappedTypes = Collections.emptySet();
 		}
+		this.cmfDataType = cmfDataType;
 		String name = name();
 		if (name.indexOf('_') < 0) {
 			this.nameString = String.format("d:%s", name).toLowerCase();

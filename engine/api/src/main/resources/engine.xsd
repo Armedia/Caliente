@@ -995,7 +995,7 @@
 
 	<xsd:complexType name="mapping.t">
 		<xsd:simpleContent>
-			<xsd:extension base="xsd:string">
+			<xsd:extension base="tns:noSpaces.t">
 				<xsd:attribute name="tgt" type="tns:noSpaces.t" use="required" />
 				<xsd:attribute name="caseSensitive" type="xsd:boolean" use="optional" default="true" />
 				<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="," />
@@ -1017,9 +1017,15 @@
 	</xsd:complexType>
 
 	<xsd:complexType name="setValue.t">
-		<xsd:complexContent>
-			<xsd:extension base="tns:mapping.t"/>
-		</xsd:complexContent>
+		<xsd:simpleContent>
+			<xsd:extension base="xsd:string">
+				<xsd:attribute name="tgt" type="tns:noSpaces.t" use="required" />
+				<xsd:attribute name="caseSensitive" type="xsd:boolean" use="optional" default="true" />
+				<xsd:attribute name="separator" type="tns:singleChar.t" use="optional" default="," />
+				<xsd:attribute name="override" type="xsd:boolean" use="optional" default="false" />
+				<xsd:attribute name="type" type="tns:cmfDataType.t" use="optional" default="STRING" />
+			</xsd:extension>
+		</xsd:simpleContent>
 	</xsd:complexType>
 
 	<xsd:complexType name="mappingNamespace.t">

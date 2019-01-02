@@ -1,13 +1,12 @@
-package com.armedia.caliente.engine.alfresco.bi.importer.mapper;
+package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
-import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class MappingRendererSet implements MappingRenderer {
@@ -48,8 +47,8 @@ public class MappingRendererSet implements MappingRenderer {
 	 * @return the set of target attributes that were rendered
 	 */
 	@Override
-	public final Collection<AttributeValue> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
-		Map<String, AttributeValue> ret = new TreeMap<>();
+	public final Collection<AttributeMapping> render(DynamicObject object, ResidualsModeTracker tracker) {
+		Map<String, AttributeMapping> ret = new TreeMap<>();
 		if (tracker != null) {
 			tracker.applyResidualsMode(this.residualsMode);
 		}
@@ -58,12 +57,12 @@ public class MappingRendererSet implements MappingRenderer {
 				continue;
 			}
 
-			Collection<AttributeValue> values = r.render(object, tracker);
+			Collection<AttributeMapping> values = r.render(object, tracker);
 			if ((values == null) || values.isEmpty()) {
 				continue;
 			}
 
-			for (AttributeValue value : values) {
+			for (AttributeMapping value : values) {
 				final String targetName = value.getTargetName();
 				if (value.isOverride() || !ret.containsKey(targetName)) {
 					ret.put(targetName, value);

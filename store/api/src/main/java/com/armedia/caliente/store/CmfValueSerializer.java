@@ -105,6 +105,7 @@ public enum CmfValueSerializer {
 
 		@Override
 		public String doSerialize(CmfValue value) throws ParseException {
+			if (value.isNull()) { return null; }
 			return DateFormatUtils.format(value.asTime(), this.PATTERN);
 		}
 
@@ -141,6 +142,7 @@ public enum CmfValueSerializer {
 	}
 
 	public final CmfValue deserialize(String str) throws ParseException {
+		// TODO: Should we instead return type.getNull() here?
 		if (str == null) { return null; }
 		return doDeserialize(str);
 	}

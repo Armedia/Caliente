@@ -33,6 +33,9 @@ import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilterException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.AttributeMapper;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -46,6 +49,7 @@ import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.tools.Closer;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
@@ -375,6 +379,17 @@ public abstract class ImportEngine<//
 			new LinkedBlockingQueue<Runnable>());
 	}
 
+	protected final AttributeMapper getAttributeMapper(CfgTools cfg, SchemaService schemaService) throws Exception {
+		if (schemaService == null) { return null; }
+
+		String mapperDefault = String.format("%s%s", this.cfgNamePrefix, AttributeMapper.getDefaultLocation());
+		String mapper = cfg.getString(ImportSetting.ATTRIBUTE_MAPPING.getLabel());
+		String residualsPrefix = cfg.getString(ImportSetting.RESIDUALS_PREFIX.getLabel());
+
+		return AttributeMapper.getAttributeMapper(schemaService, Tools.coalesce(mapper, mapperDefault), residualsPrefix,
+			false);
+	}
+
 	@Override
 	protected final void work(CmfObjectCounter<ImportResult> counter) throws ImportException, CmfStorageException {
 
@@ -402,13 +417,31 @@ public abstract class ImportEngine<//
 				throw new ImportException("Failed to obtain the import initialization session", e);
 			}
 
+			AttributeMapper attributeMapper = null;
 			Transformer transformer = null;
 			ObjectFilter filter = null;
 			ImportContextFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> contextFactory = null;
 			ImportDelegateFactory<SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?> delegateFactory = null;
 			try {
+				SchemaService schemaService = null;
 				try {
-					transformer = getTransformer(configuration);
+					schemaService = newSchemaService(baseSession.getWrapped());
+				} catch (SchemaServiceException e) {
+					throw new ImportException("Failed to initialize the required schema service", e);
+				}
+
+				if (schemaService != null) {
+					try {
+						attributeMapper = getAttributeMapper(configuration, schemaService);
+					} catch (Exception e) {
+						throw new ImportException("Failed to initialize the configured attribute mappings", e);
+					} finally {
+						Closer.closeQuietly(schemaService);
+					}
+				}
+
+				try {
+					transformer = getTransformer(configuration, attributeMapper);
 				} catch (Exception e) {
 					throw new ImportException("Failed to initialize the configured object transformations", e);
 				}
@@ -447,6 +480,7 @@ public abstract class ImportEngine<//
 				if (delegateFactory != null) {
 					delegateFactory.close();
 				}
+
 				if (contextFactory != null) {
 					contextFactory.close();
 				}
@@ -664,7 +698,8 @@ public abstract class ImportEngine<//
 				final ExecutorService executor = (strategy.isParallelCapable() ? parallelExecutor : singleExecutor);
 
 				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
-				try {
+
+				try (final SessionWrapper<SESSION> loaderSession = sessionFactory.acquireSession()) {
 					objectStore.loadObjects(type, new CmfObjectHandler<CmfValue>() {
 						private boolean filtered = false;
 						private List<CmfObject<VALUE>> contents = null;
@@ -703,11 +738,23 @@ public abstract class ImportEngine<//
 							}
 
 							if (transformer != null) {
+								SchemaService schemaService = null;
 								try {
-									dataObject = transformer.transform(objectStore.getValueMapper(), dataObject);
+									schemaService = newSchemaService(loaderSession.getWrapped());
+								} catch (SchemaServiceException e) {
+									throw new CmfStorageException(String.format(
+										"Failed to initialize the required schema service while processing %s",
+										dataObject.getDescription()), e);
+								}
+
+								try {
+									dataObject = transformer.transform(objectStore.getValueMapper(), schemaService,
+										dataObject);
 								} catch (TransformerException e) {
 									throw new CmfStorageException(
 										String.format("Failed to transform %s", dataObject.getDescription()), e);
+								} finally {
+									Closer.closeQuietly(schemaService);
 								}
 							}
 
@@ -845,6 +892,8 @@ public abstract class ImportEngine<//
 	protected CmfNameFixer<VALUE> getNameFixer(Logger output) {
 		return null;
 	}
+
+	protected abstract SchemaService newSchemaService(SESSION session) throws SchemaServiceException;
 
 	protected void initContext(CONTEXT ctx) {
 	}

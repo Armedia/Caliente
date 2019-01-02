@@ -5,6 +5,8 @@ import com.armedia.caliente.store.CmfDataType;
 
 public enum ImportSetting implements TransferEngineSetting {
 	//
+	ATTRIBUTE_MAPPING(CmfDataType.STRING),
+	RESIDUALS_PREFIX(CmfDataType.STRING),
 	TARGET_LOCATION(CmfDataType.STRING, "/"),
 	TRIM_PREFIX(CmfDataType.INTEGER, 0),
 	NO_FILENAME_MAP(CmfDataType.BOOLEAN, false),

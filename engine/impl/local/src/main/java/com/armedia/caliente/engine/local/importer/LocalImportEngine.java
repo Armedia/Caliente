@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.engine.local.common.LocalRoot;
@@ -136,5 +138,10 @@ public class LocalImportEngine extends
 	@Override
 	protected LocalImportDelegateFactory newDelegateFactory(LocalRoot session, CfgTools cfg) throws Exception {
 		return new LocalImportDelegateFactory(this, cfg);
+	}
+
+	@Override
+	protected SchemaService newSchemaService(LocalRoot session) throws SchemaServiceException {
+		return null;
 	}
 }

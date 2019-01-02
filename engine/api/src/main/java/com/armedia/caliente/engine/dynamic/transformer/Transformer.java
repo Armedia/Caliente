@@ -7,12 +7,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
+import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.AttributeMapper;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 
@@ -21,12 +26,12 @@ public class Transformer {
 	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class);
 
 	public static Transformer getTransformer(String location, ExternalMetadataLoader metadataLoader,
-		boolean failIfMissing) throws TransformerException {
+		AttributeMapper attributeMapper, boolean failIfMissing) throws TransformerException {
 		try {
 			try {
 				Transformations transformations = Transformer.INSTANCES.getInstance(location);
 				if (transformations == null) { return null; }
-				return new Transformer(location, transformations, metadataLoader);
+				return new Transformer(location, transformations, metadataLoader, attributeMapper);
 			} catch (final XmlNotFoundException e) {
 				if (!failIfMissing) { return null; }
 				throw e;
@@ -51,19 +56,21 @@ public class Transformer {
 	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private final Transformations transformations;
 	private final ExternalMetadataLoader metadataLoader;
+	private final AttributeMapper attributeMapper;
 	private boolean closed = false;
 
-	private Transformer(String location, Transformations transformations, ExternalMetadataLoader metadataLoader)
-		throws TransformerException {
+	private Transformer(String location, Transformations transformations, ExternalMetadataLoader metadataLoader,
+		AttributeMapper attributeMapper) throws TransformerException {
 		this.transformations = transformations;
 		this.metadataLoader = metadataLoader;
+		this.attributeMapper = attributeMapper;
 	}
 
 	private DynamicElementContext createContext(CmfValueMapper mapper, CmfObject<CmfValue> object) {
 		return new DynamicElementContext(object, new DefaultDynamicObject(object), mapper, this.metadataLoader);
 	}
 
-	public CmfObject<CmfValue> transform(CmfValueMapper mapper, CmfObject<CmfValue> object)
+	public CmfObject<CmfValue> transform(CmfValueMapper mapper, SchemaService schemaService, CmfObject<CmfValue> object)
 		throws TransformerException {
 		Lock l = this.rwLock.readLock();
 		l.lock();
@@ -79,7 +86,20 @@ public class Transformer {
 					// in its tracks
 				}
 
-				return ctx.getDynamicObject().applyChanges(object);
+				final DynamicObject dynamic = ctx.getDynamicObject();
+				if (dynamic.getType() == CmfType.DOCUMENT) {
+					"".hashCode();
+				}
+				if (this.attributeMapper != null) {
+					try {
+						this.attributeMapper.renderMappedAttributes(schemaService, dynamic);
+					} catch (SchemaServiceException e) {
+						throw new TransformerException(
+							String.format("Failed to apply the attribute mappings for %s", object.getDescription()), e);
+					}
+				}
+
+				return dynamic.applyChanges(object);
 			} catch (ActionException e) {
 				throw new TransformerException(String
 					.format("Exception caught while performing the transformation for %s", object.getDescription()), e);

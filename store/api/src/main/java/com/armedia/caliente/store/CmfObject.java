@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -20,7 +21,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class CmfObject<VALUE> extends CmfObjectSearchSpec {
+public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<CmfAttribute<VALUE>> {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -221,6 +222,11 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec {
 		for (CmfAttribute<VALUE> att : attributes) {
 			setAttribute(att);
 		}
+	}
+
+	@Override
+	public Iterator<CmfAttribute<VALUE>> iterator() {
+		return this.attributes.values().iterator();
 	}
 
 	public final int getPropertyCount() {
