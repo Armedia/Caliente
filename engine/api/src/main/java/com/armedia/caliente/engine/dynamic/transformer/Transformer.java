@@ -4,8 +4,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
@@ -88,10 +86,6 @@ public class Transformer {
 				}
 
 				final DynamicObject dynamic = ctx.getDynamicObject();
-				if (StringUtils.equalsIgnoreCase(dynamic.getObjectId(), "09de75d1800295db")) {
-					"".hashCode();
-				}
-
 				if (this.attributeMapper != null) {
 					try {
 						this.attributeMapper.renderMappedAttributes(schemaService, dynamic);
