@@ -1,11 +1,11 @@
-package com.armedia.caliente.engine.dynamic.mapper;
+package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.armedia.caliente.engine.dynamic.mapper.schema.ConstructedType;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.ConstructedType;
 import com.armedia.commons.utilities.Tools;
 
 public class AttributeMappingResult implements Iterable<AttributeMapping> {

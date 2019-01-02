@@ -27,9 +27,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.filter.ObjectFilter;
-import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.AttributeMapper;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.tools.MappingTools;

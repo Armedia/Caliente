@@ -7,9 +7,9 @@ import java.util.List;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Aspect;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Type;
-import com.armedia.caliente.engine.dynamic.mapper.schema.AttributeDeclaration;
-import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
-import com.armedia.caliente.engine.dynamic.mapper.schema.TypeDeclaration;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.AttributeDeclaration;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.TypeDeclaration;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.store.CmfDataType;

@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.dynamic.mapper.schema;
+package com.armedia.caliente.engine.dynamic.transformer.mapper.schema;
 
 import java.util.Collection;
 import java.util.Collections;

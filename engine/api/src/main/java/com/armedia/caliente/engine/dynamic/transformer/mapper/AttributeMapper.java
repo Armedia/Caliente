@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.dynamic.mapper;
+package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -18,10 +18,10 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
-import com.armedia.caliente.engine.dynamic.mapper.schema.ConstructedType;
-import com.armedia.caliente.engine.dynamic.mapper.schema.ConstructedTypeFactory;
-import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
-import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.ConstructedType;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.ConstructedTypeFactory;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstanceException;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;

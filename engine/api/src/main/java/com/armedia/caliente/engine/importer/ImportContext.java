@@ -8,10 +8,10 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
-import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
-import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
+import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;

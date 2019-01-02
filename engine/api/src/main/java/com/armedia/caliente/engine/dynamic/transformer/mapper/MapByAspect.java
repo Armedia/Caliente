@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.dynamic.mapper;
+package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 import com.armedia.caliente.engine.dynamic.xml.mapper.IncludeNamed;
 
