@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -262,6 +263,10 @@ public class AttributeMapper {
 	protected void applyResult(final ConstructedType type, final Map<String, AttributeMapping> mappings,
 		final boolean includeResiduals, DynamicObject object) {
 		final Map<String, DynamicValue> dynamicValues = object.getAtt();
+		if (!includeResiduals) {
+			// Remove all residuals
+			dynamicValues.keySet().retainAll(mappings.keySet());
+		}
 		mappings.forEach((name, mapping) -> {
 			DynamicValue oldValue = null;
 			DynamicValue newValue = null;
@@ -299,24 +304,27 @@ public class AttributeMapper {
 	public void renderMappedAttributes(final SchemaService schemaService, DynamicObject object)
 		throws SchemaServiceException {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
+
 		final ConstructedType type = this.constructedTypeFactory.constructType(schemaService, object.getSubtype(),
 			object.getSecondarySubtypes());
 		// If there's no type to map against, we simply skip it...
 		if (type == null) { return; }
-		Map<String, AttributeMapping> finalValues = new TreeMap<>();
+
+		Map<String, AttributeMapping> finalValues = new HashMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
 
 		// Render the mapped values
 		// The rendering will contain all attributes mapped. Time to filter out residuals from
 		// declared attributes...
-		final Map<String, AttributeMapping> residuals = new TreeMap<>();
+		final Map<String, AttributeMapping> residuals = new HashMap<>();
 		final ResidualsModeTracker tracker = new ResidualsModeTracker();
-		for (AttributeMapping attribute : renderer.render(object, tracker)) {
+		renderer.render(object, tracker).forEach((attribute) -> {
 			final String targetName = attribute.getTargetName();
+
 			// First things first: is this attribute residual?
 			if (!type.hasAttribute(targetName)) {
 				residuals.put(targetName, attribute);
-				continue;
+				return;
 			}
 
 			// This attribute is a declared attribute, so we render it!
@@ -324,23 +332,21 @@ public class AttributeMapper {
 			if (attribute.isOverride() || !finalValues.containsKey(targetName)) {
 				finalValues.put(targetName, attribute);
 			}
-		}
+		});
 
 		// Now, scan through the source object's attributes for any values that have not yet
 		// been processed and should be included as direct mappings
-		object.getAtt().forEach((sourceAttribute, att) -> {
-			if (finalValues.containsKey(sourceAttribute)) {
+		object.getAtt().forEach((name, attribute) -> {
+			if (finalValues.containsKey(name)) {
 				// This is attribute has already been rendered, so skip it! Implicit mappings
 				// cannot override explicit mappings
 				return;
 			}
 
-			final boolean declared = type.hasAttribute(sourceAttribute);
-			final AttributeMapping value = new AttributeMapping(att, sourceAttribute, ',', false);
-
 			// If the attribute is declared, then copy it directly...otherwise, it's should be
 			// treated as a residual
-			(declared ? finalValues : residuals).put(sourceAttribute, value);
+			(type.hasAttribute(name) ? finalValues : residuals).put(name,
+				new AttributeMapping(attribute, name, ',', false));
 		});
 
 		boolean residualsEnabled = false;
