@@ -1,21 +1,17 @@
 package com.armedia.caliente.engine.dynamic.transformer;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicObject;
-import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.ProcessingCompletedException;
 import com.armedia.caliente.engine.dynamic.mapper.AttributeMapper;
-import com.armedia.caliente.engine.dynamic.mapper.AttributeMappingResult;
-import com.armedia.caliente.engine.dynamic.mapper.schema.ConstructedType;
 import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
 import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
@@ -92,57 +88,16 @@ public class Transformer {
 				}
 
 				final DynamicObject dynamic = ctx.getDynamicObject();
+				if (StringUtils.equalsIgnoreCase(dynamic.getObjectId(), "09de75d1800295db")) {
+					"".hashCode();
+				}
 
-				if ((schemaService != null) && (this.attributeMapper != null)) {
-					AttributeMappingResult result = null;
+				if (this.attributeMapper != null) {
 					try {
-						result = this.attributeMapper.renderMappedAttributes(schemaService, object);
+						this.attributeMapper.renderMappedAttributes(schemaService, dynamic);
 					} catch (SchemaServiceException e) {
-						throw new TransformerException(String.format(
-							"Failed to apply the configured attribute mappings for %s", object.getDescription()), e);
-					}
-
-					if (result != null) {
-						final ConstructedType type = result.getType();
-						final boolean includeResiduals = result.isResidualsEnabled();
-
-						Map<String, DynamicValue> dynamicValues = dynamic.getAtt();
-						result.forEach((mapping) -> {
-							DynamicValue oldValue = null;
-							DynamicValue newValue = null;
-
-							final String origName = mapping.getSourceName();
-							final String newName = mapping.getTargetName();
-
-							if (origName != null) {
-								// This is a rename or a removal...
-								oldValue = dynamicValues.remove(origName);
-
-								if ((newName == null) || (oldValue == null)) {
-									// This is just a removal, or there's nothing to rename
-									return;
-								}
-							}
-
-							// Ok...so this is either a rename or an assignment, so we
-							// check if it's a residual and skip it as required
-							if (!includeResiduals && !type.hasAttribute(newName)) { return; }
-
-							newValue = new DynamicValue(newName, mapping.getType(), mapping.isRepeating());
-							dynamicValues.put(newName, newValue);
-
-							if (oldValue != null) {
-								// It's a rename, so just copy the old values
-								newValue.setValues(oldValue.getValues());
-							} else {
-								// It's an assignment, so copy the mapped values
-								Collection<Object> newValues = new ArrayList<>(mapping.getValueCount());
-								mapping.forEach((value) -> {
-									newValues.add(value.asObject());
-								});
-								newValue.setValues(newValues);
-							}
-						});
+						throw new TransformerException(
+							String.format("Failed to apply the attribute mappings for %s", object.getDescription()), e);
 					}
 				}
 

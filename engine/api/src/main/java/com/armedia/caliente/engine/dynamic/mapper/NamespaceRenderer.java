@@ -8,9 +8,8 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.engine.dynamic.xml.mapper.NamespaceMapping;
-import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 
 class NamespaceRenderer extends AttributeRenderer {
 	private static final Pattern NSPARSER = Pattern.compile("^([^:]+):(.+)$");
@@ -20,16 +19,16 @@ class NamespaceRenderer extends AttributeRenderer {
 	}
 
 	@Override
-	public Collection<AttributeMapping> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
+	public Collection<AttributeMapping> render(DynamicObject object, ResidualsModeTracker tracker) {
 		Objects.requireNonNull(object, "Must provide a source object to map against");
 
 		Collection<AttributeMapping> ret = new ArrayList<>();
-		for (final String sourceName : object.getAttributeNames()) {
+		object.getAtt().forEach((sourceName, attribute) -> {
 			// First, get the source attribute's namespace
 			Matcher m = NamespaceRenderer.NSPARSER.matcher(sourceName);
 			if (!m.matches()) {
 				// No namespace!! Not applicable
-				continue;
+				return;
 			}
 
 			// We have a namespace...so should it be mapped?
@@ -40,13 +39,13 @@ class NamespaceRenderer extends AttributeRenderer {
 
 			if (!this.sourceValues.contains(srcNs)) {
 				// No match...skip it!
-				continue;
+				return;
 			}
 
 			final String attributeBaseName = m.group(2);
 			final String targetName = String.format("%s:%s", this.target, attributeBaseName);
-			ret.add(new AttributeMapping(object.getAttribute(sourceName), targetName, this.separator, this.override));
-		}
+			ret.add(new AttributeMapping(attribute, targetName, this.separator, this.override));
+		});
 		return ret;
 	}
 }

@@ -16,6 +16,8 @@ import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.engine.dynamic.DynamicObject;
+import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.mapper.schema.ConstructedType;
 import com.armedia.caliente.engine.dynamic.mapper.schema.ConstructedTypeFactory;
 import com.armedia.caliente.engine.dynamic.mapper.schema.SchemaService;
@@ -35,9 +37,6 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
-import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
@@ -260,13 +259,50 @@ public class AttributeMapper {
 		return String.format("%s:%s", this.residualsPrefix, (m.matches() ? m.group(2) : attributeName));
 	}
 
-	public AttributeMappingResult renderMappedAttributes(final SchemaService schemaService, CmfObject<CmfValue> object)
+	protected void applyResult(final ConstructedType type, final Map<String, AttributeMapping> mappings,
+		final boolean includeResiduals, DynamicObject object) {
+		final Map<String, DynamicValue> dynamicValues = object.getAtt();
+		mappings.forEach((name, mapping) -> {
+			DynamicValue oldValue = null;
+			DynamicValue newValue = null;
+
+			final String origName = mapping.getSourceName();
+			final String newName = mapping.getTargetName();
+
+			if (origName != null) {
+				// This is a rename or a removal...
+				oldValue = dynamicValues.remove(origName);
+
+				if ((newName == null) || (oldValue == null)) {
+					// This is just a removal, or there's nothing to rename
+					return;
+				}
+			}
+
+			// Ok...so this is either a rename or an assignment, so we
+			// check if it's a residual and skip it as required
+			if (!includeResiduals && !type.hasAttribute(newName)) { return; }
+
+			newValue = new DynamicValue(newName, mapping.getType(), mapping.isRepeating());
+			dynamicValues.put(newName, newValue);
+
+			if (oldValue != null) {
+				// It's a rename, so just copy the old values
+				newValue.setValues(oldValue.getValues());
+			} else {
+				// It's a new attribute, so copy the constant values
+				newValue.setValues(mapping.getValues());
+			}
+		});
+	}
+
+	public void renderMappedAttributes(final SchemaService schemaService, DynamicObject object)
 		throws SchemaServiceException {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 		final ConstructedType type = this.constructedTypeFactory.constructType(schemaService, object.getSubtype(),
 			object.getSecondarySubtypes());
 		// If there's no type to map against, we simply skip it...
-		if (type == null) { return null; }
+		if (type == null) { return; }
 		Map<String, AttributeMapping> finalValues = new TreeMap<>();
 		final MappingRendererSet renderer = getMappingRendererSet(type);
 
@@ -292,21 +328,20 @@ public class AttributeMapper {
 
 		// Now, scan through the source object's attributes for any values that have not yet
 		// been processed and should be included as direct mappings
-		for (String sourceAttribute : object.getAttributeNames()) {
+		object.getAtt().forEach((sourceAttribute, att) -> {
 			if (finalValues.containsKey(sourceAttribute)) {
-				// This is attribute has already been rendered, so skip it! Direct mappings
+				// This is attribute has already been rendered, so skip it! Implicit mappings
 				// cannot override explicit mappings
-				continue;
+				return;
 			}
 
 			final boolean declared = type.hasAttribute(sourceAttribute);
-			final CmfAttribute<CmfValue> att = object.getAttribute(sourceAttribute);
 			final AttributeMapping value = new AttributeMapping(att, sourceAttribute, ',', false);
 
 			// If the attribute is declared, then copy it directly...otherwise, it's should be
 			// treated as a residual
 			(declared ? finalValues : residuals).put(sourceAttribute, value);
-		}
+		});
 
 		boolean residualsEnabled = false;
 		switch (tracker.getActiveResidualsMode()) {
@@ -323,6 +358,6 @@ public class AttributeMapper {
 				break;
 		}
 
-		return new AttributeMappingResult(type, finalValues, residualsEnabled);
+		applyResult(type, finalValues, residualsEnabled, object);
 	}
 }

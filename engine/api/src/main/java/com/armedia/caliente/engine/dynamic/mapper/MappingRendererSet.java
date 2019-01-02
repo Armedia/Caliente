@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
-import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class MappingRendererSet implements MappingRenderer {
@@ -48,7 +47,7 @@ public class MappingRendererSet implements MappingRenderer {
 	 * @return the set of target attributes that were rendered
 	 */
 	@Override
-	public final Collection<AttributeMapping> render(CmfObject<CmfValue> object, ResidualsModeTracker tracker) {
+	public final Collection<AttributeMapping> render(DynamicObject object, ResidualsModeTracker tracker) {
 		Map<String, AttributeMapping> ret = new TreeMap<>();
 		if (tracker != null) {
 			tracker.applyResidualsMode(this.residualsMode);
