@@ -209,7 +209,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					throw new AlfRenderingException(
 						String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
 				}
-				if (attribute.isRepeating() && !StringUtils.isEmpty(s)) {
+				if (attribute.isRepeating() || !StringUtils.isEmpty(s)) {
 					newValues.add(s);
 				}
 			});
