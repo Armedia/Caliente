@@ -70,6 +70,13 @@ public class JdbcDialectH2 extends JdbcDialect {
 		"     alter sequence %s restart with 1" //
 	;
 
+	private static final String LIST_SEQUENCES = //
+		"    select sequence_name " + //
+			"  from information_schema.columns " + //
+			" where table_name like 'CMF_%' " + //
+			"   and sequence_name is not null" //
+	;
+
 	public JdbcDialectH2(DatabaseMetaData md) throws SQLException {
 		super(EngineType.H2, md);
 	}
@@ -108,6 +115,8 @@ public class JdbcDialectH2 extends JdbcDialect {
 				return JdbcDialectH2.UPSERT_ALT_NAME;
 			case RESTART_SEQUENCE:
 				return JdbcDialectH2.RESTART_SEQUENCE;
+			case LIST_SEQUENCES:
+				return JdbcDialectH2.LIST_SEQUENCES;
 			default:
 				break;
 		}

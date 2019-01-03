@@ -1249,28 +1249,32 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		return truncateTables(operation, tables);
 	}
 
+	private Set<String> listSequences(Connection c) throws SQLException {
+		String sql = translateOptionalQuery(JdbcDialect.Query.LIST_SEQUENCES);
+		if (sql == null) { return Collections.emptySet(); }
+		QueryRunner qr = JdbcTools.getQueryRunner();
+		return qr.query(c, sql, new ResultSetHandler<Set<String>>() {
+
+			@Override
+			public Set<String> handle(ResultSet rs) throws SQLException {
+				Set<String> sequences = new TreeSet<>();
+				while (rs.next()) {
+					sequences.add(rs.getString(1));
+				}
+				return sequences;
+			}
+
+		});
+	}
+
 	private void resetSequences(Connection c) throws CmfStorageException {
 		// Find all the sequences, and reset them to their initial state
 		try {
-			DatabaseMetaData dmd = c.getMetaData();
-			ResultSet rs = null;
 			String sql = translateOptionalQuery(JdbcDialect.Query.RESTART_SEQUENCE);
 			if (sql == null) { return; }
-			Statement s = c.createStatement();
-			try {
-				rs = dmd.getTables(null, null, null, new String[] {
-					"SEQUENCE"
-				});
-				while (rs.next()) {
-					String tn = rs.getString("TABLE_NAME");
-					if (tn.toLowerCase().startsWith("cmf_")) {
-						// Restart this sequence!!
-						s.executeUpdate(String.format(sql, tn));
-					}
-				}
-			} finally {
-				JdbcTools.closeQuietly(rs);
-				JdbcTools.closeQuietly(s);
+			QueryRunner qr = JdbcTools.getQueryRunner();
+			for (String sequence : listSequences(c)) {
+				qr.update(c, String.format(sql, sequence));
 			}
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to reset the sequences", e);

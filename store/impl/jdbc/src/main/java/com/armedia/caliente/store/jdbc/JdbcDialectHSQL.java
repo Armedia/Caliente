@@ -67,6 +67,11 @@ public class JdbcDialectHSQL extends JdbcDialect {
 		"     alter sequence %s restart with 1" //
 	;
 
+	private static final String LIST_SEQUENCES = //
+		"    select sequence_name " + //
+			"  from information_schema.sequences" //
+	;
+
 	public JdbcDialectHSQL(DatabaseMetaData md) throws SQLException {
 		super(EngineType.HSQL, md);
 	}
@@ -103,6 +108,8 @@ public class JdbcDialectHSQL extends JdbcDialect {
 				return JdbcDialectHSQL.UPSERT_ALT_NAME;
 			case RESTART_SEQUENCE:
 				return JdbcDialectHSQL.RESTART_SEQUENCE;
+			case LIST_SEQUENCES:
+				return JdbcDialectHSQL.LIST_SEQUENCES;
 			default:
 				break;
 		}
