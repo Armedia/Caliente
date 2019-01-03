@@ -243,6 +243,8 @@ public class Launcher extends AbstractLauncher {
 	private StoreConfiguration configureObjectStore() throws IOException, CommandLineProcessingException {
 		final File metadataLocation = this.objectStoreLocation;
 		final Map<String, String> commonValues = new HashMap<>();
+		commonValues.put("dir.root", this.baseDataLocation.getAbsolutePath());
+
 		if (!metadataLocation.exists() || metadataLocation.isDirectory()) {
 			commonValues.put("dir.metadata", metadataLocation.getAbsolutePath());
 		}
@@ -285,6 +287,8 @@ public class Launcher extends AbstractLauncher {
 		final File contentLocation = this.contentStoreLocation;
 
 		Map<String, String> commonValues = new HashMap<>();
+		commonValues.put("dir.root", this.baseDataLocation.getAbsolutePath());
+
 		if (!contentLocation.exists() || contentLocation.isDirectory()) {
 			commonValues.put("dir.content", contentLocation.getAbsolutePath());
 		}
