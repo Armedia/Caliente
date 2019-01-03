@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.DateUtils;
 
@@ -60,7 +61,7 @@ public enum CmfValueSerializer {
 			}
 		}
 	},
-	STRING(CmfDataType.STRING) {
+	STRING(CmfDataType.STRING, true) {
 
 		@Override
 		protected boolean canSerialize(CmfDataType type) {
@@ -117,9 +118,15 @@ public enum CmfValueSerializer {
 	};
 
 	private CmfDataType type;
+	private final boolean supportsEmptyString;
 
 	private CmfValueSerializer(CmfDataType type) {
+		this(type, false);
+	}
+
+	private CmfValueSerializer(CmfDataType type, boolean supportsEmptyString) {
 		this.type = type;
+		this.supportsEmptyString = supportsEmptyString;
 	}
 
 	protected boolean canSerialize(CmfDataType type) {
@@ -142,8 +149,10 @@ public enum CmfValueSerializer {
 	}
 
 	public final CmfValue deserialize(String str) throws ParseException {
+		// If the empty string isn't a valid serialization for this value type, and
+		// the string is empty, then just return the NULL value
 		// TODO: Should we instead return type.getNull() here?
-		if (str == null) { return null; }
+		if ((str == null) || (!this.supportsEmptyString && StringUtils.isEmpty(str))) { return null; }
 		return doDeserialize(str);
 	}
 
