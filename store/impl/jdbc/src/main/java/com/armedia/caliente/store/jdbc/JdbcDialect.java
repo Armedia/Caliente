@@ -218,6 +218,10 @@ public abstract class JdbcDialect {
 			null //
 		),
 
+		LIST_SEQUENCES( //
+			null //
+		),
+
 		LOAD_ALL_MAPPINGS( //
 			"       select distinct object_type, name " + //
 				"     from cmf_mapper " + //

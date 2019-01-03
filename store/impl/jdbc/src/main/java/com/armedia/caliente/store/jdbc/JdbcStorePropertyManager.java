@@ -74,7 +74,7 @@ public class JdbcStorePropertyManager {
 						String.format("Unsupported data type name for serialization: [%s]", type)); }
 					String value = rs.getString("value");
 					try {
-						return deserializer.deserialize(value);
+						return Tools.coalesce(deserializer.deserialize(value), t.getNull());
 					} catch (ParseException e) {
 						throw new SQLException(
 							String.format("Failed to deserialize store property [%s]:[%s] as a %s", name, value, type),
