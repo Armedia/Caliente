@@ -4,9 +4,9 @@
 	xsi:schemaLocation="http://www.armedia.com/ns/caliente/stores http://www.armedia.com/ns/caliente/stores">
 	<settings>
 		<setting name="target">${user.dir}/caliente</setting>
-		<setting name="dir.metadata">${target}</setting>
-		<setting name="dir.content">${target}/content</setting>
-		<setting name="dir.content.organizer">caliente</setting>
+		<setting name="dir.metadata">${dir.root}/db</setting>
+		<setting name="dir.content">${dir.root}/streams</setting>
+		<setting name="dir.content.organizer">hierarchical</setting>
 
 		<!-- H2 Support -->
 		<setting name="db.driver">org.h2.Driver</setting>
