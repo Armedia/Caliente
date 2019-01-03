@@ -67,6 +67,11 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 		"     alter sequence %s restart" //
 	;
 
+	private static final String LIST_SEQUENCES = //
+		"    select sequence_name " + //
+			"  from information_schema.sequences" //
+	;
+
 	public JdbcDialectPostgreSQL(DatabaseMetaData md) throws SQLException {
 		super(EngineType.PostgreSQL, md);
 	}
@@ -103,6 +108,8 @@ public class JdbcDialectPostgreSQL extends JdbcDialect {
 				return JdbcDialectPostgreSQL.UPSERT_ALT_NAME;
 			case RESTART_SEQUENCE:
 				return JdbcDialectPostgreSQL.RESTART_SEQUENCE;
+			case LIST_SEQUENCES:
+				return JdbcDialectPostgreSQL.LIST_SEQUENCES;
 			default:
 				break;
 		}

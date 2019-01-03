@@ -213,17 +213,22 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					newValues.add(s);
 				}
 			});
+			// Don't add properties that have no values
 			if (newValues.isEmpty()) { return; }
+
 			String propertyValue = null;
 			if (newValues.size() == 1) {
-				String ret = newValues.get(0);
-				// Make sure we return a null value if the only value to be returned is an empty
-				// string
-				propertyValue = StringUtils.isEmpty(ret) ? null : ret;
+				propertyValue = newValues.get(0);
 			} else {
+				// Make sure no "null" strings make it in
+				newValues.replaceAll((v) -> {
+					return (v == null ? StringUtils.EMPTY : v);
+				});
 				propertyValue = Tools.joinEscaped(',', newValues);
 			}
-			if (propertyValue != null) {
+
+			// Don't add empty/null properties
+			if (!StringUtils.isEmpty(propertyValue)) {
 				p.setProperty(attribute.getName(), propertyValue);
 			}
 		});
