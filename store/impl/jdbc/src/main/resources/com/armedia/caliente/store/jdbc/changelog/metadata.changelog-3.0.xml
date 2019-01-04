@@ -340,7 +340,7 @@
 			<column name="rendition_id" type="varchar(64)" remarks="The content's rendition identifier">
 				<constraints nullable="false" />
 			</column>
-			<column name="rendition_page" type="number" remarks="The content's rendition page number">
+			<column name="rendition_page" type="int" remarks="The content's rendition page number">
 				<constraints nullable="false" />
 			</column>
 			<column name="modifier" type="varchar(16)" remarks="The content's rendition modifier" defaultValue="">
