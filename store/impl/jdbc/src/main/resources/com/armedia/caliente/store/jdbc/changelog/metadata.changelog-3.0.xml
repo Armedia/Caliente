@@ -3,13 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
-	<changeSet author="caliente" id="2000">
-		<preConditions onFail="CONTINUE">
-			<not>
-				<changeSetExecuted id="2000" author="cmf" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog.legacy.xml"/>
-			</not>
-		</preConditions>
-
+	<changeSet id="metadata-3000" author="caliente">
 		<!-- The CMF info table -->
 		<createTable tableName="cmf_info">
 			<column name="name" type="varchar(64)" remarks="The name of the property being stored">
@@ -40,6 +34,23 @@
 			</column>
 		</createTable>
 		<addPrimaryKey tableName="cmf_export_plan" columnNames="object_id" />
+
+		<!-- The history lock table -->
+		<createTable tableName="cmf_history_lock">
+			<column name="object_type" type="varchar(32)" remarks="The type of CMS object">
+				<constraints nullable="false" />
+			</column>
+			<column name="history_id" type="varchar(96)" remarks="The history ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="lock_id" type="varchar(96)" remarks="The lock ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="counter" type="int" remarks="A lock counter" defaultValueNumeric="0">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_history_lock" columnNames="object_type, history_id" />
 
 		<!-- The main objects table -->
 		<createTable tableName="cmf_object" remarks="The CMS objects">
@@ -99,7 +110,56 @@
 			<column name="history_id" />
 			<column name="object_number" />
 		</createIndex>
+		<createIndex tableName="cmf_object" indexName="idx_cmf_object_history_current" unique="false">
+			<column name="object_type" />
+			<column name="history_id" />
+			<column name="history_current" />
+		</createIndex>
 		<addAutoIncrement tableName="cmf_object" columnName="object_number" columnDataType="bigint" startWith="1" incrementBy="1"/>
+
+		<!-- The secondary subtypes (aspects) table -->
+		<createTable tableName="cmf_object_secondary_subtype" remarks="The CMS object secondary subtype data">
+			<column name="object_id" type="varchar(96)" remarks="The object's ID">
+				<constraints nullable="false" />
+			</column>
+			<column name="pos" type="int" remarks="The subtypes's position on the list">
+				<constraints nullable="false" />
+			</column>
+			<column name="name" type="varchar(256)" remarks="The secondary subtype's name">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_object_secondary_subtype" columnNames="object_id, name" />
+		<addForeignKeyConstraint constraintName="fk_cmf_object_secondary_subtype_object"
+			baseTableName="cmf_object_secondary_subtype" baseColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<createIndex tableName="cmf_object_secondary_subtype" indexName="idx_cmf_object_secondary_subtype_number" unique="true">
+			<column name="object_id" />
+			<column name="pos" />
+		</createIndex>
+
+		<!-- The import plan table -->
+		<createTable tableName="cmf_import_plan">
+			<column name="object_id" type="varchar(96)" remarks="The primary object">
+				<constraints nullable="false" />
+			</column>
+			<column name="status" type="varchar(256)" remarks="The import status">
+				<constraints nullable="false" />
+			</column>
+			<column name="info" type="text" remarks="Extra information">
+				<constraints nullable="true" />
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_import_plan" columnNames="object_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_import_plan_object"
+			baseTableName="cmf_import_plan" baseColumnNames="object_id"
+			referencedTableName="cmf_object" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<createIndex tableName="cmf_import_plan" indexName="idx_cmf_import_plan_status" unique="false">
+			<column name="status" />
+			<column name="object_id" />
+		</createIndex>
 
 		<!-- The objects hierarchy table -->
 		<createTable tableName="cmf_object_tree" remarks="The CMS object tree">
@@ -125,6 +185,10 @@
 		<createIndex tableName="cmf_object_tree" indexName="idx_cmf_object_tree_number" unique="true">
 			<column name="object_id" />
 			<column name="parent_pos" />
+		</createIndex>
+		<createIndex tableName="cmf_object_tree" indexName="idx_cmf_object_tree_parent" unique="true">
+			<column name="parent_id" />
+			<column name="object_id" />
 		</createIndex>
 
 		<!-- The objects alternate name table -->
@@ -270,6 +334,9 @@
 			<column name="object_id" type="varchar(96)" remarks="The object whose content this is">
 				<constraints nullable="false" />
 			</column>
+			<column name="content_number" type="int" remarks="The number of item within the object's content list">
+				<constraints nullable="false" />
+			</column>
 			<column name="rendition_id" type="varchar(64)" remarks="The content's rendition identifier">
 				<constraints nullable="false" />
 			</column>
@@ -279,11 +346,8 @@
 			<column name="modifier" type="varchar(16)" remarks="The content's rendition modifier" defaultValue="">
 				<constraints nullable="false" />
 			</column>
-			<column name="extension" type="varchar(64)" remarks="The content's DOS extension, if any">
+			<column name="extension" type="text" remarks="The content's DOS extension, if any">
 				<constraints nullable="true" />
-			</column>
-			<column name="content_number" type="bigint" remarks="The number of item within the object's content list">
-				<constraints nullable="false" />
 			</column>
 			<column name="stream_length" type="bigint" remarks="The content's size">
 				<constraints nullable="false" />
@@ -291,11 +355,11 @@
 			<column name="mime_type" type="varchar(96)" remarks="The content's mime type">
 				<constraints nullable="false" />
 			</column>
-			<column name="file_name" type="varchar(256)" remarks="The content's file name">
+			<column name="file_name" type="text" remarks="The content's file name">
 				<constraints nullable="true" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content" columnNames="object_id, rendition_id, rendition_page, modifier" />
+		<addPrimaryKey tableName="cmf_content" columnNames="object_id, content_number" />
 		<addForeignKeyConstraint constraintName="fk_cmf_content_object"
 			baseTableName="cmf_content" baseColumnNames="object_id"
 			referencedTableName="cmf_object" referencedColumnNames="object_id"
@@ -306,13 +370,7 @@
 			<column name="object_id" type="varchar(96)" remarks="The object whose content this is">
 				<constraints nullable="false" />
 			</column>
-			<column name="rendition_id" type="varchar(64)" remarks="The content's rendition identifier">
-				<constraints nullable="false" />
-			</column>
-			<column name="rendition_page" type="number" remarks="The content's rendition page number">
-				<constraints nullable="false" />
-			</column>
-			<column name="modifier" type="varchar(16)" remarks="The content's rendition modifier" defaultValue="">
+			<column name="content_number" type="int" remarks="The number of item within the object's content list">
 				<constraints nullable="false" />
 			</column>
 			<column name="name" type="varchar(64)" remarks="The property's name">
@@ -322,10 +380,48 @@
 				<constraints nullable="false" />
 			</column>
 		</createTable>
-		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, rendition_id, rendition_page, modifier, name" />
+		<addPrimaryKey tableName="cmf_content_property" columnNames="object_id, content_number, name" />
 		<addForeignKeyConstraint constraintName="fk_cmf_content_property_content"
-			baseTableName="cmf_content_property" baseColumnNames="object_id, rendition_id, rendition_page, modifier"
-			referencedTableName="cmf_content" referencedColumnNames="object_id, rendition_id, rendition_page, modifier"
+			baseTableName="cmf_content_property" baseColumnNames="object_id, content_number"
+			referencedTableName="cmf_content" referencedColumnNames="object_id, content_number"
 			onDelete="CASCADE" onUpdate="CASCADE" />
+
+		<createTable tableName="cmf_requirement">
+			<column name="object_id" type="varchar(96)" remarks="The primary object">
+				<constraints nullable="false" />
+			</column>
+			<column name="requirement_id" type="varchar(96)" remarks="The required object">
+				<constraints nullable="false" />
+			</column>
+			<column name="requirement_number" type="bigint" remarks="The ordinal number of the requirement">
+				<constraints nullable="false" unique="true"/>
+			</column>
+		</createTable>
+		<addPrimaryKey tableName="cmf_requirement" columnNames="object_id, requirement_id" />
+		<addForeignKeyConstraint constraintName="fk_cmf_requirement_object"
+			baseTableName="cmf_requirement" baseColumnNames="object_id"
+			referencedTableName="cmf_export_plan" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<addForeignKeyConstraint constraintName="fk_cmf_requirement_requirement"
+			baseTableName="cmf_requirement" baseColumnNames="requirement_id"
+			referencedTableName="cmf_export_plan" referencedColumnNames="object_id"
+			onDelete="CASCADE" onUpdate="CASCADE" />
+		<createIndex tableName="cmf_requirement" indexName="idx_cmf_requirement_number" unique="true">
+			<column name="requirement_number" />
+		</createIndex>
+		<createIndex tableName="cmf_requirement" indexName="idx_cmf_requirement_order" unique="true">
+			<column name="object_id" />
+			<column name="requirement_number" />
+		</createIndex>
+		<createIndex tableName="cmf_requirement" indexName="idx_cmf_requirement_order_rev" unique="true">
+			<column name="requirement_id" />
+			<column name="requirement_number" />
+		</createIndex>
+		<createIndex tableName="cmf_requirement" indexName="idx_cmf_requirement_reverse" unique="true">
+			<column name="requirement_id" />
+			<column name="object_id" />
+			<column name="requirement_number" />
+		</createIndex>
+		<addAutoIncrement tableName="cmf_requirement" columnName="requirement_number" columnDataType="bigint" startWith="1" incrementBy="1"/>
 	</changeSet>
 </databaseChangeLog>

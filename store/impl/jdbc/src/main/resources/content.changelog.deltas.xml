@@ -3,10 +3,16 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
 
-	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-3.0.xml"/>
+	<changeSet author="caliente-jdbc" id="caliente-content-3.0">
+		<preConditions>
+			<changeSetExecuted id="content-3000" author="caliente" changeLogFile="com/armedia/caliente/store/jdbc/changelog/content.changelog-3.0.xml"/>
+		</preConditions>
+	</changeSet>
 
 	<!-- **************************************** -->
-	<!-- Deltas and changes...                    -->
+	<!-- For future deltas, as needed...          -->
 	<!-- **************************************** -->
-	<include file="metadata.changelog.deltas.xml"/>
+	<!--
+	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-3.1.xml" />
+	-->
 </databaseChangeLog>

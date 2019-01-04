@@ -69,7 +69,7 @@ public class JdbcDialectHSQL extends JdbcDialect {
 
 	private static final String LIST_SEQUENCES = //
 		"    select sequence_name " + //
-			"  from information_schema.sequences" //
+			"  from information_schema.sequences where 1 = 2" //
 	;
 
 	public JdbcDialectHSQL(DatabaseMetaData md) throws SQLException {
