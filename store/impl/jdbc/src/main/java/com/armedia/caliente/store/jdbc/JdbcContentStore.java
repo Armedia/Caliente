@@ -65,8 +65,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 				this.ps = this.operation.getConnection().prepareStatement(translateQuery(JdbcDialect.Query.GET_STREAM));
 				this.ps.setString(1, this.locator.getObjectId());
-				this.ps.setString(2, this.locator.getInfo().getRenditionIdentifier());
-				this.ps.setInt(3, this.locator.getInfo().getRenditionPage());
+				this.ps.setInt(2, this.locator.getInfo().getIndex());
 				this.rs = this.ps.executeQuery();
 				if (!this.rs.next()) { throw new CmfStorageException(
 					String.format("No data stream found for locator [%s]", this.locator)); }
@@ -323,10 +322,9 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 				}
 				QueryRunner qr = JdbcTools.getQueryRunner();
 				CmfContentStream info = locator.getInfo();
-				qr.update(c, translateQuery(JdbcDialect.Query.DELETE_STREAM), locator.getObjectId(),
-					info.getRenditionIdentifier(), info.getRenditionPage());
+				qr.update(c, translateQuery(JdbcDialect.Query.DELETE_STREAM), locator.getObjectId(), info.getIndex());
 				qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_STREAM), JdbcTools.HANDLER_NULL,
-					locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage(), blob.length(), blob);
+					locator.getObjectId(), info.getIndex(), blob.length(), blob);
 				return blob.length();
 			} finally {
 				blob.free();
@@ -342,7 +340,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 			CmfContentStream info = locator.getInfo();
 			return JdbcTools.getQueryRunner().query(operation.getConnection(),
 				translateQuery(JdbcDialect.Query.CHECK_IF_CONTENT_EXISTS), JdbcTools.HANDLER_EXISTS,
-				locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage());
+				locator.getObjectId(), info.getIndex());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to check whether a stream exists for locator [%s]", locator), e);
@@ -355,7 +353,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 			CmfContentStream info = locator.getInfo();
 			return JdbcTools.getQueryRunner().query(operation.getConnection(),
 				translateQuery(JdbcDialect.Query.GET_STREAM_LENGTH), JdbcContentStore.HANDLER_LENGTH,
-				locator.getObjectId(), info.getRenditionIdentifier(), info.getRenditionPage());
+				locator.getObjectId(), info.getIndex());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to check whether a stream exists for locator [%s]", locator), e);

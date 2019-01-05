@@ -2,25 +2,17 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
-	
-	<!-- **************************************** -->
-	<!-- Make sure one of the two was successful  -->
-	<!-- **************************************** -->
-	<changeSet author="caliente-jdbc" id="2.0">
+
+	<changeSet author="caliente-jdbc" id="caliente-metadata-3.0">
 		<preConditions>
-			<or>
-				<changeSetExecuted id="2000" author="cmf" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog.legacy.xml"/>
-				<changeSetExecuted id="2000" author="caliente" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.0.xml"/>
-			</or>
+			<changeSetExecuted id="metadata-3000" author="caliente" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-3.0.xml"/>
 		</preConditions>
 	</changeSet>
 
 	<!-- **************************************** -->
 	<!-- For future deltas, as needed...          -->
 	<!-- **************************************** -->
-	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.1.xml" />
-	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.2.xml" />
-	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.3.xml" />
-	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.4.xml" />
-	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-2.5.xml" />
+	<!--
+	<include file="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-3.1.xml" />
+	-->
 </databaseChangeLog>

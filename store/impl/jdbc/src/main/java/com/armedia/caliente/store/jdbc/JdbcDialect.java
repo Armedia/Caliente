@@ -409,43 +409,35 @@ public abstract class JdbcDialect {
 			"       select object_id " + //
 				"     from cmf_content_stream " + //
 				"    where object_id = ? " + //
-				"      and rendition_id = ?" + //
-				"      and rendition_page = ?" + //
-				"      and modifier = ?" //
+				"      and content_number = ? " //
 		),
 
 		GET_STREAM_LENGTH( //
 			"       select length " + //
 				"     from cmf_content_stream " + //
 				"    where object_id = ? " + //
-				"      and rendition_id = ?" + //
-				"      and rendition_page = ?" + //
-				"      and modifier = ?" //
+				"      and content_number = ? " //
 		),
 
 		GET_STREAM( //
 			"       select length, data " + //
 				"     from cmf_content_stream " + //
 				"    where object_id = ? " + //
-				"      and rendition_id = ?" + //
-				"      and rendition_page = ?" + //
-				"      and modifier = ?" //
+				"      and content_number = ? " //
 		),
 
 		DELETE_STREAM( //
 			"       delete from cmf_content_stream " + //
 				"    where object_id = ? " + //
-				"      and rendition_id = ?" + //
-				"      and rendition_page = ?" + //
-				"      and modifier = ?" //
+				"      and content_number = ? " //
 		),
 
 		INSERT_STREAM( //
 			"       insert into " + //
 				"          cmf_content_stream (" + //
-				"              object_id, rendition_id, rendition_page, modifier, length, data" + //
+				"              object_id, content_number, length, data" + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?)" //
 		),
 
 		TRUNCATE_TABLE_FMT( //
