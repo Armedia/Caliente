@@ -7,7 +7,7 @@
 	<description>Root project for Armedia Caliente</description>
 	<groupId>com.armedia.caliente</groupId>
 	<artifactId>caliente</artifactId>
-	<version>${caliente.version}</version>
+	<version>3.7.0</version>
 	<packaging>pom</packaging>
 
 	<organization>
@@ -36,7 +36,6 @@
 	</scm>
 
 	<properties>
-		<caliente.version>3.6.1</caliente.version>
 		<maven.min-version>3.2.2</maven.min-version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.target>1.8</project.build.target>
