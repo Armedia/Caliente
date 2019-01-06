@@ -2024,7 +2024,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				if (!StringUtils.isBlank(sql)) {
 					final QueryRunner qr = JdbcTools.getQueryRunner();
 					try {
-						qr.query(this.lastConnection, sql, JdbcTools.HANDLER_NULL);
+						qr.update(this.lastConnection, sql);
 					} catch (SQLException e) {
 						this.log.error("Failed to close the last connection and shutdown the DataSource", e);
 					}

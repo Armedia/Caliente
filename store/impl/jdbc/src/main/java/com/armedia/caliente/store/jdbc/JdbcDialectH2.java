@@ -78,7 +78,8 @@ public class JdbcDialectH2 extends JdbcDialect {
 	;
 
 	private static final String SHUTDOWN_DB = //
-		"    shutdown compact " //
+		" shutdown compact "
+	// null //
 	;
 
 	public JdbcDialectH2(DatabaseMetaData md) throws SQLException {
