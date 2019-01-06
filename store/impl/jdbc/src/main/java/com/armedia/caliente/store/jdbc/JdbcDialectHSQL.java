@@ -72,6 +72,10 @@ public class JdbcDialectHSQL extends JdbcDialect {
 			"  from information_schema.sequences where 1 = 2" //
 	;
 
+	private static final String SHUTDOWN_DB = //
+		"    shutdown compact " //
+	;
+
 	public JdbcDialectHSQL(DatabaseMetaData md) throws SQLException {
 		super(EngineType.HSQL, md);
 	}
@@ -88,6 +92,11 @@ public class JdbcDialectHSQL extends JdbcDialect {
 
 	@Override
 	protected boolean isTruncateRestartsSequences() {
+		return true;
+	}
+
+	@Override
+	protected boolean isShutdownOnLastConnectionClose() {
 		return true;
 	}
 
@@ -110,6 +119,8 @@ public class JdbcDialectHSQL extends JdbcDialect {
 				return JdbcDialectHSQL.RESTART_SEQUENCE;
 			case LIST_SEQUENCES:
 				return JdbcDialectHSQL.LIST_SEQUENCES;
+			case SHUTDOWN_DB:
+				return JdbcDialectHSQL.SHUTDOWN_DB;
 			default:
 				break;
 		}

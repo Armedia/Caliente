@@ -62,8 +62,9 @@ public abstract class JdbcDialect {
 		private static JdbcDialect constructDialect(DatabaseMetaData md) throws SQLException, CmfStorageException {
 			Objects.requireNonNull(md, "Must provide a valid DatabaseMetaData instance");
 			final String dbName = md.getDatabaseProductName();
-			if (StringUtils
-				.isEmpty(dbName)) { throw new IllegalArgumentException("Must provide a DB Name to check against"); }
+			if (StringUtils.isEmpty(dbName)) {
+				throw new IllegalArgumentException("Must provide a DB Name to check against");
+			}
 			for (EngineType t : EngineType.values()) {
 				if (t.matches(dbName)) { return t.newDialect(md); }
 			}
@@ -506,6 +507,10 @@ public abstract class JdbcDialect {
 		),
 		//
 
+		SHUTDOWN_DB( //
+			null),
+		//
+
 		;
 
 		private final String sql;
@@ -536,6 +541,10 @@ public abstract class JdbcDialect {
 	protected abstract boolean isTruncateRestartsSequences();
 
 	protected abstract ResultSetHandler<Long> getObjectNumberHandler();
+
+	protected boolean isShutdownOnLastConnectionClose() {
+		return false;
+	}
 
 	protected boolean isDuplicateKeyException(SQLException e) {
 		return StringUtils.equalsIgnoreCase(e.getSQLState(), "23505");

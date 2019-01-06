@@ -72,6 +72,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	private final boolean managedTransactions;
 	private final DataSourceDescriptor<?> dataSourceDescriptor;
 	private final DataSource dataSource;
+	private final Connection lastConnection;
 	private final JdbcStorePropertyManager propertyManager;
 	private final JdbcDialect dialect;
 	private final Map<JdbcDialect.Query, String> queries;
@@ -80,8 +81,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	public JdbcObjectStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData,
 		CfgTools cfg) throws CmfStorageException {
 		super(JdbcOperation.class, true);
-		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
-			"Must provide a valid DataSource instance"); }
+		if (dataSourceDescriptor == null) {
+			throw new IllegalArgumentException("Must provide a valid DataSource instance");
+		}
 		this.dataSourceDescriptor = dataSourceDescriptor;
 		this.managedTransactions = dataSourceDescriptor.isManagedTransactions();
 		this.dataSource = dataSourceDescriptor.getDataSource();
@@ -94,11 +96,19 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			throw new CmfStorageException("Failed to get a SQL Connection to validate the schema", e);
 		}
 
+		boolean closeOnFinally = true;
 		try {
 			try {
 				this.dialect = JdbcDialect.getDialect(c.getMetaData());
 			} catch (SQLException e) {
 				throw new CmfStorageException("Failed to initialize the query resolver", e);
+			}
+
+			if (this.dialect.isShutdownOnLastConnectionClose()) {
+				this.lastConnection = c;
+				closeOnFinally = false;
+			} else {
+				this.lastConnection = null;
 			}
 
 			Map<JdbcDialect.Query, String> queries = new EnumMap<>(JdbcDialect.Query.class);
@@ -138,7 +148,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 			}
 		} finally {
-			JdbcTools.closeQuietly(c);
+			// Only close the last connection if it's not null
+			if (closeOnFinally) {
+				JdbcTools.closeQuietly(c);
+			}
 		}
 	}
 
@@ -990,9 +1003,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				return true;
 			}
 
-			if (result > 1) { throw new CmfStorageException(
-				String.format("REFERENTIAL INTEGRITY IS NOT BEING ENFORCED: %d PLAN records for %s", result,
-					target.getShortLabel())); }
+			if (result > 1) {
+				throw new CmfStorageException(
+					String.format("REFERENTIAL INTEGRITY IS NOT BEING ENFORCED: %d PLAN records for %s", result,
+						target.getShortLabel()));
+			}
 
 			// If we've come this far, then we failed to set the status. This may or may not be a
 			// problem...
@@ -1297,8 +1312,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private CmfObject<CmfValue> loadObject(ResultSet objectRS, ResultSet parentsRS, ResultSet secondariesRS)
 		throws SQLException {
-		if (objectRS == null) { throw new IllegalArgumentException(
-			"Must provide a ResultSet to load the structure from"); }
+		if (objectRS == null) {
+			throw new IllegalArgumentException("Must provide a ResultSet to load the structure from");
+		}
 		CmfType type = CmfType.valueOf(objectRS.getString("object_type"));
 		String id = objectRS.getString("object_id");
 		String name = objectRS.getString("object_name");
@@ -1998,5 +2014,25 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to clear the requirement info", e);
 		}
+	}
+
+	@Override
+	protected boolean doClose(boolean cleanupIfEmpty) {
+		if (this.lastConnection != null) {
+			try {
+				final String sql = translateQuery(JdbcDialect.Query.SHUTDOWN_DB);
+				if (!StringUtils.isBlank(sql)) {
+					final QueryRunner qr = JdbcTools.getQueryRunner();
+					try {
+						qr.query(this.lastConnection, sql, JdbcTools.HANDLER_NULL);
+					} catch (SQLException e) {
+						this.log.error("Failed to close the last connection and shutdown the DataSource", e);
+					}
+				}
+			} finally {
+				JdbcTools.closeQuietly(this.lastConnection);
+			}
+		}
+		return true;
 	}
 }

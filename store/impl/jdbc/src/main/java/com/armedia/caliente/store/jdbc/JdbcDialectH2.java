@@ -77,6 +77,10 @@ public class JdbcDialectH2 extends JdbcDialect {
 			"   and sequence_name is not null" //
 	;
 
+	private static final String SHUTDOWN_DB = //
+		"    shutdown compact " //
+	;
+
 	public JdbcDialectH2(DatabaseMetaData md) throws SQLException {
 		super(EngineType.H2, md);
 	}
@@ -94,6 +98,11 @@ public class JdbcDialectH2 extends JdbcDialect {
 	@Override
 	protected boolean isTruncateRestartsSequences() {
 		return false;
+	}
+
+	@Override
+	protected boolean isShutdownOnLastConnectionClose() {
+		return true;
 	}
 
 	@Override
@@ -117,6 +126,8 @@ public class JdbcDialectH2 extends JdbcDialect {
 				return JdbcDialectH2.RESTART_SEQUENCE;
 			case LIST_SEQUENCES:
 				return JdbcDialectH2.LIST_SEQUENCES;
+			case SHUTDOWN_DB:
+				return JdbcDialectH2.SHUTDOWN_DB;
 			default:
 				break;
 		}
