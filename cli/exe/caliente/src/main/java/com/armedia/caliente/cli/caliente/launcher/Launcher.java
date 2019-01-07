@@ -159,14 +159,16 @@ public class Launcher extends AbstractLauncher {
 	private String initializeEngineAndCommand(OptionValues baseValues, String currentCommand) {
 		// Has an engine been selected already?
 		if (this.engineInterface == null) {
-			if (!baseValues.isPresent(
-				CLIParam.engine)) { return "No engine was selected in the base options (option order is important!)"; }
+			if (!baseValues.isPresent(CLIParam.engine)) {
+				return "No engine was selected in the base options (option order is important!)";
+			}
 
 			// Find the desired engine
 			final String engine = baseValues.getString(CLIParam.engine);
 			this.engineInterface = AbstractEngineInterface.get(engine);
-			if (this.engineInterface == null) { return String.format("No engine was found with the name or alias [%s]",
-				engine); }
+			if (this.engineInterface == null) {
+				return String.format("No engine was found with the name or alias [%s]", engine);
+			}
 		}
 
 		// Has a command been given yet?
@@ -174,12 +176,15 @@ public class Launcher extends AbstractLauncher {
 			if (StringUtils.isBlank(currentCommand)) { return "No command was given (option order is important!)"; }
 
 			final CalienteCommand calienteCommand = CalienteCommand.get(currentCommand);
-			if (calienteCommand == null) { return String
-				.format("Command [%s] is not a valid Caliente command or command alias", currentCommand); }
+			if (calienteCommand == null) {
+				return String.format("Command [%s] is not a valid Caliente command or command alias", currentCommand);
+			}
 
 			this.command = this.engineInterface.getCommandModule(calienteCommand);
-			if (this.command == null) { return String.format("Engine [%s] does not support command [%s]",
-				this.engineInterface.getName(), calienteCommand.getTitle()); }
+			if (this.command == null) {
+				return String.format("Engine [%s] does not support command [%s]", this.engineInterface.getName(),
+					calienteCommand.getTitle());
+			}
 		}
 
 		return null;
@@ -366,6 +371,18 @@ public class Launcher extends AbstractLauncher {
 		}
 	}
 
+	private void shutdownStores() throws Exception {
+		this.console.info("Closing up all internal stores...");
+		boolean ok = false;
+		try {
+			CmfStores.close();
+			ok = true;
+		} finally {
+			this.console.info("The internal data stores were closed{}",
+				ok ? " cleanly." : " WITH ERRORS! (check the logs)");
+		}
+	}
+
 	protected boolean applyStoreProperties(StoreConfiguration cfg, Properties properties) {
 		if ((properties == null) || properties.isEmpty()) { return false; }
 		String storeType = properties.getProperty(Launcher.STORE_TYPE_PROPERTY);
@@ -396,8 +413,9 @@ public class Launcher extends AbstractLauncher {
 		// We've found the path we're looking for...verify that it's regular file. Otherwise,
 		// just ignore it. If this is an explicit configuration setting, then we explode!
 		if (!f.isFile()) {
-			if (required) { throw new IOException(
-				String.format("The file [%s] is not a regular file", f.getAbsolutePath())); }
+			if (required) {
+				throw new IOException(String.format("The file [%s] is not a regular file", f.getAbsolutePath()));
+			}
 			return null;
 		}
 
@@ -571,8 +589,12 @@ public class Launcher extends AbstractLauncher {
 				throw new RuntimeException("Execution failed", t);
 			} finally {
 				// TODO: Unlock from single execution
-				if (writeProperties) {
-					objectStore.setProperty(String.format("%s.end", pfx), new CmfValue(new Date()));
+				try {
+					if (writeProperties) {
+						objectStore.setProperty(String.format("%s.end", pfx), new CmfValue(new Date()));
+					}
+				} finally {
+					shutdownStores();
 				}
 			}
 			return 0;
