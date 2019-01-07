@@ -4,6 +4,7 @@ import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,7 @@ public abstract class ExportEngine<//
 		}
 	}
 
+	private final Map<LockStatus, Result> staticLockResults;
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
 
 	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> implements InvocationHandler {
@@ -123,6 +125,23 @@ public abstract class ExportEngine<//
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, ExportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"export");
+		Map<LockStatus, Result> staticLockResults = new EnumMap<>(LockStatus.class);
+		for (ExportSkipReason reason : ExportSkipReason.values()) {
+			if (reason.lockStatus != null) {
+				staticLockResults.put(reason.lockStatus, new Result(reason));
+			}
+		}
+		this.staticLockResults = Tools.freezeMap(staticLockResults);
+	}
+
+	private ExportOperation getOrCreateExportOperation(ExportTarget target,
+		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) {
+		return ConcurrentUtils.createIfAbsentUnchecked(statusMap, target, new ConcurrentInitializer<ExportOperation>() {
+			@Override
+			public ExportOperation get() {
+				return new ExportOperation(target);
+			}
+		});
 	}
 
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
@@ -148,17 +167,14 @@ public abstract class ExportEngine<//
 						break;
 
 					case ALREADY_LOCKED:
-						this.log.trace("{} is already locked for storage by another thread", logLabel);
-						return new Result(ExportSkipReason.ALREADY_LOCKED);
-
+						// If the object is already locked, then we HAVE to have this created, so we
+						// do this early on.
+						getOrCreateExportOperation(target, statusMap);
+						// fall-through
 					case ALREADY_FAILED:
-						String msg = String.format("%s was already failed, skipping it", logLabel);
-						this.log.trace(msg);
-						return new Result(ExportSkipReason.ALREADY_FAILED, msg);
-
 					case ALREADY_STORED:
-						this.log.trace("{} is already stored", logLabel);
-						return new Result(ExportSkipReason.ALREADY_STORED);
+						this.log.trace("{} result = {}", logLabel, locked);
+						return this.staticLockResults.get(locked);
 				}
 			} catch (CmfStorageException e) {
 				throw new ExportException(
@@ -230,14 +246,8 @@ public abstract class ExportEngine<//
 		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
 		final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
 
-		// First, make sure other threads don't work on this same object
-		final ExportOperation thisStatus = ConcurrentUtils.createIfAbsentUnchecked(statusMap, target,
-			new ConcurrentInitializer<ExportOperation>() {
-				@Override
-				public ExportOperation get() {
-					return new ExportOperation(target);
-				}
-			});
+		// To make sure other threads don't work on this same object
+		final ExportOperation thisStatus = getOrCreateExportOperation(target, statusMap);
 
 		boolean success = false;
 		if (referrent != null) {
@@ -260,8 +270,9 @@ public abstract class ExportEngine<//
 			// dependency causes the export "failure" of its dependent object tree.
 			if ((filter != null) && (referrent == null)) {
 				try {
-					if (!filter.acceptRaw(marshaled, objectStore.getValueMapper())) { return new Result(
-						ExportSkipReason.SKIPPED, "Excluded by filtering logic"); }
+					if (!filter.acceptRaw(marshaled, objectStore.getValueMapper())) {
+						return new Result(ExportSkipReason.SKIPPED, "Excluded by filtering logic");
+					}
 				} catch (ObjectFilterException e) {
 					throw new ExportException(String.format("Filtering logic exception while processing %s", logLabel),
 						e);
@@ -343,8 +354,10 @@ public abstract class ExportEngine<//
 					// We need to wait for each of these to be stored...so find their lock object
 					// and listen on it...?
 					ExportOperation status = statusMap.get(requirement);
-					if (status == null) { throw new ExportException(
-						String.format("No export status found for requirement [%s] of %s", requirement, logLabel)); }
+					if (status == null) {
+						throw new ExportException(
+							String.format("No export status found for requirement [%s] of %s", requirement, logLabel));
+					}
 					try {
 						ctx.printf("Waiting for [%s] from %s (#%d created by %s)", requirement, logLabel,
 							status.getObjectNumber(), status.getCreatorThread());
@@ -355,8 +368,10 @@ public abstract class ExportEngine<//
 						throw new ExportException(String.format(
 							"Thread interrupted waiting on the export of [%s] by %s", requirement, logLabel), e);
 					}
-					if (!status.isSuccessful()) { return new Result(ExportSkipReason.DEPENDENCY_FAILED,
-						String.format("A required object [%s] failed to serialize for %s", requirement, logLabel)); }
+					if (!status.isSuccessful()) {
+						return new Result(ExportSkipReason.DEPENDENCY_FAILED,
+							String.format("A required object [%s] failed to serialize for %s", requirement, logLabel));
+					}
 				}
 			} finally {
 				thisStatus.endWait();

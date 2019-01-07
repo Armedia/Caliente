@@ -108,7 +108,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 					engine.addListener(l);
 				}
 				this.log.info("##### Export Process Started #####");
-				engine.run(counter);
+				engine.run();
 				this.log.info("##### Export Process Finished #####");
 				summary = objectStore.getStoredObjectTypes();
 			} catch (Throwable t) {
