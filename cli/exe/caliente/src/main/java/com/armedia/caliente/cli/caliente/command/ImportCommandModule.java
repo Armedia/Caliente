@@ -90,7 +90,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		final Date end;
 		String exceptionReport = null;
 		final StringBuilder report = new StringBuilder();
-		final CmfObjectCounter<ImportResult> results = new CmfObjectCounter<>(ImportResult.class);
+		final CmfObjectCounter<ImportResult> counter = new CmfObjectCounter<>(ImportResult.class);
 		try {
 			configure(state, commandValues, settings);
 			start = new Date();
@@ -103,7 +103,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 					engine.addListener(l);
 				}
 				this.log.info("##### Import Process Started #####");
-				engine.run(results);
+				engine.run(counter);
 				this.log.info("##### Import Process Completed #####");
 			} catch (Throwable t) {
 				StringWriter sw = new StringWriter();
@@ -153,10 +153,10 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		report.append(String.format("%n%nAction Summary:%n%s%n", StringUtils.repeat("=", 30)));
 		for (CmfType t : CmfType.values()) {
 			report.append(String.format("%n%n%n"));
-			report.append(results.generateReport(t, 1));
+			report.append(counter.generateReport(t, 1));
 		}
 		report.append(String.format("%n%n%n"));
-		report.append(results.generateCummulativeReport(1));
+		report.append(counter.generateCummulativeReport(1));
 
 		if (exceptionReport != null) {
 			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
