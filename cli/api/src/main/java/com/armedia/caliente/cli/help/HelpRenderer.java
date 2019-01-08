@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StrTokenizer;
+import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.commons.text.WordUtils;
 
 import com.armedia.caliente.cli.Command;
