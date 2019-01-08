@@ -17,12 +17,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>compile</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>com.armedia.caliente</groupId>
 			<artifactId>caliente-store</artifactId>
 			<version>${project.version}</version>
