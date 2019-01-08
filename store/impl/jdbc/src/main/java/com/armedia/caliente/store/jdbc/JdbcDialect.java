@@ -23,12 +23,6 @@ public abstract class JdbcDialect {
 				return new JdbcDialectH2(md);
 			}
 		}, //
-		HSQL("HSQL Database Engine") {
-			@Override
-			protected JdbcDialect newDialect(DatabaseMetaData md) throws SQLException {
-				return new JdbcDialectHSQL(md);
-			}
-		}, //
 		PostgreSQL {
 			@Override
 			protected JdbcDialect newDialect(DatabaseMetaData md) throws SQLException {
