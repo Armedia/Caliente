@@ -228,7 +228,7 @@
 			<dependency>
 				<groupId>org.liquibase</groupId>
 				<artifactId>liquibase-core</artifactId>
-				<version>3.5.3-armedia</version>
+				<version>3.6.2</version>
 			</dependency>
 
 			<dependency>
