@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 import org.apache.commons.text.WordUtils;
 
 import com.armedia.caliente.cli.Command;
@@ -181,7 +181,7 @@ public final class HelpRenderer {
 	private static void printWrapped(PrintWriter pw, int totalWidth, int indentWidth, String msg) {
 		msg = WordUtils.wrap(msg, totalWidth - indentWidth);
 		String lead = StringUtils.repeat(' ', indentWidth);
-		for (String s : new StrTokenizer(msg, HelpRenderer.NL).getTokenList()) {
+		for (String s : new StringTokenizer(msg, HelpRenderer.NL).getTokenList()) {
 			pw.printf("%s%s%n", lead, s);
 		}
 	}
