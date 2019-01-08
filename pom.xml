@@ -557,7 +557,6 @@
 		<!-- the base modules -->
 		<module>store/api</module>
 		<module>store/impl/jdbc</module>
-		<module>store/impl/jpa</module>
 		<module>store/impl/local</module>
 
 		<!-- The Engine modules -->
