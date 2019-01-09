@@ -12,13 +12,6 @@
 		<setting name="db.driver">org.h2.Driver</setting>
 		<setting name="db.type">h2</setting>
 		<setting name="db.flags">AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096;TRACE_LEVEL_FILE=4</setting>
-
-		<!-- HSQLDB Support -->
-		<!--
-		<setting name="db.driver">org.hsqldb.jdbc.JDBCDriver</setting>
-		<setting name="db.type">hsqldb:file</setting>
-		<setting name="db.flags">check_props=true;shutdown=true;close_result=true;allow_empty_batch=true;sql.restrict_exec=true;sql.enforce_names=true;sql.enforce_refs=true;sql.syntax_pgs=true;</setting>
-		-->
 	</settings>
 
 	<objectstore id="default">
