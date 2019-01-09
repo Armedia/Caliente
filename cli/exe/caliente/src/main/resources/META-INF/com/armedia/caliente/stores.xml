@@ -11,7 +11,7 @@
 		<!-- H2 Support -->
 		<setting name="db.driver">org.h2.Driver</setting>
 		<setting name="db.type">h2</setting>
-		<setting name="db.flags">AUTO_SERVER=TRUE;MODE=PostgreSQL;PAGE_SIZE=4096;TRACE_LEVEL_FILE=4</setting>
+		<setting name="db.flags">AUTO_SERVER=TRUE;MODE=PostgreSQL;TRACE_LEVEL_FILE=4</setting>
 	</settings>
 
 	<objectstore id="default">
