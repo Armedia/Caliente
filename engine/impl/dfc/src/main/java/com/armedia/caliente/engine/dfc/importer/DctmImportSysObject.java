@@ -83,16 +83,12 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	private static Set<String> getSupportedExtendedPermits(IDfSysObject sysObject) throws DfException {
 		final IDfSession session = sysObject.getSession();
-		Set<String> ret = new HashSet<>();
+		final Set<String> ret = new HashSet<>();
 
-		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
-		try {
+		DfException e = DfUtils.runRetryable(session, (s) -> {
 			ret.addAll(StrTokenizer.getCSVInstance(sysObject.getXPermitList()).getTokenList());
-			DfUtils.commitTransaction(session, tx);
-		} catch (final DfException e) {
-			DfUtils.abortTransaction(session, tx);
-			if (!StringUtils.equalsIgnoreCase("DM_SYSOBJECT_W_FOLDER_DEFACL", e.getMessageId())) { throw e; }
-		}
+		});
+		if ((e != null) && !StringUtils.equalsIgnoreCase("DM_SYSOBJECT_W_FOLDER_DEFACL", e.getMessageId())) { throw e; }
 
 		return ret;
 	}
