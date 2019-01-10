@@ -128,17 +128,20 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		CmfObject<IDfValue> storedObject) throws Exception {
 		super(factory, objectClass, storedObject);
 		this.dctmType = expectedType;
-		if (expectedType.getStoredObjectType() != storedObject.getType()) { throw new IllegalArgumentException(
-			String.format("This delegate is meant for [%s], but the given object is of type [%s]",
-				expectedType.getStoredObjectType(), storedObject.getType())); }
+		if (expectedType.getStoredObjectType() != storedObject.getType()) {
+			throw new IllegalArgumentException(
+				String.format("This delegate is meant for [%s], but the given object is of type [%s]",
+					expectedType.getStoredObjectType(), storedObject.getType()));
+		}
 	}
 
 	protected final T castObject(IDfPersistentObject object) throws DfException {
 		if (object == null) { return null; }
 		Class<T> dfClass = getObjectClass();
-		if (!dfClass.isInstance(
-			object)) { throw new DfException(String.format("Expected an object of class %s, but got one of class %s",
-				dfClass.getCanonicalName(), object.getClass().getCanonicalName())); }
+		if (!dfClass.isInstance(object)) {
+			throw new DfException(String.format("Expected an object of class %s, but got one of class %s",
+				dfClass.getCanonicalName(), object.getClass().getCanonicalName()));
+		}
 		return dfClass.cast(object);
 	}
 
@@ -484,8 +487,10 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 
 	protected T newObject(DctmImportContext ctx) throws DfException, ImportException {
 		IDfType type = DctmTranslator.translateType(ctx, this.cmfObject);
-		if (type == null) { throw new ImportException(
-			String.format("Unsupported type [%s::%s]", this.cmfObject.getType(), this.cmfObject.getSubtype())); }
+		if (type == null) {
+			throw new ImportException(
+				String.format("Unsupported type [%s::%s]", this.cmfObject.getType(), this.cmfObject.getSubtype()));
+		}
 		return castObject(ctx.getSession().newObject(type.getName()));
 	}
 
@@ -535,8 +540,9 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	protected final boolean copyAttributeToObject(String attrName, T object) throws DfException {
-		if (attrName == null) { throw new IllegalArgumentException(
-			"Must provide an attribute name to set on the object"); }
+		if (attrName == null) {
+			throw new IllegalArgumentException("Must provide an attribute name to set on the object");
+		}
 		CmfAttribute<IDfValue> attribute = this.cmfObject.getAttribute(attrName);
 		if (attribute == null) { return false; }
 		return copyAttributeToObject(attribute, object);
@@ -556,8 +562,9 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	protected final boolean setAttributeOnObject(String attrName, Collection<IDfValue> values, T object)
 		throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
-		if (attrName == null) { throw new IllegalArgumentException(
-			"Must provide an attribute name to set on the object"); }
+		if (attrName == null) {
+			throw new IllegalArgumentException("Must provide an attribute name to set on the object");
+		}
 		CmfAttribute<IDfValue> dataAttr = this.cmfObject.getAttribute(attrName);
 		if (dataAttr != null) { return setAttributeOnObject(dataAttr, values, object); }
 
@@ -583,8 +590,9 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	private final boolean setAttributeOnObject(final String attrName, final DctmDataType dataType,
 		final boolean repeating, Collection<IDfValue> values, T object) throws DfException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
-		if (attrName == null) { throw new IllegalArgumentException(
-			"Must provide an attribute name to set on the object"); }
+		if (attrName == null) {
+			throw new IllegalArgumentException("Must provide an attribute name to set on the object");
+		}
 		if (!object.hasAttr(attrName)) { return false; }
 		if (values == null) {
 			values = Collections.emptyList();
@@ -646,8 +654,9 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	protected final void clearAttributeFromObject(String attr, T object) throws DfException {
-		if (object == null) { throw new IllegalArgumentException(
-			"Must provide an object to clear the attribute from"); }
+		if (object == null) {
+			throw new IllegalArgumentException("Must provide an object to clear the attribute from");
+		}
 		CmfAttribute<IDfValue> dataAttr = this.cmfObject.getAttribute(attr);
 		if (dataAttr != null) {
 			clearAttributeFromObject(dataAttr, object);
@@ -657,36 +666,41 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	protected final void clearAttributeFromObject(CmfAttribute<IDfValue> attribute, T object) throws DfException {
-		if (attribute == null) { throw new IllegalArgumentException(
-			"Must provide an attribute to clear from the object"); }
+		if (attribute == null) {
+			throw new IllegalArgumentException("Must provide an attribute to clear from the object");
+		}
 		clearAttributeFromObject(attribute.getName(), DctmTranslator.translateType(attribute.getType()),
 			attribute.isRepeating(), object);
 	}
 
 	protected final void clearAttributeFromObject(IDfAttr attribute, T object) throws DfException {
-		if (attribute == null) { throw new IllegalArgumentException(
-			"Must provide an attribute to clear from the object"); }
+		if (attribute == null) {
+			throw new IllegalArgumentException("Must provide an attribute to clear from the object");
+		}
 		clearAttributeFromObject(attribute.getName(), DctmDataType.fromAttribute(attribute), attribute.isRepeating(),
 			object);
 	}
 
 	protected final void clearAttributeFromObject(String attrName, DctmDataType dataType, boolean repeating, T object)
 		throws DfException {
-		if (object == null) { throw new IllegalArgumentException(
-			"Must provide an object to clear the attribute from"); }
-		if (attrName == null) { throw new IllegalArgumentException(
-			"Must provide an attribute name to clear from object"); }
+		if (object == null) {
+			throw new IllegalArgumentException("Must provide an object to clear the attribute from");
+		}
+		if (attrName == null) {
+			throw new IllegalArgumentException("Must provide an attribute name to clear from object");
+		}
 		if (!object.hasAttr(attrName)) { return; }
 		if (repeating) {
 			object.removeAll(attrName);
 		} else {
-			if (dataType == null) { throw new IllegalArgumentException(
-				"Must provide the data type for the attribute being cleared"); }
+			if (dataType == null) {
+				throw new IllegalArgumentException("Must provide the data type for the attribute being cleared");
+			}
 			try {
 				object.setValue(attrName, dataType.getNull());
 			} catch (DfAdminException e) {
 				// If it's not the kind of thing we're defending against, then rethrow it
-				if (!e.getMessageId().startsWith("DM_SET_")) { throw e; }
+				if (!StringUtils.startsWithIgnoreCase(e.getMessageId(), "DM_SET_")) { throw e; }
 				// This is raised when the attribute shouldn't be set (cleared) in this manner...
 				// it's safe to ignore it
 			}
