@@ -86,8 +86,8 @@ public abstract class ImportContext< //
 							e);
 					}
 					try {
-						dataObject = ImportContext.this.transformer.transform(getValueMapper(), schemaService,
-							dataObject);
+						dataObject = ImportContext.this.transformer.transform(getValueMapper(),
+							ImportContext.this.translator.getAttributeNameMapper(), schemaService, dataObject);
 					} catch (TransformerException e) {
 						throw new CmfStorageException(
 							String.format("Failed to transform %s", dataObject.getDescription()), e);
@@ -130,7 +130,8 @@ public abstract class ImportContext< //
 					sample.getDescription()), e);
 			}
 			try {
-				rawObject = this.transformer.transform(getValueMapper(), schemaService, rawObject);
+				rawObject = this.transformer.transform(getValueMapper(), this.translator.getAttributeNameMapper(),
+					schemaService, rawObject);
 			} catch (TransformerException e) {
 				throw new CmfStorageException(String.format("Failed to transform %s", sample.getDescription()), e);
 			} finally {

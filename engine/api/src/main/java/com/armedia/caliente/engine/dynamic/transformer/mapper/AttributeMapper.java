@@ -38,6 +38,7 @@ import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
 import com.armedia.caliente.engine.dynamic.xml.mapper.TypeMappings;
 import com.armedia.caliente.engine.tools.KeyLockableCache;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapper {
@@ -92,10 +93,12 @@ public class AttributeMapper {
 	private static MappingRenderer buildRenderer(MappingElement e, Character parentSeparator) {
 		if (!Mapping.class.isInstance(e)) { return null; }
 		Mapping m = Mapping.class.cast(e);
-		if (NameMapping.class
-			.isInstance(m)) { return new AttributeRenderer(NameMapping.class.cast(m), parentSeparator); }
-		if (NamespaceMapping.class
-			.isInstance(m)) { return new NamespaceRenderer(NamespaceMapping.class.cast(m), parentSeparator); }
+		if (NameMapping.class.isInstance(m)) {
+			return new AttributeRenderer(NameMapping.class.cast(m), parentSeparator);
+		}
+		if (NamespaceMapping.class.isInstance(m)) {
+			return new NamespaceRenderer(NamespaceMapping.class.cast(m), parentSeparator);
+		}
 		if (SetValue.class.isInstance(m)) { return new ConstantRenderer(SetValue.class.cast(m), parentSeparator); }
 		return null;
 	}
@@ -261,7 +264,7 @@ public class AttributeMapper {
 	}
 
 	protected void applyResult(final ConstructedType type, final Map<String, AttributeMapping> mappings,
-		final boolean includeResiduals, DynamicObject object) {
+		final boolean includeResiduals, DynamicObject object, CmfAttributeNameMapper nameMapper) {
 		final Map<String, DynamicValue> dynamicValues = object.getAtt();
 		if (!includeResiduals) {
 			// Remove all residuals
@@ -273,6 +276,8 @@ public class AttributeMapper {
 
 			final String origName = mapping.getSourceName();
 			final String newName = mapping.getTargetName();
+			final String newMappedName = Tools.coalesce(nameMapper.decodeAttributeName(object.getType(), newName),
+				newName);
 
 			if (origName != null) {
 				// This is a rename or a removal...
@@ -286,7 +291,7 @@ public class AttributeMapper {
 
 			// Ok...so this is either a rename or an assignment, so we
 			// check if it's a residual and skip it as required
-			if (!includeResiduals && !type.hasAttribute(newName)) { return; }
+			if (!includeResiduals && !type.hasAttribute(newMappedName)) { return; }
 
 			newValue = new DynamicValue(newName, mapping.getType(), mapping.isRepeating());
 			dynamicValues.put(newName, newValue);
@@ -301,8 +306,8 @@ public class AttributeMapper {
 		});
 	}
 
-	public void renderMappedAttributes(final SchemaService schemaService, DynamicObject object)
-		throws SchemaServiceException {
+	public void renderMappedAttributes(final SchemaService schemaService, DynamicObject object,
+		CmfAttributeNameMapper nameMapper) throws SchemaServiceException {
 		Objects.requireNonNull(object, "Must provide an object whose attribute values to map");
 
 		final ConstructedType type = this.constructedTypeFactory.constructType(schemaService, object.getSubtype(),
@@ -320,9 +325,11 @@ public class AttributeMapper {
 		final ResidualsModeTracker tracker = new ResidualsModeTracker();
 		renderer.render(object, tracker).forEach((attribute) -> {
 			final String targetName = attribute.getTargetName();
+			final String mappedName = Tools.coalesce(nameMapper.decodeAttributeName(object.getType(), targetName),
+				targetName);
 
 			// First things first: is this attribute residual?
-			if (!type.hasAttribute(targetName)) {
+			if (!type.hasAttribute(mappedName)) {
 				residuals.put(targetName, attribute);
 				return;
 			}
@@ -342,10 +349,11 @@ public class AttributeMapper {
 				// cannot override explicit mappings
 				return;
 			}
+			final String mappedName = Tools.coalesce(nameMapper.decodeAttributeName(object.getType(), name), name);
 
 			// If the attribute is declared, then copy it directly...otherwise, it's should be
 			// treated as a residual
-			(type.hasAttribute(name) ? finalValues : residuals).put(name,
+			(type.hasAttribute(mappedName) ? finalValues : residuals).put(name,
 				new AttributeMapping(attribute, name, ',', false));
 		});
 
@@ -364,6 +372,6 @@ public class AttributeMapper {
 				break;
 		}
 
-		applyResult(type, finalValues, residualsEnabled, object);
+		applyResult(type, finalValues, residualsEnabled, object, nameMapper);
 	}
 }

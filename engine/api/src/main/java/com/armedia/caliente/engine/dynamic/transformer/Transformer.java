@@ -16,6 +16,7 @@ import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServi
 import com.armedia.caliente.engine.dynamic.xml.Transformations;
 import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
+import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
@@ -69,8 +70,8 @@ public class Transformer {
 		return new DynamicElementContext(object, new DefaultDynamicObject(object), mapper, this.metadataLoader);
 	}
 
-	public CmfObject<CmfValue> transform(CmfValueMapper mapper, SchemaService schemaService, CmfObject<CmfValue> object)
-		throws TransformerException {
+	public CmfObject<CmfValue> transform(CmfValueMapper mapper, final CmfAttributeNameMapper nameMapper,
+		SchemaService schemaService, CmfObject<CmfValue> object) throws TransformerException {
 		Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
@@ -88,7 +89,7 @@ public class Transformer {
 				final DynamicObject dynamic = ctx.getDynamicObject();
 				if (this.attributeMapper != null) {
 					try {
-						this.attributeMapper.renderMappedAttributes(schemaService, dynamic);
+						this.attributeMapper.renderMappedAttributes(schemaService, dynamic, nameMapper);
 					} catch (SchemaServiceException e) {
 						throw new TransformerException(
 							String.format("Failed to apply the attribute mappings for %s", object.getDescription()), e);
