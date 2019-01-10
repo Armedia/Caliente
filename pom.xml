@@ -42,7 +42,7 @@
 		<dfc.version>6.7-SP1</dfc.version>
 		<!-- Can't use a newer OpenCMIS because it'll cause JAXB collisions with the DFC -->
 		<opencmis.version>0.13.0</opencmis.version>
-		<h2.version>1.4.198-20190109.git-b55aaa2b53c2681b8b58d923b058dd68efa5d7f3</h2.version>
+		<h2.version>1.4.198-20190110.git-beb140852f94c2f1d7424a148b1d4101c34eee3c</h2.version>
 		<ridc.version>11.1.1.0</ridc.version>
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 	</properties>
