@@ -600,8 +600,10 @@ public abstract class ImportEngine<//
 			// Make sure we have a valid import strategy for every item
 			for (CmfType t : containedTypes.keySet()) {
 				// If the type is supported, and we have no strategy, it's a problem...
-				if (contextFactory.isSupported(t) && (getImportStrategy(t) == null)) { throw new ImportException(
-					String.format("No import strategy provided for available object type [%s]", t.name())); }
+				if (contextFactory.isSupported(t) && (getImportStrategy(t) == null)) {
+					throw new ImportException(
+						String.format("No import strategy provided for available object type [%s]", t.name()));
+				}
 			}
 
 			objectStore.clearAttributeMappings();
@@ -748,8 +750,9 @@ public abstract class ImportEngine<//
 								}
 
 								try {
-									dataObject = transformer.transform(objectStore.getValueMapper(), schemaService,
-										dataObject);
+									"".length();
+									dataObject = transformer.transform(objectStore.getValueMapper(),
+										translator.getAttributeNameMapper(), schemaService, dataObject);
 								} catch (TransformerException e) {
 									throw new CmfStorageException(
 										String.format("Failed to transform %s", dataObject.getDescription()), e);
@@ -758,9 +761,7 @@ public abstract class ImportEngine<//
 								}
 							}
 
-							CmfObject<VALUE> decoded = translator.decodeObject(dataObject);
-							// TODO: Perform attribute mapping here?
-							this.contents.add(decoded);
+							this.contents.add(translator.decodeObject(dataObject));
 							return true;
 						}
 
