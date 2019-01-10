@@ -75,13 +75,13 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		if (this.object.isSymbolicLink()) {
 			view = Files.getFileAttributeView(path, klazz, LinkOption.NOFOLLOW_LINKS);
 		} else {
-			Files.getFileAttributeView(path, klazz);
+			view = Files.getFileAttributeView(path, klazz);
 		}
 
 		if (view != null) {
 			this.attributeViews.put(klazz, view);
 		}
-		return null;
+		return view;
 	}
 
 	@Override

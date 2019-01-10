@@ -40,8 +40,9 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.build.target>1.8</project.build.target>
 		<dfc.version>6.7-SP1</dfc.version>
+		<!-- Can't use a newer OpenCMIS because it'll cause JAXB collisions with the DFC -->
 		<opencmis.version>0.13.0</opencmis.version>
-		<h2.version>1.4.198.git-143635c9915ee619ec29250ba3fe3fd41df72073</h2.version>
+		<h2.version>1.4.198-20190110.git-beb140852f94c2f1d7424a148b1d4101c34eee3c</h2.version>
 		<ridc.version>11.1.1.0</ridc.version>
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
 	</properties>
