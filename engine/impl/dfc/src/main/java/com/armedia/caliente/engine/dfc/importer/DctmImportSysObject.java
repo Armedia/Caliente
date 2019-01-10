@@ -47,6 +47,7 @@ import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfFolder;
 import com.documentum.fc.client.IDfGroup;
+import com.documentum.fc.client.IDfLocalTransaction;
 import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfPermitType;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -79,6 +80,22 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		s.add(IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 		s.add(IDfACL.DF_XPERMIT_EXECUTE_PROC_STR);
 		AUTO_PERMITS = Collections.unmodifiableSet(s);
+	}
+
+	private static Set<String> getSupportedExtendedPermits(IDfSysObject sysObject) throws DfException {
+		final IDfSession session = sysObject.getSession();
+		Set<String> ret = new HashSet<>();
+
+		final IDfLocalTransaction tx = DfUtils.openTransaction(session);
+		try {
+			ret.addAll(StrTokenizer.getCSVInstance(sysObject.getXPermitList()).getTokenList());
+			DfUtils.commitTransaction(session, tx);
+		} catch (final DfException e) {
+			DfUtils.abortTransaction(session, tx);
+			if (!StringUtils.equalsIgnoreCase("DM_SYSOBJECT_W_FOLDER_DEFACL", e.getMessageId())) { throw e; }
+		}
+
+		return ret;
 	}
 
 	protected static final class TemporaryPermission {
@@ -121,7 +138,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.newPermit = null;
 			}
 
-			Set<String> s = new HashSet<>(StrTokenizer.getCSVInstance(object.getXPermitList()).getTokenList());
+			Set<String> s = DctmImportSysObject.getSupportedExtendedPermits(object);
 			Set<String> autoRemove = new HashSet<>();
 			for (String x : DctmImportSysObject.AUTO_PERMITS) {
 				if (!s.contains(x)) {
@@ -149,10 +166,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		private boolean apply(IDfSysObject object, boolean grant) throws DfException {
-			if (!Tools.equals(this.objectId,
-				object.getObjectId().getId())) { throw new DfException(
-					String.format("ERROR: Expected object with ID [%s] but got [%s] instead", this.objectId,
-						object.getObjectId().getId())); }
+			if (!Tools.equals(this.objectId, object.getObjectId().getId())) {
+				throw new DfException(String.format("ERROR: Expected object with ID [%s] but got [%s] instead",
+					this.objectId, object.getObjectId().getId()));
+			}
 			boolean ret = false;
 			if (this.newPermit != null) {
 				IDfPermit toGrant = (grant ? this.newPermit : this.oldPermit);
@@ -879,9 +896,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		target = IDfSysObject.class.cast(session.getObject(referenceById.asId()));
-		if (!(target instanceof IDfSysObject)) { throw new ImportException(
-			String.format("Reference [%s] target object [%s] is not an IDfSysObject instance",
-				this.cmfObject.getLabel(), referenceById.asString())); }
+		if (!(target instanceof IDfSysObject)) {
+			throw new ImportException(String.format("Reference [%s] target object [%s] is not an IDfSysObject instance",
+				this.cmfObject.getLabel(), referenceById.asString()));
+		}
 
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
 		IDfId mainFolderId = getMappedParentId(context);
@@ -940,8 +958,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
-		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String
-			.format("No target paths specified for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if ((p == null) || (p.getValueCount() == 0)) {
+			throw new ImportException(String.format("No target paths specified for [%s](%s)", this.cmfObject.getLabel(),
+				this.cmfObject.getId()));
+		}
 		return p.getValues();
 	}
 
@@ -950,9 +970,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final String documentName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 
 		IDfType type = DctmTranslator.translateType(ctx, this.cmfObject);
-		if (type == null) { throw new ImportException(String.format(
-			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.cmfObject.getSubtype(),
-			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if (type == null) {
+			throw new ImportException(String.format("Unsupported subtype [%s] and object type [%s] in object [%s](%s)",
+				this.cmfObject.getSubtype(), this.cmfObject.getType(), this.cmfObject.getLabel(),
+				this.cmfObject.getId()));
+		}
 
 		final String dqlBase = String.format("%s (ALL) where object_name = %%s and folder(%%s)", type.getName());
 
