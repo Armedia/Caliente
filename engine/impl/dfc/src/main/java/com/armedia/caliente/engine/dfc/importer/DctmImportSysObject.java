@@ -83,6 +83,18 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		AUTO_PERMITS = Collections.unmodifiableSet(s);
 	}
 
+	private static Set<String> getSupportedExtendedPermits(IDfSysObject sysObject) throws DfException {
+		final IDfSession session = sysObject.getSession();
+		final Set<String> ret = new HashSet<>();
+
+		DfException e = DfUtils.runRetryable(session, (s) -> {
+			ret.addAll(StrTokenizer.getCSVInstance(sysObject.getXPermitList()).getTokenList());
+		});
+		if ((e != null) && !StringUtils.equalsIgnoreCase("DM_SYSOBJECT_W_FOLDER_DEFACL", e.getMessageId())) { throw e; }
+
+		return ret;
+	}
+
 	protected static final class TemporaryPermission {
 		private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -123,7 +135,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.newPermit = null;
 			}
 
-			Set<String> s = new HashSet<>(StrTokenizer.getCSVInstance(object.getXPermitList()).getTokenList());
+			Set<String> s = DctmImportSysObject.getSupportedExtendedPermits(object);
 			Set<String> autoRemove = new HashSet<>();
 			for (String x : DctmImportSysObject.AUTO_PERMITS) {
 				if (!s.contains(x)) {
@@ -151,10 +163,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		private boolean apply(IDfSysObject object, boolean grant) throws DfException {
-			if (!Tools.equals(this.objectId,
-				object.getObjectId().getId())) { throw new DfException(
-					String.format("ERROR: Expected object with ID [%s] but got [%s] instead", this.objectId,
-						object.getObjectId().getId())); }
+			if (!Tools.equals(this.objectId, object.getObjectId().getId())) {
+				throw new DfException(String.format("ERROR: Expected object with ID [%s] but got [%s] instead",
+					this.objectId, object.getObjectId().getId()));
+			}
 			boolean ret = false;
 			if (this.newPermit != null) {
 				IDfPermit toGrant = (grant ? this.newPermit : this.oldPermit);
@@ -881,9 +893,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		target = IDfSysObject.class.cast(session.getObject(referenceById.asId()));
-		if (!(target instanceof IDfSysObject)) { throw new ImportException(
-			String.format("Reference [%s] target object [%s] is not an IDfSysObject instance",
-				this.cmfObject.getLabel(), referenceById.asString())); }
+		if (!(target instanceof IDfSysObject)) {
+			throw new ImportException(String.format("Reference [%s] target object [%s] is not an IDfSysObject instance",
+				this.cmfObject.getLabel(), referenceById.asString()));
+		}
 
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
 		IDfId mainFolderId = getMappedParentId(context);
@@ -942,8 +955,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
-		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String
-			.format("No target paths specified for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if ((p == null) || (p.getValueCount() == 0)) {
+			throw new ImportException(String.format("No target paths specified for [%s](%s)", this.cmfObject.getLabel(),
+				this.cmfObject.getId()));
+		}
 		return p.getValues();
 	}
 
@@ -952,9 +967,11 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final String documentName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
 
 		IDfType type = DctmTranslator.translateType(ctx, this.cmfObject);
-		if (type == null) { throw new ImportException(String.format(
-			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.cmfObject.getSubtype(),
-			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if (type == null) {
+			throw new ImportException(String.format("Unsupported subtype [%s] and object type [%s] in object [%s](%s)",
+				this.cmfObject.getSubtype(), this.cmfObject.getType(), this.cmfObject.getLabel(),
+				this.cmfObject.getId()));
+		}
 
 		final String dqlBase = String.format("%s (ALL) where object_name = %%s and folder(%%s)", type.getName());
 
