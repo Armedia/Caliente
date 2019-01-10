@@ -149,10 +149,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		private boolean apply(IDfSysObject object, boolean grant) throws DfException {
-			if (!Tools.equals(this.objectId,
-				object.getObjectId().getId())) { throw new DfException(
-					String.format("ERROR: Expected object with ID [%s] but got [%s] instead", this.objectId,
-						object.getObjectId().getId())); }
+			if (!Tools.equals(this.objectId, object.getObjectId().getId())) {
+				throw new DfException(String.format("ERROR: Expected object with ID [%s] but got [%s] instead",
+					this.objectId, object.getObjectId().getId()));
+			}
 			boolean ret = false;
 			if (this.newPermit != null) {
 				IDfPermit toGrant = (grant ? this.newPermit : this.oldPermit);
@@ -484,10 +484,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-		
+
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-		
+
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/
@@ -879,9 +879,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		target = IDfSysObject.class.cast(session.getObject(referenceById.asId()));
-		if (!(target instanceof IDfSysObject)) { throw new ImportException(
-			String.format("Reference [%s] target object [%s] is not an IDfSysObject instance",
-				this.cmfObject.getLabel(), referenceById.asString())); }
+		if (!(target instanceof IDfSysObject)) {
+			throw new ImportException(String.format("Reference [%s] target object [%s] is not an IDfSysObject instance",
+				this.cmfObject.getLabel(), referenceById.asString()));
+		}
 
 		IDfSysObject targetSysObj = IDfSysObject.class.cast(target);
 		IDfId mainFolderId = getMappedParentId(context);
@@ -940,19 +941,23 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 	protected Collection<IDfValue> getTargetPaths() throws DfException, ImportException {
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PATH);
-		if ((p == null) || (p.getValueCount() == 0)) { throw new ImportException(String
-			.format("No target paths specified for [%s](%s)", this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if ((p == null) || (p.getValueCount() == 0)) {
+			throw new ImportException(String.format("No target paths specified for [%s](%s)", this.cmfObject.getLabel(),
+				this.cmfObject.getId()));
+		}
 		return p.getValues();
 	}
 
 	protected T locateExistingByPath(DctmImportContext ctx) throws ImportException, DfException {
 		final IDfSession session = ctx.getSession();
-		final String documentName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString();
+		final String documentName = this.cmfObject.getName();
 
 		IDfType type = DctmTranslator.translateType(ctx, this.cmfObject);
-		if (type == null) { throw new ImportException(String.format(
-			"Unsupported subtype [%s] and object type [%s] in object [%s](%s)", this.cmfObject.getSubtype(),
-			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if (type == null) {
+			throw new ImportException(String.format("Unsupported subtype [%s] and object type [%s] in object [%s](%s)",
+				this.cmfObject.getSubtype(), this.cmfObject.getType(), this.cmfObject.getLabel(),
+				this.cmfObject.getId()));
+		}
 
 		final String dqlBase = String.format("%s (ALL) where object_name = %%s and folder(%%s)", type.getName());
 

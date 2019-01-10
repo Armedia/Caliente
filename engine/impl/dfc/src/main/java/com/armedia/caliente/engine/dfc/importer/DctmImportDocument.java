@@ -99,8 +99,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	}
 
 	private String calculateVersionString(IDfSysObject document, boolean full) throws DfException {
-		if (!full) { return String.format("%s%s", document.getImplicitVersionLabel(),
-			document.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : ""); }
+		if (!full) {
+			return String.format("%s%s", document.getImplicitVersionLabel(),
+				document.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : "");
+		}
 		int labelCount = document.getVersionLabelCount();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < labelCount; i++) {
@@ -244,8 +246,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				DctmAttributes.R_OBJECT_ID, aid.getId());
 			// This mapping can only exist (i.e. be non-null) if we actually processed the
 			// antecedent during this run
-			if (mapping != null) { return createSuccessorVersion(
-				castObject(session.getObject(new DfId(mapping.getTargetValue()))), null, context); }
+			if (mapping != null) {
+				return createSuccessorVersion(castObject(session.getObject(new DfId(mapping.getTargetValue()))), null,
+					context);
+			}
 		}
 
 		// Its exact antecedent isn't there, so we try for the patched one...
@@ -286,8 +290,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				antecedentVersion = newDocument(context);
 
 				// Set the name
-				antecedentVersion
-					.setObjectName(this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
+				antecedentVersion.setObjectName(this.cmfObject.getName());
 
 				// And...finally...use this object moving forward
 				substituteRoot = true;
@@ -641,8 +644,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	}
 
 	protected String determineFormat(IDfSession session, MimeType fallbackType) throws DfException {
-		String extension = FilenameUtils
-			.getExtension(this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString()).toLowerCase();
+		String extension = FilenameUtils.getExtension(this.cmfObject.getName()).toLowerCase();
 		if (StringUtils.isBlank(extension)) {
 			extension = null;
 		}
@@ -805,14 +807,18 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 					DctmVdocMember member = new DctmVdocMember(v.asString());
 					Mapping m = context.getValueMapper().getTargetMapping(CmfType.DOCUMENT,
 						DctmAttributes.I_CHRONICLE_ID, member.getChronicleId().getId());
-					if (m == null) { throw new ImportException(String.format(
-						"Virtual Document [%s](%s) references a component [%s] which could not be located (maybe it hasn't been imported yet?)",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), v.asString())); }
+					if (m == null) {
+						throw new ImportException(String.format(
+							"Virtual Document [%s](%s) references a component [%s] which could not be located (maybe it hasn't been imported yet?)",
+							this.cmfObject.getLabel(), this.cmfObject.getId(), v.asString()));
+					}
 					IDfSysObject so = IDfSysObject.class.cast(context.getSession().getObjectByQualification(String
 						.format("dm_sysobject where i_chronicle_id = %s", DfUtils.quoteString(m.getTargetValue()))));
-					if (so == null) { throw new ImportException(String.format(
-						"Virtual Document [%s](%s) references a component [%s] which could not be located, but may have failed during import",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), m.getTargetValue())); }
+					if (so == null) {
+						throw new ImportException(String.format(
+							"Virtual Document [%s](%s) references a component [%s] which could not be located, but may have failed during import",
+							this.cmfObject.getLabel(), this.cmfObject.getId(), m.getTargetValue()));
+					}
 
 					final String childBinding = (StringUtils.isBlank(member.getBinding())
 						? ISysObject.CURRENT_VERSION_LABEL

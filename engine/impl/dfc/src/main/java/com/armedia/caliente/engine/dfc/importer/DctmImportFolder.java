@@ -20,6 +20,7 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.FileNameTools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -67,8 +68,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	protected void doFinalizeConstruction(IDfFolder folder, boolean newObject, DctmImportContext context)
 		throws DfException, ImportException {
 		if (newObject && !isDfReference(folder)) {
-			CmfAttribute<IDfValue> objectName = this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME);
-			setAttributeOnObject(DctmAttributes.OBJECT_NAME, objectName.getValue(), folder);
+			setAttributeOnObject(DctmAttributes.OBJECT_NAME, DfValueFactory.newStringValue(this.cmfObject.getName()),
+				folder);
 		}
 	}
 
@@ -78,7 +79,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		if (newObject) {
 			// Make sure we apply the original name, since we had to "massage" it to
 			// get things to work later on
-			copyAttributeToObject(DctmAttributes.OBJECT_NAME, folder);
+			setAttributeOnObject(DctmAttributes.OBJECT_NAME, DfValueFactory.newStringValue(this.cmfObject.getName()),
+				folder);
 		}
 
 		if (this.mainTemporaryPermission != null) {
@@ -103,8 +105,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			.getProperty(IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS);
 
 		if ((usersWithDefaultFolder == null) || (usersDefaultFolderPaths == null)
-			|| (usersWithDefaultFolder.getValueCount() == 0)
-			|| (usersDefaultFolderPaths.getValueCount() == 0)) { return; }
+			|| (usersWithDefaultFolder.getValueCount() == 0) || (usersDefaultFolderPaths.getValueCount() == 0)) {
+			return;
+		}
 
 		final int total = usersWithDefaultFolder.getValueCount();
 		Map<String, String> m = new TreeMap<>();
@@ -206,8 +209,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		CmfProperty<IDfValue> p = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		if ((p == null) || !p.hasValues()) {
 			// This is a cabinet...
-			String path = String.format("/%s",
-				this.cmfObject.getAttribute(DctmAttributes.OBJECT_NAME).getValue().asString());
+			String path = String.format("/%s", this.cmfObject.getName());
 			return session.getFolderByPath(ctx.getTargetPath(path));
 		}
 		return super.locateInCms(ctx);
