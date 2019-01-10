@@ -96,8 +96,7 @@ public abstract class ImportContext< //
 					}
 				}
 
-				CmfObject<VALUE> encoded = ImportContext.this.translator.decodeObject(dataObject);
-				return handler.handleObject(encoded);
+				return handler.handleObject(ImportContext.this.translator.decodeObject(dataObject));
 			}
 
 			@Override
