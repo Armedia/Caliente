@@ -35,7 +35,6 @@ public class DctmSchemaService implements SchemaService {
 		"select object_name from dmc_aspect_type order by object_name", "object_name");
 	private static final String ASPECT_TABLE_DQL = "select object_name, i_attr_def from dmc_aspect_type where object_name = %s";
 	private static final String ASPECT_ATTR_DQL = "select * from %s enable(return_top 1, optimize_top 1)";
-	private static final String DM_QUERY2_E_TABLE_NOT_FOUND = "DM_QUERY2_E_TABLE_NOT_FOUND";
 
 	private static final boolean[] REPEATING = {
 		false, true
@@ -123,8 +122,8 @@ public class DctmSchemaService implements SchemaService {
 						try {
 							c = DfUtils.executeQuery(this.session, dql, IDfQuery.DF_READ_QUERY);
 						} catch (final DfException e) {
-							if (StringUtils.equalsIgnoreCase(e.getMessageId(),
-								DctmSchemaService.DM_QUERY2_E_TABLE_NOT_FOUND)) {
+							if (StringUtils.equalsIgnoreCase("DM_QUERY2_E_TABLE_NOT_FOUND", e.getMessageId())) {
+								// No data for that aspect's attribtue attributes
 								continue;
 							}
 							// Rethrow, so the outer catch clause processes it

@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmMappingUtils;
@@ -192,8 +194,10 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 
 			user = DctmMappingUtils.resolveMappableUser(acl.getSession(), user);
 			IDfUser u = DctmImportUser.locateExistingUser(context, user);
-			if (u == null) { throw new ImportException(
-				String.format("Failed to locate the owner [%s] for %s", user, this.cmfObject.getDescription())); }
+			if (u == null) {
+				throw new ImportException(
+					String.format("Failed to locate the owner [%s] for %s", user, this.cmfObject.getDescription()));
+			}
 			acl.setDomain(u.getUserName());
 			acl.setObjectName(name);
 			acl.save();
@@ -213,7 +217,7 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 						permit.getPermitValueString()));
 				}
 			} catch (DfACLException e) {
-				if ("DM_ACL_E_NOMATCH".equals(e.getMessageId())) {
+				if (StringUtils.equalsIgnoreCase("DM_ACL_E_NOMATCH", e.getMessageId())) {
 					// we can survive this...
 					this.log.warn(String.format(
 						"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
@@ -255,9 +259,11 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			// same number of values
 			if ((accessors == null) || (permitTypes == null) || (permitValues == null)
 				|| (accessors.getValueCount() != permitTypes.getValueCount())
-				|| (accessors.getValueCount() != permitValues.getValueCount())) { throw new ImportException(
+				|| (accessors.getValueCount() != permitValues.getValueCount())) {
+				throw new ImportException(
 					String.format("Irregular ACL data stored for %s%naccessors = %s%npermitType = %s%npermitValue = %s",
-						this.cmfObject.getDescription(), accessors, permitTypes, permitValues)); }
+						this.cmfObject.getDescription(), accessors, permitTypes, permitValues));
+			}
 
 			// One final check to shortcut and avoid unnecessary processing...
 			final int accessorCount = accessors.getValueCount();
