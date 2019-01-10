@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -42,6 +43,7 @@ public final class LocalRoot implements Comparable<LocalRoot> {
 		}
 		String str = f.getPath().substring(this.path.length());
 		if (str.startsWith(File.separator)) { return str.substring(1); }
+		if (StringUtils.isEmpty(str)) { return File.separator; }
 		throw new IOException(String.format("The path [%s] is not a child of [%s]", path, this.path));
 	}
 
