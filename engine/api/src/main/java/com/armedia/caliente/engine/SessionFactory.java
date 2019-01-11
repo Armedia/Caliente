@@ -23,8 +23,8 @@ public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SES
 	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 	protected final CmfCrypt crypto;
 
-	protected static GenericObjectPoolConfig getDefaultPoolConfig(CfgTools settings) {
-		GenericObjectPoolConfig config = new GenericObjectPoolConfig();
+	protected static <SESSION> GenericObjectPoolConfig<SESSION> getDefaultPoolConfig(CfgTools settings) {
+		GenericObjectPoolConfig<SESSION> config = new GenericObjectPoolConfig<>();
 		config.setLifo(true);
 		config.setMaxTotal(-1);
 		config.setMaxWaitMillis(0); // wait indefinitely
@@ -85,7 +85,7 @@ public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SES
 		}
 	}
 
-	protected GenericObjectPoolConfig getPoolConfig(CfgTools settings) {
+	protected GenericObjectPoolConfig<SESSION> getPoolConfig(CfgTools settings) {
 		return SessionFactory.getDefaultPoolConfig(settings);
 	}
 
