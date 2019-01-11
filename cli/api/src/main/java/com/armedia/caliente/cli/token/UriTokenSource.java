@@ -7,10 +7,36 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.TreeSet;
+
+import org.apache.commons.lang3.StringUtils;
+
+import com.armedia.commons.utilities.Tools;
 
 public class UriTokenSource extends ReaderTokenSource {
 
+	private static final String[] CLASSPATH_SCHEME_STRINGS = {
+		"classpath", "cp", "res", "resource"
+	};
+	private static final Set<String> CLASSPATH_SCHEMES;
+
+	static {
+		Set<String> set = new TreeSet<>();
+		for (String s : UriTokenSource.CLASSPATH_SCHEME_STRINGS) {
+			if (!StringUtils.isEmpty(s)) {
+				set.add(StringUtils.lowerCase(s));
+			}
+		}
+		CLASSPATH_SCHEMES = Tools.freezeSet(new LinkedHashSet<>(set));
+	}
 	private static final String CLASSPATH = "classpath";
+
+	private static boolean isClasspathScheme(String scheme) {
+		if (StringUtils.isEmpty(scheme)) { return false; }
+		return UriTokenSource.CLASSPATH_SCHEMES.contains(StringUtils.lowerCase(scheme));
+	}
 
 	private static boolean supportsClasspath() {
 		try {
@@ -39,7 +65,7 @@ public class UriTokenSource extends ReaderTokenSource {
 	protected Reader openReader() throws IOException {
 		final String scheme = this.sourceUri.getScheme();
 		InputStream in = null;
-		if (UriTokenSource.CLASSPATH.equalsIgnoreCase(scheme) && !UriTokenSource.supportsClasspath()) {
+		if (UriTokenSource.isClasspathScheme(scheme) && !UriTokenSource.supportsClasspath()) {
 			// It's a classpath URL... let's use the rest of it as the classpath resource to get
 			String resource = this.sourceUri.getSchemeSpecificPart();
 			// Eliminate all leading slashes

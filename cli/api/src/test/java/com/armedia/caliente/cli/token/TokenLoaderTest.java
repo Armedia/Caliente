@@ -22,8 +22,8 @@ public class TokenLoaderTest {
 		String[] args = null;
 
 		args = new String[] {
-			"-a", "--bb", "XXX", "-MuLtIsHoRt", "subcommand", "asdfasdf", "--@@classpath:/test-parameter-file.txt",
-			"--", "--@@classpath:/test-parameter-file.txt", "--ff"
+			"-a", "--bb", "XXX", "-MuLtIsHoRt", "subcommand", "asdfasdf", "--@", "classpath:/test-parameter-file.txt",
+			"--", "--@", "res:/test-parameter-file.txt", "--ff"
 		};
 
 		for (Token t : new TokenLoader(new StaticTokenSource("primary", Arrays.asList(args)))) {
