@@ -149,11 +149,11 @@ public class TokenLoader implements Iterable<Token> {
 					// recursion code and ignore the flag altogether
 					if (this.enableRecursion) {
 						if (!it.hasNext()) { throw new TokenSourceRecursionMissingException(state.source); }
-						String recursionSource = it.next();
-						if (StringUtils.isEmpty(recursionSource)) {
+						String recursionTarget = it.next();
+						if (StringUtils.isEmpty(recursionTarget)) {
 							throw new TokenSourceRecursionMissingException(state.source);
 						}
-						State newState = recurse(current, recursionSource, state.source);
+						State newState = recurse(recursionTarget, state.source);
 						if (!this.recursions.add(newState.source.getKey())) {
 							// Recursion loop!! This is an error!
 							throw new TokenSourceRecursionLoopException(newState.source, this.recursions);
@@ -203,39 +203,47 @@ public class TokenLoader implements Iterable<Token> {
 			return next;
 		}
 
-		private State recurse(String marker, String current, TokenSource source) throws IOException {
-			// Remove the file marker
-			String fileName = current;
+		private Path getCanonicalPath(String path) {
+			if (StringUtils.isEmpty(path)) { return null; }
+			try {
+				return Paths.get(path);
+			} catch (Exception e) {
+				// Not a valid path
+				return null;
+			}
+		}
+
+		private State recurse(String sourceName, TokenSource source) throws IOException {
 			TokenSource newSource = null;
-			if (StringUtils.equals(TokenLoader.this.urlMarker, marker)) {
-				// It's a URL...
-				// TODO: Eventually port this to support Commons-VFS URLs?
-				final String uriStr = fileName;
-				final URI sourceUri;
-				try {
-					sourceUri = new URI(uriStr);
-				} catch (URISyntaxException e) {
-					throw new IOException(String.format("Failed to properly process the URI [%s]", uriStr), e);
-				}
+
+			// It's not a path, so it MUST be a URL...
+			// TODO: Eventually port this to support Commons-VFS URLs?
+			final URI sourceUri;
+			try {
+				sourceUri = new URI(sourceName);
 				if (!sourceUri.getScheme().equals("file")) {
 					// Not a local file, use the URL source
 					newSource = new UriTokenSource(sourceUri);
 				} else {
 					// Local file... treat it as such...
-					fileName = new File(sourceUri).getAbsolutePath();
+					sourceName = new File(sourceUri).getPath();
 				}
+			} catch (URISyntaxException e) {
+				// Not a URI... must be a path
+				newSource = null;
 			}
 
 			if (newSource == null) {
 				// It's a local file... if the current source is another local file,
 				// and the given path isn't absolute, take its path to be relative to that one
-				Path path = Paths.get(fileName);
-				if (!path.isAbsolute() && LocalPathTokenSource.class.isInstance(source)) {
-					LocalPathTokenSource pathSource = LocalPathTokenSource.class.cast(source);
-					Path relativeTo = pathSource.getSourcePath().getParent();
-					path = relativeTo.resolve(path);
+				Path sourcePath = getCanonicalPath(sourceName);
+
+				if (!sourcePath.isAbsolute() && LocalPathTokenSource.class.isInstance(source)) {
+					LocalPathTokenSource currentSource = LocalPathTokenSource.class.cast(source);
+					Path relativeTo = currentSource.getSourcePath().getParent();
+					sourcePath = relativeTo.resolve(sourcePath);
 				}
-				newSource = new LocalPathTokenSource(path);
+				newSource = new LocalPathTokenSource(sourcePath.toAbsolutePath().normalize());
 			}
 
 			return new State(newSource);
@@ -270,8 +278,7 @@ public class TokenLoader implements Iterable<Token> {
 	private final Pattern patShort;
 	private final Pattern patLong;
 	private final Character fileMarkerChar;
-	private final String fileMarker;
-	private final String urlMarker;
+	private final String recursionMarker;
 	private final Character valueSeparator;
 
 	/**
@@ -322,12 +329,10 @@ public class TokenLoader implements Iterable<Token> {
 
 		if (allowRecursion) {
 			this.fileMarkerChar = TokenLoader.FILE_MARKER;
-			this.fileMarker = String.format("--%s", this.fileMarkerChar);
-			this.urlMarker = String.format("%s%s", this.fileMarker, this.fileMarkerChar);
+			this.recursionMarker = String.format("--%s", this.fileMarkerChar);
 		} else {
 			this.fileMarkerChar = null;
-			this.fileMarker = null;
-			this.urlMarker = null;
+			this.recursionMarker = null;
 		}
 
 		this.valueSeparator = valueSeparator;
@@ -346,11 +351,11 @@ public class TokenLoader implements Iterable<Token> {
 	}
 
 	private boolean isRecursion(String str) {
-		return (this.fileMarker != null) && (str.equals(this.fileMarker) || str.equals(this.urlMarker));
+		return (str != null) && StringUtils.equals(this.recursionMarker, str);
 	}
 
 	public boolean isRecursionEnabled() {
-		return (this.fileMarker != null);
+		return (this.recursionMarker != null);
 	}
 
 	public Collection<Token> getBaseTokens() {

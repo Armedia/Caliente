@@ -6,7 +6,7 @@ first-line
 -s
 fourth crap
 --fifth
---@@ classpath:/test-parameter-file2.txt # cause a recursion loop
+--@ cp:/test-parameter-file2.txt # cause a recursion loop
 --
 skjdlf dsafjklasdf lkjalskjfd a
 f dasdf a
