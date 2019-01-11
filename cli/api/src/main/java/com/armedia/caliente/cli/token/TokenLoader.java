@@ -208,16 +208,18 @@ public class TokenLoader implements Iterable<Token> {
 			TokenSource newSource = null;
 
 			// It's not a path, so it MUST be a URL...
-			// TODO: Eventually port this to support Commons-VFS URLs?
+			// TODO: Eventually port UriTokenSource to support Commons-VFS URLs?
 			final URI sourceUri;
 			try {
 				sourceUri = new URI(sourceName);
-				if (!sourceUri.getScheme().equals("file")) {
-					// Not a local file, use the URL source
-					newSource = new UriTokenSource(sourceUri);
-				} else {
-					// Local file... treat it as such...
-					sourceName = new File(sourceUri).getPath();
+				if (UriTokenSource.isSupported(sourceUri)) {
+					if (!StringUtils.equals("file", sourceUri.getScheme())) {
+						// Not a local file, use the URI
+						newSource = new UriTokenSource(sourceUri);
+					} else {
+						// Local file... treat it as such...
+						sourceName = new File(sourceUri).getPath();
+					}
 				}
 			} catch (URISyntaxException e) {
 				// Not a URI... must be a path
