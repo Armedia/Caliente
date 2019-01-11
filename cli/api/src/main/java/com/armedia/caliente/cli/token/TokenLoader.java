@@ -99,8 +99,8 @@ public class TokenLoader implements Iterable<Token> {
 			this.recursions.add(start.getKey());
 		}
 
-		public boolean hasNext()
-			throws IOException, TokenSourceRecursionLoopException, TokenSourceRecursionMissingException {
+		public boolean hasNext() throws IOException, TokenSourceRecursionLoopException,
+			TokenSourceRecursionMissingException, InvalidTokenSourceRecursionException {
 			// If we have a token waiting in the wings, we go with that...
 			if (this.next != null) { return true; }
 
@@ -203,17 +203,8 @@ public class TokenLoader implements Iterable<Token> {
 			return next;
 		}
 
-		private Path getCanonicalPath(String path) {
-			if (StringUtils.isEmpty(path)) { return null; }
-			try {
-				return Paths.get(path);
-			} catch (Exception e) {
-				// Not a valid path
-				return null;
-			}
-		}
-
-		private State recurse(String sourceName, TokenSource source) throws IOException {
+		private State recurse(String sourceName, TokenSource source)
+			throws IOException, InvalidTokenSourceRecursionException {
 			TokenSource newSource = null;
 
 			// It's not a path, so it MUST be a URL...
@@ -236,7 +227,13 @@ public class TokenLoader implements Iterable<Token> {
 			if (newSource == null) {
 				// It's a local file... if the current source is another local file,
 				// and the given path isn't absolute, take its path to be relative to that one
-				Path sourcePath = getCanonicalPath(sourceName);
+				Path sourcePath = null;
+				try {
+					sourcePath = Paths.get(sourceName);
+				} catch (Exception e) {
+					// Not a URI nor a path!! KABOOM!
+					throw new InvalidTokenSourceRecursionException(sourceName);
+				}
 
 				if (!sourcePath.isAbsolute() && LocalPathTokenSource.class.isInstance(source)) {
 					LocalPathTokenSource currentSource = LocalPathTokenSource.class.cast(source);
@@ -253,8 +250,8 @@ public class TokenLoader implements Iterable<Token> {
 			return new Token(state.source, state.position, type, value, rawString);
 		}
 
-		public Token next()
-			throws IOException, TokenSourceRecursionLoopException, TokenSourceRecursionMissingException {
+		public Token next() throws IOException, TokenSourceRecursionLoopException, TokenSourceRecursionMissingException,
+			InvalidTokenSourceRecursionException {
 			if (!hasNext()) { throw new NoSuchElementException(); }
 			Token ret = this.next;
 			this.next = null;
@@ -372,7 +369,8 @@ public class TokenLoader implements Iterable<Token> {
 			return ret;
 		} catch (IOException e) {
 			throw new RuntimeException("Unexpected exception reading from memory", e);
-		} catch (TokenSourceRecursionLoopException | TokenSourceRecursionMissingException e) {
+		} catch (TokenSourceRecursionLoopException | TokenSourceRecursionMissingException
+			| InvalidTokenSourceRecursionException e) {
 			throw new RuntimeException("Recursion exception while parsing the parameter stream", e);
 		}
 	}
@@ -397,6 +395,8 @@ public class TokenLoader implements Iterable<Token> {
 				} catch (TokenSourceRecursionLoopException e) {
 					throw new RuntimeException("Token recursion loop detected", e);
 				} catch (TokenSourceRecursionMissingException e) {
+					throw new RuntimeException("Missing recursion target detected", e);
+				} catch (InvalidTokenSourceRecursionException e) {
 					throw new RuntimeException("Invalid recursion syntax detected", e);
 				} catch (IOException e) {
 					throw new RuntimeException("Failed to follow a token recursion request", e);
@@ -410,6 +410,8 @@ public class TokenLoader implements Iterable<Token> {
 				} catch (TokenSourceRecursionLoopException e) {
 					throw new RuntimeException("Token recursion loop detected", e);
 				} catch (TokenSourceRecursionMissingException e) {
+					throw new RuntimeException("Missing recursion target detected", e);
+				} catch (InvalidTokenSourceRecursionException e) {
 					throw new RuntimeException("Invalid recursion syntax detected", e);
 				} catch (IOException e) {
 					throw new RuntimeException("Failed to follow a token recursion request", e);
