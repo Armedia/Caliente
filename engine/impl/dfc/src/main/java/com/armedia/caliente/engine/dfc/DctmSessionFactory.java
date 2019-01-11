@@ -5,7 +5,6 @@
 package com.armedia.caliente.engine.dfc;
 
 import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -37,27 +36,27 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 
 	@Override
 	public PooledObject<IDfSession> makeObject() throws Exception {
-		return new DefaultPooledObject<>(this.factory.makeObject());
+		return this.factory.makeObject();
 	}
 
 	@Override
 	public void destroyObject(PooledObject<IDfSession> obj) throws Exception {
-		this.factory.destroyObject(obj.getObject());
+		this.factory.destroyObject(obj);
 	}
 
 	@Override
 	public boolean validateObject(PooledObject<IDfSession> obj) {
-		return this.factory.validateObject(obj.getObject());
+		return this.factory.validateObject(obj);
 	}
 
 	@Override
 	public void activateObject(PooledObject<IDfSession> obj) throws Exception {
-		this.factory.activateObject(obj.getObject());
+		this.factory.activateObject(obj);
 	}
 
 	@Override
 	public void passivateObject(PooledObject<IDfSession> obj) throws Exception {
-		this.factory.passivateObject(obj.getObject());
+		this.factory.passivateObject(obj);
 	}
 
 	@Override

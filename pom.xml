@@ -88,13 +88,13 @@
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-api</artifactId>
-				<version>1.1.6</version>
+				<version>1.2.0</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-pooled</artifactId>
-				<version>1.1.6</version>
+				<version>1.2.0</version>
 			</dependency>
 
 			<dependency>
