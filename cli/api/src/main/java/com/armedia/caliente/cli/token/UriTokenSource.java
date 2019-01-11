@@ -31,7 +31,6 @@ public class UriTokenSource extends ReaderTokenSource {
 		}
 		CLASSPATH_SCHEMES = Tools.freezeSet(new LinkedHashSet<>(set));
 	}
-	private static final String CLASSPATH = "classpath";
 
 	private static boolean isClasspathScheme(String scheme) {
 		if (StringUtils.isEmpty(scheme)) { return false; }
@@ -39,12 +38,26 @@ public class UriTokenSource extends ReaderTokenSource {
 	}
 
 	private static boolean supportsClasspath() {
+		for (String s : UriTokenSource.CLASSPATH_SCHEMES) {
+			try {
+				new URI(s, "", "").toURL();
+				return true;
+			} catch (URISyntaxException e) {
+				continue;
+			} catch (MalformedURLException e) {
+				continue;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isSupported(URI uri) {
+		if (uri == null) { return false; }
+		if (UriTokenSource.CLASSPATH_SCHEMES.contains(StringUtils.lowerCase(uri.getScheme()))) { return true; }
 		try {
-			new URI(UriTokenSource.CLASSPATH, "", "").toURL();
+			uri.toURL();
 			return true;
-		} catch (URISyntaxException e) {
-			return false;
-		} catch (MalformedURLException e) {
+		} catch (Exception e) {
 			return false;
 		}
 	}
