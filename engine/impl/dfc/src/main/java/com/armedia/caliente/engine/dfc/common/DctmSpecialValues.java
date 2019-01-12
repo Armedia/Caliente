@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 
 import com.armedia.commons.utilities.CfgTools;
 
@@ -22,7 +22,7 @@ public class DctmSpecialValues {
 
 	private static Set<String> parseCSV(CfgTools cfg, Setting setting) {
 		String str = cfg.getString(setting);
-		StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(str);
+		StringTokenizer strTokenizer = StringTokenizer.getCSVInstance(str);
 		Set<String> ret = Collections.unmodifiableSet(new HashSet<>(strTokenizer.getTokenList()));
 		if (ret.isEmpty()) {
 			ret = Collections.emptySet();

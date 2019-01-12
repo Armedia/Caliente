@@ -18,7 +18,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.xml.bind.JAXBException;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,9 +126,11 @@ public final class CmfStores {
 		}
 
 		// Is this the right type of class?
-		if (!CmfStorePrep.class.isAssignableFrom(prepClass)) { throw new CmfStorageException(
-			String.format("The store preparation class [%s] for store [%s] is not a valid sublcass of %s",
-				prepClassName, configuration.getId(), CmfStorePrep.class.getCanonicalName())); }
+		if (!CmfStorePrep.class.isAssignableFrom(prepClass)) {
+			throw new CmfStorageException(
+				String.format("The store preparation class [%s] for store [%s] is not a valid sublcass of %s",
+					prepClassName, configuration.getId(), CmfStorePrep.class.getCanonicalName()));
+		}
 
 		// Instantiate the preparation object...
 		final CmfStorePrep prepInstance;
@@ -157,8 +158,9 @@ public final class CmfStores {
 	private CmfStore<?, ?> createStore(StoreConfiguration configuration)
 		throws CmfStorageException, DuplicateCmfStoreException {
 		assertOpen();
-		if (configuration == null) { throw new IllegalArgumentException(
-			"Must provide a configuration to construct the instance from"); }
+		if (configuration == null) {
+			throw new IllegalArgumentException("Must provide a configuration to construct the instance from");
+		}
 		final String id = configuration.getId();
 		if (id == null) { throw new IllegalArgumentException("The configuration does not specify the store id"); }
 		final String type = configuration.getType();
@@ -168,12 +170,15 @@ public final class CmfStores {
 		l.lock();
 		try {
 			CmfStore<?, ?> dupe = this.cmfStores.get(id);
-			if (dupe != null) { throw new DuplicateCmfStoreException(
-				String.format("Duplicate store requested: [%s] already exists, and is of class [%s]", id,
-					dupe.getClass().getCanonicalName())); }
+			if (dupe != null) {
+				throw new DuplicateCmfStoreException(
+					String.format("Duplicate store requested: [%s] already exists, and is of class [%s]", id,
+						dupe.getClass().getCanonicalName()));
+			}
 			CmfStoreFactory<?> factory = this.factories.get(type);
-			if (factory == null) { throw new CmfStorageException(
-				String.format("No factory found for object store type [%s]", type)); }
+			if (factory == null) {
+				throw new CmfStorageException(String.format("No factory found for object store type [%s]", type));
+			}
 			CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 
 			final boolean cleanData = cfg.getBoolean(CmfStoreFactory.CFG_CLEAN_DATA, false);
@@ -204,8 +209,9 @@ public final class CmfStores {
 
 	private StoreConfiguration getConfiguration(String name) {
 		assertOpen();
-		if (name == null) { throw new IllegalArgumentException(
-			"Must provide the name of the store configuration to retrieve"); }
+		if (name == null) {
+			throw new IllegalArgumentException("Must provide the name of the store configuration to retrieve");
+		}
 		Lock l = this.lock.readLock();
 		l.lock();
 		try {
@@ -283,12 +289,8 @@ public final class CmfStores {
 
 	protected static StoreDefinitions parseConfiguration(URL settings)
 		throws CmfStorageException, IOException, JAXBException {
-		Reader xml = null;
-		try {
-			xml = new InputStreamReader(settings.openStream());
+		try (Reader xml = new InputStreamReader(settings.openStream())) {
 			return CmfStores.parseConfiguration(xml);
-		} finally {
-			IOUtils.closeQuietly(xml);
 		}
 	}
 
@@ -319,10 +321,8 @@ public final class CmfStores {
 			// We have the set of configurations, we iterate through each one
 			while (configs.hasMoreElements()) {
 				URL config = configs.nextElement();
-				Reader r = null;
 				final StoreDefinitions cfg;
-				try {
-					r = new InputStreamReader(config.openStream());
+				try (Reader r = new InputStreamReader(config.openStream())) {
 					cfg = CmfStores.parseConfiguration(r);
 				} catch (Exception e) {
 					String msg = String.format("Exception raised attempting to load the StoreDefinitions from [%s]",
@@ -333,8 +333,6 @@ public final class CmfStores {
 						CmfStores.LOG.warn(msg);
 					}
 					continue;
-				} finally {
-					IOUtils.closeQuietly(r);
 				}
 
 				if (configOnly) {
@@ -385,8 +383,9 @@ public final class CmfStores {
 	}
 
 	private static CmfStores assertValid(CmfStores instance) {
-		if (instance == null) { throw new IllegalStateException(
-			"The requested CmfStores instance is no longer valid"); }
+		if (instance == null) {
+			throw new IllegalStateException("The requested CmfStores instance is no longer valid");
+		}
 		instance.assertOpen();
 		return instance;
 	}

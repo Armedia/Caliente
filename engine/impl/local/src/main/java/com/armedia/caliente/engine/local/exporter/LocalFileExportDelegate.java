@@ -35,8 +35,6 @@ import java.util.Map;
 
 import javax.activation.MimeType;
 
-import org.apache.commons.io.IOUtils;
-
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -366,11 +364,8 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 				}
 				Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			} else {
-				InputStream in = new FileInputStream(src);
-				try {
+				try (InputStream in = new FileInputStream(src)) {
 					h.setContents(in);
-				} finally {
-					IOUtils.closeQuietly(in);
 				}
 			}
 		}

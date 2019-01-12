@@ -12,7 +12,6 @@ import java.util.Map;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.IOUtils;
 
 import com.armedia.caliente.cli.datagen.data.DataRecord;
 import com.armedia.caliente.cli.datagen.data.DataRecordSet;
@@ -23,12 +22,15 @@ public final class CSVDataRecordSet extends DataRecordSet<CSVParser, CSVRecord, 
 	private static final URL getUrl(File f) throws IOException {
 		if (f == null) { throw new IllegalArgumentException("Must provide a file to convert to a URL"); }
 		f = Tools.canonicalize(f);
-		if (!f.exists()) { throw new FileNotFoundException(
-			String.format("The file [%s] could not be found", f.getAbsolutePath())); }
-		if (!f.isFile()) { throw new IOException(
-			String.format("The file [%s] is not a regular file", f.getAbsolutePath())); }
-		if (!f.canRead()) { throw new FileNotFoundException(
-			String.format("The file [%s] cannot be read", f.getAbsolutePath())); }
+		if (!f.exists()) {
+			throw new FileNotFoundException(String.format("The file [%s] could not be found", f.getAbsolutePath()));
+		}
+		if (!f.isFile()) {
+			throw new IOException(String.format("The file [%s] is not a regular file", f.getAbsolutePath()));
+		}
+		if (!f.canRead()) {
+			throw new FileNotFoundException(String.format("The file [%s] cannot be read", f.getAbsolutePath()));
+		}
 		try {
 			return f.toURI().toURL();
 		} catch (MalformedURLException e) {
@@ -107,8 +109,10 @@ public final class CSVDataRecordSet extends DataRecordSet<CSVParser, CSVRecord, 
 		CSVParser newParser = CSVParser.parse(this.state.url, this.state.charset, this.state.format);
 		// Make sure the headers are read
 		Map<String, Integer> headerMap = newParser.getHeaderMap();
-		if ((headerMap == null) || headerMap.isEmpty()) { throw new Exception(
-			String.format("The CSV data at [%s] does not contain a header record", this.state.url.toString())); }
+		if ((headerMap == null) || headerMap.isEmpty()) {
+			throw new Exception(
+				String.format("The CSV data at [%s] does not contain a header record", this.state.url.toString()));
+		}
 		return newParser;
 	}
 
@@ -175,7 +179,11 @@ public final class CSVDataRecordSet extends DataRecordSet<CSVParser, CSVRecord, 
 	@Override
 	protected void closeData(CSVParser data) {
 		if (!data.isClosed()) {
-			IOUtils.closeQuietly(data);
+			try {
+				data.close();
+			} catch (IOException e) {
+				// Ignore...
+			}
 		}
 	}
 }

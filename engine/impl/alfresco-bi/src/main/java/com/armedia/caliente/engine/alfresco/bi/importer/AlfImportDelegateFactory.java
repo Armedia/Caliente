@@ -32,12 +32,11 @@ import javax.xml.validation.Schema;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
-import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 
 import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
@@ -89,22 +88,26 @@ public class AlfImportDelegateFactory
 		}
 
 		public void addVersion(ScanIndexItemMarker version) throws ImportException {
-			if (this.versions.containsKey(version.getTargetName())) { throw new ImportException(
-				String.format("This virtual document already has a version called [%s]", version.getTargetName())); }
+			if (this.versions.containsKey(version.getTargetName())) {
+				throw new ImportException(
+					String.format("This virtual document already has a version called [%s]", version.getTargetName()));
+			}
 			this.versions.put(version.getTargetName(), version);
 			this.members.put(version.getTargetName(), new ArrayList<ScanIndexItemMarker>());
 		}
 
 		public void addMember(String version, ScanIndexItemMarker member) throws ImportException {
 			List<ScanIndexItemMarker> markers = this.members.get(version);
-			if ((markers == null) || !this.versions.containsKey(version)) { throw new ImportException(
-				String.format("This virtual document has no version called [%s]", version)); }
+			if ((markers == null) || !this.versions.containsKey(version)) {
+				throw new ImportException(String.format("This virtual document has no version called [%s]", version));
+			}
 			markers.add(member);
 		}
 
 		public void serialize() throws Exception {
-			if (!isComplete()) { throw new Exception(
-				"This virtual document is not complete - can't serialize it yet"); }
+			if (!isComplete()) {
+				throw new Exception("This virtual document is not complete - can't serialize it yet");
+			}
 
 			synchronized (AlfImportDelegateFactory.this.folderIndex) {
 				AlfImportDelegateFactory.this.folderIndex.marshal(this.root.getItem());
@@ -210,8 +213,9 @@ public class AlfImportDelegateFactory
 			idxClasses);
 
 		String contentModels = configuration.getString(AlfSetting.CONTENT_MODEL);
-		if (contentModels == null) { throw new IllegalStateException(
-			"Must provide a valid set of content model XML files"); }
+		if (contentModels == null) {
+			throw new IllegalStateException("Must provide a valid set of content model XML files");
+		}
 
 		String pfx = configuration.getString(AlfSetting.RESIDUALS_PREFIX);
 		pfx = StringUtils.strip(pfx);
@@ -350,7 +354,7 @@ public class AlfImportDelegateFactory
 		if ((idPath != null) && (idPath.getNameCount() > 0)) {
 			// First things first: tokenize each of them
 			final int nameCount = idPath.getNameCount();
-			List<String> names = new StrTokenizer(cmsPath, '/').getTokenList();
+			List<String> names = new StringTokenizer(cmsPath, '/').getTokenList();
 			if (names.size() > nameCount) {
 				// WTF?!?
 				throw new ImportException(String.format(
@@ -615,21 +619,15 @@ public class AlfImportDelegateFactory
 			throw new ImportException(String.format("Failed to create the directory at [%s]", target), e);
 		}
 
-		final OutputStream out;
-		try {
-			out = new FileOutputStream(meta);
+		try (OutputStream out = new FileOutputStream(meta)) {
+			XmlProperties.saveToXML(p, out, String.format("Properties for %s", cmfObject.getDescription()));
 		} catch (FileNotFoundException e) {
 			throw new ImportException(
 				String.format("Failed to open the properties file at [%s]", main.getAbsolutePath()), e);
-		}
-		try {
-			XmlProperties.saveToXML(p, out, String.format("Properties for %s", cmfObject.getDescription()));
 		} catch (IOException e) {
 			meta.delete();
 			throw new ImportException(
 				String.format("Failed to write to the properties file at [%s]", main.getAbsolutePath()), e);
-		} finally {
-			IOUtils.closeQuietly(out);
 		}
 		return meta;
 	}

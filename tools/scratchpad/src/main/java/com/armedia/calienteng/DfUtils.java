@@ -43,8 +43,9 @@ public class DfUtils {
 		}
 
 		public boolean matches(String serverVersion) {
-			if (serverVersion == null) { throw new IllegalArgumentException(
-				"Must provide a server version string to examine"); }
+			if (serverVersion == null) {
+				throw new IllegalArgumentException("Must provide a server version string to examine");
+			}
 			return this.pattern.matcher(serverVersion).matches();
 		}
 
@@ -188,8 +189,9 @@ public class DfUtils {
 	}
 
 	public static DbType getDbType(IDfSession session) throws DfException {
-		if (session == null) { throw new IllegalArgumentException(
-			"Must provide a session to identify the database from"); }
+		if (session == null) {
+			throw new IllegalArgumentException("Must provide a session to identify the database from");
+		}
 		final String serverVersion = session.getServerVersion();
 		for (DbType type : DbType.values()) {
 			if (type.matches(serverVersion)) { return type; }
@@ -218,7 +220,7 @@ public class DfUtils {
 		}
 		if (DfUtils.LOG.isTraceEnabled()) {
 			DfUtils.LOG.trace(String.format("Generated %s SQL Date string [%s] from [%s](%d)", dbType, ret,
-				DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(date), date.getTime()));
+				DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(date), date.getTime()));
 		}
 		return ret;
 	}
@@ -248,8 +250,9 @@ public class DfUtils {
 	public static int decodeAccessPermission(String permission) throws DfException {
 		if (permission == null) { throw new IllegalArgumentException("Must provide a permission to map"); }
 		Integer ret = DfUtils.PERMISSIONS_MAP.get(permission);
-		if (ret == null) { throw new DfException(
-			String.format("Unknown permissions value [%s] detected", permission)); }
+		if (ret == null) {
+			throw new DfException(String.format("Unknown permissions value [%s] detected", permission));
+		}
 		return ret;
 	}
 
@@ -278,8 +281,9 @@ public class DfUtils {
 	public static int decodePermitType(String permitType) throws DfException {
 		if (permitType == null) { throw new IllegalArgumentException("Must provide a permit type to map"); }
 		Integer ret = DfUtils.PERMIT_TYPES_MAP.get(permitType);
-		if (ret == null) { throw new DfException(
-			String.format("Unknown permit type value [%s] detected", permitType)); }
+		if (ret == null) {
+			throw new DfException(String.format("Unknown permit type value [%s] detected", permitType));
+		}
 		return ret;
 	}
 

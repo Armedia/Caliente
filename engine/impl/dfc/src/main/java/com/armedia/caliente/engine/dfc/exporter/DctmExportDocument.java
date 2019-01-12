@@ -15,7 +15,6 @@ import java.util.Set;
 import javax.activation.MimeType;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.TransferSetting;
@@ -127,8 +126,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 
 	private List<IDfSysObject> getVersions(DctmExportContext ctx, boolean prior, IDfSysObject document)
 		throws ExportException, DfException {
-		if (document == null) { throw new IllegalArgumentException(
-			"Must provide a document whose versions to analyze"); }
+		if (document == null) {
+			throw new IllegalArgumentException("Must provide a document whose versions to analyze");
+		}
 
 		final List<IDfSysObject> ret = new LinkedList<>();
 
@@ -241,8 +241,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfSysObject document,
 		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) throws Exception {
-		if (isDfReference(document)) { return super.doStoreContent(ctx, translator, marshaled, referrent, document,
-			streamStore, includeRenditions); }
+		if (isDfReference(document)) {
+			return super.doStoreContent(ctx, translator, marshaled, referrent, document, streamStore,
+				includeRenditions);
+		}
 
 		// We export our contents...
 		final String dql = "" //
@@ -295,8 +297,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		CmfObject<IDfValue> marshaled, IDfSysObject document, IDfContent content, int index,
 		CmfContentStore<?, ?, ?> streamStore, boolean skipContent) throws Exception {
 		final String contentId = content.getObjectId().getId();
-		if (document == null) { throw new Exception(String
-			.format("Could not locate the referrent document for which content [%s] was to be exported", contentId)); }
+		if (document == null) {
+			throw new Exception(String.format(
+				"Could not locate the referrent document for which content [%s] was to be exported", contentId));
+		}
 
 		String format = content.getString(DctmAttributes.FULL_FORMAT);
 		int pageNumber = content.getInt(DctmAttributes.PAGE);
@@ -344,13 +348,9 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 					false);
 			} else {
 				// Doesn't support file-level, so we (sadly) use stream-level transfers
-				InputStream in = null;
-				try {
+				try (InputStream in = document.getContentEx3(format, pageNumber, pageModifier, false)) {
 					// Don't pull the content until we're sure we can put it somewhere...
-					in = document.getContentEx3(format, pageNumber, pageModifier, false);
 					contentHandle.setContents(in);
-				} finally {
-					IOUtils.closeQuietly(in);
 				}
 			}
 		}

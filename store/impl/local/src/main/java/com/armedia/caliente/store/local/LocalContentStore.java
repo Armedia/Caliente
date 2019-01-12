@@ -102,10 +102,14 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 		throws CmfStorageException {
 		if (settings == null) { throw new IllegalArgumentException("Must provide configuration settings"); }
 		if (baseDir == null) { throw new IllegalArgumentException("Must provide a base directory"); }
-		if (baseDir.exists() && !baseDir.isDirectory()) { throw new IllegalArgumentException(
-			String.format("The file at [%s] is not a directory", baseDir.getAbsolutePath())); }
-		if (!baseDir.exists() && !baseDir.mkdirs()) { throw new IllegalArgumentException(
-			String.format("Failed to create the full path at [%s] ", baseDir.getAbsolutePath())); }
+		if (baseDir.exists() && !baseDir.isDirectory()) {
+			throw new IllegalArgumentException(
+				String.format("The file at [%s] is not a directory", baseDir.getAbsolutePath()));
+		}
+		if (!baseDir.exists() && !baseDir.mkdirs()) {
+			throw new IllegalArgumentException(
+				String.format("Failed to create the full path at [%s] ", baseDir.getAbsolutePath()));
+		}
 		this.settings = settings;
 		File f = baseDir;
 		try {
@@ -387,24 +391,22 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			throw new CmfStorageException(String.format("Failed to create the file at [%s]", f), e);
 		}
 		if (!created) {
-			if (this.failOnCollisions) { throw new CmfStorageException(String.format(
-				"Filename collision detected for target file [%s] - a file already exists at that location",
-				f.getAbsolutePath())); }
-			if (!f.exists()) { throw new CmfStorageException(
-				String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath())); }
+			if (this.failOnCollisions) {
+				throw new CmfStorageException(String.format(
+					"Filename collision detected for target file [%s] - a file already exists at that location",
+					f.getAbsolutePath()));
+			}
+			if (!f.exists()) {
+				throw new CmfStorageException(
+					String.format("Failed to create the non-existent target file [%s]", f.getAbsolutePath()));
+			}
 		}
-		FileOutputStream out = null;
-		try {
-			out = new FileOutputStream(f);
+		try (FileOutputStream out = new FileOutputStream(f)) {
+			IOUtils.copyLarge(in, out);
 		} catch (FileNotFoundException e) {
 			throw new CmfStorageException(String.format("Failed to open the output stream to the file at [%s]", f), e);
-		}
-		try {
-			IOUtils.copyLarge(in, out);
 		} catch (IOException e) {
 			throw new CmfStorageException(String.format("Failed to write the content out to the file at [%s]", f), e);
-		} finally {
-			IOUtils.closeQuietly(out);
 		}
 		return f.length();
 	}
@@ -453,9 +455,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 	protected synchronized void storeProperties() throws CmfStorageException {
 		if (!this.storeProperties) { return; }
-		OutputStream out = null;
-		try {
-			out = new FileOutputStream(this.propertiesFile);
+		try (OutputStream out = new FileOutputStream(this.propertiesFile)) {
 			StorePropertiesT p = new StorePropertiesT();
 			for (Map.Entry<String, CmfValue> e : this.properties.entrySet()) {
 				final String n = e.getKey();
@@ -483,8 +483,6 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			throw new CmfStorageException("Failed to parse the store properties", e);
 		} catch (IOException e) {
 			throw new CmfStorageException("Failed to write the store properties", e);
-		} finally {
-			IOUtils.closeQuietly(out);
 		}
 	}
 

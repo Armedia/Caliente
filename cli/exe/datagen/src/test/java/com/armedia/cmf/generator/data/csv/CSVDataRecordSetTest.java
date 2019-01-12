@@ -13,7 +13,6 @@ import java.util.UUID;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -39,22 +38,18 @@ public class CSVDataRecordSetTest {
 		// Create 3 headers: a,b,c
 		CSVDataRecordSetTest.ONLY_HEADERS = File.createTempFile("NodeDataTest-only-headers-", ".csv");
 		StringBuilder b = new StringBuilder();
-		CSVPrinter p = new CSVPrinter(b, CSVFormat.DEFAULT);
-		try {
+		try (CSVPrinter p = new CSVPrinter(b, CSVFormat.DEFAULT)) {
 			p.print("a");
 			p.print("b");
 			p.print("c");
 			p.println();
-		} finally {
-			IOUtils.closeQuietly(p);
 		}
 		FileUtils.write(CSVDataRecordSetTest.ONLY_HEADERS, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 		b.setLength(0);
 
 		// Create 3 headers: a,b,c, and ten records...
 		CSVDataRecordSetTest.TEN_RECORDS = File.createTempFile("NodeDataTest-ten-records-", ".csv");
-		p = new CSVPrinter(b, CSVFormat.DEFAULT);
-		try {
+		try (CSVPrinter p = new CSVPrinter(b, CSVFormat.DEFAULT)) {
 			p.print("a");
 			p.print("b");
 			p.print("c");
@@ -65,8 +60,6 @@ public class CSVDataRecordSetTest {
 				p.print(String.format("%d", (3 * i) + 3));
 				p.println();
 			}
-		} finally {
-			IOUtils.closeQuietly(p);
 		}
 		FileUtils.write(CSVDataRecordSetTest.TEN_RECORDS, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 	}
@@ -88,210 +81,150 @@ public class CSVDataRecordSetTest {
 
 	@Test
 	public void testNodeDataNull() throws Exception {
-		CSVDataRecordSet nd = null;
 		final File file = null;
 		final URL url = null;
 		final Charset charset = null;
 		final CSVFormat format = null;
 
-		try {
-			nd = new CSVDataRecordSet(url);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(url)) {
 			Assert.fail("Did not fail with a null URL");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(file);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(file)) {
 			Assert.fail("Did not fail with a null File");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(url, charset);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(url, charset)) {
 			Assert.fail("Did not fail with a null URL");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(file, charset);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(file, charset)) {
 			Assert.fail("Did not fail with a null File");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(url, format);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(url, format)) {
 			Assert.fail("Did not fail with a null URL");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(file, format);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(file, format)) {
 			Assert.fail("Did not fail with a null File");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(url, 0);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(url, 0)) {
 			Assert.fail("Did not fail with a null URL");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(file, 0);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(file, 0)) {
 			Assert.fail("Did not fail with a null File");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(url, charset, format);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(url, charset, format)) {
 			Assert.fail("Did not fail with a null URL");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
-		try {
-			nd = new CSVDataRecordSet(file, charset, format);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(file, charset, format)) {
 			Assert.fail("Did not fail with a null File");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(url, charset, 0);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(url, charset, 0)) {
 			Assert.fail("Did not fail with a null URL");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(file, charset, 0);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(file, charset, 0)) {
 			Assert.fail("Did not fail with a null File");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(url, format, 0);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(url, format, 0)) {
 			Assert.fail("Did not fail with a null URL");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(file, format, 0);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(file, format, 0)) {
 			Assert.fail("Did not fail with a null File");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(url, charset, format, 0);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(url, charset, format, 0)) {
 			Assert.fail("Did not fail with a null URL");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
-		try {
-			nd = new CSVDataRecordSet(file, charset, format, 0);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(file, charset, format, 0)) {
 			Assert.fail("Did not fail with a null File");
 		} catch (IllegalArgumentException e) {
 			// All is well
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
 	}
 
 	@Test
 	public void testNodeData() throws Exception {
-		CSVDataRecordSet nd = null;
 
 		// First, an empty file
-		try {
-			nd = new CSVDataRecordSet(CSVDataRecordSetTest.EMPTY, 0);
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.EMPTY, 0)) {
+
 		} catch (Exception e) {
 			Assert.assertEquals(Exception.class, e.getClass());
 			Assert.assertTrue(e.getMessage().contains("does not contain a header record"));
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
 		// Next, a file that contains only headers
-		nd = new CSVDataRecordSet(CSVDataRecordSetTest.ONLY_HEADERS, 0);
-		try {
+		;
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.ONLY_HEADERS, 0)) {
 			Assert.assertFalse(nd.hasNext());
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
 		// Next, a file that contains exactly 10 records
-		nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 1);
-		try {
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 1)) {
 			int i = 0;
 			for (DataRecord r : nd) {
 				Assert.assertNotNull(r);
 				i++;
 			}
 			Assert.assertEquals(10, i);
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 
 		// Next, a file that contains exactly 10 records, iteratively more times
 		for (int l = 1; l < 10; l++) {
-			nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, l);
-			try {
+			;
+			try (CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, l)) {
 				int i = 0;
 				for (DataRecord r : nd) {
 					Assert.assertNotNull(r);
 					i++;
 				}
 				Assert.assertEquals(10 * l, i);
-			} finally {
-				IOUtils.closeQuietly(nd);
 			}
 		}
 
 		// Finally, an "infinite loop" read 10000 times
-		nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 0);
-		try {
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 0)) {
 			int i = 0;
 			for (DataRecord r : nd) {
 				Assert.assertNotNull(r);
@@ -301,15 +234,12 @@ public class CSVDataRecordSetTest {
 				}
 			}
 			Assert.assertEquals(10000, i);
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 	}
 
 	@Test
 	public void testGetCurrentLoop() throws Exception {
-		CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 0);
-		try {
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 0)) {
 			for (int l = 1; l < 100; l++) {
 				int i = 0;
 				for (DataRecord r : nd) {
@@ -322,23 +252,18 @@ public class CSVDataRecordSetTest {
 				}
 				Assert.assertEquals(l, nd.getCurrentLoop());
 			}
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 	}
 
 	@Test
 	public void testGetRecordNumber() throws Exception {
-		CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 10);
-		try {
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 10)) {
 			int i = 0;
 			for (DataRecord r : nd) {
 				Assert.assertNotNull(r);
 				i++;
 				Assert.assertEquals(i, nd.getRecordNumber());
 			}
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 	}
 
@@ -365,13 +290,10 @@ public class CSVDataRecordSetTest {
 				}
 				FileUtils.write(f, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 
-				CSVDataRecordSet nd = new CSVDataRecordSet(f, 1);
-				try {
+				try (CSVDataRecordSet nd = new CSVDataRecordSet(f, 1)) {
 					Set<String> actual = nd.getColumnNames();
 					Assert.assertEquals(expected.size(), actual.size());
 					Assert.assertEquals(expected, actual);
-				} finally {
-					IOUtils.closeQuietly(nd);
 				}
 			}
 		} finally {
@@ -399,11 +321,8 @@ public class CSVDataRecordSetTest {
 				}
 				FileUtils.write(f, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 
-				CSVDataRecordSet nd = new CSVDataRecordSet(f, 1);
-				try {
+				try (CSVDataRecordSet nd = new CSVDataRecordSet(f, 1)) {
 					Assert.assertEquals(i, nd.getColumnCount());
-				} finally {
-					IOUtils.closeQuietly(nd);
 				}
 			}
 		} finally {
@@ -434,14 +353,11 @@ public class CSVDataRecordSetTest {
 				}
 				FileUtils.write(f, b, CSVDataRecordSetTest.DEFAULT_CHARSET);
 
-				CSVDataRecordSet nd = new CSVDataRecordSet(f, 1);
-				try {
+				try (CSVDataRecordSet nd = new CSVDataRecordSet(f, 1)) {
 					Assert.assertEquals(expected.size(), nd.getColumnCount());
 					for (int c = 0; c < expected.size(); c++) {
 						Assert.assertEquals(expected.get(c), nd.getColumnName(c));
 					}
-				} finally {
-					IOUtils.closeQuietly(nd);
 				}
 			}
 		} finally {
@@ -451,17 +367,16 @@ public class CSVDataRecordSetTest {
 
 	@Test
 	public void testClose() throws Exception {
-		CSVDataRecordSet nd = null;
-		nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 1);
-		try {
+		CSVDataRecordSet closed = null;
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 1)) {
 			Assert.assertTrue(nd.hasNext());
 			Assert.assertNotNull(nd.next());
-		} finally {
-			IOUtils.closeQuietly(nd);
+			closed = nd;
+			closed.close();
 		}
-		Assert.assertFalse(nd.hasNext());
+		Assert.assertFalse(closed.hasNext());
 		try {
-			nd.next();
+			closed.next();
 			Assert.fail("Did not fail when invoking next() on a closed instance");
 		} catch (NoSuchElementException e) {
 			// All is well
@@ -470,9 +385,7 @@ public class CSVDataRecordSetTest {
 
 	@Test
 	public void testRemove() throws Exception {
-		CSVDataRecordSet nd = null;
-		nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 1);
-		try {
+		try (CSVDataRecordSet nd = new CSVDataRecordSet(CSVDataRecordSetTest.TEN_RECORDS, 1)) {
 			Assert.assertTrue(nd.hasNext());
 			Assert.assertNotNull(nd.next());
 			try {
@@ -481,8 +394,6 @@ public class CSVDataRecordSetTest {
 			} catch (UnsupportedOperationException e) {
 				// All is well
 			}
-		} finally {
-			IOUtils.closeQuietly(nd);
 		}
 	}
 }

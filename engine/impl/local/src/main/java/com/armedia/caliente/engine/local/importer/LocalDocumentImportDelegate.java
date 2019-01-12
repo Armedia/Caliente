@@ -9,14 +9,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
-
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
@@ -53,20 +51,27 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 		}
 
 		if (!created) {
-			if (!targetFile.isFile()) { throw new ImportException(
-				String.format("Failed to create the file (and parents) at [%s] for document [%s](%s)", targetFile,
-					this.cmfObject.getLabel(), this.cmfObject.getId())); }
-			if (!targetFile.exists()) { throw new ImportException(
-				String.format("A non-file object already exists at [%s] for document [%s](%s)", targetFile,
-					this.cmfObject.getLabel(), this.cmfObject.getId())); }
+			if (!targetFile.isFile()) {
+				throw new ImportException(
+					String.format("Failed to create the file (and parents) at [%s] for document [%s](%s)", targetFile,
+						this.cmfObject.getLabel(), this.cmfObject.getId()));
+			}
+			if (!targetFile.exists()) {
+				throw new ImportException(
+					String.format("A non-file object already exists at [%s] for document [%s](%s)", targetFile,
+						this.cmfObject.getLabel(), this.cmfObject.getId()));
+			}
 
-			if (this.factory.isFailOnCollisions()) { throw new ImportException(
-				String.format("A file already exists at [%s] for document [%s](%s)", targetFile,
-					this.cmfObject.getLabel(), this.cmfObject.getId())); }
+			if (this.factory.isFailOnCollisions()) {
+				throw new ImportException(String.format("A file already exists at [%s] for document [%s](%s)",
+					targetFile, this.cmfObject.getLabel(), this.cmfObject.getId()));
+			}
 
 			try {
-				if (isSameDatesAndOwners(targetFile, translator)) { return Collections.singleton(
-					new ImportOutcome(ImportResult.DUPLICATE, getNewId(targetFile), targetFile.getAbsolutePath())); }
+				if (isSameDatesAndOwners(targetFile, translator)) {
+					return Collections.singleton(
+						new ImportOutcome(ImportResult.DUPLICATE, getNewId(targetFile), targetFile.getAbsolutePath()));
+				}
 			} catch (Exception e) {
 				throw new ImportException(
 					String.format("Failed to validate the dates and owners at [%s] for document [%s](%s)", targetFile,
@@ -106,17 +111,13 @@ public class LocalDocumentImportDelegate extends LocalImportDelegate {
 						e);
 				}
 			} else {
-				InputStream in = null;
-				try {
-					in = h.openInput();
+				try (InputStream in = h.openInput()) {
 					Files.copy(in, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 				} catch (IOException e) {
 					throw new ImportException(
 						String.format("Failed to copy the default content object into [%s] for document [%s](%s)",
 							targetFile, this.cmfObject.getLabel(), this.cmfObject.getId()),
 						e);
-				} finally {
-					IOUtils.closeQuietly(in);
 				}
 			}
 		}

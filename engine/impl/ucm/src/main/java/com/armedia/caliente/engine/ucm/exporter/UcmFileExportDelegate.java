@@ -9,8 +9,6 @@ import java.util.Map;
 import javax.activation.MimeType;
 import javax.activation.MimeTypeParseException;
 
-import org.apache.commons.io.IOUtils;
-
 import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -72,8 +70,10 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 				throw new ExportException(e.getMessage(), e);
 			}
 		}
-		if (!UcmFileHistory.class.isInstance(o)) { throw new ExportException(String
-			.format("Status violation - history with key %s is of type %s", key, o.getClass().getCanonicalName())); }
+		if (!UcmFileHistory.class.isInstance(o)) {
+			throw new ExportException(String.format("Status violation - history with key %s is of type %s", key,
+				o.getClass().getCanonicalName()));
+		}
 		return UcmFileHistory.class.cast(o);
 	}
 
@@ -220,12 +220,9 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshalled, info);
 			if (!skipContent) {
 				// Doesn't support file-level, so we (sadly) use stream-level transfers
-				InputStream in = null;
-				try {
+				try (InputStream in = this.object.getInputStream(ctx.getSession(), rendition.getType())) {
 					// Don't pull the content until we're sure we can put it somewhere...
-					contentHandle.setContents(this.object.getInputStream(ctx.getSession(), rendition.getType()));
-				} finally {
-					IOUtils.closeQuietly(in);
+					contentHandle.setContents(in);
 				}
 			}
 		}

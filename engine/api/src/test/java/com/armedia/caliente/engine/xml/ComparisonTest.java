@@ -59,7 +59,7 @@ public class ComparisonTest {
 		c2.setTimeInMillis(c.getTimeInMillis());
 		int millis = c2.get(Calendar.MILLISECOND);
 		c2.add(Calendar.MILLISECOND, -millis);
-		pairs.add(Pair.of(c2, DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(c2.getTime())));
+		pairs.add(Pair.of(c2, DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(c2.getTime())));
 
 		pairs = new ArrayList<>();
 		data.put(CmfDataType.URI, pairs);
@@ -124,7 +124,7 @@ public class ComparisonTest {
 		pairs.add(Pair.of(c, Calendar.getInstance()));
 		pairs.add(Pair.of(c, new Date(System.currentTimeMillis())));
 		pairs.add(Pair.of(new Date(System.currentTimeMillis()),
-			DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(c.getTime())));
+			DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(c.getTime())));
 
 		pairs = new ArrayList<>();
 		data.put(CmfDataType.URI, pairs);

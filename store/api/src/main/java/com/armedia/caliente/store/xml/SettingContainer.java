@@ -13,8 +13,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.apache.commons.lang3.text.StrLookup;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
+import org.apache.commons.text.lookup.StringLookup;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -22,7 +22,7 @@ import com.armedia.commons.utilities.Tools;
 public class SettingContainer implements Cloneable {
 
 	@XmlTransient
-	private static class Lookup extends StrLookup<String> {
+	private static class Lookup implements StringLookup {
 
 		private final Map<String, String> settings;
 		private final String envPrefix = "ENV.";
@@ -87,7 +87,7 @@ public class SettingContainer implements Cloneable {
 	public final Map<String, String> getEffectiveSettings() {
 		final Map<String, String> m = new HashMap<>();
 		Tools.overlayMaps(m, getSettings(), (this.parent != null ? this.parent.getEffectiveSettings() : null));
-		StrSubstitutor sub = new StrSubstitutor(new Lookup(m));
+		StringSubstitutor sub = new StringSubstitutor(new Lookup(m));
 		// We make a copy of the keys to avoid concurrent modification errors
 		for (String k : new HashSet<>(m.keySet())) {
 			m.put(k, sub.replace(m.get(k)));

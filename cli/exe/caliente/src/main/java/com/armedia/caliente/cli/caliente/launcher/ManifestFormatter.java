@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.text.StringEscapeUtils;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -44,8 +44,10 @@ class ManifestFormatter {
 
 	public final String render(Collection<?> data) {
 		if (data == null) { return null; }
-		if (data.size() != this.columns) { throw new IllegalArgumentException(
-			String.format("Insufficient data: expected %d data columns, but got %d", this.columns, data.size())); }
+		if (data.size() != this.columns) {
+			throw new IllegalArgumentException(
+				String.format("Insufficient data: expected %d data columns, but got %d", this.columns, data.size()));
+		}
 		StringBuilder sb = new StringBuilder();
 		boolean first = true;
 		for (Object o : data) {

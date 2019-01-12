@@ -16,8 +16,6 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
 
-import org.apache.commons.io.IOUtils;
-
 import com.armedia.commons.utilities.Tools;
 
 public class SmtpServer {
@@ -105,8 +103,10 @@ public class SmtpServer {
 
 	public SmtpServer(String address, int port, SslMode ssl, Authenticator authenticator) throws Exception {
 		this.inetAddress = SmtpServer.validateSmtp(address, port, Tools.coalesce(ssl, SslMode.NONE));
-		if (this.inetAddress == null) { throw new Exception(
-			String.format("Could not verify if an SMTP host was running at [%s] on port %d", address, port)); }
+		if (this.inetAddress == null) {
+			throw new Exception(
+				String.format("Could not verify if an SMTP host was running at [%s] on port %d", address, port));
+		}
 		this.port = port;
 		this.address = address;
 		this.authenticator = authenticator;
@@ -193,10 +193,8 @@ public class SmtpServer {
 
 	private static InetAddress validateSmtp(String address, int port, SslMode sslMode) throws Exception {
 		if ((port < 0) || (port > 65535)) { throw new Exception(String.format("Illegal port number given %d", port)); }
-		Socket s = null;
-		try {
-			InetAddress addx = InetAddress.getByName(address);
-			s = new Socket(addx, port);
+		InetAddress addx = InetAddress.getByName(address);
+		try (Socket s = new Socket(addx, port)) {
 			OutputStream out = s.getOutputStream();
 			PrintWriter pw = new PrintWriter(out);
 			InputStream in = s.getInputStream();
@@ -215,8 +213,6 @@ public class SmtpServer {
 				// Make sure the command elicited a "OK" response
 				if (str.matches("^\\s*250(\\s.*)?$")) { return addx; }
 			}
-		} finally {
-			IOUtils.closeQuietly(s);
 		}
 		return null;
 	}

@@ -370,8 +370,9 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		File f = service.getFile(url);
 		if (f == null) { return null; }
 		String version = m.group(2);
-		if (Tools.equals(version, String.format("%d.%d", f.getMajorVersion(),
-			f.getMinorVersion()))) { return new ShptFile(factory, service, f); }
+		if (Tools.equals(version, String.format("%d.%d", f.getMajorVersion(), f.getMinorVersion()))) {
+			return new ShptFile(factory, service, f);
+		}
 		for (FileVersion v : service.getFileVersions(url)) {
 			if (Tools.equals(version, v.getLabel())) { return new ShptFile(factory, service, f, v); }
 		}
@@ -389,25 +390,17 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 		info.setFileName(name);
 		info.setExtension(FilenameUtils.getExtension(name));
 		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshaled, info);
-		InputStream in = null;
-		if (this.version == null) {
-			in = session.getFileStream(this.object.getServerRelativeUrl());
-		} else {
-			in = session.getInputStream(this.version.getUrl());
-		}
 		// TODO: sadly, this is not memory efficient for larger files...
 		BinaryMemoryBuffer buf = new BinaryMemoryBuffer(10240);
-		try {
+		try (InputStream in = (this.version == null) ? session.getFileStream(this.object.getServerRelativeUrl())
+			: session.getInputStream(this.version.getUrl())) {
 			IOUtils.copy(in, buf);
 			buf.close();
 			h.setContents(buf.getInputStream());
-		} finally {
-			IOUtils.closeQuietly(in);
 		}
 		// Now, try to identify the content type...
-		in = buf.getInputStream();
 		MimeType type = null;
-		try {
+		try (InputStream in = buf.getInputStream()) {
 			type = MimeTools.determineMimeType(in);
 		} catch (Exception e) {
 			type = MimeTools.DEFAULT_MIME_TYPE;

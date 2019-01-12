@@ -70,8 +70,9 @@ public class XmlImportDelegateFactory
 
 	static void marshalXml(Object target, OutputStream out) throws JAXBException {
 		if (target == null) { throw new IllegalArgumentException("Must supply an object to marshal"); }
-		if (out == null) { throw new IllegalArgumentException(
-			String.format("Nowhere to write %s to", target.getClass().getName())); }
+		if (out == null) {
+			throw new IllegalArgumentException(String.format("Nowhere to write %s to", target.getClass().getName()));
+		}
 
 		Class<?> targetClass = target.getClass();
 		Marshaller m = JAXBContext.newInstance(targetClass).createMarshaller();
@@ -134,25 +135,22 @@ public class XmlImportDelegateFactory
 					}
 					tgt = new File(dir, String.format("%s-document.xml", tgt.getName()));
 
-					final OutputStream out;
-					try {
-						out = new FileOutputStream(tgt);
-					} catch (FileNotFoundException e) {
-						this.log.error(String.format("Failed to open an output stream to [%s]", tgt), e);
-						return;
-					}
-
 					boolean ok = false;
-					try {
+					try (OutputStream out = new FileOutputStream(tgt)) {
 						XmlImportDelegateFactory.marshalXml(doc, out);
 						this.filesWritten++;
 						ok = true;
+					} catch (FileNotFoundException e) {
+						this.log.error(String.format("Failed to open an output stream to [%s]", tgt), e);
+						return;
+					} catch (IOException e) {
+						this.log.error(String.format("IOException raised while writing to [%s]", tgt), e);
+						return;
 					} catch (JAXBException e) {
 						this.log.error(String.format("Failed to marshal the XML for document [%s](%s) to [%s]",
 							first.getSourcePath(), first.getId(), tgt), e);
 						return;
 					} finally {
-						IOUtils.closeQuietly(out);
 						if (!ok) {
 							FileUtils.deleteQuietly(tgt);
 						}
@@ -208,29 +206,24 @@ public class XmlImportDelegateFactory
 
 				// There is an aggregator, so write out its file
 				final File f = calculateConsolidatedFile(cmfType);
-				final OutputStream out;
-				try {
-					out = new FileOutputStream(f);
-				} catch (FileNotFoundException e) {
-					this.log.error(String.format(
-						"Failed to open the output file for the aggregate XML for type %s at [%s]", cmfType, f), e);
-					return;
-				}
 				boolean ok = false;
-				try {
+				try (OutputStream out = new FileOutputStream(f)) {
 					XmlImportDelegateFactory.marshalXml(root, out);
 					this.filesWritten++;
 					ok = true;
+				} catch (FileNotFoundException e) {
+					this.log.error(String.format(
+						"Failed to open the output file for the aggregate XML for type %s at [%s]", cmfType, f), e);
+				} catch (IOException e) {
+					this.log.error(String.format(
+						"IOException raised while writing the aggregate XML for type %s at [%s]", cmfType, f), e);
 				} catch (JAXBException e) {
 					this.log.error(String.format("Failed to generate the XML for %s", cmfType), e);
 				} finally {
-					IOUtils.closeQuietly(out);
 					if (!ok) {
 						FileUtils.deleteQuietly(f);
 					}
 				}
-			} catch (Throwable t) {
-				this.log.error(String.format("Exception caught while closing out objects of type [%s]", cmfType), t);
 			} finally {
 				// Help the GC out
 				root.clear();
@@ -238,41 +231,34 @@ public class XmlImportDelegateFactory
 		}
 
 		private void writeSchema() {
-			final InputStream in = Thread.currentThread().getContextClassLoader()
-				.getResourceAsStream(XmlImportDelegateFactory.SCHEMA_NAME);
-			if (in == null) {
-				this.log.warn(
-					String.format("Failed to load the schema from the resource '%s'", XmlImportDelegateFactory.SCHEMA));
-				return;
-			}
-			final File schemaFile = new File(XmlImportDelegateFactory.this.db, XmlImportDelegateFactory.SCHEMA_NAME);
-			FileOutputStream out = null;
-			try {
-				out = new FileOutputStream(schemaFile);
-			} catch (FileNotFoundException e) {
-				IOUtils.closeQuietly(in);
-				if (this.log.isTraceEnabled()) {
-					this.log.warn(String.format("Failed to create the schema file at [%s]",
-						XmlImportDelegateFactory.SCHEMA, schemaFile), e);
-				} else {
-					this.log.warn(String.format("Failed to create the schema file at [%s]: %s",
-						XmlImportDelegateFactory.SCHEMA, schemaFile, e.getMessage()));
+			try (InputStream in = Thread.currentThread().getContextClassLoader()
+				.getResourceAsStream(XmlImportDelegateFactory.SCHEMA_NAME)) {
+				if (in == null) {
+					this.log.warn("Failed to load the schema from the resource [{}]",
+						XmlImportDelegateFactory.SCHEMA_NAME);
+					return;
 				}
-			}
+				final File schemaFile = new File(XmlImportDelegateFactory.this.db,
+					XmlImportDelegateFactory.SCHEMA_NAME);
 
-			try {
-				IOUtils.copy(in, out);
-			} catch (IOException e) {
-				if (this.log.isTraceEnabled()) {
-					this.log.warn(String.format("Failed to copy the schema into the file at [%s]",
-						XmlImportDelegateFactory.SCHEMA, schemaFile), e);
-				} else {
-					this.log.warn(String.format("Failed to copy the schema into the file at [%s]: %s",
-						XmlImportDelegateFactory.SCHEMA, schemaFile, e.getMessage()));
+				try (FileOutputStream out = new FileOutputStream(schemaFile)) {
+					IOUtils.copy(in, out);
+				} catch (FileNotFoundException e) {
+					if (this.log.isTraceEnabled()) {
+						this.log.warn("Failed to create the schema file at [{}]", schemaFile, e);
+					} else {
+						this.log.warn("Failed to create the schema file at [{}]: {}", schemaFile, e.getMessage());
+					}
+				} catch (IOException e) {
+					if (this.log.isTraceEnabled()) {
+						this.log.warn("Failed to copy the schema into the file at [{}]", schemaFile, e);
+					} else {
+						this.log.warn("Failed to copy the schema into the file at [{}]: {}", schemaFile,
+							e.getMessage());
+					}
 				}
-			} finally {
-				IOUtils.closeQuietly(out);
-				IOUtils.closeQuietly(in);
+			} catch (IOException e) {
+				this.log.warn(XmlImportDelegateFactory.SCHEMA_NAME);
 			}
 		}
 	};
@@ -327,9 +313,11 @@ public class XmlImportDelegateFactory
 
 	protected void storeDocumentVersion(DocumentVersionT v) throws ImportException {
 		List<DocumentVersionT> l = this.threadedVersionList.get();
-		if (l == null) { throw new ImportException(
-			String.format("Attempting to store version [%s] of history [%s], but no such history has been started: %s",
-				v.getVersion(), v.getHistoryId(), v)); }
+		if (l == null) {
+			throw new ImportException(String.format(
+				"Attempting to store version [%s] of history [%s], but no such history has been started: %s",
+				v.getVersion(), v.getHistoryId(), v));
+		}
 		DocumentT doc = new DocumentT();
 		doc.getVersion().add(v);
 		try {
