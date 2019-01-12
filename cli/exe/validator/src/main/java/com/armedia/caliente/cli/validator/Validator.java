@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.validator;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
@@ -40,7 +41,6 @@ import javax.xml.stream.XMLStreamException;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
@@ -119,8 +119,9 @@ public class Validator {
 				if (source == candidate) { return null; }
 				if (source == null) { return "SOURCE VALUE IS NULL"; }
 				if (candidate == null) { return "CANDIDATE VALUE IS NULL"; }
-				if (source.length() != candidate.length()) { return String.format("LENGTHS ARE DIFFERENT (%d vs %d)",
-					source.length(), candidate.length()); }
+				if (source.length() != candidate.length()) {
+					return String.format("LENGTHS ARE DIFFERENT (%d vs %d)", source.length(), candidate.length());
+				}
 				if (source.equals(candidate)) { return null; }
 				if (source.equalsIgnoreCase(candidate)) { return "VALUES DIFFER IN CASE"; }
 				// TODO: Calculate and highlight the differences?
@@ -218,9 +219,11 @@ public class Validator {
 						for (ValueComparator c : ValueComparator.values()) {
 							for (AlfrescoDataType t : c.supported) {
 								ValueComparator C = m.put(t, c);
-								if (C != null) { throw new IllegalStateException(String.format(
-									"Comparators %s and %s both support type %s - this is not permitted, only one should support it",
-									c.name(), C.name(), t.name())); }
+								if (C != null) {
+									throw new IllegalStateException(String.format(
+										"Comparators %s and %s both support type %s - this is not permitted, only one should support it",
+										c.name(), C.name(), t.name()));
+								}
 							}
 						}
 						ValueComparator.MAP = Tools.freezeMap(m);
@@ -552,8 +555,9 @@ public class Validator {
 		this.sourceRoot = sourceRoot;
 		this.candidateRoot = candidateRoot;
 
-		if ((contentModel == null)
-			|| contentModel.isEmpty()) { throw new Exception("Must provide a valid, non-emtpy content model"); }
+		if ((contentModel == null) || contentModel.isEmpty()) {
+			throw new Exception("Must provide a valid, non-emtpy content model");
+		}
 
 		Collection<URI> modelUris = new ArrayList<>(contentModel.size());
 		for (String m : contentModel) {
@@ -633,20 +637,17 @@ public class Validator {
 
 	private Properties loadProperties(Path path) throws IOException {
 		final File file = path.toFile();
-		InputStream in = new FileInputStream(file);
-		try {
+		try (InputStream in = new FileInputStream(file)) {
 			return XmlProperties.loadFromXML(in);
 		} catch (XMLStreamException e) {
 			this.log.warn(
 				String.format("Failed to load the properties at [%s] as XML, falling back to default properties", path),
 				e);
-			IOUtils.closeQuietly(in);
+		}
+		try (InputStream in = new FileInputStream(file)) {
 			final Properties properties = new Properties();
-			in = new FileInputStream(file);
 			properties.load(in);
 			return properties;
-		} finally {
-			IOUtils.closeQuietly(in);
 		}
 	}
 
@@ -687,7 +688,9 @@ public class Validator {
 		String sourceType = sourceData.getProperty(Validator.PROP_TYPE);
 		String candidateType = candidateData.getProperty(Validator.PROP_TYPE);
 		if (Tools.equals(sourceType, candidateType)
-			|| Tools.equals(Validator.REFERENCE_TYPE_MAPPING.get(candidateType), sourceType)) { return true; }
+			|| Tools.equals(Validator.REFERENCE_TYPE_MAPPING.get(candidateType), sourceType)) {
+			return true;
+		}
 		reportFault(new TypeMismatchFault(relativePath, sourceType, candidateType));
 		return false;
 	}
@@ -785,8 +788,7 @@ public class Validator {
 
 	private byte[] getChecksum(MessageDigest digest, File source) throws IOException {
 		final byte[] buffer = new byte[Validator.BUFFER_SIZE];
-		InputStream in = new FileInputStream(source);
-		try {
+		try (InputStream in = new FileInputStream(source)) {
 			for (;;) {
 				int read = in.read(buffer);
 				if (read < 0) {
@@ -794,8 +796,6 @@ public class Validator {
 				}
 				digest.update(buffer, 0, read);
 			}
-		} finally {
-			IOUtils.closeQuietly(in);
 		}
 
 		return digest.digest();
@@ -812,8 +812,10 @@ public class Validator {
 			// If this type doesn't require a content stream, then there's no checksum required,
 			// and therefore it's OK to short-circuit the validation. Also, if the type is a
 			// reference, we assume that there won't be any content to begin with...
-			if (!sourceContentRequired || Validator.REFERENCE_TYPE_MAPPING
-				.containsKey(candidateData.getProperty(Validator.PROP_TYPE))) { return true; }
+			if (!sourceContentRequired
+				|| Validator.REFERENCE_TYPE_MAPPING.containsKey(candidateData.getProperty(Validator.PROP_TYPE))) {
+				return true;
+			}
 
 			// If there is a content stream required, then we issue a checksum violation
 			reportFault(new ContentMismatchFault(relativePath, -1, "(expected, but not checked)", -1,
@@ -996,7 +998,7 @@ public class Validator {
 		l.lock();
 		try {
 			for (ValidationErrorType t : this.errors.keySet()) {
-				IOUtils.closeQuietly(this.errors.get(t));
+				closeQuietly(this.errors.get(t));
 				this.log.info("Detected {} {} faults", this.faultCounters.get(t).get(), t.name());
 			}
 			this.log.info("Detected {} individual faults total", this.faultCount.get());
@@ -1006,6 +1008,15 @@ public class Validator {
 			resetState();
 			this.closed.set(true);
 			l.unlock();
+		}
+	}
+
+	private void closeQuietly(Closeable c) {
+		if (c != null) {
+			try {
+				c.close();
+			} catch (IOException e) {
+			}
 		}
 	}
 }

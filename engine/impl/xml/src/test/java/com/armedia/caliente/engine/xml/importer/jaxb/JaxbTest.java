@@ -2,7 +2,6 @@ package com.armedia.caliente.engine.xml.importer.jaxb;
 
 import java.io.InputStream;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -25,18 +24,14 @@ public class JaxbTest {
 		}
 
 		protected void run() throws Exception {
-			InputStream in = null;
 			final String schema = "caliente-engine-xml.xsd";
 
 			ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
 			T obj = null;
-			try {
-				in = cl.getResourceAsStream(String.format("sample-%s.xml", this.suffix));
+			try (InputStream in = cl.getResourceAsStream(String.format("sample-%s.xml", this.suffix))) {
 				obj = XmlTools.unmarshal(this.c, schema, in);
 				Assert.assertNotNull(obj);
-			} finally {
-				IOUtils.closeQuietly(in);
 			}
 
 			validate(obj);

@@ -67,12 +67,15 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 				this.ps.setString(1, this.locator.getObjectId());
 				this.ps.setInt(2, this.locator.getInfo().getIndex());
 				this.rs = this.ps.executeQuery();
-				if (!this.rs.next()) { throw new CmfStorageException(
-					String.format("No data stream found for locator [%s]", this.locator)); }
+				if (!this.rs.next()) {
+					throw new CmfStorageException(String.format("No data stream found for locator [%s]", this.locator));
+				}
 
 				this.blob = this.rs.getBlob("data");
-				if (this.rs.wasNull()) { throw new CmfStorageException(
-					String.format("The data stream for locator [%s] was NULL", this.locator)); }
+				if (this.rs.wasNull()) {
+					throw new CmfStorageException(
+						String.format("The data stream for locator [%s] was NULL", this.locator));
+				}
 				this.stream = this.blob.getBinaryStream();
 				ok = true;
 			} finally {
@@ -93,8 +96,10 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 		}
 
 		private void assertOpen() throws IOException {
-			if (this.finished) { throw new IOException(
-				String.format("The InputStream for locator [%s] has already been closed", this.locator)); }
+			if (this.finished) {
+				throw new IOException(
+					String.format("The InputStream for locator [%s] has already been closed", this.locator));
+			}
 		}
 
 		private void assertOpenRT() {
@@ -152,7 +157,13 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 		public void close() throws IOException {
 			assertOpenRT();
 			this.finished = true;
-			IOUtils.closeQuietly(this.stream);
+			if (this.stream != null) {
+				try {
+					this.stream.close();
+				} catch (IOException e) {
+					// Ignore
+				}
+			}
 			JdbcTools.closeQuietly(this.rs);
 			JdbcTools.closeQuietly(this.ps);
 			try {
@@ -190,8 +201,9 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 	public JdbcContentStore(DataSourceDescriptor<?> dataSourceDescriptor, boolean updateSchema, boolean cleanData,
 		CfgTools cfg) throws CmfStorageException {
-		if (dataSourceDescriptor == null) { throw new IllegalArgumentException(
-			"Must provide a valid DataSource instance"); }
+		if (dataSourceDescriptor == null) {
+			throw new IllegalArgumentException("Must provide a valid DataSource instance");
+		}
 		this.dataSourceDescriptor = dataSourceDescriptor;
 		this.managedTransactions = dataSourceDescriptor.isManagedTransactions();
 		this.dataSource = dataSourceDescriptor.getDataSource();
@@ -311,14 +323,11 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 		try {
 			final Blob blob = c.createBlob();
 			try {
-				OutputStream out = blob.setBinaryStream(1);
-				try {
+				try (OutputStream out = blob.setBinaryStream(1)) {
 					IOUtils.copy(in, out);
 				} catch (IOException e) {
 					throw new CmfStorageException(String
 						.format("Failed to copy the content from the given input stream for locator [%s]", locator), e);
-				} finally {
-					IOUtils.closeQuietly(out);
 				}
 				QueryRunner qr = JdbcTools.getQueryRunner();
 				CmfContentStream info = locator.getInfo();

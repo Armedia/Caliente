@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -23,6 +24,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.token.Token.Type;
+import com.armedia.caliente.tools.ResourceLoader;
+import com.armedia.caliente.tools.ResourceLoaderException;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -212,14 +215,21 @@ public class TokenLoader implements Iterable<Token> {
 			final URI sourceUri;
 			try {
 				sourceUri = new URI(sourceName);
-				if (UriTokenSource.isSupported(sourceUri)) {
-					if (!StringUtils.equals("file", sourceUri.getScheme())) {
-						// Not a local file, use the URI
-						newSource = new UriTokenSource(sourceUri);
-					} else {
-						// Local file... treat it as such...
-						sourceName = new File(sourceUri).getPath();
+				try {
+					URL resource = ResourceLoader.getResource(sourceUri);
+					if (resource != null) {
+						if (StringUtils.equals("file", resource.getProtocol())) {
+							// Local file... treat it as such...
+							sourceName = new File(resource.getPath()).getPath();
+							newSource = null;
+						} else {
+							// Not a local file, use the URI
+							newSource = new UriTokenSource(sourceUri);
+						}
 					}
+				} catch (ResourceLoaderException e) {
+					// Not a valid resource syntax... must be a path!
+					newSource = null;
 				}
 			} catch (URISyntaxException e) {
 				// Not a URI... must be a path

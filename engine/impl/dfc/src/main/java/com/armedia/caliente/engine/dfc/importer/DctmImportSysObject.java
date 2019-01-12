@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +88,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final Set<String> ret = new HashSet<>();
 
 		DfException e = DfUtils.runRetryable(session, (s) -> {
-			ret.addAll(StrTokenizer.getCSVInstance(sysObject.getXPermitList()).getTokenList());
+			ret.addAll(StringTokenizer.getCSVInstance(sysObject.getXPermitList()).getTokenList());
 		});
 		if ((e != null) && !StringUtils.equalsIgnoreCase("DM_SYSOBJECT_W_FOLDER_DEFACL", e.getMessageId())) { throw e; }
 
@@ -498,10 +498,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-		
+
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-		
+
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/

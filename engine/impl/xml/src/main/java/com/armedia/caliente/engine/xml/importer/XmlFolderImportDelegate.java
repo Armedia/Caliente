@@ -9,7 +9,6 @@ import java.io.OutputStream;
 import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.xml.importer.jaxb.FolderIndexEntryT;
@@ -60,22 +59,19 @@ public class XmlFolderImportDelegate extends XmlAggregatedImportDelegate<FolderI
 
 		tgt = new File(dir, String.format("%s-folder.xml", tgt.getName()));
 
-		final OutputStream out;
-		try {
-			out = new FileOutputStream(tgt);
-		} catch (FileNotFoundException e) {
-			throw new ImportException(String.format("Failed to open an output stream to [%s]", tgt), e);
-		}
-
 		boolean ok = false;
-		try {
+		try (OutputStream out = new FileOutputStream(tgt)) {
 			XmlImportDelegateFactory.marshalXml(f, out);
 			ok = true;
+		} catch (FileNotFoundException e) {
+			throw new ImportException(String.format("Failed to open an output stream to [%s]", tgt), e);
+		} catch (IOException e) {
+			throw new ImportException(
+				String.format("IOException caught while writing %s to [%s] ", this.cmfObject.getDescription(), tgt), e);
 		} catch (JAXBException e) {
 			throw new ImportException(
 				String.format("Failed to marshal the XML for %s to [%s]", this.cmfObject.getDescription(), tgt), e);
 		} finally {
-			IOUtils.closeQuietly(out);
 			if (!ok) {
 				FileUtils.deleteQuietly(tgt);
 			}

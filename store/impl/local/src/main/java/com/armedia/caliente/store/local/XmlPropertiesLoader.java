@@ -3,12 +3,12 @@ package com.armedia.caliente.store.local;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
 import javax.xml.bind.JAXBException;
 
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,12 +31,10 @@ public abstract class XmlPropertiesLoader<P extends XmlProperty, S extends XmlSt
 
 	public final boolean loadProperties(File propertiesFile, Map<String, CmfValue> properties)
 		throws CmfStorageException {
-		InputStream in = null;
 		if (!propertiesFile.exists()) { return false; }
 		// Allow an empty file...
 		if (propertiesFile.length() == 0) { return true; }
-		try {
-			in = new FileInputStream(propertiesFile);
+		try (InputStream in = new FileInputStream(propertiesFile)) {
 			S p = XmlTools.unmarshal(this.rootClass, this.schema, in);
 			properties.clear();
 			for (XmlProperty property : p.getProperty()) {
@@ -60,10 +58,10 @@ public abstract class XmlPropertiesLoader<P extends XmlProperty, S extends XmlSt
 			return true;
 		} catch (FileNotFoundException e) {
 			return false;
+		} catch (IOException e) {
+			throw new CmfStorageException("IOException attempting to load the properties file", e);
 		} catch (JAXBException e) {
 			throw new CmfStorageException("Failed to load the stored properties", e);
-		} finally {
-			IOUtils.closeQuietly(in);
 		}
 	}
 }

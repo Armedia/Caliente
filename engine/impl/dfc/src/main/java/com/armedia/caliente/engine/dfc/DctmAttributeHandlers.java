@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.commons.dfc.util.DfValueFactory;
@@ -344,7 +344,7 @@ public class DctmAttributeHandlers {
 		synchronized (DctmAttributeHandlers.class) {
 			if (DctmAttributeHandlers.OPERATORS_INITIALIZED) { return; }
 			String attrsToCheck = cfg.getString("owner.attributes", "");
-			StrTokenizer strTokenizer = StrTokenizer.getCSVInstance(attrsToCheck);
+			StringTokenizer strTokenizer = StringTokenizer.getCSVInstance(attrsToCheck);
 			List<String> l = strTokenizer.getTokenList();
 			for (String att : new HashSet<>(l)) {
 				DctmAttributeHandlers.setAttributeHandler(null, DctmDataType.DF_STRING, att,
@@ -360,10 +360,12 @@ public class DctmAttributeHandlers {
 
 	private static Map<String, AttributeHandler> getAttributeHandlerMap(DctmObjectType objectType,
 		DctmDataType dataType) {
-		if (dataType == null) { throw new IllegalArgumentException(
-			"Must provide a data type to retrieve the interceptor for"); }
-		if (dataType == DctmDataType.DF_UNDEFINED) { throw new IllegalArgumentException(
-			"DF_UNDEFINED is not supported"); }
+		if (dataType == null) {
+			throw new IllegalArgumentException("Must provide a data type to retrieve the interceptor for");
+		}
+		if (dataType == DctmDataType.DF_UNDEFINED) {
+			throw new IllegalArgumentException("DF_UNDEFINED is not supported");
+		}
 		return (objectType == null ? DctmAttributeHandlers.GLOBAL.get(dataType)
 			: DctmAttributeHandlers.PER_TYPE.get(objectType).get(dataType));
 	}
@@ -401,8 +403,9 @@ public class DctmAttributeHandlers {
 
 	public static AttributeHandler getAttributeHandler(IDfPersistentObject object, IDfAttr attribute)
 		throws DfException, UnsupportedDctmObjectTypeException {
-		if (object == null) { throw new IllegalArgumentException(
-			"Must provide an object to identify the attribute handler for"); }
+		if (object == null) {
+			throw new IllegalArgumentException("Must provide an object to identify the attribute handler for");
+		}
 		final DctmObjectType objectType = DctmObjectType.decodeType(object);
 		return DctmAttributeHandlers.getAttributeHandler(objectType, DctmDataType.fromAttribute(attribute),
 			attribute.getName());
@@ -410,8 +413,9 @@ public class DctmAttributeHandlers {
 
 	public static AttributeHandler getAttributeHandler(DctmObjectType objectType, DctmDataType dataType,
 		String attributeName) {
-		if (attributeName == null) { throw new IllegalArgumentException(
-			"Must provide an attribute name to intercept"); }
+		if (attributeName == null) {
+			throw new IllegalArgumentException("Must provide an attribute name to intercept");
+		}
 		AttributeHandler ret = DctmAttributeHandlers.getAttributeHandlerMap(objectType, dataType).get(attributeName);
 		if (ret == null) {
 			// Nothing, so try for the global one

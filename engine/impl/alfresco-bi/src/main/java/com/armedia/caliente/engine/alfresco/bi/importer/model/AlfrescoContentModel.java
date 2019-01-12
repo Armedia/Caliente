@@ -15,8 +15,6 @@ import java.util.TreeMap;
 
 import javax.xml.bind.JAXBException;
 
-import org.apache.commons.io.IOUtils;
-
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.ClassElement;
 import com.armedia.caliente.engine.alfresco.bi.importer.jaxb.model.Model;
 import com.armedia.commons.utilities.Tools;
@@ -72,12 +70,9 @@ public class AlfrescoContentModel {
 			references = Collections.emptyList();
 		}
 
-		InputStream in = model.toURL().openStream();
 		final Model m;
-		try {
+		try (InputStream in = model.toURL().openStream()) {
 			m = XmlTools.unmarshal(Model.class, "alfresco-model.xsd", in);
-		} finally {
-			IOUtils.closeQuietly(in);
 		}
 
 		// First, make an index of all the aspects we have
@@ -143,13 +138,16 @@ public class AlfrescoContentModel {
 		}
 
 		final String name = src.getName();
-		if (!visited
-			.add(name)) { throw new IllegalStateException(String.format("Detected a dependency cycle: %s", visited)); }
+		if (!visited.add(name)) {
+			throw new IllegalStateException(String.format("Detected a dependency cycle: %s", visited));
+		}
 
 		final String parentName = src.getParent();
 
-		final Aspect parent = (parentName != null ? AlfrescoContentModel.locateOrBuildAspect(modelName, name,
-			parentName, aspects, rawAspects, references, visited) : null);
+		final Aspect parent = (parentName != null
+			? AlfrescoContentModel.locateOrBuildAspect(modelName, name, parentName, aspects, rawAspects, references,
+				visited)
+			: null);
 
 		// First things first: check to see if all my mandatory aspects are ready. If not,
 		// recurse into each of them to make sure they're ready
@@ -206,12 +204,15 @@ public class AlfrescoContentModel {
 		}
 
 		final String name = src.getName();
-		if (!visited
-			.add(name)) { throw new IllegalStateException(String.format("Detected a dependency cycle: %s", visited)); }
+		if (!visited.add(name)) {
+			throw new IllegalStateException(String.format("Detected a dependency cycle: %s", visited));
+		}
 
 		final String parentName = src.getParent();
-		final Type parent = (parentName != null ? AlfrescoContentModel.locateOrBuildType(modelName, name, parentName,
-			types, aspects, rawTypes, references, visited) : null);
+		final Type parent = (parentName != null
+			? AlfrescoContentModel.locateOrBuildType(modelName, name, parentName, types, aspects, rawTypes, references,
+				visited)
+			: null);
 
 		// First things first: check to see if all my mandatory aspects are ready. If not,
 		// recurse into each of them to make sure they're ready
@@ -225,9 +226,11 @@ public class AlfrescoContentModel {
 						break;
 					}
 				}
-				if (aspect == null) { throw new IllegalStateException(
-					String.format("Illegal forward reference of aspect [%s] from type [%s] in model [%s]",
-						mandatoryName, name, modelName)); }
+				if (aspect == null) {
+					throw new IllegalStateException(
+						String.format("Illegal forward reference of aspect [%s] from type [%s] in model [%s]",
+							mandatoryName, name, modelName));
+				}
 			}
 			mandatoryAspects.add(aspect);
 		}

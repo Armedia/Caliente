@@ -75,7 +75,7 @@ public class History {
 	private String formatVersion(DctmVersion<?> version) {
 		if (version == null) { return "(N/A)"; }
 		return String.format("%s (%s @ %s)", version.getVersionNumber(), version.getId(),
-			DateFormatUtils.ISO_DATE_TIME_ZONE_FORMAT.format(version.getCreationDate().getDate()));
+			DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(version.getCreationDate().getDate()));
 	}
 
 	protected int run(OptionValues cli, Collection<String> chronicleIds) throws Exception {
@@ -120,11 +120,9 @@ public class History {
 							try {
 								tx = DfUtils.openTransaction(session);
 							} catch (DfException e) {
-								throw new HistoryException(id,
-									String.format(
-										"DFC reported an error while starting the read-only transaction for chronicle [%s]: %s",
-										id, e.getMessage()),
-									e);
+								throw new HistoryException(id, String.format(
+									"DFC reported an error while starting the read-only transaction for chronicle [%s]: %s",
+									id, e.getMessage()), e);
 							}
 
 							try {

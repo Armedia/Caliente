@@ -46,7 +46,7 @@ public abstract class XmlImportDelegate extends
 							throw new RuntimeException("Failed to produce a date value", e);
 						}
 						gcal.setTimeZone(XmlImportDelegate.TZUTC);
-						V = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(gcal);
+						V = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(gcal);
 					}
 					attribute.getValue().add(V);
 				}
@@ -100,7 +100,7 @@ public abstract class XmlImportDelegate extends
 							throw new RuntimeException("Failed to produce a date value", e);
 						}
 						gcal.setTimeZone(XmlImportDelegate.TZUTC);
-						V = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(gcal);
+						V = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(gcal);
 					}
 					property.getValue().add(V);
 				}

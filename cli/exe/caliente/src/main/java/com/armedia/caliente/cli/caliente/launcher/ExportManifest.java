@@ -72,7 +72,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 		private Record(CmfObject<?> object, ExportResult result, Throwable thrown, String extraInfo) {
 			this.number = object.getNumber();
-			this.date = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date());
+			this.date = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(new Date());
 			this.type = object.getType();
 			this.tier = object.getDependencyTier();
 			this.historyId = object.getHistoryId();
@@ -99,7 +99,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 		private Record(CmfType type, String objectId, ExportResult result, Throwable thrown, String extraInfo) {
 			this.number = ExportManifest.NULL;
-			this.date = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date());
+			this.date = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(new Date());
 			this.type = type;
 			this.tier = null;
 			this.historyId = "";

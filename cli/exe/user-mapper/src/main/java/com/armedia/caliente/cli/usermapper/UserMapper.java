@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.usermapper;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
@@ -30,7 +31,6 @@ import javax.xml.bind.DatatypeConverter;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
@@ -332,16 +332,10 @@ public class UserMapper {
 	private int writeMappings(OptionValues cli, String startMarkerString, String docbase, Properties userMapping,
 		Properties groupMapping) {
 		File mapFile = null;
-		FileOutputStream out = null;
+		;
 		docbase = getDocbaseSuffix(cli, docbase);
-		mapFile = new File(String.format("usermap%s.xml", docbase)).getAbsoluteFile();
-		try {
-			try {
-				mapFile = mapFile.getCanonicalFile();
-			} catch (IOException e) {
-				// Do nothing...
-			}
-			out = new FileOutputStream(mapFile);
+		mapFile = Tools.canonicalize(new File(String.format("usermap%s.xml", docbase)));
+		try (FileOutputStream out = new FileOutputStream(mapFile)) {
 			UserMapper.log.info("Writing out user mappings to [{}]...", mapFile.getAbsolutePath());
 			userMapping.storeToXML(out, String.format("User mappings as of %s", startMarkerString));
 			UserMapper.log.info("User mappings written out to [{}]...", mapFile.getAbsolutePath());
@@ -350,19 +344,12 @@ public class UserMapper {
 			UserMapper.log
 				.error(String.format("Failed to write out the user mappings to [%s]", mapFile.getAbsolutePath()), e);
 			return 1;
-		} finally {
-			IOUtils.closeQuietly(out);
 		}
 
-		mapFile = new File(String.format("groupmap%s.xml", docbase)).getAbsoluteFile();
-		try {
-			try {
-				mapFile = mapFile.getCanonicalFile();
-			} catch (IOException e) {
-				// Do nothing...
-			}
+		mapFile = Tools.canonicalize(new File(String.format("groupmap%s.xml", docbase)));
+		try (FileOutputStream out = new FileOutputStream(mapFile)) {
 			UserMapper.log.info("Writing out group mappings to [{}]...", mapFile.getAbsolutePath());
-			out = new FileOutputStream(mapFile);
+			;
 			groupMapping.storeToXML(out, String.format("Group mappings as of %s", startMarkerString));
 			UserMapper.log.info("Group mappings written out to [{}]...", mapFile.getAbsolutePath());
 		} catch (IOException e) {
@@ -370,8 +357,6 @@ public class UserMapper {
 			UserMapper.log
 				.error(String.format("Failed to write out the group mappings to [%s]", mapFile.getAbsolutePath()), e);
 			return 1;
-		} finally {
-			IOUtils.closeQuietly(out);
 		}
 
 		return 0;
@@ -453,8 +438,10 @@ public class UserMapper {
 		try {
 			// Who is the current user? Use that as a validation point...
 			IDfUser user = session.getUser(session.getLoginUserName());
-			if (user == null) { throw new Exception(
-				String.format("Failed to locate the current session's user object [%s]", session.getLoginUserName())); }
+			if (user == null) {
+				throw new Exception(String.format("Failed to locate the current session's user object [%s]",
+					session.getLoginUserName()));
+			}
 			for (String attributeName : candidates) {
 				if (StringUtils.isEmpty(attributeName)) {
 					UserMapper.log.warn("Blank attribute name detected, ignoring it");
@@ -580,7 +567,8 @@ public class UserMapper {
 			executor = Executors.newCachedThreadPool();
 
 			final Date startMarker = new Date();
-			final String startMarkerString = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(startMarker);
+			final String startMarkerString = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT
+				.format(startMarker);
 
 			final Future<Map<String, DctmUser>> dctmUserFuture = executor.submit(DctmUser.getUserLoader(dfcPool));
 			final Future<Map<String, DctmGroup>> dctmGroupFuture = executor.submit(DctmGroup.getGroupLoader(dfcPool));
@@ -822,11 +810,11 @@ public class UserMapper {
 				}
 			} finally {
 				for (CSVPrinter p : userRecords.values()) {
-					IOUtils.closeQuietly(p);
+					UserMapper.closeQuietly(p);
 				}
 
 				for (CSVPrinter p : groupRecords.values()) {
-					IOUtils.closeQuietly(p);
+					UserMapper.closeQuietly(p);
 				}
 			}
 			UserMapper.log.info("File generation completed");
@@ -842,6 +830,16 @@ public class UserMapper {
 			}
 			if (ldapPool != null) {
 				ldapPool.close();
+			}
+		}
+	}
+
+	private static void closeQuietly(Closeable c) {
+		if (c != null) {
+			try {
+				c.close();
+			} catch (Exception e) {
+				// Do nothing...
 			}
 		}
 	}

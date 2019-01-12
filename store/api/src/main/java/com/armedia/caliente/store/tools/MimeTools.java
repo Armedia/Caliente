@@ -45,8 +45,10 @@ public class MimeTools {
 
 	static {
 		DEFAULT_MIME_TYPE = MimeTools.resolveMimeType(MimeTools.DEFAULT_MIME_STRING);
-		if (MimeTools.DEFAULT_MIME_TYPE == null) { throw new RuntimeException(
-			String.format("Failed to parse the default mime string [%s]", MimeTools.DEFAULT_MIME_STRING)); }
+		if (MimeTools.DEFAULT_MIME_TYPE == null) {
+			throw new RuntimeException(
+				String.format("Failed to parse the default mime string [%s]", MimeTools.DEFAULT_MIME_STRING));
+		}
 		UNKNOWN = MimeTools.DEFAULT_MIME_TYPE;
 		MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.MagicMimeMimeDetector");
 		MimeUtil.registerMimeDetector("eu.medsea.mimeutil.detector.ExtensionMimeDetector");
@@ -99,11 +101,8 @@ public class MimeTools {
 	}
 
 	public static MimeType determineMimeType(File data) throws IOException {
-		FileInputStream in = new FileInputStream(data);
-		try {
+		try (FileInputStream in = new FileInputStream(data)) {
 			return MimeTools.determineMimeType(data.getName(), in);
-		} finally {
-			IOUtils.closeQuietly(in);
 		}
 	}
 

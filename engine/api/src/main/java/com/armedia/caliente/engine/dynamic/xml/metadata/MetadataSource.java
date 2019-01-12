@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,7 +106,7 @@ public class MetadataSource {
 			String name = s.getName();
 			String value = s.getValue();
 			if ((name != null) && (value != null)) {
-				ret.put(String.format("jdbc.%s", name), StrSubstitutor.replaceSystemProperties(value));
+				ret.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
 			}
 		}
 		return ret;
@@ -123,7 +123,7 @@ public class MetadataSource {
 	private void setValue(String name, String value, Map<String, String> map) {
 		value = StringUtils.strip(value);
 		if (!StringUtils.isEmpty(value)) {
-			map.put(String.format("jdbc.%s", name), StrSubstitutor.replaceSystemProperties(value));
+			map.put(String.format("jdbc.%s", name), StringSubstitutor.replaceSystemProperties(value));
 		}
 	}
 
@@ -171,8 +171,9 @@ public class MetadataSource {
 		final Lock lock = this.rwLock.readLock();
 		lock.lock();
 		try {
-			if (this.dataSource == null) { throw new IllegalStateException(
-				String.format("The datasource [%s] is not yet initialized", this.name)); }
+			if (this.dataSource == null) {
+				throw new IllegalStateException(String.format("The datasource [%s] is not yet initialized", this.name));
+			}
 			return this.dataSource.getConnection();
 		} finally {
 			lock.unlock();

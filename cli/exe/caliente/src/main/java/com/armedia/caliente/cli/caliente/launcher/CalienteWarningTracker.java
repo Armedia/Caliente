@@ -63,7 +63,7 @@ public class CalienteWarningTracker implements WarningTracker {
 		public String toString(boolean withTime) {
 			long millis = TimeUnit.MILLISECONDS.convert(this.nanos, TimeUnit.NANOSECONDS);
 			String timeHeader = (withTime
-				? String.format("%s ", DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(millis))
+				? String.format("%s ", DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(millis))
 				: StringUtils.EMPTY);
 			return String.format("%s[%s] %s", timeHeader, this.threadName, generateReport());
 		}

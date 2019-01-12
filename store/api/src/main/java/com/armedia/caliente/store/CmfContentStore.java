@@ -31,8 +31,10 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 		protected Handle(CmfObject<?> object, CmfContentStream info, LOCATOR locator) {
 			if (object == null) { throw new IllegalArgumentException("Must provide an object"); }
 			if (info == null) { throw new IllegalArgumentException("Must provide a content info"); }
-			if (locator == null) { throw new IllegalArgumentException(
-				"Must provide a locator string to identify the content within the store"); }
+			if (locator == null) {
+				throw new IllegalArgumentException(
+					"Must provide a locator string to identify the content within the store");
+			}
 			this.objectType = object.getType();
 			this.objectId = object.getId();
 			this.info = info;
@@ -221,22 +223,17 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 		 */
 		public final long writeFile(File target, int bufferSize) throws IOException, CmfStorageException {
 			if (target == null) { throw new IllegalArgumentException("Must provide a file to write to"); }
-			return runTransfer(openInput(), new FileOutputStream(target), bufferSize);
-		}
-
-		private long runTransfer(InputStream in, OutputStream out, int bufferSize) throws IOException {
-			if (bufferSize <= 0) {
-				bufferSize = CmfContentStore.DEFAULT_BUFFER_SIZE;
-			} else {
-				bufferSize = Tools.ensureBetween(CmfContentStore.MIN_BUFFER_SIZE, bufferSize,
-					CmfContentStore.MAX_BUFFER_SIZE);
-			}
-			try {
-				// We use copyLarge() to support files greater than 2GB
-				return IOUtils.copyLarge(in, out, new byte[bufferSize]);
-			} finally {
-				IOUtils.closeQuietly(in);
-				IOUtils.closeQuietly(out);
+			try (InputStream in = openInput()) {
+				try (OutputStream out = new FileOutputStream(target)) {
+					if (bufferSize <= 0) {
+						bufferSize = CmfContentStore.DEFAULT_BUFFER_SIZE;
+					} else {
+						bufferSize = Tools.ensureBetween(CmfContentStore.MIN_BUFFER_SIZE, bufferSize,
+							CmfContentStore.MAX_BUFFER_SIZE);
+					}
+					// We use copyLarge() to support files greater than 2GB
+					return IOUtils.copyLarge(in, out, new byte[bufferSize]);
+				}
 			}
 		}
 
@@ -305,8 +302,9 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 		assertOpen();
 		try {
 			File f = doGetFile(locator);
-			if (f == null) { throw new IllegalStateException(
-				"doGetFile() returned null - did you forget to override the method?"); }
+			if (f == null) {
+				throw new IllegalStateException("doGetFile() returned null - did you forget to override the method?");
+			}
 			return f.getCanonicalFile();
 		} finally {
 			getReadLock().unlock();
@@ -339,13 +337,17 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 					caught = e;
 				}
 			}
-			if (caught != null) { throw new IOException(
-				String.format("Failed to create the parent content directory [%s]", parent.getAbsolutePath()),
-				caught); }
+			if (caught != null) {
+				throw new IOException(
+					String.format("Failed to create the parent content directory [%s]", parent.getAbsolutePath()),
+					caught);
+			}
 		}
 
-		if (!parent.isDirectory()) { throw new IOException(
-			String.format("The parent location [%s] is not a directory", parent.getAbsoluteFile())); }
+		if (!parent.isDirectory()) {
+			throw new IOException(
+				String.format("The parent location [%s] is not a directory", parent.getAbsoluteFile()));
+		}
 	}
 
 	protected File doGetFile(LOCATOR locator) throws IOException {
@@ -354,9 +356,11 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 
 	protected final void validateLocator(LOCATOR locator) {
 		if (locator == null) { throw new IllegalArgumentException("Must provide a non-null locator"); }
-		if (!isSupported(locator)) { throw new IllegalArgumentException(
-			String.format("The locator [%s] is not supported by CmfContentStore class [%s]", locator,
-				getClass().getCanonicalName())); }
+		if (!isSupported(locator)) {
+			throw new IllegalArgumentException(
+				String.format("The locator [%s] is not supported by CmfContentStore class [%s]", locator,
+					getClass().getCanonicalName()));
+		}
 	}
 
 	protected abstract Handle constructHandle(CmfObject<?> object, CmfContentStream info, LOCATOR locator);
@@ -444,19 +448,14 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 				throw new CmfStorageException(
 					String.format("Failed to create the requisite directory structure for locator [%s]", locator), e);
 			}
-			try {
-				OutputStream out = new FileOutputStream(f);
-				try {
-					return IOUtils.copyLarge(in, out);
-				} catch (IOException e) {
-					throw new CmfStorageException(
-						String.format("Failed to copy the content from the file [%s]", f.getAbsolutePath()), e);
-				} finally {
-					IOUtils.closeQuietly(out);
-				}
+			try (OutputStream out = new FileOutputStream(f)) {
+				return IOUtils.copyLarge(in, out);
 			} catch (FileNotFoundException e) {
 				throw new CmfStorageException(
 					String.format("Failed to open an output stream to the file [%s]", f.getAbsolutePath()), e);
+			} catch (IOException e) {
+				throw new CmfStorageException(
+					String.format("Failed to copy the content from the file [%s]", f.getAbsolutePath()), e);
 			}
 		}
 
@@ -531,8 +530,10 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 		if (isSupportsFileAccess()) {
 			try {
 				File f = getFile(locator);
-				if (!f.exists() || !f.isFile()) { throw new CmfStorageException(
-					String.format("Locator [%s] doesn't refer to an existing and valid file", locator)); }
+				if (!f.exists() || !f.isFile()) {
+					throw new CmfStorageException(
+						String.format("Locator [%s] doesn't refer to an existing and valid file", locator));
+				}
 				return f.length();
 			} catch (IOException e) {
 				throw new CmfStorageException(String.format("Failed to locate the file for locator [%s]", locator), e);

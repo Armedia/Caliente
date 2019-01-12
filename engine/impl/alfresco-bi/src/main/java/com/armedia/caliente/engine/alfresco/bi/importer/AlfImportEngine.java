@@ -20,7 +20,6 @@ import javax.xml.validation.Schema;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -289,7 +288,7 @@ public class AlfImportEngine extends
 		protected void importFinishedImpl(UUID jobId, Map<ImportResult, Long> counters) {
 			PrintWriter w = getWriter(jobId);
 			w.flush();
-			IOUtils.closeQuietly(w);
+			w.close();
 		}
 	};
 
@@ -322,8 +321,9 @@ public class AlfImportEngine extends
 		addListener(this.listener);
 
 		String content = settings.getString(AlfSetting.CONTENT);
-		if (content == null) { throw new IOException(
-			"Can't proceed without a content directory to store artifacts in"); }
+		if (content == null) {
+			throw new IOException("Can't proceed without a content directory to store artifacts in");
+		}
 		File contentFile = Tools.canonicalize(new File(content));
 		FileUtils.forceMkdir(contentFile);
 		this.contentPath = contentFile.toPath();
@@ -333,17 +333,20 @@ public class AlfImportEngine extends
 		FileUtils.forceMkdir(modelDir);
 
 		String contentModels = settings.getString(AlfSetting.CONTENT_MODEL);
-		if (contentModels == null) { throw new IllegalStateException(
-			"Must provide a valid set of content model XML files"); }
+		if (contentModels == null) {
+			throw new IllegalStateException("Must provide a valid set of content model XML files");
+		}
 
 		List<URI> modelUrls = new ArrayList<>();
 		for (String s : contentModels.split(",")) {
 			File f = new File(s).getCanonicalFile();
 			if (!f.exists()) { throw new FileNotFoundException(f.getAbsolutePath()); }
-			if (!f.isFile()) { throw new IOException(
-				String.format("File [%s] is not a regular file", f.getAbsolutePath())); }
-			if (!f
-				.canRead()) { throw new IOException(String.format("File [%s] is not readable", f.getAbsolutePath())); }
+			if (!f.isFile()) {
+				throw new IOException(String.format("File [%s] is not a regular file", f.getAbsolutePath()));
+			}
+			if (!f.canRead()) {
+				throw new IOException(String.format("File [%s] is not readable", f.getAbsolutePath()));
+			}
 			modelUrls.add(f.toURI());
 			FileUtils.copyFile(f, new File(modelDir, f.getName()));
 		}

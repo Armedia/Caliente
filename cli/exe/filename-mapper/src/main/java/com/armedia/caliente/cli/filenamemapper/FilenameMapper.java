@@ -10,10 +10,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrLookup;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,8 +71,9 @@ class FilenameMapper {
 	};
 
 	private CmfType decodeType(String idString) {
-		if (idString == null) { throw new IllegalArgumentException(
-			"Must provide an ID to decode the information from"); }
+		if (idString == null) {
+			throw new IllegalArgumentException("Must provide an ID to decode the information from");
+		}
 		// TODO: Not happy with this hardcoded table - maybe find a way to dynamically populate this
 		// from the installation?
 		final IDfId id = new DfId(idString);
@@ -126,12 +125,9 @@ class FilenameMapper {
 
 	private boolean checkDedupPattern(String pattern) {
 		final Set<String> found = new HashSet<>();
-		new StrSubstitutor(new StrLookup<String>() {
-			@Override
-			public String lookup(String key) {
-				found.add(key);
-				return key;
-			}
+		new StringSubstitutor((key) -> {
+			found.add(key);
+			return key;
 		}).replace(pattern);
 		return found.contains("id");
 	}
@@ -164,11 +160,14 @@ class FilenameMapper {
 		} else {
 			if (cli.isPresent(CLIParam.fix_char)) {
 				String s = cli.getString(CLIParam.fix_char);
-				if (StringUtils.isEmpty(
-					s)) { throw new CliParameterException("The fix_char string must be at least 1 character long"); }
+				if (StringUtils.isEmpty(s)) {
+					throw new CliParameterException("The fix_char string must be at least 1 character long");
+				}
 				fixChar = s.charAt(0);
-				if (!fixerModel.isValidFixChar(fixChar)) { throw new CliParameterException(String.format(
-					"The character [%s] is not a valid fix character for fix mode %s", fixChar, fixerModel.name())); }
+				if (!fixerModel.isValidFixChar(fixChar)) {
+					throw new CliParameterException(String.format(
+						"The character [%s] is not a valid fix character for fix mode %s", fixChar, fixerModel.name()));
+				}
 			} else {
 				fixChar = FilenameMapper.DEFAULT_FIX_CHAR;
 			}
@@ -340,7 +339,7 @@ class FilenameMapper {
 							resolverMap.put("id", entryId.getId());
 							resolverMap.put("name", currentName);
 							resolverMap.put("count", count);
-							String newName = StrSubstitutor.replace(resolverPattern, resolverMap);
+							String newName = StringSubstitutor.replace(resolverPattern, resolverMap);
 							if (fixer != null) {
 								// Make sure we use a clean name...
 								newName = fixer.fixName(newName);
@@ -365,11 +364,8 @@ class FilenameMapper {
 					this.log.warn("No mappings to output, will not generate a mapping file");
 				} else {
 					this.log.info("Outputting the properties map to [{}]", targetFile.getAbsolutePath());
-					OutputStream out = new FileOutputStream(targetFile);
-					try {
+					try (OutputStream out = new FileOutputStream(targetFile)) {
 						finalMap.storeToXML(out, null);
-					} finally {
-						IOUtils.closeQuietly(out);
 					}
 					this.log.info("Output {} mappings to [{}]", finalMap.size(), targetFile.getAbsolutePath());
 				}

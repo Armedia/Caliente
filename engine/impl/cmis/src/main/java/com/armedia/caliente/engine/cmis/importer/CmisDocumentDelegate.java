@@ -14,7 +14,7 @@ import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.impl.IOUtils;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
-import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.importer.ImportException;
@@ -45,7 +45,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 		int last = 0;
 		if (this.versionLabel != null) {
-			String[] arr = new StrTokenizer(this.versionLabel, '.').getTokenArray();
+			String[] arr = new StringTokenizer(this.versionLabel, '.').getTokenArray();
 			last = (arr != null ? Integer.valueOf(arr[arr.length - 1]) : 0);
 		}
 		this.major = (last == 0);
@@ -135,8 +135,10 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 								Document doc = Document.class.cast(obj);
 								for (Document d : doc.getAllVersions()) {
 									Boolean pwc = d.isPrivateWorkingCopy();
-									if ((pwc != null) && pwc.booleanValue()) { throw new ImportException(String.format(
-										"The document is already checked out %s", this.cmfObject.getDescription())); }
+									if ((pwc != null) && pwc.booleanValue()) {
+										throw new ImportException(String.format(
+											"The document is already checked out %s", this.cmfObject.getDescription()));
+									}
 									Boolean lv = d.isLatestVersion();
 									if ((lv != null) && lv.booleanValue()) { return d; }
 								}

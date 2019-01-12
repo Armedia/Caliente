@@ -22,7 +22,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.tools.xml.XmlProperties;
@@ -53,13 +52,16 @@ public class AlfXmlIndex implements Closeable {
 				}
 			}
 		}
-		if (l
-			.isEmpty()) { throw new IllegalArgumentException("No classes provided to support the indexing operation"); }
+		if (l.isEmpty()) {
+			throw new IllegalArgumentException("No classes provided to support the indexing operation");
+		}
 		this.supportedClasses = Tools.freezeList(l);
 		this.rootClass = this.supportedClasses.iterator().next();
 		final XmlRootElement rootElementDecl = this.rootClass.getAnnotation(XmlRootElement.class);
-		if (rootElementDecl == null) { throw new JAXBException(String
-			.format("The root class [%s] lacks an XmlRootElement annotation", this.rootClass.getCanonicalName())); }
+		if (rootElementDecl == null) {
+			throw new JAXBException(String.format("The root class [%s] lacks an XmlRootElement annotation",
+				this.rootClass.getCanonicalName()));
+		}
 		String rootElement = rootElementDecl.name();
 		if ((rootElement == null) || "##default".equals(rootElement)) {
 			rootElement = StringUtils.uncapitalize(this.rootClass.getSimpleName());
@@ -237,7 +239,13 @@ public class AlfXmlIndex implements Closeable {
 					// Log it...???
 				} finally {
 					closeXml();
-					IOUtils.closeQuietly(this.out);
+					if (this.out != null) {
+						try {
+							this.out.close();
+						} catch (IOException e) {
+							// Ignore this...
+						}
+					}
 					this.out = null;
 					this.xml = null;
 					this.marshaller = null;

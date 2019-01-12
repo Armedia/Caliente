@@ -68,14 +68,11 @@ public class Expression {
 
 			// Add some date formatting stuff
 			Map<String, Object> dateMap = new HashMap<>();
-			dateMap.put("ISO_DATE", DateFormatUtils.ISO_DATE_FORMAT);
-			dateMap.put("ISO_DATE_TZ", DateFormatUtils.ISO_DATE_TIME_ZONE_FORMAT);
-			dateMap.put("ISO_DATETIME", DateFormatUtils.ISO_DATETIME_FORMAT);
-			dateMap.put("ISO_DATETIME_TZ", DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT);
-			dateMap.put("ISO_TIME", DateFormatUtils.ISO_TIME_FORMAT);
-			dateMap.put("ISO_TIME_TZ", DateFormatUtils.ISO_TIME_TIME_ZONE_FORMAT);
-			dateMap.put("ISO_TIME_NO_T", DateFormatUtils.ISO_TIME_NO_T_FORMAT);
-			dateMap.put("ISO_TIME_NO_T_TZ", DateFormatUtils.ISO_TIME_NO_T_TIME_ZONE_FORMAT);
+			dateMap.put("ISO_DATE", DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT);
+			dateMap.put("ISO_DATETIME", DateFormatUtils.ISO_8601_EXTENDED_DATETIME_FORMAT);
+			dateMap.put("ISO_DATETIME_TZ", DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT);
+			dateMap.put("ISO_TIME", DateFormatUtils.ISO_8601_EXTENDED_TIME_FORMAT);
+			dateMap.put("ISO_TIME_TZ", DateFormatUtils.ISO_8601_EXTENDED_TIME_TIME_ZONE_FORMAT);
 
 			tools.put("dateFormat", Tools.freezeMap(dateMap));
 
@@ -129,9 +126,11 @@ public class Expression {
 			if (!StringUtils.isEmpty(actualLanguage)) {
 				engine = Expression.ENGINE_FACTORY.getEngineByName(actualLanguage);
 			}
-			if (engine == null) { throw new IllegalArgumentException(
-				String.format("Unknown script language [%s] - supported languages are (case-insensitive): %s", language,
-					Expression.ENGINE_ALIASES.keySet())); }
+			if (engine == null) {
+				throw new IllegalArgumentException(
+					String.format("Unknown script language [%s] - supported languages are (case-insensitive): %s",
+						language, Expression.ENGINE_ALIASES.keySet()));
+			}
 		}
 		return engine;
 	}

@@ -21,6 +21,8 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.caliente.tools.ResourceLoader;
+import com.armedia.caliente.tools.ResourceLoaderException;
 import com.armedia.commons.utilities.Tools;
 
 public class XmlInstances<T> {
@@ -86,8 +88,10 @@ public class XmlInstances<T> {
 				this.label, f.getAbsolutePath()));
 		}
 
-		if (!f.canRead()) { throw new XmlNotFoundException(
-			String.format("The %s file [%s] is not readable", this.label, f.getAbsolutePath())); }
+		if (!f.canRead()) {
+			throw new XmlNotFoundException(
+				String.format("The %s file [%s] is not readable", this.label, f.getAbsolutePath()));
+		}
 
 		// It exists, it's a file, and can be read!! Move forward!
 		return f.toURI().toURL();
@@ -106,23 +110,11 @@ public class XmlInstances<T> {
 			// Try to see if it's a URI...
 			try {
 				URI uri = new URI(location);
-				if ("resource".equalsIgnoreCase(uri.getScheme()) || "res".equalsIgnoreCase(uri.getScheme())
-					|| "classpath".equalsIgnoreCase(uri.getScheme()) || "cp".equalsIgnoreCase(uri.getScheme())) {
-					// It's a classpath reference, so let's just find the first resource that
-					// matches the SSP
-					String path = uri.getSchemeSpecificPart();
-					// Remove all leading slahes
-					path = path.replaceAll("^/+", "");
-					url = Thread.currentThread().getContextClassLoader().getResource(path);
+				try {
+					url = ResourceLoader.getResource(uri);
 					if (url == null) { return null; }
-				} else {
-					if (uri.isAbsolute()) {
-						try {
-							url = uri.normalize().toURL();
-						} catch (MalformedURLException e) {
-							// This isn't a valid URL...so it must be a file path
-						}
-					}
+				} catch (ResourceLoaderException e) {
+					// The ResourceLoader can't handle it...maybe a file path?
 				}
 			} catch (URISyntaxException e) {
 				// Not a URI...is it a URL? (URL syntax rules are looser than a URI's)
@@ -130,6 +122,7 @@ public class XmlInstances<T> {
 					url = new URL(location);
 				} catch (MalformedURLException e2) {
 					// Do nothing...it may still be a file path
+					url = null;
 				}
 			}
 

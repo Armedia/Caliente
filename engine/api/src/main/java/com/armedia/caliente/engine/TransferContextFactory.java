@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,17 +44,19 @@ public abstract class TransferContextFactory< //
 	private static Iterable<?> getAsIterable(final Object o) {
 		if (o == null) { return Collections.emptyList(); }
 		if (o instanceof Iterable) { return Iterable.class.cast(o); }
-		if (o instanceof String) { return new StrTokenizer(o.toString(), ',').getTokenList(); }
+		if (o instanceof String) { return new StringTokenizer(o.toString(), ',').getTokenList(); }
 		if (o.getClass().isArray()) {
-			if (!o.getClass().getComponentType().isPrimitive()) { return new Iterable<Object>() {
-				private final Object[] arr = (Object[]) o;
+			if (!o.getClass().getComponentType().isPrimitive()) {
+				return new Iterable<Object>() {
+					private final Object[] arr = (Object[]) o;
 
-				@Override
-				public Iterator<Object> iterator() {
-					return new ArrayIterator<>(this.arr);
-				}
+					@Override
+					public Iterator<Object> iterator() {
+						return new ArrayIterator<>(this.arr);
+					}
 
-			}; }
+				};
+			}
 		}
 		return Collections.emptyList();
 	}
@@ -80,8 +82,9 @@ public abstract class TransferContextFactory< //
 	protected TransferContextFactory(ENGINE engine, CfgTools settings, SESSION session,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
 		WarningTracker tracker) throws Exception {
-		if (engine == null) { throw new IllegalArgumentException(
-			"Must provide an engine to which this factory is tied"); }
+		if (engine == null) {
+			throw new IllegalArgumentException("Must provide an engine to which this factory is tied");
+		}
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
 		Set<CmfType> excludes = EnumSet.noneOf(CmfType.class);
