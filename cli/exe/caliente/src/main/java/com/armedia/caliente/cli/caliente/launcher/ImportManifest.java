@@ -66,7 +66,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 		private Record(CmfObject<?> object, String targetId, ImportResult result, Throwable thrown) {
 			this.number = object.getNumber();
-			this.date = DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT.format(new Date());
+			this.date = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(new Date());
 			this.type = object.getType();
 			this.tier = object.getDependencyTier();
 			this.historyId = object.getHistoryId();

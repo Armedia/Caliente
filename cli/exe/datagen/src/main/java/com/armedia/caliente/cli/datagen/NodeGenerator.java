@@ -29,9 +29,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
-import org.apache.commons.lang3.text.StrTokenizer;
 import org.apache.commons.lang3.time.DateUtils;
+import org.apache.commons.text.StringSubstitutor;
+import org.apache.commons.text.StringTokenizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -329,7 +329,7 @@ public class NodeGenerator {
 				} else {
 					List<IDfValue> l = new ArrayList<>();
 					// Split by commas, then parse each value separately
-					StrTokenizer tok = StrTokenizer.getCSVInstance(baseValue);
+					StringTokenizer tok = StringTokenizer.getCSVInstance(baseValue);
 					tok.setIgnoreEmptyTokens(false); // Do not ignore empty tokens...
 					for (String v : tok.getTokenList()) {
 						l.add(sanitizeValue(attribute, v));
@@ -400,7 +400,7 @@ public class NodeGenerator {
 			nameVariables.put("uuid", UUID.randomUUID().toString());
 			nameVariables.put("number", String.format("#%08x", childNumber));
 			nameVariables.put("type", typeName);
-			sysObject.setObjectName(StrSubstitutor.replace(nameFormat, nameVariables));
+			sysObject.setObjectName(StringSubstitutor.replace(nameFormat, nameVariables));
 
 			if (this.documentTypes.contains(typeName)) {
 
@@ -410,73 +410,67 @@ public class NodeGenerator {
 					r = c.next();
 				}
 
-				ByteArrayOutputStream baos = new ByteArrayOutputStream();
-				File srcFile = null;
-				String contentType = "binary";
-				boolean contentReady = false;
+				try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+					File srcFile = null;
+					String contentType = "binary";
+					boolean contentReady = false;
 
-				if (r != null) {
-					String newContentType = r.get("format");
-					if (!StringUtils.isEmpty(newContentType)) {
-						contentType = newContentType;
-					}
+					if (r != null) {
+						String newContentType = r.get("format");
+						if (!StringUtils.isEmpty(newContentType)) {
+							contentType = newContentType;
+						}
 
-					String src = r.get("location");
-					URL srcUrl = null;
-					if (!StringUtils.isEmpty(src)) {
-						// Is src a URL?
-						try {
-							srcUrl = new URL(src);
-						} catch (MalformedURLException e) {
-							// Not a URL, assume it's a file
-							srcFile = Tools.canonicalize(new File(src));
-							srcUrl = null;
+						String src = r.get("location");
+						URL srcUrl = null;
+						if (!StringUtils.isEmpty(src)) {
+							// Is src a URL?
+							try {
+								srcUrl = new URL(src);
+							} catch (MalformedURLException e) {
+								// Not a URL, assume it's a file
+								srcFile = Tools.canonicalize(new File(src));
+								srcUrl = null;
+							}
+						}
+
+						if (srcUrl != null) {
+							// It's a URL, so copy its contents into the BAOS...
+							try (InputStream in = srcUrl.openStream()) {
+								IOUtils.copy(in, baos);
+								contentReady = true;
+							} catch (IOException e) {
+								// Failed to read
+								this.log.warn(
+									String.format("Failed to load the data from the URL [%s]", srcUrl.toString()), e);
+							}
+						}
+
+						if (srcFile != null) {
+							if (srcFile.exists() && srcFile.isFile() && srcFile.canRead()) {
+								contentReady = true;
+							}
 						}
 					}
 
-					if (srcUrl != null) {
-						// It's a URL, so copy its contents into the BAOS...
-						InputStream in = null;
+					if (!contentReady) {
 						try {
-							in = srcUrl.openStream();
-							IOUtils.copy(in, baos);
+							NodeGenerator.copyPartial(data, baos, dataLength);
 							contentReady = true;
 						} catch (IOException e) {
-							// Failed to read
-							this.log.warn(String.format("Failed to load the data from the URL [%s]", srcUrl.toString()),
-								e);
-						} finally {
-							IOUtils.closeQuietly(in);
-							IOUtils.closeQuietly(baos);
+							throw new RuntimeException("Unexpected exception writing to memory", e);
 						}
 					}
 
+					// This is a document...generate a content stream
+					sysObject.setContentType(contentType);
 					if (srcFile != null) {
-						if (srcFile.exists() && srcFile.isFile() && srcFile.canRead()) {
-							contentReady = true;
-							IOUtils.closeQuietly(baos);
-							baos = null;
-						}
+						sysObject.setFile(srcFile.getAbsolutePath());
+					} else {
+						sysObject.setContent(baos);
 					}
-				}
-
-				if (!contentReady) {
-					try {
-						NodeGenerator.copyPartial(data, baos, dataLength);
-						contentReady = true;
-					} catch (IOException e) {
-						throw new RuntimeException("Unexpected exception writing to memory", e);
-					} finally {
-						IOUtils.closeQuietly(baos);
-					}
-				}
-
-				// This is a document...generate a content stream
-				sysObject.setContentType(contentType);
-				if (srcFile != null) {
-					sysObject.setFile(srcFile.getAbsolutePath());
-				} else {
-					sysObject.setContent(baos);
+				} catch (IOException e) {
+					throw new RuntimeException("Unexpected exception while closing memory resources", e);
 				}
 			}
 

@@ -3,7 +3,6 @@ package com.armedia.caliente.engine.alfresco.bi.importer.model.jaxb;
 import java.io.InputStream;
 import java.net.URL;
 
-import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -30,15 +29,10 @@ public class JaxbTest {
 		}
 
 		protected final void run() throws Exception {
-			InputStream in = null;
-
 			T obj = null;
-			try {
-				in = this.resource.openStream();
+			try (InputStream in = this.resource.openStream()) {
 				obj = XmlTools.unmarshal(this.c, this.schema, in);
 				Assert.assertNotNull(obj);
-			} finally {
-				IOUtils.closeQuietly(in);
 			}
 
 			validate(obj);

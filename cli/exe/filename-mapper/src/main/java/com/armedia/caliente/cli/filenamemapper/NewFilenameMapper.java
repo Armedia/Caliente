@@ -9,8 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrLookup;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
 
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FSEntry;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
@@ -89,12 +88,9 @@ public class NewFilenameMapper {
 
 	private static boolean checkDedupPattern(String pattern) {
 		final Set<String> found = new HashSet<>();
-		new StrSubstitutor(new StrLookup<String>() {
-			@Override
-			public String lookup(String key) {
-				found.add(key);
-				return key;
-			}
+		new StringSubstitutor((key) -> {
+			found.add(key);
+			return key;
 		}).replace(pattern);
 		return found.contains("id");
 	}
@@ -115,8 +111,10 @@ public class NewFilenameMapper {
 
 		public SimpleConflictResolver(FilenameFixer fixer, String resolverPattern) {
 			resolverPattern = Tools.coalesce(resolverPattern, NewFilenameMapper.DEFAULT_DEDUP_PATTERN);
-			if (!NewFilenameMapper.checkDedupPattern(resolverPattern)) { throw new IllegalArgumentException(
-				String.format("Illegal deduplication pattern - doesn't contain ${id}: [%s]", resolverPattern)); }
+			if (!NewFilenameMapper.checkDedupPattern(resolverPattern)) {
+				throw new IllegalArgumentException(
+					String.format("Illegal deduplication pattern - doesn't contain ${id}: [%s]", resolverPattern));
+			}
 			this.fixer = fixer;
 			this.resolverPattern = resolverPattern;
 			this.resolverMap.put("fixChar", Tools.coalesce(fixer.getFixChar(), FilenameFixer.DEFAULT_FIX_CHAR));
@@ -133,7 +131,7 @@ public class NewFilenameMapper {
 			this.resolverMap.put("id", entryId.getId());
 			this.resolverMap.put("name", currentName);
 			this.resolverMap.put("count", count);
-			String newName = StrSubstitutor.replace(this.resolverPattern, this.resolverMap);
+			String newName = StringSubstitutor.replace(this.resolverPattern, this.resolverMap);
 			if (this.fixer != null) {
 				// Make sure we use a clean name...
 				newName = this.fixer.fixName(newName);

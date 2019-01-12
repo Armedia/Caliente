@@ -10,8 +10,8 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,8 +143,9 @@ public class TestLoop {
 		private final Set<EventMode> modes;
 
 		private Event(EventMode... modes) {
-			if ((modes == null) || (modes.length == 0)) { throw new IllegalArgumentException(
-				String.format("Must specify the object modes for Event.%s", name())); }
+			if ((modes == null) || (modes.length == 0)) {
+				throw new IllegalArgumentException(String.format("Must specify the object modes for Event.%s", name()));
+			}
 			Set<EventMode> s = EnumSet.noneOf(EventMode.class);
 			for (EventMode m : modes) {
 				if (m == null) {
@@ -152,8 +153,10 @@ public class TestLoop {
 				}
 				s.add(m);
 			}
-			if (s.isEmpty()) { throw new IllegalArgumentException(
-				String.format("Must specify at least one non-null mode Event.%s", name())); }
+			if (s.isEmpty()) {
+				throw new IllegalArgumentException(
+					String.format("Must specify at least one non-null mode Event.%s", name()));
+			}
 			this.modes = Tools.freezeSet(s);
 		}
 
@@ -161,7 +164,7 @@ public class TestLoop {
 
 	private static final String CALIENTE_STR = "$caliente$";
 	private static final TimeZone TZ = TimeZone.getTimeZone("UTC");
-	private static final String DATE_PATTERN = DateFormatUtils.ISO_DATETIME_FORMAT.getPattern();
+	private static final String DATE_PATTERN = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_FORMAT.getPattern();
 
 	private static final String INSERT_STATUS_DQL = //
 		"    insert into dm_dbo.caliente_status " + //
@@ -234,7 +237,7 @@ public class TestLoop {
 			Map<String, String> parameters = new HashMap<>();
 			parameters.put("objectId", DfUtils.quoteString(id.getId()));
 			IDfCollection result = DfUtils.executeQuery(session,
-				StrSubstitutor.replace(TestLoop.GET_STATUS_DQL, parameters));
+				StringSubstitutor.replace(TestLoop.GET_STATUS_DQL, parameters));
 			try {
 				if (!result.next()) {
 					// No chronicle...can't delete the watch!
@@ -316,7 +319,7 @@ public class TestLoop {
 			parameters.put("mtime", DfUtils.quoteString(modifiedStr));
 			parameters.put("depth", String.valueOf(depth));
 			IDfCollection insertResult = DfUtils.executeQuery(session,
-				StrSubstitutor.replace(TestLoop.INSERT_STATUS_DQL, parameters));
+				StringSubstitutor.replace(TestLoop.INSERT_STATUS_DQL, parameters));
 			try {
 				if (insertResult.next()) {
 					int inserted = insertResult.getInt("rows_inserted");
@@ -333,7 +336,7 @@ public class TestLoop {
 			}
 
 			insertResult = DfUtils.executeQuery(session,
-				StrSubstitutor.replace(TestLoop.INSERT_VERSION_DQL, parameters));
+				StringSubstitutor.replace(TestLoop.INSERT_VERSION_DQL, parameters));
 			try {
 				if (insertResult.next()) {
 					int inserted = insertResult.getInt("rows_inserted");
@@ -409,7 +412,7 @@ public class TestLoop {
 	// @Test
 	public void test() throws Throwable {
 		final TimeZone utc = TimeZone.getTimeZone("UTC");
-		final String datePattern = DateFormatUtils.ISO_DATETIME_FORMAT.getPattern();
+		final String datePattern = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_FORMAT.getPattern();
 		final IDfSession session = TestLoop.POOL.acquireSession();
 
 		final IDfFolder ligeroTests = IDfFolder.class.cast(
@@ -552,7 +555,7 @@ public class TestLoop {
 								parameters.put("depth", String.valueOf(StringUtils.countMatches(path, "/")));
 								parameters.put("chronicleId", DfUtils.quoteString(so.getChronicleId().getId()));
 								IDfCollection updateResult = DfUtils.executeQuery(session,
-									StrSubstitutor.replace(TestLoop.UPDATE_STATUS_SQL, parameters));
+									StringSubstitutor.replace(TestLoop.UPDATE_STATUS_SQL, parameters));
 								try {
 									while (updateResult.next()) {
 										String dump = updateResult.getTypedObject().dump();

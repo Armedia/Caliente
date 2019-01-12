@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.commons.lang3.text.StrTokenizer;
+import org.apache.commons.text.StringTokenizer;
 
 import com.armedia.commons.utilities.FileNameTools;
 
@@ -54,7 +54,7 @@ public abstract class AclTools {
 	public static Set<String> decode(String encodedNames) {
 		Set<String> ret = new TreeSet<>();
 		if (encodedNames != null) {
-			for (String p : new StrTokenizer(encodedNames, AclTools.SEPARATOR).getTokenList()) {
+			for (String p : new StringTokenizer(encodedNames, AclTools.SEPARATOR).getTokenList()) {
 				ret.add(AclTools.UrlDecode(p));
 			}
 		}

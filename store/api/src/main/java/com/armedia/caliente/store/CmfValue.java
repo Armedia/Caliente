@@ -21,14 +21,10 @@ public final class CmfValue {
 
 	static {
 		List<FastDateFormat> dateFormats = new LinkedList<>();
-		dateFormats.add(DateFormatUtils.ISO_DATETIME_TIME_ZONE_FORMAT);
-		dateFormats.add(DateFormatUtils.ISO_DATETIME_FORMAT);
-		dateFormats.add(DateFormatUtils.ISO_DATE_TIME_ZONE_FORMAT);
-		dateFormats.add(DateFormatUtils.ISO_DATE_FORMAT);
-		dateFormats.add(DateFormatUtils.ISO_TIME_TIME_ZONE_FORMAT);
-		dateFormats.add(DateFormatUtils.ISO_TIME_FORMAT);
-		dateFormats.add(DateFormatUtils.ISO_TIME_NO_T_TIME_ZONE_FORMAT);
-		dateFormats.add(DateFormatUtils.ISO_TIME_NO_T_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_8601_EXTENDED_DATETIME_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_8601_EXTENDED_TIME_TIME_ZONE_FORMAT);
+		dateFormats.add(DateFormatUtils.ISO_8601_EXTENDED_TIME_FORMAT);
 		dateFormats.add(DateFormatUtils.SMTP_DATETIME_FORMAT);
 		DATE_FORMATS = Tools.freezeList(dateFormats);
 	}

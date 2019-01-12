@@ -20,10 +20,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.text.StrLookup;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -163,12 +161,9 @@ public class DataGen {
 			if (!StringUtils.equals(nameFormat, DataGen.DEFAULT_NAME_FORMAT)) {
 				// If a non-default name format is provided, we have to do QA on it
 				final Set<String> provided = new HashSet<>();
-				StrSubstitutor subs = new StrSubstitutor(new StrLookup<String>() {
-					@Override
-					public String lookup(String key) {
-						provided.add(key);
-						return "";
-					}
+				StringSubstitutor subs = new StringSubstitutor((k) -> {
+					provided.add(k);
+					return "";
 				});
 				subs.replace(nameFormat);
 				if (!provided.contains("id") && !provided.contains("uuid")) {
@@ -209,31 +204,33 @@ public class DataGen {
 				maxDocSize = max;
 			}
 
-			final BinaryMemoryBuffer BASE_BUFFER = new BinaryMemoryBuffer(DataGen.BUFFER_CHUNK_SIZE);
-			try {
-				final int chunkCount = (maxDocSize / BASE_BUFFER.getChunkSize());
-				byte[] buf = new byte[BASE_BUFFER.getChunkSize()];
+			final BinaryMemoryBuffer BASE_BUFFER;
+			try (BinaryMemoryBuffer buffer = new BinaryMemoryBuffer(DataGen.BUFFER_CHUNK_SIZE)) {
+				final int chunkCount = (maxDocSize / buffer.getChunkSize());
+				byte[] buf = new byte[buffer.getChunkSize()];
 				for (int i = 0; i < chunkCount; i++) {
 					DataGen.RANDOM.nextBytes(buf);
 					try {
-						BASE_BUFFER.write(buf);
+						buffer.write(buf);
 					} catch (IOException e) {
 						// Can't continue...
 						this.log.warn("Unexpected exception writing to memory", e);
 						return 1;
 					}
 				}
-				final int chunkRemainder = (maxDocSize % BASE_BUFFER.getChunkSize());
+
+				final int chunkRemainder = (maxDocSize % buffer.getChunkSize());
 				DataGen.RANDOM.nextBytes(buf);
 				try {
-					BASE_BUFFER.write(buf, 0, chunkRemainder);
+					buffer.write(buf, 0, chunkRemainder);
 				} catch (IOException e) {
 					// Can't continue...
 					this.log.warn("Unexpected exception writing to memory", e);
 					return 1;
 				}
-			} finally {
-				IOUtils.closeQuietly(BASE_BUFFER);
+
+				BASE_BUFFER = buffer;
+				BASE_BUFFER.close();
 			}
 
 			this.log.info("Random data buffer of {} bytes ready", BASE_BUFFER.getCurrentSize());

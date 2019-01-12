@@ -26,8 +26,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import org.apache.commons.dbutils.DbUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.text.StrLookup;
-import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.commons.text.StringSubstitutor;
 
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
@@ -125,12 +124,9 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		// Here we use a list instead of a set because the parameter's position on the list is
 		// relevant, and we can have one parameter referenced multiple times
 		final List<String> referencedParameters = new ArrayList<>();
-		final String finalSql = new StrSubstitutor(new StrLookup<Object>() {
-			@Override
-			public String lookup(String key) {
-				referencedParameters.add(key);
-				return "?";
-			}
+		final String finalSql = new StringSubstitutor((key) -> {
+			referencedParameters.add(key);
+			return "?";
 		}).replace(this.query.getSql());
 		// Also, compile it just to make absolutely sure that it's a valid SQL query with all
 		// the substitutions and whatnot. We can't store the PS b/c it's connection-specific,
@@ -151,9 +147,11 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 				missing.add(p);
 			}
 		}
-		if (!missing.isEmpty()) { throw new ExternalMetadataException(String.format(
-			"The given SQL query references the following parameters that have no expression associated: %s",
-			missing)); }
+		if (!missing.isEmpty()) {
+			throw new ExternalMetadataException(String.format(
+				"The given SQL query references the following parameters that have no expression associated: %s",
+				missing));
+		}
 
 		DatabaseMetaData md = c.getMetaData();
 		this.columnNamesCaseSensitive = md.supportsMixedCaseIdentifiers();
