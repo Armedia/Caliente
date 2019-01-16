@@ -11,6 +11,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.SessionFactoryException;
 import com.armedia.caliente.engine.ucm.UcmSessionSetting.SSLMode;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -70,8 +71,9 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 			UcmSessionFactory.MAX_PING_TIME);
 		this.host = settings.getString(UcmSessionSetting.HOST);
 		this.port = settings.getInteger(UcmSessionSetting.PORT);
-		if ((this.port <= 0) || (this.port > 0xffff)) { throw new Exception(
-			String.format("Port number must be a number between 1 and 65535 (got %d)", this.port)); }
+		if ((this.port <= 0) || (this.port > 0xffff)) {
+			throw new Exception(String.format("Port number must be a number between 1 and 65535 (got %d)", this.port));
+		}
 
 		Integer socketTimeout = settings.getInteger(UcmSessionSetting.SOCKET_TIMEOUT);
 		if (socketTimeout != null) {
@@ -119,8 +121,9 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 				clientKs = KeyStoreTools.loadKeyStore(this.clientStore, this.clientStorePassword);
 
 				String clientCertAlias = settings.getString(UcmSessionSetting.CLIENT_CERT_ALIAS);
-				if (StringUtils
-					.isEmpty(clientCertAlias)) { throw new Exception("The client certificate alias may not be empty"); }
+				if (StringUtils.isEmpty(clientCertAlias)) {
+					throw new Exception("The client certificate alias may not be empty");
+				}
 				String clientCertPassword = settings.getString(UcmSessionSetting.CLIENT_CERT_PASSWORD);
 				if (clientCertPassword != null) {
 					clientCertPassword = crypto.decrypt(clientCertPassword);
@@ -131,9 +134,11 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 				char[] passChars = (this.clientCertPassword != null ? this.clientCertPassword.toCharArray() : null);
 				try {
 					Key key = clientKs.getKey(this.clientCertAlias, passChars);
-					if (key == null) { throw new Exception(
-						String.format("No private key with alias [%s] was found in the keystore at [%s]",
-							this.clientCertAlias, this.clientStore)); }
+					if (key == null) {
+						throw new Exception(
+							String.format("No private key with alias [%s] was found in the keystore at [%s]",
+								this.clientCertAlias, this.clientStore));
+					}
 				} catch (NoSuchAlgorithmException e) {
 					throw new Exception(
 						String.format("The algorithm to decode the key [%s] in the keystore at [%s] could not be found",
@@ -224,8 +229,9 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 		if (this.minPingTime <= 0) { return true; }
 
 		// If we have a ping interval, compare it
-		if ((System.currentTimeMillis() - p.getLastUsedTime()) <= TimeUnit.SECONDS
-			.toMillis(this.minPingTime)) { return true; }
+		if ((System.currentTimeMillis() - p.getLastUsedTime()) <= TimeUnit.SECONDS.toMillis(this.minPingTime)) {
+			return true;
+		}
 
 		// It's time to ping the server, so do it!
 		try {
@@ -251,7 +257,7 @@ public class UcmSessionFactory extends SessionFactory<UcmSession> {
 	}
 
 	@Override
-	protected UcmSessionWrapper newWrapper(UcmSession session) throws Exception {
+	protected UcmSessionWrapper newWrapper(UcmSession session) throws SessionFactoryException {
 		return new UcmSessionWrapper(this, session);
 	}
 }

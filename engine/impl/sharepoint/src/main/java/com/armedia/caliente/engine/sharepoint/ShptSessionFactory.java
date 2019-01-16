@@ -11,6 +11,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -64,7 +65,7 @@ public class ShptSessionFactory extends SessionFactory<ShptSession> {
 	}
 
 	@Override
-	protected ShptSessionWrapper newWrapper(ShptSession session) throws Exception {
+	protected ShptSessionWrapper newWrapper(ShptSession session) throws SessionFactoryException {
 		return new ShptSessionWrapper(this, session);
 	}
 }

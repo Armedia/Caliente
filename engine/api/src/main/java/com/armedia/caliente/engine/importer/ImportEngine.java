@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.SessionFactoryException;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
@@ -413,7 +414,7 @@ public abstract class ImportEngine<//
 			SessionWrapper<SESSION> baseSession = null;
 			try {
 				baseSession = sessionFactory.acquireSession();
-			} catch (Exception e) {
+			} catch (SessionFactoryException e) {
 				throw new ImportException("Failed to obtain the import initialization session", e);
 			}
 
@@ -614,21 +615,17 @@ public abstract class ImportEngine<//
 			}
 			// Ensure the target path exists
 			{
-				final SessionWrapper<SESSION> rootSession;
-				try {
-					rootSession = sessionFactory.acquireSession();
-				} catch (Exception e) {
+				try (SessionWrapper<SESSION> rootSession = sessionFactory.acquireSession()) {
+					try {
+						rootSession.begin();
+						contextFactory.ensureTargetPath(rootSession.getWrapped());
+						rootSession.commit();
+					} catch (Exception e) {
+						rootSession.rollback();
+						throw new ImportException("Failed to ensure the target path", e);
+					}
+				} catch (SessionFactoryException e) {
 					throw new ImportException("Failed to obtain the root session to ensure the target path", e);
-				}
-				try {
-					rootSession.begin();
-					contextFactory.ensureTargetPath(rootSession.getWrapped());
-					rootSession.commit();
-				} catch (Exception e) {
-					rootSession.rollback();
-					throw new ImportException("Failed to ensure the target path", e);
-				} finally {
-					rootSession.close();
 				}
 			}
 
@@ -866,7 +863,9 @@ public abstract class ImportEngine<//
 				}
 			}
 			return listenerDelegator.getStoredObjectCounter();
-		} finally {
+		} finally
+
+		{
 			parallelExecutor.shutdownNow();
 			singleExecutor.shutdownNow();
 

@@ -19,6 +19,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.SessionFactoryException;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferEngine;
@@ -595,7 +596,7 @@ public abstract class ExportEngine<//
 			SessionWrapper<SESSION> baseSession = null;
 			try {
 				baseSession = sessionFactory.acquireSession();
-			} catch (Exception e) {
+			} catch (SessionFactoryException e) {
 				throw new ExportException("Failed to obtain the main export session", e);
 			}
 
@@ -689,7 +690,7 @@ public abstract class ExportEngine<//
 				final SessionWrapper<SESSION> s;
 				try {
 					s = sessionFactory.acquireSession();
-				} catch (Exception e) {
+				} catch (SessionFactoryException e) {
 					this.log.error("Failed to obtain a worker session", e);
 					return null;
 				}
@@ -907,7 +908,7 @@ public abstract class ExportEngine<//
 			SessionWrapper<SESSION> baseSession = null;
 			try {
 				baseSession = sessionFactory.acquireSession();
-			} catch (Exception e) {
+			} catch (SessionFactoryException e) {
 				throw new ExportException("Failed to obtain the main export session", e);
 			}
 

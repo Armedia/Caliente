@@ -7,6 +7,7 @@ package com.armedia.caliente.engine.dfc;
 import org.apache.commons.pool2.PooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 import com.armedia.commons.utilities.CfgTools;
@@ -60,7 +61,7 @@ public class DctmSessionFactory extends SessionFactory<IDfSession> {
 	}
 
 	@Override
-	protected DctmSessionWrapper newWrapper(IDfSession session) throws Exception {
+	protected DctmSessionWrapper newWrapper(IDfSession session) throws SessionFactoryException {
 		return new DctmSessionWrapper(this, session);
 	}
 }

@@ -80,7 +80,7 @@ public abstract class TransferEngine< //
 			this.listenerProxy = listenerClass
 				.cast(Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {
 					listenerClass
-			}, this));
+				}, this));
 		}
 
 		public final LISTENER getListenerProxy() {
@@ -372,8 +372,10 @@ public abstract class TransferEngine< //
 	}
 
 	public final void run(CmfObjectCounter<RESULT> counter) throws EXCEPTION, CmfStorageException {
-		if (!this.runLock.tryLock()) { throw newException(String.format(
-			"This %s instance is already running a job - can't run a second one", getClass().getSimpleName())); }
+		if (!this.runLock.tryLock()) {
+			throw newException(String.format("This %s instance is already running a job - can't run a second one",
+				getClass().getSimpleName()));
+		}
 		try {
 			if (counter == null) {
 				counter = new CmfObjectCounter<>(this.resultClass);
