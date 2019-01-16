@@ -116,7 +116,7 @@ public class DctmExportEngine extends
 			}
 		}
 
-		if (source.startsWith("#") || source.startsWith("@")) {
+		if (source.startsWith("#") || source.startsWith("/")) {
 			final char marker = source.charAt(0);
 			source = source.substring(1); // Remove the leading marker
 			final IDfPersistentObject object;
