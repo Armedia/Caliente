@@ -173,9 +173,31 @@ public enum DctmObjectType {
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
 	private static Map<CmfType, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
 
+	static {
+		Map<String, DctmObjectType> m = new HashMap<>();
+		for (DctmObjectType t : DctmObjectType.values()) {
+			m.put(t.dmType, t);
+		}
+		DctmObjectType.DM_TYPE_DECODER = Tools.freezeMap(m);
+	}
+
+	static {
+		Map<CmfType, DctmObjectType> m = new EnumMap<>(CmfType.class);
+		for (DctmObjectType t : DctmObjectType.values()) {
+			CmfType c = t.getStoredObjectType();
+			if (c != null) {
+				m.put(c, t);
+			}
+		}
+		DctmObjectType.OBJECT_TYPE_TRANSLATOR = Tools.freezeMap(m);
+	}
+
 	public static DctmObjectType decodeType(IDfPersistentObject object)
 		throws DfException, UnsupportedDctmObjectTypeException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to decode the type from"); }
+		IDfId id = object.getObjectId();
+		DctmObjectType type = DctmObjectType.decodeType(id);
+		if (type != null) { return type; }
 		return DctmObjectType.decodeType(object.getType());
 	}
 
@@ -211,15 +233,6 @@ public enum DctmObjectType {
 	}
 
 	private static DctmObjectType decodeType(String type) throws UnsupportedDctmObjectTypeException {
-		synchronized (DctmObjectType.class) {
-			if (DctmObjectType.DM_TYPE_DECODER == null) {
-				Map<String, DctmObjectType> m = new HashMap<>();
-				for (DctmObjectType t : DctmObjectType.values()) {
-					m.put(t.dmType, t);
-				}
-				DctmObjectType.DM_TYPE_DECODER = Tools.freezeMap(m);
-			}
-		}
 		if (type == null) { throw new IllegalArgumentException("Must provide a type to decode"); }
 		DctmObjectType ret = DctmObjectType.DM_TYPE_DECODER.get(type);
 		if (ret == null) { throw new UnsupportedDctmObjectTypeException(type); }
@@ -227,18 +240,6 @@ public enum DctmObjectType {
 	}
 
 	public static DctmObjectType decodeType(CmfType type) {
-		synchronized (DctmObjectType.class) {
-			if (DctmObjectType.OBJECT_TYPE_TRANSLATOR == null) {
-				Map<CmfType, DctmObjectType> m = new EnumMap<>(CmfType.class);
-				for (DctmObjectType t : DctmObjectType.values()) {
-					CmfType c = t.getStoredObjectType();
-					if (c != null) {
-						m.put(c, t);
-					}
-				}
-				DctmObjectType.OBJECT_TYPE_TRANSLATOR = Tools.freezeMap(m);
-			}
-		}
 		return DctmObjectType.OBJECT_TYPE_TRANSLATOR.get(type);
 	}
 
