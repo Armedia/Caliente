@@ -361,6 +361,9 @@ public class Launcher extends AbstractLauncher {
 			this.console.info("The Metadata Store does not support local storage");
 		}
 
+		// TODO: Did these objects require "external" content references? I.e. do their content
+		// streams reside in the local filesystem?
+
 		cfg = configureContentStore();
 		this.contentStore = CmfStores.createContentStore(cfg);
 		storeLocation = this.contentStore.getStoreLocation();

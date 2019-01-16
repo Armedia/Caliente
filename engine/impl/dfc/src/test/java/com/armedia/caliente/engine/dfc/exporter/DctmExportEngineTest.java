@@ -27,7 +27,7 @@ public class DctmExportEngineTest extends DctmEngineTest {
 		settings.put(DctmSetting.DOCBASE.getLabel(), "documentum");
 		settings.put(DctmSetting.USERNAME.getLabel(), "dmadmin2");
 		settings.put(DctmSetting.PASSWORD.getLabel(), "XZ6ZkrcrHEg=");
-		settings.put(Setting.DQL.getLabel(),
+		settings.put(Setting.SOURCE.getLabel(),
 			"select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)");
 
 		factory.newInstance(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore,

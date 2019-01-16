@@ -4,7 +4,7 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum Setting implements ConfigurationSetting {
 	//
-	DQL("dql"),
+	SOURCE("source"),
 	IMPORT_MAX_ERRORS("import.max.errors", 1),
 	DEFAULT_USER_PASSWORD("default.user.password"),
 	OWNER_ATTRIBUTES("owner.attributes", ""),

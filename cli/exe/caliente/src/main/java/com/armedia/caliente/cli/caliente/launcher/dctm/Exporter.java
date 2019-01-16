@@ -193,11 +193,11 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 			throw new CalienteException("Failed to initialize the connection pool or get the primary session", e);
 		}
 
-		String dql = Exporter.DEFAULT_PREDICATE;
+		String source = Exporter.DEFAULT_PREDICATE;
 		if (commandValues.isPresent(CLIParam.source)) {
-			dql = commandValues.getString(CLIParam.source);
+			source = commandValues.getString(CLIParam.source);
 		}
-		settings.put(Setting.DQL.getLabel(), String.format("select r_object_id from %s", dql));
+		settings.put(Setting.SOURCE.getLabel(), source);
 
 		if (commandValues.isPresent(Exporter.OWNER_ATTRIBUTES)) {
 			settings.put(Setting.OWNER_ATTRIBUTES.getLabel(),

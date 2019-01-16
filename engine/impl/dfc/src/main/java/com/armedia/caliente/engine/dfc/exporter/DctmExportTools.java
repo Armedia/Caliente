@@ -30,8 +30,10 @@ public class DctmExportTools {
 		throws DfException, UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
 		idAttribute = Tools.coalesce(idAttribute, DctmAttributes.R_OBJECT_ID);
-		if (!source.hasAttr(idAttribute)) { throw new IllegalArgumentException(
-			String.format("The ID attribute [%s] was not found in the given object", idAttribute)); }
+		if (!source.hasAttr(idAttribute)) {
+			throw new IllegalArgumentException(
+				String.format("The ID attribute [%s] was not found in the given object", idAttribute));
+		}
 		final IDfId id = source.getId(idAttribute);
 
 		// This is the best case scenario - we deduced the object's archetype from its ID,
@@ -68,8 +70,44 @@ public class DctmExportTools {
 		}
 
 		final String strId = id.getId();
-		if (objectType == null) { throw new UnsupportedDctmObjectTypeException(
-			String.format("from r_object_id %s", strId)); }
+		if (objectType == null) {
+			throw new UnsupportedDctmObjectTypeException(String.format("from r_object_id %s", strId));
+		}
+		return new ExportTarget(objectType, strId, strId);
+	}
+
+	public static ExportTarget getExportTarget(final IDfSession session, final IDfId id, String typeAttribute)
+		throws DfException, UnsupportedDctmObjectTypeException {
+		if (id == null) { throw new IllegalArgumentException("Must provide an object ID to create a target for"); }
+
+		// This is the best case scenario - we deduced the object's archetype from its ID,
+		// so we don't need to analyze anything else.
+		DctmObjectType dctmType = DctmObjectType.decodeType(id);
+		if (dctmType == null) {
+			// This is the worst case, slowest scenario where we have to actually analyze the object
+			// type in play directly, either by getting the object type attribute or by analyzing
+			// the object itself.
+			typeAttribute = Tools.coalesce(typeAttribute, DctmAttributes.R_OBJECT_TYPE);
+			String dql = "select t.name from dmi_object_type o, dm_type t where o.i_type = t.i_type and o.r_object_id = %s";
+			IDfCollection c = DfUtils.executeQuery(session, String.format(dql, DfUtils.quoteString(id.getId())),
+				IDfQuery.DF_EXECREAD_QUERY);
+			try {
+				if (c.next()) {
+					dctmType = DctmObjectType.decodeType(session, c.getString("name"));
+				}
+			} finally {
+				DfUtils.closeQuietly(c);
+			}
+		}
+		CmfType objectType = null;
+		if (dctmType != null) {
+			objectType = dctmType.getStoredObjectType();
+		}
+
+		final String strId = id.getId();
+		if (objectType == null) {
+			throw new UnsupportedDctmObjectTypeException(String.format("from r_object_id %s", strId));
+		}
 		return new ExportTarget(objectType, strId, strId);
 	}
 }
