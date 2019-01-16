@@ -2,7 +2,6 @@ package com.armedia.caliente.cli.token;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -212,28 +211,30 @@ public class TokenLoader implements Iterable<Token> {
 
 			// It's not a path, so it MUST be a URL...
 			// TODO: Eventually port UriTokenSource to support Commons-VFS URLs?
-			final URI sourceUri;
+			final URL resource;
 			try {
-				sourceUri = new URI(sourceName);
-				try {
-					URL resource = ResourceLoader.getResource(sourceUri);
-					if (resource != null) {
-						if (StringUtils.equals("file", resource.getProtocol())) {
-							// Local file... treat it as such...
-							sourceName = new File(resource.getPath()).getPath();
-							newSource = null;
-						} else {
-							// Not a local file, use the URI
-							newSource = new UriTokenSource(sourceUri);
-						}
-					}
-				} catch (ResourceLoaderException e) {
-					// Not a valid resource syntax... must be a path!
+				resource = ResourceLoader.getResourceOrFile(sourceName);
+			} catch (ResourceLoaderException e) {
+				throw new InvalidTokenSourceRecursionException(sourceName);
+			}
+			if (resource == null) {
+				new InvalidTokenSourceRecursionException(sourceName);
+			}
+
+			if (resource != null) {
+				// This is a URL, so let's work some magic...
+				if (StringUtils.equals("file", resource.getProtocol())) {
+					// Local file... treat it as such...
+					sourceName = new File(resource.getPath()).getPath();
 					newSource = null;
+				} else {
+					// Not a local file, use the URI
+					try {
+						newSource = new UriTokenSource(resource.toURI());
+					} catch (URISyntaxException e) {
+						throw new InvalidTokenSourceRecursionException(sourceName);
+					}
 				}
-			} catch (URISyntaxException e) {
-				// Not a URI... must be a path
-				newSource = null;
 			}
 
 			if (newSource == null) {
