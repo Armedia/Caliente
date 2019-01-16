@@ -1,11 +1,14 @@
 package com.armedia.caliente.tools;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -91,5 +94,46 @@ public class ResourceLoader {
 
 	public static InputStream getResourceAsStream(URI uri) throws ResourceLoaderException, IOException {
 		return ResourceLoader.getResource(uri).openStream();
+	}
+
+	public static URL getResourceOrFile(String uriOrPath) throws ResourceLoaderException {
+		final URI sourceUri;
+		try {
+			sourceUri = new URI(uriOrPath);
+			try {
+				URL resource = ResourceLoader.getResource(sourceUri);
+				if (resource != null) {
+					if (StringUtils.equals("file", resource.getProtocol())) {
+						// Local file... treat it as such...
+						return new File(resource.getPath()).toURI().toURL();
+					} else {
+						// Not a local file, use the URI
+						return resource;
+					}
+				}
+			} catch (MalformedURLException | ResourceLoaderException e) {
+				// Not a valid resource syntax... must be a path!
+			}
+		} catch (URISyntaxException e) {
+			// Not a URI... must be a path
+		}
+
+		// It's a local file... if the current source is another local file,
+		// and the given path isn't absolute, take its path to be relative to that one
+		try {
+			Path p = Paths.get(uriOrPath).toAbsolutePath().normalize();
+			File f = p.toFile();
+			if (!f.exists() || !f.isFile()) { return null; }
+			return f.toURI().toURL();
+		} catch (Exception e) {
+			// Not a URI nor a path!! KABOOM!
+			throw new ResourceLoaderException(
+				String.format("The string [%s] is neither a valid path nor a valid URI", uriOrPath), e);
+		}
+	}
+
+	public static InputStream getResourceOrFileAsStream(String uriOrPath) throws ResourceLoaderException, IOException {
+		return ResourceLoader.getResourceOrFile(uriOrPath).openStream();
+
 	}
 }
