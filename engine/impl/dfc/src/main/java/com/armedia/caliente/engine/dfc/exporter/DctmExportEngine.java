@@ -67,8 +67,7 @@ public class DctmExportEngine extends
 		source = StringUtils.stripStart(source, null);
 
 		if (source.startsWith("@")) {
-			// This is either a path or a URL to a file listing IDs to be retrieved, so treat it as
-			// such
+			// This is either a path or a URL to a file listing IDs to be retrieved
 			source = source.substring(1); // Remove the leading @
 
 			URL url = ResourceLoader.getResource(source);
@@ -117,11 +116,36 @@ public class DctmExportEngine extends
 			}
 		}
 
-		if (source.startsWith("/")) {
-			// This is a path, so find the object by path and export everything within it...
-			IDfPersistentObject object = session.getObjectByPath(source);
-			if (object == null) {
-				throw new Exception(String.format("Failed to find any objects at the path [%s]", source));
+		if (source.startsWith("#") || source.startsWith("@")) {
+			final IDfPersistentObject object;
+			final IDfId id;
+			source = source.substring(1); // Remove the leading marker
+
+			if (source.startsWith("#")) {
+				// This is an object ID, so work it...
+				source = StringUtils.strip(source);
+				id = new DfId(source);
+				if (!id.isObjectId()) {
+					throw new Exception(String.format("Bad ID given (%s), nothing will be exported", source));
+				}
+
+				if (id.isNull()) {
+					this.log.warn("Null ID given ({}), nothing will be exported", id);
+					return;
+				}
+
+				object = session.getObject(id);
+				if (object == null) {
+					throw new Exception(String.format("Failed to find any objects with the ID [%s]", source));
+				}
+			} else {
+				// This is a path, so find the object by path and export everything within it...
+				object = session.getObjectByPath(source);
+				if (object == null) {
+					throw new Exception(String.format("Failed to find any objects at the path [%s]", source));
+				}
+
+				id = object.getObjectId();
 			}
 
 			final DctmObjectType type;
@@ -137,8 +161,7 @@ public class DctmExportEngine extends
 
 			// Change the source into a DQL predicate, and let the rest of the code take it from
 			// there...
-			source = String.format("dm_sysobject where folder(ID(%s), DESCEND)",
-				DfUtils.quoteString(object.getObjectId().getId()));
+			source = String.format("dm_sysobject where folder(ID(%s), DESCEND)", DfUtils.quoteString(id.getId()));
 		}
 
 		// This must be a predicate, so turn it into a DQL query
