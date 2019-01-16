@@ -117,11 +117,12 @@ public class DctmExportEngine extends
 		}
 
 		if (source.startsWith("#") || source.startsWith("@")) {
+			final char marker = source.charAt(0);
+			source = source.substring(1); // Remove the leading marker
 			final IDfPersistentObject object;
 			final IDfId id;
-			source = source.substring(1); // Remove the leading marker
 
-			if (source.startsWith("#")) {
+			if (marker == '#') {
 				// This is an object ID, so work it...
 				source = StringUtils.strip(source);
 				id = new DfId(source);
