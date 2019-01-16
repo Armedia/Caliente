@@ -70,7 +70,7 @@ public class DctmExportEngine extends
 			// This is either a path or a URL to a file listing IDs to be retrieved
 			source = source.substring(1); // Remove the leading @
 
-			URL url = ResourceLoader.getResource(source);
+			URL url = ResourceLoader.getResourceOrFile(source);
 			if (url == null) {
 				throw new Exception(String.format("Failed to find the object ID list at [%s]", source));
 			}
