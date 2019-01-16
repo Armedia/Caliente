@@ -209,6 +209,16 @@ public abstract class TransferEngine< //
 
 	protected abstract SessionFactory<SESSION> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
 
+	protected final SessionFactory<SESSION> constructSessionFactory(CfgTools cfg, CmfCrypt crypto)
+		throws SessionFactoryException {
+		try {
+			return newSessionFactory(cfg, crypto);
+		} catch (Exception e) {
+			throw new SessionFactoryException(String.format(
+				"Failed to construct a new SessionFactory instance for engine %s", getClass().getSimpleName()), e);
+		}
+	}
+
 	protected abstract CONTEXT_FACTORY newContextFactory(SESSION session, CfgTools cfg,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception;

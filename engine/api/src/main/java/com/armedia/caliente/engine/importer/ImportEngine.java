@@ -398,21 +398,18 @@ public abstract class ImportEngine<//
 		// is not the same as the previous target repo - we can tell this by
 		// looking at the target mappings.
 		// this.log.info("Clearing all previous mappings");
-		// objectStore.clearAllMappings();Object
+		// objectStore.clearAllMappings();
 
 		final CfgTools configuration = this.settings;
 		final ImportState importState = new ImportState(this.output, this.baseData, this.objectStore, this.contentStore,
 			configuration);
-		final SessionFactory<SESSION> sessionFactory;
-		try {
-			sessionFactory = newSessionFactory(configuration, this.crypto);
-		} catch (Exception e) {
-			throw new ImportException("Failed to configure the session factory to carry out the import", e);
-		}
 
-		try {
+		try (final SessionFactory<SESSION> sessionFactory = constructSessionFactory(configuration, this.crypto)) {
 			SessionWrapper<SESSION> baseSession = null;
 			try {
+				// We do it like this instead of via try-with-resources because we may want
+				// to release this session early rather than late, and we can only do that
+				// if we manage the closing manually
 				baseSession = sessionFactory.acquireSession();
 			} catch (SessionFactoryException e) {
 				throw new ImportException("Failed to obtain the import initialization session", e);
@@ -492,8 +489,8 @@ public abstract class ImportEngine<//
 					transformer.close();
 				}
 			}
-		} finally {
-			sessionFactory.close();
+		} catch (SessionFactoryException e) {
+			throw new ImportException("Failed to configure the session factory to carry out the import", e);
 		}
 	}
 

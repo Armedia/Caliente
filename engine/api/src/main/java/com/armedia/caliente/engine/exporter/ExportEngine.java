@@ -565,98 +565,6 @@ public abstract class ExportEngine<//
 		}
 	}
 
-	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
-		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore,
-		CfgTools settings) throws ExportException, CmfStorageException {
-		return runExport(output, warningTracker, baseData, objectStore, contentStore, settings, null);
-	}
-
-	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
-		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore,
-		CfgTools configuration, CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
-		// We get this at the very top because if this fails, there's no point in continuing.
-
-		objectStore.clearAttributeMappings();
-		try {
-			loadPrincipalMappings(objectStore.getValueMapper(), configuration);
-		} catch (TransferException e) {
-			throw new ExportException(e.getMessage(), e.getCause());
-		}
-		final ExportState exportState = new ExportState(output, baseData.toPath(), objectStore, contentStore,
-			configuration);
-
-		final SessionFactory<SESSION> sessionFactory;
-		try {
-			sessionFactory = newSessionFactory(configuration, this.crypto);
-		} catch (Exception e) {
-			throw new ExportException("Failed to configure the session factory to carry out the export", e);
-		}
-
-		try {
-			SessionWrapper<SESSION> baseSession = null;
-			try {
-				baseSession = sessionFactory.acquireSession();
-			} catch (SessionFactoryException e) {
-				throw new ExportException("Failed to obtain the main export session", e);
-			}
-
-			TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory = null;
-			DELEGATE_FACTORY delegateFactory = null;
-			Transformer transformer = null;
-			ObjectFilter filter = null;
-			try {
-
-				validateEngine(baseSession.getWrapped());
-
-				try {
-					transformer = getTransformer(configuration, null);
-				} catch (Exception e) {
-					throw new ExportException("Failed to initialize the configured object transformations", e);
-				}
-
-				try {
-					filter = getFilter(configuration);
-				} catch (Exception e) {
-					throw new ExportException("Failed to initialize the configured object filters", e);
-				}
-
-				try {
-					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
-						contentStore, transformer, output, warningTracker);
-				} catch (Exception e) {
-					throw new ExportException("Failed to configure the context factory to carry out the export", e);
-				}
-
-				try {
-					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
-				} catch (Exception e) {
-					throw new ExportException("Failed to configure the delegate factory to carry out the export", e);
-				}
-
-				return runExportImpl(exportState, counter, sessionFactory, baseSession, contextFactory, delegateFactory,
-					transformer, filter);
-			} finally {
-				if (delegateFactory != null) {
-					delegateFactory.close();
-				}
-				if (contextFactory != null) {
-					contextFactory.close();
-				}
-				if (filter != null) {
-					filter.close();
-				}
-				if (transformer != null) {
-					transformer.close();
-				}
-				if (baseSession != null) {
-					baseSession.close();
-				}
-			}
-		} finally {
-			sessionFactory.close();
-		}
-	}
-
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
 		CmfObjectCounter<ExportResult> objectCounter, final SessionFactory<SESSION> sessionFactory,
 		final SessionWrapper<SESSION> baseSession,
@@ -897,29 +805,13 @@ public abstract class ExportEngine<//
 		final ExportState exportState = new ExportState(getOutput(), getBaseData(), getObjectStore(), getContentStore(),
 			configuration);
 
-		final SessionFactory<SESSION> sessionFactory;
-		try {
-			sessionFactory = newSessionFactory(configuration, this.crypto);
-		} catch (Exception e) {
-			throw new ExportException("Failed to configure the session factory to carry out the export", e);
-		}
-
-		try {
-			SessionWrapper<SESSION> baseSession = null;
-			try {
-				baseSession = sessionFactory.acquireSession();
-			} catch (SessionFactoryException e) {
-				throw new ExportException("Failed to obtain the main export session", e);
-			}
-
+		try (final SessionFactory<SESSION> sessionFactory = constructSessionFactory(configuration, this.crypto)) {
 			TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory = null;
 			DELEGATE_FACTORY delegateFactory = null;
 			Transformer transformer = null;
 			ObjectFilter filter = null;
-			try {
-
+			try (final SessionWrapper<SESSION> baseSession = sessionFactory.acquireSession()) {
 				validateEngine(baseSession.getWrapped());
-
 				try {
 					transformer = getTransformer(configuration, null);
 				} catch (Exception e) {
@@ -947,6 +839,8 @@ public abstract class ExportEngine<//
 
 				runExportImpl(exportState, counter, sessionFactory, baseSession, contextFactory, delegateFactory,
 					transformer, filter);
+			} catch (SessionFactoryException e) {
+				throw new ExportException("Failed to obtain the main export session", e);
 			} finally {
 				if (delegateFactory != null) {
 					delegateFactory.close();
@@ -960,12 +854,9 @@ public abstract class ExportEngine<//
 				if (transformer != null) {
 					transformer.close();
 				}
-				if (baseSession != null) {
-					baseSession.close();
-				}
 			}
-		} finally {
-			sessionFactory.close();
+		} catch (SessionFactoryException e) {
+			throw new ExportException("Failed to configure the session factory to carry out the export", e);
 		}
 	}
 }
