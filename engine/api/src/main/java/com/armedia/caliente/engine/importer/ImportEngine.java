@@ -1,9 +1,15 @@
 package com.armedia.caliente.engine.importer;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.Reader;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -20,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +58,10 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.Closer;
+import com.armedia.caliente.tools.ResourceLoader;
+import com.armedia.caliente.tools.ResourceLoaderException;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
 
@@ -367,6 +377,8 @@ public abstract class ImportEngine<//
 		}
 	}
 
+	private static final Pattern OBJECT_RESTRICTION_PARSER = Pattern.compile("^([^-]+)-(.*)$");
+
 	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
@@ -384,11 +396,98 @@ public abstract class ImportEngine<//
 		if (schemaService == null) { return null; }
 
 		String mapperDefault = String.format("%s%s", this.cfgNamePrefix, AttributeMapper.getDefaultLocation());
-		String mapper = cfg.getString(ImportSetting.ATTRIBUTE_MAPPING.getLabel());
-		String residualsPrefix = cfg.getString(ImportSetting.RESIDUALS_PREFIX.getLabel());
+		String mapper = cfg.getString(ImportSetting.ATTRIBUTE_MAPPING);
+		String residualsPrefix = cfg.getString(ImportSetting.RESIDUALS_PREFIX);
 
 		return AttributeMapper.getAttributeMapper(schemaService, Tools.coalesce(mapper, mapperDefault), residualsPrefix,
 			false);
+	}
+
+	private CmfObjectRef parseRef(final String str, final int index) throws Exception {
+		String err = null;
+		if (!StringUtils.isBlank(str)) {
+			// Parse it out...
+			Matcher m = ImportEngine.OBJECT_RESTRICTION_PARSER.matcher(str);
+			if (m.matches()) {
+				final String id = StringUtils.strip(m.group(2));
+				if (!StringUtils.isEmpty(id)) {
+					final String typeStr = m.group(1);
+					try {
+						CmfType type = CmfType.decode(typeStr);
+						return new CmfObjectRef(type, StringUtils.strip(id));
+					} catch (IllegalArgumentException e) {
+						// Bad type! Ignore...
+						err = String.format("Unknown object type or abbreviation [%s]", typeStr);
+					}
+				} else {
+					err = "No object ID";
+				}
+			} else {
+				err = String.format("Doesn't match the required format (RE = /%s/)",
+					ImportEngine.OBJECT_RESTRICTION_PARSER.pattern());
+			}
+		} else {
+			err = "Empty string";
+		}
+		if (err != null) {
+			throw new Exception(String.format("Bad restrictor spec [%s] at position %d - %s", str, index, err));
+		}
+		return null;
+	}
+
+	private CloseableIterator<CmfObjectRef> getObjectRestrictionIterator(CfgTools cfg) throws ImportException {
+		String source = cfg.getString(ImportSetting.RESTRICT_TO);
+		if (StringUtils.isEmpty(source)) { return null; }
+		final String strippedSource = StringUtils.strip(source);
+
+		if (strippedSource.startsWith("#")) {
+			// If the source starts with a #, then it's a comma-separated list of IDs in the form
+			// TYPE-ID
+			final String data = StringUtils.strip(source);
+			return new CloseableIterator<CmfObjectRef>() {
+
+				private int pos = 0;
+				final Iterator<String> it = Tools.splitCSVEscaped(data).iterator();
+
+				@Override
+				protected Result findNext() throws Exception {
+					if (!this.it.hasNext()) { return null; }
+					return found(parseRef(this.it.next(), this.pos++));
+				}
+
+				@Override
+				protected void doClose() {
+				}
+			};
+		}
+
+		// Otherwise the source points to a resource to be loaded via ResourceLoader.
+		try {
+			final InputStream in = ResourceLoader.getResourceOrFileAsStream(source);
+			if (in == null) {
+				throw new ImportException(String.format("Failed to find the restrictions list at [%s]", source));
+			}
+
+			final Reader r = new InputStreamReader(in);
+			return new CloseableIterator<CmfObjectRef>() {
+				final LineNumberReader lr = new LineNumberReader(r);
+
+				@Override
+				protected Result findNext() throws Exception {
+					String nextLine = this.lr.readLine();
+					if (nextLine == null) { return null; }
+					return found(parseRef(nextLine, this.lr.getLineNumber()));
+				}
+
+				@Override
+				protected void doClose() throws Exception {
+					in.close();
+				}
+
+			};
+		} catch (ResourceLoaderException | IOException e) {
+			throw new ImportException(String.format("Failed to load the restrictions list from [%s]", source), e);
+		}
 	}
 
 	@Override
@@ -634,6 +733,18 @@ public abstract class ImportEngine<//
 			output.info("Clearing the import plan");
 			objectStore.clearImportPlan();
 			output.info("Cleared the import plan");
+
+			output.info("Loading the object restriction list");
+			try (CloseableIterator<CmfObjectRef> objectRestrictions = getObjectRestrictionIterator(importState.cfg)) {
+				if (objectRestrictions != null) {
+					output.info("Loaded the object restriction list");
+					output.info("Applying the object restriction list");
+					objectStore.setBulkObjectLoaderFilter(objectRestrictions);
+					output.info("Applied the object restriction list");
+				} else {
+					output.info("No object restriction list loaded, will import all available objects");
+				}
+			}
 
 			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();
