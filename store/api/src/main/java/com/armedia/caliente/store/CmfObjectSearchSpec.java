@@ -7,11 +7,6 @@ public class CmfObjectSearchSpec extends CmfObjectRef {
 
 	private final String searchKey;
 
-	protected CmfObjectSearchSpec() {
-		super();
-		this.searchKey = null;
-	}
-
 	public CmfObjectSearchSpec(CmfType type, String id) {
 		this(type, id, id);
 	}
