@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1214,8 +1216,26 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract Map<CmfType, Long> setBulkObjectLoaderFilter(OPERATION operation, Iterator<CmfObjectRef> objects)
+	protected abstract boolean addBulkObjectLoaderFilterEntry(OPERATION operation, CmfObjectRef ref)
 		throws CmfStorageException;
+
+	private void addBulkObjectLoaderFilter(final OPERATION operation, final CmfObjectRef root,
+		final Map<CmfType, AtomicLong> counters) throws CmfStorageException {
+		// If this object has already been added, or can't be added, we simply return
+		if (!addBulkObjectLoaderFilterEntry(operation, root)) { return; }
+
+		// Something to add!! First, get/add the counter
+		AtomicLong counter = counters.get(root.getType());
+		if (counter == null) {
+			counter = new AtomicLong(0);
+			counters.put(root.getType(), counter);
+		}
+		counter.incrementAndGet();
+
+		for (CmfRequirementInfo<?> info : getRequirementInfo(operation, null, root)) {
+			addBulkObjectLoaderFilter(operation, info, counters);
+		}
+	}
 
 	public final Map<CmfType, Long> setBulkObjectLoaderFilter(Iterator<CmfObjectRef> objects)
 		throws CmfStorageException {
@@ -1225,13 +1245,25 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		try {
 			final boolean tx = operation.begin();
 			// Remove the prior filter data...
-			clearBulkObjectLoaderFilter(operation);
 			try {
-				Map<CmfType, Long> ret = setBulkObjectLoaderFilter(operation, objects);
+				clearBulkObjectLoaderFilter(operation);
+
+				Map<CmfType, AtomicLong> counters = new EnumMap<>(CmfType.class);
+				while (objects.hasNext()) {
+					CmfObjectRef ref = objects.next();
+					if (ref == null) {
+						continue;
+					}
+					addBulkObjectLoaderFilter(operation, ref, counters);
+				}
 				if (tx) {
 					operation.commit();
 				}
 				this.objectFilterActive.set(true);
+				Map<CmfType, Long> ret = new EnumMap<>(CmfType.class);
+				counters.forEach((k, v) -> {
+					ret.put(k, v.get());
+				});
 				return ret;
 			} finally {
 				if (tx) {

@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,7 +27,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 
 import javax.sql.DataSource;
@@ -2056,47 +2054,27 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<CmfType, Long> setBulkObjectLoaderFilter(JdbcOperation operation, Iterator<CmfObjectRef> objects)
+	protected boolean addBulkObjectLoaderFilterEntry(JdbcOperation operation, CmfObjectRef entry)
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final QueryRunner qr = JdbcTools.getQueryRunner();
-		long count = 0;
-		Map<CmfType, AtomicLong> map = new EnumMap<>(CmfType.class);
-		while (objects.hasNext()) {
-			CmfObjectRef next = objects.next();
-			if (next == null) {
-				continue;
+		Savepoint savePoint = null;
+		try {
+			savePoint = c.setSavepoint();
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_LOADER_FILTER), JdbcTools.HANDLER_NULL,
+				JdbcTools.composeDatabaseId(entry));
+			savePoint = JdbcTools.commitSavepoint(c, savePoint);
+			return true;
+		} catch (SQLException e) {
+			if (this.dialect.isDuplicateKeyException(e) || this.dialect.isForeignKeyMissingException(e)) {
+				// We're good! With the use of savepoints, the transaction will remain valid and
+				// thus we'll be OK to continue using the transaction in other connections
+				JdbcTools.rollbackSavepoint(c, savePoint);
+				return false;
 			}
-			Savepoint savePoint = null;
-			try {
-				savePoint = c.setSavepoint();
-				qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_LOADER_FILTER), JdbcTools.HANDLER_NULL,
-					JdbcTools.composeDatabaseId(next));
-				savePoint = JdbcTools.commitSavepoint(c, savePoint);
-				AtomicLong counter = map.get(next.getType());
-				if (counter == null) {
-					counter = new AtomicLong(0);
-					map.put(next.getType(), counter);
-				}
-				counter.incrementAndGet();
-				count++;
-			} catch (SQLException e) {
-				if (this.dialect.isDuplicateKeyException(e) || this.dialect.isForeignKeyMissingException(e)) {
-					// We're good! With the use of savepoints, the transaction will remain valid and
-					// thus we'll be OK to continue using the transaction in other connections
-					JdbcTools.rollbackSavepoint(c, savePoint);
-					count++;
-					continue;
-				}
-				throw new CmfStorageException(String.format(
-					"Failed to persist the bulk loader filters (%d entries were processed correctly)", count), e);
-			}
+			throw new CmfStorageException(String.format("Failed to persist the bulk loader filter entry for {%s-%s}",
+				entry.getType().name(), entry.getId()), e);
 		}
-		Map<CmfType, Long> ret = new EnumMap<>(CmfType.class);
-		map.forEach((k, v) -> {
-			ret.put(k, v.get());
-		});
-		return ret;
 	}
 
 	@Override
