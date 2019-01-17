@@ -511,7 +511,7 @@ public abstract class JdbcDialect {
 		//
 
 		INSERT_LOADER_FILTER( //
-			"       insert into cmf_object_filter (object_id) key (object_id) values ( ? ) " //
+			"       insert into cmf_object_filter (object_id) values ( ? ) " //
 		),
 		//
 
