@@ -1190,7 +1190,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	protected abstract void clearBulkObjectLoaderFilter(OPERATION operation) throws CmfStorageException;
 
 	public final void clearBulkObjectLoaderFilter() throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginExclusiveInvocation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1198,6 +1198,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				if (tx) {
 					operation.commit();
 				}
+				this.objectFilterActive.set(false);
 			} finally {
 				if (tx) {
 					try {
