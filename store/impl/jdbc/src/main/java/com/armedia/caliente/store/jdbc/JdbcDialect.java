@@ -324,6 +324,15 @@ public abstract class JdbcDialect {
 				" order by o.tier_id, o.history_id, o.object_number" //
 		),
 
+		LOAD_FILTERED_OBJECTS( //
+			"       select o.*, n.new_name " + //
+				"     from cmf_object o left outer join cmf_alt_name n on (o.object_id = n.object_id), " + //
+				"          cmf_object_filter f " + //
+				"    where o.object_id = f.object_id " + //
+				"      and o.object_type = ? " + //
+				" order by o.tier_id, o.history_id, o.object_number" //
+		),
+
 		LOAD_OBJECTS_BY_ID_CURRENT( //
 			null),
 
@@ -501,8 +510,24 @@ public abstract class JdbcDialect {
 		),
 		//
 
+		INSERT_LOADER_FILTER( //
+			"       insert into cmf_object_filter (object_id) key (object_id) values ( ? ) " //
+		),
+		//
+
+		LOAD_FILTER( //
+			"       select object_id from cmf_object_filter order by object_id " //
+		),
+		//
+
+		CLEAR_LOADER_FILTER( //
+			"       delete from cmf_object_filter " //
+		),
+		//
+
 		SHUTDOWN_DB( //
-			null),
+			null //
+		),
 		//
 
 		;
@@ -542,6 +567,10 @@ public abstract class JdbcDialect {
 
 	protected boolean isDuplicateKeyException(SQLException e) {
 		return StringUtils.equalsIgnoreCase(e.getSQLState(), "23505");
+	}
+
+	protected boolean isForeignKeyMissingException(SQLException e) {
+		return StringUtils.equalsIgnoreCase(e.getSQLState(), "23503");
 	}
 
 	final String translateQuery(Query query) {

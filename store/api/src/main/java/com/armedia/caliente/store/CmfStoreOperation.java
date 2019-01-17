@@ -8,13 +8,16 @@ public abstract class CmfStoreOperation<CONNECTION> {
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private final CONNECTION connection;
+	private final boolean exclusive;
 	private boolean valid = true;
 	private boolean transactionOpen = false;
 
-	protected CmfStoreOperation(CONNECTION wrapped) {
-		if (wrapped == null) { throw new IllegalArgumentException(
-			"Must provide the connection that this operation is related to"); }
+	protected CmfStoreOperation(CONNECTION wrapped, boolean exclusive) {
+		if (wrapped == null) {
+			throw new IllegalArgumentException("Must provide the connection that this operation is related to");
+		}
 		this.connection = wrapped;
+		this.exclusive = exclusive;
 	}
 
 	protected final void assertValid() {
@@ -22,6 +25,10 @@ public abstract class CmfStoreOperation<CONNECTION> {
 	}
 
 	protected abstract boolean supportsTransactions();
+
+	protected final boolean isExclusive() {
+		return this.exclusive;
+	}
 
 	public final CONNECTION getConnection() {
 		assertValid();
@@ -44,8 +51,9 @@ public abstract class CmfStoreOperation<CONNECTION> {
 	public final void commit() throws CmfOperationException {
 		assertValid();
 		if (!this.transactionOpen) { return; }
-		if (!supportsTransactions()) { throw new UnsupportedOperationException(
-			"This type of session doesn't support transactions"); }
+		if (!supportsTransactions()) {
+			throw new UnsupportedOperationException("This type of session doesn't support transactions");
+		}
 		try {
 			commitTransaction();
 		} finally {
@@ -58,8 +66,9 @@ public abstract class CmfStoreOperation<CONNECTION> {
 	public final void rollback() throws CmfOperationException {
 		assertValid();
 		if (!this.transactionOpen) { return; }
-		if (!supportsTransactions()) { throw new UnsupportedOperationException(
-			"This type of session doesn't support transactions"); }
+		if (!supportsTransactions()) {
+			throw new UnsupportedOperationException("This type of session doesn't support transactions");
+		}
 		try {
 			rollbackTransaction();
 		} finally {

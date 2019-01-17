@@ -178,7 +178,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 					}
 				}
 			} finally {
-				endConcurrentInvocation(this.operation);
+				endInvocation(this.operation);
 			}
 		}
 	}
@@ -225,7 +225,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 
 			this.propertyManager = new JdbcStorePropertyManager(JdbcContentStore.PROPERTY_TABLE);
 
-			JdbcOperation op = new JdbcOperation(c, this.managedTransactions);
+			JdbcOperation op = new JdbcOperation(c, this.managedTransactions, true);
 			boolean ok = false;
 			op.begin();
 			try {
@@ -268,9 +268,9 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	}
 
 	@Override
-	protected JdbcOperation newOperation() throws CmfStorageException {
+	protected JdbcOperation newOperation(boolean exclusive) throws CmfStorageException {
 		try {
-			return new JdbcOperation(this.dataSource.getConnection(), this.managedTransactions);
+			return new JdbcOperation(this.dataSource.getConnection(), this.managedTransactions, exclusive);
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to obtain a new connection from the datasource", e);
 		}

@@ -10,9 +10,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,8 +77,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		protected Mapping createMapping(CmfType type, String name, String source, String target) {
 			if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
 			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
-			if ((source == null) && (target == null)) { throw new IllegalArgumentException(
-				"Must provide either a source or a target value for the mapping"); }
+			if ((source == null) && (target == null)) {
+				throw new IllegalArgumentException("Must provide either a source or a target value for the mapping");
+			}
 
 			this.log.debug("Creating a {} mapping for attribute [{}] from [{}] to [{}]{}", type, name, source, target,
 				(this.operation != null ? " within a transaction" : ""));
@@ -168,6 +171,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	private final Mapper mapper = new Mapper();
 	private final Class<OPERATION> operationClass;
 	private boolean open = false;
+	private final AtomicBoolean objectFilterActive = new AtomicBoolean(false);
 
 	protected CmfObjectStore(Class<OPERATION> operationClass) throws CmfStorageException {
 		this(operationClass, false);
@@ -179,6 +183,10 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		this.open = openState;
 	}
 
+	public final boolean isObjectFilterActive() {
+		return this.objectFilterActive.get();
+	}
+
 	public final boolean init(Map<String, String> settings) throws CmfStorageException {
 		getWriteLock().lock();
 		try {
@@ -186,6 +194,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 			if (this.open) { return false; }
 			doInit(settings);
 			this.open = true;
+			this.objectFilterActive.set(false);
 			return this.open;
 		} finally {
 			getWriteLock().unlock();
@@ -226,7 +235,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -262,7 +271,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -294,7 +303,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -319,7 +328,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -344,7 +353,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -411,7 +420,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -464,7 +473,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -493,7 +502,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -501,27 +510,22 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		Collection<String> ids) throws CmfStorageException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
-		getReadLock().lock();
-		try {
-			if (ids == null) {
-				ids = Collections.emptyList();
-			}
-			Set<String> actualIds = null;
-			final List<CmfObject<CmfValue>> ret = new ArrayList<>(ids.size());
-			if (ids.isEmpty()) { return ret; }
-			actualIds = new HashSet<>();
-			for (String s : ids) {
-				if (s == null) {
-					continue;
-				}
-				actualIds.add(s);
-			}
-			final CmfObjectHandler<CmfValue> h = new CollectionObjectHandler<>(ret);
-			loadObjects(operation, type, actualIds, h);
-			return ret;
-		} finally {
-			getReadLock().unlock();
+		if (ids == null) {
+			ids = Collections.emptyList();
 		}
+		Set<String> actualIds = null;
+		final List<CmfObject<CmfValue>> ret = new ArrayList<>(ids.size());
+		if (ids.isEmpty()) { return ret; }
+		actualIds = new HashSet<>();
+		for (String s : ids) {
+			if (s == null) {
+				continue;
+			}
+			actualIds.add(s);
+		}
+		final CmfObjectHandler<CmfValue> h = new CollectionObjectHandler<>(ret);
+		loadObjects(operation, type, actualIds, h);
+		return ret;
 	}
 
 	public final int loadObjects(final CmfType type, CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
@@ -531,8 +535,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	public final int loadObjects(final CmfType type, Collection<String> ids, final CmfObjectHandler<CmfValue> handler)
 		throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
-		if (handler == null) { throw new IllegalArgumentException(
-			"Must provide an object handler to handle the deserialized objects"); }
+		if (handler == null) {
+			throw new IllegalArgumentException("Must provide an object handler to handle the deserialized objects");
+		}
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -549,7 +554,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -567,11 +572,13 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 
 	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfType type, Set<String> ids)
 		throws CmfStorageException {
-		if (nameFixer == null) { throw new IllegalArgumentException(
-			"Must provide name fixer to fix the object names"); }
+		if (nameFixer == null) {
+			throw new IllegalArgumentException("Must provide name fixer to fix the object names");
+		}
 		if (ids != null) {
-			if (type == null) { throw new CmfStorageException(
-				"Submitted a set of IDs without an object type - this is not supported"); }
+			if (type == null) {
+				throw new CmfStorageException("Submitted a set of IDs without an object type - this is not supported");
+			}
 			// Short-circuit - avoid doing anything if there's nothing to do
 			if (ids.isEmpty()) { return 0; }
 		}
@@ -597,7 +604,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -621,7 +628,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -631,8 +638,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	private Mapping createMapping(CmfType type, String name, String source, String target) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
-		if ((source == null) && (target == null)) { throw new IllegalArgumentException(
-			"Must provide either a source or a target value for the mapping"); }
+		if ((source == null) && (target == null)) {
+			throw new IllegalArgumentException("Must provide either a source or a target value for the mapping");
+		}
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -659,7 +667,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -686,7 +694,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -695,8 +703,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
-		if (source == null) { throw new IllegalArgumentException(
-			"Must provide a source value to find the target mapping for"); }
+		if (source == null) {
+			throw new IllegalArgumentException("Must provide a source value to find the target mapping for");
+		}
 		String target = getMapping(operation, true, type, name, source);
 		if (target == null) { return null; }
 		return this.mapper.constructMapping(type, name, source, target);
@@ -719,7 +728,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -728,8 +737,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
-		if (target == null) { throw new IllegalArgumentException(
-			"Must provide a target value to find the source mapping for"); }
+		if (target == null) {
+			throw new IllegalArgumentException("Must provide a target value to find the source mapping for");
+		}
 		String source = getMapping(operation, false, type, name, target);
 		if (source == null) { return null; }
 		return this.mapper.constructMapping(type, name, source, target);
@@ -747,7 +757,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -784,7 +794,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endExclusiveInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -821,7 +831,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endExclusiveInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -852,7 +862,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endExclusiveInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -876,7 +886,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -901,7 +911,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -927,7 +937,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -955,7 +965,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endExclusiveInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -977,7 +987,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -1002,7 +1012,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -1027,7 +1037,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -1052,7 +1062,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -1062,8 +1072,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	public final boolean addRequirement(CmfObjectRef object, CmfObjectRef requirement) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
 		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
-		if (requirement == null) { throw new IllegalArgumentException(
-			"Must provide a requirement to associate to the base object"); }
+		if (requirement == null) {
+			throw new IllegalArgumentException("Must provide a requirement to associate to the base object");
+		}
 		if (requirement.isNull()) { throw new IllegalArgumentException("Null requirement references are not allowed"); }
 		OPERATION operation = beginConcurrentInvocation();
 		try {
@@ -1084,7 +1095,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -1118,7 +1129,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -1144,7 +1155,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -1165,14 +1176,104 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for clearing the requirement status", e);
+						this.log.warn("Failed to rollback the transaction for clearing the import status", e);
 					}
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
 	protected abstract void clearImportPlan(OPERATION operation) throws CmfStorageException;
+
+	protected abstract void clearBulkObjectLoaderFilter(OPERATION operation) throws CmfStorageException;
+
+	public final void clearBulkObjectLoaderFilter() throws CmfStorageException {
+		OPERATION operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				clearBulkObjectLoaderFilter(operation);
+				if (tx) {
+					operation.commit();
+				}
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for clearing the bulk object loader filter",
+							e);
+					}
+				}
+			}
+		} finally {
+			endInvocation(operation);
+		}
+	}
+
+	protected abstract Map<CmfType, Long> setBulkObjectLoaderFilter(OPERATION operation, Iterator<CmfObjectRef> objects)
+		throws CmfStorageException;
+
+	public final Map<CmfType, Long> setBulkObjectLoaderFilter(Iterator<CmfObjectRef> objects)
+		throws CmfStorageException {
+		// Shortcut - avoid starting a transaction over nothing
+		if (objects == null) { throw new IllegalArgumentException("Must provide a non-null Iterator instance"); }
+		OPERATION operation = beginExclusiveInvocation();
+		try {
+			final boolean tx = operation.begin();
+			// Remove the prior filter data...
+			clearBulkObjectLoaderFilter(operation);
+			try {
+				Map<CmfType, Long> ret = setBulkObjectLoaderFilter(operation, objects);
+				if (tx) {
+					operation.commit();
+				}
+				this.objectFilterActive.set(true);
+				return ret;
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn("Failed to rollback the transaction for setting the bulk object loader filter",
+							e);
+					}
+				}
+			}
+		} finally {
+			endInvocation(operation);
+		}
+	}
+
+	public final Map<CmfType, Long> setBulkObjectLoaderFilter(Iterable<CmfObjectRef> objects)
+		throws CmfStorageException {
+		if (objects == null) { throw new IllegalArgumentException("Must provide a non-null Iterable instance"); }
+		return setBulkObjectLoaderFilter(objects.iterator());
+	}
+
+	public final Map<CmfType, Set<CmfObjectRef>> getObjectFilter() throws CmfStorageException {
+		if (!isObjectFilterActive()) { return null; }
+		OPERATION operation = beginConcurrentInvocation();
+		try {
+			final boolean tx = operation.begin();
+			try {
+				return getObjectFilter(operation);
+			} finally {
+				if (tx) {
+					try {
+						operation.rollback();
+					} catch (CmfStorageException e) {
+						this.log.warn(
+							"Failed to rollback the transaction for loading the bulk object loader filter data", e);
+					}
+				}
+			}
+		} finally {
+			endInvocation(operation);
+		}
+	}
+
+	protected abstract Map<CmfType, Set<CmfObjectRef>> getObjectFilter(OPERATION operation) throws CmfStorageException;
 }

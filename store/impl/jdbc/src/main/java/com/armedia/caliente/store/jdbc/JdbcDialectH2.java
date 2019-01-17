@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.lang3.StringUtils;
 
 public class JdbcDialectH2 extends JdbcDialect {
 
@@ -104,6 +105,11 @@ public class JdbcDialectH2 extends JdbcDialect {
 	@Override
 	protected boolean isShutdownOnLastConnectionClose() {
 		return true;
+	}
+
+	@Override
+	protected boolean isForeignKeyMissingException(SQLException e) {
+		return StringUtils.equalsIgnoreCase(e.getSQLState(), "23506");
 	}
 
 	@Override
