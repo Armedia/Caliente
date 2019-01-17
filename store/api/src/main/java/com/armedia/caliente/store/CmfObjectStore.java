@@ -10,11 +10,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -171,7 +169,6 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	private final Mapper mapper = new Mapper();
 	private final Class<OPERATION> operationClass;
 	private boolean open = false;
-	private final AtomicBoolean objectFilterActive = new AtomicBoolean(false);
 
 	protected CmfObjectStore(Class<OPERATION> operationClass) throws CmfStorageException {
 		this(operationClass, false);
@@ -183,10 +180,6 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		this.open = openState;
 	}
 
-	public final boolean isObjectFilterActive() {
-		return this.objectFilterActive.get();
-	}
-
 	public final boolean init(Map<String, String> settings) throws CmfStorageException {
 		getWriteLock().lock();
 		try {
@@ -194,7 +187,6 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 			if (this.open) { return false; }
 			doInit(settings);
 			this.open = true;
-			this.objectFilterActive.set(false);
 			return this.open;
 		} finally {
 			getWriteLock().unlock();
@@ -1186,95 +1178,4 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	}
 
 	protected abstract void clearImportPlan(OPERATION operation) throws CmfStorageException;
-
-	protected abstract void clearBulkObjectLoaderFilter(OPERATION operation) throws CmfStorageException;
-
-	public final void clearBulkObjectLoaderFilter() throws CmfStorageException {
-		OPERATION operation = beginExclusiveInvocation();
-		try {
-			final boolean tx = operation.begin();
-			try {
-				clearBulkObjectLoaderFilter(operation);
-				if (tx) {
-					operation.commit();
-				}
-				this.objectFilterActive.set(false);
-			} finally {
-				if (tx) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for clearing the bulk object loader filter",
-							e);
-					}
-				}
-			}
-		} finally {
-			endInvocation(operation);
-		}
-	}
-
-	protected abstract Map<CmfType, Long> setBulkObjectLoaderFilter(OPERATION operation, Iterator<CmfObjectRef> objects)
-		throws CmfStorageException;
-
-	public final Map<CmfType, Long> setBulkObjectLoaderFilter(Iterator<CmfObjectRef> objects)
-		throws CmfStorageException {
-		// Shortcut - avoid starting a transaction over nothing
-		if (objects == null) { throw new IllegalArgumentException("Must provide a non-null Iterator instance"); }
-		OPERATION operation = beginExclusiveInvocation();
-		try {
-			final boolean tx = operation.begin();
-			// Remove the prior filter data...
-			clearBulkObjectLoaderFilter(operation);
-			try {
-				Map<CmfType, Long> ret = setBulkObjectLoaderFilter(operation, objects);
-				if (tx) {
-					operation.commit();
-				}
-				this.objectFilterActive.set(true);
-				return ret;
-			} finally {
-				if (tx) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn("Failed to rollback the transaction for setting the bulk object loader filter",
-							e);
-					}
-				}
-			}
-		} finally {
-			endInvocation(operation);
-		}
-	}
-
-	public final Map<CmfType, Long> setBulkObjectLoaderFilter(Iterable<CmfObjectRef> objects)
-		throws CmfStorageException {
-		if (objects == null) { throw new IllegalArgumentException("Must provide a non-null Iterable instance"); }
-		return setBulkObjectLoaderFilter(objects.iterator());
-	}
-
-	public final Map<CmfType, Set<CmfObjectRef>> getObjectFilter() throws CmfStorageException {
-		if (!isObjectFilterActive()) { return null; }
-		OPERATION operation = beginConcurrentInvocation();
-		try {
-			final boolean tx = operation.begin();
-			try {
-				return getObjectFilter(operation);
-			} finally {
-				if (tx) {
-					try {
-						operation.rollback();
-					} catch (CmfStorageException e) {
-						this.log.warn(
-							"Failed to rollback the transaction for loading the bulk object loader filter data", e);
-					}
-				}
-			}
-		} finally {
-			endInvocation(operation);
-		}
-	}
-
-	protected abstract Map<CmfType, Set<CmfObjectRef>> getObjectFilter(OPERATION operation) throws CmfStorageException;
 }

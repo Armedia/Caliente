@@ -161,18 +161,6 @@
 			<column name="object_id" />
 		</createIndex>
 
-		<!-- The object filter table -->
-		<createTable tableName="cmf_object_filter">
-			<column name="object_id" type="varchar(96)" remarks="The primary object">
-				<constraints nullable="false" />
-			</column>
-		</createTable>
-		<addPrimaryKey tableName="cmf_object_filter" columnNames="object_id" />
-		<addForeignKeyConstraint constraintName="fk_cmf_object_filter_object"
-			baseTableName="cmf_object_filter" baseColumnNames="object_id"
-			referencedTableName="cmf_object" referencedColumnNames="object_id"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-
 		<!-- The objects hierarchy table -->
 		<createTable tableName="cmf_object_tree" remarks="The CMS object tree">
 			<column name="object_id" type="varchar(96)" remarks="The object's ID">
