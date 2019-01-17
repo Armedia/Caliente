@@ -4,31 +4,35 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
 public enum CmfDataType {
 	//
-	BOOLEAN {
+	BOOLEAN("bool") {
 		@Override
 		protected Object doGetValue(CmfValue value) {
 			return value.asBoolean();
 		}
 	},
-	INTEGER {
+	INTEGER("int") {
 		@Override
 		protected Object doGetValue(CmfValue value) {
 			return value.asInteger();
 		}
 	},
-	DOUBLE {
+	DOUBLE("dbl") {
 		@Override
 		protected Object doGetValue(CmfValue value) {
 			return value.asDouble();
 		}
 	},
-	STRING {
+	STRING("str") {
 		@Override
 		protected Object doGetValue(CmfValue value) {
 			return value.asString();
@@ -40,7 +44,7 @@ public enum CmfDataType {
 			return value.asId();
 		}
 	},
-	DATETIME {
+	DATETIME("date") {
 		@Override
 		protected Object doGetValue(CmfValue value) {
 			try {
@@ -72,13 +76,13 @@ public enum CmfDataType {
 			return value.asString();
 		}
 	},
-	BASE64_BINARY {
+	BASE64_BINARY("bin") {
 		@Override
 		protected Object doGetValue(CmfValue value) {
 			return value.asBinary();
 		}
 	},
-	OTHER {
+	OTHER("oth") {
 		@Override
 		protected Object doGetValue(CmfValue value) {
 			throw new UnsupportedOperationException("Values of type OTHER can't be converted to");
@@ -87,11 +91,29 @@ public enum CmfDataType {
 	//
 	;
 
+	private final String abbreviation;
+
+	private CmfDataType() {
+		this(null);
+	}
+
+	private CmfDataType(String abbreviation) {
+		this.abbreviation = StringUtils.lowerCase(Tools.coalesce(abbreviation, name()));
+	}
+
 	private static final Map<CmfDataType, CmfValue> NULL;
+	private static final Map<String, CmfDataType> ABBREVIATIONS;
 
 	static {
 		Map<CmfDataType, CmfValue> nvl = new EnumMap<>(CmfDataType.class);
+		Map<String, CmfDataType> abb = new TreeMap<>();
 		for (CmfDataType t : CmfDataType.values()) {
+			CmfDataType o = abb.put(t.abbreviation, t);
+			if (o != null) {
+				throw new RuntimeException(
+					String.format("ERROR: The CmfDataType values %s and %s share the same abbreviation [%s]", t.name(),
+						o.name(), t.abbreviation));
+			}
 			try {
 				nvl.put(t, new CmfValue(t, null));
 			} catch (ParseException e) {
@@ -100,6 +122,7 @@ public enum CmfDataType {
 			}
 		}
 		NULL = Tools.freezeMap(nvl);
+		ABBREVIATIONS = Tools.freezeMap(new LinkedHashMap<>(abb));
 	}
 
 	public final CmfValue getNull() {
@@ -123,4 +146,16 @@ public enum CmfDataType {
 	}
 
 	protected abstract Object doGetValue(CmfValue value) throws Exception;
+
+	public static CmfDataType decode(String value) {
+		if (value == null) { return null; }
+		try {
+			return CmfDataType.valueOf(StringUtils.upperCase(value));
+		} catch (final IllegalArgumentException e) {
+			// Maybe an abbreviation?
+			CmfDataType t = CmfDataType.ABBREVIATIONS.get(StringUtils.lowerCase(value));
+			if (t != null) { return t; }
+			throw e;
+		}
+	}
 }
