@@ -479,7 +479,7 @@ public abstract class ImportEngine<//
 							continue;
 						}
 						// Ignore comments...
-						nextLine = nextLine.replaceAll("^\\s*#", "");
+						nextLine = nextLine.replaceAll("\\s*#.*$", "");
 						nextLine = StringUtils.strip(nextLine);
 						if (StringUtils.isEmpty(nextLine)) {
 							// Skip this line...
