@@ -376,7 +376,7 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	private static final Pattern OBJECT_RESTRICTION_PARSER = Pattern.compile("^([^-]+)-(.*)$");
+	private static final Pattern OBJECT_RESTRICTION_PARSER = Pattern.compile("^([^:]+):(.*)$");
 
 	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
