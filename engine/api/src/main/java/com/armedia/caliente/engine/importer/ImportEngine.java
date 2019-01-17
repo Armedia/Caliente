@@ -750,7 +750,7 @@ public abstract class ImportEngine<//
 				if (objectRestrictions != null) {
 					output.info("Loaded the object restriction list");
 					output.info("Applying the object restriction list");
-					objectStore.setBulkObjectLoaderFilter(objectRestrictions);
+					containedTypes = objectStore.setBulkObjectLoaderFilter(objectRestrictions);
 					output.info("Applied the object restriction list");
 				} else {
 					output.info("No object restriction list loaded, will import all available objects");
