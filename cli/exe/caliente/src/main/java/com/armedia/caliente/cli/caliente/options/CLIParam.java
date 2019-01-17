@@ -329,8 +329,9 @@ public enum CLIParam implements OptionWrapper {
 
 	restrict_to( //
 		new OptionImpl() //
-			.setArgumentLimits(1) //
+			.setArgumentLimits(1, -1) //
 			.setArgumentName("restriction-spec") //
+			.setValueSep(',') //
 			.setDescription(
 				"Either a comma-separated list of ObjectRefs (TYPE:ID), or the path/url of a text file that contains them (one per line), which will be used to restrict which objects are imported") //
 	), //
