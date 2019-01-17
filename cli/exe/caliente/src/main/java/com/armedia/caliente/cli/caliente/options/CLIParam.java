@@ -36,7 +36,7 @@ public enum CLIParam implements OptionWrapper {
 			.setValueFilter(new StringValueFilter( //
 				false, // Case-insensitive
 				"true", "yes", "on", "1", "false", "off", "no", "0", "any" //
-		)) //
+			)) //
 	), //
 
 	count_include( //
@@ -56,7 +56,7 @@ public enum CLIParam implements OptionWrapper {
 			.setValueFilter(new StringValueFilter( //
 				false, // Case-insensitive
 				"true", "yes", "on", "1", "false", "off", "no", "0", "any" //
-		)) //
+			)) //
 	), //
 
 	data( //
@@ -325,6 +325,14 @@ public enum CLIParam implements OptionWrapper {
 			.setArgumentLimits(1) //
 			.setArgumentName("password") //
 			.setDescription("The password to authenticate with") //
+	), //
+
+	restrict_to( //
+		new OptionImpl() //
+			.setArgumentLimits(1) //
+			.setArgumentName("restriction-spec") //
+			.setDescription(
+				"Either a comma-separated list of ObjectRefs (TYPE:ID), or the path/url of a text file that contains them (one per line), which will be used to restrict which objects are imported") //
 	), //
 
 	role_map( //
