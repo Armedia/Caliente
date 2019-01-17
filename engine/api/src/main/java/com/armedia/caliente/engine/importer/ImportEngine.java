@@ -442,7 +442,7 @@ public abstract class ImportEngine<//
 		if (strippedSource.startsWith("#")) {
 			// If the source starts with a #, then it's a comma-separated list of IDs in the form
 			// TYPE-ID
-			final String data = StringUtils.strip(source);
+			final String data = StringUtils.strip(source.substring(1));
 			return new CloseableIterator<CmfObjectRef>() {
 
 				private int pos = 0;
