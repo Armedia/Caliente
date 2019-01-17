@@ -136,6 +136,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							clearAllObjects(o);
 						}
 						clearAttributeMappings(o);
+						clearBulkObjectLoaderFilter(o);
 					});
 				op.commit();
 				ok = true;
