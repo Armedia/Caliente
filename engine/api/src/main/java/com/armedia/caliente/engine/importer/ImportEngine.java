@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
-import java.io.Reader;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -468,15 +467,27 @@ public abstract class ImportEngine<//
 				throw new ImportException(String.format("Failed to find the restrictions list at [%s]", source));
 			}
 
-			final Reader r = new InputStreamReader(in);
 			return new CloseableIterator<CmfObjectRef>() {
-				final LineNumberReader lr = new LineNumberReader(r);
+				final LineNumberReader lr = new LineNumberReader(new InputStreamReader(in));
+				final Iterator<String> it = this.lr.lines().iterator();
 
 				@Override
 				protected Result findNext() throws Exception {
-					String nextLine = this.lr.readLine();
-					if (nextLine == null) { return null; }
-					return found(parseRef(nextLine, this.lr.getLineNumber()));
+					while (this.it.hasNext()) {
+						String nextLine = this.it.next();
+						if (nextLine == null) {
+							continue;
+						}
+						// Ignore comments...
+						nextLine = nextLine.replaceAll("^\\s*#", "");
+						nextLine = StringUtils.strip(nextLine);
+						if (StringUtils.isEmpty(nextLine)) {
+							// Skip this line...
+							continue;
+						}
+						return found(parseRef(nextLine, this.lr.getLineNumber()));
+					}
+					return null;
 				}
 
 				@Override
