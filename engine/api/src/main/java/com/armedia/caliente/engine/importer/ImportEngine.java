@@ -429,7 +429,7 @@ public abstract class ImportEngine<//
 			err = "Empty string";
 		}
 		if (err != null) {
-			throw new Exception(String.format("Bad restrictor spec [%s] at position %d - %s", str, index, err));
+			this.output.warn("Bad restrictor spec [{}] at position {} - {}", str, index, err);
 		}
 		return null;
 	}
