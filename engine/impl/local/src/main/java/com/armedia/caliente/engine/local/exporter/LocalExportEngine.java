@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionFactory;
@@ -32,7 +33,7 @@ public class LocalExportEngine extends
 
 	@Override
 	protected void findExportResults(LocalRoot session, CfgTools configuration, LocalExportDelegateFactory factory,
-		TargetSubmitter submitter) throws Exception {
+		ExportResultSubmitter submitter) throws Exception {
 		Iterator<ExportTarget> it = new LocalRecursiveIterator(session,
 			configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS));
 		while (it.hasNext()) {

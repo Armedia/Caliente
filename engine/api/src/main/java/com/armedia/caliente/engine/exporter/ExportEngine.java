@@ -57,11 +57,6 @@ public abstract class ExportEngine<//
 > extends
 	TransferEngine<ExportEngineListener, ExportResult, ExportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ENGINE_FACTORY> {
 
-	@FunctionalInterface
-	protected static interface TargetSubmitter {
-		public void submit(ExportTarget target) throws ExportException;
-	}
-
 	private class Result {
 		private final Long objectNumber;
 		private final CmfObject<VALUE> object;
@@ -777,7 +772,7 @@ public abstract class ExportEngine<//
 	}
 
 	protected abstract void findExportResults(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
-		TargetSubmitter handler) throws Exception;
+		ExportResultSubmitter handler) throws Exception;
 
 	@Override
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {

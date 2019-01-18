@@ -24,6 +24,7 @@ import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -56,7 +57,7 @@ public class DctmExportEngine extends
 
 	@Override
 	protected void findExportResults(IDfSession session, CfgTools configuration, DctmExportDelegateFactory factory,
-		TargetSubmitter submitter) throws Exception {
+		ExportResultSubmitter submitter) throws Exception {
 		if (session == null) {
 			throw new IllegalArgumentException("Must provide a session through which to retrieve the results");
 		}

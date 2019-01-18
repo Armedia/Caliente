@@ -27,6 +27,7 @@ import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -132,7 +133,7 @@ public class CmisExportEngine extends
 
 	@Override
 	protected void findExportResults(final Session session, CfgTools cfg, CmisExportDelegateFactory factory,
-		TargetSubmitter submitter) throws Exception {
+		ExportResultSubmitter submitter) throws Exception {
 		Iterator<ExportTarget> it = null;
 
 		// Is this a path or ID-based search?

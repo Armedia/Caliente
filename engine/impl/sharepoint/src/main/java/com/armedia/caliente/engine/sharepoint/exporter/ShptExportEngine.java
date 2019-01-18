@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
+import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sharepoint.ShptException;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
@@ -42,7 +43,7 @@ public class ShptExportEngine extends
 
 	@Override
 	protected void findExportResults(ShptSession service, CfgTools configuration, ShptExportDelegateFactory factory,
-		TargetSubmitter submitter) throws Exception {
+		ExportResultSubmitter submitter) throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
 		if (service == null) { throw new IllegalArgumentException(

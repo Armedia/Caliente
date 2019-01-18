@@ -24,6 +24,7 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
+import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
@@ -70,7 +71,7 @@ public class UcmExportEngine extends
 
 	@Override
 	protected void findExportResults(final UcmSession session, CfgTools cfg, UcmExportDelegateFactory factory,
-		final TargetSubmitter submitter) throws Exception {
+		final ExportResultSubmitter submitter) throws Exception {
 		// Get the list of files/folders to be exported.
 		List<String> paths = UcmExportEngine.decodePathList(cfg.getString(UcmSetting.SOURCE));
 		if (paths.isEmpty()) { throw new ExportException("No paths given to export - cannot continue"); }
