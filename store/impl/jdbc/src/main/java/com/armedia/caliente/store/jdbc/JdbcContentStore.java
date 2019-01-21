@@ -9,6 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
@@ -230,7 +231,12 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 			op.begin();
 			try {
 				JdbcSchemaManager.prepareSchema(JdbcContentStore.SCHEMA_CHANGE_LOG, op, updateSchema,
-					this.managedTransactions, (o) -> clearAllProperties(op));
+					this.managedTransactions, (o) -> {
+						if (cleanData) {
+							clearAllProperties(o);
+							clearAllStreams(o);
+						}
+					});
 				op.commit();
 				ok = true;
 			} finally {
@@ -370,7 +376,25 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	}
 
 	@Override
-	protected void clearAllStreams(JdbcOperation operation) throws CmfStorageException {
+	protected final void clearAllStreams(JdbcOperation operation) throws CmfStorageException {
+		// Allow for subclasses to implement optimized clearing operations
+		Connection c = operation.getConnection();
+		try {
+			Savepoint sp = c.setSavepoint();
+			try {
+				JdbcTools.getQueryRunner().update(c, translateQuery(JdbcDialect.Query.TRUNCATE_STREAMS));
+				JdbcTools.commitSavepoint(c, sp);
+				return;
+			} catch (SQLException e) {
+				JdbcTools.rollbackSavepoint(c, sp);
+				this.log.warn("Failed to truncate content streams, will try the hard way", e);
+			}
+		} catch (SQLException e) {
+			// Couldn't set up the savepoint...this is a problem
+			throw new CmfStorageException("Failed to set up a savepoint to truncate existing streams", e);
+		}
+
+		// Can't do it quickly, so do it the hard way...
 		try {
 			JdbcTools.getQueryRunner().update(operation.getConnection(),
 				translateQuery(JdbcDialect.Query.DELETE_ALL_STREAMS));
