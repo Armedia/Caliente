@@ -35,20 +35,4 @@
 		</createTable>
 		<addPrimaryKey tableName="cmf_content_stream" columnNames="object_id, content_number" />
 	</changeSet>
-
-	<!--
-	<changeSet id="content-3000-fk" author="caliente">
-		<preConditions onFail="CONTINUE">
-			<and>
-				<changeSetExecuted id="metadata-3000" author="caliente" changeLogFile="com/armedia/caliente/store/jdbc/changelog/metadata.changelog-3.0.xml" />
-				<changeSetExecuted id="content-3000" author="caliente" changeLogFile="com/armedia/caliente/store/jdbc/changelog/content.changelog-3.0.xml" />
-			</and>
-		</preConditions>
-
-		<addForeignKeyConstraint constraintName="fk_cmf_content_stream_content"
-			baseTableName="cmf_content_stream" baseColumnNames="object_id, content_number"
-			referencedTableName="cmf_content" referencedColumnNames="object_id, content_number"
-			onDelete="CASCADE" onUpdate="CASCADE" />
-	</changeSet>
-	-->
 </databaseChangeLog>
