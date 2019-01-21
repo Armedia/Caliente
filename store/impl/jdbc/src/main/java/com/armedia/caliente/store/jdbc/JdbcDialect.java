@@ -409,6 +409,10 @@ public abstract class JdbcDialect {
 			"       delete from cmf_content_stream" //
 		),
 
+		TRUNCATE_STREAMS( //
+			"       truncate table cmf_content_stream" //
+		),
+
 		CHECK_IF_CONTENT_EXISTS( //
 			"       select object_id " + //
 				"     from cmf_content_stream " + //
