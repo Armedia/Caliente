@@ -57,10 +57,10 @@ import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.Closer;
-import com.armedia.caliente.tools.ResourceLoader;
-import com.armedia.caliente.tools.ResourceLoaderException;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.ResourceLoader;
+import com.armedia.commons.utilities.ResourceLoaderException;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
 

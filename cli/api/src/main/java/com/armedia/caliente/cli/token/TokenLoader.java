@@ -23,8 +23,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.token.Token.Type;
-import com.armedia.caliente.tools.ResourceLoader;
-import com.armedia.caliente.tools.ResourceLoaderException;
+import com.armedia.commons.utilities.ResourceLoader;
+import com.armedia.commons.utilities.ResourceLoaderException;
 import com.armedia.commons.utilities.Tools;
 
 /**
