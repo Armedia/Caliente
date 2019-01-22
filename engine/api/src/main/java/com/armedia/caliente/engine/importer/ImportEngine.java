@@ -376,7 +376,7 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	private static final Pattern OBJECT_RESTRICTION_PARSER = Pattern.compile("^([^:]+):(.*)$");
+	private static final Pattern OBJECT_RESTRICTION_PARSER = Pattern.compile("^([^=]+)=(.*)$");
 
 	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
@@ -439,8 +439,8 @@ public abstract class ImportEngine<//
 		if (StringUtils.isEmpty(source)) { return null; }
 		final String strippedSource = StringUtils.strip(source);
 
-		if (strippedSource.startsWith("#")) {
-			// If the source starts with a #, then it's a comma-separated list of IDs in the form
+		if (strippedSource.startsWith("%")) {
+			// If the source starts with a %, then it's a comma-separated list of IDs in the form
 			// TYPE-ID
 			final String data = StringUtils.strip(source.substring(1));
 			return new CloseableIterator<CmfObjectRef>() {
@@ -462,7 +462,7 @@ public abstract class ImportEngine<//
 
 		// Otherwise the source points to a resource to be loaded via ResourceLoader.
 		try {
-			final InputStream in = ResourceLoader.getResourceOrFileAsStream(source);
+			final InputStream in = ResourceLoader.getResourceOrFileAsStream(source, System.getProperty("user.dir"));
 			if (in == null) {
 				throw new ImportException(String.format("Failed to find the restrictions list at [%s]", source));
 			}
