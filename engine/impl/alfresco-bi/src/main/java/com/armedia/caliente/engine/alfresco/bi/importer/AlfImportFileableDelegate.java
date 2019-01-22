@@ -224,7 +224,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			} else {
 				// Make sure no "null" strings make it in
 				newValues.replaceAll((v) -> (v == null ? StringUtils.EMPTY : v));
-				propertyValue = Tools.joinEscaped(',', newValues);
+				propertyValue = Tools.joinCSVEscaped(newValues);
 			}
 
 			// Don't add empty/null properties
@@ -243,7 +243,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			getPropertyValues(IntermediateProperty.PARENT_TREE_IDS).stream().map((v) -> v.asString())
 				.filter(StringUtils::isNotEmpty).forEachOrdered(values::add);
 			if (!values.isEmpty()) {
-				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
+				p.setProperty(currentProperty, Tools.joinCSVEscaped(values));
 			}
 		}
 
@@ -261,7 +261,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 			});
 			if (!values.isEmpty()) {
-				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
+				p.setProperty(currentProperty, Tools.joinCSVEscaped(values));
 			}
 		}
 

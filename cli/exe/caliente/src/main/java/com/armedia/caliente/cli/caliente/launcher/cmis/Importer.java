@@ -84,8 +84,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		}
 		String repoName = commandValues.getString(CLIParam.domain, "-default-");
 		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), Tools.coalesce(repoName, "-default-"));
-		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(),
-			Tools.joinCSVEscaped(commandValues.getAllStrings(CLIParam.exclude_types)));
+		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), commandValues.getAllStrings(CLIParam.exclude_types));
 
 		return true;
 	}

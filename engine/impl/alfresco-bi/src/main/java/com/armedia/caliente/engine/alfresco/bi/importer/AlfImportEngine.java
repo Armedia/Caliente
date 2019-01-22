@@ -332,13 +332,13 @@ public class AlfImportEngine extends
 		final File modelDir = this.biRootPath.resolve(AlfImportEngine.MODEL_DIR_NAME).toFile();
 		FileUtils.forceMkdir(modelDir);
 
-		String contentModels = settings.getString(AlfSetting.CONTENT_MODEL);
+		List<String> contentModels = settings.getStrings(AlfSetting.CONTENT_MODEL);
 		if (contentModels == null) {
 			throw new IllegalStateException("Must provide a valid set of content model XML files");
 		}
 
 		List<URI> modelUrls = new ArrayList<>();
-		for (String s : contentModels.split(",")) {
+		for (String s : contentModels) {
 			File f = new File(s).getCanonicalFile();
 			if (!f.exists()) { throw new FileNotFoundException(f.getAbsolutePath()); }
 			if (!f.isFile()) {

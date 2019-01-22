@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.dfc.common;
 
+import java.util.Collections;
+
 import com.armedia.commons.utilities.ConfigurationSetting;
 
 public enum Setting implements ConfigurationSetting {
@@ -7,10 +9,10 @@ public enum Setting implements ConfigurationSetting {
 	SOURCE("source"),
 	IMPORT_MAX_ERRORS("import.max.errors", 1),
 	DEFAULT_USER_PASSWORD("default.user.password"),
-	OWNER_ATTRIBUTES("owner.attributes", ""),
-	SPECIAL_USERS("special.users", ""),
-	SPECIAL_GROUPS("special.groups", ""),
-	SPECIAL_TYPES("special.types", ""),
+	OWNER_ATTRIBUTES("owner.attributes", Collections.emptyList()),
+	SPECIAL_USERS("special.users", Collections.emptyList()),
+	SPECIAL_GROUPS("special.groups", Collections.emptyList()),
+	SPECIAL_TYPES("special.types", Collections.emptyList()),
 	EXPORT_BATCH_SIZE("export.batch.size", 10000),
 	//
 	;

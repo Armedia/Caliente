@@ -212,8 +212,7 @@ public class AlfImportDelegateFactory
 		this.folderIndex = new AlfXmlIndex(this.biRootPath.resolve(AlfImportDelegateFactory.FOLDER_CACHE_FILE).toFile(),
 			idxClasses);
 
-		String contentModels = configuration.getString(AlfSetting.CONTENT_MODEL);
-		if (contentModels == null) {
+		if (!configuration.hasValue(AlfSetting.CONTENT_MODEL)) {
 			throw new IllegalStateException("Must provide a valid set of content model XML files");
 		}
 

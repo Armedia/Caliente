@@ -39,7 +39,7 @@ public class UcmExceptionData {
 			if (this.string == null) {
 				synchronized (this) {
 					if (this.string == null) {
-						this.string = Tools.joinEscaped(',', this.allValues);
+						this.string = Tools.joinCSVEscaped(this.allValues);
 					}
 				}
 			}
