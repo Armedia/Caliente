@@ -14,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
@@ -45,6 +46,9 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.line.LineScanner;
+import com.armedia.commons.utilities.line.LineScannerConfig;
+import com.armedia.commons.utilities.line.LineScannerConfig.Feature;
 
 public abstract class ExportEngine<//
 	SESSION, //
@@ -713,7 +717,8 @@ public abstract class ExportEngine<//
 				final AtomicLong targetCounter = new AtomicLong(0);
 				boolean ok = false;
 				try {
-					findExportResults(baseSession.getWrapped(), settings, delegateFactory, (target) -> {
+
+					final ExportResultSubmitter submitter = (target) -> {
 						if (target == null) { return; }
 						if (target.isNull()) {
 							ExportEngine.this.log.warn("Skipping a null target: {}", target);
@@ -728,7 +733,44 @@ public abstract class ExportEngine<//
 							throw new ExportException(String.format("Interrupted while trying to queue up %s", target),
 								e);
 						}
-					});
+					};
+
+					LineScannerConfig config = new LineScannerConfig();
+					config //
+						.removeFeature(Feature.CONTINUATION) //
+						.removeFeature(Feature.COMMENTS) //
+					;
+
+					LineScanner scanner = new LineScanner();
+					final SESSION session = baseSession.getWrapped();
+					scanner.scanLines((line) -> {
+						try {
+							if (line.startsWith("%")) {
+								// SearchKey!
+								final String searchKey = StringUtils.strip(line.substring(1));
+								ExportTarget target = null;
+								if (!StringUtils.isEmpty(searchKey)) {
+									target = findExportTarget(session, searchKey);
+								}
+								if (target != null) {
+									submitter.submit(target);
+								} else {
+									this.log.warn("Invalid search key [{}] - no object was found", searchKey);
+								}
+							} else //
+							if (line.startsWith("/")) {
+								// CMS Path!
+								findExportTargetsByPath(session, settings, delegateFactory, submitter, line);
+							} else {
+								// Query string!
+								findExportTargetsByQuery(session, settings, delegateFactory, submitter, line);
+							}
+						} catch (Exception e) {
+							throw new RuntimeException(
+								String.format("Failed to retrieve the export targets as per [%s]", line), e);
+						}
+						return true;
+					}, exportState.cfg.getStrings(ExportSetting.FROM));
 					ok = true;
 				} catch (Exception e) {
 					throw new ExportException("Failed to retrieve the objects to export", e);
@@ -771,8 +813,13 @@ public abstract class ExportEngine<//
 		// By default, do nothing...
 	}
 
-	protected abstract void findExportResults(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
-		ExportResultSubmitter handler) throws Exception;
+	protected abstract void findExportTargetsByQuery(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
+		ExportResultSubmitter handler, String query) throws Exception;
+
+	protected abstract void findExportTargetsByPath(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
+		ExportResultSubmitter handler, String path) throws Exception;
+
+	protected abstract ExportTarget findExportTarget(SESSION session, String searchKey) throws Exception;
 
 	@Override
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {

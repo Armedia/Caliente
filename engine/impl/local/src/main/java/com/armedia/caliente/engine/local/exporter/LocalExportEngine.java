@@ -32,12 +32,23 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected void findExportResults(LocalRoot session, CfgTools configuration, LocalExportDelegateFactory factory,
-		ExportResultSubmitter submitter) throws Exception {
+	protected void findExportTargetsByQuery(LocalRoot session, CfgTools configuration,
+		LocalExportDelegateFactory factory, ExportResultSubmitter handler, String query) throws Exception {
+		throw new Exception("Local Export doesn't support queries");
+	}
+
+	@Override
+	protected ExportTarget findExportTarget(LocalRoot session, String searchKey) throws Exception {
+		throw new Exception("Local Export doesn't support ID-based searches");
+	}
+
+	@Override
+	protected void findExportTargetsByPath(LocalRoot session, CfgTools configuration,
+		LocalExportDelegateFactory factory, ExportResultSubmitter handler, String path) throws Exception {
 		Iterator<ExportTarget> it = new LocalRecursiveIterator(session,
 			configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS));
 		while (it.hasNext()) {
-			submitter.submit(it.next());
+			handler.submit(it.next());
 		}
 	}
 

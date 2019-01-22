@@ -12,6 +12,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.enums.BaseTypeId;
+import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -21,7 +22,6 @@ import com.armedia.caliente.engine.cmis.CmisRecursiveIterator;
 import com.armedia.caliente.engine.cmis.CmisResultTransformer;
 import com.armedia.caliente.engine.cmis.CmisSessionFactory;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
-import com.armedia.caliente.engine.cmis.CmisSetting;
 import com.armedia.caliente.engine.cmis.CmisTransformerIterator;
 import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
@@ -62,8 +62,9 @@ public class CmisExportEngine extends
 
 	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {
 		PropertyData<?> objectId = r.getPropertyById(PropertyIds.OBJECT_ID);
-		if (objectId == null) { throw new ExportException(
-			"Failed to find the cmis:objectId property as part of the query result"); }
+		if (objectId == null) {
+			throw new ExportException("Failed to find the cmis:objectId property as part of the query result");
+		}
 
 		CmfType type = null;
 		PropertyData<?>[] objectTypes = {
@@ -85,32 +86,22 @@ public class CmisExportEngine extends
 				break;
 			}
 		}
-		if (type == null) { throw new ExportException(
-			"Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result, or the returned value couldn't be decoded"); }
+		if (type == null) {
+			throw new ExportException(
+				"Failed to find the cmis:objectTypeId or the cmis:baseTypeId properties as part of the query result, or the returned value couldn't be decoded");
+		}
 		String id = Tools.toString(objectId.getFirstValue());
 		return new ExportTarget(type, id, id);
 	}
 
-	protected Iterator<ExportTarget> getPathIdIterator(final Session session, final CfgTools cfg) throws Exception {
-		String id = cfg.getString(CmisSetting.EXPORT_ID);
-		if (StringUtils.isEmpty(id)) {
-			id = null;
-		}
-
-		String path = cfg.getString(CmisSetting.EXPORT_PATH);
-		if (StringUtils.isEmpty(path)) {
-			path = null;
-		}
-
-		if ((path == null) && (id == null)) { return null; }
-
+	protected Iterator<ExportTarget> getPathIterator(final Session session, String path) throws Exception {
 		final CmisObject obj;
-		if (id != null) {
-			obj = session.getObject(id);
-		} else {
+		try {
 			obj = session.getObjectByPath(path);
+		} catch (CmisObjectNotFoundException e) {
+			this.log.warn("No object found at [{}]", path);
+			return null;
 		}
-
 		if (Folder.class.isInstance(obj)) {
 			// This is a folder that we need to recurse into
 			return new CmisTransformerIterator<>(new CmisRecursiveIterator(session, Folder.class.cast(obj), true),
@@ -122,9 +113,19 @@ public class CmisExportEngine extends
 			.iterator();
 	}
 
-	protected Iterator<ExportTarget> getQueryIterator(final Session session, final CfgTools cfg) throws Exception {
-		final String query = cfg.getString(CmisSetting.EXPORT_QUERY);
-		if (query == null) { return null; }
+	@Override
+	protected void findExportTargetsByPath(Session session, CfgTools configuration, CmisExportDelegateFactory factory,
+		ExportResultSubmitter handler, String path) throws Exception {
+		Iterator<ExportTarget> it = getPathIterator(session, path);
+		if (it != null) {
+			while (it.hasNext()) {
+				handler.submit(it.next());
+			}
+		}
+	}
+
+	protected Iterator<ExportTarget> getQueryIterator(final Session session, final String query) throws Exception {
+		if (StringUtils.isBlank(query)) { return null; }
 		final boolean searchAllVersions = session.getRepositoryInfo().getCapabilities()
 			.isAllVersionsSearchableSupported();
 		return new CmisPagingTransformerIterator<>(session.query(query, searchAllVersions),
@@ -132,26 +133,23 @@ public class CmisExportEngine extends
 	}
 
 	@Override
-	protected void findExportResults(final Session session, CfgTools cfg, CmisExportDelegateFactory factory,
-		ExportResultSubmitter submitter) throws Exception {
-		Iterator<ExportTarget> it = null;
-
-		// Is this a path or ID-based search?
-		if (it == null) {
-			it = getPathIdIterator(session, cfg);
+	protected void findExportTargetsByQuery(Session session, CfgTools configuration, CmisExportDelegateFactory factory,
+		ExportResultSubmitter handler, String query) throws Exception {
+		Iterator<ExportTarget> it = getQueryIterator(session, query);
+		if (it != null) {
+			while (it.hasNext()) {
+				handler.submit(it.next());
+			}
 		}
+	}
 
-		// No search yet? Is this a query based search?
-		if (it == null) {
-			it = getQueryIterator(session, cfg);
-		}
-
-		// If we have no results, then we simply return...
-		if (it == null) { return; }
-
-		// If we have results, we submit them all
-		while (it.hasNext()) {
-			submitter.submit(it.next());
+	@Override
+	protected ExportTarget findExportTarget(Session session, String searchKey) throws Exception {
+		try {
+			CmisObject obj = session.getObject(searchKey);
+			return new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), searchKey);
+		} catch (CmisObjectNotFoundException e) {
+			return null;
 		}
 	}
 

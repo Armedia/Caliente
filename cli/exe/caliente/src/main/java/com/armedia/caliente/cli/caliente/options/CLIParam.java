@@ -357,7 +357,7 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("Don't process the actual content streams") //
 	), //
 
-	source( //
+	from( //
 		new OptionImpl() //
 			.setRequired(true) //
 			.setArgumentLimits(1) //

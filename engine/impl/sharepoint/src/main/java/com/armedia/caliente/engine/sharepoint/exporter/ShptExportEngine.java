@@ -42,13 +42,24 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected void findExportResults(ShptSession service, CfgTools configuration, ShptExportDelegateFactory factory,
-		ExportResultSubmitter submitter) throws Exception {
+	protected void findExportTargetsByQuery(ShptSession session, CfgTools configuration,
+		ShptExportDelegateFactory factory, ExportResultSubmitter handler, String query) throws Exception {
+		throw new Exception("SharePoint export doesn't yet support query-based export");
+	}
+
+	@Override
+	protected ExportTarget findExportTarget(ShptSession session, String searchKey) throws Exception {
+		throw new Exception("SharePoint export doesn't yet support ID-based export");
+	}
+
+	@Override
+	protected void findExportTargetsByPath(ShptSession service, CfgTools configuration,
+		ShptExportDelegateFactory factory, ExportResultSubmitter handler, String path) throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
-		if (service == null) { throw new IllegalArgumentException(
-			"Must provide a session through which to retrieve the results"); }
-		final String path = configuration.getString(ShptSetting.PATH);
+		if (service == null) {
+			throw new IllegalArgumentException("Must provide a session through which to retrieve the results");
+		}
 		if (path == null) { throw new ShptException("Must provide the name of the site to export"); }
 		final boolean excludeEmptyFolders = configuration.getBoolean(ShptSetting.EXCLUDE_EMPTY_FOLDERS);
 
@@ -56,10 +67,10 @@ public class ShptExportEngine extends
 			Iterator<ExportTarget> it = new ShptRecursiveIterator(service, service.getFolder(path), configuration,
 				excludeEmptyFolders);
 			while (it.hasNext()) {
-				submitter.submit(it.next());
+				handler.submit(it.next());
 			}
 		} catch (ShptSessionException e) {
-			throw new ShptException("Export target search failed", e);
+			throw new ShptException(String.format("Export target search failed for path [%s]", path), e);
 		}
 	}
 

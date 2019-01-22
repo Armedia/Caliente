@@ -17,6 +17,7 @@ import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
+import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 
@@ -193,10 +194,10 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		}
 
 		String source = Exporter.DEFAULT_PREDICATE;
-		if (commandValues.isPresent(CLIParam.source)) {
-			source = commandValues.getString(CLIParam.source);
+		if (commandValues.isPresent(CLIParam.from)) {
+			source = commandValues.getString(CLIParam.from);
 		}
-		settings.put(Setting.SOURCE.getLabel(), source);
+		settings.put(ExportSetting.FROM.getLabel(), source);
 
 		if (commandValues.isPresent(Exporter.OWNER_ATTRIBUTES)) {
 			settings.put(Setting.OWNER_ATTRIBUTES.getLabel(), commandValues.getAllStrings(Exporter.OWNER_ATTRIBUTES));

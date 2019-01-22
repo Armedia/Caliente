@@ -5,7 +5,7 @@ import com.armedia.caliente.store.CmfDataType;
 
 public enum ExportSetting implements TransferEngineSetting {
 	//
-	SOURCE(CmfDataType.STRING),
+	FROM(CmfDataType.STRING),
 	//
 	;
 

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.cmis.CmisSessionSetting;
 import com.armedia.caliente.engine.cmis.CmisSetting;
 import com.armedia.caliente.engine.cmis.exporter.CmisExportEngineFactory;
+import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStores;
@@ -27,7 +28,7 @@ public class BaseTest {
 		settings.put(CmisSessionSetting.PASSWORD.getLabel(), "123");
 		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), "-default-");
 		// settings.put(CmisSetting.EXPORT_QUERY.getLabel(), "SELECT * FROM cmis:document");
-		settings.put(CmisSetting.EXPORT_PATH.getLabel(), "/Shared");
+		settings.put(ExportSetting.FROM.getLabel(), "/Shared");
 		settings.put(CmisSetting.EXPORT_PAGE_SIZE.getLabel(), "5");
 
 		CmfObjectStore<?, ?> objectStore = CmfStores.getObjectStore("default");
