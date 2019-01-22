@@ -40,6 +40,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 		"HISTORY_ID", //
 		"SOURCE_ID", //
 		"TARGET_ID", //
+		"RETRY_ID", //
 		"LABEL", //
 		"ERROR_DATA" //
 	);
@@ -53,6 +54,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 		private final String sourceId;
 		private final String label;
 		private final String targetId;
+		private final String retryId;
 		private final ImportResult result;
 		private final Throwable thrown;
 
@@ -73,6 +75,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 			this.sourceId = object.getId();
 			this.label = object.getLabel();
 			this.result = result;
+			this.retryId = String.format("%%%s=%s", this.type.abbrev, this.sourceId);
 			if (result != ImportResult.FAILED) {
 				this.targetId = Tools.coalesce(targetId, "");
 				this.thrown = null;
@@ -109,6 +112,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 				this.historyId, //
 				this.sourceId, //
 				this.targetId, //
+				this.retryId, //
 				this.label, //
 				extraData //
 			);
