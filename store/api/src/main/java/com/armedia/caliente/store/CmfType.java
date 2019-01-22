@@ -25,32 +25,32 @@ public enum CmfType {
 	//
 	;
 
-	private final String abbreviation;
+	public final String abbrev;
 
 	private CmfType() {
 		this(null);
 	}
 
 	private CmfType(String abbreviation) {
-		this.abbreviation = StringUtils.lowerCase(Tools.coalesce(abbreviation, name()));
+		this.abbrev = StringUtils.lowerCase(Tools.coalesce(abbreviation, name()));
 	}
 
-	private static final Map<String, CmfType> ABBREVIATIONS;
+	private static final Map<String, CmfType> ABBREV;
 	private static final Set<String> NAMES;
 	static {
 		Map<String, CmfType> abb = new TreeMap<>();
 		Set<String> n = new TreeSet<>();
 		for (CmfType t : CmfType.values()) {
 			n.add(t.name());
-			CmfType o = abb.put(t.abbreviation, t);
+			CmfType o = abb.put(t.abbrev, t);
 			if (o != null) {
 				throw new RuntimeException(
 					String.format("ERROR: The CmfType values %s and %s share the same abbreviation [%s]", t.name(),
-						o.name(), t.abbreviation));
+						o.name(), t.abbrev));
 			}
 		}
 		NAMES = Tools.freezeSet(new LinkedHashSet<>(n));
-		ABBREVIATIONS = Tools.freezeMap(new LinkedHashMap<>(abb));
+		ABBREV = Tools.freezeMap(new LinkedHashMap<>(abb));
 	}
 
 	public static Set<String> getNames() {
@@ -63,7 +63,7 @@ public enum CmfType {
 			return CmfType.valueOf(StringUtils.upperCase(value));
 		} catch (final IllegalArgumentException e) {
 			// Maybe an abbreviation?
-			CmfType t = CmfType.ABBREVIATIONS.get(StringUtils.lowerCase(value));
+			CmfType t = CmfType.ABBREV.get(StringUtils.lowerCase(value));
 			if (t != null) { return t; }
 			throw e;
 		}

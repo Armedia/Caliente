@@ -91,28 +91,28 @@ public enum CmfDataType {
 	//
 	;
 
-	private final String abbreviation;
+	public final String abbrev;
 
 	private CmfDataType() {
 		this(null);
 	}
 
 	private CmfDataType(String abbreviation) {
-		this.abbreviation = StringUtils.lowerCase(Tools.coalesce(abbreviation, name()));
+		this.abbrev = StringUtils.lowerCase(Tools.coalesce(abbreviation, name()));
 	}
 
 	private static final Map<CmfDataType, CmfValue> NULL;
-	private static final Map<String, CmfDataType> ABBREVIATIONS;
+	private static final Map<String, CmfDataType> ABBREV;
 
 	static {
 		Map<CmfDataType, CmfValue> nvl = new EnumMap<>(CmfDataType.class);
 		Map<String, CmfDataType> abb = new TreeMap<>();
 		for (CmfDataType t : CmfDataType.values()) {
-			CmfDataType o = abb.put(t.abbreviation, t);
+			CmfDataType o = abb.put(t.abbrev, t);
 			if (o != null) {
 				throw new RuntimeException(
 					String.format("ERROR: The CmfDataType values %s and %s share the same abbreviation [%s]", t.name(),
-						o.name(), t.abbreviation));
+						o.name(), t.abbrev));
 			}
 			try {
 				nvl.put(t, new CmfValue(t, null));
@@ -122,7 +122,7 @@ public enum CmfDataType {
 			}
 		}
 		NULL = Tools.freezeMap(nvl);
-		ABBREVIATIONS = Tools.freezeMap(new LinkedHashMap<>(abb));
+		ABBREV = Tools.freezeMap(new LinkedHashMap<>(abb));
 	}
 
 	public final CmfValue getNull() {
@@ -153,7 +153,7 @@ public enum CmfDataType {
 			return CmfDataType.valueOf(StringUtils.upperCase(value));
 		} catch (final IllegalArgumentException e) {
 			// Maybe an abbreviation?
-			CmfDataType t = CmfDataType.ABBREVIATIONS.get(StringUtils.lowerCase(value));
+			CmfDataType t = CmfDataType.ABBREV.get(StringUtils.lowerCase(value));
 			if (t != null) { return t; }
 			throw e;
 		}
