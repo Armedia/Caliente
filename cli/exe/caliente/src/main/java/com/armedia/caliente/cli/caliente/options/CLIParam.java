@@ -138,6 +138,14 @@ public enum CLIParam implements OptionWrapper {
 			.setDescription("The object filter descriptor file") //
 	), //
 
+	from( //
+		new OptionImpl() //
+			.setRequired(true) //
+			.setArgumentLimits(1) //
+			.setArgumentName("source-spec") //
+			.setDescription("The source specification identifying which content to extract") //
+	), //
+
 	group_map( //
 		new OptionImpl() //
 			.setArgumentLimits(1) //
@@ -355,14 +363,6 @@ public enum CLIParam implements OptionWrapper {
 	skip_content( //
 		new OptionImpl() //
 			.setDescription("Don't process the actual content streams") //
-	), //
-
-	from( //
-		new OptionImpl() //
-			.setRequired(true) //
-			.setArgumentLimits(1) //
-			.setArgumentName("source-spec") //
-			.setDescription("The source specification identifying which content to extract") //
 	), //
 
 	streams( //
