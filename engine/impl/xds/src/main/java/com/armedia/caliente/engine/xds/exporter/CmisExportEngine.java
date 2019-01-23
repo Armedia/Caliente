@@ -3,6 +3,7 @@ package com.armedia.caliente.engine.xds.exporter;
 import java.io.File;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.client.api.Folder;
@@ -20,7 +21,6 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.xds.CmisPagingTransformerIterator;
 import com.armedia.caliente.engine.xds.CmisRecursiveIterator;
@@ -115,11 +115,11 @@ public class CmisExportEngine extends
 
 	@Override
 	protected void findExportTargetsByPath(Session session, CfgTools configuration, CmisExportDelegateFactory factory,
-		ExportResultSubmitter handler, String path) throws Exception {
+		Consumer<ExportTarget> handler, String path) throws Exception {
 		Iterator<ExportTarget> it = getPathIterator(session, path);
 		if (it != null) {
 			while (it.hasNext()) {
-				handler.submit(it.next());
+				handler.accept(it.next());
 			}
 		}
 	}
@@ -134,11 +134,11 @@ public class CmisExportEngine extends
 
 	@Override
 	protected void findExportTargetsByQuery(Session session, CfgTools configuration, CmisExportDelegateFactory factory,
-		ExportResultSubmitter handler, String query) throws Exception {
+		Consumer<ExportTarget> handler, String query) throws Exception {
 		Iterator<ExportTarget> it = getQueryIterator(session, query);
 		if (it != null) {
 			while (it.hasNext()) {
-				handler.submit(it.next());
+				handler.accept(it.next());
 			}
 		}
 	}

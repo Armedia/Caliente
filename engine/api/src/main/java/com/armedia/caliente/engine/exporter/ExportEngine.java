@@ -14,6 +14,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
@@ -589,7 +590,7 @@ public abstract class ExportEngine<//
 	}
 
 	private void processSource(SESSION session, String source, DELEGATE_FACTORY delegateFactory,
-		ExportResultSubmitter submitter) throws Exception {
+		Consumer<ExportTarget> submitter) throws Exception {
 		if (source.startsWith("%")) {
 			if (!this.supportedSearches.contains(SearchType.KEY)) {
 				throw new ExportException(
@@ -605,7 +606,7 @@ public abstract class ExportEngine<//
 			if (target == null) {
 				throw new ExportException(String.format("Invalid search key [%s] - no object was found"));
 			}
-			submitter.submit(target);
+			submitter.accept(target);
 		} else //
 		if (source.startsWith("/")) {
 			if (!this.supportedSearches.contains(SearchType.PATH)) {
@@ -778,7 +779,7 @@ public abstract class ExportEngine<//
 				boolean ok = false;
 				try {
 
-					final ExportResultSubmitter submitter = (target) -> {
+					final Consumer<ExportTarget> submitter = (target) -> {
 						if (target == null) { return; }
 						if (target.isNull()) {
 							ExportEngine.this.log.warn("Skipping a null target: {}", target);
@@ -790,7 +791,7 @@ public abstract class ExportEngine<//
 						try {
 							worker.addWorkItem(target);
 						} catch (InterruptedException e) {
-							throw new ExportException(String.format("Interrupted while trying to queue up %s", target),
+							throw new RuntimeException(String.format("Interrupted while trying to queue up %s", target),
 								e);
 						}
 					};
@@ -861,10 +862,10 @@ public abstract class ExportEngine<//
 	}
 
 	protected abstract void findExportTargetsByQuery(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
-		ExportResultSubmitter handler, String query) throws Exception;
+		Consumer<ExportTarget> handler, String query) throws Exception;
 
 	protected abstract void findExportTargetsByPath(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
-		ExportResultSubmitter handler, String path) throws Exception;
+		Consumer<ExportTarget> handler, String path) throws Exception;
 
 	protected abstract ExportTarget findExportTarget(SESSION session, String searchKey) throws Exception;
 

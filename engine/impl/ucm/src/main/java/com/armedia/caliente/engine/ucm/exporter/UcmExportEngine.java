@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,7 +19,6 @@ import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.ucm.UcmSession;
 import com.armedia.caliente.engine.ucm.UcmSessionFactory;
@@ -29,7 +29,6 @@ import com.armedia.caliente.engine.ucm.model.UcmFolder;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
 import com.armedia.caliente.engine.ucm.model.UcmModel.URIHandler;
-import com.armedia.caliente.engine.ucm.model.UcmRuntimeException;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
@@ -46,16 +45,6 @@ public class UcmExportEngine extends
 	private static final Pattern STATIC_PARSER = Pattern.compile("^(file|folder)\\s*:\\s*(.+)$",
 		Pattern.CASE_INSENSITIVE);
 
-	private static class ExceptionWrapper extends RuntimeException {
-		private static final long serialVersionUID = 1L;
-		private final URI uri;
-
-		private ExceptionWrapper(URI uri, Throwable cause) {
-			super(cause);
-			this.uri = uri;
-		}
-	}
-
 	public UcmExportEngine(UcmExportEngineFactory factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true);
@@ -63,23 +52,14 @@ public class UcmExportEngine extends
 
 	@Override
 	protected void findExportTargetsByQuery(UcmSession session, CfgTools configuration,
-		UcmExportDelegateFactory factory, ExportResultSubmitter handler, String query) throws Exception {
+		UcmExportDelegateFactory factory, Consumer<ExportTarget> handler, String query) throws Exception {
 		if (StringUtils.isEmpty(query)) { return; }
-		try {
-			session.iterateURISearchResults(query, new URIHandler() {
-				@Override
-				public void handleURI(UcmSession session, long pos, URI objectUri) {
-					try {
-						handler.submit(new ExportTarget(CmfType.DOCUMENT, objectUri.toString(), objectUri.toString()));
-					} catch (final ExportException e) {
-						throw new ExceptionWrapper(objectUri, e);
-					}
-				}
-			});
-		} catch (ExceptionWrapper e) {
-			throw new ExportException(String.format("Exception caught while handling search result [%s]", e.uri),
-				e.getCause());
-		}
+		session.iterateURISearchResults(query, new URIHandler() {
+			@Override
+			public void handleURI(UcmSession session, long pos, URI objectUri) {
+				handler.accept(new ExportTarget(CmfType.DOCUMENT, objectUri.toString(), objectUri.toString()));
+			}
+		});
 	}
 
 	@Override
@@ -116,16 +96,16 @@ public class UcmExportEngine extends
 
 	@Override
 	protected void findExportTargetsByPath(UcmSession session, CfgTools configuration, UcmExportDelegateFactory factory,
-		ExportResultSubmitter handler, String path) throws Exception {
+		Consumer<ExportTarget> handler, String path) throws Exception {
 		UcmFSObject object = session.getObject(path);
 		switch (object.getType()) {
 			case FILE:
-				handler.submit(
+				handler.accept(
 					new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(), object.getURI().toString()));
 				break;
 			case FOLDER:
 				if (object.isShortcut()) {
-					handler.submit(
+					handler.accept(
 						new ExportTarget(CmfType.FOLDER, object.getUniqueURI().toString(), object.getURI().toString()));
 					break;
 				}
@@ -135,13 +115,8 @@ public class UcmExportEngine extends
 				session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
 					@Override
 					public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
-						try {
-							handler.submit(new ExportTarget(object.getType().cmfType, object.getUniqueURI().toString(),
-								object.getURI().toString()));
-						} catch (ExportException e) {
-							throw new UcmRuntimeException(String.format(
-								"ExportException caught while submitting item [%s] to the workload", objectUri), e);
-						}
+						handler.accept(new ExportTarget(object.getType().cmfType, object.getUniqueURI().toString(),
+							object.getURI().toString()));
 					}
 				});
 				break;

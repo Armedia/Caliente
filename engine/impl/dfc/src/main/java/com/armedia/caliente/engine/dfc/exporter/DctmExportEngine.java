@@ -5,6 +5,7 @@
 package com.armedia.caliente.engine.dfc.exporter;
 
 import java.io.File;
+import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -18,7 +19,6 @@ import com.armedia.caliente.engine.dfc.DctmTranslator;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
@@ -55,7 +55,7 @@ public class DctmExportEngine extends
 
 	@Override
 	protected void findExportTargetsByPath(IDfSession session, CfgTools configuration,
-		DctmExportDelegateFactory factory, ExportResultSubmitter handler, String path) throws Exception {
+		DctmExportDelegateFactory factory, Consumer<ExportTarget> handler, String path) throws Exception {
 		IDfPersistentObject obj = session.getObjectByPath(path);
 		if (obj == null) { return; }
 
@@ -63,7 +63,7 @@ public class DctmExportEngine extends
 		if (!obj.isInstanceOf("dm_folder")) {
 			// Not a folder, so no recursion!
 			handler
-				.submit(new ExportTarget(DctmObjectType.decodeType(obj).getStoredObjectType(), id.getId(), id.getId()));
+				.accept(new ExportTarget(DctmObjectType.decodeType(obj).getStoredObjectType(), id.getId(), id.getId()));
 		}
 
 		// If it's a folder, we morph into a query-based recursion.
@@ -73,7 +73,7 @@ public class DctmExportEngine extends
 
 	@Override
 	protected void findExportTargetsByQuery(IDfSession session, CfgTools configuration,
-		DctmExportDelegateFactory factory, ExportResultSubmitter handler, String source) throws Exception {
+		DctmExportDelegateFactory factory, Consumer<ExportTarget> handler, String source) throws Exception {
 		if (session == null) {
 			throw new IllegalArgumentException("Must provide a session through which to retrieve the results");
 		}
@@ -85,7 +85,7 @@ public class DctmExportEngine extends
 		try (CloseableIterator<ExportTarget> it = new DctmExportTargetIterator(
 			DfUtils.executeQuery(session, source.toString(), IDfQuery.DF_EXECREAD_QUERY, batchSize))) {
 			while (it.hasNext()) {
-				handler.submit(it.next());
+				handler.accept(it.next());
 			}
 		}
 	}

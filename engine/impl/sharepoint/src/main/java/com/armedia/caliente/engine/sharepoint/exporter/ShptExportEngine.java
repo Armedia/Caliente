@@ -6,13 +6,13 @@ package com.armedia.caliente.engine.sharepoint.exporter;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sharepoint.ShptException;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
@@ -43,7 +43,7 @@ public class ShptExportEngine extends
 
 	@Override
 	protected void findExportTargetsByQuery(ShptSession session, CfgTools configuration,
-		ShptExportDelegateFactory factory, ExportResultSubmitter handler, String query) throws Exception {
+		ShptExportDelegateFactory factory, Consumer<ExportTarget> handler, String query) throws Exception {
 		throw new Exception("SharePoint export doesn't yet support query-based export");
 	}
 
@@ -54,7 +54,7 @@ public class ShptExportEngine extends
 
 	@Override
 	protected void findExportTargetsByPath(ShptSession service, CfgTools configuration,
-		ShptExportDelegateFactory factory, ExportResultSubmitter handler, String path) throws Exception {
+		ShptExportDelegateFactory factory, Consumer<ExportTarget> handler, String path) throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
 		if (service == null) {
@@ -67,7 +67,7 @@ public class ShptExportEngine extends
 			Iterator<ExportTarget> it = new ShptRecursiveIterator(service, service.getFolder(path), configuration,
 				excludeEmptyFolders);
 			while (it.hasNext()) {
-				handler.submit(it.next());
+				handler.accept(it.next());
 			}
 		} catch (ShptSessionException e) {
 			throw new ShptException(String.format("Export target search failed for path [%s]", path), e);

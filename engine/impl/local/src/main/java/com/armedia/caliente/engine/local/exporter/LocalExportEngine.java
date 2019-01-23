@@ -2,13 +2,13 @@ package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.exporter.ExportEngine;
-import com.armedia.caliente.engine.exporter.ExportResultSubmitter;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionFactory;
@@ -33,7 +33,7 @@ public class LocalExportEngine extends
 
 	@Override
 	protected void findExportTargetsByQuery(LocalRoot session, CfgTools configuration,
-		LocalExportDelegateFactory factory, ExportResultSubmitter handler, String query) throws Exception {
+		LocalExportDelegateFactory factory, Consumer<ExportTarget> handler, String query) throws Exception {
 		throw new Exception("Local Export doesn't support queries");
 	}
 
@@ -44,11 +44,11 @@ public class LocalExportEngine extends
 
 	@Override
 	protected void findExportTargetsByPath(LocalRoot session, CfgTools configuration,
-		LocalExportDelegateFactory factory, ExportResultSubmitter handler, String path) throws Exception {
+		LocalExportDelegateFactory factory, Consumer<ExportTarget> handler, String path) throws Exception {
 		Iterator<ExportTarget> it = new LocalRecursiveIterator(session,
 			configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS));
 		while (it.hasNext()) {
-			handler.submit(it.next());
+			handler.accept(it.next());
 		}
 	}
 
