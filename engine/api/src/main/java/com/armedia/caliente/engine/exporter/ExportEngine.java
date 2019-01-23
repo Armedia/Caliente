@@ -47,8 +47,6 @@ import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.line.LineScanner;
-import com.armedia.commons.utilities.line.LineScannerConfig;
-import com.armedia.commons.utilities.line.LineScannerConfig.Feature;
 
 public abstract class ExportEngine<//
 	SESSION, //
@@ -734,12 +732,6 @@ public abstract class ExportEngine<//
 								e);
 						}
 					};
-
-					LineScannerConfig config = new LineScannerConfig();
-					config //
-						.removeFeature(Feature.CONTINUATION) //
-						.removeFeature(Feature.COMMENTS) //
-					;
 
 					LineScanner scanner = new LineScanner();
 					final SESSION session = baseSession.getWrapped();
