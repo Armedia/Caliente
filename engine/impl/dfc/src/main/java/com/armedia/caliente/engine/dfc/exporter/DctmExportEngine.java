@@ -5,7 +5,8 @@
 package com.armedia.caliente.engine.dfc.exporter;
 
 import java.io.File;
-import java.util.function.Consumer;
+import java.util.Collections;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -25,13 +26,14 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.tools.CmfCrypt;
+import com.armedia.commons.dfc.util.DctmCollectionStream;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.CloseableIterator;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
+import com.documentum.fc.client.IDfTypedObject;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
@@ -54,26 +56,28 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected void findExportTargetsByPath(IDfSession session, CfgTools configuration,
-		DctmExportDelegateFactory factory, Consumer<ExportTarget> handler, String path) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(IDfSession session, CfgTools configuration,
+		DctmExportDelegateFactory factory, String path) throws Exception {
 		IDfPersistentObject obj = session.getObjectByPath(path);
-		if (obj == null) { return; }
+		if (obj == null) { return null; }
 
 		final IDfId id = obj.getObjectId();
 		if (!obj.isInstanceOf("dm_folder")) {
 			// Not a folder, so no recursion!
-			handler
-				.accept(new ExportTarget(DctmObjectType.decodeType(obj).getStoredObjectType(), id.getId(), id.getId()));
+			return Collections
+				.singleton(
+					new ExportTarget(DctmObjectType.decodeType(obj).getStoredObjectType(), id.getId(), id.getId()))
+				.stream();
 		}
 
 		// If it's a folder, we morph into a query-based recursion.
-		findExportTargetsByQuery(session, configuration, factory, handler,
+		return findExportTargetsByQuery(session, configuration, factory,
 			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfUtils.quoteString(id.getId())));
 	}
 
 	@Override
-	protected void findExportTargetsByQuery(IDfSession session, CfgTools configuration,
-		DctmExportDelegateFactory factory, Consumer<ExportTarget> handler, String source) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(IDfSession session, CfgTools configuration,
+		DctmExportDelegateFactory factory, String source) throws Exception {
 		if (session == null) {
 			throw new IllegalArgumentException("Must provide a session through which to retrieve the results");
 		}
@@ -82,11 +86,17 @@ public class DctmExportEngine extends
 		source = String.format("select r_object_id from %s", StringUtils.strip(source));
 
 		final int batchSize = configuration.getInteger(Setting.EXPORT_BATCH_SIZE);
-		try (CloseableIterator<ExportTarget> it = new DctmExportTargetIterator(
-			DfUtils.executeQuery(session, source.toString(), IDfQuery.DF_EXECREAD_QUERY, batchSize))) {
-			while (it.hasNext()) {
-				handler.accept(it.next());
-			}
+
+		return DctmCollectionStream.get(session, source, IDfQuery.DF_EXECREAD_QUERY, batchSize)
+			.map(this::getExportTarget);
+	}
+
+	private ExportTarget getExportTarget(IDfTypedObject t) {
+		if (t == null) { return null; }
+		try {
+			return DctmExportTools.getExportTarget(t);
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to construct an ExportTarget instance", e);
 		}
 	}
 

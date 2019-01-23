@@ -6,7 +6,7 @@ package com.armedia.caliente.engine.sharepoint.exporter;
 
 import java.io.File;
 import java.util.Iterator;
-import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
@@ -42,8 +42,8 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected void findExportTargetsByQuery(ShptSession session, CfgTools configuration,
-		ShptExportDelegateFactory factory, Consumer<ExportTarget> handler, String query) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(ShptSession session, CfgTools configuration,
+		ShptExportDelegateFactory factory, String query) throws Exception {
 		throw new Exception("SharePoint export doesn't yet support query-based export");
 	}
 
@@ -53,8 +53,8 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected void findExportTargetsByPath(ShptSession service, CfgTools configuration,
-		ShptExportDelegateFactory factory, Consumer<ExportTarget> handler, String path) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(ShptSession service, CfgTools configuration,
+		ShptExportDelegateFactory factory, String path) throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
 		if (service == null) {
@@ -62,16 +62,13 @@ public class ShptExportEngine extends
 		}
 		if (path == null) { throw new ShptException("Must provide the name of the site to export"); }
 		final boolean excludeEmptyFolders = configuration.getBoolean(ShptSetting.EXCLUDE_EMPTY_FOLDERS);
-
+		final Iterator<ExportTarget> it;
 		try {
-			Iterator<ExportTarget> it = new ShptRecursiveIterator(service, service.getFolder(path), configuration,
-				excludeEmptyFolders);
-			while (it.hasNext()) {
-				handler.accept(it.next());
-			}
+			it = new ShptRecursiveIterator(service, service.getFolder(path), configuration, excludeEmptyFolders);
 		} catch (ShptSessionException e) {
 			throw new ShptException(String.format("Export target search failed for path [%s]", path), e);
 		}
+		return getStreamFromIterator(it);
 	}
 
 	@Override

@@ -6,15 +6,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
@@ -589,8 +594,22 @@ public abstract class ExportEngine<//
 		}
 	}
 
-	private void processSource(SESSION session, String source, DELEGATE_FACTORY delegateFactory,
-		Consumer<ExportTarget> submitter) throws Exception {
+	protected Stream<ExportTarget> getStreamFromIterator(Iterator<ExportTarget> it) {
+		return getStreamFromIterator(it, Spliterator.DISTINCT | Spliterator.IMMUTABLE | Spliterator.ORDERED);
+	}
+
+	protected Stream<ExportTarget> getStreamFromIterator(Iterator<ExportTarget> it, int flags) {
+		return getStreamFromIterator(it, flags, false);
+	}
+
+	protected Stream<ExportTarget> getStreamFromIterator(Iterator<ExportTarget> it, int flags, boolean parallel) {
+		if (it == null) { return Stream.empty(); }
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, flags), parallel);
+	}
+
+	private Stream<ExportTarget> getExportTargets(SESSION session, String source, DELEGATE_FACTORY delegateFactory)
+		throws Exception {
+		Stream<ExportTarget> ret = null;
 		if (source.startsWith("%")) {
 			if (!this.supportedSearches.contains(SearchType.KEY)) {
 				throw new ExportException(
@@ -606,7 +625,7 @@ public abstract class ExportEngine<//
 			if (target == null) {
 				throw new ExportException(String.format("Invalid search key [%s] - no object was found"));
 			}
-			submitter.accept(target);
+			ret = Stream.of(target);
 		} else //
 		if (source.startsWith("/")) {
 			if (!this.supportedSearches.contains(SearchType.PATH)) {
@@ -614,15 +633,21 @@ public abstract class ExportEngine<//
 					String.format("This engine doesn't support searches by path - found [%s] as the source", source));
 			}
 			// CMS Path!
-			findExportTargetsByPath(session, this.settings, delegateFactory, submitter, source);
+			ret = findExportTargetsByPath(session, this.settings, delegateFactory, source);
 		} else {
 			if (!this.supportedSearches.contains(SearchType.QUERY)) {
 				throw new ExportException(
 					String.format("This engine doesn't support searches by query - found [%s] as the source", source));
 			}
 			// Query string!
-			findExportTargetsByQuery(session, this.settings, delegateFactory, submitter, source);
+			ret = findExportTargetsByQuery(session, this.settings, delegateFactory, source);
 		}
+		if (ret != null) {
+			ret = ret.sequential();
+		} else {
+			ret = Stream.empty();
+		}
+		return ret;
 	}
 
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
@@ -809,15 +834,20 @@ public abstract class ExportEngine<//
 						}
 
 						scanner.scanLines((line) -> {
-							try {
-								processSource(session, line, delegateFactory, submitter);
+							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
+								s.forEachOrdered(submitter);
 							} catch (Exception e) {
 								this.log.warn("Failed to find the export target(s) as per [{}]", line, e);
 							}
 							return true;
 						}, sources);
 					} else {
-						processSource(session, sources.iterator().next(), delegateFactory, submitter);
+						try (Stream<ExportTarget> s = getExportTargets(session, sources.iterator().next(),
+							delegateFactory)) {
+							if (s != null) {
+								s.forEachOrdered(submitter);
+							}
+						}
 					}
 					ok = true;
 				} catch (Exception e) {
@@ -861,11 +891,11 @@ public abstract class ExportEngine<//
 		// By default, do nothing...
 	}
 
-	protected abstract void findExportTargetsByQuery(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
-		Consumer<ExportTarget> handler, String query) throws Exception;
+	protected abstract Stream<ExportTarget> findExportTargetsByQuery(SESSION session, CfgTools configuration,
+		DELEGATE_FACTORY factory, String query) throws Exception;
 
-	protected abstract void findExportTargetsByPath(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
-		Consumer<ExportTarget> handler, String path) throws Exception;
+	protected abstract Stream<ExportTarget> findExportTargetsByPath(SESSION session, CfgTools configuration,
+		DELEGATE_FACTORY factory, String path) throws Exception;
 
 	protected abstract ExportTarget findExportTarget(SESSION session, String searchKey) throws Exception;
 

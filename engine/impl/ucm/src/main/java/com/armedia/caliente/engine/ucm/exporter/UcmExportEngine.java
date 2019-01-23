@@ -8,9 +8,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+import java.util.stream.Stream.Builder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -51,15 +52,19 @@ public class UcmExportEngine extends
 	}
 
 	@Override
-	protected void findExportTargetsByQuery(UcmSession session, CfgTools configuration,
-		UcmExportDelegateFactory factory, Consumer<ExportTarget> handler, String query) throws Exception {
-		if (StringUtils.isEmpty(query)) { return; }
+	protected Stream<ExportTarget> findExportTargetsByQuery(UcmSession session, CfgTools configuration,
+		UcmExportDelegateFactory factory, String query) throws Exception {
+		if (StringUtils.isEmpty(query)) { return Stream.empty(); }
+
+		// TODO: Not like!! Doesn't match the spirit of what we're trying to do
+		Builder<ExportTarget> builder = Stream.builder();
 		session.iterateURISearchResults(query, new URIHandler() {
 			@Override
 			public void handleURI(UcmSession session, long pos, URI objectUri) {
-				handler.accept(new ExportTarget(CmfType.DOCUMENT, objectUri.toString(), objectUri.toString()));
+				builder.accept(new ExportTarget(CmfType.DOCUMENT, objectUri.toString(), objectUri.toString()));
 			}
 		});
+		return builder.build();
 	}
 
 	@Override
@@ -95,32 +100,35 @@ public class UcmExportEngine extends
 	}
 
 	@Override
-	protected void findExportTargetsByPath(UcmSession session, CfgTools configuration, UcmExportDelegateFactory factory,
-		Consumer<ExportTarget> handler, String path) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByPath(UcmSession session, CfgTools configuration,
+		UcmExportDelegateFactory factory, String path) throws Exception {
 		UcmFSObject object = session.getObject(path);
 		switch (object.getType()) {
 			case FILE:
-				handler.accept(
+				return Stream.of(
 					new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(), object.getURI().toString()));
-				break;
+
 			case FOLDER:
 				if (object.isShortcut()) {
-					handler.accept(
+					return Stream.of(
 						new ExportTarget(CmfType.FOLDER, object.getUniqueURI().toString(), object.getURI().toString()));
-					break;
 				}
+
+				// TODO: Not like!! Doesn't match the spirit of what we're trying to do
+				Builder<ExportTarget> builder = Stream.builder();
 				UcmFolder folder = UcmFolder.class.cast(object);
 				// Not a shortcut, so we'll recurse into it and submit each and every one of
 				// its contents, but we won't be recursing into shortcuts
 				session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
 					@Override
 					public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
-						handler.accept(new ExportTarget(object.getType().cmfType, object.getUniqueURI().toString(),
+						builder.accept(new ExportTarget(object.getType().cmfType, object.getUniqueURI().toString(),
 							object.getURI().toString()));
 					}
 				});
-				break;
+				return builder.build();
 		}
+		return Stream.empty();
 	}
 
 	@Override

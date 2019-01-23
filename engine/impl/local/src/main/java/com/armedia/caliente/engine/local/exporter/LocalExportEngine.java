@@ -1,8 +1,7 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
-import java.util.Iterator;
-import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
@@ -32,8 +31,8 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected void findExportTargetsByQuery(LocalRoot session, CfgTools configuration,
-		LocalExportDelegateFactory factory, Consumer<ExportTarget> handler, String query) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration,
+		LocalExportDelegateFactory factory, String query) throws Exception {
 		throw new Exception("Local Export doesn't support queries");
 	}
 
@@ -43,13 +42,10 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected void findExportTargetsByPath(LocalRoot session, CfgTools configuration,
-		LocalExportDelegateFactory factory, Consumer<ExportTarget> handler, String path) throws Exception {
-		Iterator<ExportTarget> it = new LocalRecursiveIterator(session,
-			configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS));
-		while (it.hasNext()) {
-			handler.accept(it.next());
-		}
+	protected Stream<ExportTarget> findExportTargetsByPath(LocalRoot session, CfgTools configuration,
+		LocalExportDelegateFactory factory, String path) throws Exception {
+		return getStreamFromIterator(
+			new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)));
 	}
 
 	@Override

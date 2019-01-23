@@ -26,6 +26,16 @@ public class DctmExportTools {
 		return new ExportTarget(type.getStoredObjectType(), strId, strId);
 	}
 
+	public static ExportTarget getExportTarget(IDfTypedObject source)
+		throws DfException, UnsupportedDctmObjectTypeException {
+		return DctmExportTools.getExportTarget(source, null);
+	}
+
+	public static ExportTarget getExportTarget(IDfTypedObject source, String idAttribute)
+		throws DfException, UnsupportedDctmObjectTypeException {
+		return DctmExportTools.getExportTarget(source, idAttribute, null);
+	}
+
 	public static ExportTarget getExportTarget(IDfTypedObject source, String idAttribute, String typeAttribute)
 		throws DfException, UnsupportedDctmObjectTypeException {
 		if (source == null) { throw new IllegalArgumentException("Must provide an object to create a target for"); }
