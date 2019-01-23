@@ -141,9 +141,10 @@ public enum CLIParam implements OptionWrapper {
 	from( //
 		new OptionImpl() //
 			.setRequired(true) //
-			.setArgumentLimits(1) //
+			.setArgumentLimits(1, -1) //
 			.setArgumentName("source-spec") //
-			.setDescription("The source specification identifying which content to extract") //
+			.setDescription(
+				"The source specifications identifying which content to extract (%searchKey, @fileref, /path, or query string)") //
 	), //
 
 	group_map( //
