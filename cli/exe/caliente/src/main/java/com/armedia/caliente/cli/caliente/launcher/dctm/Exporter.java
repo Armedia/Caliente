@@ -14,23 +14,12 @@ import com.armedia.caliente.cli.caliente.command.ExportCommandModule;
 import com.armedia.caliente.cli.caliente.exception.CalienteException;
 import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
-import com.armedia.caliente.cli.caliente.options.CLIParam;
 import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
-import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.documentum.fc.client.IDfSession;
 
 class Exporter extends ExportCommandModule implements DynamicCommandOptions {
-	/**
-	 * The from and where clause of the export query that runs periodically. The application will
-	 * combine the select clause listed above with this from and where clauses to build the complete
-	 * dql query. Please note that this clause will be ignored when the export is running in the
-	 * adhoc mode. In that case the from and where clauses are specified in the properties file.
-	 */
-	private static final String DEFAULT_PREDICATE = "dm_sysobject where (TYPE(\"dm_folder\") or TYPE(\"dm_document\")) "
-		+ "and not folder('/System', descend) and not folder('/Temp', descend) ";
-
 	private static final Option BATCH_SIZE = new OptionImpl() //
 		.setLongOpt("batch-size") //
 		.setArgumentLimits(1) //
@@ -192,12 +181,6 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		} catch (Exception e) {
 			throw new CalienteException("Failed to initialize the connection pool or get the primary session", e);
 		}
-
-		String source = Exporter.DEFAULT_PREDICATE;
-		if (commandValues.isPresent(CLIParam.from)) {
-			source = commandValues.getString(CLIParam.from);
-		}
-		settings.put(ExportSetting.FROM.getLabel(), source);
 
 		if (commandValues.isPresent(Exporter.OWNER_ATTRIBUTES)) {
 			settings.put(Setting.OWNER_ATTRIBUTES.getLabel(), commandValues.getAllStrings(Exporter.OWNER_ATTRIBUTES));
