@@ -57,7 +57,7 @@ public class CmisExportEngine extends
 
 	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
-		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true);
 	}
 
 	protected ExportTarget newExportTarget(QueryResult r) throws ExportException {

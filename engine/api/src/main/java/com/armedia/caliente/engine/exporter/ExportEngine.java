@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,15 @@ public abstract class ExportEngine<//
 > extends
 	TransferEngine<ExportEngineListener, ExportResult, ExportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ENGINE_FACTORY> {
 
+	protected static enum SearchType {
+		//
+		PATH, //
+		KEY, //
+		QUERY, //
+		//
+		;
+	}
+
 	private class Result {
 		private final Long objectNumber;
 		private final CmfObject<VALUE> object;
@@ -85,6 +95,8 @@ public abstract class ExportEngine<//
 	}
 
 	private final Map<LockStatus, Result> staticLockResults;
+	private final boolean supportsMultipleSources;
+	private final Set<SearchType> supportedSearches;
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
 
 	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> implements InvocationHandler {
@@ -120,7 +132,8 @@ public abstract class ExportEngine<//
 	}
 
 	protected ExportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings,
+		boolean supportsMultipleSources, SearchType... searchTypes) {
 		super(factory, ExportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"export");
 		Map<LockStatus, Result> staticLockResults = new EnumMap<>(LockStatus.class);
@@ -130,6 +143,19 @@ public abstract class ExportEngine<//
 			}
 		}
 		this.staticLockResults = Tools.freezeMap(staticLockResults);
+		Set<SearchType> specSet = EnumSet.noneOf(SearchType.class);
+		for (SearchType type : searchTypes) {
+			if (type != null) {
+				specSet.add(type);
+			}
+		}
+
+		if (specSet.isEmpty()) {
+			specSet = EnumSet.allOf(SearchType.class);
+		}
+
+		this.supportedSearches = Tools.freezeSet(specSet);
+		this.supportsMultipleSources = supportsMultipleSources;
 	}
 
 	private ExportOperation getOrCreateExportOperation(ExportTarget target,
@@ -735,9 +761,71 @@ public abstract class ExportEngine<//
 
 					LineScanner scanner = new LineScanner();
 					final SESSION session = baseSession.getWrapped();
-					scanner.scanLines((line) -> {
+					Collection<String> sources = exportState.cfg.getStrings(ExportSetting.FROM);
+
+					// Does it support multiple sources?
+					if (sources.size() > 1) {
+						if (!this.supportsMultipleSources) {
+							throw new ExportException(String.format(
+								"This engine doesn't support multiple export sources, please use only one (found %d)",
+								sources.size()));
+						}
+
+						scanner.scanLines((line) -> {
+							try {
+								if (line.startsWith("%")) {
+									if (!this.supportedSearches.contains(SearchType.KEY)) {
+										this.log.warn(
+											"This engine doesn't support searches by key - found [{}] as the source",
+											line);
+										return true;
+									}
+									// SearchKey!
+									final String searchKey = StringUtils.strip(line.substring(1));
+									ExportTarget target = null;
+									if (!StringUtils.isEmpty(searchKey)) {
+										target = findExportTarget(session, searchKey);
+									}
+									if (target != null) {
+										submitter.submit(target);
+									} else {
+										this.log.warn("Invalid search key [{}] - no object was found", searchKey);
+									}
+								} else //
+								if (line.startsWith("/")) {
+									if (!this.supportedSearches.contains(SearchType.PATH)) {
+										this.log.warn(
+											"This engine doesn't support searches by path - found [{}] as the source",
+											line);
+										return true;
+									}
+									// CMS Path!
+									findExportTargetsByPath(session, settings, delegateFactory, submitter, line);
+								} else {
+									if (!this.supportedSearches.contains(SearchType.QUERY)) {
+										this.log.warn(
+											"This engine doesn't support searches by query - found [{}] as the source",
+											line);
+										return true;
+									}
+									// Query string!
+									findExportTargetsByQuery(session, settings, delegateFactory, submitter, line);
+								}
+							} catch (Exception e) {
+								throw new RuntimeException(
+									String.format("Failed to retrieve the export targets as per [%s]", line), e);
+							}
+							return true;
+						}, sources);
+					} else {
+						String line = sources.iterator().next();
 						try {
 							if (line.startsWith("%")) {
+								if (!this.supportedSearches.contains(SearchType.KEY)) {
+									throw new ExportException(String.format(
+										"This engine doesn't support searches by key - found [%s] as the source",
+										line));
+								}
 								// SearchKey!
 								final String searchKey = StringUtils.strip(line.substring(1));
 								ExportTarget target = null;
@@ -751,9 +839,19 @@ public abstract class ExportEngine<//
 								}
 							} else //
 							if (line.startsWith("/")) {
+								if (!this.supportedSearches.contains(SearchType.PATH)) {
+									throw new ExportException(String.format(
+										"This engine doesn't support searches by path - found [%s] as the source",
+										line));
+								}
 								// CMS Path!
 								findExportTargetsByPath(session, settings, delegateFactory, submitter, line);
 							} else {
+								if (!this.supportedSearches.contains(SearchType.QUERY)) {
+									throw new ExportException(String.format(
+										"This engine doesn't support searches by query - found [%s] as the source",
+										line));
+								}
 								// Query string!
 								findExportTargetsByQuery(session, settings, delegateFactory, submitter, line);
 							}
@@ -761,8 +859,7 @@ public abstract class ExportEngine<//
 							throw new RuntimeException(
 								String.format("Failed to retrieve the export targets as per [%s]", line), e);
 						}
-						return true;
-					}, exportState.cfg.getStrings(ExportSetting.FROM));
+					}
 					ok = true;
 				} catch (Exception e) {
 					throw new ExportException("Failed to retrieve the objects to export", e);

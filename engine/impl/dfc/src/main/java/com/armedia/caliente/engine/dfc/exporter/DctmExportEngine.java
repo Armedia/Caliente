@@ -44,7 +44,7 @@ public class DctmExportEngine extends
 
 	public DctmExportEngine(DctmExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
-		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true);
 	}
 
 	@Override

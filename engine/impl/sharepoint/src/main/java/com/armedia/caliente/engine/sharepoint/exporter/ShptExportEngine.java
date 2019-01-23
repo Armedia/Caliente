@@ -38,7 +38,7 @@ public class ShptExportEngine extends
 
 	public ShptExportEngine(ShptExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
-		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true, SearchType.PATH);
 	}
 
 	@Override
