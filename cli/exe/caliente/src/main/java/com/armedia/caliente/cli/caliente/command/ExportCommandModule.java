@@ -26,6 +26,7 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.exporter.ExportResult;
+import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -45,7 +46,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 		if (!super.preConfigure(state, commandValues, settings)) { return false; }
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
 			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
-
+		settings.put(ExportSetting.FROM.getLabel(), commandValues.getAllStrings(CLIParam.from));
 		return true;
 	}
 
