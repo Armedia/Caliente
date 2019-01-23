@@ -2,13 +2,9 @@ package com.armedia.caliente.engine.importer;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -59,10 +55,12 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.Closer;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.CloseableIterator;
-import com.armedia.commons.utilities.ResourceLoader;
-import com.armedia.commons.utilities.ResourceLoaderException;
+import com.armedia.commons.utilities.CloseableIteratorWrapper;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.line.LineProcessorException;
+import com.armedia.commons.utilities.line.LineScanner;
+import com.armedia.commons.utilities.line.LineSourceException;
 
 public abstract class ImportEngine<//
 	SESSION, //
@@ -376,8 +374,6 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	private static final Pattern OBJECT_RESTRICTION_PARSER = Pattern.compile("^([^=]+)=(.*)$");
-
 	protected ImportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
 		super(factory, ImportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
@@ -402,103 +398,31 @@ public abstract class ImportEngine<//
 			false);
 	}
 
-	private CmfObjectRef parseRef(final String str, final int index) throws Exception {
-		String err = null;
-		if (!StringUtils.isBlank(str)) {
-			// Parse it out...
-			Matcher m = ImportEngine.OBJECT_RESTRICTION_PARSER.matcher(str);
-			if (m.matches()) {
-				final String id = StringUtils.strip(m.group(2));
-				if (!StringUtils.isEmpty(id)) {
-					final String typeStr = m.group(1);
-					try {
-						CmfType type = CmfType.decode(typeStr);
-						return new CmfObjectRef(type, StringUtils.strip(id));
-					} catch (IllegalArgumentException e) {
-						// Bad type! Ignore...
-						err = String.format("Unknown object type or abbreviation [%s]", typeStr);
-					}
-				} else {
-					err = "No object ID";
-				}
-			} else {
-				err = String.format("Doesn't match the required format (RE = /%s/)",
-					ImportEngine.OBJECT_RESTRICTION_PARSER.pattern());
-			}
-		} else {
-			err = "Empty string";
-		}
-		if (err != null) {
-			this.output.warn("Bad restrictor spec [{}] at position {} - {}", str, index, err);
-		}
-		return null;
-	}
-
 	private CloseableIterator<CmfObjectRef> getObjectRestrictionIterator(CfgTools cfg) throws ImportException {
-		String source = cfg.getString(ImportSetting.RESTRICT_TO);
-		if (StringUtils.isEmpty(source)) { return null; }
-		final String strippedSource = StringUtils.strip(source);
+		Collection<String> source = cfg.getStrings(ImportSetting.RESTRICT_TO);
+		if ((source == null) || source.isEmpty()) { return null; }
 
-		if (strippedSource.startsWith("%")) {
-			// If the source starts with a %, then it's a comma-separated list of IDs in the form
-			// TYPE-ID
-			final String data = StringUtils.strip(source.substring(1));
-			return new CloseableIterator<CmfObjectRef>() {
+		LineScanner scanner = new LineScanner();
 
-				private int pos = 0;
-				final Iterator<String> it = Tools.splitCSVEscaped(data).iterator();
+		final Collection<CmfObjectRef> restrictions = new LinkedList<>();
 
-				@Override
-				protected Result findNext() throws Exception {
-					if (!this.it.hasNext()) { return null; }
-					return found(parseRef(this.it.next(), this.pos++));
-				}
-
-				@Override
-				protected void doClose() {
-				}
-			};
-		}
-
-		// Otherwise the source points to a resource to be loaded via ResourceLoader.
 		try {
-			final InputStream in = ResourceLoader.getResourceOrFileAsStream(source, System.getProperty("user.dir"));
-			if (in == null) {
-				throw new ImportException(String.format("Failed to find the restrictions list at [%s]", source));
-			}
-
-			return new CloseableIterator<CmfObjectRef>() {
-				final LineNumberReader lr = new LineNumberReader(new InputStreamReader(in));
-				final Iterator<String> it = this.lr.lines().iterator();
-
-				@Override
-				protected Result findNext() throws Exception {
-					while (this.it.hasNext()) {
-						String nextLine = this.it.next();
-						if (nextLine == null) {
-							continue;
-						}
-						// Ignore comments...
-						nextLine = nextLine.replaceAll("\\s*#.*$", "");
-						nextLine = StringUtils.strip(nextLine);
-						if (StringUtils.isEmpty(nextLine)) {
-							// Skip this line...
-							continue;
-						}
-						return found(parseRef(nextLine, this.lr.getLineNumber()));
+			scanner.scanLines((line) -> {
+				try {
+					CmfObjectRef ref = ImportRestriction.parse(StringUtils.strip(line.substring(1)));
+					if (ref != null) {
+						restrictions.add(ref);
 					}
-					return null;
+				} catch (Exception e) {
+					// Illegal reference...
 				}
-
-				@Override
-				protected void doClose() throws Exception {
-					in.close();
-				}
-
-			};
-		} catch (ResourceLoaderException | IOException e) {
-			throw new ImportException(String.format("Failed to load the restrictions list from [%s]", source), e);
+				return true;
+			}, source);
+		} catch (IOException | LineSourceException | LineProcessorException e) {
+			throw new ImportException("Failed to load all the import restrictions", e);
 		}
+
+		return new CloseableIteratorWrapper<>(restrictions.iterator());
 	}
 
 	@Override
