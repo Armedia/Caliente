@@ -588,6 +588,42 @@ public abstract class ExportEngine<//
 		}
 	}
 
+	private void processSource(SESSION session, String source, DELEGATE_FACTORY delegateFactory,
+		ExportResultSubmitter submitter) throws Exception {
+		if (source.startsWith("%")) {
+			if (!this.supportedSearches.contains(SearchType.KEY)) {
+				throw new ExportException(
+					String.format("This engine doesn't support searches by key - found [%s] as the source", source));
+			}
+
+			// SearchKey!
+			final String searchKey = StringUtils.strip(source.substring(1));
+			ExportTarget target = null;
+			if (!StringUtils.isEmpty(searchKey)) {
+				target = findExportTarget(session, searchKey);
+			}
+			if (target == null) {
+				throw new ExportException(String.format("Invalid search key [%s] - no object was found"));
+			}
+			submitter.submit(target);
+		} else //
+		if (source.startsWith("/")) {
+			if (!this.supportedSearches.contains(SearchType.PATH)) {
+				throw new ExportException(
+					String.format("This engine doesn't support searches by path - found [%s] as the source", source));
+			}
+			// CMS Path!
+			findExportTargetsByPath(session, this.settings, delegateFactory, submitter, source);
+		} else {
+			if (!this.supportedSearches.contains(SearchType.QUERY)) {
+				throw new ExportException(
+					String.format("This engine doesn't support searches by query - found [%s] as the source", source));
+			}
+			// Query string!
+			findExportTargetsByQuery(session, this.settings, delegateFactory, submitter, source);
+		}
+	}
+
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
 		CmfObjectCounter<ExportResult> objectCounter, final SessionFactory<SESSION> sessionFactory,
 		final SessionWrapper<SESSION> baseSession,
@@ -773,92 +809,14 @@ public abstract class ExportEngine<//
 
 						scanner.scanLines((line) -> {
 							try {
-								if (line.startsWith("%")) {
-									if (!this.supportedSearches.contains(SearchType.KEY)) {
-										this.log.warn(
-											"This engine doesn't support searches by key - found [{}] as the source",
-											line);
-										return true;
-									}
-									// SearchKey!
-									final String searchKey = StringUtils.strip(line.substring(1));
-									ExportTarget target = null;
-									if (!StringUtils.isEmpty(searchKey)) {
-										target = findExportTarget(session, searchKey);
-									}
-									if (target != null) {
-										submitter.submit(target);
-									} else {
-										this.log.warn("Invalid search key [{}] - no object was found", searchKey);
-									}
-								} else //
-								if (line.startsWith("/")) {
-									if (!this.supportedSearches.contains(SearchType.PATH)) {
-										this.log.warn(
-											"This engine doesn't support searches by path - found [{}] as the source",
-											line);
-										return true;
-									}
-									// CMS Path!
-									findExportTargetsByPath(session, settings, delegateFactory, submitter, line);
-								} else {
-									if (!this.supportedSearches.contains(SearchType.QUERY)) {
-										this.log.warn(
-											"This engine doesn't support searches by query - found [{}] as the source",
-											line);
-										return true;
-									}
-									// Query string!
-									findExportTargetsByQuery(session, settings, delegateFactory, submitter, line);
-								}
+								processSource(session, line, delegateFactory, submitter);
 							} catch (Exception e) {
-								throw new RuntimeException(
-									String.format("Failed to retrieve the export targets as per [%s]", line), e);
+								this.log.warn("Failed to find the export target(s) as per [{}]", line, e);
 							}
 							return true;
 						}, sources);
 					} else {
-						String line = sources.iterator().next();
-						try {
-							if (line.startsWith("%")) {
-								if (!this.supportedSearches.contains(SearchType.KEY)) {
-									throw new ExportException(String.format(
-										"This engine doesn't support searches by key - found [%s] as the source",
-										line));
-								}
-								// SearchKey!
-								final String searchKey = StringUtils.strip(line.substring(1));
-								ExportTarget target = null;
-								if (!StringUtils.isEmpty(searchKey)) {
-									target = findExportTarget(session, searchKey);
-								}
-								if (target != null) {
-									submitter.submit(target);
-								} else {
-									this.log.warn("Invalid search key [{}] - no object was found", searchKey);
-								}
-							} else //
-							if (line.startsWith("/")) {
-								if (!this.supportedSearches.contains(SearchType.PATH)) {
-									throw new ExportException(String.format(
-										"This engine doesn't support searches by path - found [%s] as the source",
-										line));
-								}
-								// CMS Path!
-								findExportTargetsByPath(session, settings, delegateFactory, submitter, line);
-							} else {
-								if (!this.supportedSearches.contains(SearchType.QUERY)) {
-									throw new ExportException(String.format(
-										"This engine doesn't support searches by query - found [%s] as the source",
-										line));
-								}
-								// Query string!
-								findExportTargetsByQuery(session, settings, delegateFactory, submitter, line);
-							}
-						} catch (Exception e) {
-							throw new RuntimeException(
-								String.format("Failed to retrieve the export targets as per [%s]", line), e);
-						}
+						processSource(session, sources.iterator().next(), delegateFactory, submitter);
 					}
 					ok = true;
 				} catch (Exception e) {
