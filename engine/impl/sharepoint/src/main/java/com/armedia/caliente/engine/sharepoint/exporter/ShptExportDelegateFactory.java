@@ -15,17 +15,6 @@ public class ShptExportDelegateFactory
 		super(engine, configuration);
 	}
 
-	String getRelativePath(String relativeUrl) {
-		// TODO: Is this even applicable anymore? We may have multiple different paths for different
-		// things...
-		String exportPath = String.format("%s/", getConfiguration().getString(""));
-		if (relativeUrl.startsWith(exportPath)) {
-			// The -1 is to account for the leading slash we want to preserve
-			relativeUrl = relativeUrl.substring(exportPath.length() - 1);
-		}
-		return relativeUrl;
-	}
-
 	@Override
 	protected ShptExportDelegate<?> newExportDelegate(ShptSession session, CmfType type, String searchKey)
 		throws Exception {
