@@ -36,6 +36,7 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisExportEngine extends
@@ -116,7 +117,7 @@ public class CmisExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByPath(Session session, CfgTools configuration,
 		CmisExportDelegateFactory factory, String path) throws Exception {
-		return getStreamFromIterator(getPathIterator(session, path));
+		return StreamTools.fromIterator(getPathIterator(session, path));
 	}
 
 	protected Iterator<ExportTarget> getQueryIterator(final Session session, final String query) throws Exception {
@@ -130,7 +131,7 @@ public class CmisExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByQuery(Session session, CfgTools configuration,
 		CmisExportDelegateFactory factory, String query) throws Exception {
-		return getStreamFromIterator(getQueryIterator(session, query));
+		return StreamTools.fromIterator(getQueryIterator(session, query));
 	}
 
 	@Override

@@ -21,6 +21,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.StreamTools;
 
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngineFactory> {
@@ -45,7 +46,7 @@ public class LocalExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByPath(LocalRoot session, CfgTools configuration,
 		LocalExportDelegateFactory factory, String path) throws Exception {
-		return getStreamFromIterator(
+		return StreamTools.fromIterator(
 			new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)));
 	}
 

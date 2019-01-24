@@ -28,6 +28,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.StreamTools;
 
 /**
  * @author diego
@@ -69,7 +70,7 @@ public class ShptExportEngine extends
 		} catch (ShptSessionException e) {
 			throw new ShptException(String.format("Export target search failed for path [%s]", path), e);
 		}
-		return getStreamFromIterator(it);
+		return StreamTools.fromIterator(it);
 	}
 
 	@Override

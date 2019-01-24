@@ -6,20 +6,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
@@ -592,19 +588,6 @@ public abstract class ExportEngine<//
 				ctx.popReferrent();
 			}
 		}
-	}
-
-	protected Stream<ExportTarget> getStreamFromIterator(Iterator<ExportTarget> it) {
-		return getStreamFromIterator(it, Spliterator.DISTINCT | Spliterator.IMMUTABLE | Spliterator.ORDERED);
-	}
-
-	protected Stream<ExportTarget> getStreamFromIterator(Iterator<ExportTarget> it, int flags) {
-		return getStreamFromIterator(it, flags, false);
-	}
-
-	protected Stream<ExportTarget> getStreamFromIterator(Iterator<ExportTarget> it, int flags, boolean parallel) {
-		if (it == null) { return Stream.empty(); }
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(it, flags), parallel);
 	}
 
 	private Stream<ExportTarget> getExportTargets(SESSION session, String source, DELEGATE_FACTORY delegateFactory)
