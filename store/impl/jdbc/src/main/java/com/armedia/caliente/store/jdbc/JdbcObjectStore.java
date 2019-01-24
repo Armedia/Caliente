@@ -939,7 +939,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					while (rs.next()) {
 						String str = rs.getString(1);
 						if ((str != null) && !rs.wasNull()) {
-							if (results != null) {
+							if (results == null) {
 								results = new ArrayList<>();
 							}
 							results.add(str);
