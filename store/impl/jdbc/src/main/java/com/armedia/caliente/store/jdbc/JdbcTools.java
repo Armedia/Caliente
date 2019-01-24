@@ -38,8 +38,9 @@ class JdbcTools {
 			int c = 0;
 			while (rs.next()) {
 				c++;
-				if (c < 0) { throw new SQLException(
-					String.format("Counter wraparound after %d items", Integer.MAX_VALUE)); }
+				if (c < 0) {
+					throw new SQLException(String.format("Counter wraparound after %d items", Integer.MAX_VALUE));
+				}
 			}
 			return c;
 		}
@@ -51,8 +52,9 @@ class JdbcTools {
 			long c = 0;
 			while (rs.next()) {
 				c++;
-				if (c < 0) { throw new SQLException(
-					String.format("Counter wraparound after %d items", Long.MAX_VALUE)); }
+				if (c < 0) {
+					throw new SQLException(String.format("Counter wraparound after %d items", Long.MAX_VALUE));
+				}
 			}
 			return c;
 		}
@@ -64,8 +66,9 @@ class JdbcTools {
 			BigInteger c = BigInteger.ZERO;
 			while (rs.next()) {
 				c = c.add(BigInteger.ONE);
-				if (c.compareTo(BigInteger.ZERO) < 0) { throw new SQLException(
-					"BigInteger counter wraparound (probable Java bug!!!)"); }
+				if (c.compareTo(BigInteger.ZERO) < 0) {
+					throw new SQLException("BigInteger counter wraparound (probable Java bug!!!)");
+				}
 			}
 			return c;
 		}
@@ -78,7 +81,7 @@ class JdbcTools {
 		}
 	};
 
-	static final Pattern OBJECT_ID_PARSER = Pattern.compile("^\\{([\\da-fA-F]{1,8})-(.*)\\}$");
+	static final Pattern OBJECT_ID_PARSER = Pattern.compile("^\\{([\\da-f]{1,8})-(.*)\\}$", Pattern.CASE_INSENSITIVE);
 
 	static final Object[][] NO_PARAMS = new Object[0][0];
 
@@ -114,8 +117,9 @@ class JdbcTools {
 	static CmfObjectRef decodeDatabaseId(String id) {
 		if (id == null) { throw new IllegalArgumentException("Must provide an ID to parse"); }
 		Matcher m = JdbcTools.OBJECT_ID_PARSER.matcher(id);
-		if (!m.matches()) { throw new IllegalArgumentException(
-			String.format("The string [%s] is not a valid object ID", id)); }
+		if (!m.matches()) {
+			throw new IllegalArgumentException(String.format("The string [%s] is not a valid object ID", id));
+		}
 		// Parse out the ID value
 		final CmfType type;
 		try {
