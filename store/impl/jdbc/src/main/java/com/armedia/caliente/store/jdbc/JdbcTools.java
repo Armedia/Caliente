@@ -25,61 +25,40 @@ class JdbcTools {
 	private JdbcTools() {
 	}
 
-	static final ResultSetHandler<Void> HANDLER_NULL = new ResultSetHandler<Void>() {
-		@Override
-		public Void handle(ResultSet rs) throws SQLException {
-			return null;
-		}
-	};
+	static final ResultSetHandler<Void> HANDLER_NULL = (rs) -> null;
 
-	static final ResultSetHandler<Integer> HANDLER_INT_COUNTER = new ResultSetHandler<Integer>() {
-		@Override
-		public Integer handle(ResultSet rs) throws SQLException {
-			int c = 0;
-			while (rs.next()) {
-				c++;
-				if (c < 0) {
-					throw new SQLException(String.format("Counter wraparound after %d items", Integer.MAX_VALUE));
-				}
+	static final ResultSetHandler<Integer> HANDLER_INT_COUNTER = (rs) -> {
+		int c = 0;
+		while (rs.next()) {
+			c++;
+			if (c < 0) {
+				throw new SQLException(String.format("Counter wraparound after %d items", Integer.MAX_VALUE));
 			}
-			return c;
 		}
+		return c;
 	};
 
-	static final ResultSetHandler<Long> HANDLER_LONG_COUNTER = new ResultSetHandler<Long>() {
-		@Override
-		public Long handle(ResultSet rs) throws SQLException {
-			long c = 0;
-			while (rs.next()) {
-				c++;
-				if (c < 0) {
-					throw new SQLException(String.format("Counter wraparound after %d items", Long.MAX_VALUE));
-				}
+	static final ResultSetHandler<Long> HANDLER_LONG_COUNTER = (rs) -> {
+		long c = 0;
+		while (rs.next()) {
+			c++;
+			if (c < 0) { throw new SQLException(String.format("Counter wraparound after %d items", Long.MAX_VALUE)); }
+		}
+		return c;
+	};
+
+	static final ResultSetHandler<BigInteger> HANDLER_BIGINT_COUNTER = (rs) -> {
+		BigInteger c = BigInteger.ZERO;
+		while (rs.next()) {
+			c = c.add(BigInteger.ONE);
+			if (c.compareTo(BigInteger.ZERO) < 0) {
+				throw new SQLException("BigInteger counter wraparound (probable Java bug!!!)");
 			}
-			return c;
 		}
+		return c;
 	};
 
-	static final ResultSetHandler<BigInteger> HANDLER_BIGINT_COUNTER = new ResultSetHandler<BigInteger>() {
-		@Override
-		public BigInteger handle(ResultSet rs) throws SQLException {
-			BigInteger c = BigInteger.ZERO;
-			while (rs.next()) {
-				c = c.add(BigInteger.ONE);
-				if (c.compareTo(BigInteger.ZERO) < 0) {
-					throw new SQLException("BigInteger counter wraparound (probable Java bug!!!)");
-				}
-			}
-			return c;
-		}
-	};
-
-	static final ResultSetHandler<Boolean> HANDLER_EXISTS = new ResultSetHandler<Boolean>() {
-		@Override
-		public Boolean handle(ResultSet rs) throws SQLException {
-			return rs.next();
-		}
-	};
+	static final ResultSetHandler<Boolean> HANDLER_EXISTS = (rs) -> rs.next();
 
 	static final Pattern OBJECT_ID_PARSER = Pattern.compile("^\\{([\\da-f]{1,8})-(.*)\\}$", Pattern.CASE_INSENSITIVE);
 

@@ -37,14 +37,11 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 	private static final String PROPERTY_TABLE = "cmf_content_info";
 	private static final String SCHEMA_CHANGE_LOG = "content.changelog.xml";
 
-	private static final ResultSetHandler<Long> HANDLER_LENGTH = new ResultSetHandler<Long>() {
-		@Override
-		public Long handle(ResultSet rs) throws SQLException {
-			if (!rs.next()) { return null; }
-			long l = rs.getLong("length");
-			if (rs.wasNull()) { return null; }
-			return l;
-		}
+	private static final ResultSetHandler<Long> HANDLER_LENGTH = (rs) -> {
+		if (!rs.next()) { return null; }
+		long l = rs.getLong("length");
+		if (rs.wasNull()) { return null; }
+		return l;
 	};
 
 	private class Input extends InputStream {

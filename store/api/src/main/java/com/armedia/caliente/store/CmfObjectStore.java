@@ -124,7 +124,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 
 		@Override
-		public Mapping getSourceMapping(CmfType type, String name, String target) {
+		public Collection<Mapping> getSourceMapping(CmfType type, String name, String target) {
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getSourceMapping(type, name, target); }
 				return CmfObjectStore.this.getSourceMapping(this.operation, type, name, target);
@@ -676,8 +676,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	protected abstract void createMapping(OPERATION operation, CmfType type, String name, String source, String target)
 		throws CmfStorageException;
 
-	protected abstract String getMapping(OPERATION operation, boolean source, CmfType type, String name, String value)
-		throws CmfStorageException;
+	protected abstract Collection<String> getMapping(OPERATION operation, boolean source, CmfType type, String name,
+		String value) throws CmfStorageException;
 
 	public final Mapping getTargetMapping(CmfType type, String name, String source) throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
@@ -708,12 +708,13 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		if (source == null) {
 			throw new IllegalArgumentException("Must provide a source value to find the target mapping for");
 		}
-		String target = getMapping(operation, true, type, name, source);
-		if (target == null) { return null; }
-		return this.mapper.constructMapping(type, name, source, target);
+		Collection<String> target = getMapping(operation, true, type, name, source);
+		if ((target == null) || target.isEmpty()) { return null; }
+		return this.mapper.constructMapping(type, name, source, target.iterator().next());
 	}
 
-	public final Mapping getSourceMapping(CmfType type, String name, String target) throws CmfStorageException {
+	public final Collection<Mapping> getSourceMapping(CmfType type, String name, String target)
+		throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -734,17 +735,21 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected final Mapping getSourceMapping(OPERATION operation, CmfType type, String name, String target)
-		throws CmfStorageException {
+	protected final Collection<Mapping> getSourceMapping(OPERATION operation, final CmfType type, final String name,
+		final String target) throws CmfStorageException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (target == null) {
 			throw new IllegalArgumentException("Must provide a target value to find the source mapping for");
 		}
-		String source = getMapping(operation, false, type, name, target);
-		if (source == null) { return null; }
-		return this.mapper.constructMapping(type, name, source, target);
+		Collection<String> source = getMapping(operation, false, type, name, target);
+		if ((source == null) || source.isEmpty()) { return null; }
+		Collection<Mapping> mappings = new ArrayList<>(source.size());
+		source.forEach((src) -> {
+			mappings.add(this.mapper.constructMapping(type, name, src, target));
+		});
+		return mappings;
 	}
 
 	public final Map<CmfType, Long> getStoredObjectTypes() throws CmfStorageException {
