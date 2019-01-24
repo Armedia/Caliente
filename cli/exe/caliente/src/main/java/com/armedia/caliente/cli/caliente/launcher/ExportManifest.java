@@ -16,8 +16,9 @@ import com.armedia.caliente.engine.exporter.DefaultExportEngineListener;
 import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.exporter.ExportSkipReason;
 import com.armedia.caliente.engine.exporter.ExportState;
+import com.armedia.caliente.engine.importer.ImportRestriction;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfObjectRef;
+import com.armedia.caliente.store.CmfObjectSearchSpec;
 import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.Tools;
 
@@ -36,6 +37,8 @@ public class ExportManifest extends DefaultExportEngineListener {
 		"TYPE", //
 		"TIER", //
 		"RESULT", //
+		"SEARCH_KEY", //
+		"RETRY_ID", //
 		"HISTORY_ID", //
 		"SOURCE_ID", //
 		"LABEL", //
@@ -47,6 +50,8 @@ public class ExportManifest extends DefaultExportEngineListener {
 		private final String date;
 		private final CmfType type;
 		private final Integer tier;
+		private final String searchKey;
+		private final String retryId;
 		private final String historyId;
 		private final String sourceId;
 		private final String label;
@@ -75,6 +80,8 @@ public class ExportManifest extends DefaultExportEngineListener {
 			this.date = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(new Date());
 			this.type = object.getType();
 			this.tier = object.getDependencyTier();
+			this.searchKey = String.format("%%%s", object.getSearchKey(), object.getId());
+			this.retryId = ImportRestriction.render(object);
 			this.historyId = object.getHistoryId();
 			this.sourceId = object.getId();
 			this.label = object.getLabel();
@@ -88,22 +95,24 @@ public class ExportManifest extends DefaultExportEngineListener {
 			}
 		}
 
-		private Record(CmfType type, String objectId, Throwable thrown) {
-			this(type, objectId, ExportResult.FAILED, thrown, null);
+		private Record(CmfObjectSearchSpec spec, Throwable thrown) {
+			this(spec, ExportResult.FAILED, thrown, null);
 
 		}
 
-		private Record(CmfType type, String objectId, ExportResult result, String extraInfo) {
-			this(type, objectId, result, null, extraInfo);
+		private Record(CmfObjectSearchSpec spec, ExportResult result, String extraInfo) {
+			this(spec, result, null, extraInfo);
 		}
 
-		private Record(CmfType type, String objectId, ExportResult result, Throwable thrown, String extraInfo) {
+		private Record(CmfObjectSearchSpec spec, ExportResult result, Throwable thrown, String extraInfo) {
 			this.number = ExportManifest.NULL;
 			this.date = DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(new Date());
-			this.type = type;
+			this.type = spec.getType();
 			this.tier = null;
+			this.searchKey = String.format("%%%s", spec.getSearchKey());
+			this.retryId = ImportRestriction.render(spec);
 			this.historyId = "";
-			this.sourceId = objectId;
+			this.sourceId = spec.getId();
 			this.label = "";
 			this.result = result;
 			this.extraInfo = extraInfo;
@@ -139,6 +148,8 @@ public class ExportManifest extends DefaultExportEngineListener {
 				this.type.name(), //
 				(this.tier != null ? this.tier.toString() : ""), //
 				this.result.name(), //
+				this.searchKey, //
+				this.retryId, //
 				this.historyId, //
 				this.sourceId, //
 				this.label, //
@@ -171,7 +182,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
+	public void objectSkipped(UUID jobId, CmfObjectSearchSpec object, ExportSkipReason reason, String extraInfo) {
 		// For the manifest, we're not really interested in Skipped objects, since
 		// they'll always be the result of duplicate serializations, so there's no
 		// problem to be reported or deduced from it
@@ -181,7 +192,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 			case SKIPPED:
 			case UNSUPPORTED:
 			case DEPENDENCY_FAILED:
-				new Record(object.getType(), object.getId(), ExportResult.SKIPPED, extraInfo).log(this.manifestLog);
+				new Record(object, ExportResult.SKIPPED, extraInfo).log(this.manifestLog);
 				break;
 			default:
 				break;
@@ -189,9 +200,9 @@ public class ExportManifest extends DefaultExportEngineListener {
 	}
 
 	@Override
-	public void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
+	public void objectExportFailed(UUID jobId, CmfObjectSearchSpec object, Throwable thrown) {
 		if (!this.types.contains(object.getType())) { return; }
 		if (!this.results.contains(ExportResult.FAILED)) { return; }
-		new Record(object.getType(), object.getId(), thrown).log(this.manifestLog);
+		new Record(object, thrown).log(this.manifestLog);
 	}
 }
