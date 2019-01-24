@@ -134,10 +134,17 @@ public class CmisExportEngine extends
 	}
 
 	@Override
-	protected ExportTarget findExportTarget(Session session, String searchKey) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsBySearchKey(Session session, CfgTools configuration,
+		CmisExportDelegateFactory factory, String searchKey) throws Exception {
 		try {
 			CmisObject obj = session.getObject(searchKey);
-			return new ExportTarget(decodeType(obj.getBaseType()), obj.getId(), searchKey);
+			CmfType type = decodeType(obj.getBaseType());
+
+			// Not a folder, so no recursion
+			if (type != CmfType.FOLDER) { return Stream.of(new ExportTarget(type, obj.getId(), searchKey)); }
+
+			// RECURSE!!!
+			return findExportTargetsByPath(session, configuration, factory, Folder.class.cast(obj).getPath());
 		} catch (CmisObjectNotFoundException e) {
 			return null;
 		}

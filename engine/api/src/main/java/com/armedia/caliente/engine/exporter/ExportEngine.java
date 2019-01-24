@@ -618,14 +618,11 @@ public abstract class ExportEngine<//
 
 			// SearchKey!
 			final String searchKey = StringUtils.strip(source.substring(1));
-			ExportTarget target = null;
-			if (!StringUtils.isEmpty(searchKey)) {
-				target = findExportTarget(session, searchKey);
+			if (StringUtils.isEmpty(searchKey)) {
+				throw new ExportException(
+					String.format("Invalid search key [%s] - no object can be found with an empty key"));
 			}
-			if (target == null) {
-				throw new ExportException(String.format("Invalid search key [%s] - no object was found"));
-			}
-			ret = Stream.of(target);
+			ret = findExportTargetsBySearchKey(session, this.settings, delegateFactory, searchKey);
 		} else //
 		if (source.startsWith("/")) {
 			if (!this.supportedSearches.contains(SearchType.PATH)) {
@@ -897,7 +894,8 @@ public abstract class ExportEngine<//
 	protected abstract Stream<ExportTarget> findExportTargetsByPath(SESSION session, CfgTools configuration,
 		DELEGATE_FACTORY factory, String path) throws Exception;
 
-	protected abstract ExportTarget findExportTarget(SESSION session, String searchKey) throws Exception;
+	protected abstract Stream<ExportTarget> findExportTargetsBySearchKey(SESSION session, CfgTools configuration,
+		DELEGATE_FACTORY factory, String searchKey) throws Exception;
 
 	@Override
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {

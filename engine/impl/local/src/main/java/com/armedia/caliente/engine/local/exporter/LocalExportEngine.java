@@ -37,7 +37,8 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected ExportTarget findExportTarget(LocalRoot session, String searchKey) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsBySearchKey(LocalRoot session, CfgTools configuration,
+		LocalExportDelegateFactory factory, String searchKey) throws Exception {
 		throw new Exception("Local Export doesn't support ID-based searches");
 	}
 

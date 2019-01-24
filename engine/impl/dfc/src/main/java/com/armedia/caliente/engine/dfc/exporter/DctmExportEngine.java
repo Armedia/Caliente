@@ -30,10 +30,12 @@ import com.armedia.commons.dfc.util.DctmCollectionStream;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
+import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfTypedObject;
+import com.documentum.fc.common.DfId;
 import com.documentum.fc.common.IDfId;
 import com.documentum.fc.common.IDfValue;
 
@@ -50,9 +52,33 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected ExportTarget findExportTarget(IDfSession session, String searchKey) throws Exception {
-		// The searchKey is an r_object_id value, so treat it as such
-		return null;
+	protected Stream<ExportTarget> findExportTargetsBySearchKey(IDfSession session, CfgTools configuration,
+		DctmExportDelegateFactory factory, String searchKey) throws Exception {
+		// The searchKey is an r_object_id value, so treat it as such...
+		IDfId id = new DfId(searchKey);
+		if (id.isNull() || !id.isObjectId()) {
+			throw new Exception(String.format("Invalid object ID [%s]", searchKey));
+		}
+
+		final IDfPersistentObject obj;
+		try {
+			obj = session.getObject(id);
+		} catch (DfObjectNotFoundException e) {
+			// ID goes nowhere...
+			return null;
+		}
+
+		if (!obj.isInstanceOf("dm_folder")) {
+			// Not a folder, so no recursion!
+			return Collections
+				.singleton(
+					new ExportTarget(DctmObjectType.decodeType(obj).getStoredObjectType(), id.getId(), id.getId()))
+				.stream();
+		}
+
+		// If it's a folder, we morph into a query-based recursion.
+		return findExportTargetsByQuery(session, configuration, factory,
+			String.format("dm_sysobject where folder(id(%s), DESCEND)", DfUtils.quoteString(id.getId())));
 	}
 
 	@Override
@@ -77,17 +103,17 @@ public class DctmExportEngine extends
 
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByQuery(IDfSession session, CfgTools configuration,
-		DctmExportDelegateFactory factory, String source) throws Exception {
+		DctmExportDelegateFactory factory, String query) throws Exception {
 		if (session == null) {
 			throw new IllegalArgumentException("Must provide a session through which to retrieve the results");
 		}
 
 		// Turn the predicate it into a DQL query
-		source = String.format("select r_object_id from %s", StringUtils.strip(source));
+		query = String.format("select r_object_id from %s", StringUtils.strip(query));
 
 		final int batchSize = configuration.getInteger(Setting.EXPORT_BATCH_SIZE);
 
-		return DctmCollectionStream.get(session, source, IDfQuery.DF_EXECREAD_QUERY, batchSize)
+		return DctmCollectionStream.get(session, query, IDfQuery.DF_EXECREAD_QUERY, batchSize)
 			.map(this::getExportTarget);
 	}
 

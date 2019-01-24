@@ -48,7 +48,8 @@ public class ShptExportEngine extends
 	}
 
 	@Override
-	protected ExportTarget findExportTarget(ShptSession session, String searchKey) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsBySearchKey(ShptSession session, CfgTools configuration,
+		ShptExportDelegateFactory factory, String searchKey) throws Exception {
 		throw new Exception("SharePoint export doesn't yet support ID-based export");
 	}
 

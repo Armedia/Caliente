@@ -27,6 +27,7 @@ import com.armedia.caliente.engine.ucm.UcmSessionWrapper;
 import com.armedia.caliente.engine.ucm.UcmTranslator;
 import com.armedia.caliente.engine.ucm.model.UcmFSObject;
 import com.armedia.caliente.engine.ucm.model.UcmFolder;
+import com.armedia.caliente.engine.ucm.model.UcmFolderNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
 import com.armedia.caliente.engine.ucm.model.UcmModel.URIHandler;
@@ -68,7 +69,8 @@ public class UcmExportEngine extends
 	}
 
 	@Override
-	protected ExportTarget findExportTarget(UcmSession session, String line) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsBySearchKey(UcmSession session, CfgTools configuration,
+		UcmExportDelegateFactory factory, String line) throws Exception {
 		// Remove leading and trailing space
 		line = StringUtils.strip(line);
 
@@ -89,14 +91,18 @@ public class UcmExportEngine extends
 			return null;
 		}
 
-		CmfType cmfType = null;
-		if (type.equalsIgnoreCase("file")) {
-			cmfType = CmfType.DOCUMENT;
-		} else {
-			cmfType = CmfType.FOLDER;
+		if (!UcmModel.isFolderURI(uri)) {
+			return Stream.of(new ExportTarget(CmfType.DOCUMENT, uri.toString(), uri.toString()));
 		}
 
-		return new ExportTarget(cmfType, uri.toString(), uri.toString());
+		// This is a folder....
+		try {
+			UcmFolder folder = session.getFolder(uri);
+			if (folder == null) { return null; }
+			return findExportTargetsByPath(session, configuration, factory, folder.getPath());
+		} catch (UcmFolderNotFoundException e) {
+			return null;
+		}
 	}
 
 	@Override
