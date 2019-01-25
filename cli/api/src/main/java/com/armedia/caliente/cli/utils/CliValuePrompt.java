@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.OptionWrapper;
 import com.armedia.commons.utilities.Tools;
 
 public class CliValuePrompt {
@@ -52,7 +51,7 @@ public class CliValuePrompt {
 		return new String(c);
 	}
 
-	public static final String getUsername(OptionValues cli, OptionWrapper param, String prompt,
+	public static final String getUsername(OptionValues cli, Supplier<Option> param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt.getUsername(cli, Option.unwrap(param), prompt, promptParams);
 	}
@@ -62,12 +61,12 @@ public class CliValuePrompt {
 			.getString(CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(false, prompt, promptParams)));
 	}
 
-	public static final String getPasswordString(OptionValues cli, OptionWrapper param, String prompt,
+	public static final String getPasswordString(OptionValues cli, Supplier<Option> param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt.getPasswordString(cli, Option.unwrap(param), prompt, promptParams);
 	}
 
-	public static final char[] getPassword(OptionValues cli, OptionWrapper param, String prompt,
+	public static final char[] getPassword(OptionValues cli, Supplier<Option> param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt.getPassword(cli, Option.unwrap(param), prompt, promptParams);
 	}
@@ -81,7 +80,7 @@ public class CliValuePrompt {
 		return CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(true, prompt, promptParams));
 	}
 
-	public static final char[] getPromptableValue(OptionValues cli, OptionWrapper param,
+	public static final char[] getPromptableValue(OptionValues cli, Supplier<Option> param,
 		Supplier<char[]> promptCallback) {
 		return CliValuePrompt.getPromptableValue(cli, Option.unwrap(param), promptCallback);
 	}

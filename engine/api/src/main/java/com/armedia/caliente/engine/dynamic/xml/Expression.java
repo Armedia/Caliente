@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Consumer;
 
 import javax.script.Bindings;
 import javax.script.Compilable;
@@ -101,10 +102,6 @@ public class Expression {
 			// Do nothing...
 		}
 	};
-
-	public interface ScriptContextConfig {
-		public void configure(ScriptContext ctx);
-	}
 
 	private static final ConcurrentMap<String, CompiledScript> getCompilerCache(String lang) {
 		Objects.requireNonNull(lang, "Must provide a language to scan the cache for");
@@ -234,7 +231,7 @@ public class Expression {
 		return evaluate(null);
 	}
 
-	public Object evaluate(ScriptContextConfig cfg) throws ScriptException {
+	public Object evaluate(Consumer<ScriptContext> cfg) throws ScriptException {
 		// If there is no engine needed, then we simply return the contents of the script as a
 		// literal string script
 		final ScriptEngine engine = getEngine();
@@ -250,7 +247,7 @@ public class Expression {
 		scriptCtx.setErrorWriter(new PrintWriter(System.err));
 
 		if (cfg != null) {
-			cfg.configure(scriptCtx);
+			cfg.accept(scriptCtx);
 		}
 		Bindings b = scriptCtx.getBindings(ScriptContext.GLOBAL_SCOPE);
 		if (b == null) {
@@ -297,7 +294,7 @@ public class Expression {
 		return e;
 	}
 
-	public static Object eval(Expression e, ScriptContextConfig cfg) throws ScriptException {
+	public static Object eval(Expression e, Consumer<ScriptContext> cfg) throws ScriptException {
 		if (e == null) { return null; }
 		return e.evaluate(cfg);
 	}

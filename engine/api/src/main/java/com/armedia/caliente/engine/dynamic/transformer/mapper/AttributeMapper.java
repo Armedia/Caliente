@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.dynamic.transformer.mapper;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -90,7 +92,8 @@ public class AttributeMapper {
 	private final ConstructedTypeFactory constructedTypeFactory;
 	private final String residualsPrefix;
 
-	private static MappingRenderer buildRenderer(MappingElement e, Character parentSeparator) {
+	private static BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>> buildRenderer(
+		MappingElement e, Character parentSeparator) {
 		if (!Mapping.class.isInstance(e)) { return null; }
 		Mapping m = Mapping.class.cast(e);
 		if (NameMapping.class.isInstance(m)) {
@@ -113,11 +116,12 @@ public class AttributeMapper {
 		}
 		MappingSet commonMappings = xml.getCommonMappings();
 
-		List<MappingRenderer> renderers = new ArrayList<>();
+		List<BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers = new ArrayList<>();
 		MappingRendererSet commonRenderers = null;
 		if (commonMappings != null) {
 			for (MappingElement e : commonMappings.getMappingElements()) {
-				MappingRenderer r = AttributeMapper.buildRenderer(e, commonMappings.getSeparator());
+				BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>> r = AttributeMapper
+					.buildRenderer(e, commonMappings.getSeparator());
 				if (r != null) {
 					renderers.add(r);
 				}
@@ -130,7 +134,7 @@ public class AttributeMapper {
 		this.commonRenderers = commonRenderers;
 
 		List<TypeMappings> typeMappings = new ArrayList<>();
-		Map<String, MappingRendererSet> namedMappings = new TreeMap<>();
+		Map<String, BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> namedMappings = new TreeMap<>();
 		for (NamedMappings nm : xml.getMappings()) {
 			if (TypeMappings.class.isInstance(nm)) {
 				typeMappings.add(TypeMappings.class.cast(nm));
@@ -145,7 +149,8 @@ public class AttributeMapper {
 				if (IncludeNamed.class.isInstance(e)) {
 					String included = IncludeNamed.class.cast(e).getValue();
 					included = StringUtils.strip(included);
-					final MappingRendererSet mappings = namedMappings.get(included);
+					final BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>> mappings = namedMappings
+						.get(included);
 					if (mappings == null) {
 						// KABOOM!! Illegal forward reference
 						throw new XmlInstanceException(
@@ -154,7 +159,8 @@ public class AttributeMapper {
 					}
 					renderers.add(mappings);
 				} else {
-					MappingRenderer renderer = AttributeMapper.buildRenderer(e, nm.getSeparator());
+					BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>> renderer = AttributeMapper
+						.buildRenderer(e, nm.getSeparator());
 					if (renderer != null) {
 						renderers.add(renderer);
 					}
@@ -176,7 +182,8 @@ public class AttributeMapper {
 			// Construct the mapping set for this:
 			renderers = new ArrayList<>();
 			for (MappingElement e : tm.getMappingElements()) {
-				MappingRenderer renderer = AttributeMapper.buildRenderer(e, tm.getSeparator());
+				BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>> renderer = AttributeMapper
+					.buildRenderer(e, tm.getSeparator());
 				if ((renderer == null) && IncludeNamed.class.isInstance(e)) {
 					// If this is an <include>, then get the element and add it to the rendering
 					// pipeline!
@@ -219,7 +226,7 @@ public class AttributeMapper {
 			return this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
 				@Override
 				public MappingRendererSet get() throws ConcurrentException {
-					Map<String, MappingRenderer> renderers = new LinkedHashMap<>();
+					Map<String, BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers = new LinkedHashMap<>();
 
 					// First, the type itself
 					MappingRendererSet set = AttributeMapper.this.typedMappings.get(type.getName());
@@ -323,7 +330,7 @@ public class AttributeMapper {
 		// declared attributes...
 		final Map<String, AttributeMapping> residuals = new HashMap<>();
 		final ResidualsModeTracker tracker = new ResidualsModeTracker();
-		renderer.render(object, tracker).forEach((attribute) -> {
+		renderer.apply(object, tracker).forEach((attribute) -> {
 			final String targetName = attribute.getTargetName();
 			final String mappedName = Tools.coalesce(nameMapper.decodeAttributeName(object.getType(), targetName),
 				targetName);

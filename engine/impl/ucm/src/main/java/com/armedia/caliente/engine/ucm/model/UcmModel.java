@@ -149,8 +149,9 @@ public class UcmModel {
 		DataResultSet rs = responseData.getResultSet("EnabledComponents");
 		List<DataObject> components = rs.getRows();
 		for (DataObject component : components) {
-			if (("FrameworkFolders".equals(component.get("name")))
-				&& ("Enabled".equals(component.get("status")))) { return Boolean.TRUE; }
+			if (("FrameworkFolders".equals(component.get("name"))) && ("Enabled".equals(component.get("status")))) {
+				return Boolean.TRUE;
+			}
 		}
 		return Boolean.FALSE;
 	}
@@ -259,8 +260,9 @@ public class UcmModel {
 
 	protected static final URI newURI(String scheme, String ssp, String fragment) {
 		if (StringUtils.isEmpty(scheme)) { throw new IllegalArgumentException("The URI scheme may not be empty"); }
-		if (StringUtils
-			.isEmpty(ssp)) { throw new IllegalArgumentException("The URI scheme-specific part may not be empty"); }
+		if (StringUtils.isEmpty(ssp)) {
+			throw new IllegalArgumentException("The URI scheme-specific part may not be empty");
+		}
 		try {
 			return new URI(scheme, ssp, fragment);
 		} catch (URISyntaxException e) {
@@ -443,13 +445,15 @@ public class UcmModel {
 
 	public UcmFile getFile(UcmSession s, URI uri) throws UcmServiceException, UcmFileNotFoundException {
 		// Ensure the target is a file...
-		if (!UcmModel.isFileURI(
-			uri)) { throw new UcmFileNotFoundException(String.format("The object with URI [%s] is not a file", uri)); }
+		if (!UcmModel.isFileURI(uri)) {
+			throw new UcmFileNotFoundException(String.format("The object with URI [%s] is not a file", uri));
+		}
 
 		try {
 			UcmFSObject obj = getFSObject(s, uri);
-			if (!UcmFile.class.isInstance(obj)) { throw new UcmFileNotFoundException(
-				String.format("The file with URI [%s] does not exist", uri)); }
+			if (!UcmFile.class.isInstance(obj)) {
+				throw new UcmFileNotFoundException(String.format("The file with URI [%s] does not exist", uri));
+			}
 			return UcmFile.class.cast(obj);
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFileNotFoundException(e.getMessage(), e);
@@ -460,8 +464,9 @@ public class UcmModel {
 		try {
 			URI uri = resolveGuid(s, guid, UcmObjectType.FILE);
 			UcmFSObject obj = getFSObject(s, uri);
-			if (!UcmFile.class.isInstance(obj)) { throw new UcmFileNotFoundException(
-				String.format("The file with URI [%s] does not exist", uri)); }
+			if (!UcmFile.class.isInstance(obj)) {
+				throw new UcmFileNotFoundException(String.format("The file with URI [%s] does not exist", uri));
+			}
 			return UcmFile.class.cast(obj);
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFileNotFoundException(e.getMessage(), e);
@@ -472,8 +477,9 @@ public class UcmModel {
 		try {
 			URI uri = resolveGuid(s, guid, UcmObjectType.FOLDER);
 			UcmFSObject obj = getFSObject(s, uri);
-			if (!UcmFolder.class.isInstance(obj)) { throw new UcmFileNotFoundException(
-				String.format("The folder with URI [%s] does not exist", uri)); }
+			if (!UcmFolder.class.isInstance(obj)) {
+				throw new UcmFileNotFoundException(String.format("The folder with URI [%s] does not exist", uri));
+			}
 			return UcmFolder.class.cast(obj);
 		} catch (UcmObjectNotFoundException e) {
 			throw new UcmFolderNotFoundException(e.getMessage(), e);
@@ -520,14 +526,18 @@ public class UcmModel {
 							}
 
 							final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
-							if (attributes == null) { throw new UcmServiceException(String.format(
-								"Path [%s] was found via FLD_INFO, but was neither a file nor a folder?!?",
-								sanitizedPath)); }
+							if (attributes == null) {
+								throw new UcmServiceException(String.format(
+									"Path [%s] was found via FLD_INFO, but was neither a file nor a folder?!?",
+									sanitizedPath));
+							}
 							URI uri = UcmModel.getURI(attributes);
 							data.set(newFSObject(uri, attributes));
-							if (uri == null) { throw new UcmServiceException(String.format(
-								"Path [%s] was found, but was neither a file nor a folder (no identifier attributes)?!?",
-								sanitizedPath)); }
+							if (uri == null) {
+								throw new UcmServiceException(String.format(
+									"Path [%s] was found, but was neither a file nor a folder (no identifier attributes)?!?",
+									sanitizedPath));
+							}
 							return uri;
 						} catch (IdcClientException | UcmException e) {
 							throw new ConcurrentException(e);
@@ -545,9 +555,10 @@ public class UcmModel {
 		// There's an object...so stash it
 		cacheDataObject(data.get());
 
-		if (Tools.equals(UcmModel.NULL_URI,
-			uri)) { throw new UcmObjectNotFoundException(String.format("No object found at path [%s]", sanitizedPath),
-				thrown.get()); }
+		if (Tools.equals(UcmModel.NULL_URI, uri)) {
+			throw new UcmObjectNotFoundException(String.format("No object found at path [%s]", sanitizedPath),
+				thrown.get());
+		}
 		return uri;
 	}
 
@@ -606,9 +617,11 @@ public class UcmModel {
 							}
 
 							final UcmAttributes attributes = buildAttributesFromFldInfo(responseData);
-							if (attributes == null) { throw new UcmServiceException(
-								String.format("%s GUID [%s] was found via %s(%s=%s), didn't contain any data?!?",
-									type.name(), guid, serviceName, identifierAtt.name(), guid)); }
+							if (attributes == null) {
+								throw new UcmServiceException(
+									String.format("%s GUID [%s] was found via %s(%s=%s), didn't contain any data?!?",
+										type.name(), guid, serviceName, identifierAtt.name(), guid));
+							}
 							String uriIdentifier = attributes.getString(uriAtt);
 							if (uriIdentifier != null) {
 								URI uri = UcmModel.getURI(attributes);
@@ -658,9 +671,10 @@ public class UcmModel {
 			}
 		}
 
-		if (Tools.equals(UcmModel.NULL_URI,
-			uri)) { throw new UcmObjectNotFoundException(String.format("No %s found with GUID [%s]", type.name(), guid),
-				thrown.get()); }
+		if (Tools.equals(UcmModel.NULL_URI, uri)) {
+			throw new UcmObjectNotFoundException(String.format("No %s found with GUID [%s]", type.name(), guid),
+				thrown.get());
+		}
 		return uri;
 	}
 
@@ -747,9 +761,11 @@ public class UcmModel {
 							} else {
 								attributes = buildAttributesFromFldInfo(responseData);
 							}
-							if (attributes == null) { throw new UcmServiceException(
-								String.format("The URI [%s] was found via %s(%s=%s), didn't contain any data?!?", uri,
-									serviceName, identifierAtt.name(), searchKey)); }
+							if (attributes == null) {
+								throw new UcmServiceException(
+									String.format("The URI [%s] was found via %s(%s=%s), didn't contain any data?!?",
+										uri, serviceName, identifierAtt.name(), searchKey));
+							}
 							final URI uri = UcmModel.getURI(attributes);
 							final UcmUniqueURI guid = UcmModel.getUniqueURI(attributes);
 							final UcmFSObject object = newFSObject(uri, attributes);
@@ -773,9 +789,9 @@ public class UcmModel {
 			}
 		}
 
-		if (UcmUniqueURI.NULL_GUID
-			.equals(guid)) { throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri),
-				thrown.get()); }
+		if (UcmUniqueURI.NULL_GUID.equals(guid)) {
+			throw new UcmObjectNotFoundException(String.format("No object found with URI [%s]", uri), thrown.get());
+		}
 
 		if (serviceInvoked.get()) {
 			if (history.get() != null) {
@@ -837,15 +853,19 @@ public class UcmModel {
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
 								if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]",
-									id)) { return UcmUniqueURI.NULL_GUID; }
+									id)) {
+									return UcmUniqueURI.NULL_GUID;
+								}
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
 
 							UcmAttributes attributes = buildAttributesFromDocInfo(responseData, history, renditions);
-							if (attributes == null) { throw new UcmServiceException(String.format(
-								"Revision ID [%s] was found via DOC_INFO(dID=%s), but returned empty results", id,
-								id)); }
+							if (attributes == null) {
+								throw new UcmServiceException(String.format(
+									"Revision ID [%s] was found via DOC_INFO(dID=%s), but returned empty results", id,
+									id));
+							}
 							final URI uri = UcmModel.getURI(attributes);
 							final UcmUniqueURI guid = UcmModel.getUniqueURI(attributes);
 							UcmModel.this.objectByUniqueURI.put(guid, newFSObject(uri, attributes));
@@ -868,12 +888,14 @@ public class UcmModel {
 			}
 		}
 
-		if (UcmUniqueURI.NULL_GUID.equals(
-			guid)) { throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id)); }
+		if (UcmUniqueURI.NULL_GUID.equals(guid)) {
+			throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id));
+		}
 
 		UcmFSObject ret = this.objectByUniqueURI.get(guid);
-		if (!UcmFile.class.isInstance(
-			ret)) { throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id)); }
+		if (!UcmFile.class.isInstance(ret)) {
+			throw new UcmFileRevisionNotFoundException(String.format("No revision found with ID [%s]", id));
+		}
 		if (serviceInvoked.get()) {
 			if (history.get() != null) {
 				URI uri = ret.getURI();
@@ -914,6 +936,7 @@ public class UcmModel {
 		return getFolderContents(s, guid.getURI());
 	}
 
+	@FunctionalInterface
 	public static interface URIHandler {
 		public void handleURI(UcmSession session, long pos, URI objectUri) throws UcmServiceException;
 	}
@@ -950,8 +973,9 @@ public class UcmModel {
 		if (!m.matches()) { throw new UcmServiceException(String.format("Invalid query syntax: [%s]", query)); }
 
 		final String actualQuery = m.group(1);
-		if (StringUtils.isEmpty(
-			actualQuery)) { throw new UcmServiceException("The actual query string is empty - this is not supported"); }
+		if (StringUtils.isEmpty(actualQuery)) {
+			throw new UcmServiceException("The actual query string is empty - this is not supported");
+		}
 
 		final String sortField;
 		final boolean desc;
@@ -1004,8 +1028,10 @@ public class UcmModel {
 		String rowSpec = m.group(3);
 		if (rowSpec != null) {
 			Matcher rm = UcmModel.ROW_PARSER.matcher(rowSpec);
-			if (!rm.matches()) { throw new UcmServiceException(String.format(
-				"Illegal row specification '%s' - the syntax is [startRow,]rowCount[/pageSize] where elements in [] are optional (numbers may not begin with a 0, and must be positive integers - the first row is 1)")); }
+			if (!rm.matches()) {
+				throw new UcmServiceException(String.format(
+					"Illegal row specification '%s' - the syntax is [startRow,]rowCount[/pageSize] where elements in [] are optional (numbers may not begin with a 0, and must be positive integers - the first row is 1)"));
+			}
 			String startRowStr = rm.group(1);
 			if (startRowStr != null) {
 				startRow.set(Long.parseLong(startRowStr));
@@ -1082,6 +1108,7 @@ public class UcmModel {
 		return rowNumber;
 	}
 
+	@FunctionalInterface
 	public static interface ObjectHandler {
 		public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object);
 	}
@@ -1205,9 +1232,10 @@ public class UcmModel {
 								return children;
 							} catch (final UcmServiceException e) {
 								Throwable cause = e.getCause();
-								if (isNotFoundException(cause, "Exception caught retrieving the URI [%s]",
-									uri)) { throw new UcmFolderNotFoundException(
-										String.format("No folder found with URI [%s]", uri)); }
+								if (isNotFoundException(cause, "Exception caught retrieving the URI [%s]", uri)) {
+									throw new UcmFolderNotFoundException(
+										String.format("No folder found with URI [%s]", uri));
+								}
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -1276,8 +1304,10 @@ public class UcmModel {
 			handler.handleObject(s, outerPos.getAndIncrement(), uri, getFolder(s, uri));
 		}
 
-		if (!recursions.add(uri)) { throw new IllegalStateException(
-			String.format("Folder recursion detected when descending into [%s] : %s", uri, recursions)); }
+		if (!recursions.add(uri)) {
+			throw new IllegalStateException(
+				String.format("Folder recursion detected when descending into [%s] : %s", uri, recursions));
+		}
 
 		try {
 			iterateFolderContents(s, uri, new ObjectHandler() {
@@ -1370,8 +1400,9 @@ public class UcmModel {
 
 	public UcmFolder getFolder(UcmSession s, URI uri) throws UcmServiceException, UcmFolderNotFoundException {
 		Objects.requireNonNull(uri, "Must provide a URI to locate");
-		if (!UcmModel.isFolderURI(uri)) { throw new UcmFolderNotFoundException(
-			String.format("The object URI [%s] is not a folder URI", uri)); }
+		if (!UcmModel.isFolderURI(uri)) {
+			throw new UcmFolderNotFoundException(String.format("The object URI [%s] is not a folder URI", uri));
+		}
 		if (UcmModel.NULL_FOLDER_URI.equals(uri)) { return null; }
 		try {
 			UcmFSObject data = getFSObject(s, uri);
@@ -1424,9 +1455,10 @@ public class UcmModel {
 								});
 								responseData = response.getResponseAsBinder();
 							} catch (final IdcClientException e) {
-								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]",
-									uri)) { throw new UcmFolderNotFoundException(
-										String.format("No file found with URI [%s]", uri)); }
+								if (isNotFoundException(e, "Exception caught retrieving the URI [%s]", uri)) {
+									throw new UcmFolderNotFoundException(
+										String.format("No file found with URI [%s]", uri));
+								}
 								// This is a "regular" exception that we simply re-raise
 								throw e;
 							}
@@ -1510,8 +1542,10 @@ public class UcmModel {
 			}
 		}
 		String newPath = FilenameUtils.normalizeNoEndSeparator(path, true);
-		if (newPath == null) { throw new IllegalArgumentException(
-			String.format("The given path [%s] is invalid - too may '..' elements", path)); }
+		if (newPath == null) {
+			throw new IllegalArgumentException(
+				String.format("The given path [%s] is invalid - too may '..' elements", path));
+		}
 		return newPath;
 	}
 
@@ -1573,7 +1607,9 @@ public class UcmModel {
 									responseData = response.getResponseAsBinder();
 								} catch (final IdcClientException e) {
 									if (isNotFoundException(e, "Exception caught retrieving the revision with ID [%s]",
-										id)) { throw new UcmFileRevisionNotFoundException(); }
+										id)) {
+										throw new UcmFileRevisionNotFoundException();
+									}
 									// This is a "regular" exception that we simply re-raise
 									throw e;
 								}

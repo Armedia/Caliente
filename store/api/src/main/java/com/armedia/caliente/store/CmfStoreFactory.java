@@ -5,12 +5,14 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.xml.StoreConfiguration;
+import com.armedia.commons.utilities.CfgTools;
 
 public abstract class CmfStoreFactory<STORE extends CmfStore<?, ?>> {
 
@@ -54,7 +56,7 @@ public abstract class CmfStoreFactory<STORE extends CmfStore<?, ?>> {
 		return this.aliases;
 	}
 
-	protected abstract STORE newInstance(StoreConfiguration cfg, boolean cleanData, CmfPrepInfo prepInfo)
+	protected abstract STORE newInstance(StoreConfiguration cfg, boolean cleanData, Supplier<CfgTools> prepInfo)
 		throws CmfStorageException;
 
 	protected void close() {

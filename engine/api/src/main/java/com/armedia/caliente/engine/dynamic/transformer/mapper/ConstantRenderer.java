@@ -33,7 +33,7 @@ class ConstantRenderer extends AttributeRenderer {
 	}
 
 	@Override
-	public Collection<AttributeMapping> render(DynamicObject object, ResidualsModeTracker tracker) {
+	public Collection<AttributeMapping> apply(DynamicObject object, ResidualsModeTracker tracker) {
 		return this.value;
 	}
 }

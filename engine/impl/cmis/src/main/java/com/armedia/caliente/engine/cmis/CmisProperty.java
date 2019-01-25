@@ -1,14 +1,14 @@
 package com.armedia.caliente.engine.cmis;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import com.armedia.caliente.engine.converter.MappingManager;
-import com.armedia.caliente.engine.converter.MappingManager.Mappable;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.commons.utilities.Tools;
 
-public enum CmisProperty implements Mappable, CmfEncodeableName {
+public enum CmisProperty implements Supplier<String>, CmfEncodeableName {
 
 	//
 	PRODUCT_NAME(CmfDataType.STRING), PRODUCT_VERSION(CmfDataType.STRING), ACL_PERMISSION(CmfDataType.STRING, true),
@@ -37,7 +37,7 @@ public enum CmisProperty implements Mappable, CmfEncodeableName {
 	}
 
 	@Override
-	public String getMapping() {
+	public String get() {
 		return this.name;
 	}
 
@@ -58,8 +58,10 @@ public enum CmisProperty implements Mappable, CmfEncodeableName {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
 		CmisProperty.initMappings();
 		CmisProperty ret = CmisProperty.MAPPINGS.get(name);
-		if (ret == null) { throw new IllegalArgumentException(
-			String.format("Failed to decode [%s] into a valid intermediate property", name)); }
+		if (ret == null) {
+			throw new IllegalArgumentException(
+				String.format("Failed to decode [%s] into a valid intermediate property", name));
+		}
 		return ret;
 	}
 }

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -162,8 +163,9 @@ public final class OptionImpl extends Option implements Cloneable {
 			if (valid) {
 				valid &= (longOpt.length() > 1);
 			}
-			if (!valid) { throw new IllegalArgumentException(
-				String.format("The long option value [%s] is not valid", longOpt)); }
+			if (!valid) {
+				throw new IllegalArgumentException(String.format("The long option value [%s] is not valid", longOpt));
+			}
 		}
 		this.longOpt = longOpt;
 		this.key = Option.calculateKey(this);
@@ -178,8 +180,9 @@ public final class OptionImpl extends Option implements Cloneable {
 	public OptionImpl setShortOpt(Character shortOpt) {
 		if (shortOpt != null) {
 			boolean valid = Option.VALID_SHORT.matcher(shortOpt.toString()).matches();
-			if (!valid) { throw new IllegalArgumentException(
-				String.format("The short option value [%s] is not valid", shortOpt)); }
+			if (!valid) {
+				throw new IllegalArgumentException(String.format("The short option value [%s] is not valid", shortOpt));
+			}
 		}
 		this.shortOpt = shortOpt;
 		this.key = Option.calculateKey(this);
@@ -251,7 +254,7 @@ public final class OptionImpl extends Option implements Cloneable {
 		return null;
 	}
 
-	public static OptionImpl cast(OptionWrapper o) {
+	public static OptionImpl cast(Supplier<Option> o) {
 		return OptionImpl.cast(Option.unwrap(o));
 	}
 

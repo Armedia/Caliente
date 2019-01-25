@@ -1,6 +1,7 @@
 package com.armedia.caliente.cli;
 
 import java.util.Collection;
+import java.util.function.Supplier;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
 
@@ -42,7 +43,7 @@ public interface OptionGroup extends OptionContainer {
 	 *             check with {@link #hasOption(Character)}, {@link #hasOption(String)}, or
 	 *             {@link #countCollisions(Option)}
 	 */
-	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException;
+	public OptionGroup add(Supplier<Option> option) throws DuplicateOptionException;
 
 	/**
 	 * Remove any and all options (a maximum of 2) that may collide with the given option's short or
@@ -61,7 +62,7 @@ public interface OptionGroup extends OptionContainer {
 	 *            the option to check against
 	 * @return the options that were removed
 	 */
-	public Collection<Option> remove(OptionWrapper option);
+	public Collection<Option> remove(Supplier<Option> option);
 
 	/**
 	 * Remove the option which matches the given long option

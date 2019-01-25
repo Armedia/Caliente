@@ -64,6 +64,7 @@ public class FilenameDeduplicator {
 		}
 	}
 
+	@FunctionalInterface
 	public static interface FilenameCollisionResolver {
 		public String generateUniqueName(CmfObjectRef entryId, String currentName, long count);
 	}

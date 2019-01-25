@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -218,8 +219,9 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	protected static final String canonicalizeGroupName(String name) {
-		if (StringUtils
-			.isBlank(name)) { throw new IllegalArgumentException("Must provide a non-blank, non-null name"); }
+		if (StringUtils.isBlank(name)) {
+			throw new IllegalArgumentException("Must provide a non-blank, non-null name");
+		}
 		return name.toLowerCase().trim();
 	}
 
@@ -369,7 +371,7 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	@Override
-	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException {
+	public OptionGroup add(Supplier<Option> option) throws DuplicateOptionException {
 		this.baseGroup.add(option);
 		return this;
 	}
@@ -380,7 +382,7 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 	}
 
 	@Override
-	public Collection<Option> remove(OptionWrapper option) {
+	public Collection<Option> remove(Supplier<Option> option) {
 		return this.baseGroup.remove(option);
 	}
 

@@ -4,19 +4,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
-import com.armedia.caliente.engine.dynamic.xml.Expression.ScriptContextConfig;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 
-public class DynamicElementContext implements ScriptContextConfig {
+public class DynamicElementContext implements Consumer<ScriptContext> {
 
 	private final CmfObject<CmfValue> baseObject;
 	private final DynamicObject dynamicObject;
@@ -75,7 +75,7 @@ public class DynamicElementContext implements ScriptContextConfig {
 	}
 
 	@Override
-	public void configure(ScriptContext ctx) {
+	public void accept(ScriptContext ctx) {
 		final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
 		bindings.put("baseObj", getBaseObject());
 		bindings.put("obj", getDynamicObject());

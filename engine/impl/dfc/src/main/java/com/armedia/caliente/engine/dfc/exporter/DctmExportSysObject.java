@@ -58,6 +58,7 @@ import com.documentum.fc.common.IDfValue;
  */
 public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDelegate<T> implements DctmSysObject {
 
+	@FunctionalInterface
 	protected interface RecursionCalculator {
 		public String getValue(IDfSysObject o) throws DfException;
 	}
@@ -104,8 +105,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		if (visited == null) {
 			visited = new LinkedHashSet<>();
 		}
-		if (!visited
-			.add(oid)) { throw new DfException(String.format("Visited node [%s] twice (history = %s)", oid, visited)); }
+		if (!visited.add(oid)) {
+			throw new DfException(String.format("Visited node [%s] twice (history = %s)", oid, visited));
+		}
 		IDfSession session = f.getSession();
 		final int parentCount = f.getFolderIdCount();
 		List<List<String>> all = new ArrayList<>(parentCount);
@@ -409,8 +411,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	protected final String calculateVersionString(IDfSysObject sysObject, boolean full) throws DfException {
-		if (!full) { return String.format("%s%s", sysObject.getImplicitVersionLabel(),
-			sysObject.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : ""); }
+		if (!full) {
+			return String.format("%s%s", sysObject.getImplicitVersionLabel(),
+				sysObject.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : "");
+		}
 		int labelCount = sysObject.getVersionLabelCount();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < labelCount; i++) {
@@ -505,9 +509,10 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			visited = new LinkedHashSet<>();
 		}
 		final IDfId objectId = object.getObjectId();
-		if (!visited.add(objectId.getId())) { throw new DfException(
-			String.format("Document reference loop detected, element [%s] exists twice: %s",
-				object.getObjectId().getId(), visited.toString())); }
+		if (!visited.add(objectId.getId())) {
+			throw new DfException(String.format("Document reference loop detected, element [%s] exists twice: %s",
+				object.getObjectId().getId(), visited.toString()));
+		}
 
 		try {
 			final IDfSession session = object.getSession();
@@ -612,9 +617,11 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 				// The object is from the same docbase, so we make sure it's listed as a requirement
 				// to ensure it gets copied AFTER the referrent gets copied
 				DctmExportDelegate<?> delegate = this.factory.newExportDelegate(session.getObject(referrentId));
-				if (delegate == null) { throw new ExportException(String.format(
-					"The %s [%s](%s) is a reference to an object with ID (%s), but that object is not supported to be exported",
-					marshaled.getType(), marshaled.getLabel(), marshaled.getId(), referrentId.getId())); }
+				if (delegate == null) {
+					throw new ExportException(String.format(
+						"The %s [%s](%s) is a reference to an object with ID (%s), but that object is not supported to be exported",
+						marshaled.getType(), marshaled.getLabel(), marshaled.getId(), referrentId.getId()));
+				}
 				req.add(delegate);
 			}
 

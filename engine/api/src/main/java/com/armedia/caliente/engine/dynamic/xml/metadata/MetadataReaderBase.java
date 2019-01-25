@@ -30,7 +30,6 @@ import org.apache.commons.text.StringSubstitutor;
 
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.engine.dynamic.xml.Expression.ScriptContextConfig;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfDataType;
@@ -186,37 +185,34 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 	protected final <V> Object evaluateExpression(Expression expression, final CmfObject<V> object,
 		final String sqlName) throws ScriptException {
 		if (expression == null) { return null; }
-		return expression.evaluate(new ScriptContextConfig() {
-			@Override
-			public void configure(ScriptContext ctx) {
-				final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
-				if (object != null) {
-					CmfAttributeTranslator<V> translator = object.getTranslator();
-					Map<String, Object> attributes = new HashMap<>();
-					for (CmfAttribute<V> att : object.getAttributes()) {
-						Object value = null;
-						if (att.hasValues()) {
-							CmfValueCodec<V> codec = translator.getCodec(att.getType());
-							value = att.getType().getValue(codec.encodeValue(att.getValue()));
-						}
-						attributes.put(att.getName(), value);
+		return expression.evaluate((ctx) -> {
+			final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
+			if (object != null) {
+				CmfAttributeTranslator<V> translator = object.getTranslator();
+				Map<String, Object> attributes = new HashMap<>();
+				for (CmfAttribute<V> att : object.getAttributes()) {
+					Object value = null;
+					if (att.hasValues()) {
+						CmfValueCodec<V> codec = translator.getCodec(att.getType());
+						value = att.getType().getValue(codec.encodeValue(att.getValue()));
 					}
-					Map<String, Object> properties = new HashMap<>();
-					for (CmfProperty<V> prop : object.getProperties()) {
-						Object value = null;
-						if (prop.hasValues()) {
-							CmfValueCodec<V> codec = translator.getCodec(prop.getType());
-							value = prop.getType().getValue(codec.encodeValue(prop.getValue()));
-						}
-						attributes.put(prop.getName(), value);
+					attributes.put(att.getName(), value);
+				}
+				Map<String, Object> properties = new HashMap<>();
+				for (CmfProperty<V> prop : object.getProperties()) {
+					Object value = null;
+					if (prop.hasValues()) {
+						CmfValueCodec<V> codec = translator.getCodec(prop.getType());
+						value = prop.getType().getValue(codec.encodeValue(prop.getValue()));
 					}
-					bindings.put("att", attributes);
-					bindings.put("prop", properties);
-					bindings.put("obj", object);
+					attributes.put(prop.getName(), value);
 				}
-				if (sqlName != null) {
-					bindings.put("sqlName", sqlName);
-				}
+				bindings.put("att", attributes);
+				bindings.put("prop", properties);
+				bindings.put("obj", object);
+			}
+			if (sqlName != null) {
+				bindings.put("sqlName", sqlName);
 			}
 		});
 	}

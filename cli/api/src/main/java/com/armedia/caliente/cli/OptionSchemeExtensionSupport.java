@@ -3,6 +3,7 @@ package com.armedia.caliente.cli;
 import com.armedia.caliente.cli.exception.CommandLineExtensionException;
 import com.armedia.caliente.cli.token.Token;
 
+@FunctionalInterface
 public interface OptionSchemeExtensionSupport {
 
 	/**

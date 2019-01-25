@@ -35,6 +35,7 @@ import oracle.stellent.ridc.protocol.intradoc.IntradocClient;
 
 public class UcmSession implements TrackedUse {
 
+	@FunctionalInterface
 	public static interface RequestPreparation {
 		public void prepareRequest(DataBinder request) throws UcmServiceException;
 	}
@@ -120,8 +121,9 @@ public class UcmSession implements TrackedUse {
 	}
 
 	public ServiceResponse callService(String service, RequestPreparation prep) throws UcmServiceException {
-		if (StringUtils.isEmpty(
-			service)) { throw new IllegalArgumentException(String.format("Illegal service name [%s]", service)); }
+		if (StringUtils.isEmpty(service)) {
+			throw new IllegalArgumentException(String.format("Illegal service name [%s]", service));
+		}
 		DataBinder binder = createBinder();
 		if (prep != null) {
 			prep.prepareRequest(binder);
