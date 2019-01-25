@@ -45,6 +45,7 @@
 		<h2.version>1.4.198-20190114.git-a092ef8bba8ee54411f7dfeac56f0a4e70b9f4e1</h2.version>
 		<ridc.version>11.1.1.0</ridc.version>
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
+		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
 	</properties>
 
 	<distributionManagement>
@@ -240,7 +241,7 @@
 				<artifactId>dfc-jars</artifactId>
 				<version>${dfc.version}</version>
 				<scope>system</scope>
-				<systemPath>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</systemPath>
+				<systemPath>${dfc.jar}</systemPath>
 			</dependency>
 
 			<dependency>
@@ -318,7 +319,7 @@
 							</requireEnvironmentVariable>
 							<requireFilesExist>
 								<files>
-									<file>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</file>
+									<file>${dfc.jar}</file>
 								</files>
 								<message>Failed to find the primary DFC JAR file in DOCUMENTUM_SHARED</message>
 							</requireFilesExist>
