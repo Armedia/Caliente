@@ -623,7 +623,10 @@ public abstract class ExportEngine<//
 			ret = findExportTargetsByQuery(session, this.settings, delegateFactory, source);
 		}
 		if (ret != null) {
-			ret = ret.sequential();
+			if (ret.isParallel()) {
+				// Switch to sequential mode - we're doing our own parallelism here
+				ret = ret.sequential();
+			}
 		} else {
 			ret = Stream.empty();
 		}
@@ -824,9 +827,7 @@ public abstract class ExportEngine<//
 					} else {
 						try (Stream<ExportTarget> s = getExportTargets(session, sources.iterator().next(),
 							delegateFactory)) {
-							if (s != null) {
-								s.forEachOrdered(submitter);
-							}
+							s.forEachOrdered(submitter);
 						}
 					}
 					ok = true;
