@@ -1,6 +1,7 @@
 package com.armedia.caliente.cli.utils;
 
 import java.io.Console;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -12,11 +13,7 @@ import com.armedia.commons.utilities.Tools;
 
 public class CliValuePrompt {
 
-	public interface PromptCallback {
-		public char[] promptForValue();
-	}
-
-	public static class ConsolePrompter implements PromptCallback {
+	public static class ConsolePrompter implements Supplier<char[]> {
 		private final boolean echoInput;
 		private final String prompt;
 		private final Object[] promptParams;
@@ -32,7 +29,7 @@ public class CliValuePrompt {
 		}
 
 		@Override
-		public char[] promptForValue() {
+		public char[] get() {
 			final Console console = System.console();
 			if (console == null) { return null; }
 
@@ -85,15 +82,16 @@ public class CliValuePrompt {
 	}
 
 	public static final char[] getPromptableValue(OptionValues cli, OptionWrapper param,
-		PromptCallback promptCallback) {
+		Supplier<char[]> promptCallback) {
 		return CliValuePrompt.getPromptableValue(cli, Option.unwrap(param), promptCallback);
 	}
 
-	public static final char[] getPromptableValue(OptionValues cli, Option param, PromptCallback promptCallback) {
+	public static final char[] getPromptableValue(OptionValues cli, Option param, Supplier<char[]> promptCallback) {
 		// If the option is given, return its value
-		if ((cli != null) && (param != null)
-			&& cli.isPresent(param)) { return CliValuePrompt.getChars(cli.getString(param)); }
+		if ((cli != null) && (param != null) && cli.isPresent(param)) {
+			return CliValuePrompt.getChars(cli.getString(param));
+		}
 		if (promptCallback == null) { return null; }
-		return promptCallback.promptForValue();
+		return promptCallback.get();
 	}
 }

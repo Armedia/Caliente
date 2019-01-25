@@ -1,5 +1,7 @@
 package com.armedia.caliente.cli;
 
+import java.util.function.Supplier;
+
 /**
  * <p>
  * This is a utility interface that helps in the use of classes (like {@link Enum Enums}, for
@@ -10,15 +12,6 @@ package com.armedia.caliente.cli;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public interface OptionWrapper {
-
-	/**
-	 * <p>
-	 * Return the option that this wrapper is keeping
-	 * </p>
-	 *
-	 * @return the option
-	 */
-	public Option getOption();
+public interface OptionWrapper extends Supplier<Option> {
 
 }

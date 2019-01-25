@@ -162,7 +162,7 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 */
 	public static Option unwrap(OptionWrapper wrapper) {
 		if (wrapper == null) { return null; }
-		return wrapper.getOption();
+		return wrapper.get();
 	}
 
 	/**

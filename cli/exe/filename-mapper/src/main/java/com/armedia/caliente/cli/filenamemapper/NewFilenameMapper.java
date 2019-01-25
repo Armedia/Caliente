@@ -7,13 +7,13 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
 
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FSEntry;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
-import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.RenamedEntryProcessor;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.commons.utilities.Tools;
 
@@ -141,8 +141,9 @@ public class NewFilenameMapper {
 	}
 
 	public static Map<CmfObjectRef, String> repairFilenames(Iterator<Entry> iterator, boolean dedupIgnoreCase,
-		FilenameCollisionResolver resolver, FilenameFixer fixer, final RenamedEntryProcessor renamedEntryProcessor,
-		final ProgressListener listener) throws Exception {
+		FilenameCollisionResolver resolver, FilenameFixer fixer,
+		final BiConsumer<CmfObjectRef, String> renamedEntryProcessor, final ProgressListener listener)
+		throws Exception {
 
 		final FilenameDeduplicator deduplicator = new FilenameDeduplicator(dedupIgnoreCase);
 		long count = 0;
@@ -186,16 +187,13 @@ public class NewFilenameMapper {
 		}
 
 		final Map<CmfObjectRef, String> renames = new LinkedHashMap<>();
-		deduplicator.processRenamedEntries(new RenamedEntryProcessor() {
-			@Override
-			public void processEntry(CmfObjectRef entryId, String entryName) {
-				try {
-					if (renamedEntryProcessor != null) {
-						renamedEntryProcessor.processEntry(entryId, entryName);
-					}
-				} finally {
-					renames.put(entryId, entryName);
+		deduplicator.processRenamedEntries((entryId, entryName) -> {
+			try {
+				if (renamedEntryProcessor != null) {
+					renamedEntryProcessor.accept(entryId, entryName);
 				}
+			} finally {
+				renames.put(entryId, entryName);
 			}
 		});
 		return renames;

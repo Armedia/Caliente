@@ -65,7 +65,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 			// If unified login is not in use, then user information (and a password?) is required
 			if (StringUtils.isBlank(user)) { throw new CalienteException(
 				String.format("A non-blank username (specified via --%s) is required when not using unified login",
-					CLIParam.user.getOption().getLongOpt())); }
+					CLIParam.user.get().getLongOpt())); }
 		}
 
 		if (!StringUtils.isEmpty(server)) {

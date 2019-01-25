@@ -17,7 +17,7 @@ public enum CLIParam implements OptionWrapper {
 	}
 
 	@Override
-	public Option getOption() {
+	public Option get() {
 		return this.option;
 	}
 }

@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringSubstitutor;
@@ -17,8 +18,6 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
-import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.IdValidator;
-import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.RenamedEntryProcessor;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfType;
@@ -58,16 +57,11 @@ class FilenameMapper {
 		this.dfcLaunchHelper = dfcLaunchHelper;
 	}
 
-	private final IdValidator idValidator = new IdValidator() {
-
-		@Override
-		public boolean isValidId(CmfObjectRef id) {
-			if (id == null) { return false; }
-			if (id.getType() == null) { return false; }
-			if (StringUtils.isEmpty(id.getId())) { return false; }
-			return (decodeType(id.getId()) != null);
-		}
-
+	private final Predicate<CmfObjectRef> idValidator = (id) -> {
+		if (id == null) { return false; }
+		if (id.getType() == null) { return false; }
+		if (StringUtils.isEmpty(id.getId())) { return false; }
+		return (decodeType(id.getId()) != null);
 	};
 
 	private CmfType decodeType(String idString) {
@@ -348,13 +342,10 @@ class FilenameMapper {
 						}
 					});
 					this.log.info("Conflicts fixed: {}", fixes);
-					deduplicator.processRenamedEntries(new RenamedEntryProcessor() {
-						@Override
-						public void processEntry(CmfObjectRef entryId, String entryName) {
-							String key = generateKey(entryId);
-							if (key != null) {
-								finalMap.setProperty(key, entryName);
-							}
+					deduplicator.processRenamedEntries((entryId, entryName) -> {
+						String key = generateKey(entryId);
+						if (key != null) {
+							finalMap.setProperty(key, entryName);
 						}
 					});
 				}
