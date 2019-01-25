@@ -9,7 +9,6 @@ public enum ShptSetting implements TransferEngineSetting {
 	USER(CmfDataType.STRING),
 	PASSWORD(CmfDataType.STRING),
 	DOMAIN(CmfDataType.STRING),
-	PATH(CmfDataType.STRING),
 	EXCLUDE_EMPTY_FOLDERS(CmfDataType.STRING, "excludeEmptyFolders", Boolean.FALSE),
 	//
 	;

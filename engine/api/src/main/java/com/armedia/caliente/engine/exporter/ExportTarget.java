@@ -8,11 +8,6 @@ public final class ExportTarget extends CmfObjectSearchSpec {
 
 	private final Long number;
 
-	ExportTarget() {
-		super();
-		this.number = null;
-	}
-
 	public ExportTarget(CmfObjectSearchSpec spec) {
 		super(spec);
 		this.number = null;
@@ -33,8 +28,10 @@ public final class ExportTarget extends CmfObjectSearchSpec {
 
 	@Override
 	public String toString() {
-		if (this.number != null) { return String.format("ExportTarget [type=%s, id=%s, searchKey=%s, number=%s]",
-			getType().name(), getId(), getSearchKey(), this.number); }
+		if (this.number != null) {
+			return String.format("ExportTarget [type=%s, id=%s, searchKey=%s, number=%s]", getType().name(), getId(),
+				getSearchKey(), this.number);
+		}
 		return String.format("ExportTarget [type=%s, id=%s, searchKey=%s]", getType().name(), getId(), getSearchKey());
 	}
 }

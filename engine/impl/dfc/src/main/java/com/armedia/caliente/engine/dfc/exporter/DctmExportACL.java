@@ -28,7 +28,6 @@ import com.documentum.fc.client.IDfQuery;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.IDfList;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -86,12 +85,9 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			DctmDataType.DF_INTEGER.getStoredType(), true);
 		CmfProperty<IDfValue> permitValues = new CmfProperty<>(DctmACL.PERMIT_VALUES,
 			DctmDataType.DF_STRING.getStoredType(), true);
-		IDfList permits = acl.getPermissions();
-		final int permitCount = permits.getCount();
 		final IDfSession session = acl.getSession();
 		Set<String> missingAccessors = new HashSet<>();
-		for (int i = 0; i < permitCount; i++) {
-			IDfPermit p = IDfPermit.class.cast(permits.get(i));
+		for (IDfPermit p : DfUtils.getPermissionsWithFallback(session, acl)) {
 			// First, validate the accessor
 			final String accessor = p.getAccessorName();
 			final boolean group;
@@ -193,9 +189,11 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			this.log.warn(String.format("Skipping export of special user [%s]", owner));
 		} else {
 			IDfUser user = session.getUser(owner);
-			if (user == null) { throw new Exception(
-				String.format("Missing dependency for ACL [%s:%s] - user [%s] not found (as ACL domain)", owner,
-					acl.getObjectName(), owner)); }
+			if (user == null) {
+				throw new Exception(
+					String.format("Missing dependency for ACL [%s:%s] - user [%s] not found (as ACL domain)", owner,
+						acl.getObjectName(), owner));
+			}
 			ret.add(this.factory.newExportDelegate(user));
 		}
 		return ret;

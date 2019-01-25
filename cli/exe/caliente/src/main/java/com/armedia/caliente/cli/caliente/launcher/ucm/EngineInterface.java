@@ -117,7 +117,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 
 		List<String> paths = new ArrayList<>();
 
-		for (String srcPath : commandValues.getAllStrings(CLIParam.source)) {
+		for (String srcPath : commandValues.getAllStrings(CLIParam.from)) {
 			if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Empty paths are not allowed"); }
 			if (!srcPath.startsWith("/")) {
 				srcPath = StringUtils.strip(srcPath);

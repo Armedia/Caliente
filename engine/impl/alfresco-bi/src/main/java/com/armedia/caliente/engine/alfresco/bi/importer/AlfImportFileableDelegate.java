@@ -125,8 +125,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 	protected final AlfrescoType getTargetType(CmfContentStream content) throws ImportException {
 		if (!isReference()) { return calculateTargetType(content); }
-		if (this.referenceType == null) { throw new ImportException(
-			String.format("References are not supported for %s", this.cmfObject.getDescription())); }
+		if (this.referenceType == null) {
+			throw new ImportException(
+				String.format("References are not supported for %s", this.cmfObject.getDescription()));
+		}
 		return this.referenceType;
 	}
 
@@ -221,10 +223,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				propertyValue = newValues.get(0);
 			} else {
 				// Make sure no "null" strings make it in
-				newValues.replaceAll((v) -> {
-					return (v == null ? StringUtils.EMPTY : v);
-				});
-				propertyValue = Tools.joinEscaped(',', newValues);
+				newValues.replaceAll((v) -> (v == null ? StringUtils.EMPTY : v));
+				propertyValue = Tools.joinCSVEscaped(newValues);
 			}
 
 			// Don't add empty/null properties
@@ -240,14 +240,10 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		currentProperty = "arm:parentPathIDs";
 		if (includeProperty(currentProperty, targetType)) {
 			values.clear();
-			getPropertyValues(IntermediateProperty.PARENT_TREE_IDS).forEach((v) -> {
-				String s = v.asString();
-				if (!StringUtils.isEmpty(s)) {
-					values.add(s);
-				}
-			});
+			getPropertyValues(IntermediateProperty.PARENT_TREE_IDS).stream().map((v) -> v.asString())
+				.filter(StringUtils::isNotEmpty).forEachOrdered(values::add);
 			if (!values.isEmpty()) {
-				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
+				p.setProperty(currentProperty, Tools.joinCSVEscaped(values));
 			}
 		}
 
@@ -256,7 +252,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			values.clear();
 			getPropertyValues(IntermediateProperty.PATH).forEach((v) -> {
 				String s = v.asString();
-				if (StringUtils.isEmpty(s)) {
+				if (!StringUtils.isEmpty(s)) {
 					try {
 						values.add(URLEncoder.encode(s, "UTF-8"));
 					} catch (UnsupportedEncodingException e) {
@@ -265,7 +261,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				}
 			});
 			if (!values.isEmpty()) {
-				p.setProperty(currentProperty, Tools.joinEscaped(',', values));
+				p.setProperty(currentProperty, Tools.joinCSVEscaped(values));
 			}
 		}
 
@@ -317,14 +313,18 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			final String refVersion = "arm:refVersion";
 			if (includeProperty(refTarget, targetType) && includeProperty(refVersion, targetType)) {
 				CmfProperty<CmfValue> prop = this.cmfObject.getProperty(IntermediateProperty.REF_TARGET);
-				if ((prop == null) || !prop.hasValues()) { throw new ImportException(
-					String.format("Exported object %s doesn't have the required reference target metadata",
-						this.cmfObject.getDescription())); }
+				if ((prop == null) || !prop.hasValues()) {
+					throw new ImportException(
+						String.format("Exported object %s doesn't have the required reference target metadata",
+							this.cmfObject.getDescription()));
+				}
 
 				String refTargetValue = prop.getValue().asString();
-				if (StringUtils.isEmpty(refTargetValue)) { throw new ImportException(
-					String.format("Exported object %s has empty reference target metadata (must not be empty)",
-						this.cmfObject.getDescription())); }
+				if (StringUtils.isEmpty(refTargetValue)) {
+					throw new ImportException(
+						String.format("Exported object %s has empty reference target metadata (must not be empty)",
+							this.cmfObject.getDescription()));
+				}
 				p.setProperty("arm:refTarget", refTargetValue);
 
 				prop = this.cmfObject.getProperty(IntermediateProperty.REF_VERSION);
@@ -339,10 +339,11 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 		targetType.getExtraAspects().forEach((s) -> {
 			if (!StringUtils.isEmpty(s)) {
-				if (!this.factory.getSchema()
-					.hasAspect(s)) { throw new AlfRenderingException(String.format(
+				if (!this.factory.getSchema().hasAspect(s)) {
+					throw new AlfRenderingException(String.format(
 						"No aspect named [%s] is defined in the current content model schema, while importing %s", s,
-						this.cmfObject.getDescription())); }
+						this.cmfObject.getDescription()));
+				}
 				values.add(s);
 			}
 		});
@@ -534,17 +535,19 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	protected final Collection<ImportOutcome> doImportObject(CmfAttributeTranslator<CmfValue> translator,
 		AlfImportContext ctx) throws ImportException, CmfStorageException {
 
-		if (!ctx.getContentStore()
-			.isSupportsFileAccess()) { throw new ImportException("This engine requires filesystem access"); }
+		if (!ctx.getContentStore().isSupportsFileAccess()) {
+			throw new ImportException("This engine requires filesystem access");
+		}
 
 		String path = null;
 		CmfValue pathProp = getPropertyValue(IntermediateProperty.LATEST_PARENT_TREE_IDS);
 		if ((pathProp == null) || pathProp.isNull()) {
 			pathProp = getPropertyValue(IntermediateProperty.PARENT_TREE_IDS);
 		}
-		if (pathProp == null) { throw new ImportException(
-			String.format("Failed to find the required property [%s] in %s",
-				IntermediateProperty.PARENT_TREE_IDS.encode(), this.cmfObject.getDescription())); }
+		if (pathProp == null) {
+			throw new ImportException(String.format("Failed to find the required property [%s] in %s",
+				IntermediateProperty.PARENT_TREE_IDS.encode(), this.cmfObject.getDescription()));
+		}
 
 		String prefix = (!pathProp.isNull() ? pathProp.asString() : "");
 		path = String.format("%s%s%s", prefix, StringUtils.isEmpty(prefix) ? "" : "/", this.cmfObject.getId());
@@ -589,8 +592,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 			if (!main.exists()) {
 				ctx.printf("Creating a stub for %s", this.cmfObject.getDescription());
-				if (!createStub(ctx, main,
-					this.cmfObject.getLabel())) { return Collections.singleton(ImportOutcome.SKIPPED); }
+				if (!createStub(ctx, main, this.cmfObject.getLabel())) {
+					return Collections.singleton(ImportOutcome.SKIPPED);
+				}
 			}
 
 			// Ok...so...now that we know where the metadata properties must go, we write them

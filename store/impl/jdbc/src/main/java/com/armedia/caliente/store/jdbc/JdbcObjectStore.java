@@ -123,7 +123,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 			this.propertyManager = new JdbcStorePropertyManager(JdbcObjectStore.PROPERTY_TABLE);
 
-			JdbcOperation op = new JdbcOperation(c, this.managedTransactions);
+			JdbcOperation op = new JdbcOperation(c, this.managedTransactions, true);
 			boolean ok = false;
 			op.begin();
 			try {
@@ -134,6 +134,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							clearAllObjects(o);
 						}
 						clearAttributeMappings(o);
+						clearBulkObjectLoaderFilter(o);
 					});
 				op.commit();
 				ok = true;
@@ -500,7 +501,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			try {
 				boolean limitByIDs = false;
 				if (ids == null) {
-					objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECTS));
+					if (isObjectFilterActive()) {
+						objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_FILTERED_OBJECTS));
+					} else {
+						objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECTS));
+					}
 				} else {
 					limitByIDs = true;
 					objectPS = connection.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_OBJECTS_BY_ID));
@@ -809,33 +814,30 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	protected void scanObjectTree(JdbcOperation operation, final CmfTreeScanner scanner) throws CmfStorageException {
 		try {
 			JdbcTools.getQueryRunner().query(operation.getConnection(),
-				translateQuery(JdbcDialect.Query.SCAN_OBJECT_TREE), new ResultSetHandler<Void>() {
-					@Override
-					public Void handle(ResultSet rs) throws SQLException {
-						while (rs.next()) {
-							String objectId = rs.getString("object_id");
-							if (rs.wasNull()) {
-								continue;
-							}
-							String parentId = rs.getString("parent_id");
-							if (rs.wasNull()) {
-								continue;
-							}
-							String name = rs.getString("name");
-							if (rs.wasNull()) {
-								continue;
-							}
-							CmfObjectRef parent = JdbcTools.decodeDatabaseId(parentId);
-							CmfObjectRef child = JdbcTools.decodeDatabaseId(objectId);
-							try {
-								scanner.scanNode(parent, child, name);
-							} catch (Exception e) {
-								throw new SQLException(
-									"Failed to scan through the object tree due to a scanner exception", e);
-							}
+				translateQuery(JdbcDialect.Query.SCAN_OBJECT_TREE), (rs) -> {
+					while (rs.next()) {
+						String objectId = rs.getString("object_id");
+						if (rs.wasNull()) {
+							continue;
 						}
-						return null;
+						String parentId = rs.getString("parent_id");
+						if (rs.wasNull()) {
+							continue;
+						}
+						String name = rs.getString("name");
+						if (rs.wasNull()) {
+							continue;
+						}
+						CmfObjectRef parent = JdbcTools.decodeDatabaseId(parentId);
+						CmfObjectRef child = JdbcTools.decodeDatabaseId(objectId);
+						try {
+							scanner.scanNode(parent, child, name);
+						} catch (Exception e) {
+							throw new SQLException("Failed to scan through the object tree due to a scanner exception",
+								e);
+						}
 					}
+					return null;
 				});
 		} catch (SQLException e) {
 			throw new CmfStorageException("Exception raised while scanning the object tree", e);
@@ -869,7 +871,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		throws SQLException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
-		final QueryRunner qr = new QueryRunner();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
 
 		if ((targetValue == null) || (sourceValue == null)) {
 			// Delete instead
@@ -924,23 +926,27 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected String getMapping(JdbcOperation operation, boolean source, CmfType type, String name, String value)
-		throws CmfStorageException {
+	protected Collection<String> getMapping(JdbcOperation operation, boolean source, CmfType type, String name,
+		String value) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to search against"); }
-		final QueryRunner qr = new QueryRunner(this.dataSource);
-		ResultSetHandler<String> h = new ResultSetHandler<String>() {
-			@Override
-			public String handle(ResultSet rs) throws SQLException {
-				if (!rs.next()) { return null; }
-				return rs.getString(1);
-			}
-		};
-		final String sql = translateQuery(
-			source ? JdbcDialect.Query.FIND_TARGET_MAPPING : JdbcDialect.Query.FIND_SOURCE_MAPPING);
 		try {
-			return qr.query(sql, h, type.name(), name, value);
+			return JdbcTools.getQueryRunner().query(operation.getConnection(),
+				translateQuery(source ? JdbcDialect.Query.FIND_TARGET_MAPPING : JdbcDialect.Query.FIND_SOURCE_MAPPING),
+				(rs) -> {
+					Collection<String> results = null;
+					while (rs.next()) {
+						String str = rs.getString(1);
+						if ((str != null) && !rs.wasNull()) {
+							if (results == null) {
+								results = new ArrayList<>();
+							}
+							results.add(str);
+						}
+					}
+					return results;
+				}, type.name(), name, value);
 		} catch (SQLException e) {
 			throw new CmfStorageException(String.format("Failed to retrieve the %s mapping for [%s::%s(%s)]",
 				source ? "source" : "target", type, name, value), e);
@@ -956,17 +962,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			// Get the result string from the EXPORT_PLAN
 			// If it does exist, then this one MUST return exactly one result.
-			String result = qr.query(c, translateQuery(JdbcDialect.Query.GET_EXPORT_RESULT),
-				new ResultSetHandler<String>() {
-					@Override
-					public String handle(ResultSet rs) throws SQLException {
-						// If there is no record, then by definition there is no store status
-						if (!rs.next()) { return null; }
-						// If there's a record, the value may still be null...so check for it
-						String v = rs.getString(1);
-						return (rs.wasNull() ? null : v);
-					}
-				}, dbId, target.getType().name());
+			String result = qr.query(c, translateQuery(JdbcDialect.Query.GET_EXPORT_RESULT), (rs) -> {
+				// If there is no record, then by definition there is no store status
+				if (!rs.next()) { return null; }
+				// If there's a record, the value may still be null...so check for it
+				String v = rs.getString(1);
+				return (rs.wasNull() ? null : v);
+			}, dbId, target.getType().name());
 			if (result == null) { return null; }
 			return StoreStatus.valueOf(result);
 		} catch (SQLException e) {
@@ -1037,28 +1039,23 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private Map<CmfType, Long> getStoredObjectTypes(Connection c) throws CmfStorageException {
 		try {
-			return new QueryRunner().query(c, translateQuery(JdbcDialect.Query.LOAD_OBJECT_TYPES),
-				new ResultSetHandler<Map<CmfType, Long>>() {
-					@Override
-					public Map<CmfType, Long> handle(ResultSet rs) throws SQLException {
-						Map<CmfType, Long> ret = new EnumMap<>(CmfType.class);
-						while (rs.next()) {
-							String t = rs.getString(1);
-							if ((t == null) || rs.wasNull()) {
-								JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
-							try {
-								ret.put(CmfType.valueOf(t), rs.getLong(2));
-							} catch (IllegalArgumentException e) {
-								JdbcObjectStore.this.log
-									.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
-								continue;
-							}
-						}
-						return ret;
+			return JdbcTools.getQueryRunner().query(c, translateQuery(JdbcDialect.Query.LOAD_OBJECT_TYPES), (rs) -> {
+				Map<CmfType, Long> ret = new EnumMap<>(CmfType.class);
+				while (rs.next()) {
+					String t = rs.getString(1);
+					if ((t == null) || rs.wasNull()) {
+						JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+						continue;
 					}
-				});
+					try {
+						ret.put(CmfType.valueOf(t), rs.getLong(2));
+					} catch (IllegalArgumentException e) {
+						JdbcObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+						continue;
+					}
+				}
+				return ret;
+			});
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to retrieve the stored object types", e);
 		}
@@ -1071,7 +1068,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 	private int clearAttributeMappings(Connection c) throws CmfStorageException {
 		try {
-			return new QueryRunner().update(c, translateQuery(JdbcDialect.Query.CLEAR_ALL_MAPPINGS));
+			return JdbcTools.getQueryRunner().update(c, translateQuery(JdbcDialect.Query.CLEAR_ALL_MAPPINGS));
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to clear all the stored mappings", e);
 		}
@@ -1085,25 +1082,22 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected Map<CmfType, Set<String>> getAvailableMappings(JdbcOperation operation) throws CmfStorageException {
 		final Map<CmfType, Set<String>> ret = new EnumMap<>(CmfType.class);
-		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
-			@Override
-			public Void handle(ResultSet rs) throws SQLException {
-				CmfType currentType = null;
-				Set<String> names = null;
-				while (rs.next()) {
-					final CmfType newType = CmfType.valueOf(rs.getString("object_type"));
-					if (newType != currentType) {
-						names = new TreeSet<>();
-						ret.put(newType, names);
-						currentType = newType;
-					}
-					names.add(rs.getString("name"));
-				}
-				return null;
-			}
-		};
 		try {
-			new QueryRunner().query(operation.getConnection(), translateQuery(JdbcDialect.Query.LOAD_ALL_MAPPINGS), h);
+			JdbcTools.getQueryRunner().query(operation.getConnection(),
+				translateQuery(JdbcDialect.Query.LOAD_ALL_MAPPINGS), (rs) -> {
+					CmfType currentType = null;
+					Set<String> names = null;
+					while (rs.next()) {
+						final CmfType newType = CmfType.valueOf(rs.getString("object_type"));
+						if (newType != currentType) {
+							names = new TreeSet<>();
+							ret.put(newType, names);
+							currentType = newType;
+						}
+						names.add(rs.getString("name"));
+					}
+					return null;
+				});
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to retrieve the declared mapping types and names", e);
 		}
@@ -1113,18 +1107,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected Set<String> getAvailableMappings(JdbcOperation operation, CmfType type) throws CmfStorageException {
 		final Set<String> ret = new TreeSet<>();
-		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
-			@Override
-			public Void handle(ResultSet rs) throws SQLException {
-				while (rs.next()) {
-					ret.add(rs.getString("name"));
-				}
-				return null;
-			}
-		};
 		try {
-			new QueryRunner().query(operation.getConnection(), translateQuery(JdbcDialect.Query.LOAD_TYPE_MAPPINGS), h,
-				type.name());
+			JdbcTools.getQueryRunner().query(operation.getConnection(),
+				translateQuery(JdbcDialect.Query.LOAD_TYPE_MAPPINGS), (rs) -> {
+					while (rs.next()) {
+						ret.add(rs.getString("name"));
+					}
+					return null;
+				}, type.name());
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to retrieve the declared mapping names for type [%s]", type), e);
@@ -1135,18 +1125,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected Map<String, String> getMappings(JdbcOperation operation, CmfType type, String name) {
 		final Map<String, String> ret = new HashMap<>();
-		ResultSetHandler<Void> h = new ResultSetHandler<Void>() {
-			@Override
-			public Void handle(ResultSet rs) throws SQLException {
-				while (rs.next()) {
-					ret.put(rs.getString("source_value"), rs.getString("target_value"));
-				}
-				return null;
-			}
-		};
 		try {
-			new QueryRunner().query(operation.getConnection(),
-				translateQuery(JdbcDialect.Query.LOAD_TYPE_NAME_MAPPINGS), h, type.name(), name);
+			JdbcTools.getQueryRunner().query(operation.getConnection(),
+				translateQuery(JdbcDialect.Query.LOAD_TYPE_NAME_MAPPINGS), (rs) -> {
+					while (rs.next()) {
+						ret.put(rs.getString("source_value"), rs.getString("target_value"));
+					}
+					return null;
+				}, type.name(), name);
 		} catch (SQLException e) {
 			throw new RuntimeException(
 				String.format("Failed to retrieve the declared mappings for [%s::%s]", type, name), e);
@@ -1268,17 +1254,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		String sql = translateOptionalQuery(JdbcDialect.Query.LIST_SEQUENCES);
 		if (sql == null) { return Collections.emptySet(); }
 		QueryRunner qr = JdbcTools.getQueryRunner();
-		return qr.query(c, sql, new ResultSetHandler<Set<String>>() {
-
-			@Override
-			public Set<String> handle(ResultSet rs) throws SQLException {
-				Set<String> sequences = new TreeSet<>();
-				while (rs.next()) {
-					sequences.add(rs.getString(1));
-				}
-				return sequences;
+		return qr.query(c, sql, (rs) -> {
+			Set<String> sequences = new TreeSet<>();
+			while (rs.next()) {
+				sequences.add(rs.getString(1));
 			}
-
+			return sequences;
 		});
 	}
 
@@ -1433,9 +1414,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected JdbcOperation newOperation() throws CmfStorageException {
+	protected JdbcOperation newOperation(boolean exclusive) throws CmfStorageException {
 		try {
-			return new JdbcOperation(this.dataSource.getConnection(), this.managedTransactions);
+			return new JdbcOperation(this.dataSource.getConnection(), this.managedTransactions, exclusive);
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to obtain a new connection from the datasource", e);
 		}
@@ -1563,7 +1544,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		Collection<CmfContentStream> content) throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final String objectId = JdbcTools.composeDatabaseId(object);
-		final QueryRunner qr = new QueryRunner();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
 
 		// Step 1: Delete what's there
 		try {
@@ -1624,6 +1605,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final String objectId = JdbcTools.composeDatabaseId(object);
+		final QueryRunner qr = JdbcTools.getQueryRunner();
 
 		PreparedStatement cPS = null;
 		PreparedStatement pPS = null;
@@ -1633,58 +1615,50 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			pPS = c.prepareStatement(translateQuery(JdbcDialect.Query.LOAD_CONTENT_PROPERTIES));
 
 			// This one will simply gather up the properties for each content record
-			final ResultSetHandler<Map<String, String>> pHandler = new ResultSetHandler<Map<String, String>>() {
-				@Override
-				public Map<String, String> handle(ResultSet rs) throws SQLException {
-					final Map<String, String> ret = new TreeMap<>();
-					while (rs.next()) {
-						ret.put(rs.getString("name"), rs.getString("value"));
-					}
-					return ret;
+			final ResultSetHandler<Map<String, String>> pHandler = (rs) -> {
+				final Map<String, String> ret = new TreeMap<>();
+				while (rs.next()) {
+					ret.put(rs.getString("name"), rs.getString("value"));
 				}
+				return ret;
 			};
 
 			// This one will process each content record
-			final ResultSetHandler<List<CmfContentStream>> cHandler = new ResultSetHandler<List<CmfContentStream>>() {
-				@Override
-				public List<CmfContentStream> handle(ResultSet rs) throws SQLException {
-					final List<CmfContentStream> ret = new ArrayList<>();
-					final QueryRunner qr = new QueryRunner();
-					while (rs.next()) {
-						final int contentNumber = rs.getInt("content_number");
-						final CmfContentStream info = new CmfContentStream(contentNumber, rs.getString("rendition_id"),
-							rs.getInt("rendition_page"), rs.getString("modifier"));
-						info.setLength(rs.getLong("stream_length"));
-						String ext = rs.getString("extension");
-						if (rs.wasNull() || StringUtils.isEmpty(ext)) {
-							ext = null;
-						}
-						info.setExtension(ext);
-						String str = rs.getString("mime_type");
-						if ((str != null) && !rs.wasNull()) {
-							info.setMimeType(MimeTools.resolveMimeType(str));
-						}
-						str = rs.getString("file_name");
-						if ((str != null) && !rs.wasNull()) {
-							info.setFileName(str);
-						}
-
-						Map<String, String> props = qr.query(c,
-							translateQuery(JdbcDialect.Query.LOAD_CONTENT_PROPERTIES), pHandler, objectId,
-							contentNumber);
-						for (String s : props.keySet()) {
-							String v = props.get(s);
-							if ((s != null) && (v != null)) {
-								info.setProperty(s, v);
-							}
-						}
-						ret.add(info);
+			final ResultSetHandler<List<CmfContentStream>> cHandler = (rs) -> {
+				final List<CmfContentStream> ret = new ArrayList<>();
+				while (rs.next()) {
+					final int contentNumber = rs.getInt("content_number");
+					final CmfContentStream info = new CmfContentStream(contentNumber, rs.getString("rendition_id"),
+						rs.getInt("rendition_page"), rs.getString("modifier"));
+					info.setLength(rs.getLong("stream_length"));
+					String ext = rs.getString("extension");
+					if (rs.wasNull() || StringUtils.isEmpty(ext)) {
+						ext = null;
 					}
-					return ret;
+					info.setExtension(ext);
+					String str = rs.getString("mime_type");
+					if ((str != null) && !rs.wasNull()) {
+						info.setMimeType(MimeTools.resolveMimeType(str));
+					}
+					str = rs.getString("file_name");
+					if ((str != null) && !rs.wasNull()) {
+						info.setFileName(str);
+					}
+
+					Map<String, String> props = qr.query(c, translateQuery(JdbcDialect.Query.LOAD_CONTENT_PROPERTIES),
+						pHandler, objectId, contentNumber);
+					for (String s : props.keySet()) {
+						String v = props.get(s);
+						if ((s != null) && (v != null)) {
+							info.setProperty(s, v);
+						}
+					}
+					ret.add(info);
 				}
+				return ret;
 			};
 
-			return new QueryRunner().query(c, translateQuery(JdbcDialect.Query.LOAD_CONTENTS), cHandler, objectId);
+			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_CONTENTS), cHandler, objectId);
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to load the content records for %s", object.getDescription()), e);
@@ -1763,41 +1737,37 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final Connection c = operation.getConnection();
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
-			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_RENAME_MAPPINGS),
-				new ResultSetHandler<Map<CmfType, Map<String, String>>>() {
-					@Override
-					public Map<CmfType, Map<String, String>> handle(ResultSet rs) throws SQLException {
-						Map<CmfType, Map<String, String>> ret = new EnumMap<>(CmfType.class);
-						while (rs.next()) {
-							String id = rs.getString("object_id");
-							if (rs.wasNull()) {
-								continue;
-							}
-							String name = rs.getString("new_name");
-							if (rs.wasNull()) {
-								continue;
-							}
-
-							CmfObjectRef ref = JdbcTools.decodeDatabaseId(id);
-							Map<String, String> m = ret.get(ref.getType());
-							if (m == null) {
-								m = new HashMap<>();
-								ret.put(ref.getType(), m);
-							}
-
-							m.put(ref.getId(), name);
-						}
-
-						// Freeze the maps
-						Map<CmfType, Map<String, String>> frozen = new EnumMap<>(CmfType.class);
-						for (CmfType t : ret.keySet()) {
-							Map<String, String> m = ret.get(t);
-							frozen.put(t, Tools.freezeMap(m, true));
-						}
-						ret = Tools.freezeMap(frozen);
-						return ret;
+			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_RENAME_MAPPINGS), (rs) -> {
+				Map<CmfType, Map<String, String>> ret = new EnumMap<>(CmfType.class);
+				while (rs.next()) {
+					String id = rs.getString("object_id");
+					if (rs.wasNull()) {
+						continue;
 					}
-				});
+					String name = rs.getString("new_name");
+					if (rs.wasNull()) {
+						continue;
+					}
+
+					CmfObjectRef ref = JdbcTools.decodeDatabaseId(id);
+					Map<String, String> m = ret.get(ref.getType());
+					if (m == null) {
+						m = new HashMap<>();
+						ret.put(ref.getType(), m);
+					}
+
+					m.put(ref.getId(), name);
+				}
+
+				// Freeze the maps
+				Map<CmfType, Map<String, String>> frozen = new EnumMap<>(CmfType.class);
+				for (CmfType t : ret.keySet()) {
+					Map<String, String> m = ret.get(t);
+					frozen.put(t, Tools.freezeMap(m, true));
+				}
+				ret = Tools.freezeMap(frozen);
+				return ret;
+			});
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to retrieve the next cached target in the given result set", e);
 		}
@@ -1870,19 +1840,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
 			final String referenceId = JdbcTools.composeDatabaseId(object);
-			return qr.query(c, translateQuery(query), new ResultSetHandler<Collection<CmfObjectRef>>() {
-				@Override
-				public Collection<CmfObjectRef> handle(ResultSet rs) throws SQLException {
-					Collection<CmfObjectRef> ret = new LinkedList<>();
-					while (rs.next()) {
-						String id = rs.getString(1);
-						if (rs.wasNull()) {
-							continue;
-						}
-						ret.add(JdbcTools.decodeDatabaseId(id));
+			return qr.query(c, translateQuery(query), (rs) -> {
+				Collection<CmfObjectRef> ret = new LinkedList<>();
+				while (rs.next()) {
+					String id = rs.getString(1);
+					if (rs.wasNull()) {
+						continue;
 					}
-					return Tools.freezeCollection(ret);
+					ret.add(JdbcTools.decodeDatabaseId(id));
 				}
+				return Tools.freezeCollection(ret);
 			}, referenceId);
 		} catch (SQLException e) {
 			throw new CmfStorageException(
@@ -1909,43 +1876,39 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
 			final String objectId = JdbcTools.composeDatabaseId(object);
-			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_IMPORT_PLAN),
-				new ResultSetHandler<Collection<CmfRequirementInfo<T>>>() {
-					@Override
-					public Collection<CmfRequirementInfo<T>> handle(ResultSet rs) throws SQLException {
-						Collection<CmfRequirementInfo<T>> ret = new LinkedList<>();
-						while (rs.next()) {
-							String requirementId = rs.getString("requirement_id");
-							if (rs.wasNull()) {
-								continue;
-							}
-							String statusStr = rs.getString("status");
-							if (rs.wasNull()) {
-								statusStr = null;
-							}
-							String info = rs.getString("info");
-							if (rs.wasNull()) {
-								info = null;
-							}
-
-							T status = null;
-							if ((statusClass != null) && (statusStr != null)) {
-								try {
-									status = Enum.valueOf(statusClass, statusStr);
-								} catch (IllegalArgumentException e) {
-									throw new SQLException(String.format("Illegal enum value [%s] for type %s",
-										statusStr, statusClass.getCanonicalName()));
-								}
-							} else {
-								// If there is no status, or no status class, no info is returned
-								info = null;
-							}
-
-							ret.add(new CmfRequirementInfo<>(JdbcTools.decodeDatabaseId(requirementId), status, info));
-						}
-						return Tools.freezeCollection(ret);
+			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_IMPORT_PLAN), (rs) -> {
+				Collection<CmfRequirementInfo<T>> ret = new LinkedList<>();
+				while (rs.next()) {
+					String requirementId = rs.getString("requirement_id");
+					if (rs.wasNull()) {
+						continue;
 					}
-				}, objectId);
+					String statusStr = rs.getString("status");
+					if (rs.wasNull()) {
+						statusStr = null;
+					}
+					String info = rs.getString("info");
+					if (rs.wasNull()) {
+						info = null;
+					}
+
+					T status = null;
+					if ((statusClass != null) && (statusStr != null)) {
+						try {
+							status = Enum.valueOf(statusClass, statusStr);
+						} catch (IllegalArgumentException e) {
+							throw new SQLException(String.format("Illegal enum value [%s] for type %s", statusStr,
+								statusClass.getCanonicalName()));
+						}
+					} else {
+						// If there is no status, or no status class, no info is returned
+						info = null;
+					}
+
+					ret.add(new CmfRequirementInfo<>(JdbcTools.decodeDatabaseId(requirementId), status, info));
+				}
+				return Tools.freezeCollection(ret);
+			}, objectId);
 		} catch (SQLException e) {
 			throw new CmfStorageException(
 				String.format("Failed to retrieve the object's requirement info for %s", object.getShortLabel()), e);
@@ -2034,5 +1997,70 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			}
 		}
 		return true;
+	}
+
+	@Override
+	protected void clearBulkObjectLoaderFilter(JdbcOperation operation) throws CmfStorageException {
+		if (truncateTables(operation, "CMF_OBJECT_FILTER")) { return; }
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		try {
+			qr.update(c, translateQuery(JdbcDialect.Query.CLEAR_LOADER_FILTER));
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to clear the bulk loader filter", e);
+		}
+	}
+
+	@Override
+	protected boolean addBulkObjectLoaderFilterEntry(JdbcOperation operation, CmfObjectRef entry)
+		throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		Savepoint savePoint = null;
+		try {
+			savePoint = c.setSavepoint();
+			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_LOADER_FILTER), JdbcTools.HANDLER_NULL,
+				JdbcTools.composeDatabaseId(entry));
+			savePoint = JdbcTools.commitSavepoint(c, savePoint);
+			return true;
+		} catch (SQLException e) {
+			if (this.dialect.isDuplicateKeyException(e) || this.dialect.isForeignKeyMissingException(e)) {
+				// We're good! With the use of savepoints, the transaction will remain valid and
+				// thus we'll be OK to continue using the transaction in other connections
+				JdbcTools.rollbackSavepoint(c, savePoint);
+				return false;
+			}
+			throw new CmfStorageException(String.format("Failed to persist the bulk loader filter entry for {%s-%s}",
+				entry.getType().name(), entry.getId()), e);
+		}
+	}
+
+	@Override
+	protected Map<CmfType, Set<CmfObjectRef>> getObjectFilter(JdbcOperation operation) throws CmfStorageException {
+		final Connection c = operation.getConnection();
+		final QueryRunner qr = JdbcTools.getQueryRunner();
+		try {
+			final Map<CmfType, Set<CmfObjectRef>> map = new EnumMap<>(CmfType.class);
+			qr.query(c, translateQuery(JdbcDialect.Query.LOAD_FILTER), (rs) -> {
+				while (rs.next()) {
+					String v = rs.getString(1);
+					// Defend against nulls/empties
+					if (StringUtils.isEmpty(v) || rs.wasNull()) {
+						continue;
+					}
+					CmfObjectRef ref = JdbcTools.decodeDatabaseId(v);
+					Set<CmfObjectRef> set = map.get(ref.getType());
+					if (set == null) {
+						set = new LinkedHashSet<>();
+						map.put(ref.getType(), set);
+					}
+					set.add(ref);
+				}
+				return null;
+			});
+			return map;
+		} catch (SQLException e) {
+			throw new CmfStorageException("Failed to load the object filter data", e);
+		}
 	}
 }

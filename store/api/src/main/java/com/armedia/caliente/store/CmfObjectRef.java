@@ -10,20 +10,10 @@ public class CmfObjectRef implements Comparable<CmfObjectRef>, Serializable {
 	private final CmfType type;
 	private final String id;
 
-	CmfObjectRef() {
-		this.type = null;
-		this.id = null;
-	}
-
 	public CmfObjectRef(CmfObjectRef other) {
 		if (other == null) { throw new IllegalArgumentException("Must provide another object to build from"); }
 		this.type = other.type;
 		this.id = other.id;
-	}
-
-	public CmfObjectRef(CmfObject<?> object) {
-		this.type = object.getType();
-		this.id = object.getId();
 	}
 
 	public CmfObjectRef(CmfType type, String id) {

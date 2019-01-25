@@ -15,7 +15,6 @@ import com.armedia.caliente.cli.caliente.launcher.DynamicCommandOptions;
 import com.armedia.caliente.cli.caliente.options.CLIGroup;
 import com.armedia.caliente.engine.alfresco.bi.AlfSetting;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
-import com.armedia.commons.utilities.Tools;
 
 class Importer extends ImportCommandModule implements DynamicCommandOptions {
 
@@ -78,10 +77,11 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		settings.put(AlfSetting.ROOT.getLabel(), state.getBaseDataLocation().getAbsolutePath());
 		settings.put(AlfSetting.CONTENT.getLabel(), state.getContentStoreLocation().toString());
 
-		if (!commandValues.isPresent(Importer.CONTENT_MODEL)) { throw new CalienteException(
-			"No content models were given - these are required in order to properly generate the Alfresco metadata"); }
-		settings.put(AlfSetting.CONTENT_MODEL.getLabel(),
-			Tools.joinCSVEscaped(commandValues.getAllStrings(Importer.CONTENT_MODEL)));
+		if (!commandValues.isPresent(Importer.CONTENT_MODEL)) {
+			throw new CalienteException(
+				"No content models were given - these are required in order to properly generate the Alfresco metadata");
+		}
+		settings.put(AlfSetting.CONTENT_MODEL.getLabel(), commandValues.getAllStrings(Importer.CONTENT_MODEL));
 
 		if (commandValues.isPresent(Importer.ATTRIBUTE_MAP)) {
 			settings.put(AlfSetting.ATTRIBUTE_MAPPING.getLabel(), commandValues.getString(Importer.ATTRIBUTE_MAP));

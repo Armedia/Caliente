@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.dynamic;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -160,7 +161,7 @@ public class ImmutableElementContext extends DynamicElementContext {
 		}
 
 		@Override
-		public Mapping getSourceMapping(CmfType objectType, String mappingName, String targetValue) {
+		public Collection<Mapping> getSourceMapping(CmfType objectType, String mappingName, String targetValue) {
 			return this.mapper.getSourceMapping(objectType, mappingName, targetValue);
 		}
 

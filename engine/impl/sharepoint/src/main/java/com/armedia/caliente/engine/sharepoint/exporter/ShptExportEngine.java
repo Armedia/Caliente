@@ -6,6 +6,7 @@ package com.armedia.caliente.engine.sharepoint.exporter;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
@@ -27,6 +28,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.StreamTools;
 
 /**
  * @author diego
@@ -37,29 +39,38 @@ public class ShptExportEngine extends
 
 	public ShptExportEngine(ShptExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
-		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true, SearchType.PATH);
 	}
 
 	@Override
-	protected void findExportResults(ShptSession service, CfgTools configuration, ShptExportDelegateFactory factory,
-		TargetSubmitter submitter) throws Exception {
+	protected Stream<ExportTarget> findExportTargetsByQuery(ShptSession session, CfgTools configuration,
+		ShptExportDelegateFactory factory, String query) throws Exception {
+		throw new Exception("SharePoint export doesn't yet support query-based export");
+	}
+
+	@Override
+	protected Stream<ExportTarget> findExportTargetsBySearchKey(ShptSession session, CfgTools configuration,
+		ShptExportDelegateFactory factory, String searchKey) throws Exception {
+		throw new Exception("SharePoint export doesn't yet support ID-based export");
+	}
+
+	@Override
+	protected Stream<ExportTarget> findExportTargetsByPath(ShptSession service, CfgTools configuration,
+		ShptExportDelegateFactory factory, String path) throws Exception {
 		// support query by path (i.e. all files in these paths)
 		// support query by Sharepoint query language
-		if (service == null) { throw new IllegalArgumentException(
-			"Must provide a session through which to retrieve the results"); }
-		final String path = configuration.getString(ShptSetting.PATH);
+		if (service == null) {
+			throw new IllegalArgumentException("Must provide a session through which to retrieve the results");
+		}
 		if (path == null) { throw new ShptException("Must provide the name of the site to export"); }
 		final boolean excludeEmptyFolders = configuration.getBoolean(ShptSetting.EXCLUDE_EMPTY_FOLDERS);
-
+		final Iterator<ExportTarget> it;
 		try {
-			Iterator<ExportTarget> it = new ShptRecursiveIterator(service, service.getFolder(path), configuration,
-				excludeEmptyFolders);
-			while (it.hasNext()) {
-				submitter.submit(it.next());
-			}
+			it = new ShptRecursiveIterator(service, service.getFolder(path), configuration, excludeEmptyFolders);
 		} catch (ShptSessionException e) {
-			throw new ShptException("Export target search failed", e);
+			throw new ShptException(String.format("Export target search failed for path [%s]", path), e);
 		}
+		return StreamTools.fromIterator(it);
 	}
 
 	@Override

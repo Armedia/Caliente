@@ -18,6 +18,7 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.SessionFactoryException;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.CryptException;
 import com.armedia.commons.utilities.CfgTools;
@@ -80,8 +81,10 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 			// If we don't have a match, keep track of what we've checked against
 			ids.put(r.getId(), r.getName());
 		}
-		if (repo == null) { throw new RuntimeException(String.format(
-			"No repository with ID [%s] was found - only found these repositories (id -> name): %s", repoId, ids)); }
+		if (repo == null) {
+			throw new RuntimeException(String.format(
+				"No repository with ID [%s] was found - only found these repositories (id -> name): %s", repoId, ids));
+		}
 		parameters.put(CmisSessionSetting.REPOSITORY_ID.getSessionParameter(), repo.getId());
 
 		// Allow for Alfresco extensions to be used if available
@@ -137,7 +140,7 @@ public class CmisSessionFactory extends SessionFactory<Session> {
 	}
 
 	@Override
-	protected CmisSessionWrapper newWrapper(Session session) throws Exception {
+	protected CmisSessionWrapper newWrapper(Session session) throws SessionFactoryException {
 		return new CmisSessionWrapper(this, session);
 	}
 }

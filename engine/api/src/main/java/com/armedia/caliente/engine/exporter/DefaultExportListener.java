@@ -6,14 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfObjectRef;
+import com.armedia.caliente.store.CmfObjectSearchSpec;
 
 public class DefaultExportListener implements ExportListener {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Override
-	public void objectExportStarted(UUID jobId, CmfObjectRef object, CmfObjectRef referrent) {
+	public void objectExportStarted(UUID jobId, CmfObjectSearchSpec object, CmfObjectSearchSpec referrent) {
 	}
 
 	@Override
@@ -21,14 +21,14 @@ public class DefaultExportListener implements ExportListener {
 	}
 
 	@Override
-	public void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
+	public void objectSkipped(UUID jobId, CmfObjectSearchSpec object, ExportSkipReason reason, String extraInfo) {
 	}
 
 	@Override
-	public void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
+	public void objectExportFailed(UUID jobId, CmfObjectSearchSpec object, Throwable thrown) {
 	}
 
 	@Override
-	public void consistencyWarning(UUID jobId, CmfObjectRef object, String fmt, Object... args) {
+	public void consistencyWarning(UUID jobId, CmfObjectSearchSpec object, String fmt, Object... args) {
 	}
 }

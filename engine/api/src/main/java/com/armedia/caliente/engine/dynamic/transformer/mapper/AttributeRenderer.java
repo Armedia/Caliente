@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,14 +28,11 @@ class AttributeRenderer implements MappingRenderer {
 		this.caseSensitive = mapping.isCaseSensitive();
 		this.separator = Tools.coalesce(mapping.getSeparator(), parentSeparator, AttributeRenderer.DEFAULT_SEPARATOR);
 		String value = StringUtils.strip(mapping.getValue());
-		Set<String> sourceValues = new LinkedHashSet<>();
-		Tools.splitEscaped(this.separator, value).forEach((v) -> {
-			if (!this.caseSensitive) {
-				v = StringUtils.upperCase(v);
-			}
-			sourceValues.add(v);
-		});
-		this.sourceValues = Tools.freezeSet(sourceValues);
+		Stream<String> sourceValues = Tools.splitEscaped(this.separator, value).stream();
+		if (!this.caseSensitive) {
+			sourceValues = sourceValues.map(StringUtils::upperCase);
+		}
+		this.sourceValues = Tools.freezeSet(sourceValues.collect(Collectors.toCollection(LinkedHashSet::new)));
 		this.override = mapping.isOverride();
 	}
 

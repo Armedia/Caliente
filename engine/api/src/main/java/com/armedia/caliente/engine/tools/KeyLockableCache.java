@@ -181,9 +181,8 @@ public class KeyLockableCache<K extends Serializable, V> {
 	private final TimeUnit maxAgeUnit;
 	private final long maxAge;
 	private final Map<K, CacheItem> cache;
-	private final LockDispenser<K, ReentrantReadWriteLock> locks = new LockDispenser<>((key) -> {
-		return new TraceableReentrantReadWriteLock(key);
-	});
+	private final LockDispenser<K, ReentrantReadWriteLock> locks = new LockDispenser<>(
+		(key) -> new TraceableReentrantReadWriteLock(key));
 
 	public KeyLockableCache() {
 		this(KeyLockableCache.MIN_LIMIT, KeyLockableCache.DEFAULT_MAX_AGE_UNIT, KeyLockableCache.DEFAULT_MAX_AGE);

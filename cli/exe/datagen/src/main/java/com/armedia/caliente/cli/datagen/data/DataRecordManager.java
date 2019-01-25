@@ -39,7 +39,7 @@ public abstract class DataRecordManager<L extends Object> {
 	private boolean streamRecordsInitialized = false;
 	private DataRecordSet<?, ?, ?> streamRecords = null;
 
-	private final LockDispenser<String, Object> typeLocks = LockDispenser.getSynchronized();
+	private final LockDispenser<String, Object> typeLocks = LockDispenser.synchronizableObject();
 	private final ConcurrentMap<String, DataRecordSet<?, ?, ?>> typeRecords = new ConcurrentHashMap<>();
 
 	protected abstract DataRecordSet<?, ?, ?> buildRecordSet(L location, int loopCount) throws Exception;
