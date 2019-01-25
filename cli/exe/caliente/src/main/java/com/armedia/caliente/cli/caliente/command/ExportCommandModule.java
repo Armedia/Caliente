@@ -76,12 +76,10 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 
 		PluggableServiceLocator<ExportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ExportEngineListener.class);
-		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
-			@Override
-			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				ExportCommandModule.this.console.warn(String.format(
-					"Failed to register an additional listener class [%s]", serviceClass.getCanonicalName()), t);
-			}
+		extraListeners.setErrorListener((serviceClass, t) -> {
+			ExportCommandModule.this.console.warn(
+				String.format("Failed to register an additional listener class [%s]", serviceClass.getCanonicalName()),
+				t);
 		});
 		extraListeners.setHideErrors(false);
 

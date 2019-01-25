@@ -71,12 +71,10 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 
 		PluggableServiceLocator<ImportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ImportEngineListener.class);
-		extraListeners.setErrorListener(new PluggableServiceLocator.ErrorListener() {
-			@Override
-			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				ImportCommandModule.this.log.warn(String.format("Failed to register an additional listener class [%s]",
-					serviceClass.getCanonicalName()), t);
-			}
+		extraListeners.setErrorListener((serviceClass, t) -> {
+			ImportCommandModule.this.log.warn(
+				String.format("Failed to register an additional listener class [%s]", serviceClass.getCanonicalName()),
+				t);
 		});
 		extraListeners.setHideErrors(false);
 

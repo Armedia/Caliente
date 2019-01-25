@@ -17,12 +17,9 @@ public class CustomComponents {
 
 	private static <C, F extends CustomComponentFactory<C>> Map<String, F> buildFactoryMap(final Class<F> klass) {
 		PluggableServiceLocator<F> locator = new PluggableServiceLocator<>(klass);
-		locator.setErrorListener(new PluggableServiceLocator.ErrorListener() {
-			@Override
-			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				CustomComponents.LOG.error("Failed to load initialize the factory class {} (as a subclass of {})",
-					serviceClass.getCanonicalName(), klass.getCanonicalName(), t);
-			}
+		locator.setErrorListener((serviceClass, t) -> {
+			CustomComponents.LOG.error("Failed to load initialize the factory class {} (as a subclass of {})",
+				serviceClass.getCanonicalName(), klass.getCanonicalName(), t);
 		});
 		locator.setHideErrors(false);
 		Map<String, F> map = new TreeMap<>();
