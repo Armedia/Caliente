@@ -18,8 +18,8 @@ class JdbcOperation extends CmfStoreOperation<Connection> {
 
 	private final boolean jtaManaged;
 
-	public JdbcOperation(Connection wrapped, boolean jtaManaged) throws CmfOperationException {
-		super(wrapped);
+	public JdbcOperation(Connection wrapped, boolean jtaManaged, boolean exclusive) throws CmfOperationException {
+		super(wrapped, exclusive);
 		this.jtaManaged = jtaManaged;
 		try {
 			if (!jtaManaged && !wrapped.getAutoCommit()) {

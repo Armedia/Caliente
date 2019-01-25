@@ -62,7 +62,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 		}
 	}
 
-	protected abstract OPERATION newOperation() throws CmfStorageException;
+	protected abstract OPERATION newOperation(boolean exclusive) throws CmfStorageException;
 
 	protected final OPERATION beginConcurrentInvocation() throws CmfStorageException {
 		return beginInvocation(false);
@@ -78,7 +78,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 		try {
 			lock.lock();
 			assertOpen();
-			OPERATION ret = newOperation();
+			OPERATION ret = newOperation(exclusive);
 			ok = true;
 			return ret;
 		} finally {
@@ -88,16 +88,12 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 		}
 	}
 
-	protected final void endConcurrentInvocation(OPERATION operation) {
+	protected final void endInvocation(OPERATION operation) {
 		endInvocation(operation, false);
 	}
 
-	protected final void endExclusiveInvocation(OPERATION operation) {
-		endInvocation(operation, true);
-	}
-
 	private void endInvocation(OPERATION operation, boolean exclusive) {
-		final Lock lock = (exclusive ? getWriteLock() : getReadLock());
+		final Lock lock = (operation.isExclusive() ? getWriteLock() : getReadLock());
 		try {
 			operation.closeQuietly();
 		} finally {
@@ -134,8 +130,9 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 	}
 
 	public final Map<String, CmfValue> setProperties(Map<String, CmfValue> properties) throws CmfStorageException {
-		if (properties == null) { throw new IllegalArgumentException(
-			"Must provide a valid set of properties to store"); }
+		if (properties == null) {
+			throw new IllegalArgumentException("Must provide a valid set of properties to store");
+		}
 		if (properties.isEmpty()) { return properties; }
 		return doSetProperties(properties);
 	}
@@ -146,14 +143,16 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 	}
 
 	public final Map<String, CmfValue> clearProperties(String... properties) throws CmfStorageException {
-		if (properties == null) { throw new IllegalArgumentException(
-			"Must provide a valid collection of property names to clear"); }
+		if (properties == null) {
+			throw new IllegalArgumentException("Must provide a valid collection of property names to clear");
+		}
 		return doClearProperties(Arrays.asList(properties));
 	}
 
 	public final Map<String, CmfValue> clearProperties(Collection<String> properties) throws CmfStorageException {
-		if (properties == null) { throw new IllegalArgumentException(
-			"Must provide a valid collection of property names to clear"); }
+		if (properties == null) {
+			throw new IllegalArgumentException("Must provide a valid collection of property names to clear");
+		}
 		return doClearProperties(properties);
 	}
 
@@ -186,7 +185,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -211,7 +210,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -234,7 +233,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -265,7 +264,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -300,7 +299,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -323,7 +322,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -352,7 +351,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 

@@ -5,9 +5,6 @@ import com.armedia.caliente.store.CmfDataType;
 
 public enum CmisSetting implements TransferEngineSetting {
 	//
-	EXPORT_PATH(CmfDataType.STRING),
-	EXPORT_ID(CmfDataType.STRING),
-	EXPORT_QUERY(CmfDataType.STRING),
 	EXPORT_PAGE_SIZE(CmfDataType.INTEGER, 100),
 	//
 	;

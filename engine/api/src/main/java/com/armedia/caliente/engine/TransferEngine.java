@@ -80,7 +80,7 @@ public abstract class TransferEngine< //
 			this.listenerProxy = listenerClass
 				.cast(Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {
 					listenerClass
-			}, this));
+				}, this));
 		}
 
 		public final LISTENER getListenerProxy() {
@@ -208,6 +208,16 @@ public abstract class TransferEngine< //
 	protected abstract CmfAttributeTranslator<VALUE> getTranslator();
 
 	protected abstract SessionFactory<SESSION> newSessionFactory(CfgTools cfg, CmfCrypt crypto) throws Exception;
+
+	protected final SessionFactory<SESSION> constructSessionFactory(CfgTools cfg, CmfCrypt crypto)
+		throws SessionFactoryException {
+		try {
+			return newSessionFactory(cfg, crypto);
+		} catch (Exception e) {
+			throw new SessionFactoryException(String.format(
+				"Failed to construct a new SessionFactory instance for engine %s", getClass().getSimpleName()), e);
+		}
+	}
 
 	protected abstract CONTEXT_FACTORY newContextFactory(SESSION session, CfgTools cfg,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
@@ -372,8 +382,10 @@ public abstract class TransferEngine< //
 	}
 
 	public final void run(CmfObjectCounter<RESULT> counter) throws EXCEPTION, CmfStorageException {
-		if (!this.runLock.tryLock()) { throw newException(String.format(
-			"This %s instance is already running a job - can't run a second one", getClass().getSimpleName())); }
+		if (!this.runLock.tryLock()) {
+			throw newException(String.format("This %s instance is already running a job - can't run a second one",
+				getClass().getSimpleName()));
+		}
 		try {
 			if (counter == null) {
 				counter = new CmfObjectCounter<>(this.resultClass);

@@ -88,8 +88,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 
 	@Override
 	public String calculateLabel(ShptSession session, ShptVersion file) {
-		return String.format("%s#%s", this.factory.getRelativePath(file.getServerRelativeUrl()),
-			file.getVersionNumber().toString());
+		return String.format("%s#%s", file.getServerRelativeUrl(), file.getVersionNumber().toString());
 	}
 
 	@Override

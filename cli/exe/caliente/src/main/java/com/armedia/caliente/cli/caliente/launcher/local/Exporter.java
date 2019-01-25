@@ -91,7 +91,7 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		throws CalienteException {
 		if (!super.doConfigure(state, commandValues, settings)) { return false; }
 
-		File source = Tools.canonicalize(new File(commandValues.getString(CLIParam.source)));
+		File source = Tools.canonicalize(new File(commandValues.getString(CLIParam.from)));
 
 		// Make sure a source has been specified
 		if (source == null) { throw new CalienteException("Must specify a source to export from"); }

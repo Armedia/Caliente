@@ -424,7 +424,7 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -482,7 +482,7 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -518,7 +518,7 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -558,7 +558,7 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 				}
 			}
 		} finally {
-			endConcurrentInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 
@@ -580,7 +580,7 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 				}
 			}
 		} finally {
-			endExclusiveInvocation(operation);
+			endInvocation(operation);
 		}
 	}
 

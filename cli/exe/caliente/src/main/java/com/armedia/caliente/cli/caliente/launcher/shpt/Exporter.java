@@ -92,13 +92,14 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 			throw new CalienteException(String.format("Bad URL for Sharepoint: [%s]", server), e);
 		}
 
-		String srcPath = commandValues.getString(CLIParam.source);
+		String srcPath = commandValues.getString(CLIParam.from);
 		if (srcPath == null) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
 		List<String> l = FileNameTools.tokenize(srcPath, '/');
 		if (l.isEmpty()) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
 		final String site = l.get(0);
-		if (StringUtils
-			.isEmpty(site)) { throw new CalienteException("Must provide the title of the sharepoint site to export"); }
+		if (StringUtils.isEmpty(site)) {
+			throw new CalienteException("Must provide the title of the sharepoint site to export");
+		}
 
 		srcPath = FileNameTools.reconstitute(l, false, false, '/');
 
@@ -120,8 +121,6 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		} catch (MalformedURLException e) {
 			throw new CalienteException("Bad base URL", e);
 		}
-		settings.put(ShptSetting.PATH.getLabel(),
-			String.format("%s/%s", StringUtils.isEmpty(srcPrefix) ? "" : String.format("/%s", srcPrefix), srcPath));
 		return true;
 	}
 

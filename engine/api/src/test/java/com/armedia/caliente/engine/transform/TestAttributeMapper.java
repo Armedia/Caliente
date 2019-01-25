@@ -1,5 +1,7 @@
 package com.armedia.caliente.engine.transform;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
@@ -46,10 +48,10 @@ public class TestAttributeMapper extends CmfValueMapper {
 	}
 
 	@Override
-	public Mapping getSourceMapping(CmfType objectType, String mappingName, String targetValue) {
+	public Collection<Mapping> getSourceMapping(CmfType objectType, String mappingName, String targetValue) {
 		BidiMap<String, String> mappings = getNamedMappingsForType(objectType, mappingName).inverseBidiMap();
 		if (!mappings.containsKey(targetValue)) { return null; }
-		return newMapping(objectType, mappingName, mappings.get(targetValue), targetValue);
+		return Collections.singleton(newMapping(objectType, mappingName, mappings.get(targetValue), targetValue));
 	}
 
 	@Override
@@ -81,8 +83,9 @@ public class TestAttributeMapper extends CmfValueMapper {
 	protected Mapping createMapping(CmfType objectType, String mappingName, String sourceValue, String targetValue) {
 		if ((sourceValue == null) || (targetValue == null)) {
 			// This is a removal...
-			if ((sourceValue == null) && (targetValue == null)) { throw new IllegalArgumentException(
-				"Must provide either a source or target value to search by"); }
+			if ((sourceValue == null) && (targetValue == null)) {
+				throw new IllegalArgumentException("Must provide either a source or target value to search by");
+			}
 			BidiMap<String, String> m = getNamedMappingsForType(objectType, mappingName);
 			String key = sourceValue;
 			if (sourceValue == null) {

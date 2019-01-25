@@ -1,5 +1,6 @@
 package com.armedia.caliente.store;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,8 +62,9 @@ public abstract class CmfValueMapper {
 		}
 
 		public boolean isSameTypeAndName(Mapping other) {
-			if (other == null) { throw new IllegalArgumentException(
-				"Must provide another mapping to compare against"); }
+			if (other == null) {
+				throw new IllegalArgumentException("Must provide another mapping to compare against");
+			}
 			if (!Tools.equals(this.objectType, other.objectType)) { return false; }
 			if (!Tools.equals(this.mappingName, other.mappingName)) { return false; }
 			return true;
@@ -131,8 +133,9 @@ public abstract class CmfValueMapper {
 	}
 
 	public final void setMapping(Mapping oldMapping, String targetValue) {
-		if (oldMapping == null) { throw new IllegalArgumentException(
-			"Must provide an old mapping to pattern the new mapping after"); }
+		if (oldMapping == null) {
+			throw new IllegalArgumentException("Must provide an old mapping to pattern the new mapping after");
+		}
 		setMapping(oldMapping.getObjectType(), oldMapping.getMappingName(), oldMapping.getSourceValue(), targetValue);
 	}
 
@@ -189,10 +192,10 @@ public abstract class CmfValueMapper {
 	 * @param objectType
 	 * @param mappingName
 	 * @param targetValue
-	 * @return the value mapping for the given object type, name and source value, or {@code null}
-	 *         if no such mapping can be found.
+	 * @return the value mappings for the given object type, name and target values, or {@code null}
+	 *         if no such mappings can be found.
 	 */
-	public abstract Mapping getSourceMapping(CmfType objectType, String mappingName, String targetValue);
+	public abstract Collection<Mapping> getSourceMapping(CmfType objectType, String mappingName, String targetValue);
 
 	/**
 	 * <p>

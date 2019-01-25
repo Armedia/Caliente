@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.armedia.caliente.engine.dfc.DctmEngineTest;
 import com.armedia.caliente.engine.dfc.DctmSetting;
-import com.armedia.caliente.engine.dfc.common.Setting;
+import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.commons.utilities.CfgTools;
 
 public class DctmExportEngineTest extends DctmEngineTest {
@@ -27,8 +27,7 @@ public class DctmExportEngineTest extends DctmEngineTest {
 		settings.put(DctmSetting.DOCBASE.getLabel(), "documentum");
 		settings.put(DctmSetting.USERNAME.getLabel(), "dmadmin2");
 		settings.put(DctmSetting.PASSWORD.getLabel(), "XZ6ZkrcrHEg=");
-		settings.put(Setting.DQL.getLabel(),
-			"select r_object_id from dm_sysobject where folder('/CMSMFTests', DESCEND)");
+		settings.put(ExportSetting.FROM.getLabel(), "dm_sysobject where folder('/CMSMFTests', DESCEND)");
 
 		factory.newInstance(this.output, null, this.baseData, this.cmfObjectStore, this.streamStore,
 			new CfgTools(settings)).run(null);

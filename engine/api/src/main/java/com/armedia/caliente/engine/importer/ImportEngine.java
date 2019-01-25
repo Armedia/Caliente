@@ -1,6 +1,7 @@
 package com.armedia.caliente.engine.importer;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -20,10 +21,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.SessionFactoryException;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferEngine;
 import com.armedia.caliente.engine.TransferEngineSetting;
@@ -51,8 +54,13 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.Closer;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.CloseableIterator;
+import com.armedia.commons.utilities.CloseableIteratorWrapper;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.line.LineProcessorException;
+import com.armedia.commons.utilities.line.LineScanner;
+import com.armedia.commons.utilities.line.LineSourceException;
 
 public abstract class ImportEngine<//
 	SESSION, //
@@ -383,11 +391,38 @@ public abstract class ImportEngine<//
 		if (schemaService == null) { return null; }
 
 		String mapperDefault = String.format("%s%s", this.cfgNamePrefix, AttributeMapper.getDefaultLocation());
-		String mapper = cfg.getString(ImportSetting.ATTRIBUTE_MAPPING.getLabel());
-		String residualsPrefix = cfg.getString(ImportSetting.RESIDUALS_PREFIX.getLabel());
+		String mapper = cfg.getString(ImportSetting.ATTRIBUTE_MAPPING);
+		String residualsPrefix = cfg.getString(ImportSetting.RESIDUALS_PREFIX);
 
 		return AttributeMapper.getAttributeMapper(schemaService, Tools.coalesce(mapper, mapperDefault), residualsPrefix,
 			false);
+	}
+
+	private CloseableIterator<CmfObjectRef> getObjectRestrictionIterator(CfgTools cfg) throws ImportException {
+		Collection<String> source = cfg.getStrings(ImportSetting.RESTRICT_TO);
+		if ((source == null) || source.isEmpty()) { return null; }
+
+		LineScanner scanner = new LineScanner();
+
+		final Collection<CmfObjectRef> restrictions = new LinkedList<>();
+
+		try {
+			scanner.scanLines((line) -> {
+				try {
+					CmfObjectRef ref = ImportRestriction.parse(StringUtils.strip(line.substring(1)));
+					if (ref != null) {
+						restrictions.add(ref);
+					}
+				} catch (Exception e) {
+					// Illegal reference...
+				}
+				return true;
+			}, source);
+		} catch (IOException | LineSourceException | LineProcessorException e) {
+			throw new ImportException("Failed to load all the import restrictions", e);
+		}
+
+		return new CloseableIteratorWrapper<>(restrictions.iterator());
 	}
 
 	@Override
@@ -397,23 +432,20 @@ public abstract class ImportEngine<//
 		// is not the same as the previous target repo - we can tell this by
 		// looking at the target mappings.
 		// this.log.info("Clearing all previous mappings");
-		// objectStore.clearAllMappings();Object
+		// objectStore.clearAllMappings();
 
 		final CfgTools configuration = this.settings;
 		final ImportState importState = new ImportState(this.output, this.baseData, this.objectStore, this.contentStore,
 			configuration);
-		final SessionFactory<SESSION> sessionFactory;
-		try {
-			sessionFactory = newSessionFactory(configuration, this.crypto);
-		} catch (Exception e) {
-			throw new ImportException("Failed to configure the session factory to carry out the import", e);
-		}
 
-		try {
+		try (final SessionFactory<SESSION> sessionFactory = constructSessionFactory(configuration, this.crypto)) {
 			SessionWrapper<SESSION> baseSession = null;
 			try {
+				// We do it like this instead of via try-with-resources because we may want
+				// to release this session early rather than late, and we can only do that
+				// if we manage the closing manually
 				baseSession = sessionFactory.acquireSession();
-			} catch (Exception e) {
+			} catch (SessionFactoryException e) {
 				throw new ImportException("Failed to obtain the import initialization session", e);
 			}
 
@@ -491,8 +523,8 @@ public abstract class ImportEngine<//
 					transformer.close();
 				}
 			}
-		} finally {
-			sessionFactory.close();
+		} catch (SessionFactoryException e) {
+			throw new ImportException("Failed to configure the session factory to carry out the import", e);
 		}
 	}
 
@@ -614,21 +646,17 @@ public abstract class ImportEngine<//
 			}
 			// Ensure the target path exists
 			{
-				final SessionWrapper<SESSION> rootSession;
-				try {
-					rootSession = sessionFactory.acquireSession();
-				} catch (Exception e) {
+				try (SessionWrapper<SESSION> rootSession = sessionFactory.acquireSession()) {
+					try {
+						rootSession.begin();
+						contextFactory.ensureTargetPath(rootSession.getWrapped());
+						rootSession.commit();
+					} catch (Exception e) {
+						rootSession.rollback();
+						throw new ImportException("Failed to ensure the target path", e);
+					}
+				} catch (SessionFactoryException e) {
 					throw new ImportException("Failed to obtain the root session to ensure the target path", e);
-				}
-				try {
-					rootSession.begin();
-					contextFactory.ensureTargetPath(rootSession.getWrapped());
-					rootSession.commit();
-				} catch (Exception e) {
-					rootSession.rollback();
-					throw new ImportException("Failed to ensure the target path", e);
-				} finally {
-					rootSession.close();
 				}
 			}
 
@@ -640,6 +668,18 @@ public abstract class ImportEngine<//
 			output.info("Clearing the import plan");
 			objectStore.clearImportPlan();
 			output.info("Cleared the import plan");
+
+			output.info("Loading the object restriction list");
+			try (CloseableIterator<CmfObjectRef> objectRestrictions = getObjectRestrictionIterator(importState.cfg)) {
+				if (objectRestrictions != null) {
+					output.info("Loaded the object restriction list");
+					output.info("Applying the object restriction list");
+					containedTypes = objectStore.setBulkObjectLoaderFilter(objectRestrictions);
+					output.info("Applied the object restriction list");
+				} else {
+					output.info("No object restriction list loaded, will import all available objects");
+				}
+			}
 
 			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
 				final Properties p = new Properties();
@@ -866,7 +906,9 @@ public abstract class ImportEngine<//
 				}
 			}
 			return listenerDelegator.getStoredObjectCounter();
-		} finally {
+		} finally
+
+		{
 			parallelExecutor.shutdownNow();
 			singleExecutor.shutdownNow();
 

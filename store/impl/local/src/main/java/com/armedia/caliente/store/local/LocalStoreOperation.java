@@ -7,8 +7,8 @@ import com.armedia.caliente.store.CmfStoreOperation;
 
 public class LocalStoreOperation extends CmfStoreOperation<File> {
 
-	public LocalStoreOperation(File wrapped) {
-		super(wrapped);
+	public LocalStoreOperation(File wrapped, boolean exclusive) {
+		super(wrapped, exclusive);
 	}
 
 	@Override

@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -140,8 +141,9 @@ public abstract class AbstractEngineInterface {
 	}
 
 	public static AbstractEngineInterface get(final Logger log, final String engine) {
-		if (StringUtils
-			.isEmpty(engine)) { throw new IllegalArgumentException("Must provide a non-empty engine title"); }
+		if (StringUtils.isEmpty(engine)) {
+			throw new IllegalArgumentException("Must provide a non-empty engine title");
+		}
 
 		AbstractEngineInterface.initializeInterfaces(log);
 
@@ -175,21 +177,16 @@ public abstract class AbstractEngineInterface {
 
 	protected AbstractEngineInterface(String name, Set<String> aliases) {
 		name = StringUtils.strip(name);
-		if (StringUtils
-			.isBlank(name)) { throw new IllegalArgumentException("Must provide a non-null, non-blank engine name"); }
+		if (StringUtils.isBlank(name)) {
+			throw new IllegalArgumentException("Must provide a non-null, non-blank engine name");
+		}
 		this.name = name;
 		if ((aliases == null) || aliases.isEmpty()) {
 			this.aliases = Collections.emptySet();
 		} else {
-			final Set<String> newAliases = new TreeSet<>();
-			aliases.forEach((a) -> {
-				a = StringUtils.strip(a);
-				if (StringUtils.isBlank(a)) { throw new IllegalArgumentException(
-					String.format("Engine aliases must be non-null, and non-empty (engine = %s)", this.name)); }
-				if (!StringUtils.equals(a, this.name)) {
-					newAliases.add(a);
-				}
-			});
+			final Set<String> newAliases = aliases.stream().map(StringUtils::strip)
+				.filter((a) -> (!StringUtils.isBlank(a) && !this.name.equals(a)))
+				.collect(Collectors.toCollection(TreeSet::new));
 			this.aliases = Tools.freezeSet(new LinkedHashSet<>(newAliases));
 		}
 	}

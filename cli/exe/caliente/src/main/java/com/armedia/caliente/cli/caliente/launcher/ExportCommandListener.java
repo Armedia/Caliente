@@ -13,7 +13,7 @@ import com.armedia.caliente.engine.exporter.ExportSkipReason;
 import com.armedia.caliente.engine.exporter.ExportState;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
-import com.armedia.caliente.store.CmfObjectRef;
+import com.armedia.caliente.store.CmfObjectSearchSpec;
 import com.armedia.caliente.store.CmfType;
 
 public class ExportCommandListener extends AbstractCommandListener implements ExportEngineListener {
@@ -70,7 +70,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	}
 
 	@Override
-	public void objectExportStarted(UUID jobId, CmfObjectRef object, CmfObjectRef referrent) {
+	public void objectExportStarted(UUID jobId, CmfObjectSearchSpec object, CmfObjectSearchSpec referrent) {
 		if (referrent == null) {
 			this.console.info(String.format("Object export started for %s", object.getShortLabel()));
 		} else {
@@ -91,7 +91,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	}
 
 	@Override
-	public void objectSkipped(UUID jobId, CmfObjectRef object, ExportSkipReason reason, String extraInfo) {
+	public void objectSkipped(UUID jobId, CmfObjectSearchSpec object, ExportSkipReason reason, String extraInfo) {
 		this.objectCounter.incrementAndGet();
 		switch (reason) {
 			case SKIPPED:
@@ -113,7 +113,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	}
 
 	@Override
-	public void objectExportFailed(UUID jobId, CmfObjectRef object, Throwable thrown) {
+	public void objectExportFailed(UUID jobId, CmfObjectSearchSpec object, Throwable thrown) {
 		this.objectCounter.incrementAndGet();
 		this.counter.increment(object.getType(), ExportResult.FAILED);
 		this.console.warn(String.format("Object export failed for %s", object.getShortLabel()), thrown);
@@ -121,7 +121,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	}
 
 	@Override
-	public void consistencyWarning(UUID jobId, CmfObjectRef object, String fmt, Object... args) {
+	public void consistencyWarning(UUID jobId, CmfObjectSearchSpec object, String fmt, Object... args) {
 		// TODO: Raise a warning
 	}
 

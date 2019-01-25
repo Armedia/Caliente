@@ -13,6 +13,7 @@ public enum ImportSetting implements TransferEngineSetting {
 	FILENAME_MAP(CmfDataType.STRING),
 	VALIDATE_REQUIREMENTS(CmfDataType.BOOLEAN, false),
 	REPLACE_MODE(CmfDataType.STRING, ImportReplaceMode.UPDATE.name()),
+	RESTRICT_TO(CmfDataType.STRING),
 	//
 	;
 

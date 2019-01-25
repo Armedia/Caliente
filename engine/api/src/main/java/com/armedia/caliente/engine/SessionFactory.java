@@ -44,11 +44,13 @@ public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SES
 		this.pool.setConfig(getPoolConfig(settings));
 	}
 
-	public final SessionWrapper<SESSION> acquireSession() throws Exception {
+	public final SessionWrapper<SESSION> acquireSession() throws SessionFactoryException {
 		this.lock.readLock().lock();
 		if (!this.open) { throw new IllegalStateException("This session factory is not open"); }
 		try {
 			return newWrapper(this.pool.borrowObject());
+		} catch (Exception e) {
+			throw new SessionFactoryException("Failed to borrow an object from the pool", e);
 		} finally {
 			this.lock.readLock().unlock();
 		}
@@ -89,5 +91,5 @@ public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SES
 		return SessionFactory.getDefaultPoolConfig(settings);
 	}
 
-	protected abstract SessionWrapper<SESSION> newWrapper(SESSION session) throws Exception;
+	protected abstract SessionWrapper<SESSION> newWrapper(SESSION session) throws SessionFactoryException;
 }

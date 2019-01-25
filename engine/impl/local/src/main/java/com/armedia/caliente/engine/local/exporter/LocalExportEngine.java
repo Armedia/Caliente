@@ -1,7 +1,7 @@
 package com.armedia.caliente.engine.local.exporter;
 
 import java.io.File;
-import java.util.Iterator;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
@@ -21,23 +21,33 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.StreamTools;
 
 public class LocalExportEngine extends
 	ExportEngine<LocalRoot, LocalSessionWrapper, CmfValue, LocalExportContext, LocalExportContextFactory, LocalExportDelegateFactory, LocalExportEngineFactory> {
 
 	public LocalExportEngine(LocalExportEngineFactory factory, Logger output, WarningTracker warningTracker,
 		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
-		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
+		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, false, SearchType.PATH);
 	}
 
 	@Override
-	protected void findExportResults(LocalRoot session, CfgTools configuration, LocalExportDelegateFactory factory,
-		TargetSubmitter submitter) throws Exception {
-		Iterator<ExportTarget> it = new LocalRecursiveIterator(session,
-			configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS));
-		while (it.hasNext()) {
-			submitter.submit(it.next());
-		}
+	protected Stream<ExportTarget> findExportTargetsByQuery(LocalRoot session, CfgTools configuration,
+		LocalExportDelegateFactory factory, String query) throws Exception {
+		throw new Exception("Local Export doesn't support queries");
+	}
+
+	@Override
+	protected Stream<ExportTarget> findExportTargetsBySearchKey(LocalRoot session, CfgTools configuration,
+		LocalExportDelegateFactory factory, String searchKey) throws Exception {
+		throw new Exception("Local Export doesn't support ID-based searches");
+	}
+
+	@Override
+	protected Stream<ExportTarget> findExportTargetsByPath(LocalRoot session, CfgTools configuration,
+		LocalExportDelegateFactory factory, String path) throws Exception {
+		return StreamTools.fromIterator(
+			new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)));
 	}
 
 	@Override

@@ -22,7 +22,6 @@ import com.armedia.caliente.engine.dfc.DctmDataType;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.DctmTranslator;
-import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
@@ -31,11 +30,8 @@ import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.CmfValueMapper.Mapping;
-import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
@@ -778,41 +774,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 
 		// Update the system attributes, if we can
 		final String objectId = targetObject.getObjectId().getId();
-		final DctmObjectType targetType;
 		try {
-			targetType = DctmObjectType.decodeType(targetObject);
-		} catch (UnsupportedDctmObjectTypeException e) {
-			throw new ImportException(
-				String.format("Failed to decode the object type for [%s]", targetObject.getType().getName()), e);
-		}
-		Mapping m = context.getValueMapper().getSourceMapping(targetType.getStoredObjectType(),
-			DctmAttributes.R_OBJECT_ID, objectId);
-		if (m == null) { return false; }
-
-		Set<String> s = Collections.singleton(m.getSourceValue());
-		final AtomicReference<CmfObject<IDfValue>> loaded = new AtomicReference<>(null);
-		final CmfObjectHandler<IDfValue> handler = new DefaultCmfObjectHandler<IDfValue>() {
-
-			@Override
-			public boolean handleObject(CmfObject<IDfValue> dataObject) throws CmfStorageException {
-				loaded.set(dataObject);
-				return false;
-			}
-
-			@Override
-			public boolean handleException(Exception e) {
-				return true;
-			}
-		};
-		try {
-			context.loadObjects(targetType.getStoredObjectType(), s, handler);
-		} catch (Exception e) {
-			throw new ImportException(String.format("Exception caught attempting to load %s [%s](%s)",
-				targetType.getStoredObjectType(), this.cmfObject.getLabel(), this.cmfObject.getId()), e);
-		}
-		if (loaded.get() == null) { return false; }
-		try {
-			return updateSystemAttributes(loaded.get(), targetObject, context);
+			return updateSystemAttributes(this.cmfObject, targetObject, context);
 		} catch (DfException e) {
 			throw new ImportException(String.format("Failed to update the system attributes for %s object [%s](%s)",
 				this.cmfObject.getType().name(), this.cmfObject.getLabel(), objectId), e);

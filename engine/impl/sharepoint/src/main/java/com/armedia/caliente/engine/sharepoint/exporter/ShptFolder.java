@@ -67,7 +67,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 
 	@Override
 	public String calculateLabel(ShptSession session, Folder f) {
-		return this.factory.getRelativePath(f.getServerRelativeUrl());
+		return f.getServerRelativeUrl();
 	}
 
 	@Override

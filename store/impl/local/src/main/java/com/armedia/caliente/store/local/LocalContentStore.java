@@ -487,8 +487,8 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 	}
 
 	@Override
-	protected LocalStoreOperation newOperation() throws CmfStorageException {
-		return new LocalStoreOperation(this.baseDir);
+	protected LocalStoreOperation newOperation(boolean exclusive) throws CmfStorageException {
+		return new LocalStoreOperation(this.baseDir, exclusive);
 	}
 
 	@Override

@@ -1,12 +1,11 @@
 package com.armedia.caliente.engine.dfc.common;
 
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
-
-import org.apache.commons.text.StringTokenizer;
+import java.util.TreeSet;
 
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.Tools;
 
 public class DctmSpecialValues {
 
@@ -15,19 +14,16 @@ public class DctmSpecialValues {
 	private final Set<String> specialTypes;
 
 	public DctmSpecialValues(CfgTools cfg) {
-		this.specialUsers = DctmSpecialValues.parseCSV(cfg, Setting.SPECIAL_USERS);
-		this.specialGroups = DctmSpecialValues.parseCSV(cfg, Setting.SPECIAL_GROUPS);
-		this.specialTypes = DctmSpecialValues.parseCSV(cfg, Setting.SPECIAL_TYPES);
-	}
+		Set<String> set = null;
 
-	private static Set<String> parseCSV(CfgTools cfg, Setting setting) {
-		String str = cfg.getString(setting);
-		StringTokenizer strTokenizer = StringTokenizer.getCSVInstance(str);
-		Set<String> ret = Collections.unmodifiableSet(new HashSet<>(strTokenizer.getTokenList()));
-		if (ret.isEmpty()) {
-			ret = Collections.emptySet();
-		}
-		return ret;
+		set = new TreeSet<>(cfg.getStrings(Setting.SPECIAL_USERS));
+		this.specialUsers = Tools.freezeSet(new LinkedHashSet<>(set));
+
+		set = new TreeSet<>(cfg.getStrings(Setting.SPECIAL_GROUPS));
+		this.specialGroups = Tools.freezeSet(new LinkedHashSet<>(set));
+
+		set = new TreeSet<>(cfg.getStrings(Setting.SPECIAL_TYPES));
+		this.specialTypes = Tools.freezeSet(new LinkedHashSet<>(set));
 	}
 
 	public final boolean isSpecialGroup(String group) {

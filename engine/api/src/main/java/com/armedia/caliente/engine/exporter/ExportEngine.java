@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,12 +14,16 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.SessionFactory;
+import com.armedia.caliente.engine.SessionFactoryException;
 import com.armedia.caliente.engine.SessionWrapper;
 import com.armedia.caliente.engine.TransferContextFactory;
 import com.armedia.caliente.engine.TransferEngine;
@@ -44,6 +49,7 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PooledWorkers;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.line.LineScanner;
 
 public abstract class ExportEngine<//
 	SESSION, //
@@ -56,9 +62,13 @@ public abstract class ExportEngine<//
 > extends
 	TransferEngine<ExportEngineListener, ExportResult, ExportException, SESSION, VALUE, CONTEXT, CONTEXT_FACTORY, DELEGATE_FACTORY, ENGINE_FACTORY> {
 
-	@FunctionalInterface
-	protected static interface TargetSubmitter {
-		public void submit(ExportTarget target) throws ExportException;
+	protected static enum SearchType {
+		//
+		PATH, //
+		KEY, //
+		QUERY, //
+		//
+		;
 	}
 
 	private class Result {
@@ -87,6 +97,8 @@ public abstract class ExportEngine<//
 	}
 
 	private final Map<LockStatus, Result> staticLockResults;
+	private final boolean supportsMultipleSources;
+	private final Set<SearchType> supportedSearches;
 	private final Result unsupportedResult = new Result(ExportSkipReason.UNSUPPORTED);
 
 	private class ExportListenerPropagator extends ListenerPropagator<ExportResult> implements InvocationHandler {
@@ -122,7 +134,8 @@ public abstract class ExportEngine<//
 	}
 
 	protected ExportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings,
+		boolean supportsMultipleSources, SearchType... searchTypes) {
 		super(factory, ExportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"export");
 		Map<LockStatus, Result> staticLockResults = new EnumMap<>(LockStatus.class);
@@ -132,6 +145,19 @@ public abstract class ExportEngine<//
 			}
 		}
 		this.staticLockResults = Tools.freezeMap(staticLockResults);
+		Set<SearchType> specSet = EnumSet.noneOf(SearchType.class);
+		for (SearchType type : searchTypes) {
+			if (type != null) {
+				specSet.add(type);
+			}
+		}
+
+		if (specSet.isEmpty()) {
+			specSet = EnumSet.allOf(SearchType.class);
+		}
+
+		this.supportedSearches = Tools.freezeSet(specSet);
+		this.supportsMultipleSources = supportsMultipleSources;
 	}
 
 	private ExportOperation getOrCreateExportOperation(ExportTarget target,
@@ -564,96 +590,47 @@ public abstract class ExportEngine<//
 		}
 	}
 
-	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
-		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore,
-		CfgTools settings) throws ExportException, CmfStorageException {
-		return runExport(output, warningTracker, baseData, objectStore, contentStore, settings, null);
-	}
-
-	public final CmfObjectCounter<ExportResult> runExport(final Logger output, final WarningTracker warningTracker,
-		final File baseData, final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore,
-		CfgTools configuration, CmfObjectCounter<ExportResult> counter) throws ExportException, CmfStorageException {
-		// We get this at the very top because if this fails, there's no point in continuing.
-
-		objectStore.clearAttributeMappings();
-		try {
-			loadPrincipalMappings(objectStore.getValueMapper(), configuration);
-		} catch (TransferException e) {
-			throw new ExportException(e.getMessage(), e.getCause());
-		}
-		final ExportState exportState = new ExportState(output, baseData.toPath(), objectStore, contentStore,
-			configuration);
-
-		final SessionFactory<SESSION> sessionFactory;
-		try {
-			sessionFactory = newSessionFactory(configuration, this.crypto);
-		} catch (Exception e) {
-			throw new ExportException("Failed to configure the session factory to carry out the export", e);
-		}
-
-		try {
-			SessionWrapper<SESSION> baseSession = null;
-			try {
-				baseSession = sessionFactory.acquireSession();
-			} catch (Exception e) {
-				throw new ExportException("Failed to obtain the main export session", e);
+	private Stream<ExportTarget> getExportTargets(SESSION session, String source, DELEGATE_FACTORY delegateFactory)
+		throws Exception {
+		Stream<ExportTarget> ret = null;
+		if (source.startsWith("%")) {
+			if (!this.supportedSearches.contains(SearchType.KEY)) {
+				throw new ExportException(
+					String.format("This engine doesn't support searches by key - found [%s] as the source", source));
 			}
 
-			TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory = null;
-			DELEGATE_FACTORY delegateFactory = null;
-			Transformer transformer = null;
-			ObjectFilter filter = null;
-			try {
-
-				validateEngine(baseSession.getWrapped());
-
-				try {
-					transformer = getTransformer(configuration, null);
-				} catch (Exception e) {
-					throw new ExportException("Failed to initialize the configured object transformations", e);
-				}
-
-				try {
-					filter = getFilter(configuration);
-				} catch (Exception e) {
-					throw new ExportException("Failed to initialize the configured object filters", e);
-				}
-
-				try {
-					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, objectStore,
-						contentStore, transformer, output, warningTracker);
-				} catch (Exception e) {
-					throw new ExportException("Failed to configure the context factory to carry out the export", e);
-				}
-
-				try {
-					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
-				} catch (Exception e) {
-					throw new ExportException("Failed to configure the delegate factory to carry out the export", e);
-				}
-
-				return runExportImpl(exportState, counter, sessionFactory, baseSession, contextFactory, delegateFactory,
-					transformer, filter);
-			} finally {
-				if (delegateFactory != null) {
-					delegateFactory.close();
-				}
-				if (contextFactory != null) {
-					contextFactory.close();
-				}
-				if (filter != null) {
-					filter.close();
-				}
-				if (transformer != null) {
-					transformer.close();
-				}
-				if (baseSession != null) {
-					baseSession.close();
-				}
+			// SearchKey!
+			final String searchKey = StringUtils.strip(source.substring(1));
+			if (StringUtils.isEmpty(searchKey)) {
+				throw new ExportException(
+					String.format("Invalid search key [%s] - no object can be found with an empty key"));
 			}
-		} finally {
-			sessionFactory.close();
+			ret = findExportTargetsBySearchKey(session, this.settings, delegateFactory, searchKey);
+		} else //
+		if (source.startsWith("/")) {
+			if (!this.supportedSearches.contains(SearchType.PATH)) {
+				throw new ExportException(
+					String.format("This engine doesn't support searches by path - found [%s] as the source", source));
+			}
+			// CMS Path!
+			ret = findExportTargetsByPath(session, this.settings, delegateFactory, source);
+		} else {
+			if (!this.supportedSearches.contains(SearchType.QUERY)) {
+				throw new ExportException(
+					String.format("This engine doesn't support searches by query - found [%s] as the source", source));
+			}
+			// Query string!
+			ret = findExportTargetsByQuery(session, this.settings, delegateFactory, source);
 		}
+		if (ret != null) {
+			if (ret.isParallel()) {
+				// Switch to sequential mode - we're doing our own parallelism here
+				ret = ret.sequential();
+			}
+		} else {
+			ret = Stream.empty();
+		}
+		return ret;
 	}
 
 	private CmfObjectCounter<ExportResult> runExportImpl(final ExportState exportState,
@@ -689,7 +666,7 @@ public abstract class ExportEngine<//
 				final SessionWrapper<SESSION> s;
 				try {
 					s = sessionFactory.acquireSession();
-				} catch (Exception e) {
+				} catch (SessionFactoryException e) {
 					this.log.error("Failed to obtain a worker session", e);
 					return null;
 				}
@@ -809,7 +786,8 @@ public abstract class ExportEngine<//
 				final AtomicLong targetCounter = new AtomicLong(0);
 				boolean ok = false;
 				try {
-					findExportResults(baseSession.getWrapped(), settings, delegateFactory, (target) -> {
+
+					final Consumer<ExportTarget> submitter = (target) -> {
 						if (target == null) { return; }
 						if (target.isNull()) {
 							ExportEngine.this.log.warn("Skipping a null target: {}", target);
@@ -821,10 +799,37 @@ public abstract class ExportEngine<//
 						try {
 							worker.addWorkItem(target);
 						} catch (InterruptedException e) {
-							throw new ExportException(String.format("Interrupted while trying to queue up %s", target),
+							throw new RuntimeException(String.format("Interrupted while trying to queue up %s", target),
 								e);
 						}
-					});
+					};
+
+					LineScanner scanner = new LineScanner();
+					final SESSION session = baseSession.getWrapped();
+					Collection<String> sources = exportState.cfg.getStrings(ExportSetting.FROM);
+
+					// Does it support multiple sources?
+					if (sources.size() > 1) {
+						if (!this.supportsMultipleSources) {
+							throw new ExportException(String.format(
+								"This engine doesn't support multiple export sources, please use only one (found %d)",
+								sources.size()));
+						}
+
+						scanner.scanLines((line) -> {
+							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
+								s.forEachOrdered(submitter);
+							} catch (Exception e) {
+								this.log.warn("Failed to find the export target(s) as per [{}]", line, e);
+							}
+							return true;
+						}, sources);
+					} else {
+						try (Stream<ExportTarget> s = getExportTargets(session, sources.iterator().next(),
+							delegateFactory)) {
+							s.forEachOrdered(submitter);
+						}
+					}
 					ok = true;
 				} catch (Exception e) {
 					throw new ExportException("Failed to retrieve the objects to export", e);
@@ -867,8 +872,14 @@ public abstract class ExportEngine<//
 		// By default, do nothing...
 	}
 
-	protected abstract void findExportResults(SESSION session, CfgTools configuration, DELEGATE_FACTORY factory,
-		TargetSubmitter handler) throws Exception;
+	protected abstract Stream<ExportTarget> findExportTargetsByQuery(SESSION session, CfgTools configuration,
+		DELEGATE_FACTORY factory, String query) throws Exception;
+
+	protected abstract Stream<ExportTarget> findExportTargetsByPath(SESSION session, CfgTools configuration,
+		DELEGATE_FACTORY factory, String path) throws Exception;
+
+	protected abstract Stream<ExportTarget> findExportTargetsBySearchKey(SESSION session, CfgTools configuration,
+		DELEGATE_FACTORY factory, String searchKey) throws Exception;
 
 	@Override
 	protected void getSupportedSettings(Collection<TransferEngineSetting> settings) {
@@ -896,29 +907,13 @@ public abstract class ExportEngine<//
 		final ExportState exportState = new ExportState(getOutput(), getBaseData(), getObjectStore(), getContentStore(),
 			configuration);
 
-		final SessionFactory<SESSION> sessionFactory;
-		try {
-			sessionFactory = newSessionFactory(configuration, this.crypto);
-		} catch (Exception e) {
-			throw new ExportException("Failed to configure the session factory to carry out the export", e);
-		}
-
-		try {
-			SessionWrapper<SESSION> baseSession = null;
-			try {
-				baseSession = sessionFactory.acquireSession();
-			} catch (Exception e) {
-				throw new ExportException("Failed to obtain the main export session", e);
-			}
-
+		try (final SessionFactory<SESSION> sessionFactory = constructSessionFactory(configuration, this.crypto)) {
 			TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory = null;
 			DELEGATE_FACTORY delegateFactory = null;
 			Transformer transformer = null;
 			ObjectFilter filter = null;
-			try {
-
+			try (final SessionWrapper<SESSION> baseSession = sessionFactory.acquireSession()) {
 				validateEngine(baseSession.getWrapped());
-
 				try {
 					transformer = getTransformer(configuration, null);
 				} catch (Exception e) {
@@ -946,6 +941,8 @@ public abstract class ExportEngine<//
 
 				runExportImpl(exportState, counter, sessionFactory, baseSession, contextFactory, delegateFactory,
 					transformer, filter);
+			} catch (SessionFactoryException e) {
+				throw new ExportException("Failed to obtain the main export session", e);
 			} finally {
 				if (delegateFactory != null) {
 					delegateFactory.close();
@@ -959,12 +956,9 @@ public abstract class ExportEngine<//
 				if (transformer != null) {
 					transformer.close();
 				}
-				if (baseSession != null) {
-					baseSession.close();
-				}
 			}
-		} finally {
-			sessionFactory.close();
+		} catch (SessionFactoryException e) {
+			throw new ExportException("Failed to configure the session factory to carry out the export", e);
 		}
 	}
 }

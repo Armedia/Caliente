@@ -5,6 +5,7 @@
 package com.armedia.caliente.engine.dfc.importer;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,7 +33,6 @@ import com.documentum.fc.client.IDfPermit;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.client.IDfUser;
 import com.documentum.fc.common.DfException;
-import com.documentum.fc.common.IDfList;
 import com.documentum.fc.common.IDfValue;
 
 /**
@@ -147,9 +147,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		if (att.getValue().asBoolean() != acl.getBoolean(att.getName())) { return false; }
 
 		// Now, count the permits
-		IDfList existingPermits = acl.getPermissions();
+		Collection<IDfPermit> existingPermits = DfUtils.getPermissionsWithFallback(ctx.getSession(), acl);
 		CmfProperty<IDfValue> prop = this.cmfObject.getProperty(DctmACL.ACCESSORS);
-		if (existingPermits.getCount() != prop.getValueCount()) {
+		if (existingPermits.size() != prop.getValueCount()) {
 			// The permit counts have to be identical...
 			return false;
 		}
@@ -157,10 +157,10 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		Set<Permit> existing = new HashSet<>();
 		Set<Permit> incoming = new HashSet<>();
 		IDfSession session = acl.getSession();
-		final int permitCount = existingPermits.getCount();
-		for (int i = 0; i < permitCount; i++) {
-			existing.add(new Permit(session, IDfPermit.class.cast(existingPermits.get(i))));
-			incoming.add(new Permit(session, this, i));
+		int i = 0;
+		for (IDfPermit p : existingPermits) {
+			existing.add(new Permit(session, p));
+			incoming.add(new Permit(session, this, i++));
 		}
 
 		// The ACLs are considered the same only if the sets are identical
@@ -204,11 +204,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		}
 
 		// Clear any existing permissions
-		final IDfList existingPermissions = acl.getPermissions();
-		final int existingPermissionCount = existingPermissions.getCount();
 		final IDfSession session = acl.getSession();
-		for (int i = 0; i < existingPermissionCount; i++) {
-			IDfPermit permit = IDfPermit.class.cast(existingPermissions.get(i));
+		for (IDfPermit permit : DfUtils.getPermissionsWithFallback(context.getSession(), acl)) {
 			try {
 				acl.revokePermit(permit);
 				if (this.log.isDebugEnabled()) {

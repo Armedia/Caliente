@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.importer.DefaultImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportOutcome;
+import com.armedia.caliente.engine.importer.ImportRestriction;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.store.CmfObject;
@@ -40,6 +41,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 		"HISTORY_ID", //
 		"SOURCE_ID", //
 		"TARGET_ID", //
+		"RETRY_ID", //
 		"LABEL", //
 		"ERROR_DATA" //
 	);
@@ -53,6 +55,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 		private final String sourceId;
 		private final String label;
 		private final String targetId;
+		private final String retryId;
 		private final ImportResult result;
 		private final Throwable thrown;
 
@@ -73,6 +76,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 			this.sourceId = object.getId();
 			this.label = object.getLabel();
 			this.result = result;
+			this.retryId = ImportRestriction.render(object);
 			if (result != ImportResult.FAILED) {
 				this.targetId = Tools.coalesce(targetId, "");
 				this.thrown = null;
@@ -109,6 +113,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 				this.historyId, //
 				this.sourceId, //
 				this.targetId, //
+				this.retryId, //
 				this.label, //
 				extraData //
 			);
