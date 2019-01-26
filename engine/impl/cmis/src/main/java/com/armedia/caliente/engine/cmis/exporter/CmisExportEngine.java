@@ -117,7 +117,7 @@ public class CmisExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByPath(Session session, CfgTools configuration,
 		CmisExportDelegateFactory factory, String path) throws Exception {
-		return StreamTools.fromIterator(getPathIterator(session, path));
+		return StreamTools.of(getPathIterator(session, path));
 	}
 
 	protected Iterator<ExportTarget> getQueryIterator(final Session session, final String query) throws Exception {
@@ -131,7 +131,7 @@ public class CmisExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByQuery(Session session, CfgTools configuration,
 		CmisExportDelegateFactory factory, String query) throws Exception {
-		return StreamTools.fromIterator(getQueryIterator(session, query));
+		return StreamTools.of(getQueryIterator(session, query));
 	}
 
 	@Override

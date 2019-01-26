@@ -82,19 +82,19 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
-				<version>1.2.5</version>
+				<version>1.2.6</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-api</artifactId>
-				<version>1.2.4</version>
+				<version>1.2.5</version>
 			</dependency>
 
 			<dependency>
 				<groupId>com.armedia.commons.datasource</groupId>
 				<artifactId>datasource-locator-pooled</artifactId>
-				<version>1.2.4</version>
+				<version>1.2.5</version>
 			</dependency>
 
 			<dependency>

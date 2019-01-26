@@ -70,7 +70,7 @@ public class ShptExportEngine extends
 		} catch (ShptSessionException e) {
 			throw new ShptException(String.format("Export target search failed for path [%s]", path), e);
 		}
-		return StreamTools.fromIterator(it);
+		return StreamTools.of(it);
 	}
 
 	@Override

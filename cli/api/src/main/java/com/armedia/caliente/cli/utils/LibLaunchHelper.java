@@ -1,14 +1,19 @@
 package com.armedia.caliente.cli.utils;
 
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;
@@ -30,13 +35,10 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
 	;
 
-	private static final FileFilter LIB_FILTER = new FileFilter() {
-		@Override
-		public boolean accept(File pathname) {
-			if (!pathname.isFile()) { return false; }
-			final String name = pathname.getName().toLowerCase();
-			return name.endsWith(".zip") || name.endsWith(".jar");
-		}
+	private static final DirectoryStream.Filter<Path> LIB_FILTER = (path) -> {
+		if (!Files.isRegularFile(path)) { return false; }
+		final String name = StringUtils.lowerCase(path.getFileName().toString());
+		return StringUtils.endsWith(name, ".zip") || StringUtils.endsWith(name, ".jar");
 	};
 
 	public static final String DEFAULT_LIB = "caliente.lib";
@@ -94,12 +96,14 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 
 				// Make sure they're sorted by name
 				Map<String, URL> urls = new TreeMap<>();
-				for (File jar : f.listFiles(LibLaunchHelper.LIB_FILTER)) {
-					urls.put(jar.getName(), jar.toURI().toURL());
-				}
-				for (String s : urls.keySet()) {
-					ret.add(urls.get(s));
-				}
+				Files.newDirectoryStream(f.toPath(), LibLaunchHelper.LIB_FILTER).forEach((jar) -> {
+					try {
+						urls.put(jar.getFileName().toString(), jar.toUri().toURL());
+					} catch (MalformedURLException e) {
+						throw new RuntimeException(String.format("Failed to convert the path [%s] to a URL", jar), e);
+					}
+				});
+				urls.values().stream().forEachOrdered(ret::add);
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("Failed to configure the dynamic library classpath for %s"), e);
