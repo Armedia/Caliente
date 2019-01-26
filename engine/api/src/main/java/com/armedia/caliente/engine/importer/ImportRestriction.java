@@ -18,6 +18,14 @@ public class ImportRestriction implements Serializable {
 	private static final String RENDERER = "%%%s=%s";
 
 	public static CmfObjectRef parse(String str) {
+		return ImportRestriction.parse(str, true);
+	}
+
+	public static CmfObjectRef parseQuiet(String str) {
+		return ImportRestriction.parse(str, false);
+	}
+
+	public static CmfObjectRef parse(String str, boolean raiseError) {
 		String err = null;
 		str = StringUtils.strip(str);
 		if (!StringUtils.isBlank(str)) {
@@ -43,7 +51,10 @@ public class ImportRestriction implements Serializable {
 		} else {
 			err = "Empty string";
 		}
-		throw new IllegalArgumentException(String.format("Bad restrictor spec [%s] - %s", str, err));
+		if (raiseError) {
+			throw new IllegalArgumentException(String.format("Bad restrictor spec [%s] - %s", str, err));
+		}
+		return null;
 	}
 
 	public static String render(CmfObjectRef ref) {
