@@ -276,8 +276,9 @@ public class OptionParser {
 		final char optionValueSplitter, Collection<String> args)
 		throws CommandLineSyntaxException, HelpRequestedException {
 
-		if ((args == null) || args
-			.isEmpty()) { return new OptionParseResult(new OptionValues(), null, null, OptionParser.NO_POSITIONALS); }
+		if ((args == null) || args.isEmpty()) {
+			return new OptionParseResult(new OptionValues(), null, null, OptionParser.NO_POSITIONALS);
+		}
 
 		if (baseScheme == null) {
 			baseScheme = new OptionScheme("(ad-hoc)");
@@ -581,9 +582,7 @@ public class OptionParser {
 
 		// Unwrap the positionals...
 		List<String> positionalStrings = new ArrayList<>(positionals.size());
-		for (Token t : positionals) {
-			positionalStrings.add(t.getRawString());
-		}
+		positionals.stream().map(Token::getRawString).forEachOrdered(positionalStrings::add);
 
 		raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command, null);
 		return new OptionParseResult(baseValues, (command != null ? command.getName() : null), commandValues,
@@ -653,15 +652,19 @@ public class OptionParser {
 		UnknownCommandException, UnknownOptionException {
 		if (e == null) { return; }
 		if (IllegalOptionValuesException.class.isInstance(e)) { throw IllegalOptionValuesException.class.cast(e); }
-		if (InsufficientOptionValuesException.class
-			.isInstance(e)) { throw InsufficientOptionValuesException.class.cast(e); }
-		if (MissingRequiredCommandException.class
-			.isInstance(e)) { throw MissingRequiredCommandException.class.cast(e); }
-		if (MissingRequiredOptionsException.class
-			.isInstance(e)) { throw MissingRequiredOptionsException.class.cast(e); }
+		if (InsufficientOptionValuesException.class.isInstance(e)) {
+			throw InsufficientOptionValuesException.class.cast(e);
+		}
+		if (MissingRequiredCommandException.class.isInstance(e)) {
+			throw MissingRequiredCommandException.class.cast(e);
+		}
+		if (MissingRequiredOptionsException.class.isInstance(e)) {
+			throw MissingRequiredOptionsException.class.cast(e);
+		}
 		if (TooManyOptionValuesException.class.isInstance(e)) { throw TooManyOptionValuesException.class.cast(e); }
-		if (TooManyPositionalValuesException.class
-			.isInstance(e)) { throw TooManyPositionalValuesException.class.cast(e); }
+		if (TooManyPositionalValuesException.class.isInstance(e)) {
+			throw TooManyPositionalValuesException.class.cast(e);
+		}
 		if (UnknownCommandException.class.isInstance(e)) { throw UnknownCommandException.class.cast(e); }
 		if (UnknownOptionException.class.isInstance(e)) { throw UnknownOptionException.class.cast(e); }
 	}

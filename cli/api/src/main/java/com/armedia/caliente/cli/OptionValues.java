@@ -1,5 +1,7 @@
 package com.armedia.caliente.cli;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -182,9 +184,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Boolean> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Tools.toBoolean(s));
-		}
+		l.stream().map(Tools::toBoolean).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -203,9 +203,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Integer> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Integer.valueOf(s));
-		}
+		l.stream().map(Integer::valueOf).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -224,9 +222,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Long> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Long.valueOf(s));
-		}
+		l.stream().map(Long::valueOf).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -245,9 +241,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Float> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Float.valueOf(s));
-		}
+		l.stream().map(Float::valueOf).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -266,9 +260,45 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Double> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Double.valueOf(s));
-		}
+		l.stream().map(Double::valueOf).forEachOrdered(r::add);
+		return Tools.freezeList(r);
+	}
+
+	public BigInteger getBigInteger(Option param) {
+		String s = getString(param);
+		return (s != null ? new BigInteger(s) : null);
+	}
+
+	public BigInteger getBigInteger(Option param, BigInteger def) {
+		BigInteger v = getBigInteger(param);
+		return (v != null ? v : def);
+	}
+
+	public List<BigInteger> getAllBigIntegers(Option param) {
+		List<String> l = getAllStrings(param);
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
+		List<BigInteger> r = new ArrayList<>(l.size());
+		l.stream().map(BigInteger::new).forEachOrdered(r::add);
+		return Tools.freezeList(r);
+	}
+
+	public BigDecimal getBigDecimal(Option param) {
+		String s = getString(param);
+		return (s != null ? new BigDecimal(s) : null);
+	}
+
+	public BigDecimal getBigDecimal(Option param, BigDecimal def) {
+		BigDecimal v = getBigDecimal(param);
+		return (v != null ? v : def);
+	}
+
+	public List<BigDecimal> getAllBigDecimals(Option param) {
+		List<String> l = getAllStrings(param);
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
+		List<BigDecimal> r = new ArrayList<>(l.size());
+		l.stream().map(BigDecimal::new).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -494,6 +524,30 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 
 	public List<Double> getAllDoubles(Supplier<Option> paramDel) {
 		return getAllDoubles(Option.unwrap(paramDel));
+	}
+
+	public BigInteger getBigInteger(Supplier<Option> paramDel) {
+		return getBigInteger(Option.unwrap(paramDel));
+	}
+
+	public BigInteger getBigInteger(Supplier<Option> paramDel, BigInteger def) {
+		return getBigInteger(Option.unwrap(paramDel), def);
+	}
+
+	public List<BigInteger> getAllBigIntegers(Supplier<Option> paramDel) {
+		return getAllBigIntegers(Option.unwrap(paramDel));
+	}
+
+	public BigDecimal getBigDecimal(Supplier<Option> paramDel) {
+		return getBigDecimal(Option.unwrap(paramDel));
+	}
+
+	public BigDecimal getBigDecimal(Supplier<Option> paramDel, BigDecimal def) {
+		return getBigDecimal(Option.unwrap(paramDel), def);
+	}
+
+	public List<BigDecimal> getAllBigDecimals(Supplier<Option> paramDel) {
+		return getAllBigDecimals(Option.unwrap(paramDel));
 	}
 
 	public String getString(Supplier<Option> paramDel) {

@@ -51,8 +51,9 @@ public class StringValueFilter extends OptionValueFilter {
 				canonicalized.add(canon(s));
 			}
 		}
-		if (defined.isEmpty()) { throw new IllegalArgumentException(
-			"No values are marked as canonical, this is illegal"); }
+		if (defined.isEmpty()) {
+			throw new IllegalArgumentException("No values are marked as canonical, this is illegal");
+		}
 		this.allowed = Tools.freezeSet(new LinkedHashSet<>(defined));
 		this.canonical = (caseSensitive ? this.allowed : Tools.freezeSet(new LinkedHashSet<>(canonicalized)));
 		this.description = String.format("one of%s: %s", (caseSensitive ? "" : " (case insensitive)"),

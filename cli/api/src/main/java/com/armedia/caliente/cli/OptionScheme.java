@@ -254,9 +254,7 @@ public class OptionScheme implements Iterable<Option>, OptionGroup, OptionScheme
 		} finally {
 			if (!ok) {
 				// Roll back the changes, as they'll be re-done below...
-				for (Option o : added) {
-					newGroup.remove(o);
-				}
+				added.stream().forEachOrdered(newGroup::remove);
 			}
 		}
 
