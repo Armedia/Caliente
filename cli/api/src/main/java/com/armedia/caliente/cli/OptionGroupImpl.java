@@ -10,9 +10,11 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
+import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.Tools;
 
 public class OptionGroupImpl implements OptionGroup {
@@ -157,19 +159,14 @@ public class OptionGroupImpl implements OptionGroup {
 			Collection<O> added = new LinkedList<>();
 			boolean ok = false;
 			try {
-				for (O o : options) {
-					if (o != null) {
-						add(o);
-						added.add(o);
-					}
-				}
+				Consumer<O> consumer = this::add;
+				StreamTools.of(options.iterator()).filter(Objects::nonNull)
+					.forEachOrdered(consumer.andThen(added::add));
 				ok = true;
 			} finally {
 				if (!ok) {
 					// Roll back the changes...
-					for (O o : added) {
-						remove(o);
-					}
+					added.stream().forEachOrdered(this::remove);
 				}
 			}
 		}

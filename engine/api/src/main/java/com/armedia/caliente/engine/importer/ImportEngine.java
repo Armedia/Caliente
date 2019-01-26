@@ -402,8 +402,8 @@ public abstract class ImportEngine<//
 		if ((source == null) || source.isEmpty()) { return null; }
 
 		LineIterator it = new LineScanner().iterator(source);
-		return StreamTools.of(it).sequential().filter(StringUtils::isNotEmpty)
-			.map(ImportRestriction::parseQuiet).filter(Objects::nonNull);
+		return StreamTools.of(it).filter(StringUtils::isNotEmpty).map(ImportRestriction::parseQuiet)
+			.filter(Objects::nonNull);
 	}
 
 	@Override

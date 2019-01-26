@@ -746,9 +746,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		Collection<String> source = getMapping(operation, false, type, name, target);
 		if ((source == null) || source.isEmpty()) { return null; }
 		Collection<Mapping> mappings = new ArrayList<>(source.size());
-		source.forEach((src) -> {
-			mappings.add(this.mapper.constructMapping(type, name, src, target));
-		});
+		source.stream().map((src) -> this.mapper.constructMapping(type, name, src, target))
+			.forEachOrdered(mappings::add);
 		return mappings;
 	}
 

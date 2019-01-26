@@ -45,9 +45,7 @@ public final class CommandScheme extends OptionScheme {
 		Command c = this.commands.remove(name);
 		this.aliases.remove(name);
 		if (c != null) {
-			for (String alias : c.getAliases()) {
-				this.aliases.remove(canonicalizeCommand(alias));
-			}
+			c.getAliases().stream().map(this::canonicalizeCommand).forEachOrdered(this.aliases::remove);
 		}
 		return c;
 	}
@@ -58,9 +56,7 @@ public final class CommandScheme extends OptionScheme {
 		Command c = this.commands.remove(name);
 		this.aliases.remove(name);
 		if (c != null) {
-			for (String alias : c.getAliases()) {
-				this.aliases.remove(canonicalizeCommand(alias));
-			}
+			c.getAliases().stream().map(this::canonicalizeCommand).forEachOrdered(this.aliases::remove);
 		}
 		return c;
 	}
