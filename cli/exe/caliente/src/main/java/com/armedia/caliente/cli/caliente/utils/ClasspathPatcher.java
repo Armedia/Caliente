@@ -5,10 +5,14 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+
+import org.apache.commons.lang3.StringUtils;
 
 public abstract class ClasspathPatcher {
 
@@ -21,8 +25,9 @@ public abstract class ClasspathPatcher {
 
 	static {
 		ClassLoader cl = ClassLoader.getSystemClassLoader();
-		if (!(cl instanceof URLClassLoader)) { throw new RuntimeException(
-			"System Classloader is not a URLClassLoader"); }
+		if (!(cl instanceof URLClassLoader)) {
+			throw new RuntimeException("System Classloader is not a URLClassLoader");
+		}
 		CL = URLClassLoader.class.cast(cl);
 		try {
 			METHOD = URLClassLoader.class.getDeclaredMethod("addURL", ClasspathPatcher.PARAMETERS);
@@ -58,11 +63,7 @@ public abstract class ClasspathPatcher {
 
 	protected ClasspathPatcher(String... engines) {
 		Set<String> s = new HashSet<>();
-		for (String e : engines) {
-			if (e != null) {
-				s.add(e.toLowerCase());
-			}
-		}
+		Arrays.stream(engines).filter(Objects::nonNull).map(StringUtils::lowerCase).forEachOrdered(s::add);
 		this.engines = Collections.unmodifiableSet(s);
 	}
 

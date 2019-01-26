@@ -103,9 +103,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 					state.getBaseDataLocation(), objectStore, contentStore, new CfgTools(settings));
 				engine.addListener(mainListener);
 				engine.addListener(new ExportManifest(outcomes, types));
-				for (ExportEngineListener l : extraListeners) {
-					engine.addListener(l);
-				}
+				extraListeners.forEach(engine::addListener);
 				this.log.info("##### Export Process Started #####");
 				engine.run();
 				this.log.info("##### Export Process Finished #####");

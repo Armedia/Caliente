@@ -97,9 +97,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 					state.getBaseDataLocation(), objectStore, contentStore, new CfgTools(settings));
 				engine.addListener(mainListener);
 				engine.addListener(new ImportManifest(outcomes, types));
-				for (ImportEngineListener l : extraListeners) {
-					engine.addListener(l);
-				}
+				extraListeners.forEach(engine::addListener);
 				this.log.info("##### Import Process Started #####");
 				engine.run(counter);
 				this.log.info("##### Import Process Completed #####");

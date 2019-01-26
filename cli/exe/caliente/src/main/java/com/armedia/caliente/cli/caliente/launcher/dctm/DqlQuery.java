@@ -1,6 +1,7 @@
 package com.armedia.caliente.cli.caliente.launcher.dctm;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -55,9 +56,7 @@ class DqlQuery {
 
 		private Keyword(Keyword... chasers) {
 			Set<Keyword> s = new HashSet<>();
-			for (Keyword k : chasers) {
-				s.add(k);
-			}
+			Arrays.stream(chasers).forEachOrdered(s::add);
 			this.chasers = Tools.freezeSet(s);
 		}
 	}
@@ -80,8 +79,10 @@ class DqlQuery {
 			Keyword first = Keyword.valueOf(s[0]);
 			if (s.length > 1) {
 				Keyword second = Keyword.valueOf(s[1]);
-				if (!first.chasers.contains(second)) { throw new RuntimeException(
-					String.format("Parser structural error: Keyword [%s] can't be followed by [%s]", first, second)); }
+				if (!first.chasers.contains(second)) {
+					throw new RuntimeException(String
+						.format("Parser structural error: Keyword [%s] can't be followed by [%s]", first, second));
+				}
 			}
 		}
 
@@ -100,15 +101,11 @@ class DqlQuery {
 
 	static {
 		Map<String, Keyword> kw = new HashMap<>();
-		for (Keyword k : Keyword.values()) {
-			kw.put(k.name(), k);
-		}
+		Arrays.stream(Keyword.values()).forEachOrdered((k) -> kw.put(k.name(), k));
 		KEYWORDS = Tools.freezeMap(kw);
 
 		Map<String, Clause> cl = new HashMap<>();
-		for (Clause c : Clause.values()) {
-			cl.put(c.string, c);
-		}
+		Arrays.stream(Clause.values()).forEachOrdered((c) -> cl.put(c.name(), c));
 		CLAUSES = Tools.freezeMap(cl);
 	}
 
@@ -200,9 +197,7 @@ class DqlQuery {
 		}
 		Set<Clause> endClauses = EnumSet.noneOf(Clause.class);
 		if (end != null) {
-			for (Clause e : end) {
-				endClauses.add(e);
-			}
+			Arrays.stream(end).forEachOrdered(endClauses::add);
 			endClauses = Tools.freezeSet(endClauses);
 		}
 
@@ -252,9 +247,11 @@ class DqlQuery {
 				// The remaining text is the data for this clause
 				data = dql.substring(clause.dataStart).trim();
 			} else {
-				if (nextClause.clause.ordinal() < clause.clause.ordinal()) { throw new Exception(
-					String.format("SQL Clauses out of order: %s (at index %d) can't come before %s (at index %d)",
-						clause.clause, clause.clauseStart, nextClause.clause, nextClause.clauseStart)); }
+				if (nextClause.clause.ordinal() < clause.clause.ordinal()) {
+					throw new Exception(
+						String.format("SQL Clauses out of order: %s (at index %d) can't come before %s (at index %d)",
+							clause.clause, clause.clauseStart, nextClause.clause, nextClause.clauseStart));
+				}
 				data = dql.substring(clause.dataStart, nextClause.clauseStart).trim();
 			}
 			clauses.put(clause.clause, data);
@@ -288,8 +285,9 @@ class DqlQuery {
 	}
 
 	public String setClauseData(Clause clause, String data) {
-		if (clause == Clause.UNION) { throw new IllegalArgumentException(
-			"Can't use this method to modify UNION clauses"); }
+		if (clause == Clause.UNION) {
+			throw new IllegalArgumentException("Can't use this method to modify UNION clauses");
+		}
 		return Tools.toString(data == null ? this.clauses.remove(clause) : this.clauses.put(clause, data));
 	}
 
