@@ -4,11 +4,11 @@ import java.io.File;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.EnumMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -20,6 +20,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -54,9 +55,10 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.Closer;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.CloseableIteratorWrapper;
+import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.line.LineIterator;
 import com.armedia.commons.utilities.line.LineScanner;
 
 public abstract class ImportEngine<//
@@ -395,26 +397,13 @@ public abstract class ImportEngine<//
 			false);
 	}
 
-	private Iterator<CmfObjectRef> getObjectRestrictionIterator(CfgTools cfg) throws ImportException {
+	private Stream<CmfObjectRef> getObjectRestrictions(CfgTools cfg) throws ImportException {
 		Collection<String> source = cfg.getStrings(ImportSetting.RESTRICT_TO);
 		if ((source == null) || source.isEmpty()) { return null; }
 
-		LineScanner scanner = new LineScanner();
-
-		final Collection<CmfObjectRef> restrictions = new LinkedList<>();
-
-		scanner.iterator(source).forEachRemaining((line) -> {
-			try {
-				CmfObjectRef ref = ImportRestriction.parse(StringUtils.strip(line.substring(1)));
-				if (ref != null) {
-					restrictions.add(ref);
-				}
-			} catch (Exception e) {
-				// Illegal reference...
-			}
-		});
-
-		return new CloseableIteratorWrapper<>(restrictions.iterator());
+		LineIterator it = new LineScanner().iterator(source);
+		return StreamTools.fromIterator(it).sequential().filter(StringUtils::isNotEmpty)
+			.map(ImportRestriction::parseQuiet).filter(Objects::nonNull);
 	}
 
 	@Override
@@ -662,14 +651,15 @@ public abstract class ImportEngine<//
 			output.info("Cleared the import plan");
 
 			output.info("Loading the object restriction list");
-			Iterator<CmfObjectRef> objectRestrictions = getObjectRestrictionIterator(importState.cfg);
-			if (objectRestrictions != null) {
-				output.info("Loaded the object restriction list");
-				output.info("Applying the object restriction list");
-				containedTypes = objectStore.setBulkObjectLoaderFilter(objectRestrictions);
-				output.info("Applied the object restriction list");
-			} else {
-				output.info("No object restriction list loaded, will import all available objects");
+			try (Stream<CmfObjectRef> objectRestrictions = getObjectRestrictions(importState.cfg)) {
+				if (objectRestrictions != null) {
+					output.info("Loaded the object restriction list");
+					output.info("Applying the object restriction list");
+					containedTypes = objectStore.setBulkObjectLoaderFilter(objectRestrictions.iterator());
+					output.info("Applied the object restriction list");
+				} else {
+					output.info("No object restriction list loaded, will import all available objects");
+				}
 			}
 
 			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {
