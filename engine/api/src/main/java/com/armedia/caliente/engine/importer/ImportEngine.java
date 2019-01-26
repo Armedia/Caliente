@@ -1,10 +1,10 @@
 package com.armedia.caliente.engine.importer;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,13 +54,10 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.Closer;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.CloseableIterator;
 import com.armedia.commons.utilities.CloseableIteratorWrapper;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.line.LineProcessorException;
 import com.armedia.commons.utilities.line.LineScanner;
-import com.armedia.commons.utilities.line.LineSourceException;
 
 public abstract class ImportEngine<//
 	SESSION, //
@@ -398,7 +395,7 @@ public abstract class ImportEngine<//
 			false);
 	}
 
-	private CloseableIterator<CmfObjectRef> getObjectRestrictionIterator(CfgTools cfg) throws ImportException {
+	private Iterator<CmfObjectRef> getObjectRestrictionIterator(CfgTools cfg) throws ImportException {
 		Collection<String> source = cfg.getStrings(ImportSetting.RESTRICT_TO);
 		if ((source == null) || source.isEmpty()) { return null; }
 
@@ -406,21 +403,16 @@ public abstract class ImportEngine<//
 
 		final Collection<CmfObjectRef> restrictions = new LinkedList<>();
 
-		try {
-			scanner.scanLines((line) -> {
-				try {
-					CmfObjectRef ref = ImportRestriction.parse(StringUtils.strip(line.substring(1)));
-					if (ref != null) {
-						restrictions.add(ref);
-					}
-				} catch (Exception e) {
-					// Illegal reference...
+		scanner.iterator(source).forEachRemaining((line) -> {
+			try {
+				CmfObjectRef ref = ImportRestriction.parse(StringUtils.strip(line.substring(1)));
+				if (ref != null) {
+					restrictions.add(ref);
 				}
-				return true;
-			}, source);
-		} catch (IOException | LineSourceException | LineProcessorException e) {
-			throw new ImportException("Failed to load all the import restrictions", e);
-		}
+			} catch (Exception e) {
+				// Illegal reference...
+			}
+		});
 
 		return new CloseableIteratorWrapper<>(restrictions.iterator());
 	}
@@ -670,15 +662,14 @@ public abstract class ImportEngine<//
 			output.info("Cleared the import plan");
 
 			output.info("Loading the object restriction list");
-			try (CloseableIterator<CmfObjectRef> objectRestrictions = getObjectRestrictionIterator(importState.cfg)) {
-				if (objectRestrictions != null) {
-					output.info("Loaded the object restriction list");
-					output.info("Applying the object restriction list");
-					containedTypes = objectStore.setBulkObjectLoaderFilter(objectRestrictions);
-					output.info("Applied the object restriction list");
-				} else {
-					output.info("No object restriction list loaded, will import all available objects");
-				}
+			Iterator<CmfObjectRef> objectRestrictions = getObjectRestrictionIterator(importState.cfg);
+			if (objectRestrictions != null) {
+				output.info("Loaded the object restriction list");
+				output.info("Applying the object restriction list");
+				containedTypes = objectStore.setBulkObjectLoaderFilter(objectRestrictions);
+				output.info("Applied the object restriction list");
+			} else {
+				output.info("No object restriction list loaded, will import all available objects");
 			}
 
 			if (!settings.getBoolean(ImportSetting.NO_FILENAME_MAP)) {

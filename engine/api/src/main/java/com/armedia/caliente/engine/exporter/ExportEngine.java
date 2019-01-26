@@ -816,14 +816,13 @@ public abstract class ExportEngine<//
 								sources.size()));
 						}
 
-						scanner.scanLines((line) -> {
+						scanner.iterator(sources).forEachRemaining((line) -> {
 							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
 								s.forEachOrdered(submitter);
 							} catch (Exception e) {
 								this.log.warn("Failed to find the export target(s) as per [{}]", line, e);
 							}
-							return true;
-						}, sources);
+						});
 					} else {
 						try (Stream<ExportTarget> s = getExportTargets(session, sources.iterator().next(),
 							delegateFactory)) {
