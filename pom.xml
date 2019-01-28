@@ -554,7 +554,6 @@
 		<module>engine/impl/local</module>
 		<module>engine/impl/sharepoint</module>
 		<module>engine/impl/ucm</module>
-		<module>engine/impl/xds</module>
 		<module>engine/impl/xml</module>
 
 		<!-- The command-line tools -->
