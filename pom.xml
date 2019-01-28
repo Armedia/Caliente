@@ -76,10 +76,10 @@
 			<dependency>
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>utilities</artifactId>
-				<version>0.5.3</version>
+				<version>0.6.0</version>
 			</dependency>
 
-			<dependency>
+			<dependency> 
 				<groupId>com.armedia.commons</groupId>
 				<artifactId>dfc-session-pool</artifactId>
 				<version>1.2.6</version>
