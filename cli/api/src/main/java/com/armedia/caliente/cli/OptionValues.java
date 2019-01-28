@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
@@ -327,10 +328,11 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 	}
 
 	public <E extends Enum<E>> E getEnum(Class<E> enumClass, Option param) {
-		return getEnum(enumClass, true, param);
+		return getEnum(enumClass, null, param);
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, Option param) {
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Option param) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
 		if (!enumClass.isEnum()) {
 			throw new IllegalArgumentException(
@@ -341,16 +343,17 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		try {
 			return Enum.valueOf(enumClass, value);
 		} catch (final IllegalArgumentException e) {
-			if (failOnInvalid) { throw e; }
-			return null;
+			if (invalidHandler == null) { throw e; }
+			return invalidHandler.apply(value, e);
 		}
 	}
 
 	public <E extends Enum<E>> E getEnum(Class<E> enumClass, Option param, E def) {
-		return getEnum(enumClass, true, param, def);
+		return getEnum(enumClass, null, param, def);
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, Option param, E def) {
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Option param, E def) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
 		if (!enumClass.isEnum()) {
 			throw new IllegalArgumentException(
@@ -361,21 +364,22 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		try {
 			return Enum.valueOf(enumClass, value);
 		} catch (final IllegalArgumentException e) {
-			if (failOnInvalid) { throw e; }
-			return null;
+			if (invalidHandler == null) { throw e; }
+			return invalidHandler.apply(value, e);
 		}
 	}
 
 	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, Option param) {
-		return getEnums(enumClass, true, param);
+		return getEnums(enumClass, null, param);
 	}
 
-	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, boolean failOnInvalid, Option param) {
-		return getEnums(enumClass, null, failOnInvalid, param);
-	}
-
-	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
 		Option param) {
+		return getEnums(enumClass, null, invalidHandler, param);
+	}
+
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString,
+		BiFunction<Object, Exception, E> invalidHandler, Option param) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
 		if (!enumClass.isEnum()) {
 			throw new IllegalArgumentException(
@@ -392,22 +396,27 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 			try {
 				ret.add(Enum.valueOf(enumClass, s));
 			} catch (final IllegalArgumentException e) {
-				if (failOnInvalid) { throw e; }
+				if (invalidHandler == null) { throw e; }
+				E alt = invalidHandler.apply(ret, e);
+				if (alt != null) {
+					ret.add(alt);
+				}
 			}
 		}
 		return ret;
 	}
 
 	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, Option param, Set<E> def) {
-		return getEnums(enumClass, true, param, def);
+		return getEnums(enumClass, null, param, def);
 	}
 
-	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, boolean failOnInvalid, Option param, Set<E> def) {
-		return getEnums(enumClass, null, failOnInvalid, param, def);
-	}
-
-	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
 		Option param, Set<E> def) {
+		return getEnums(enumClass, null, invalidHandler, param, def);
+	}
+
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString,
+		BiFunction<Object, Exception, E> invalidHandler, Option param, Set<E> def) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
 		if (!enumClass.isEnum()) {
 			throw new IllegalArgumentException(
@@ -421,7 +430,11 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 			try {
 				ret.add(Enum.valueOf(enumClass, s));
 			} catch (final IllegalArgumentException e) {
-				if (failOnInvalid) { throw e; }
+				if (invalidHandler == null) { throw e; }
+				E alt = invalidHandler.apply(ret, e);
+				if (alt != null) {
+					ret.add(alt);
+				}
 			}
 		}
 		return ret;
@@ -574,12 +587,14 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return getEnum(enumClass, Option.unwrap(paramDel), def);
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, Supplier<Option> paramDel) {
-		return getEnum(enumClass, failOnInvalid, Option.unwrap(paramDel));
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Supplier<Option> paramDel) {
+		return getEnum(enumClass, invalidHandler, Option.unwrap(paramDel));
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, Supplier<Option> paramDel, E def) {
-		return getEnum(enumClass, failOnInvalid, Option.unwrap(paramDel), def);
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Supplier<Option> paramDel, E def) {
+		return getEnum(enumClass, invalidHandler, Option.unwrap(paramDel), def);
 	}
 
 	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, Supplier<Option> paramDel) {
@@ -590,23 +605,24 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return getEnums(enumClass, Option.unwrap(paramDel), def);
 	}
 
-	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, boolean failOnInvalid, Supplier<Option> paramDel) {
-		return getEnums(enumClass, failOnInvalid, Option.unwrap(paramDel));
-	}
-
-	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
 		Supplier<Option> paramDel) {
-		return getEnums(enumClass, allString, failOnInvalid, Option.unwrap(paramDel));
+		return getEnums(enumClass, invalidHandler, Option.unwrap(paramDel));
 	}
 
-	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, boolean failOnInvalid, Supplier<Option> paramDel,
-		Set<E> def) {
-		return getEnums(enumClass, failOnInvalid, Option.unwrap(paramDel), def);
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString,
+		BiFunction<Object, Exception, E> invalidHandler, Supplier<Option> paramDel) {
+		return getEnums(enumClass, allString, invalidHandler, Option.unwrap(paramDel));
 	}
 
-	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
 		Supplier<Option> paramDel, Set<E> def) {
-		return getEnums(enumClass, allString, failOnInvalid, Option.unwrap(paramDel), def);
+		return getEnums(enumClass, invalidHandler, Option.unwrap(paramDel), def);
+	}
+
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString,
+		BiFunction<Object, Exception, E> invalidHandler, Supplier<Option> paramDel, Set<E> def) {
+		return getEnums(enumClass, allString, invalidHandler, Option.unwrap(paramDel), def);
 	}
 
 	public boolean isPresent(Supplier<Option> paramDel) {

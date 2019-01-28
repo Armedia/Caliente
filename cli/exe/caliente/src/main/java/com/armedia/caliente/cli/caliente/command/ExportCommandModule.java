@@ -60,12 +60,12 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
 		throws CalienteException {
 
-		Set<ExportResult> outcomes = commandValues.getEnums(ExportResult.class, false,
+		Set<ExportResult> outcomes = commandValues.getEnums(ExportResult.class, CfgTools.ignoreFailures(),
 			CLIParam.manifest_outcomes_export);
 		if (outcomes == null) {
 			outcomes = EnumSet.allOf(ExportResult.class);
 		}
-		Set<CmfType> types = commandValues.getEnums(CmfType.class, false, CLIParam.manifest_types);
+		Set<CmfType> types = commandValues.getEnums(CmfType.class, CfgTools.ignoreFailures(), CLIParam.manifest_types);
 		if (types == null) {
 			types = EnumSet.allOf(CmfType.class);
 		}

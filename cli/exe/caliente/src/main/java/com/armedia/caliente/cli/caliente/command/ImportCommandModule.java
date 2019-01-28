@@ -61,10 +61,10 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 	@Override
 	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
 		throws CalienteException {
-		Set<ImportResult> outcomes = commandValues.getEnums(ImportResult.class, CommandModule.ALL, false,
-			CLIParam.manifest_outcomes_import, EnumSet.allOf(ImportResult.class));
-		Set<CmfType> types = commandValues.getEnums(CmfType.class, CommandModule.ALL, false, CLIParam.manifest_types,
-			EnumSet.allOf(CmfType.class));
+		Set<ImportResult> outcomes = commandValues.getEnums(ImportResult.class, CommandModule.ALL,
+			CfgTools.ignoreFailures(), CLIParam.manifest_outcomes_import, EnumSet.allOf(ImportResult.class));
+		Set<CmfType> types = commandValues.getEnums(CmfType.class, CommandModule.ALL, CfgTools.ignoreFailures(),
+			CLIParam.manifest_types, EnumSet.allOf(CmfType.class));
 
 		final ImportCommandListener mainListener = new ImportCommandListener(this.console);
 		final CalienteWarningTracker warningTracker = mainListener.getWarningTracker();
