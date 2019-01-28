@@ -44,7 +44,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		throws CalienteException {
 		settings.put(ImportSetting.TARGET_LOCATION.getLabel(), commandValues.getString(CLIParam.target, "/"));
 		settings.put(ImportSetting.TRIM_PREFIX.getLabel(), commandValues.getInteger(CLIParam.trim_path, 0));
-		settings.put(ImportSetting.RESTRICT_TO.getLabel(), commandValues.getAllStrings(CLIParam.restrict_to));
+		settings.put(ImportSetting.RESTRICT_TO.getLabel(), commandValues.getStrings(CLIParam.restrict_to));
 		settings.put(ImportSetting.NO_FILENAME_MAP.getLabel(), commandValues.isPresent(CLIParam.no_filename_map));
 		settings.put(ImportSetting.FILENAME_MAP.getLabel(), commandValues.getString(CLIParam.filename_map));
 		settings.put(ImportSetting.VALIDATE_REQUIREMENTS.getLabel(),
@@ -61,9 +61,9 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 	@Override
 	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
 		throws CalienteException {
-		Set<ImportResult> outcomes = commandValues.getAllEnums(ImportResult.class, CommandModule.ALL, false,
+		Set<ImportResult> outcomes = commandValues.getEnums(ImportResult.class, CommandModule.ALL, false,
 			CLIParam.manifest_outcomes_import, EnumSet.allOf(ImportResult.class));
-		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, CommandModule.ALL, false, CLIParam.manifest_types,
+		Set<CmfType> types = commandValues.getEnums(CmfType.class, CommandModule.ALL, false, CLIParam.manifest_types,
 			EnumSet.allOf(CmfType.class));
 
 		final ImportCommandListener mainListener = new ImportCommandListener(this.console);
@@ -140,7 +140,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 				key = String.format("-%s", value.getShortOpt());
 			}
 			if (value.hasValues()) {
-				report.append(String.format("%n\t%s = %s", key, value.getAllStrings()));
+				report.append(String.format("%n\t%s = %s", key, value.getStrings()));
 			} else {
 				report.append(String.format("%n\t%s", key));
 			}

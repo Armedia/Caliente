@@ -183,16 +183,16 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		}
 
 		if (commandValues.isPresent(Exporter.OWNER_ATTRIBUTES)) {
-			settings.put(Setting.OWNER_ATTRIBUTES.getLabel(), commandValues.getAllStrings(Exporter.OWNER_ATTRIBUTES));
+			settings.put(Setting.OWNER_ATTRIBUTES.getLabel(), commandValues.getStrings(Exporter.OWNER_ATTRIBUTES));
 		}
 		if (commandValues.isPresent(Exporter.SPECIAL_USERS)) {
-			settings.put(Setting.SPECIAL_USERS.getLabel(), commandValues.getAllStrings(Exporter.SPECIAL_USERS));
+			settings.put(Setting.SPECIAL_USERS.getLabel(), commandValues.getStrings(Exporter.SPECIAL_USERS));
 		}
 		if (commandValues.isPresent(Exporter.SPECIAL_GROUPS)) {
-			settings.put(Setting.SPECIAL_GROUPS.getLabel(), commandValues.getAllStrings(Exporter.SPECIAL_GROUPS));
+			settings.put(Setting.SPECIAL_GROUPS.getLabel(), commandValues.getStrings(Exporter.SPECIAL_GROUPS));
 		}
 		if (commandValues.isPresent(Exporter.SPECIAL_TYPES)) {
-			settings.put(Setting.SPECIAL_TYPES.getLabel(), commandValues.getAllStrings(Exporter.SPECIAL_TYPES));
+			settings.put(Setting.SPECIAL_TYPES.getLabel(), commandValues.getStrings(Exporter.SPECIAL_TYPES));
 		}
 		if (commandValues.isPresent(Exporter.BATCH_SIZE)) {
 			settings.put(Setting.EXPORT_BATCH_SIZE.getLabel(), commandValues.getString(Exporter.BATCH_SIZE));

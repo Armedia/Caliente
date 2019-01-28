@@ -48,7 +48,7 @@ public class BulkDel {
 	private List<String> addExplicitTargets(OptionValues cli, IDfSession session, IDfDeleteOperation op)
 		throws DfException {
 		List<String> targets = new ArrayList<>();
-		for (String spec : cli.getAllStrings(CLIParam.target)) {
+		for (String spec : cli.getStrings(CLIParam.target)) {
 			// Spec can either be an object ID or a path... let's first find out
 			// if it's an object ID...
 

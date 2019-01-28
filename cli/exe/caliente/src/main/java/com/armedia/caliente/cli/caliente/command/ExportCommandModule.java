@@ -46,7 +46,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 		if (!super.preConfigure(state, commandValues, settings)) { return false; }
 		settings.put(TransferSetting.LATEST_ONLY.getLabel(),
 			commandValues.isPresent(CLIParam.no_versions) || commandValues.isPresent(CLIParam.direct_fs));
-		settings.put(ExportSetting.FROM.getLabel(), commandValues.getAllStrings(CLIParam.from));
+		settings.put(ExportSetting.FROM.getLabel(), commandValues.getStrings(CLIParam.from));
 		return true;
 	}
 
@@ -60,12 +60,12 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 	protected int execute(CalienteState state, OptionValues commandValues, Collection<String> positionals)
 		throws CalienteException {
 
-		Set<ExportResult> outcomes = commandValues.getAllEnums(ExportResult.class, false,
+		Set<ExportResult> outcomes = commandValues.getEnums(ExportResult.class, false,
 			CLIParam.manifest_outcomes_export);
 		if (outcomes == null) {
 			outcomes = EnumSet.allOf(ExportResult.class);
 		}
-		Set<CmfType> types = commandValues.getAllEnums(CmfType.class, false, CLIParam.manifest_types);
+		Set<CmfType> types = commandValues.getEnums(CmfType.class, false, CLIParam.manifest_types);
 		if (types == null) {
 			types = EnumSet.allOf(CmfType.class);
 		}
@@ -147,7 +147,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 				key = String.format("-%s", value.getShortOpt());
 			}
 			if (value.hasValues()) {
-				report.append(String.format("%n\t%s = %s", key, value.getAllStrings()));
+				report.append(String.format("%n\t%s = %s", key, value.getStrings()));
 			} else {
 				report.append(String.format("%n\t%s", key));
 			}

@@ -84,7 +84,7 @@ public abstract class CommandModule<ENGINE_FACTORY extends TransferEngineFactory
 	protected boolean preConfigure(CalienteState state, OptionValues commandValues, Map<String, Object> settings)
 		throws CalienteException {
 
-		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), commandValues.getAllStrings(CLIParam.exclude_types));
+		settings.put(TransferSetting.EXCLUDE_TYPES.getLabel(), commandValues.getStrings(CLIParam.exclude_types));
 		settings.put(TransferSetting.EXTERNAL_METADATA.getLabel(), commandValues.getString(CLIParam.external_metadata));
 		settings.put(TransferSetting.FILTER.getLabel(), commandValues.getString(CLIParam.filter));
 		settings.put(TransferSetting.IGNORE_CONTENT.getLabel(), commandValues.isPresent(CLIParam.skip_content));

@@ -90,11 +90,11 @@ public class Launcher extends AbstractLauncher {
 		this.log.info("Bulk Import path: [{}]", biFile.getAbsolutePath());
 		this.log.info("Bulk Export path: [{}]", beFile.getAbsolutePath());
 		this.log.info("Report directory: [{}]", reportDir.getAbsolutePath());
-		this.log.info("Content models  : {}", cli.getAllStrings(CLIParam.model));
+		this.log.info("Content models  : {}", cli.getStrings(CLIParam.model));
 		this.log.info("Report marker   : [{}]", reportMarker);
 
 		final Validator validator = new Validator(reportDir.toPath(), biFile.toPath(), beFile.toPath(),
-			cli.getAllStrings(CLIParam.model), reportMarker);
+			cli.getStrings(CLIParam.model), reportMarker);
 		final long start = System.currentTimeMillis();
 		try {
 			final PooledWorkers<Object, Object, Path> workers = new PooledWorkers<Object, Object, Path>() {
@@ -153,7 +153,7 @@ public class Launcher extends AbstractLauncher {
 			) //
 			.addFrom( //
 				Option.unwrap(CLIParam.values()) //
-		) //
+			) //
 		;
 	}
 }

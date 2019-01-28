@@ -81,7 +81,7 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 			throw new CalienteException(
 				"No content models were given - these are required in order to properly generate the Alfresco metadata");
 		}
-		settings.put(AlfSetting.CONTENT_MODEL.getLabel(), commandValues.getAllStrings(Importer.CONTENT_MODEL));
+		settings.put(AlfSetting.CONTENT_MODEL.getLabel(), commandValues.getStrings(Importer.CONTENT_MODEL));
 
 		if (commandValues.isPresent(Importer.ATTRIBUTE_MAP)) {
 			settings.put(AlfSetting.ATTRIBUTE_MAPPING.getLabel(), commandValues.getString(Importer.ATTRIBUTE_MAP));

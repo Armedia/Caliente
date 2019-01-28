@@ -428,7 +428,7 @@ public class UserMapper {
 	}
 
 	private Set<String> getMappingAttributes(OptionValues cli, DfcSessionPool pool) throws Exception {
-		List<String> attributes = cli.getAllStrings(CLIParam.dctm_sam, UserMapper.DEFAULT_DCTM_SAM_ATTRIBUTES);
+		List<String> attributes = cli.getStrings(CLIParam.dctm_sam, UserMapper.DEFAULT_DCTM_SAM_ATTRIBUTES);
 		// Shortcut - if there's nothing to validate, don't bother validating...
 		if (attributes.isEmpty()) { return Collections.emptySet(); }
 
