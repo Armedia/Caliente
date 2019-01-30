@@ -7,11 +7,11 @@ public class CmfObjectSearchSpec extends CmfObjectRef {
 
 	private final String searchKey;
 
-	public CmfObjectSearchSpec(CmfArchetype type, String id) {
+	public CmfObjectSearchSpec(CmfObject.Archetype type, String id) {
 		this(type, id, id);
 	}
 
-	public CmfObjectSearchSpec(CmfArchetype type, String id, String searchKey) {
+	public CmfObjectSearchSpec(CmfObject.Archetype type, String id, String searchKey) {
 		super(type, id);
 		this.searchKey = Tools.coalesce(searchKey, id);
 	}

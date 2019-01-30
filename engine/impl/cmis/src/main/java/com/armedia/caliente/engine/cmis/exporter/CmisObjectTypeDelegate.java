@@ -10,7 +10,6 @@ import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 
 public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
@@ -65,8 +64,8 @@ public class CmisObjectTypeDelegate extends CmisExportDelegate<ObjectType> {
 	}
 
 	@Override
-	protected CmfArchetype calculateType(Session session, ObjectType object) throws Exception {
-		return CmfArchetype.TYPE;
+	protected CmfObject.Archetype calculateType(Session session, ObjectType object) throws Exception {
+		return CmfObject.Archetype.TYPE;
 	}
 
 	@Override

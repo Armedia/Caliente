@@ -7,7 +7,7 @@ import com.armedia.commons.utilities.Tools;
 public class CmfObjectRef implements Comparable<CmfObjectRef>, Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private final CmfArchetype type;
+	private final CmfObject.Archetype type;
 	private final String id;
 
 	public CmfObjectRef(CmfObjectRef other) {
@@ -16,14 +16,14 @@ public class CmfObjectRef implements Comparable<CmfObjectRef>, Serializable {
 		this.id = other.id;
 	}
 
-	public CmfObjectRef(CmfArchetype type, String id) {
+	public CmfObjectRef(CmfObject.Archetype type, String id) {
 		if (type == null) { throw new IllegalArgumentException("Must provide the object's type"); }
 		if (id == null) { throw new IllegalArgumentException("Must provide the object's ID"); }
 		this.type = type;
 		this.id = id;
 	}
 
-	public final CmfArchetype getType() {
+	public final CmfObject.Archetype getType() {
 		return this.type;
 	}
 

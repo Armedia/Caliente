@@ -9,8 +9,8 @@ import java.util.function.Supplier;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfEncodeableName;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -19,53 +19,53 @@ import com.armedia.commons.utilities.Tools;
  */
 public enum IntermediateAttribute implements Supplier<String>, CmfEncodeableName {
 	// CMIS attributes
-	OBJECT_ID(PropertyIds.OBJECT_ID, CmfValueType.ID),
-	BASE_TYPE_ID(PropertyIds.BASE_TYPE_ID, CmfValueType.STRING),
-	OBJECT_TYPE_ID(PropertyIds.OBJECT_TYPE_ID, CmfValueType.STRING),
-	NAME(PropertyIds.NAME, CmfValueType.STRING),
-	DESCRIPTION(PropertyIds.DESCRIPTION, CmfValueType.STRING),
-	CONTENT_STREAM_MIME_TYPE(PropertyIds.CONTENT_STREAM_MIME_TYPE, CmfValueType.STRING),
-	CONTENT_STREAM_LENGTH(PropertyIds.CONTENT_STREAM_LENGTH, CmfValueType.INTEGER),
-	CONTENT_STREAM_HASH(PropertyIds.CONTENT_STREAM_HASH, CmfValueType.STRING),
-	CREATED_BY(PropertyIds.CREATED_BY, CmfValueType.STRING),
-	CREATION_DATE(PropertyIds.CREATION_DATE, CmfValueType.DATETIME),
-	LAST_MODIFIED_BY(PropertyIds.LAST_MODIFIED_BY, CmfValueType.STRING),
-	LAST_MODIFICATION_DATE(PropertyIds.LAST_MODIFICATION_DATE, CmfValueType.DATETIME),
-	IS_IMMUTABLE(PropertyIds.IS_IMMUTABLE, CmfValueType.BOOLEAN),
-	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfValueType.BOOLEAN),
-	PARENT_ID(PropertyIds.PARENT_ID, CmfValueType.ID, true),
-	PATH(PropertyIds.PATH, CmfValueType.STRING, true),
-	SOURCE_ID(PropertyIds.SOURCE_ID, CmfValueType.ID),
-	TARGET_ID(PropertyIds.TARGET_ID, CmfValueType.ID),
-	CHANGE_TOKEN(PropertyIds.CHANGE_TOKEN, CmfValueType.INTEGER),
-	VERSION_LABEL(PropertyIds.VERSION_LABEL, CmfValueType.STRING),
-	VERSION_SERIES_ID(PropertyIds.VERSION_SERIES_ID, CmfValueType.ID),
-	VERSION_SERIES_CHECKED_OUT_BY(PropertyIds.VERSION_SERIES_CHECKED_OUT_BY, CmfValueType.STRING),
-	CHECKIN_COMMENT(PropertyIds.CHECKIN_COMMENT, CmfValueType.STRING),
-	SECONDARY_TYPE_IDS(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, CmfValueType.STRING),
+	OBJECT_ID(PropertyIds.OBJECT_ID, CmfValue.Type.ID),
+	BASE_TYPE_ID(PropertyIds.BASE_TYPE_ID, CmfValue.Type.STRING),
+	OBJECT_TYPE_ID(PropertyIds.OBJECT_TYPE_ID, CmfValue.Type.STRING),
+	NAME(PropertyIds.NAME, CmfValue.Type.STRING),
+	DESCRIPTION(PropertyIds.DESCRIPTION, CmfValue.Type.STRING),
+	CONTENT_STREAM_MIME_TYPE(PropertyIds.CONTENT_STREAM_MIME_TYPE, CmfValue.Type.STRING),
+	CONTENT_STREAM_LENGTH(PropertyIds.CONTENT_STREAM_LENGTH, CmfValue.Type.INTEGER),
+	CONTENT_STREAM_HASH(PropertyIds.CONTENT_STREAM_HASH, CmfValue.Type.STRING),
+	CREATED_BY(PropertyIds.CREATED_BY, CmfValue.Type.STRING),
+	CREATION_DATE(PropertyIds.CREATION_DATE, CmfValue.Type.DATETIME),
+	LAST_MODIFIED_BY(PropertyIds.LAST_MODIFIED_BY, CmfValue.Type.STRING),
+	LAST_MODIFICATION_DATE(PropertyIds.LAST_MODIFICATION_DATE, CmfValue.Type.DATETIME),
+	IS_IMMUTABLE(PropertyIds.IS_IMMUTABLE, CmfValue.Type.BOOLEAN),
+	IS_LATEST_VERSION(PropertyIds.IS_LATEST_VERSION, CmfValue.Type.BOOLEAN),
+	PARENT_ID(PropertyIds.PARENT_ID, CmfValue.Type.ID, true),
+	PATH(PropertyIds.PATH, CmfValue.Type.STRING, true),
+	SOURCE_ID(PropertyIds.SOURCE_ID, CmfValue.Type.ID),
+	TARGET_ID(PropertyIds.TARGET_ID, CmfValue.Type.ID),
+	CHANGE_TOKEN(PropertyIds.CHANGE_TOKEN, CmfValue.Type.INTEGER),
+	VERSION_LABEL(PropertyIds.VERSION_LABEL, CmfValue.Type.STRING),
+	VERSION_SERIES_ID(PropertyIds.VERSION_SERIES_ID, CmfValue.Type.ID),
+	VERSION_SERIES_CHECKED_OUT_BY(PropertyIds.VERSION_SERIES_CHECKED_OUT_BY, CmfValue.Type.STRING),
+	CHECKIN_COMMENT(PropertyIds.CHECKIN_COMMENT, CmfValue.Type.STRING),
+	SECONDARY_TYPE_IDS(PropertyIds.SECONDARY_OBJECT_TYPE_IDS, CmfValue.Type.STRING),
 
 	// Non-CMIS attributes
-	SUPER_NAME(CmfValueType.STRING),
-	OWNER(CmfValueType.STRING),
-	OWNER_PERMISSION(CmfValueType.STRING),
-	GROUP(CmfValueType.STRING),
-	GROUP_PERMISSION(CmfValueType.STRING),
-	LAST_ACCESSED_BY(CmfValueType.STRING),
-	LAST_ACCESS_DATE(CmfValueType.DATETIME),
-	LOGIN_NAME(CmfValueType.STRING),
-	LOGIN_REALM(CmfValueType.STRING),
-	OS_NAME(CmfValueType.STRING),
-	OS_REALM(CmfValueType.STRING),
-	EMAIL(CmfValueType.STRING),
-	ADMINISTRATOR(CmfValueType.STRING),
-	GROUP_TYPE(CmfValueType.STRING),
-	ACL_NAME(CmfValueType.STRING),
-	DEFAULT_FOLDER(CmfValueType.STRING),
-	VERSION_ANTECEDENT_ID(CmfValueType.ID),
-	USER_SOURCE(CmfValueType.STRING),
-	GROUP_SOURCE(CmfValueType.STRING),
-	UNFILED_FOLDER(CmfValueType.STRING),
-	IS_REFERENCE(CmfValueType.BOOLEAN),
+	SUPER_NAME(CmfValue.Type.STRING),
+	OWNER(CmfValue.Type.STRING),
+	OWNER_PERMISSION(CmfValue.Type.STRING),
+	GROUP(CmfValue.Type.STRING),
+	GROUP_PERMISSION(CmfValue.Type.STRING),
+	LAST_ACCESSED_BY(CmfValue.Type.STRING),
+	LAST_ACCESS_DATE(CmfValue.Type.DATETIME),
+	LOGIN_NAME(CmfValue.Type.STRING),
+	LOGIN_REALM(CmfValue.Type.STRING),
+	OS_NAME(CmfValue.Type.STRING),
+	OS_REALM(CmfValue.Type.STRING),
+	EMAIL(CmfValue.Type.STRING),
+	ADMINISTRATOR(CmfValue.Type.STRING),
+	GROUP_TYPE(CmfValue.Type.STRING),
+	ACL_NAME(CmfValue.Type.STRING),
+	DEFAULT_FOLDER(CmfValue.Type.STRING),
+	VERSION_ANTECEDENT_ID(CmfValue.Type.ID),
+	USER_SOURCE(CmfValue.Type.STRING),
+	GROUP_SOURCE(CmfValue.Type.STRING),
+	UNFILED_FOLDER(CmfValue.Type.STRING),
+	IS_REFERENCE(CmfValue.Type.BOOLEAN),
 	//
 	;
 
@@ -73,22 +73,22 @@ public enum IntermediateAttribute implements Supplier<String>, CmfEncodeableName
 		.freezeMap(MappingManager.createMappings(IntermediateAttribute.class, IntermediateAttribute.values()));
 
 	private final String name;
-	public final CmfValueType type;
+	public final CmfValue.Type type;
 	public final boolean repeating;
 
-	private IntermediateAttribute(String propertyId, CmfValueType type) {
+	private IntermediateAttribute(String propertyId, CmfValue.Type type) {
 		this(propertyId, type, false);
 	}
 
-	private IntermediateAttribute(CmfValueType type) {
+	private IntermediateAttribute(CmfValue.Type type) {
 		this(null, type, false);
 	}
 
-	private IntermediateAttribute(CmfValueType type, boolean repeating) {
+	private IntermediateAttribute(CmfValue.Type type, boolean repeating) {
 		this(null, type, repeating);
 	}
 
-	private IntermediateAttribute(String propertyId, CmfValueType type, boolean repeating) {
+	private IntermediateAttribute(String propertyId, CmfValue.Type type, boolean repeating) {
 		this.name = MappingManager.generateMapping(propertyId, name());
 		this.type = type;
 		this.repeating = repeating;

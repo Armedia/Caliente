@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "actionSetVariable.t", propOrder = {
@@ -16,7 +16,7 @@ import com.armedia.caliente.store.CmfValueType;
 public class VariableSet extends AbstractSetValue {
 
 	@Override
-	protected DynamicValue createValue(DynamicElementContext ctx, String name, CmfValueType type, boolean multivalue) {
+	protected DynamicValue createValue(DynamicElementContext ctx, String name, CmfValue.Type type, boolean multivalue) {
 		DynamicValue member = new DynamicValue(name, type, multivalue);
 		ctx.getVariables().put(name, member);
 		return member;

@@ -20,7 +20,6 @@ import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -71,7 +70,7 @@ public class LoadExternalMetadata extends ConditionalAction {
 
 			final String varName = String.format("emdl:%s", setName);
 			ctx.getVariables().put(varName,
-				new DynamicValue(varName, CmfValueType.BOOLEAN, false).setValue(externalAttributes != null));
+				new DynamicValue(varName, CmfValue.Type.BOOLEAN, false).setValue(externalAttributes != null));
 			if (externalAttributes == null) {
 				// Nothing was loaded...
 				continue;

@@ -32,9 +32,9 @@ import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
@@ -112,7 +112,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		this.attributeTypeMapping = attributeTypeMapping;
 	}
 
-	protected CmfValueType getMappedAttributeType(String sqlAttributeName) {
+	protected CmfValue.Type getMappedAttributeType(String sqlAttributeName) {
 		if (this.attributeTypeMapping == null) { return null; }
 		return this.attributeTypeMapping.getMappedType(sqlAttributeName);
 	}
@@ -237,7 +237,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		return ps.executeQuery();
 	}
 
-	protected final Object getValue(ResultSet rs, String columnName, CmfValueType type) throws Exception {
+	protected final Object getValue(ResultSet rs, String columnName, CmfValue.Type type) throws Exception {
 		switch (type) {
 			case BOOLEAN:
 				return rs.getBoolean(columnName);
@@ -268,7 +268,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		}
 	}
 
-	protected final Object getValue(ResultSet rs, int columnIndex, CmfValueType type) throws Exception {
+	protected final Object getValue(ResultSet rs, int columnIndex, CmfValue.Type type) throws Exception {
 		switch (type) {
 			case BOOLEAN:
 				return rs.getBoolean(columnIndex);
@@ -299,11 +299,11 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 		}
 	}
 
-	protected final CmfValueType decodeSQLType(int type) {
+	protected final CmfValue.Type decodeSQLType(int type) {
 		switch (type) {
 			case Types.BIT:
 			case Types.BOOLEAN:
-				return CmfValueType.BOOLEAN;
+				return CmfValue.Type.BOOLEAN;
 
 			case Types.CHAR:
 			case Types.CLOB:
@@ -311,27 +311,27 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader {
 			case Types.LONGNVARCHAR:
 			case Types.VARCHAR:
 			case Types.NVARCHAR:
-				return CmfValueType.STRING;
+				return CmfValue.Type.STRING;
 
 			case Types.SMALLINT:
 			case Types.TINYINT:
 			case Types.INTEGER:
 			case Types.BIGINT:
-				return CmfValueType.INTEGER;
+				return CmfValue.Type.INTEGER;
 
 			case Types.REAL:
 			case Types.FLOAT:
 			case Types.DOUBLE:
 			case Types.NUMERIC:
-				return CmfValueType.DOUBLE;
+				return CmfValue.Type.DOUBLE;
 
 			case Types.TIME:
 			case Types.TIMESTAMP:
 			case Types.DATE:
-				return CmfValueType.DATETIME;
+				return CmfValue.Type.DATETIME;
 
 			default:
-				return CmfValueType.OTHER;
+				return CmfValue.Type.OTHER;
 		}
 	}
 

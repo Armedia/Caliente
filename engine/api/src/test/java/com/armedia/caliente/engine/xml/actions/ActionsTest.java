@@ -30,7 +30,7 @@ import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeReplace;
 import com.armedia.caliente.engine.dynamic.xml.actions.SubtypeSet;
 import com.armedia.caliente.engine.transform.TestObjectContext;
 import com.armedia.caliente.engine.transform.TestObjectFacade;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 
 public class ActionsTest {
 
@@ -648,7 +648,7 @@ public class ActionsTest {
 
 		final String attributeName = UUID.randomUUID().toString();
 		action.setName(new Expression(attributeName));
-		DynamicValue tv = new DynamicValue(attributeName, CmfValueType.STRING, true);
+		DynamicValue tv = new DynamicValue(attributeName, CmfValue.Type.STRING, true);
 		object.getAtt().put(attributeName, tv);
 		Set<String> expected = new HashSet<>();
 		for (Pair<String, String> p : data) {

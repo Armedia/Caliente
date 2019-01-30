@@ -6,16 +6,169 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 
 import com.armedia.commons.utilities.Tools;
 
 public final class CmfValue {
+
+	public static enum Type {
+		//
+		BOOLEAN("bool") {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				return value.asBoolean();
+			}
+		},
+		INTEGER("int") {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				return value.asInteger();
+			}
+		},
+		DOUBLE("dbl") {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				return value.asDouble();
+			}
+		},
+		STRING("str") {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				return value.asString();
+			}
+		},
+		ID {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				return value.asId();
+			}
+		},
+		DATETIME("date") {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				try {
+					return value.asTime();
+				} catch (ParseException e) {
+					throw new UnsupportedOperationException(
+						String.format("Failed to convert value [%s] of type [%s] into a DATETIME value",
+							value.asString(), value.getDataType()),
+						e);
+				}
+			}
+		},
+		URI {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				try {
+					return new URI(value.asString());
+				} catch (URISyntaxException e) {
+					throw new UnsupportedOperationException(
+						String.format("Failed to convert value [%s] of type [%s] into a URI value", value.asString(),
+							value.getDataType()),
+						e);
+				}
+			}
+		},
+		HTML {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				return value.asString();
+			}
+		},
+		BASE64_BINARY("bin") {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				return value.asBinary();
+			}
+		},
+		OTHER("oth") {
+			@Override
+			protected Object doGetValue(CmfValue value) {
+				throw new UnsupportedOperationException("Values of type OTHER can't be converted to");
+			}
+		},
+		//
+		;
+
+		public final String abbrev;
+
+		private Type() {
+			this(null);
+		}
+
+		private Type(String abbreviation) {
+			this.abbrev = StringUtils.lowerCase(Tools.coalesce(abbreviation, name()));
+		}
+
+		private static final Map<CmfValue.Type, CmfValue> NULL;
+		private static final Map<String, CmfValue.Type> ABBREV;
+
+		static {
+			Map<CmfValue.Type, CmfValue> nvl = new EnumMap<>(CmfValue.Type.class);
+			Map<String, CmfValue.Type> abb = new TreeMap<>();
+			for (CmfValue.Type t : CmfValue.Type.values()) {
+				CmfValue.Type o = abb.put(t.abbrev, t);
+				if (o != null) {
+					throw new RuntimeException(
+						String.format("ERROR: The CmfValue.Type values %s and %s share the same abbreviation [%s]",
+							t.name(), o.name(), t.abbrev));
+				}
+				try {
+					nvl.put(t, new CmfValue(t, null));
+				} catch (ParseException e) {
+					throw new RuntimeException(
+						String.format("Failed to create a CMF value with a null value for type [%s]", t), e);
+				}
+			}
+			NULL = Tools.freezeMap(nvl);
+			ABBREV = Tools.freezeMap(new LinkedHashMap<>(abb));
+		}
+
+		public final CmfValue getNull() {
+			return CmfValue.Type.NULL.get(this);
+		}
+
+		public final CmfValueSerializer getSerializer() {
+			return CmfValueSerializer.get(this);
+		}
+
+		public final Object getValue(CmfValue value) {
+			if (value.getDataType() == this) { return value.asObject(); }
+			try {
+				return doGetValue(value);
+			} catch (Exception e) {
+				throw new UnsupportedOperationException(
+					String.format("Failed to convert value [%s] of type [%s] into a %s value", value.asObject(),
+						value.getDataType(), name()),
+					e);
+			}
+		}
+
+		protected abstract Object doGetValue(CmfValue value) throws Exception;
+
+		public static CmfValue.Type decode(String value) {
+			if (value == null) { return null; }
+			try {
+				return CmfValue.Type.valueOf(StringUtils.upperCase(value));
+			} catch (final IllegalArgumentException e) {
+				// Maybe an abbreviation?
+				CmfValue.Type t = CmfValue.Type.ABBREV.get(StringUtils.lowerCase(value));
+				if (t != null) { return t; }
+				throw e;
+			}
+		}
+	}
 
 	private static final List<FastDateFormat> DATE_FORMATS;
 
@@ -42,59 +195,59 @@ public final class CmfValue {
 		return DateFormat.getDateInstance().parse(str);
 	}
 
-	private final CmfValueType type;
+	private final CmfValue.Type type;
 	private final Object value;
 	private final boolean nullValue;
 
 	public CmfValue(long value) {
-		this.type = CmfValueType.INTEGER;
+		this.type = CmfValue.Type.INTEGER;
 		this.value = value;
 		this.nullValue = false;
 	}
 
 	public CmfValue(boolean value) {
-		this.type = CmfValueType.BOOLEAN;
+		this.type = CmfValue.Type.BOOLEAN;
 		this.value = value;
 		this.nullValue = false;
 	}
 
 	public CmfValue(double value) {
-		this.type = CmfValueType.DOUBLE;
+		this.type = CmfValue.Type.DOUBLE;
 		this.value = value;
 		this.nullValue = false;
 	}
 
 	public CmfValue(String value) {
-		this.type = CmfValueType.STRING;
+		this.type = CmfValue.Type.STRING;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
 	public CmfValue(URI value) {
-		this.type = CmfValueType.URI;
+		this.type = CmfValue.Type.URI;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
 	public CmfValue(byte[] data) {
-		this.type = CmfValueType.BASE64_BINARY;
+		this.type = CmfValue.Type.BASE64_BINARY;
 		this.value = Base64.encodeBase64(data);
 		this.nullValue = (this.value == null);
 	}
 
 	public CmfValue(Date value) {
-		this.type = CmfValueType.DATETIME;
+		this.type = CmfValue.Type.DATETIME;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
 	public CmfValue(Calendar value) {
-		this.type = CmfValueType.DATETIME;
+		this.type = CmfValue.Type.DATETIME;
 		this.value = (value != null ? value.getTime() : null);
 		this.nullValue = (value == null);
 	}
 
-	public CmfValue(CmfValueType type, Object value) throws ParseException {
+	public CmfValue(CmfValue.Type type, Object value) throws ParseException {
 		this.type = type;
 		this.nullValue = (value == null);
 		if (value != null) {
@@ -216,7 +369,7 @@ public final class CmfValue {
 		return this.value;
 	}
 
-	public CmfValueType getDataType() {
+	public CmfValue.Type getDataType() {
 		return this.type;
 	}
 
@@ -247,7 +400,7 @@ public final class CmfValue {
 		return asString();
 	}
 
-	public static CmfValue newValue(CmfValueType type, Object value) {
+	public static CmfValue newValue(CmfValue.Type type, Object value) {
 		try {
 			return new CmfValue(type, value);
 		} catch (ParseException e) {

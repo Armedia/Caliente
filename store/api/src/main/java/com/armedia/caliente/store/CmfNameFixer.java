@@ -2,7 +2,7 @@ package com.armedia.caliente.store;
 
 public interface CmfNameFixer<VALUE> {
 
-	public boolean supportsType(CmfArchetype type);
+	public boolean supportsType(CmfObject.Archetype type);
 
 	public String fixName(CmfObject<VALUE> dataObject) throws CmfStorageException;
 

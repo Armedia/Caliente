@@ -10,7 +10,7 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.TransferContext;
 import com.armedia.caliente.engine.WarningTracker;
-import com.armedia.caliente.store.CmfArchetype;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -31,7 +31,7 @@ public class ExportContext< //
 	 * @param session
 	 * @param output
 	 */
-	public ExportContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfArchetype rootType, SESSION session,
+	public ExportContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfObject.Archetype rootType, SESSION session,
 		Logger output, WarningTracker tracker) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
 	}
@@ -41,7 +41,7 @@ public class ExportContext< //
 		this.referrents.push(referrent);
 	}
 
-	public boolean shouldWaitForRequirement(CmfArchetype referrent, CmfArchetype referenced) {
+	public boolean shouldWaitForRequirement(CmfObject.Archetype referrent, CmfObject.Archetype referenced) {
 		return false;
 	}
 

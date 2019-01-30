@@ -6,15 +6,15 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsOriginalSubtype.t")
 public class IsOriginalSubtype extends AbstractSingleValueComparison {
 
 	@Override
-	protected CmfValueType getCandidateType(DynamicElementContext ctx) {
-		return CmfValueType.STRING;
+	protected CmfValue.Type getCandidateType(DynamicElementContext ctx) {
+		return CmfValue.Type.STRING;
 	}
 
 	@Override

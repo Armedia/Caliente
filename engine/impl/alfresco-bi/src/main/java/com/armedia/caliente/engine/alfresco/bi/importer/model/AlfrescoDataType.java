@@ -7,17 +7,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public enum AlfrescoDataType {
 	//
-	TEXT(CmfValueType.STRING, CmfValueType.ID, CmfValueType.HTML, CmfValueType.URI),
-	INT(CmfValueType.INTEGER),
-	DOUBLE(CmfValueType.DOUBLE),
-	DATETIME(CmfValueType.DATETIME),
-	BOOLEAN(CmfValueType.BOOLEAN),
-	ANY(CmfValueType.OTHER),
+	TEXT(CmfValue.Type.STRING, CmfValue.Type.ID, CmfValue.Type.HTML, CmfValue.Type.URI),
+	INT(CmfValue.Type.INTEGER),
+	DOUBLE(CmfValue.Type.DOUBLE),
+	DATETIME(CmfValue.Type.DATETIME),
+	BOOLEAN(CmfValue.Type.BOOLEAN),
+	ANY(CmfValue.Type.OTHER),
 	//
 	// Now, the other Alfresco types that have no mapping in CMIS
 	//
@@ -36,15 +36,15 @@ public enum AlfrescoDataType {
 	//
 	;
 
-	public final CmfValueType cmfValueType;
-	private final Set<CmfValueType> mappedTypes;
+	public final CmfValue.Type cmfValueType;
+	private final Set<CmfValue.Type> mappedTypes;
 	public final String nameString;
 
-	private AlfrescoDataType(CmfValueType... types) {
-		CmfValueType cmfValueType = null;
+	private AlfrescoDataType(CmfValue.Type... types) {
+		CmfValue.Type cmfValueType = null;
 		if ((types != null) && (types.length > 0)) {
-			EnumSet<CmfValueType> s = EnumSet.noneOf(CmfValueType.class);
-			for (CmfValueType t : types) {
+			EnumSet<CmfValue.Type> s = EnumSet.noneOf(CmfValue.Type.class);
+			for (CmfValue.Type t : types) {
 				if (t == null) {
 					continue;
 				}
@@ -66,18 +66,18 @@ public enum AlfrescoDataType {
 		}
 	}
 
-	public final boolean matches(CmfValueType t) {
-		if (t == null) { throw new IllegalArgumentException("Must provide a valid CmfValueType instance"); }
+	public final boolean matches(CmfValue.Type t) {
+		if (t == null) { throw new IllegalArgumentException("Must provide a valid CmfValue.Type instance"); }
 		return this.mappedTypes.contains(t);
 	}
 
-	private static Map<CmfValueType, AlfrescoDataType> CMF_MAP = null;
+	private static Map<CmfValue.Type, AlfrescoDataType> CMF_MAP = null;
 
 	private static Map<String, AlfrescoDataType> STR_MAP = null;
 
-	private static synchronized Map<CmfValueType, AlfrescoDataType> getCmfMappings() {
+	private static synchronized Map<CmfValue.Type, AlfrescoDataType> getCmfMappings() {
 		if (AlfrescoDataType.CMF_MAP != null) { return AlfrescoDataType.CMF_MAP; }
-		Map<CmfValueType, AlfrescoDataType> m = new EnumMap<>(CmfValueType.class);
+		Map<CmfValue.Type, AlfrescoDataType> m = new EnumMap<>(CmfValue.Type.class);
 		Map<String, AlfrescoDataType> m2 = new HashMap<>();
 		for (AlfrescoDataType p : AlfrescoDataType.values()) {
 
@@ -87,11 +87,11 @@ public enum AlfrescoDataType {
 					String.format("Two property types mapped as [%s] - %s and %s", p.nameString, p.name(), p2.name()));
 			}
 
-			for (CmfValueType t : p.mappedTypes) {
+			for (CmfValue.Type t : p.mappedTypes) {
 				p2 = m.put(t, p);
 				if (p2 != null) {
 					throw new IllegalStateException(
-						String.format("Mapping error: CmfValueType.%s is mapped to by both %s and %s", t, p, p2));
+						String.format("Mapping error: CmfValue.Type.%s is mapped to by both %s and %s", t, p, p2));
 				}
 			}
 		}
@@ -105,7 +105,7 @@ public enum AlfrescoDataType {
 		return AlfrescoDataType.STR_MAP;
 	}
 
-	public static AlfrescoDataType decode(CmfValueType t) {
+	public static AlfrescoDataType decode(CmfValue.Type t) {
 		AlfrescoDataType pt = AlfrescoDataType.getCmfMappings().get(t);
 		if (pt == null) { throw new IllegalArgumentException(String.format("Unsupported property type %s", t)); }
 		return pt;

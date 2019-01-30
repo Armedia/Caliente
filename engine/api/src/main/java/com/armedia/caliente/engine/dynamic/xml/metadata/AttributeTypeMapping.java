@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
@@ -28,9 +28,9 @@ public class AttributeTypeMapping {
 
 	private static class TypeMatcher {
 		private final Pattern pattern;
-		private final CmfValueType type;
+		private final CmfValue.Type type;
 
-		private TypeMatcher(Pattern pattern, CmfValueType type) {
+		private TypeMatcher(Pattern pattern, CmfValue.Type type) {
 			this.pattern = pattern;
 			this.type = type;
 		}
@@ -41,7 +41,7 @@ public class AttributeTypeMapping {
 
 	@XmlElement(name = "default", required = false)
 	@XmlJavaTypeAdapter(CmfValueTypeAdapter.class)
-	protected CmfValueType defaultType;
+	protected CmfValue.Type defaultType;
 
 	@XmlTransient
 	protected final ReadWriteLock rwLock = new ReentrantReadWriteLock();
@@ -50,7 +50,7 @@ public class AttributeTypeMapping {
 	protected List<TypeMatcher> matchers = null;
 
 	@XmlTransient
-	protected CmfValueType activeDefault = null;
+	protected CmfValue.Type activeDefault = null;
 
 	@XmlTransient
 	protected Boolean caseSensitive = null;
@@ -94,7 +94,7 @@ public class AttributeTypeMapping {
 		}
 	}
 
-	public CmfValueType getDefaultType() {
+	public CmfValue.Type getDefaultType() {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {
@@ -104,7 +104,7 @@ public class AttributeTypeMapping {
 		}
 	}
 
-	public void setDefaultType(CmfValueType value) {
+	public void setDefaultType(CmfValue.Type value) {
 		final Lock l = this.rwLock.writeLock();
 		l.lock();
 		try {
@@ -116,7 +116,7 @@ public class AttributeTypeMapping {
 		}
 	}
 
-	public CmfValueType getMappedType(final String sqlName) {
+	public CmfValue.Type getMappedType(final String sqlName) {
 		final Lock l = this.rwLock.readLock();
 		l.lock();
 		try {

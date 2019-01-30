@@ -1,43 +1,43 @@
 package com.armedia.caliente.engine.dfc;
 
 import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.dfc.pool.DfcSessionFactory;
 
 public enum DctmSetting implements TransferEngineSetting {
 	//
-	DOCBASE(DfcSessionFactory.DOCBASE, CmfValueType.STRING),
-	USERNAME(DfcSessionFactory.USERNAME, CmfValueType.STRING),
-	PASSWORD(DfcSessionFactory.PASSWORD, CmfValueType.STRING)
+	DOCBASE(DfcSessionFactory.DOCBASE, CmfValue.Type.STRING),
+	USERNAME(DfcSessionFactory.USERNAME, CmfValue.Type.STRING),
+	PASSWORD(DfcSessionFactory.PASSWORD, CmfValue.Type.STRING)
 	//
 	;
 
 	private final String label;
 	private final Object defaultValue;
-	private final CmfValueType type;
+	private final CmfValue.Type type;
 	private final boolean required;
 
-	private DctmSetting(CmfValueType type) {
+	private DctmSetting(CmfValue.Type type) {
 		this(null, type, null);
 	}
 
-	private DctmSetting(String label, CmfValueType type) {
+	private DctmSetting(String label, CmfValue.Type type) {
 		this(label, type, null);
 	}
 
-	private DctmSetting(CmfValueType type, Object defaultValue) {
+	private DctmSetting(CmfValue.Type type, Object defaultValue) {
 		this(null, type, defaultValue, false);
 	}
 
-	private DctmSetting(String label, CmfValueType type, Object defaultValue) {
+	private DctmSetting(String label, CmfValue.Type type, Object defaultValue) {
 		this(label, type, defaultValue, false);
 	}
 
-	private DctmSetting(CmfValueType type, Object defaultValue, boolean required) {
+	private DctmSetting(CmfValue.Type type, Object defaultValue, boolean required) {
 		this(null, type, defaultValue, false);
 	}
 
-	private DctmSetting(String label, CmfValueType type, Object defaultValue, boolean required) {
+	private DctmSetting(String label, CmfValue.Type type, Object defaultValue, boolean required) {
 		this.label = (label != null ? label : name().toLowerCase());
 		this.defaultValue = defaultValue;
 		this.type = type;
@@ -55,7 +55,7 @@ public enum DctmSetting implements TransferEngineSetting {
 	}
 
 	@Override
-	public CmfValueType getType() {
+	public CmfValue.Type getType() {
 		return this.type;
 	}
 

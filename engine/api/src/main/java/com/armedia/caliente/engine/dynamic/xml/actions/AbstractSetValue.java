@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
@@ -26,7 +26,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 
 	@XmlElement(name = "type", required = false)
 	@XmlJavaTypeAdapter(CmfValueTypeAdapter.class)
-	protected CmfValueType type;
+	protected CmfValue.Type type;
 
 	@XmlElement(name = "value", required = true)
 	protected Expression value;
@@ -39,11 +39,11 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		this.name = value;
 	}
 
-	public CmfValueType getType() {
-		return Tools.coalesce(this.type, CmfValueType.STRING);
+	public CmfValue.Type getType() {
+		return Tools.coalesce(this.type, CmfValue.Type.STRING);
 	}
 
-	public void setDataType(CmfValueType value) {
+	public void setDataType(CmfValue.Type value) {
 		this.type = value;
 	}
 
@@ -55,7 +55,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		this.value = value;
 	}
 
-	protected abstract DynamicValue createValue(DynamicElementContext ctx, String name, CmfValueType type,
+	protected abstract DynamicValue createValue(DynamicElementContext ctx, String name, CmfValue.Type type,
 		boolean multivalue);
 
 	private Iterable<?> toIterable(Object o) {
@@ -83,7 +83,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		Object name = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (name == null) { throw new ActionException("No name expression given for variable definition"); }
 
-		final CmfValueType type = getType();
+		final CmfValue.Type type = getType();
 		final Object value = ActionTools.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
 		final DynamicValue variable = createValue(ctx, String.valueOf(name), type, repeating);

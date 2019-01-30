@@ -8,19 +8,19 @@ public class CmfAttribute<VALUE> extends CmfProperty<VALUE> {
 		super(pattern);
 	}
 
-	public CmfAttribute(CmfEncodeableName name, CmfValueType type, boolean repeating) {
+	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, boolean repeating) {
 		super(name, type, repeating);
 	}
 
-	public CmfAttribute(CmfEncodeableName name, CmfValueType type, boolean repeating, Collection<VALUE> values) {
+	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, boolean repeating, Collection<VALUE> values) {
 		super(name, type, repeating, values);
 	}
 
-	public CmfAttribute(String name, CmfValueType type, boolean repeating) {
+	public CmfAttribute(String name, CmfValue.Type type, boolean repeating) {
 		super(name, type, repeating);
 	}
 
-	public CmfAttribute(String name, CmfValueType type, boolean repeating, Collection<VALUE> values) {
+	public CmfAttribute(String name, CmfValue.Type type, boolean repeating, Collection<VALUE> values) {
 		super(name, type, repeating, values);
 	}
 

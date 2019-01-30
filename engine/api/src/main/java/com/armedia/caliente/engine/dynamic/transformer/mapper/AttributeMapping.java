@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import com.armedia.caliente.engine.dynamic.DynamicValue;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class AttributeMapping implements Iterable<Object> {
@@ -17,7 +17,7 @@ public class AttributeMapping implements Iterable<Object> {
 	private final Collection<Object> values;
 	private final boolean override;
 	private final char separator;
-	private final CmfValueType type;
+	private final CmfValue.Type type;
 	private final boolean repeating;
 
 	AttributeMapping(DynamicValue sourceAttribute, String targetName, char separator, boolean override) {
@@ -30,7 +30,8 @@ public class AttributeMapping implements Iterable<Object> {
 		this.repeating = sourceAttribute.isRepeating();
 	}
 
-	AttributeMapping(String targetName, char separator, boolean override, CmfValueType type, Collection<Object> values) {
+	AttributeMapping(String targetName, char separator, boolean override, CmfValue.Type type,
+		Collection<Object> values) {
 		this.sourceName = null;
 		this.targetName = targetName;
 		this.values = Tools.coalesce(values, Collections.emptyList());
@@ -40,11 +41,11 @@ public class AttributeMapping implements Iterable<Object> {
 		this.type = type;
 	}
 
-	AttributeMapping(String targetName, char separator, boolean override, CmfValueType type, Object... values) {
+	AttributeMapping(String targetName, char separator, boolean override, CmfValue.Type type, Object... values) {
 		this(targetName, separator, override, type, Arrays.asList(values));
 	}
 
-	public CmfValueType getType() {
+	public CmfValue.Type getType() {
 		return this.type;
 	}
 

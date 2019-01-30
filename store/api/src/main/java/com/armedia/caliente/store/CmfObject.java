@@ -10,10 +10,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
@@ -24,9 +29,65 @@ import com.armedia.commons.utilities.Tools;
 public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<CmfAttribute<VALUE>> {
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 *
-	 */
+	public static enum Archetype {
+		//
+		DATASTORE("ds"), //
+		USER("usr"), //
+		GROUP("grp"), //
+		ACL, //
+		TYPE("typ"), //
+		FORMAT("fmt"), //
+		FOLDER("fld"), //
+		DOCUMENT("doc"), //
+		// RELATION("rel"), //
+		//
+		;
+
+		public final String abbrev;
+
+		private Archetype() {
+			this(null);
+		}
+
+		private Archetype(String abbreviation) {
+			this.abbrev = StringUtils.lowerCase(Tools.coalesce(abbreviation, name()));
+		}
+
+		private static final Map<String, CmfObject.Archetype> ABBREV;
+		private static final Set<String> NAMES;
+		static {
+			Map<String, CmfObject.Archetype> abb = new TreeMap<>();
+			Set<String> n = new TreeSet<>();
+			for (CmfObject.Archetype t : CmfObject.Archetype.values()) {
+				n.add(t.name());
+				CmfObject.Archetype o = abb.put(t.abbrev, t);
+				if (o != null) {
+					throw new RuntimeException(
+						String.format("ERROR: The CmfObject.Archetype values %s and %s share the same abbreviation [%s]",
+							t.name(), o.name(), t.abbrev));
+				}
+			}
+			NAMES = Tools.freezeSet(new LinkedHashSet<>(n));
+			ABBREV = Tools.freezeMap(new LinkedHashMap<>(abb));
+		}
+
+		public static Set<String> getNames() {
+			return Archetype.NAMES;
+		}
+
+		public static CmfObject.Archetype decode(String value) {
+			if (value == null) { return null; }
+			try {
+				return CmfObject.Archetype.valueOf(StringUtils.upperCase(value));
+			} catch (final IllegalArgumentException e) {
+				// Maybe an abbreviation?
+				CmfObject.Archetype t = Archetype.ABBREV.get(StringUtils.lowerCase(value));
+				if (t != null) { return t; }
+				throw e;
+			}
+		}
+	}
+
 	private Long number = null;
 	private final String name;
 	private final Collection<CmfObjectRef> parentIds;
@@ -67,14 +128,14 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 		this.translator = pattern.translator;
 	}
 
-	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfArchetype type, String id, String name,
+	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfObject.Archetype type, String id, String name,
 		Collection<CmfObjectRef> parentIds, int dependencyTier, String historyId, boolean historyCurrent, String label,
 		String subtype, Set<String> secondaries, Long number) {
 		this(translator, type, id, name, parentIds, id, dependencyTier, historyId, historyCurrent, label, subtype,
 			secondaries, number);
 	}
 
-	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfArchetype type, String id, String name,
+	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfObject.Archetype type, String id, String name,
 		Collection<CmfObjectRef> parentIds, String searchKey, int dependencyTier, String historyId,
 		boolean historyCurrent, String label, String subtype, Set<String> secondaries, Long number) {
 		super(type, id, searchKey);

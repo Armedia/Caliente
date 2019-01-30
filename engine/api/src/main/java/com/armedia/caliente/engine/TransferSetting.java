@@ -1,26 +1,26 @@
 package com.armedia.caliente.engine;
 
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 
 public enum TransferSetting implements TransferEngineSetting {
 	//
-	EXCLUDE_TYPES(CmfValueType.BOOLEAN),
-	IGNORE_CONTENT(CmfValueType.BOOLEAN, false),
-	THREAD_COUNT(CmfValueType.INTEGER),
-	BACKLOG_SIZE(CmfValueType.INTEGER),
-	LATEST_ONLY(CmfValueType.BOOLEAN, false),
-	NO_RENDITIONS(CmfValueType.BOOLEAN, false),
-	RETRY_ATTEMPTS(CmfValueType.INTEGER, 2),
-	TRANSFORMATION(CmfValueType.STRING),
-	FILTER(CmfValueType.STRING),
-	EXTERNAL_METADATA(CmfValueType.STRING),
-	USER_MAP(CmfValueType.STRING) {
+	EXCLUDE_TYPES(CmfValue.Type.BOOLEAN),
+	IGNORE_CONTENT(CmfValue.Type.BOOLEAN, false),
+	THREAD_COUNT(CmfValue.Type.INTEGER),
+	BACKLOG_SIZE(CmfValue.Type.INTEGER),
+	LATEST_ONLY(CmfValue.Type.BOOLEAN, false),
+	NO_RENDITIONS(CmfValue.Type.BOOLEAN, false),
+	RETRY_ATTEMPTS(CmfValue.Type.INTEGER, 2),
+	TRANSFORMATION(CmfValue.Type.STRING),
+	FILTER(CmfValue.Type.STRING),
+	EXTERNAL_METADATA(CmfValue.Type.STRING),
+	USER_MAP(CmfValue.Type.STRING) {
 		@Override
 		public Object getDefaultValue() {
 			return PrincipalType.USER.getDefaultMappingFile();
 		}
 	},
-	GROUP_MAP(CmfValueType.STRING) {
+	GROUP_MAP(CmfValue.Type.STRING) {
 		@Override
 		public Object getDefaultValue() {
 			return PrincipalType.GROUP.getDefaultMappingFile();
@@ -31,18 +31,18 @@ public enum TransferSetting implements TransferEngineSetting {
 
 	private final String label;
 	private final Object defaultValue;
-	private final CmfValueType type;
+	private final CmfValue.Type type;
 	private final boolean required;
 
-	private TransferSetting(CmfValueType type) {
+	private TransferSetting(CmfValue.Type type) {
 		this(type, null);
 	}
 
-	private TransferSetting(CmfValueType type, Object defaultValue) {
+	private TransferSetting(CmfValue.Type type, Object defaultValue) {
 		this(type, defaultValue, false);
 	}
 
-	private TransferSetting(CmfValueType type, Object defaultValue, boolean required) {
+	private TransferSetting(CmfValue.Type type, Object defaultValue, boolean required) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
 		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
@@ -61,7 +61,7 @@ public enum TransferSetting implements TransferEngineSetting {
 	}
 
 	@Override
-	public CmfValueType getType() {
+	public CmfValue.Type getType() {
 		return this.type;
 	}
 

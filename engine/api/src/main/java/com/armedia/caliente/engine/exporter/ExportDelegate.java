@@ -14,7 +14,6 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class ExportDelegate< //
@@ -65,9 +64,9 @@ public abstract class ExportDelegate< //
 		return this.exportTarget;
 	}
 
-	protected abstract CmfArchetype calculateType(SESSION session, ECM_OBJECT object) throws Exception;
+	protected abstract CmfObject.Archetype calculateType(SESSION session, ECM_OBJECT object) throws Exception;
 
-	public final CmfArchetype getType() {
+	public final CmfObject.Archetype getType() {
 		return this.exportTarget.getType();
 	}
 
@@ -128,11 +127,11 @@ public abstract class ExportDelegate< //
 		return this.historyCurrent;
 	}
 
-	protected String calculateSubType(SESSION session, CmfArchetype type, ECM_OBJECT object) throws Exception {
+	protected String calculateSubType(SESSION session, CmfObject.Archetype type, ECM_OBJECT object) throws Exception {
 		return type.name();
 	}
 
-	protected Set<String> calculateSecondarySubtypes(SESSION session, CmfArchetype type, String subtype, ECM_OBJECT object)
+	protected Set<String> calculateSecondarySubtypes(SESSION session, CmfObject.Archetype type, String subtype, ECM_OBJECT object)
 		throws Exception {
 		return new LinkedHashSet<>();
 	}

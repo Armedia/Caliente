@@ -14,7 +14,7 @@ import com.armedia.commons.utilities.Tools;
 
 public enum CmfValueSerializer {
 	//
-	BOOLEAN(CmfValueType.BOOLEAN) {
+	BOOLEAN(CmfValue.Type.BOOLEAN) {
 
 		@Override
 		public String doSerialize(CmfValue value) {
@@ -27,7 +27,7 @@ public enum CmfValueSerializer {
 		}
 
 	},
-	INTEGER(CmfValueType.INTEGER) {
+	INTEGER(CmfValue.Type.INTEGER) {
 
 		@Override
 		public String doSerialize(CmfValue value) {
@@ -39,7 +39,7 @@ public enum CmfValueSerializer {
 			return new CmfValue(Integer.valueOf(str));
 		}
 	},
-	DOUBLE(CmfValueType.DOUBLE) {
+	DOUBLE(CmfValue.Type.DOUBLE) {
 
 		@Override
 		public String doSerialize(CmfValue value) {
@@ -52,7 +52,7 @@ public enum CmfValueSerializer {
 		}
 
 		@Override
-		protected boolean canSerialize(CmfValueType type) {
+		protected boolean canSerialize(CmfValue.Type type) {
 			switch (type) {
 				case INTEGER:
 					return true;
@@ -61,16 +61,16 @@ public enum CmfValueSerializer {
 			}
 		}
 	},
-	STRING(CmfValueType.STRING, true) {
+	STRING(CmfValue.Type.STRING, true) {
 
 		@Override
-		protected boolean canSerialize(CmfValueType type) {
+		protected boolean canSerialize(CmfValue.Type type) {
 			// This guy is a catch-all
 			return true;
 		}
 
 	},
-	ID(CmfValueType.ID) {
+	ID(CmfValue.Type.ID) {
 
 		private final Pattern parser = Pattern.compile("^%ID\\{(.*)\\}%$");
 
@@ -84,11 +84,11 @@ public enum CmfValueSerializer {
 			Matcher m = this.parser.matcher(str);
 			if (!m.matches()) { throw new ParseException(String.format("The string [%s] is not a valid ID string", str),
 				0); }
-			return new CmfValue(CmfValueType.ID, m.group(1));
+			return new CmfValue(CmfValue.Type.ID, m.group(1));
 		}
 
 		@Override
-		protected boolean canSerialize(CmfValueType type) {
+		protected boolean canSerialize(CmfValue.Type type) {
 			switch (type) {
 				case STRING:
 				case ID:
@@ -100,7 +100,7 @@ public enum CmfValueSerializer {
 		}
 
 	},
-	TIME(CmfValueType.DATETIME) {
+	TIME(CmfValue.Type.DATETIME) {
 
 		private final String PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSSZZ";
 
@@ -117,23 +117,23 @@ public enum CmfValueSerializer {
 
 	};
 
-	private CmfValueType type;
+	private CmfValue.Type type;
 	private final boolean supportsEmptyString;
 
-	private CmfValueSerializer(CmfValueType type) {
+	private CmfValueSerializer(CmfValue.Type type) {
 		this(type, false);
 	}
 
-	private CmfValueSerializer(CmfValueType type, boolean supportsEmptyString) {
+	private CmfValueSerializer(CmfValue.Type type, boolean supportsEmptyString) {
 		this.type = type;
 		this.supportsEmptyString = supportsEmptyString;
 	}
 
-	protected boolean canSerialize(CmfValueType type) {
+	protected boolean canSerialize(CmfValue.Type type) {
 		return (this.type == type);
 	}
 
-	public final CmfValueType getType() {
+	public final CmfValue.Type getType() {
 		return this.type;
 	}
 
@@ -160,12 +160,12 @@ public enum CmfValueSerializer {
 		return new CmfValue(str);
 	}
 
-	private static Map<CmfValueType, CmfValueSerializer> MAP = null;
+	private static Map<CmfValue.Type, CmfValueSerializer> MAP = null;
 
-	public static CmfValueSerializer get(CmfValueType type) {
+	public static CmfValueSerializer get(CmfValue.Type type) {
 		synchronized (CmfValueSerializer.class) {
 			if (CmfValueSerializer.MAP == null) {
-				Map<CmfValueType, CmfValueSerializer> m = new EnumMap<>(CmfValueType.class);
+				Map<CmfValue.Type, CmfValueSerializer> m = new EnumMap<>(CmfValue.Type.class);
 				for (CmfValueSerializer s : CmfValueSerializer.values()) {
 					if (m.containsKey(s.type)) { throw new IllegalStateException(
 						String.format("Duplicate mapping for data type [%s]", s.type)); }

@@ -35,13 +35,12 @@ import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.tools.MappingTools;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfArchetype;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -95,11 +94,11 @@ public abstract class TransferEngine< //
 			return this.counter.getCummulative();
 		}
 
-		public final Map<CmfArchetype, Map<R, Long>> getCounters() {
+		public final Map<CmfObject.Archetype, Map<R, Long>> getCounters() {
 			return this.counter.getCounters();
 		}
 
-		public final Map<R, Long> getCounters(CmfArchetype type) {
+		public final Map<R, Long> getCounters(CmfObject.Archetype type) {
 			return this.counter.getCounters(type);
 		}
 
@@ -172,7 +171,7 @@ public abstract class TransferEngine< //
 		this.settings = settings;
 	}
 
-	protected boolean checkSupported(Set<CmfArchetype> excludes, CmfArchetype type) {
+	protected boolean checkSupported(Set<CmfObject.Archetype> excludes, CmfObject.Archetype type) {
 		return !excludes.contains(type);
 	}
 
@@ -203,7 +202,7 @@ public abstract class TransferEngine< //
 			TransferEngine.MAX_THREAD_COUNT);
 	}
 
-	protected abstract VALUE getValue(CmfValueType type, Object value);
+	protected abstract VALUE getValue(CmfValue.Type type, Object value);
 
 	protected abstract CmfAttributeTranslator<VALUE> getTranslator();
 
@@ -239,7 +238,7 @@ public abstract class TransferEngine< //
 		String id = Tools.toString(referrentId.getValue(), true);
 		String key = Tools.toString(referrentKey.getValue(), true);
 		if ((type == null) || (id == null)) { return null; }
-		return new ExportTarget(CmfArchetype.valueOf(type), id, key);
+		return new ExportTarget(CmfObject.Archetype.valueOf(type), id, key);
 	}
 
 	public final void setReferrent(CmfObject<VALUE> marshaled, ExportTarget referrent) throws ExportException {
@@ -247,19 +246,19 @@ public abstract class TransferEngine< //
 		if (referrent != null) {
 			final CmfAttributeTranslator<VALUE> translator = getTranslator();
 			try {
-				CmfProperty<VALUE> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE, CmfValueType.STRING,
-					false);
-				referrentType.setValue(translator.getValue(CmfValueType.STRING, referrent.getType().name()));
+				CmfProperty<VALUE> referrentType = new CmfProperty<>(TransferEngine.REFERRENT_TYPE,
+					CmfValue.Type.STRING, false);
+				referrentType.setValue(translator.getValue(CmfValue.Type.STRING, referrent.getType().name()));
 				marshaled.setProperty(referrentType);
 
-				CmfProperty<VALUE> referrentId = new CmfProperty<>(TransferEngine.REFERRENT_ID, CmfValueType.STRING,
+				CmfProperty<VALUE> referrentId = new CmfProperty<>(TransferEngine.REFERRENT_ID, CmfValue.Type.STRING,
 					false);
-				referrentId.setValue(translator.getValue(CmfValueType.STRING, referrent.getId()));
+				referrentId.setValue(translator.getValue(CmfValue.Type.STRING, referrent.getId()));
 				marshaled.setProperty(referrentId);
 
-				CmfProperty<VALUE> referrentKey = new CmfProperty<>(TransferEngine.REFERRENT_KEY, CmfValueType.STRING,
+				CmfProperty<VALUE> referrentKey = new CmfProperty<>(TransferEngine.REFERRENT_KEY, CmfValue.Type.STRING,
 					false);
-				referrentKey.setValue(translator.getValue(CmfValueType.STRING, referrent.getSearchKey()));
+				referrentKey.setValue(translator.getValue(CmfValue.Type.STRING, referrent.getSearchKey()));
 				marshaled.setProperty(referrentKey);
 			} catch (ParseException e) {
 				// This should never happen...

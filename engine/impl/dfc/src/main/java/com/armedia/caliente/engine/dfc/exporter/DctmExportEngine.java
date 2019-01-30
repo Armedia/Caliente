@@ -23,8 +23,8 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObjectStore;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.dfc.util.DctmCollectionStream;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -149,7 +149,7 @@ public class DctmExportEngine extends
 	}
 
 	@Override
-	protected IDfValue getValue(CmfValueType type, Object value) {
+	protected IDfValue getValue(CmfValue.Type type, Object value) {
 		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
 	}
 }

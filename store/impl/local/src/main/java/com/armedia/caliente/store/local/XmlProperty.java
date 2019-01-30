@@ -4,7 +4,8 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlValue;
 
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValue.Type;
 
 @XmlTransient
 public abstract class XmlProperty {
@@ -16,7 +17,7 @@ public abstract class XmlProperty {
 	protected String type;
 
 	@XmlTransient
-	protected CmfValueType dataType;
+	protected CmfValue.Type dataType;
 
 	@XmlValue
 	protected String value;
@@ -66,10 +67,10 @@ public abstract class XmlProperty {
 	/**
 	 * Gets the value of the type property.
 	 *
-	 * @return possible object is {@link CmfValueType }
+	 * @return possible object is {@link Type }
 	 *
 	 */
-	public CmfValueType getType() {
+	public CmfValue.Type getType() {
 		return this.dataType;
 	}
 
@@ -77,10 +78,10 @@ public abstract class XmlProperty {
 	 * Sets the value of the type property.
 	 *
 	 * @param value
-	 *            allowed object is {@link CmfValueType }
+	 *            allowed object is {@link Type }
 	 *
 	 */
-	public void setType(CmfValueType value) {
+	public void setType(CmfValue.Type value) {
 		this.dataType = value;
 	}
 }

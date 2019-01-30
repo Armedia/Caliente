@@ -18,9 +18,7 @@ import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 
@@ -50,7 +48,7 @@ public abstract class CmisImportDelegate<T> extends
 		final Session session = ctx.getSession();
 		final String typeName = this.cmfObject.getSubtype();
 
-		Mapping m = ctx.getValueMapper().getTargetMapping(CmfArchetype.TYPE, PropertyIds.NAME, typeName);
+		Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.TYPE, PropertyIds.NAME, typeName);
 		final String finalTypeName;
 		if (m == null) {
 			BaseTypeId id = CmisTranslator.decodeObjectType(this.cmfObject.getType());
@@ -85,7 +83,7 @@ public abstract class CmisImportDelegate<T> extends
 				continue;
 			}
 
-			final CmfValueType targetType = CmisTranslator.decodePropertyType(def.getPropertyType());
+			final CmfValue.Type targetType = CmisTranslator.decodePropertyType(def.getPropertyType());
 
 			Object value = null;
 			switch (def.getCardinality()) {

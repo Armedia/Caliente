@@ -23,7 +23,6 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.dfc.util.DctmException;
 import com.armedia.commons.dfc.util.DctmVersionHistory;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -74,7 +73,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected Set<String> calculateSecondarySubtypes(IDfSession session, CmfArchetype type, String subtype, T object)
+	protected Set<String> calculateSecondarySubtypes(IDfSession session, CmfObject.Archetype type, String subtype, T object)
 		throws Exception {
 		Set<String> secondaries = super.calculateSecondarySubtypes(session, type, subtype, object);
 		if (object.hasAttr(DctmAttributes.R_ASPECT_NAME)) {
@@ -588,7 +587,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		Collection<DctmExportDelegate<?>> req = super.findRequirements(session, marshaled, sysObject, ctx);
 
 		// The parent folders
-		if (ctx.isSupported(CmfArchetype.FOLDER)) {
+		if (ctx.isSupported(CmfObject.Archetype.FOLDER)) {
 			final int pathCount = sysObject.getFolderIdCount();
 			for (int i = 0; i < pathCount; i++) {
 				IDfId folderId = sysObject.getFolderId(i);
@@ -598,7 +597,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// We export our filestore
-		if (ctx.isSupported(CmfArchetype.DATASTORE)) {
+		if (ctx.isSupported(CmfObject.Archetype.DATASTORE)) {
 			String storeName = sysObject.getStorageType();
 			if (StringUtils.isNotBlank(storeName)) {
 				IDfStore store = DfUtils.getStore(session, storeName);
@@ -630,7 +629,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// Export the format
-		if (ctx.isSupported(CmfArchetype.FORMAT)) {
+		if (ctx.isSupported(CmfObject.Archetype.FORMAT)) {
 			IDfFormat format = sysObject.getFormat();
 			if (format != null) {
 				req.add(this.factory.newExportDelegate(format));
@@ -638,7 +637,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// Export the owner
-		if (ctx.isSupported(CmfArchetype.USER)) {
+		if (ctx.isSupported(CmfObject.Archetype.USER)) {
 			String owner = DctmMappingUtils.substituteMappableUsers(session, sysObject.getOwnerName());
 			if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
 				IDfUser user = session.getUser(sysObject.getOwnerName());
@@ -649,7 +648,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// Export the group
-		if (ctx.isSupported(CmfArchetype.GROUP)) {
+		if (ctx.isSupported(CmfObject.Archetype.GROUP)) {
 			IDfGroup group = session.getGroup(sysObject.getGroupName());
 			if (group != null) {
 				req.add(this.factory.newExportDelegate(group));
@@ -657,7 +656,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 
 		// Export the ACL requirements
-		if (ctx.isSupported(CmfArchetype.ACL)) {
+		if (ctx.isSupported(CmfObject.Archetype.ACL)) {
 			req.add(this.factory.newExportDelegate(sysObject.getACL()));
 		}
 		return req;
@@ -687,7 +686,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	protected Collection<CmfObjectRef> calculateParentIds(IDfSession session, T sysObject) throws Exception {
 		List<CmfObjectRef> ret = new ArrayList<>();
 		for (IDfValue v : DfValueFactory.getAllRepeatingValues(DctmAttributes.I_FOLDER_ID, sysObject)) {
-			ret.add(new CmfObjectRef(CmfArchetype.FOLDER, v.asId().getId()));
+			ret.add(new CmfObjectRef(CmfObject.Archetype.FOLDER, v.asId().getId()));
 		}
 		return ret;
 	}

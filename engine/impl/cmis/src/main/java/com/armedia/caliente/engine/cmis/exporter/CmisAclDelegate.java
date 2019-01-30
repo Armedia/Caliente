@@ -15,10 +15,8 @@ import com.armedia.caliente.engine.cmis.CmisProperty;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.tools.AclTools;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 
 public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
@@ -29,8 +27,8 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 	}
 
 	@Override
-	protected CmfArchetype calculateType(Session session, FileableCmisObject object) throws Exception {
-		return CmfArchetype.ACL;
+	protected CmfObject.Archetype calculateType(Session session, FileableCmisObject object) throws Exception {
+		return CmfObject.Archetype.ACL;
 	}
 
 	@Override
@@ -69,19 +67,19 @@ public class CmisAclDelegate extends CmisExportDelegate<FileableCmisObject> {
 		// Copy the ACL Data into the object's attributes using the common ACL attributes
 		final Acl acl = this.object.getAcl();
 
-		CmfProperty<CmfValue> owner = new CmfProperty<>(IntermediateProperty.ACL_OWNER, CmfValueType.STRING, false);
+		CmfProperty<CmfValue> owner = new CmfProperty<>(IntermediateProperty.ACL_OWNER, CmfValue.Type.STRING, false);
 		owner.setValue(new CmfValue(this.object.getCreatedBy()));
-		CmfProperty<CmfValue> name = new CmfProperty<>(IntermediateProperty.ACL_OBJECT_ID, CmfValueType.STRING, false);
+		CmfProperty<CmfValue> name = new CmfProperty<>(IntermediateProperty.ACL_OBJECT_ID, CmfValue.Type.STRING, false);
 		name.setValue(new CmfValue(this.object.getId()));
 
 		if (acl != null) {
 			String permissionsName = String.format(CmisProperty.PERMISSION_PROPERTY_FMT,
 				ctx.getRepositoryInfo().getProductName().toLowerCase());
 			CmfProperty<CmfValue> accessors = new CmfProperty<>(IntermediateProperty.ACL_ACCESSOR_NAME,
-				CmfValueType.STRING, true);
-			CmfProperty<CmfValue> permissions = new CmfProperty<>(permissionsName, CmfValueType.STRING, true);
+				CmfValue.Type.STRING, true);
+			CmfProperty<CmfValue> permissions = new CmfProperty<>(permissionsName, CmfValue.Type.STRING, true);
 			CmfProperty<CmfValue> accessorActions = new CmfProperty<>(IntermediateProperty.ACL_ACCESSOR_ACTIONS,
-				CmfValueType.STRING, true);
+				CmfValue.Type.STRING, true);
 
 			for (Ace ace : acl.getAces()) {
 				// Only export directly-applied ACEs

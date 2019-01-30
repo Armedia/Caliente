@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalSetting;
-import com.armedia.caliente.store.CmfArchetype;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -39,7 +39,7 @@ public class LocalExportDelegateFactory
 	}
 
 	@Override
-	protected LocalExportDelegate<?> newExportDelegate(LocalRoot session, CmfArchetype type, String searchKey)
+	protected LocalExportDelegate<?> newExportDelegate(LocalRoot session, CmfObject.Archetype type, String searchKey)
 		throws Exception {
 		switch (type) {
 			case FOLDER:

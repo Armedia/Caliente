@@ -6,9 +6,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 
 public class CmisUserDelegate extends CmisExportDelegate<FileableCmisObject> {
@@ -19,8 +17,8 @@ public class CmisUserDelegate extends CmisExportDelegate<FileableCmisObject> {
 	}
 
 	@Override
-	protected CmfArchetype calculateType(Session session, FileableCmisObject object) throws Exception {
-		return CmfArchetype.USER;
+	protected CmfObject.Archetype calculateType(Session session, FileableCmisObject object) throws Exception {
+		return CmfObject.Archetype.USER;
 	}
 
 	@Override
@@ -40,9 +38,9 @@ public class CmisUserDelegate extends CmisExportDelegate<FileableCmisObject> {
 
 	@Override
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
-		CmfAttribute<CmfValue> userName = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValueType.STRING, false);
+		CmfAttribute<CmfValue> userName = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValue.Type.STRING, false);
 		userName.setValue(new CmfValue(this.object.getCreatedBy()));
-		userName = new CmfAttribute<>(IntermediateAttribute.LOGIN_NAME, CmfValueType.STRING, false);
+		userName = new CmfAttribute<>(IntermediateAttribute.LOGIN_NAME, CmfValue.Type.STRING, false);
 		userName.setValue(new CmfValue(this.object.getCreatedBy()));
 		return true;
 	}

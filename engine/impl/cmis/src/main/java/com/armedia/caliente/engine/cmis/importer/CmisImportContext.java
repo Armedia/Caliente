@@ -12,13 +12,13 @@ import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContext;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 
 public class CmisImportContext extends ImportContext<Session, CmfValue, CmisImportContextFactory> {
 
-	CmisImportContext(CmisImportContextFactory factory, String rootId, CmfArchetype rootType, Session session, Logger output,
+	CmisImportContext(CmisImportContextFactory factory, String rootId, CmfObject.Archetype rootType, Session session, Logger output,
 		WarningTracker warningTracker, Transformer transformer, CmfAttributeTranslator<CmfValue> translator,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output, warningTracker, transformer,

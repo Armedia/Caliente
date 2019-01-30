@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -71,7 +71,7 @@ public abstract class AbstractTransformValue extends ConditionalAction {
 
 		// Need to find a matching candidate...
 		for (String s : values.keySet()) {
-			if (comparison.check(CmfValueType.STRING, s, comparand)) {
+			if (comparison.check(CmfValue.Type.STRING, s, comparand)) {
 				executeAction(ctx, values.get(s));
 			}
 		}

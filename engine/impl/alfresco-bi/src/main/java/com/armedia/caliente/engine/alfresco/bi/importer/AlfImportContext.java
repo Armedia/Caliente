@@ -16,13 +16,12 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImportContextFactory> {
 
-	public AlfImportContext(AlfImportContextFactory factory, CfgTools settings, String rootId, CmfArchetype rootType,
+	public AlfImportContext(AlfImportContextFactory factory, CfgTools settings, String rootId, CmfObject.Archetype rootType,
 		AlfRoot session, Logger output, WarningTracker tracker, Transformer transformer,
 		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
@@ -30,7 +29,7 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 			streamStore, batchPosition);
 	}
 
-	public final String getAlternateName(CmfArchetype type, String id) throws ImportException {
+	public final String getAlternateName(CmfObject.Archetype type, String id) throws ImportException {
 		return getFactory().getAlternateName(type, id);
 	}
 

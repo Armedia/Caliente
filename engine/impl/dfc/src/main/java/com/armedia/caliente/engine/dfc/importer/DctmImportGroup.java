@@ -19,7 +19,6 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfGroup;
@@ -63,7 +62,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			if (existingMembers.isEmpty()) { return false; }
 		}
 
-		if (ctx.isSupported(CmfArchetype.USER)) {
+		if (ctx.isSupported(CmfObject.Archetype.USER)) {
 			// Same user-members?
 			existingMembers = new HashSet<>();
 			c = existingObject.getValueCount(DctmAttributes.USERS_NAMES);
@@ -112,7 +111,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				} catch (MultipleUserMatchesException e) {
 					String msg = String.format("Failed to add user [%s] as a member of [%s] - %s", actualUser,
 						groupName.asString(), e.getMessage());
-					if (context.isSupported(CmfArchetype.USER)) { throw new ImportException(msg); }
+					if (context.isSupported(CmfObject.Archetype.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 					continue;
 				}
@@ -121,7 +120,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 					String msg = String.format(
 						"Failed to add user [%s] as a member of [%s] - the user wasn't found - probably didn't need to be copied over",
 						actualUser, groupName.asString());
-					if (context.isSupported(CmfArchetype.USER)) { throw new ImportException(msg); }
+					if (context.isSupported(CmfObject.Archetype.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 					continue;
 				}
@@ -218,7 +217,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to set group [%s] as the default group for the user [%s] - %s",
 					groupName, actualUser, e.getMessage());
-				if (context.isSupported(CmfArchetype.USER)) { throw new ImportException(msg); }
+				if (context.isSupported(CmfObject.Archetype.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
 			}
@@ -226,7 +225,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				String msg = String.format(
 					"Failed to set group [%s] as the default group for the user [%s] - the user wasn't found - probably didn't need to be copied over",
 					groupName, actualUser);
-				if (context.isSupported(CmfArchetype.USER)) { throw new ImportException(msg); }
+				if (context.isSupported(CmfObject.Archetype.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				continue;
 			}

@@ -3,7 +3,7 @@ package com.armedia.caliente.engine;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.store.CmfArchetype;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.utilities.ConfigurationSetting;
@@ -11,17 +11,17 @@ import com.armedia.commons.utilities.ConfigurationSetting;
 public enum PrincipalType {
 
 	//
-	USER(CmfArchetype.USER, TransferSetting.USER_MAP), //
-	GROUP(CmfArchetype.GROUP, TransferSetting.GROUP_MAP), //
+	USER(CmfObject.Archetype.USER, TransferSetting.USER_MAP), //
+	GROUP(CmfObject.Archetype.GROUP, TransferSetting.GROUP_MAP), //
 	//
 	;
 
-	private final CmfArchetype objectType;
+	private final CmfObject.Archetype objectType;
 	private final ConfigurationSetting setting;
 	private final String mappingName;
 	private final String defaultMappingFile;
 
-	private PrincipalType(CmfArchetype objectType, ConfigurationSetting setting) {
+	private PrincipalType(CmfObject.Archetype objectType, ConfigurationSetting setting) {
 		this.objectType = objectType;
 		this.setting = setting;
 		this.mappingName = String.format("$%s_NAME$", name()).toUpperCase();
@@ -39,7 +39,7 @@ public enum PrincipalType {
 		return v;
 	}
 
-	public CmfArchetype getObjectType() {
+	public CmfObject.Archetype getObjectType() {
 		return this.objectType;
 	}
 

@@ -11,10 +11,9 @@ import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.engine.sharepoint.ShptSessionWrapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 import com.independentsoft.share.Folder;
@@ -24,14 +23,14 @@ import com.independentsoft.share.User;
 public abstract class ShptExportDelegate<T> extends
 	ExportDelegate<T, ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportDelegateFactory, ShptExportEngine> {
 
-	private static final Map<Class<?>, CmfArchetype> TYPE_MAP;
+	private static final Map<Class<?>, CmfObject.Archetype> TYPE_MAP;
 
 	static {
-		Map<Class<?>, CmfArchetype> m = new LinkedHashMap<>();
-		m.put(ShptVersion.class, CmfArchetype.DOCUMENT);
-		m.put(Folder.class, CmfArchetype.FOLDER);
-		m.put(Group.class, CmfArchetype.GROUP);
-		m.put(User.class, CmfArchetype.USER);
+		Map<Class<?>, CmfObject.Archetype> m = new LinkedHashMap<>();
+		m.put(ShptVersion.class, CmfObject.Archetype.DOCUMENT);
+		m.put(Folder.class, CmfObject.Archetype.FOLDER);
+		m.put(Group.class, CmfObject.Archetype.GROUP);
+		m.put(User.class, CmfObject.Archetype.USER);
 		TYPE_MAP = Tools.freezeMap(m);
 	}
 
@@ -65,8 +64,8 @@ public abstract class ShptExportDelegate<T> extends
 	}
 
 	@Override
-	protected final CmfArchetype calculateType(ShptSession session, T object) throws Exception {
-		for (Map.Entry<Class<?>, CmfArchetype> e : ShptExportDelegate.TYPE_MAP.entrySet()) {
+	protected final CmfObject.Archetype calculateType(ShptSession session, T object) throws Exception {
+		for (Map.Entry<Class<?>, CmfObject.Archetype> e : ShptExportDelegate.TYPE_MAP.entrySet()) {
 			if (e.getKey().isInstance(object)) { return e.getValue(); }
 		}
 		return null;

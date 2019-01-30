@@ -3,7 +3,7 @@ package com.armedia.caliente.engine.importer;
 import java.util.Map;
 import java.util.UUID;
 
-import com.armedia.caliente.store.CmfArchetype;
+import com.armedia.caliente.store.CmfObject;
 
 public interface ImportEngineListener extends ImportListener {
 
@@ -16,7 +16,7 @@ public interface ImportEngineListener extends ImportListener {
 	 *
 	 * @param summary
 	 */
-	public void importStarted(ImportState importState, Map<CmfArchetype, Long> summary);
+	public void importStarted(ImportState importState, Map<CmfObject.Archetype, Long> summary);
 
 	/**
 	 * <p>
@@ -27,7 +27,7 @@ public interface ImportEngineListener extends ImportListener {
 	 * @param objectType
 	 * @param totalObjects
 	 */
-	public void objectTypeImportStarted(UUID jobId, CmfArchetype objectType, long totalObjects);
+	public void objectTypeImportStarted(UUID jobId, CmfObject.Archetype objectType, long totalObjects);
 
 	/**
 	 * <p>
@@ -38,7 +38,7 @@ public interface ImportEngineListener extends ImportListener {
 	 * @param objectType
 	 * @param counters
 	 */
-	public void objectTypeImportFinished(UUID jobId, CmfArchetype objectType, Map<ImportResult, Long> counters);
+	public void objectTypeImportFinished(UUID jobId, CmfObject.Archetype objectType, Map<ImportResult, Long> counters);
 
 	/**
 	 * <p>

@@ -18,7 +18,6 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.documentum.fc.client.IDfCollection;
@@ -180,7 +179,7 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 					String msg = String.format(
 						"Missing dependency for group [%s] - user [%s] not found (as group member)",
 						group.getGroupName(), userName);
-					if (ctx.isSupported(CmfArchetype.USER)) { throw new Exception(msg); }
+					if (ctx.isSupported(CmfObject.Archetype.USER)) { throw new Exception(msg); }
 					this.log.warn(msg);
 					ctx.printf(msg);
 				}

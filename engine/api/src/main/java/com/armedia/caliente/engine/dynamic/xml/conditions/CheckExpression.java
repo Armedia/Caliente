@@ -20,7 +20,6 @@ import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
@@ -39,13 +38,13 @@ public class CheckExpression extends AbstractComparisonCheck {
 
 	@XmlAttribute(name = "type")
 	@XmlJavaTypeAdapter(CmfValueTypeAdapter.class)
-	protected CmfValueType type;
+	protected CmfValue.Type type;
 
-	public final CmfValueType getType() {
-		return Tools.coalesce(this.type, CmfValueType.STRING);
+	public final CmfValue.Type getType() {
+		return Tools.coalesce(this.type, CmfValue.Type.STRING);
 	}
 
-	public final void setType(CmfValueType type) {
+	public final void setType(CmfValue.Type type) {
 		this.type = type;
 	}
 
@@ -65,7 +64,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 		this.right = value;
 	}
 
-	private Object castTo(CmfValueType type, Object object) throws ConditionException {
+	private Object castTo(CmfValue.Type type, Object object) throws ConditionException {
 		if (object == null) { return null; }
 		switch (type) {
 			case BOOLEAN:
@@ -134,7 +133,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 
 	@Override
 	public boolean check(DynamicElementContext ctx) throws ConditionException {
-		final CmfValueType type = getType();
+		final CmfValue.Type type = getType();
 		Expression leftExp = getLeft();
 		Object leftVal = ConditionTools.eval(leftExp, ctx);
 		Expression rightExp = getRight();

@@ -11,8 +11,8 @@ import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfArchetype;
-import com.armedia.caliente.store.xml.CmfArchetypeAdapter;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.xml.CmfObjectArchetypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -22,8 +22,8 @@ import com.armedia.commons.utilities.Tools;
 public class ValueMappingSet extends ConditionalAction {
 
 	@XmlElement(name = "type", required = false)
-	@XmlJavaTypeAdapter(CmfArchetypeAdapter.class)
-	protected CmfArchetype type;
+	@XmlJavaTypeAdapter(CmfObjectArchetypeAdapter.class)
+	protected CmfObject.Archetype type;
 
 	@XmlElement(name = "name", required = true)
 	protected Expression name;
@@ -34,11 +34,11 @@ public class ValueMappingSet extends ConditionalAction {
 	@XmlElement(name = "to", required = false)
 	protected Expression to;
 
-	public void setType(CmfArchetype type) {
+	public void setType(CmfObject.Archetype type) {
 		this.type = type;
 	}
 
-	public CmfArchetype getType() {
+	public CmfObject.Archetype getType() {
 		return this.type;
 	}
 
@@ -68,7 +68,7 @@ public class ValueMappingSet extends ConditionalAction {
 
 	@Override
 	protected void executeAction(DynamicElementContext ctx) throws ActionException {
-		CmfArchetype type = getType();
+		CmfObject.Archetype type = getType();
 		if (type == null) { throw new ActionException("Must provide a type name to associate the mapping with"); }
 		String name = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (name == null) { throw new ActionException("Must provide a mapping name"); }

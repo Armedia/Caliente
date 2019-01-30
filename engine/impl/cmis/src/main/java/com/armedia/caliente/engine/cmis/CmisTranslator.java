@@ -13,86 +13,85 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfValueType;
-import com.armedia.caliente.store.CmfArchetype;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 
-	private static final Map<PropertyType, CmfValueType> DATA_TYPES;
-	private static final Map<CmfValueType, PropertyType> DATA_TYPES_REV;
+	private static final Map<PropertyType, CmfValue.Type> DATA_TYPES;
+	private static final Map<CmfValue.Type, PropertyType> DATA_TYPES_REV;
 
-	private static final Map<BaseTypeId, CmfArchetype> OBJECT_TYPES;
-	private static final Map<CmfArchetype, BaseTypeId> OBJECT_TYPES_REV;
+	private static final Map<BaseTypeId, CmfObject.Archetype> OBJECT_TYPES;
+	private static final Map<CmfObject.Archetype, BaseTypeId> OBJECT_TYPES_REV;
 
-	private static final Map<CmfArchetype, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
+	private static final Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<PropertyType, CmfValueType> m = new EnumMap<>(PropertyType.class);
-		m.put(PropertyType.BOOLEAN, CmfValueType.BOOLEAN);
-		m.put(PropertyType.INTEGER, CmfValueType.INTEGER);
-		m.put(PropertyType.DECIMAL, CmfValueType.DOUBLE);
-		m.put(PropertyType.DATETIME, CmfValueType.DATETIME);
-		m.put(PropertyType.ID, CmfValueType.ID);
-		m.put(PropertyType.STRING, CmfValueType.STRING);
-		m.put(PropertyType.URI, CmfValueType.URI);
-		m.put(PropertyType.HTML, CmfValueType.HTML);
+		Map<PropertyType, CmfValue.Type> m = new EnumMap<>(PropertyType.class);
+		m.put(PropertyType.BOOLEAN, CmfValue.Type.BOOLEAN);
+		m.put(PropertyType.INTEGER, CmfValue.Type.INTEGER);
+		m.put(PropertyType.DECIMAL, CmfValue.Type.DOUBLE);
+		m.put(PropertyType.DATETIME, CmfValue.Type.DATETIME);
+		m.put(PropertyType.ID, CmfValue.Type.ID);
+		m.put(PropertyType.STRING, CmfValue.Type.STRING);
+		m.put(PropertyType.URI, CmfValue.Type.URI);
+		m.put(PropertyType.HTML, CmfValue.Type.HTML);
 		DATA_TYPES = Tools.freezeMap(m);
 
-		Map<CmfValueType, PropertyType> n = new EnumMap<>(CmfValueType.class);
-		n.put(CmfValueType.BOOLEAN, PropertyType.BOOLEAN);
-		n.put(CmfValueType.INTEGER, PropertyType.INTEGER);
-		n.put(CmfValueType.DOUBLE, PropertyType.DECIMAL);
-		n.put(CmfValueType.DATETIME, PropertyType.DATETIME);
-		n.put(CmfValueType.ID, PropertyType.ID);
-		n.put(CmfValueType.STRING, PropertyType.STRING);
-		n.put(CmfValueType.URI, PropertyType.URI);
-		n.put(CmfValueType.HTML, PropertyType.HTML);
+		Map<CmfValue.Type, PropertyType> n = new EnumMap<>(CmfValue.Type.class);
+		n.put(CmfValue.Type.BOOLEAN, PropertyType.BOOLEAN);
+		n.put(CmfValue.Type.INTEGER, PropertyType.INTEGER);
+		n.put(CmfValue.Type.DOUBLE, PropertyType.DECIMAL);
+		n.put(CmfValue.Type.DATETIME, PropertyType.DATETIME);
+		n.put(CmfValue.Type.ID, PropertyType.ID);
+		n.put(CmfValue.Type.STRING, PropertyType.STRING);
+		n.put(CmfValue.Type.URI, PropertyType.URI);
+		n.put(CmfValue.Type.HTML, PropertyType.HTML);
 		DATA_TYPES_REV = Tools.freezeMap(n);
 
-		Map<BaseTypeId, CmfArchetype> o = new EnumMap<>(BaseTypeId.class);
-		o.put(BaseTypeId.CMIS_DOCUMENT, CmfArchetype.DOCUMENT);
-		o.put(BaseTypeId.CMIS_FOLDER, CmfArchetype.FOLDER);
+		Map<BaseTypeId, CmfObject.Archetype> o = new EnumMap<>(BaseTypeId.class);
+		o.put(BaseTypeId.CMIS_DOCUMENT, CmfObject.Archetype.DOCUMENT);
+		o.put(BaseTypeId.CMIS_FOLDER, CmfObject.Archetype.FOLDER);
 		// TODO: add other types...such as policies
 		OBJECT_TYPES = Tools.freezeMap(o);
 
-		Map<CmfArchetype, BaseTypeId> p = new EnumMap<>(CmfArchetype.class);
-		p.put(CmfArchetype.DOCUMENT, BaseTypeId.CMIS_DOCUMENT);
-		p.put(CmfArchetype.FOLDER, BaseTypeId.CMIS_FOLDER);
+		Map<CmfObject.Archetype, BaseTypeId> p = new EnumMap<>(CmfObject.Archetype.class);
+		p.put(CmfObject.Archetype.DOCUMENT, BaseTypeId.CMIS_DOCUMENT);
+		p.put(CmfObject.Archetype.FOLDER, BaseTypeId.CMIS_FOLDER);
 		// TODO: add other types...such as policies
 		OBJECT_TYPES_REV = Tools.freezeMap(p);
 
-		Map<CmfArchetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfArchetype.class);
+		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfObject.Archetype.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 		am = new DualHashBidiMap<>();
 		// BASE_TYPE_ID (DOCUMENT)
 		// OBJECT_TYPE_ID (cmis:document|...)
 		am.put(CmisCustomAttributes.VERSION_ANTECEDENT_ID.name, IntermediateAttribute.VERSION_ANTECEDENT_ID);
-		attributeMappings.put(CmfArchetype.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfObject.Archetype.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
 	}
 
-	public static CmfValueType decodePropertyType(PropertyType t) {
+	public static CmfValue.Type decodePropertyType(PropertyType t) {
 		return CmisTranslator.DATA_TYPES.get(t);
 	}
 
-	public static PropertyType decodePropertyType(CmfValueType t) {
+	public static PropertyType decodePropertyType(CmfValue.Type t) {
 		return CmisTranslator.DATA_TYPES_REV.get(t);
 	}
 
-	public static CmfArchetype decodeObjectType(BaseTypeId type) {
+	public static CmfObject.Archetype decodeObjectType(BaseTypeId type) {
 		return CmisTranslator.OBJECT_TYPES.get(type);
 	}
 
-	public static BaseTypeId decodeObjectType(CmfArchetype type) {
+	public static BaseTypeId decodeObjectType(CmfObject.Archetype type) {
 		return CmisTranslator.OBJECT_TYPES_REV.get(type);
 	}
 
-	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfArchetype type) {
+	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfObject.Archetype type) {
 		return CmisTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
@@ -100,7 +99,7 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 	private static final CmfAttributeNameMapper MAPPER = new CmfAttributeNameMapper() {
 
 		@Override
-		public String encodeAttributeName(CmfArchetype type, String attributeName) {
+		public String encodeAttributeName(CmfObject.Archetype type, String attributeName) {
 			BidiMap<String, IntermediateAttribute> mappings = CmisTranslator.getAttributeMappings(type);
 			if (mappings != null) {
 				// TODO: normalize the CMS attribute name
@@ -111,7 +110,7 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		}
 
 		@Override
-		public String decodeAttributeName(CmfArchetype type, String attributeName) {
+		public String decodeAttributeName(CmfObject.Archetype type, String attributeName) {
 			BidiMap<String, IntermediateAttribute> mappings = CmisTranslator.getAttributeMappings(type);
 			if (mappings != null) {
 				String att = null;
@@ -132,12 +131,12 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 	}
 
 	@Override
-	public CmfValueCodec<CmfValue> getCodec(CmfValueType type) {
+	public CmfValueCodec<CmfValue> getCodec(CmfValue.Type type) {
 		return CmfAttributeTranslator.getStoredValueCodec(type);
 	}
 
 	@Override
-	public CmfValue getValue(CmfValueType type, Object value) throws ParseException {
+	public CmfValue getValue(CmfValue.Type type, Object value) throws ParseException {
 		return new CmfValue(type, value);
 	}
 }

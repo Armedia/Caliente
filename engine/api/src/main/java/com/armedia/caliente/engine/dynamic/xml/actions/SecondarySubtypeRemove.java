@@ -17,7 +17,7 @@ import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -64,7 +64,7 @@ public class SecondarySubtypeRemove extends ConditionalAction {
 		Iterator<String> it = ctx.getDynamicObject().getSecondarySubtypes().iterator();
 		while (it.hasNext()) {
 			String current = it.next();
-			if (comparison.check(CmfValueType.STRING, current, comparand)) {
+			if (comparison.check(CmfValue.Type.STRING, current, comparand)) {
 				it.remove();
 			}
 		}

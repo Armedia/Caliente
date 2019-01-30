@@ -19,11 +19,9 @@ import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmObjectNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -36,8 +34,8 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 	}
 
 	@Override
-	protected final CmfArchetype calculateType(UcmSession session, T object) throws Exception {
-		return object.getType().cmfArchetype;
+	protected final CmfObject.Archetype calculateType(UcmSession session, T object) throws Exception {
+		return object.getType().archetype;
 	}
 
 	@Override
@@ -50,7 +48,7 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 		Collection<CmfObjectRef> parents = new ArrayList<>();
 		UcmFolder folder = object.getParentFolder(session);
 		if (folder != null) {
-			parents.add(new CmfObjectRef(CmfArchetype.FOLDER, folder.getUniqueURI().toString()));
+			parents.add(new CmfObjectRef(CmfObject.Archetype.FOLDER, folder.getUniqueURI().toString()));
 		}
 		return parents;
 	}
@@ -135,18 +133,18 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 	protected boolean getDataProperties(UcmExportContext ctx, Collection<CmfProperty<CmfValue>> properties, T object)
 		throws ExportException {
 		String path = object.getParentPath();
-		CmfProperty<CmfValue> p = new CmfProperty<>(IntermediateProperty.PATH, CmfValueType.STRING,
+		CmfProperty<CmfValue> p = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING,
 			new CmfValue(Tools.coalesce(path, StringUtils.EMPTY)));
 		properties.add(p);
 
-		p = new CmfProperty<>(IntermediateProperty.IS_REFERENCE, CmfValueType.BOOLEAN,
+		p = new CmfProperty<>(IntermediateProperty.IS_REFERENCE, CmfValue.Type.BOOLEAN,
 			new CmfValue(object.isShortcut()));
 		properties.add(p);
 		if (object.isShortcut()) {
 			String targetGuid = object.getTargetGUID();
 			UcmFSObject target = null;
 			try {
-				if (getType() == CmfArchetype.DOCUMENT) {
+				if (getType() == CmfObject.Archetype.DOCUMENT) {
 					target = ctx.getSession().getFileByGUID(targetGuid);
 				} else {
 					target = ctx.getSession().getFolderByGUID(targetGuid);
@@ -155,22 +153,22 @@ public abstract class UcmFSObjectExportDelegate<T extends UcmFSObject> extends U
 				throw new ExportException(
 					String.format("Failed to locate the referenced %s with GUID %s", getType().name(), targetGuid), e);
 			}
-			p = new CmfProperty<>(IntermediateProperty.REF_TARGET, CmfValueType.STRING,
+			p = new CmfProperty<>(IntermediateProperty.REF_TARGET, CmfValue.Type.STRING,
 				new CmfValue(target.getURI().toString()));
 			properties.add(p);
-			p = new CmfProperty<>(IntermediateProperty.REF_VERSION, CmfValueType.STRING, new CmfValue("HEAD"));
+			p = new CmfProperty<>(IntermediateProperty.REF_VERSION, CmfValue.Type.STRING, new CmfValue("HEAD"));
 			properties.add(p);
 		}
 
 		URI parentUri = object.getParentURI();
-		p = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValueType.ID, true);
+		p = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValue.Type.ID, true);
 		properties.add(p);
 
 		if (!UcmModel.isRoot(parentUri)) {
 			p.addValue(new CmfValue(parentUri.toString()));
 		}
 
-		p = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValueType.STRING, true);
+		p = new CmfProperty<>(IntermediateProperty.PARENT_TREE_IDS, CmfValue.Type.STRING, true);
 		properties.add(p);
 		if (!UcmModel.isRoot(parentUri)) {
 			LinkedList<String> l = new LinkedList<>();

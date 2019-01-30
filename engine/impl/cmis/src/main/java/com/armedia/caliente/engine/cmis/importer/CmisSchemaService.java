@@ -20,7 +20,7 @@ import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.AttributeDe
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.TypeDeclaration;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class CmisSchemaService implements SchemaService {
@@ -77,7 +77,7 @@ public class CmisSchemaService implements SchemaService {
 				// Don't include inherited properties
 				continue;
 			}
-			CmfValueType dataType = CmisTranslator.decodePropertyType(definition.getPropertyType());
+			CmfValue.Type dataType = CmisTranslator.decodePropertyType(definition.getPropertyType());
 			attributes.put(name, new AttributeDeclaration(name, dataType, definition.isRequired(),
 				definition.getCardinality() == Cardinality.MULTI));
 		}

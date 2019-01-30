@@ -12,7 +12,7 @@ import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.importer.ImportResult;
-import com.armedia.caliente.store.CmfArchetype;
+import com.armedia.caliente.store.CmfObject;
 
 public enum CLIParam implements Supplier<Option> {
 	count_empty( //
@@ -112,7 +112,7 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentLimits(1, -1) //
 			.setValueSep(',') //
 			.setArgumentName("object-type") //
-			.setValueFilter(new EnumValueFilter<>(false, CmfArchetype.class)) //
+			.setValueFilter(new EnumValueFilter<>(false, CmfObject.Archetype.class)) //
 			.setDescription("Object types to exclude from processing") //
 	), //
 
@@ -297,7 +297,7 @@ public enum CLIParam implements Supplier<Option> {
 			.setArgumentLimits(1, -1) //
 			.setValueSep(',') //
 			.setArgumentName("type") //
-			.setValueFilter(new EnumValueFilter<>(false, CmfArchetype.class)) //
+			.setValueFilter(new EnumValueFilter<>(false, CmfObject.Archetype.class)) //
 			.setDescription("The object types to include in the manifest (not specified = all types)") //
 	), //
 

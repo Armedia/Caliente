@@ -5,8 +5,6 @@ import java.util.List;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.armedia.caliente.engine.tools.PathTools;
-
 public class PathToolsTest {
 
 	@Test

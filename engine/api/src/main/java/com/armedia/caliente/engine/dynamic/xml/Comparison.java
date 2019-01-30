@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.dynamic.RuntimeDynamicElementException;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -22,7 +21,7 @@ public enum Comparison {
 	// Base checks
 	EQ() {
 		@Override
-		protected boolean eval(CmfValueType type, Object candidate, Object comparand, boolean caseInsensitive) {
+		protected boolean eval(CmfValue.Type type, Object candidate, Object comparand, boolean caseInsensitive) {
 			candidate = Comparison.canonicalizeCase(type, candidate, caseInsensitive);
 			comparand = Comparison.canonicalizeCase(type, comparand, caseInsensitive);
 			return (Comparison.compare(type, candidate, comparand) == 0);
@@ -30,7 +29,7 @@ public enum Comparison {
 	},
 	GT() {
 		@Override
-		protected boolean eval(CmfValueType type, Object bigger, Object smaller, boolean caseInsensitive) {
+		protected boolean eval(CmfValue.Type type, Object bigger, Object smaller, boolean caseInsensitive) {
 			bigger = Comparison.canonicalizeCase(type, bigger, caseInsensitive);
 			smaller = Comparison.canonicalizeCase(type, smaller, caseInsensitive);
 			return (Comparison.compare(type, bigger, smaller) > 0);
@@ -38,7 +37,7 @@ public enum Comparison {
 	},
 	GE() {
 		@Override
-		protected boolean eval(CmfValueType type, Object bigger, Object smallerOrEqual, boolean caseInsensitive) {
+		protected boolean eval(CmfValue.Type type, Object bigger, Object smallerOrEqual, boolean caseInsensitive) {
 			bigger = Comparison.canonicalizeCase(type, bigger, caseInsensitive);
 			smallerOrEqual = Comparison.canonicalizeCase(type, smallerOrEqual, caseInsensitive);
 			return (Comparison.compare(type, bigger, smallerOrEqual) >= 0);
@@ -46,19 +45,19 @@ public enum Comparison {
 	},
 	LT() {
 		@Override
-		protected boolean eval(CmfValueType type, Object smaller, Object bigger, boolean caseInsensitive) {
+		protected boolean eval(CmfValue.Type type, Object smaller, Object bigger, boolean caseInsensitive) {
 			return GT.eval(type, bigger, smaller, caseInsensitive);
 		}
 	},
 	LE() {
 		@Override
-		protected boolean eval(CmfValueType type, Object smallerOrEqual, Object bigger, boolean caseInsensitive) {
+		protected boolean eval(CmfValue.Type type, Object smallerOrEqual, Object bigger, boolean caseInsensitive) {
 			return GE.eval(type, bigger, smallerOrEqual, caseInsensitive);
 		}
 	},
 	SW() {
 		@Override
-		protected boolean eval(CmfValueType type, Object candidate, Object prefix, boolean caseInsensitive) {
+		protected boolean eval(CmfValue.Type type, Object candidate, Object prefix, boolean caseInsensitive) {
 			// Regardless of type, must treat them as strings
 			if ((candidate == null) || (prefix == null)) { return false; }
 			candidate = Comparison.canonicalizeCase(type, candidate, caseInsensitive);
@@ -68,7 +67,7 @@ public enum Comparison {
 	},
 	EW() {
 		@Override
-		protected boolean eval(CmfValueType type, Object candidate, Object suffix, boolean caseInsensitive) {
+		protected boolean eval(CmfValue.Type type, Object candidate, Object suffix, boolean caseInsensitive) {
 			// Regardless of type, must treat them as strings
 			if ((candidate == null) || (suffix == null)) { return false; }
 			candidate = Comparison.canonicalizeCase(type, candidate, caseInsensitive);
@@ -78,7 +77,7 @@ public enum Comparison {
 	},
 	CN() {
 		@Override
-		protected boolean eval(CmfValueType type, Object candidate, Object substring, boolean caseInsensitive) {
+		protected boolean eval(CmfValue.Type type, Object candidate, Object substring, boolean caseInsensitive) {
 			// Regardless of type, must treat them as strings
 			if ((candidate == null) || (substring == null)) { return false; }
 			candidate = Comparison.canonicalizeCase(type, candidate, caseInsensitive);
@@ -88,7 +87,7 @@ public enum Comparison {
 	},
 	RE() {
 		@Override
-		protected boolean eval(CmfValueType type, Object candidate, Object regex, boolean caseInsensitive) {
+		protected boolean eval(CmfValue.Type type, Object candidate, Object regex, boolean caseInsensitive) {
 			// Regardless of type, must treat them as strings
 			if ((candidate == null) || (regex == null)) { return false; }
 			int flags = (caseInsensitive ? Pattern.CASE_INSENSITIVE : 0);
@@ -97,8 +96,8 @@ public enum Comparison {
 	},
 	GLOB() {
 		@Override
-		protected boolean eval(CmfValueType type, Object candidate, Object comparand, boolean caseInsensitive) {
-			return RE.eval(CmfValueType.STRING, Tools.toString(candidate), Tools.globToRegex(Tools.toString(comparand)),
+		protected boolean eval(CmfValue.Type type, Object candidate, Object comparand, boolean caseInsensitive) {
+			return RE.eval(CmfValue.Type.STRING, Tools.toString(candidate), Tools.globToRegex(Tools.toString(comparand)),
 				caseInsensitive);
 		}
 	},
@@ -141,14 +140,14 @@ public enum Comparison {
 	//
 	;
 
-	private static Object canonicalizeCase(CmfValueType type, Object value, boolean caseInsensitive) {
-		if ((value == null) || (type != CmfValueType.STRING) || !caseInsensitive) { return value; }
+	private static Object canonicalizeCase(CmfValue.Type type, Object value, boolean caseInsensitive) {
+		if ((value == null) || (type != CmfValue.Type.STRING) || !caseInsensitive) { return value; }
 		return StringUtils.upperCase(String.valueOf(value));
 	}
 
 	public static Comparison DEFAULT = Comparison.EQ;
 
-	public static int compare(CmfValueType type, Object candidate, Object comparand) {
+	public static int compare(CmfValue.Type type, Object candidate, Object comparand) {
 		switch (type) {
 			case BOOLEAN:
 				return Tools.compare(Comparison.toBoolean(candidate), Comparison.toBoolean(comparand));
@@ -219,7 +218,7 @@ public enum Comparison {
 		if (str == null) { return null; }
 
 		try {
-			return new CmfValue(CmfValueType.DATETIME, str).asTime();
+			return new CmfValue(CmfValue.Type.DATETIME, str).asTime();
 		} catch (ParseException e) {
 			throw new RuntimeDynamicElementException(String.format("Could not parse the date string [%s]", str));
 		}
@@ -244,7 +243,7 @@ public enum Comparison {
 		}
 	}
 
-	protected boolean eval(CmfValueType type, Object candidate, Object comparand, boolean caseInsensitive) {
+	protected boolean eval(CmfValue.Type type, Object candidate, Object comparand, boolean caseInsensitive) {
 		// The default implementation only looks for the case-insensitive counterpart.
 		// This way we only have to provide the comparison implementation assuming case
 		// sensitivity.
@@ -267,7 +266,7 @@ public enum Comparison {
 		return (negated ^ comp.eval(type, candidate, comparand, caseInsensitive));
 	}
 
-	public final boolean check(CmfValueType type, Object candidate, Object comparand) {
+	public final boolean check(CmfValue.Type type, Object candidate, Object comparand) {
 		Objects.requireNonNull(comparand, "Must provide a non-null comparand value to check the candidate against");
 		return eval(type, candidate, comparand, false);
 	}

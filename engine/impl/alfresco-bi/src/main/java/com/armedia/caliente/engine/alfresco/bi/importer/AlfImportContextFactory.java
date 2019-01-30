@@ -14,17 +14,17 @@ import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
 public class AlfImportContextFactory
 	extends ImportContextFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine, File> {
 
-	private volatile Map<CmfArchetype, Map<String, String>> renameMap = null;
+	private volatile Map<CmfObject.Archetype, Map<String, String>> renameMap = null;
 
 	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
@@ -49,12 +49,12 @@ public class AlfImportContextFactory
 	}
 
 	@Override
-	protected AlfImportContext constructContext(String rootId, CmfArchetype rootType, AlfRoot session, int batchPosition) {
+	protected AlfImportContext constructContext(String rootId, CmfObject.Archetype rootType, AlfRoot session, int batchPosition) {
 		final CmfObjectStore<?, ?> store = getObjectStore();
 		if (this.renameMap == null) {
 			synchronized (this) {
 				if (this.renameMap == null) {
-					Map<CmfArchetype, Map<String, String>> m = null;
+					Map<CmfObject.Archetype, Map<String, String>> m = null;
 					try {
 						m = store.getRenameMappings();
 					} catch (CmfStorageException e) {
@@ -80,11 +80,11 @@ public class AlfImportContextFactory
 		return "1.0";
 	}
 
-	private Map<CmfArchetype, Map<String, String>> getRenameMap() throws ImportException {
+	private Map<CmfObject.Archetype, Map<String, String>> getRenameMap() throws ImportException {
 		if (this.renameMap == null) {
 			synchronized (this) {
 				if (this.renameMap == null) {
-					Map<CmfArchetype, Map<String, String>> m = null;
+					Map<CmfObject.Archetype, Map<String, String>> m = null;
 					final CmfObjectStore<?, ?> objectStore = getObjectStore();
 					try {
 						m = objectStore.getRenameMappings();
@@ -101,8 +101,8 @@ public class AlfImportContextFactory
 		return this.renameMap;
 	}
 
-	public final String getAlternateName(CmfArchetype type, String id) throws ImportException {
-		Map<CmfArchetype, Map<String, String>> renameMap = getRenameMap();
+	public final String getAlternateName(CmfObject.Archetype type, String id) throws ImportException {
+		Map<CmfObject.Archetype, Map<String, String>> renameMap = getRenameMap();
 		if ((renameMap == null) || renameMap.isEmpty()) { return null; }
 		Map<String, String> m = renameMap.get(type);
 		if ((m == null) || m.isEmpty()) { return null; }

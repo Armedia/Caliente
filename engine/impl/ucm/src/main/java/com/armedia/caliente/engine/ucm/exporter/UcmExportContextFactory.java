@@ -17,8 +17,8 @@ import com.armedia.caliente.engine.ucm.model.UcmModel;
 import com.armedia.caliente.engine.ucm.model.UcmRuntimeException;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
@@ -73,7 +73,7 @@ public class UcmExportContextFactory
 	}
 
 	@Override
-	protected UcmExportContext constructContext(String rootId, CmfArchetype rootType, UcmSession session,
+	protected UcmExportContext constructContext(String rootId, CmfObject.Archetype rootType, UcmSession session,
 		int batchPosition) {
 		return new UcmExportContext(this, rootId, rootType, session, getOutput(), getWarningTracker());
 	}

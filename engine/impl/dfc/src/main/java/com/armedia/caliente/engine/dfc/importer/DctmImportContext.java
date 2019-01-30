@@ -13,8 +13,8 @@ import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContext;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -28,7 +28,7 @@ public class DctmImportContext extends ImportContext<IDfSession, IDfValue, DctmI
 
 	private final DctmSpecialValues specialValues;
 
-	DctmImportContext(DctmImportContextFactory factory, CfgTools settings, String rootId, CmfArchetype rootType,
+	DctmImportContext(DctmImportContextFactory factory, CfgTools settings, String rootId, CmfObject.Archetype rootType,
 		IDfSession session, Logger output, WarningTracker warningTracker, Transformer transformer,
 		CmfAttributeTranslator<IDfValue> translator, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?, ?, ?> streamStore, int historyPosition) {

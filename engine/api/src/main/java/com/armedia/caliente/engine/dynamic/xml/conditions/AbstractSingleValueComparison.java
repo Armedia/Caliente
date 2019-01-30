@@ -5,12 +5,12 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfValue;
 
 @XmlTransient
 public abstract class AbstractSingleValueComparison extends AbstractExpressionComparison {
 
-	protected abstract CmfValueType getCandidateType(DynamicElementContext ctx);
+	protected abstract CmfValue.Type getCandidateType(DynamicElementContext ctx);
 
 	protected abstract Object getCandidateValue(DynamicElementContext ctx);
 
