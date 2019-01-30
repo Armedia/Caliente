@@ -81,6 +81,7 @@ final class ExportOperation {
 	}
 
 	synchronized long waitUntilCompleted(long timeout) throws InterruptedException {
+		if (this.completed) { return 0; }
 		if (Thread.currentThread() == this.creatorThread) {
 			throw new IllegalStateException("Can't wait on an operation from the thread that created it!!!");
 		}
