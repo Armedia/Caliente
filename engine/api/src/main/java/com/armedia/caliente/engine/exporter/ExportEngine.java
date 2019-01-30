@@ -387,7 +387,7 @@ public abstract class ExportEngine<//
 					}
 					try {
 						ctx.printf("Waiting for [%s] from %s (#%d created by %s)", requirement, logLabel,
-							status.getObjectNumber(), status.getCreatorThread());
+							status.getObjectNumber(), status.getCreatorThread().getName());
 						long waitTime = status.waitUntilCompleted();
 						ctx.printf("Waiting for [%s] from %s for %d ms", requirement, logLabel, waitTime);
 					} catch (InterruptedException e) {

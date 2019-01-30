@@ -8,20 +8,20 @@ final class ExportOperation {
 	private static final AtomicLong COUNTER = new AtomicLong(0);
 
 	final long objectNumber;
-	final String creatorThread;
+	final Thread creatorThread;
 	final ExportTarget target;
 	private final AtomicBoolean waiting = new AtomicBoolean(false);
 	private boolean completed = false;
 	private boolean success = false;
 
 	ExportOperation(ExportTarget target) {
-		this.creatorThread = Thread.currentThread().getName();
+		this.creatorThread = Thread.currentThread();
 		this.objectNumber = ExportOperation.COUNTER.getAndIncrement();
 		this.target = target;
 		this.completed = false;
 	}
 
-	String getCreatorThread() {
+	Thread getCreatorThread() {
 		return this.creatorThread;
 	}
 
@@ -46,6 +46,10 @@ final class ExportOperation {
 	}
 
 	synchronized void setCompleted(boolean success) {
+		if (Thread.currentThread() != this.creatorThread) {
+			throw new IllegalStateException(
+				"Can't mark an operation as completed from a thread that didn't create it!!!");
+		}
 		this.completed = true;
 		this.success |= success;
 		notify();
@@ -60,6 +64,9 @@ final class ExportOperation {
 	}
 
 	synchronized long waitUntilCompleted(long timeout) throws InterruptedException {
+		if (Thread.currentThread() == this.creatorThread) {
+			throw new IllegalStateException("Can't wait on an operation from the thread that created it!!!");
+		}
 		final long start = System.currentTimeMillis();
 		while (!this.completed) {
 			wait(timeout);
