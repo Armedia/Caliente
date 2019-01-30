@@ -28,9 +28,9 @@ import com.armedia.caliente.engine.exporter.ExportEngineListener;
 import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.exporter.ExportSetting;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
@@ -65,9 +65,9 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 		if (outcomes == null) {
 			outcomes = EnumSet.allOf(ExportResult.class);
 		}
-		Set<CmfType> types = commandValues.getEnums(CmfType.class, CfgTools.ignoreFailures(), CLIParam.manifest_types);
+		Set<CmfObject.Archetype> types = commandValues.getEnums(CmfObject.Archetype.class, CfgTools.ignoreFailures(), CLIParam.manifest_types);
 		if (types == null) {
-			types = EnumSet.allOf(CmfType.class);
+			types = EnumSet.allOf(CmfObject.Archetype.class);
 		}
 
 		final ExportCommandListener mainListener = new ExportCommandListener(this.console);
@@ -91,7 +91,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 
 		final Date start;
 		final Date end;
-		Map<CmfType, Long> summary = null;
+		Map<CmfObject.Archetype, Long> summary = null;
 		String exceptionReport = null;
 		final StringBuilder report = new StringBuilder();
 		try {
@@ -156,7 +156,7 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 		if (summary != null) {
 			report.append(String.format("%n%n%nExported Object Summary:%n")).append(StringUtils.repeat("=", 30));
 			long total = 0;
-			for (CmfType t : summary.keySet()) {
+			for (CmfObject.Archetype t : summary.keySet()) {
 				Long count = summary.get(t);
 				if ((count == null) || (count == 0)) {
 					continue;

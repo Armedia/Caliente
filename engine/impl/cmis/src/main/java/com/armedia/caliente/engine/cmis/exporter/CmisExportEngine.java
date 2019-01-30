@@ -30,9 +30,8 @@ import com.armedia.caliente.engine.exporter.ExportEngine;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -67,7 +66,7 @@ public class CmisExportEngine extends
 			throw new ExportException("Failed to find the cmis:objectId property as part of the query result");
 		}
 
-		CmfType type = null;
+		CmfObject.Archetype type = null;
 		PropertyData<?>[] objectTypes = {
 			r.getPropertyById(PropertyIds.OBJECT_TYPE_ID), r.getPropertyById(PropertyIds.BASE_TYPE_ID)
 		};
@@ -139,10 +138,10 @@ public class CmisExportEngine extends
 		CmisExportDelegateFactory factory, String searchKey) throws Exception {
 		try {
 			CmisObject obj = session.getObject(searchKey);
-			CmfType type = decodeType(obj.getBaseType());
+			CmfObject.Archetype type = decodeType(obj.getBaseType());
 
 			// Not a folder, so no recursion
-			if (type != CmfType.FOLDER) { return Stream.of(new ExportTarget(type, obj.getId(), searchKey)); }
+			if (type != CmfObject.Archetype.FOLDER) { return Stream.of(new ExportTarget(type, obj.getId(), searchKey)); }
 
 			// RECURSE!!!
 			return findExportTargetsByPath(session, configuration, factory, Folder.class.cast(obj).getPath());
@@ -151,12 +150,12 @@ public class CmisExportEngine extends
 		}
 	}
 
-	protected CmfType decodeType(ObjectType type) throws ExportException {
+	protected CmfObject.Archetype decodeType(ObjectType type) throws ExportException {
 		if (!type.isBaseType()) { return decodeType(type.getBaseType()); }
 		return decodeType(type.getId());
 	}
 
-	protected CmfType decodeType(String type) throws ExportException {
+	protected CmfObject.Archetype decodeType(String type) throws ExportException {
 		final BaseTypeId id;
 		try {
 			id = BaseTypeId.fromValue(type);
@@ -166,16 +165,16 @@ public class CmisExportEngine extends
 
 		switch (id) {
 			case CMIS_DOCUMENT:
-				return CmfType.DOCUMENT;
+				return CmfObject.Archetype.DOCUMENT;
 			case CMIS_FOLDER:
-				return CmfType.FOLDER;
+				return CmfObject.Archetype.FOLDER;
 			default:
 				return null;
 		}
 	}
 
 	@Override
-	protected CmfValue getValue(CmfDataType type, Object value) {
+	protected CmfValue getValue(CmfValue.Type type, Object value) {
 		return CmfValue.newValue(type, value);
 	}
 

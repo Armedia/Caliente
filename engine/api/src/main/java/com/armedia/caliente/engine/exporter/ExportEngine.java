@@ -44,7 +44,6 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfObjectStore.LockStatus;
 import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PooledWorkers;
@@ -161,12 +160,12 @@ public abstract class ExportEngine<//
 		this.supportsMultipleSources = supportsMultipleSources;
 	}
 
-	private ExportOperation getOrCreateExportOperation(ExportTarget target,
+	private ExportOperation getOrCreateExportOperation(ExportTarget target, ExportTarget referrent,
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) {
 		return ConcurrentUtils.createIfAbsentUnchecked(statusMap, target, new ConcurrentInitializer<ExportOperation>() {
 			@Override
 			public ExportOperation get() {
-				return new ExportOperation(target);
+				return new ExportOperation(target, referrent);
 			}
 		});
 	}
@@ -179,7 +178,7 @@ public abstract class ExportEngine<//
 		try {
 			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
 
-			final CmfType type = target.getType();
+			final CmfObject.Archetype type = target.getType();
 			final String id = target.getId();
 			final String objectLabel = sourceObject.getLabel();
 			final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
@@ -196,7 +195,7 @@ public abstract class ExportEngine<//
 					case ALREADY_LOCKED:
 						// If the object is already locked, then we HAVE to have this created, so we
 						// do this early on.
-						getOrCreateExportOperation(target, statusMap);
+						getOrCreateExportOperation(target, referrent, statusMap);
 						// fall-through
 					case ALREADY_FAILED:
 					case ALREADY_STORED:
@@ -258,7 +257,7 @@ public abstract class ExportEngine<//
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
 
-		final CmfType type = target.getType();
+		final CmfObject.Archetype type = target.getType();
 		final String id = target.getId();
 		final String objectLabel = sourceObject.getLabel();
 		final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
@@ -274,7 +273,7 @@ public abstract class ExportEngine<//
 		final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
 
 		// To make sure other threads don't work on this same object
-		final ExportOperation thisStatus = getOrCreateExportOperation(target, statusMap);
+		final ExportOperation thisStatus = getOrCreateExportOperation(target, referrent, statusMap);
 
 		boolean success = false;
 		if (referrent != null) {
@@ -386,8 +385,9 @@ public abstract class ExportEngine<//
 							String.format("No export status found for requirement [%s] of %s", requirement, logLabel));
 					}
 					try {
-						ctx.printf("Waiting for [%s] from %s (#%d created by %s)", requirement, logLabel,
-							status.getObjectNumber(), status.getCreatorThread().getName());
+						ctx.printf("Waiting for [%s] from %s (#%d created by %s from %s)", requirement, logLabel,
+							status.getObjectNumber(), status.getCreatorThread().getName(),
+							status.getReferrentDescription());
 						long waitTime = status.waitUntilCompleted();
 						ctx.printf("Waiting for [%s] from %s for %d ms", requirement, logLabel, waitTime);
 					} catch (InterruptedException e) {
@@ -677,7 +677,7 @@ public abstract class ExportEngine<//
 			public void process(SessionWrapper<SESSION> session, ExportTarget target) throws Exception {
 				final SESSION s = session.getWrapped();
 
-				CmfType nextType = target.getType();
+				CmfObject.Archetype nextType = target.getType();
 				final String nextId = target.getId();
 				final String nextKey = target.getSearchKey();
 
@@ -852,7 +852,7 @@ public abstract class ExportEngine<//
 		} finally {
 			baseSession.close(false);
 
-			Map<CmfType, Long> summary = Collections.emptyMap();
+			Map<CmfObject.Archetype, Long> summary = Collections.emptyMap();
 			try {
 				summary = objectStore.getStoredObjectTypes();
 			} catch (CmfStorageException e) {

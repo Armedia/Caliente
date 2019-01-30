@@ -14,7 +14,6 @@ import com.armedia.caliente.engine.exporter.ExportState;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectSearchSpec;
-import com.armedia.caliente.store.CmfType;
 
 public class ExportCommandListener extends AbstractCommandListener implements ExportEngineListener {
 
@@ -126,13 +125,13 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	}
 
 	@Override
-	public final void exportFinished(UUID jobId, Map<CmfType, Long> summary) {
+	public final void exportFinished(UUID jobId, Map<CmfObject.Archetype, Long> summary) {
 		showProgress(true);
 		this.console.info("");
 		this.console.info("Export Summary");
 		this.console.info("");
 		final String format = "%-16s : %12d";
-		for (CmfType t : CmfType.values()) {
+		for (CmfObject.Archetype t : CmfObject.Archetype.values()) {
 			Long v = summary.get(t);
 			if ((v == null) || (v.longValue() == 0)) {
 				continue;

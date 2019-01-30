@@ -14,22 +14,21 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfType;
 
 public class ImportCommandListener extends AbstractCommandListener implements ImportEngineListener {
 
 	private final AtomicLong aggregateTotal = new AtomicLong(0);
 	private final AtomicLong aggregateCurrent = new AtomicLong(0);
 
-	private final Map<CmfType, Long> total = new HashMap<>();
-	private final Map<CmfType, AtomicLong> current = new HashMap<>();
-	private final Map<CmfType, AtomicLong> previous = new HashMap<>();
+	private final Map<CmfObject.Archetype, Long> total = new HashMap<>();
+	private final Map<CmfObject.Archetype, AtomicLong> current = new HashMap<>();
+	private final Map<CmfObject.Archetype, AtomicLong> previous = new HashMap<>();
 
 	public ImportCommandListener(Logger console) {
 		super(console);
 	}
 
-	private void showProgress(CmfType objectType) {
+	private void showProgress(CmfObject.Archetype objectType) {
 		final Double aggregateTotal = this.aggregateTotal.doubleValue();
 		final Double aggregateCurrent = this.aggregateCurrent.doubleValue();
 		final Double aggregatePct = (aggregateCurrent / aggregateTotal) * 100.0;
@@ -74,12 +73,12 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 	}
 
 	@Override
-	public final void importStarted(ImportState importState, Map<CmfType, Long> summary) {
+	public final void importStarted(ImportState importState, Map<CmfObject.Archetype, Long> summary) {
 		this.aggregateCurrent.set(0);
 		this.total.clear();
 		this.current.clear();
 		this.console.info("Import process started");
-		for (CmfType t : CmfType.values()) {
+		for (CmfObject.Archetype t : CmfObject.Archetype.values()) {
 			Long v = summary.get(t);
 			if ((v == null) || (v.longValue() == 0)) {
 				continue;
@@ -93,7 +92,7 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 	}
 
 	@Override
-	public final void objectTypeImportStarted(UUID jobId, CmfType objectType, long totalObjects) {
+	public final void objectTypeImportStarted(UUID jobId, CmfObject.Archetype objectType, long totalObjects) {
 		showProgress(objectType);
 		this.console.info(String.format("Object import started for %d %s objects", totalObjects, objectType.name()));
 	}
@@ -133,7 +132,7 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 	}
 
 	@Override
-	public final void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Long> counters) {
+	public final void objectTypeImportFinished(UUID jobId, CmfObject.Archetype objectType, Map<ImportResult, Long> counters) {
 		this.console.info(String.format("Finished importing %s objects", objectType.name()));
 		for (ImportResult r : ImportResult.values()) {
 			Long v = counters.get(r);
@@ -159,23 +158,23 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 	}
 
 	@Override
-	public void objectTierImportStarted(UUID jobId, CmfType objectType, int tier) {
+	public void objectTierImportStarted(UUID jobId, CmfObject.Archetype objectType, int tier) {
 		showProgress(objectType);
 	}
 
 	@Override
-	public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String historyId, int count) {
+	public void objectHistoryImportStarted(UUID jobId, CmfObject.Archetype objectType, String historyId, int count) {
 		showProgress(objectType);
 	}
 
 	@Override
-	public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String historyId,
+	public void objectHistoryImportFinished(UUID jobId, CmfObject.Archetype objectType, String historyId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 		showProgress(objectType);
 	}
 
 	@Override
-	public void objectTierImportFinished(UUID jobId, CmfType objectType, int tier, boolean failed) {
+	public void objectTierImportFinished(UUID jobId, CmfObject.Archetype objectType, int tier, boolean failed) {
 		showProgress(objectType);
 	}
 }

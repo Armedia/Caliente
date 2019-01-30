@@ -19,7 +19,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
@@ -93,7 +92,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 								// Find the column we're interested in
 								ResultSetMetaData md = rs.getMetaData();
 								final int columns = md.getColumnCount();
-								CmfDataType type = getMappedAttributeType(sqlAttributeName);
+								CmfValue.Type type = getMappedAttributeType(sqlAttributeName);
 								for (int i = 1; i <= columns; i++) {
 									String soughtColumnName = columnName;
 									String thisColumnName = md.getColumnName(i);
@@ -110,7 +109,7 @@ public class MetadataFromSQL extends MetadataReaderBase {
 										if (type == null) {
 											type = decodeSQLType(columnType);
 										}
-										if (type == CmfDataType.OTHER) { throw new Exception(String.format(
+										if (type == CmfValue.Type.OTHER) { throw new Exception(String.format(
 											"Unsupported data type [%s] for column [%s] (query = %s), searching for attribute [%s]",
 											md.getColumnTypeName(i), this.valueColumn, this.finalSql,
 											sqlAttributeName)); }

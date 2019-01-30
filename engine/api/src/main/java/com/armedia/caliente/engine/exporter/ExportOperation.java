@@ -3,30 +3,47 @@ package com.armedia.caliente.engine.exporter;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.armedia.caliente.store.CmfObjectSearchSpec;
+
 final class ExportOperation {
 
 	private static final AtomicLong COUNTER = new AtomicLong(0);
 
-	final long objectNumber;
-	final Thread creatorThread;
-	final ExportTarget target;
+	private final long objectNumber;
+	private final Thread creatorThread;
+	private final ExportTarget target;
+	private final CmfObjectSearchSpec referrent;
 	private final AtomicBoolean waiting = new AtomicBoolean(false);
 	private boolean completed = false;
 	private boolean success = false;
 
-	ExportOperation(ExportTarget target) {
+	ExportOperation(ExportTarget target, CmfObjectSearchSpec referrent) {
 		this.creatorThread = Thread.currentThread();
 		this.objectNumber = ExportOperation.COUNTER.getAndIncrement();
 		this.target = target;
+		this.referrent = referrent;
 		this.completed = false;
+	}
+
+	long getObjectNumber() {
+		return this.objectNumber;
 	}
 
 	Thread getCreatorThread() {
 		return this.creatorThread;
 	}
 
-	long getObjectNumber() {
-		return this.objectNumber;
+	ExportTarget getTarget() {
+		return this.target;
+	}
+
+	CmfObjectSearchSpec getReferrent() {
+		return this.referrent;
+	}
+
+	String getReferrentDescription() {
+		if (this.referrent == null) { return "direct search"; }
+		return String.format("%s[%s]", this.referrent.getType().name(), this.referrent.getId());
 	}
 
 	boolean isWaiting() {

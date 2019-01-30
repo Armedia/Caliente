@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfObject;
 
 public class DefaultImportEngineListener extends DefaultImportListener implements ImportEngineListener {
 
@@ -18,22 +18,22 @@ public class DefaultImportEngineListener extends DefaultImportListener implement
 	}
 
 	@Override
-	public final void importStarted(ImportState importState, Map<CmfType, Long> summary) {
+	public final void importStarted(ImportState importState, Map<CmfObject.Archetype, Long> summary) {
 		if (importState == null) { throw new IllegalArgumentException("Must provide a job import state"); }
 		this.jobStates.put(importState.jobId, importState);
 		importStartedImpl(importState, summary);
 
 	}
 
-	protected void importStartedImpl(ImportState importState, Map<CmfType, Long> summary) {
+	protected void importStartedImpl(ImportState importState, Map<CmfObject.Archetype, Long> summary) {
 	}
 
 	@Override
-	public void objectTypeImportStarted(UUID jobId, CmfType objectType, long totalObjects) {
+	public void objectTypeImportStarted(UUID jobId, CmfObject.Archetype objectType, long totalObjects) {
 	}
 
 	@Override
-	public void objectTypeImportFinished(UUID jobId, CmfType objectType, Map<ImportResult, Long> counters) {
+	public void objectTypeImportFinished(UUID jobId, CmfObject.Archetype objectType, Map<ImportResult, Long> counters) {
 	}
 
 	@Override

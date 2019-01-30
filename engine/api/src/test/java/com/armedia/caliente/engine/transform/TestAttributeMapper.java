@@ -12,14 +12,14 @@ import java.util.TreeSet;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualTreeBidiMap;
 
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValueMapper;
 
 public class TestAttributeMapper extends CmfValueMapper {
 
-	private final Map<CmfType, Map<String, BidiMap<String, String>>> mappings = new EnumMap<>(CmfType.class);
+	private final Map<CmfObject.Archetype, Map<String, BidiMap<String, String>>> mappings = new EnumMap<>(CmfObject.Archetype.class);
 
-	private Map<String, BidiMap<String, String>> getMappingsForType(CmfType type) {
+	private Map<String, BidiMap<String, String>> getMappingsForType(CmfObject.Archetype type) {
 		Objects.requireNonNull(type, "Must provide a type to retrieve the mappings for");
 		Map<String, BidiMap<String, String>> typeMappings = this.mappings.get(type);
 		if (typeMappings == null) {
@@ -29,7 +29,7 @@ public class TestAttributeMapper extends CmfValueMapper {
 		return typeMappings;
 	}
 
-	private BidiMap<String, String> getNamedMappingsForType(CmfType type, String name) {
+	private BidiMap<String, String> getNamedMappingsForType(CmfObject.Archetype type, String name) {
 		Objects.requireNonNull(name, "Must provide a name for the mapping sought");
 		Map<String, BidiMap<String, String>> typeMappings = getMappingsForType(type);
 		BidiMap<String, String> namedMappings = typeMappings.get(name);
@@ -41,33 +41,33 @@ public class TestAttributeMapper extends CmfValueMapper {
 	}
 
 	@Override
-	public Mapping getTargetMapping(CmfType objectType, String mappingName, String sourceValue) {
+	public Mapping getTargetMapping(CmfObject.Archetype objectType, String mappingName, String sourceValue) {
 		BidiMap<String, String> mappings = getNamedMappingsForType(objectType, mappingName);
 		if (!mappings.containsKey(sourceValue)) { return null; }
 		return newMapping(objectType, mappingName, sourceValue, mappings.get(sourceValue));
 	}
 
 	@Override
-	public Collection<Mapping> getSourceMapping(CmfType objectType, String mappingName, String targetValue) {
+	public Collection<Mapping> getSourceMapping(CmfObject.Archetype objectType, String mappingName, String targetValue) {
 		BidiMap<String, String> mappings = getNamedMappingsForType(objectType, mappingName).inverseBidiMap();
 		if (!mappings.containsKey(targetValue)) { return null; }
 		return Collections.singleton(newMapping(objectType, mappingName, mappings.get(targetValue), targetValue));
 	}
 
 	@Override
-	public Map<String, String> getMappings(CmfType objectType, String mappingName) {
+	public Map<String, String> getMappings(CmfObject.Archetype objectType, String mappingName) {
 		return new TreeMap<>(getNamedMappingsForType(objectType, mappingName));
 	}
 
 	@Override
-	public Set<String> getAvailableMappings(CmfType objectType) {
+	public Set<String> getAvailableMappings(CmfObject.Archetype objectType) {
 		return new TreeSet<>(getMappingsForType(objectType).keySet());
 	}
 
 	@Override
-	public Map<CmfType, Set<String>> getAvailableMappings() {
-		Map<CmfType, Set<String>> ret = new EnumMap<>(CmfType.class);
-		for (CmfType t : this.mappings.keySet()) {
+	public Map<CmfObject.Archetype, Set<String>> getAvailableMappings() {
+		Map<CmfObject.Archetype, Set<String>> ret = new EnumMap<>(CmfObject.Archetype.class);
+		for (CmfObject.Archetype t : this.mappings.keySet()) {
 			Set<String> s = null;
 			if (this.mappings.containsKey(t)) {
 				s = getAvailableMappings(t);
@@ -80,7 +80,7 @@ public class TestAttributeMapper extends CmfValueMapper {
 	}
 
 	@Override
-	protected Mapping createMapping(CmfType objectType, String mappingName, String sourceValue, String targetValue) {
+	protected Mapping createMapping(CmfObject.Archetype objectType, String mappingName, String sourceValue, String targetValue) {
 		if ((sourceValue == null) || (targetValue == null)) {
 			// This is a removal...
 			if ((sourceValue == null) && (targetValue == null)) {

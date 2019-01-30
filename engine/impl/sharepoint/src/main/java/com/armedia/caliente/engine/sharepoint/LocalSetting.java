@@ -1,31 +1,31 @@
 package com.armedia.caliente.engine.sharepoint;
 
 import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 
 public enum LocalSetting implements TransferEngineSetting {
 	//
-	ROOT(CmfDataType.STRING),
-	COPY_CONTENT(CmfDataType.BOOLEAN, true),
-	INCLUDE_ALL_VERSIONS(CmfDataType.BOOLEAN, false),
-	FAIL_ON_COLLISIONS(CmfDataType.BOOLEAN, true),
+	ROOT(CmfValue.Type.STRING),
+	COPY_CONTENT(CmfValue.Type.BOOLEAN, true),
+	INCLUDE_ALL_VERSIONS(CmfValue.Type.BOOLEAN, false),
+	FAIL_ON_COLLISIONS(CmfValue.Type.BOOLEAN, true),
 	//
 	;
 
 	private final String label;
 	private final Object defaultValue;
-	private final CmfDataType type;
+	private final CmfValue.Type type;
 	private final boolean required;
 
-	private LocalSetting(CmfDataType type) {
+	private LocalSetting(CmfValue.Type type) {
 		this(type, null);
 	}
 
-	private LocalSetting(CmfDataType type, Object defaultValue) {
+	private LocalSetting(CmfValue.Type type, Object defaultValue) {
 		this(type, defaultValue, false);
 	}
 
-	private LocalSetting(CmfDataType type, Object defaultValue, boolean required) {
+	private LocalSetting(CmfValue.Type type, Object defaultValue, boolean required) {
 		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
 		this.type = type;
@@ -43,7 +43,7 @@ public enum LocalSetting implements TransferEngineSetting {
 	}
 
 	@Override
-	public CmfDataType getType() {
+	public CmfValue.Type getType() {
 		return this.type;
 	}
 

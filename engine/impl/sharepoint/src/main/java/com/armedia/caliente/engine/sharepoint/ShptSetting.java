@@ -1,32 +1,32 @@
 package com.armedia.caliente.engine.sharepoint;
 
 import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 
 public enum ShptSetting implements TransferEngineSetting {
 	//
-	URL(CmfDataType.STRING),
-	USER(CmfDataType.STRING),
-	PASSWORD(CmfDataType.STRING),
-	DOMAIN(CmfDataType.STRING),
-	EXCLUDE_EMPTY_FOLDERS(CmfDataType.STRING, "excludeEmptyFolders", Boolean.FALSE),
+	URL(CmfValue.Type.STRING),
+	USER(CmfValue.Type.STRING),
+	PASSWORD(CmfValue.Type.STRING),
+	DOMAIN(CmfValue.Type.STRING),
+	EXCLUDE_EMPTY_FOLDERS(CmfValue.Type.STRING, "excludeEmptyFolders", Boolean.FALSE),
 	//
 	;
 
 	private final String label;
-	private final CmfDataType type;
+	private final CmfValue.Type type;
 	private final Object defaultValue;
 	private final boolean required;
 
-	private ShptSetting(CmfDataType type) {
+	private ShptSetting(CmfValue.Type type) {
 		this(type, null);
 	}
 
-	private ShptSetting(CmfDataType type, Object defaultValue) {
+	private ShptSetting(CmfValue.Type type, Object defaultValue) {
 		this(type, defaultValue, false);
 	}
 
-	private ShptSetting(CmfDataType type, Object defaultValue, boolean required) {
+	private ShptSetting(CmfValue.Type type, Object defaultValue, boolean required) {
 		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
 		this.type = type;
@@ -44,7 +44,7 @@ public enum ShptSetting implements TransferEngineSetting {
 	}
 
 	@Override
-	public CmfDataType getType() {
+	public CmfValue.Type getType() {
 		return this.type;
 	}
 

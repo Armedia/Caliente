@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import com.armedia.caliente.engine.TransferListener;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfType;
 
 public interface ImportListener extends TransferListener {
 
@@ -19,7 +18,7 @@ public interface ImportListener extends TransferListener {
 	 * @param objectType
 	 * @param tier
 	 */
-	public void objectTierImportStarted(UUID jobId, CmfType objectType, int tier);
+	public void objectTierImportStarted(UUID jobId, CmfObject.Archetype objectType, int tier);
 
 	/**
 	 * <p>
@@ -31,7 +30,7 @@ public interface ImportListener extends TransferListener {
 	 * @param historyId
 	 * @param count
 	 */
-	public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String historyId, int count);
+	public void objectHistoryImportStarted(UUID jobId, CmfObject.Archetype objectType, String historyId, int count);
 
 	/**
 	 * <p>
@@ -74,7 +73,7 @@ public interface ImportListener extends TransferListener {
 	 * @param outcomes
 	 * @param failed
 	 */
-	public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String historyId,
+	public void objectHistoryImportFinished(UUID jobId, CmfObject.Archetype objectType, String historyId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed);
 
 	/**
@@ -87,5 +86,5 @@ public interface ImportListener extends TransferListener {
 	 * @param tier
 	 * @param failed
 	 */
-	public void objectTierImportFinished(UUID jobId, CmfType objectType, int tier, boolean failed);
+	public void objectTierImportFinished(UUID jobId, CmfObject.Archetype objectType, int tier, boolean failed);
 }

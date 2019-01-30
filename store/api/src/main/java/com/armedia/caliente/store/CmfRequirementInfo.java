@@ -12,7 +12,7 @@ public class CmfRequirementInfo<T extends Enum<T>> extends CmfObjectRef {
 		this.data = data;
 	}
 
-	public CmfRequirementInfo(CmfType type, String id, T status, String data) {
+	public CmfRequirementInfo(CmfObject.Archetype type, String id, T status, String data) {
 		super(type, id);
 		this.status = status;
 		this.data = data;

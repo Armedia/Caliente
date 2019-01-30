@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.dynamic.xml.Cardinality;
 import com.armedia.caliente.engine.dynamic.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -84,7 +84,7 @@ public abstract class AbstractAttributeCalientePropertyVariableValueCheck extend
 
 		final int valueCount = candidate.getSize();
 		if (valueCount > 0) {
-			final CmfDataType type = candidate.getType();
+			final CmfValue.Type type = candidate.getType();
 			switch (getCardinality()) {
 				case ALL:
 					// Check against all attribute values, until one succeeds

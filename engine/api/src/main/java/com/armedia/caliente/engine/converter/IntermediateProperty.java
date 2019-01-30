@@ -9,8 +9,8 @@ import java.util.function.Supplier;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfEncodeableName;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -19,63 +19,63 @@ import com.armedia.commons.utilities.Tools;
  */
 public enum IntermediateProperty implements Supplier<String>, CmfEncodeableName {
 	// CMIS-inspired properties
-	PATH(PropertyIds.PATH, CmfDataType.STRING),
-	PARENT_ID(PropertyIds.PARENT_ID, CmfDataType.ID),
-	CONTENT_STREAM_ID(PropertyIds.CONTENT_STREAM_ID, CmfDataType.STRING),
+	PATH(PropertyIds.PATH, CmfValue.Type.STRING),
+	PARENT_ID(PropertyIds.PARENT_ID, CmfValue.Type.ID),
+	CONTENT_STREAM_ID(PropertyIds.CONTENT_STREAM_ID, CmfValue.Type.STRING),
 
 	// Non-CMIS properties
-	PARENT_TREE_IDS(CmfDataType.STRING),
-	LATEST_PARENT_TREE_IDS(CmfDataType.STRING),
-	ACL_ID(CmfDataType.ID),
-	ACL_INHERITANCE(CmfDataType.BOOLEAN),
-	ACL_OWNER(CmfDataType.STRING),
-	ACL_OBJECT_ID(CmfDataType.STRING),
-	ACL_ACCESSOR_NAME(CmfDataType.STRING),
-	ACL_ACCESSOR_TYPE(CmfDataType.STRING),
-	ACL_ACCESSOR_ACTIONS(CmfDataType.STRING),
-	VERSION_TREE_ROOT(CmfDataType.BOOLEAN),
-	VERSION_COUNT(CmfDataType.INTEGER),
-	VERSION_HEAD_INDEX(CmfDataType.INTEGER),
-	VERSION_INDEX(CmfDataType.INTEGER),
-	VERSION_PATCHES(CmfDataType.STRING),
-	IS_NEWEST_VERSION(CmfDataType.BOOLEAN),
-	IS_UNFILED(CmfDataType.BOOLEAN),
-	PATCH_ANTECEDENT(CmfDataType.STRING),
-	USERS_WITH_DEFAULT_FOLDER(CmfDataType.STRING),
-	USERS_DEFAULT_FOLDER_PATHS(CmfDataType.STRING),
-	USERS_WITH_DEFAULT_ACL(CmfDataType.STRING),
-	USERS_WITH_DEFAULT_GROUP(CmfDataType.STRING),
-	GROUPS_WITH_DEFAULT_FOLDER(CmfDataType.STRING),
-	ORIG_ATTR_NAME(CmfDataType.STRING),
-	MAPPED_ATTR_NAME(CmfDataType.STRING),
-	VDOC_HISTORY(CmfDataType.BOOLEAN),
-	VDOC_MEMBER(CmfDataType.STRING),
-	DEFAULT_ACL(CmfDataType.STRING),
-	DEFAULT_ASPECTS(CmfDataType.STRING),
-	DEFAULT_STORAGE(CmfDataType.STRING),
-	IS_REFERENCE(CmfDataType.BOOLEAN),
-	REF_TARGET(CmfDataType.STRING),
-	REF_VERSION(CmfDataType.STRING),
+	PARENT_TREE_IDS(CmfValue.Type.STRING),
+	LATEST_PARENT_TREE_IDS(CmfValue.Type.STRING),
+	ACL_ID(CmfValue.Type.ID),
+	ACL_INHERITANCE(CmfValue.Type.BOOLEAN),
+	ACL_OWNER(CmfValue.Type.STRING),
+	ACL_OBJECT_ID(CmfValue.Type.STRING),
+	ACL_ACCESSOR_NAME(CmfValue.Type.STRING),
+	ACL_ACCESSOR_TYPE(CmfValue.Type.STRING),
+	ACL_ACCESSOR_ACTIONS(CmfValue.Type.STRING),
+	VERSION_TREE_ROOT(CmfValue.Type.BOOLEAN),
+	VERSION_COUNT(CmfValue.Type.INTEGER),
+	VERSION_HEAD_INDEX(CmfValue.Type.INTEGER),
+	VERSION_INDEX(CmfValue.Type.INTEGER),
+	VERSION_PATCHES(CmfValue.Type.STRING),
+	IS_NEWEST_VERSION(CmfValue.Type.BOOLEAN),
+	IS_UNFILED(CmfValue.Type.BOOLEAN),
+	PATCH_ANTECEDENT(CmfValue.Type.STRING),
+	USERS_WITH_DEFAULT_FOLDER(CmfValue.Type.STRING),
+	USERS_DEFAULT_FOLDER_PATHS(CmfValue.Type.STRING),
+	USERS_WITH_DEFAULT_ACL(CmfValue.Type.STRING),
+	USERS_WITH_DEFAULT_GROUP(CmfValue.Type.STRING),
+	GROUPS_WITH_DEFAULT_FOLDER(CmfValue.Type.STRING),
+	ORIG_ATTR_NAME(CmfValue.Type.STRING),
+	MAPPED_ATTR_NAME(CmfValue.Type.STRING),
+	VDOC_HISTORY(CmfValue.Type.BOOLEAN),
+	VDOC_MEMBER(CmfValue.Type.STRING),
+	DEFAULT_ACL(CmfValue.Type.STRING),
+	DEFAULT_ASPECTS(CmfValue.Type.STRING),
+	DEFAULT_STORAGE(CmfValue.Type.STRING),
+	IS_REFERENCE(CmfValue.Type.BOOLEAN),
+	REF_TARGET(CmfValue.Type.STRING),
+	REF_VERSION(CmfValue.Type.STRING),
 	//
 	;
 
 	private final String name;
-	public final CmfDataType type;
+	public final CmfValue.Type type;
 	public final boolean repeating;
 
-	private IntermediateProperty(CmfDataType type) {
+	private IntermediateProperty(CmfValue.Type type) {
 		this(null, type, false);
 	}
 
-	private IntermediateProperty(String propertyId, CmfDataType type) {
+	private IntermediateProperty(String propertyId, CmfValue.Type type) {
 		this(propertyId, type, false);
 	}
 
-	private IntermediateProperty(CmfDataType type, boolean repeating) {
+	private IntermediateProperty(CmfValue.Type type, boolean repeating) {
 		this(null, type, repeating);
 	}
 
-	private IntermediateProperty(String propertyId, CmfDataType type, boolean repeating) {
+	private IntermediateProperty(String propertyId, CmfValue.Type type, boolean repeating) {
 		this.name = MappingManager.generateMapping(propertyId, name());
 		this.type = type;
 		this.repeating = repeating;

@@ -1,28 +1,28 @@
 package com.armedia.caliente.engine.cmis;
 
 import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 
 public enum CmisSetting implements TransferEngineSetting {
 	//
-	EXPORT_PAGE_SIZE(CmfDataType.INTEGER, 100),
+	EXPORT_PAGE_SIZE(CmfValue.Type.INTEGER, 100),
 	//
 	;
 
 	private final String label;
 	private final Object defaultValue;
-	private final CmfDataType type;
+	private final CmfValue.Type type;
 	private final boolean required;
 
-	private CmisSetting(CmfDataType type) {
+	private CmisSetting(CmfValue.Type type) {
 		this(type, null);
 	}
 
-	private CmisSetting(CmfDataType type, Object defaultValue) {
+	private CmisSetting(CmfValue.Type type, Object defaultValue) {
 		this(type, defaultValue, false);
 	}
 
-	private CmisSetting(CmfDataType type, Object defaultValue, boolean required) {
+	private CmisSetting(CmfValue.Type type, Object defaultValue, boolean required) {
 		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
 		this.type = type;
@@ -40,7 +40,7 @@ public enum CmisSetting implements TransferEngineSetting {
 	}
 
 	@Override
-	public CmfDataType getType() {
+	public CmfValue.Type getType() {
 		return this.type;
 	}
 

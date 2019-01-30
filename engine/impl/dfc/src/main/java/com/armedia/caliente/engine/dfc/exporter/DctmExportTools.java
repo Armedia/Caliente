@@ -4,7 +4,7 @@ import com.armedia.caliente.engine.dfc.DctmAttributes;
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportTarget;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfCollection;
@@ -74,7 +74,7 @@ public class DctmExportTools {
 				}
 			}
 		}
-		CmfType objectType = null;
+		CmfObject.Archetype objectType = null;
 		if (dctmType != null) {
 			objectType = dctmType.getStoredObjectType();
 		}
@@ -109,7 +109,7 @@ public class DctmExportTools {
 				DfUtils.closeQuietly(c);
 			}
 		}
-		CmfType objectType = null;
+		CmfObject.Archetype objectType = null;
 		if (dctmType != null) {
 			objectType = dctmType.getStoredObjectType();
 		}

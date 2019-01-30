@@ -20,9 +20,8 @@ import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
+import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -38,14 +37,14 @@ public class CheckExpression extends AbstractComparisonCheck {
 	protected Expression right;
 
 	@XmlAttribute(name = "type")
-	@XmlJavaTypeAdapter(CmfDataTypeAdapter.class)
-	protected CmfDataType type;
+	@XmlJavaTypeAdapter(CmfValueTypeAdapter.class)
+	protected CmfValue.Type type;
 
-	public final CmfDataType getType() {
-		return Tools.coalesce(this.type, CmfDataType.STRING);
+	public final CmfValue.Type getType() {
+		return Tools.coalesce(this.type, CmfValue.Type.STRING);
 	}
 
-	public final void setType(CmfDataType type) {
+	public final void setType(CmfValue.Type type) {
 		this.type = type;
 	}
 
@@ -65,7 +64,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 		this.right = value;
 	}
 
-	private Object castTo(CmfDataType type, Object object) throws ConditionException {
+	private Object castTo(CmfValue.Type type, Object object) throws ConditionException {
 		if (object == null) { return null; }
 		switch (type) {
 			case BOOLEAN:
@@ -134,7 +133,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 
 	@Override
 	public boolean check(DynamicElementContext ctx) throws ConditionException {
-		final CmfDataType type = getType();
+		final CmfValue.Type type = getType();
 		Expression leftExp = getLeft();
 		Object leftVal = ConditionTools.eval(leftExp, ctx);
 		Expression rightExp = getRight();

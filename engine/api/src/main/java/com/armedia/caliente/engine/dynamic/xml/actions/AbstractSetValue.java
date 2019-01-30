@@ -14,8 +14,8 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
+import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -25,8 +25,8 @@ public abstract class AbstractSetValue extends ConditionalAction {
 	protected Expression name;
 
 	@XmlElement(name = "type", required = false)
-	@XmlJavaTypeAdapter(CmfDataTypeAdapter.class)
-	protected CmfDataType type;
+	@XmlJavaTypeAdapter(CmfValueTypeAdapter.class)
+	protected CmfValue.Type type;
 
 	@XmlElement(name = "value", required = true)
 	protected Expression value;
@@ -39,11 +39,11 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		this.name = value;
 	}
 
-	public CmfDataType getType() {
-		return Tools.coalesce(this.type, CmfDataType.STRING);
+	public CmfValue.Type getType() {
+		return Tools.coalesce(this.type, CmfValue.Type.STRING);
 	}
 
-	public void setDataType(CmfDataType value) {
+	public void setDataType(CmfValue.Type value) {
 		this.type = value;
 	}
 
@@ -55,7 +55,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		this.value = value;
 	}
 
-	protected abstract DynamicValue createValue(DynamicElementContext ctx, String name, CmfDataType type,
+	protected abstract DynamicValue createValue(DynamicElementContext ctx, String name, CmfValue.Type type,
 		boolean multivalue);
 
 	private Iterable<?> toIterable(Object o) {
@@ -83,7 +83,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 		Object name = Tools.toString(ActionTools.eval(getName(), ctx));
 		if (name == null) { throw new ActionException("No name expression given for variable definition"); }
 
-		final CmfDataType type = getType();
+		final CmfValue.Type type = getType();
 		final Object value = ActionTools.eval(getValue(), ctx);
 		final boolean repeating = (Iterable.class.isInstance(value) || ((value != null) && value.getClass().isArray()));
 		final DynamicValue variable = createValue(ctx, String.valueOf(name), type, repeating);

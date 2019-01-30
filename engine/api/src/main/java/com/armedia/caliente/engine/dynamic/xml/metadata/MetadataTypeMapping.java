@@ -6,8 +6,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
+import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataTypeMapping.t", propOrder = {
@@ -19,8 +19,8 @@ public class MetadataTypeMapping {
 	protected String name;
 
 	@XmlElement(name = "type", required = true)
-	@XmlJavaTypeAdapter(CmfDataTypeAdapter.class)
-	protected CmfDataType type;
+	@XmlJavaTypeAdapter(CmfValueTypeAdapter.class)
+	protected CmfValue.Type type;
 
 	public String getName() {
 		return this.name;
@@ -30,11 +30,11 @@ public class MetadataTypeMapping {
 		this.name = name;
 	}
 
-	public CmfDataType getType() {
+	public CmfValue.Type getType() {
 		return this.type;
 	}
 
-	public void setType(CmfDataType type) {
+	public void setType(CmfValue.Type type) {
 		this.type = type;
 	}
 }

@@ -1,32 +1,32 @@
 package com.armedia.caliente.engine.xml.common;
 
 import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 
 public enum XmlSetting implements TransferEngineSetting {
 	//
-	ROOT(CmfDataType.STRING),
-	DB(CmfDataType.STRING),
-	CONTENT(CmfDataType.STRING),
-	AGGREGATE_FOLDERS(CmfDataType.BOOLEAN, false),
-	AGGREGATE_DOCUMENTS(CmfDataType.BOOLEAN, false),
+	ROOT(CmfValue.Type.STRING),
+	DB(CmfValue.Type.STRING),
+	CONTENT(CmfValue.Type.STRING),
+	AGGREGATE_FOLDERS(CmfValue.Type.BOOLEAN, false),
+	AGGREGATE_DOCUMENTS(CmfValue.Type.BOOLEAN, false),
 	//
 	;
 
 	private final String label;
 	private final Object defaultValue;
-	private final CmfDataType type;
+	private final CmfValue.Type type;
 	private final boolean required;
 
-	private XmlSetting(CmfDataType type) {
+	private XmlSetting(CmfValue.Type type) {
 		this(type, null);
 	}
 
-	private XmlSetting(CmfDataType type, Object defaultValue) {
+	private XmlSetting(CmfValue.Type type, Object defaultValue) {
 		this(type, defaultValue, false);
 	}
 
-	private XmlSetting(CmfDataType type, Object defaultValue, boolean required) {
+	private XmlSetting(CmfValue.Type type, Object defaultValue, boolean required) {
 		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
 		this.type = type;
@@ -44,7 +44,7 @@ public enum XmlSetting implements TransferEngineSetting {
 	}
 
 	@Override
-	public CmfDataType getType() {
+	public CmfValue.Type getType() {
 		return this.type;
 	}
 

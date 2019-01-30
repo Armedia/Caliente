@@ -24,7 +24,6 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
@@ -106,9 +105,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		if (!super.marshal(ctx, object)) { return false; }
 		if (this.antecedentId != null) {
 			CmfAttribute<CmfValue> antecedentId = new CmfAttribute<>(CmisCustomAttributes.VERSION_ANTECEDENT_ID.name,
-				CmfDataType.ID, false);
+				CmfValue.Type.ID, false);
 			try {
-				antecedentId.setValue(new CmfValue(CmfDataType.ID, Object.class.cast(this.antecedentId)));
+				antecedentId.setValue(new CmfValue(CmfValue.Type.ID, Object.class.cast(this.antecedentId)));
 			} catch (ParseException e) {
 				throw new ExportException(String.format("Failed to create an object ID value for [%s] for %s",
 					this.antecedentId, getType(), getLabel(), getObjectId()));
@@ -116,12 +115,12 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 			object.setAttribute(antecedentId);
 		}
 		CmfAttribute<CmfValue> current = new CmfAttribute<>(IntermediateAttribute.IS_LATEST_VERSION,
-			CmfDataType.BOOLEAN, false);
+			CmfValue.Type.BOOLEAN, false);
 		current.setValue(new CmfValue(this.object.isLatestVersion()));
 		object.setAttribute(current);
 
 		CmfProperty<CmfValue> versionTreeRoot = new CmfProperty<>(IntermediateProperty.VERSION_TREE_ROOT,
-			CmfDataType.BOOLEAN, false);
+			CmfValue.Type.BOOLEAN, false);
 		versionTreeRoot.setValue(
 			new CmfValue((this.antecedentId == null) || ctx.getSettings().getBoolean(TransferSetting.LATEST_ONLY)));
 		object.setProperty(versionTreeRoot);

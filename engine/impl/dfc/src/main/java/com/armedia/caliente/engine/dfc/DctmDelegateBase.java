@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.TransferEngine;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfObject;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -17,7 +17,7 @@ public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferE
 	private final DctmObjectType type;
 	private final E engine;
 
-	protected DctmDelegateBase(E engine, CmfType type) {
+	protected DctmDelegateBase(E engine, CmfObject.Archetype type) {
 		this(engine, DctmObjectType.decodeType(type));
 	}
 

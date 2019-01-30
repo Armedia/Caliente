@@ -1,15 +1,15 @@
 package com.armedia.caliente.engine.dynamic.transformer.mapper.schema;
 
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public final class AttributeDeclaration {
 	public final String name;
-	public final CmfDataType type;
+	public final CmfValue.Type type;
 	public final boolean multiple;
 	public final boolean required;
 
-	public AttributeDeclaration(String name, CmfDataType type, boolean required, boolean multiple) {
+	public AttributeDeclaration(String name, CmfValue.Type type, boolean required, boolean multiple) {
 		this.name = name;
 		this.type = type;
 		this.required = required;

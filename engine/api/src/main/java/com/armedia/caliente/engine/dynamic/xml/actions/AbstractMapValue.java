@@ -16,7 +16,7 @@ import com.armedia.caliente.engine.dynamic.xml.Cardinality;
 import com.armedia.caliente.engine.dynamic.xml.CardinalityAdapter;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -55,7 +55,7 @@ public abstract class AbstractMapValue extends AbstractTransformValue {
 		this.defVal = defaultValue;
 	}
 
-	protected boolean mapValue(DynamicElementContext ctx, CmfDataType type, Object candidate,
+	protected boolean mapValue(DynamicElementContext ctx, CmfValue.Type type, Object candidate,
 		AtomicReference<Object> result) throws ActionException {
 
 		// Apply the comparison to each value in the typed value, and if there's a

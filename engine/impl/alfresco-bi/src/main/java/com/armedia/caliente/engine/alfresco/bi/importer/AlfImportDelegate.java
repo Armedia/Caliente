@@ -9,7 +9,6 @@ import com.armedia.caliente.engine.alfresco.bi.AlfRoot;
 import com.armedia.caliente.engine.alfresco.bi.AlfSessionWrapper;
 import com.armedia.caliente.engine.importer.ImportDelegate;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -26,7 +25,7 @@ public abstract class AlfImportDelegate extends
 
 	protected final CmfValue getAttributeValue(String attribute) {
 		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(attribute);
-		if (att == null) { return CmfDataType.OTHER.getNull(); }
+		if (att == null) { return CmfValue.Type.OTHER.getNull(); }
 		if (att.hasValues()) { return att.getValue(); }
 		return att.getType().getNull();
 	}
@@ -47,7 +46,7 @@ public abstract class AlfImportDelegate extends
 
 	protected final CmfValue getPropertyValue(String attribute) {
 		CmfProperty<CmfValue> att = this.cmfObject.getProperty(attribute);
-		if (att == null) { return CmfDataType.OTHER.getNull(); }
+		if (att == null) { return CmfValue.Type.OTHER.getNull(); }
 		if (att.hasValues()) { return att.getValue(); }
 		return att.getType().getNull();
 	}

@@ -8,18 +8,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfType;
 
 public class DefaultImportListener implements ImportListener {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	@Override
-	public void objectTierImportStarted(UUID jobId, CmfType objectType, int tier) {
+	public void objectTierImportStarted(UUID jobId, CmfObject.Archetype objectType, int tier) {
 	}
 
 	@Override
-	public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
+	public void objectHistoryImportStarted(UUID jobId, CmfObject.Archetype objectType, String batchId, int count) {
 	}
 
 	@Override
@@ -35,11 +34,11 @@ public class DefaultImportListener implements ImportListener {
 	}
 
 	@Override
-	public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String batchId,
+	public void objectHistoryImportFinished(UUID jobId, CmfObject.Archetype objectType, String batchId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 	}
 
 	@Override
-	public void objectTierImportFinished(UUID jobId, CmfType objectType, int tier, boolean failed) {
+	public void objectTierImportFinished(UUID jobId, CmfObject.Archetype objectType, int tier, boolean failed) {
 	}
 }

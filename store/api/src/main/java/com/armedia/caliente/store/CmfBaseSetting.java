@@ -7,7 +7,7 @@ import com.armedia.commons.utilities.Tools;
 public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 
 	protected final String name;
-	protected final CmfDataType type;
+	protected final CmfValue.Type type;
 	protected final boolean repeating;
 
 	protected CmfBaseSetting(CmfBaseSetting pattern) {
@@ -19,11 +19,11 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 		this.repeating = pattern.repeating;
 	}
 
-	public CmfBaseSetting(String name, CmfDataType type) {
+	public CmfBaseSetting(String name, CmfValue.Type type) {
 		this(name, type, false);
 	}
 
-	public CmfBaseSetting(String name, CmfDataType type, boolean multiple) {
+	public CmfBaseSetting(String name, CmfValue.Type type, boolean multiple) {
 		if (StringUtils.isBlank(name)) {
 			throw new IllegalArgumentException("Must provide a non-null, non-blank name");
 		}
@@ -39,7 +39,7 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 	}
 
 	@Override
-	public final CmfDataType getType() {
+	public final CmfValue.Type getType() {
 		return this.type;
 	}
 

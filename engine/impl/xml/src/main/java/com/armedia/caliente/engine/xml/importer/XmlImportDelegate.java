@@ -16,7 +16,6 @@ import com.armedia.caliente.engine.xml.importer.jaxb.AttributeT;
 import com.armedia.caliente.engine.xml.importer.jaxb.DataTypeT;
 import com.armedia.caliente.engine.xml.importer.jaxb.PropertyT;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
@@ -34,7 +33,7 @@ public abstract class XmlImportDelegate extends
 
 			attribute.setName(name);
 			attribute.setDataType(DataTypeT.convert(att.getType()));
-			if (att.getType() == CmfDataType.DATETIME) {
+			if (att.getType() == CmfValue.Type.DATETIME) {
 				// Dump it out in XML format
 				for (CmfValue v : att) {
 					String V = "";
@@ -65,7 +64,7 @@ public abstract class XmlImportDelegate extends
 
 	protected final CmfValue getAttributeValue(String attribute) {
 		CmfAttribute<CmfValue> att = this.cmfObject.getAttribute(attribute);
-		if (att == null) { return CmfDataType.OTHER.getNull(); }
+		if (att == null) { return CmfValue.Type.OTHER.getNull(); }
 		if (att.hasValues()) { return att.getValue(); }
 		return att.getType().getNull();
 	}
@@ -88,7 +87,7 @@ public abstract class XmlImportDelegate extends
 			property.setName(name);
 			property.setDataType(DataTypeT.convert(prop.getType()));
 			property.setRepeating(prop.isRepeating());
-			if (prop.getType() == CmfDataType.DATETIME) {
+			if (prop.getType() == CmfValue.Type.DATETIME) {
 				// Dump it out in XML format
 				for (CmfValue v : prop) {
 					String V = "";
@@ -120,7 +119,7 @@ public abstract class XmlImportDelegate extends
 
 	protected final CmfValue getPropertyValue(String attribute) {
 		CmfProperty<CmfValue> att = this.cmfObject.getProperty(attribute);
-		if (att == null) { return CmfDataType.OTHER.getNull(); }
+		if (att == null) { return CmfValue.Type.OTHER.getNull(); }
 		if (att.hasValues()) { return att.getValue(); }
 		return att.getType().getNull();
 	}

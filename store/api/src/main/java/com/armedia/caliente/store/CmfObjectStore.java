@@ -71,12 +71,12 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 			this.operation = operation;
 		}
 
-		private Mapping constructMapping(CmfType type, String name, String source, String target) {
+		private Mapping constructMapping(CmfObject.Archetype type, String name, String source, String target) {
 			return super.newMapping(type, name, source, target);
 		}
 
 		@Override
-		protected Mapping createMapping(CmfType type, String name, String source, String target) {
+		protected Mapping createMapping(CmfObject.Archetype type, String name, String source, String target) {
 			if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
 			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
 			if ((source == null) && (target == null)) {
@@ -113,7 +113,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 
 		@Override
-		public Mapping getTargetMapping(CmfType type, String name, String source) {
+		public Mapping getTargetMapping(CmfObject.Archetype type, String name, String source) {
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getTargetMapping(type, name, source); }
 				return CmfObjectStore.this.getTargetMapping(this.operation, type, name, source);
@@ -124,7 +124,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 
 		@Override
-		public Collection<Mapping> getSourceMapping(CmfType type, String name, String target) {
+		public Collection<Mapping> getSourceMapping(CmfObject.Archetype type, String name, String target) {
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getSourceMapping(type, name, target); }
 				return CmfObjectStore.this.getSourceMapping(this.operation, type, name, target);
@@ -135,7 +135,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 
 		@Override
-		public Map<CmfType, Set<String>> getAvailableMappings() {
+		public Map<CmfObject.Archetype, Set<String>> getAvailableMappings() {
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getAvailableMappings(); }
 				return CmfObjectStore.this.getAvailableMappings(this.operation);
@@ -145,7 +145,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 
 		@Override
-		public Set<String> getAvailableMappings(CmfType type) {
+		public Set<String> getAvailableMappings(CmfObject.Archetype type) {
 			if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 			try {
 				if (this.operation == null) { return CmfObjectStore.this.getAvailableMappings(type); }
@@ -156,7 +156,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 
 		@Override
-		public Map<String, String> getMappings(CmfType type, String name) {
+		public Map<String, String> getMappings(CmfObject.Archetype type, String name) {
 			if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 			if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 			try {
@@ -450,10 +450,10 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	 * @param lockId
 	 * @throws CmfStorageException
 	 */
-	protected abstract boolean lockHistory(OPERATION operation, CmfType type, String historyId, String lockId)
+	protected abstract boolean lockHistory(OPERATION operation, CmfObject.Archetype type, String historyId, String lockId)
 		throws CmfStorageException;
 
-	public final CmfObject<CmfValue> loadHeadObject(CmfType type, String historyId) throws CmfStorageException {
+	public final CmfObject<CmfValue> loadHeadObject(CmfObject.Archetype type, String historyId) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to work with"); }
 		if (historyId == null) { throw new IllegalArgumentException("Must provide a history ID to work with"); }
 
@@ -479,14 +479,14 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract CmfObject<CmfValue> loadHeadObject(OPERATION operation, CmfType type, String historyId)
+	protected abstract CmfObject<CmfValue> loadHeadObject(OPERATION operation, CmfObject.Archetype type, String historyId)
 		throws CmfStorageException;
 
-	public final Collection<CmfObject<CmfValue>> loadObjects(CmfType type, String... ids) throws CmfStorageException {
+	public final Collection<CmfObject<CmfValue>> loadObjects(CmfObject.Archetype type, String... ids) throws CmfStorageException {
 		return loadObjects(type, (ids != null ? Arrays.asList(ids) : null));
 	}
 
-	public final Collection<CmfObject<CmfValue>> loadObjects(final CmfType type, Collection<String> ids)
+	public final Collection<CmfObject<CmfValue>> loadObjects(final CmfObject.Archetype type, Collection<String> ids)
 		throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
 		try {
@@ -508,7 +508,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected final Collection<CmfObject<CmfValue>> loadObjects(final OPERATION operation, final CmfType type,
+	protected final Collection<CmfObject<CmfValue>> loadObjects(final OPERATION operation, final CmfObject.Archetype type,
 		Collection<String> ids) throws CmfStorageException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to retrieve"); }
@@ -530,11 +530,11 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		return ret;
 	}
 
-	public final int loadObjects(final CmfType type, CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
+	public final int loadObjects(final CmfObject.Archetype type, CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
 		return loadObjects(type, null, handler);
 	}
 
-	public final int loadObjects(final CmfType type, Collection<String> ids, final CmfObjectHandler<CmfValue> handler)
+	public final int loadObjects(final CmfObject.Archetype type, Collection<String> ids, final CmfObjectHandler<CmfValue> handler)
 		throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to load"); }
 		if (handler == null) {
@@ -560,19 +560,19 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract int loadObjects(OPERATION operation, CmfType type, Collection<String> ids,
+	protected abstract int loadObjects(OPERATION operation, CmfObject.Archetype type, Collection<String> ids,
 		CmfObjectHandler<CmfValue> handler) throws CmfStorageException;
 
 	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer) throws CmfStorageException {
 		return fixObjectNames(nameFixer, null, null);
 	}
 
-	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfType type)
+	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfObject.Archetype type)
 		throws CmfStorageException {
 		return fixObjectNames(nameFixer, type, null);
 	}
 
-	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfType type, Set<String> ids)
+	public final int fixObjectNames(final CmfNameFixer<CmfValue> nameFixer, final CmfObject.Archetype type, Set<String> ids)
 		throws CmfStorageException {
 		if (nameFixer == null) {
 			throw new IllegalArgumentException("Must provide name fixer to fix the object names");
@@ -610,7 +610,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract int fixObjectNames(OPERATION operation, CmfNameFixer<CmfValue> nameFixer, CmfType type,
+	protected abstract int fixObjectNames(OPERATION operation, CmfNameFixer<CmfValue> nameFixer, CmfObject.Archetype type,
 		Set<String> ids) throws CmfStorageException;
 
 	public final void scanObjectTree(final CmfTreeScanner scanner) throws CmfStorageException {
@@ -637,7 +637,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 	protected abstract void scanObjectTree(final OPERATION operation, final CmfTreeScanner scanner)
 		throws CmfStorageException;
 
-	private Mapping createMapping(CmfType type, String name, String source, String target) throws CmfStorageException {
+	private Mapping createMapping(CmfObject.Archetype type, String name, String source, String target) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to map for"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to map for"); }
 		if ((source == null) && (target == null)) {
@@ -673,13 +673,13 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract void createMapping(OPERATION operation, CmfType type, String name, String source, String target)
+	protected abstract void createMapping(OPERATION operation, CmfObject.Archetype type, String name, String source, String target)
 		throws CmfStorageException;
 
-	protected abstract Collection<String> getMapping(OPERATION operation, boolean source, CmfType type, String name,
+	protected abstract Collection<String> getMapping(OPERATION operation, boolean source, CmfObject.Archetype type, String name,
 		String value) throws CmfStorageException;
 
-	public final Mapping getTargetMapping(CmfType type, String name, String source) throws CmfStorageException {
+	public final Mapping getTargetMapping(CmfObject.Archetype type, String name, String source) throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -700,7 +700,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected final Mapping getTargetMapping(OPERATION operation, CmfType type, String name, String source)
+	protected final Mapping getTargetMapping(OPERATION operation, CmfObject.Archetype type, String name, String source)
 		throws CmfStorageException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
@@ -713,7 +713,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		return this.mapper.constructMapping(type, name, source, target.iterator().next());
 	}
 
-	public final Collection<Mapping> getSourceMapping(CmfType type, String name, String target)
+	public final Collection<Mapping> getSourceMapping(CmfObject.Archetype type, String name, String target)
 		throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
 		try {
@@ -735,7 +735,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected final Collection<Mapping> getSourceMapping(OPERATION operation, final CmfType type, final String name,
+	protected final Collection<Mapping> getSourceMapping(OPERATION operation, final CmfObject.Archetype type, final String name,
 		final String target) throws CmfStorageException {
 		if (operation == null) { throw new IllegalArgumentException("Must provide an operation to work with"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
@@ -751,7 +751,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		return mappings;
 	}
 
-	public final Map<CmfType, Long> getStoredObjectTypes() throws CmfStorageException {
+	public final Map<CmfObject.Archetype, Long> getStoredObjectTypes() throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -767,7 +767,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract Map<CmfType, Long> getStoredObjectTypes(OPERATION operation) throws CmfStorageException;
+	protected abstract Map<CmfObject.Archetype, Long> getStoredObjectTypes(OPERATION operation) throws CmfStorageException;
 
 	public final CmfValueMapper getValueMapper() {
 		return this.mapper;
@@ -874,7 +874,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 
 	protected abstract int clearAttributeMappings(OPERATION operation) throws CmfStorageException;
 
-	public final Map<CmfType, Set<String>> getAvailableMappings() throws CmfStorageException {
+	public final Map<CmfObject.Archetype, Set<String>> getAvailableMappings() throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -896,9 +896,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract Map<CmfType, Set<String>> getAvailableMappings(OPERATION operation) throws CmfStorageException;
+	protected abstract Map<CmfObject.Archetype, Set<String>> getAvailableMappings(OPERATION operation) throws CmfStorageException;
 
-	public final Set<String> getAvailableMappings(CmfType type) throws CmfStorageException {
+	public final Set<String> getAvailableMappings(CmfObject.Archetype type) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		OPERATION operation = beginConcurrentInvocation();
 		try {
@@ -921,9 +921,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract Set<String> getAvailableMappings(OPERATION operation, CmfType type) throws CmfStorageException;
+	protected abstract Set<String> getAvailableMappings(OPERATION operation, CmfObject.Archetype type) throws CmfStorageException;
 
-	public final Map<String, String> getMappings(CmfType type, String name) throws CmfStorageException {
+	public final Map<String, String> getMappings(CmfObject.Archetype type, String name) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		OPERATION operation = beginConcurrentInvocation();
@@ -947,7 +947,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract Map<String, String> getMappings(OPERATION operation, CmfType type, String name)
+	protected abstract Map<String, String> getMappings(OPERATION operation, CmfObject.Archetype type, String name)
 		throws CmfStorageException;
 
 	public final void clearAllObjects() throws CmfStorageException {
@@ -977,7 +977,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 
 	protected abstract void clearAllObjects(OPERATION operation) throws CmfStorageException;
 
-	public final Map<CmfType, Map<String, String>> getRenameMappings() throws CmfStorageException {
+	public final Map<CmfObject.Archetype, Map<String, String>> getRenameMappings() throws CmfStorageException {
 		OPERATION operation = beginConcurrentInvocation();
 		try {
 			final boolean tx = operation.begin();
@@ -997,7 +997,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract Map<CmfType, Map<String, String>> getRenameMappings(OPERATION operation)
+	protected abstract Map<CmfObject.Archetype, Map<String, String>> getRenameMappings(OPERATION operation)
 		throws CmfStorageException;
 
 	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean latest)
@@ -1224,7 +1224,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		throws CmfStorageException;
 
 	private void addBulkObjectLoaderFilter(final OPERATION operation, final CmfObjectRef root,
-		final Map<CmfType, AtomicLong> counters) throws CmfStorageException {
+		final Map<CmfObject.Archetype, AtomicLong> counters) throws CmfStorageException {
 		// If this object has already been added, or can't be added, we simply return
 		if (!addBulkObjectLoaderFilterEntry(operation, root)) { return; }
 
@@ -1241,7 +1241,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	public final Map<CmfType, Long> setBulkObjectLoaderFilter(Iterator<CmfObjectRef> objects)
+	public final Map<CmfObject.Archetype, Long> setBulkObjectLoaderFilter(Iterator<CmfObjectRef> objects)
 		throws CmfStorageException {
 		// Shortcut - avoid starting a transaction over nothing
 		if (objects == null) { throw new IllegalArgumentException("Must provide a non-null Iterator instance"); }
@@ -1252,7 +1252,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 			try {
 				clearBulkObjectLoaderFilter(operation);
 
-				Map<CmfType, AtomicLong> counters = new EnumMap<>(CmfType.class);
+				Map<CmfObject.Archetype, AtomicLong> counters = new EnumMap<>(CmfObject.Archetype.class);
 				while (objects.hasNext()) {
 					CmfObjectRef ref = objects.next();
 					if (ref == null) {
@@ -1264,7 +1264,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					operation.commit();
 				}
 				this.objectFilterActive.set(true);
-				Map<CmfType, Long> ret = new EnumMap<>(CmfType.class);
+				Map<CmfObject.Archetype, Long> ret = new EnumMap<>(CmfObject.Archetype.class);
 				counters.forEach((k, v) -> {
 					ret.put(k, v.get());
 				});
@@ -1284,13 +1284,13 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	public final Map<CmfType, Long> setBulkObjectLoaderFilter(Iterable<CmfObjectRef> objects)
+	public final Map<CmfObject.Archetype, Long> setBulkObjectLoaderFilter(Iterable<CmfObjectRef> objects)
 		throws CmfStorageException {
 		if (objects == null) { throw new IllegalArgumentException("Must provide a non-null Iterable instance"); }
 		return setBulkObjectLoaderFilter(objects.iterator());
 	}
 
-	public final Map<CmfType, Set<CmfObjectRef>> getObjectFilter() throws CmfStorageException {
+	public final Map<CmfObject.Archetype, Set<CmfObjectRef>> getObjectFilter() throws CmfStorageException {
 		if (!isObjectFilterActive()) { return null; }
 		OPERATION operation = beginConcurrentInvocation();
 		try {
@@ -1312,5 +1312,5 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 		}
 	}
 
-	protected abstract Map<CmfType, Set<CmfObjectRef>> getObjectFilter(OPERATION operation) throws CmfStorageException;
+	protected abstract Map<CmfObject.Archetype, Set<CmfObjectRef>> getObjectFilter(OPERATION operation) throws CmfStorageException;
 }

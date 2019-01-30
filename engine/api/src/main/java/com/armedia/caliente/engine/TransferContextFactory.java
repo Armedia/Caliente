@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
@@ -24,12 +24,12 @@ public abstract class TransferContextFactory< //
 	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?, ?> //
 > {
 
-	private static CmfType decodeObjectType(Object o) {
+	private static CmfObject.Archetype decodeObjectType(Object o) {
 		if (o == null) { return null; }
-		if (o instanceof CmfType) { return CmfType.class.cast(o); }
+		if (o instanceof CmfObject.Archetype) { return CmfObject.Archetype.class.cast(o); }
 		if (o instanceof String) {
 			try {
-				return CmfType.valueOf(String.valueOf(o));
+				return CmfObject.Archetype.valueOf(String.valueOf(o));
 			} catch (IllegalArgumentException e) {
 				// Do nothing...
 			}
@@ -46,7 +46,7 @@ public abstract class TransferContextFactory< //
 	private final AtomicLong contextId = new AtomicLong(0);
 	private CfgTools settings = CfgTools.EMPTY;
 	private final ENGINE engine;
-	private final Set<CmfType> excludes;
+	private final Set<CmfObject.Archetype> excludes;
 	private final String productName;
 	private final String productVersion;
 	private final CmfContentStore<?, ?, ?> contentStore;
@@ -63,9 +63,9 @@ public abstract class TransferContextFactory< //
 		}
 		this.engine = engine;
 		this.settings = Tools.coalesce(settings, CfgTools.EMPTY);
-		Set<CmfType> excludes = EnumSet.noneOf(CmfType.class);
+		Set<CmfObject.Archetype> excludes = EnumSet.noneOf(CmfObject.Archetype.class);
 		for (Object o : settings.getObjects(TransferSetting.EXCLUDE_TYPES)) {
-			CmfType t = TransferContextFactory.decodeObjectType(o);
+			CmfObject.Archetype t = TransferContextFactory.decodeObjectType(o);
 			if (t != null) {
 				excludes.add(t);
 			}
@@ -87,7 +87,7 @@ public abstract class TransferContextFactory< //
 		this.warningTracker = tracker;
 	}
 
-	protected void calculateExcludes(CmfObjectStore<?, ?> objectStore, Set<CmfType> excludes)
+	protected void calculateExcludes(CmfObjectStore<?, ?> objectStore, Set<CmfObject.Archetype> excludes)
 		throws CmfStorageException {
 		// do nothing
 	}
@@ -112,7 +112,7 @@ public abstract class TransferContextFactory< //
 		return this.warningTracker;
 	}
 
-	public final boolean isSupported(CmfType type) {
+	public final boolean isSupported(CmfObject.Archetype type) {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to check for"); }
 		return !this.excludes.contains(type) && this.engine.checkSupported(this.excludes, type);
 	}
@@ -157,7 +157,7 @@ public abstract class TransferContextFactory< //
 		return this.productVersion;
 	}
 
-	public final CONTEXT newContext(String rootId, CmfType rootType, SESSION session, int batchPosition) {
+	public final CONTEXT newContext(String rootId, CmfObject.Archetype rootType, SESSION session, int batchPosition) {
 		this.lock.readLock().lock();
 		try {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
@@ -167,7 +167,7 @@ public abstract class TransferContextFactory< //
 		}
 	}
 
-	protected abstract CONTEXT constructContext(String rootId, CmfType rootType, SESSION session, int batchPosition);
+	protected abstract CONTEXT constructContext(String rootId, CmfObject.Archetype rootType, SESSION session, int batchPosition);
 
 	final String getNextContextId() {
 		return String.format("%s-%016x", getContextLabel(), this.contextId.incrementAndGet());

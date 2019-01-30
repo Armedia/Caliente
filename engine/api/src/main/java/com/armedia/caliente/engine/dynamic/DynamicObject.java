@@ -11,7 +11,6 @@ import com.armedia.caliente.engine.dynamic.transformer.TransformerException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -29,7 +28,7 @@ public abstract class DynamicObject {
 
 	public abstract boolean isHistoryCurrent();
 
-	public abstract CmfType getType();
+	public abstract CmfObject.Archetype getType();
 
 	public abstract String getLabel();
 

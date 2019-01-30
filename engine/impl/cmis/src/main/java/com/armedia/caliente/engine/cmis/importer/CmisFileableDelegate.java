@@ -32,7 +32,6 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
 
@@ -45,7 +44,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 	protected void applyAcl(final CmisImportContext ctx, final T object) throws ImportException {
 		// Make sure that if ACL processing is disabled, we don't process it
-		if (!ctx.isSupported(CmfType.ACL)) { return; }
+		if (!ctx.isSupported(CmfObject.Archetype.ACL)) { return; }
 		CmfProperty<CmfValue> aclIdAtt = this.cmfObject.getProperty(IntermediateProperty.ACL_ID);
 		if ((aclIdAtt == null) || !aclIdAtt.hasValues()) { return; }
 		CmfValue aclId = aclIdAtt.getValue();
@@ -131,7 +130,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 		};
 		try {
-			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId.asString()), handler);
+			int count = ctx.loadObjects(CmfObject.Archetype.ACL, Collections.singleton(aclId.asString()), handler);
 			if (count == 0) { return; }
 		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s", aclIdAtt,

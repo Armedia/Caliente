@@ -33,9 +33,8 @@ import com.armedia.caliente.engine.ucm.model.UcmModel.ObjectHandler;
 import com.armedia.caliente.engine.ucm.model.UcmModel.URIHandler;
 import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -62,7 +61,7 @@ public class UcmExportEngine extends
 		session.iterateURISearchResults(query, new URIHandler() {
 			@Override
 			public void handleURI(UcmSession session, long pos, URI objectUri) {
-				builder.accept(new ExportTarget(CmfType.DOCUMENT, objectUri.toString(), objectUri.toString()));
+				builder.accept(new ExportTarget(CmfObject.Archetype.DOCUMENT, objectUri.toString(), objectUri.toString()));
 			}
 		});
 		return builder.build();
@@ -92,7 +91,7 @@ public class UcmExportEngine extends
 		}
 
 		if (!UcmModel.isFolderURI(uri)) {
-			return Stream.of(new ExportTarget(CmfType.DOCUMENT, uri.toString(), uri.toString()));
+			return Stream.of(new ExportTarget(CmfObject.Archetype.DOCUMENT, uri.toString(), uri.toString()));
 		}
 
 		// This is a folder....
@@ -112,12 +111,12 @@ public class UcmExportEngine extends
 		switch (object.getType()) {
 			case FILE:
 				return Stream.of(
-					new ExportTarget(CmfType.DOCUMENT, object.getUniqueURI().toString(), object.getURI().toString()));
+					new ExportTarget(CmfObject.Archetype.DOCUMENT, object.getUniqueURI().toString(), object.getURI().toString()));
 
 			case FOLDER:
 				if (object.isShortcut()) {
 					return Stream.of(
-						new ExportTarget(CmfType.FOLDER, object.getUniqueURI().toString(), object.getURI().toString()));
+						new ExportTarget(CmfObject.Archetype.FOLDER, object.getUniqueURI().toString(), object.getURI().toString()));
 				}
 
 				// TODO: Not like!! Doesn't match the spirit of what we're trying to do
@@ -128,7 +127,7 @@ public class UcmExportEngine extends
 				session.iterateFolderContentsRecursive(folder, false, new ObjectHandler() {
 					@Override
 					public void handleObject(UcmSession session, long pos, URI objectUri, UcmFSObject object) {
-						builder.accept(new ExportTarget(object.getType().cmfType, object.getUniqueURI().toString(),
+						builder.accept(new ExportTarget(object.getType().archetype, object.getUniqueURI().toString(),
 							object.getURI().toString()));
 					}
 				});
@@ -138,7 +137,7 @@ public class UcmExportEngine extends
 	}
 
 	@Override
-	protected CmfValue getValue(CmfDataType type, Object value) {
+	protected CmfValue getValue(CmfValue.Type type, Object value) {
 		return CmfValue.newValue(type, value);
 	}
 

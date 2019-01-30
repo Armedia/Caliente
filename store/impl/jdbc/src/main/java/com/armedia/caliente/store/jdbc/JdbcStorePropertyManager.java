@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
@@ -58,10 +57,10 @@ public class JdbcStorePropertyManager {
 				if (!rs.next()) { return null; }
 				String name = rs.getString("name");
 				String type = rs.getString("data_type");
-				final CmfDataType t;
+				final CmfValue.Type t;
 
 				try {
-					t = CmfDataType.valueOf(type);
+					t = CmfValue.Type.valueOf(type);
 				} catch (IllegalArgumentException e) {
 					throw new SQLException(String.format("Unsupported data type name: [%s]", type), e);
 				}

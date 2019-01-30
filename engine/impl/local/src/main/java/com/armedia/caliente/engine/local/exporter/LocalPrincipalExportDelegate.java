@@ -15,11 +15,9 @@ import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 
 public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal> {
@@ -43,11 +41,11 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	@Override
 	protected boolean marshal(LocalExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		CmfAttribute<CmfValue> att = null;
-		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfDataType.STRING, false);
+		att = new CmfAttribute<>(IntermediateAttribute.NAME, CmfValue.Type.STRING, false);
 		att.setValue(new CmfValue(this.object.getName()));
 		object.setAttribute(att);
-		if (object.getType() == CmfType.USER) {
-			att = new CmfAttribute<>(IntermediateAttribute.LOGIN_NAME, CmfDataType.STRING, false);
+		if (object.getType() == CmfObject.Archetype.USER) {
+			att = new CmfAttribute<>(IntermediateAttribute.LOGIN_NAME, CmfValue.Type.STRING, false);
 			att.setValue(new CmfValue(this.object.getName()));
 			object.setAttribute(att);
 		}
@@ -61,9 +59,9 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	}
 
 	@Override
-	protected CmfType calculateType(LocalRoot root, Principal p) throws Exception {
-		if (GroupPrincipal.class.isInstance(p)) { return CmfType.GROUP; }
-		if (UserPrincipal.class.isInstance(p)) { return CmfType.USER; }
+	protected CmfObject.Archetype calculateType(LocalRoot root, Principal p) throws Exception {
+		if (GroupPrincipal.class.isInstance(p)) { return CmfObject.Archetype.GROUP; }
+		if (UserPrincipal.class.isInstance(p)) { return CmfObject.Archetype.USER; }
 		throw new ExportException(String.format("Principal object [%s] is of an unknown type or doesn't exist", p));
 	}
 

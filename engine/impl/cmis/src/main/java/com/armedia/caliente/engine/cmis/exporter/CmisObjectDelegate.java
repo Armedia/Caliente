@@ -11,7 +11,6 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import com.armedia.caliente.engine.cmis.CmisTranslator;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
@@ -26,7 +25,7 @@ public abstract class CmisObjectDelegate<T extends CmisObject> extends CmisExpor
 	protected boolean marshal(CmisExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		CmisTranslator translator = this.factory.getEngine().getTranslator();
 		for (Property<?> prop : this.object.getProperties()) {
-			CmfDataType t = CmisTranslator.decodePropertyType(prop.getType());
+			CmfValue.Type t = CmisTranslator.decodePropertyType(prop.getType());
 			CmfAttribute<CmfValue> att = new CmfAttribute<>(prop.getId(), t, prop.isMultiValued());
 			List<?> values = prop.getValues();
 			List<CmfValue> l = new ArrayList<>(values.size());

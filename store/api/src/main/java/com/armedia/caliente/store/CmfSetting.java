@@ -4,7 +4,7 @@ public interface CmfSetting {
 
 	String getName();
 
-	CmfDataType getType();
+	CmfValue.Type getType();
 
 	boolean isRepeating();
 

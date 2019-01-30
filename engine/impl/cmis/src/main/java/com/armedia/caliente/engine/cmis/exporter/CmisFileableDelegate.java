@@ -14,10 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 
 public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends CmisObjectDelegate<T> {
@@ -45,7 +43,7 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected Set<String> calculateSecondarySubtypes(Session session, CmfType type, String subtype, T object)
+	protected Set<String> calculateSecondarySubtypes(Session session, CmfObject.Archetype type, String subtype, T object)
 		throws Exception {
 		Set<String> secondaries = super.calculateSecondarySubtypes(session, type, subtype, object);
 		List<SecondaryType> t = object.getSecondaryTypes();
@@ -62,18 +60,18 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected String calculateSubType(Session session, CmfType type, T obj) throws Exception {
+	protected String calculateSubType(Session session, CmfObject.Archetype type, T obj) throws Exception {
 		return obj.getType().getId();
 	}
 
 	protected void marshalParentsAndPaths(CmisExportContext ctx, CmfObject<CmfValue> marshaled, T object)
 		throws ExportException {
-		CmfProperty<CmfValue> parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
-		CmfProperty<CmfValue> paths = new CmfProperty<>(IntermediateProperty.PATH, CmfDataType.STRING, true);
+		CmfProperty<CmfValue> parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValue.Type.ID, true);
+		CmfProperty<CmfValue> paths = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true);
 		final String rootPath = ctx.getSession().getRootFolder().getName();
 		for (Folder f : object.getParents()) {
 			try {
-				parents.addValue(new CmfValue(CmfDataType.ID, f.getId()));
+				parents.addValue(new CmfValue(CmfValue.Type.ID, f.getId()));
 			} catch (ParseException e) {
 				// Will not happen...but still
 				throw new ExportException(String.format("Failed to store the parent ID [%s] for %s [%s]", f.getId(),
@@ -108,9 +106,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected final CmfType calculateType(Session session, T object) throws Exception {
-		if (Document.class.isInstance(object)) { return CmfType.DOCUMENT; }
-		if (Folder.class.isInstance(object)) { return CmfType.FOLDER; }
+	protected final CmfObject.Archetype calculateType(Session session, T object) throws Exception {
+		if (Document.class.isInstance(object)) { return CmfObject.Archetype.DOCUMENT; }
+		if (Folder.class.isInstance(object)) { return CmfObject.Archetype.FOLDER; }
 		throw new Exception(String.format("Can't identify the type for object with ID [%s] of class [%s] and type [%s]",
 			object.getId(), object.getClass().getCanonicalName(), object.getType().getId()));
 	}

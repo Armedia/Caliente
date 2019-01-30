@@ -10,8 +10,8 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
-import com.armedia.caliente.store.CmfType;
-import com.armedia.caliente.store.xml.CmfTypeAdapter;
+import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.store.xml.CmfObjectArchetypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsType.t", propOrder = {
@@ -20,20 +20,20 @@ import com.armedia.caliente.store.xml.CmfTypeAdapter;
 public class IsType implements Condition {
 
 	@XmlValue
-	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
-	protected CmfType value;
+	@XmlJavaTypeAdapter(CmfObjectArchetypeAdapter.class)
+	protected CmfObject.Archetype value;
 
-	public CmfType getValue() {
+	public CmfObject.Archetype getValue() {
 		return this.value;
 	}
 
-	public void setValue(CmfType value) {
+	public void setValue(CmfObject.Archetype value) {
 		this.value = value;
 	}
 
 	@Override
 	public boolean check(DynamicElementContext ctx) throws ConditionException {
-		CmfType type = getValue();
+		CmfObject.Archetype type = getValue();
 		if (type == null) { throw new ConditionException("No type value to check against"); }
 		// We can use == because this is an enum
 		return (type == ctx.getDynamicObject().getType());

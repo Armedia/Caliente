@@ -15,9 +15,8 @@ import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -100,7 +99,7 @@ public class CmisImportEngine extends
 	}
 
 	@Override
-	protected ImportStrategy getImportStrategy(CmfType type) {
+	protected ImportStrategy getImportStrategy(CmfObject.Archetype type) {
 		switch (type) {
 			case DOCUMENT:
 				return CmisImportEngine.DOCUMENT_STRATEGY;
@@ -113,7 +112,7 @@ public class CmisImportEngine extends
 	}
 
 	@Override
-	protected CmfValue getValue(CmfDataType type, Object value) {
+	protected CmfValue getValue(CmfValue.Type type, Object value) {
 		return CmfValue.newValue(type, value);
 	}
 

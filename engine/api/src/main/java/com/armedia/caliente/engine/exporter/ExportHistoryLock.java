@@ -2,17 +2,17 @@ package com.armedia.caliente.engine.exporter;
 
 import java.io.Serializable;
 
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 
 final class ExportHistoryLock implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private final CmfType type;
+	private final CmfObject.Archetype type;
 	private final String historyId;
 	private final String lockId;
 
-	ExportHistoryLock(CmfType type, String historyId, ExportContext<?, ?, ?> ctx) {
+	ExportHistoryLock(CmfObject.Archetype type, String historyId, ExportContext<?, ?, ?> ctx) {
 		if (type == null) { throw new IllegalArgumentException("Must provide a non-null object type"); }
 		if (historyId == null) { throw new IllegalArgumentException("Must provide a non-null history ID"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a non-null export context"); }
@@ -21,7 +21,7 @@ final class ExportHistoryLock implements Serializable {
 		this.lockId = ctx.getId();
 	}
 
-	public CmfType getType() {
+	public CmfObject.Archetype getType() {
 		return this.type;
 	}
 

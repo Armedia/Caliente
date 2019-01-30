@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfObject;
 
 public class DefaultExportEngineListener extends DefaultExportListener implements ExportEngineListener {
 
@@ -30,7 +30,7 @@ public class DefaultExportEngineListener extends DefaultExportListener implement
 	}
 
 	@Override
-	public void exportFinished(UUID jobId, Map<CmfType, Long> summary) {
+	public void exportFinished(UUID jobId, Map<CmfObject.Archetype, Long> summary) {
 		try {
 			exportFinishedImpl(jobId, summary);
 		} finally {
@@ -38,7 +38,7 @@ public class DefaultExportEngineListener extends DefaultExportListener implement
 		}
 	}
 
-	protected void exportFinishedImpl(UUID jobId, Map<CmfType, Long> summary) {
+	protected void exportFinishedImpl(UUID jobId, Map<CmfObject.Archetype, Long> summary) {
 		// Do whatever...
 	}
 }

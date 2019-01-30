@@ -39,7 +39,6 @@ import org.apache.commons.lang3.StringUtils;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStream;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
@@ -50,7 +49,6 @@ import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfTreeScanner;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.MimeTools;
@@ -168,7 +166,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	@Override
 	protected Long storeObject(JdbcOperation operation, CmfObject<CmfValue> object) throws CmfStorageException {
 		final Connection c = operation.getConnection();
-		final CmfType objectType = object.getType();
+		final CmfObject.Archetype objectType = object.getType();
 		final String objectId = JdbcTools.composeDatabaseId(object);
 
 		Collection<Object[]> attributeParameters = new ArrayList<>();
@@ -357,7 +355,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected CmfObject<CmfValue> loadHeadObject(JdbcOperation operation, CmfType type, String historyId)
+	protected CmfObject<CmfValue> loadHeadObject(JdbcOperation operation, CmfObject.Archetype type, String historyId)
 		throws CmfStorageException {
 		final Connection connection = operation.getConnection();
 		try {
@@ -483,7 +481,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected int loadObjects(JdbcOperation operation, final CmfType type, Collection<String> ids,
+	protected int loadObjects(JdbcOperation operation, final CmfObject.Archetype type, Collection<String> ids,
 		CmfObjectHandler<CmfValue> handler) throws CmfStorageException {
 		// If we're retrieving by IDs and no IDs have been given, don't waste time or resources
 		if ((ids != null) && ids.isEmpty()) { return 0; }
@@ -745,16 +743,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected int fixObjectNames(final JdbcOperation operation, final CmfNameFixer<CmfValue> nameFixer, CmfType type,
-		Set<String> ids) throws CmfStorageException {
+	protected int fixObjectNames(final JdbcOperation operation, final CmfNameFixer<CmfValue> nameFixer,
+		CmfObject.Archetype type, Set<String> ids) throws CmfStorageException {
 		final AtomicInteger result = new AtomicInteger(0);
-		CmfType[] types = {
+		CmfObject.Archetype[] types = {
 			type
 		};
 		if (type == null) {
-			types = CmfType.values();
+			types = CmfObject.Archetype.values();
 		}
-		for (CmfType currentType : types) {
+		for (CmfObject.Archetype currentType : types) {
 			if (!nameFixer.supportsType(currentType)) {
 				continue;
 			}
@@ -866,8 +864,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	 * </p>
 	 *
 	 */
-	protected void createMapping(Connection c, CmfType type, String name, String sourceValue, String targetValue)
-		throws SQLException {
+	protected void createMapping(Connection c, CmfObject.Archetype type, String name, String sourceValue,
+		String targetValue) throws SQLException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		final QueryRunner qr = JdbcTools.getQueryRunner();
@@ -913,7 +911,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected void createMapping(JdbcOperation operation, CmfType type, String name, String sourceValue,
+	protected void createMapping(JdbcOperation operation, CmfObject.Archetype type, String name, String sourceValue,
 		String targetValue) {
 		try {
 			createMapping(operation.getConnection(), type, name, sourceValue, targetValue);
@@ -925,8 +923,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Collection<String> getMapping(JdbcOperation operation, boolean source, CmfType type, String name,
-		String value) throws CmfStorageException {
+	protected Collection<String> getMapping(JdbcOperation operation, boolean source, CmfObject.Archetype type,
+		String name, String value) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to search against"); }
@@ -1036,10 +1034,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 	}
 
-	private Map<CmfType, Long> getStoredObjectTypes(Connection c) throws CmfStorageException {
+	private Map<CmfObject.Archetype, Long> getStoredObjectTypes(Connection c) throws CmfStorageException {
 		try {
 			return JdbcTools.getQueryRunner().query(c, translateQuery(JdbcDialect.Query.LOAD_OBJECT_TYPES), (rs) -> {
-				Map<CmfType, Long> ret = new EnumMap<>(CmfType.class);
+				Map<CmfObject.Archetype, Long> ret = new EnumMap<>(CmfObject.Archetype.class);
 				while (rs.next()) {
 					String t = rs.getString(1);
 					if ((t == null) || rs.wasNull()) {
@@ -1047,7 +1045,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						continue;
 					}
 					try {
-						ret.put(CmfType.valueOf(t), rs.getLong(2));
+						ret.put(CmfObject.Archetype.valueOf(t), rs.getLong(2));
 					} catch (IllegalArgumentException e) {
 						JdbcObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
 						continue;
@@ -1061,7 +1059,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<CmfType, Long> getStoredObjectTypes(JdbcOperation operation) throws CmfStorageException {
+	protected Map<CmfObject.Archetype, Long> getStoredObjectTypes(JdbcOperation operation) throws CmfStorageException {
 		return getStoredObjectTypes(operation.getConnection());
 	}
 
@@ -1079,15 +1077,16 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<CmfType, Set<String>> getAvailableMappings(JdbcOperation operation) throws CmfStorageException {
-		final Map<CmfType, Set<String>> ret = new EnumMap<>(CmfType.class);
+	protected Map<CmfObject.Archetype, Set<String>> getAvailableMappings(JdbcOperation operation)
+		throws CmfStorageException {
+		final Map<CmfObject.Archetype, Set<String>> ret = new EnumMap<>(CmfObject.Archetype.class);
 		try {
 			JdbcTools.getQueryRunner().query(operation.getConnection(),
 				translateQuery(JdbcDialect.Query.LOAD_ALL_MAPPINGS), (rs) -> {
-					CmfType currentType = null;
+					CmfObject.Archetype currentType = null;
 					Set<String> names = null;
 					while (rs.next()) {
-						final CmfType newType = CmfType.valueOf(rs.getString("object_type"));
+						final CmfObject.Archetype newType = CmfObject.Archetype.valueOf(rs.getString("object_type"));
 						if (newType != currentType) {
 							names = new TreeSet<>();
 							ret.put(newType, names);
@@ -1104,7 +1103,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Set<String> getAvailableMappings(JdbcOperation operation, CmfType type) throws CmfStorageException {
+	protected Set<String> getAvailableMappings(JdbcOperation operation, CmfObject.Archetype type)
+		throws CmfStorageException {
 		final Set<String> ret = new TreeSet<>();
 		try {
 			JdbcTools.getQueryRunner().query(operation.getConnection(),
@@ -1122,7 +1122,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<String, String> getMappings(JdbcOperation operation, CmfType type, String name) {
+	protected Map<String, String> getMappings(JdbcOperation operation, CmfObject.Archetype type, String name) {
 		final Map<String, String> ret = new HashMap<>();
 		try {
 			JdbcTools.getQueryRunner().query(operation.getConnection(),
@@ -1295,7 +1295,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		if (objectRS == null) {
 			throw new IllegalArgumentException("Must provide a ResultSet to load the structure from");
 		}
-		CmfType type = CmfType.valueOf(objectRS.getString("object_type"));
+		CmfObject.Archetype type = CmfObject.Archetype.valueOf(objectRS.getString("object_type"));
 		String id = objectRS.getString("object_id");
 		String name = objectRS.getString("object_name");
 		String newName = objectRS.getString("new_name");
@@ -1350,18 +1350,19 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			historyId, historyCurrent, label, subtype, secondaries, number);
 	}
 
-	private CmfProperty<CmfValue> loadProperty(CmfType objectType, ResultSet rs) throws SQLException {
+	private CmfProperty<CmfValue> loadProperty(CmfObject.Archetype objectType, ResultSet rs) throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
-		CmfDataType type = CmfDataType.valueOf(rs.getString("data_type"));
+		CmfValue.Type type = CmfValue.Type.valueOf(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
 		return new CmfProperty<>(name, type, repeating);
 	}
 
-	private <VALUE> CmfAttribute<CmfValue> loadAttribute(CmfType objectType, ResultSet rs) throws SQLException {
+	private <VALUE> CmfAttribute<CmfValue> loadAttribute(CmfObject.Archetype objectType, ResultSet rs)
+		throws SQLException {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
-		CmfDataType type = CmfDataType.valueOf(rs.getString("data_type"));
+		CmfValue.Type type = CmfValue.Type.valueOf(rs.getString("data_type"));
 		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
 		return new CmfAttribute<>(name, type, repeating);
 	}
@@ -1420,7 +1421,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected boolean lockHistory(JdbcOperation operation, CmfType type, String historyId, String lockId)
+	protected boolean lockHistory(JdbcOperation operation, CmfObject.Archetype type, String historyId, String lockId)
 		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		QueryRunner qr = JdbcTools.getQueryRunner();
@@ -1730,12 +1731,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<CmfType, Map<String, String>> getRenameMappings(JdbcOperation operation) throws CmfStorageException {
+	protected Map<CmfObject.Archetype, Map<String, String>> getRenameMappings(JdbcOperation operation)
+		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
 			return qr.query(c, translateQuery(JdbcDialect.Query.LOAD_RENAME_MAPPINGS), (rs) -> {
-				Map<CmfType, Map<String, String>> ret = new EnumMap<>(CmfType.class);
+				Map<CmfObject.Archetype, Map<String, String>> ret = new EnumMap<>(CmfObject.Archetype.class);
 				while (rs.next()) {
 					String id = rs.getString("object_id");
 					if (rs.wasNull()) {
@@ -1757,8 +1759,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				}
 
 				// Freeze the maps
-				Map<CmfType, Map<String, String>> frozen = new EnumMap<>(CmfType.class);
-				for (CmfType t : ret.keySet()) {
+				Map<CmfObject.Archetype, Map<String, String>> frozen = new EnumMap<>(CmfObject.Archetype.class);
+				for (CmfObject.Archetype t : ret.keySet()) {
 					Map<String, String> m = ret.get(t);
 					frozen.put(t, Tools.freezeMap(m, true));
 				}
@@ -2033,11 +2035,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 	}
 
 	@Override
-	protected Map<CmfType, Set<CmfObjectRef>> getObjectFilter(JdbcOperation operation) throws CmfStorageException {
+	protected Map<CmfObject.Archetype, Set<CmfObjectRef>> getObjectFilter(JdbcOperation operation)
+		throws CmfStorageException {
 		final Connection c = operation.getConnection();
 		final QueryRunner qr = JdbcTools.getQueryRunner();
 		try {
-			final Map<CmfType, Set<CmfObjectRef>> map = new EnumMap<>(CmfType.class);
+			final Map<CmfObject.Archetype, Set<CmfObjectRef>> map = new EnumMap<>(CmfObject.Archetype.class);
 			qr.query(c, translateQuery(JdbcDialect.Query.LOAD_FILTER), (rs) -> {
 				while (rs.next()) {
 					String v = rs.getString(1);

@@ -20,7 +20,6 @@ import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.tools.Closer;
@@ -39,7 +38,7 @@ public abstract class ImportContext< //
 	private final CmfContentStore<?, ?, ?> streamStore;
 	private final int historyPosition;
 
-	public ImportContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType, SESSION session,
+	public ImportContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfObject.Archetype rootType, SESSION session,
 		Logger output, WarningTracker tracker, Transformer transformer, CmfAttributeTranslator<VALUE> translator,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
@@ -59,7 +58,7 @@ public abstract class ImportContext< //
 		return this.cmfObjectStore.getValueMapper();
 	}
 
-	public final int loadObjects(CmfType type, Set<String> ids, final CmfObjectHandler<VALUE> handler)
+	public final int loadObjects(CmfObject.Archetype type, Set<String> ids, final CmfObjectHandler<VALUE> handler)
 		throws CmfStorageException {
 		return this.cmfObjectStore.loadObjects(type, ids, new CmfObjectHandler<CmfValue>() {
 

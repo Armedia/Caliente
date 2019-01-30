@@ -7,7 +7,6 @@ import java.util.Set;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 
 public class DefaultDynamicObject extends DynamicObject {
@@ -45,7 +44,7 @@ public class DefaultDynamicObject extends DynamicObject {
 	}
 
 	@Override
-	public CmfType getType() {
+	public CmfObject.Archetype getType() {
 		return this.object.getType();
 	}
 

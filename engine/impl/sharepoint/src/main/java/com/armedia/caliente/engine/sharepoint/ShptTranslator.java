@@ -15,8 +15,7 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
@@ -28,10 +27,10 @@ import com.armedia.commons.utilities.Tools;
 public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 
 	private static final String SHPT_PREFIX = "shpt:";
-	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
+	private static final Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfType.class);
+		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfObject.Archetype.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
@@ -44,7 +43,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.LOGIN_DOMAIN.name, IntermediateAttribute.LOGIN_REALM);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
-		attributeMappings.put(CmfType.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfObject.Archetype.USER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -54,7 +53,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
 		am.put(ShptAttributes.GROUP_OWNER.name, IntermediateAttribute.OWNER);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
-		attributeMappings.put(CmfType.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfObject.Archetype.GROUP, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -63,7 +62,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(ShptAttributes.OWNER.name, IntermediateAttribute.OWNER);
-		attributeMappings.put(CmfType.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfObject.Archetype.TYPE, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -71,7 +70,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		// OBJECT_TYPE_ID (DM_FORMAT)
 		am.put(ShptAttributes.OBJECT_NAME.name, IntermediateAttribute.NAME);
 		am.put(ShptAttributes.DESCRIPTION.name, IntermediateAttribute.DESCRIPTION);
-		attributeMappings.put(CmfType.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfObject.Archetype.FORMAT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -89,7 +88,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.MODIFICATION_DATE.name, IntermediateAttribute.LAST_MODIFICATION_DATE);
 		am.put(ShptAttributes.PARENTS.name, IntermediateAttribute.PARENT_ID);
 		am.put(ShptAttributes.PATHS.name, IntermediateAttribute.PATH);
-		attributeMappings.put(CmfType.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfObject.Archetype.FOLDER, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		am = new DualHashBidiMap<>();
 		am.put(ShptAttributes.OBJECT_ID.name, IntermediateAttribute.OBJECT_ID);
@@ -108,21 +107,21 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		am.put(ShptAttributes.VERSION.name, IntermediateAttribute.VERSION_LABEL);
 		am.put(ShptAttributes.VERSION_TREE.name, IntermediateAttribute.VERSION_SERIES_ID);
 		am.put(ShptAttributes.VERSION_PRIOR.name, IntermediateAttribute.VERSION_ANTECEDENT_ID);
-		attributeMappings.put(CmfType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfObject.Archetype.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
 	}
 
 	public static ShptTranslator INSTANCE = new ShptTranslator();
 
-	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
+	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfObject.Archetype type) {
 		return ShptTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
 	private static final CmfAttributeNameMapper MAPPER = new CmfAttributeNameMapper() {
 
 		@Override
-		public String encodeAttributeName(CmfType type, String attributeName) {
+		public String encodeAttributeName(CmfObject.Archetype type, String attributeName) {
 			BidiMap<String, IntermediateAttribute> mappings = ShptTranslator.getAttributeMappings(type);
 			if (mappings != null) {
 				// TODO: normalize the CMS attribute name
@@ -133,7 +132,7 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 		}
 
 		@Override
-		public String decodeAttributeName(CmfType type, String attributeName) {
+		public String decodeAttributeName(CmfObject.Archetype type, String attributeName) {
 			BidiMap<String, IntermediateAttribute> mappings = ShptTranslator.getAttributeMappings(type);
 			if (mappings != null) {
 				String att = null;
@@ -157,12 +156,12 @@ public final class ShptTranslator extends CmfAttributeTranslator<CmfValue> {
 	}
 
 	@Override
-	public CmfValueCodec<CmfValue> getCodec(CmfDataType type) {
+	public CmfValueCodec<CmfValue> getCodec(CmfValue.Type type) {
 		return CmfAttributeTranslator.getStoredValueCodec(type);
 	}
 
 	@Override
-	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
+	public CmfValue getValue(CmfValue.Type type, Object value) throws ParseException {
 		try {
 			return new CmfValue(type, value);
 		} catch (ParseException e) {

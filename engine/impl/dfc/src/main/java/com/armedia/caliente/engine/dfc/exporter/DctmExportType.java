@@ -15,9 +15,9 @@ import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.documentum.fc.client.DfObjectNotFoundException;
@@ -79,7 +79,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			String aclDom = typeInfo.getString(DctmAttributes.ACL_DOMAIN);
 			String aclName = typeInfo.getString(DctmAttributes.ACL_NAME);
 			if (!StringUtils.isEmpty(aclDom) && !StringUtils.isEmpty(aclName)) {
-				properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_ACL, CmfDataType.STRING, false,
+				properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_ACL, CmfValue.Type.STRING, false,
 					DfValueFactory.newStringValue(String.format("%s:%s", aclDom, aclName))));
 			}
 
@@ -87,7 +87,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			if (!StringUtils.isEmpty(defaultStorage)) {
 				try {
 					IDfStore store = IDfStore.class.cast(ctx.getSession().getObject(new DfId(defaultStorage)));
-					properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_STORAGE, CmfDataType.STRING, false,
+					properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_STORAGE, CmfValue.Type.STRING, false,
 						DfValueFactory.newStringValue(store.getName())));
 				} catch (DfObjectNotFoundException e) {
 					throw new ExportException(
@@ -97,7 +97,7 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 				}
 			}
 
-			properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_ASPECTS, CmfDataType.STRING, true,
+			properties.add(new CmfProperty<>(IntermediateProperty.DEFAULT_ASPECTS, CmfValue.Type.STRING, true,
 				DfValueFactory.getAllRepeatingValues(DctmAttributes.DEFAULT_ASPECTS, typeInfo)));
 		}
 
@@ -162,8 +162,8 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			final int attCount = type.getValueCount(DctmAttributes.ATTR_NAME);
 			// We map the name for every attribute, just to be safe
 			final CmfAttributeTranslator<IDfValue> translator = this.factory.getTranslator();
-			CmfProperty<IDfValue> orig = new CmfProperty<>(IntermediateProperty.ORIG_ATTR_NAME, CmfDataType.STRING);
-			CmfProperty<IDfValue> mapped = new CmfProperty<>(IntermediateProperty.MAPPED_ATTR_NAME, CmfDataType.STRING);
+			CmfProperty<IDfValue> orig = new CmfProperty<>(IntermediateProperty.ORIG_ATTR_NAME, CmfValue.Type.STRING);
+			CmfProperty<IDfValue> mapped = new CmfProperty<>(IntermediateProperty.MAPPED_ATTR_NAME, CmfValue.Type.STRING);
 			CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 			for (int i = 0; i < attCount; i++) {
 				IDfValue o = type.getRepeatingValue(DctmAttributes.ATTR_NAME, i);

@@ -3,24 +3,24 @@ package com.armedia.caliente.engine.cmis;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
 import org.apache.chemistry.opencmis.commons.data.Acl;
 
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 
 public final class CmisAcl {
 
-	private final CmfType sourceType;
+	private final CmfObject.Archetype sourceType;
 	private final String sourceId;
 	private final String sourceOwner;
 	private final Acl acl;
 
-	public CmisAcl(CmfType sourceType, CmisObject object) {
+	public CmisAcl(CmfObject.Archetype sourceType, CmisObject object) {
 		this.sourceType = sourceType;
 		this.sourceId = object.getId();
 		this.sourceOwner = object.getCreatedBy();
 		this.acl = object.getAcl();
 	}
 
-	public CmfType getSourceType() {
+	public CmfObject.Archetype getSourceType() {
 		return this.sourceType;
 	}
 

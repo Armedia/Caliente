@@ -1,28 +1,28 @@
 package com.armedia.caliente.engine.exporter;
 
 import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 
 public enum ExportSetting implements TransferEngineSetting {
 	//
-	FROM(CmfDataType.STRING),
+	FROM(CmfValue.Type.STRING),
 	//
 	;
 
 	private final String label;
 	private final Object defaultValue;
-	private final CmfDataType type;
+	private final CmfValue.Type type;
 	private final boolean required;
 
-	private ExportSetting(CmfDataType type) {
+	private ExportSetting(CmfValue.Type type) {
 		this(type, null);
 	}
 
-	private ExportSetting(CmfDataType type, Object defaultValue) {
+	private ExportSetting(CmfValue.Type type, Object defaultValue) {
 		this(type, defaultValue, false);
 	}
 
-	private ExportSetting(CmfDataType type, Object defaultValue, boolean required) {
+	private ExportSetting(CmfValue.Type type, Object defaultValue, boolean required) {
 		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
 		this.type = type;
@@ -40,7 +40,7 @@ public enum ExportSetting implements TransferEngineSetting {
 	}
 
 	@Override
-	public CmfDataType getType() {
+	public CmfValue.Type getType() {
 		return this.type;
 	}
 

@@ -3,7 +3,6 @@ package com.armedia.caliente.engine.dfc;
 import java.text.ParseException;
 import java.util.Date;
 
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.documentum.fc.client.IDfPersistentObject;
@@ -16,7 +15,7 @@ import com.documentum.fc.common.IDfTime;
 import com.documentum.fc.common.IDfValue;
 
 public enum DctmDataType implements CmfValueCodec<IDfValue> {
-	DF_BOOLEAN(CmfDataType.BOOLEAN, IDfValue.DF_BOOLEAN) {
+	DF_BOOLEAN(CmfValue.Type.BOOLEAN, IDfValue.DF_BOOLEAN) {
 		private final String nullEncoding = String.valueOf(false);
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_BOOLEAN);
 
@@ -50,7 +49,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendBoolean(name, value.asBoolean());
 		}
 	},
-	DF_INTEGER(CmfDataType.INTEGER, IDfValue.DF_INTEGER) {
+	DF_INTEGER(CmfValue.Type.INTEGER, IDfValue.DF_INTEGER) {
 		private final String nullEncoding = String.valueOf(0);
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_INTEGER);
 
@@ -84,7 +83,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendInt(name, value.asInteger());
 		}
 	},
-	DF_STRING(CmfDataType.STRING, IDfValue.DF_STRING) {
+	DF_STRING(CmfValue.Type.STRING, IDfValue.DF_STRING) {
 		private final String nullEncoding = "";
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_STRING);
 
@@ -121,14 +120,14 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendString(name, value.asString());
 		}
 	},
-	DF_ID(CmfDataType.ID, IDfValue.DF_ID) {
+	DF_ID(CmfValue.Type.ID, IDfValue.DF_ID) {
 		private final String nullEncoding = DfId.DF_NULLID_STR;
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_ID);
 
 		@Override
 		public CmfValue doEncode(IDfValue value) {
 			try {
-				return new CmfValue(CmfDataType.ID, value.asId().getId());
+				return new CmfValue(CmfValue.Type.ID, value.asId().getId());
 			} catch (ParseException e) {
 				throw new RuntimeException("Unexpected parsing exception", e);
 			}
@@ -159,7 +158,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendId(name, value.asId());
 		}
 	},
-	DF_TIME(CmfDataType.DATETIME, IDfValue.DF_TIME) {
+	DF_TIME(CmfValue.Type.DATETIME, IDfValue.DF_TIME) {
 		private final IDfValue nullValue = new DfValue(DfTime.DF_NULLDATE);
 
 		@Override
@@ -167,7 +166,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			IDfTime t = value.asTime();
 			if (t.isNullDate() || !t.isValid()) {
 				try {
-					return new CmfValue(CmfDataType.DATETIME, null);
+					return new CmfValue(CmfValue.Type.DATETIME, null);
 				} catch (ParseException e) {
 					// Not going to happen...
 					throw new RuntimeException("Unexpected parse exception", e);
@@ -206,7 +205,7 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 			object.appendTime(name, value.asTime());
 		}
 	},
-	DF_DOUBLE(CmfDataType.DOUBLE, IDfValue.DF_DOUBLE) {
+	DF_DOUBLE(CmfValue.Type.DOUBLE, IDfValue.DF_DOUBLE) {
 		private final String nullEncoding = Double.toHexString(0.0);
 		private final IDfValue nullValue = new DfValue(this.nullEncoding, IDfValue.DF_DOUBLE);
 
@@ -266,15 +265,15 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		}
 	};
 
-	private final CmfDataType type;
+	private final CmfValue.Type type;
 	private final int dfConstant;
 
-	private DctmDataType(CmfDataType type, int dfConstant) {
+	private DctmDataType(CmfValue.Type type, int dfConstant) {
 		this.type = type;
 		this.dfConstant = dfConstant;
 	}
 
-	public final CmfDataType getStoredType() {
+	public final CmfValue.Type getStoredType() {
 		return this.type;
 	}
 

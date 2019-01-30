@@ -9,7 +9,7 @@ import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -34,7 +34,7 @@ public abstract class AbstractAttributeCalientePropertyVariableCheck extends Abs
 
 		// Need to find a matching candidate...
 		for (String s : values.keySet()) {
-			if (comparison.check(CmfDataType.STRING, s, comparand)) {
+			if (comparison.check(CmfValue.Type.STRING, s, comparand)) {
 				// Only check the first match, since a true or false result may be conclusive
 				return check(values.get(s));
 			}

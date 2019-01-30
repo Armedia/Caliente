@@ -15,7 +15,6 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -80,15 +79,15 @@ public final class UcmAttributes {
 				String v = data.get(f.getName());
 
 				Type t = f.getType();
-				// Map that type to a CmfDataType
+				// Map that type to a CmfValue.Type
 				CmfValue value = null;
-				CmfDataType T = null;
+				CmfValue.Type T = null;
 				switch (t) {
 					case BOOLEAN:
 						if (!StringUtils.isEmpty(v)) {
 							value = new CmfValue(UcmAttributes.TRUE_VALUES.contains(v.toString().toUpperCase()));
 						} else {
-							T = CmfDataType.BOOLEAN;
+							T = CmfValue.Type.BOOLEAN;
 						}
 						break;
 					case CHAR:
@@ -98,7 +97,7 @@ public final class UcmAttributes {
 						if (v != null) {
 							value = new CmfValue(v.toString());
 						} else {
-							T = CmfDataType.STRING;
+							T = CmfValue.Type.STRING;
 						}
 						break;
 					case DECIMAL:
@@ -107,7 +106,7 @@ public final class UcmAttributes {
 						if (!StringUtils.isEmpty(v)) {
 							value = new CmfValue(Double.valueOf(v.toString()));
 						} else {
-							T = CmfDataType.DOUBLE;
+							T = CmfValue.Type.DOUBLE;
 						}
 						break;
 					case DATE:
@@ -119,14 +118,14 @@ public final class UcmAttributes {
 									String.format("Failed to parse the value [%s] as a date", v), e);
 							}
 						} else {
-							T = CmfDataType.DATETIME;
+							T = CmfValue.Type.DATETIME;
 						}
 						break;
 					case INT:
 						if (!StringUtils.isEmpty(v)) {
 							value = new CmfValue(Long.valueOf(v.toString()));
 						} else {
-							T = CmfDataType.INTEGER;
+							T = CmfValue.Type.INTEGER;
 						}
 						break;
 					case BINARY:
@@ -134,7 +133,7 @@ public final class UcmAttributes {
 						// Can't support this...no way to retrieve the data, and even if I got it as
 						// a string, I don't know how it's encoded and thus how to turn it into a
 						// binary stream of octets...so we simply keep a null value in its place
-						T = CmfDataType.BASE64_BINARY;
+						T = CmfValue.Type.BASE64_BINARY;
 						break;
 				}
 				if (value == null) {
@@ -165,14 +164,14 @@ public final class UcmAttributes {
 		return att.name();
 	}
 
-	public CmfDataType getAttributeType(String name) {
+	public CmfValue.Type getAttributeType(String name) {
 		Objects.requireNonNull(name, "Must provide a non-null attribute name");
 		CmfValue v = this.data.get(name);
 		if (v == null) { return null; }
 		return v.getDataType();
 	}
 
-	public CmfDataType getAttributeType(UcmAtt att) {
+	public CmfValue.Type getAttributeType(UcmAtt att) {
 		return getAttributeType(getKey(att));
 	}
 

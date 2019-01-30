@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.engine.dynamic.xml.mapper.SetValue;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -18,7 +17,7 @@ class ConstantRenderer extends AttributeRenderer {
 	public ConstantRenderer(SetValue m, Character parentSeparator) {
 		super(m, parentSeparator);
 		List<CmfValue> values = new ArrayList<>();
-		final CmfDataType dataType = m.getType();
+		final CmfValue.Type dataType = m.getType();
 		Tools.splitEscaped(this.separator, m.getValue()).forEach((v) -> {
 			try {
 				values.add(dataType.getSerializer().deserialize(v));

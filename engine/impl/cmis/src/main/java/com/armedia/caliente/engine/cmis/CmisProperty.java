@@ -4,28 +4,28 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.armedia.caliente.engine.converter.MappingManager;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfEncodeableName;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public enum CmisProperty implements Supplier<String>, CmfEncodeableName {
 
 	//
-	PRODUCT_NAME(CmfDataType.STRING), PRODUCT_VERSION(CmfDataType.STRING), ACL_PERMISSION(CmfDataType.STRING, true),
+	PRODUCT_NAME(CmfValue.Type.STRING), PRODUCT_VERSION(CmfValue.Type.STRING), ACL_PERMISSION(CmfValue.Type.STRING, true),
 	//
 	;
 
 	public static final String PERMISSION_PROPERTY_FMT = "cmf:%s:aclPermission";
 
 	public final String name;
-	public final CmfDataType type;
+	public final CmfValue.Type type;
 	public final boolean repeating;
 
-	private CmisProperty(CmfDataType type) {
+	private CmisProperty(CmfValue.Type type) {
 		this(type, false);
 	}
 
-	private CmisProperty(CmfDataType type, boolean repeating) {
+	private CmisProperty(CmfValue.Type type, boolean repeating) {
 		this.name = String.format("cmis:%s", name().toLowerCase());
 		this.type = type;
 		this.repeating = repeating;

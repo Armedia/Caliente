@@ -7,12 +7,12 @@ import java.util.List;
 
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Aspect;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoContentModel.Type;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
+import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.AttributeDeclaration;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.TypeDeclaration;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
-import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfSchemaService implements SchemaService {
@@ -42,7 +42,7 @@ public class AlfSchemaService implements SchemaService {
 			if (att == null) {
 				continue;
 			}
-			CmfDataType dataType = Tools.coalesce(att.type.cmfDataType, CmfDataType.OTHER);
+			CmfValue.Type dataType = Tools.coalesce(att.type.cmfValueType, CmfValue.Type.OTHER);
 			attributes.add(new AttributeDeclaration(a, dataType, (att.mandatory == SchemaAttribute.Mandatory.ENFORCED),
 				att.multiple));
 		}
@@ -69,7 +69,7 @@ public class AlfSchemaService implements SchemaService {
 			if (att == null) {
 				continue;
 			}
-			CmfDataType dataType = Tools.coalesce(att.type.cmfDataType, CmfDataType.OTHER);
+			CmfValue.Type dataType = Tools.coalesce(att.type.cmfValueType, CmfValue.Type.OTHER);
 			attributes.add(new AttributeDeclaration(a, dataType, (att.mandatory == SchemaAttribute.Mandatory.ENFORCED),
 				att.multiple));
 		}

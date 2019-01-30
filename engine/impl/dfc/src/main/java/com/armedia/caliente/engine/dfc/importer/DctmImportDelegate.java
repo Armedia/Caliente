@@ -31,7 +31,6 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.Tools;
@@ -322,7 +321,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 				if (object.hasAttr(DctmAttributes.I_CHRONICLE_ID)) {
 					final String attName = DctmAttributes.I_CHRONICLE_ID;
 					final String sourceHistoryId = this.cmfObject.getHistoryId();
-					final CmfType type = getDctmType().getStoredObjectType();
+					final CmfObject.Archetype type = getDctmType().getStoredObjectType();
 					if (context.getValueMapper().getTargetMapping(type, attName, sourceHistoryId) == null) {
 						context.getValueMapper().setMapping(type, attName, sourceHistoryId,
 							object.getId(attName).getId());

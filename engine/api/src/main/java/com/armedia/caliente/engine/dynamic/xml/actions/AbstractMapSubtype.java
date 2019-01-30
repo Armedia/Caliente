@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -57,7 +57,7 @@ public abstract class AbstractMapSubtype extends ConditionalAction {
 			if (replacement == null) { throw new ActionException("No value given to replace with"); }
 
 			// All is well, execute!
-			if (comparison.check(CmfDataType.STRING, candidate, ActionTools.eval(comparand, ctx))) {
+			if (comparison.check(CmfValue.Type.STRING, candidate, ActionTools.eval(comparand, ctx))) {
 				// This is the mapping value, so return it!
 				return ActionTools.eval(replacement, ctx);
 			}

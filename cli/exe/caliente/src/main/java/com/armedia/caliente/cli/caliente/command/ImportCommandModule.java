@@ -27,9 +27,9 @@ import com.armedia.caliente.engine.importer.ImportEngineListener;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportSetting;
 import com.armedia.caliente.store.CmfContentStore;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
@@ -63,8 +63,8 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		throws CalienteException {
 		Set<ImportResult> outcomes = commandValues.getEnums(ImportResult.class, CommandModule.ALL,
 			CfgTools.ignoreFailures(), CLIParam.manifest_outcomes_import, EnumSet.allOf(ImportResult.class));
-		Set<CmfType> types = commandValues.getEnums(CmfType.class, CommandModule.ALL, CfgTools.ignoreFailures(),
-			CLIParam.manifest_types, EnumSet.allOf(CmfType.class));
+		Set<CmfObject.Archetype> types = commandValues.getEnums(CmfObject.Archetype.class, CommandModule.ALL, CfgTools.ignoreFailures(),
+			CLIParam.manifest_types, EnumSet.allOf(CmfObject.Archetype.class));
 
 		final ImportCommandListener mainListener = new ImportCommandListener(this.console);
 		final CalienteWarningTracker warningTracker = mainListener.getWarningTracker();
@@ -147,7 +147,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		}
 
 		report.append(String.format("%n%nAction Summary:%n%s%n", StringUtils.repeat("=", 30)));
-		for (CmfType t : CmfType.values()) {
+		for (CmfObject.Archetype t : CmfObject.Archetype.values()) {
 			report.append(String.format("%n%n%n"));
 			report.append(counter.generateReport(t, 1));
 		}

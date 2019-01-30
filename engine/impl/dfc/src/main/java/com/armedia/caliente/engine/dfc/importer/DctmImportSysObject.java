@@ -35,10 +35,9 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportReplaceMode;
 import com.armedia.caliente.engine.importer.ImportSetting;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
@@ -481,7 +480,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					"Failed to find the ACL [domain=%s, name=%s] for %s [%s](%s) - the target ACL couldn't be found",
 					aclDomain, aclName, this.cmfObject.getType().name(), this.cmfObject.getLabel(),
 					this.cmfObject.getId());
-				if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
+				if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				return false;
 			}
@@ -533,13 +532,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final IDfSession session = ctx.getSession();
 
 		if ("FOLDER".equalsIgnoreCase(type)) {
-			Mapping map = ctx.getValueMapper().getTargetMapping(CmfType.FOLDER, DctmAttributes.R_OBJECT_ID, reference);
+			Mapping map = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.FOLDER, DctmAttributes.R_OBJECT_ID, reference);
 			if (map == null) {
 				String msg = String.format(
 					"Can't inherit an ACL from a parent folder for %s [%s](%s) - the source parent ID [%s] couldn't be mapped to a target object",
 					this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId(), reference);
 				// No mapping...parent hasn't been mapped
-				if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
+				if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				return false;
 			}
@@ -552,7 +551,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					"Can't inherit an ACL from a parent folder for %s [%s](%s) - the parent with ID [%s] doesn't exist",
 					this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId(),
 					map.getTargetValue());
-				if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
+				if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				return false;
 			}
@@ -571,7 +570,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				String msg = String.format(
 					"Can't inherit an ACL from type [%s] for %s [%s](%s) - the type doesn't exist", reference,
 					this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId());
-				if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
+				if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				return false;
 			}
@@ -599,7 +598,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					"Can't inherit an ACL from user [%s] for %s [%s](%s) - the user doesn't exist (mapped to [%s])",
 					reference, this.cmfObject.getType().name(), this.cmfObject.getLabel(), this.cmfObject.getId(),
 					user);
-				if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
+				if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 				return false;
 			}
@@ -647,7 +646,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// old format - acl ID
 				String aclId = aclIdProp.getValue().asString();
 				// Find the mapped ACL
-				Mapping m = ctx.getValueMapper().getTargetMapping(CmfType.ACL, DctmAttributes.R_OBJECT_ID, aclId);
+				Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.ACL, DctmAttributes.R_OBJECT_ID, aclId);
 				if (m != null) {
 					final String dql = String.format(
 						"select owner_name, object_name from dm_acl where r_object_id = %s",
@@ -675,7 +674,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		}
 
 		if (msg != null) {
-			if (ctx.isSupported(CmfType.ACL)) { throw new ImportException(msg); }
+			if (ctx.isSupported(CmfObject.Archetype.ACL)) { throw new ImportException(msg); }
 			this.log.warn(msg);
 			return;
 		}
@@ -691,7 +690,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		linkToParents(object, context);
 		// We only try to restore ACLs if it's a new object, or if ACL support is enabled.
 		if (!isReference()) {
-			if (context.isSupported(CmfType.ACL)) {
+			if (context.isSupported(CmfObject.Archetype.ACL)) {
 				// If ACL processing is enabled, go full tilt...
 				restoreAcl(object, newObject, context);
 			}
@@ -1167,7 +1166,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 	protected T newObject(DctmImportContext ctx) throws DfException, ImportException {
 		T newObj = super.newObject(ctx);
 		setOwnerGroupACLData(newObj, ctx);
-		if (ctx.isSupported(CmfType.DATASTORE)) {
+		if (ctx.isSupported(CmfObject.Archetype.DATASTORE)) {
 			CmfAttribute<IDfValue> att = this.cmfObject.getAttribute(DctmAttributes.A_STORAGE_TYPE);
 			String dataStore = "";
 			if ((att != null) && att.hasValues()) {
@@ -1195,14 +1194,14 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 						"Failed to set the owner for %s [%s](%s) to user [%s] - the user wasn't found - probably didn't need to be copied over",
 						this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(),
 						actualUser);
-					if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
+					if (ctx.isSupported(CmfObject.Archetype.USER)) { throw new ImportException(msg); }
 					this.log.warn(msg);
 				}
 			} catch (MultipleUserMatchesException e) {
 				String msg = String.format("Failed to set the owner for %s [%s](%s) to user [%s] - %s",
 					this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(), actualUser,
 					e.getMessage());
-				if (ctx.isSupported(CmfType.USER)) { throw new ImportException(msg); }
+				if (ctx.isSupported(CmfObject.Archetype.USER)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 			}
 		}
@@ -1217,7 +1216,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				String msg = String.format(
 					"Failed to set the group for %s [%s](%s) to group [%s] - the group wasn't found - probably didn't need to be copied over",
 					this.cmfObject.getType(), this.cmfObject.getLabel(), sysObject.getObjectId().getId(), group);
-				if (ctx.isSupported(CmfType.GROUP)) { throw new ImportException(msg); }
+				if (ctx.isSupported(CmfObject.Archetype.GROUP)) { throw new ImportException(msg); }
 				this.log.warn(msg);
 			}
 		}
@@ -1228,7 +1227,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		// First things first: fix the parent paths in the incoming object
 		CmfProperty<IDfValue> paths = this.cmfObject.getProperty(IntermediateProperty.PATH);
 		if (paths == null) {
-			paths = new CmfProperty<>(IntermediateProperty.PATH, CmfDataType.STRING, true);
+			paths = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true);
 			this.cmfObject.setProperty(paths);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
 				IntermediateProperty.PATH, this.cmfObject.getLabel(), this.cmfObject.getId()));
@@ -1236,7 +1235,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		if (parents == null) {
-			parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true);
+			parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValue.Type.ID, true);
 			this.cmfObject.setProperty(parents);
 			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
 				PropertyIds.PARENT_ID, this.cmfObject.getLabel(), this.cmfObject.getId()));
@@ -1260,12 +1259,12 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (!StringUtils.equals(aclDomain, object.getACLDomain())) { return false; }
 
 		// Same owner?
-		if (ctx.isSupported(CmfType.USER)) {
+		if (ctx.isSupported(CmfObject.Archetype.USER)) {
 			if (!isAttributeEquals(object, DctmAttributes.OWNER_NAME)) { return false; }
 		}
 
 		// Same group?
-		if (ctx.isSupported(CmfType.GROUP)) {
+		if (ctx.isSupported(CmfObject.Archetype.GROUP)) {
 			if (!isAttributeEquals(object, DctmAttributes.GROUP_NAME)) { return false; }
 		}
 

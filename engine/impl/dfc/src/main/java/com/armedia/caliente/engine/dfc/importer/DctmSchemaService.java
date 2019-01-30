@@ -16,7 +16,7 @@ import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.AttributeDe
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaService;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServiceException;
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.TypeDeclaration;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.documentum.fc.client.IDfCollection;
 import com.documentum.fc.client.IDfLocalTransaction;
@@ -79,7 +79,7 @@ public class DctmSchemaService implements SchemaService {
 			for (int i = type.getInt(DctmAttributes.START_POS); i < attributeCount; i++) {
 				IDfAttr attr = type.getTypeAttr(i);
 				String name = attr.getName();
-				CmfDataType dataType = null;
+				CmfValue.Type dataType = null;
 				attributes.put(name, new AttributeDeclaration(name, dataType, false, attr.isRepeating()));
 			}
 

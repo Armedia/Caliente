@@ -51,7 +51,6 @@ import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfRequirementInfo;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.Closer;
 import com.armedia.commons.utilities.CfgTools;
@@ -190,7 +189,7 @@ public abstract class ImportEngine<//
 									}
 								}
 
-								final CmfType storedType = next.getType();
+								final CmfObject.Archetype storedType = next.getType();
 								final boolean useTx = getImportStrategy(storedType).isSupportsTransactions();
 								if (useTx) {
 									session.begin();
@@ -289,7 +288,7 @@ public abstract class ImportEngine<//
 	}
 
 	private class Batch {
-		private final CmfType type;
+		private final CmfObject.Archetype type;
 		private final String id;
 		private final Collection<CmfObject<VALUE>> contents;
 		private final ImportStrategy strategy;
@@ -299,7 +298,7 @@ public abstract class ImportEngine<//
 			this(null, null, null, null);
 		}
 
-		private Batch(CmfType type, String id, Collection<CmfObject<VALUE>> contents, ImportStrategy strategy) {
+		private Batch(CmfObject.Archetype type, String id, Collection<CmfObject<VALUE>> contents, ImportStrategy strategy) {
 			this.type = type;
 			this.id = id;
 			this.contents = contents;
@@ -363,7 +362,7 @@ public abstract class ImportEngine<//
 			}
 		}
 
-		private void objectTypeImportFinished(UUID jobId, CmfType objectType) {
+		private void objectTypeImportFinished(UUID jobId, CmfObject.Archetype objectType) {
 			this.listenerProxy.objectTypeImportFinished(jobId, objectType,
 				getStoredObjectCounter().getCounters(objectType));
 		}
@@ -379,7 +378,7 @@ public abstract class ImportEngine<//
 			"import");
 	}
 
-	protected abstract ImportStrategy getImportStrategy(CmfType type);
+	protected abstract ImportStrategy getImportStrategy(CmfObject.Archetype type);
 
 	protected final ExecutorService newExecutor(int threadCount) {
 		return new ThreadPoolExecutor(threadCount, threadCount, 30, TimeUnit.SECONDS,
@@ -520,7 +519,7 @@ public abstract class ImportEngine<//
 		// objects require fixing, we don't sweep the whole table, but instead submit
 		// the IDs that we want fixed.
 
-		Map<CmfType, Map<String, String>> idMap = new EnumMap<>(CmfType.class);
+		Map<CmfObject.Archetype, Map<String, String>> idMap = new EnumMap<>(CmfObject.Archetype.class);
 		for (String key : p.stringPropertyNames()) {
 			final String fixedName = p.getProperty(key);
 			Matcher matcher = ImportEngine.MAP_KEY_PARSER.matcher(key);
@@ -528,9 +527,9 @@ public abstract class ImportEngine<//
 				continue;
 			}
 			final String T = matcher.group(1);
-			final CmfType t;
+			final CmfObject.Archetype t;
 			try {
-				t = CmfType.valueOf(T);
+				t = CmfObject.Archetype.valueOf(T);
 			} catch (Exception e) {
 				this.log.warn(
 					String.format("Unsupported object type found [%s] in key [%s] (value = [%s])", T, key, fixedName),
@@ -551,12 +550,12 @@ public abstract class ImportEngine<//
 			return;
 		}
 
-		for (final CmfType t : idMap.keySet()) {
+		for (final CmfObject.Archetype t : idMap.keySet()) {
 			final Map<String, String> mappings = idMap.get(t);
 			CmfNameFixer<CmfValue> nameFixer = new CmfNameFixer<CmfValue>() {
 
 				@Override
-				public boolean supportsType(CmfType type) {
+				public boolean supportsType(CmfObject.Archetype type) {
 					return (type == t);
 				}
 
@@ -608,7 +607,7 @@ public abstract class ImportEngine<//
 		final ImportEngineListener listener = listenerDelegator.getListenerProxy();
 
 		try {
-			Map<CmfType, Long> containedTypes;
+			Map<CmfObject.Archetype, Long> containedTypes;
 			try {
 				containedTypes = objectStore.getStoredObjectTypes();
 			} catch (CmfStorageException e) {
@@ -616,7 +615,7 @@ public abstract class ImportEngine<//
 			}
 
 			// Make sure we have a valid import strategy for every item
-			for (CmfType t : containedTypes.keySet()) {
+			for (CmfObject.Archetype t : containedTypes.keySet()) {
 				// If the type is supported, and we have no strategy, it's a problem...
 				if (contextFactory.isSupported(t) && (getImportStrategy(t) == null)) {
 					throw new ImportException(
@@ -688,7 +687,7 @@ public abstract class ImportEngine<//
 
 			listener.importStarted(importState, containedTypes);
 			final CmfAttributeTranslator<VALUE> translator = getTranslator();
-			for (final CmfType type : CmfType.values()) {
+			for (final CmfObject.Archetype type : CmfObject.Archetype.values()) {
 				final Long total = containedTypes.get(type);
 				if (total == null) {
 					this.log.warn(String.format("No %s objects are contained in the export", type.name()));
@@ -808,7 +807,7 @@ public abstract class ImportEngine<//
 
 							// Ok... we have stuff to process that wasn't filtered, process it!
 							CmfObject<?> sample = this.contents.get(0);
-							CmfType storedType = sample.getType();
+							CmfObject.Archetype storedType = sample.getType();
 							ImportStrategy strategy = getImportStrategy(storedType);
 							// We will have already validated that a valid strategy is provided
 							// for all stored types
@@ -914,7 +913,7 @@ public abstract class ImportEngine<//
 		}
 	}
 
-	protected boolean abortImport(CmfType type, long errors) {
+	protected boolean abortImport(CmfObject.Archetype type, long errors) {
 		return false;
 	}
 

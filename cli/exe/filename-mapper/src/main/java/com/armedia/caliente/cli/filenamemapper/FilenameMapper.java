@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.filenamemapper.FilenameDeduplicator.FilenameCollisionResolver;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
+import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -64,7 +64,7 @@ class FilenameMapper {
 		return (decodeType(id.getId()) != null);
 	};
 
-	private CmfType decodeType(String idString) {
+	private CmfObject.Archetype decodeType(String idString) {
 		if (idString == null) {
 			throw new IllegalArgumentException("Must provide an ID to decode the information from");
 		}
@@ -73,37 +73,37 @@ class FilenameMapper {
 		final IDfId id = new DfId(idString);
 		switch (id.getTypePart()) {
 			case IDfId.DM_STORE:
-				return CmfType.DATASTORE;
+				return CmfObject.Archetype.DATASTORE;
 
 			case IDfId.DM_USER:
-				return CmfType.USER;
+				return CmfObject.Archetype.USER;
 
 			case IDfId.DM_GROUP:
-				return CmfType.GROUP;
+				return CmfObject.Archetype.GROUP;
 
 			case IDfId.DM_ACL:
-				return CmfType.ACL;
+				return CmfObject.Archetype.ACL;
 
 			case IDfId.DM_TYPE:
-				return CmfType.TYPE;
+				return CmfObject.Archetype.TYPE;
 
 			case IDfId.DM_FORMAT:
-				return CmfType.FORMAT;
+				return CmfObject.Archetype.FORMAT;
 
 			case IDfId.DM_CABINET: // fall-through, both folders and cabinets map as folders
 			case IDfId.DM_FOLDER:
-				return CmfType.FOLDER;
+				return CmfObject.Archetype.FOLDER;
 
 			case IDfId.DM_SYSOBJECT:
 			case IDfId.DM_DOCUMENT:
-				return CmfType.DOCUMENT;
+				return CmfObject.Archetype.DOCUMENT;
 
 			default:
 				return null;
 		}
 	}
 
-	private CmfObjectRef newObjectRef(CmfType type, String idString) {
+	private CmfObjectRef newObjectRef(CmfObject.Archetype type, String idString) {
 		if (type == null) {
 			// If we weren't given a type, then we try to identify it
 			type = decodeType(idString);
@@ -276,14 +276,14 @@ class FilenameMapper {
 								final int c = collection.getValueCount("i_folder_id");
 								for (int i = 0; i < c; i++) {
 									String containerId = collection.getRepeatingString("i_folder_id", i);
-									CmfObjectRef containerRef = newObjectRef(CmfType.FOLDER, containerId);
+									CmfObjectRef containerRef = newObjectRef(CmfObject.Archetype.FOLDER, containerId);
 									if ((containerRef != null) && (entryRef != null)) {
 										deduplicator.addEntry(containerRef, entryRef, name);
 									}
 								}
 							} else {
 								String containerId = collection.getString("i_folder_id");
-								CmfObjectRef containerRef = newObjectRef(CmfType.FOLDER, containerId);
+								CmfObjectRef containerRef = newObjectRef(CmfObject.Archetype.FOLDER, containerId);
 								if ((containerRef != null) && (entryRef != null)) {
 									deduplicator.addEntry(containerRef, entryRef, name);
 								}
