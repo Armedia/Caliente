@@ -571,20 +571,20 @@ public class Launcher extends AbstractLauncher {
 			final Logger log = LoggerFactory.getLogger(getClass());
 			final CmfObjectStore<?, ?> objectStore = state.getObjectStore();
 			final boolean writeProperties = (objectStore != null);
-			final String pfx = String.format("caliente.%s.%s", engineName.toLowerCase(),
+			final String format = String.format("caliente.%s.%s.%%s", engineName.toLowerCase(),
 				this.command.getDescriptor().getTitle().toLowerCase());
 			try {
 				if (writeProperties) {
 					Map<String, CmfValue> properties = new TreeMap<>();
-					properties.put(String.format("%s.version", pfx), new CmfValue(Launcher.VERSION));
-					properties.put(String.format("%s.start", pfx), new CmfValue(new Date()));
+					properties.put(String.format(format, "version"), new CmfValue(Launcher.VERSION));
+					properties.put(String.format(format, "start"), new CmfValue(new Date()));
 					objectStore.setProperties(properties);
 				}
 				this.command.run(state, commandValues, positionals);
 			} catch (Throwable t) {
 				if (writeProperties) {
 					try {
-						objectStore.setProperty(String.format("%s.error", pfx), new CmfValue(Tools.dumpStackTrace(t)));
+						objectStore.setProperty(String.format(format, "error"), new CmfValue(Tools.dumpStackTrace(t)));
 					} catch (Exception e) {
 						log.error("Failed to store the captured error into the properties database", e);
 					}
@@ -594,7 +594,7 @@ public class Launcher extends AbstractLauncher {
 				// TODO: Unlock from single execution
 				try {
 					if (writeProperties) {
-						objectStore.setProperty(String.format("%s.end", pfx), new CmfValue(new Date()));
+						objectStore.setProperty(String.format(format, "end"), new CmfValue(new Date()));
 					}
 				} finally {
 					shutdownStores();
