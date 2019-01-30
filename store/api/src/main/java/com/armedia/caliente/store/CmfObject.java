@@ -36,8 +36,6 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 	private final String label;
 	private final String subtype;
 	private final Set<String> secondaries;
-	private final String productName;
-	private final String productVersion;
 	private final Map<String, CmfAttribute<VALUE>> attributes = new HashMap<>();
 	private final Map<String, CmfProperty<VALUE>> properties = new HashMap<>();
 	private final CmfAttributeTranslator<VALUE> translator;
@@ -59,8 +57,6 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 		this.historyCurrent = pattern.isHistoryCurrent();
 		this.label = pattern.getLabel();
 		this.subtype = pattern.getSubtype();
-		this.productName = pattern.getProductName();
-		this.productVersion = pattern.getProductVersion();
 		for (CmfAttribute<VALUE> attribute : pattern.getAttributes()) {
 			this.attributes.put(attribute.getName(), new CmfAttribute<>(attribute));
 		}
@@ -73,15 +69,14 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 
 	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfType type, String id, String name,
 		Collection<CmfObjectRef> parentIds, int dependencyTier, String historyId, boolean historyCurrent, String label,
-		String subtype, Set<String> secondaries, String productName, String productVersion, Long number) {
+		String subtype, Set<String> secondaries, Long number) {
 		this(translator, type, id, name, parentIds, id, dependencyTier, historyId, historyCurrent, label, subtype,
-			secondaries, productName, productVersion, number);
+			secondaries, number);
 	}
 
 	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfType type, String id, String name,
 		Collection<CmfObjectRef> parentIds, String searchKey, int dependencyTier, String historyId,
-		boolean historyCurrent, String label, String subtype, Set<String> secondaries, String productName,
-		String productVersion, Long number) {
+		boolean historyCurrent, String label, String subtype, Set<String> secondaries, Long number) {
 		super(type, id, searchKey);
 		if (translator == null) { throw new IllegalArgumentException("Must provide a valid value translator"); }
 		if (type == null) { throw new IllegalArgumentException("Must provide a valid object type"); }
@@ -89,8 +84,6 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 		if (name == null) { throw new IllegalArgumentException("Must provide a valid object id"); }
 		if (label == null) { throw new IllegalArgumentException("Must provide a valid object label"); }
 		if (subtype == null) { throw new IllegalArgumentException("Must provide a valid object subtype"); }
-		if (productName == null) { throw new IllegalArgumentException("Must provide a valid product name"); }
-		if (productVersion == null) { throw new IllegalArgumentException("Must provide a valid product version"); }
 		if (parentIds == null) {
 			parentIds = Collections.emptyList();
 		}
@@ -103,8 +96,6 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 		this.label = label;
 		this.subtype = subtype;
 		this.secondaries = Tools.freezeSet(new LinkedHashSet<>(secondaries));
-		this.productName = productName;
-		this.productVersion = productVersion;
 		this.translator = translator;
 	}
 
@@ -120,8 +111,10 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 
 	public final void copyNumber(CmfObject<?> other) {
 		Objects.requireNonNull(other, "Must provide an object whose number to copy");
-		if (!new CmfObjectSearchSpec(this).equals(new CmfObjectSearchSpec(other))) { throw new IllegalArgumentException(
-			String.format("The given %s is not the same as %s", other.getDescription(), this.getDescription())); }
+		if (!new CmfObjectSearchSpec(this).equals(new CmfObjectSearchSpec(other))) {
+			throw new IllegalArgumentException(
+				String.format("The given %s is not the same as %s", other.getDescription(), this.getDescription()));
+		}
 		if (this == other) { return; }
 		setNumber(other.getNumber());
 	}
@@ -156,14 +149,6 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 
 	public final String getLabel() {
 		return this.label;
-	}
-
-	public final String getProductName() {
-		return this.productName;
-	}
-
-	public final String getProductVersion() {
-		return this.productVersion;
 	}
 
 	public final int getAttributeCount() {

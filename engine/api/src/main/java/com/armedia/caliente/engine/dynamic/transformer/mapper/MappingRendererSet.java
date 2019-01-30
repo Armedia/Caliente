@@ -4,20 +4,22 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.BiFunction;
 
 import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.engine.dynamic.xml.mapper.ResidualsMode;
 import com.armedia.commons.utilities.Tools;
 
-public class MappingRendererSet implements MappingRenderer {
+public class MappingRendererSet
+	implements BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>> {
 
 	private final String name;
 	private final ResidualsMode residualsMode;
 	private final Character separator;
-	private final List<MappingRenderer> renderers;
+	private final List<BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers;
 
 	public MappingRendererSet(String name, Character separator, ResidualsMode residualsMode,
-		List<MappingRenderer> renderers) {
+		List<BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers) {
 		this.name = name;
 		this.renderers = Tools.freezeList(renderers);
 		this.residualsMode = residualsMode;
@@ -28,7 +30,7 @@ public class MappingRendererSet implements MappingRenderer {
 		return this.name;
 	}
 
-	public List<MappingRenderer> getRenderers() {
+	public List<BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> getRenderers() {
 		return this.renderers;
 	}
 
@@ -47,17 +49,17 @@ public class MappingRendererSet implements MappingRenderer {
 	 * @return the set of target attributes that were rendered
 	 */
 	@Override
-	public final Collection<AttributeMapping> render(DynamicObject object, ResidualsModeTracker tracker) {
+	public final Collection<AttributeMapping> apply(DynamicObject object, ResidualsModeTracker tracker) {
 		Map<String, AttributeMapping> ret = new TreeMap<>();
 		if (tracker != null) {
 			tracker.applyResidualsMode(this.residualsMode);
 		}
-		for (MappingRenderer r : this.renderers) {
+		for (BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>> r : this.renderers) {
 			if (r == null) {
 				continue;
 			}
 
-			Collection<AttributeMapping> values = r.render(object, tracker);
+			Collection<AttributeMapping> values = r.apply(object, tracker);
 			if ((values == null) || values.isEmpty()) {
 				continue;
 			}

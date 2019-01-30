@@ -1,5 +1,6 @@
 package com.armedia.caliente.cli.caliente.command;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -66,12 +67,8 @@ public enum CalienteCommand {
 	private CalienteCommand(String description, String[] aliases, boolean requiresStorage, boolean requiresCleanData) {
 		this.description = description;
 		Set<String> a = new TreeSet<>();
-		for (String s : aliases) {
-			s = CalienteCommand.canonicalize(s);
-			if (!StringUtils.isBlank(s)) {
-				a.add(s);
-			}
-		}
+		Arrays.stream(aliases).map(CalienteCommand::canonicalize).filter(StringUtils::isNotBlank)
+			.forEachOrdered(a::add);
 		this.title = CalienteCommand.canonicalize(name());
 		this.aliases = Tools.freezeSet(new LinkedHashSet<>(a));
 		this.requiresStorage = requiresStorage;

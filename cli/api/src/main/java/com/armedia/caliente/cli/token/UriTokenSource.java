@@ -7,6 +7,7 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -24,11 +25,7 @@ public class UriTokenSource extends ReaderTokenSource {
 
 	static {
 		Set<String> set = new TreeSet<>();
-		for (String s : UriTokenSource.CLASSPATH_SCHEME_STRINGS) {
-			if (!StringUtils.isEmpty(s)) {
-				set.add(StringUtils.lowerCase(s));
-			}
-		}
+		Arrays.stream(UriTokenSource.CLASSPATH_SCHEME_STRINGS).filter(StringUtils::isNotEmpty).forEachOrdered(set::add);
 		CLASSPATH_SCHEMES = Tools.freezeSet(new LinkedHashSet<>(set));
 	}
 

@@ -80,10 +80,9 @@ public abstract class JdbcDialect {
 			"       insert into " + //
 				"          cmf_object (" + //
 				"              object_id, object_name, search_key, object_type, " + //
-				"              object_subtype, object_label, tier_id, history_id, history_current, " + //
-				"              product_name, product_version" + //
+				"              object_subtype, object_label, tier_id, history_id, history_current " + //
 				"          ) " + //
-				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" //
+				"   values (?, ?, ?, ?, ?, ?, ?, ?, ?)" //
 		),
 
 		UPSERT_ALT_NAME( //

@@ -48,6 +48,7 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PooledWorkers;
+import com.armedia.commons.utilities.PooledWorkersLogic;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.line.LineScanner;
 
@@ -386,7 +387,7 @@ public abstract class ExportEngine<//
 					}
 					try {
 						ctx.printf("Waiting for [%s] from %s (#%d created by %s)", requirement, logLabel,
-							status.getObjectNumber(), status.getCreatorThread());
+							status.getObjectNumber(), status.getCreatorThread().getName());
 						long waitTime = status.waitUntilCompleted();
 						ctx.printf("Waiting for [%s] from %s for %d ms", requirement, logLabel, waitTime);
 					} catch (InterruptedException e) {
@@ -659,33 +660,31 @@ public abstract class ExportEngine<//
 		final ExportEngineListener listener = listenerDelegator.getListenerProxy();
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap = new ConcurrentHashMap<>();
 
-		final PooledWorkers<SessionFactory<SESSION>, SessionWrapper<SESSION>, ExportTarget> worker = new PooledWorkers<SessionFactory<SESSION>, SessionWrapper<SESSION>, ExportTarget>() {
+		final PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget> logic = new PooledWorkersLogic<SessionWrapper<SESSION>, ExportTarget>() {
 
 			@Override
-			protected SessionWrapper<SESSION> initialize(SessionFactory<SESSION> sessionFactory) throws Exception {
-				final SessionWrapper<SESSION> s;
+			public SessionWrapper<SESSION> initialize() throws Exception {
 				try {
-					s = sessionFactory.acquireSession();
+					final SessionWrapper<SESSION> s = sessionFactory.acquireSession();
+					ExportEngine.this.log.info("Worker ready with session [{}]", s.getId());
+					return s;
 				} catch (SessionFactoryException e) {
-					this.log.error("Failed to obtain a worker session", e);
-					return null;
+					throw new ExportException("Failed to obtain a worker session", e);
 				}
-				this.log.info("Worker ready with session [{}]", s.getId());
-				return s;
 			}
 
 			@Override
-			protected void process(SessionWrapper<SESSION> session, ExportTarget target) throws Exception {
+			public void process(SessionWrapper<SESSION> session, ExportTarget target) throws Exception {
 				final SESSION s = session.getWrapped();
 
 				CmfType nextType = target.getType();
 				final String nextId = target.getId();
 				final String nextKey = target.getSearchKey();
 
-				if (this.log.isDebugEnabled()) {
-					this.log.debug("Polled {}", target);
+				if (ExportEngine.this.log.isDebugEnabled()) {
+					ExportEngine.this.log.debug("Polled {}", target);
 				}
-				this.log.info("Worker thread polled {}", target);
+				ExportEngine.this.log.info("Worker thread polled {}", target);
 
 				final boolean tx = session.begin();
 				boolean ok = false;
@@ -696,7 +695,7 @@ public abstract class ExportEngine<//
 						.newExportDelegate(s, nextType, nextKey);
 					if (exportDelegate == null) {
 						// No object found with that ID...
-						this.log.warn("No {} object found with searchKey[{}]",
+						ExportEngine.this.log.warn("No {} object found with searchKey[{}]",
 							(nextType != null ? nextType.name() : "globally unique"), nextKey);
 						return;
 					}
@@ -704,13 +703,14 @@ public abstract class ExportEngine<//
 					target = exportDelegate.getExportTarget();
 					nextType = target.getType();
 					if (nextType == null) {
-						this.log.error("Failed to determine the object type for target with ID[{}] and searchKey[{}]",
-							nextId, nextKey);
+						ExportEngine.this.log.error(
+							"Failed to determine the object type for target with ID[{}] and searchKey[{}]", nextId,
+							nextKey);
 						return;
 					}
 
-					if (this.log.isDebugEnabled()) {
-						this.log.debug("Exporting the {} object with ID[{}]", nextType, nextId);
+					if (ExportEngine.this.log.isDebugEnabled()) {
+						ExportEngine.this.log.debug("Exporting the {} object with ID[{}]", nextType, nextId);
 					}
 
 					// The type mapper parameter is null here because it's only useful
@@ -729,13 +729,13 @@ public abstract class ExportEngine<//
 							result = null;
 						}
 						if (result != null) {
-							if (this.log.isDebugEnabled()) {
+							if (ExportEngine.this.log.isDebugEnabled()) {
 								if (result.skipReason != null) {
-									this.log.debug("Skipped {} [{}]({}) : {}", target.getType(), target.getSearchKey(),
-										target.getId(), result.skipReason);
+									ExportEngine.this.log.debug("Skipped {} [{}]({}) : {}", target.getType(),
+										target.getSearchKey(), target.getId(), result.skipReason);
 								} else {
-									this.log.debug("Exported {} in position {}", result.object.getDescription(),
-										result.objectNumber);
+									ExportEngine.this.log.debug("Exported {} in position {}",
+										result.object.getDescription(), result.objectNumber);
 								}
 							}
 						}
@@ -764,22 +764,23 @@ public abstract class ExportEngine<//
 			}
 
 			@Override
-			protected void processingFailed(SessionWrapper<SESSION> session, ExportTarget target, Throwable thrown) {
-				super.processingFailed(session, target, thrown);
+			public void handleFailure(SessionWrapper<SESSION> state, ExportTarget target, Exception thrown) {
 				ExportEngine.this.log.error("Failed to process {}", target, thrown);
 			}
 
 			@Override
-			protected void cleanup(SessionWrapper<SESSION> session) {
+			public void cleanup(SessionWrapper<SESSION> session) {
 				session.close();
 			}
 		};
+
+		final PooledWorkers<SessionWrapper<SESSION>, ExportTarget> worker = new PooledWorkers<>();
 
 		this.log.debug("Locating export results...");
 		try {
 			// Fire off the workers
 			listener.exportStarted(exportState);
-			worker.start(sessionFactory, threadCount, "Exporter", true);
+			worker.start(logic, threadCount, "Exporter", true);
 			try {
 				output.info("Retrieving the results");
 				final int reportCount = 1000;
@@ -816,14 +817,13 @@ public abstract class ExportEngine<//
 								sources.size()));
 						}
 
-						scanner.scanLines((line) -> {
+						scanner.iterator(sources).forEachRemaining((line) -> {
 							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
 								s.forEachOrdered(submitter);
 							} catch (Exception e) {
 								this.log.warn("Failed to find the export target(s) as per [{}]", line, e);
 							}
-							return true;
-						}, sources);
+						});
 					} else {
 						try (Stream<ExportTarget> s = getExportTargets(session, sources.iterator().next(),
 							delegateFactory)) {
@@ -929,6 +929,12 @@ public abstract class ExportEngine<//
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, getObjectStore(),
 						getContentStore(), transformer, getOutput(), getWarningTracker());
+
+					final String fmt = "caliente.export.product.%s";
+					this.objectStore.setProperty(String.format(fmt, "name"),
+						new CmfValue(contextFactory.getProductName()));
+					this.objectStore.setProperty(String.format(fmt, "version"),
+						new CmfValue(contextFactory.getProductVersion()));
 				} catch (Exception e) {
 					throw new ExportException("Failed to configure the context factory to carry out the export", e);
 				}

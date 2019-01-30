@@ -151,7 +151,7 @@ public class DataGen {
 	protected int run(OptionValues cli) throws Exception {
 		final boolean debug = cli.isPresent(CLIParam.debug);
 
-		List<String> objectTypes = cli.getAllStrings(CLIParam.object_types);
+		List<String> objectTypes = cli.getStrings(CLIParam.object_types);
 		if ((objectTypes == null) || objectTypes.isEmpty()) {
 			objectTypes = Collections.emptyList();
 		}

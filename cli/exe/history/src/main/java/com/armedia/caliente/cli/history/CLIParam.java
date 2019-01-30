@@ -1,12 +1,14 @@
 package com.armedia.caliente.cli.history;
 
+import java.util.function.Supplier;
+
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.OptionWrapper;
 
-public enum CLIParam implements OptionWrapper {
-	debug(new OptionImpl() //
-		.setDescription("Enable increased logging for debugging") //
+public enum CLIParam implements Supplier<Option> {
+	debug(
+		new OptionImpl() //
+			.setDescription("Enable increased logging for debugging") //
 	), //
 	;
 
@@ -17,7 +19,7 @@ public enum CLIParam implements OptionWrapper {
 	}
 
 	@Override
-	public Option getOption() {
+	public Option get() {
 		return this.option;
 	}
 }

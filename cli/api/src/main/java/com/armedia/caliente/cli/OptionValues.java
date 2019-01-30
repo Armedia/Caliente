@@ -1,5 +1,7 @@
 package com.armedia.caliente.cli;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,6 +14,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -70,12 +74,14 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 	private String getValidKey(Option param) {
 		Objects.requireNonNull(param, "Must provide an option whose presence to check for");
 		String key = param.getKey();
-		if (key == null) { throw new IllegalArgumentException(
-			"The given option definition does not define a valid key"); }
+		if (key == null) {
+			throw new IllegalArgumentException("The given option definition does not define a valid key");
+		}
 		if (OptionValue.class.isInstance(param)) {
 			OptionValue p = OptionValue.class.cast(param);
-			if (p.getOptionValues() != this) { throw new IllegalArgumentException(
-				"The given option is not associated to this OptionValues instance"); }
+			if (p.getOptionValues() != this) {
+				throw new IllegalArgumentException("The given option is not associated to this OptionValues instance");
+			}
 		}
 		return key;
 	}
@@ -174,14 +180,12 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return (v != null ? v.booleanValue() : def);
 	}
 
-	public List<Boolean> getAllBooleans(Option param) {
-		List<String> l = getAllStrings(param);
+	public List<Boolean> getBooleans(Option param) {
+		List<String> l = getStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Boolean> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Tools.toBoolean(s));
-		}
+		l.stream().map(Tools::toBoolean).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -195,14 +199,12 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return (v != null ? v.intValue() : def);
 	}
 
-	public List<Integer> getAllIntegers(Option param) {
-		List<String> l = getAllStrings(param);
+	public List<Integer> getIntegers(Option param) {
+		List<String> l = getStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Integer> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Integer.valueOf(s));
-		}
+		l.stream().map(Integer::valueOf).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -216,14 +218,12 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return (v != null ? v.longValue() : def);
 	}
 
-	public List<Long> getAllLongs(Option param) {
-		List<String> l = getAllStrings(param);
+	public List<Long> getLongs(Option param) {
+		List<String> l = getStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Long> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Long.valueOf(s));
-		}
+		l.stream().map(Long::valueOf).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -237,14 +237,12 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return (v != null ? v.floatValue() : def);
 	}
 
-	public List<Float> getAllFloats(Option param) {
-		List<String> l = getAllStrings(param);
+	public List<Float> getFloats(Option param) {
+		List<String> l = getStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Float> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Float.valueOf(s));
-		}
+		l.stream().map(Float::valueOf).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -258,91 +256,136 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return (v != null ? v.doubleValue() : def);
 	}
 
-	public List<Double> getAllDoubles(Option param) {
-		List<String> l = getAllStrings(param);
+	public List<Double> getDoubles(Option param) {
+		List<String> l = getStrings(param);
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Double> r = new ArrayList<>(l.size());
-		for (String s : l) {
-			r.add(Double.valueOf(s));
-		}
+		l.stream().map(Double::valueOf).forEachOrdered(r::add);
+		return Tools.freezeList(r);
+	}
+
+	public BigInteger getBigInteger(Option param) {
+		String s = getString(param);
+		return (s != null ? new BigInteger(s) : null);
+	}
+
+	public BigInteger getBigInteger(Option param, BigInteger def) {
+		BigInteger v = getBigInteger(param);
+		return (v != null ? v : def);
+	}
+
+	public List<BigInteger> getBigIntegers(Option param) {
+		List<String> l = getStrings(param);
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
+		List<BigInteger> r = new ArrayList<>(l.size());
+		l.stream().map(BigInteger::new).forEachOrdered(r::add);
+		return Tools.freezeList(r);
+	}
+
+	public BigDecimal getBigDecimal(Option param) {
+		String s = getString(param);
+		return (s != null ? new BigDecimal(s) : null);
+	}
+
+	public BigDecimal getBigDecimal(Option param, BigDecimal def) {
+		BigDecimal v = getBigDecimal(param);
+		return (v != null ? v : def);
+	}
+
+	public List<BigDecimal> getBigDecimals(Option param) {
+		List<String> l = getStrings(param);
+		if (l == null) { return null; }
+		if (l.isEmpty()) { return Collections.emptyList(); }
+		List<BigDecimal> r = new ArrayList<>(l.size());
+		l.stream().map(BigDecimal::new).forEachOrdered(r::add);
 		return Tools.freezeList(r);
 	}
 
 	public String getString(Option param) {
-		List<String> l = getAllStrings(param);
+		List<String> l = getStrings(param);
 		if (l == null) { return param.getDefault(); }
 		return l.get(0);
 	}
 
 	public String getString(Option param, String def) {
-		List<String> l = getAllStrings(param, null);
+		List<String> l = getStrings(param, null);
 		if (l == null) { return def; }
 		return l.get(0);
 	}
 
-	public List<String> getAllStrings(Option param) {
-		List<String> v = getAllStrings(param, null);
+	public List<String> getStrings(Option param) {
+		List<String> v = getStrings(param, null);
 		if (v == null) { return param.getDefaults(); }
 		return v;
 	}
 
-	public List<String> getAllStrings(Option param, List<String> def) {
+	public List<String> getStrings(Option param, List<String> def) {
 		List<String> v = this.values.get(getValidKey(param));
 		if (v == null) { return def; }
 		return v;
 	}
 
 	public <E extends Enum<E>> E getEnum(Class<E> enumClass, Option param) {
-		return getEnum(enumClass, true, param);
+		return getEnum(enumClass, null, param);
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, Option param) {
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Option param) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
-		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
-			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
+		if (!enumClass.isEnum()) {
+			throw new IllegalArgumentException(
+				String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName()));
+		}
 		String value = getString(param);
 		if (value == null) { return null; }
 		try {
 			return Enum.valueOf(enumClass, value);
 		} catch (final IllegalArgumentException e) {
-			if (failOnInvalid) { throw e; }
-			return null;
+			if (invalidHandler == null) { throw e; }
+			return invalidHandler.apply(value, e);
 		}
 	}
 
 	public <E extends Enum<E>> E getEnum(Class<E> enumClass, Option param, E def) {
-		return getEnum(enumClass, true, param, def);
+		return getEnum(enumClass, null, param, def);
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, Option param, E def) {
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Option param, E def) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
-		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
-			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
+		if (!enumClass.isEnum()) {
+			throw new IllegalArgumentException(
+				String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName()));
+		}
 		String value = getString(param, null);
 		if (value == null) { return def; }
 		try {
 			return Enum.valueOf(enumClass, value);
 		} catch (final IllegalArgumentException e) {
-			if (failOnInvalid) { throw e; }
-			return null;
+			if (invalidHandler == null) { throw e; }
+			return invalidHandler.apply(value, e);
 		}
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, Option param) {
-		return getAllEnums(enumClass, true, param);
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, Option param) {
+		return getEnums(enumClass, null, param);
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, Option param) {
-		return getAllEnums(enumClass, null, failOnInvalid, param);
-	}
-
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
 		Option param) {
+		return getEnums(enumClass, null, invalidHandler, param);
+	}
+
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString,
+		BiFunction<Object, Exception, E> invalidHandler, Option param) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
-		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
-			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
-		List<String> v = getAllStrings(param, null);
+		if (!enumClass.isEnum()) {
+			throw new IllegalArgumentException(
+				String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName()));
+		}
+		List<String> v = getStrings(param, null);
 		if (v == null) {
 			v = param.getDefaults();
 		}
@@ -353,26 +396,33 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 			try {
 				ret.add(Enum.valueOf(enumClass, s));
 			} catch (final IllegalArgumentException e) {
-				if (failOnInvalid) { throw e; }
+				if (invalidHandler == null) { throw e; }
+				E alt = invalidHandler.apply(ret, e);
+				if (alt != null) {
+					ret.add(alt);
+				}
 			}
 		}
 		return ret;
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, Option param, Set<E> def) {
-		return getAllEnums(enumClass, true, param, def);
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, Option param, Set<E> def) {
+		return getEnums(enumClass, null, param, def);
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, Option param, Set<E> def) {
-		return getAllEnums(enumClass, null, failOnInvalid, param, def);
-	}
-
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
 		Option param, Set<E> def) {
+		return getEnums(enumClass, null, invalidHandler, param, def);
+	}
+
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString,
+		BiFunction<Object, Exception, E> invalidHandler, Option param, Set<E> def) {
 		if (enumClass == null) { throw new IllegalArgumentException("Must provide a non-null Enum class"); }
-		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
-			String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName())); }
-		List<String> v = getAllStrings(param, null);
+		if (!enumClass.isEnum()) {
+			throw new IllegalArgumentException(
+				String.format("Class [%s] is not an Enum class", enumClass.getCanonicalName()));
+		}
+		List<String> v = getStrings(param, null);
 		if (v == null) { return def; }
 		Set<E> ret = EnumSet.noneOf(enumClass);
 		for (String s : v) {
@@ -380,7 +430,11 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 			try {
 				ret.add(Enum.valueOf(enumClass, s));
 			} catch (final IllegalArgumentException e) {
-				if (failOnInvalid) { throw e; }
+				if (invalidHandler == null) { throw e; }
+				E alt = invalidHandler.apply(ret, e);
+				if (alt != null) {
+					ret.add(alt);
+				}
 			}
 		}
 		return ret;
@@ -417,150 +471,177 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		return (getValueCount(param) > 0);
 	}
 
-	public boolean isDefined(OptionWrapper paramDel) {
+	public boolean isDefined(Supplier<Option> paramDel) {
 		return isDefined(Option.unwrap(paramDel));
 	}
 
-	public OptionValue getOption(OptionWrapper paramDel) {
+	public OptionValue getOption(Supplier<Option> paramDel) {
 		return getOption(Option.unwrap(paramDel));
 	}
 
-	public Boolean getBoolean(OptionWrapper paramDel) {
+	public Boolean getBoolean(Supplier<Option> paramDel) {
 		return getBoolean(Option.unwrap(paramDel));
 	}
 
-	public Boolean getBoolean(OptionWrapper paramDel, Boolean def) {
+	public Boolean getBoolean(Supplier<Option> paramDel, Boolean def) {
 		return getBoolean(Option.unwrap(paramDel), def);
 	}
 
-	public List<Boolean> getAllBooleans(OptionWrapper paramDel) {
-		return getAllBooleans(Option.unwrap(paramDel));
+	public List<Boolean> getBooleans(Supplier<Option> paramDel) {
+		return getBooleans(Option.unwrap(paramDel));
 	}
 
-	public Integer getInteger(OptionWrapper paramDel) {
+	public Integer getInteger(Supplier<Option> paramDel) {
 		return getInteger(Option.unwrap(paramDel));
 	}
 
-	public Integer getInteger(OptionWrapper paramDel, Integer def) {
+	public Integer getInteger(Supplier<Option> paramDel, Integer def) {
 		return getInteger(Option.unwrap(paramDel), def);
 	}
 
-	public List<Integer> getAllIntegers(OptionWrapper paramDel) {
-		return getAllIntegers(Option.unwrap(paramDel));
+	public List<Integer> getIntegers(Supplier<Option> paramDel) {
+		return getIntegers(Option.unwrap(paramDel));
 	}
 
-	public Long getLong(OptionWrapper paramDel) {
+	public Long getLong(Supplier<Option> paramDel) {
 		return getLong(Option.unwrap(paramDel));
 	}
 
-	public Long getLong(OptionWrapper paramDel, Long def) {
+	public Long getLong(Supplier<Option> paramDel, Long def) {
 		return getLong(Option.unwrap(paramDel), def);
 	}
 
-	public List<Long> getAllLongs(OptionWrapper paramDel) {
-		return getAllLongs(Option.unwrap(paramDel));
+	public List<Long> getLongs(Supplier<Option> paramDel) {
+		return getLongs(Option.unwrap(paramDel));
 	}
 
-	public Float getFloat(OptionWrapper paramDel) {
+	public Float getFloat(Supplier<Option> paramDel) {
 		return getFloat(Option.unwrap(paramDel));
 	}
 
-	public Float getFloat(OptionWrapper paramDel, Float def) {
+	public Float getFloat(Supplier<Option> paramDel, Float def) {
 		return getFloat(Option.unwrap(paramDel), def);
 	}
 
-	public List<Float> getAllFloats(OptionWrapper paramDel) {
-		return getAllFloats(Option.unwrap(paramDel));
+	public List<Float> getFloats(Supplier<Option> paramDel) {
+		return getFloats(Option.unwrap(paramDel));
 	}
 
-	public Double getDouble(OptionWrapper paramDel) {
+	public Double getDouble(Supplier<Option> paramDel) {
 		return getDouble(Option.unwrap(paramDel));
 	}
 
-	public Double getDouble(OptionWrapper paramDel, Double def) {
+	public Double getDouble(Supplier<Option> paramDel, Double def) {
 		return getDouble(Option.unwrap(paramDel), def);
 	}
 
-	public List<Double> getAllDoubles(OptionWrapper paramDel) {
-		return getAllDoubles(Option.unwrap(paramDel));
+	public List<Double> getDoubles(Supplier<Option> paramDel) {
+		return getDoubles(Option.unwrap(paramDel));
 	}
 
-	public String getString(OptionWrapper paramDel) {
+	public BigInteger getBigInteger(Supplier<Option> paramDel) {
+		return getBigInteger(Option.unwrap(paramDel));
+	}
+
+	public BigInteger getBigInteger(Supplier<Option> paramDel, BigInteger def) {
+		return getBigInteger(Option.unwrap(paramDel), def);
+	}
+
+	public List<BigInteger> getBigIntegers(Supplier<Option> paramDel) {
+		return getBigIntegers(Option.unwrap(paramDel));
+	}
+
+	public BigDecimal getBigDecimal(Supplier<Option> paramDel) {
+		return getBigDecimal(Option.unwrap(paramDel));
+	}
+
+	public BigDecimal getBigDecimal(Supplier<Option> paramDel, BigDecimal def) {
+		return getBigDecimal(Option.unwrap(paramDel), def);
+	}
+
+	public List<BigDecimal> getBigDecimals(Supplier<Option> paramDel) {
+		return getBigDecimals(Option.unwrap(paramDel));
+	}
+
+	public String getString(Supplier<Option> paramDel) {
 		return getString(Option.unwrap(paramDel));
 	}
 
-	public String getString(OptionWrapper paramDel, String def) {
+	public String getString(Supplier<Option> paramDel, String def) {
 		return getString(Option.unwrap(paramDel), def);
 	}
 
-	public List<String> getAllStrings(OptionWrapper paramDel) {
-		return getAllStrings(Option.unwrap(paramDel));
+	public List<String> getStrings(Supplier<Option> paramDel) {
+		return getStrings(Option.unwrap(paramDel));
 	}
 
-	public List<String> getAllStrings(OptionWrapper paramDel, List<String> def) {
-		return getAllStrings(Option.unwrap(paramDel), def);
+	public List<String> getStrings(Supplier<Option> paramDel, List<String> def) {
+		return getStrings(Option.unwrap(paramDel), def);
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, OptionWrapper paramDel) {
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, Supplier<Option> paramDel) {
 		return getEnum(enumClass, Option.unwrap(paramDel));
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, OptionWrapper paramDel, E def) {
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, Supplier<Option> paramDel, E def) {
 		return getEnum(enumClass, Option.unwrap(paramDel), def);
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, OptionWrapper paramDel) {
-		return getEnum(enumClass, failOnInvalid, Option.unwrap(paramDel));
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Supplier<Option> paramDel) {
+		return getEnum(enumClass, invalidHandler, Option.unwrap(paramDel));
 	}
 
-	public <E extends Enum<E>> E getEnum(Class<E> enumClass, boolean failOnInvalid, OptionWrapper paramDel, E def) {
-		return getEnum(enumClass, failOnInvalid, Option.unwrap(paramDel), def);
+	public <E extends Enum<E>> E getEnum(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Supplier<Option> paramDel, E def) {
+		return getEnum(enumClass, invalidHandler, Option.unwrap(paramDel), def);
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, OptionWrapper paramDel) {
-		return getAllEnums(enumClass, Option.unwrap(paramDel));
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, Supplier<Option> paramDel) {
+		return getEnums(enumClass, Option.unwrap(paramDel));
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, OptionWrapper paramDel, Set<E> def) {
-		return getAllEnums(enumClass, Option.unwrap(paramDel), def);
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, Supplier<Option> paramDel, Set<E> def) {
+		return getEnums(enumClass, Option.unwrap(paramDel), def);
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, OptionWrapper paramDel) {
-		return getAllEnums(enumClass, failOnInvalid, Option.unwrap(paramDel));
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Supplier<Option> paramDel) {
+		return getEnums(enumClass, invalidHandler, Option.unwrap(paramDel));
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
-		OptionWrapper paramDel) {
-		return getAllEnums(enumClass, allString, failOnInvalid, Option.unwrap(paramDel));
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString,
+		BiFunction<Object, Exception, E> invalidHandler, Supplier<Option> paramDel) {
+		return getEnums(enumClass, allString, invalidHandler, Option.unwrap(paramDel));
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, boolean failOnInvalid, OptionWrapper paramDel,
-		Set<E> def) {
-		return getAllEnums(enumClass, failOnInvalid, Option.unwrap(paramDel), def);
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, BiFunction<Object, Exception, E> invalidHandler,
+		Supplier<Option> paramDel, Set<E> def) {
+		return getEnums(enumClass, invalidHandler, Option.unwrap(paramDel), def);
 	}
 
-	public <E extends Enum<E>> Set<E> getAllEnums(Class<E> enumClass, String allString, boolean failOnInvalid,
-		OptionWrapper paramDel, Set<E> def) {
-		return getAllEnums(enumClass, allString, failOnInvalid, Option.unwrap(paramDel), def);
+	public <E extends Enum<E>> Set<E> getEnums(Class<E> enumClass, String allString,
+		BiFunction<Object, Exception, E> invalidHandler, Supplier<Option> paramDel, Set<E> def) {
+		return getEnums(enumClass, allString, invalidHandler, Option.unwrap(paramDel), def);
 	}
 
-	public boolean isPresent(OptionWrapper paramDel) {
+	public boolean isPresent(Supplier<Option> paramDel) {
 		return isPresent(Option.unwrap(paramDel));
 	}
 
-	public int getOccurrences(OptionWrapper param) {
+	public int getOccurrences(Supplier<Option> param) {
 		return getOccurrences(Option.unwrap(param));
 	}
 
-	public Collection<String> getOccurrenceValues(OptionWrapper param, int occurrence) {
+	public Collection<String> getOccurrenceValues(Supplier<Option> param, int occurrence) {
 		return getOccurrenceValues(Option.unwrap(param), occurrence);
 	}
 
-	public int getValueCount(OptionWrapper param) {
+	public int getValueCount(Supplier<Option> param) {
 		return getValueCount(Option.unwrap(param));
 	}
 
-	public boolean hasValues(OptionWrapper param) {
+	public boolean hasValues(Supplier<Option> param) {
 		return hasValues(Option.unwrap(param));
 	}
 }

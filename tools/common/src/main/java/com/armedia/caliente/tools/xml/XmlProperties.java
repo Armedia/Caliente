@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -43,17 +44,10 @@ public final class XmlProperties {
 	public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 	public static final Class<?>[] NO_CLASSES = {};
 
-	public static interface ValueSerializer<T> {
-		public String serialize(T value);
-	}
-
-	public static final <T> ValueSerializer<T> getDefaultSerializer() {
-		return new ValueSerializer<T>() {
-			@Override
-			public String serialize(T value) {
-				if (value == null) { return null; }
-				return value.toString();
-			}
+	public static final <T> Function<T, String> getDefaultSerializer() {
+		return (value) -> {
+			if (value == null) { return null; }
+			return value.toString();
 		};
 	}
 
@@ -239,7 +233,7 @@ public final class XmlProperties {
 	}
 
 	public static <T> void saveToXML(Map<String, T> p, OutputStream out, String comment, Charset charset,
-		ValueSerializer<T> serializer) throws IOException {
+		Function<T, String> serializer) throws IOException {
 		if (charset == null) {
 			// Default to UTF-8
 			charset = XmlProperties.DEFAULT_CHARSET;
@@ -281,7 +275,7 @@ public final class XmlProperties {
 			// Output the the values...
 			PropertiesEntry entry = new PropertiesEntry();
 			for (final String key : keys) {
-				String value = serializer.serialize(p.get(key));
+				String value = serializer.apply(p.get(key));
 				if (value == null) {
 					continue;
 				}
@@ -322,12 +316,15 @@ public final class XmlProperties {
 				continue;
 			}
 
-			if (!xml.hasNext()) { throw new XMLStreamException("Malformed XML document - no root element",
-				xml.getLocation()); }
+			if (!xml.hasNext()) {
+				throw new XMLStreamException("Malformed XML document - no root element", xml.getLocation());
+			}
 
 			// Go through the <comment> or <entry> elements
-			if (!"properties".equals(xml.getLocalName())) { throw new XMLStreamException(
-				String.format("Unknown XML element '%s'", xml.getLocalName()), xml.getLocation()); }
+			if (!"properties".equals(xml.getLocalName())) {
+				throw new XMLStreamException(String.format("Unknown XML element '%s'", xml.getLocalName()),
+					xml.getLocation());
+			}
 
 			Unmarshaller unmarshaller = XmlProperties.getJAXBContext().createUnmarshaller();
 
@@ -347,8 +344,9 @@ public final class XmlProperties {
 					throw new XMLStreamException("Multiple <comment> elements found - this is a violation", location);
 				}
 
-				if (!"entry".equals(element)) { throw new XMLStreamException(
-					String.format("Unknown XML element '%s'", element), xml.getLocation()); }
+				if (!"entry".equals(element)) {
+					throw new XMLStreamException(String.format("Unknown XML element '%s'", element), xml.getLocation());
+				}
 
 				JAXBElement<PropertiesEntry> xmlItem = unmarshaller.unmarshal(xml, PropertiesEntry.class);
 				if (xmlItem == null) {

@@ -1,10 +1,11 @@
 package com.armedia.caliente.cli.caliente.options;
 
+import java.util.function.Supplier;
+
 import com.armedia.caliente.cli.EnumValueFilter;
 import com.armedia.caliente.cli.IntegerValueFilter;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.OptionWrapper;
 import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.utils.SmtpServer.SslMode;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
@@ -13,7 +14,7 @@ import com.armedia.caliente.engine.exporter.ExportResult;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.store.CmfType;
 
-public enum CLIParam implements OptionWrapper {
+public enum CLIParam implements Supplier<Option> {
 	count_empty( //
 		new OptionImpl() //
 			.setDescription("Enable reporting of empty folders (i.e. folders with 0 non-folder children)") //
@@ -437,7 +438,7 @@ public enum CLIParam implements OptionWrapper {
 	}
 
 	@Override
-	public Option getOption() {
+	public Option get() {
 		return this.option;
 	}
 

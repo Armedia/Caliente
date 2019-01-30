@@ -50,8 +50,6 @@ public class ExternalMetadataTest {
 			"09de75d1800205d6", //
 			"subtype", //
 			secondaries, //
-			"test", //
-			"Test2", //
 			null //
 		);
 
@@ -464,8 +462,6 @@ public class ExternalMetadataTest {
 			"09de75d180020638", //
 			"subtype", //
 			secondaries, //
-			"test", //
-			"Test2", //
 			217L //
 		);
 

@@ -46,7 +46,7 @@ public class LocalExportEngine extends
 	@Override
 	protected Stream<ExportTarget> findExportTargetsByPath(LocalRoot session, CfgTools configuration,
 		LocalExportDelegateFactory factory, String path) throws Exception {
-		return StreamTools.fromIterator(
+		return StreamTools.of(
 			new LocalRecursiveIterator(session, configuration.getBoolean(LocalSetting.IGNORE_EMPTY_FOLDERS)));
 	}
 

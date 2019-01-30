@@ -5,10 +5,10 @@
 package com.armedia.caliente.engine.converter;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
-import com.armedia.caliente.engine.converter.MappingManager.Mappable;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.commons.utilities.Tools;
@@ -17,7 +17,7 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
+public enum IntermediateAttribute implements Supplier<String>, CmfEncodeableName {
 	// CMIS attributes
 	OBJECT_ID(PropertyIds.OBJECT_ID, CmfDataType.ID),
 	BASE_TYPE_ID(PropertyIds.BASE_TYPE_ID, CmfDataType.STRING),
@@ -95,7 +95,7 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	}
 
 	@Override
-	public final String getMapping() {
+	public final String get() {
 		return this.name;
 	}
 
@@ -107,8 +107,10 @@ public enum IntermediateAttribute implements Mappable, CmfEncodeableName {
 	public static IntermediateAttribute decode(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
 		IntermediateAttribute ret = IntermediateAttribute.MAPPINGS.get(name);
-		if (ret == null) { throw new IllegalArgumentException(
-			String.format("Failed to decode [%s] into a valid intermediate attribute", name)); }
+		if (ret == null) {
+			throw new IllegalArgumentException(
+				String.format("Failed to decode [%s] into a valid intermediate attribute", name));
+		}
 		return ret;
 	}
 }

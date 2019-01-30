@@ -13,6 +13,9 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
@@ -61,20 +64,9 @@ public class FilenameDeduplicator {
 		}
 	}
 
-	public static interface IdValidator {
-		public boolean isValidId(CmfObjectRef id);
-	}
-
-	public static interface Renamer {
-		public String getNewName(CmfObjectRef entryId, String currentName);
-	}
-
+	@FunctionalInterface
 	public static interface FilenameCollisionResolver {
 		public String generateUniqueName(CmfObjectRef entryId, String currentName, long count);
-	}
-
-	public static interface RenamedEntryProcessor {
-		public void processEntry(CmfObjectRef entryId, String entryName);
 	}
 
 	public class FSObject {
@@ -113,8 +105,9 @@ public class FilenameDeduplicator {
 
 		private FSEntry(CmfObjectRef id, String originalName) {
 			super(id);
-			if (StringUtils
-				.isEmpty(originalName)) { throw new IllegalArgumentException("Must provide a non-null original name"); }
+			if (StringUtils.isEmpty(originalName)) {
+				throw new IllegalArgumentException("Must provide a non-null original name");
+			}
 			this.originalName = originalName;
 			this.newName = originalName;
 		}
@@ -342,12 +335,8 @@ public class FilenameDeduplicator {
 		}
 	}
 
-	protected static final IdValidator DEFAULT_ID_VALIDATOR = new IdValidator() {
-		@Override
-		public boolean isValidId(CmfObjectRef id) {
-			return (id != null) && (id.getType() != null) && (id.getId() != null);
-		}
-	};
+	protected static final Predicate<CmfObjectRef> DEFAULT_ID_VALIDATOR = (id) -> (id != null) && (id.getType() != null)
+		&& (id.getId() != null);
 
 	private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -359,7 +348,7 @@ public class FilenameDeduplicator {
 
 	private final ConcurrentMap<CmfObjectRef, FSEntry> renamedEntries = new ConcurrentHashMap<>();
 
-	private final IdValidator idValidator;
+	private final Predicate<CmfObjectRef> idValidator;
 
 	private final Canonicalizer canonicalizer;
 
@@ -367,7 +356,7 @@ public class FilenameDeduplicator {
 		this(null, ignoreCase);
 	}
 
-	public FilenameDeduplicator(IdValidator idValidator, boolean ignoreCase) {
+	public FilenameDeduplicator(Predicate<CmfObjectRef> idValidator, boolean ignoreCase) {
 		this.idValidator = Tools.coalesce(idValidator, FilenameDeduplicator.DEFAULT_ID_VALIDATOR);
 		this.canonicalizer = (ignoreCase ? Canonicalizer.CASE_INSENSITIVE : Canonicalizer.NO_CHANGE);
 	}
@@ -390,10 +379,10 @@ public class FilenameDeduplicator {
 			});
 	}
 
-	public synchronized long renameAllEntries(Renamer renamer) {
+	public synchronized long renameAllEntries(BiFunction<CmfObjectRef, String, String> renamer) {
 		long count = 0;
 		for (FSEntry e : this.allEntries.values()) {
-			final String newName = renamer.getNewName(e.id, e.newName);
+			final String newName = renamer.apply(e.id, e.newName);
 			if (e.setName(newName)) {
 				count++;
 			}
@@ -466,16 +455,16 @@ public class FilenameDeduplicator {
 		}
 	}
 
-	public synchronized void processRenamedEntries(RenamedEntryProcessor p) {
+	public synchronized void processRenamedEntries(BiConsumer<CmfObjectRef, String> p) {
 		if (p == null) { return; }
 		for (FSEntry e : this.renamedEntries.values()) {
-			p.processEntry(e.id, e.newName);
+			p.accept(e.id, e.newName);
 		}
 	}
 
 	public FSEntry addEntry(CmfObjectRef containerId, final CmfObjectRef entryId, final String name) {
-		if (!this.idValidator.isValidId(containerId)) { return null; }
-		if (!this.idValidator.isValidId(entryId)) { return null; }
+		if (!this.idValidator.test(containerId)) { return null; }
+		if (!this.idValidator.test(entryId)) { return null; }
 		final FSEntryContainer container = getContainer(containerId);
 		FSEntry entry = ConcurrentUtils.createIfAbsentUnchecked(this.allEntries, entryId,
 			new ConcurrentInitializer<FSEntry>() {

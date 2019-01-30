@@ -37,8 +37,9 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 		URI baseUri = URI.create(server);
 		baseUri = baseUri.normalize();
 
-		if (baseUri.isOpaque()) { throw new CalienteException(
-			String.format("Bad URL format for UCM connectivity: [%s]", baseUri)); }
+		if (baseUri.isOpaque()) {
+			throw new CalienteException(String.format("Bad URL format for UCM connectivity: [%s]", baseUri));
+		}
 
 		String scheme = baseUri.getScheme().toLowerCase();
 		UcmSessionSetting.SSLMode sslMode = UcmSessionSetting.SSLMode.NONE;
@@ -102,8 +103,9 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 		}
 
 		String host = baseUri.getHost();
-		if (host == null) { throw new CalienteException(
-			String.format("Bad URL format for UCM connectivity: [%s]", baseUri)); }
+		if (host == null) {
+			throw new CalienteException(String.format("Bad URL format for UCM connectivity: [%s]", baseUri));
+		}
 		settings.put(UcmSessionSetting.HOST.getLabel(), host);
 
 		int port = baseUri.getPort();
@@ -117,7 +119,7 @@ public class EngineInterface extends AbstractEngineInterface implements DynamicE
 
 		List<String> paths = new ArrayList<>();
 
-		for (String srcPath : commandValues.getAllStrings(CLIParam.from)) {
+		for (String srcPath : commandValues.getStrings(CLIParam.from)) {
 			if (StringUtils.isEmpty(srcPath)) { throw new CalienteException("Empty paths are not allowed"); }
 			if (!srcPath.startsWith("/")) {
 				srcPath = StringUtils.strip(srcPath);

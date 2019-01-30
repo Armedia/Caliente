@@ -33,6 +33,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 
 	private static final AtomicLong CACHE_ID = new AtomicLong(0);
 
+	@FunctionalInterface
 	public static interface Expirable {
 		public void expire();
 	}

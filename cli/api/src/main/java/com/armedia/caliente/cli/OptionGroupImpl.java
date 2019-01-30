@@ -10,8 +10,11 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import com.armedia.caliente.cli.exception.DuplicateOptionException;
+import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.Tools;
 
 public class OptionGroupImpl implements OptionGroup {
@@ -102,8 +105,9 @@ public class OptionGroupImpl implements OptionGroup {
 		final boolean hasShortOpt = (def.getShortOpt() != null);
 		final boolean hasLongOpt = (def.getLongOpt() != null);
 
-		if (!hasShortOpt && !hasLongOpt) { throw new IllegalArgumentException(
-			"The given option definition has neither a short or a long option"); }
+		if (!hasShortOpt && !hasLongOpt) {
+			throw new IllegalArgumentException("The given option definition has neither a short or a long option");
+		}
 	}
 
 	@Override
@@ -145,7 +149,7 @@ public class OptionGroupImpl implements OptionGroup {
 	}
 
 	@Override
-	public OptionGroup add(OptionWrapper option) throws DuplicateOptionException {
+	public OptionGroup add(Supplier<Option> option) throws DuplicateOptionException {
 		return add(Option.unwrap(option));
 	}
 
@@ -155,19 +159,14 @@ public class OptionGroupImpl implements OptionGroup {
 			Collection<O> added = new LinkedList<>();
 			boolean ok = false;
 			try {
-				for (O o : options) {
-					if (o != null) {
-						add(o);
-						added.add(o);
-					}
-				}
+				Consumer<O> consumer = this::add;
+				StreamTools.of(options.iterator()).filter(Objects::nonNull)
+					.forEachOrdered(consumer.andThen(added::add));
 				ok = true;
 			} finally {
 				if (!ok) {
 					// Roll back the changes...
-					for (O o : added) {
-						remove(o);
-					}
+					added.stream().forEachOrdered(this::remove);
 				}
 			}
 		}
@@ -187,7 +186,7 @@ public class OptionGroupImpl implements OptionGroup {
 	}
 
 	@Override
-	public Collection<Option> remove(OptionWrapper option) {
+	public Collection<Option> remove(Supplier<Option> option) {
 		return remove(Option.unwrap(option));
 	}
 

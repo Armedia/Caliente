@@ -8,7 +8,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -18,7 +17,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.engine.dynamic.xml.Expression.ScriptContextConfig;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -138,12 +136,8 @@ public class AttributeNameMapping {
 				repl = this.activeDefault;
 			}
 
-			String value = Tools.toString(repl.evaluate(new ScriptContextConfig() {
-				@Override
-				public void configure(ScriptContext ctx) {
-					final Bindings bindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
-					bindings.put("sqlName", sqlName);
-				}
+			String value = Tools.toString(repl.evaluate((ctx) -> {
+				ctx.getBindings(ScriptContext.ENGINE_SCOPE).put("sqlName", sqlName);
 			}));
 
 			// If there is no replacement, then we simply return the original name

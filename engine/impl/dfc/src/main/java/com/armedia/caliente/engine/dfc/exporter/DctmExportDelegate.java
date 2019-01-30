@@ -148,7 +148,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 			// Then, the CMIS (Intermediate) attributes
 			for (IntermediateAttribute att : IntermediateAttribute.values()) {
-				final String tgtName = att.getMapping();
+				final String tgtName = att.get();
 				// If the attribute is already encoded, skip it
 				if (object.hasAttribute(tgtName)) {
 					continue;
@@ -213,8 +213,10 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 		throws ClassCastException {
 		if (klazz == null) { throw new IllegalArgumentException("Must provide a class to cast to"); }
 		if (p == null) { return null; }
-		if (!klazz.isInstance(p)) { throw new ClassCastException(String.format("Can't convert a [%s] into a [%s]",
-			p.getClass().getCanonicalName(), klazz.getCanonicalName())); }
+		if (!klazz.isInstance(p)) {
+			throw new ClassCastException(String.format("Can't convert a [%s] into a [%s]",
+				p.getClass().getCanonicalName(), klazz.getCanonicalName()));
+		}
 		return klazz.cast(p);
 	}
 }

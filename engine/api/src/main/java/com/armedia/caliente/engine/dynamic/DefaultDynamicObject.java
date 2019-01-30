@@ -79,14 +79,4 @@ public class DefaultDynamicObject extends DynamicObject {
 		return this.object.getName();
 	}
 
-	@Override
-	public String getProductName() {
-		return this.object.getProductName();
-	}
-
-	@Override
-	public String getProductVersion() {
-		return this.object.getProductVersion();
-	}
-
 }

@@ -19,7 +19,7 @@ class NamespaceRenderer extends AttributeRenderer {
 	}
 
 	@Override
-	public Collection<AttributeMapping> render(DynamicObject object, ResidualsModeTracker tracker) {
+	public Collection<AttributeMapping> apply(DynamicObject object, ResidualsModeTracker tracker) {
 		Objects.requireNonNull(object, "Must provide a source object to map against");
 
 		Collection<AttributeMapping> ret = new ArrayList<>();

@@ -145,7 +145,7 @@ public class PostgresStorePrep implements CmfStorePrep {
 	}
 
 	@Override
-	public CfgTools getSettings() {
+	public CfgTools get() {
 		Lock l = this.rwLock.readLock();
 		l.lock();
 		try {

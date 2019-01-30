@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import com.armedia.commons.utilities.Tools;
@@ -144,8 +145,9 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	}
 
 	public static String calculateKey(String longOpt, String shortOpt) {
-		if ((longOpt == null)
-			&& (shortOpt == null)) { throw new NullPointerException("Must provide at least one short or long option"); }
+		if ((longOpt == null) && (shortOpt == null)) {
+			throw new NullPointerException("Must provide at least one short or long option");
+		}
 		String opt = (longOpt != null ? longOpt : shortOpt.toString());
 		String prefix = (longOpt != null ? "-" : "");
 		return String.format("-%s%s", prefix, opt);
@@ -160,9 +162,9 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 * @param wrapper
 	 * @return the {@link Option} instance from the given wrapper
 	 */
-	public static Option unwrap(OptionWrapper wrapper) {
+	public static Option unwrap(Supplier<Option> wrapper) {
 		if (wrapper == null) { return null; }
-		return wrapper.getOption();
+		return wrapper.get();
 	}
 
 	/**
@@ -175,7 +177,8 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 * @param wrappers
 	 * @return a list of the {@link Option} instances wrapped by the given wrappers
 	 */
-	public static List<Option> unwrap(OptionWrapper... wrappers) {
+	@SafeVarargs
+	public static List<Option> unwrap(Supplier<Option>... wrappers) {
 		if (wrappers == null) { return null; }
 		return Option.unwrap(Arrays.asList(wrappers));
 	}
@@ -190,15 +193,10 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	 * @param wrappers
 	 * @return a list of the {@link Option} instances wrapped by the given wrappers
 	 */
-	public static List<Option> unwrap(Collection<OptionWrapper> wrappers) {
+	public static List<Option> unwrap(Collection<Supplier<Option>> wrappers) {
 		if (wrappers == null) { return null; }
 		List<Option> l = new ArrayList<>(wrappers.size());
-		for (OptionWrapper d : wrappers) {
-			Option p = Option.unwrap(d);
-			if (p != null) {
-				l.add(p);
-			}
-		}
+		wrappers.stream().map(Option::unwrap).filter(Objects::nonNull).forEachOrdered(l::add);
 		return l;
 	}
 }

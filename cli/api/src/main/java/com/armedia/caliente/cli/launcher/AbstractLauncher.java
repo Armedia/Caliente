@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -16,7 +17,6 @@ import com.armedia.caliente.cli.OptionParser;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionSchemeExtensionSupport;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.OptionWrapper;
 import com.armedia.caliente.cli.classpath.ClasspathPatcher;
 import com.armedia.caliente.cli.exception.CommandLineSyntaxException;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
@@ -101,7 +101,7 @@ public abstract class AbstractLauncher {
 
 	protected abstract OptionScheme getOptionScheme();
 
-	protected final int launch(OptionWrapper helpOption, String... args) {
+	protected final int launch(Supplier<Option> helpOption, String... args) {
 		return launch(Option.unwrap(helpOption), args);
 	}
 

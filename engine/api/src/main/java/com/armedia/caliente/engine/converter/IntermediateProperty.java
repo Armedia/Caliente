@@ -5,10 +5,10 @@
 package com.armedia.caliente.engine.converter;
 
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 
-import com.armedia.caliente.engine.converter.MappingManager.Mappable;
 import com.armedia.caliente.store.CmfDataType;
 import com.armedia.caliente.store.CmfEncodeableName;
 import com.armedia.commons.utilities.Tools;
@@ -17,7 +17,7 @@ import com.armedia.commons.utilities.Tools;
  * @author diego
  *
  */
-public enum IntermediateProperty implements Mappable, CmfEncodeableName {
+public enum IntermediateProperty implements Supplier<String>, CmfEncodeableName {
 	// CMIS-inspired properties
 	PATH(PropertyIds.PATH, CmfDataType.STRING),
 	PARENT_ID(PropertyIds.PARENT_ID, CmfDataType.ID),
@@ -82,7 +82,7 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 	}
 
 	@Override
-	public final String getMapping() {
+	public final String get() {
 		return this.name;
 	}
 
@@ -108,8 +108,10 @@ public enum IntermediateProperty implements Mappable, CmfEncodeableName {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
 		IntermediateProperty.initMappings();
 		IntermediateProperty ret = IntermediateProperty.MAPPINGS.get(name);
-		if (ret == null) { throw new IllegalArgumentException(
-			String.format("Failed to decode [%s] into a valid intermediate property", name)); }
+		if (ret == null) {
+			throw new IllegalArgumentException(
+				String.format("Failed to decode [%s] into a valid intermediate property", name));
+		}
 		return ret;
 	}
 }

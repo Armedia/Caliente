@@ -11,8 +11,9 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 	protected final boolean repeating;
 
 	protected CmfBaseSetting(CmfBaseSetting pattern) {
-		if (pattern == null) { throw new IllegalArgumentException(
-			"Must provide a non-null pattern to copy values from"); }
+		if (pattern == null) {
+			throw new IllegalArgumentException("Must provide a non-null pattern to copy values from");
+		}
 		this.name = pattern.name;
 		this.type = pattern.type;
 		this.repeating = pattern.repeating;
@@ -23,8 +24,9 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 	}
 
 	public CmfBaseSetting(String name, CmfDataType type, boolean multiple) {
-		if (StringUtils
-			.isBlank(name)) { throw new IllegalArgumentException("Must provide a non-null, non-blank name"); }
+		if (StringUtils.isBlank(name)) {
+			throw new IllegalArgumentException("Must provide a non-null, non-blank name");
+		}
 		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
 		this.type = type;
 		this.name = name;
@@ -48,7 +50,7 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(null, null, this.name, this.type, this.repeating);
+		return Tools.hashTool(this, null, this.name, this.type, this.repeating);
 	}
 
 	@Override

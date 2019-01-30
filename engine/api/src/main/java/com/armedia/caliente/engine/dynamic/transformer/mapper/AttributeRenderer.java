@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -13,7 +14,7 @@ import com.armedia.caliente.engine.dynamic.DynamicObject;
 import com.armedia.caliente.engine.dynamic.xml.mapper.Mapping;
 import com.armedia.commons.utilities.Tools;
 
-class AttributeRenderer implements MappingRenderer {
+class AttributeRenderer implements BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>> {
 
 	private static final char DEFAULT_SEPARATOR = ',';
 
@@ -37,7 +38,7 @@ class AttributeRenderer implements MappingRenderer {
 	}
 
 	@Override
-	public Collection<AttributeMapping> render(DynamicObject object, ResidualsModeTracker tracker) {
+	public Collection<AttributeMapping> apply(DynamicObject object, ResidualsModeTracker tracker) {
 		if (this.caseSensitive) {
 			// If the mapping is case sensitive, we don't need to do a scanning search
 			for (String sourceName : this.sourceValues) {

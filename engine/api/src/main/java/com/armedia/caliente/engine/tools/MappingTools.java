@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.function.BiPredicate;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -22,16 +23,7 @@ public class MappingTools {
 
 	private static final Logger LOG = LoggerFactory.getLogger(MappingTools.class);
 
-	public static interface MappingValidator {
-		public boolean validate(String key, String value) throws Exception;
-	}
-
-	private static final MappingValidator NULL_VALIDATOR = new MappingValidator() {
-		@Override
-		public boolean validate(String key, String value) {
-			return true;
-		}
-	};
+	private static final BiPredicate<String, String> NULL_VALIDATOR = (a, b) -> true;
 
 	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties)
 		throws TransferException {
@@ -39,7 +31,7 @@ public class MappingTools {
 	}
 
 	public static boolean loadMap(Logger log, CfgTools cfg, ConfigurationSetting setting, Properties properties,
-		MappingValidator validator) throws TransferException {
+		BiPredicate<String, String> validator) throws TransferException {
 
 		String mapFile = cfg.getString(setting);
 		if (StringUtils.isEmpty(mapFile)) { return false; }
@@ -59,10 +51,8 @@ public class MappingTools {
 			log.warn("The file [{}] does not exist", mapFile);
 			return false;
 		}
-		if (!f.isFile()) { throw new TransferException(
-			String.format("The file [%s] is not a regular file", mapFile)); }
-		if (!f
-			.canRead()) { throw new TransferException(String.format("The file [%s] is not readable", mapFile)); }
+		if (!f.isFile()) { throw new TransferException(String.format("The file [%s] is not a regular file", mapFile)); }
+		if (!f.canRead()) { throw new TransferException(String.format("The file [%s] is not readable", mapFile)); }
 
 		if (validator == null) {
 			validator = MappingTools.NULL_VALIDATOR;
@@ -73,14 +63,13 @@ public class MappingTools {
 			MappingTools.copyProperties(log, p, properties, f, validator);
 		} catch (IOException | XMLStreamException e) {
 			// Not XML-format or I/O issues...
-			throw new TransferException(String.format("Failed to load the properties from file [%s]", mapFile),
-				e);
+			throw new TransferException(String.format("Failed to load the properties from file [%s]", mapFile), e);
 		}
 		return true;
 	}
 
 	private static void copyProperties(Logger log, Properties p, Properties properties, File mapFile,
-		MappingValidator validator) throws TransferException {
+		BiPredicate<String, String> validator) throws TransferException {
 		if (validator == null) {
 			validator = MappingTools.NULL_VALIDATOR;
 		}
@@ -88,7 +77,7 @@ public class MappingTools {
 		for (String k : p.stringPropertyNames()) {
 			String v = p.getProperty(k);
 			try {
-				if (validator.validate(k, v)) {
+				if (validator.test(k, v)) {
 					properties.setProperty(k, v);
 				}
 			} catch (Exception e) {
@@ -97,7 +86,6 @@ public class MappingTools {
 				ok = false;
 			}
 		}
-		if (!ok) { throw new TransferException(
-			String.format("Failed to load the mappings from file [%s]", mapFile)); }
+		if (!ok) { throw new TransferException(String.format("Failed to load the mappings from file [%s]", mapFile)); }
 	}
 }

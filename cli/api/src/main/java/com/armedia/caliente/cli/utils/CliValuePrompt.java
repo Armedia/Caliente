@@ -1,22 +1,18 @@
 package com.armedia.caliente.cli.utils;
 
 import java.io.Console;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionValues;
-import com.armedia.caliente.cli.OptionWrapper;
 import com.armedia.commons.utilities.Tools;
 
 public class CliValuePrompt {
 
-	public interface PromptCallback {
-		public char[] promptForValue();
-	}
-
-	public static class ConsolePrompter implements PromptCallback {
+	public static class ConsolePrompter implements Supplier<char[]> {
 		private final boolean echoInput;
 		private final String prompt;
 		private final Object[] promptParams;
@@ -32,7 +28,7 @@ public class CliValuePrompt {
 		}
 
 		@Override
-		public char[] promptForValue() {
+		public char[] get() {
 			final Console console = System.console();
 			if (console == null) { return null; }
 
@@ -55,7 +51,7 @@ public class CliValuePrompt {
 		return new String(c);
 	}
 
-	public static final String getUsername(OptionValues cli, OptionWrapper param, String prompt,
+	public static final String getUsername(OptionValues cli, Supplier<Option> param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt.getUsername(cli, Option.unwrap(param), prompt, promptParams);
 	}
@@ -65,12 +61,12 @@ public class CliValuePrompt {
 			.getString(CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(false, prompt, promptParams)));
 	}
 
-	public static final String getPasswordString(OptionValues cli, OptionWrapper param, String prompt,
+	public static final String getPasswordString(OptionValues cli, Supplier<Option> param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt.getPasswordString(cli, Option.unwrap(param), prompt, promptParams);
 	}
 
-	public static final char[] getPassword(OptionValues cli, OptionWrapper param, String prompt,
+	public static final char[] getPassword(OptionValues cli, Supplier<Option> param, String prompt,
 		Object... promptParams) {
 		return CliValuePrompt.getPassword(cli, Option.unwrap(param), prompt, promptParams);
 	}
@@ -84,16 +80,17 @@ public class CliValuePrompt {
 		return CliValuePrompt.getPromptableValue(cli, param, new ConsolePrompter(true, prompt, promptParams));
 	}
 
-	public static final char[] getPromptableValue(OptionValues cli, OptionWrapper param,
-		PromptCallback promptCallback) {
+	public static final char[] getPromptableValue(OptionValues cli, Supplier<Option> param,
+		Supplier<char[]> promptCallback) {
 		return CliValuePrompt.getPromptableValue(cli, Option.unwrap(param), promptCallback);
 	}
 
-	public static final char[] getPromptableValue(OptionValues cli, Option param, PromptCallback promptCallback) {
+	public static final char[] getPromptableValue(OptionValues cli, Option param, Supplier<char[]> promptCallback) {
 		// If the option is given, return its value
-		if ((cli != null) && (param != null)
-			&& cli.isPresent(param)) { return CliValuePrompt.getChars(cli.getString(param)); }
+		if ((cli != null) && (param != null) && cli.isPresent(param)) {
+			return CliValuePrompt.getChars(cli.getString(param));
+		}
 		if (promptCallback == null) { return null; }
-		return promptCallback.promptForValue();
+		return promptCallback.get();
 	}
 }

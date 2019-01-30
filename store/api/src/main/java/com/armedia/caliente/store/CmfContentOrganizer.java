@@ -134,13 +134,10 @@ public abstract class CmfContentOrganizer {
 		Map<String, CmfContentOrganizer> strategies = new HashMap<>();
 		PluggableServiceLocator<CmfContentOrganizer> l = new PluggableServiceLocator<>(CmfContentOrganizer.class);
 		l.setHideErrors(false);
-		l.setErrorListener(new PluggableServiceLocator.ErrorListener() {
-			@Override
-			public void errorRaised(Class<?> serviceClass, Throwable t) {
-				if (CmfContentOrganizer.LOG.isDebugEnabled()) {
-					CmfContentOrganizer.LOG.warn("Failed to instantiate the content organizer class [{}]",
-						serviceClass.getCanonicalName(), t);
-				}
+		l.setErrorListener((serviceClass, t) -> {
+			if (CmfContentOrganizer.LOG.isDebugEnabled()) {
+				CmfContentOrganizer.LOG.warn("Failed to instantiate the content organizer class [{}]",
+					serviceClass.getCanonicalName(), t);
 			}
 		});
 		for (CmfContentOrganizer s : l) {
@@ -179,8 +176,10 @@ public abstract class CmfContentOrganizer {
 	}
 
 	protected CmfContentOrganizer(String name) {
-		if (!CmfContentOrganizer.isValidName(name)) { throw new IllegalArgumentException(
-			String.format("The string [%s] is not valid for a content organizer name", name)); }
+		if (!CmfContentOrganizer.isValidName(name)) {
+			throw new IllegalArgumentException(
+				String.format("The string [%s] is not valid for a content organizer name", name));
+		}
 		this.name = name;
 	}
 

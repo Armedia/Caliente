@@ -44,9 +44,7 @@ public class EncryptCommandModule extends CommandModule<TransferEngineFactory<?,
 
 		CalienteException thrown = new CalienteException(
 			String.format("Failed to encrypt the password [%s] with all available cryptography options", password));
-		for (Exception e : exceptions) {
-			thrown.addSuppressed(e);
-		}
+		exceptions.stream().forEachOrdered(thrown::addSuppressed);
 		throw thrown;
 	}
 

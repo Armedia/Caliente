@@ -61,12 +61,9 @@ public abstract class AbstractEngineInterface {
 							AbstractEngineInterface.class);
 						abstractEngineInterfaces.setHideErrors(log == null);
 						if (!abstractEngineInterfaces.isHideErrors()) {
-							abstractEngineInterfaces.setErrorListener(new PluggableServiceLocator.ErrorListener() {
-								@Override
-								public void errorRaised(Class<?> serviceClass, Throwable t) {
-									log.error("Failed to initialize the EngineInterface class {}",
-										serviceClass.getCanonicalName(), t);
-								}
+							abstractEngineInterfaces.setErrorListener((serviceClass, t) -> {
+								log.error("Failed to initialize the EngineInterface class {}",
+									serviceClass.getCanonicalName(), t);
 							});
 						}
 						Map<String, String> engineAliases = new TreeMap<>();

@@ -61,10 +61,6 @@ public abstract class DynamicObject {
 
 	public abstract String getOriginalName();
 
-	public abstract String getProductName();
-
-	public abstract String getProductVersion();
-
 	public Map<String, DynamicValue> getAtt() {
 		return this.attributes;
 	}
@@ -86,8 +82,6 @@ public abstract class DynamicObject {
 			getLabel(), //
 			getSubtype(), //
 			getSecondarySubtypes(), //
-			getProductName(), //
-			getProductVersion(), //
 			object.getNumber() //
 		);
 		// Create the list of attributes to copy...

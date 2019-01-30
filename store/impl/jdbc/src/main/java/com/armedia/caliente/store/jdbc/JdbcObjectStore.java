@@ -317,8 +317,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			final Long ret = qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT),
 				this.dialect.getObjectNumberHandler(), objectId, object.getName(), object.getSearchKey(),
 				objectType.name(), Tools.coalesce(object.getSubtype(), objectType.name()), object.getLabel(),
-				object.getDependencyTier(), object.getHistoryId(), object.isHistoryCurrent(), object.getProductName(),
-				object.getProductVersion());
+				object.getDependencyTier(), object.getHistoryId(), object.isHistoryCurrent());
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_SECONDARIES), JdbcTools.HANDLER_NULL,
 				secondariesParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_OBJECT_PARENTS), JdbcTools.HANDLER_NULL,
@@ -1321,8 +1320,6 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		boolean historyCurrent = objectRS.getBoolean("history_current");
 		String label = objectRS.getString("object_label");
 		String subtype = objectRS.getString("object_subtype");
-		String productName = objectRS.getString("product_name");
-		String productVersion = objectRS.getString("product_version");
 
 		Set<String> secondaries = new LinkedHashSet<>();
 		while (secondariesRS.next()) {
@@ -1350,7 +1347,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		}
 
 		return new CmfObject<>(CmfAttributeTranslator.CMFVALUE_TRANSLATOR, type, id, name, parentIds, searchKey, tierId,
-			historyId, historyCurrent, label, subtype, secondaries, productName, productVersion, number);
+			historyId, historyCurrent, label, subtype, secondaries, number);
 	}
 
 	private CmfProperty<CmfValue> loadProperty(CmfType objectType, ResultSet rs) throws SQLException {

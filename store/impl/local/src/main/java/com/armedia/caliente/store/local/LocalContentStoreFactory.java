@@ -1,10 +1,10 @@
 package com.armedia.caliente.store.local;
 
 import java.io.File;
+import java.util.function.Supplier;
 
 import com.armedia.caliente.store.CmfContentOrganizer;
 import com.armedia.caliente.store.CmfContentStoreFactory;
-import com.armedia.caliente.store.CmfPrepInfo;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.commons.utilities.CfgTools;
@@ -16,13 +16,15 @@ public class LocalContentStoreFactory extends CmfContentStoreFactory<LocalConten
 	}
 
 	@Override
-	protected LocalContentStore newInstance(StoreConfiguration configuration, boolean cleanData, CmfPrepInfo prepInfo)
-		throws CmfStorageException {
+	protected LocalContentStore newInstance(StoreConfiguration configuration, boolean cleanData,
+		Supplier<CfgTools> prepInfo) throws CmfStorageException {
 		// It's either direct, or taken from Spring or JNDI
 		CfgTools cfg = new CfgTools(configuration.getEffectiveSettings());
 		String basePath = cfg.getString(LocalContentStoreSetting.BASE_DIR);
-		if (basePath == null) { throw new CmfStorageException(
-			String.format("No setting [%s] specified", LocalContentStoreSetting.BASE_DIR.getLabel())); }
+		if (basePath == null) {
+			throw new CmfStorageException(
+				String.format("No setting [%s] specified", LocalContentStoreSetting.BASE_DIR.getLabel()));
+		}
 		// Resolve system properties
 
 		CmfContentOrganizer organizer = CmfContentOrganizer

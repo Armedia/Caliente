@@ -153,8 +153,6 @@ public abstract class CmfAttributeTranslator<VALUE> {
 			obj.getLabel(), //
 			obj.getSubtype(), //
 			obj.getSecondarySubtypes(), //
-			obj.getProductName(), //
-			obj.getProductVersion(), //
 			obj.getNumber() //
 		);
 
@@ -208,8 +206,6 @@ public abstract class CmfAttributeTranslator<VALUE> {
 			obj.getLabel(), //
 			obj.getSubtype(), //
 			obj.getSecondarySubtypes(), //
-			obj.getProductName(), //
-			obj.getProductVersion(), //
 			obj.getNumber() //
 		);
 

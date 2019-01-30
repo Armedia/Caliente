@@ -1,7 +1,6 @@
 package com.armedia.caliente.engine.importer;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -9,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.UUID;
@@ -20,6 +20,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -54,13 +55,11 @@ import com.armedia.caliente.store.CmfType;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.Closer;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.CloseableIterator;
-import com.armedia.commons.utilities.CloseableIteratorWrapper;
+import com.armedia.commons.utilities.StreamTools;
 import com.armedia.commons.utilities.SynchronizedCounter;
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.line.LineProcessorException;
+import com.armedia.commons.utilities.line.LineIterator;
 import com.armedia.commons.utilities.line.LineScanner;
-import com.armedia.commons.utilities.line.LineSourceException;
 
 public abstract class ImportEngine<//
 	SESSION, //
@@ -398,31 +397,13 @@ public abstract class ImportEngine<//
 			false);
 	}
 
-	private CloseableIterator<CmfObjectRef> getObjectRestrictionIterator(CfgTools cfg) throws ImportException {
+	private Stream<CmfObjectRef> getObjectRestrictions(CfgTools cfg) throws ImportException {
 		Collection<String> source = cfg.getStrings(ImportSetting.RESTRICT_TO);
 		if ((source == null) || source.isEmpty()) { return null; }
 
-		LineScanner scanner = new LineScanner();
-
-		final Collection<CmfObjectRef> restrictions = new LinkedList<>();
-
-		try {
-			scanner.scanLines((line) -> {
-				try {
-					CmfObjectRef ref = ImportRestriction.parse(StringUtils.strip(line.substring(1)));
-					if (ref != null) {
-						restrictions.add(ref);
-					}
-				} catch (Exception e) {
-					// Illegal reference...
-				}
-				return true;
-			}, source);
-		} catch (IOException | LineSourceException | LineProcessorException e) {
-			throw new ImportException("Failed to load all the import restrictions", e);
-		}
-
-		return new CloseableIteratorWrapper<>(restrictions.iterator());
+		LineIterator it = new LineScanner().iterator(source);
+		return StreamTools.of(it).filter(StringUtils::isNotEmpty).map(ImportRestriction::parseQuiet)
+			.filter(Objects::nonNull);
 	}
 
 	@Override
@@ -487,6 +468,11 @@ public abstract class ImportEngine<//
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, this.objectStore,
 						this.contentStore, transformer, this.output, this.warningTracker);
+					final String fmt = "caliente.import.product.%s";
+					this.objectStore.setProperty(String.format(fmt, "name"),
+						new CmfValue(contextFactory.getProductName()));
+					this.objectStore.setProperty(String.format(fmt, "version"),
+						new CmfValue(contextFactory.getProductVersion()));
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}
@@ -670,11 +656,11 @@ public abstract class ImportEngine<//
 			output.info("Cleared the import plan");
 
 			output.info("Loading the object restriction list");
-			try (CloseableIterator<CmfObjectRef> objectRestrictions = getObjectRestrictionIterator(importState.cfg)) {
+			try (Stream<CmfObjectRef> objectRestrictions = getObjectRestrictions(importState.cfg)) {
 				if (objectRestrictions != null) {
 					output.info("Loaded the object restriction list");
 					output.info("Applying the object restriction list");
-					containedTypes = objectStore.setBulkObjectLoaderFilter(objectRestrictions);
+					containedTypes = objectStore.setBulkObjectLoaderFilter(objectRestrictions.iterator());
 					output.info("Applied the object restriction list");
 				} else {
 					output.info("No object restriction list loaded, will import all available objects");

@@ -105,8 +105,8 @@ public final class OptionValue extends Option {
 		return this.values.getBoolean(this, def);
 	}
 
-	public List<Boolean> getAllBooleans() {
-		return this.values.getAllBooleans(this);
+	public List<Boolean> getBooleans() {
+		return this.values.getBooleans(this);
 	}
 
 	public Integer getInteger() {
@@ -117,8 +117,8 @@ public final class OptionValue extends Option {
 		return this.values.getInteger(this, def);
 	}
 
-	public List<Integer> getAllIntegers() {
-		return this.values.getAllIntegers(this);
+	public List<Integer> getIntegers() {
+		return this.values.getIntegers(this);
 	}
 
 	public Long getLong() {
@@ -129,8 +129,8 @@ public final class OptionValue extends Option {
 		return this.values.getLong(this, def);
 	}
 
-	public List<Long> getAllLongs() {
-		return this.values.getAllLongs(this);
+	public List<Long> getLongs() {
+		return this.values.getLongs(this);
 	}
 
 	public Float getFloat() {
@@ -141,8 +141,8 @@ public final class OptionValue extends Option {
 		return this.values.getFloat(this, def);
 	}
 
-	public List<Float> getAllFloats() {
-		return this.values.getAllFloats(this);
+	public List<Float> getFloats() {
+		return this.values.getFloats(this);
 	}
 
 	public Double getDouble() {
@@ -153,8 +153,8 @@ public final class OptionValue extends Option {
 		return this.values.getDouble(this, def);
 	}
 
-	public List<Double> getAllDoubles() {
-		return this.values.getAllDoubles(this);
+	public List<Double> getDoubles() {
+		return this.values.getDoubles(this);
 	}
 
 	public String getString() {
@@ -165,8 +165,8 @@ public final class OptionValue extends Option {
 		return this.values.getString(this, def);
 	}
 
-	public List<String> getAllStrings() {
-		return this.values.getAllStrings(this);
+	public List<String> getStrings() {
+		return this.values.getStrings(this);
 	}
 
 	public int getValueCount() {
