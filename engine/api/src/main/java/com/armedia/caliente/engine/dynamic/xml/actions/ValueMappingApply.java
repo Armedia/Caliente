@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfArchetype;
-import com.armedia.caliente.store.xml.CmfTypeAdapter;
+import com.armedia.caliente.store.xml.CmfArchetypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -20,7 +20,7 @@ import com.armedia.commons.utilities.Tools;
 public class ValueMappingApply extends AbstractValueMappingApply<CmfArchetype> {
 
 	@XmlElement(name = "type", required = false)
-	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
+	@XmlJavaTypeAdapter(CmfArchetypeAdapter.class)
 	protected CmfArchetype type;
 
 	@XmlElement(name = "mapping-name", required = false)

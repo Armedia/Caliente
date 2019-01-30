@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlType;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import com.armedia.caliente.store.CmfValueType;
-import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
+import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -40,7 +40,7 @@ public class AttributeTypeMapping {
 	protected List<MetadataTypeMapping> mappings;
 
 	@XmlElement(name = "default", required = false)
-	@XmlJavaTypeAdapter(CmfDataTypeAdapter.class)
+	@XmlJavaTypeAdapter(CmfValueTypeAdapter.class)
 	protected CmfValueType defaultType;
 
 	@XmlTransient

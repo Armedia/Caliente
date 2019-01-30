@@ -22,7 +22,7 @@ import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfValue;
-import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
+import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -38,7 +38,7 @@ public class CheckExpression extends AbstractComparisonCheck {
 	protected Expression right;
 
 	@XmlAttribute(name = "type")
-	@XmlJavaTypeAdapter(CmfDataTypeAdapter.class)
+	@XmlJavaTypeAdapter(CmfValueTypeAdapter.class)
 	protected CmfValueType type;
 
 	public final CmfValueType getType() {

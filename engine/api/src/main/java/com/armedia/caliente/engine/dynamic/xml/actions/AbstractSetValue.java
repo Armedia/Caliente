@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.store.CmfValueType;
-import com.armedia.caliente.store.xml.CmfDataTypeAdapter;
+import com.armedia.caliente.store.xml.CmfValueTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
 @XmlTransient
@@ -25,7 +25,7 @@ public abstract class AbstractSetValue extends ConditionalAction {
 	protected Expression name;
 
 	@XmlElement(name = "type", required = false)
-	@XmlJavaTypeAdapter(CmfDataTypeAdapter.class)
+	@XmlJavaTypeAdapter(CmfValueTypeAdapter.class)
 	protected CmfValueType type;
 
 	@XmlElement(name = "value", required = true)

@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfArchetype;
 
-public class CmfTypeAdapter extends XmlAdapter<String, CmfArchetype> {
+public class CmfArchetypeAdapter extends XmlAdapter<String, CmfArchetype> {
 
 	@Override
 	public CmfArchetype unmarshal(String v) throws Exception {

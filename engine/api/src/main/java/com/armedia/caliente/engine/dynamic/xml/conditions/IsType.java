@@ -11,7 +11,7 @@ import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.store.CmfArchetype;
-import com.armedia.caliente.store.xml.CmfTypeAdapter;
+import com.armedia.caliente.store.xml.CmfArchetypeAdapter;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "conditionIsType.t", propOrder = {
@@ -20,7 +20,7 @@ import com.armedia.caliente.store.xml.CmfTypeAdapter;
 public class IsType implements Condition {
 
 	@XmlValue
-	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
+	@XmlJavaTypeAdapter(CmfArchetypeAdapter.class)
 	protected CmfArchetype value;
 
 	public CmfArchetype getValue() {
