@@ -73,8 +73,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 	}
 
 	@Override
-	protected Set<String> calculateSecondarySubtypes(IDfSession session, CmfObject.Archetype type, String subtype, T object)
-		throws Exception {
+	protected Set<String> calculateSecondarySubtypes(IDfSession session, CmfObject.Archetype type, String subtype,
+		T object) throws Exception {
 		Set<String> secondaries = super.calculateSecondarySubtypes(session, type, subtype, object);
 		if (object.hasAttr(DctmAttributes.R_ASPECT_NAME)) {
 			final int count = object.getValueCount(DctmAttributes.R_ASPECT_NAME);
@@ -495,7 +495,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			if (f != null) {
 				String path = (f.getFolderPathCount() > 0 ? f.getFolderPath(0)
 					: String.format("(unknown-folder:[%s])", id.getId()));
-				return String.format("%s/%s [%s]", path, objectName, calculateVersionString(sysObject, true));
+				return String.format("%s/%s#%s", path, objectName, calculateVersionString(sysObject, true));
 			}
 		}
 		throw new DfException(

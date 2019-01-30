@@ -160,12 +160,12 @@ public abstract class ExportEngine<//
 		this.supportsMultipleSources = supportsMultipleSources;
 	}
 
-	private ExportOperation getOrCreateExportOperation(ExportTarget target,
+	private ExportOperation getOrCreateExportOperation(ExportTarget target, ExportTarget referrent,
 		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) {
 		return ConcurrentUtils.createIfAbsentUnchecked(statusMap, target, new ConcurrentInitializer<ExportOperation>() {
 			@Override
 			public ExportOperation get() {
-				return new ExportOperation(target);
+				return new ExportOperation(target, referrent);
 			}
 		});
 	}
@@ -195,7 +195,7 @@ public abstract class ExportEngine<//
 					case ALREADY_LOCKED:
 						// If the object is already locked, then we HAVE to have this created, so we
 						// do this early on.
-						getOrCreateExportOperation(target, statusMap);
+						getOrCreateExportOperation(target, referrent, statusMap);
 						// fall-through
 					case ALREADY_FAILED:
 					case ALREADY_STORED:
@@ -273,7 +273,7 @@ public abstract class ExportEngine<//
 		final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
 
 		// To make sure other threads don't work on this same object
-		final ExportOperation thisStatus = getOrCreateExportOperation(target, statusMap);
+		final ExportOperation thisStatus = getOrCreateExportOperation(target, referrent, statusMap);
 
 		boolean success = false;
 		if (referrent != null) {
@@ -385,8 +385,9 @@ public abstract class ExportEngine<//
 							String.format("No export status found for requirement [%s] of %s", requirement, logLabel));
 					}
 					try {
-						ctx.printf("Waiting for [%s] from %s (#%d created by %s)", requirement, logLabel,
-							status.getObjectNumber(), status.getCreatorThread().getName());
+						ctx.printf("Waiting for [%s] from %s (#%d created by %s from %s)", requirement, logLabel,
+							status.getObjectNumber(), status.getCreatorThread().getName(),
+							status.getReferrentDescription());
 						long waitTime = status.waitUntilCompleted();
 						ctx.printf("Waiting for [%s] from %s for %d ms", requirement, logLabel, waitTime);
 					} catch (InterruptedException e) {
