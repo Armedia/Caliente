@@ -5,7 +5,7 @@ import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.importer.ImportDelegateFactory;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.UnsupportedCmfTypeException;
+import com.armedia.caliente.store.UnsupportedCmfArchetypeException;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -20,7 +20,7 @@ public class DctmImportDelegateFactory
 	@Override
 	protected DctmImportDelegate<?> newImportDelegate(CmfObject<IDfValue> marshaled) throws Exception {
 		DctmObjectType type = DctmObjectType.decodeType(marshaled.getType());
-		if (type == null) { throw new UnsupportedCmfTypeException(marshaled.getType()); }
+		if (type == null) { throw new UnsupportedCmfArchetypeException(marshaled.getType()); }
 		switch (type) {
 			case DOCUMENT:
 				return new DctmImportDocument(this, marshaled);

@@ -67,7 +67,7 @@ public enum AlfrescoDataType {
 	}
 
 	public final boolean matches(CmfValueType t) {
-		if (t == null) { throw new IllegalArgumentException("Must provide a valid CmfDataType instance"); }
+		if (t == null) { throw new IllegalArgumentException("Must provide a valid CmfValueType instance"); }
 		return this.mappedTypes.contains(t);
 	}
 
@@ -82,13 +82,17 @@ public enum AlfrescoDataType {
 		for (AlfrescoDataType p : AlfrescoDataType.values()) {
 
 			AlfrescoDataType p2 = m2.put(p.nameString, p);
-			if (p2 != null) { throw new IllegalStateException(
-				String.format("Two property types mapped as [%s] - %s and %s", p.nameString, p.name(), p2.name())); }
+			if (p2 != null) {
+				throw new IllegalStateException(
+					String.format("Two property types mapped as [%s] - %s and %s", p.nameString, p.name(), p2.name()));
+			}
 
 			for (CmfValueType t : p.mappedTypes) {
 				p2 = m.put(t, p);
-				if (p2 != null) { throw new IllegalStateException(
-					String.format("Mapping error: CmfDataType.%s is mapped to by both %s and %s", t, p, p2)); }
+				if (p2 != null) {
+					throw new IllegalStateException(
+						String.format("Mapping error: CmfValueType.%s is mapped to by both %s and %s", t, p, p2));
+				}
 			}
 		}
 		AlfrescoDataType.CMF_MAP = Tools.freezeMap(m);

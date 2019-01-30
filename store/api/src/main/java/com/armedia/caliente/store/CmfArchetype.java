@@ -45,7 +45,7 @@ public enum CmfArchetype {
 			CmfArchetype o = abb.put(t.abbrev, t);
 			if (o != null) {
 				throw new RuntimeException(
-					String.format("ERROR: The CmfType values %s and %s share the same abbreviation [%s]", t.name(),
+					String.format("ERROR: The CmfArchetype values %s and %s share the same abbreviation [%s]", t.name(),
 						o.name(), t.abbrev));
 			}
 		}

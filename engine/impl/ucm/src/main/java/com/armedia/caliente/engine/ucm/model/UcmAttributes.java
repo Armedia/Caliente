@@ -15,8 +15,8 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfValue;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.commons.utilities.Tools;
 
 import oracle.stellent.ridc.model.DataBinder;
@@ -80,7 +80,7 @@ public final class UcmAttributes {
 				String v = data.get(f.getName());
 
 				Type t = f.getType();
-				// Map that type to a CmfDataType
+				// Map that type to a CmfValueType
 				CmfValue value = null;
 				CmfValueType T = null;
 				switch (t) {

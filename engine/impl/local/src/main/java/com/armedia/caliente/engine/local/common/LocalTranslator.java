@@ -10,12 +10,12 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfValueType;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.commons.utilities.Tools;
 
 public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
@@ -33,8 +33,8 @@ public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 		m.put(PropertyType.DATETIME, CmfValueType.DATETIME);
 		m.put(PropertyType.ID, CmfValueType.ID);
 		m.put(PropertyType.STRING, CmfValueType.STRING);
-		m.put(PropertyType.URI, CmfValueType.STRING); // TODO: Add this to CmfDataType
-		m.put(PropertyType.HTML, CmfValueType.STRING); // TODO: Add this to CmfDataType
+		m.put(PropertyType.URI, CmfValueType.STRING); // TODO: Add this to CmfValueType
+		m.put(PropertyType.HTML, CmfValueType.STRING); // TODO: Add this to CmfValueType
 		DATA_TYPES = Tools.freezeMap(m);
 
 		Map<CmfValueType, PropertyType> n = new EnumMap<>(CmfValueType.class);

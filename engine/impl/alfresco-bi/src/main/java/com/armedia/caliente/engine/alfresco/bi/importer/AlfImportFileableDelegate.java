@@ -29,17 +29,17 @@ import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.tools.AclTools.AccessorType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
-import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
 import com.armedia.commons.utilities.Tools;
 
@@ -384,7 +384,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	protected final String generateAcl(final AlfImportContext ctx, final String owner, final String group)
 		throws ImportException {
 		// Make sure that if ACL processing is disabled, we don't process it
-		// if (!ctx.isSupported(CmfType.ACL)) { return null; }
+		// if (!ctx.isSupported(CmfArchetype.ACL)) { return null; }
 		CmfValue aclId = getPropertyValue(IntermediateProperty.ACL_ID);
 		if ((aclId == null) || aclId.isNull()) { return null; }
 

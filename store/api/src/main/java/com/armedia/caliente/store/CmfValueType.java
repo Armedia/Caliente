@@ -111,7 +111,7 @@ public enum CmfValueType {
 			CmfValueType o = abb.put(t.abbrev, t);
 			if (o != null) {
 				throw new RuntimeException(
-					String.format("ERROR: The CmfDataType values %s and %s share the same abbreviation [%s]", t.name(),
+					String.format("ERROR: The CmfValueType values %s and %s share the same abbreviation [%s]", t.name(),
 						o.name(), t.abbrev));
 			}
 			try {

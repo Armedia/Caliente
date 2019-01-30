@@ -52,9 +52,11 @@ public enum DataTypeT {
 					for (DataTypeT t : DataTypeT.values()) {
 						DataTypeT.TO_CMF.put(t, t.equiv);
 						DataTypeT t2 = DataTypeT.FROM_CMF.put(t.equiv, t);
-						if (t2 != null) { throw new RuntimeException(
-							String.format("Duplicate mapping: DataTypeT.%s and DataTypeT.%s both map to CmfDataType.%s",
-								t, t2, t.equiv)); }
+						if (t2 != null) {
+							throw new RuntimeException(String.format(
+								"Duplicate mapping: DataTypeT.%s and DataTypeT.%s both map to CmfValueType.%s", t, t2,
+								t.equiv));
+						}
 					}
 				}
 			}
