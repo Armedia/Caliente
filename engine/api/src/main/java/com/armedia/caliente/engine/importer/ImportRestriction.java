@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 
 public class ImportRestriction implements Serializable {
 
@@ -36,7 +36,7 @@ public class ImportRestriction implements Serializable {
 				if (!StringUtils.isEmpty(id)) {
 					final String typeStr = m.group(1);
 					try {
-						return new CmfObjectRef(CmfType.decode(typeStr), StringUtils.strip(id));
+						return new CmfObjectRef(CmfArchetype.decode(typeStr), StringUtils.strip(id));
 					} catch (IllegalArgumentException e) {
 						// Bad type! Ignore...
 						err = String.format("Unknown object type or abbreviation [%s]", typeStr);
@@ -62,7 +62,7 @@ public class ImportRestriction implements Serializable {
 		return ImportRestriction.render(ref.getType(), ref.getId());
 	}
 
-	public static String render(CmfType type, String id) {
+	public static String render(CmfArchetype type, String id) {
 		Objects.requireNonNull(type, "Must provdie a non-null object type");
 		if (StringUtils.isBlank(id)) { throw new IllegalArgumentException("Must provide a non-null, non-blank ID"); }
 		return String.format(ImportRestriction.RENDERER, type.abbrev, id);

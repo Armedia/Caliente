@@ -19,7 +19,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.DfException;
@@ -53,7 +53,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected final CmfType calculateType(IDfSession session, T object) throws Exception {
+	protected final CmfArchetype calculateType(IDfSession session, T object) throws Exception {
 		return DctmObjectType.decodeType(object).getStoredObjectType();
 	}
 
@@ -78,7 +78,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	}
 
 	@Override
-	protected final String calculateSubType(IDfSession session, CmfType type, T object) throws Exception {
+	protected final String calculateSubType(IDfSession session, CmfArchetype type, T object) throws Exception {
 		return object.getType().getName();
 	}
 

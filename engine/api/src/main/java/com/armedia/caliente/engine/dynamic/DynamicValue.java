@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfBaseSetting;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
@@ -30,7 +30,7 @@ public class DynamicValue extends CmfBaseSetting {
 		}
 	}
 
-	public DynamicValue(String name, CmfDataType type, boolean multivalue) {
+	public DynamicValue(String name, CmfValueType type, boolean multivalue) {
 		super(name, type, multivalue);
 	}
 

@@ -11,7 +11,7 @@ import com.armedia.caliente.engine.dynamic.Condition;
 import com.armedia.caliente.engine.dynamic.ConditionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
 
@@ -23,7 +23,7 @@ public class HasValueMapping implements Condition {
 
 	@XmlElement(name = "type", required = false)
 	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
-	protected CmfType type;
+	protected CmfArchetype type;
 
 	@XmlElement(name = "name", required = true)
 	protected Expression name;
@@ -34,11 +34,11 @@ public class HasValueMapping implements Condition {
 	@XmlElement(name = "name", required = false)
 	protected Expression to;
 
-	public void setType(CmfType type) {
+	public void setType(CmfArchetype type) {
 		this.type = type;
 	}
 
-	public CmfType getType() {
+	public CmfArchetype getType() {
 		return this.type;
 	}
 
@@ -68,7 +68,7 @@ public class HasValueMapping implements Condition {
 
 	@Override
 	public boolean check(DynamicElementContext ctx) throws ConditionException {
-		CmfType type = getType();
+		CmfArchetype type = getType();
 		if (type == null) { throw new ConditionException("No type given to find the mappings with"); }
 
 		Object name = ConditionTools.eval(getName(), ctx);

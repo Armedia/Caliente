@@ -24,7 +24,7 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
@@ -88,7 +88,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			UcmFileHistory history = getHistory(ctx);
 			latest = (history.getLastRevision().getRevisionId() == this.object.getRevisionNumber());
 		}
-		CmfAttribute<CmfValue> latestVersion = new CmfAttribute<>(UcmAtt.cmfLatestVersion.name(), CmfDataType.BOOLEAN,
+		CmfAttribute<CmfValue> latestVersion = new CmfAttribute<>(UcmAtt.cmfLatestVersion.name(), CmfValueType.BOOLEAN,
 			false, Collections.singleton(new CmfValue(latest)));
 		object.setAttribute(latestVersion);
 
@@ -101,7 +101,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 		if (!super.getDataProperties(ctx, properties, object)) { return false; }
 		CmfProperty<CmfValue> p = null;
 
-		p = new CmfProperty<>(IntermediateProperty.IS_UNFILED, CmfDataType.BOOLEAN, new CmfValue(object.isUnfiled()));
+		p = new CmfProperty<>(IntermediateProperty.IS_UNFILED, CmfValueType.BOOLEAN, new CmfValue(object.isUnfiled()));
 		properties.add(p);
 
 		final boolean newestVersion;
@@ -121,7 +121,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			versionHeadIndex = history.getLastRevision().getRevisionId();
 		}
 
-		p = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfDataType.BOOLEAN, new CmfValue(newestVersion));
+		p = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfValueType.BOOLEAN, new CmfValue(newestVersion));
 		properties.add(p);
 
 		p = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,

@@ -11,7 +11,7 @@ import com.armedia.caliente.engine.sharepoint.ShptAttributes;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.engine.sharepoint.ShptSessionException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.FileNameTools;
@@ -73,7 +73,7 @@ public class ShptFolder extends ShptFSObject<Folder> {
 	@Override
 	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.WELCOME_PAGE.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.WELCOME_PAGE.name, CmfValueType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getWelcomePage()))));
 		return true;
 	}

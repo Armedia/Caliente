@@ -18,7 +18,7 @@ import com.armedia.caliente.engine.dfc.common.Setting;
 import com.armedia.caliente.engine.importer.ImportException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.dfc.util.DfValueFactory;
@@ -61,13 +61,13 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	}
 
 	protected static IDfUser getUserMapping(DctmImportContext ctx, String userName) throws DfException {
-		Mapping m = ctx.getValueMapper().getTargetMapping(CmfType.USER, DctmImportUser.USERNAME_MAPPING_NAME, userName);
+		Mapping m = ctx.getValueMapper().getTargetMapping(CmfArchetype.USER, DctmImportUser.USERNAME_MAPPING_NAME, userName);
 		if (m == null) { return null; }
 		return ctx.getSession().getUser(m.getTargetValue());
 	}
 
 	protected static void setUserMapping(DctmImportContext ctx, String userName, IDfUser user) throws DfException {
-		ctx.getValueMapper().setMapping(CmfType.USER, DctmImportUser.USERNAME_MAPPING_NAME, userName,
+		ctx.getValueMapper().setMapping(CmfArchetype.USER, DctmImportUser.USERNAME_MAPPING_NAME, userName,
 			user.getUserName());
 	}
 

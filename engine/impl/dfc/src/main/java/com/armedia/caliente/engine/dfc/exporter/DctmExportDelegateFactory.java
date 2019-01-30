@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfPersistentObject;
 import com.documentum.fc.client.IDfSession;
@@ -35,7 +35,7 @@ public class DctmExportDelegateFactory
 	}
 
 	@Override
-	protected DctmExportDelegate<?> newExportDelegate(IDfSession session, CmfType type, String searchKey)
+	protected DctmExportDelegate<?> newExportDelegate(IDfSession session, CmfArchetype type, String searchKey)
 		throws Exception {
 		if (session == null) { throw new IllegalArgumentException(
 			"Must provide a session through which to retrieve the object"); }
@@ -47,7 +47,7 @@ public class DctmExportDelegateFactory
 		return newExportDelegate(object.getSession(), object, null);
 	}
 
-	DctmExportDelegate<?> newExportDelegate(IDfSession session, IDfPersistentObject object, CmfType type)
+	DctmExportDelegate<?> newExportDelegate(IDfSession session, IDfPersistentObject object, CmfArchetype type)
 		throws Exception {
 		// For Documentum, the type is not used for the search. We do, however, use it to validate
 		// the returned object...

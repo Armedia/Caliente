@@ -28,11 +28,11 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.dfc.util.DctmVersionNumber;
 import com.armedia.commons.dfc.util.DfUtils;
@@ -309,7 +309,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			for (IDfValue p : patches) {
 				// Now we checkout and checkin and branch and whatnot as necessary until we can
 				// actually proceed with the rest of the algorithm...
-				final CmfProperty<IDfValue> prop = new CmfProperty<>(DctmAttributes.R_VERSION_LABEL, CmfDataType.STRING,
+				final CmfProperty<IDfValue> prop = new CmfProperty<>(DctmAttributes.R_VERSION_LABEL, CmfValueType.STRING,
 					false, DfValueFactory.newStringValue(p.toString()));
 				if (substituteRoot) {
 					antecedentVersion.save();
@@ -803,7 +803,7 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 					this.cmfObject.getLabel(), this.cmfObject.getId());
 				for (IDfValue v : p) {
 					DctmVdocMember member = new DctmVdocMember(v.asString());
-					Mapping m = context.getValueMapper().getTargetMapping(CmfType.DOCUMENT,
+					Mapping m = context.getValueMapper().getTargetMapping(CmfArchetype.DOCUMENT,
 						DctmAttributes.I_CHRONICLE_ID, member.getChronicleId().getId());
 					if (m == null) { throw new ImportException(String.format(
 						"Virtual Document [%s](%s) references a component [%s] which could not be located (maybe it hasn't been imported yet?)",

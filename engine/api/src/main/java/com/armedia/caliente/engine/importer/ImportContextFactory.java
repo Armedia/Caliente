@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.FileNameTools;
 import com.armedia.commons.utilities.Tools;
@@ -93,11 +93,11 @@ public abstract class ImportContextFactory< //
 	}
 
 	@Override
-	protected void calculateExcludes(CmfObjectStore<?, ?> objectStore, Set<CmfType> excludes)
+	protected void calculateExcludes(CmfObjectStore<?, ?> objectStore, Set<CmfArchetype> excludes)
 		throws CmfStorageException {
-		Map<CmfType, Long> summary = objectStore.getStoredObjectTypes();
+		Map<CmfArchetype, Long> summary = objectStore.getStoredObjectTypes();
 		if ((summary != null) && !summary.isEmpty()) {
-			for (CmfType t : CmfType.values()) {
+			for (CmfArchetype t : CmfArchetype.values()) {
 				Long count = summary.get(t);
 				// If the object type isn't even included (null or 0-count), then
 				// we add the object to the excludes list to avoid problems.
@@ -106,7 +106,7 @@ public abstract class ImportContextFactory< //
 				}
 			}
 		} else {
-			excludes = EnumSet.allOf(CmfType.class);
+			excludes = EnumSet.allOf(CmfArchetype.class);
 		}
 	}
 

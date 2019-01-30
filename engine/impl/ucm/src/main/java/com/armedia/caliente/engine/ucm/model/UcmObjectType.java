@@ -3,35 +3,35 @@ package com.armedia.caliente.engine.ucm.model;
 import java.util.EnumMap;
 import java.util.Map;
 
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.Tools;
 
 public enum UcmObjectType {
 	//
-	FILE(CmfType.DOCUMENT), //
-	FOLDER(CmfType.FOLDER), //
+	FILE(CmfArchetype.DOCUMENT), //
+	FOLDER(CmfArchetype.FOLDER), //
 	//
 	;
 
-	private static final Map<CmfType, UcmObjectType> REVERSE;
+	private static final Map<CmfArchetype, UcmObjectType> REVERSE;
 
 	static {
-		Map<CmfType, UcmObjectType> reverse = new EnumMap<>(CmfType.class);
+		Map<CmfArchetype, UcmObjectType> reverse = new EnumMap<>(CmfArchetype.class);
 		for (UcmObjectType t : UcmObjectType.values()) {
-			UcmObjectType old = reverse.put(t.cmfType, t);
+			UcmObjectType old = reverse.put(t.cmfArchetype, t);
 			if (old != null) { throw new RuntimeException(
-				String.format("UcmTypes %s and %s have identical CMF mappings to %s", t, old, t.cmfType)); }
+				String.format("UcmTypes %s and %s have identical CMF mappings to %s", t, old, t.cmfArchetype)); }
 		}
 		REVERSE = Tools.freezeMap(reverse);
 	}
 
-	public final CmfType cmfType;
+	public final CmfArchetype cmfArchetype;
 
-	private UcmObjectType(CmfType cmfType) {
-		this.cmfType = cmfType;
+	private UcmObjectType(CmfArchetype cmfArchetype) {
+		this.cmfArchetype = cmfArchetype;
 	}
 
-	public static UcmObjectType resolve(CmfType type) {
+	public static UcmObjectType resolve(CmfArchetype type) {
 		return UcmObjectType.REVERSE.get(type);
 	}
 }

@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.dfc.common.DctmSpecialValues;
 import com.armedia.caliente.engine.exporter.ExportContextFactory;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.CfgTools;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
@@ -34,7 +34,7 @@ public class DctmExportContextFactory
 	}
 
 	@Override
-	protected DctmExportContext constructContext(String rootId, CmfType rootType, IDfSession session,
+	protected DctmExportContext constructContext(String rootId, CmfArchetype rootType, IDfSession session,
 		int batchPosition) {
 		return new DctmExportContext(this, rootId, rootType, session, getOutput(), getWarningTracker());
 	}

@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.exporter.ExportException;
 import com.armedia.caliente.engine.sharepoint.ShptAttributes;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValue;
@@ -72,18 +72,18 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			name = FileNameTools.removeEdgeSeparators(name, '/');
 			name = name.replaceFirst("/", "_");
 		}
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_NAME.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_NAME.name, CmfValueType.STRING, false,
 			Collections.singleton(new CmfValue(name))));
 
 		Date d = getCreatedTime();
 		if (d != null) {
-			object.setAttribute(new CmfAttribute<>(ShptAttributes.CREATE_DATE.name, CmfDataType.DATETIME, false,
+			object.setAttribute(new CmfAttribute<>(ShptAttributes.CREATE_DATE.name, CmfValueType.DATETIME, false,
 				Collections.singleton(new CmfValue(d))));
 		}
 
 		d = getLastModifiedTime();
 		if (d != null) {
-			object.setAttribute(new CmfAttribute<>(ShptAttributes.MODIFICATION_DATE.name, CmfDataType.DATETIME, false,
+			object.setAttribute(new CmfAttribute<>(ShptAttributes.MODIFICATION_DATE.name, CmfValueType.DATETIME, false,
 				Collections.singleton(new CmfValue(d))));
 		}
 
@@ -98,7 +98,7 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]", path,
 					getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
 			}
-			object.setProperty(new CmfProperty<>(IntermediateProperty.PATH, CmfDataType.STRING, true,
+			object.setProperty(new CmfProperty<>(IntermediateProperty.PATH, CmfValueType.STRING, true,
 				Collections.singleton(new CmfValue(path))));
 		}
 		return true;
@@ -112,8 +112,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			String parentPath = getServerRelativeUrl();
 			parentPath = FileNameTools.dirname(parentPath, '/');
 			ShptFolder parent = new ShptFolder(this.factory, session, session.getFolder(parentPath));
-			marshaled.setProperty(new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfDataType.ID, true,
-				Collections.singleton(new CmfValue(CmfDataType.ID, parent.getObjectId()))));
+			marshaled.setProperty(new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValueType.ID, true,
+				Collections.singleton(new CmfValue(CmfValueType.ID, parent.getObjectId()))));
 			ret.add(parent);
 			if (this.log.isDebugEnabled()) {
 				this.log

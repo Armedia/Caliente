@@ -15,7 +15,7 @@ public class UnsupportedCmfTypeException extends RuntimeException {
 		super(String.format("The object type [%s] is not supported", type));
 	}
 
-	public UnsupportedCmfTypeException(CmfType type) {
+	public UnsupportedCmfTypeException(CmfArchetype type) {
 		this(type != null ? type.name() : "(null-value)");
 	}
 }

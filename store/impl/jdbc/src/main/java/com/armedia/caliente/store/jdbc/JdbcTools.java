@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 
 class JdbcTools {
 
@@ -81,7 +81,7 @@ class JdbcTools {
 		return q;
 	}
 
-	static String composeDatabaseId(CmfType type, String id) {
+	static String composeDatabaseId(CmfArchetype type, String id) {
 		return String.format("{%02x-%s}", type.ordinal(), id);
 	}
 
@@ -100,9 +100,9 @@ class JdbcTools {
 			throw new IllegalArgumentException(String.format("The string [%s] is not a valid object ID", id));
 		}
 		// Parse out the ID value
-		final CmfType type;
+		final CmfArchetype type;
 		try {
-			type = CmfType.values()[Integer.valueOf(m.group(1), 16)];
+			type = CmfArchetype.values()[Integer.valueOf(m.group(1), 16)];
 		} catch (Exception e) {
 			throw new IllegalArgumentException(String.format("The object type [%s] is not a valid object type", id), e);
 		}

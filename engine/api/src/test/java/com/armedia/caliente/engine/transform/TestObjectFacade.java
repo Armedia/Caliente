@@ -4,14 +4,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.armedia.caliente.engine.dynamic.DynamicObject;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 
 public class TestObjectFacade extends DynamicObject {
 
 	private String objectId = null;
 	private final String historyId = null;
 	private boolean historyCurrent = false;
-	private CmfType type = null;
+	private CmfArchetype type = null;
 	private String label = null;
 	private String originalSubtype = null;
 	private Set<String> originalSecondaries = new HashSet<>();
@@ -43,7 +43,7 @@ public class TestObjectFacade extends DynamicObject {
 	}
 
 	@Override
-	public CmfType getType() {
+	public CmfArchetype getType() {
 		return this.type;
 	}
 
@@ -57,7 +57,7 @@ public class TestObjectFacade extends DynamicObject {
 		return this;
 	}
 
-	public TestObjectFacade setType(CmfType type) {
+	public TestObjectFacade setType(CmfArchetype type) {
 		this.type = type;
 		return this;
 	}

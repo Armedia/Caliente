@@ -15,7 +15,7 @@ import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.DynamicValue;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
 import com.armedia.caliente.engine.transform.TestObjectContext;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 
 public class ExpressionTest {
 
@@ -117,7 +117,7 @@ public class ExpressionTest {
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
-				DynamicValue value = new DynamicValue("testValue", CmfDataType.INTEGER, false);
+				DynamicValue value = new DynamicValue("testValue", CmfValueType.INTEGER, false);
 				value.setValue(expectedInt);
 				ctx.getVariables().put("testValue", value);
 				actual = Expression.eval(e, ctx);
@@ -158,7 +158,7 @@ public class ExpressionTest {
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
-				DynamicValue value = new DynamicValue("testValue", CmfDataType.INTEGER, false);
+				DynamicValue value = new DynamicValue("testValue", CmfValueType.INTEGER, false);
 				value.setValue(expectedInt);
 				ctx.getVariables().put("testValue", value);
 				actual = Expression.eval(e, ctx);
@@ -199,7 +199,7 @@ public class ExpressionTest {
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
-				DynamicValue value = new DynamicValue("testValue", CmfDataType.INTEGER, false);
+				DynamicValue value = new DynamicValue("testValue", CmfValueType.INTEGER, false);
 				value.setValue(expectedInt);
 				ctx.getVariables().put("testValue", value);
 				actual = Expression.eval(e, ctx);
@@ -240,7 +240,7 @@ public class ExpressionTest {
 			e.setScript(script);
 			for (int i = 0; i < 99; i++) {
 				int expectedInt = (random.nextInt(10000) * 1000) + i;
-				DynamicValue value = new DynamicValue("testValue", CmfDataType.INTEGER, false);
+				DynamicValue value = new DynamicValue("testValue", CmfValueType.INTEGER, false);
 				value.setValue(expectedInt);
 				ctx.getVariables().put("testValue", value);
 				actual = Expression.eval(e, ctx);

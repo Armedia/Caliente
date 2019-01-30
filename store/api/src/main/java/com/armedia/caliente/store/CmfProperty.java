@@ -23,51 +23,51 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 		setValues(pattern.values);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type) {
+	public CmfProperty(CmfEncodeableName name, CmfValueType type) {
 		this(name, type, true, (VALUE) null);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating) {
+	public CmfProperty(CmfEncodeableName name, CmfValueType type, boolean repeating) {
 		this(name, type, repeating, (VALUE) null);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type, VALUE value) {
+	public CmfProperty(CmfEncodeableName name, CmfValueType type, VALUE value) {
 		this(name, type, false, value);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating, VALUE value) {
+	public CmfProperty(CmfEncodeableName name, CmfValueType type, boolean repeating, VALUE value) {
 		this(name, type, repeating, (value != null ? Collections.singleton(value) : null));
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type, Collection<VALUE> values) {
+	public CmfProperty(CmfEncodeableName name, CmfValueType type, Collection<VALUE> values) {
 		this(name, type, true, values);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfDataType type, boolean repeating, Collection<VALUE> values) {
+	public CmfProperty(CmfEncodeableName name, CmfValueType type, boolean repeating, Collection<VALUE> values) {
 		this(name.encode(), type, repeating, values);
 	}
 
-	public CmfProperty(String name, CmfDataType type) {
+	public CmfProperty(String name, CmfValueType type) {
 		this(name, type, true, (VALUE) null);
 	}
 
-	public CmfProperty(String name, CmfDataType type, boolean repeating) {
+	public CmfProperty(String name, CmfValueType type, boolean repeating) {
 		this(name, type, repeating, (VALUE) null);
 	}
 
-	public CmfProperty(String name, CmfDataType type, VALUE value) {
+	public CmfProperty(String name, CmfValueType type, VALUE value) {
 		this(name, type, false, value);
 	}
 
-	public CmfProperty(String name, CmfDataType type, boolean repeating, VALUE value) {
+	public CmfProperty(String name, CmfValueType type, boolean repeating, VALUE value) {
 		this(name, type, repeating, (value != null ? Collections.singleton(value) : null));
 	}
 
-	public CmfProperty(String name, CmfDataType type, Collection<VALUE> values) {
+	public CmfProperty(String name, CmfValueType type, Collection<VALUE> values) {
 		this(name, type, true, values);
 	}
 
-	public CmfProperty(String name, CmfDataType type, boolean repeating, Collection<VALUE> values) {
+	public CmfProperty(String name, CmfValueType type, boolean repeating, Collection<VALUE> values) {
 		super(name, type, repeating);
 		if (values == null) {
 			values = Collections.emptyList();

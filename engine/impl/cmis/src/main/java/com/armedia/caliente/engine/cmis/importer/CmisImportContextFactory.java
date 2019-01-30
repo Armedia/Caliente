@@ -22,7 +22,7 @@ import com.armedia.caliente.engine.dynamic.transformer.Transformer;
 import com.armedia.caliente.engine.importer.ImportContextFactory;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -37,7 +37,7 @@ public class CmisImportContextFactory
 		WarningTracker warningTracker) throws Exception {
 		super(engine, settings, session, objectStore, contentStore, transformer, output, warningTracker);
 		this.repositoryInfo = session.getRepositoryInfo();
-		if (super.isSupported(CmfType.ACL)) {
+		if (super.isSupported(CmfArchetype.ACL)) {
 			this.permissionMapper = new PermissionMapper(session);
 		} else {
 			this.permissionMapper = null;
@@ -54,7 +54,7 @@ public class CmisImportContextFactory
 	}
 
 	@Override
-	protected CmisImportContext constructContext(String rootId, CmfType rootType, Session session,
+	protected CmisImportContext constructContext(String rootId, CmfArchetype rootType, Session session,
 		int historyPosition) {
 		return new CmisImportContext(this, rootId, rootType, session, getOutput(), getWarningTracker(),
 			getTransformer(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);

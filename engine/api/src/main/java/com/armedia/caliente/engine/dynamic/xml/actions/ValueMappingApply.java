@@ -9,7 +9,7 @@ import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.xml.CmfTypeAdapter;
 import com.armedia.commons.utilities.Tools;
 
@@ -17,11 +17,11 @@ import com.armedia.commons.utilities.Tools;
 @XmlType(name = "actionApplyValueMapping.t", propOrder = {
 	"comparison", "attributeName", "type", "mappingName", "cardinality", "fallback"
 })
-public class ValueMappingApply extends AbstractValueMappingApply<CmfType> {
+public class ValueMappingApply extends AbstractValueMappingApply<CmfArchetype> {
 
 	@XmlElement(name = "type", required = false)
 	@XmlJavaTypeAdapter(CmfTypeAdapter.class)
-	protected CmfType type;
+	protected CmfArchetype type;
 
 	@XmlElement(name = "mapping-name", required = false)
 	protected Expression mappingName;
@@ -40,17 +40,17 @@ public class ValueMappingApply extends AbstractValueMappingApply<CmfType> {
 	}
 
 	@Override
-	protected CmfType getMappingType(CmfType type) {
+	protected CmfArchetype getMappingType(CmfArchetype type) {
 		return type;
 	}
 
 	@Override
-	public void setType(CmfType type) {
+	public void setType(CmfArchetype type) {
 		this.type = type;
 	}
 
 	@Override
-	public CmfType getType() {
+	public CmfArchetype getType() {
 		return this.type;
 	}
 }

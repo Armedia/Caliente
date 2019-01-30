@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.armedia.caliente.engine.importer.ImportStrategy;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.IDfACL;
 import com.documentum.fc.client.IDfFolder;
@@ -35,56 +35,56 @@ public enum DctmObjectType {
 	// otherwise that operation will fail.
 
 	STORE(
-		CmfType.DATASTORE,
+		CmfArchetype.DATASTORE,
 		IDfStore.class,
 		null,
 		Flag.FAILURE_INTERRUPTS_BATCH,
 		Flag.SUPPORTS_TRANSACTIONS,
 		Flag.PARALLEL_CAPABLE),
 	USER(
-		CmfType.USER,
+		CmfArchetype.USER,
 		IDfUser.class,
 		null,
 		Flag.FAILURE_INTERRUPTS_BATCH,
 		Flag.SUPPORTS_TRANSACTIONS,
 		Flag.PARALLEL_CAPABLE),
 	GROUP(
-		CmfType.GROUP,
+		CmfArchetype.GROUP,
 		IDfGroup.class,
 		null,
 		Flag.FAILURE_INTERRUPTS_BATCH,
 		Flag.SUPPORTS_TRANSACTIONS,
 		Flag.PARALLEL_CAPABLE),
 	ACL(
-		CmfType.ACL,
+		CmfArchetype.ACL,
 		IDfACL.class,
 		null,
 		Flag.FAILURE_INTERRUPTS_BATCH,
 		Flag.SUPPORTS_TRANSACTIONS,
 		Flag.PARALLEL_CAPABLE),
 	TYPE(
-		CmfType.TYPE,
+		CmfArchetype.TYPE,
 		IDfType.class,
 		null,
 		Flag.FAILURE_INTERRUPTS_BATCH,
 		// Flag.SUPPORTS_TRANSACTIONS,
 		Flag.PARALLEL_CAPABLE),
 	FORMAT(
-		CmfType.FORMAT,
+		CmfArchetype.FORMAT,
 		IDfFormat.class,
 		null,
 		Flag.FAILURE_INTERRUPTS_BATCH,
 		Flag.SUPPORTS_TRANSACTIONS,
 		Flag.PARALLEL_CAPABLE),
 	FOLDER(
-		CmfType.FOLDER,
+		CmfArchetype.FOLDER,
 		IDfFolder.class,
 		null,
 		Flag.FAILURE_INTERRUPTS_BATCH,
 		Flag.SUPPORTS_TRANSACTIONS,
 		Flag.PARALLEL_CAPABLE),
 	DOCUMENT(
-		CmfType.DOCUMENT,
+		CmfArchetype.DOCUMENT,
 		IDfSysObject.class,
 		null,
 		Flag.FAILURE_INTERRUPTS_BATCH,
@@ -100,7 +100,7 @@ public enum DctmObjectType {
 		;
 	}
 
-	private final CmfType cmsType;
+	private final CmfArchetype cmsType;
 	private final String dmType;
 	private final Class<? extends IDfPersistentObject> dfClass;
 	private final boolean failureInterruptsBatch;
@@ -129,11 +129,11 @@ public enum DctmObjectType {
 		}
 	};
 
-	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass) {
+	private <T extends IDfPersistentObject> DctmObjectType(CmfArchetype cmsType, Class<T> dfClass) {
 		this(cmsType, dfClass, null);
 	}
 
-	private <T extends IDfPersistentObject> DctmObjectType(CmfType cmsType, Class<T> dfClass, String dmType,
+	private <T extends IDfPersistentObject> DctmObjectType(CmfArchetype cmsType, Class<T> dfClass, String dmType,
 		Flag... flags) {
 		this.cmsType = cmsType;
 		if (dmType == null) {
@@ -153,7 +153,7 @@ public enum DctmObjectType {
 		this.parallelCapable = s.contains(Flag.PARALLEL_CAPABLE);
 	}
 
-	public final CmfType getStoredObjectType() {
+	public final CmfArchetype getStoredObjectType() {
 		return this.cmsType;
 	}
 
@@ -171,7 +171,7 @@ public enum DctmObjectType {
 	}
 
 	private static Map<String, DctmObjectType> DM_TYPE_DECODER = null;
-	private static Map<CmfType, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
+	private static Map<CmfArchetype, DctmObjectType> OBJECT_TYPE_TRANSLATOR = null;
 
 	static {
 		Map<String, DctmObjectType> m = new HashMap<>();
@@ -182,9 +182,9 @@ public enum DctmObjectType {
 	}
 
 	static {
-		Map<CmfType, DctmObjectType> m = new EnumMap<>(CmfType.class);
+		Map<CmfArchetype, DctmObjectType> m = new EnumMap<>(CmfArchetype.class);
 		for (DctmObjectType t : DctmObjectType.values()) {
-			CmfType c = t.getStoredObjectType();
+			CmfArchetype c = t.getStoredObjectType();
 			if (c != null) {
 				m.put(c, t);
 			}
@@ -239,7 +239,7 @@ public enum DctmObjectType {
 		return ret;
 	}
 
-	public static DctmObjectType decodeType(CmfType type) {
+	public static DctmObjectType decodeType(CmfArchetype type) {
 		return DctmObjectType.OBJECT_TYPE_TRANSLATOR.get(type);
 	}
 

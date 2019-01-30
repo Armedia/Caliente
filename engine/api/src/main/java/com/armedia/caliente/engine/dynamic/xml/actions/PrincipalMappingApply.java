@@ -22,7 +22,7 @@ import com.armedia.caliente.engine.dynamic.xml.Comparison;
 import com.armedia.caliente.engine.dynamic.xml.ComparisonAdapter;
 import com.armedia.caliente.engine.dynamic.xml.ConditionalAction;
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.commons.utilities.Tools;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -158,7 +158,7 @@ public class PrincipalMappingApply extends ConditionalAction {
 
 			// Need to find a matching candidate...
 			for (String s : ctx.getDynamicObject().getAtt().keySet()) {
-				if (comparison.check(CmfDataType.STRING, s, comparand)) {
+				if (comparison.check(CmfValueType.STRING, s, comparand)) {
 					applyMapping(ctx, ctx.getDynamicObject().getAtt().get(s));
 				}
 			}

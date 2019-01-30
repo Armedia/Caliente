@@ -59,7 +59,7 @@ import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
 import com.armedia.caliente.store.CmfProperty;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.CfgTools;
@@ -367,7 +367,7 @@ public class AlfImportDelegateFactory
 				final String folderId = idPath.getName(i).toString();
 				String folderName = names.get(i);
 				// If we're still resolving valid IDs...
-				final String altName = ctx.getAlternateName(CmfType.FOLDER, folderId);
+				final String altName = ctx.getAlternateName(CmfArchetype.FOLDER, folderId);
 				if ((altName != null) && !Tools.equals(altName, folderName)) {
 					folderName = altName;
 				}
@@ -382,7 +382,7 @@ public class AlfImportDelegateFactory
 		List<CmfObjectRef> refs = new ArrayList<>();
 		for (String id : StringUtils.split(cmsPath, '/')) {
 			// They're all known to be folders, so...
-			refs.add(new CmfObjectRef(CmfType.FOLDER, id));
+			refs.add(new CmfObjectRef(CmfArchetype.FOLDER, id));
 		}
 		Map<CmfObjectRef, String> names = ctx.getObjectNames(refs, true);
 		StringBuilder path = new StringBuilder();

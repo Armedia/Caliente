@@ -12,7 +12,7 @@ import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.SchemaServi
 import com.armedia.caliente.engine.dynamic.transformer.mapper.schema.TypeDeclaration;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.commons.utilities.Tools;
 
 public class AlfSchemaService implements SchemaService {
@@ -42,7 +42,7 @@ public class AlfSchemaService implements SchemaService {
 			if (att == null) {
 				continue;
 			}
-			CmfDataType dataType = Tools.coalesce(att.type.cmfDataType, CmfDataType.OTHER);
+			CmfValueType dataType = Tools.coalesce(att.type.cmfValueType, CmfValueType.OTHER);
 			attributes.add(new AttributeDeclaration(a, dataType, (att.mandatory == SchemaAttribute.Mandatory.ENFORCED),
 				att.multiple));
 		}
@@ -69,7 +69,7 @@ public class AlfSchemaService implements SchemaService {
 			if (att == null) {
 				continue;
 			}
-			CmfDataType dataType = Tools.coalesce(att.type.cmfDataType, CmfDataType.OTHER);
+			CmfValueType dataType = Tools.coalesce(att.type.cmfValueType, CmfValueType.OTHER);
 			attributes.add(new AttributeDeclaration(a, dataType, (att.mandatory == SchemaAttribute.Mandatory.ENFORCED),
 				att.multiple));
 		}

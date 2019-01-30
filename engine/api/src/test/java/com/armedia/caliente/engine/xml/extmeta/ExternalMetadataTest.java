@@ -12,10 +12,10 @@ import org.junit.Test;
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.Tools;
 
@@ -40,7 +40,7 @@ public class ExternalMetadataTest {
 		List<CmfObjectRef> parentIds = Collections.emptyList();
 		CmfObject<CmfValue> obj = new CmfObject<>( //
 			translator, //
-			CmfType.DOCUMENT, //
+			CmfArchetype.DOCUMENT, //
 			"09de75d1800205d6", //
 			"/CMSMFTests/FILES/file4.txt", //
 			parentIds, //
@@ -452,7 +452,7 @@ public class ExternalMetadataTest {
 		List<CmfObjectRef> parentIds = Collections.emptyList();
 		CmfObject<CmfValue> obj = new CmfObject<>( //
 			translator, //
-			CmfType.DOCUMENT, //
+			CmfArchetype.DOCUMENT, //
 			"09de75d180020638", //
 			"/CMSMFTests/LANDING/ACCESS/READ_NONE/primary.png", //
 			parentIds, //
@@ -467,57 +467,57 @@ public class ExternalMetadataTest {
 
 		Object[][] data = {
 			{
-				"cmf:HISTORY_CURRENT", 1, CmfDataType.BOOLEAN, new Object[] {
+				"cmf:HISTORY_CURRENT", 1, CmfValueType.BOOLEAN, new Object[] {
 					true,
 				}
 			}, //
 			{
-				"cmf:HISTORY_ID", 1, CmfDataType.STRING, new Object[] {
+				"cmf:HISTORY_ID", 1, CmfValueType.STRING, new Object[] {
 					"09de75d180020638",
 				}
 			}, //
 			{
-				"cmf:OBJECT_LABEL", 1, CmfDataType.STRING, new Object[] {
+				"cmf:OBJECT_LABEL", 1, CmfValueType.STRING, new Object[] {
 					"/CMSMFTests/LANDING/ACCESS/READ_NONE/primary.png [1.0,CURRENT]",
 				}
 			}, //
 			{
-				"cmf:OBJECT_NAME", 1, CmfDataType.STRING, new Object[] {
+				"cmf:OBJECT_NAME", 1, CmfValueType.STRING, new Object[] {
 					"primary.png",
 				}
 			}, //
 			{
-				"cmf:OBJECT_SUBTYPE", 1, CmfDataType.STRING, new Object[] {
+				"cmf:OBJECT_SUBTYPE", 1, CmfValueType.STRING, new Object[] {
 					"dm_document",
 				}
 			}, //
 			{
-				"cmf:OBJECT_TYPE", 1, CmfDataType.STRING, new Object[] {
+				"cmf:OBJECT_TYPE", 1, CmfValueType.STRING, new Object[] {
 					"DOCUMENT",
 				}
 			}, //
 			{
-				"cmf:PRODUCT_NAME", 1, CmfDataType.STRING, new Object[] {
+				"cmf:PRODUCT_NAME", 1, CmfValueType.STRING, new Object[] {
 					"Documentum",
 				}
 			}, //
 			{
-				"cmf:PRODUCT_VERSION", 1, CmfDataType.STRING, new Object[] {
+				"cmf:PRODUCT_VERSION", 1, CmfValueType.STRING, new Object[] {
 					"6.6.0.055 P3400 Win32.SQLServer",
 				}
 			}, //
 			{
-				"cmf:someSearchKey", 1, CmfDataType.STRING, new Object[] {
+				"cmf:someSearchKey", 1, CmfValueType.STRING, new Object[] {
 					"09de75d180020638",
 				}
 			}, //
 			{
-				"cmis:objectId", 1, CmfDataType.STRING, new Object[] {
+				"cmis:objectId", 1, CmfValueType.STRING, new Object[] {
 					"{07-09de75d180020638}",
 				}
 			}, //
 			{
-				"cmf:objectIndexWithinExport", 1, CmfDataType.INTEGER, new Object[] {
+				"cmf:objectIndexWithinExport", 1, CmfValueType.INTEGER, new Object[] {
 					217L,
 				}
 			}, //
@@ -531,7 +531,7 @@ public class ExternalMetadataTest {
 			Assert.assertNotNull(name);
 			final Integer count = Tools.decodeInteger(d[1]);
 			Assert.assertNotNull(count);
-			final CmfDataType type = CmfDataType.class.cast(d[2]);
+			final CmfValueType type = CmfValueType.class.cast(d[2]);
 			Assert.assertNotNull(type);
 			final Object[] values = (Object[]) d[3];
 			Assert.assertNotNull(values);

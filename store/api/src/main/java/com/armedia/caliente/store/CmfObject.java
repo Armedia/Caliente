@@ -67,14 +67,14 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 		this.translator = pattern.translator;
 	}
 
-	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfType type, String id, String name,
+	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfArchetype type, String id, String name,
 		Collection<CmfObjectRef> parentIds, int dependencyTier, String historyId, boolean historyCurrent, String label,
 		String subtype, Set<String> secondaries, Long number) {
 		this(translator, type, id, name, parentIds, id, dependencyTier, historyId, historyCurrent, label, subtype,
 			secondaries, number);
 	}
 
-	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfType type, String id, String name,
+	public CmfObject(CmfAttributeTranslator<VALUE> translator, CmfArchetype type, String id, String name,
 		Collection<CmfObjectRef> parentIds, String searchKey, int dependencyTier, String historyId,
 		boolean historyCurrent, String label, String subtype, Set<String> secondaries, Long number) {
 		super(type, id, searchKey);

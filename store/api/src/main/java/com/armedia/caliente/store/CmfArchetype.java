@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public enum CmfType {
+public enum CmfArchetype {
 	//
 	DATASTORE("ds"), //
 	USER("usr"), //
@@ -27,22 +27,22 @@ public enum CmfType {
 
 	public final String abbrev;
 
-	private CmfType() {
+	private CmfArchetype() {
 		this(null);
 	}
 
-	private CmfType(String abbreviation) {
+	private CmfArchetype(String abbreviation) {
 		this.abbrev = StringUtils.lowerCase(Tools.coalesce(abbreviation, name()));
 	}
 
-	private static final Map<String, CmfType> ABBREV;
+	private static final Map<String, CmfArchetype> ABBREV;
 	private static final Set<String> NAMES;
 	static {
-		Map<String, CmfType> abb = new TreeMap<>();
+		Map<String, CmfArchetype> abb = new TreeMap<>();
 		Set<String> n = new TreeSet<>();
-		for (CmfType t : CmfType.values()) {
+		for (CmfArchetype t : CmfArchetype.values()) {
 			n.add(t.name());
-			CmfType o = abb.put(t.abbrev, t);
+			CmfArchetype o = abb.put(t.abbrev, t);
 			if (o != null) {
 				throw new RuntimeException(
 					String.format("ERROR: The CmfType values %s and %s share the same abbreviation [%s]", t.name(),
@@ -54,16 +54,16 @@ public enum CmfType {
 	}
 
 	public static Set<String> getNames() {
-		return CmfType.NAMES;
+		return CmfArchetype.NAMES;
 	}
 
-	public static CmfType decode(String value) {
+	public static CmfArchetype decode(String value) {
 		if (value == null) { return null; }
 		try {
-			return CmfType.valueOf(StringUtils.upperCase(value));
+			return CmfArchetype.valueOf(StringUtils.upperCase(value));
 		} catch (final IllegalArgumentException e) {
 			// Maybe an abbreviation?
-			CmfType t = CmfType.ABBREV.get(StringUtils.lowerCase(value));
+			CmfArchetype t = CmfArchetype.ABBREV.get(StringUtils.lowerCase(value));
 			if (t != null) { return t; }
 			throw e;
 		}

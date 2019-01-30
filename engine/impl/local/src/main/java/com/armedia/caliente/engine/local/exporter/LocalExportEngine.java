@@ -16,7 +16,7 @@ import com.armedia.caliente.engine.local.common.LocalSetting;
 import com.armedia.caliente.engine.local.common.LocalTranslator;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
@@ -51,7 +51,7 @@ public class LocalExportEngine extends
 	}
 
 	@Override
-	protected CmfValue getValue(CmfDataType type, Object value) {
+	protected CmfValue getValue(CmfValueType type, Object value) {
 		return CmfValue.newValue(type, value);
 	}
 

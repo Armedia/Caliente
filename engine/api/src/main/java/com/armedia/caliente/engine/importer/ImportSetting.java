@@ -1,35 +1,35 @@
 package com.armedia.caliente.engine.importer;
 
 import com.armedia.caliente.engine.TransferEngineSetting;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 
 public enum ImportSetting implements TransferEngineSetting {
 	//
-	ATTRIBUTE_MAPPING(CmfDataType.STRING),
-	RESIDUALS_PREFIX(CmfDataType.STRING),
-	TARGET_LOCATION(CmfDataType.STRING, "/"),
-	TRIM_PREFIX(CmfDataType.INTEGER, 0),
-	NO_FILENAME_MAP(CmfDataType.BOOLEAN, false),
-	FILENAME_MAP(CmfDataType.STRING),
-	VALIDATE_REQUIREMENTS(CmfDataType.BOOLEAN, false),
-	RESTRICT_TO(CmfDataType.STRING),
+	ATTRIBUTE_MAPPING(CmfValueType.STRING),
+	RESIDUALS_PREFIX(CmfValueType.STRING),
+	TARGET_LOCATION(CmfValueType.STRING, "/"),
+	TRIM_PREFIX(CmfValueType.INTEGER, 0),
+	NO_FILENAME_MAP(CmfValueType.BOOLEAN, false),
+	FILENAME_MAP(CmfValueType.STRING),
+	VALIDATE_REQUIREMENTS(CmfValueType.BOOLEAN, false),
+	RESTRICT_TO(CmfValueType.STRING),
 	//
 	;
 
 	private final String label;
 	private final Object defaultValue;
-	private final CmfDataType type;
+	private final CmfValueType type;
 	private final boolean required;
 
-	private ImportSetting(CmfDataType type) {
+	private ImportSetting(CmfValueType type) {
 		this(type, null);
 	}
 
-	private ImportSetting(CmfDataType type, Object defaultValue) {
+	private ImportSetting(CmfValueType type, Object defaultValue) {
 		this(type, defaultValue, false);
 	}
 
-	private ImportSetting(CmfDataType type, Object defaultValue, boolean required) {
+	private ImportSetting(CmfValueType type, Object defaultValue, boolean required) {
 		this.label = name().toLowerCase();
 		this.defaultValue = defaultValue;
 		this.type = type;
@@ -47,7 +47,7 @@ public enum ImportSetting implements TransferEngineSetting {
 	}
 
 	@Override
-	public CmfDataType getType() {
+	public CmfValueType getType() {
 		return this.type;
 	}
 

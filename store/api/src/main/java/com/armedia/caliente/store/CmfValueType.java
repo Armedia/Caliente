@@ -12,7 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public enum CmfDataType {
+public enum CmfValueType {
 	//
 	BOOLEAN("bool") {
 		@Override
@@ -93,22 +93,22 @@ public enum CmfDataType {
 
 	public final String abbrev;
 
-	private CmfDataType() {
+	private CmfValueType() {
 		this(null);
 	}
 
-	private CmfDataType(String abbreviation) {
+	private CmfValueType(String abbreviation) {
 		this.abbrev = StringUtils.lowerCase(Tools.coalesce(abbreviation, name()));
 	}
 
-	private static final Map<CmfDataType, CmfValue> NULL;
-	private static final Map<String, CmfDataType> ABBREV;
+	private static final Map<CmfValueType, CmfValue> NULL;
+	private static final Map<String, CmfValueType> ABBREV;
 
 	static {
-		Map<CmfDataType, CmfValue> nvl = new EnumMap<>(CmfDataType.class);
-		Map<String, CmfDataType> abb = new TreeMap<>();
-		for (CmfDataType t : CmfDataType.values()) {
-			CmfDataType o = abb.put(t.abbrev, t);
+		Map<CmfValueType, CmfValue> nvl = new EnumMap<>(CmfValueType.class);
+		Map<String, CmfValueType> abb = new TreeMap<>();
+		for (CmfValueType t : CmfValueType.values()) {
+			CmfValueType o = abb.put(t.abbrev, t);
 			if (o != null) {
 				throw new RuntimeException(
 					String.format("ERROR: The CmfDataType values %s and %s share the same abbreviation [%s]", t.name(),
@@ -126,7 +126,7 @@ public enum CmfDataType {
 	}
 
 	public final CmfValue getNull() {
-		return CmfDataType.NULL.get(this);
+		return CmfValueType.NULL.get(this);
 	}
 
 	public final CmfValueSerializer getSerializer() {
@@ -147,13 +147,13 @@ public enum CmfDataType {
 
 	protected abstract Object doGetValue(CmfValue value) throws Exception;
 
-	public static CmfDataType decode(String value) {
+	public static CmfValueType decode(String value) {
 		if (value == null) { return null; }
 		try {
-			return CmfDataType.valueOf(StringUtils.upperCase(value));
+			return CmfValueType.valueOf(StringUtils.upperCase(value));
 		} catch (final IllegalArgumentException e) {
 			// Maybe an abbreviation?
-			CmfDataType t = CmfDataType.ABBREV.get(StringUtils.lowerCase(value));
+			CmfValueType t = CmfValueType.ABBREV.get(StringUtils.lowerCase(value));
 			if (t != null) { return t; }
 			throw e;
 		}

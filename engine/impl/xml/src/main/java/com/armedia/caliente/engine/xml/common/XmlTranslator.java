@@ -12,41 +12,41 @@ import org.apache.commons.collections4.bidimap.UnmodifiableBidiMap;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfDataType;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfValueType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 
 public class XmlTranslator extends CmfAttributeTranslator<CmfValue> {
 
-	private static final Map<PropertyType, CmfDataType> DATA_TYPES;
-	private static final Map<CmfDataType, PropertyType> DATA_TYPES_REV;
+	private static final Map<PropertyType, CmfValueType> DATA_TYPES;
+	private static final Map<CmfValueType, PropertyType> DATA_TYPES_REV;
 
-	private static final Map<CmfType, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
+	private static final Map<CmfArchetype, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<PropertyType, CmfDataType> m = new EnumMap<>(PropertyType.class);
-		m.put(PropertyType.BOOLEAN, CmfDataType.BOOLEAN);
-		m.put(PropertyType.INTEGER, CmfDataType.INTEGER);
-		m.put(PropertyType.DECIMAL, CmfDataType.DOUBLE);
-		m.put(PropertyType.DATETIME, CmfDataType.DATETIME);
-		m.put(PropertyType.ID, CmfDataType.ID);
-		m.put(PropertyType.STRING, CmfDataType.STRING);
-		m.put(PropertyType.URI, CmfDataType.STRING); // TODO: Add this to CmfDataType
-		m.put(PropertyType.HTML, CmfDataType.STRING); // TODO: Add this to CmfDataType
+		Map<PropertyType, CmfValueType> m = new EnumMap<>(PropertyType.class);
+		m.put(PropertyType.BOOLEAN, CmfValueType.BOOLEAN);
+		m.put(PropertyType.INTEGER, CmfValueType.INTEGER);
+		m.put(PropertyType.DECIMAL, CmfValueType.DOUBLE);
+		m.put(PropertyType.DATETIME, CmfValueType.DATETIME);
+		m.put(PropertyType.ID, CmfValueType.ID);
+		m.put(PropertyType.STRING, CmfValueType.STRING);
+		m.put(PropertyType.URI, CmfValueType.STRING); // TODO: Add this to CmfDataType
+		m.put(PropertyType.HTML, CmfValueType.STRING); // TODO: Add this to CmfDataType
 		DATA_TYPES = Tools.freezeMap(m);
 
-		Map<CmfDataType, PropertyType> n = new EnumMap<>(CmfDataType.class);
-		n.put(CmfDataType.BOOLEAN, PropertyType.BOOLEAN);
-		n.put(CmfDataType.INTEGER, PropertyType.INTEGER);
-		n.put(CmfDataType.DOUBLE, PropertyType.DECIMAL);
-		n.put(CmfDataType.DATETIME, PropertyType.DATETIME);
-		n.put(CmfDataType.ID, PropertyType.ID);
-		n.put(CmfDataType.STRING, PropertyType.STRING); // TODO: Need to handle HTML and URI
+		Map<CmfValueType, PropertyType> n = new EnumMap<>(CmfValueType.class);
+		n.put(CmfValueType.BOOLEAN, PropertyType.BOOLEAN);
+		n.put(CmfValueType.INTEGER, PropertyType.INTEGER);
+		n.put(CmfValueType.DOUBLE, PropertyType.DECIMAL);
+		n.put(CmfValueType.DATETIME, PropertyType.DATETIME);
+		n.put(CmfValueType.ID, PropertyType.ID);
+		n.put(CmfValueType.STRING, PropertyType.STRING); // TODO: Need to handle HTML and URI
 		DATA_TYPES_REV = Tools.freezeMap(n);
 
-		Map<CmfType, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfType.class);
+		Map<CmfArchetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfArchetype.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
@@ -55,20 +55,20 @@ public class XmlTranslator extends CmfAttributeTranslator<CmfValue> {
 		// OBJECT_TYPE_ID (cmis:document|...)
 		// am.put(XmlAttributes.VERSION_ANTECEDENT_ID.name,
 		// IntermediateAttribute.VERSION_ANTECEDENT_ID);
-		attributeMappings.put(CmfType.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
+		attributeMappings.put(CmfArchetype.DOCUMENT, UnmodifiableBidiMap.unmodifiableBidiMap(am));
 
 		ATTRIBUTE_MAPPINGS = Tools.freezeMap(attributeMappings);
 	}
 
-	public static CmfDataType decodePropertyType(PropertyType t) {
+	public static CmfValueType decodePropertyType(PropertyType t) {
 		return XmlTranslator.DATA_TYPES.get(t);
 	}
 
-	public static PropertyType decodePropertyType(CmfDataType t) {
+	public static PropertyType decodePropertyType(CmfValueType t) {
 		return XmlTranslator.DATA_TYPES_REV.get(t);
 	}
 
-	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfType type) {
+	private static BidiMap<String, IntermediateAttribute> getAttributeMappings(CmfArchetype type) {
 		return XmlTranslator.ATTRIBUTE_MAPPINGS.get(type);
 	}
 
@@ -76,7 +76,7 @@ public class XmlTranslator extends CmfAttributeTranslator<CmfValue> {
 	private static final CmfAttributeNameMapper MAPPER = new CmfAttributeNameMapper() {
 
 		@Override
-		public String encodeAttributeName(CmfType type, String attributeName) {
+		public String encodeAttributeName(CmfArchetype type, String attributeName) {
 			BidiMap<String, IntermediateAttribute> mappings = XmlTranslator.getAttributeMappings(type);
 			if (mappings != null) {
 				// TODO: normalize the CMS attribute name
@@ -87,7 +87,7 @@ public class XmlTranslator extends CmfAttributeTranslator<CmfValue> {
 		}
 
 		@Override
-		public String decodeAttributeName(CmfType type, String attributeName) {
+		public String decodeAttributeName(CmfArchetype type, String attributeName) {
 			BidiMap<String, IntermediateAttribute> mappings = XmlTranslator.getAttributeMappings(type);
 			if (mappings != null) {
 				String att = null;
@@ -108,12 +108,12 @@ public class XmlTranslator extends CmfAttributeTranslator<CmfValue> {
 	}
 
 	@Override
-	public CmfValueCodec<CmfValue> getCodec(CmfDataType type) {
+	public CmfValueCodec<CmfValue> getCodec(CmfValueType type) {
 		return CmfAttributeTranslator.getStoredValueCodec(type);
 	}
 
 	@Override
-	public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
+	public CmfValue getValue(CmfValueType type, Object value) throws ParseException {
 		return new CmfValue(type, value);
 	}
 }

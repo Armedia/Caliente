@@ -14,7 +14,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlType;
 
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.local.XmlProperty;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -28,6 +28,6 @@ public class PropertyT extends XmlProperty {
 	}
 
 	protected void afterUnmarshal(Unmarshaller u, Object parent) {
-		this.dataType = CmfDataType.valueOf(this.type);
+		this.dataType = CmfValueType.valueOf(this.type);
 	}
 }

@@ -11,7 +11,7 @@ import java.util.TreeMap;
 
 import com.armedia.caliente.engine.dynamic.metadata.ExternalMetadataLoader;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
 import com.armedia.commons.utilities.Tools;
@@ -71,7 +71,7 @@ public class ImmutableElementContext extends DynamicElementContext {
 		}
 
 		@Override
-		public CmfType getType() {
+		public CmfArchetype getType() {
 			return this.object.getType();
 		}
 
@@ -140,33 +140,33 @@ public class ImmutableElementContext extends DynamicElementContext {
 		}
 
 		@Override
-		protected Mapping createMapping(CmfType objectType, String mappingName, String sourceValue,
+		protected Mapping createMapping(CmfArchetype objectType, String mappingName, String sourceValue,
 			String targetValue) {
 			throw ImmutableElementContext.fail();
 		}
 
 		@Override
-		public Mapping getTargetMapping(CmfType objectType, String mappingName, String sourceValue) {
+		public Mapping getTargetMapping(CmfArchetype objectType, String mappingName, String sourceValue) {
 			return this.mapper.getTargetMapping(objectType, mappingName, sourceValue);
 		}
 
 		@Override
-		public Collection<Mapping> getSourceMapping(CmfType objectType, String mappingName, String targetValue) {
+		public Collection<Mapping> getSourceMapping(CmfArchetype objectType, String mappingName, String targetValue) {
 			return this.mapper.getSourceMapping(objectType, mappingName, targetValue);
 		}
 
 		@Override
-		public Map<CmfType, Set<String>> getAvailableMappings() {
+		public Map<CmfArchetype, Set<String>> getAvailableMappings() {
 			return this.mapper.getAvailableMappings();
 		}
 
 		@Override
-		public Set<String> getAvailableMappings(CmfType objectType) {
+		public Set<String> getAvailableMappings(CmfArchetype objectType) {
 			return this.mapper.getAvailableMappings(objectType);
 		}
 
 		@Override
-		public Map<String, String> getMappings(CmfType objectType, String mappingName) {
+		public Map<String, String> getMappings(CmfArchetype objectType, String mappingName) {
 			return this.mapper.getMappings(objectType, mappingName);
 		}
 	}

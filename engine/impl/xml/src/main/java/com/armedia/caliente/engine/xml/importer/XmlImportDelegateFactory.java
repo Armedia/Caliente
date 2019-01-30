@@ -47,7 +47,7 @@ import com.armedia.caliente.engine.xml.importer.jaxb.GroupsT;
 import com.armedia.caliente.engine.xml.importer.jaxb.TypesT;
 import com.armedia.caliente.engine.xml.importer.jaxb.UsersT;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.XmlTools;
@@ -82,7 +82,7 @@ public class XmlImportDelegateFactory
 		m.marshal(target, out);
 	}
 
-	private final Map<CmfType, AggregatorBase<?>> xml;
+	private final Map<CmfArchetype, AggregatorBase<?>> xml;
 	private final boolean aggregateFolders;
 	private final boolean aggregateDocuments;
 	private final File db;
@@ -95,8 +95,8 @@ public class XmlImportDelegateFactory
 		private int filesWritten = 0;
 
 		@Override
-		public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String batchId, int count) {
-			if (objectType != CmfType.DOCUMENT) { return; }
+		public void objectHistoryImportStarted(UUID jobId, CmfArchetype objectType, String batchId, int count) {
+			if (objectType != CmfArchetype.DOCUMENT) { return; }
 			List<DocumentVersionT> l = XmlImportDelegateFactory.this.threadedVersionList.get();
 			if (l == null) {
 				l = new ArrayList<>();
@@ -106,9 +106,9 @@ public class XmlImportDelegateFactory
 		}
 
 		@Override
-		public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String batchId,
+		public void objectHistoryImportFinished(UUID jobId, CmfArchetype objectType, String batchId,
 			Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
-			if (objectType != CmfType.DOCUMENT) { return; }
+			if (objectType != CmfArchetype.DOCUMENT) { return; }
 			if (failed) { return; }
 			List<DocumentVersionT> l = XmlImportDelegateFactory.this.threadedVersionList.get();
 			if ((l == null) || l.isEmpty()) { return; }
@@ -118,7 +118,7 @@ public class XmlImportDelegateFactory
 				doc.getVersion().addAll(l);
 
 				if (XmlImportDelegateFactory.this.aggregateDocuments) {
-					DocumentsT.class.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT)).add(doc);
+					DocumentsT.class.cast(XmlImportDelegateFactory.this.xml.get(CmfArchetype.DOCUMENT)).add(doc);
 				} else {
 					// The content's location is in the first version
 					DocumentVersionT first = l.get(0);
@@ -157,7 +157,7 @@ public class XmlImportDelegateFactory
 					}
 
 					DocumentIndexT index = DocumentIndexT.class
-						.cast(XmlImportDelegateFactory.this.xml.get(CmfType.DOCUMENT));
+						.cast(XmlImportDelegateFactory.this.xml.get(CmfArchetype.DOCUMENT));
 					List<DocumentIndexVersionT> entries = new ArrayList<>(l.size());
 					for (DocumentVersionT v : l) {
 						DocumentIndexVersionT idx = new DocumentIndexVersionT();
@@ -192,8 +192,8 @@ public class XmlImportDelegateFactory
 		}
 
 		@Override
-		public void objectTypeImportFinished(UUID jobId, CmfType cmfType, Map<ImportResult, Long> counters) {
-			AggregatorBase<?> root = XmlImportDelegateFactory.this.xml.get(cmfType);
+		public void objectTypeImportFinished(UUID jobId, CmfArchetype cmfArchetype, Map<ImportResult, Long> counters) {
+			AggregatorBase<?> root = XmlImportDelegateFactory.this.xml.get(cmfArchetype);
 			if ((root == null) || (root.getCount() == 0)) {
 				// If there is no aggregator, or it's empty, skip it
 				return;
@@ -205,7 +205,7 @@ public class XmlImportDelegateFactory
 				}
 
 				// There is an aggregator, so write out its file
-				final File f = calculateConsolidatedFile(cmfType);
+				final File f = calculateConsolidatedFile(cmfArchetype);
 				boolean ok = false;
 				try (OutputStream out = new FileOutputStream(f)) {
 					XmlImportDelegateFactory.marshalXml(root, out);
@@ -213,12 +213,12 @@ public class XmlImportDelegateFactory
 					ok = true;
 				} catch (FileNotFoundException e) {
 					this.log.error(String.format(
-						"Failed to open the output file for the aggregate XML for type %s at [%s]", cmfType, f), e);
+						"Failed to open the output file for the aggregate XML for type %s at [%s]", cmfArchetype, f), e);
 				} catch (IOException e) {
 					this.log.error(String.format(
-						"IOException raised while writing the aggregate XML for type %s at [%s]", cmfType, f), e);
+						"IOException raised while writing the aggregate XML for type %s at [%s]", cmfArchetype, f), e);
 				} catch (JAXBException e) {
-					this.log.error(String.format("Failed to generate the XML for %s", cmfType), e);
+					this.log.error(String.format("Failed to generate the XML for %s", cmfArchetype), e);
 				} finally {
 					if (!ok) {
 						FileUtils.deleteQuietly(f);
@@ -283,17 +283,17 @@ public class XmlImportDelegateFactory
 		this.aggregateFolders = configuration.getBoolean(XmlSetting.AGGREGATE_FOLDERS);
 		this.aggregateDocuments = configuration.getBoolean(XmlSetting.AGGREGATE_DOCUMENTS);
 
-		Map<CmfType, AggregatorBase<?>> xml = new EnumMap<>(CmfType.class);
-		xml.put(CmfType.USER, new UsersT());
-		xml.put(CmfType.GROUP, new GroupsT());
-		xml.put(CmfType.ACL, new AclsT());
-		xml.put(CmfType.TYPE, new TypesT());
-		xml.put(CmfType.FORMAT, new FormatsT());
-		xml.put(CmfType.FOLDER, (this.aggregateFolders ? new FoldersT() : new FolderIndexT()));
-		xml.put(CmfType.DOCUMENT, (this.aggregateDocuments ? new DocumentsT() : new DocumentIndexT()));
+		Map<CmfArchetype, AggregatorBase<?>> xml = new EnumMap<>(CmfArchetype.class);
+		xml.put(CmfArchetype.USER, new UsersT());
+		xml.put(CmfArchetype.GROUP, new GroupsT());
+		xml.put(CmfArchetype.ACL, new AclsT());
+		xml.put(CmfArchetype.TYPE, new TypesT());
+		xml.put(CmfArchetype.FORMAT, new FormatsT());
+		xml.put(CmfArchetype.FOLDER, (this.aggregateFolders ? new FoldersT() : new FolderIndexT()));
+		xml.put(CmfArchetype.DOCUMENT, (this.aggregateDocuments ? new DocumentsT() : new DocumentIndexT()));
 		this.xml = xml;
 
-		for (CmfType t : xml.keySet()) {
+		for (CmfArchetype t : xml.keySet()) {
 			File f = calculateConsolidatedFile(t);
 			try {
 				FileUtils.forceDelete(f);
@@ -331,7 +331,7 @@ public class XmlImportDelegateFactory
 		l.add(v);
 	}
 
-	protected <T> T getXmlObject(CmfType t, Class<T> klazz) {
+	protected <T> T getXmlObject(CmfArchetype t, Class<T> klazz) {
 		return klazz.cast(this.xml.get(t));
 	}
 
@@ -361,7 +361,7 @@ public class XmlImportDelegateFactory
 		}
 	}
 
-	protected File calculateConsolidatedFile(CmfType t) {
+	protected File calculateConsolidatedFile(CmfArchetype t) {
 		return new File(this.db, String.format("%ss.xml", t.name().toLowerCase()));
 	}
 }

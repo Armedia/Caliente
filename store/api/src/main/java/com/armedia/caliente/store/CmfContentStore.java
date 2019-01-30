@@ -23,7 +23,7 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 	public static final String DEFAULT_QUALIFIER = "content";
 
 	public abstract class Handle {
-		private final CmfType objectType;
+		private final CmfArchetype objectType;
 		private final String objectId;
 		private final CmfContentStream info;
 		private final LOCATOR locator;
@@ -48,7 +48,7 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 		 *
 		 * @return the type of object whose content this handle points to.
 		 */
-		public final CmfType getObjectType() {
+		public final CmfArchetype getObjectType() {
 			return this.objectType;
 		}
 

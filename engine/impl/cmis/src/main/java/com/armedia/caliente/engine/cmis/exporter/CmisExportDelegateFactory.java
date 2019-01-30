@@ -9,7 +9,7 @@ import org.apache.chemistry.opencmis.client.api.Session;
 import com.armedia.caliente.engine.cmis.CmisSessionWrapper;
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
@@ -21,7 +21,7 @@ public class CmisExportDelegateFactory
 		super(engine, configuration);
 	}
 
-	protected final <T> T checkedCast(CmisObject obj, Class<T> klazz, CmfType type, String searchKey)
+	protected final <T> T checkedCast(CmisObject obj, Class<T> klazz, CmfArchetype type, String searchKey)
 		throws ExportException {
 		if (klazz.isInstance(obj)) { return klazz.cast(obj); }
 		throw new ExportException(String.format("Object with ID [%s] (class %s) is not a %s-type (%s archetype)",
@@ -29,7 +29,7 @@ public class CmisExportDelegateFactory
 	}
 
 	@Override
-	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfType type, String searchKey)
+	protected CmisExportDelegate<?> newExportDelegate(Session session, CmfArchetype type, String searchKey)
 		throws Exception {
 		CmisObject obj = session.getObject(searchKey);
 		switch (type) {

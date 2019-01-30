@@ -46,12 +46,12 @@ import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfNameFixer;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -110,7 +110,7 @@ public class AlfImportEngine extends
 		}
 
 		@Override
-		public boolean supportsType(CmfType type) {
+		public boolean supportsType(CmfArchetype type) {
 			switch (type) {
 				case DOCUMENT:
 				case FOLDER:
@@ -225,7 +225,7 @@ public class AlfImportEngine extends
 		private final Map<UUID, PrintWriter> writers = new ConcurrentHashMap<>();
 
 		@Override
-		protected void importStartedImpl(ImportState importState, Map<CmfType, Long> summary) {
+		protected void importStartedImpl(ImportState importState, Map<CmfArchetype, Long> summary) {
 			File rootLocation = importState.baseData;
 			if (rootLocation != null) {
 				// Initialize the manifest for this job
@@ -387,7 +387,7 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected ImportStrategy getImportStrategy(CmfType type) {
+	protected ImportStrategy getImportStrategy(CmfArchetype type) {
 		switch (type) {
 			case USER:
 				return AlfImportEngine.USER_STRATEGY;
@@ -404,7 +404,7 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected boolean checkSupported(Set<CmfType> excludes, CmfType type) {
+	protected boolean checkSupported(Set<CmfArchetype> excludes, CmfArchetype type) {
 		switch (type) {
 			case USER:
 			case FOLDER:
@@ -417,7 +417,7 @@ public class AlfImportEngine extends
 	}
 
 	@Override
-	protected CmfValue getValue(CmfDataType type, Object value) {
+	protected CmfValue getValue(CmfValueType type, Object value) {
 		return CmfValue.newValue(type, value);
 	}
 

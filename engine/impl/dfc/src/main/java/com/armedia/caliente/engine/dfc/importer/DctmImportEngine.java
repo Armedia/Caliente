@@ -20,9 +20,9 @@ import com.armedia.caliente.engine.importer.ImportEngine;
 import com.armedia.caliente.engine.importer.ImportStrategy;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.dfc.util.DfValueFactory;
 import com.armedia.commons.utilities.CfgTools;
@@ -64,7 +64,7 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected ImportStrategy getImportStrategy(CmfType type) {
+	protected ImportStrategy getImportStrategy(CmfArchetype type) {
 		DctmObjectType dctmType = DctmObjectType.decodeType(type);
 		if (dctmType == null) { return DctmImportEngine.NOT_SUPPORTED; }
 		return dctmType.importStrategy;
@@ -79,7 +79,7 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected IDfValue getValue(CmfDataType type, Object value) {
+	protected IDfValue getValue(CmfValueType type, Object value) {
 		return DfValueFactory.newValue(DctmTranslator.translateType(type).getDfConstant(), value);
 	}
 
@@ -99,8 +99,8 @@ public class DctmImportEngine extends
 	}
 
 	@Override
-	protected boolean abortImport(CmfType type, long errors) {
-		if (type == CmfType.DATASTORE) {
+	protected boolean abortImport(CmfArchetype type, long errors) {
+		if (type == CmfArchetype.DATASTORE) {
 			// We MUST have all datastores present
 			return (errors > 0);
 		}

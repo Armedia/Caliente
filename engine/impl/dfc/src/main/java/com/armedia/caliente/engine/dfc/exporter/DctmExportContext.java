@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.dfc.common.DctmSpecialValues;
 import com.armedia.caliente.engine.exporter.ExportContext;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.documentum.fc.client.IDfSession;
 import com.documentum.fc.common.IDfValue;
 
@@ -21,18 +21,18 @@ class DctmExportContext extends ExportContext<IDfSession, IDfValue, DctmExportCo
 
 	private final DctmSpecialValues specialValues;
 
-	DctmExportContext(DctmExportContextFactory factory, String rootId, CmfType rootType, IDfSession session,
+	DctmExportContext(DctmExportContextFactory factory, String rootId, CmfArchetype rootType, IDfSession session,
 		Logger output, WarningTracker warningTracker) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output, warningTracker);
 		this.specialValues = factory.getSpecialValues();
 	}
 
 	@Override
-	public boolean shouldWaitForRequirement(CmfType referrent, CmfType referenced) {
+	public boolean shouldWaitForRequirement(CmfArchetype referrent, CmfArchetype referenced) {
 		switch (referrent) {
 			case FOLDER:
 			case DOCUMENT:
-				return (referenced == CmfType.FOLDER);
+				return (referenced == CmfArchetype.FOLDER);
 			default:
 				return false;
 		}

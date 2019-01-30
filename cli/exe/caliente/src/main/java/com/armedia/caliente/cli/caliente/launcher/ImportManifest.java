@@ -21,7 +21,7 @@ import com.armedia.caliente.engine.importer.ImportRestriction;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -49,7 +49,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	private static final class Record {
 		private final Long number;
 		private final String date;
-		private final CmfType type;
+		private final CmfArchetype type;
 		private final int tier;
 		private final String historyId;
 		private final String sourceId;
@@ -123,15 +123,15 @@ public class ImportManifest extends DefaultImportEngineListener {
 
 	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<>();
 	private final Set<ImportResult> results;
-	private final Set<CmfType> types;
+	private final Set<CmfArchetype> types;
 
-	public ImportManifest(Set<ImportResult> results, Set<CmfType> types) {
+	public ImportManifest(Set<ImportResult> results, Set<CmfArchetype> types) {
 		this.results = Tools.freezeCopy(results, true);
 		this.types = Tools.freezeCopy(types, true);
 	}
 
 	@Override
-	protected void importStartedImpl(ImportState importState, Map<CmfType, Long> summary) {
+	protected void importStartedImpl(ImportState importState, Map<CmfArchetype, Long> summary) {
 		// Clear manifest
 		this.openBatches.clear();
 		this.manifestLog.info(ImportManifest.FORMAT.renderHeaders());
@@ -144,7 +144,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectHistoryImportStarted(UUID jobId, CmfType objectType, String historyId, int count) {
+	public void objectHistoryImportStarted(UUID jobId, CmfArchetype objectType, String historyId, int count) {
 		if (!this.types.contains(objectType)) { return; }
 		if (count <= 1) {
 			// We don't track batches with a single item because it's not worth the trouble
@@ -184,7 +184,7 @@ public class ImportManifest extends DefaultImportEngineListener {
 	}
 
 	@Override
-	public void objectHistoryImportFinished(UUID jobId, CmfType objectType, String historyId,
+	public void objectHistoryImportFinished(UUID jobId, CmfArchetype objectType, String historyId,
 		Map<String, Collection<ImportOutcome>> outcomes, boolean failed) {
 		if (!this.types.contains(objectType)) { return; }
 		List<Record> batch = this.openBatches.get(historyId);

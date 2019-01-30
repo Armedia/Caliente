@@ -1,7 +1,7 @@
 package com.armedia.caliente.engine.exporter;
 
 import com.armedia.caliente.store.CmfObjectSearchSpec;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 
 public final class ExportTarget extends CmfObjectSearchSpec {
 	private static final long serialVersionUID = 1L;
@@ -13,11 +13,11 @@ public final class ExportTarget extends CmfObjectSearchSpec {
 		this.number = null;
 	}
 
-	public ExportTarget(CmfType type, String id, String searchKey) {
+	public ExportTarget(CmfArchetype type, String id, String searchKey) {
 		this(type, id, searchKey, null);
 	}
 
-	public ExportTarget(CmfType type, String id, String searchKey, Long number) {
+	public ExportTarget(CmfArchetype type, String id, String searchKey, Long number) {
 		super(type, id, searchKey);
 		this.number = number;
 	}

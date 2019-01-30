@@ -11,7 +11,7 @@ import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 
@@ -41,7 +41,7 @@ public class LocalImportContextFactory extends
 	}
 
 	@Override
-	protected LocalImportContext constructContext(String rootId, CmfType rootType, LocalRoot session,
+	protected LocalImportContext constructContext(String rootId, CmfArchetype rootType, LocalRoot session,
 		int historyPosition) {
 		return new LocalImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
 			getTransformer(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);

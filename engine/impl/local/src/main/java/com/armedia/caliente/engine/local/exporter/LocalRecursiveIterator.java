@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalFile;
 import com.armedia.caliente.engine.local.common.LocalRoot;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.ArrayIterator;
 
 public class LocalRecursiveIterator implements Iterator<ExportTarget> {
@@ -123,7 +123,7 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 		RecursiveState state = this.stateStack.peek();
 		LocalFile ret = state.next;
 		state.next = null;
-		return new ExportTarget(ret.getAbsolute().isFile() ? CmfType.DOCUMENT : CmfType.FOLDER, ret.getId(),
+		return new ExportTarget(ret.getAbsolute().isFile() ? CmfArchetype.DOCUMENT : CmfArchetype.FOLDER, ret.getId(),
 			ret.getSafePath());
 	}
 

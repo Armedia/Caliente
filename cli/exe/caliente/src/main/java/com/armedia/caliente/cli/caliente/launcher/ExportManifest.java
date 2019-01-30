@@ -19,7 +19,7 @@ import com.armedia.caliente.engine.exporter.ExportState;
 import com.armedia.caliente.engine.importer.ImportRestriction;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectSearchSpec;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.Tools;
 
 /**
@@ -48,7 +48,7 @@ public class ExportManifest extends DefaultExportEngineListener {
 	private static final class Record {
 		private final Long number;
 		private final String date;
-		private final CmfType type;
+		private final CmfArchetype type;
 		private final Integer tier;
 		private final String searchKey;
 		private final String retryId;
@@ -161,9 +161,9 @@ public class ExportManifest extends DefaultExportEngineListener {
 
 	private final Map<String, List<Record>> openBatches = new ConcurrentHashMap<>();
 	private final Set<ExportResult> results;
-	private final Set<CmfType> types;
+	private final Set<CmfArchetype> types;
 
-	public ExportManifest(Set<ExportResult> results, Set<CmfType> types) {
+	public ExportManifest(Set<ExportResult> results, Set<CmfArchetype> types) {
 		this.results = Tools.freezeCopy(results, true);
 		this.types = Tools.freezeCopy(types, true);
 	}

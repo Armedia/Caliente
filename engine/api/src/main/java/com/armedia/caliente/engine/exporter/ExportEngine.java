@@ -44,7 +44,7 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfObjectStore.LockStatus;
 import com.armedia.caliente.store.CmfObjectStore.StoreStatus;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PooledWorkers;
@@ -179,7 +179,7 @@ public abstract class ExportEngine<//
 		try {
 			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
 
-			final CmfType type = target.getType();
+			final CmfArchetype type = target.getType();
 			final String id = target.getId();
 			final String objectLabel = sourceObject.getLabel();
 			final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
@@ -258,7 +258,7 @@ public abstract class ExportEngine<//
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
 
-		final CmfType type = target.getType();
+		final CmfArchetype type = target.getType();
 		final String id = target.getId();
 		final String objectLabel = sourceObject.getLabel();
 		final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
@@ -677,7 +677,7 @@ public abstract class ExportEngine<//
 			public void process(SessionWrapper<SESSION> session, ExportTarget target) throws Exception {
 				final SESSION s = session.getWrapped();
 
-				CmfType nextType = target.getType();
+				CmfArchetype nextType = target.getType();
 				final String nextId = target.getId();
 				final String nextKey = target.getSearchKey();
 
@@ -852,7 +852,7 @@ public abstract class ExportEngine<//
 		} finally {
 			baseSession.close(false);
 
-			Map<CmfType, Long> summary = Collections.emptyMap();
+			Map<CmfArchetype, Long> summary = Collections.emptyMap();
 			try {
 				summary = objectStore.getStoredObjectTypes();
 			} catch (CmfStorageException e) {

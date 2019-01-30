@@ -16,9 +16,9 @@ import com.armedia.caliente.engine.local.common.LocalSessionWrapper;
 import com.armedia.caliente.engine.local.common.LocalTranslator;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObjectStore;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.commons.utilities.CfgTools;
@@ -101,7 +101,7 @@ public class LocalImportEngine extends
 	};
 
 	@Override
-	protected ImportStrategy getImportStrategy(CmfType type) {
+	protected ImportStrategy getImportStrategy(CmfArchetype type) {
 		switch (type) {
 			case DOCUMENT:
 				return LocalImportEngine.DOCUMENT_STRATEGY;
@@ -113,7 +113,7 @@ public class LocalImportEngine extends
 	}
 
 	@Override
-	protected CmfValue getValue(CmfDataType type, Object value) {
+	protected CmfValue getValue(CmfValueType type, Object value) {
 		return CmfValue.newValue(type, value);
 	}
 

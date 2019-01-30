@@ -9,14 +9,14 @@ import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.WarningTracker;
 import com.armedia.caliente.engine.exporter.ExportContext;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 
 public class CmisExportContext extends ExportContext<Session, CmfValue, CmisExportContextFactory> {
 
 	private final RepositoryInfo repositoryInfo;
 
-	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfType rootType, Session session, Logger output,
+	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfArchetype rootType, Session session, Logger output,
 		WarningTracker warningTracker) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output, warningTracker);
 		session.setDefaultContext(newOperationContext(session));
@@ -38,7 +38,7 @@ public class CmisExportContext extends ExportContext<Session, CmfValue, CmisExpo
 		ctx.setFilter(parent.getFilter());
 		ctx.setFilterString(parent.getFilterString());
 		// Disable ACL retrieval if ACLs aren't supported
-		ctx.setIncludeAcls(getFactory().isSupported(CmfType.ACL) && parent.isIncludeAcls());
+		ctx.setIncludeAcls(getFactory().isSupported(CmfArchetype.ACL) && parent.isIncludeAcls());
 		ctx.setIncludeAllowableActions(parent.isIncludeAllowableActions());
 		ctx.setIncludePathSegments(parent.isIncludePathSegments());
 		ctx.setIncludePolicies(parent.isIncludePolicies());

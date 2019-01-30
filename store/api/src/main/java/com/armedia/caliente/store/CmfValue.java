@@ -42,59 +42,59 @@ public final class CmfValue {
 		return DateFormat.getDateInstance().parse(str);
 	}
 
-	private final CmfDataType type;
+	private final CmfValueType type;
 	private final Object value;
 	private final boolean nullValue;
 
 	public CmfValue(long value) {
-		this.type = CmfDataType.INTEGER;
+		this.type = CmfValueType.INTEGER;
 		this.value = value;
 		this.nullValue = false;
 	}
 
 	public CmfValue(boolean value) {
-		this.type = CmfDataType.BOOLEAN;
+		this.type = CmfValueType.BOOLEAN;
 		this.value = value;
 		this.nullValue = false;
 	}
 
 	public CmfValue(double value) {
-		this.type = CmfDataType.DOUBLE;
+		this.type = CmfValueType.DOUBLE;
 		this.value = value;
 		this.nullValue = false;
 	}
 
 	public CmfValue(String value) {
-		this.type = CmfDataType.STRING;
+		this.type = CmfValueType.STRING;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
 	public CmfValue(URI value) {
-		this.type = CmfDataType.URI;
+		this.type = CmfValueType.URI;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
 	public CmfValue(byte[] data) {
-		this.type = CmfDataType.BASE64_BINARY;
+		this.type = CmfValueType.BASE64_BINARY;
 		this.value = Base64.encodeBase64(data);
 		this.nullValue = (this.value == null);
 	}
 
 	public CmfValue(Date value) {
-		this.type = CmfDataType.DATETIME;
+		this.type = CmfValueType.DATETIME;
 		this.value = value;
 		this.nullValue = (value == null);
 	}
 
 	public CmfValue(Calendar value) {
-		this.type = CmfDataType.DATETIME;
+		this.type = CmfValueType.DATETIME;
 		this.value = (value != null ? value.getTime() : null);
 		this.nullValue = (value == null);
 	}
 
-	public CmfValue(CmfDataType type, Object value) throws ParseException {
+	public CmfValue(CmfValueType type, Object value) throws ParseException {
 		this.type = type;
 		this.nullValue = (value == null);
 		if (value != null) {
@@ -216,7 +216,7 @@ public final class CmfValue {
 		return this.value;
 	}
 
-	public CmfDataType getDataType() {
+	public CmfValueType getDataType() {
 		return this.type;
 	}
 
@@ -247,7 +247,7 @@ public final class CmfValue {
 		return asString();
 	}
 
-	public static CmfValue newValue(CmfDataType type, Object value) {
+	public static CmfValue newValue(CmfValueType type, Object value) {
 		try {
 			return new CmfValue(type, value);
 		} catch (ParseException e) {

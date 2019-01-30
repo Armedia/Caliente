@@ -10,10 +10,10 @@ import com.armedia.commons.utilities.Tools;
 public abstract class CmfAttributeTranslator<VALUE> {
 	private static class Codec implements CmfValueCodec<CmfValue> {
 
-		private final CmfDataType type;
+		private final CmfValueType type;
 		private final CmfValue nullValue;
 
-		private Codec(CmfDataType type) {
+		private Codec(CmfValueType type) {
 			this.type = type;
 			try {
 				this.nullValue = new CmfValue(this.type, null);
@@ -45,9 +45,9 @@ public abstract class CmfAttributeTranslator<VALUE> {
 
 	private static class DefaultValueCodec implements CmfValueCodec<CmfValue> {
 
-		private final CmfDataType type;
+		private final CmfValueType type;
 
-		private DefaultValueCodec(CmfDataType type) {
+		private DefaultValueCodec(CmfValueType type) {
 			this.type = type;
 		}
 
@@ -74,11 +74,11 @@ public abstract class CmfAttributeTranslator<VALUE> {
 
 	public static final CmfAttributeNameMapper NULL_MAPPER = new CmfAttributeNameMapper();
 
-	private static final Map<CmfDataType, Codec> CODECS;
+	private static final Map<CmfValueType, Codec> CODECS;
 
 	static {
-		Map<CmfDataType, Codec> codecs = new EnumMap<>(CmfDataType.class);
-		for (CmfDataType t : CmfDataType.values()) {
+		Map<CmfValueType, Codec> codecs = new EnumMap<>(CmfValueType.class);
+		for (CmfValueType t : CmfValueType.values()) {
 			codecs.put(t, new Codec(t));
 		}
 		CODECS = Tools.freezeMap(codecs);
@@ -87,29 +87,29 @@ public abstract class CmfAttributeTranslator<VALUE> {
 	public static final CmfAttributeTranslator<CmfValue> CMFVALUE_TRANSLATOR = new CmfAttributeTranslator<CmfValue>(
 		CmfValue.class) {
 
-		private final Map<CmfDataType, CmfValueCodec<CmfValue>> codecs;
+		private final Map<CmfValueType, CmfValueCodec<CmfValue>> codecs;
 
 		{
-			Map<CmfDataType, CmfValueCodec<CmfValue>> codecs = new EnumMap<>(CmfDataType.class);
-			for (CmfDataType t : CmfDataType.values()) {
+			Map<CmfValueType, CmfValueCodec<CmfValue>> codecs = new EnumMap<>(CmfValueType.class);
+			for (CmfValueType t : CmfValueType.values()) {
 				codecs.put(t, new DefaultValueCodec(t));
 			}
 			this.codecs = Tools.freezeMap(codecs);
 		}
 
 		@Override
-		public CmfValueCodec<CmfValue> getCodec(CmfDataType type) {
+		public CmfValueCodec<CmfValue> getCodec(CmfValueType type) {
 			return this.codecs.get(type);
 		}
 
 		@Override
-		public CmfValue getValue(CmfDataType type, Object value) throws ParseException {
+		public CmfValue getValue(CmfValueType type, Object value) throws ParseException {
 			return new CmfValue(type, value);
 		}
 
 	};
 
-	public static CmfValueCodec<CmfValue> getStoredValueCodec(CmfDataType type) {
+	public static CmfValueCodec<CmfValue> getStoredValueCodec(CmfValueType type) {
 		return CmfAttributeTranslator.CODECS.get(type);
 	}
 
@@ -129,9 +129,9 @@ public abstract class CmfAttributeTranslator<VALUE> {
 		return this.nameMapper;
 	}
 
-	public abstract CmfValueCodec<VALUE> getCodec(CmfDataType type);
+	public abstract CmfValueCodec<VALUE> getCodec(CmfValueType type);
 
-	public abstract VALUE getValue(CmfDataType type, Object value) throws ParseException;
+	public abstract VALUE getValue(CmfValueType type, Object value) throws ParseException;
 
 	public final CmfObject<VALUE> decodeObject(CmfObject<CmfValue> obj) {
 		// Can we optimize this if there are no changes needed?

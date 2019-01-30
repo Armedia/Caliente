@@ -3,7 +3,7 @@ package com.armedia.caliente.engine.sharepoint.exporter;
 import com.armedia.caliente.engine.exporter.ExportDelegateFactory;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.engine.sharepoint.ShptSessionWrapper;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
@@ -16,7 +16,7 @@ public class ShptExportDelegateFactory
 	}
 
 	@Override
-	protected ShptExportDelegate<?> newExportDelegate(ShptSession session, CmfType type, String searchKey)
+	protected ShptExportDelegate<?> newExportDelegate(ShptSession session, CmfArchetype type, String searchKey)
 		throws Exception {
 		switch (type) {
 			case USER:

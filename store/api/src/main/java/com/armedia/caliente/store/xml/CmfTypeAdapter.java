@@ -4,19 +4,19 @@ import javax.xml.bind.annotation.adapters.XmlAdapter;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 
-public class CmfTypeAdapter extends XmlAdapter<String, CmfType> {
+public class CmfTypeAdapter extends XmlAdapter<String, CmfArchetype> {
 
 	@Override
-	public CmfType unmarshal(String v) throws Exception {
+	public CmfArchetype unmarshal(String v) throws Exception {
 		if (v == null) { return null; }
 		v = StringUtils.strip(v).toUpperCase();
-		return CmfType.valueOf(v);
+		return CmfArchetype.valueOf(v);
 	}
 
 	@Override
-	public String marshal(CmfType v) throws Exception {
+	public String marshal(CmfArchetype v) throws Exception {
 		if (v == null) { return null; }
 		return v.name();
 	}

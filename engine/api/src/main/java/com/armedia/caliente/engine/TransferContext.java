@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.store.CmfObjectRef;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.commons.utilities.CfgTools;
 
 /**
@@ -29,7 +29,7 @@ public abstract class TransferContext< //
 	private final String id;
 	private final CONTEXT_FACTORY factory;
 	private final String rootId;
-	private final CmfType rootType;
+	private final CmfArchetype rootType;
 	private final SESSION session;
 	private final Map<String, VALUE> values = new HashMap<>();
 	private final Map<String, Object> objects = new HashMap<>();
@@ -39,7 +39,7 @@ public abstract class TransferContext< //
 	private final String productVersion;
 	private final WarningTracker warningTracker;
 
-	protected TransferContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfType rootType,
+	protected TransferContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfArchetype rootType,
 		SESSION session, Logger output, WarningTracker warningTracker) {
 		this.factory = factory;
 		this.settings = settings;
@@ -69,7 +69,7 @@ public abstract class TransferContext< //
 		return this.rootId;
 	}
 
-	public final CmfType getRootObjectType() {
+	public final CmfArchetype getRootObjectType() {
 		return this.rootType;
 	}
 
@@ -138,7 +138,7 @@ public abstract class TransferContext< //
 		}
 	}
 
-	public final boolean isSupported(CmfType type) {
+	public final boolean isSupported(CmfArchetype type) {
 		return this.factory.isSupported(type);
 	}
 

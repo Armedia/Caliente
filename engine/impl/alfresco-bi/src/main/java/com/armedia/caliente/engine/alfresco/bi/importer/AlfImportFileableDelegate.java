@@ -32,12 +32,12 @@ import com.armedia.caliente.engine.tools.AclTools.AccessorType;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectHandler;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.store.CmfType;
+import com.armedia.caliente.store.CmfArchetype;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueSerializer;
 import com.armedia.caliente.store.tools.DefaultCmfObjectHandler;
@@ -144,7 +144,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				break;
 			default:
 				// Use the default one for everyone else
-				serializer = CmfValueSerializer.get(CmfDataType.STRING);
+				serializer = CmfValueSerializer.get(CmfValueType.STRING);
 				break;
 		}
 
@@ -459,7 +459,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 
 		};
 		try {
-			int count = ctx.loadObjects(CmfType.ACL, Collections.singleton(aclId.asString()), handler);
+			int count = ctx.loadObjects(CmfArchetype.ACL, Collections.singleton(aclId.asString()), handler);
 			if (count > 0) { return ret.toString(); }
 		} catch (CmfStorageException e) {
 			throw new ImportException(String.format("Failed to load the ACL [%s] associated with %s", aclId.asString(),

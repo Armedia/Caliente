@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlType;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfBaseSetting;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
@@ -33,7 +33,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 		private final int sqlType;
 		private final String sqlTypeName;
 
-		private ColumnStructure(String name, CmfDataType type, boolean repeating, int sqlType, String sqlTypeName) {
+		private ColumnStructure(String name, CmfValueType type, boolean repeating, int sqlType, String sqlTypeName) {
 			super(name, type, repeating);
 			this.sqlType = sqlType;
 			this.sqlTypeName = sqlTypeName;
@@ -88,11 +88,11 @@ public class MetadataFromDDL extends MetadataReaderBase {
 				finalName = this.attributeNameMapping.transformName(sqlName);
 			}
 
-			CmfDataType type = getMappedAttributeType(sqlName);
+			CmfValueType type = getMappedAttributeType(sqlName);
 			if (type == null) {
 				type = decodeSQLType(md.getColumnType(i));
 			}
-			if (type == CmfDataType.OTHER) {
+			if (type == CmfValueType.OTHER) {
 				continue columnLoop;
 			}
 			structure.put(sqlName,

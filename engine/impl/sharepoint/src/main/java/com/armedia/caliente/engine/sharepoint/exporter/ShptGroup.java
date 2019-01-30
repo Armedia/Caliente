@@ -10,7 +10,7 @@ import com.armedia.caliente.engine.sharepoint.ShptAttributes;
 import com.armedia.caliente.engine.sharepoint.ShptSession;
 import com.armedia.caliente.engine.sharepoint.ShptSessionException;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfDataType;
+import com.armedia.caliente.store.CmfValueType;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.independentsoft.share.Group;
@@ -42,43 +42,43 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 	protected boolean marshal(ShptExportContext ctx, CmfObject<CmfValue> object) throws ExportException {
 		if (!super.marshal(ctx, object)) { return false; }
 		// UserID
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_ID.name, CmfDataType.ID, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_ID.name, CmfValueType.ID, false,
 			Collections.singleton(new CmfValue(String.format("USER(%08x)", this.object.getId())))));
 
 		// LoginName
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_NAME.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.OBJECT_NAME.name, CmfValueType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getLoginName()))));
 
 		// AutoAcceptMembershipRequest
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name, CmfDataType.BOOLEAN,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name, CmfValueType.BOOLEAN,
 			false, Collections.singleton(new CmfValue(this.object.isAutoAcceptRequestToJoinLeave()))));
 
 		// AllowMembershipRequest
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERSHIP_REQUEST.name, CmfDataType.BOOLEAN, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERSHIP_REQUEST.name, CmfValueType.BOOLEAN, false,
 			Collections.singleton(new CmfValue(this.object.isRequestToJoinLeaveAllowed()))));
 
 		// AllowMembersEditMembership
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERS_EDIT_MEMBERSHIP.name, CmfDataType.BOOLEAN,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERS_EDIT_MEMBERSHIP.name, CmfValueType.BOOLEAN,
 			false, Collections.singleton(new CmfValue(this.object.isMembersEditMembershipAllowed()))));
 
 		// PrincipalType
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.PRINCIPAL_TYPE.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.PRINCIPAL_TYPE.name, CmfValueType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getType().name()))));
 
 		// Description
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.DESCRIPTION.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.DESCRIPTION.name, CmfValueType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getDescription()))));
 
 		// Email
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.EMAIL.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.EMAIL.name, CmfValueType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getRequestToJoinLeaveEmailSetting()))));
 
 		// Title
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.TITLE.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.TITLE.name, CmfValueType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getTitle()))));
 
 		// Owner Title
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.OWNER_TITLE.name, CmfDataType.STRING, false,
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.OWNER_TITLE.name, CmfValueType.STRING, false,
 			Collections.singleton(new CmfValue(this.object.getOwnerTitle()))));
 
 		// User Groups
@@ -90,7 +90,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			throw new ExportException(String.format("Failed to obtain the group list for user [%s](%d)",
 				this.object.getLoginName(), this.object.getId()), e);
 		}
-		CmfAttribute<CmfValue> users = new CmfAttribute<>(ShptAttributes.GROUP_MEMBERS.name, CmfDataType.STRING, true);
+		CmfAttribute<CmfValue> users = new CmfAttribute<>(ShptAttributes.GROUP_MEMBERS.name, CmfValueType.STRING, true);
 		object.setAttribute(users);
 		if ((l != null) && !l.isEmpty()) {
 			for (User u : l) {
