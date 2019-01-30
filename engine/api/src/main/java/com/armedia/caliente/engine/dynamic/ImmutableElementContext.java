@@ -116,16 +116,6 @@ public class ImmutableElementContext extends DynamicElementContext {
 		}
 
 		@Override
-		public String getProductName() {
-			return this.object.getProductName();
-		}
-
-		@Override
-		public String getProductVersion() {
-			return this.object.getProductVersion();
-		}
-
-		@Override
 		public Map<String, DynamicValue> getAtt() {
 			return this.att;
 		}

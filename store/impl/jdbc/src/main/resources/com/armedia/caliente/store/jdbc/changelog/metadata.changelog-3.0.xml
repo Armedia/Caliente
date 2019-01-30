@@ -84,12 +84,6 @@
 			<column name="object_label" type="text" remarks="A label to quickly identify the object">
 				<constraints nullable="false" />
 			</column>
-			<column name="product_name" type="varchar(96)" remarks="The name of the CMS product the object was read from">
-				<constraints nullable="false" unique="false"/>
-			</column>
-			<column name="product_version" type="varchar(96)" remarks="The version of the CMS product the object was read from">
-				<constraints nullable="false" unique="false"/>
-			</column>
 		</createTable>
 		<addPrimaryKey tableName="cmf_object" columnNames="object_id" />
 		<addForeignKeyConstraint constraintName="fk_cmf_object_plan"

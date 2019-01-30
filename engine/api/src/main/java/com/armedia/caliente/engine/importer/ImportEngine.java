@@ -468,6 +468,11 @@ public abstract class ImportEngine<//
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, this.objectStore,
 						this.contentStore, transformer, this.output, this.warningTracker);
+					final String fmt = "caliente.import.product.%s";
+					this.objectStore.setProperty(String.format(fmt, "name"),
+						new CmfValue(contextFactory.getProductName()));
+					this.objectStore.setProperty(String.format(fmt, "version"),
+						new CmfValue(contextFactory.getProductVersion()));
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the context factory to carry out the import", e);
 				}

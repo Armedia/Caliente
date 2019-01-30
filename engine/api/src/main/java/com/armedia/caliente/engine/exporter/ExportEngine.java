@@ -929,6 +929,12 @@ public abstract class ExportEngine<//
 				try {
 					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, getObjectStore(),
 						getContentStore(), transformer, getOutput(), getWarningTracker());
+
+					final String fmt = "caliente.export.product.%s";
+					this.objectStore.setProperty(String.format(fmt, "name"),
+						new CmfValue(contextFactory.getProductName()));
+					this.objectStore.setProperty(String.format(fmt, "version"),
+						new CmfValue(contextFactory.getProductVersion()));
 				} catch (Exception e) {
 					throw new ExportException("Failed to configure the context factory to carry out the export", e);
 				}

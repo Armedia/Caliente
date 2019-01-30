@@ -158,8 +158,7 @@ public abstract class ExportDelegate< //
 	final CmfObject<VALUE> marshal(CONTEXT ctx, ExportTarget referrent) throws ExportException {
 		CmfObject<VALUE> marshaled = new CmfObject<>(this.factory.getTranslator(), this.exportTarget.getType(),
 			this.exportTarget.getId(), this.name, this.parentIds, this.exportTarget.getSearchKey(), this.dependencyTier,
-			this.historyId, this.historyCurrent, this.label, this.subType, this.secondaries, ctx.getProductName(),
-			ctx.getProductVersion(), null);
+			this.historyId, this.historyCurrent, this.label, this.subType, this.secondaries, null);
 		if (!marshal(ctx, marshaled)) { return null; }
 		this.factory.getEngine().setReferrent(marshaled, referrent);
 		return marshaled;

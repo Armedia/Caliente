@@ -18,8 +18,6 @@ public class TestObjectFacade extends DynamicObject {
 	private Set<String> secondaries = new HashSet<>();
 	private int dependencyTier = 0;
 	private String originalName = null;
-	private String productName = null;
-	private String productVersion = null;
 
 	public TestObjectFacade() {
 	}
@@ -113,26 +111,6 @@ public class TestObjectFacade extends DynamicObject {
 	@Override
 	public TestObjectFacade setName(String name) {
 		super.setName(name);
-		return this;
-	}
-
-	@Override
-	public String getProductName() {
-		return this.productName;
-	}
-
-	public TestObjectFacade setProductName(String productName) {
-		this.productName = productName;
-		return this;
-	}
-
-	@Override
-	public String getProductVersion() {
-		return this.productVersion;
-	}
-
-	public TestObjectFacade setProductVersion(String productVersion) {
-		this.productVersion = productVersion;
 		return this;
 	}
 
