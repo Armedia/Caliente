@@ -45,6 +45,7 @@
 		<h2.version>1.4.198-20190114.git-a092ef8bba8ee54411f7dfeac56f0a4e70b9f4e1</h2.version>
 		<ridc.version>11.1.1.0</ridc.version>
 		<build.number>-SNAPSHOT-${scmBranch}-${buildNumber}</build.number>
+		<dfc.jar>${env.DOCUMENTUM_SHARED}/dfc/dfc.jar</dfc.jar>
 	</properties>
 
 	<distributionManagement>
@@ -239,7 +240,8 @@
 				<groupId>com.documentum.dfc</groupId>
 				<artifactId>dfc-jars</artifactId>
 				<version>${dfc.version}</version>
-				<type>pom</type>
+				<scope>system</scope>
+				<systemPath>${dfc.jar}</systemPath>
 			</dependency>
 
 			<dependency>
@@ -311,6 +313,16 @@
 							<requireMavenVersion>
 								<version>${maven.min-version}</version>
 							</requireMavenVersion>
+							<requireEnvironmentVariable>
+								<variableName>DOCUMENTUM_SHARED</variableName>
+								<message>Please ensure the DOCUMENTUM_SHARED environment variable is set</message>
+							</requireEnvironmentVariable>
+							<requireFilesExist>
+								<files>
+									<file>${dfc.jar}</file>
+								</files>
+								<message>Failed to find the primary DFC JAR file in DOCUMENTUM_SHARED</message>
+							</requireFilesExist>
 						</rules>
 					</configuration>
 				</plugin>
