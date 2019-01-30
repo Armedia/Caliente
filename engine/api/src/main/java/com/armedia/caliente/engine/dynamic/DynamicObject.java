@@ -87,8 +87,8 @@ public abstract class DynamicObject {
 		Collection<CmfAttribute<CmfValue>> attributeList = new ArrayList<>(this.attributes.size());
 		for (String s : this.attributes.keySet()) {
 			DynamicValue v = this.attributes.get(s);
-			CmfAttribute<CmfValue> a = new CmfAttribute<>(v.getName(), v.getType(), v.isRepeating());
-			if (a.isRepeating()) {
+			CmfAttribute<CmfValue> a = new CmfAttribute<>(v.getName(), v.getType(), v.isMultivalued());
+			if (a.isMultivalued()) {
 				for (Object o : v.getValues()) {
 					try {
 						a.addValue(new CmfValue(v.getType(), o));
@@ -117,8 +117,8 @@ public abstract class DynamicObject {
 		Collection<CmfProperty<CmfValue>> propertyList = new ArrayList<>(this.privateProperties.size());
 		for (String s : this.privateProperties.keySet()) {
 			DynamicValue v = this.privateProperties.get(s);
-			CmfProperty<CmfValue> p = new CmfProperty<>(v.getName(), v.getType(), v.isRepeating());
-			if (p.isRepeating()) {
+			CmfProperty<CmfValue> p = new CmfProperty<>(v.getName(), v.getType(), v.isMultivalued());
+			if (p.isMultivalued()) {
 				for (Object o : v.getValues()) {
 					try {
 						p.addValue(new CmfValue(v.getType(), o));

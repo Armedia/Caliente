@@ -8,20 +8,20 @@ public class CmfAttribute<VALUE> extends CmfProperty<VALUE> {
 		super(pattern);
 	}
 
-	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, boolean repeating) {
-		super(name, type, repeating);
+	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, boolean multivalue) {
+		super(name, type, multivalue);
 	}
 
-	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, boolean repeating, Collection<VALUE> values) {
-		super(name, type, repeating, values);
+	public CmfAttribute(CmfEncodeableName name, CmfValue.Type type, boolean multivalue, Collection<VALUE> values) {
+		super(name, type, multivalue, values);
 	}
 
-	public CmfAttribute(String name, CmfValue.Type type, boolean repeating) {
-		super(name, type, repeating);
+	public CmfAttribute(String name, CmfValue.Type type, boolean multivalue) {
+		super(name, type, multivalue);
 	}
 
-	public CmfAttribute(String name, CmfValue.Type type, boolean repeating, Collection<VALUE> values) {
-		super(name, type, repeating, values);
+	public CmfAttribute(String name, CmfValue.Type type, boolean multivalue, Collection<VALUE> values) {
+		super(name, type, multivalue, values);
 	}
 
 	@Override
@@ -50,7 +50,7 @@ public class CmfAttribute<VALUE> extends CmfProperty<VALUE> {
 
 	@Override
 	public String toString() {
-		return String.format("CmfAttribute [name=%s, type=%s, repeating=%s %s=%s]", getName(), getType(), isRepeating(),
-			(isRepeating() ? "values" : "singleValue"), (isRepeating() ? getValues() : getValue()));
+		return String.format("CmfAttribute [name=%s, type=%s, repeating=%s %s=%s]", getName(), getType(), isMultivalued(),
+			(isMultivalued() ? "values" : "singleValue"), (isMultivalued() ? getValues() : getValue()));
 	}
 }

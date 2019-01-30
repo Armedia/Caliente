@@ -100,7 +100,7 @@ public class PrincipalMappingApply extends ConditionalAction {
 
 	private void applyMapping(DynamicElementContext ctx, DynamicValue candidate) throws ActionException {
 
-		if (!candidate.isRepeating()) {
+		if (!candidate.isMultivalued()) {
 			// Cardinality is irrelevant...
 			String oldString = Tools.toString(candidate.getValue());
 			String newString = performMapping(ctx, oldString);

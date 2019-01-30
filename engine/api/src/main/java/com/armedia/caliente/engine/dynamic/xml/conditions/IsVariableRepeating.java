@@ -13,7 +13,7 @@ public class IsVariableRepeating extends AbstractVariableCheck {
 
 	@Override
 	protected boolean check(DynamicValue candidate) {
-		return ((candidate != null) && candidate.isRepeating());
+		return ((candidate != null) && candidate.isMultivalued());
 	}
 
 }

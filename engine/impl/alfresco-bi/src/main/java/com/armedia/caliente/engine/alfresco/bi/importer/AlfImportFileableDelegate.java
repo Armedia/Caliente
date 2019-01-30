@@ -147,7 +147,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		try {
-			if (srcAtt.isRepeating()) {
+			if (srcAtt.isMultivalued()) {
 				if (multiple || concatenateFallback) {
 					// Concatenate using the separator
 					StringBuilder sb = new StringBuilder();
@@ -209,7 +209,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					throw new AlfRenderingException(
 						String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
 				}
-				if (attribute.isRepeating() || !StringUtils.isEmpty(s)) {
+				if (attribute.isMultivalued() || !StringUtils.isEmpty(s)) {
 					newValues.add(s);
 				}
 			});

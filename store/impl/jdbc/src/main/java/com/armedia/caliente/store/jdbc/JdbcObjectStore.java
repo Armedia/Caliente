@@ -223,7 +223,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						name, attribute.getName(), duplicate));
 					continue;
 				}
-				final boolean repeating = attribute.isRepeating();
+				final boolean repeating = attribute.isMultivalued();
 				final String type = attribute.getType().name();
 
 				attData[1] = name;
@@ -280,7 +280,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 				propData[1] = name;
 				propData[2] = type;
-				propData[3] = property.isRepeating();
+				propData[3] = property.isMultivalued();
 
 				// Insert the attribute
 				propertyParameters.add(propData.clone());
@@ -1386,7 +1386,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					String.format("Failed to deserialize value [%s] as a %s", data, property.getType()), e);
 			}
 			values.add(v);
-			if (!property.isRepeating()) {
+			if (!property.isMultivalued()) {
 				break;
 			}
 		}

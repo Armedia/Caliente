@@ -22,7 +22,7 @@ public class DynamicValue extends CmfBaseSetting {
 
 	public DynamicValue(DynamicValue member) {
 		super(member);
-		if (member.isRepeating()) {
+		if (member.isMultivalued()) {
 			this.values.addAll(member.values);
 		} else {
 			this.value = member.value;
@@ -36,7 +36,7 @@ public class DynamicValue extends CmfBaseSetting {
 	public <V extends CmfProperty<CmfValue>> DynamicValue(V property) {
 		super(property);
 		// Copy the values over
-		if (isRepeating()) {
+		if (isMultivalued()) {
 			for (CmfValue v : property) {
 				if ((v != null) && !v.isNull()) {
 					this.values.add(this.type.getValue(v));
@@ -58,7 +58,7 @@ public class DynamicValue extends CmfBaseSetting {
 		super(property);
 		// Copy the values over
 		CmfValueCodec<V> codec = translator.getCodec(property.getType());
-		if (isRepeating()) {
+		if (isMultivalued()) {
 			for (V raw : property) {
 				CmfValue v = codec.encodeValue(raw);
 				if ((v != null) && !v.isNull()) {
@@ -79,7 +79,7 @@ public class DynamicValue extends CmfBaseSetting {
 
 	public boolean isEmpty() {
 		Object value = null;
-		if (isRepeating()) {
+		if (isMultivalued()) {
 			// it will be empty if and only if it has no values, or its first value is a
 			// an empty value in the single-valued sense
 			if (this.values.isEmpty()) { return true; }
@@ -93,14 +93,14 @@ public class DynamicValue extends CmfBaseSetting {
 	}
 
 	public Object getValue() {
-		if (!isRepeating()) { return this.value; }
+		if (!isMultivalued()) { return this.value; }
 		List<Object> values = getValues();
 		if (values.isEmpty()) { throw new IndexOutOfBoundsException(); }
 		return values.get(0);
 	}
 
 	public DynamicValue setValue(Object value) {
-		if (!isRepeating()) {
+		if (!isMultivalued()) {
 			this.value = value;
 		} else {
 			this.values.clear();
@@ -110,7 +110,7 @@ public class DynamicValue extends CmfBaseSetting {
 	}
 
 	public DynamicValue setValues(Iterator<?> values) {
-		if (!isRepeating()) {
+		if (!isMultivalued()) {
 			this.value = null;
 			if ((values != null) && values.hasNext()) {
 				this.value = values.next();
@@ -146,7 +146,7 @@ public class DynamicValue extends CmfBaseSetting {
 	}
 
 	public List<Object> getValues() {
-		if (!isRepeating()) {
+		if (!isMultivalued()) {
 			List<Object> ret = new ArrayList<>(1);
 			ret.add(this.value);
 			return ret;
@@ -155,11 +155,11 @@ public class DynamicValue extends CmfBaseSetting {
 	}
 
 	public int getSize() {
-		return (!isRepeating() ? 1 : this.values.size());
+		return (!isMultivalued() ? 1 : this.values.size());
 	}
 
 	@Override
 	public String toString() {
-		return Tools.toString(isRepeating() ? this.values : this.value);
+		return Tools.toString(isMultivalued() ? this.values : this.value);
 	}
 }

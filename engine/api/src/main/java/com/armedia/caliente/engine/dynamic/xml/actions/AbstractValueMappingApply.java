@@ -90,7 +90,7 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 	private void applyMapping(DynamicElementContext ctx, CmfObject.Archetype type, String mappingName, DynamicValue candidate)
 		throws ActionException {
 
-		if (!candidate.isRepeating()) {
+		if (!candidate.isMultivalued()) {
 			// Cardinality is irrelevant...
 			String oldString = Tools.toString(candidate.getValue());
 			String newString = mapValue(ctx, type, mappingName, oldString, candidate.getType());

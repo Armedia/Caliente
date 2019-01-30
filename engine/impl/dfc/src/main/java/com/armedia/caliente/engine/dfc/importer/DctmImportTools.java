@@ -7,7 +7,7 @@ public class DctmImportTools {
 	public static String concatenateStrings(CmfProperty<IDfValue> p, char sep) {
 		if (p == null) { return null; }
 		if (p.getValueCount() < 1) { return ""; }
-		if (!p.isRepeating() || (p.getValueCount() == 1)) { return p.getValue().asString(); }
+		if (!p.isMultivalued() || (p.getValueCount() == 1)) { return p.getValue().asString(); }
 		StringBuilder sb = new StringBuilder();
 		for (IDfValue v : p) {
 			if (sb.length() > 0) {

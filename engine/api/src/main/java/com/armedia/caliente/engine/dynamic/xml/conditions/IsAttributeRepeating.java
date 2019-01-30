@@ -13,7 +13,7 @@ public class IsAttributeRepeating extends AbstractAttributeCheck {
 
 	@Override
 	protected boolean check(DynamicValue candidate) {
-		return (candidate != null) && candidate.isRepeating();
+		return (candidate != null) && candidate.isMultivalued();
 	}
 
 }
