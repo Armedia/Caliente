@@ -113,7 +113,7 @@ public abstract class JdbcDialect {
 			"       insert into " + //
 				"          cmf_attribute (" + //
 				"              object_id, name, id, data_type, " + //
-				"              length, qualifiable, repeating" + //
+				"              length, qualifiable, multivalued" + //
 				"          ) " + //
 				"   values (?, ?, ?, ?, ?, ?, ?)" //
 		),
@@ -129,7 +129,7 @@ public abstract class JdbcDialect {
 		INSERT_PROPERTY( //
 			"       insert into " + //
 				"          cmf_property (" + //
-				"              object_id, name, data_type, repeating" + //
+				"              object_id, name, data_type, multivalued" + //
 				"          ) " + //
 				"   values (?, ?, ?, ?)" //
 		),

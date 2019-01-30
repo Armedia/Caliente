@@ -236,7 +236,7 @@
 			<column name="qualifiable" type="boolean" remarks="The flag indicating whether the attriute is qualifiable">
 				<constraints nullable="false" />
 			</column>
-			<column name="repeating" type="boolean" remarks="The flag indicating whether this is a single or repeating value attribute">
+			<column name="multivalued" type="boolean" remarks="The flag indicating whether this is a single or multivalued value attribute">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
@@ -254,7 +254,7 @@
 			<column name="name" type="varchar(64)" remarks="The attribute's name">
 				<constraints nullable="false" />
 			</column>
-			<column name="value_number" type="integer" remarks="The value index for repeating values (always 0 for single-values)">
+			<column name="value_number" type="integer" remarks="The value index for multivalued values (always 0 for single-values)">
 				<constraints nullable="false" />
 			</column>
 			<column name="null_value" type="boolean" remarks="Indicates whether this value is null">
@@ -280,7 +280,7 @@
 			<column name="data_type" type="varchar(32)" remarks="The property's data type">
 				<constraints nullable="false" />
 			</column>
-			<column name="repeating" type="boolean" remarks="The flag indicating whether this is a single or repeating value property">
+			<column name="multivalued" type="boolean" remarks="The flag indicating whether this is a single or multivalued value property">
 				<constraints nullable="false" />
 			</column>
 		</createTable>
@@ -298,7 +298,7 @@
 			<column name="name" type="varchar(64)" remarks="The property's name">
 				<constraints nullable="false" />
 			</column>
-			<column name="value_number" type="integer" remarks="The value index for repeating values (always 0 for single-values)">
+			<column name="value_number" type="integer" remarks="The value index for multivalued values (always 0 for single-values)">
 				<constraints nullable="false" />
 			</column>
 			<column name="null_value" type="boolean" remarks="Indicates whether this value is null">
