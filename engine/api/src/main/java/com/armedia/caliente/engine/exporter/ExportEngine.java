@@ -257,26 +257,19 @@ public abstract class ExportEngine<//
 		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
 
-		final CmfObject.Archetype type = target.getType();
-		final String id = target.getId();
-		final String objectLabel = sourceObject.getLabel();
-		final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
-
-		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format(
-				"Attemp	public ExportEngineWorker() {\n" + "		super(ExportResult.class);\n"
-					+ "		// TODO Auto-generated constructor stub\n" + "	}\n" + "\n" + "ting export of %s",
-				logLabel));
-		}
-
-		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
-		final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
-
 		boolean success = false;
 		if (referrent != null) {
 			ctx.pushReferrent(referrent);
 		}
 		try {
+			final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
+			final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
+
+			final CmfObject.Archetype type = target.getType();
+			final String id = target.getId();
+			final String objectLabel = sourceObject.getLabel();
+			final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
+
 			if (this.log.isDebugEnabled()) {
 				if (referrent != null) {
 					this.log.debug(String.format("Exporting %s (referenced by %s)", logLabel, referrent));
