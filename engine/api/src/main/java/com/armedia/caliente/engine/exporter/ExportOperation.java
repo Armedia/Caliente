@@ -12,39 +12,46 @@ final class ExportOperation {
 	private final long objectNumber;
 	private final Thread creatorThread;
 	private final ExportTarget target;
+	private final String targetLabel;
 	private final CmfObjectSearchSpec referrent;
+	private final String referrentLabel;
 	private final AtomicBoolean waiting = new AtomicBoolean(false);
 	private boolean completed = false;
 	private boolean success = false;
 
-	ExportOperation(ExportTarget target, CmfObjectSearchSpec referrent) {
+	ExportOperation(ExportTarget target, String targetLabel, CmfObjectSearchSpec referrent, String referrentLabel) {
 		this.creatorThread = Thread.currentThread();
 		this.objectNumber = ExportOperation.COUNTER.getAndIncrement();
 		this.target = target;
+		this.targetLabel = targetLabel;
 		this.referrent = referrent;
+		this.referrentLabel = referrentLabel;
 		this.completed = false;
 		this.success = false;
-	}
-
-	long getObjectNumber() {
-		return this.objectNumber;
 	}
 
 	Thread getCreatorThread() {
 		return this.creatorThread;
 	}
 
+	long getObjectNumber() {
+		return this.objectNumber;
+	}
+
 	ExportTarget getTarget() {
 		return this.target;
+	}
+
+	String getTargetLabel() {
+		return this.targetLabel;
 	}
 
 	CmfObjectSearchSpec getReferrent() {
 		return this.referrent;
 	}
 
-	String getReferrentDescription() {
-		if (this.referrent == null) { return "direct search"; }
-		return String.format("%s[%s]", this.referrent.getType().name(), this.referrent.getId());
+	String getReferrentLabel() {
+		return this.referrentLabel;
 	}
 
 	boolean isWaiting() {
@@ -77,11 +84,11 @@ final class ExportOperation {
 		return this.completed;
 	}
 
-	synchronized long waitUntilCompleted() throws InterruptedException {
-		return waitUntilCompleted(0);
+	synchronized long waitUntilCompleted(Runnable waitMessage) throws InterruptedException {
+		return waitUntilCompleted(waitMessage, 0);
 	}
 
-	synchronized long waitUntilCompleted(long timeout) throws InterruptedException {
+	synchronized long waitUntilCompleted(Runnable waitMessage, long timeout) throws InterruptedException {
 		if (this.completed) {
 			try {
 				return 0;
@@ -94,7 +101,16 @@ final class ExportOperation {
 			throw new IllegalStateException("Can't wait on an operation from the thread that created it!!!");
 		}
 		final long start = System.currentTimeMillis();
+		boolean messageShown = (waitMessage == null);
 		while (!this.completed) {
+			if (!messageShown) {
+				messageShown = true;
+				try {
+					waitMessage.run();
+				} catch (Exception e) {
+					// ignore...
+				}
+			}
 			wait(timeout);
 		}
 		try {
