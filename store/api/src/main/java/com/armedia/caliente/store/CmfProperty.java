@@ -27,48 +27,48 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 		this(name, type, true, (VALUE) null);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfValue.Type type, boolean repeating) {
-		this(name, type, repeating, (VALUE) null);
+	public CmfProperty(CmfEncodeableName name, CmfValue.Type type, boolean multivalue) {
+		this(name, type, multivalue, (VALUE) null);
 	}
 
 	public CmfProperty(CmfEncodeableName name, CmfValue.Type type, VALUE value) {
 		this(name, type, false, value);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfValue.Type type, boolean repeating, VALUE value) {
-		this(name, type, repeating, (value != null ? Collections.singleton(value) : null));
+	public CmfProperty(CmfEncodeableName name, CmfValue.Type type, boolean multivalue, VALUE value) {
+		this(name, type, multivalue, (value != null ? Collections.singleton(value) : null));
 	}
 
 	public CmfProperty(CmfEncodeableName name, CmfValue.Type type, Collection<VALUE> values) {
 		this(name, type, true, values);
 	}
 
-	public CmfProperty(CmfEncodeableName name, CmfValue.Type type, boolean repeating, Collection<VALUE> values) {
-		this(name.encode(), type, repeating, values);
+	public CmfProperty(CmfEncodeableName name, CmfValue.Type type, boolean multivalue, Collection<VALUE> values) {
+		this(name.encode(), type, multivalue, values);
 	}
 
 	public CmfProperty(String name, CmfValue.Type type) {
 		this(name, type, true, (VALUE) null);
 	}
 
-	public CmfProperty(String name, CmfValue.Type type, boolean repeating) {
-		this(name, type, repeating, (VALUE) null);
+	public CmfProperty(String name, CmfValue.Type type, boolean multivalue) {
+		this(name, type, multivalue, (VALUE) null);
 	}
 
 	public CmfProperty(String name, CmfValue.Type type, VALUE value) {
 		this(name, type, false, value);
 	}
 
-	public CmfProperty(String name, CmfValue.Type type, boolean repeating, VALUE value) {
-		this(name, type, repeating, (value != null ? Collections.singleton(value) : null));
+	public CmfProperty(String name, CmfValue.Type type, boolean multivalue, VALUE value) {
+		this(name, type, multivalue, (value != null ? Collections.singleton(value) : null));
 	}
 
 	public CmfProperty(String name, CmfValue.Type type, Collection<VALUE> values) {
 		this(name, type, true, values);
 	}
 
-	public CmfProperty(String name, CmfValue.Type type, boolean repeating, Collection<VALUE> values) {
-		super(name, type, repeating);
+	public CmfProperty(String name, CmfValue.Type type, boolean multivalue, Collection<VALUE> values) {
+		super(name, type, multivalue);
 		if (values == null) {
 			values = Collections.emptyList();
 		}
@@ -87,7 +87,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 	 *         returns 1.
 	 */
 	public final int getValueCount() {
-		if (!isRepeating()) { return 1; }
+		if (!isMultivalued()) { return 1; }
 		return this.values.size();
 	}
 
@@ -95,8 +95,9 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 		if (idx < 0) {
 			idx = 0;
 		}
-		if ((!isRepeating() && (idx > 0))
-			|| (isRepeating() && (idx >= this.values.size()))) { throw new ArrayIndexOutOfBoundsException(idx); }
+		if ((!isMultivalued() && (idx > 0)) || (isMultivalued() && (idx >= this.values.size()))) {
+			throw new ArrayIndexOutOfBoundsException(idx);
+		}
 		return idx;
 	}
 
@@ -109,7 +110,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 	 * @return {@code true} if there are values stored in this instance, {@code false} otherwise.
 	 */
 	public final boolean hasValues() {
-		return !isRepeating() || !this.values.isEmpty();
+		return !isMultivalued() || !this.values.isEmpty();
 	}
 
 	/**
@@ -129,7 +130,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 		if (values == null) {
 			values = Collections.emptyList();
 		}
-		if (isRepeating()) {
+		if (isMultivalued()) {
 			for (VALUE value : values) {
 				this.values.add(value);
 			}
@@ -153,7 +154,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 	 * @return a list containing all the values in this instance
 	 */
 	public final List<VALUE> getValues() {
-		if (isRepeating()) { return this.values; }
+		if (isMultivalued()) { return this.values; }
 		List<VALUE> l = new ArrayList<>(1);
 		l.add(this.singleValue);
 		return l;
@@ -168,7 +169,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 	 * @param value
 	 */
 	public CmfProperty<VALUE> addValue(VALUE value) {
-		if (isRepeating()) {
+		if (isMultivalued()) {
 			this.values.add(value);
 			return this;
 		}
@@ -199,7 +200,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 	 * </p>
 	 */
 	public CmfProperty<VALUE> setValue(VALUE value) {
-		if (isRepeating()) {
+		if (isMultivalued()) {
 			this.values.clear();
 			this.values.add(value);
 		} else {
@@ -218,7 +219,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 	 * @return {@code true} if the value was cleared, {@code false} otherwise.
 	 */
 	public final boolean clearValue() {
-		if (isRepeating()) {
+		if (isMultivalued()) {
 			boolean empty = this.values.isEmpty();
 			this.values.clear();
 			return !empty;
@@ -247,7 +248,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 	 */
 	public final VALUE removeValue(int idx) {
 		idx = sanitizeIndex(idx);
-		if (isRepeating()) { return this.values.remove(idx); }
+		if (isMultivalued()) { return this.values.remove(idx); }
 		VALUE old = this.singleValue;
 		this.singleValue = null;
 		return old;
@@ -272,7 +273,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 	 */
 	public final VALUE getValue(int idx) {
 		idx = sanitizeIndex(idx);
-		if (isRepeating()) { return this.values.get(idx); }
+		if (isMultivalued()) { return this.values.get(idx); }
 		return this.singleValue;
 	}
 
@@ -306,7 +307,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 
 	public boolean isSameValues(CmfProperty<?> other) {
 		if (!isSame(other)) { return false; }
-		if (!isRepeating()) { return Tools.equals(this.singleValue, other.singleValue); }
+		if (!isMultivalued()) { return Tools.equals(this.singleValue, other.singleValue); }
 		final int valueCount = this.values.size();
 		if (valueCount != other.getValueCount()) { return false; }
 		for (int i = 0; i < valueCount; i++) {
@@ -325,7 +326,7 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 	 */
 	@Override
 	public final Iterator<VALUE> iterator() {
-		if (isRepeating()) { return this.values.iterator(); }
+		if (isMultivalued()) { return this.values.iterator(); }
 		return new Iterator<VALUE>() {
 			boolean retrieved = false;
 			boolean removed = false;
@@ -354,7 +355,8 @@ public class CmfProperty<VALUE> extends CmfBaseSetting implements Iterable<VALUE
 
 	@Override
 	public String toString() {
-		return String.format("CmsProperty [name=%s, type=%s, repeating=%s, %s=%s]", getName(), getType(), isRepeating(),
-			(isRepeating() ? "values" : "singleValue"), (isRepeating() ? this.values : this.singleValue));
+		return String.format("CmsProperty [name=%s, type=%s, repeating=%s, %s=%s]", getName(), getType(),
+			isMultivalued(), (isMultivalued() ? "values" : "singleValue"),
+			(isMultivalued() ? this.values : this.singleValue));
 	}
 }

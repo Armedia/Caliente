@@ -167,7 +167,8 @@ public abstract class TransferContextFactory< //
 		}
 	}
 
-	protected abstract CONTEXT constructContext(String rootId, CmfObject.Archetype rootType, SESSION session, int batchPosition);
+	protected abstract CONTEXT constructContext(String rootId, CmfObject.Archetype rootType, SESSION session,
+		int batchPosition);
 
 	final String getNextContextId() {
 		return String.format("%s-%016x", getContextLabel(), this.contextId.incrementAndGet());

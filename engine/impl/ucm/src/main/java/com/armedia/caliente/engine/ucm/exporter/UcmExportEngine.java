@@ -61,7 +61,8 @@ public class UcmExportEngine extends
 		session.iterateURISearchResults(query, new URIHandler() {
 			@Override
 			public void handleURI(UcmSession session, long pos, URI objectUri) {
-				builder.accept(new ExportTarget(CmfObject.Archetype.DOCUMENT, objectUri.toString(), objectUri.toString()));
+				builder
+					.accept(new ExportTarget(CmfObject.Archetype.DOCUMENT, objectUri.toString(), objectUri.toString()));
 			}
 		});
 		return builder.build();
@@ -110,13 +111,13 @@ public class UcmExportEngine extends
 		UcmFSObject object = session.getObject(path);
 		switch (object.getType()) {
 			case FILE:
-				return Stream.of(
-					new ExportTarget(CmfObject.Archetype.DOCUMENT, object.getUniqueURI().toString(), object.getURI().toString()));
+				return Stream.of(new ExportTarget(CmfObject.Archetype.DOCUMENT, object.getUniqueURI().toString(),
+					object.getURI().toString()));
 
 			case FOLDER:
 				if (object.isShortcut()) {
-					return Stream.of(
-						new ExportTarget(CmfObject.Archetype.FOLDER, object.getUniqueURI().toString(), object.getURI().toString()));
+					return Stream.of(new ExportTarget(CmfObject.Archetype.FOLDER, object.getUniqueURI().toString(),
+						object.getURI().toString()));
 				}
 
 				// TODO: Not like!! Doesn't match the spirit of what we're trying to do

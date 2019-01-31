@@ -22,10 +22,12 @@ public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferE
 	}
 
 	protected DctmDelegateBase(E engine, DctmObjectType type) {
-		if (engine == null) { throw new IllegalArgumentException(
-			"Must provide the engine that will interact with this delegate"); }
-		if (type == null) { throw new IllegalArgumentException(
-			"Must provide the object type for which this delegate will operate"); }
+		if (engine == null) {
+			throw new IllegalArgumentException("Must provide the engine that will interact with this delegate");
+		}
+		if (type == null) {
+			throw new IllegalArgumentException("Must provide the object type for which this delegate will operate");
+		}
 		this.engine = engine;
 		this.type = type;
 		@SuppressWarnings("unchecked")
@@ -47,9 +49,10 @@ public class DctmDelegateBase<T extends IDfPersistentObject, E extends TransferE
 
 	protected final T castObject(IDfPersistentObject object) throws DfException {
 		if (object == null) { return null; }
-		if (!this.dfClass.isInstance(
-			object)) { throw new DfException(String.format("Expected an object of class %s, but got one of class %s",
-				this.dfClass.getCanonicalName(), object.getClass().getCanonicalName())); }
+		if (!this.dfClass.isInstance(object)) {
+			throw new DfException(String.format("Expected an object of class %s, but got one of class %s",
+				this.dfClass.getCanonicalName(), object.getClass().getCanonicalName()));
+		}
 		return this.dfClass.cast(object);
 	}
 }

@@ -38,8 +38,9 @@ public class CustomAction extends ConditionalAction {
 		if (className == null) { throw new ActionException("No classname given to insantiate"); }
 
 		final ActionFactory factory = CustomComponents.getActionFactory(className);
-		if (factory == null) { throw new ActionException(
-			String.format("Failed to locate an action factory for class [%s]", className)); }
+		if (factory == null) {
+			throw new ActionException(String.format("Failed to locate an action factory for class [%s]", className));
+		}
 		try {
 			Action action = factory.acquireInstance(className);
 			try {

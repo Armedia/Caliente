@@ -36,11 +36,15 @@ public class DctmVdocMember {
 	}
 
 	public DctmVdocMember(String encoded) {
-		if (StringUtils.isEmpty(encoded)) { throw new IllegalArgumentException(
-			String.format("The given string [%s] is not a valid virtual document member record", encoded)); }
+		if (StringUtils.isEmpty(encoded)) {
+			throw new IllegalArgumentException(
+				String.format("The given string [%s] is not a valid virtual document member record", encoded));
+		}
 		Matcher m = DctmVdocMember.PARSER.matcher(encoded);
-		if (!m.matches()) { throw new IllegalArgumentException(
-			String.format("The given string [%s] is not a valid virtual document member record", encoded)); }
+		if (!m.matches()) {
+			throw new IllegalArgumentException(
+				String.format("The given string [%s] is not a valid virtual document member record", encoded));
+		}
 
 		this.name = m.group(2);
 		String[] s = m.group(1).split("\\|");

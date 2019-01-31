@@ -48,8 +48,9 @@ public class DctmMappingUtils {
 	};
 
 	private static IDfTypedObject[] getSources(IDfSession session) throws DfException {
-		if (session == null) { throw new IllegalArgumentException(
-			"Must provide a session to get the nameSources from"); }
+		if (session == null) {
+			throw new IllegalArgumentException("Must provide a session to get the nameSources from");
+		}
 		// Always add the nameSources in priority order
 		return new IDfTypedObject[] {
 			session.getDocbaseConfig(), session.getServerConfig()
@@ -136,8 +137,9 @@ public class DctmMappingUtils {
 
 	public static List<IDfValue> substituteMappableUsers(IDfSession session, Collection<IDfValue> values)
 		throws DfException {
-		if (session == null) { throw new IllegalArgumentException(
-			"Must provide a session to calculate the mappings from"); }
+		if (session == null) {
+			throw new IllegalArgumentException("Must provide a session to calculate the mappings from");
+		}
 		if (values == null) { throw new IllegalArgumentException("Must provide a collection of values to expand"); }
 		if (values.isEmpty()) { return new ArrayList<>(); }
 		List<IDfValue> ret = new ArrayList<>(values.size());

@@ -15,8 +15,9 @@ class LogbackConfigurator extends LogConfigurator {
 	@Override
 	public Logger initialize() {
 		URL config = getClass().getResource("logback.xml");
-		if (config == null) { throw new RuntimeException(
-			"Failed to configure the boot log - no Logback boot configuration was found"); }
+		if (config == null) {
+			throw new RuntimeException("Failed to configure the boot log - no Logback boot configuration was found");
+		}
 
 		// assume SLF4J is bound to logback in the current environment
 		LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();

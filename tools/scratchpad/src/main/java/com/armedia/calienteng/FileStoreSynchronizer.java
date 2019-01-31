@@ -24,8 +24,9 @@ public class FileStoreSynchronizer {
 
 	public FileStoreSynchronizer(CfgTools configuration, FileStore alpha, FileStore bravo, Model model)
 		throws IOException {
-		if ((alpha == null)
-			|| (bravo == null)) { throw new IllegalArgumentException("Must provide both FileStore instances"); }
+		if ((alpha == null) || (bravo == null)) {
+			throw new IllegalArgumentException("Must provide both FileStore instances");
+		}
 		if (model == null) { throw new IllegalArgumentException("Must provide a valid mode of operation"); }
 		this.alpha = alpha;
 		this.bravo = bravo;
@@ -38,7 +39,7 @@ public class FileStoreSynchronizer {
 			dm_prune
 			dm_save
 			dm_unlink
-		
+
 			// On all dm_folder and dm_document
 			dm_link
 		 */

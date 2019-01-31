@@ -119,8 +119,9 @@ public class EventRegistration implements Comparable<EventRegistration> {
 
 	public static boolean registerEvent(IDfPersistentObject object, String message, String event, int priority,
 		boolean sendMail) throws DfException {
-		if (object == null) { throw new IllegalArgumentException(
-			"Must provide an object for which to register the event"); }
+		if (object == null) {
+			throw new IllegalArgumentException("Must provide an object for which to register the event");
+		}
 		final IDfSession session = object.getSession();
 		final IDfLocalTransaction tx;
 		if (session.isTransactionActive()) {
@@ -156,8 +157,9 @@ public class EventRegistration implements Comparable<EventRegistration> {
 	}
 
 	public static boolean unregisterEvent(IDfSession session, IDfId id, String event, String user) throws DfException {
-		if (id == null) { throw new IllegalArgumentException(
-			"Must provide an object ID for which to unregister the event"); }
+		if (id == null) {
+			throw new IllegalArgumentException("Must provide an object ID for which to unregister the event");
+		}
 		final IDfLocalTransaction tx;
 		if (session.isTransactionActive()) {
 			tx = session.beginTransEx();
@@ -204,8 +206,9 @@ public class EventRegistration implements Comparable<EventRegistration> {
 	 * @throws DfException
 	 */
 	public static int getRegisteredCount(IDfPersistentObject object, String user) throws DfException {
-		if (object == null) { throw new IllegalArgumentException(
-			"Must provide an object for which to check event registration"); }
+		if (object == null) {
+			throw new IllegalArgumentException("Must provide an object for which to check event registration");
+		}
 		final IDfSession session = object.getSession();
 		if (user == null) {
 			user = session.getLoginUserName();
@@ -255,8 +258,9 @@ public class EventRegistration implements Comparable<EventRegistration> {
 	 * @throws DfException
 	 */
 	public static boolean isRegistered(IDfPersistentObject object, String event, String user) throws DfException {
-		if (object == null) { throw new IllegalArgumentException(
-			"Must provide an object for which to check event registration"); }
+		if (object == null) {
+			throw new IllegalArgumentException("Must provide an object for which to check event registration");
+		}
 		if (event == null) { throw new IllegalArgumentException("Must provide an event to check for"); }
 		final IDfSession session = object.getSession();
 		if (user == null) {
@@ -329,8 +333,9 @@ public class EventRegistration implements Comparable<EventRegistration> {
 	 */
 	public static Set<EventRegistration> getRegisteredForUser(IDfPersistentObject object, String user)
 		throws DfException {
-		if (object == null) { throw new IllegalArgumentException(
-			"Must provide an object whose event registrations to analyze"); }
+		if (object == null) {
+			throw new IllegalArgumentException("Must provide an object whose event registrations to analyze");
+		}
 		final IDfSession session = object.getSession();
 		if (user == null) {
 			user = session.getLoginUserName();
@@ -364,8 +369,9 @@ public class EventRegistration implements Comparable<EventRegistration> {
 	 * @throws DfException
 	 */
 	public static Map<String, Set<EventRegistration>> getAllRegistered(IDfPersistentObject object) throws DfException {
-		if (object == null) { throw new IllegalArgumentException(
-			"Must provide an object whose event registrations to analyze"); }
+		if (object == null) {
+			throw new IllegalArgumentException("Must provide an object whose event registrations to analyze");
+		}
 		final IDfSession session = object.getSession();
 		String dql = "select event from dmi_registry where registered_id = %s order by user_name, event";
 		dql = String.format(dql, DfUtils.quoteString(object.getObjectId().getId()));

@@ -181,8 +181,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			Date d = this.version.getCreatedTime();
 			if (d != null) {
 				Collection<CmfValue> c = Collections.singleton(new CmfValue(d));
-				object
-					.setAttribute(new CmfAttribute<>(ShptAttributes.CREATE_DATE.name, CmfValue.Type.DATETIME, false, c));
+				object.setAttribute(
+					new CmfAttribute<>(ShptAttributes.CREATE_DATE.name, CmfValue.Type.DATETIME, false, c));
 				object.setAttribute(
 					new CmfAttribute<>(ShptAttributes.MODIFICATION_DATE.name, CmfValue.Type.DATETIME, false, c));
 			}

@@ -390,7 +390,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 						}
 					}
 					if (add) {
-						if (!versionLabel.isRepeating()) {
+						if (!versionLabel.isMultivalued()) {
 							// If the incoming attribute doesn't support multiple values, we
 							// need to change that...
 							versionLabel = new CmfAttribute<>(versionLabel.getName(), versionLabel.getType(), true,
@@ -643,7 +643,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to set the attributes to"); }
 		if (attribute == null) { throw new IllegalArgumentException("Must provide an attribute to set on the object"); }
 		return setAttributeOnObject(attribute.getName(), DctmTranslator.translateType(attribute.getType()),
-			attribute.isRepeating(), values, object);
+			attribute.isMultivalued(), values, object);
 	}
 
 	private final boolean setAttributeOnObject(final String attrName, final DctmDataType dataType,
@@ -729,7 +729,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			throw new IllegalArgumentException("Must provide an attribute to clear from the object");
 		}
 		clearAttributeFromObject(attribute.getName(), DctmTranslator.translateType(attribute.getType()),
-			attribute.isRepeating(), object);
+			attribute.isMultivalued(), object);
 	}
 
 	protected final void clearAttributeFromObject(IDfAttr attribute, T object) throws DfException {

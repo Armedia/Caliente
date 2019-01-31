@@ -582,7 +582,7 @@ public class OptionParser {
 
 		// Unwrap the positionals...
 		List<String> positionalStrings = new ArrayList<>(positionals.size());
-		positionals.stream().map(Token::getRawString).forEachOrdered(positionalStrings::add);
+		positionals.stream().map(Token::getRawString).forEach(positionalStrings::add);
 
 		raiseExceptionWithHelp(helpRequested, helpOption, baseScheme, command, null);
 		return new OptionParseResult(baseValues, (command != null ? command.getName() : null), commandValues,

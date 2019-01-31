@@ -147,7 +147,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		}
 
 		try {
-			if (srcAtt.isRepeating()) {
+			if (srcAtt.isMultivalued()) {
 				if (multiple || concatenateFallback) {
 					// Concatenate using the separator
 					StringBuilder sb = new StringBuilder();
@@ -209,7 +209,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 					throw new AlfRenderingException(
 						String.format("Failed to render %s value [%s]", v.getDataType().name(), v.asString()), e);
 				}
-				if (attribute.isRepeating() || !StringUtils.isEmpty(s)) {
+				if (attribute.isMultivalued() || !StringUtils.isEmpty(s)) {
 					newValues.add(s);
 				}
 			});
@@ -239,7 +239,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		if (includeProperty(currentProperty, targetType)) {
 			values.clear();
 			getPropertyValues(IntermediateProperty.PARENT_TREE_IDS).stream().map((v) -> v.asString())
-				.filter(StringUtils::isNotEmpty).forEachOrdered(values::add);
+				.filter(StringUtils::isNotEmpty).forEach(values::add);
 			if (!values.isEmpty()) {
 				p.setProperty(currentProperty, Tools.joinCSVEscaped(values));
 			}

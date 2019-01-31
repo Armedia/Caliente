@@ -8,7 +8,7 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 
 	protected final String name;
 	protected final CmfValue.Type type;
-	protected final boolean repeating;
+	protected final boolean multivalue;
 
 	protected CmfBaseSetting(CmfBaseSetting pattern) {
 		if (pattern == null) {
@@ -16,21 +16,21 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 		}
 		this.name = pattern.name;
 		this.type = pattern.type;
-		this.repeating = pattern.repeating;
+		this.multivalue = pattern.multivalue;
 	}
 
 	public CmfBaseSetting(String name, CmfValue.Type type) {
 		this(name, type, false);
 	}
 
-	public CmfBaseSetting(String name, CmfValue.Type type, boolean multiple) {
+	public CmfBaseSetting(String name, CmfValue.Type type, boolean multivalue) {
 		if (StringUtils.isBlank(name)) {
 			throw new IllegalArgumentException("Must provide a non-null, non-blank name");
 		}
 		if (type == null) { throw new IllegalArgumentException("Must provide a data type"); }
 		this.type = type;
 		this.name = name;
-		this.repeating = multiple;
+		this.multivalue = multivalue;
 	}
 
 	@Override
@@ -44,13 +44,13 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 	}
 
 	@Override
-	public final boolean isRepeating() {
-		return this.repeating;
+	public final boolean isMultivalued() {
+		return this.multivalue;
 	}
 
 	@Override
 	public int hashCode() {
-		return Tools.hashTool(this, null, this.name, this.type, this.repeating);
+		return Tools.hashTool(this, null, this.name, this.type, this.multivalue);
 	}
 
 	@Override
@@ -59,7 +59,7 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 		CmfBaseSetting other = CmfBaseSetting.class.cast(obj);
 		if (!Tools.equals(this.name, other.name)) { return false; }
 		if (this.type != other.type) { return false; }
-		if (this.repeating != other.repeating) { return false; }
+		if (this.multivalue != other.multivalue) { return false; }
 		return true;
 	}
 
@@ -70,7 +70,7 @@ public class CmfBaseSetting implements CmfSetting, Comparable<CmfBaseSetting> {
 		if (r != 0) { return r; }
 		r = this.type.compareTo(o.type);
 		if (r != 0) { return r; }
-		r = Tools.compare(this.repeating, o.repeating);
+		r = Tools.compare(this.multivalue, o.multivalue);
 		if (r != 0) { return r; }
 		return 0;
 	}

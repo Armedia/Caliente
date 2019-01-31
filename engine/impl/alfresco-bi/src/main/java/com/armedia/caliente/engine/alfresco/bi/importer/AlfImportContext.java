@@ -21,8 +21,8 @@ import com.armedia.commons.utilities.CfgTools;
 
 public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImportContextFactory> {
 
-	public AlfImportContext(AlfImportContextFactory factory, CfgTools settings, String rootId, CmfObject.Archetype rootType,
-		AlfRoot session, Logger output, WarningTracker tracker, Transformer transformer,
+	public AlfImportContext(AlfImportContextFactory factory, CfgTools settings, String rootId,
+		CmfObject.Archetype rootType, AlfRoot session, Logger output, WarningTracker tracker, Transformer transformer,
 		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
 		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker, transformer, translator, objectStore,

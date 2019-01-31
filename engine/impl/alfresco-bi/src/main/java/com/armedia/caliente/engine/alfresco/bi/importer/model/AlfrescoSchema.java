@@ -69,8 +69,10 @@ public class AlfrescoSchema {
 			aspects = new ArrayList<>(aspectNames.size());
 			for (String aspectName : aspectNames) {
 				Aspect aspect = this.aspectIndex.get(aspectName);
-				if (aspect == null) { throw new IllegalArgumentException(
-					String.format("Could not find aspect [%s] to apply", aspectName)); }
+				if (aspect == null) {
+					throw new IllegalArgumentException(
+						String.format("Could not find aspect [%s] to apply", aspectName));
+				}
 				aspects.add(aspect);
 			}
 		}

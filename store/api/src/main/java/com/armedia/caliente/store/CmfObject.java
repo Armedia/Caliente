@@ -62,9 +62,9 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 				n.add(t.name());
 				CmfObject.Archetype o = abb.put(t.abbrev, t);
 				if (o != null) {
-					throw new RuntimeException(
-						String.format("ERROR: The CmfObject.Archetype values %s and %s share the same abbreviation [%s]",
-							t.name(), o.name(), t.abbrev));
+					throw new RuntimeException(String.format(
+						"ERROR: The CmfObject.Archetype values %s and %s share the same abbreviation [%s]", t.name(),
+						o.name(), t.abbrev));
 				}
 			}
 			NAMES = Tools.freezeSet(new LinkedHashSet<>(n));

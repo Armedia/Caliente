@@ -28,9 +28,10 @@ public class AlfImportDocumentDelegate extends AlfImportFileableDelegate {
 	protected AlfrescoType calculateTargetType(CmfContentStream content) throws ImportException {
 		if (!content.isDefaultRendition() || (content.getRenditionPage() > 0)) {
 			// If this is a rendition or rendition extra page...
-			if (this.renditionType == null) { throw new ImportException(
-				String.format("Renditions are not supported for %s (content = %s)", this.cmfObject.getDescription(),
-					content.toString())); }
+			if (this.renditionType == null) {
+				throw new ImportException(String.format("Renditions are not supported for %s (content = %s)",
+					this.cmfObject.getDescription(), content.toString()));
+			}
 			return this.renditionType;
 		}
 		return super.calculateTargetType(content);

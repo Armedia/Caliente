@@ -45,7 +45,8 @@ public class LocalTranslator extends CmfAttributeTranslator<CmfValue> {
 		n.put(CmfValue.Type.STRING, PropertyType.STRING); // TODO: Need to handle HTML and URI
 		DATA_TYPES_REV = Tools.freezeMap(n);
 
-		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfObject.Archetype.class);
+		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(
+			CmfObject.Archetype.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 

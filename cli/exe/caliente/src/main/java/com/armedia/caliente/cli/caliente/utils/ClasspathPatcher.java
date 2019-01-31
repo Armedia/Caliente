@@ -63,7 +63,7 @@ public abstract class ClasspathPatcher {
 
 	protected ClasspathPatcher(String... engines) {
 		Set<String> s = new HashSet<>();
-		Arrays.stream(engines).filter(Objects::nonNull).map(StringUtils::lowerCase).forEachOrdered(s::add);
+		Arrays.stream(engines).filter(Objects::nonNull).map(StringUtils::lowerCase).forEach(s::add);
 		this.engines = Collections.unmodifiableSet(s);
 	}
 

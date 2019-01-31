@@ -19,12 +19,15 @@ public class CustomCheck extends AbstractExpressionCondition {
 	@Override
 	public boolean check(DynamicElementContext ctx) throws ConditionException {
 		String className = Tools.toString(ConditionTools.eval(this, ctx));
-		if (className == null) { throw new ConditionException(
-			String.format("The given %s expression did not return a string value: %s", getLang(), getScript())); }
+		if (className == null) {
+			throw new ConditionException(
+				String.format("The given %s expression did not return a string value: %s", getLang(), getScript()));
+		}
 
 		ConditionFactory factory = CustomComponents.getConditionFactory(className);
-		if (factory == null) { throw new ConditionException(
-			String.format("No factory found for custom condition type [%s]", className)); }
+		if (factory == null) {
+			throw new ConditionException(String.format("No factory found for custom condition type [%s]", className));
+		}
 		try {
 			final Condition condition = factory.acquireInstance(className);
 			try {

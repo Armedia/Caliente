@@ -86,7 +86,7 @@ public abstract class XmlImportDelegate extends
 
 			property.setName(name);
 			property.setDataType(DataTypeT.convert(prop.getType()));
-			property.setRepeating(prop.isRepeating());
+			property.setRepeating(prop.isMultivalued());
 			if (prop.getType() == CmfValue.Type.DATETIME) {
 				// Dump it out in XML format
 				for (CmfValue v : prop) {

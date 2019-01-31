@@ -160,8 +160,9 @@ public abstract class ExportEngine<//
 		this.supportsMultipleSources = supportsMultipleSources;
 	}
 
-	private ExportOperation getOrCreateExportOperation(ExportTarget target, ExportTarget referrent,
-		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) {
+	private ExportOperation createExportOperation(ExportTarget target, ExportTarget referrent,
+		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws CmfStorageException {
+
 		return ConcurrentUtils.createIfAbsentUnchecked(statusMap, target, new ConcurrentInitializer<ExportOperation>() {
 			@Override
 			public ExportOperation get() {
@@ -183,6 +184,7 @@ public abstract class ExportEngine<//
 			final String objectLabel = sourceObject.getLabel();
 			final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
 			final LockStatus locked;
+			final ExportOperation thisStatus;
 			try {
 				locked = exportState.objectStore.lockForStorage(target, referrent,
 					Tools.coalesce(sourceObject.getHistoryId(), sourceObject.getObjectId()), ctx.getId());
@@ -190,15 +192,13 @@ public abstract class ExportEngine<//
 					case LOCK_ACQUIRED:
 						// We got the lock, which means we create the locker object
 						this.log.trace("Locked {} for storage", logLabel);
+						thisStatus = createExportOperation(target, referrent, statusMap);
 						break;
 
-					case ALREADY_LOCKED:
-						// If the object is already locked, then we HAVE to have this created, so we
-						// do this early on.
-						getOrCreateExportOperation(target, referrent, statusMap);
-						// fall-through
-					case ALREADY_FAILED:
-					case ALREADY_STORED:
+					case ALREADY_LOCKED: // fall-through
+					case ALREADY_FAILED: // fall-through
+					case ALREADY_STORED: // fall-through
+					default:
 						this.log.trace("{} result = {}", logLabel, locked);
 						return this.staticLockResults.get(locked);
 				}
@@ -210,7 +210,7 @@ public abstract class ExportEngine<//
 			listener.objectExportStarted(exportState.jobId, target, referrent);
 
 			final Result result = doExportObject(exportState, transformer, filter, referrent, target, sourceObject, ctx,
-				listener, statusMap);
+				listener, statusMap, thisStatus);
 			if ((result.objectNumber != null) && (result.object != null)) {
 				listener.objectExportCompleted(exportState.jobId, result.object, result.objectNumber);
 			} else {
@@ -251,35 +251,30 @@ public abstract class ExportEngine<//
 	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
 		final ExportTarget referrent, final ExportTarget target,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
-		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
-		throws ExportException, CmfStorageException {
-		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
-		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
-		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
-
-		final CmfObject.Archetype type = target.getType();
-		final String id = target.getId();
-		final String objectLabel = sourceObject.getLabel();
-		final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
-
-		if (this.log.isTraceEnabled()) {
-			this.log.trace(String.format(
-				"Attemp	public ExportEngineWorker() {\n" + "		super(ExportResult.class);\n"
-					+ "		// TODO Auto-generated constructor stub\n" + "	}\n" + "\n" + "ting export of %s",
-				logLabel));
-		}
-
-		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
-		final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
-
-		// To make sure other threads don't work on this same object
-		final ExportOperation thisStatus = getOrCreateExportOperation(target, referrent, statusMap);
+		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap,
+		final ExportOperation thisStatus) throws ExportException, CmfStorageException {
 
 		boolean success = false;
-		if (referrent != null) {
-			ctx.pushReferrent(referrent);
-		}
+		boolean pushed = false;
 		try {
+			if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
+			if (sourceObject == null) {
+				throw new IllegalArgumentException("Must provide the original object to export");
+			}
+			if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
+
+			if (referrent != null) {
+				ctx.pushReferrent(referrent);
+				pushed = true;
+			}
+			final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
+			final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
+
+			final CmfObject.Archetype type = target.getType();
+			final String id = target.getId();
+			final String objectLabel = sourceObject.getLabel();
+			final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
+
 			if (this.log.isDebugEnabled()) {
 				if (referrent != null) {
 					this.log.debug(String.format("Exporting %s (referenced by %s)", logLabel, referrent));
@@ -585,7 +580,7 @@ public abstract class ExportEngine<//
 			return result;
 		} finally {
 			thisStatus.setCompleted(success);
-			if (referrent != null) {
+			if ((referrent != null) && pushed) {
 				ctx.popReferrent();
 			}
 		}
@@ -819,7 +814,7 @@ public abstract class ExportEngine<//
 
 						scanner.iterator(sources).forEachRemaining((line) -> {
 							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
-								s.forEachOrdered(submitter);
+								s.forEach(submitter);
 							} catch (Exception e) {
 								this.log.warn("Failed to find the export target(s) as per [{}]", line, e);
 							}
@@ -827,7 +822,7 @@ public abstract class ExportEngine<//
 					} else {
 						try (Stream<ExportTarget> s = getExportTargets(session, sources.iterator().next(),
 							delegateFactory)) {
-							s.forEachOrdered(submitter);
+							s.forEach(submitter);
 						}
 					}
 					ok = true;

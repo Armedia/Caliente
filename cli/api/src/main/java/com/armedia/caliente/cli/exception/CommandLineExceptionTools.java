@@ -26,17 +26,22 @@ public class CommandLineExceptionTools {
 		if (t == null) { return; }
 		if (UnknownOptionException.class.isInstance(t)) { throw UnknownOptionException.class.cast(t); }
 		if (UnknownCommandException.class.isInstance(t)) { throw UnknownCommandException.class.cast(t); }
-		if (TooManyPositionalValuesException.class
-			.isInstance(t)) { throw TooManyPositionalValuesException.class.cast(t); }
+		if (TooManyPositionalValuesException.class.isInstance(t)) {
+			throw TooManyPositionalValuesException.class.cast(t);
+		}
 		if (TooManyOptionValuesException.class.isInstance(t)) { throw TooManyOptionValuesException.class.cast(t); }
-		if (InsufficientPositionalValuesException.class
-			.isInstance(t)) { throw InsufficientPositionalValuesException.class.cast(t); }
-		if (InsufficientOptionValuesException.class
-			.isInstance(t)) { throw InsufficientOptionValuesException.class.cast(t); }
-		if (MissingRequiredOptionsException.class
-			.isInstance(t)) { throw MissingRequiredOptionsException.class.cast(t); }
-		if (MissingRequiredCommandException.class
-			.isInstance(t)) { throw MissingRequiredCommandException.class.cast(t); }
+		if (InsufficientPositionalValuesException.class.isInstance(t)) {
+			throw InsufficientPositionalValuesException.class.cast(t);
+		}
+		if (InsufficientOptionValuesException.class.isInstance(t)) {
+			throw InsufficientOptionValuesException.class.cast(t);
+		}
+		if (MissingRequiredOptionsException.class.isInstance(t)) {
+			throw MissingRequiredOptionsException.class.cast(t);
+		}
+		if (MissingRequiredCommandException.class.isInstance(t)) {
+			throw MissingRequiredCommandException.class.cast(t);
+		}
 	}
 
 }

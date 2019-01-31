@@ -41,7 +41,8 @@ public class XmlImportContextFactory
 	}
 
 	@Override
-	protected XmlImportContext constructContext(String rootId, CmfObject.Archetype rootType, XmlRoot session, int historyPosition) {
+	protected XmlImportContext constructContext(String rootId, CmfObject.Archetype rootType, XmlRoot session,
+		int historyPosition) {
 		return new XmlImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
 			getTransformer(), getEngine().getTranslator(), getObjectStore(), getContentStore(), historyPosition);
 	}

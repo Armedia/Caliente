@@ -58,8 +58,10 @@ public abstract class UcmFSObject extends UcmModelObject {
 				break;
 			}
 		}
-		if (nameAtt == null) { throw new IllegalArgumentException(
-			String.format("No object name attribute is present from among %s", Arrays.toString(nameAtts))); }
+		if (nameAtt == null) {
+			throw new IllegalArgumentException(
+				String.format("No object name attribute is present from among %s", Arrays.toString(nameAtts)));
+		}
 		this.nameAtt = nameAtt;
 
 		this.parentPath = this.attributes.getString(UcmAtt.cmfParentPath);

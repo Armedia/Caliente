@@ -23,6 +23,7 @@ final class ExportOperation {
 		this.target = target;
 		this.referrent = referrent;
 		this.completed = false;
+		this.success = false;
 	}
 
 	long getObjectNumber() {
@@ -81,6 +82,14 @@ final class ExportOperation {
 	}
 
 	synchronized long waitUntilCompleted(long timeout) throws InterruptedException {
+		if (this.completed) {
+			try {
+				return 0;
+			} finally {
+				// Make sure we wake any waiters...
+				notify();
+			}
+		}
 		if (Thread.currentThread() == this.creatorThread) {
 			throw new IllegalStateException("Can't wait on an operation from the thread that created it!!!");
 		}

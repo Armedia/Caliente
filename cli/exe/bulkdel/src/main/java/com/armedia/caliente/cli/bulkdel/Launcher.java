@@ -34,7 +34,7 @@ public class Launcher extends AbstractLauncher {
 			) //
 			.addFrom( //
 				Option.unwrap(CLIParam.values()) //
-		) //
+			) //
 		;
 	}
 

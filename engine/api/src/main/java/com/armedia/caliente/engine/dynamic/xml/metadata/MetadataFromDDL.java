@@ -153,7 +153,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 							CmfAttribute<V> attribute = tempAtts.get(column);
 							if (attribute == null) {
 								attribute = new CmfAttribute<>(structure.getName(), structure.getType(),
-									structure.isRepeating());
+									structure.isMultivalued());
 								tempAtts.put(column, attribute);
 							}
 

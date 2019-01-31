@@ -231,7 +231,7 @@ public final class OptionImpl extends Option implements Cloneable {
 	public OptionImpl setDefaults(Collection<String> defaults) {
 		this.defaults.clear();
 		if (defaults != null) {
-			defaults.stream().filter(Objects::nonNull).forEachOrdered(this.defaults::add);
+			defaults.stream().filter(Objects::nonNull).forEach(this.defaults::add);
 		}
 		return this;
 	}

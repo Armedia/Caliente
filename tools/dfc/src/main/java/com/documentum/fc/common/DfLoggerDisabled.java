@@ -20,7 +20,7 @@ import com.documentum.fc.impl.util.ThrowableStack;
 /**
  * This class has a "Disabled" suffix to mark it as such. If there's a desire to dump Log4J entirely
  * and stick to only Logback, remove the "Disabled" suffix.
- * 
+ *
  * @author diego
  *
  */

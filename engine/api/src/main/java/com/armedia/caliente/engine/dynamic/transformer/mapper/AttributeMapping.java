@@ -27,7 +27,7 @@ public class AttributeMapping implements Iterable<Object> {
 		this.override = override;
 		this.separator = separator;
 		this.type = sourceAttribute.getType();
-		this.repeating = sourceAttribute.isRepeating();
+		this.repeating = sourceAttribute.isMultivalued();
 	}
 
 	AttributeMapping(String targetName, char separator, boolean override, CmfValue.Type type,

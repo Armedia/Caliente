@@ -6,6 +6,6 @@ public interface CmfSetting {
 
 	CmfValue.Type getType();
 
-	boolean isRepeating();
+	boolean isMultivalued();
 
 }

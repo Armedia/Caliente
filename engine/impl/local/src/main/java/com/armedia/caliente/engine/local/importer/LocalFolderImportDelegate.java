@@ -31,16 +31,21 @@ public class LocalFolderImportDelegate extends LocalImportDelegate {
 				this.cmfObject.getLabel(), this.cmfObject.getId()), e);
 		}
 
-		if (targetFile.isDirectory()) { return Collections
-			.singleton(new ImportOutcome(ImportResult.DUPLICATE, getNewId(targetFile), targetFile.getAbsolutePath())); }
+		if (targetFile.isDirectory()) {
+			return Collections.singleton(
+				new ImportOutcome(ImportResult.DUPLICATE, getNewId(targetFile), targetFile.getAbsolutePath()));
+		}
 
 		final boolean created = targetFile.mkdirs();
-		if (!targetFile.isDirectory()) { throw new ImportException(
-			String.format("Failed to create the directory (and parents) at [%s] for folder [%s](%s)", targetFile,
-				this.cmfObject.getLabel(), this.cmfObject.getId())); }
-		if (!targetFile.exists()) { throw new ImportException(
-			String.format("A non-folder object already exists at [%s] for folder [%s](%s)", targetFile,
-				this.cmfObject.getLabel(), this.cmfObject.getId())); }
+		if (!targetFile.isDirectory()) {
+			throw new ImportException(
+				String.format("Failed to create the directory (and parents) at [%s] for folder [%s](%s)", targetFile,
+					this.cmfObject.getLabel(), this.cmfObject.getId()));
+		}
+		if (!targetFile.exists()) {
+			throw new ImportException(String.format("A non-folder object already exists at [%s] for folder [%s](%s)",
+				targetFile, this.cmfObject.getLabel(), this.cmfObject.getId()));
+		}
 
 		try {
 			applyAttributes(targetFile, translator);

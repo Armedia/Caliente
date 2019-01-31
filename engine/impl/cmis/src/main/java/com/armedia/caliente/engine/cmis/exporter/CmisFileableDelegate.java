@@ -43,8 +43,8 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 	}
 
 	@Override
-	protected Set<String> calculateSecondarySubtypes(Session session, CmfObject.Archetype type, String subtype, T object)
-		throws Exception {
+	protected Set<String> calculateSecondarySubtypes(Session session, CmfObject.Archetype type, String subtype,
+		T object) throws Exception {
 		Set<String> secondaries = super.calculateSecondarySubtypes(session, type, subtype, object);
 		List<SecondaryType> t = object.getSecondaryTypes();
 		if ((t != null) && !t.isEmpty()) {

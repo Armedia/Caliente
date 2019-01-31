@@ -23,14 +23,15 @@ public class TraceableReentrantReadWriteLock extends ReentrantReadWriteLock {
 
 		@Override
 		public void lock() {
-			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].ReadLock.lock()", TraceableReentrantReadWriteLock.this.lockId);
+			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].ReadLock.lock()",
+				TraceableReentrantReadWriteLock.this.lockId);
 			boolean ok = false;
 			try {
 				super.lock();
 				ok = true;
 			} finally {
-				TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].ReadLock.lock() {}", TraceableReentrantReadWriteLock.this.lockId,
-					ok ? "completed" : "FAILED");
+				TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].ReadLock.lock() {}",
+					TraceableReentrantReadWriteLock.this.lockId, ok ? "completed" : "FAILED");
 			}
 		}
 
@@ -50,7 +51,8 @@ public class TraceableReentrantReadWriteLock extends ReentrantReadWriteLock {
 
 		@Override
 		public boolean tryLock() {
-			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].ReadLock.tryLock()", TraceableReentrantReadWriteLock.this.lockId);
+			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].ReadLock.tryLock()",
+				TraceableReentrantReadWriteLock.this.lockId);
 			boolean ok = false;
 			Boolean ret = null;
 			try {
@@ -81,7 +83,8 @@ public class TraceableReentrantReadWriteLock extends ReentrantReadWriteLock {
 
 		@Override
 		public void unlock() {
-			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].ReadLock.unlock()", TraceableReentrantReadWriteLock.this.lockId);
+			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].ReadLock.unlock()",
+				TraceableReentrantReadWriteLock.this.lockId);
 			boolean ok = false;
 			try {
 				super.unlock();
@@ -97,8 +100,8 @@ public class TraceableReentrantReadWriteLock extends ReentrantReadWriteLock {
 			Condition condition = super.newCondition();
 			final String conditionId = String.format("%016x",
 				TraceableReentrantReadWriteLock.this.conditionCounter.getAndIncrement());
-			return new TraceableCondition(TraceableReentrantReadWriteLock.this.log, TraceableReentrantReadWriteLock.this.lockId,
-				conditionId, condition);
+			return new TraceableCondition(TraceableReentrantReadWriteLock.this.log,
+				TraceableReentrantReadWriteLock.this.lockId, conditionId, condition);
 		}
 	}
 
@@ -111,7 +114,8 @@ public class TraceableReentrantReadWriteLock extends ReentrantReadWriteLock {
 
 		@Override
 		public void lock() {
-			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].WriteLock.lock()", TraceableReentrantReadWriteLock.this.lockId);
+			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].WriteLock.lock()",
+				TraceableReentrantReadWriteLock.this.lockId);
 			boolean ok = false;
 			try {
 				super.lock();
@@ -138,7 +142,8 @@ public class TraceableReentrantReadWriteLock extends ReentrantReadWriteLock {
 
 		@Override
 		public boolean tryLock() {
-			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].WriteLock.tryLock()", TraceableReentrantReadWriteLock.this.lockId);
+			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].WriteLock.tryLock()",
+				TraceableReentrantReadWriteLock.this.lockId);
 			boolean ok = false;
 			Boolean ret = null;
 			try {
@@ -169,7 +174,8 @@ public class TraceableReentrantReadWriteLock extends ReentrantReadWriteLock {
 
 		@Override
 		public void unlock() {
-			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].WriteLock.unlock()", TraceableReentrantReadWriteLock.this.lockId);
+			TraceableReentrantReadWriteLock.this.log.trace("Lock[{}].WriteLock.unlock()",
+				TraceableReentrantReadWriteLock.this.lockId);
 			boolean ok = false;
 			try {
 				super.unlock();
@@ -185,8 +191,8 @@ public class TraceableReentrantReadWriteLock extends ReentrantReadWriteLock {
 			Condition condition = super.newCondition();
 			final String conditionId = String.format("%016x",
 				TraceableReentrantReadWriteLock.this.conditionCounter.getAndIncrement());
-			return new TraceableCondition(TraceableReentrantReadWriteLock.this.log, TraceableReentrantReadWriteLock.this.lockId,
-				conditionId, condition);
+			return new TraceableCondition(TraceableReentrantReadWriteLock.this.log,
+				TraceableReentrantReadWriteLock.this.lockId, conditionId, condition);
 		}
 	}
 

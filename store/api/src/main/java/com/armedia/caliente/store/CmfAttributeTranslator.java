@@ -158,9 +158,9 @@ public abstract class CmfAttributeTranslator<VALUE> {
 
 		for (CmfAttribute<CmfValue> att : obj.getAttributes()) {
 			String attName = this.nameMapper.decodeAttributeName(newObj.getType(), att.getName());
-			CmfAttribute<VALUE> newAtt = new CmfAttribute<>(attName, att.getType(), att.isRepeating());
+			CmfAttribute<VALUE> newAtt = new CmfAttribute<>(attName, att.getType(), att.isMultivalued());
 			CmfValueCodec<VALUE> codec = getCodec(att.getType());
-			if (newAtt.isRepeating()) {
+			if (newAtt.isMultivalued()) {
 				for (CmfValue v : att) {
 					newAtt.addValue(codec.decodeValue(v));
 				}
@@ -171,9 +171,9 @@ public abstract class CmfAttributeTranslator<VALUE> {
 		}
 
 		for (CmfProperty<CmfValue> prop : obj.getProperties()) {
-			CmfProperty<VALUE> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isRepeating());
+			CmfProperty<VALUE> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isMultivalued());
 			CmfValueCodec<VALUE> codec = getCodec(prop.getType());
-			if (newProp.isRepeating()) {
+			if (newProp.isMultivalued()) {
 				for (CmfValue v : prop) {
 					newProp.addValue(codec.decodeValue(v));
 				}
@@ -211,9 +211,9 @@ public abstract class CmfAttributeTranslator<VALUE> {
 
 		for (CmfAttribute<VALUE> att : obj.getAttributes()) {
 			String attName = this.nameMapper.encodeAttributeName(newObj.getType(), att.getName());
-			CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(attName, att.getType(), att.isRepeating());
+			CmfAttribute<CmfValue> newAtt = new CmfAttribute<>(attName, att.getType(), att.isMultivalued());
 			CmfValueCodec<VALUE> codec = getCodec(att.getType());
-			if (newAtt.isRepeating()) {
+			if (newAtt.isMultivalued()) {
 				for (VALUE v : att) {
 					newAtt.addValue(codec.encodeValue(v));
 				}
@@ -224,9 +224,9 @@ public abstract class CmfAttributeTranslator<VALUE> {
 		}
 
 		for (CmfProperty<VALUE> prop : obj.getProperties()) {
-			CmfProperty<CmfValue> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isRepeating());
+			CmfProperty<CmfValue> newProp = new CmfProperty<>(prop.getName(), prop.getType(), prop.isMultivalued());
 			CmfValueCodec<VALUE> codec = getCodec(prop.getType());
-			if (newProp.isRepeating()) {
+			if (newProp.isMultivalued()) {
 				for (VALUE v : prop) {
 					newProp.addValue(codec.encodeValue(v));
 				}

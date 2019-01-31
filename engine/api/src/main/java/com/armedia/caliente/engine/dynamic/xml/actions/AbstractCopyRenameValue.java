@@ -54,7 +54,7 @@ public abstract class AbstractCopyRenameValue extends ConditionalAction {
 		final Map<String, DynamicValue> values = getCandidateValues(ctx);
 		DynamicValue src = values.get(Tools.toString(from));
 		if (src != null) {
-			DynamicValue tgt = new DynamicValue(Tools.toString(to), src.getType(), src.isRepeating());
+			DynamicValue tgt = new DynamicValue(Tools.toString(to), src.getType(), src.isMultivalued());
 			tgt.setValues(src.getValues());
 			storeValue(ctx, src, tgt);
 		}

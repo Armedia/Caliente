@@ -65,7 +65,8 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 		if (outcomes == null) {
 			outcomes = EnumSet.allOf(ExportResult.class);
 		}
-		Set<CmfObject.Archetype> types = commandValues.getEnums(CmfObject.Archetype.class, CfgTools.ignoreFailures(), CLIParam.manifest_types);
+		Set<CmfObject.Archetype> types = commandValues.getEnums(CmfObject.Archetype.class, CfgTools.ignoreFailures(),
+			CLIParam.manifest_types);
 		if (types == null) {
 			types = EnumSet.allOf(CmfObject.Archetype.class);
 		}

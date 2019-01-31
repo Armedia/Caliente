@@ -12,8 +12,9 @@ public class DefaultImportEngineListener extends DefaultImportListener implement
 	private final Map<UUID, ImportState> jobStates = new ConcurrentHashMap<>();
 
 	protected final ImportState getState(UUID uuid) {
-		if (!this.jobStates.containsKey(uuid)) { throw new NoSuchElementException(
-			String.format("Given job ID [%s] has no state stored", uuid.toString())); }
+		if (!this.jobStates.containsKey(uuid)) {
+			throw new NoSuchElementException(String.format("Given job ID [%s] has no state stored", uuid.toString()));
+		}
 		return this.jobStates.get(uuid);
 	}
 

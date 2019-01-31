@@ -132,7 +132,8 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 	}
 
 	@Override
-	public final void objectTypeImportFinished(UUID jobId, CmfObject.Archetype objectType, Map<ImportResult, Long> counters) {
+	public final void objectTypeImportFinished(UUID jobId, CmfObject.Archetype objectType,
+		Map<ImportResult, Long> counters) {
 		this.console.info(String.format("Finished importing %s objects", objectType.name()));
 		for (ImportResult r : ImportResult.values()) {
 			Long v = counters.get(r);

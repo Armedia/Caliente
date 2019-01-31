@@ -58,8 +58,9 @@ public abstract class DataRecordSet<D extends Object, R extends Object, S extend
 		if (this.data == null) {
 			D data = initData();
 			Map<String, Integer> headerMap = mapColumns(data);
-			if ((headerMap == null)
-				|| headerMap.isEmpty()) { throw new Exception("The data does not contain a header record"); }
+			if ((headerMap == null) || headerMap.isEmpty()) {
+				throw new Exception("The data does not contain a header record");
+			}
 			if (this.headers == null) {
 				this.headers = Tools.freezeMap(headerMap);
 				this.headersArr = new String[this.headers.size()];

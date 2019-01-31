@@ -23,7 +23,8 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 	private static final Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfObject.Archetype.class);
+		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(
+			CmfObject.Archetype.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
@@ -102,8 +103,9 @@ public class UcmTranslator extends CmfAttributeTranslator<CmfValue> {
 				}
 				if (att != null) { return att; }
 			}
-			if (attributeName.startsWith(
-				UcmTranslator.UCM_PREFIX)) { return attributeName.substring(UcmTranslator.UCM_PREFIX.length()); }
+			if (attributeName.startsWith(UcmTranslator.UCM_PREFIX)) {
+				return attributeName.substring(UcmTranslator.UCM_PREFIX.length());
+			}
 			return attributeName;
 		}
 	};

@@ -71,7 +71,7 @@ public class AlfImportFolderDelegate extends AlfImportFileableDelegate {
 	private boolean hasPropertyValues(IntermediateProperty property) {
 		CmfProperty<CmfValue> p = this.cmfObject.getProperty(property);
 		if (p == null) { return false; }
-		if (p.isRepeating()) { return p.hasValues(); }
+		if (p.isMultivalued()) { return p.hasValues(); }
 		CmfValue v = p.getValue();
 		return ((v != null) && !v.isNull());
 	}

@@ -11,8 +11,8 @@ import com.armedia.commons.utilities.CfgTools;
 
 public class LocalExportContext extends ExportContext<LocalRoot, CmfValue, LocalExportContextFactory> {
 
-	public LocalExportContext(LocalExportContextFactory factory, CfgTools settings, String rootId, CmfObject.Archetype rootType,
-		LocalRoot session, Logger output, WarningTracker warningTracker) {
+	public LocalExportContext(LocalExportContextFactory factory, CfgTools settings, String rootId,
+		CmfObject.Archetype rootType, LocalRoot session, Logger output, WarningTracker warningTracker) {
 		super(factory, settings, rootId, rootType, session, output, warningTracker);
 	}
 }

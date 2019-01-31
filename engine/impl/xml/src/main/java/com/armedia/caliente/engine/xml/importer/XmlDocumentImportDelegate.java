@@ -124,8 +124,9 @@ public class XmlDocumentImportDelegate extends XmlImportDelegate {
 			File f = null;
 			try {
 				f = h.getFile(true);
-				if (f == null) { throw new CmfStorageException(
-					"The given content store doesn't support file-level access"); }
+				if (f == null) {
+					throw new CmfStorageException("The given content store doesn't support file-level access");
+				}
 				f.createNewFile();
 			} catch (IOException e) {
 				// Failed to get the file, so we can't handle this

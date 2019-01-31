@@ -195,8 +195,10 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 				if (!f.exists()) {
 					FileUtils.forceMkdir(f);
 				}
-				if (!f.isDirectory()) { throw new FileNotFoundException(
-					String.format("Could not find the directory [%s]", f.getAbsolutePath())); }
+				if (!f.isDirectory()) {
+					throw new FileNotFoundException(
+						String.format("Could not find the directory [%s]", f.getAbsolutePath()));
+				}
 
 				ret.add(CliUtils.newFileObject(f, "config").toURI().toURL());
 			}
@@ -214,15 +216,18 @@ public final class DfcLaunchHelper extends Options implements LaunchClasspathHel
 			if (var != null) {
 				// Next, is it a directory?
 				File f = CliUtils.newFileObject(var);
-				if (!f.isDirectory()) { throw new FileNotFoundException(
-					String.format("Could not find the [%s] directory [%s]", DfcLaunchHelper.ENV_DOCUMENTUM_SHARED,
-						f.getAbsolutePath())); }
+				if (!f.isDirectory()) {
+					throw new FileNotFoundException(String.format("Could not find the [%s] directory [%s]",
+						DfcLaunchHelper.ENV_DOCUMENTUM_SHARED, f.getAbsolutePath()));
+				}
 
 				// Next, does paramDctm.jar exist in there?
 				if (!dfcFound) {
 					File tgt = CliUtils.newFileObject(f, DfcLaunchHelper.DCTM_JAR);
-					if (!tgt.isFile()) { throw new FileNotFoundException(
-						String.format("Could not find the JAR file [%s]", tgt.getAbsolutePath())); }
+					if (!tgt.isFile()) {
+						throw new FileNotFoundException(
+							String.format("Could not find the JAR file [%s]", tgt.getAbsolutePath()));
+					}
 
 					// Next, to the classpath
 					ret.add(tgt.toURI().toURL());

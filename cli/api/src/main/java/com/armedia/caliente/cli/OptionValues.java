@@ -185,7 +185,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Boolean> r = new ArrayList<>(l.size());
-		l.stream().map(Tools::toBoolean).forEachOrdered(r::add);
+		l.stream().map(Tools::toBoolean).forEach(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -204,7 +204,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Integer> r = new ArrayList<>(l.size());
-		l.stream().map(Integer::valueOf).forEachOrdered(r::add);
+		l.stream().map(Integer::valueOf).forEach(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -223,7 +223,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Long> r = new ArrayList<>(l.size());
-		l.stream().map(Long::valueOf).forEachOrdered(r::add);
+		l.stream().map(Long::valueOf).forEach(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -242,7 +242,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Float> r = new ArrayList<>(l.size());
-		l.stream().map(Float::valueOf).forEachOrdered(r::add);
+		l.stream().map(Float::valueOf).forEach(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -261,7 +261,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<Double> r = new ArrayList<>(l.size());
-		l.stream().map(Double::valueOf).forEachOrdered(r::add);
+		l.stream().map(Double::valueOf).forEach(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -280,7 +280,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<BigInteger> r = new ArrayList<>(l.size());
-		l.stream().map(BigInteger::new).forEachOrdered(r::add);
+		l.stream().map(BigInteger::new).forEach(r::add);
 		return Tools.freezeList(r);
 	}
 
@@ -299,7 +299,7 @@ public final class OptionValues implements Iterable<OptionValue>, Cloneable {
 		if (l == null) { return null; }
 		if (l.isEmpty()) { return Collections.emptyList(); }
 		List<BigDecimal> r = new ArrayList<>(l.size());
-		l.stream().map(BigDecimal::new).forEachOrdered(r::add);
+		l.stream().map(BigDecimal::new).forEach(r::add);
 		return Tools.freezeList(r);
 	}
 

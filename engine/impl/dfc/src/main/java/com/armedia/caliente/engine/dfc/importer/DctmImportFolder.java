@@ -104,8 +104,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			.getProperty(IntermediateProperty.USERS_DEFAULT_FOLDER_PATHS);
 
 		if ((usersWithDefaultFolder == null) || (usersDefaultFolderPaths == null)
-			|| (usersWithDefaultFolder.getValueCount() == 0)
-			|| (usersDefaultFolderPaths.getValueCount() == 0)) { return; }
+			|| (usersWithDefaultFolder.getValueCount() == 0) || (usersDefaultFolderPaths.getValueCount() == 0)) {
+			return;
+		}
 
 		final int total = usersWithDefaultFolder.getValueCount();
 		Map<String, String> m = new TreeMap<>();

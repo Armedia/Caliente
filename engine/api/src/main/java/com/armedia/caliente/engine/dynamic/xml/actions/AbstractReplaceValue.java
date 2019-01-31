@@ -67,7 +67,7 @@ public abstract class AbstractReplaceValue extends AbstractTransformValue {
 			flags = Pattern.CASE_INSENSITIVE;
 		}
 
-		if (!candidate.isRepeating()) {
+		if (!candidate.isMultivalued()) {
 			// Cardinality is irrelevant...
 			Object oldValue = candidate.getValue();
 			String oldString = ((oldValue != null) ? Tools.toString(oldValue) : null);

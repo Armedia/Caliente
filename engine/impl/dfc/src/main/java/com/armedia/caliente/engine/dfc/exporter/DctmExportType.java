@@ -151,8 +151,10 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 		String typeName = type.getString(DctmAttributes.NAME);
 		IDfType dfType = type.getSession().getType(typeName);
 		// If there's no dfType, then we clearly have an issue
-		if (dfType == null) { throw new ExportException(String.format(
-			"Could not locate the type object for [%s] even though its definition is being exported", typeName)); }
+		if (dfType == null) {
+			throw new ExportException(String.format(
+				"Could not locate the type object for [%s] even though its definition is being exported", typeName));
+		}
 		// getExtraProperties(ctx, properties, dfType);
 		DctmObjectType dctmTypeObjectType;
 		boolean ret = false;
@@ -163,7 +165,8 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 			// We map the name for every attribute, just to be safe
 			final CmfAttributeTranslator<IDfValue> translator = this.factory.getTranslator();
 			CmfProperty<IDfValue> orig = new CmfProperty<>(IntermediateProperty.ORIG_ATTR_NAME, CmfValue.Type.STRING);
-			CmfProperty<IDfValue> mapped = new CmfProperty<>(IntermediateProperty.MAPPED_ATTR_NAME, CmfValue.Type.STRING);
+			CmfProperty<IDfValue> mapped = new CmfProperty<>(IntermediateProperty.MAPPED_ATTR_NAME,
+				CmfValue.Type.STRING);
 			CmfAttributeNameMapper nameMapper = translator.getAttributeNameMapper();
 			for (int i = 0; i < attCount; i++) {
 				IDfValue o = type.getRepeatingValue(DctmAttributes.ATTR_NAME, i);

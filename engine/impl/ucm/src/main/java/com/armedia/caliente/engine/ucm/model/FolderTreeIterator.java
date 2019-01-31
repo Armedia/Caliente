@@ -153,7 +153,9 @@ class FolderTreeIterator {
 			// Special edge case - if we're in the first recursion and we're not recursing
 			// shortcuts, and the first recursion is a shortcut, we quite simply don't move past
 			if ((this.recursion.size() == 1) && UcmModel.isShortcut(currentRecursion.getFolder())
-				&& !this.recurseShortcuts) { return false; }
+				&& !this.recurseShortcuts) {
+				return false;
+			}
 
 			if (!currentRecursion.hasNext()) {
 				// If this level is exhausted, we move to the next level...

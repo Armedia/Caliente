@@ -104,9 +104,11 @@ public class MetadataSet {
 
 					final String dsName = loader.getDataSource();
 					final MetadataSource mds = ds.get(dsName);
-					if (mds == null) { throw new Exception(
-						String.format("A %s loader in MetadataSet %s references a non-existent metadata source [%s]",
-							loader.getClass().getSimpleName(), getId(), dsName)); }
+					if (mds == null) {
+						throw new Exception(String.format(
+							"A %s loader in MetadataSet %s references a non-existent metadata source [%s]",
+							loader.getClass().getSimpleName(), getId(), dsName));
+					}
 					try (final Connection c = mds.getConnection()) {
 						loader.initialize(c);
 						initializedLoaders.add(loader);

@@ -19,13 +19,16 @@ public class AlfSessionFactory extends SessionFactory<AlfRoot> {
 	public AlfSessionFactory(CfgTools settings, CmfCrypt crypto) throws IOException {
 		super(settings, crypto);
 		File root = PathTools.getRootDirectory(settings);
-		if (root == null) { throw new IllegalArgumentException(
-			"Must provide a root directory to base the local engine off of"); }
+		if (root == null) {
+			throw new IllegalArgumentException("Must provide a root directory to base the local engine off of");
+		}
 		root = root.getCanonicalFile();
 
 		FileUtils.forceMkdir(root);
-		if (!root.isDirectory()) { throw new IllegalArgumentException(
-			String.format("Root directory [%s] could not be found, nor could it be created", root)); }
+		if (!root.isDirectory()) {
+			throw new IllegalArgumentException(
+				String.format("Root directory [%s] could not be found, nor could it be created", root));
+		}
 		this.root = new AlfRoot(root);
 	}
 

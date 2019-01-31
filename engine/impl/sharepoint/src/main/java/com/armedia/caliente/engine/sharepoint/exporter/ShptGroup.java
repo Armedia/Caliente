@@ -49,12 +49,13 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			Collections.singleton(new CmfValue(this.object.getLoginName()))));
 
 		// AutoAcceptMembershipRequest
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name, CmfValue.Type.BOOLEAN,
-			false, Collections.singleton(new CmfValue(this.object.isAutoAcceptRequestToJoinLeave()))));
+		object
+			.setAttribute(new CmfAttribute<>(ShptAttributes.AUTO_ACCEPT_MEMBERSHIP_REQUEST.name, CmfValue.Type.BOOLEAN,
+				false, Collections.singleton(new CmfValue(this.object.isAutoAcceptRequestToJoinLeave()))));
 
 		// AllowMembershipRequest
-		object.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERSHIP_REQUEST.name, CmfValue.Type.BOOLEAN, false,
-			Collections.singleton(new CmfValue(this.object.isRequestToJoinLeaveAllowed()))));
+		object.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERSHIP_REQUEST.name, CmfValue.Type.BOOLEAN,
+			false, Collections.singleton(new CmfValue(this.object.isRequestToJoinLeaveAllowed()))));
 
 		// AllowMembersEditMembership
 		object.setAttribute(new CmfAttribute<>(ShptAttributes.ALLOW_MEMBERS_EDIT_MEMBERSHIP.name, CmfValue.Type.BOOLEAN,
@@ -89,7 +90,8 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 			throw new ExportException(String.format("Failed to obtain the group list for user [%s](%d)",
 				this.object.getLoginName(), this.object.getId()), e);
 		}
-		CmfAttribute<CmfValue> users = new CmfAttribute<>(ShptAttributes.GROUP_MEMBERS.name, CmfValue.Type.STRING, true);
+		CmfAttribute<CmfValue> users = new CmfAttribute<>(ShptAttributes.GROUP_MEMBERS.name, CmfValue.Type.STRING,
+			true);
 		object.setAttribute(users);
 		if ((l != null) && !l.isEmpty()) {
 			for (User u : l) {

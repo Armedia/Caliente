@@ -48,11 +48,15 @@ public class CmfCrypt {
 		if (value == null) { throw new IllegalArgumentException("Must provide a value to decode"); }
 		value = value.trim();
 		if (value.length() == 0) { return CmfCrypt.NO_BYTES; }
-		if ((value.length() % 4) != 0) { throw new CryptException(
-			String.format("Bad Base64 value - its length should be a multiple of 4, but it's %d", value.length())); }
+		if ((value.length() % 4) != 0) {
+			throw new CryptException(
+				String.format("Bad Base64 value - its length should be a multiple of 4, but it's %d", value.length()));
+		}
 		Matcher m = CmfCrypt.BASE64_VALIDATOR.matcher(value);
-		if (!m.matches()) { throw new CryptException(String.format(
-			"Bad Base64 value - doesn't match the required syntax of <%s>", CmfCrypt.BASE64_VALIDATOR.pattern())); }
+		if (!m.matches()) {
+			throw new CryptException(String.format("Bad Base64 value - doesn't match the required syntax of <%s>",
+				CmfCrypt.BASE64_VALIDATOR.pattern()));
+		}
 		return DatatypeConverter.parseBase64Binary(value);
 	}
 
@@ -80,9 +84,9 @@ public class CmfCrypt {
 				pdk = true;
 				key = DatatypeConverter.parseBase64Binary(CmfCrypt.ENCODED_KEY);
 			} else {
-				if ((key.length != 16) && (key.length != 24)
-					&& (key.length != 32)) { throw new IllegalArgumentException(
-						"The key must be either 128, 192 or 256 bits"); }
+				if ((key.length != 16) && (key.length != 24) && (key.length != 32)) {
+					throw new IllegalArgumentException("The key must be either 128, 192 or 256 bits");
+				}
 				this.key = new SecretKeySpec(key, CmfCrypt.CIPHER_ALGORITHM);
 			}
 			getCipher(this.key, false);

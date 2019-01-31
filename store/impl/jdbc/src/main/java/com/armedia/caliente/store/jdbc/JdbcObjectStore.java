@@ -223,13 +223,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						name, attribute.getName(), duplicate));
 					continue;
 				}
-				final boolean repeating = attribute.isRepeating();
+				final boolean multivalued = attribute.isMultivalued();
 				final String type = attribute.getType().name();
 
 				attData[1] = name;
 				attData[2] = name;
 				attData[3] = type;
-				attData[6] = repeating;
+				attData[6] = multivalued;
 
 				// Insert the attribute
 				attributeParameters.add(attData.clone());
@@ -280,7 +280,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 				propData[1] = name;
 				propData[2] = type;
-				propData[3] = property.isRepeating();
+				propData[3] = property.isMultivalued();
 
 				// Insert the attribute
 				propertyParameters.add(propData.clone());
@@ -1354,8 +1354,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
 		CmfValue.Type type = CmfValue.Type.valueOf(rs.getString("data_type"));
-		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
-		return new CmfProperty<>(name, type, repeating);
+		boolean multivalued = rs.getBoolean("multivalued") && !rs.wasNull();
+		return new CmfProperty<>(name, type, multivalued);
 	}
 
 	private <VALUE> CmfAttribute<CmfValue> loadAttribute(CmfObject.Archetype objectType, ResultSet rs)
@@ -1363,8 +1363,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		if (rs == null) { throw new IllegalArgumentException("Must provide a ResultSet to load the structure from"); }
 		String name = rs.getString("name");
 		CmfValue.Type type = CmfValue.Type.valueOf(rs.getString("data_type"));
-		boolean repeating = rs.getBoolean("repeating") && !rs.wasNull();
-		return new CmfAttribute<>(name, type, repeating);
+		boolean multivalued = rs.getBoolean("multivalued") && !rs.wasNull();
+		return new CmfAttribute<>(name, type, multivalued);
 	}
 
 	private void loadValues(CmfValueSerializer deserializer, ResultSet rs, CmfProperty<CmfValue> property)
@@ -1386,7 +1386,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					String.format("Failed to deserialize value [%s] as a %s", data, property.getType()), e);
 			}
 			values.add(v);
-			if (!property.isRepeating()) {
+			if (!property.isMultivalued()) {
 				break;
 			}
 		}

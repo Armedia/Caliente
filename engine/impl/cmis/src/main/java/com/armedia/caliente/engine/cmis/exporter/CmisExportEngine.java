@@ -141,7 +141,9 @@ public class CmisExportEngine extends
 			CmfObject.Archetype type = decodeType(obj.getBaseType());
 
 			// Not a folder, so no recursion
-			if (type != CmfObject.Archetype.FOLDER) { return Stream.of(new ExportTarget(type, obj.getId(), searchKey)); }
+			if (type != CmfObject.Archetype.FOLDER) {
+				return Stream.of(new ExportTarget(type, obj.getId(), searchKey));
+			}
 
 			// RECURSE!!!
 			return findExportTargetsByPath(session, configuration, factory, Folder.class.cast(obj).getPath());

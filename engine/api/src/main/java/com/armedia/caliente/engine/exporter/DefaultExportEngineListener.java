@@ -13,8 +13,9 @@ public class DefaultExportEngineListener extends DefaultExportListener implement
 
 	protected final ExportState getState(UUID uuid) {
 		if (uuid == null) { throw new NullPointerException("Must provide a job ID to find"); }
-		if (!this.jobStates.containsKey(uuid)) { throw new NoSuchElementException(
-			String.format("Given job ID [%s] has no state stored", uuid.toString())); }
+		if (!this.jobStates.containsKey(uuid)) {
+			throw new NoSuchElementException(String.format("Given job ID [%s] has no state stored", uuid.toString()));
+		}
 		return this.jobStates.get(uuid);
 	}
 

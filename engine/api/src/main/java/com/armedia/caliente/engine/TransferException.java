@@ -27,8 +27,7 @@ public class TransferException extends Exception {
 		super(cause);
 	}
 
-	public TransferException(String message, Throwable cause, boolean enableSuppression,
-		boolean writableStackTrace) {
+	public TransferException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
 }

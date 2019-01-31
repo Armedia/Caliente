@@ -150,7 +150,8 @@ public class ImmutableElementContext extends DynamicElementContext {
 		}
 
 		@Override
-		public Collection<Mapping> getSourceMapping(CmfObject.Archetype objectType, String mappingName, String targetValue) {
+		public Collection<Mapping> getSourceMapping(CmfObject.Archetype objectType, String mappingName,
+			String targetValue) {
 			return this.mapper.getSourceMapping(objectType, mappingName, targetValue);
 		}
 

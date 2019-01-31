@@ -81,16 +81,16 @@ public abstract class AbstractValueMappingApply<E extends Enum<E>> extends Condi
 		this.cardinality = cardinality;
 	}
 
-	private String mapValue(DynamicElementContext ctx, CmfObject.Archetype mappingType, String mappingName, String sourceValue,
-		CmfValue.Type targetType) throws ActionException {
+	private String mapValue(DynamicElementContext ctx, CmfObject.Archetype mappingType, String mappingName,
+		String sourceValue, CmfValue.Type targetType) throws ActionException {
 		Mapping m = ctx.getAttributeMapper().getTargetMapping(mappingType, mappingName, sourceValue);
 		return (m != null ? m.getTargetValue() : null);
 	}
 
-	private void applyMapping(DynamicElementContext ctx, CmfObject.Archetype type, String mappingName, DynamicValue candidate)
-		throws ActionException {
+	private void applyMapping(DynamicElementContext ctx, CmfObject.Archetype type, String mappingName,
+		DynamicValue candidate) throws ActionException {
 
-		if (!candidate.isRepeating()) {
+		if (!candidate.isMultivalued()) {
 			// Cardinality is irrelevant...
 			String oldString = Tools.toString(candidate.getValue());
 			String newString = mapValue(ctx, type, mappingName, oldString, candidate.getType());

@@ -18,8 +18,9 @@ public final class OptionParseResult {
 	 * @param positionals
 	 */
 	OptionParseResult(OptionValues optionValues, String command, OptionValues commandValues, List<String> positionals) {
-		if (optionValues == null) { throw new IllegalArgumentException(
-			"Must provide the option values for the base options - even if empty"); }
+		if (optionValues == null) {
+			throw new IllegalArgumentException("Must provide the option values for the base options - even if empty");
+		}
 		this.optionValues = optionValues;
 		if ((command != null) && (commandValues != null)) {
 			this.command = command;

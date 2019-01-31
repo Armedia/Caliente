@@ -64,8 +64,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				CmfProperty<CmfValue> accessorActions = dataObject
 					.getProperty(IntermediateProperty.ACL_ACCESSOR_ACTIONS);
 
-				if ((accessorNames == null)
-					|| ((accessorActions == null) && (directPermissions == null))) { return false; }
+				if ((accessorNames == null) || ((accessorActions == null) && (directPermissions == null))) {
+					return false;
+				}
 
 				if (directPermissions != null) {
 					if (accessorNames.getValueCount() != directPermissions.getValueCount()) {
@@ -100,10 +101,12 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 					}
 				}
 
-				if (accessorNames.getValueCount() != accessorActions.getValueCount()) { throw new CmfStorageException(
-					String.format("ACL accessors and actions have different object counts (%d != %d) for %s",
-						accessorNames.getValueCount(), accessorActions.getValueCount(),
-						CmisFileableDelegate.this.cmfObject.getDescription())); }
+				if (accessorNames.getValueCount() != accessorActions.getValueCount()) {
+					throw new CmfStorageException(
+						String.format("ACL accessors and actions have different object counts (%d != %d) for %s",
+							accessorNames.getValueCount(), accessorActions.getValueCount(),
+							CmisFileableDelegate.this.cmfObject.getDescription()));
+				}
 
 				final int count = accessorNames.getValueCount();
 				for (int i = 0; i < count; i++) {
@@ -238,8 +241,9 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 		if (isVersionable(existing)) {
 			versionLabel = String.format("#%s", existing.getProperty(PropertyIds.VERSION_LABEL).getValueAsString());
 		}
-		if ((paths == null)
-			|| paths.isEmpty()) { return String.format("<unfiled>::%s%s", existing.getName(), versionLabel); }
+		if ((paths == null) || paths.isEmpty()) {
+			return String.format("<unfiled>::%s%s", existing.getName(), versionLabel);
+		}
 		String path = paths.get(0);
 		return String.format("%s%s", path, versionLabel);
 	}
@@ -321,8 +325,10 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 				.singleton(new ImportOutcome(ImportResult.CREATED, existing.getId(), calculateNewLabel(existing)));
 		}
 
-		if (isSameObject(existing)) { return Collections
-			.singleton(new ImportOutcome(ImportResult.DUPLICATE, existing.getId(), calculateNewLabel(existing))); }
+		if (isSameObject(existing)) {
+			return Collections
+				.singleton(new ImportOutcome(ImportResult.DUPLICATE, existing.getId(), calculateNewLabel(existing)));
+		}
 		if (isVersionable(existing)) {
 			existing = createNewVersion(ctx, existing, props);
 			applyAcl(ctx, existing);

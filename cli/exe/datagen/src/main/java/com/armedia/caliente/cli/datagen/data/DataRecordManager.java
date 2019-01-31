@@ -68,8 +68,10 @@ public abstract class DataRecordManager<L extends Object> {
 				if (c == null) { return null; }
 				Set<String> missing = new LinkedHashSet<>(DataRecordManager.REQUIRED_STREAM_COLUMNS);
 				missing.removeAll(c.getColumnNames());
-				if (!missing.isEmpty()) { throw new Exception(
-					String.format("The CSV stream records lack the following required columns: %s", missing)); }
+				if (!missing.isEmpty()) {
+					throw new Exception(
+						String.format("The CSV stream records lack the following required columns: %s", missing));
+				}
 				this.streamRecords = c;
 			} catch (Exception e) {
 				if (DataRecordManager.this.log.isDebugEnabled()) {

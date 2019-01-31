@@ -12,8 +12,9 @@ class Log4JConfigurator extends LogConfigurator {
 	public Logger initialize() {
 		// First, find log4j-boot.xml
 		URL config = getClass().getResource("log4j.xml");
-		if (config == null) { throw new RuntimeException(
-			"Failed to configure the boot log - no Log4J boot configuration was found"); }
+		if (config == null) {
+			throw new RuntimeException("Failed to configure the boot log - no Log4J boot configuration was found");
+		}
 		DOMConfigurator.configure(config);
 		return LoggerFactory.getLogger(LogConfigurator.DEFAULT_LOG_NAME);
 	}

@@ -11,7 +11,9 @@ import com.armedia.commons.utilities.Tools;
 public enum CmisProperty implements Supplier<String>, CmfEncodeableName {
 
 	//
-	PRODUCT_NAME(CmfValue.Type.STRING), PRODUCT_VERSION(CmfValue.Type.STRING), ACL_PERMISSION(CmfValue.Type.STRING, true),
+	PRODUCT_NAME(CmfValue.Type.STRING),
+	PRODUCT_VERSION(CmfValue.Type.STRING),
+	ACL_PERMISSION(CmfValue.Type.STRING, true),
 	//
 	;
 

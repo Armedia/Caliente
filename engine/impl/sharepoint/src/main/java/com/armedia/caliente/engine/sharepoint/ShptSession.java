@@ -116,9 +116,11 @@ public class ShptSession {
 			}
 			this.service = newService();
 		}
-		return new ShptSessionException(String.format(
-			"ServiceException caught - %s, message = [%s], errorString = [%s], requestUrl = [%s], newService = %s",
-			e.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService), e);
+		return new ShptSessionException(
+			String.format(
+				"ServiceException caught - %s, message = [%s], errorString = [%s], requestUrl = [%s], newService = %s",
+				e.getClass().getCanonicalName(), e.getMessage(), e.getErrorString(), e.getRequestUrl(), replaceService),
+			e);
 	}
 
 	private ShptSessionException processException(ServiceException e) {

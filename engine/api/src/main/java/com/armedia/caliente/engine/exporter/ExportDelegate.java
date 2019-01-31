@@ -131,8 +131,8 @@ public abstract class ExportDelegate< //
 		return type.name();
 	}
 
-	protected Set<String> calculateSecondarySubtypes(SESSION session, CmfObject.Archetype type, String subtype, ECM_OBJECT object)
-		throws Exception {
+	protected Set<String> calculateSecondarySubtypes(SESSION session, CmfObject.Archetype type, String subtype,
+		ECM_OBJECT object) throws Exception {
 		return new LinkedHashSet<>();
 	}
 

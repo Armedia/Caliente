@@ -12,8 +12,9 @@ public class DuplicateOptionException extends CommandLineRuntimeException {
 		super(msg);
 		if (existing == null) { throw new IllegalArgumentException("Must have an existing value"); }
 		if (incoming == null) { throw new IllegalArgumentException("Must have an incoming value"); }
-		if (incoming == existing) { throw new IllegalArgumentException(
-			"The existing and incoming definitions must be different"); }
+		if (incoming == existing) {
+			throw new IllegalArgumentException("The existing and incoming definitions must be different");
+		}
 		this.existing = existing;
 		this.incoming = incoming;
 	}

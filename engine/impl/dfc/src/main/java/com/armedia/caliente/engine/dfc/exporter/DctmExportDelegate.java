@@ -155,7 +155,7 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 
 				// Identify the source object's attribute for this intermediate attribtue
 				final String srcName = this.factory.getEngine().getTranslator().getAttributeNameMapper()
-					.decodeAttributeName(this.getType(), tgtName);
+					.decodeAttributeName(getType(), tgtName);
 				if (!this.object.hasAttr(srcName)) {
 					continue;
 				}
