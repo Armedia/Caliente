@@ -253,13 +253,16 @@ public abstract class ExportEngine<//
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
 		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap,
 		final ExportOperation thisStatus) throws ExportException, CmfStorageException {
-		if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
-		if (sourceObject == null) { throw new IllegalArgumentException("Must provide the original object to export"); }
-		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
 
 		boolean success = false;
 		boolean pushed = false;
 		try {
+			if (target == null) { throw new IllegalArgumentException("Must provide the original export target"); }
+			if (sourceObject == null) {
+				throw new IllegalArgumentException("Must provide the original object to export");
+			}
+			if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
+
 			if (referrent != null) {
 				ctx.pushReferrent(referrent);
 				pushed = true;
