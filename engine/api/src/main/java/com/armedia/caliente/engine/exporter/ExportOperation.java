@@ -23,6 +23,7 @@ final class ExportOperation {
 		this.target = target;
 		this.referrent = referrent;
 		this.completed = false;
+		this.success = false;
 	}
 
 	long getObjectNumber() {
