@@ -49,7 +49,8 @@ public class AlfImportContextFactory
 	}
 
 	@Override
-	protected AlfImportContext constructContext(String rootId, CmfObject.Archetype rootType, AlfRoot session, int batchPosition) {
+	protected AlfImportContext constructContext(String rootId, CmfObject.Archetype rootType, AlfRoot session,
+		int batchPosition) {
 		final CmfObjectStore<?, ?> store = getObjectStore();
 		if (this.renameMap == null) {
 			synchronized (this) {

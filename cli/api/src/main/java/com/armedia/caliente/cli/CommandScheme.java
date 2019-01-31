@@ -33,8 +33,7 @@ public final class CommandScheme extends OptionScheme {
 		String name = canonicalizeCommand(command.getName());
 		this.commands.put(name, command);
 		this.aliases.put(name, name);
-		command.getAliases().stream().map(this::canonicalizeCommand)
-			.forEach((alias) -> this.aliases.put(alias, name));
+		command.getAliases().stream().map(this::canonicalizeCommand).forEach((alias) -> this.aliases.put(alias, name));
 		return this;
 	}
 

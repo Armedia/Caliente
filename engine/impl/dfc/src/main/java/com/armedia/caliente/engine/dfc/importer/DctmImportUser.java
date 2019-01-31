@@ -60,7 +60,8 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 	}
 
 	protected static IDfUser getUserMapping(DctmImportContext ctx, String userName) throws DfException {
-		Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.USER, DctmImportUser.USERNAME_MAPPING_NAME, userName);
+		Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.USER,
+			DctmImportUser.USERNAME_MAPPING_NAME, userName);
 		if (m == null) { return null; }
 		return ctx.getSession().getUser(m.getTargetValue());
 	}
@@ -94,8 +95,10 @@ public class DctmImportUser extends DctmImportDelegate<IDfUser> {
 					}
 					ret = session.getUser(c.getString(DctmAttributes.USER_NAME));
 				}
-				if (candidates != null) { throw new MultipleUserMatchesException(
-					String.format("Found multiple candidate matches for login name [%s]: %s", loginName, candidates)); }
+				if (candidates != null) {
+					throw new MultipleUserMatchesException(String
+						.format("Found multiple candidate matches for login name [%s]: %s", loginName, candidates));
+				}
 			} finally {
 				DfUtils.closeQuietly(c);
 			}

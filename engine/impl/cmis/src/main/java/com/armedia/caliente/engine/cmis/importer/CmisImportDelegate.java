@@ -52,9 +52,10 @@ public abstract class CmisImportDelegate<T> extends
 		final String finalTypeName;
 		if (m == null) {
 			BaseTypeId id = CmisTranslator.decodeObjectType(this.cmfObject.getType());
-			if (id == null) { throw new ImportException(
-				String.format("Failed to identify the base type for %s of subtype [%s]",
-					this.cmfObject.getDescription(), this.cmfObject.getSubtype())); }
+			if (id == null) {
+				throw new ImportException(String.format("Failed to identify the base type for %s of subtype [%s]",
+					this.cmfObject.getDescription(), this.cmfObject.getSubtype()));
+			}
 			finalTypeName = id.value();
 		} else {
 			finalTypeName = m.getTargetValue();

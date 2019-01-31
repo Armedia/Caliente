@@ -116,7 +116,8 @@ public abstract class CmfValueMapper {
 	 * @param targetValue
 	 * @return a new instance of {@link Mapping}
 	 */
-	protected final Mapping newMapping(CmfObject.Archetype objectType, String mappingName, String sourceValue, String targetValue) {
+	protected final Mapping newMapping(CmfObject.Archetype objectType, String mappingName, String sourceValue,
+		String targetValue) {
 		return new Mapping(objectType, mappingName, sourceValue, targetValue);
 	}
 
@@ -139,7 +140,8 @@ public abstract class CmfValueMapper {
 		setMapping(oldMapping.getObjectType(), oldMapping.getMappingName(), oldMapping.getSourceValue(), targetValue);
 	}
 
-	public final Mapping setMapping(CmfObject.Archetype objectType, String mappingName, String sourceValue, String targetValue) {
+	public final Mapping setMapping(CmfObject.Archetype objectType, String mappingName, String sourceValue,
+		String targetValue) {
 		if (objectType == null) { throw new IllegalArgumentException("Must provide an object type"); }
 		if (mappingName == null) { throw new IllegalArgumentException("Must provide a mapping name"); }
 		return createMapping(objectType, mappingName, sourceValue, targetValue);
@@ -195,7 +197,8 @@ public abstract class CmfValueMapper {
 	 * @return the value mappings for the given object type, name and target values, or {@code null}
 	 *         if no such mappings can be found.
 	 */
-	public abstract Collection<Mapping> getSourceMapping(CmfObject.Archetype objectType, String mappingName, String targetValue);
+	public abstract Collection<Mapping> getSourceMapping(CmfObject.Archetype objectType, String mappingName,
+		String targetValue);
 
 	/**
 	 * <p>

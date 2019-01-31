@@ -187,8 +187,9 @@ public class ConstructedTypeFactory {
 
 	public final ConstructedType constructType(final SchemaService schemaService, final String typeName,
 		Collection<String> secondaries) throws SchemaServiceException {
-		if (StringUtils
-			.isBlank(typeName)) { throw new IllegalArgumentException("Must provide a non-null, non-empty type name"); }
+		if (StringUtils.isBlank(typeName)) {
+			throw new IllegalArgumentException("Must provide a non-null, non-empty type name");
+		}
 
 		final TypeDeclaration mainType = getObjectTypeDeclaration(schemaService, typeName);
 		if (mainType == null) { return null; }

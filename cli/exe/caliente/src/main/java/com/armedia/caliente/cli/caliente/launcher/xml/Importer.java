@@ -57,10 +57,14 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		}
 		final File targetDir = Tools.canonicalize(new File(target));
 		targetDir.mkdirs();
-		if (!targetDir.exists()) { throw new CalienteException(
-			String.format("The target directory [%s] does not exist, and could not be created", targetDir)); }
-		if (!targetDir.isDirectory()) { throw new CalienteException(
-			String.format("A non-directory already exists at the location [%s] - can't continue", targetDir)); }
+		if (!targetDir.exists()) {
+			throw new CalienteException(
+				String.format("The target directory [%s] does not exist, and could not be created", targetDir));
+		}
+		if (!targetDir.isDirectory()) {
+			throw new CalienteException(
+				String.format("A non-directory already exists at the location [%s] - can't continue", targetDir));
+		}
 
 		settings.put(XmlSetting.ROOT.getLabel(), targetDir.getAbsolutePath());
 		settings.put(XmlSetting.DB.getLabel(), state.getObjectStoreLocation().toString());

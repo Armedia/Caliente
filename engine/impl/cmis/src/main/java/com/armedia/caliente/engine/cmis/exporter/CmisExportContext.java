@@ -16,8 +16,8 @@ public class CmisExportContext extends ExportContext<Session, CmfValue, CmisExpo
 
 	private final RepositoryInfo repositoryInfo;
 
-	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfObject.Archetype rootType, Session session, Logger output,
-		WarningTracker warningTracker) {
+	CmisExportContext(CmisExportContextFactory factory, String rootId, CmfObject.Archetype rootType, Session session,
+		Logger output, WarningTracker warningTracker) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output, warningTracker);
 		session.setDefaultContext(newOperationContext(session));
 		this.repositoryInfo = session.getRepositoryInfo();

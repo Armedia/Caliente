@@ -35,13 +35,16 @@ public abstract class SchemaMember<T extends SchemaMember<T>> {
 		for (Property property : e.getProperties()) {
 			String name = property.getName();
 			// Is this a duplicate at this level?
-			if (localAttributes.containsKey(name)) { throw new IllegalStateException(
-				String.format("Duplicate attribute name [%s] on type [%s]", name, this.name)); }
+			if (localAttributes.containsKey(name)) {
+				throw new IllegalStateException(
+					String.format("Duplicate attribute name [%s] on type [%s]", name, this.name));
+			}
 
 			// Is this a duplicate at my parent's level?
-			if ((parent != null)
-				&& (parent.getAttribute(name) != null)) { throw new IllegalStateException(String.format(
-					"Duplicate attribute name [%s] on type [%s] - already defined by a supertype", name, this.name)); }
+			if ((parent != null) && (parent.getAttribute(name) != null)) {
+				throw new IllegalStateException(String.format(
+					"Duplicate attribute name [%s] on type [%s] - already defined by a supertype", name, this.name));
+			}
 
 			// No dupes, add the attribute
 			Boolean mult = Tools.coalesce(property.getMultiple(), Boolean.FALSE);

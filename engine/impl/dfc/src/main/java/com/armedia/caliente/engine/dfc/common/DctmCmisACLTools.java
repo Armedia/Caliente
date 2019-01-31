@@ -58,20 +58,24 @@ public class DctmCmisACLTools implements DctmACL {
 			PermissionMapping.CAN_GET_FOLDER_PARENT_OBJECT, //
 			PermissionMapping.CAN_GET_OBJECT_RELATIONSHIPS_OBJECT, //
 			PermissionMapping.CAN_GET_PROPERTIES_OBJECT //
-		), DF_PERMIT_READ(
+		),
+		DF_PERMIT_READ(
 			IDfACL.DF_PERMIT_READ, //
 			PermissionMapping.CAN_GET_ALL_VERSIONS_VERSION_SERIES, //
 			PermissionMapping.CAN_VIEW_CONTENT_OBJECT //
-		), DF_PERMIT_RELATE(
+		),
+		DF_PERMIT_RELATE(
 			IDfACL.DF_PERMIT_RELATE, //
 			PermissionMapping.CAN_CREATE_RELATIONSHIP_SOURCE, //
 			PermissionMapping.CAN_CREATE_RELATIONSHIP_TARGET //
-		), DF_PERMIT_VERSION(
+		),
+		DF_PERMIT_VERSION(
 			IDfACL.DF_PERMIT_VERSION, //
 			PermissionMapping.CAN_CANCEL_CHECKOUT_DOCUMENT, //
 			PermissionMapping.CAN_CHECKIN_DOCUMENT, //
 			PermissionMapping.CAN_CHECKOUT_DOCUMENT //
-		), DF_PERMIT_WRITE(
+		),
+		DF_PERMIT_WRITE(
 			IDfACL.DF_PERMIT_WRITE, //
 			PermissionMapping.CAN_ADD_TO_FOLDER_OBJECT, //
 			PermissionMapping.CAN_CREATE_DOCUMENT_FOLDER, //
@@ -83,7 +87,8 @@ public class DctmCmisACLTools implements DctmACL {
 			PermissionMapping.CAN_REMOVE_FROM_FOLDER_FOLDER, //
 			PermissionMapping.CAN_SET_CONTENT_DOCUMENT, //
 			PermissionMapping.CAN_UPDATE_PROPERTIES_OBJECT //
-		), DF_PERMIT_DELETE(
+		),
+		DF_PERMIT_DELETE(
 			IDfACL.DF_PERMIT_DELETE, //
 			PermissionMapping.CAN_DELETE_OBJECT //
 		),
@@ -121,13 +126,17 @@ public class DctmCmisACLTools implements DctmACL {
 			Set<String> s = new HashSet<>();
 			s.addAll(e.actions);
 			Set<String> oldS = p2a.put(permit, Tools.freezeSet(s));
-			if (oldS != null) { throw new RuntimeException(
-				String.format("Permission [%d] is defined for two sets of Actions: [%s] and [%s]", permit, s, oldS)); }
+			if (oldS != null) {
+				throw new RuntimeException(String
+					.format("Permission [%d] is defined for two sets of Actions: [%s] and [%s]", permit, s, oldS));
+			}
 
 			for (String a : s) {
 				Integer old = a2p.put(a, permit);
-				if (old != null) { throw new RuntimeException(
-					String.format("Action [%s] is mapped for two Permissions: [%d] and [%d]", a, permit, old)); }
+				if (old != null) {
+					throw new RuntimeException(
+						String.format("Action [%s] is mapped for two Permissions: [%d] and [%d]", a, permit, old));
+				}
 			}
 		}
 		PERMIT_TO_ACTION = Tools.freezeMap(p2a);
@@ -141,10 +150,15 @@ public class DctmCmisACLTools implements DctmACL {
 			IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR, //
 			PermissionMapping.CAN_ADD_TO_FOLDER_OBJECT, //
 			PermissionMapping.CAN_MOVE_OBJECT //
-		), DF_XPERMIT_CHANGE_OWNER(IDfACL.DF_XPERMIT_CHANGE_OWNER_STR), DF_XPERMIT_CHANGE_PERMIT(
+		),
+		DF_XPERMIT_CHANGE_OWNER(IDfACL.DF_XPERMIT_CHANGE_OWNER_STR),
+		DF_XPERMIT_CHANGE_PERMIT(
 			IDfACL.DF_XPERMIT_CHANGE_PERMIT_STR, //
 			PermissionMapping.CAN_APPLY_ACL_OBJECT //
-		), DF_XPERMIT_CHANGE_STATE(IDfACL.DF_XPERMIT_CHANGE_STATE_STR), DF_XPERMIT_DELETE_OBJECT(IDfACL.DF_XPERMIT_DELETE_OBJECT_STR), DF_XPERMIT_EXECUTE_PROC(IDfACL.DF_XPERMIT_EXECUTE_PROC_STR),
+		),
+		DF_XPERMIT_CHANGE_STATE(IDfACL.DF_XPERMIT_CHANGE_STATE_STR),
+		DF_XPERMIT_DELETE_OBJECT(IDfACL.DF_XPERMIT_DELETE_OBJECT_STR),
+		DF_XPERMIT_EXECUTE_PROC(IDfACL.DF_XPERMIT_EXECUTE_PROC_STR),
 		//
 		;
 
@@ -178,13 +192,17 @@ public class DctmCmisACLTools implements DctmACL {
 			Set<String> s = new HashSet<>();
 			s.addAll(e.actions);
 			Set<String> oldS = x2a.put(permit, Tools.freezeSet(s));
-			if (oldS != null) { throw new RuntimeException(String.format(
-				"Extended Permission [%s] is defined for two sets of Actions: [%s] and [%s]", permit, s, oldS)); }
+			if (oldS != null) {
+				throw new RuntimeException(String.format(
+					"Extended Permission [%s] is defined for two sets of Actions: [%s] and [%s]", permit, s, oldS));
+			}
 
 			for (String a : s) {
 				String old = a2x.put(a, permit);
-				if (old != null) { throw new RuntimeException(String
-					.format("Action [%s] is mapped for two Extended Permissions: [%s] and [%s]", permit, a, old)); }
+				if (old != null) {
+					throw new RuntimeException(String
+						.format("Action [%s] is mapped for two Extended Permissions: [%s] and [%s]", permit, a, old));
+				}
 			}
 		}
 		XPERMIT_TO_ACTION = Tools.freezeMap(x2a);
@@ -220,14 +238,19 @@ public class DctmCmisACLTools implements DctmACL {
 	public static List<IDfPermit> calculatePermissionsFromCMIS(CmfObject<IDfValue> cmisAcl) throws DfException {
 		CmfProperty<IDfValue> accessors = cmisAcl.getProperty(IntermediateProperty.ACL_ACCESSOR_NAME);
 		CmfProperty<IDfValue> accessorActions = cmisAcl.getProperty(IntermediateProperty.ACL_ACCESSOR_ACTIONS);
-		if (accessors == null) { throw new DfException(String.format("Failed to find the [%s] property for %s",
-			IntermediateProperty.ACL_ACCESSOR_NAME.encode(), cmisAcl.getDescription())); }
-		if (accessorActions == null) { throw new DfException(String.format("Failed to find the [%s] property for %s",
-			IntermediateProperty.ACL_ACCESSOR_ACTIONS.encode(), cmisAcl.getDescription())); }
+		if (accessors == null) {
+			throw new DfException(String.format("Failed to find the [%s] property for %s",
+				IntermediateProperty.ACL_ACCESSOR_NAME.encode(), cmisAcl.getDescription()));
+		}
+		if (accessorActions == null) {
+			throw new DfException(String.format("Failed to find the [%s] property for %s",
+				IntermediateProperty.ACL_ACCESSOR_ACTIONS.encode(), cmisAcl.getDescription()));
+		}
 
-		if (accessors.getValueCount() != accessorActions.getValueCount()) { throw new DfException(
-			String.format("Value count mismatches for %s (accessors=%d | actions=%d)", cmisAcl.getDescription(),
-				accessors.getValueCount(), accessorActions.getValueCount())); }
+		if (accessors.getValueCount() != accessorActions.getValueCount()) {
+			throw new DfException(String.format("Value count mismatches for %s (accessors=%d | actions=%d)",
+				cmisAcl.getDescription(), accessors.getValueCount(), accessorActions.getValueCount()));
+		}
 
 		// Ok...we have the triplets, so we start walking...
 		List<IDfPermit> ret = new ArrayList<>();

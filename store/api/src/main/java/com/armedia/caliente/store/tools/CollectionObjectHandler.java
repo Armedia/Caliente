@@ -8,7 +8,8 @@ import java.util.LinkedList;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfStorageException;
 
-public final class CollectionObjectHandler<VALUE> extends DefaultCmfObjectHandler<VALUE> implements Iterable<CmfObject<VALUE>> {
+public final class CollectionObjectHandler<VALUE> extends DefaultCmfObjectHandler<VALUE>
+	implements Iterable<CmfObject<VALUE>> {
 
 	private final Collection<CmfObject<VALUE>> objects;
 

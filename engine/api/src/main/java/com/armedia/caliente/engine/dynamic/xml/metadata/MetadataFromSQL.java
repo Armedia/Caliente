@@ -62,8 +62,9 @@ public class MetadataFromSQL extends MetadataReaderBase {
 
 	@Override
 	protected void doInitialize(Connection c) throws Exception {
-		if (this.names == null) { throw new ExternalMetadataException(
-			"No attribute names defined for this SQL lookup"); }
+		if (this.names == null) {
+			throw new ExternalMetadataException("No attribute names defined for this SQL lookup");
+		}
 		super.doInitialize(c);
 		this.names.initialize(c);
 	}
@@ -109,10 +110,12 @@ public class MetadataFromSQL extends MetadataReaderBase {
 										if (type == null) {
 											type = decodeSQLType(columnType);
 										}
-										if (type == CmfValue.Type.OTHER) { throw new Exception(String.format(
-											"Unsupported data type [%s] for column [%s] (query = %s), searching for attribute [%s]",
-											md.getColumnTypeName(i), this.valueColumn, this.finalSql,
-											sqlAttributeName)); }
+										if (type == CmfValue.Type.OTHER) {
+											throw new Exception(String.format(
+												"Unsupported data type [%s] for column [%s] (query = %s), searching for attribute [%s]",
+												md.getColumnTypeName(i), this.valueColumn, this.finalSql,
+												sqlAttributeName));
+										}
 										columnIndex = i;
 										break;
 									}

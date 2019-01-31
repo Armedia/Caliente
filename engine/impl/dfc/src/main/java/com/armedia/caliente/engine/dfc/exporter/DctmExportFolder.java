@@ -63,8 +63,10 @@ public class DctmExportFolder extends DctmExportSysObject<IDfFolder> implements 
 			visited = new LinkedHashSet<>();
 		}
 		// If the folder has already been visited, we have a loop...so let's explode loudly
-		if (!visited.add(folderId.getId())) { throw new DfException(String
-			.format("Folder loop detected, element [%s] exists twice: %s", folderId.getId(), visited.toString())); }
+		if (!visited.add(folderId.getId())) {
+			throw new DfException(String.format("Folder loop detected, element [%s] exists twice: %s", folderId.getId(),
+				visited.toString()));
+		}
 		try {
 			int depth = 0;
 			String dql = String.format("select distinct i_folder_id from dm_sysobject where r_object_id = '%s'",

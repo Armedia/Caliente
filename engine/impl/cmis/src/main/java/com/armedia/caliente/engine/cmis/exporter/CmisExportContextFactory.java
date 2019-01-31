@@ -44,7 +44,8 @@ public class CmisExportContextFactory
 	}
 
 	@Override
-	protected CmisExportContext constructContext(String rootId, CmfObject.Archetype rootType, Session session, int batchPosition) {
+	protected CmisExportContext constructContext(String rootId, CmfObject.Archetype rootType, Session session,
+		int batchPosition) {
 		return new CmisExportContext(this, rootId, rootType, session, getOutput(), getWarningTracker());
 	}
 

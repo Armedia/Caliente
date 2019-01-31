@@ -18,17 +18,20 @@ public class Command extends OptionScheme {
 
 	public Command(String name, Collection<String> aliases) {
 		super(name);
-		if (!Command.NAME_PATTERN.matcher(name).matches()) { throw new IllegalArgumentException(String.format(
-			"The name [%s] does not match the regular expression /%s/", name, Command.NAME_PATTERN.pattern())); }
+		if (!Command.NAME_PATTERN.matcher(name).matches()) {
+			throw new IllegalArgumentException(String.format("The name [%s] does not match the regular expression /%s/",
+				name, Command.NAME_PATTERN.pattern()));
+		}
 		Set<String> A = new TreeSet<>();
 		A.add(name);
 		if (aliases != null) {
 			for (String a : aliases) {
 				Objects.requireNonNull(a, "aliases may not be null");
-				if (!Command.NAME_PATTERN.matcher(a)
-					.matches()) { throw new IllegalArgumentException(
+				if (!Command.NAME_PATTERN.matcher(a).matches()) {
+					throw new IllegalArgumentException(
 						String.format("The given alias [%s] does not match the regular expression /%s/", a,
-							Command.NAME_PATTERN.pattern())); }
+							Command.NAME_PATTERN.pattern()));
+				}
 				A.add(a);
 			}
 		}

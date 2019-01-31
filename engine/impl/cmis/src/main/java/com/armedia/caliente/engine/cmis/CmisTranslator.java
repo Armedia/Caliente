@@ -63,7 +63,8 @@ public class CmisTranslator extends CmfAttributeTranslator<CmfValue> {
 		// TODO: add other types...such as policies
 		OBJECT_TYPES_REV = Tools.freezeMap(p);
 
-		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfObject.Archetype.class);
+		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(
+			CmfObject.Archetype.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 		am = new DualHashBidiMap<>();

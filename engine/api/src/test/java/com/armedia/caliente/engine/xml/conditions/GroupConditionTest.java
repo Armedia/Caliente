@@ -27,8 +27,9 @@ public class GroupConditionTest {
 
 	private static List<Condition> convertToList(Integer[] values, boolean lastIsResult) {
 		Objects.requireNonNull(values, "Must provide a non-null array of booleans");
-		if (values.length < 2) { throw new IllegalArgumentException(
-			"The array of booleans must contain at least two elements"); }
+		if (values.length < 2) {
+			throw new IllegalArgumentException("The array of booleans must contain at least two elements");
+		}
 		List<Condition> ret = new ArrayList<>(values.length);
 		for (Integer i : values) {
 			ret.add( //

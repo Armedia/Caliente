@@ -31,8 +31,10 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 
 	protected int calculateDepth(Folder f, final Set<String> visited) throws Exception {
 		if (f == null) { throw new IllegalArgumentException("Must provide a folder whose depth to calculate"); }
-		if (!visited.add(f.getId())) { throw new IllegalStateException(
-			String.format("Folder [%s] was visited twice - visited set: %s", f.getId(), visited)); }
+		if (!visited.add(f.getId())) {
+			throw new IllegalStateException(
+				String.format("Folder [%s] was visited twice - visited set: %s", f.getId(), visited));
+		}
 		try {
 			if (f.isRootFolder()) { return 0; }
 			List<Folder> parents = f.getParents();

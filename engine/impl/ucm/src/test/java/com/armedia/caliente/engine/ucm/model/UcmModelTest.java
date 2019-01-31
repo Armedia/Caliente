@@ -78,7 +78,8 @@ public class UcmModelTest extends BaseTest {
 				}
 				name = String.format("%s/%s", path, name);
 				String shortcut = UcmModel.isShortcut(att)
-					? String.format(" | target=%s ", att.getString(UcmAtt.fTargetGUID)) : "";
+					? String.format(" | target=%s ", att.getString(UcmAtt.fTargetGUID))
+					: "";
 				URI uri = UcmModel.getURI(att);
 				String data = String.format("{ uri=%s | guid=%s%s }", uri,
 					att.getString(UcmModel.isFileURI(uri) ? UcmAtt.dDocName : UcmAtt.fFolderGUID), shortcut);

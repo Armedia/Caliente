@@ -75,12 +75,12 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 		super.customizeContentStoreProperties(cfg);
 		cfg.getSettings().put(LocalContentStoreSetting.IGNORE_DESCRIPTOR.getLabel(), Boolean.TRUE.toString());
 	}
-	
+
 	protected File getContentFilesLocation() {
 		if (isCopyContent()) { return super.getContentFilesLocation(); }
 		return new File(BaseParam.source.getString());
 	}
-	
+
 	protected String getContentOrganizerName() {
 		return LocalOrganizer.NAME;
 	}
@@ -95,14 +95,20 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 
 		// Make sure a source has been specified
 		if (source == null) { throw new CalienteException("Must specify a source to export from"); }
-		if (!source.exists()) { throw new CalienteException(
-			String.format("The specified source at [%s] does not exist", source.getPath())); }
-		if (!source.exists()) { throw new CalienteException(
-			String.format("The specified source at [%s] does not exist", source.getPath())); }
-		if (!source.isDirectory()) { throw new CalienteException(
-			String.format("The specified source at [%s] is not a directory", source.getPath())); }
-		if (!source.canRead()) { throw new CalienteException(
-			String.format("The specified source at [%s] is not readable", source.getPath())); }
+		if (!source.exists()) {
+			throw new CalienteException(String.format("The specified source at [%s] does not exist", source.getPath()));
+		}
+		if (!source.exists()) {
+			throw new CalienteException(String.format("The specified source at [%s] does not exist", source.getPath()));
+		}
+		if (!source.isDirectory()) {
+			throw new CalienteException(
+				String.format("The specified source at [%s] is not a directory", source.getPath()));
+		}
+		if (!source.canRead()) {
+			throw new CalienteException(
+				String.format("The specified source at [%s] is not readable", source.getPath()));
+		}
 		try {
 			File f = source.getCanonicalFile();
 			source = f;

@@ -46,8 +46,10 @@ public class ShptUser extends ShptSecurityObject<User> {
 		 */
 		this.roles = Collections.emptyList();
 		String loginName = this.object.getLoginName();
-		if (loginName == null) { throw new IncompleteDataException(String.format(
-			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }
+		if (loginName == null) {
+			throw new IncompleteDataException(String.format(
+				"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId()));
+		}
 		final int backslash = loginName.indexOf('\\');
 		final int atSign = loginName.indexOf('@');
 		if (backslash >= 0) {
@@ -67,8 +69,10 @@ public class ShptUser extends ShptSecurityObject<User> {
 	@Override
 	public String calculateObjectId(ShptSession session, User user) throws Exception {
 		UserId uid = user.getUserId();
-		if (uid == null) { throw new IncompleteDataException(
-			String.format("No userId information available for user [%s\\%s]", this.userDomain, this.userName)); }
+		if (uid == null) {
+			throw new IncompleteDataException(
+				String.format("No userId information available for user [%s\\%s]", this.userDomain, this.userName));
+		}
 		return String.format("%08X",
 			Tools.hashTool(this, null, uid.getNameId().toLowerCase(), uid.getNameIdIssuer().toLowerCase()));
 	}
@@ -81,8 +85,10 @@ public class ShptUser extends ShptSecurityObject<User> {
 	@Override
 	protected String calculateLabel(ShptSession session, User object) throws Exception {
 		String loginName = object.getLoginName();
-		if (loginName == null) { throw new IncompleteDataException(String.format(
-			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }
+		if (loginName == null) {
+			throw new IncompleteDataException(String.format(
+				"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId()));
+		}
 		final int backslash = loginName.indexOf('\\');
 		final int atSign = loginName.indexOf('@');
 		String userName = null;
@@ -202,8 +208,10 @@ public class ShptUser extends ShptSecurityObject<User> {
 	@Override
 	protected String calculateName(ShptSession session, User user) throws Exception {
 		String loginName = user.getLoginName();
-		if (loginName == null) { throw new IncompleteDataException(String.format(
-			"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId())); }
+		if (loginName == null) {
+			throw new IncompleteDataException(String.format(
+				"The given user lacks a login name - cannot identify the user with ID [%s]", this.object.getId()));
+		}
 		final int backslash = loginName.indexOf('\\');
 		final int atSign = loginName.indexOf('@');
 		if (backslash >= 0) {

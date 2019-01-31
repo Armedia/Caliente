@@ -63,9 +63,9 @@ public abstract class LdapPrincipalDb<P extends LdapPrincipal> {
 
 	protected LdapPrincipalDb(Class<P> pClass, LDAPConnectionPool pool, boolean onDemand, String baseDn,
 		String baseFilter, String... searchAttributes) throws LDAPException {
-		if ((searchAttributes == null) || (searchAttributes.length < 1)
-			|| StringUtils.isEmpty(searchAttributes[0])) { throw new IllegalArgumentException(
-				"Must provide at least one attribute to search against"); }
+		if ((searchAttributes == null) || (searchAttributes.length < 1) || StringUtils.isEmpty(searchAttributes[0])) {
+			throw new IllegalArgumentException("Must provide at least one attribute to search against");
+		}
 		this.pClass = pClass;
 		this.baseFilter = Filter.create(baseFilter);
 		this.baseDn = baseDn;

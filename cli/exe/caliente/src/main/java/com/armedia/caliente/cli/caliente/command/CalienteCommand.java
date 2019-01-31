@@ -67,8 +67,7 @@ public enum CalienteCommand {
 	private CalienteCommand(String description, String[] aliases, boolean requiresStorage, boolean requiresCleanData) {
 		this.description = description;
 		Set<String> a = new TreeSet<>();
-		Arrays.stream(aliases).map(CalienteCommand::canonicalize).filter(StringUtils::isNotBlank)
-			.forEach(a::add);
+		Arrays.stream(aliases).map(CalienteCommand::canonicalize).filter(StringUtils::isNotBlank).forEach(a::add);
 		this.title = CalienteCommand.canonicalize(name());
 		this.aliases = Tools.freezeSet(new LinkedHashSet<>(a));
 		this.requiresStorage = requiresStorage;

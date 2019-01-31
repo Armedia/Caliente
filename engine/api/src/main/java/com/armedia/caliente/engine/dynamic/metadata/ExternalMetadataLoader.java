@@ -102,8 +102,10 @@ public class ExternalMetadataLoader {
 			}
 
 			for (final MetadataSet desc : this.metadata.getMetadataSets()) {
-				if (this.metadataSources.isEmpty()) { throw new ExternalMetadataException(
-					"No metadata sources are defined - this is a configuration error!"); }
+				if (this.metadataSources.isEmpty()) {
+					throw new ExternalMetadataException(
+						"No metadata sources are defined - this is a configuration error!");
+				}
 				try {
 					desc.initialize(Tools.freezeMap(this.metadataSources));
 				} catch (Exception e) {
@@ -134,13 +136,16 @@ public class ExternalMetadataLoader {
 
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, String firstSourceName,
 		String... sourceNames) throws ExternalMetadataException {
-		if (StringUtils.isEmpty(firstSourceName)) { throw new IllegalArgumentException(
-			"Must provide the name of a source to retrieve the values from"); }
+		if (StringUtils.isEmpty(firstSourceName)) {
+			throw new IllegalArgumentException("Must provide the name of a source to retrieve the values from");
+		}
 		List<String> finalSources = new ArrayList<>();
 		finalSources.add(firstSourceName);
 		for (String source : sourceNames) {
-			if (StringUtils.isEmpty(source)) { throw new IllegalArgumentException(
-				String.format("The given source name [%s] is not valid from %s", source, this.locationDesc)); }
+			if (StringUtils.isEmpty(source)) {
+				throw new IllegalArgumentException(
+					String.format("The given source name [%s] is not valid from %s", source, this.locationDesc));
+			}
 			finalSources.add(source);
 		}
 		return getAttributeValues(object, finalSources);
@@ -159,8 +164,10 @@ public class ExternalMetadataLoader {
 			Map<String, CmfAttribute<V>> finalMap = new HashMap<>();
 			for (String src : sourceNames) {
 				final MetadataSet source = this.metadataSets.get(src);
-				if (source == null) { throw new ExternalMetadataException(
-					String.format("No metadata source named [%s] has been defined at %s", src, this.locationDesc)); }
+				if (source == null) {
+					throw new ExternalMetadataException(
+						String.format("No metadata source named [%s] has been defined at %s", src, this.locationDesc));
+				}
 
 				Map<String, CmfAttribute<V>> m = null;
 				try {

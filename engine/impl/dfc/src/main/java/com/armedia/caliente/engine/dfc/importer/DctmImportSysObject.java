@@ -530,7 +530,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final IDfSession session = ctx.getSession();
 
 		if ("FOLDER".equalsIgnoreCase(type)) {
-			Mapping map = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.FOLDER, DctmAttributes.R_OBJECT_ID, reference);
+			Mapping map = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.FOLDER, DctmAttributes.R_OBJECT_ID,
+				reference);
 			if (map == null) {
 				String msg = String.format(
 					"Can't inherit an ACL from a parent folder for %s [%s](%s) - the source parent ID [%s] couldn't be mapped to a target object",
@@ -644,7 +645,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				// old format - acl ID
 				String aclId = aclIdProp.getValue().asString();
 				// Find the mapped ACL
-				Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.ACL, DctmAttributes.R_OBJECT_ID, aclId);
+				Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.ACL, DctmAttributes.R_OBJECT_ID,
+					aclId);
 				if (m != null) {
 					final String dql = String.format(
 						"select owner_name, object_name from dm_acl where r_object_id = %s",

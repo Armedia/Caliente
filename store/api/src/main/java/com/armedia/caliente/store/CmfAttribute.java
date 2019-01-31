@@ -50,7 +50,8 @@ public class CmfAttribute<VALUE> extends CmfProperty<VALUE> {
 
 	@Override
 	public String toString() {
-		return String.format("CmfAttribute [name=%s, type=%s, repeating=%s %s=%s]", getName(), getType(), isMultivalued(),
-			(isMultivalued() ? "values" : "singleValue"), (isMultivalued() ? getValues() : getValue()));
+		return String.format("CmfAttribute [name=%s, type=%s, repeating=%s %s=%s]", getName(), getType(),
+			isMultivalued(), (isMultivalued() ? "values" : "singleValue"),
+			(isMultivalued() ? getValues() : getValue()));
 	}
 }

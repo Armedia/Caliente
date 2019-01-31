@@ -38,9 +38,10 @@ public abstract class ImportContext< //
 	private final CmfContentStore<?, ?, ?> streamStore;
 	private final int historyPosition;
 
-	public ImportContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfObject.Archetype rootType, SESSION session,
-		Logger output, WarningTracker tracker, Transformer transformer, CmfAttributeTranslator<VALUE> translator,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
+	public ImportContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfObject.Archetype rootType,
+		SESSION session, Logger output, WarningTracker tracker, Transformer transformer,
+		CmfAttributeTranslator<VALUE> translator, CmfObjectStore<?, ?> objectStore,
+		CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
 		this.factory = factory;
 		this.translator = translator;

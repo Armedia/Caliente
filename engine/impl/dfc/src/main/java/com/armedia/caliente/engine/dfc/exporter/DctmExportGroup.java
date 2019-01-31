@@ -54,8 +54,10 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		final IDfSession session = group.getSession();
 		// If the group has already been visited, we have a loop...so let's explode loudly
 		final IDfId groupId = group.getObjectId();
-		if (visited.contains(groupId.getId())) { throw new DfException(
-			String.format("Group loop detected, element [%s] exists twice: %s", groupId.getId(), visited.toString())); }
+		if (visited.contains(groupId.getId())) {
+			throw new DfException(String.format("Group loop detected, element [%s] exists twice: %s", groupId.getId(),
+				visited.toString()));
+		}
 		visited.add(groupId.getId());
 
 		try {
@@ -135,9 +137,11 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		String groupOwner = group.getOwnerName();
 		if (!DctmMappingUtils.isMappableUser(session, groupOwner) && !ctx.isSpecialUser(groupOwner)) {
 			IDfUser owner = session.getUser(groupOwner);
-			if (owner == null) { throw new Exception(
-				String.format("Missing dependency for group [%s] - user [%s] not found (as group owner)",
-					group.getGroupName(), groupOwner)); }
+			if (owner == null) {
+				throw new Exception(
+					String.format("Missing dependency for group [%s] - user [%s] not found (as group owner)",
+						group.getGroupName(), groupOwner));
+			}
 			ret.add(this.factory.newExportDelegate(owner));
 		} else {
 			this.log.warn(String.format("Skipping export of special user [%s] as the owner of group [%s]", groupOwner,
@@ -147,9 +151,11 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 		String groupAdmin = group.getGroupAdmin();
 		if (!DctmMappingUtils.isMappableUser(session, groupAdmin) && !ctx.isSpecialUser(groupAdmin)) {
 			IDfUser admin = session.getUser(groupAdmin);
-			if (admin == null) { throw new Exception(
-				String.format("Missing dependency for group [%s] - user [%s] not found (as group admin)",
-					group.getGroupName(), groupAdmin)); }
+			if (admin == null) {
+				throw new Exception(
+					String.format("Missing dependency for group [%s] - user [%s] not found (as group admin)",
+						group.getGroupName(), groupAdmin));
+			}
 			ret.add(this.factory.newExportDelegate(admin));
 		} else {
 			this.log.warn(String.format("Skipping export of special user [%s] as the admin of group [%s]", groupAdmin,

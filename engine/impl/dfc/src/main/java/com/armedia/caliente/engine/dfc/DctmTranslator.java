@@ -27,7 +27,8 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 	private static final Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> ATTRIBUTE_MAPPINGS;
 
 	static {
-		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(CmfObject.Archetype.class);
+		Map<CmfObject.Archetype, BidiMap<String, IntermediateAttribute>> attributeMappings = new EnumMap<>(
+			CmfObject.Archetype.class);
 
 		BidiMap<String, IntermediateAttribute> am = null;
 
@@ -164,8 +165,9 @@ public final class DctmTranslator extends CmfAttributeTranslator<IDfValue> {
 				}
 				if (att != null) { return att; }
 			}
-			if (attributeName.startsWith(
-				DctmTranslator.DCTM_PREFIX)) { return attributeName.substring(DctmTranslator.DCTM_PREFIX.length()); }
+			if (attributeName.startsWith(DctmTranslator.DCTM_PREFIX)) {
+				return attributeName.substring(DctmTranslator.DCTM_PREFIX.length());
+			}
 			return super.encodeAttributeName(type, attributeName);
 		}
 	};

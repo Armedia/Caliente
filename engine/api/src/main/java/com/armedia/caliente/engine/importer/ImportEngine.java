@@ -298,7 +298,8 @@ public abstract class ImportEngine<//
 			this(null, null, null, null);
 		}
 
-		private Batch(CmfObject.Archetype type, String id, Collection<CmfObject<VALUE>> contents, ImportStrategy strategy) {
+		private Batch(CmfObject.Archetype type, String id, Collection<CmfObject<VALUE>> contents,
+			ImportStrategy strategy) {
 			this.type = type;
 			this.id = id;
 			this.contents = contents;

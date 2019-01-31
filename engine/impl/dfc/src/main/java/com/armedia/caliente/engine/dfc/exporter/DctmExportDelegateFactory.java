@@ -37,8 +37,9 @@ public class DctmExportDelegateFactory
 	@Override
 	protected DctmExportDelegate<?> newExportDelegate(IDfSession session, CmfObject.Archetype type, String searchKey)
 		throws Exception {
-		if (session == null) { throw new IllegalArgumentException(
-			"Must provide a session through which to retrieve the object"); }
+		if (session == null) {
+			throw new IllegalArgumentException("Must provide a session through which to retrieve the object");
+		}
 		if (searchKey == null) { throw new IllegalArgumentException("Must provide an object ID to retrieve"); }
 		return newExportDelegate(session, session.getObject(new DfId(searchKey)), type);
 	}
@@ -64,8 +65,10 @@ public class DctmExportDelegateFactory
 				dctmType = null;
 			}
 		}
-		if (dctmType == null) { throw new ExportException(
-			String.format("Unsupported object type [%s] (objectId = [%s])", typeStr, object.getObjectId().getId())); }
+		if (dctmType == null) {
+			throw new ExportException(
+				String.format("Unsupported object type [%s] (objectId = [%s])", typeStr, object.getObjectId().getId()));
+		}
 
 		Class<? extends IDfPersistentObject> requiredClass = dctmType.getDfClass();
 		if (requiredClass.isInstance(object)) {

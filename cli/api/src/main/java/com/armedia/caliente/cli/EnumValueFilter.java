@@ -34,8 +34,10 @@ public class EnumValueFilter<E extends Enum<E>> extends OptionValueFilter {
 
 	public EnumValueFilter(boolean caseSensitive, Class<E> enumClass, Set<E> excluded) {
 		this.klass = Objects.requireNonNull(enumClass, "Must provide an enum class");
-		if (!enumClass.isEnum()) { throw new IllegalArgumentException(
-			String.format("The class %s is not an Enum", enumClass.getCanonicalName())); }
+		if (!enumClass.isEnum()) {
+			throw new IllegalArgumentException(
+				String.format("The class %s is not an Enum", enumClass.getCanonicalName()));
+		}
 		this.caseSensitive = caseSensitive;
 
 		// Limit to only the non-excluded (allowed) values
@@ -43,8 +45,9 @@ public class EnumValueFilter<E extends Enum<E>> extends OptionValueFilter {
 		if ((excluded != null) && !excluded.isEmpty()) {
 			allowed.removeAll(excluded);
 		}
-		if (allowed
-			.isEmpty()) { throw new IllegalArgumentException("No values are marked as allowed, this is illegal"); }
+		if (allowed.isEmpty()) {
+			throw new IllegalArgumentException("No values are marked as allowed, this is illegal");
+		}
 
 		// Generate the canonicalized set
 		Set<String> v = new TreeSet<>();
@@ -52,9 +55,11 @@ public class EnumValueFilter<E extends Enum<E>> extends OptionValueFilter {
 		for (E e : allowed) {
 			v.add(e.name());
 			E old = canon.put(canon(e.name()), e);
-			if (old != null) { throw new IllegalArgumentException(String.format(
-				"Enums of type %s can't be handled case-insensitively - the values %s and %s would collide",
-				enumClass.getCanonicalName(), old.name(), e.name())); }
+			if (old != null) {
+				throw new IllegalArgumentException(String.format(
+					"Enums of type %s can't be handled case-insensitively - the values %s and %s would collide",
+					enumClass.getCanonicalName(), old.name(), e.name()));
+			}
 		}
 		this.allowed = Tools.freezeSet(allowed);
 		this.canon = Tools.freezeMap(new LinkedHashMap<>(canon));

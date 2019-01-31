@@ -47,11 +47,15 @@ public class CmisFolderDelegate extends CmisFileableDelegate<Folder> {
 		List<Folder> parents = getParentFolders(ctx);
 		List<ImportOutcome> outcomes = new ArrayList<>(parents.size());
 		CmfAttribute<CmfValue> nameAtt = this.cmfObject.getAttribute(PropertyIds.NAME);
-		if ((nameAtt == null) || !nameAtt.hasValues()) { throw new ImportException(
-			String.format("No %s attribute found for %s", PropertyIds.NAME, this.cmfObject.getDescription())); }
+		if ((nameAtt == null) || !nameAtt.hasValues()) {
+			throw new ImportException(
+				String.format("No %s attribute found for %s", PropertyIds.NAME, this.cmfObject.getDescription()));
+		}
 		final CmfValue nameValue = nameAtt.getValue();
-		if (nameValue.isNull()) { throw new ImportException(
-			String.format("%s attribute has a null value for %s", PropertyIds.NAME, this.cmfObject.getDescription())); }
+		if (nameValue.isNull()) {
+			throw new ImportException(String.format("%s attribute has a null value for %s", PropertyIds.NAME,
+				this.cmfObject.getDescription()));
+		}
 		final String name = nameValue.asString();
 		for (Folder f : getParentFolders(ctx)) {
 			String path = String.format("%s/%s", f.getPath(), name);

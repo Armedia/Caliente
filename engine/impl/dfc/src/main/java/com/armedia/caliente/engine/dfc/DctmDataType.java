@@ -105,8 +105,10 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 		@Override
 		protected String generateDeclaration(IDfAttr type) {
 			final int length = type.getLength();
-			if (length <= 0) { throw new IllegalArgumentException(
-				String.format("The given attribute (%s) has an invalid length (%d)", type.getName(), length)); }
+			if (length <= 0) {
+				throw new IllegalArgumentException(
+					String.format("The given attribute (%s) has an invalid length (%d)", type.getName(), length));
+			}
 			return String.format("string(%d)", length);
 		}
 
@@ -290,11 +292,14 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 	}
 
 	public final String getDeclaration(IDfAttr attr) {
-		if (attr == null) { throw new IllegalArgumentException(
-			"Must provide an attribute generate the type declaration for"); }
-		if (attr.getDataType() != this.dfConstant) { throw new IllegalArgumentException(
-			String.format("The given attribute has data type [%d], but this is datatype [%d] (%s)", attr.getDataType(),
-				this.dfConstant, name())); }
+		if (attr == null) {
+			throw new IllegalArgumentException("Must provide an attribute generate the type declaration for");
+		}
+		if (attr.getDataType() != this.dfConstant) {
+			throw new IllegalArgumentException(
+				String.format("The given attribute has data type [%d], but this is datatype [%d] (%s)",
+					attr.getDataType(), this.dfConstant, name()));
+		}
 		String baseDec = generateDeclaration(attr);
 		boolean rep = attr.isRepeating();
 		boolean q = attr.isQualifiable();
@@ -419,8 +424,9 @@ public enum DctmDataType implements CmfValueCodec<IDfValue> {
 	 */
 
 	public static DctmDataType fromAttribute(IDfAttr attribute) {
-		if (attribute == null) { throw new IllegalArgumentException(
-			"Must provide an attribute to decode the data type from"); }
+		if (attribute == null) {
+			throw new IllegalArgumentException("Must provide an attribute to decode the data type from");
+		}
 		return DctmDataType.fromDataType(attribute.getDataType());
 	}
 

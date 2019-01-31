@@ -63,8 +63,9 @@ public abstract class TransferEngineFactory< //
 	public static synchronized <ENGINE_FACTORY extends TransferEngineFactory<?, ?, ?, ?, ?, ?, ?, ?, ?>> ENGINE_FACTORY getEngineFactory(
 		Class<ENGINE_FACTORY> subclass, String targetName) {
 		if (subclass == null) { throw new IllegalArgumentException("Must provide a valid engine subclass"); }
-		if (StringUtils.isEmpty(
-			targetName)) { throw new IllegalArgumentException("Must provide a non-empty, non-null target name"); }
+		if (StringUtils.isEmpty(targetName)) {
+			throw new IllegalArgumentException("Must provide a non-empty, non-null target name");
+		}
 		TransferEngineFactory.registerSubclass(subclass);
 		Map<String, Object> m = TransferEngineFactory.REGISTRY.get(subclass.getCanonicalName());
 		if (m == null) { return null; }

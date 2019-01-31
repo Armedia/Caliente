@@ -74,10 +74,13 @@ public class ValueMappingClear extends ConditionalAction {
 
 		String from = Tools.toString(ActionTools.eval(getFrom(), ctx));
 		String to = Tools.toString(ActionTools.eval(getTo(), ctx));
-		if ((from == null) && (to == null)) { throw new ActionException(
-			"Must provide either a sorce or target value to identify the mapping to remove"); }
-		if ((from != null) && (to != null)) { throw new ActionException(
-			"Must provide only one of either a sorce or target value to identify the mapping to remove (both provided)"); }
+		if ((from == null) && (to == null)) {
+			throw new ActionException("Must provide either a sorce or target value to identify the mapping to remove");
+		}
+		if ((from != null) && (to != null)) {
+			throw new ActionException(
+				"Must provide only one of either a sorce or target value to identify the mapping to remove (both provided)");
+		}
 
 		if (from != null) {
 			ctx.getAttributeMapper().clearSourceMapping(type, name, from);

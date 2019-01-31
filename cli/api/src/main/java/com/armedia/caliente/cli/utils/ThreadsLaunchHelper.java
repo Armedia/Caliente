@@ -42,8 +42,10 @@ public final class ThreadsLaunchHelper extends Options {
 
 	public ThreadsLaunchHelper(int min, int max) {
 		min = Math.max(1, min);
-		if (max < min) { throw new IllegalArgumentException(
-			String.format("Maximum value %d is lower than minmum value %d", max, min)); }
+		if (max < min) {
+			throw new IllegalArgumentException(
+				String.format("Maximum value %d is lower than minmum value %d", max, min));
+		}
 		this.min = min;
 		this.max = max;
 		this.def = null;
@@ -54,8 +56,10 @@ public final class ThreadsLaunchHelper extends Options {
 
 	public ThreadsLaunchHelper(int min, int def, int max) {
 		min = Math.max(1, min);
-		if (max < min) { throw new IllegalArgumentException(
-			String.format("Maximum value %d is lower than minmum value %d", max, min)); }
+		if (max < min) {
+			throw new IllegalArgumentException(
+				String.format("Maximum value %d is lower than minmum value %d", max, min));
+		}
 		this.min = min;
 		this.max = max;
 		this.def = Tools.ensureBetween(min, def, max);

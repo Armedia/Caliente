@@ -97,8 +97,8 @@ public enum Comparison {
 	GLOB() {
 		@Override
 		protected boolean eval(CmfValue.Type type, Object candidate, Object comparand, boolean caseInsensitive) {
-			return RE.eval(CmfValue.Type.STRING, Tools.toString(candidate), Tools.globToRegex(Tools.toString(comparand)),
-				caseInsensitive);
+			return RE.eval(CmfValue.Type.STRING, Tools.toString(candidate),
+				Tools.globToRegex(Tools.toString(comparand)), caseInsensitive);
 		}
 	},
 
@@ -248,8 +248,10 @@ public enum Comparison {
 		// This way we only have to provide the comparison implementation assuming case
 		// sensitivity.
 		String name = name().toUpperCase();
-		if (!name.startsWith("N") && !name.endsWith("I")) { throw new AbstractMethodError(
-			String.format("Must provide a concrete implementation of eval() for the %s comparison check", name())); }
+		if (!name.startsWith("N") && !name.endsWith("I")) {
+			throw new AbstractMethodError(
+				String.format("Must provide a concrete implementation of eval() for the %s comparison check", name()));
+		}
 
 		// Case-insensitive, find my counterpart!
 		boolean negated = false;

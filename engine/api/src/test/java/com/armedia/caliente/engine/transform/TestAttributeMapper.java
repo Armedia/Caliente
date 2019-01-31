@@ -17,7 +17,8 @@ import com.armedia.caliente.store.CmfValueMapper;
 
 public class TestAttributeMapper extends CmfValueMapper {
 
-	private final Map<CmfObject.Archetype, Map<String, BidiMap<String, String>>> mappings = new EnumMap<>(CmfObject.Archetype.class);
+	private final Map<CmfObject.Archetype, Map<String, BidiMap<String, String>>> mappings = new EnumMap<>(
+		CmfObject.Archetype.class);
 
 	private Map<String, BidiMap<String, String>> getMappingsForType(CmfObject.Archetype type) {
 		Objects.requireNonNull(type, "Must provide a type to retrieve the mappings for");
@@ -48,7 +49,8 @@ public class TestAttributeMapper extends CmfValueMapper {
 	}
 
 	@Override
-	public Collection<Mapping> getSourceMapping(CmfObject.Archetype objectType, String mappingName, String targetValue) {
+	public Collection<Mapping> getSourceMapping(CmfObject.Archetype objectType, String mappingName,
+		String targetValue) {
 		BidiMap<String, String> mappings = getNamedMappingsForType(objectType, mappingName).inverseBidiMap();
 		if (!mappings.containsKey(targetValue)) { return null; }
 		return Collections.singleton(newMapping(objectType, mappingName, mappings.get(targetValue), targetValue));
@@ -80,7 +82,8 @@ public class TestAttributeMapper extends CmfValueMapper {
 	}
 
 	@Override
-	protected Mapping createMapping(CmfObject.Archetype objectType, String mappingName, String sourceValue, String targetValue) {
+	protected Mapping createMapping(CmfObject.Archetype objectType, String mappingName, String sourceValue,
+		String targetValue) {
 		if ((sourceValue == null) || (targetValue == null)) {
 			// This is a removal...
 			if ((sourceValue == null) && (targetValue == null)) {

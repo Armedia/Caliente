@@ -98,8 +98,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 	}
 
 	private String calculateVersionString(IDfSysObject document, boolean full) throws DfException {
-		if (!full) { return String.format("%s%s", document.getImplicitVersionLabel(),
-			document.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : ""); }
+		if (!full) {
+			return String.format("%s%s", document.getImplicitVersionLabel(),
+				document.getHasFolder() ? String.format(",%s", ISysObject.CURRENT_VERSION_LABEL) : "");
+		}
 		int labelCount = document.getVersionLabelCount();
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < labelCount; i++) {
@@ -243,8 +245,10 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				DctmAttributes.R_OBJECT_ID, aid.getId());
 			// This mapping can only exist (i.e. be non-null) if we actually processed the
 			// antecedent during this run
-			if (mapping != null) { return createSuccessorVersion(
-				castObject(session.getObject(new DfId(mapping.getTargetValue()))), null, context); }
+			if (mapping != null) {
+				return createSuccessorVersion(castObject(session.getObject(new DfId(mapping.getTargetValue()))), null,
+					context);
+			}
 		}
 
 		// Its exact antecedent isn't there, so we try for the patched one...
@@ -308,8 +312,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			for (IDfValue p : patches) {
 				// Now we checkout and checkin and branch and whatnot as necessary until we can
 				// actually proceed with the rest of the algorithm...
-				final CmfProperty<IDfValue> prop = new CmfProperty<>(DctmAttributes.R_VERSION_LABEL, CmfValue.Type.STRING,
-					false, DfValueFactory.newStringValue(p.toString()));
+				final CmfProperty<IDfValue> prop = new CmfProperty<>(DctmAttributes.R_VERSION_LABEL,
+					CmfValue.Type.STRING, false, DfValueFactory.newStringValue(p.toString()));
 				if (substituteRoot) {
 					antecedentVersion.save();
 					// Don't need to do this again...
@@ -804,14 +808,18 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 					DctmVdocMember member = new DctmVdocMember(v.asString());
 					Mapping m = context.getValueMapper().getTargetMapping(CmfObject.Archetype.DOCUMENT,
 						DctmAttributes.I_CHRONICLE_ID, member.getChronicleId().getId());
-					if (m == null) { throw new ImportException(String.format(
-						"Virtual Document [%s](%s) references a component [%s] which could not be located (maybe it hasn't been imported yet?)",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), v.asString())); }
+					if (m == null) {
+						throw new ImportException(String.format(
+							"Virtual Document [%s](%s) references a component [%s] which could not be located (maybe it hasn't been imported yet?)",
+							this.cmfObject.getLabel(), this.cmfObject.getId(), v.asString()));
+					}
 					IDfSysObject so = IDfSysObject.class.cast(context.getSession().getObjectByQualification(String
 						.format("dm_sysobject where i_chronicle_id = %s", DfUtils.quoteString(m.getTargetValue()))));
-					if (so == null) { throw new ImportException(String.format(
-						"Virtual Document [%s](%s) references a component [%s] which could not be located, but may have failed during import",
-						this.cmfObject.getLabel(), this.cmfObject.getId(), m.getTargetValue())); }
+					if (so == null) {
+						throw new ImportException(String.format(
+							"Virtual Document [%s](%s) references a component [%s] which could not be located, but may have failed during import",
+							this.cmfObject.getLabel(), this.cmfObject.getId(), m.getTargetValue()));
+					}
 
 					final String childBinding = (StringUtils.isBlank(member.getBinding())
 						? ISysObject.CURRENT_VERSION_LABEL

@@ -120,7 +120,8 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 			versionHeadIndex = history.getLastRevision().getRevisionId();
 		}
 
-		p = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfValue.Type.BOOLEAN, new CmfValue(newestVersion));
+		p = new CmfProperty<>(IntermediateProperty.IS_NEWEST_VERSION, CmfValue.Type.BOOLEAN,
+			new CmfValue(newestVersion));
 		properties.add(p);
 
 		p = new CmfProperty<>(IntermediateProperty.VERSION_COUNT, IntermediateProperty.VERSION_COUNT.type,

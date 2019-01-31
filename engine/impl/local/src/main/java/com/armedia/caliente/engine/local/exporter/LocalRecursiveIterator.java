@@ -123,8 +123,8 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 		RecursiveState state = this.stateStack.peek();
 		LocalFile ret = state.next;
 		state.next = null;
-		return new ExportTarget(ret.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT : CmfObject.Archetype.FOLDER, ret.getId(),
-			ret.getSafePath());
+		return new ExportTarget(ret.getAbsolute().isFile() ? CmfObject.Archetype.DOCUMENT : CmfObject.Archetype.FOLDER,
+			ret.getId(), ret.getSafePath());
 	}
 
 	@Override

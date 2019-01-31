@@ -160,8 +160,9 @@ public class PermissionMapper {
 	public Set<String> convertPermissionToAllowableActions(String permission) {
 		if (permission == null) { throw new IllegalArgumentException("Must provide a non-null permission"); }
 		Set<String> ret = this.permissionsToActions.get(permission);
-		if (ret == null) { throw new IllegalArgumentException(
-			String.format("Unsupported permission [%s]", permission)); }
+		if (ret == null) {
+			throw new IllegalArgumentException(String.format("Unsupported permission [%s]", permission));
+		}
 		return ret;
 	}
 
@@ -188,8 +189,9 @@ public class PermissionMapper {
 
 			// First, find the permissions that may allow that action to be performed
 			Set<String> permissions = this.actionsToPermissions.get(a);
-			if (permissions == null) { throw new IllegalArgumentException(
-				String.format("The action [%s] is not a valid allowable action", a)); }
+			if (permissions == null) {
+				throw new IllegalArgumentException(String.format("The action [%s] is not a valid allowable action", a));
+			}
 
 			if (permissions.isEmpty()) {
 				continue;

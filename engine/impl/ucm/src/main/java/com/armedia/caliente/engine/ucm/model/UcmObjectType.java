@@ -19,8 +19,10 @@ public enum UcmObjectType {
 		Map<CmfObject.Archetype, UcmObjectType> reverse = new EnumMap<>(CmfObject.Archetype.class);
 		for (UcmObjectType t : UcmObjectType.values()) {
 			UcmObjectType old = reverse.put(t.archetype, t);
-			if (old != null) { throw new RuntimeException(
-				String.format("UcmTypes %s and %s have identical CMF mappings to %s", t, old, t.archetype)); }
+			if (old != null) {
+				throw new RuntimeException(
+					String.format("UcmTypes %s and %s have identical CMF mappings to %s", t, old, t.archetype));
+			}
 		}
 		REVERSE = Tools.freezeMap(reverse);
 	}

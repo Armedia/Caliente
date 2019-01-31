@@ -69,8 +69,9 @@ public abstract class SessionWrapper<SESSION> implements AutoCloseable {
 	private void end(boolean commit) {
 		assertValid();
 		if (this.openCount < 1) { return; }
-		if (!isSupportsTransactions()) { throw new UnsupportedOperationException(
-			"This type of session doesn't support transactions"); }
+		if (!isSupportsTransactions()) {
+			throw new UnsupportedOperationException("This type of session doesn't support transactions");
+		}
 		try {
 			if (commit) {
 				commitTransaction();

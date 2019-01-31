@@ -72,13 +72,16 @@ public abstract class ImportContextFactory< //
 
 	public final String getTargetPath(String sourcePath) throws ImportException {
 		if (sourcePath == null) { throw new IllegalArgumentException("Must provide a path to transform"); }
-		if (!sourcePath.startsWith(
-			"/")) { throw new IllegalArgumentException(String.format("The path [%s] must be absolute", sourcePath)); }
+		if (!sourcePath.startsWith("/")) {
+			throw new IllegalArgumentException(String.format("The path [%s] must be absolute", sourcePath));
+		}
 		List<String> l = FileNameTools.tokenize(sourcePath, '/');
 		final int delta = (this.rootPath.size() > 0 ? 1 : 0);
-		if (l.size() < (this.pathTrunc - delta)) { throw new ImportException(String.format(
-			"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
-			this.pathTrunc, sourcePath, l.size())); }
+		if (l.size() < (this.pathTrunc - delta)) {
+			throw new ImportException(String.format(
+				"The path truncation setting (%d) is higher than the number of path components in [%s] (%d) - can't continue",
+				this.pathTrunc, sourcePath, l.size()));
+		}
 		for (int i = 0; i < this.pathTrunc; i++) {
 			l.remove(0);
 		}

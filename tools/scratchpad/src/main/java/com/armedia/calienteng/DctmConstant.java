@@ -11,10 +11,14 @@ public class DctmConstant {
 	/** The string value that is stored in user type attribute for inline users. */
 	public static final String USER_SOURCE_INLINE_PASSWORD = "inline password";
 
-	/** The "sql-neutral" date and time pattern that will be fed for SQL updates to date attributes */
+	/**
+	 * The "sql-neutral" date and time pattern that will be fed for SQL updates to date attributes
+	 */
 	public static final String SQL_DATETIME_PATTERN = "yyyy-mm-dd hh:mi:ss";
 
-	/** The "sql-neutral" date and time pattern that will be fed for SQL updates to date attributes */
+	/**
+	 * The "sql-neutral" date and time pattern that will be fed for SQL updates to date attributes
+	 */
 	public static final String JAVA_SQL_DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
 	/** The date and time pattern used in oracle sql query. */

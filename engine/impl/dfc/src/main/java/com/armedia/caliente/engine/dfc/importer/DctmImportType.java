@@ -67,7 +67,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 
 		// Step 1: is the ACL there?
 		IDfId aclId = prop.getValue().asId();
-		Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.ACL, DctmAttributes.R_OBJECT_ID, aclId.getId());
+		Mapping m = ctx.getValueMapper().getTargetMapping(CmfObject.Archetype.ACL, DctmAttributes.R_OBJECT_ID,
+			aclId.getId());
 		if (m == null) {
 			// The mapping isn't there...we can't set it...
 			this.log.warn("The ACL with ID[{}], specified as default for type [{}] was not imported", aclId.getId(),
@@ -358,8 +359,9 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 				}
 			}
 		}
-		if (!ok) { throw new ImportException(
-			String.format("Type declaration mismatch for [%s]:%n%n%s%n%n", typeName, sb)); }
+		if (!ok) {
+			throw new ImportException(String.format("Type declaration mismatch for [%s]:%n%n%s%n%n", typeName, sb));
+		}
 	}
 
 	@Override
@@ -377,29 +379,43 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 	@Override
 	protected boolean isSameObject(IDfType existingType, DctmImportContext ctx) throws DfException, ImportException {
 		if (!Tools.equals(existingType.getName(),
-			this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString())) { return false; }
+			this.cmfObject.getAttribute(DctmAttributes.NAME).getValue().asString())) {
+			return false;
+		}
 
 		this.attributesMissing.clear();
 		this.attributeMismatches.clear();
 
 		CmfAttribute<IDfValue> nameAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_NAME);
-		if (nameAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_NAME)); }
+		if (nameAtt == null) {
+			throw new ImportException(
+				String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_NAME));
+		}
 		CmfAttribute<IDfValue> repeatingAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_REPEATING);
-		if (repeatingAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_REPEATING)); }
+		if (repeatingAtt == null) {
+			throw new ImportException(
+				String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_REPEATING));
+		}
 		CmfAttribute<IDfValue> typeAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_TYPE);
-		if (typeAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_TYPE)); }
+		if (typeAtt == null) {
+			throw new ImportException(
+				String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_TYPE));
+		}
 		CmfAttribute<IDfValue> lengthAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_LENGTH);
-		if (lengthAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_LENGTH)); }
+		if (lengthAtt == null) {
+			throw new ImportException(
+				String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_LENGTH));
+		}
 		CmfAttribute<IDfValue> restrictionAtt = this.cmfObject.getAttribute(DctmAttributes.ATTR_RESTRICTION);
-		if (restrictionAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_RESTRICTION)); }
+		if (restrictionAtt == null) {
+			throw new ImportException(
+				String.format("Source type is missing the attribute %s", DctmAttributes.ATTR_RESTRICTION));
+		}
 		CmfAttribute<IDfValue> startPosAtt = this.cmfObject.getAttribute(DctmAttributes.START_POS);
-		if (startPosAtt == null) { throw new ImportException(
-			String.format("Source type is missing the attribute %s", DctmAttributes.START_POS)); }
+		if (startPosAtt == null) {
+			throw new ImportException(
+				String.format("Source type is missing the attribute %s", DctmAttributes.START_POS));
+		}
 
 		// Now, make a cache of the source attributes in play
 		final int startPosition = startPosAtt.getValue().asInteger();
