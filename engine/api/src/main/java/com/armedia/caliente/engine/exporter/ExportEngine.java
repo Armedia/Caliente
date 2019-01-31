@@ -18,8 +18,6 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
-import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 
 import com.armedia.caliente.engine.SessionFactory;
@@ -160,54 +158,56 @@ public abstract class ExportEngine<//
 		this.supportsMultipleSources = supportsMultipleSources;
 	}
 
-	private ExportOperation createExportOperation(ExportTarget target, ExportTarget referrent,
-		final ConcurrentMap<ExportTarget, ExportOperation> statusMap) throws CmfStorageException {
-
-		return ConcurrentUtils.createIfAbsentUnchecked(statusMap, target, new ConcurrentInitializer<ExportOperation>() {
-			@Override
-			public ExportOperation get() {
-				return new ExportOperation(target, referrent);
-			}
-		});
-	}
-
 	private Result exportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
-		final ExportTarget referrent, final ExportTarget target,
+		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> referrent,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
 		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap)
 		throws ExportException, CmfStorageException {
+		final ExportTarget target = sourceObject.getExportTarget();
 		try {
 			if (!ctx.isSupported(target.getType())) { return this.unsupportedResult; }
+
+			final ExportTarget referrentTarget;
+			final String referrentLogLabel;
+			if (referrent != null) {
+				referrentTarget = (referrent != null ? referrent.getExportTarget() : null);
+				referrentLogLabel = String.format("%s [%s](%s)", referrentTarget.getType(), referrent.getLabel(),
+					referrentTarget.getId());
+			} else {
+				referrentTarget = null;
+				referrentLogLabel = "direct search";
+			}
 
 			final CmfObject.Archetype type = target.getType();
 			final String id = target.getId();
 			final String objectLabel = sourceObject.getLabel();
-			final String logLabel = String.format("%s [%s](%s)", type, objectLabel, id);
+			final String targetLogLabel = String.format("%s [%s](%s)", type, objectLabel, id);
 			final LockStatus locked;
 			final ExportOperation thisStatus;
 			try {
-				locked = exportState.objectStore.lockForStorage(target, referrent,
+				locked = exportState.objectStore.lockForStorage(target, referrentTarget,
 					Tools.coalesce(sourceObject.getHistoryId(), sourceObject.getObjectId()), ctx.getId());
 				switch (locked) {
 					case LOCK_ACQUIRED:
 						// We got the lock, which means we create the locker object
-						this.log.trace("Locked {} for storage", logLabel);
-						thisStatus = createExportOperation(target, referrent, statusMap);
+						this.log.trace("Locked {} for storage", targetLogLabel);
+						thisStatus = new ExportOperation(target, targetLogLabel, referrentTarget, referrentLogLabel);
+						statusMap.put(target, thisStatus);
 						break;
 
 					case ALREADY_LOCKED: // fall-through
 					case ALREADY_FAILED: // fall-through
 					case ALREADY_STORED: // fall-through
 					default:
-						this.log.trace("{} result = {}", logLabel, locked);
+						this.log.trace("{} result = {}", targetLogLabel, locked);
 						return this.staticLockResults.get(locked);
 				}
 			} catch (CmfStorageException e) {
 				throw new ExportException(
-					String.format("Exception caught attempting to lock a %s for storage", logLabel), e);
+					String.format("Exception caught attempting to lock a %s for storage", targetLogLabel), e);
 			}
 
-			listener.objectExportStarted(exportState.jobId, target, referrent);
+			listener.objectExportStarted(exportState.jobId, target, referrentTarget);
 
 			final Result result = doExportObject(exportState, transformer, filter, referrent, target, sourceObject, ctx,
 				listener, statusMap, thisStatus);
@@ -249,7 +249,7 @@ public abstract class ExportEngine<//
 	}
 
 	private Result doExportObject(ExportState exportState, final Transformer transformer, final ObjectFilter filter,
-		final ExportTarget referrent, final ExportTarget target,
+		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> referrent, final ExportTarget target,
 		final ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> sourceObject, final CONTEXT ctx,
 		final ExportListener listener, final ConcurrentMap<ExportTarget, ExportOperation> statusMap,
 		final ExportOperation thisStatus) throws ExportException, CmfStorageException {
@@ -263,8 +263,9 @@ public abstract class ExportEngine<//
 			}
 			if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
 
+			final ExportTarget referrentTarget = (referrent != null ? referrent.getExportTarget() : null);
 			if (referrent != null) {
-				ctx.pushReferrent(referrent);
+				ctx.pushReferrent(referrentTarget);
 				pushed = true;
 			}
 			final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
@@ -282,8 +283,7 @@ public abstract class ExportEngine<//
 					this.log.debug(String.format("Exporting %s (from the main search)", logLabel));
 				}
 			}
-
-			final CmfObject<VALUE> marshaled = sourceObject.marshal(ctx, referrent);
+			final CmfObject<VALUE> marshaled = sourceObject.marshal(ctx, referrentTarget);
 			if (marshaled == null) { return new Result(ExportSkipReason.SKIPPED); }
 			// For now, only filter "leaf" objects (i.e. with no referrent, which means they were
 			// explicitly requested). In the (near) future, we'll add an option to allow filtering
@@ -329,8 +329,8 @@ public abstract class ExportEngine<//
 				}
 				final Result r;
 				try {
-					r = exportObject(exportState, transformer, filter, target, requirement.getExportTarget(),
-						requirement, ctx, listener, statusMap);
+					r = exportObject(exportState, transformer, filter, sourceObject, requirement, ctx, listener,
+						statusMap);
 				} catch (Exception e) {
 					// This exception will already be logged...so we simply accept the failure and
 					// report it upwards, without bubbling up the exception to be reported 1000
@@ -380,11 +380,12 @@ public abstract class ExportEngine<//
 							String.format("No export status found for requirement [%s] of %s", requirement, logLabel));
 					}
 					try {
-						ctx.printf("Waiting for [%s] from %s (#%d created by %s from %s)", requirement, logLabel,
-							status.getObjectNumber(), status.getCreatorThread().getName(),
-							status.getReferrentDescription());
-						long waitTime = status.waitUntilCompleted();
-						ctx.printf("Waiting for [%s] from %s for %d ms", requirement, logLabel, waitTime);
+						long waitTime = status.waitUntilCompleted(() -> {
+							ctx.printf("Waiting on a dependency:%n\tFOR  : %s%n\tFROM : %s%n\tOWNER: %s for %s",
+								status.getTargetLabel(), logLabel, status.getCreatorThread().getName(),
+								status.getReferrentLabel());
+						});
+						ctx.printf("Waited for %s from %s for %d ms", status.getTargetLabel(), logLabel, waitTime);
 					} catch (InterruptedException e) {
 						Thread.interrupted();
 						throw new ExportException(String.format(
@@ -425,8 +426,8 @@ public abstract class ExportEngine<//
 				CmfObjectRef prev = null;
 				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> antecedent : referenced) {
 					try {
-						exportObject(exportState, transformer, filter, target, antecedent.getExportTarget(), antecedent,
-							ctx, listener, statusMap);
+						exportObject(exportState, transformer, filter, sourceObject, antecedent, ctx, listener,
+							statusMap);
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
@@ -489,7 +490,7 @@ public abstract class ExportEngine<//
 			try {
 				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
 				List<CmfContentStream> contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled,
-					referrent, streamStore, includeRenditions);
+					referrentTarget, streamStore, includeRenditions);
 				if ((contentStreams != null) && !contentStreams.isEmpty()) {
 					objectStore.setContentStreams(marshaled, contentStreams);
 				}
@@ -519,8 +520,8 @@ public abstract class ExportEngine<//
 				CmfObjectRef prev = marshaled;
 				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> successor : referenced) {
 					try {
-						exportObject(exportState, transformer, filter, target, successor.getExportTarget(), successor,
-							ctx, listener, statusMap);
+						exportObject(exportState, transformer, filter, sourceObject, successor, ctx, listener,
+							statusMap);
 					} catch (Exception e) {
 						// This exception will already be logged...so we simply accept the failure
 						// and report it upwards, without bubbling up the exception to be reported
@@ -555,8 +556,7 @@ public abstract class ExportEngine<//
 			int dependentsExported = 0;
 			for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> dependent : referenced) {
 				try {
-					exportObject(exportState, transformer, filter, target, dependent.getExportTarget(), dependent, ctx,
-						listener, statusMap);
+					exportObject(exportState, transformer, filter, sourceObject, dependent, ctx, listener, statusMap);
 				} catch (Exception e) {
 					// Contrary to previous cases, this isn't a failure because this doesn't
 					// stop the object from being properly represented...
@@ -715,8 +715,8 @@ public abstract class ExportEngine<//
 						initContext(ctx);
 						Result result = null;
 						try {
-							result = exportObject(exportState, transformer, filter, null, target, exportDelegate, ctx,
-								listener, statusMap);
+							result = exportObject(exportState, transformer, filter, null, exportDelegate, ctx, listener,
+								statusMap);
 						} catch (Exception e) {
 							// Any and all Exceptions have already been processed in exportObject,
 							// so we safely absorb them here. We leave all other Throwables intact
