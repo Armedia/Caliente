@@ -278,9 +278,9 @@ public abstract class ExportEngine<//
 
 			if (this.log.isDebugEnabled()) {
 				if (referrent != null) {
-					this.log.debug(String.format("Exporting %s (referenced by %s)", logLabel, referrent));
+					this.log.debug("Exporting {} (referenced by {})", logLabel, referrent);
 				} else {
-					this.log.debug(String.format("Exporting %s (from the main search)", logLabel));
+					this.log.debug("Exporting {} (from the main search)", logLabel);
 				}
 			}
 			final CmfObject<VALUE> marshaled = sourceObject.marshal(ctx, referrentTarget);
@@ -420,8 +420,8 @@ public abstract class ExportEngine<//
 				}
 
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("%s requires %d antecedent versions for successful storage", logLabel,
-						referenced.size()));
+					this.log.debug("{} requires {} antecedent versions for successful storage", logLabel,
+						referenced.size());
 				}
 				CmfObjectRef prev = null;
 				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> antecedent : referenced) {
@@ -479,14 +479,15 @@ public abstract class ExportEngine<//
 			if (ret == null) {
 				// Should be impossible, but still guard against it
 				if (this.log.isTraceEnabled()) {
-					this.log.trace(String.format("%s was stored by another thread", logLabel));
+					this.log.trace("{} was stored by another thread", logLabel);
 				}
 				return new Result(ExportSkipReason.ALREADY_STORED);
 			}
 
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Executing supplemental storage for %s", logLabel));
+				this.log.debug("Executing supplemental storage for {}", logLabel);
 			}
+
 			try {
 				final boolean includeRenditions = !ctx.getSettings().getBoolean(TransferSetting.NO_RENDITIONS);
 				List<CmfContentStream> contentStreams = sourceObject.storeContent(ctx, getTranslator(), marshaled,
@@ -496,10 +497,10 @@ public abstract class ExportEngine<//
 				}
 			} catch (Exception e) {
 				throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel), e);
-			}
+				}
 
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Successfully stored %s as object # %d", logLabel, ret));
+				this.log.debug("Successfully stored {} as object # {}", logLabel, ret);
 			}
 
 			if (!latestOnly) {
@@ -514,8 +515,8 @@ public abstract class ExportEngine<//
 				}
 
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("%s is succeeded by %d additional versions for successful storage",
-						logLabel, referenced.size()));
+					this.log.debug("{} is succeeded by {} additional versions for successful storage", logLabel,
+						referenced.size());
 				}
 				CmfObjectRef prev = marshaled;
 				for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> successor : referenced) {
@@ -551,7 +552,7 @@ public abstract class ExportEngine<//
 			}
 
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("%s has %d dependent objects to store", logLabel, referenced.size()));
+				this.log.debug("{} has {} dependent objects to store", logLabel, referenced.size());
 			}
 			int dependentsExported = 0;
 			for (ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, ?, ?> dependent : referenced) {
