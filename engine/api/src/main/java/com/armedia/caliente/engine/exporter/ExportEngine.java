@@ -496,8 +496,13 @@ public abstract class ExportEngine<//
 					objectStore.setContentStreams(marshaled, contentStreams);
 				}
 			} catch (Exception e) {
-				throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel), e);
+				if (CmfStorageException.class.isInstance(e) || CmfStorageException.class.isInstance(e.getCause())) {
+					throw new ExportException(String.format("Failed to execute the content storage for %s", logLabel),
+						e);
 				}
+				// Otherwise, just log it and keep moving
+				this.log.warn("Failed to store the content streams for {}", logLabel, e);
+			}
 
 			if (this.log.isDebugEnabled()) {
 				this.log.debug("Successfully stored {} as object # {}", logLabel, ret);
