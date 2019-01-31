@@ -2,8 +2,8 @@ package com.armedia.caliente.cli.exception;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -47,16 +47,14 @@ public class MissingRequiredOptionsException extends CommandLineSyntaxException 
 	protected String renderMessage() {
 		String globalMsg = "";
 		if ((this.baseMissing != null) && !this.baseMissing.isEmpty()) {
-			Set<String> options = new TreeSet<>();
-			this.baseMissing.stream().map(Option::getKey).forEachOrdered(options::add);
-			globalMsg = String.format("The following required global options were not specified: %s", options);
+			globalMsg = String.format("The following required global options were not specified: %s",
+				this.baseMissing.stream().map(Option::getKey).collect(Collectors.toCollection(TreeSet::new)));
 		}
 		String commandMsg = "";
 		if (this.command != null) {
-			Set<String> options = new TreeSet<>();
-			this.commandMissing.stream().map(Option::getKey).forEachOrdered(options::add);
 			commandMsg = String.format("%she following options required for the '%s' command were not specified: %s",
-				(StringUtils.isEmpty(globalMsg) ? "T" : ", and t"), this.command, options);
+				(StringUtils.isEmpty(globalMsg) ? "T" : ", and t"), this.command,
+				this.commandMissing.stream().map(Option::getKey).collect(Collectors.toCollection(TreeSet::new)));
 		}
 		return String.format("%s%s", globalMsg, commandMsg);
 	}

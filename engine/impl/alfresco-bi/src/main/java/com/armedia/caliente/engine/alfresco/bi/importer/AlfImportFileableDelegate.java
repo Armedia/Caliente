@@ -239,7 +239,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 		if (includeProperty(currentProperty, targetType)) {
 			values.clear();
 			getPropertyValues(IntermediateProperty.PARENT_TREE_IDS).stream().map((v) -> v.asString())
-				.filter(StringUtils::isNotEmpty).forEachOrdered(values::add);
+				.filter(StringUtils::isNotEmpty).forEach(values::add);
 			if (!values.isEmpty()) {
 				p.setProperty(currentProperty, Tools.joinCSVEscaped(values));
 			}

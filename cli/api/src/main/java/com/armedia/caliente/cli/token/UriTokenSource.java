@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -24,8 +25,8 @@ public class UriTokenSource extends ReaderTokenSource {
 	private static final Set<String> CLASSPATH_SCHEMES;
 
 	static {
-		Set<String> set = new TreeSet<>();
-		Arrays.stream(UriTokenSource.CLASSPATH_SCHEME_STRINGS).filter(StringUtils::isNotEmpty).forEachOrdered(set::add);
+		Set<String> set = Arrays.stream(UriTokenSource.CLASSPATH_SCHEME_STRINGS).filter(StringUtils::isNotEmpty)
+			.collect(Collectors.toCollection(TreeSet::new));
 		CLASSPATH_SCHEMES = Tools.freezeSet(new LinkedHashSet<>(set));
 	}
 

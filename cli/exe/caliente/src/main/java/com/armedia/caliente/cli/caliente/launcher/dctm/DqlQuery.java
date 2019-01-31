@@ -56,7 +56,7 @@ class DqlQuery {
 
 		private Keyword(Keyword... chasers) {
 			Set<Keyword> s = new HashSet<>();
-			Arrays.stream(chasers).forEachOrdered(s::add);
+			Arrays.stream(chasers).forEach(s::add);
 			this.chasers = Tools.freezeSet(s);
 		}
 	}
@@ -101,11 +101,11 @@ class DqlQuery {
 
 	static {
 		Map<String, Keyword> kw = new HashMap<>();
-		Arrays.stream(Keyword.values()).forEachOrdered((k) -> kw.put(k.name(), k));
+		Arrays.stream(Keyword.values()).forEach((k) -> kw.put(k.name(), k));
 		KEYWORDS = Tools.freezeMap(kw);
 
 		Map<String, Clause> cl = new HashMap<>();
-		Arrays.stream(Clause.values()).forEachOrdered((c) -> cl.put(c.name(), c));
+		Arrays.stream(Clause.values()).forEach((c) -> cl.put(c.name(), c));
 		CLAUSES = Tools.freezeMap(cl);
 	}
 
@@ -197,7 +197,7 @@ class DqlQuery {
 		}
 		Set<Clause> endClauses = EnumSet.noneOf(Clause.class);
 		if (end != null) {
-			Arrays.stream(end).forEachOrdered(endClauses::add);
+			Arrays.stream(end).forEach(endClauses::add);
 			endClauses = Tools.freezeSet(endClauses);
 		}
 

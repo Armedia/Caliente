@@ -196,7 +196,7 @@ public abstract class Option implements PositionalValueSupport, Cloneable {
 	public static List<Option> unwrap(Collection<Supplier<Option>> wrappers) {
 		if (wrappers == null) { return null; }
 		List<Option> l = new ArrayList<>(wrappers.size());
-		wrappers.stream().map(Option::unwrap).filter(Objects::nonNull).forEachOrdered(l::add);
+		wrappers.stream().map(Option::unwrap).filter(Objects::nonNull).forEach(l::add);
 		return l;
 	}
 }

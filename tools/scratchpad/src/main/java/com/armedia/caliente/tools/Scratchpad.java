@@ -3,6 +3,7 @@ package com.armedia.caliente.tools;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -53,9 +54,8 @@ public class Scratchpad extends AbstractLauncher {
 		for (int i = 0; i < 10; i++) {
 			c.add(Pair.of(String.format("number-%02d", i), i));
 		}
-		Collection<String> result = new ArrayList<>();
-		c.stream().map(Pair::getLeft).forEachOrdered(result::add);
-		System.out.printf("RESULT: %s%n", result);
+		System.out.printf("RESULT: %s%n",
+			c.stream().map(Pair::getLeft).collect(Collectors.toCollection(ArrayList::new)));
 		// PropertiesTest.test();
 		// DctmTest.test();
 		return 0;

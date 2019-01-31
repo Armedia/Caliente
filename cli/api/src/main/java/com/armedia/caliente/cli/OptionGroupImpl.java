@@ -161,12 +161,12 @@ public class OptionGroupImpl implements OptionGroup {
 			try {
 				Consumer<O> consumer = this::add;
 				StreamTools.of(options.iterator()).filter(Objects::nonNull)
-					.forEachOrdered(consumer.andThen(added::add));
+					.forEach(consumer.andThen(added::add));
 				ok = true;
 			} finally {
 				if (!ok) {
 					// Roll back the changes...
-					added.stream().forEachOrdered(this::remove);
+					added.stream().forEach(this::remove);
 				}
 			}
 		}

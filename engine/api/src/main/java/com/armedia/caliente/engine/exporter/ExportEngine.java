@@ -819,7 +819,7 @@ public abstract class ExportEngine<//
 
 						scanner.iterator(sources).forEachRemaining((line) -> {
 							try (Stream<ExportTarget> s = getExportTargets(session, line, delegateFactory)) {
-								s.forEachOrdered(submitter);
+								s.forEach(submitter);
 							} catch (Exception e) {
 								this.log.warn("Failed to find the export target(s) as per [{}]", line, e);
 							}
@@ -827,7 +827,7 @@ public abstract class ExportEngine<//
 					} else {
 						try (Stream<ExportTarget> s = getExportTargets(session, sources.iterator().next(),
 							delegateFactory)) {
-							s.forEachOrdered(submitter);
+							s.forEach(submitter);
 						}
 					}
 					ok = true;

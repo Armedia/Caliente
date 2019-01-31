@@ -103,7 +103,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 						throw new RuntimeException(String.format("Failed to convert the path [%s] to a URL", jar), e);
 					}
 				});
-				urls.values().stream().forEachOrdered(ret::add);
+				urls.values().stream().forEach(ret::add);
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("Failed to configure the dynamic library classpath for %s"), e);
