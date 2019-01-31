@@ -258,10 +258,12 @@ public abstract class ExportEngine<//
 		if (ctx == null) { throw new IllegalArgumentException("Must provide a context to operate in"); }
 
 		boolean success = false;
-		if (referrent != null) {
-			ctx.pushReferrent(referrent);
-		}
+		boolean pushed = false;
 		try {
+			if (referrent != null) {
+				ctx.pushReferrent(referrent);
+				pushed = true;
+			}
 			final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
 			final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
 
@@ -575,7 +577,7 @@ public abstract class ExportEngine<//
 			return result;
 		} finally {
 			thisStatus.setCompleted(success);
-			if (referrent != null) {
+			if ((referrent != null) && pushed) {
 				ctx.popReferrent();
 			}
 		}
