@@ -94,8 +94,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 			path = FileNameTools.removeEdgeSeparators(path, '/').replaceFirst("/", "_");
 			path = String.format("/%s", path);
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting target path [%s] from source path [%s] for %s [ID=%s/L=%s]", path,
-					getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
+				this.log.debug("Setting target path [{}] from source path [{}] for {} [ID={}/L={}]", path,
+					getServerRelativeUrl(), getType(), getObjectId(), getLabel());
 			}
 			object.setProperty(new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true,
 				Collections.singleton(new CmfValue(path))));
@@ -115,9 +115,8 @@ public abstract class ShptFSObject<T> extends ShptObject<T> {
 				Collections.singleton(new CmfValue(CmfValue.Type.ID, parent.getObjectId()))));
 			ret.add(parent);
 			if (this.log.isDebugEnabled()) {
-				this.log
-					.debug(String.format("Adding parent dependency to [%s] from source path [%s] for %s [ID=%s/L=%s]",
-						parentPath, getServerRelativeUrl(), getType(), getObjectId(), getLabel()));
+				this.log.debug("Adding parent dependency to [{}] from source path [{}] for {} [ID={}/L={}]", parentPath,
+					getServerRelativeUrl(), getType(), getObjectId(), getLabel());
 			}
 		}
 		return ret;

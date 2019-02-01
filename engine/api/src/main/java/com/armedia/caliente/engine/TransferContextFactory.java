@@ -71,8 +71,8 @@ public abstract class TransferContextFactory< //
 			}
 		}
 		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Excluded types for this context factory instance (%s): %s",
-				getClass().getSimpleName(), excludes));
+			this.log.debug("Excluded types for this context factory instance ({}): {}", getClass().getSimpleName(),
+				excludes);
 		}
 
 		calculateExcludes(objectStore, excludes);
@@ -137,7 +137,7 @@ public abstract class TransferContextFactory< //
 			if (this.log.isDebugEnabled()) {
 				this.log.error("Exception caught closing this a factory", e);
 			} else {
-				this.log.error(String.format("Exception caught closing this a factory: %s", e.getMessage()));
+				this.log.error("Exception caught closing this a factory: {}", e.getMessage());
 			}
 		} finally {
 			this.open = false;

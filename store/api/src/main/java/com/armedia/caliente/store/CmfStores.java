@@ -232,8 +232,8 @@ public final class CmfStores {
 					try {
 						s.close();
 					} catch (Exception e) {
-						this.log.warn(String.format("Exception caught closing CmfObjectStore %s[%s]", n,
-							s.getClass().getCanonicalName()), e);
+						this.log.warn("Exception caught closing CmfObjectStore {}[{}]", n,
+							s.getClass().getCanonicalName(), e);
 					}
 
 					CmfStorePrep prep = this.cmfPreps.get(n);
@@ -243,10 +243,8 @@ public final class CmfStores {
 					try {
 						prep.close();
 					} catch (Exception e) {
-						this.log.warn(
-							String.format("Exception caught cleaning up the CmfStorePrep for CmfObjectStore %s[%s]", n,
-								s.getClass().getCanonicalName()),
-							e);
+						this.log.warn("Exception caught cleaning up the CmfStorePrep for CmfObjectStore {}[{}]", n,
+							s.getClass().getCanonicalName(), e);
 					}
 				}
 
@@ -254,8 +252,7 @@ public final class CmfStores {
 					try {
 						f.close();
 					} catch (Exception e) {
-						this.log.warn(
-							String.format("Exception caught closing Factory [%s]", f.getClass().getCanonicalName()), e);
+						this.log.warn("Exception caught closing Factory [{}]", f.getClass().getCanonicalName(), e);
 					}
 				}
 			} finally {

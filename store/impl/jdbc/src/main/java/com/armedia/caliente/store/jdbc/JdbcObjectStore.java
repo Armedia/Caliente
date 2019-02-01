@@ -141,8 +141,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 					try {
 						op.rollback();
 					} catch (CmfOperationException e) {
-						this.log.warn(
-							String.format("Rollback failed during schema preparation (dialect = %s)", this.dialect), e);
+						this.log.warn("Rollback failed during schema preparation (dialect = {})", this.dialect, e);
 					}
 				}
 			}
@@ -218,9 +217,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				final String name = attribute.getName();
 				final String duplicate = encodedNames.put(name, attribute.getName());
 				if (duplicate != null) {
-					this.log.warn(String.format(
-						"Duplicate encoded attribute name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
-						name, attribute.getName(), duplicate));
+					this.log.warn(
+						"Duplicate encoded attribute name [{}] resulted from encoding [{}] (previous encoding came from [{}])",
+						name, attribute.getName(), duplicate);
 					continue;
 				}
 				final boolean multivalued = attribute.isMultivalued();
@@ -271,8 +270,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				final String name = property.getName();
 				final String duplicate = encodedNames.put(name, property.getName());
 				if (duplicate != null) {
-					this.log.warn(String.format(
-						"Duplicate encoded property name [%s] resulted from encoding [%s] (previous encoding came from [%s])",
+					this.log.warn(
+						"Duplicate encoded property name [{}] resulted from encoding [{}] (previous encoding came from [{}])",
 						name, property.getName(), duplicate));
 					continue;
 				}

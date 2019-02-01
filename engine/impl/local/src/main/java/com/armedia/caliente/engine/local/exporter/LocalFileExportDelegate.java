@@ -358,7 +358,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 			File tgt = h.getFile(true);
 			if (tgt != null) {
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("Copying %d bytes from [%s] into [%s]", src.length(), src, tgt));
+					this.log.debug("Copying {} bytes from [{}] into [{}]", src.length(), src, tgt);
 				}
 				Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			} else {

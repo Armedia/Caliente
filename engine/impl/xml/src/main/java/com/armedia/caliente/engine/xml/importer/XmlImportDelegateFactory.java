@@ -128,7 +128,7 @@ public class XmlImportDelegateFactory
 						try {
 							FileUtils.forceMkdir(dir);
 						} catch (IOException e) {
-							this.log.error(String.format("Failed to create the parent directory at [%s]", dir), e);
+							this.log.error("Failed to create the parent directory at [{}]", dir, e);
 							return;
 						}
 					}
@@ -140,14 +140,14 @@ public class XmlImportDelegateFactory
 						this.filesWritten++;
 						ok = true;
 					} catch (FileNotFoundException e) {
-						this.log.error(String.format("Failed to open an output stream to [%s]", tgt), e);
+						this.log.error("Failed to open an output stream to [{}]", tgt, e);
 						return;
 					} catch (IOException e) {
-						this.log.error(String.format("IOException raised while writing to [%s]", tgt), e);
+						this.log.error("IOException raised while writing to [{}]", tgt, e);
 						return;
 					} catch (JAXBException e) {
-						this.log.error(String.format("Failed to marshal the XML for document [%s](%s) to [%s]",
-							first.getSourcePath(), first.getId(), tgt), e);
+						this.log.error("Failed to marshal the XML for document [{}]({}) to [{}]", first.getSourcePath(),
+							first.getId(), tgt, e);
 						return;
 					} finally {
 						if (!ok) {
@@ -183,7 +183,7 @@ public class XmlImportDelegateFactory
 					index.add(entry);
 				}
 			} catch (Throwable t) {
-				this.log.error(String.format("Exception caught while closing out batch ID [%s]", batchId), t);
+				this.log.error("Exception caught while closing out batch ID [{}]", batchId, t);
 			} finally {
 				// Some cleanup to facilitate garbage reclaiming
 				l.clear();
@@ -212,13 +212,13 @@ public class XmlImportDelegateFactory
 					this.filesWritten++;
 					ok = true;
 				} catch (FileNotFoundException e) {
-					this.log.error(String.format(
-						"Failed to open the output file for the aggregate XML for type %s at [%s]", archetype, f), e);
+					this.log.error("Failed to open the output file for the aggregate XML for type {} at [{}]",
+						archetype, f, e);
 				} catch (IOException e) {
-					this.log.error(String.format(
-						"IOException raised while writing the aggregate XML for type %s at [%s]", archetype, f), e);
+					this.log.error("IOException raised while writing the aggregate XML for type {} at [{}]", archetype,
+						f, e);
 				} catch (JAXBException e) {
-					this.log.error(String.format("Failed to generate the XML for %s", archetype), e);
+					this.log.error("Failed to generate the XML for {}", archetype, e);
 				} finally {
 					if (!ok) {
 						FileUtils.deleteQuietly(f);
@@ -300,7 +300,7 @@ public class XmlImportDelegateFactory
 			} catch (FileNotFoundException e) {
 				// Wasn't there...no problem!
 			} catch (IOException e) {
-				this.log.warn(String.format("Failed to delete the aggregate XML file at [%s]", f.getAbsolutePath()), e);
+				this.log.warn("Failed to delete the aggregate XML file at [{}]", f.getAbsolutePath(), e);
 			}
 		}
 	}

@@ -23,6 +23,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.dfc.util.DfUtils;
+import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfACL;
@@ -210,7 +211,8 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		dql.append(" with supertype ").append((superType != null) ? superTypeName : "null").append(" publish");
 
 		if (this.log.isInfoEnabled()) {
-			this.log.info(String.format("Creating new type [%s] with DQL:%n%n%s%n", typeName, dql));
+			this.log.info("Creating new type [{}] with DQL:{}{}{}{}", typeName, LazyFormatter.NL, LazyFormatter.NL, dql,
+				LazyFormatter.NL);
 		}
 
 		IDfCollection resultCol = DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_QUERY);
@@ -465,7 +467,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		IDfValue typeNameValue = this.cmfObject.getAttribute(DctmAttributes.NAME).getValue();
 		final String typeName = typeNameValue.asString();
 		if (ctx.isSpecialType(typeName)) {
-			this.log.warn(String.format("Will not import special type [%s]", typeName));
+			this.log.warn("Will not import special type [{}]", typeName);
 			return true;
 		}
 		// If the type name is the same as dmi_${objectId}, we skip it

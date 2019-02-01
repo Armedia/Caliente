@@ -195,8 +195,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			int previousCount = 0;
 			for (IDfSysObject versionDoc : getVersions(ctx, true, document)) {
 				if (this.log.isDebugEnabled()) {
-					this.log
-						.debug(String.format("Adding prior version [%s]", calculateVersionString(versionDoc, false)));
+					this.log.debug("Adding prior version [{}]", calculateVersionString(versionDoc, false));
 				}
 				req.add(this.factory.newExportDelegate(versionDoc));
 				previousCount++;
@@ -228,8 +227,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			// Now, also do the *SUBSEQUENT* versions...
 			for (IDfSysObject versionDoc : getVersions(ctx, false, document)) {
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(
-						String.format("Adding subsequent version [%s]", calculateVersionString(versionDoc, false)));
+					this.log.debug("Adding subsequent version [{}]", calculateVersionString(versionDoc, false));
 				}
 				ret.add(this.factory.newExportDelegate(versionDoc));
 			}

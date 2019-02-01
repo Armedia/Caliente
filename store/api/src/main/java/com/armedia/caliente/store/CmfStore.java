@@ -179,8 +179,8 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for setting the properties from %s", properties), e);
+						this.log.warn("Failed to rollback the transaction for setting the properties from {}",
+							properties, e);
 					}
 				}
 			}
@@ -227,8 +227,8 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for retrieving the property [%s]", property), e);
+						this.log.warn("Failed to rollback the transaction for retrieving the property [{}]", property,
+							e);
 					}
 				}
 			}
@@ -256,10 +256,8 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for setting the property [%s] to [%s]",
-								property, value.asString()),
-							e);
+						this.log.warn("Failed to rollback the transaction for setting the property [{}] to [[}]",
+							property, value.asString(), e);
 					}
 				}
 			}
@@ -293,8 +291,8 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for setting the properties from %s", properties), e);
+						this.log.warn("Failed to rollback the transaction for setting the properties from {}",
+							properties, e);
 					}
 				}
 			}
@@ -345,8 +343,7 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for clearing the property [%s]",
-							property), e);
+						this.log.warn("Failed to rollback the transaction for clearing the property [{}]", property, e);
 					}
 				}
 			}

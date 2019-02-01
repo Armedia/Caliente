@@ -119,7 +119,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 					try {
 						ret.add(new ShptGroup(this.factory, service, service.getGroup(u.getId())));
 					} catch (ShptSessionException e) {
-						this.log.warn(String.format("Failed to locate group with ID [%d]", u.getId()));
+						this.log.warn("Failed to locate group with ID [{}]", u.getId());
 					}
 				}
 			}
@@ -145,9 +145,9 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 							} catch (ShptSessionException e) {
 								// Did not find an owner group
 								if (this.log.isDebugEnabled()) {
-									this.log.warn(String.format("Failed to find the group with ID [%d]", u.getId()), e);
+									this.log.warn("Failed to find the group with ID [{}]", u.getId(), e);
 								} else {
-									this.log.warn(String.format("Failed to find the group with ID [%d]", u.getId()));
+									this.log.warn("Failed to find the group with ID [{}]", u.getId());
 								}
 							}
 						}
@@ -157,8 +157,7 @@ public class ShptGroup extends ShptSecurityObject<Group> {
 				}
 			}
 		} catch (ShptSessionException e) {
-			this.log.warn(
-				String.format("Failed to find the owner for group [%s] (ID[%d])", getLabel(), this.object.getId()));
+			this.log.warn("Failed to find the owner for group [{}] (ID[{}])", getLabel(), this.object.getId());
 		}
 		if (owner != null) {
 			ret.add(owner);

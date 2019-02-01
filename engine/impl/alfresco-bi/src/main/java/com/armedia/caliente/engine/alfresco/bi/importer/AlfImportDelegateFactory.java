@@ -808,7 +808,7 @@ public class AlfImportDelegateFactory
 				vdoc.serialize();
 			} catch (Exception e) {
 				// This should never happen, but we still look out for it
-				this.log.warn(String.format("Failed to marshal the VDoc XML for [%s]", vdoc), e);
+				this.log.warn("Failed to marshal the VDoc XML for [{}]", vdoc, e);
 			}
 		}
 

@@ -51,6 +51,7 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.xml.StoreConfiguration;
 import com.armedia.caliente.tools.CmfCrypt;
 import com.armedia.caliente.tools.xml.XmlProperties;
+import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 
 public class Launcher extends AbstractLauncher {
@@ -356,7 +357,7 @@ public class Launcher extends AbstractLauncher {
 		this.objectStore = CmfStores.createObjectStore(cfg);
 		storeLocation = this.objectStore.getStoreLocation();
 		if (storeLocation != null) {
-			this.console.info(String.format("Using metadata directory: [%s]", storeLocation.getAbsolutePath()));
+			this.console.info("Using metadata directory: [{}]", storeLocation.getAbsolutePath());
 		} else {
 			this.console.info("The Metadata Store does not support local storage");
 		}
@@ -368,7 +369,7 @@ public class Launcher extends AbstractLauncher {
 		this.contentStore = CmfStores.createContentStore(cfg);
 		storeLocation = this.contentStore.getStoreLocation();
 		if (storeLocation != null) {
-			this.console.info(String.format("Using content directory: [%s]", storeLocation.getAbsolutePath()));
+			this.console.info("Using content directory: [{}]", storeLocation.getAbsolutePath());
 		} else {
 			this.console.info("The Content Store does not support local storage");
 		}
@@ -543,11 +544,11 @@ public class Launcher extends AbstractLauncher {
 
 		// Now, get the logs via SLF4J, which is what we'll be using moving forward...
 		final Logger console = LoggerFactory.getLogger("console");
-		console
-			.info(String.format("Launching Caliente v%s %s mode for engine %s%n", Launcher.VERSION, command, engine));
+		console.info("Launching Caliente v{} {} mode for engine {}{}", Launcher.VERSION, command, engine,
+			LazyFormatter.NL);
 		Runtime runtime = Runtime.getRuntime();
-		console.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
-		console.info(String.format("Maximum heap size: %d MB", runtime.maxMemory() / 1024 / 1024));
+		console.info("Current heap size: {} MB", runtime.totalMemory() / 1024 / 1024);
+		console.info("Maximum heap size: {} MB", runtime.maxMemory() / 1024 / 1024);
 
 		return true;
 	}

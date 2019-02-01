@@ -363,8 +363,8 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 			try {
 				head = ctx.getHeadObject(this.cmfObject);
 			} catch (CmfStorageException e) {
-				this.log.warn(String.format("Failed to load the HEAD object for %s batch [%s]",
-					this.cmfObject.getType().name(), this.cmfObject.getHistoryId()), e);
+				this.log.warn("Failed to load the HEAD object for {} batch [{}]", this.cmfObject.getType().name(),
+					this.cmfObject.getHistoryId(), e);
 			}
 			String name = ctx.getObjectName(head);
 

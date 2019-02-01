@@ -17,6 +17,7 @@ import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.launcher.AbstractLauncher;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
+import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.PooledWorkers;
 
 public class Launcher extends AbstractLauncher {
@@ -85,8 +86,8 @@ public class Launcher extends AbstractLauncher {
 
 		this.log.info("Starting validation with {} thread{}", threads, threads > 1 ? "s" : "");
 		Runtime runtime = Runtime.getRuntime();
-		this.log.info(String.format("Current heap size: %d MB", runtime.totalMemory() / 1024 / 1024));
-		this.log.info(String.format("Maximum heap size: %d MB", runtime.maxMemory() / 1024 / 1024));
+		this.log.info("Current heap size: {} MB", runtime.totalMemory() / 1024 / 1024);
+		this.log.info("Maximum heap size: {} MB", runtime.maxMemory() / 1024 / 1024);
 		this.log.info("Bulk Import path: [{}]", biFile.getAbsolutePath());
 		this.log.info("Bulk Export path: [{}]", beFile.getAbsolutePath());
 		this.log.info("Report directory: [{}]", reportDir.getAbsolutePath());
@@ -122,7 +123,13 @@ public class Launcher extends AbstractLauncher {
 			try {
 				validator.writeAndClear();
 			} finally {
-				this.log.info(String.format("Total duration: %d:%02d:%02d.%03d", hours, minutes, seconds, duration));
+				String format = "Total duration: {}:{}:{}.{}";
+				Object[] args = {
+					hours, LazyFormatter.lazyFormat("%02", minutes), LazyFormatter.lazyFormat("%02", seconds),
+					LazyFormatter.lazyFormat("%03", duration)
+				};
+				this.log.info(format, args);
+				this.console.info(format, args);
 			}
 		}
 

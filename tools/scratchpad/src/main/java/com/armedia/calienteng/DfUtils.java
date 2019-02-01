@@ -326,18 +326,18 @@ public class DfUtils {
 		try {
 			if (obj.getSession().isTransactionActive()) {
 				if (log.isTraceEnabled()) {
-					log.trace(String.format("LOCKING OBJECT [%s](%s)", objectId, objectClass));
+					log.trace("LOCKING OBJECT [{}]({})", objectId, objectClass);
 				}
 				obj.lock();
 				if (log.isTraceEnabled()) {
-					log.trace(String.format("SUCCESSFULLY LOCKED OBJECT [%s](%s)", objectId, objectClass));
+					log.trace("SUCCESSFULLY LOCKED OBJECT [{}]({})", objectId, objectClass);
 				}
 			}
 			ok = true;
 			return obj;
 		} finally {
 			if (!ok) {
-				log.error(String.format("ERROR LOCKING OBJECT WITH ID [%s](%s)", objectId, objectClass));
+				log.error("ERROR LOCKING OBJECT WITH ID [{}]({})", objectId, objectClass);
 			}
 		}
 	}

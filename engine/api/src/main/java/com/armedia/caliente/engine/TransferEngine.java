@@ -316,14 +316,14 @@ public abstract class TransferEngine< //
 			}
 			TransferEngineSetting old = settings.put(s.getLabel(), s);
 			if (old != null) {
-				this.log.warn(String.format("Duplicate setting name [%s]", s.getLabel()));
+				this.log.warn("Duplicate setting name [{}]", s.getLabel());
 			}
 		}
 		c = new ArrayList<>(settings.size());
 		for (String s : settings.keySet()) {
 			Matcher m = TransferEngine.SETTING_NAME_PATTERN.matcher(s);
 			if (!m.matches()) {
-				this.log.warn(String.format("Illegal setting name [%s], skipping", s));
+				this.log.warn("Illegal setting name [{}], skipping", s);
 				continue;
 			}
 			c.add(settings.get(s));

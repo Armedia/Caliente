@@ -13,6 +13,7 @@ import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.LockDispenser;
 import com.armedia.commons.utilities.Tools;
 
@@ -52,8 +53,8 @@ public abstract class DataRecordManager<L extends Object> {
 			return buildRecordSet(location, loopCount);
 		} catch (Exception e) {
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Failed to load the data records from [%s]", describeLocation(location)),
-					e);
+				this.log.debug("Failed to load the data records from [{}]",
+					LazyFormatter.lazyFormat(() -> describeLocation(location)), e);
 			}
 			return null;
 		}
@@ -99,8 +100,8 @@ public abstract class DataRecordManager<L extends Object> {
 								ret = loadDataRecordSet(findTypeRecords(type), loopCount);
 							} catch (Exception e) {
 								if (DataRecordManager.this.log.isDebugEnabled()) {
-									DataRecordManager.this.log
-										.debug(String.format("Failed to locate the records for type [%s]", type), e);
+									DataRecordManager.this.log.debug("Failed to locate the records for type [{}]", type,
+										e);
 								}
 							}
 							if (ret == null) {

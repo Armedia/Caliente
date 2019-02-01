@@ -58,7 +58,7 @@ public class DctmExportTargetIterator extends CloseableIterator<ExportTarget> {
 				dump = String.format(":%n%s%n", this.collection.dump());
 			} catch (DfException e2) {
 				if (this.log.isTraceEnabled()) {
-					this.log.error(String.format("Failed to generate the debug dump for object # %d", this.index), e2);
+					this.log.error("Failed to generate the debug dump for object # {}", this.index, e2);
 				}
 			}
 			throw new ExportException(String.format("Item # %d is not a supported export target: %s", this.index, dump),

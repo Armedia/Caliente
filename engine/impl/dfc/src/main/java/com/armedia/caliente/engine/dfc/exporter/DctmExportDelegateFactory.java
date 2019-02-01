@@ -103,8 +103,8 @@ public class DctmExportDelegateFactory
 			}
 			return delegate;
 		}
-		this.log.warn(String.format("Type [%s] is not supported - no delegate created for search key [%s]", type,
-			object.getObjectId().getId()));
+		this.log.warn("Type [{}] is not supported - no delegate created for search key [{}]", type,
+			object.getObjectId().getId());
 		return null;
 	}
 }

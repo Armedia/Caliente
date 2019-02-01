@@ -175,8 +175,8 @@ public class CmfCrypt {
 		try {
 			return this.encryptionScheme.decryptValue(value);
 		} catch (Exception e) {
-			this.log.trace(String.format("Failed to decrypt the value [%s] using the scheme [%s]", value,
-				this.encryptionScheme.getDescription()), e);
+			this.log.trace("Failed to decrypt the value [{}] using the scheme [{}]", value,
+				this.encryptionScheme.getDescription(), e);
 			for (Scheme s : this.alternateSchemes) {
 				if (s == null) {
 					continue;
@@ -185,8 +185,8 @@ public class CmfCrypt {
 					return s.decryptValue(value);
 				} catch (Exception e2) {
 					// Failed to decrypt, move on
-					this.log.trace(String.format("Failed to decrypt the value [%s] using the scheme [%s]", value,
-						s.getDescription()), e);
+					this.log.trace("Failed to decrypt the value [{}] using the scheme [{}]", value, s.getDescription(),
+						e);
 				}
 			}
 			return value;
@@ -201,8 +201,8 @@ public class CmfCrypt {
 			return this.encryptionScheme.encryptValue(value);
 		} catch (Exception e) {
 			// Can't encrypt?? HOW?!?
-			this.log.trace(String.format("Failed to encrypt the value [%s] using scheme [%s]", value,
-				this.encryptionScheme.getDescription()), e);
+			this.log.trace("Failed to encrypt the value [{}] using scheme [{}]", value,
+				this.encryptionScheme.getDescription(), e);
 			for (Scheme s : this.alternateSchemes) {
 				if (s == null) {
 					continue;
@@ -211,8 +211,8 @@ public class CmfCrypt {
 					return s.encryptValue(value);
 				} catch (Exception e2) {
 					// Failed to encrypt, move on
-					this.log.trace(String.format("Failed to encrypt the value [%s] using the scheme [%s]", value,
-						s.getDescription()), e);
+					this.log.trace("Failed to encrypt the value [{}] using the scheme [{}]", value, s.getDescription(),
+						e);
 				}
 			}
 			throw new Exception(

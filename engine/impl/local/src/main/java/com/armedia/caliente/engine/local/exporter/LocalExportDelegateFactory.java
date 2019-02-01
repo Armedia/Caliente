@@ -53,8 +53,7 @@ public class LocalExportDelegateFactory
 			default:
 				break;
 		}
-		this.log.warn(
-			String.format("Type [%s] is not supported - no delegate created for search key [%s]", type, searchKey));
+		this.log.warn("Type [{}] is not supported - no delegate created for search key [{}]", type, searchKey);
 		return null;
 	}
 }

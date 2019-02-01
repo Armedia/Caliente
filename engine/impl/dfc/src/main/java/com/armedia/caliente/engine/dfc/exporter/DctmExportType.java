@@ -127,9 +127,9 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 				final int vaLabelCount = vaLabels.getCount();
 				if (vaValueCount != vaLabels.getCount()) {
 					// The count doesn't match, so can't use this
-					this.log.warn(String.format(
-						"Attribute %s::%s has an incorrect count for ValueAssist values (%d) vs Labels (%d), can't continue storing VA information for it",
-						type.getName(), name, vaValueCount, vaLabelCount));
+					this.log.warn(
+						"Attribute {}::{} has an incorrect count for ValueAssist values ({}) vs Labels ({}), can't continue storing VA information for it",
+						type.getName(), name, vaValueCount, vaLabelCount);
 					// TODO: store empty values
 					continue;
 				}
@@ -192,8 +192,8 @@ public class DctmExportType extends DctmExportDelegate<IDfType> {
 		IDfType superType = type.getSuperType();
 		if (superType != null) {
 			if (ctx.isSpecialType(superType.getName())) {
-				this.log.warn(String.format("Will not export special type [%s] (supertype of [%s])",
-					superType.getName(), type.getName()));
+				this.log.warn("Will not export special type [{}] (supertype of [{}])", superType.getName(),
+					type.getName());
 			} else {
 				ret.add(this.factory.newExportDelegate(superType));
 			}

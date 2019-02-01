@@ -73,13 +73,12 @@ public class LocalRecursiveIterator implements Iterator<ExportTarget> {
 					}
 
 					if (this.log.isTraceEnabled()) {
-						this.log
-							.trace(String.format("Found %s [%s]", f.isFile() ? "FILE" : "FOLDER", f.getAbsolutePath()));
+						this.log.trace("Found {} [{}]", f.isFile() ? "FILE" : "FOLDER", f.getAbsolutePath());
 					}
 
 					if (f.isDirectory()) {
 						if (this.log.isTraceEnabled()) {
-							this.log.trace(String.format("Recursing into [%s]", f.getAbsolutePath()));
+							this.log.trace("Recursing into [{}]", f.getAbsolutePath());
 						}
 						state.folderCount++;
 						this.stateStack.push(new RecursiveState(f));

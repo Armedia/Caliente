@@ -239,8 +239,8 @@ public class AlfImportEngine extends
 					this.writers.put(importState.jobId, new PrintWriter(manifest));
 				} catch (IOException e) {
 					// Log a warning
-					this.log.error(String.format("Failed to initialize the output manifest for job %s at [%s]",
-						importState.jobId.toString(), manifest.getAbsolutePath()), e);
+					this.log.error("Failed to initialize the output manifest for job {} at [{}]",
+						importState.jobId.toString(), manifest.getAbsolutePath(), e);
 				}
 			}
 		}

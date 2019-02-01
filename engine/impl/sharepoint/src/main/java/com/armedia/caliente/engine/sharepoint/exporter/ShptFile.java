@@ -241,9 +241,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 						continue;
 					}
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("FILE [%s] - version %s is anteceded by %s",
-							this.object.getServerRelativeUrl(), v.getLabel(),
-							antecedent != null ? antecedent.getObjectId() : "none"));
+						this.log.debug("FILE [{}] - version {} is anteceded by {}", this.object.getServerRelativeUrl(),
+							v.getLabel(), antecedent != null ? antecedent.getObjectId() : "none");
 					}
 					ShptFile f;
 					try {
@@ -264,9 +263,8 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 				this.successors = Tools.freezeList(succ);
 				// TODO: See previous note about version detection/antecedent detection
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(
-						String.format("FILE [%s] - version %s is anteceded by %s", this.object.getServerRelativeUrl(),
-							this.versionNumber, antecedentId != null ? antecedentId : "none"));
+					this.log.debug("FILE [{}] - version {} is anteceded by {}", this.object.getServerRelativeUrl(),
+						this.versionNumber, antecedentId != null ? antecedentId : "none");
 				}
 				if (antecedentId != null) {
 					object.setAttribute(new CmfAttribute<>(ShptAttributes.VERSION_PRIOR.name, CmfValue.Type.ID, false,

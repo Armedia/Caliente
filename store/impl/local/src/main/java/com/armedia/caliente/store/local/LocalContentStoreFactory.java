@@ -30,8 +30,8 @@ public class LocalContentStoreFactory extends CmfContentStoreFactory<LocalConten
 		CmfContentOrganizer organizer = CmfContentOrganizer
 			.getOrganizer(cfg.getString(LocalContentStoreSetting.URI_ORGANIZER));
 		if (this.log.isDebugEnabled()) {
-			this.log.debug(String.format("Creating a new local file store with base path [%s], and organizer [%s]",
-				basePath, organizer.getName()));
+			this.log.debug("Creating a new local file store with base path [{}], and organizer [{}]", basePath,
+				organizer.getName());
 		}
 		return new LocalContentStore(cfg, new File(basePath), organizer, cleanData);
 	}

@@ -99,8 +99,7 @@ public class PermissionMapper {
 			}
 			if (p.isEmpty()) {
 				// WARNING!!! The action requested can't be mapped to any permissions!!
-				this.log
-					.warn(String.format("Allowable Action [%s] is not granted by any existing permissions", action));
+				this.log.warn("Allowable Action [{}] is not granted by any existing permissions", action);
 				actionsToPermissions.put(action, empty);
 			} else {
 				actionsToPermissions.put(action, Tools.freezeSet(new LinkedHashSet<>(p)));
@@ -119,7 +118,7 @@ public class PermissionMapper {
 				continue;
 			}
 			// WARNING!!! The action requested can't be mapped to any permissions!!
-			this.log.warn(String.format("Permission [%s] grants no Allowable Actions", p.getId()));
+			this.log.warn("Permission [{}] grants no Allowable Actions", p.getId());
 			permissionsToActions.put(p.getId(), empty);
 		}
 		this.permissionsToActions = Tools.freezeMap(new LinkedHashMap<>(permissionsToActions));
@@ -140,8 +139,7 @@ public class PermissionMapper {
 				if (actionsToPermissions.containsKey(v.toString())) {
 					continue;
 				}
-				this.log.warn(
-					String.format("Allowable Action [%s] is not granted by any existing permissions", v.toString()));
+				this.log.warn("Allowable Action [{}] is not granted by any existing permissions", v.toString());
 				actionsToPermissions.put(v.toString(), empty);
 			}
 		}

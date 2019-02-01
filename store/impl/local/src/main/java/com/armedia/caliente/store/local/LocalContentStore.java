@@ -346,7 +346,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 
 		try {
 			URI uri = new URI(scheme, ssp, null);
-			this.log.info(String.format("Generated URI %s", uri));
+			this.log.info("Generated URI {}", uri);
 			return uri;
 		} catch (URISyntaxException e) {
 			throw new RuntimeException(
@@ -470,7 +470,7 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 				try {
 					property.setValue(serializer.serialize(v));
 				} catch (Exception ex) {
-					this.log.warn(String.format("Failed to serialize the value for store property [%s]:  [%s]", n, v));
+					this.log.warn("Failed to serialize the value for store property [{}]:  [{}]", n, v);
 					continue;
 				}
 				p.getProperty().add(property);
@@ -530,8 +530,8 @@ public class LocalContentStore extends CmfContentStore<URI, File, LocalStoreOper
 			try {
 				storeProperties();
 			} catch (CmfStorageException e) {
-				this.log.error(String.format("Failed to write the store properties to [%s]",
-					this.propertiesFile.getAbsolutePath()), e);
+				this.log.error("Failed to write the store properties to [{}]", this.propertiesFile.getAbsolutePath(),
+					e);
 			}
 		}
 		return super.doClose(cleanupIfEmpty);

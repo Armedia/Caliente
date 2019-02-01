@@ -311,8 +311,7 @@ public abstract class ExportEngine<//
 			}
 
 			if (this.log.isDebugEnabled()) {
-				this.log
-					.debug(String.format("%s requires %d objects for successful storage", logLabel, referenced.size()));
+				this.log.debug("{} requires {} objects for successful storage", logLabel, referenced.size());
 			}
 			// We use a TreeSet to ensure that all our targets are always waited upon in the same
 			// order, to avoid deadlocks.

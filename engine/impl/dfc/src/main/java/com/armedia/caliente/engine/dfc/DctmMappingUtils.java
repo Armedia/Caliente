@@ -205,7 +205,7 @@ public class DctmMappingUtils {
 			Map<String, IDfValue> resolutions = DctmMappingUtils.getResolutionMappings(session);
 			IDfValue actual = resolutions.get(user);
 			if (actual != null) {
-				DctmMappingUtils.LOG.info(String.format("Resolved user %s as [%s]", user, actual.asString()));
+				DctmMappingUtils.LOG.info("Resolved user {} as [{}]", user, actual.asString());
 				return actual.asString();
 			}
 		}

@@ -233,9 +233,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			final IDfValue folderId = object.getRepeatingValue(DctmAttributes.I_FOLDER_ID, i);
 			final IDfFolder parent = session.getFolderBySpecification(folderId.asId().getId());
 			if ((parent == null) && !folderId.asId().isNull()) {
-				this.log
-					.warn(String.format("%s [%s](%s) references non-existent folder [%s]", object.getType().getName(),
-						object.getObjectName(), object.getObjectId().getId(), folderId.asString()));
+				this.log.warn("{} [{}]({}) references non-existent folder [{}]", object.getType().getName(),
+					object.getObjectName(), object.getObjectId().getId(), folderId.asString());
 				continue;
 			}
 

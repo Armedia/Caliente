@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.armedia.calienteng.DfUtils;
 import com.armedia.calienteng.EventRegistration;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
 import com.documentum.fc.client.IDfCollection;
@@ -68,7 +69,7 @@ public class TestLoop {
 		case CREATE:
 			addWatcher(obj);
 			break;
-
+	
 		case UPDATE:
 			boolean updateRecord = true;
 			Record existing = getExistingRecord(obj);
@@ -88,7 +89,7 @@ public class TestLoop {
 				}
 			}
 			break;
-
+	
 		case DELETE:
 			removeWatcher(obj);
 			break;
@@ -284,8 +285,8 @@ public class TestLoop {
 				try {
 					session.abortTransEx(tx);
 				} catch (DfException e) {
-					this.log.warn(String.format("Failed to abort the transaction adding the TYPE watch for %s",
-						obj.getDescription()), e);
+					this.log.warn("Failed to abort the transaction adding the TYPE watch for {}", obj.getDescription(),
+						e);
 				}
 			}
 		}
@@ -327,8 +328,8 @@ public class TestLoop {
 						register = true;
 					} else {
 						// Duplicate record
-						this.log.warn(String.format(
-							"Duplicate status record detected - either by object ID or by path: %s", parameters));
+						this.log.warn("Duplicate status record detected - either by object ID or by path: {}",
+							parameters);
 					}
 				}
 			} finally {
@@ -344,8 +345,8 @@ public class TestLoop {
 						register = true;
 					} else {
 						// Duplicate record
-						this.log.warn(String.format(
-							"Duplicate version record detected - either by object ID or by path: %s", parameters));
+						this.log.warn("Duplicate version record detected - either by object ID or by path: {}",
+							parameters);
 					}
 				}
 			} finally {
@@ -366,8 +367,8 @@ public class TestLoop {
 				try {
 					session.abortTransEx(tx);
 				} catch (DfException e) {
-					this.log.warn(String.format("Failed to abort the transaction adding the OBJECT watch for %s [%s]",
-						obj.getClass().getSimpleName(), obj.getObjectId()), e);
+					this.log.warn("Failed to abort the transaction adding the OBJECT watch for {} [{}]",
+						obj.getClass().getSimpleName(), obj.getObjectId(), e);
 				}
 			}
 		}
@@ -454,14 +455,14 @@ public class TestLoop {
 							event = Event.valueOf(eventName);
 						} catch (IllegalArgumentException e) {
 							// We're not interested in this event
-							this.log.warn(String.format("Ignoring [%s] from [%s] for %s[%s] (%s)", eventName,
-								id.getId(), i.getItemType(), i.getItemId(), i.getItemName()));
+							this.log.warn("Ignoring [{}] from [{}] for {}[{}] ({})", eventName, id.getId(),
+								i.getItemType(), i.getItemId(), i.getItemName());
 							continue item;
 						}
 
 						// Ok so this is an event type we're interested in...
-						this.log.info(String.format("Stowing [%s] from [%s] for %s[%s] (%s)%n", event, id.getId(),
-							i.getItemType(), i.getItemId(), i.getItemName()));
+						this.log.info("Stowing [{}] from [{}] for {}[[}] ({}){}", event, id.getId(), i.getItemType(),
+							i.getItemId(), i.getItemName(), LazyFormatter.NL);
 						if (!i.isDeleteFlag()) {
 							session.dequeue(id);
 						}
@@ -534,8 +535,9 @@ public class TestLoop {
 							}
 
 							final String dateStr = DateFormatUtils.format(payload.date.getDate(), datePattern, utc);
-							this.log.info(String.format("Event #%08d: [%s] from [%s] at [%s]%n", ++current,
-								payload.event, path, dateStr));
+							this.log.info("Event #{}: [{}] from [{}] at [{}]{}",
+								LazyFormatter.lazyFormat("%08d", ++current), payload.event, path, dateStr,
+								LazyFormatter.NL);
 
 							if (dateStr.hashCode() != utc.hashCode()) {
 								continue;

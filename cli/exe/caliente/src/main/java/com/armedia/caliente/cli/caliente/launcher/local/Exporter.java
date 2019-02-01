@@ -114,14 +114,11 @@ class Exporter extends ExportCommandModule implements DynamicCommandOptions {
 			source = f;
 		} catch (IOException e) {
 			File f = source.getAbsoluteFile();
+			String fmt = "Failed to find the canonical path for [{}], will settle for the absolute path at [{}]";
 			if (this.log.isTraceEnabled()) {
-				this.log.warn(String.format(
-					"Failed to find the canonical path for [%s], will settle for the absolute path at [%s]",
-					source.getPath(), f.getPath()), e);
+				this.log.warn(fmt, source.getPath(), f.getPath(), e);
 			} else {
-				this.log.warn(String.format(
-					"Failed to find the canonical path for [%s], will settle for the absolute path at [%s]",
-					source.getPath(), f.getPath()));
+				this.log.warn(fmt, source.getPath(), f.getPath());
 			}
 			source = f;
 		}

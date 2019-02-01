@@ -32,6 +32,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 
 public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?, ?, ?, ?, ?>> {
@@ -78,9 +79,8 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 		PluggableServiceLocator<ExportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ExportEngineListener.class);
 		extraListeners.setErrorListener((serviceClass, t) -> {
-			ExportCommandModule.this.console.warn(
-				String.format("Failed to register an additional listener class [%s]", serviceClass.getCanonicalName()),
-				t);
+			ExportCommandModule.this.console.warn("Failed to register an additional listener class [{}]",
+				serviceClass.getCanonicalName(), t);
 		});
 		extraListeners.setHideErrors(false);
 
@@ -187,12 +187,13 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 
 		if (exceptionReport != null) {
 			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
-			this.console
-				.error(String.format("%n%nEXCEPTION CAUGHT WHILE RUNNING THE EXPORT:%n%n%s%n", exceptionReport));
+			this.console.error("{}{}EXCEPTION CAUGHT WHILE RUNNING THE EXPORT:{}{}{}{}", LazyFormatter.NL,
+				LazyFormatter.NL, LazyFormatter.NL, LazyFormatter.NL, exceptionReport, LazyFormatter.NL);
 		}
 
 		String reportString = report.toString();
-		this.log.info(String.format("Action report for export operation:%n%n%s%n", reportString));
+		this.log.info("Action report for export operation:{}{}{}{}", LazyFormatter.NL, LazyFormatter.NL, reportString,
+			LazyFormatter.NL);
 		// TODO: Send the e-mail report
 		/*
 		try {

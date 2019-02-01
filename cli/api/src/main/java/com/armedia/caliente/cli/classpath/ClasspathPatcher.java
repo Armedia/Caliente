@@ -60,8 +60,8 @@ public abstract class ClasspathPatcher {
 				l = p.getPatches(verbose);
 			} catch (Exception e) {
 				if (verbose && ClasspathPatcher.log.isDebugEnabled()) {
-					ClasspathPatcher.log.warn(String.format("Failed to load the classpath patches from [%s]",
-						p.getClass().getCanonicalName()), e);
+					ClasspathPatcher.log.warn("Failed to load the classpath patches from [{}]",
+						p.getClass().getCanonicalName(), e);
 				}
 				continue;
 			}
@@ -85,9 +85,9 @@ public abstract class ClasspathPatcher {
 			} catch (IOException e) {
 				if (verbose) {
 					if (ClasspathPatcher.log.isDebugEnabled()) {
-						ClasspathPatcher.log.error(String.format("Failed to add [%s] to the classpath", u), e);
+						ClasspathPatcher.log.error("Failed to add [{}] to the classpath", u, e);
 					} else {
-						ClasspathPatcher.log.error(String.format("Failed to add [%s] to the classpath", u));
+						ClasspathPatcher.log.error("Failed to add [{}] to the classpath", u);
 					}
 				}
 			}
