@@ -20,11 +20,19 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
+import com.armedia.commons.utilities.function.LazySupplier;
 
 public class AlfImportContextFactory
 	extends ImportContextFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine, File> {
 
-	private volatile Map<CmfObject.Archetype, Map<String, String>> renameMap = null;
+	private final LazySupplier<Map<CmfObject.Archetype, Map<String, String>>> renameMap = new LazySupplier<>(() -> {
+		try {
+			return getObjectStore().getRenameMappings();
+		} catch (final CmfStorageException e) {
+			this.log.error("Failed to load the renamer map from the object store", e);
+			throw new ImportException(e);
+		}
+	}, Collections.emptyMap());
 
 	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root,
 		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
@@ -52,20 +60,10 @@ public class AlfImportContextFactory
 	protected AlfImportContext constructContext(String rootId, CmfObject.Archetype rootType, AlfRoot session,
 		int batchPosition) {
 		final CmfObjectStore<?, ?> store = getObjectStore();
-		if (this.renameMap == null) {
-			synchronized (this) {
-				if (this.renameMap == null) {
-					Map<CmfObject.Archetype, Map<String, String>> m = null;
-					try {
-						m = store.getRenameMappings();
-					} catch (CmfStorageException e) {
-						m = Collections.emptyMap();
-						this.log.error("Failed to load the renamer map from the object store", e);
-					} finally {
-						this.renameMap = m;
-					}
-				}
-			}
+		try {
+			this.renameMap.getChecked();
+		} catch (Exception e) {
+			// Ignore it - already logged
 		}
 		return new AlfImportContext(this, getSettings(), rootId, rootType, session, getOutput(), getWarningTracker(),
 			getTransformer(), getEngine().getTranslator(), store, getContentStore(), batchPosition);
@@ -82,24 +80,11 @@ public class AlfImportContextFactory
 	}
 
 	private Map<CmfObject.Archetype, Map<String, String>> getRenameMap() throws ImportException {
-		if (this.renameMap == null) {
-			synchronized (this) {
-				if (this.renameMap == null) {
-					Map<CmfObject.Archetype, Map<String, String>> m = null;
-					final CmfObjectStore<?, ?> objectStore = getObjectStore();
-					try {
-						m = objectStore.getRenameMappings();
-					} catch (CmfStorageException e) {
-						m = Collections.emptyMap();
-						this.log.error("Failed to load the renamer map from the object store", e);
-						throw new ImportException("Failed to load the renamer map from the object store", e);
-					} finally {
-						this.renameMap = m;
-					}
-				}
-			}
+		try {
+			return this.renameMap.getChecked();
+		} catch (Exception e) {
+			throw new ImportException("Failed to load the renamer map from the object store", e);
 		}
-		return this.renameMap;
 	}
 
 	public final String getAlternateName(CmfObject.Archetype type, String id) throws ImportException {

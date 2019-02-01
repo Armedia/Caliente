@@ -79,9 +79,9 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 	private final AlfrescoType defaultType;
 	private final AlfrescoType referenceType;
 
-	private volatile AlfrescoType vdocRoot = null;
-	private volatile AlfrescoType vdocVersion = null;
-	private volatile AlfrescoType vdocReference = null;
+	private AlfrescoType vdocRoot = null;
+	private AlfrescoType vdocVersion = null;
+	private AlfrescoType vdocReference = null;
 
 	public AlfImportFileableDelegate(String defaultType, AlfImportDelegateFactory factory,
 		CmfObject<CmfValue> storedObject) throws Exception {

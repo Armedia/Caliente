@@ -21,6 +21,7 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.LazySupplier;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataFromDDL.t", propOrder = {
@@ -43,7 +44,7 @@ public class MetadataFromDDL extends MetadataReaderBase {
 	protected SeparatedValuesNamesSource ignore;
 
 	@XmlTransient
-	private volatile Map<String, ColumnStructure> structure = null;
+	private final LazySupplier<Map<String, ColumnStructure>> structure = new LazySupplier<>();
 
 	public SeparatedValuesNamesSource getIgnore() {
 		return this.ignore;
@@ -111,25 +112,8 @@ public class MetadataFromDDL extends MetadataReaderBase {
 				try (final ResultSet rs = getResultSet(ps, object, null)) {
 
 					// Do we have a structure defined yet?
-					if (this.structure == null) {
-						// Step 1: upgrade the read lock to a write lock
-						final Lock writeLock = this.rwLock.writeLock();
-						readLock.unlock();
-						writeLock.lock();
-						try {
-							// Step 2: check again if initialization is needed
-							if (this.structure == null) {
-								// Step 3: initialize!
-								this.structure = getStructure(rs.getMetaData());
-							}
-						} finally {
-							// Step 4: downgrade to a read lock
-							// We downgrade in the finally clause because we have to be holding the
-							// read lock so the outer code releases it accordingly
-							readLock.lock();
-							writeLock.unlock();
-						}
-					}
+					Map<String, ColumnStructure> localStructure = this.structure
+						.getChecked(() -> getStructure(rs.getMetaData()));
 
 					int pos = 0;
 					int skip = this.skip;
@@ -145,8 +129,8 @@ public class MetadataFromDDL extends MetadataReaderBase {
 						// Increase our counter, since rs.getRow() isn't mandatory
 						++pos;
 
-						for (String column : this.structure.keySet()) {
-							final ColumnStructure structure = this.structure.get(column);
+						for (String column : localStructure.keySet()) {
+							final ColumnStructure structure = localStructure.get(column);
 
 							Tools.equals(structure.sqlType, structure.sqlTypeName); // to disable a
 																					// warning...
@@ -195,7 +179,6 @@ public class MetadataFromDDL extends MetadataReaderBase {
 
 	@Override
 	protected void doClose() {
-		this.structure = null;
 		if (this.ignore != null) {
 			try {
 				this.ignore.close();

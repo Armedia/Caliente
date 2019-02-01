@@ -3,6 +3,7 @@ package com.armedia.caliente.cli.exception;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionScheme;
 import com.armedia.caliente.cli.token.Token;
+import com.armedia.commons.utilities.function.LazySupplier;
 
 public abstract class CommandLineSyntaxException extends CommandLineException {
 	private static final long serialVersionUID = 1L;
@@ -11,7 +12,7 @@ public abstract class CommandLineSyntaxException extends CommandLineException {
 	private final Option option;
 	private final Token token;
 
-	private volatile String message = null;
+	private final LazySupplier<String> message = new LazySupplier<>(this::renderMessage);
 
 	protected CommandLineSyntaxException(OptionScheme optionScheme, Option option, Token token) {
 		this.optionScheme = optionScheme;
@@ -33,14 +34,7 @@ public abstract class CommandLineSyntaxException extends CommandLineException {
 
 	@Override
 	public final String getMessage() {
-		if (this.message == null) {
-			synchronized (this) {
-				if (this.message == null) {
-					this.message = renderMessage();
-				}
-			}
-		}
-		return this.message;
+		return this.message.get();
 	}
 
 	protected abstract String renderMessage();

@@ -91,22 +91,15 @@ public enum IntermediateProperty implements Supplier<String>, CmfEncodeableName 
 		return this.name;
 	}
 
-	private static volatile Map<String, IntermediateProperty> MAPPINGS = null;
+	private static final Map<String, IntermediateProperty> MAPPINGS;
 
-	private static void initMappings() {
-		if (IntermediateProperty.MAPPINGS == null) {
-			synchronized (IntermediateProperty.class) {
-				if (IntermediateProperty.MAPPINGS == null) {
-					IntermediateProperty.MAPPINGS = Tools.freezeMap(
-						MappingManager.createMappings(IntermediateProperty.class, IntermediateProperty.values()));
-				}
-			}
-		}
+	static {
+		MAPPINGS = Tools
+			.freezeMap(MappingManager.createMappings(IntermediateProperty.class, IntermediateProperty.values()));
 	}
 
 	public static IntermediateProperty decode(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
-		IntermediateProperty.initMappings();
 		IntermediateProperty ret = IntermediateProperty.MAPPINGS.get(name);
 		if (ret == null) {
 			throw new IllegalArgumentException(

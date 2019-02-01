@@ -43,22 +43,14 @@ public enum CmisProperty implements Supplier<String>, CmfEncodeableName {
 		return this.name;
 	}
 
-	private static volatile Map<String, CmisProperty> MAPPINGS = null;
+	private static final Map<String, CmisProperty> MAPPINGS;
 
-	private static void initMappings() {
-		if (CmisProperty.MAPPINGS == null) {
-			synchronized (CmisProperty.class) {
-				if (CmisProperty.MAPPINGS == null) {
-					CmisProperty.MAPPINGS = Tools
-						.freezeMap(MappingManager.createMappings(CmisProperty.class, CmisProperty.values()));
-				}
-			}
-		}
+	static {
+		MAPPINGS = Tools.freezeMap(MappingManager.createMappings(CmisProperty.class, CmisProperty.values()));
 	}
 
 	public static CmisProperty decode(String name) {
 		if (name == null) { throw new IllegalArgumentException("Must provide a name to decode"); }
-		CmisProperty.initMappings();
 		CmisProperty ret = CmisProperty.MAPPINGS.get(name);
 		if (ret == null) {
 			throw new IllegalArgumentException(

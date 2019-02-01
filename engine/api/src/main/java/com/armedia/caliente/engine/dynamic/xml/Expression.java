@@ -167,7 +167,7 @@ public class Expression {
 	protected String lang;
 
 	@XmlTransient
-	private volatile ScriptEngine engine = null;
+	private ScriptEngine engine = null;
 
 	protected void beforeMarshal(Marshaller m) {
 		this.lang = StringUtils.strip(this.lang);
