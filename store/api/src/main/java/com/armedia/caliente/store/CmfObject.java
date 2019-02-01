@@ -100,6 +100,7 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 	private final Map<String, CmfAttribute<VALUE>> attributes = new HashMap<>();
 	private final Map<String, CmfProperty<VALUE>> properties = new HashMap<>();
 	private final CmfAttributeTranslator<VALUE> translator;
+	private volatile String description = null;
 
 	/**
 	 * <p>
@@ -334,7 +335,18 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 	}
 
 	public final String getDescription() {
-		return String.format("%s [%s](%s)", getType().name(), this.label, getId());
+		String localDescription = this.description;
+		if (localDescription == null) {
+			synchronized (this) {
+				localDescription = this.description;
+				if (localDescription == null) {
+					// Two-phase locking = pay the price once and only once
+					this.description = localDescription = String.format("%s [%s](%s)", getType().name(), this.label,
+						getId());
+				}
+			}
+		}
+		return localDescription;
 	}
 
 	@Override

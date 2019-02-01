@@ -138,13 +138,12 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 					if (user != null) {
 						group.setOwnerName(user.getUserName());
 					} else {
-						this.log.warn(
-							String.format("Failed to set user [%s] as the owner for group [%s] - the user wasn't found",
-								actualUser, groupName.asString()));
+						this.log.warn("Failed to set user [{}] as the owner for group [{}] - the user wasn't found",
+							actualUser, groupName.asString());
 					}
 				} catch (ImportException e) {
-					this.log.warn(String.format("Failed to set user [%s] as the owner for group [%s] - %s", actualUser,
-						groupName.asString(), e.getMessage()));
+					this.log.warn("Failed to set user [{}] as the owner for group [{}] - {}", actualUser,
+						groupName.asString(), e.getMessage());
 				}
 			}
 		}
@@ -159,13 +158,13 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 					if (user != null) {
 						group.setGroupAdmin(user.getUserName());
 					} else {
-						this.log.warn(String.format(
-							"Failed to set user [%s] as the administrator for group [%s] - the user wasn't found",
-							actualUser, groupName.asString()));
+						this.log.warn(
+							"Failed to set user [{}] as the administrator for group [{}] - the user wasn't found",
+							actualUser, groupName.asString());
 					}
 				} catch (ImportException e) {
-					this.log.warn(String.format("Failed to set user [%s] as the administrator for group [%s] - %s",
-						actualUser, groupName.asString(), e.getMessage()));
+					this.log.warn("Failed to set user [{}] as the administrator for group [{}] - {}", actualUser,
+						groupName.asString(), e.getMessage());
 				}
 			}
 		}
@@ -180,9 +179,9 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 					try {
 						group.addGroup(actualGroup);
 					} catch (DfException e) {
-						this.log.warn(String.format(
-							"Failed to add group [%s] as a member of [%s] - the group wasn't found and couldn't be added by name",
-							actualGroup, groupName.asString()), e);
+						this.log.warn(
+							"Failed to add group [{}] as a member of [{}] - the group wasn't found and couldn't be added by name",
+							actualGroup, groupName.asString(), e);
 					}
 				} else {
 					group.addGroup(other.getGroupName());
@@ -204,8 +203,8 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			String user = v.asString();
 			// Don't touch the special users!
 			if (context.isUntouchableUser(user)) {
-				this.log.warn(String.format("Will not substitute the default group for the special user [%s]",
-					DctmMappingUtils.resolveMappableUser(session, user)));
+				this.log.warn("Will not substitute the default group for the special user [{}]",
+					DctmMappingUtils.resolveMappableUser(session, user));
 				continue;
 			}
 			users.add(user);
@@ -232,8 +231,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			if (Tools.equals(groupName, user.getUserGroupName())) {
 				continue;
 			}
-			this.log.info(
-				String.format("Setting group [%s] as the default group for user [%s]", groupName, user.getUserName()));
+			this.log.info("Setting group [{}] as the default group for user [{}]", groupName, user.getUserName());
 			DfUtils.lockObject(this.log, user);
 			user.fetch(null);
 			user.setUserGroupName(groupName);
@@ -242,9 +240,9 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 			try {
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
-				this.log.warn(String.format(
-					"Failed to update the system attributes for user [%s] after assigning group [%s] as their default group",
-					actualUser, group.getGroupName()), e);
+				this.log.warn(
+					"Failed to update the system attributes for user [{}] after assigning group [{}] as their default group",
+					actualUser, group.getGroupName(), e);
 			}
 		}
 	}
