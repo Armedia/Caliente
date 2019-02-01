@@ -26,7 +26,8 @@ import com.armedia.commons.utilities.BinaryMemoryBuffer;
 import com.armedia.commons.utilities.Tools;
 import com.ctc.wstx.api.WstxOutputProperties;
 import com.ctc.wstx.stax.WstxOutputFactory;
-import com.sun.xml.txw2.output.IndentingXMLStreamWriter;
+
+import javanet.staxutils.IndentingXMLStreamWriter;
 
 public class PropertiesTest {
 
