@@ -14,8 +14,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -223,42 +221,39 @@ public class AttributeMapper {
 		if (type == null) { return this.commonRenderers; }
 		final String signature = type.getSignature();
 		try {
-			return this.cache.createIfAbsent(signature, new ConcurrentInitializer<MappingRendererSet>() {
-				@Override
-				public MappingRendererSet get() throws ConcurrentException {
-					Map<String, BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers = new LinkedHashMap<>();
+			return this.cache.createIfAbsent(signature, () -> {
+				Map<String, BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers = new LinkedHashMap<>();
 
-					// First, the type itself
-					MappingRendererSet set = AttributeMapper.this.typedMappings.get(type.getName());
-					if (set != null) {
-						renderers.put(type.getName(), set);
-					}
-
-					// Next, all of its hierarchical parents
-					for (String a : type.getAncestors()) {
-						set = AttributeMapper.this.typedMappings.get(a);
-						if ((set != null) && !renderers.containsKey(a)) {
-							renderers.put(a, set);
-						}
-					}
-
-					// Finally, all its secondaries
-					for (String s : type.getSecondaries()) {
-						set = AttributeMapper.this.typedMappings.get(s);
-						if ((set != null) && !renderers.containsKey(s)) {
-							renderers.put(s, set);
-						}
-					}
-
-					// Finally, add the common renderers
-					if (AttributeMapper.this.commonRenderers != null) {
-						renderers.put(null, AttributeMapper.this.commonRenderers);
-					}
-
-					return new MappingRendererSet(type.toString(), null, null, new ArrayList<>(renderers.values()));
+				// First, the type itself
+				MappingRendererSet set = AttributeMapper.this.typedMappings.get(type.getName());
+				if (set != null) {
+					renderers.put(type.getName(), set);
 				}
+
+				// Next, all of its hierarchical parents
+				for (String a : type.getAncestors()) {
+					set = AttributeMapper.this.typedMappings.get(a);
+					if ((set != null) && !renderers.containsKey(a)) {
+						renderers.put(a, set);
+					}
+				}
+
+				// Finally, all its secondaries
+				for (String s : type.getSecondaries()) {
+					set = AttributeMapper.this.typedMappings.get(s);
+					if ((set != null) && !renderers.containsKey(s)) {
+						renderers.put(s, set);
+					}
+				}
+
+				// Finally, add the common renderers
+				if (AttributeMapper.this.commonRenderers != null) {
+					renderers.put(null, AttributeMapper.this.commonRenderers);
+				}
+
+				return new MappingRendererSet(type.toString(), null, null, new ArrayList<>(renderers.values()));
 			});
-		} catch (ConcurrentException e) {
+		} catch (Exception e) {
 			throw new RuntimeException(String.format("Failed to generate the mapping renderers for type [%s] (%s)",
 				type.toString(), signature), e);
 		}

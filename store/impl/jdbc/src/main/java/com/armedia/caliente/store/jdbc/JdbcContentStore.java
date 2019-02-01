@@ -170,8 +170,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 						this.operation.rollback();
 					} catch (CmfOperationException e) {
 						JdbcContentStore.this.log.warn(
-							String.format("Failed to rollback the transaction for closing the stream for locator [%s]",
-								this.locator),
+							"Failed to rollback the transaction for closing the stream for locator [{}]", this.locator,
 							e);
 					}
 				}
@@ -241,8 +240,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connec
 					try {
 						op.rollback();
 					} catch (CmfOperationException e) {
-						this.log.warn(
-							String.format("Rollback failed during schema preparation (dialect = %s)", this.dialect), e);
+						this.log.warn("Rollback failed during schema preparation (dialect = {})", this.dialect, e);
 					}
 				}
 			}

@@ -14,6 +14,8 @@ import com.armedia.caliente.engine.importer.ImportOutcome;
 import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.commons.utilities.LazyFormatter;
+import com.armedia.commons.utilities.Tools;
 
 public class ImportCommandListener extends AbstractCommandListener implements ImportEngineListener {
 
@@ -67,8 +69,9 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 				objectLine = String.format("%n\tProcessed %d/%d %s objects (%.2f%%, ~%.2f/s, %d since last report)",
 					current.longValue(), total.longValue(), objectType.name(), itemPct, itemRate, count);
 			}
-			this.console.info(String.format("PROGRESS REPORT%s%n\tProcessed %d/%d objects in total (%.2f%%)",
-				objectLine, aggregateCurrent.longValue(), aggregateTotal.longValue(), aggregatePct));
+			this.console.info("PROGRESS REPORT{}{}\tProcessed {}/{} objects in total ({}%)", objectLine, Tools.NL,
+				aggregateCurrent.longValue(), aggregateTotal.longValue(),
+				LazyFormatter.lazyFormat("%.2f", aggregatePct));
 		}
 	}
 
@@ -94,13 +97,13 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 	@Override
 	public final void objectTypeImportStarted(UUID jobId, CmfObject.Archetype objectType, long totalObjects) {
 		showProgress(objectType);
-		this.console.info(String.format("Object import started for %d %s objects", totalObjects, objectType.name()));
+		this.console.info("Object import started for {} {} objects", totalObjects, objectType.name());
 	}
 
 	@Override
 	public final void objectImportStarted(UUID jobId, CmfObject<?> object) {
 		showProgress(object.getType());
-		this.console.info(String.format("Import started for %s", object.getDescription()));
+		this.console.info("Import started for {}", object.getDescription());
 	}
 
 	@Override
@@ -118,8 +121,7 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 				suffix = "";
 				break;
 		}
-		this.console.info(String.format("Import completed for %s: %s%s", object.getDescription(),
-			outcome.getResult().name(), suffix));
+		this.console.info("Import completed for {}: {}{}", object.getDescription(), outcome.getResult().name(), suffix);
 		showProgress(object.getType());
 	}
 
@@ -127,14 +129,14 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 	public final void objectImportFailed(UUID jobId, CmfObject<?> object, Throwable thrown) {
 		this.aggregateCurrent.incrementAndGet();
 		this.current.get(object.getType()).incrementAndGet();
-		this.console.info(String.format("Import failed for %s", object.getDescription()), thrown);
+		this.console.info("Import failed for {}", object.getDescription(), thrown);
 		showProgress(object.getType());
 	}
 
 	@Override
 	public final void objectTypeImportFinished(UUID jobId, CmfObject.Archetype objectType,
 		Map<ImportResult, Long> counters) {
-		this.console.info(String.format("Finished importing %s objects", objectType.name()));
+		this.console.info("Finished importing {} objects", objectType.name());
 		for (ImportResult r : ImportResult.values()) {
 			Long v = counters.get(r);
 			if ((v == null) || (v.longValue() == 0)) {

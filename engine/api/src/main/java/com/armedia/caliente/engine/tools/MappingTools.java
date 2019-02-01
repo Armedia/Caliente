@@ -81,8 +81,7 @@ public class MappingTools {
 					properties.setProperty(k, v);
 				}
 			} catch (Exception e) {
-				log.error(String.format("Mapping error detected in file [%s]: [%s]->[%s]", mapFile.getAbsolutePath(), k,
-					v.toString()), e);
+				log.error("Mapping error detected in file [{}]: [{}]->[{}]", mapFile.getAbsolutePath(), k, v, e);
 				ok = false;
 			}
 		}

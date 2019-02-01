@@ -104,14 +104,11 @@ public class ShptSession {
 		if (replaceService == true) {
 			if (!silent) {
 				if (this.log.isTraceEnabled()) {
-					this.log.warn(
-						String.format("Exception raised for URL [%s] resulted in a new Service instance being created",
-							e.getRequestUrl()),
-						e);
+					this.log.warn("Exception raised for URL [{}] resulted in a new Service instance being created",
+						e.getRequestUrl(), e);
 				} else {
-					this.log.warn(String.format(
-						"Exception raised for URL [%s] resulted in a new Service instance being created - %s",
-						e.getRequestUrl(), e.getErrorString()));
+					this.log.warn("Exception raised for URL [{}] resulted in a new Service instance being created - {}",
+						e.getRequestUrl(), e.getErrorString());
 				}
 			}
 			this.service = newService();
@@ -1219,7 +1216,7 @@ public class ShptSession {
 
 			// Ok...so...let's try to reprocess, as a last resort...
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("Will reprocess URL [%s] for getInputStream() invocation", url));
+				this.log.trace("Will reprocess URL [{}] for getInputStream() invocation", url);
 			}
 			java.util.List<String> items = new ArrayList<>();
 			for (String s : FileNameTools.tokenize(url, '/')) {
@@ -1234,9 +1231,8 @@ public class ShptSession {
 			}
 			final String newUrl = FileNameTools.reconstitute(items, url.startsWith("/"), url.endsWith("/"), '/');
 			if (this.log.isTraceEnabled()) {
-				this.log
-					.trace(String.format("URL reprocessing of [%s] resulted in [%s] - invoking getInputStream(\"%s\")",
-						url, newUrl, newUrl));
+				this.log.trace("URL reprocessing of [{}] resulted in [{}] - invoking getInputStream(\"{}\")", url,
+					newUrl, newUrl);
 			}
 			try {
 				return this.service.getInputStream(newUrl);

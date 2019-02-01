@@ -106,8 +106,8 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 			if ((o == null) && !DctmMappingUtils.SPECIAL_NAMES.contains(accessor)) {
 				// Accessor not there, skip it...
 				if (!missingAccessors.contains(accessor)) {
-					this.log.warn(String.format("Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)",
-						getLabel(), (group ? "group" : "user"), accessor));
+					this.log.warn("Missing dependency for ACL [{}] - {} [{}] not found (as ACL accessor)", getLabel(),
+						(group ? "group" : "user"), accessor);
 					missingAccessors.add(accessor);
 				}
 				continue;
@@ -176,8 +176,8 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 
 			final IDfPersistentObject obj = (group ? session.getGroup(name) : session.getUser(name));
 			if (obj == null) {
-				this.log.warn(String.format("Missing dependency for ACL [%s] - %s [%s] not found (as ACL accessor)",
-					acl.getObjectName(), (group ? "group" : "user"), name));
+				this.log.warn("Missing dependency for ACL [{}] - {} [{}] not found (as ACL accessor)",
+					acl.getObjectName(), (group ? "group" : "user"), name);
 				continue;
 			}
 			ret.add(this.factory.newExportDelegate(obj));
@@ -186,7 +186,7 @@ public class DctmExportACL extends DctmExportDelegate<IDfACL> implements DctmACL
 		// Do the owner
 		final String owner = acl.getDomain();
 		if (DctmMappingUtils.isMappableUser(session, owner) || ctx.isSpecialUser(owner)) {
-			this.log.warn(String.format("Skipping export of special user [%s]", owner));
+			this.log.warn("Skipping export of special user [{}]", owner);
 		} else {
 			IDfUser user = session.getUser(owner);
 			if (user == null) {

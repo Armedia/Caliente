@@ -71,19 +71,19 @@ public class DataGen {
 			File f = new File(this.baseDir, name);
 			if (!f.exists()) {
 				if (this.log.isDebugEnabled()) {
-					this.log.warn(String.format("The file [%s] does not exist", f.getAbsolutePath()));
+					this.log.warn("The file [{}] does not exist", f.getAbsolutePath());
 				}
 				return null;
 			}
 			if (!f.isFile()) {
 				if (this.log.isDebugEnabled()) {
-					this.log.warn(String.format("The file [%s] is not a regular file", f.getAbsolutePath()));
+					this.log.warn("The file [{}] is not a regular file", f.getAbsolutePath());
 				}
 				return null;
 			}
 			if (!f.canRead()) {
 				if (this.log.isDebugEnabled()) {
-					this.log.warn(String.format("The file [%s] cannot be read", f.getAbsolutePath()));
+					this.log.warn("The file [{}] cannot be read", f.getAbsolutePath());
 				}
 				return null;
 			}
@@ -322,9 +322,9 @@ public class DataGen {
 											total += generator.generateDocuments(folder, documentCount, nameFormat,
 												BASE_BUFFER.getInputStream(), size);
 										} catch (DfException e) {
-											DataGen.this.log.error(String.format(
-												"Failed to generate the documents at ID [%s] with path [%s]",
-												id.getId(), path), e);
+											DataGen.this.log.error(
+												"Failed to generate the documents at ID [{}] with path [{}]",
+												id.getId(), path, e);
 										}
 									}
 									return total;

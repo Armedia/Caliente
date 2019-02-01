@@ -114,8 +114,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			String user = usersWithDefaultFolder.getValue(i).asString();
 			// Don't touch the special users!!
 			if (context.isUntouchableUser(user)) {
-				this.log.warn(String.format("Will not substitute the default folder for the special user [%s]",
-					DctmMappingUtils.resolveMappableUser(session, user)));
+				this.log.warn("Will not substitute the default folder for the special user [{}]",
+					DctmMappingUtils.resolveMappableUser(session, user));
 				continue;
 			}
 			m.put(user, usersDefaultFolderPaths.getValue(i).asString());
@@ -159,9 +159,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 			try {
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
-				this.log.warn(String.format(
-					"Failed to update the system attributes for user [%s] after assigning folder [%s] as their default folder",
-					actualUser, this.cmfObject.getLabel()), e);
+				this.log.warn(
+					"Failed to update the system attributes for user [{}] after assigning folder [{}] as their default folder",
+					actualUser, this.cmfObject.getLabel(), e);
 			}
 		}
 
@@ -192,9 +192,9 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 				try {
 					updateSystemAttributes(group, context);
 				} catch (ImportException e) {
-					this.log.warn(String.format(
-						"Failed to update the system attributes for group [%s] after assigning folder [%s] as its default folder",
-						g, this.cmfObject.getLabel()), e);
+					this.log.warn(
+						"Failed to update the system attributes for group [{}] after assigning folder [{}] as its default folder",
+						g, this.cmfObject.getLabel(), e);
 				}
 			}
 		}

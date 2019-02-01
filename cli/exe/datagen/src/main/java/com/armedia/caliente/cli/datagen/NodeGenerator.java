@@ -245,9 +245,8 @@ public class NodeGenerator {
 						T = new DfTime(DateUtils.parseDate(v, NodeGenerator.DATE_PATTERNS));
 					} catch (ParseException e) {
 						if (this.log.isDebugEnabled()) {
-							this.log
-								.warn(String.format("Failed to parse the date string [%s] using any of the formats %s",
-									v, NodeGenerator.DATE_PATTERNS), e);
+							this.log.warn("Failed to parse the date string [{}] using any of the formats {}", v,
+								NodeGenerator.DATE_PATTERNS, e);
 						}
 						T = DfTime.DF_INVALIDDATE;
 					}
@@ -441,8 +440,7 @@ public class NodeGenerator {
 								contentReady = true;
 							} catch (IOException e) {
 								// Failed to read
-								this.log.warn(
-									String.format("Failed to load the data from the URL [%s]", srcUrl.toString()), e);
+								this.log.warn("Failed to load the data from the URL [{}]", srcUrl.toString(), e);
 							}
 						}
 

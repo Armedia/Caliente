@@ -21,6 +21,7 @@ import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.LazySupplier;
 
 /**
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
@@ -100,6 +101,8 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 	private final Map<String, CmfAttribute<VALUE>> attributes = new HashMap<>();
 	private final Map<String, CmfProperty<VALUE>> properties = new HashMap<>();
 	private final CmfAttributeTranslator<VALUE> translator;
+	private final LazySupplier<String> description = new LazySupplier<>(this::renderDescription);
+	private final LazySupplier<String> string = new LazySupplier<>(this::renderString);
 
 	/**
 	 * <p>
@@ -334,11 +337,19 @@ public class CmfObject<VALUE> extends CmfObjectSearchSpec implements Iterable<Cm
 	}
 
 	public final String getDescription() {
+		return this.description.get();
+	}
+
+	private String renderDescription() {
 		return String.format("%s [%s](%s)", getType().name(), this.label, getId());
 	}
 
 	@Override
 	public final String toString() {
+		return this.string.get();
+	}
+
+	private String renderString() {
 		final String trailer = toStringTrailer();
 		final String trailerSep = ((trailer != null) && (trailer.length() > 0) ? ", " : "");
 		return String.format(

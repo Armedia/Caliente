@@ -109,9 +109,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 				try {
 					newVersion.cancelCheckOut();
 				} catch (Exception e) {
-					this.log
-						.warn(String.format("Failed to cancel the checkout for [%s], checked out from [%s] (for %s)",
-							newVersion.getId(), existing.getId(), this.cmfObject.getDescription()), e);
+					this.log.warn("Failed to cancel the checkout for [{}], checked out from [{}] (for {})",
+						newVersion.getId(), existing.getId(), this.cmfObject.getDescription(), e);
 				}
 			}
 		}

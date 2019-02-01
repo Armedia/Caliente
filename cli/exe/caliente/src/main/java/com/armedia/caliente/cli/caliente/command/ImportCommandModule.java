@@ -32,6 +32,7 @@ import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.PluggableServiceLocator;
+import com.armedia.commons.utilities.Tools;
 
 public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?, ?, ?, ?, ?>> {
 
@@ -72,9 +73,8 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		PluggableServiceLocator<ImportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ImportEngineListener.class);
 		extraListeners.setErrorListener((serviceClass, t) -> {
-			ImportCommandModule.this.log.warn(
-				String.format("Failed to register an additional listener class [%s]", serviceClass.getCanonicalName()),
-				t);
+			ImportCommandModule.this.log.warn("Failed to register an additional listener class [{}]",
+				serviceClass.getCanonicalName(), t);
 		});
 		extraListeners.setHideErrors(false);
 
@@ -159,9 +159,12 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		}
 
 		String reportString = report.toString();
-		this.log.info(String.format("Action report for import operation:%n%n%s%n", reportString));
-		this.console.info(String.format("Action report for import operation:%n%n%s%n", reportString));
-		// TODO: Send the e-mail report
+		String fmt = "Action report for import operation:{}{}{}{}";
+		Object[] args = {
+			Tools.NL, Tools.NL, reportString, Tools.NL
+		};
+		this.log.info(fmt, args);
+		this.console.info(fmt, args);
 		/*
 		try {
 			EmailUtils.postCalienteMail(String.format("Action report for Caliente Import"), reportString);

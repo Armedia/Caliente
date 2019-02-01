@@ -141,8 +141,8 @@ public class Validator {
 					sourceValue = DateUtils.parseDate(source, this.dateFormat);
 				} catch (ParseException e) {
 					if (Validator.LOG.isDebugEnabled()) {
-						Validator.LOG.error(String.format("Failed to parse the source date value [%s] with format [%s]",
-							source, this.dateFormat), e);
+						Validator.LOG.error("Failed to parse the source date value [{}] with format [{}]", source,
+							this.dateFormat, e);
 					}
 					sourceValue = null;
 					remarks = String.format("Failed to parse the source date value with the format [%s]: %s",
@@ -153,9 +153,8 @@ public class Validator {
 					candidateValue = DateUtils.parseDate(candidate, this.dateFormat);
 				} catch (ParseException e) {
 					if (Validator.LOG.isDebugEnabled()) {
-						Validator.LOG
-							.error(String.format("Failed to parse the candidate date value [%s] with format [%s]",
-								source, this.dateFormat), e);
+						Validator.LOG.error("Failed to parse the candidate date value [{}] with format [{}]", source,
+							this.dateFormat, e);
 					}
 					candidateValue = null;
 					String split = "F";
@@ -494,16 +493,12 @@ public class Validator {
 					processFile(file);
 				} catch (InterruptedException e) {
 					// Log the error...
-					Validator.LOG.error(
-						String.format("Failed to submit the file [%s] for processing - workers no longer working",
-							file.toAbsolutePath().toString()),
-						e);
+					Validator.LOG.error("Failed to submit the file [{}] for processing - workers no longer working",
+						file.toAbsolutePath().toString(), e);
 					return FileVisitResult.TERMINATE;
 				} catch (Exception e) {
-					Validator.LOG.error(
-						String.format("Failed to submit the file [%s] for processing - unexpected exception caught",
-							file.toAbsolutePath().toString()),
-						e);
+					Validator.LOG.error("Failed to submit the file [{}] for processing - unexpected exception caught",
+						file.toAbsolutePath().toString(), e);
 				}
 			}
 			return FileVisitResult.CONTINUE;
@@ -513,8 +508,7 @@ public class Validator {
 
 		@Override
 		public final FileVisitResult visitFileFailed(Path file, IOException exception) throws IOException {
-			Validator.this.log.warn(String.format("Failed to visit the file at [%s]", file.toAbsolutePath().toString()),
-				exception);
+			Validator.this.log.warn("Failed to visit the file at [{}]", file.toAbsolutePath(), exception);
 			// We continue b/c we need to keep trying...
 			return FileVisitResult.CONTINUE;
 		}
@@ -640,9 +634,7 @@ public class Validator {
 		try (InputStream in = new FileInputStream(file)) {
 			return XmlProperties.loadFromXML(in);
 		} catch (XMLStreamException e) {
-			this.log.warn(
-				String.format("Failed to load the properties at [%s] as XML, falling back to default properties", path),
-				e);
+			this.log.warn("Failed to load the properties at [{}] as XML, falling back to default properties", path, e);
 		}
 		try (InputStream in = new FileInputStream(file)) {
 			final Properties properties = new Properties();
@@ -976,8 +968,7 @@ public class Validator {
 				// We only reach here if all tests were successful.
 				validated = true;
 			} catch (Throwable t) {
-				this.log.error(
-					String.format("Unexpected Exception caught while processing [%s]", relativePath.toString()), t);
+				this.log.error("Unexpected Exception caught while processing [{}]", relativePath.toString(), t);
 			} finally {
 				(validated ? this.successCount : this.failureCount).incrementAndGet();
 				this.log.info("Validation for [{}] {}", relativePath.toString(), validated ? "PASSED" : "FAILED");

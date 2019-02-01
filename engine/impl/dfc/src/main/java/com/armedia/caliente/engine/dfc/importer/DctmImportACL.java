@@ -209,17 +209,17 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			try {
 				acl.revokePermit(permit);
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("PERMIT REVOKED on [%s]: [%s|%d|%d (%s)]", this.cmfObject.getLabel(),
+					this.log.debug("PERMIT REVOKED on [{}]: [{}|{}|{} ({})]", this.cmfObject.getLabel(),
 						permit.getAccessorName(), permit.getPermitType(), permit.getPermitValueInt(),
-						permit.getPermitValueString()));
+						permit.getPermitValueString());
 				}
 			} catch (DfACLException e) {
 				if (StringUtils.equalsIgnoreCase("DM_ACL_E_NOMATCH", e.getMessageId())) {
 					// we can survive this...
-					this.log.warn(String.format(
-						"PERMIT REVOKATION FAILED on [%s]: [%s|%d|%d (%s)] - ACE not found, possibly removed implicitly",
+					this.log.warn(
+						"PERMIT REVOKATION FAILED on [{}]: [{}|{}|{} ({})] - ACE not found, possibly removed implicitly",
 						this.cmfObject.getLabel(), permit.getAccessorName(), permit.getPermitType(),
-						permit.getPermitValueInt(), permit.getPermitValueString()));
+						permit.getPermitValueInt(), permit.getPermitValueString());
 					continue;
 				}
 				// something else? don't snuff it...
@@ -232,15 +232,15 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 		if (this.documentumMode) {
 			CmfProperty<IDfValue> accessors = this.cmfObject.getProperty(DctmACL.ACCESSORS);
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), accessors));
+				this.log.trace("[{}]: {}", this.cmfObject.getLabel(), accessors);
 			}
 			CmfProperty<IDfValue> permitTypes = this.cmfObject.getProperty(DctmACL.PERMIT_TYPES);
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), permitTypes));
+				this.log.trace("[{}]: {}", this.cmfObject.getLabel(), permitTypes);
 			}
 			CmfProperty<IDfValue> permitValues = this.cmfObject.getProperty(DctmACL.PERMIT_VALUES);
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("[%s]: %s", this.cmfObject.getLabel(), permitValues));
+				this.log.trace("[{}]: {}", this.cmfObject.getLabel(), permitValues);
 			}
 
 			// If all 3 are null, then we assume an empty list
@@ -310,17 +310,16 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 								exists = false;
 							}
 						} catch (ImportException e) {
-							this.log.warn(String.format(
-								"ACL [%s] references the user %s - %s - will not add the accessor to the ACL",
-								this.cmfObject.getLabel(), name, e.getMessage()));
+							this.log.warn("ACL [{}] references the user {} - {} - will not add the accessor to the ACL",
+								this.cmfObject.getLabel(), name, e.getMessage());
 							continue;
 						}
 						// Safety net?
 						if (!exists) {
 							// This shouldn't be necessary
-							this.log.warn(String.format(
-								"ACL [%s] references the user %s, but it wasn't found - will try to search for a group instead",
-								this.cmfObject.getLabel(), name));
+							this.log.warn(
+								"ACL [{}] references the user {}, but it wasn't found - will try to search for a group instead",
+								this.cmfObject.getLabel(), name);
 							exists = (session.getGroup(name) != null);
 							accessorType = "accessor (user or group)";
 						}
@@ -331,15 +330,13 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 				}
 
 				if (!exists) {
-					this.log.warn(
-						String.format("ACL [%s] references the %s [%s] for %s permission %s, but the %1$s wasn't found",
-							this.cmfObject.getLabel(), accessorType, name, type, perm));
+					this.log.warn("ACL [{}] references the {} [{}] for {} permission {}, but the {} wasn't found",
+						this.cmfObject.getLabel(), accessorType, name, type, perm, accessorType);
 					continue;
 				}
 
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(String.format("PERMIT GRANTED on [%s]: [%s|%s|%s]", this.cmfObject.getLabel(), name,
-						type, perm));
+					this.log.debug("PERMIT GRANTED on [{}]: [{}|{}|{}]", this.cmfObject.getLabel(), name, type, perm);
 				}
 
 				p.setAccessorName(name);
@@ -421,8 +418,8 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			String userName = value.asString();
 			// Don't touch the special users!!
 			if (context.isUntouchableUser(userName)) {
-				this.log.warn(String.format("Will not substitute the default ACL for the special user [%s]",
-					DctmMappingUtils.resolveMappableUser(session, userName)));
+				this.log.warn("Will not substitute the default ACL for the special user [{}]",
+					DctmMappingUtils.resolveMappableUser(session, userName));
 				continue;
 			}
 			users.add(value.asString());
@@ -439,15 +436,14 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			try {
 				user = DctmImportUser.locateExistingUser(context, userName);
 			} catch (MultipleUserMatchesException e) {
-				this.log.warn(String.format("Failed to link ACL [%s.%s] to user [%s] as its default ACL - %s",
-					acl.getDomain(), acl.getObjectName(), userName, e.getMessage()));
+				this.log.warn("Failed to link ACL [{}.{}] to user [{}] as its default ACL - {}", acl.getDomain(),
+					acl.getObjectName(), userName, e.getMessage());
 				continue;
 			}
 
 			if (user == null) {
-				this.log.warn(
-					String.format("Failed to link ACL [%s.%s] to user [%s] as its default ACL - the user wasn't found",
-						acl.getDomain(), acl.getObjectName(), userName));
+				this.log.warn("Failed to link ACL [{}.{}] to user [{}] as its default ACL - the user wasn't found",
+					acl.getDomain(), acl.getObjectName(), userName);
 				continue;
 			}
 
@@ -460,9 +456,9 @@ public class DctmImportACL extends DctmImportDelegate<IDfACL> implements DctmACL
 			try {
 				updateSystemAttributes(user, context);
 			} catch (ImportException e) {
-				this.log.warn(String.format(
-					"Failed to update the system attributes for user [%s] after assigning ACL [%s] as their default ACL",
-					user.getUserName(), this.cmfObject.getLabel()), e);
+				this.log.warn(
+					"Failed to update the system attributes for user [{}] after assigning ACL [{}] as their default ACL",
+					user.getUserName(), this.cmfObject.getLabel(), e);
 			}
 		}
 	}

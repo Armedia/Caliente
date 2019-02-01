@@ -214,8 +214,7 @@ class FilenameMapper {
 		try {
 			dfcPool = new DfcSessionPool(docbase, dctmUser, new DctmCrypto().decrypt(dctmPass));
 		} catch (DfException e) {
-			this.log.error(String.format("Failed to open the session pool to docbase [%s] as [%s]", docbase, dctmUser),
-				e);
+			this.log.error("Failed to open the session pool to docbase [{}] as [{}]", docbase, dctmUser, e);
 			return 1;
 		}
 

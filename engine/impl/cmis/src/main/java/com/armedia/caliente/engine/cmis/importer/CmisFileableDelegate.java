@@ -70,10 +70,10 @@ public abstract class CmisFileableDelegate<T extends FileableCmisObject> extends
 
 				if (directPermissions != null) {
 					if (accessorNames.getValueCount() != directPermissions.getValueCount()) {
-						CmisFileableDelegate.this.log.warn(String.format(
-							"ACL accessors and directPermissions have different object counts (%s != %s) for %s",
+						CmisFileableDelegate.this.log.warn(
+							"ACL accessors and directPermissions have different object counts ({} != {}) for {}",
 							accessorNames.getValueCount(), accessorActions.getValueCount(),
-							CmisFileableDelegate.this.cmfObject.getDescription()));
+							CmisFileableDelegate.this.cmfObject.getDescription());
 					} else {
 						// Ok...we have explicit permissions for each accessor, so skip the actions
 						// mappings and simply apply them directly

@@ -33,7 +33,6 @@ import javax.xml.bind.annotation.XmlValue;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -83,8 +82,6 @@ public class Expression {
 
 	private static final ConcurrentMap<String, ConcurrentMap<String, CompiledScript>> COMPILER_CACHE = new ConcurrentHashMap<>();
 
-	private static final String NL = String.format("%n");
-
 	public static final Expression NULL = new Expression() {
 
 		{
@@ -106,12 +103,7 @@ public class Expression {
 	private static final ConcurrentMap<String, CompiledScript> getCompilerCache(String lang) {
 		Objects.requireNonNull(lang, "Must provide a language to scan the cache for");
 		return ConcurrentUtils.createIfAbsentUnchecked(Expression.COMPILER_CACHE, lang,
-			new ConcurrentInitializer<ConcurrentMap<String, CompiledScript>>() {
-				@Override
-				public ConcurrentMap<String, CompiledScript> get() throws ConcurrentException {
-					return new ConcurrentHashMap<>();
-				}
-			});
+			() -> new ConcurrentHashMap<>());
 	}
 
 	private static final ScriptEngine getEngine(String language) {
@@ -141,14 +133,11 @@ public class Expression {
 		// The key will be the source's SHA256 checksum
 		final String key = DigestUtils.sha256Hex(source);
 		try {
-			return ConcurrentUtils.createIfAbsent(cache, key, new ConcurrentInitializer<CompiledScript>() {
-				@Override
-				public CompiledScript get() throws ConcurrentException {
-					try {
-						return compiler.compile(source);
-					} catch (ScriptException e) {
-						throw new ConcurrentException(e);
-					}
+			return ConcurrentUtils.createIfAbsent(cache, key, () -> {
+				try {
+					return compiler.compile(source);
+				} catch (ScriptException e) {
+					throw new ConcurrentException(e);
 				}
 			});
 		} catch (ConcurrentException e) {
@@ -169,7 +158,7 @@ public class Expression {
 	protected String lang;
 
 	@XmlTransient
-	private volatile ScriptEngine engine = null;
+	private ScriptEngine engine = null;
 
 	protected void beforeMarshal(Marshaller m) {
 		this.lang = StringUtils.strip(this.lang);
@@ -261,21 +250,19 @@ public class Expression {
 			}
 		}
 
-		this.log.trace("Compiling {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
+		this.log.trace("Compiling {} expression script:{}{}{}", lang, Tools.NL, script, Tools.NL);
 		final CompiledScript compiled = Expression.compileScript(lang, script);
 		if (compiled != null) {
 			this.log.trace("The {} script was compiled - will use the precompiled version", lang);
 			return compiled.eval(scriptCtx);
 		}
 
-		this.log.trace("Evaluating {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
+		this.log.trace("Evaluating {} expression script:{}{}{}", lang, Tools.NL, script, Tools.NL);
 		Object ret = engine.eval(script);
 		if (ret != null) {
-			this.log.trace("Returned [{}] from {} expression script:{}{}{}", ret, lang, Expression.NL, script,
-				Expression.NL);
+			this.log.trace("Returned [{}] from {} expression script:{}{}{}", ret, lang, Tools.NL, script, Tools.NL);
 		} else {
-			this.log.trace("Returned <null> from {} expression script:{}{}{}", lang, Expression.NL, script,
-				Expression.NL);
+			this.log.trace("Returned <null> from {} expression script:{}{}{}", lang, Tools.NL, script, Tools.NL);
 		}
 		return ret;
 	}

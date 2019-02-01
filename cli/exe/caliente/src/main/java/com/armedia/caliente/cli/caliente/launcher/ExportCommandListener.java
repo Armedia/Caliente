@@ -14,6 +14,7 @@ import com.armedia.caliente.engine.exporter.ExportState;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectSearchSpec;
+import com.armedia.commons.utilities.Tools;
 
 public class ExportCommandListener extends AbstractCommandListener implements ExportEngineListener {
 
@@ -57,24 +58,24 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 
 			objectLine = String.format("Exported %d objects (~%.2f/s, %d since last report, ~%.2f/s average)",
 				current.longValue(), itemRate, count, startRate);
-			this.console.info(
-				String.format("PROGRESS REPORT%n\t%s%n%n%s", objectLine, this.counter.generateCummulativeReport(1)));
+			this.console.info("PROGRESS REPORT{}\t{}{}{}{}", Tools.NL, objectLine, Tools.NL, Tools.NL,
+				this.counter.generateCummulativeReport(1));
 		}
 	}
 
 	@Override
 	public void exportStarted(ExportState exportState) {
 		this.start.set(System.currentTimeMillis());
-		this.console.info(String.format("Export process started with settings:%n%n\t%s%n%n", exportState.cfg));
+		this.console.info("Export process started with settings:{}{}\t{}{}{}", exportState.cfg);
 	}
 
 	@Override
 	public void objectExportStarted(UUID jobId, CmfObjectSearchSpec object, CmfObjectSearchSpec referrent) {
 		if (referrent == null) {
-			this.console.info(String.format("Object export started for %s", object.getShortLabel()));
+			this.console.info("Object export started for {}", object.getShortLabel());
 		} else {
-			this.console.info(String.format("Object export started for %s (referenced by %s)", object.getShortLabel(),
-				referrent.getShortLabel()));
+			this.console.info("Object export started for {} (referenced by {})", object.getShortLabel(),
+				referrent.getShortLabel());
 		}
 	}
 
@@ -82,8 +83,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	public void objectExportCompleted(UUID jobId, CmfObject<?> object, Long objectNumber) {
 		this.objectCounter.incrementAndGet();
 		if (objectNumber != null) {
-			this.console
-				.info(String.format("Export completed for %s as object #%d", object.getDescription(), objectNumber));
+			this.console.info("Export completed for {} as object #{}", object.getDescription(), objectNumber);
 			this.counter.increment(object.getType(), ExportResult.EXPORTED);
 		}
 		showProgress();
@@ -98,11 +98,10 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 			case DEPENDENCY_FAILED:
 				this.counter.increment(object.getType(), ExportResult.SKIPPED);
 				if (extraInfo != null) {
-					this.console
-						.info(String.format("%s was skipped (%s: %s)", object.getShortLabel(), reason, extraInfo));
+					this.console.info("{} was skipped ({}: {})", object.getShortLabel(), reason, extraInfo);
 				} else {
-					this.console.info(String.format("%s was skipped (%s)", object.getShortLabel(),
-						object.getType().name(), object.getId(), reason));
+					this.console.info("{} was skipped ({})", object.getShortLabel(), object.getType().name(),
+						object.getId(), reason);
 				}
 				break;
 			default:
@@ -115,7 +114,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	public void objectExportFailed(UUID jobId, CmfObjectSearchSpec object, Throwable thrown) {
 		this.objectCounter.incrementAndGet();
 		this.counter.increment(object.getType(), ExportResult.FAILED);
-		this.console.warn(String.format("Object export failed for %s", object.getShortLabel()), thrown);
+		this.console.warn("Object export failed for {}", object.getShortLabel(), thrown);
 		showProgress();
 	}
 

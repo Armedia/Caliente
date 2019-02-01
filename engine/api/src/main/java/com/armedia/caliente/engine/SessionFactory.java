@@ -77,9 +77,9 @@ public abstract class SessionFactory<SESSION> implements PooledObjectFactory<SES
 			doClose();
 		} catch (Exception e) {
 			if (this.log.isDebugEnabled()) {
-				this.log.error("Exception caught closing this a factory", e);
+				this.log.error("Exception caught closing this factory", e);
 			} else {
-				this.log.error(String.format("Exception caught closing this a factory: %s", e.getMessage()));
+				this.log.error("Exception caught closing this factory: {}", e.getMessage());
 			}
 		} finally {
 			this.open = false;

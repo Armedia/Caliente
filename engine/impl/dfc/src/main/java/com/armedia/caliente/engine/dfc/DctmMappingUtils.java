@@ -85,10 +85,8 @@ public class DctmMappingUtils {
 					}
 					DctmMappingUtils.FWD_MAPPINGS.put(docbase, Collections.unmodifiableMap(forward));
 					DctmMappingUtils.REV_MAPPINGS.put(docbase, Collections.unmodifiableMap(reverse));
-					DctmMappingUtils.LOG
-						.info(String.format("User Mapping Substitutions configured for [%s]: %s", docbase, reverse));
-					DctmMappingUtils.LOG
-						.info(String.format("User Mapping Resolutions configured for [%s]: %s", docbase, forward));
+					DctmMappingUtils.LOG.info("User Mapping Substitutions configured for [{}]: {}", docbase, reverse);
+					DctmMappingUtils.LOG.info("User Mapping Resolutions configured for [{}]: {}", docbase, forward);
 				}
 			}
 		}
@@ -148,8 +146,7 @@ public class DctmMappingUtils {
 		for (IDfValue user : values) {
 			IDfValue substitution = substitutions.get(user.asString());
 			if (substitution != null) {
-				DctmMappingUtils.LOG
-					.info(String.format("Substituted user [%s] as %s", user.asString(), substitution.asString()));
+				DctmMappingUtils.LOG.info("Substituted user [{}] as {}", user.asString(), substitution.asString());
 				user = substitution;
 			}
 			ret.add(user);
@@ -180,8 +177,7 @@ public class DctmMappingUtils {
 				}
 				IDfValue actual = resolutions.get(oldValue.asString());
 				if (actual != null) {
-					DctmMappingUtils.LOG
-						.info(String.format("Resolved user %s as [%s]", oldValue.asString(), actual.asString()));
+					DctmMappingUtils.LOG.info("Resolved user {} as [{}]", oldValue.asString(), actual.asString());
 					oldValue = actual;
 				}
 			}
@@ -205,7 +201,7 @@ public class DctmMappingUtils {
 			Map<String, IDfValue> resolutions = DctmMappingUtils.getResolutionMappings(session);
 			IDfValue actual = resolutions.get(user);
 			if (actual != null) {
-				DctmMappingUtils.LOG.info(String.format("Resolved user %s as [%s]", user, actual.asString()));
+				DctmMappingUtils.LOG.info("Resolved user {} as [{}]", user, actual.asString());
 				return actual.asString();
 			}
 		}

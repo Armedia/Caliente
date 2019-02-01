@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.LazySupplier;
 
 public abstract class CmfContentOrganizer {
 
@@ -26,7 +27,7 @@ public abstract class CmfContentOrganizer {
 		public final String extension;
 		public final String descriptor;
 		public final String appendix;
-		private volatile String string = null;
+		private final LazySupplier<String> string;
 
 		private Location(List<String> containerSpec, String baseName, String extension, String descriptor,
 			String appendix) {
@@ -35,6 +36,7 @@ public abstract class CmfContentOrganizer {
 			this.extension = extension;
 			this.descriptor = descriptor;
 			this.appendix = appendix;
+			this.string = new LazySupplier<>(this::renderString);
 		}
 
 		@Override
@@ -80,33 +82,25 @@ public abstract class CmfContentOrganizer {
 
 		@Override
 		public String toString() {
-			if (this.string == null) {
-				synchronized (this) {
-					if (this.string == null) {
-						final String containerSpec;
-						StringBuilder b = new StringBuilder();
-						for (String s : this.containerSpec) {
-							if (b.length() > 0) {
-								b.append('/');
-							}
-							b.append(s);
-						}
-						containerSpec = b.toString();
-						final String baseName = (!StringUtils.isEmpty(this.baseName) ? this.baseName : "");
-						final String descriptor = (!StringUtils.isEmpty(this.descriptor)
-							? String.format("[%s]", this.descriptor)
-							: "");
-						final String extension = (!StringUtils.isEmpty(this.extension)
-							? String.format(".%s", this.extension)
-							: "");
-						final String appendix = (!StringUtils.isEmpty(this.appendix)
-							? String.format(".%s", this.appendix)
-							: "");
-						return String.format("%s/%s%s%s%s", containerSpec, baseName, descriptor, extension, appendix);
-					}
+			return this.string.get();
+		}
+
+		private String renderString() {
+			final String containerSpec;
+			StringBuilder b = new StringBuilder();
+			for (String s : this.containerSpec) {
+				if (b.length() > 0) {
+					b.append('/');
 				}
+				b.append(s);
 			}
-			return this.string;
+			containerSpec = b.toString();
+			final String baseName = (!StringUtils.isEmpty(this.baseName) ? this.baseName : "");
+			final String descriptor = (!StringUtils.isEmpty(this.descriptor) ? String.format("[%s]", this.descriptor)
+				: "");
+			final String extension = (!StringUtils.isEmpty(this.extension) ? String.format(".%s", this.extension) : "");
+			final String appendix = (!StringUtils.isEmpty(this.appendix) ? String.format(".%s", this.appendix) : "");
+			return String.format("%s/%s%s%s%s", containerSpec, baseName, descriptor, extension, appendix);
 		}
 	}
 
@@ -144,15 +138,15 @@ public abstract class CmfContentOrganizer {
 			String name = s.getName();
 			if (name == null) {
 				CmfContentOrganizer.LOG.warn(
-					String.format("The content organizer class [%s] did not provide a name, so it won't be registered",
-						s.getClass().getCanonicalName()));
+					"The content organizer class [{}] did not provide a name, so it won't be registered",
+					s.getClass().getCanonicalName());
 				continue;
 			}
 			CmfContentOrganizer old = strategies.get(name);
 			if (old != null) {
-				CmfContentOrganizer.LOG.warn(String.format(
-					"The content organizer class [%s] provides the name [%s], but this collides with already-registered organizer class [%s]. The newcomer will be ignored.",
-					s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
+				CmfContentOrganizer.LOG.warn(
+					"The content organizer class [{}] provides the name [{}], but this collides with already-registered organizer class [{}]. The newcomer will be ignored.",
+					s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName());
 				continue;
 			}
 			CmfContentOrganizer.LOG.debug("Registering the content organizer class [{}] as [{}]",

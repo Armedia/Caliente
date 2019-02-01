@@ -90,8 +90,8 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 			}
 		}
 		if (!path.hasValues()) {
-			this.log.warn(String.format("Can't import %s [%s](%s) without a parent FOLDER or CABINET - skipping",
-				this.cmfObject.getSubtype(), this.cmfObject.getLabel(), this.cmfObject.getId()));
+			this.log.warn("Can't import {}  without a parent FOLDER or CABINET - skipping",
+				this.cmfObject.getDescription());
 			return true;
 		}
 		return super.skipImport(ctx);
@@ -739,19 +739,17 @@ public class DctmImportDocument extends DctmImportSysObject<IDfSysObject> implem
 				rendition = (info.isDefaultRendition() ? 0
 					: Integer.valueOf(info.getProperty(DctmAttributes.RENDITION)));
 				if ((rendition == 0) && !info.isDefaultRendition()) {
-					this.log.warn(String.format(
-						"%s %s [%s](%s) has a non-default rendition with an ID of 0, which is not allowed (%s)",
-						this.cmfObject.getSubtype(), this.cmfObject.getType(), this.cmfObject.getLabel(),
-						this.cmfObject.getId(), info));
+					this.log.warn("{} {} has a non-default rendition with an ID of 0, which is not allowed ({})",
+						this.cmfObject.getSubtype(), this.cmfObject.getDescription(), info);
 					continue;
 				}
 				page = info.getRenditionPage();
 			} else {
 				// If this isn't a documentum stream, then the rendition number must be the current
 				// iteration, so that the main rendition is always the primary stream
-				this.log.info(String.format("Storing rendition #%d (r=[%s], p=%d, i=%d) for %s [%s](%s)", i + 1,
+				this.log.info("Storing rendition #{} (r=[{}], p={}, i={}) for {} [{}]({})", i + 1,
 					info.getRenditionIdentifier(), info.getRenditionPage(), i, this.cmfObject.getType(),
-					this.cmfObject.getLabel(), this.cmfObject.getId()));
+					this.cmfObject.getLabel(), this.cmfObject.getId());
 			}
 
 			saveContentStream(context, document, info, h, contentType, fullFormat, page, rendition, pageModifier, ++i,

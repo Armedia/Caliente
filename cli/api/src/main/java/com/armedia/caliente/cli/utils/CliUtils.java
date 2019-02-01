@@ -14,8 +14,8 @@ public class CliUtils {
 		try {
 			f = f.getCanonicalFile();
 		} catch (IOException e) {
-			// this.log.warn(String.format("Failed to canonicalize the path for [%s]",
-			// f.getAbsolutePath()), e);
+			// this.log.warn("Failed to canonicalize the path for [{}]",
+			// f.getAbsolutePath(), e);
 			// Do nothing, for now
 		} finally {
 			f = f.getAbsoluteFile();

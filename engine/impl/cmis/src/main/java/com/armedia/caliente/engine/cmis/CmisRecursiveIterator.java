@@ -84,12 +84,12 @@ public class CmisRecursiveIterator implements Iterator<CmisObject> {
 					fullPath = String.format("${unfiled}:%s", f.getName());
 				}
 				if (this.log.isTraceEnabled()) {
-					this.log.trace(String.format("Found %s [%s]", f.getType().getId(), fullPath));
+					this.log.trace("Found {} [{}]", f.getType().getId(), fullPath);
 				}
 
 				if (f instanceof Folder) {
 					if (this.log.isTraceEnabled()) {
-						this.log.trace(String.format("Recursing into %s [%s]", f.getType().getId(), fullPath));
+						this.log.trace("Recursing into {} [{}]", f.getType().getId(), fullPath);
 					}
 					state.folderCount++;
 					this.stateStack.push(new RecursiveState(Folder.class.cast(f)));

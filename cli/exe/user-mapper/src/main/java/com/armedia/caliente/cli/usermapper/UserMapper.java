@@ -169,8 +169,7 @@ public class UserMapper {
 		IDfUser u = session.getUser(user.getName());
 		if (u == null) {
 			// WTF?!?!?
-			UserMapper.log
-				.warn(String.format("User [%s] disappeared on us...can't generate the record", user.getName()));
+			UserMapper.log.warn("User [{}] disappeared on us...can't generate the record", user.getName());
 			return;
 		}
 
@@ -240,8 +239,7 @@ public class UserMapper {
 		IDfGroup g = session.getGroup(group.getName());
 		if (g == null) {
 			// WTF?!?!?
-			UserMapper.log
-				.warn(String.format("Group [%s] disappeared on us...can't generate the record", group.getName()));
+			UserMapper.log.warn("Group [{}] disappeared on us...can't generate the record", group.getName());
 			return;
 		}
 		UserMapper.log.info("Retrieved group {} ({})", g.getGroupName(), g.getGroupSource());
@@ -341,8 +339,7 @@ public class UserMapper {
 			UserMapper.log.info("User mappings written out to [{}]...", mapFile.getAbsolutePath());
 		} catch (IOException e) {
 			mapFile.deleteOnExit();
-			UserMapper.log
-				.error(String.format("Failed to write out the user mappings to [%s]", mapFile.getAbsolutePath()), e);
+			UserMapper.log.error("Failed to write out the user mappings to [{}]", mapFile.getAbsolutePath(), e);
 			return 1;
 		}
 
@@ -354,8 +351,7 @@ public class UserMapper {
 			UserMapper.log.info("Group mappings written out to [{}]...", mapFile.getAbsolutePath());
 		} catch (IOException e) {
 			mapFile.deleteOnExit();
-			UserMapper.log
-				.error(String.format("Failed to write out the group mappings to [%s]", mapFile.getAbsolutePath()), e);
+			UserMapper.log.error("Failed to write out the group mappings to [{}]", mapFile.getAbsolutePath(), e);
 			return 1;
 		}
 
@@ -385,7 +381,7 @@ public class UserMapper {
 					doWork(session);
 				}
 			} catch (Exception e) {
-				UserMapper.log.error(String.format("Exception caught attempting to store %s", this.principal), e);
+				UserMapper.log.error("Exception caught attempting to store {}", this.principal, e);
 				return;
 			} finally {
 				if (session != null) {
@@ -485,8 +481,7 @@ public class UserMapper {
 			try {
 				dfcPool = new DfcSessionPool(docbase, dctmUser, new DctmCrypto().decrypt(dctmPass));
 			} catch (DfException e) {
-				UserMapper.log.error(
-					String.format("Failed to open the session pool to docbase [%s] as [%s]", docbase, dctmUser), e);
+				UserMapper.log.error("Failed to open the session pool to docbase [{}] as [{}]", docbase, dctmUser, e);
 				return 1;
 			}
 
@@ -515,7 +510,7 @@ public class UserMapper {
 				try {
 					ldapUrl = new LDAPURL(ldapUrlString);
 				} catch (LDAPException e) {
-					UserMapper.log.error(String.format("Failed to parse the LDAP URL [%s]", ldapUrlString), e);
+					UserMapper.log.error("Failed to parse the LDAP URL [{}]", ldapUrlString, e);
 					return 1;
 				}
 
@@ -629,8 +624,7 @@ public class UserMapper {
 						if (t == null) {
 							continue;
 						}
-						UserMapper.log.error(String.format("Exception raised while downloading databases (#%d)", i + 1),
-							t);
+						UserMapper.log.error("Exception raised while downloading databases (#{})", i + 1, t);
 					}
 					return 1;
 				}
@@ -800,11 +794,11 @@ public class UserMapper {
 						int k = key.intValue();
 						if ((k < 0) || (k >= principals.size())) {
 							// ?!?!? Out of bounds
-							UserMapper.log.error(String.format("Unidentified exception caught (%d)", i), t);
+							UserMapper.log.error("Unidentified exception caught ({})", i, t);
 							continue;
 						}
 						DctmPrincipal p = principals.get(key.intValue());
-						UserMapper.log.error(String.format("Exception raised while processing %s", p), t);
+						UserMapper.log.error("Exception raised while processing {}", p, t);
 					}
 					return 1;
 				}

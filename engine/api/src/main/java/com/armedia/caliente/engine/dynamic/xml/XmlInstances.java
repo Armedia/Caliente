@@ -16,7 +16,6 @@ import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,18 +164,16 @@ public class XmlInstances<T> {
 		Objects.requireNonNull(resource, "Must provide a non-null resource URL");
 		final URL key = normalize(resource);
 		try {
-			return ConcurrentUtils.createIfAbsent(this.instances, key, new ConcurrentInitializer<T>() {
-				@Override
-				public T get() throws ConcurrentException {
-					try (InputStream in = key.openStream()) {
-						return newInstance(in);
-					} catch (JAXBException e) {
-						throw new ConcurrentException(String.format("Failed to parse out the XML %s resource at [%s]",
-							XmlInstances.this.label, key), e);
-					} catch (IOException e) {
-						throw new ConcurrentException(String.format(
-							"Failed to retrieve the contents of the %s URL [%s]", XmlInstances.this.label, key), e);
-					}
+			return ConcurrentUtils.createIfAbsent(this.instances, key, () -> {
+				try (InputStream in = key.openStream()) {
+					return newInstance(in);
+				} catch (JAXBException e) {
+					throw new ConcurrentException(
+						String.format("Failed to parse out the XML %s resource at [%s]", XmlInstances.this.label, key),
+						e);
+				} catch (IOException e) {
+					throw new ConcurrentException(String.format("Failed to retrieve the contents of the %s URL [%s]",
+						XmlInstances.this.label, key), e);
 				}
 			});
 		} catch (ConcurrentException e) {

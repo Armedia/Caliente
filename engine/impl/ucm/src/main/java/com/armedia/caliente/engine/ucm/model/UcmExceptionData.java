@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.function.LazySupplier;
 
 public class UcmExceptionData {
 
@@ -14,12 +15,13 @@ public class UcmExceptionData {
 		private final String tag;
 		private final List<String> parameters;
 		private final List<String> allValues;
-		private volatile String string = null;
+		private final LazySupplier<String> string;
 
 		private Entry(List<String> parameters) {
 			this.allValues = Tools.freezeCopy(parameters);
 			this.tag = parameters.remove(0);
 			this.parameters = Tools.freezeList(parameters);
+			this.string = new LazySupplier<>(() -> Tools.joinCSVEscaped(this.allValues));
 		}
 
 		public String getTag() {
@@ -36,14 +38,7 @@ public class UcmExceptionData {
 
 		@Override
 		public String toString() {
-			if (this.string == null) {
-				synchronized (this) {
-					if (this.string == null) {
-						this.string = Tools.joinCSVEscaped(this.allValues);
-					}
-				}
-			}
-			return this.string;
+			return this.string.get();
 		}
 	}
 

@@ -105,14 +105,13 @@ public abstract class ImportEngine<//
 				try {
 					if (this.batch.contents.isEmpty()) {
 						// Shouldn't happen, but still
-						this.log.warn(
-							String.format("An invalid value made it into the work queue somehow: %s", this.batch));
+						this.log.warn("An invalid value made it into the work queue somehow: {}", this.batch);
 						this.batch.markCompleted();
 						return null;
 					}
 
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("Polled a batch with %d items", this.batch.contents.size()));
+						this.log.debug("Polled a batch with {} items", this.batch.contents.size());
 					}
 
 					final SessionWrapper<SESSION> session;
@@ -126,7 +125,7 @@ public abstract class ImportEngine<//
 
 					try {
 						if (this.log.isDebugEnabled()) {
-							this.log.debug(String.format("Got session [%s]", session.getId()));
+							this.log.debug("Got session [{}]", session.getId());
 						}
 
 						this.listenerDelegator.objectHistoryImportStarted(this.importState.jobId, this.batch.type,
@@ -134,8 +133,8 @@ public abstract class ImportEngine<//
 						int i = 0;
 						batch: for (CmfObject<VALUE> next : this.batch.contents) {
 							if (failBatch) {
-								this.log.error(String.format("Batch has been failed - will not process %s (%s)",
-									next.getDescription(), ImportResult.SKIPPED.name()));
+								this.log.error("Batch has been failed - will not process {} ({})",
+									next.getDescription(), ImportResult.SKIPPED.name());
 								this.listenerDelegator.objectImportStarted(this.importState.jobId, next);
 								this.listenerDelegator.objectImportCompleted(this.importState.jobId, next,
 									ImportOutcome.SKIPPED);
@@ -158,9 +157,8 @@ public abstract class ImportEngine<//
 											ImportResult status = req.getStatus();
 											if (status == null) {
 												failBatch = true;
-												this.log.error(
-													String.format("The required %s for %s has not been imported yet",
-														req.getShortLabel(), next.getDescription()));
+												this.log.error("The required {} for {} has not been imported yet",
+													req.getShortLabel(), next.getDescription());
 												this.listenerDelegator.objectImportStarted(this.importState.jobId,
 													next);
 												this.listenerDelegator.objectImportCompleted(this.importState.jobId,
@@ -173,10 +171,10 @@ public abstract class ImportEngine<//
 												case SKIPPED:
 													// Can't continue... a requirement is missing
 													failBatch = true;
-													this.log.error(String.format(
-														"The required %s for %s was %s, can't import the object (extra info = %s)",
+													this.log.error(
+														"The required {} for {} was {}, can't import the object (extra info = {})",
 														req.getShortLabel(), next.getDescription(),
-														req.getStatus().name(), req.getData()));
+														req.getStatus().name(), req.getData());
 													this.listenerDelegator.objectImportStarted(this.importState.jobId,
 														next);
 													this.listenerDelegator.objectImportCompleted(this.importState.jobId,
@@ -247,9 +245,9 @@ public abstract class ImportEngine<//
 										// If we're supposed to kill the batch, fail all
 										// the other objects
 										failBatch = true;
-										this.log.debug(String.format(
-											"Objects of type [%s] require that the remainder of the batch fail if an object fails",
-											storedType));
+										this.log.debug(
+											"Objects of type [{}] require that the remainder of the batch fail if an object fails",
+											storedType);
 										this.batch.markAborted(t);
 										continue;
 									}
@@ -265,8 +263,8 @@ public abstract class ImportEngine<//
 						session.close();
 					}
 				} catch (Exception e) {
-					this.log.error(String.format("Uncaught exception while processing batch [%s::%s]",
-						this.batch.type.name(), this.batch.id), e);
+					this.log.error("Uncaught exception while processing batch [{}::{}]", this.batch.type.name(),
+						this.batch.id, e);
 					throw e;
 				} finally {
 					this.batch.markCompleted();
@@ -532,9 +530,7 @@ public abstract class ImportEngine<//
 			try {
 				t = CmfObject.Archetype.valueOf(T);
 			} catch (Exception e) {
-				this.log.warn(
-					String.format("Unsupported object type found [%s] in key [%s] (value = [%s])", T, key, fixedName),
-					e);
+				this.log.warn("Unsupported object type found [{}] in key [{}] (value = [{}])", T, key, fixedName, e);
 				continue;
 			}
 			final String id = matcher.group(2);
@@ -691,27 +687,26 @@ public abstract class ImportEngine<//
 			for (final CmfObject.Archetype type : CmfObject.Archetype.values()) {
 				final Long total = containedTypes.get(type);
 				if (total == null) {
-					this.log.warn(String.format("No %s objects are contained in the export", type.name()));
+					this.log.warn("No {} objects are contained in the export", type.name());
 					continue;
 				}
 
 				if (total < 1) {
-					this.log.warn(String.format("No %s objects available", type.name()));
+					this.log.warn("No {} objects available", type.name());
 					continue;
 				}
 
 				if (!contextFactory.isSupported(type)) {
-					this.log.debug(
-						String.format("Ignoring %d objects of type %s due to engine configuration", total, type));
+					this.log.debug("Ignoring {} objects of type {} due to engine configuration", total, type);
 					continue;
 				}
 
 				final ImportStrategy strategy = getImportStrategy(type);
 				if (strategy.isIgnored()) {
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format(
-							"Skipping %d objects of type %s because it's marked as ignored by the given strategy",
-							total, type.name()));
+						this.log.debug(
+							"Skipping {} objects of type {} because it's marked as ignored by the given strategy",
+							total, type.name());
 					}
 					continue;
 				}
@@ -725,7 +720,7 @@ public abstract class ImportEngine<//
 				// are serialized).
 				final ExecutorService executor = (strategy.isParallelCapable() ? parallelExecutor : singleExecutor);
 
-				this.log.info(String.format("%d %s objects available, starting deserialization", total, type.name()));
+				this.log.info("{} {} objects available, starting deserialization", total, type.name());
 
 				try (final SessionWrapper<SESSION> loaderSession = sessionFactory.acquireSession()) {
 					objectStore.loadObjects(type, new CmfObjectHandler<CmfValue>() {
@@ -847,7 +842,7 @@ public abstract class ImportEngine<//
 				} finally {
 					try {
 						// Here, we wait for all the workers to conclude
-						this.log.info(String.format("Waiting for the %s workers to exit...", type.name()));
+						this.log.info("Waiting for the {} workers to exit...", type.name());
 						try {
 							workerCounter.waitUntil(0);
 						} catch (InterruptedException e) {
@@ -855,7 +850,7 @@ public abstract class ImportEngine<//
 							Thread.currentThread().interrupt();
 							break;
 						}
-						this.log.info(String.format("All the %s workers have exited", type.name()));
+						this.log.info("All the {} workers have exited", type.name());
 					} finally {
 						listenerDelegator.objectTypeImportFinished(jobId, type);
 					}
@@ -865,13 +860,11 @@ public abstract class ImportEngine<//
 				final Map<ImportResult, Long> results = listenerDelegator.getCounters(type);
 				final long errorCount = results.get(ImportResult.FAILED);
 				if (abortImport(type, errorCount)) {
-					this.log.info(
-						String.format("Import aborted due to %d errors detected while importing objects of type %s",
-							errorCount, type.name()));
+					this.log.info("Import aborted due to {} errors detected while importing objects of type {}",
+						errorCount, type.name());
 					break;
 				}
-				this.log.info(String.format("Work on %s objects completed, continuing with the next object type...",
-					type.name()));
+				this.log.info("Work on {} objects completed, continuing with the next object type...", type.name());
 			}
 
 			// Shut down the executor
@@ -882,8 +875,8 @@ public abstract class ImportEngine<//
 			// minutes
 			long pending = workerCounter.get();
 			if (pending > 0) {
-				this.log.info(String.format(
-					"Waiting for pending workers to terminate (maximum 5 minutes, %d pending workers)", pending));
+				this.log.info("Waiting for pending workers to terminate (maximum 5 minutes, {} pending workers)",
+					pending);
 				try {
 					workerCounter.waitUntil(0, 5, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
@@ -901,9 +894,9 @@ public abstract class ImportEngine<//
 			long pending = workerCounter.get();
 			if (pending > 0) {
 				try {
-					this.log.info(String.format(
-						"Waiting an additional 60 seconds for worker termination as a contingency (%d pending workers)",
-						pending));
+					this.log.info(
+						"Waiting an additional 60 seconds for worker termination as a contingency ({} pending workers)",
+						pending);
 					workerCounter.waitUntil(0, 1, TimeUnit.MINUTES);
 				} catch (InterruptedException e) {
 					this.log.warn("Interrupted while waiting for immediate executor termination", e);

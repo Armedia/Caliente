@@ -10,6 +10,8 @@ import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.utilities.LazyFormatter;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;
 import com.documentum.com.IDfClientX;
 import com.documentum.fc.client.DfIdNotFoundException;
@@ -68,12 +70,12 @@ public class BulkDel {
 			}
 
 			if (target == null) {
-				this.log.warn(String.format("Object spec [%s] did not return an object", spec));
+				this.log.warn("Object spec [{}] did not return an object", spec);
 				continue;
 			}
 
 			if (!IDfSysObject.class.isInstance(target)) {
-				this.log.warn(String.format("Object spec [%s] does not refer to an IDfSysObject", spec));
+				this.log.warn("Object spec [{}] does not refer to an IDfSysObject", spec);
 				continue;
 			}
 
@@ -194,7 +196,7 @@ public class BulkDel {
 						public int reportError(IDfOperationError error) throws DfException {
 							IDfOperationNode node = error.getNode();
 							if (node != null) {
-								BulkDel.this.log.error(String.format("Error deleting object [%s]", node.getId()),
+								BulkDel.this.log.error("Error deleting object [{}]", node.getId(),
 									error.getException());
 							} else {
 								BulkDel.this.log.error("Operation error detected", error.getException());
@@ -205,8 +207,9 @@ public class BulkDel {
 						@Override
 						public int progressReport(IDfOperation operation, int operationPercentDone,
 							IDfOperationStep step, int stepPercentDone, IDfOperationNode node) throws DfException {
-							BulkDel.this.log.info(String.format("%s: %3d%% done (%s: %3d%% done)%n",
-								operation.getName(), operationPercentDone, step.getName(), stepPercentDone));
+							BulkDel.this.log.info("{}: {}% done ({}: {}% done){}", operation.getName(),
+								LazyFormatter.lazyFormat("%3d", operationPercentDone), step.getName(),
+								LazyFormatter.lazyFormat("%3d", stepPercentDone), Tools.NL);
 							return IDfOperationMonitor.CONTINUE;
 						}
 

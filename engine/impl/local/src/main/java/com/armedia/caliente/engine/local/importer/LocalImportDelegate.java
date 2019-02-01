@@ -63,8 +63,7 @@ public abstract class LocalImportDelegate extends
 				// If this isn't the last version, we bork out if we're configured to only deal
 				// with the last version
 				if (this.log.isDebugEnabled()) {
-					this.log.warn(String.format("Skipping non-final version for %s [%s](%s)", this.cmfObject.getType(),
-						this.cmfObject.getLabel(), this.cmfObject.getId()));
+					this.log.warn("Skipping non-final version for {}", this.cmfObject.getDescription());
 				}
 				return Collections.singleton(ImportOutcome.SKIPPED);
 			}

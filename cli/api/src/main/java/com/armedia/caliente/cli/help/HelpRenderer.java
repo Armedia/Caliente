@@ -27,8 +27,6 @@ import com.armedia.commons.utilities.Tools;
 public final class HelpRenderer {
 	public static final int DEFAULT_WIDTH = 100;
 
-	private static final String NL = String.format("%n");
-
 	private HelpRenderer() {
 		// Ensure the class isn't instantiable
 	}
@@ -181,7 +179,7 @@ public final class HelpRenderer {
 	private static void printWrapped(PrintWriter pw, int totalWidth, int indentWidth, String msg) {
 		msg = WordUtils.wrap(msg, totalWidth - indentWidth);
 		String lead = StringUtils.repeat(' ', indentWidth);
-		for (String s : new StringTokenizer(msg, HelpRenderer.NL).getTokenList()) {
+		for (String s : new StringTokenizer(msg, Tools.NL).getTokenList()) {
 			pw.printf("%s%s%n", lead, s);
 		}
 	}

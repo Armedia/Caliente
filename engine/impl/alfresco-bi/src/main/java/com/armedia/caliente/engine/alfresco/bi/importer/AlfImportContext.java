@@ -48,8 +48,8 @@ public class AlfImportContext extends ImportContext<AlfRoot, CmfValue, AlfImport
 			try {
 				head = getHeadObject(object);
 			} catch (CmfStorageException e) {
-				this.log.warn(String.format("Failed to load the HEAD object for %s history [%s]",
-					object.getType().name(), object.getHistoryId()), e);
+				this.log.warn("Failed to load the HEAD object for {} history [{}]", object.getType().name(),
+					object.getHistoryId(), e);
 			}
 			if (head == null) {
 				head = object;

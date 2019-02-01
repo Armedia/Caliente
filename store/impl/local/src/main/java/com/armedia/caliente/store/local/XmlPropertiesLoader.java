@@ -46,9 +46,8 @@ public abstract class XmlPropertiesLoader<P extends XmlProperty, S extends XmlSt
 				try {
 					v = deserializer.deserialize(property.getValue());
 				} catch (Exception e) {
-					this.log.warn(String.format(
-						"Failed to deserialize the value for store property [%s]:  [%s] not valid as a [%s]",
-						property.getName(), property.getValue(), property.getType()));
+					this.log.warn("Failed to deserialize the value for store property [{}]:  [{}] not valid as a [{}]",
+						property.getName(), property.getValue(), property.getType());
 					continue;
 				}
 				if ((v != null) && !v.isNull()) {

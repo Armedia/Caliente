@@ -418,8 +418,8 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for retrieving the file locator [%s]", locator), e);
+						this.log.warn("Failed to rollback the transaction for retrieving the file locator [{}]",
+							locator, e);
 					}
 				}
 			}
@@ -476,8 +476,8 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for setting the content for locator [%s]", locator), e);
+						this.log.warn("Failed to rollback the transaction for setting the content for locator [{}]",
+							locator, e);
 					}
 				}
 			}
@@ -512,8 +512,8 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for retrieving the file locator [%s]", locator), e);
+						this.log.warn("Failed to rollback the transaction for retrieving the file locator [{}]",
+							locator, e);
 					}
 				}
 			}
@@ -551,9 +551,8 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for getting the stream size for locator %s", locator),
-							e);
+						this.log.warn("Failed to rollback the transaction for getting the stream size for locator {}",
+							locator, e);
 					}
 				}
 			}

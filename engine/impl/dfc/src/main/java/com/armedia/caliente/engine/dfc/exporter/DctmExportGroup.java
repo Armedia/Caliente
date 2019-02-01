@@ -144,8 +144,8 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 			}
 			ret.add(this.factory.newExportDelegate(owner));
 		} else {
-			this.log.warn(String.format("Skipping export of special user [%s] as the owner of group [%s]", groupOwner,
-				group.getGroupName()));
+			this.log.warn("Skipping export of special user [{}] as the owner of group [{}]", groupOwner,
+				group.getGroupName());
 		}
 
 		String groupAdmin = group.getGroupAdmin();
@@ -158,8 +158,8 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 			}
 			ret.add(this.factory.newExportDelegate(admin));
 		} else {
-			this.log.warn(String.format("Skipping export of special user [%s] as the admin of group [%s]", groupAdmin,
-				group.getGroupName()));
+			this.log.warn("Skipping export of special user [{}] as the admin of group [{}]", groupAdmin,
+				group.getGroupName());
 		}
 
 		CmfAttribute<IDfValue> usersNames = marshaled.getAttribute(DctmAttributes.USERS_NAMES);
@@ -167,8 +167,8 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 			for (IDfValue v : usersNames) {
 				String userName = v.asString();
 				if (ctx.isSpecialUser(userName)) {
-					this.log.warn(String.format("Will not persist special member user dependency [%s] for group [%s]",
-						userName, group.getGroupName()));
+					this.log.warn("Will not persist special member user dependency [{}] for group [{}]", userName,
+						group.getGroupName());
 					continue;
 				}
 				// We can check against whether the user is ${...} or a normal one because
@@ -198,8 +198,8 @@ public class DctmExportGroup extends DctmExportDelegate<IDfGroup> implements Dct
 			for (IDfValue v : groupsNames) {
 				String groupName = v.asString();
 				if (ctx.isSpecialGroup(groupName) || DctmMappingUtils.SPECIAL_NAMES.contains(groupName)) {
-					this.log.warn(String.format("Will not persist special member group dependency [%s] for group [%s]",
-						groupName, group.getGroupName()));
+					this.log.warn("Will not persist special member group dependency [{}] for group [{}]", groupName,
+						group.getGroupName());
 					continue;
 				}
 

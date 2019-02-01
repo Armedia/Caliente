@@ -296,7 +296,7 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			String newLabel = null;
 			if (isNew) {
 				// Create a new object
-				this.log.info(String.format("Creating %s", this.cmfObject.getDescription()));
+				this.log.info("Creating {}", this.cmfObject.getDescription());
 				object = newObject(context);
 				// Apply the aspects right away?
 				object = applyAspects(object, context);
@@ -310,10 +310,10 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			} else {
 				// Is this correct?
 				newLabel = calculateLabel(object);
-				this.log.info(String.format("Acquiring lock on existing %s", this.cmfObject.getDescription()));
+				this.log.info("Acquiring lock on existing {}", this.cmfObject.getDescription());
 				DfUtils.lockObject(this.log, object);
 				object.fetch(null);
-				this.log.info(String.format("Acquired lock on %s", this.cmfObject.getDescription()));
+				this.log.info("Acquired lock on {}", this.cmfObject.getDescription());
 				// First, store the mapping for the object's exact ID
 				context.getValueMapper().setMapping(getDctmType().getStoredObjectType(), DctmAttributes.R_OBJECT_ID,
 					this.cmfObject.getId(), object.getObjectId().getId());
@@ -346,9 +346,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 					newLabel = calculateLabel(object);
 				}
 				ok = true;
-				this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
-					getDctmType(), cmsImportResult, this.cmfObject.getLabel(), this.cmfObject.getId(), newLabel,
-					object.getObjectId().getId()));
+				this.log.info("Completed saving {} to CMS with result [{}] for {} -> [{}]({})", getDctmType(),
+					cmsImportResult, this.cmfObject.getDescription(), newLabel, object.getObjectId().getId());
 
 				return new ImportOutcome(cmsImportResult, object.getObjectId().getId(), newLabel);
 			}
@@ -425,9 +424,8 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 			if (newLabel == null) {
 				newLabel = calculateLabel(object);
 			}
-			this.log.info(String.format("Completed saving %s to CMS with result [%s] for [%s](%s)->[%s](%s)",
-				getDctmType(), cmsImportResult, this.cmfObject.getLabel(), this.cmfObject.getId(), newLabel,
-				object.getObjectId().getId()));
+			this.log.info("Completed saving {} to CMS with result [{}] for {}->[{}]({})", getDctmType(),
+				cmsImportResult, this.cmfObject.getDescription(), newLabel, object.getObjectId().getId());
 
 			ImportOutcome ret = new ImportOutcome(cmsImportResult, object.getObjectId().getId(), newLabel);
 			ok = true;
@@ -438,21 +436,19 @@ public abstract class DctmImportDelegate<T extends IDfPersistentObject> extends
 					finalizeOperation(object);
 				} catch (DfException e) {
 					ok = false;
-					this.log.error(String.format(
-						"Caught an exception while trying to finalize the import for %s - aborting the transaction",
-						this.cmfObject.getDescription()), e);
+					this.log.error(
+						"Caught an exception while trying to finalize the import for {} - aborting the transaction",
+						this.cmfObject.getDescription(), e);
 				}
 				// This has to be the last thing that happens, else some of the attributes won't
 				// take. There is no need to save() the object for this, as this is a direct
 				// modification
 				if (this.log.isTraceEnabled()) {
-					this.log
-						.trace(String.format("Updating the system attributes for %s", this.cmfObject.getDescription()));
+					this.log.trace("Updating the system attributes for {}", this.cmfObject.getDescription());
 				}
 
 				if (!updateSystemAttributes(this.cmfObject, object, context)) {
-					this.log.warn(String.format("Failed to update the system attributes for %s",
-						this.cmfObject.getDescription()));
+					this.log.warn("Failed to update the system attributes for {}", this.cmfObject.getDescription());
 				}
 			} else {
 				// Clear the mapping

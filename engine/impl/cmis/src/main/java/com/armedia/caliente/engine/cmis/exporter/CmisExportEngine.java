@@ -76,12 +76,12 @@ public class CmisExportEngine extends
 				continue;
 			}
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("Found property [%s] with value [%s]", t.getId(), t.getFirstValue()));
+				this.log.trace("Found property [{}] with value [{}]", t.getId(), t.getFirstValue());
 			}
 			type = decodeType(Tools.toString(t.getFirstValue()));
 			if (type != null) {
 				if (this.log.isTraceEnabled()) {
-					this.log.trace(String.format("Object type [%s] decoded as [%s]", t.getFirstValue(), type));
+					this.log.trace("Object type [{}] decoded as [{}]", t.getFirstValue(), type);
 				}
 				break;
 			}
