@@ -272,7 +272,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				if (duplicate != null) {
 					this.log.warn(
 						"Duplicate encoded property name [{}] resulted from encoding [{}] (previous encoding came from [{}])",
-						name, property.getName(), duplicate));
+						name, property.getName(), duplicate);
 					continue;
 				}
 				final String type = property.getType().name();
