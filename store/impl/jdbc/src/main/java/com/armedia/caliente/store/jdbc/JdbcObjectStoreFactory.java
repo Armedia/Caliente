@@ -33,9 +33,9 @@ public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<Connection, Jd
 				ds = locator.locateDataSource(cfg);
 			} catch (Exception e) {
 				if (JdbcObjectStoreFactory.LOG.isTraceEnabled()) {
-					JdbcObjectStoreFactory.LOG.warn(String.format(
-						"Exception caught attempting to locate a DataSource via %s for CmfObjectStore %s[%s]",
-						locator.getClass().getCanonicalName(), configuration.getType(), configuration.getId()), e);
+					JdbcObjectStoreFactory.LOG.warn(
+						"Exception caught attempting to locate a DataSource via {} for CmfObjectStore {}[{}]",
+						locator.getClass().getCanonicalName(), configuration.getType(), configuration.getId(), e);
 				}
 				continue;
 			}

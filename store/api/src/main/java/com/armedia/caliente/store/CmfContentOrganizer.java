@@ -144,15 +144,15 @@ public abstract class CmfContentOrganizer {
 			String name = s.getName();
 			if (name == null) {
 				CmfContentOrganizer.LOG.warn(
-					String.format("The content organizer class [%s] did not provide a name, so it won't be registered",
-						s.getClass().getCanonicalName()));
+					"The content organizer class [{}] did not provide a name, so it won't be registered",
+					s.getClass().getCanonicalName());
 				continue;
 			}
 			CmfContentOrganizer old = strategies.get(name);
 			if (old != null) {
-				CmfContentOrganizer.LOG.warn(String.format(
-					"The content organizer class [%s] provides the name [%s], but this collides with already-registered organizer class [%s]. The newcomer will be ignored.",
-					s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName()));
+				CmfContentOrganizer.LOG.warn(
+					"The content organizer class [{}] provides the name [{}], but this collides with already-registered organizer class [{}]. The newcomer will be ignored.",
+					s.getClass().getCanonicalName(), name, old.getClass().getCanonicalName());
 				continue;
 			}
 			CmfContentOrganizer.LOG.debug("Registering the content organizer class [{}] as [{}]",

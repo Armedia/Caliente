@@ -153,9 +153,8 @@ public class Validator {
 					candidateValue = DateUtils.parseDate(candidate, this.dateFormat);
 				} catch (ParseException e) {
 					if (Validator.LOG.isDebugEnabled()) {
-						Validator.LOG
-							.error(String.format("Failed to parse the candidate date value [%s] with format [%s]",
-								source, this.dateFormat), e);
+						Validator.LOG.error("Failed to parse the candidate date value [{}] with format [{}]", source,
+							this.dateFormat, e);
 					}
 					candidateValue = null;
 					String split = "F";
@@ -494,16 +493,12 @@ public class Validator {
 					processFile(file);
 				} catch (InterruptedException e) {
 					// Log the error...
-					Validator.LOG.error(
-						String.format("Failed to submit the file [%s] for processing - workers no longer working",
-							file.toAbsolutePath().toString()),
-						e);
+					Validator.LOG.error("Failed to submit the file [{}] for processing - workers no longer working",
+						file.toAbsolutePath().toString(), e);
 					return FileVisitResult.TERMINATE;
 				} catch (Exception e) {
-					Validator.LOG.error(
-						String.format("Failed to submit the file [%s] for processing - unexpected exception caught",
-							file.toAbsolutePath().toString()),
-						e);
+					Validator.LOG.error("Failed to submit the file [{}] for processing - unexpected exception caught",
+						file.toAbsolutePath().toString(), e);
 				}
 			}
 			return FileVisitResult.CONTINUE;

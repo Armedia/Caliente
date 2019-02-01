@@ -10,6 +10,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -154,14 +155,14 @@ public class DfUtils {
 					try {
 						throw new IllegalArgumentException();
 					} catch (Throwable t) {
-						DfUtils.LOG.warn(String.format("Unknown query type value [%d] given", queryType), t);
+						DfUtils.LOG.warn("Unknown query type value [{}] given", queryType, t);
 					}
 				}
 				break;
 		}
 		IDfQuery query = DfUtils.newQuery();
 		if (DfUtils.LOG.isTraceEnabled()) {
-			DfUtils.LOG.trace(String.format("Executing DQL (type=%d):%n%s", queryType, dql));
+			DfUtils.LOG.trace("Executing DQL (type={}):{}{}", queryType, LazyFormatter.NL, dql);
 		}
 		query.setDQL(dql);
 		if (queryBatchSize > 0) {
@@ -174,7 +175,7 @@ public class DfUtils {
 			return ret;
 		} finally {
 			if (!ok) {
-				DfUtils.LOG.error(String.format("Exception raised while executing the query:%n%s", dql));
+				DfUtils.LOG.error("Exception raised while executing the query:{}{}", LazyFormatter.NL, dql);
 			}
 		}
 	}
@@ -219,8 +220,8 @@ public class DfUtils {
 				throw new UnsupportedOperationException(String.format("Unsupported database type [%s]", dbType));
 		}
 		if (DfUtils.LOG.isTraceEnabled()) {
-			DfUtils.LOG.trace(String.format("Generated %s SQL Date string [%s] from [%s](%d)", dbType, ret,
-				DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(date), date.getTime()));
+			DfUtils.LOG.trace("Generated {} SQL Date string [{}] from [{}]({})", dbType, ret,
+				DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.format(date), date.getTime());
 		}
 		return ret;
 	}

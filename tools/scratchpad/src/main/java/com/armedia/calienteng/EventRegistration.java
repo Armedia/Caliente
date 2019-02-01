@@ -141,9 +141,9 @@ public class EventRegistration implements Comparable<EventRegistration> {
 					session.abortTransEx(tx);
 				} catch (DfException e2) {
 					if (EventRegistration.LOG.isDebugEnabled()) {
-						EventRegistration.LOG.warn(String.format(
-							"Exception caught aborting the transaction for event registration: [%s, %s, %s, %d, %s]",
-							object.getObjectId(), message, event, priority, sendMail), e2);
+						EventRegistration.LOG.warn(
+							"Exception caught aborting the transaction for event registration: [{}, {}, {}, {}, {}]",
+							object.getObjectId(), message, event, priority, sendMail, e2);
 					}
 				}
 			}
@@ -183,8 +183,8 @@ public class EventRegistration implements Comparable<EventRegistration> {
 					session.abortTransEx(tx);
 				} catch (DfException e2) {
 					if (EventRegistration.LOG.isDebugEnabled()) {
-						EventRegistration.LOG.warn(String.format(
-							"Exception caught aborting the transaction for event unregistration: [%s, %s]", id, event),
+						EventRegistration.LOG.warn(
+							"Exception caught aborting the transaction for event unregistration: [{}, {}]", id, event,
 							e2);
 					}
 				}
