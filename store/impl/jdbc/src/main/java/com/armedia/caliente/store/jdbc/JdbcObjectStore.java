@@ -327,9 +327,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				propertyParameters.toArray(JdbcTools.NO_PARAMS));
 			qr.insertBatch(c, translateQuery(JdbcDialect.Query.INSERT_PROPERTY_VALUE), JdbcTools.HANDLER_NULL,
 				propertyValueParameters.toArray(JdbcTools.NO_PARAMS));
-			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Stored object #%d: %s", ret, object));
-			}
+			this.log.debug("Stored object #{}: {}", ret, object);
 			return ret;
 		} catch (SQLException e) {
 			throw new CmfStorageException(String.format("Failed to serialize %s", object), e);
@@ -393,10 +391,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							final String objId = objectRS.getString("object_id");
 							final String objLabel = objectRS.getString("object_label");
 
-							if (this.log.isInfoEnabled()) {
-								this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
-									objLabel, objId));
-							}
+							this.log.info("De-serializing {} object #{} [{}]({})", type, objNum, objLabel, objId);
 
 							secondariesPS.setString(1, objId);
 							secondariesRS = secondariesPS.executeQuery();
@@ -406,10 +401,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 							obj = loadObject(objectRS, parentsRS, secondariesRS);
 							if (this.log.isTraceEnabled()) {
-								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
-							} else if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("De-serialized %s object #%d [%s](%s)", type, objNum,
-									objLabel, objId));
+								this.log.trace("De-serialized {} object #{}: {}", type, objNum, obj);
+							} else {
+								this.log.debug("De-serialized {} object #{} [{}]({})", type, objNum, objLabel, objId);
 							}
 
 							attributePS.clearParameters();
@@ -556,12 +550,10 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							// Do the history checking
 							if (!Tools.equals(currentHistory, historyId)) {
 								if (currentHistory != null) {
-									if (this.log.isDebugEnabled()) {
-										this.log.debug(String.format("CLOSE HISTORY: %s", currentHistory));
-									}
+									this.log.debug("CLOSE HISTORY: {}", currentHistory);
 									if (!handler.endHistory(currentHistory, true)) {
-										this.log.warn(String.format("%s history [%s] requested processing cancellation",
-											type.name(), historyId));
+										this.log.warn("{} history [{}] requested processing cancellation", type.name(),
+											historyId);
 										currentHistory = null;
 										break;
 									}
@@ -570,32 +562,26 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 								// Do the tier checking
 								if (!Tools.equals(currentTier, tierId)) {
 									if (currentTier != null) {
-										if (this.log.isDebugEnabled()) {
-											this.log.debug(String.format("CLOSE TIER: %d", currentTier));
-										}
+										this.log.debug("CLOSE TIER: {}", currentTier);
 										if (!handler.endTier(currentTier, true)) {
-											this.log.warn(String.format(
-												"%s tier [%d] requested processing cancellation", type.name(), tierId));
+											this.log.warn("{} tier [{}] requested processing cancellation", type.name(),
+												tierId);
 											currentTier = null;
 											break;
 										}
 									}
 
-									if (this.log.isDebugEnabled()) {
-										this.log.debug(String.format("NEW TIER: %s", tierId));
-									}
+									this.log.debug("NEW TIER: {}", tierId);
 									if (!handler.newTier(tierId)) {
-										this.log.warn(String.format("%s tier [%s] skipped", type.name(), tierId));
+										this.log.warn("{} tier [{}] skipped", type.name(), tierId);
 										continue;
 									}
 									currentTier = tierId;
 								}
 
-								if (this.log.isDebugEnabled()) {
-									this.log.debug(String.format("NEW HISTORY: %s", historyId));
-								}
+								this.log.debug("NEW HISTORY: {}", historyId);
 								if (!handler.newHistory(historyId)) {
-									this.log.warn(String.format("%s history [%s] skipped", type.name(), historyId));
+									this.log.warn("{} history [{}] skipped", type.name(), historyId);
 									continue;
 								}
 								currentHistory = historyId;
@@ -604,10 +590,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							final String objId = objectRS.getString("object_id");
 							final String objLabel = objectRS.getString("object_label");
 
-							if (this.log.isInfoEnabled()) {
-								this.log.info(String.format("De-serializing %s object #%d [%s](%s)", type, objNum,
-									objLabel, objId));
-							}
+							this.log.info("De-serializing {} object #{} [{}]({})", type, objNum, objLabel, objId);
 
 							secondariesPS.setString(1, objId);
 							secondariesRS = secondariesPS.executeQuery();
@@ -617,10 +600,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 							obj = loadObject(objectRS, parentsRS, secondariesRS);
 							if (this.log.isTraceEnabled()) {
-								this.log.trace(String.format("De-serialized %s object #%d: %s", type, objNum, obj));
-							} else if (this.log.isDebugEnabled()) {
-								this.log.debug(String.format("De-serialized %s object #%d [%s](%s)", type, objNum,
-									objLabel, objId));
+								this.log.trace("De-serialized {} object #{}: {}", type, objNum, obj);
+							} else {
+								this.log.debug("De-serialized {} object #{} [{}]({})", type, objNum, objLabel, objId);
 							}
 
 							attributePS.clearParameters();
@@ -679,10 +661,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 
 						try {
 							if (!handler.handleObject(obj)) {
-								if (this.log.isDebugEnabled()) {
-									this.log.debug(
-										String.format("ObjectHandler requested load loop break on object: %s", obj));
-								}
+								this.log.debug("ObjectHandler requested load loop break on object: {}", obj);
 								break;
 							}
 						} finally {
@@ -697,10 +676,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						try {
 							handler.endHistory(currentHistory, ok);
 						} catch (CmfStorageException e) {
-							this.log.error(
-								String.format("Exception caught attempting to close the pending history [%s] (ok=%s)",
-									currentHistory, ok),
-								e);
+							this.log.error("Exception caught attempting to close the pending history [{}] (ok={})",
+								currentHistory, ok, e);
 						} finally {
 							currentHistory = null;
 						}
@@ -709,10 +686,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						try {
 							handler.endTier(currentTier, ok);
 						} catch (CmfStorageException e) {
-							this.log.error(
-								String.format("Exception caught attempting to close the pending tier [%d] (ok=%s)",
-									currentTier, ok),
-								e);
+							this.log.error("Exception caught attempting to close the pending tier [{}] (ok={})",
+								currentTier, ok, e);
 						} finally {
 							currentTier = null;
 						}
@@ -778,9 +753,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 							nameFixer.nameFixed(obj, oldName, newName);
 						} catch (Exception e) {
 							// Just log it
-							JdbcObjectStore.this.log
-								.warn(String.format("Exception caught while invoking the nameFixed() callback for %s",
-									obj.getDescription()), e);
+							JdbcObjectStore.this.log.warn(
+								"Exception caught while invoking the nameFixed() callback for {}", obj.getDescription(),
+								e);
 						}
 					}
 					return true;
@@ -876,8 +851,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			final String refValue = (targetValue == null ? sourceValue : targetValue);
 			int count = qr.update(c, sql, type.name(), name, refValue);
 			if (count > 0) {
-				this.log.info(String.format("Deleted the mappings [%s/%s/%s->%s] : %d", type, name, sourceValue,
-					targetValue, count));
+				this.log.info("Deleted the mappings [{}/{}/{}->{}] : %d", type, name, sourceValue, targetValue, count);
 			}
 			return;
 		}
@@ -901,11 +875,9 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 			// Now, add the new mapping...
 			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_MAPPING), JdbcTools.HANDLER_NULL, type.name(), name,
 				sourceValue, targetValue);
-			this.log
-				.info(String.format("Established the mapping [%s/%s/%s->%s]", type, name, sourceValue, targetValue));
+			this.log.info("Established the mapping [{}/{}/{}->{}]", type, name, sourceValue, targetValue);
 		} else if (this.log.isDebugEnabled()) {
-			this.log.debug(
-				String.format("The mapping [%s/%s/%s->%s] already exists", type, name, sourceValue, targetValue));
+			this.log.debug("The mapping [{}/{}/{}->{}] already exists", type, name, sourceValue, targetValue);
 		}
 	}
 
@@ -988,15 +960,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			// No existing status, so we can continue
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("ATTEMPTING TO SET THE EXPORT RESULT TO [%s] FOR %s", status.name(),
-					target.getShortLabel()));
+				this.log.trace("ATTEMPTING TO SET THE EXPORT RESULT TO [{}] FOR {}", status.name(),
+					target.getShortLabel());
 			}
 			int result = qr.update(c, translateQuery(JdbcDialect.Query.UPDATE_EXPORT_RESULT), status.name(), message,
 				target.getType().name(), dbid);
 			if (result == 1) {
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(
-						String.format("SET THE EXPORT RESULT TO [%s] FOR %s", status.name(), target.getShortLabel()));
+					this.log.debug("SET THE EXPORT RESULT TO [{}] FOR {}", status.name(), target.getShortLabel());
 				}
 				return true;
 			}
@@ -1014,8 +985,8 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				// If the existing status was already set, this isn't really a problem - we just
 				// report the discrepancy if necessary, and return false...then move on
 				if (existing != status) {
-					this.log.warn(String.format("FAILED TO SET THE RESULT TO [%s] for %s (%d updated, existing=%s)",
-						status.name(), target.getShortLabel(), result, existing.name()));
+					this.log.warn("FAILED TO SET THE RESULT TO [{}] for {} ({} updated, existing={})", status.name(),
+						target.getShortLabel(), result, existing.name());
 				}
 				return false;
 			}
@@ -1040,13 +1011,13 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				while (rs.next()) {
 					String t = rs.getString(1);
 					if ((t == null) || rs.wasNull()) {
-						JdbcObjectStore.this.log.warn(String.format("NULL TYPE STORED IN DATABASE: [%s]", t));
+						JdbcObjectStore.this.log.warn("NULL TYPE STORED IN DATABASE: [{}]", t);
 						continue;
 					}
 					try {
 						ret.put(CmfObject.Archetype.valueOf(t), rs.getLong(2));
 					} catch (IllegalArgumentException e) {
-						JdbcObjectStore.this.log.warn(String.format("UNSUPPORTED TYPE STORED IN DATABASE: [%s]", t));
+						JdbcObjectStore.this.log.warn("UNSUPPORTED TYPE STORED IN DATABASE: [{}]", t);
 						continue;
 					}
 				}
@@ -1427,14 +1398,11 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		Savepoint savePoint = null;
 		try {
 			savePoint = c.setSavepoint();
-			if (this.log.isTraceEnabled()) {
-				this.log.trace(
-					String.format("ATTEMPTING TO LOCK %s HISTORY %s WITH ID %s", type.name(), historyId, lockId));
-			}
+			this.log.trace("ATTEMPTING TO LOCK {} HISTORY {} WITH ID {}", type.name(), historyId, lockId);
 			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_HISTORY_LOCK), JdbcTools.HANDLER_NULL, type.name(),
 				historyId, lockId);
 			if (this.log.isDebugEnabled()) {
-				this.log.trace(String.format("LOCKED %s HISTORY %s WITH ID %s", type.name(), historyId, lockId));
+				this.log.trace("LOCKED {} HISTORY {} WITH ID {}", type.name(), historyId, lockId);
 			}
 			savePoint = JdbcTools.commitSavepoint(c, savePoint);
 			return true;
@@ -1450,15 +1418,14 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 						type.name(), historyId, lockId);
 					if (updated == 1) {
 						if (this.log.isTraceEnabled()) {
-							this.log.trace(String.format("%s HISTORY %s IS LOCKED BY THIS SAME ID (%s)", type.name(),
-								historyId, lockId));
+							this.log.trace("{} HISTORY {} IS LOCKED BY THIS SAME ID ({})", type.name(), historyId,
+								lockId);
 						}
 						return true;
 					}
 
 					if (this.log.isTraceEnabled()) {
-						this.log.trace(
-							String.format("%s HISTORY %s IS ALREADY LOCKED WITH ANOTHER ID", type.name(), historyId));
+						this.log.trace("{} HISTORY {} IS ALREADY LOCKED WITH ANOTHER ID", type.name(), historyId);
 					}
 					return false;
 				} catch (SQLException e2) {
@@ -1484,12 +1451,12 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			savePoint = c.setSavepoint();
 			if (this.log.isTraceEnabled()) {
-				this.log.trace(String.format("ATTEMPTING TO PERSIST DEPENDENCY %s", target.getShortLabel()));
+				this.log.trace("ATTEMPTING TO PERSIST DEPENDENCY {}", target.getShortLabel());
 			}
 			qr.insert(c, translateQuery(JdbcDialect.Query.INSERT_EXPORT_PLAN), JdbcTools.HANDLER_NULL,
 				target.getType().name(), dbid);
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("PERSISTED DEPENDENCY %s", target.getShortLabel()));
+				this.log.debug("PERSISTED DEPENDENCY {}", target.getShortLabel());
 			}
 			savePoint = JdbcTools.commitSavepoint(c, savePoint);
 			return true;
@@ -1499,7 +1466,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 				// thus we'll be OK to continue using the transaction in other operations
 				JdbcTools.rollbackSavepoint(c, savePoint);
 				if (this.log.isTraceEnabled()) {
-					this.log.trace(String.format("DUPLICATE DEPENDENCY %s", target.getShortLabel()));
+					this.log.trace("DUPLICATE DEPENDENCY {}", target.getShortLabel());
 				}
 				return false;
 			}
@@ -1676,7 +1643,7 @@ public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
 		try {
 			int count = qr.update(c, translateQuery(JdbcDialect.Query.RESET_ALT_NAME));
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Reset %d alternate name mappings", count));
+				this.log.debug("Reset {} alternate name mappings", count);
 			}
 		} catch (SQLException e) {
 			throw new CmfStorageException("Failed to reset the alt names table", e);

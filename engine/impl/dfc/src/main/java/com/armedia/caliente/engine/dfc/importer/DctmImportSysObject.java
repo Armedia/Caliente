@@ -170,15 +170,13 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				IDfPermit toRevoke = (grant ? this.oldPermit : this.newPermit);
 				if (toRevoke != null) {
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("REVOKING [%s] on [%s]", toRevoke.getPermitValueString(),
-							object.getObjectId()));
+						this.log.debug("REVOKING [{}] on [{}]", toRevoke.getPermitValueString(), object.getObjectId());
 					}
 					object.revokePermit(toRevoke);
 				}
 				if (toGrant != null) {
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("GRANTING [%s] on [%s]", toGrant.getPermitValueString(),
-							object.getObjectId()));
+						this.log.debug("GRANTING [{}] on [{}]", toGrant.getPermitValueString(), object.getObjectId());
 					}
 					object.grantPermit(toGrant);
 				}
@@ -194,8 +192,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 					}
 					auto.setPermitValue(p);
 					if (this.log.isDebugEnabled()) {
-						this.log.debug(String.format("REVOKING AUTO-XPERM [%s] on [%s]", auto.getPermitValueString(),
-							object.getObjectId()));
+						this.log.debug("REVOKING AUTO-XPERM [{}] on [{}]", auto.getPermitValueString(),
+							object.getObjectId());
 					}
 					object.revokePermit(auto);
 				}
@@ -213,8 +211,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				xperm.setPermitValue(p);
 
 				if (this.log.isDebugEnabled()) {
-					this.log.debug(
-						String.format("%s [%s] on [%s]", (grant ? "GRANTING" : "REVOKING"), p, object.getObjectId()));
+					this.log.debug("{} [{}] on [{}]", (grant ? "GRANTING" : "REVOKING"), p, object.getObjectId());
 				}
 				if (grant) {
 					object.grantPermit(xperm);
@@ -275,8 +272,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				this.parent.save();
 			}
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("%sLINKING [%s] --> [%s]", this.link ? "" : "UN",
-					child.getObjectId().getId(), this.parent.getObjectId().getId()));
+				this.log.debug("{}LINKING [{}] --> [{}]", this.link ? "" : "UN", child.getObjectId().getId(),
+					this.parent.getObjectId().getId());
 			}
 			if (this.link) {
 				child.link(this.parentId);
@@ -362,8 +359,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			// An object being frozen implies immutability
 			this.mustFreeze = true;
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Clearing frozen status from [%s](%s){%s}", this.cmfObject.getLabel(),
-					this.cmfObject.getId(), newId));
+				this.log.debug("Clearing frozen status from [{}]({}){{}}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), newId);
 			}
 			// TODO: How to determine if we use false or true here? Stick to false, for now...
 			sysObject.unfreeze(false);
@@ -377,8 +374,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			// An object may be immutable, yet not frozen
 			this.mustImmute = true;
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Clearing immutable status from [%s](%s){%s}", this.cmfObject.getLabel(),
-					this.cmfObject.getId(), newId));
+				this.log.debug("Clearing immutable status from [{}]({}){{}}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), newId);
 			}
 			sysObject.setBoolean(DctmAttributes.R_IMMUTABLE_FLAG, false);
 			if (!sysObject.isCheckedOut()) {
@@ -395,8 +392,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final String newId = sysObject.getObjectId().getId();
 		if (this.mustFreeze && !sysObject.isFrozen()) {
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting frozen status to [%s](%s){%s}", this.cmfObject.getLabel(),
-					this.cmfObject.getId(), newId));
+				this.log.debug("Setting frozen status to [{}]({}){{}}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), newId);
 			}
 			// TODO: assembly support?
 			// TODO: How to determine if we use false or true here? Stick to false, for now...
@@ -404,8 +401,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			ret |= true;
 		} else if (this.mustImmute && !sysObject.isImmutable()) {
 			if (this.log.isDebugEnabled()) {
-				this.log.debug(String.format("Setting immutability status to [%s](%s){%s}", this.cmfObject.getLabel(),
-					this.cmfObject.getId(), newId));
+				this.log.debug("Setting immutability status to [{}]({}){{}}", this.cmfObject.getLabel(),
+					this.cmfObject.getId(), newId);
 			}
 			sysObject.setBoolean(DctmAttributes.R_IMMUTABLE_FLAG, true);
 			ret |= true;
@@ -495,10 +492,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-
+		
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-
+		
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/
@@ -745,8 +742,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 			newId = sysObject.getObjectId();
 			sysObject.save();
 		}
-		this.log.info(String.format("%s %s [%s](%s) to CMS as version [%s] (newId=%s)", action,
-			this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId(), vl, newId.getId()));
+		this.log.info("{} {} [{}]({}) to CMS as version [{}] (newId={})", action, this.cmfObject.getType(),
+			this.cmfObject.getLabel(), this.cmfObject.getId(), vl, newId.getId());
 		return newId;
 	}
 
@@ -1053,8 +1050,7 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 				String path = context.getTargetPath(paths.getValue().asString());
 				IDfFolder f = session.getFolderByPath(path);
 				if (f != null) { return f.getObjectId(); }
-				this.log.warn(String.format("Fixup path [%s] for %s [%s](%s) was not found", path,
-					this.cmfObject.getType(), this.cmfObject.getLabel(), this.cmfObject.getId()));
+				this.log.warn("Fixup path [{}] for {} was not found", path, this.cmfObject.getDescription());
 			}
 		}
 		Mapping m = context.getValueMapper().getTargetMapping(DctmObjectType.FOLDER.getStoredObjectType(),
@@ -1135,18 +1131,18 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		for (String parentId : oldParents) {
 			IDfSysObject parent = parentCache.get(parentId);
 			ParentFolderAction action = new ParentFolderAction(parent, false);
-			this.log.debug(String.format("Applying %s", action));
+			this.log.debug("Applying {}", action);
 			action.apply(sysObject);
-			this.log.debug(String.format("Applied %s", action));
+			this.log.debug("Applied {}", action);
 			this.parentLinkActions.add(action);
 		}
 
 		for (String parentId : newParents) {
 			IDfSysObject parent = parentCache.get(parentId);
 			ParentFolderAction action = new ParentFolderAction(parent, true);
-			this.log.debug(String.format("Applying %s", action));
+			this.log.debug("Applying {}", action);
 			action.apply(sysObject);
-			this.log.debug(String.format("Applied %s", action));
+			this.log.debug("Applied {}", action);
 			this.parentLinkActions.add(action);
 		}
 
@@ -1229,16 +1225,16 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		if (paths == null) {
 			paths = new CmfProperty<>(IntermediateProperty.PATH, CmfValue.Type.STRING, true);
 			this.cmfObject.setProperty(paths);
-			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
-				IntermediateProperty.PATH, this.cmfObject.getLabel(), this.cmfObject.getId()));
+			this.log.warn("Added the {} property for [{}]({}) (missing at the source)", IntermediateProperty.PATH,
+				this.cmfObject.getLabel(), this.cmfObject.getId());
 		}
 
 		CmfProperty<IDfValue> parents = this.cmfObject.getProperty(IntermediateProperty.PARENT_ID);
 		if (parents == null) {
 			parents = new CmfProperty<>(IntermediateProperty.PARENT_ID, CmfValue.Type.ID, true);
 			this.cmfObject.setProperty(parents);
-			this.log.warn(String.format("Added the %s property for [%s](%s) (missing at the source)",
-				PropertyIds.PARENT_ID, this.cmfObject.getLabel(), this.cmfObject.getId()));
+			this.log.warn("Added the {} property for [{}]({}) (missing at the source)", PropertyIds.PARENT_ID,
+				this.cmfObject.getLabel(), this.cmfObject.getId());
 		}
 
 		return super.doImportObject(context);

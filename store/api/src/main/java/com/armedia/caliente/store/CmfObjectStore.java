@@ -231,8 +231,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for %s", object.getDescription()), e);
+						this.log.warn("Failed to rollback the object storage transaction for {}",
+							object.getDescription(), e);
 					}
 				}
 			}
@@ -267,8 +267,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for %s", target.getShortLabel()), e);
+						this.log.warn("Failed to rollback the store status marking transaction for {}",
+							target.getShortLabel(), e);
 					}
 				}
 			}
@@ -299,8 +299,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for %s", object.getDescription()), e);
+						this.log.warn("Failed to rollback the content stream storage transaction for {}",
+							object.getDescription(), e);
 					}
 				}
 			}
@@ -324,8 +324,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for %s", object.getDescription()), e);
+						this.log.warn("Failed to rollback the transaction for {}", object.getDescription(), e);
 					}
 				}
 			}
@@ -349,8 +348,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for %s (%s)",
-							target.getType().name(), target.getId()), e);
+						this.log.warn("Failed to rollback the store status retrieval transaction for {} ({})",
+							target.getType().name(), target.getId(), e);
 					}
 				}
 			}
@@ -416,8 +415,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for %s", target.getShortLabel()), e);
+						this.log.warn("Failed to rollback the locking transaction for {}", target.getShortLabel(), e);
 					}
 				}
 			}
@@ -468,10 +466,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for loading the head object for %s %s",
-								type, historyId),
-							e);
+						this.log.warn("Failed to rollback the transaction for loading the head object for {} {}", type,
+							historyId, e);
 					}
 				}
 			}
@@ -500,8 +496,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for loading objects of type %s: %s", type, ids), e);
+						this.log.warn("Failed to rollback the transaction for loading objects of type {} with IDs {}",
+							type, ids, e);
 					}
 				}
 			}
@@ -553,8 +549,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for loading %s : %s", type, ids), e);
+						this.log.warn("Failed to rollback the transaction for loading {} with IDs {}", type, ids, e);
 					}
 				}
 			}
@@ -667,8 +662,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for mapping [%s::%s(%s->%s))",
-							type, name, source, target), e);
+						this.log.warn("Failed to rollback the transaction for setting the mapping [{}::{}({}->{}))",
+							type, name, source, target, e);
 					}
 				}
 			}
@@ -695,8 +690,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for mapping [%s::%s(%s->?))",
-							type, name, source), e);
+						this.log.warn(
+							"Failed to rollback the transaction for loading the target mapping [{}::{}({}->?))", type,
+							name, source, e);
 					}
 				}
 			}
@@ -730,8 +726,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format("Failed to rollback the transaction for mapping [%s::%s(?->%s))",
-							type, name, target), e);
+						this.log.warn(
+							"Failed to rollback the transaction for loading the source mappings [{}::{}(?->{}))", type,
+							name, target, e);
 					}
 				}
 			}
@@ -916,8 +913,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for getting all available mappings for type %s", type),
+						this.log.warn(
+							"Failed to rollback the transaction for getting all available mappings for type {}", type,
 							e);
 					}
 				}
@@ -943,9 +940,9 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(String.format(
-							"Failed to rollback the transaction for getting all available [%s] mappings for type %s",
-							name, type), e);
+						this.log.warn(
+							"Failed to rollback the transaction for getting all available [{}] mappings for type {}",
+							name, type, e);
 					}
 				}
 			}
@@ -1134,10 +1131,8 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 					try {
 						operation.rollback();
 					} catch (CmfStorageException e) {
-						this.log.warn(
-							String.format("Failed to rollback the transaction for setting requirements info for %s",
-								object.getShortLabel()),
-							e);
+						this.log.warn("Failed to rollback the transaction for setting requirements info for {}",
+							object.getShortLabel(), e);
 					}
 				}
 			}
