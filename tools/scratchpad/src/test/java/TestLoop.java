@@ -462,7 +462,7 @@ public class TestLoop {
 
 						// Ok so this is an event type we're interested in...
 						this.log.info("Stowing [{}] from [{}] for {}[[}] ({}){}", event, id.getId(), i.getItemType(),
-							i.getItemId(), i.getItemName(), LazyFormatter.NL);
+							i.getItemId(), i.getItemName(), Tools.NL);
 						if (!i.isDeleteFlag()) {
 							session.dequeue(id);
 						}
@@ -537,7 +537,7 @@ public class TestLoop {
 							final String dateStr = DateFormatUtils.format(payload.date.getDate(), datePattern, utc);
 							this.log.info("Event #{}: [{}] from [{}] at [{}]{}",
 								LazyFormatter.lazyFormat("%08d", ++current), payload.event, path, dateStr,
-								LazyFormatter.NL);
+								Tools.NL);
 
 							if (dateStr.hashCode() != utc.hashCode()) {
 								continue;

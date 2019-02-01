@@ -23,7 +23,6 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
 import com.armedia.caliente.store.CmfValueMapper.Mapping;
 import com.armedia.commons.dfc.util.DfUtils;
-import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfObjectNotFoundException;
 import com.documentum.fc.client.IDfACL;
@@ -211,8 +210,7 @@ public class DctmImportType extends DctmImportDelegate<IDfType> {
 		dql.append(" with supertype ").append((superType != null) ? superTypeName : "null").append(" publish");
 
 		if (this.log.isInfoEnabled()) {
-			this.log.info("Creating new type [{}] with DQL:{}{}{}{}", typeName, LazyFormatter.NL, LazyFormatter.NL, dql,
-				LazyFormatter.NL);
+			this.log.info("Creating new type [{}] with DQL:{}{}{}{}", typeName, Tools.NL, Tools.NL, dql, Tools.NL);
 		}
 
 		IDfCollection resultCol = DfUtils.executeQuery(session, dql.toString(), IDfQuery.DF_QUERY);

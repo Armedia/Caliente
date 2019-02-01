@@ -32,8 +32,8 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.PluggableServiceLocator;
+import com.armedia.commons.utilities.Tools;
 
 public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?, ?, ?, ?, ?>> {
 
@@ -187,13 +187,12 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 
 		if (exceptionReport != null) {
 			report.append(String.format("%n%n%nEXCEPTION REPORT FOLLOWS:%n%n")).append(exceptionReport);
-			this.console.error("{}{}EXCEPTION CAUGHT WHILE RUNNING THE EXPORT:{}{}{}{}", LazyFormatter.NL,
-				LazyFormatter.NL, LazyFormatter.NL, LazyFormatter.NL, exceptionReport, LazyFormatter.NL);
+			this.console.error("{}{}EXCEPTION CAUGHT WHILE RUNNING THE EXPORT:{}{}{}{}", Tools.NL, Tools.NL, Tools.NL,
+				Tools.NL, exceptionReport, Tools.NL);
 		}
 
 		String reportString = report.toString();
-		this.log.info("Action report for export operation:{}{}{}{}", LazyFormatter.NL, LazyFormatter.NL, reportString,
-			LazyFormatter.NL);
+		this.log.info("Action report for export operation:{}{}{}{}", Tools.NL, Tools.NL, reportString, Tools.NL);
 		// TODO: Send the e-mail report
 		/*
 		try {

@@ -14,7 +14,7 @@ import com.armedia.caliente.engine.exporter.ExportState;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectSearchSpec;
-import com.armedia.commons.utilities.LazyFormatter;
+import com.armedia.commons.utilities.Tools;
 
 public class ExportCommandListener extends AbstractCommandListener implements ExportEngineListener {
 
@@ -58,8 +58,8 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 
 			objectLine = String.format("Exported %d objects (~%.2f/s, %d since last report, ~%.2f/s average)",
 				current.longValue(), itemRate, count, startRate);
-			this.console.info("PROGRESS REPORT{}\t{}{}{}{}", LazyFormatter.NL, objectLine, LazyFormatter.NL,
-				LazyFormatter.NL, this.counter.generateCummulativeReport(1));
+			this.console.info("PROGRESS REPORT{}\t{}{}{}{}", Tools.NL, objectLine, Tools.NL, Tools.NL,
+				this.counter.generateCummulativeReport(1));
 		}
 	}
 

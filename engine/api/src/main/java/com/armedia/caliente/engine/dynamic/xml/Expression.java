@@ -83,8 +83,6 @@ public class Expression {
 
 	private static final ConcurrentMap<String, ConcurrentMap<String, CompiledScript>> COMPILER_CACHE = new ConcurrentHashMap<>();
 
-	private static final String NL = String.format("%n");
-
 	public static final Expression NULL = new Expression() {
 
 		{
@@ -261,21 +259,19 @@ public class Expression {
 			}
 		}
 
-		this.log.trace("Compiling {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
+		this.log.trace("Compiling {} expression script:{}{}{}", lang, Tools.NL, script, Tools.NL);
 		final CompiledScript compiled = Expression.compileScript(lang, script);
 		if (compiled != null) {
 			this.log.trace("The {} script was compiled - will use the precompiled version", lang);
 			return compiled.eval(scriptCtx);
 		}
 
-		this.log.trace("Evaluating {} expression script:{}{}{}", lang, Expression.NL, script, Expression.NL);
+		this.log.trace("Evaluating {} expression script:{}{}{}", lang, Tools.NL, script, Tools.NL);
 		Object ret = engine.eval(script);
 		if (ret != null) {
-			this.log.trace("Returned [{}] from {} expression script:{}{}{}", ret, lang, Expression.NL, script,
-				Expression.NL);
+			this.log.trace("Returned [{}] from {} expression script:{}{}{}", ret, lang, Tools.NL, script, Tools.NL);
 		} else {
-			this.log.trace("Returned <null> from {} expression script:{}{}{}", lang, Expression.NL, script,
-				Expression.NL);
+			this.log.trace("Returned <null> from {} expression script:{}{}{}", lang, Tools.NL, script, Tools.NL);
 		}
 		return ret;
 	}

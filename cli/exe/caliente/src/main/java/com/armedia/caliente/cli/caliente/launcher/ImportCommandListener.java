@@ -15,6 +15,7 @@ import com.armedia.caliente.engine.importer.ImportResult;
 import com.armedia.caliente.engine.importer.ImportState;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.LazyFormatter;
+import com.armedia.commons.utilities.Tools;
 
 public class ImportCommandListener extends AbstractCommandListener implements ImportEngineListener {
 
@@ -68,8 +69,8 @@ public class ImportCommandListener extends AbstractCommandListener implements Im
 				objectLine = String.format("%n\tProcessed %d/%d %s objects (%.2f%%, ~%.2f/s, %d since last report)",
 					current.longValue(), total.longValue(), objectType.name(), itemPct, itemRate, count);
 			}
-			this.console.info("PROGRESS REPORT{}{}\tProcessed {}/{} objects in total ({}%)", objectLine,
-				LazyFormatter.NL, aggregateCurrent.longValue(), aggregateTotal.longValue(),
+			this.console.info("PROGRESS REPORT{}{}\tProcessed {}/{} objects in total ({}%)", objectLine, Tools.NL,
+				aggregateCurrent.longValue(), aggregateTotal.longValue(),
 				LazyFormatter.lazyFormat("%.2f", aggregatePct));
 		}
 	}

@@ -11,6 +11,7 @@ import com.armedia.caliente.cli.utils.DfcLaunchHelper;
 import com.armedia.caliente.tools.dfc.DctmCrypto;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
 import com.armedia.commons.utilities.LazyFormatter;
+import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;
 import com.documentum.com.IDfClientX;
 import com.documentum.fc.client.DfIdNotFoundException;
@@ -208,7 +209,7 @@ public class BulkDel {
 							IDfOperationStep step, int stepPercentDone, IDfOperationNode node) throws DfException {
 							BulkDel.this.log.info("{}: {}% done ({}: {}% done){}", operation.getName(),
 								LazyFormatter.lazyFormat("%3d", operationPercentDone), step.getName(),
-								LazyFormatter.lazyFormat("%3d", stepPercentDone), LazyFormatter.NL);
+								LazyFormatter.lazyFormat("%3d", stepPercentDone), Tools.NL);
 							return IDfOperationMonitor.CONTINUE;
 						}
 

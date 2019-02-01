@@ -10,7 +10,6 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.com.DfClientX;
 import com.documentum.fc.client.IDfACL;
@@ -162,7 +161,7 @@ public class DfUtils {
 		}
 		IDfQuery query = DfUtils.newQuery();
 		if (DfUtils.LOG.isTraceEnabled()) {
-			DfUtils.LOG.trace("Executing DQL (type={}):{}{}", queryType, LazyFormatter.NL, dql);
+			DfUtils.LOG.trace("Executing DQL (type={}):{}{}", queryType, Tools.NL, dql);
 		}
 		query.setDQL(dql);
 		if (queryBatchSize > 0) {
@@ -175,7 +174,7 @@ public class DfUtils {
 			return ret;
 		} finally {
 			if (!ok) {
-				DfUtils.LOG.error("Exception raised while executing the query:{}{}", LazyFormatter.NL, dql);
+				DfUtils.LOG.error("Exception raised while executing the query:{}{}", Tools.NL, dql);
 			}
 		}
 	}

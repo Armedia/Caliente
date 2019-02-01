@@ -31,8 +31,8 @@ import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.PluggableServiceLocator;
+import com.armedia.commons.utilities.Tools;
 
 public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?, ?, ?, ?, ?>> {
 
@@ -161,7 +161,7 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 		String reportString = report.toString();
 		String fmt = "Action report for import operation:{}{}{}{}";
 		Object[] args = {
-			LazyFormatter.NL, LazyFormatter.NL, reportString, LazyFormatter.NL
+			Tools.NL, Tools.NL, reportString, Tools.NL
 		};
 		this.log.info(fmt, args);
 		this.console.info(fmt, args);
