@@ -18,7 +18,6 @@ import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -370,13 +369,7 @@ public class FilenameDeduplicator {
 	}
 
 	private FSEntryContainer getContainer(final CmfObjectRef id) {
-		return ConcurrentUtils.createIfAbsentUnchecked(this.containers, id,
-			new ConcurrentInitializer<FSEntryContainer>() {
-				@Override
-				public FSEntryContainer get() {
-					return new FSEntryContainer(id);
-				}
-			});
+		return ConcurrentUtils.createIfAbsentUnchecked(this.containers, id, () -> new FSEntryContainer(id));
 	}
 
 	public synchronized long renameAllEntries(BiFunction<CmfObjectRef, String, String> renamer) {
@@ -467,12 +460,7 @@ public class FilenameDeduplicator {
 		if (!this.idValidator.test(entryId)) { return null; }
 		final FSEntryContainer container = getContainer(containerId);
 		FSEntry entry = ConcurrentUtils.createIfAbsentUnchecked(this.allEntries, entryId,
-			new ConcurrentInitializer<FSEntry>() {
-				@Override
-				public FSEntry get() {
-					return new FSEntry(entryId, name);
-				}
-			});
+			() -> new FSEntry(entryId, name));
 		entry.addParent(container);
 		container.addChild(entry);
 		return entry;

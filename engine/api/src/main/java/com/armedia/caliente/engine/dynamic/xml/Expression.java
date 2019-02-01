@@ -33,7 +33,6 @@ import javax.xml.bind.annotation.XmlValue;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -104,12 +103,7 @@ public class Expression {
 	private static final ConcurrentMap<String, CompiledScript> getCompilerCache(String lang) {
 		Objects.requireNonNull(lang, "Must provide a language to scan the cache for");
 		return ConcurrentUtils.createIfAbsentUnchecked(Expression.COMPILER_CACHE, lang,
-			new ConcurrentInitializer<ConcurrentMap<String, CompiledScript>>() {
-				@Override
-				public ConcurrentMap<String, CompiledScript> get() throws ConcurrentException {
-					return new ConcurrentHashMap<>();
-				}
-			});
+			() -> new ConcurrentHashMap<>());
 	}
 
 	private static final ScriptEngine getEngine(String language) {
@@ -139,14 +133,11 @@ public class Expression {
 		// The key will be the source's SHA256 checksum
 		final String key = DigestUtils.sha256Hex(source);
 		try {
-			return ConcurrentUtils.createIfAbsent(cache, key, new ConcurrentInitializer<CompiledScript>() {
-				@Override
-				public CompiledScript get() throws ConcurrentException {
-					try {
-						return compiler.compile(source);
-					} catch (ScriptException e) {
-						throw new ConcurrentException(e);
-					}
+			return ConcurrentUtils.createIfAbsent(cache, key, () -> {
+				try {
+					return compiler.compile(source);
+				} catch (ScriptException e) {
+					throw new ConcurrentException(e);
 				}
 			});
 		} catch (ConcurrentException e) {

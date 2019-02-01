@@ -18,12 +18,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.collections4.map.LRUMap;
-import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.LockDispenser;
+import com.armedia.commons.utilities.function.CheckedSupplier;
 
 public class KeyLockableCache<K extends Serializable, V> {
 
@@ -240,7 +239,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 		}
 	}
 
-	public final V createIfAbsent(K key, ConcurrentInitializer<V> initializer) throws ConcurrentException {
+	public final V createIfAbsent(K key, CheckedSupplier<V> initializer) throws Exception {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		Objects.requireNonNull(initializer, "Must provide a non-null initializer");
 		final Lock l = getExclusiveLock(key);
@@ -255,7 +254,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 			if (value != null) { return value; }
 
 			// The value is absent or expired...
-			V newValue = initializer.get();
+			V newValue = initializer.getChecked();
 			if (newValue != null) {
 				this.cache.put(key, newCacheItem(key, newValue));
 			} else {

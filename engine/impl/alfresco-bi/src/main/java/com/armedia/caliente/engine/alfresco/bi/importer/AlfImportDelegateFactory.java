@@ -33,8 +33,6 @@ import javax.xml.validation.Schema;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.apache.commons.text.StringTokenizer;
 
@@ -573,12 +571,7 @@ public class AlfImportDelegateFactory
 	private final void handleVirtual(final CmfObject<CmfValue> cmfObject, File contentFile, File metadataFile,
 		MarkerType type, ScanIndexItemMarker thisMarker) throws ImportException {
 		VirtualDocument vdoc = ConcurrentUtils.createIfAbsentUnchecked(this.vdocs, cmfObject.getHistoryId(),
-			new ConcurrentInitializer<VirtualDocument>() {
-				@Override
-				public VirtualDocument get() throws ConcurrentException {
-					return new VirtualDocument(cmfObject.getHistoryId());
-				}
-			});
+			() -> new VirtualDocument(cmfObject.getHistoryId()));
 
 		switch (type) {
 			case VDOC_ROOT:

@@ -7,8 +7,6 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.apache.commons.lang3.concurrent.ConcurrentException;
-import org.apache.commons.lang3.concurrent.ConcurrentInitializer;
 import org.apache.commons.lang3.concurrent.ConcurrentUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,25 +89,20 @@ public abstract class DataRecordManager<L extends Object> {
 		final Object lock = this.typeLocks.getLock(type);
 		if (!this.typeRecords.containsKey(type)) {
 			synchronized (lock) {
-				return ConcurrentUtils.createIfAbsentUnchecked(this.typeRecords, type,
-					new ConcurrentInitializer<DataRecordSet<?, ?, ?>>() {
-						@Override
-						public DataRecordSet<?, ?, ?> get() throws ConcurrentException {
-							DataRecordSet<?, ?, ?> ret = null;
-							try {
-								ret = loadDataRecordSet(findTypeRecords(type), loopCount);
-							} catch (Exception e) {
-								if (DataRecordManager.this.log.isDebugEnabled()) {
-									DataRecordManager.this.log.debug("Failed to locate the records for type [{}]", type,
-										e);
-								}
-							}
-							if (ret == null) {
-								ret = DataRecordManager.EMPTY_RECORD_SET;
-							}
-							return ret;
+				return ConcurrentUtils.createIfAbsentUnchecked(this.typeRecords, type, () -> {
+					DataRecordSet<?, ?, ?> ret = null;
+					try {
+						ret = loadDataRecordSet(findTypeRecords(type), loopCount);
+					} catch (Exception e) {
+						if (DataRecordManager.this.log.isDebugEnabled()) {
+							DataRecordManager.this.log.debug("Failed to locate the records for type [{}]", type, e);
 						}
-					});
+					}
+					if (ret == null) {
+						ret = DataRecordManager.EMPTY_RECORD_SET;
+					}
+					return ret;
+				});
 			}
 		}
 		return this.typeRecords.get(type);
