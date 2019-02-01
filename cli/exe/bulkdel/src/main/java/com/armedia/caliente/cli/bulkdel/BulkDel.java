@@ -206,7 +206,7 @@ public class BulkDel {
 						@Override
 						public int progressReport(IDfOperation operation, int operationPercentDone,
 							IDfOperationStep step, int stepPercentDone, IDfOperationNode node) throws DfException {
-							BulkDel.this.log.info("{}: {}% done ({}: {}% done)%n", operation.getName(),
+							BulkDel.this.log.info("{}: {}% done ({}: {}% done){}", operation.getName(),
 								LazyFormatter.lazyFormat("%3d", operationPercentDone), step.getName(),
 								LazyFormatter.lazyFormat("%3d", stepPercentDone), LazyFormatter.NL);
 							return IDfOperationMonitor.CONTINUE;
