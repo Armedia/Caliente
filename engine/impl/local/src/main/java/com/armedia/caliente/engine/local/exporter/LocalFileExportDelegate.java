@@ -35,6 +35,7 @@ import java.util.Map;
 
 import javax.activation.MimeType;
 
+import com.armedia.caliente.engine.TransferSetting;
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.converter.IntermediateProperty;
 import com.armedia.caliente.engine.exporter.ExportException;
@@ -329,7 +330,7 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 	@Override
 	protected List<CmfContentStream> storeContent(LocalExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception {
+		boolean includeRenditions) {
 		if (getType() != CmfObject.Archetype.DOCUMENT) { return null; }
 
 		List<CmfContentStream> ret = new ArrayList<>(1);
@@ -352,19 +353,23 @@ public class LocalFileExportDelegate extends LocalExportDelegate<LocalFile> {
 		info.setLength(src.length());
 		info.setFileName(src.getName());
 		ret.add(info);
-
-		if (this.factory.isCopyContent()) {
-			CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
-			File tgt = h.getFile(true);
-			if (tgt != null) {
-				if (this.log.isDebugEnabled()) {
-					this.log.debug("Copying {} bytes from [{}] into [{}]", src.length(), src, tgt);
+		boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
+		if (this.factory.isCopyContent() && !skipContent) {
+			try {
+				CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
+				File tgt = h.getFile(true);
+				if (tgt != null) {
+					if (this.log.isDebugEnabled()) {
+						this.log.debug("Copying {} bytes from [{}] into [{}]", src.length(), src, tgt);
+					}
+					Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
+				} else {
+					try (InputStream in = new FileInputStream(src)) {
+						h.setContents(in);
+					}
 				}
-				Files.copy(src.toPath(), tgt.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			} else {
-				try (InputStream in = new FileInputStream(src)) {
-					h.setContents(in);
-				}
+			} catch (Exception e) {
+				this.log.error("Failed to copy the source file [{}] into the content store", src, e);
 			}
 		}
 		return ret;

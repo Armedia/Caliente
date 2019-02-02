@@ -241,7 +241,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 	@Override
 	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfSysObject document,
-		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) throws Exception {
+		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) throws DfException {
 		if (isDfReference(document)) {
 			return super.doStoreContent(ctx, translator, marshaled, referrent, document, streamStore,
 				includeRenditions);

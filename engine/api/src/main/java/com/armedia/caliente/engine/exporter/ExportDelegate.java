@@ -179,7 +179,7 @@ public abstract class ExportDelegate< //
 
 	protected abstract List<CmfContentStream> storeContent(CONTEXT ctx, CmfAttributeTranslator<VALUE> translator,
 		CmfObject<VALUE> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception;
+		boolean includeRenditions);
 
 	protected abstract Collection<? extends ExportDelegate<?, SESSION, SESSION_WRAPPER, VALUE, CONTEXT, DELEGATE_FACTORY, ?>> identifyDependents(
 		CmfObject<VALUE> marshalled, CONTEXT ctx) throws Exception;

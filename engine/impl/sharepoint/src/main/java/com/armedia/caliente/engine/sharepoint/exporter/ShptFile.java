@@ -32,6 +32,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.commons.utilities.BinaryMemoryBuffer;
@@ -379,7 +380,7 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 	@Override
 	protected List<CmfContentStream> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshaled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception {
+		boolean includeRenditions) {
 		final ShptSession session = ctx.getSession();
 		CmfContentStream info = new CmfContentStream(0);
 		final String name = this.object.getName();
@@ -392,8 +393,17 @@ public class ShptFile extends ShptFSObject<ShptVersion> {
 			: session.getInputStream(this.version.getUrl())) {
 			IOUtils.copy(in, buf);
 			buf.close();
-			h.setContents(buf.getInputStream());
+		} catch (Exception e) {
+			this.log.error("Failed to read the content stream for {}", marshaled.getDescription(), e);
 		}
+
+		try {
+			h.setContents(buf.getInputStream());
+		} catch (CmfStorageException e) {
+			this.log.error("Failed to store the content stream for {} into the content store",
+				marshaled.getDescription(), e);
+		}
+
 		// Now, try to identify the content type...
 		MimeType type = null;
 		try (InputStream in = buf.getInputStream()) {
