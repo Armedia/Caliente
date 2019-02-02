@@ -128,12 +128,9 @@ public class ConstructedTypeFactory {
 		LazySupplier<TypeDeclaration> ret = this.objectTypeDeclarations.get(typeName);
 		if (ret == null) { return null; }
 		try {
-			return ret.getChecked(() -> {
-				return Objects
-					.requireNonNull(schemaService,
-						"Must provide a non-null SchemaService instance for lazy initialization")
-					.getObjectTypeDeclaration(typeName);
-			});
+			return ret.getChecked(() -> Objects
+				.requireNonNull(schemaService, "Must provide a non-null SchemaService instance for lazy initialization")
+				.getObjectTypeDeclaration(typeName));
 		} catch (Exception e) {
 			if (SchemaServiceException.class.isInstance(e)) { throw SchemaServiceException.class.cast(e); }
 			throw new SchemaServiceException(String.format(
@@ -148,12 +145,9 @@ public class ConstructedTypeFactory {
 		if (ret == null) { return null; }
 
 		try {
-			return ret.getChecked(() -> {
-				return Objects
-					.requireNonNull(schemaService,
-						"Must provide a non-null SchemaService instance for lazy initialization")
-					.getSecondaryTypeDeclaration(secondaryTypeName);
-			});
+			return ret.getChecked(() -> Objects
+				.requireNonNull(schemaService, "Must provide a non-null SchemaService instance for lazy initialization")
+				.getSecondaryTypeDeclaration(secondaryTypeName));
 		} catch (Exception e) {
 			if (SchemaServiceException.class.isInstance(e)) { throw SchemaServiceException.class.cast(e); }
 			throw new SchemaServiceException(String.format(
@@ -190,14 +184,10 @@ public class ConstructedTypeFactory {
 		harvestData(schemaService, mainType, false, null, null, allSecondaries);
 		final String signature = getSignature(mainType, allSecondaries);
 		LazySupplier<ConstructedType> ret = ConcurrentUtils.createIfAbsentUnchecked(this.constructedTypes, signature,
-			() -> {
-				return new LazySupplier<>(() -> {
-					return newObjectType(
-						Objects.requireNonNull(schemaService,
-							"Must provide a non-null SchemaService instance for lazy initialization"),
-						mainType, allSecondaries, signature);
-				});
-			});
+			() -> new LazySupplier<>(() -> newObjectType(
+				Objects.requireNonNull(schemaService,
+					"Must provide a non-null SchemaService instance for lazy initialization"),
+				mainType, allSecondaries, signature)));
 
 		try {
 			return ret.getChecked();

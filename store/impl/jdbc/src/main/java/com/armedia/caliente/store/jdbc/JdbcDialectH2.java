@@ -8,10 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class JdbcDialectH2 extends JdbcDialect {
 
-	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = (rs) -> {
-		if (rs.next()) { return rs.getLong(1); }
-		return null;
-	};
+	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = (rs) -> (rs.next() ? rs.getLong(1) : null);
 
 	private static final String LOAD_OBJECTS_BY_ID = //
 		"       select o.*, n.new_name " + //

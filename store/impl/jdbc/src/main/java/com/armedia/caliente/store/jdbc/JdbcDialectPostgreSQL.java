@@ -8,10 +8,8 @@ import org.apache.commons.dbutils.ResultSetHandler;
 public class JdbcDialectPostgreSQL extends JdbcDialect {
 
 	private static final String OBJECT_COLUMN_NAME = "object_number";
-	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = (rs) -> {
-		if (rs.next()) { return rs.getLong(JdbcDialectPostgreSQL.OBJECT_COLUMN_NAME); }
-		return null;
-	};
+	private static final ResultSetHandler<Long> OBJECT_NUMBER_HANDLER = (
+		rs) -> (rs.next() ? rs.getLong(JdbcDialectPostgreSQL.OBJECT_COLUMN_NAME) : null);
 
 	private static final String LOAD_OBJECTS_BY_ID = //
 		"       select o.*, n.new_name " + //

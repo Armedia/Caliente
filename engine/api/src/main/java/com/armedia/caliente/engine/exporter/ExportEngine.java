@@ -379,11 +379,10 @@ public abstract class ExportEngine<//
 							String.format("No export status found for requirement [%s] of %s", requirement, logLabel));
 					}
 					try {
-						long waitTime = status.waitUntilCompleted(() -> {
-							ctx.printf("Waiting on a dependency:%n\tFOR  : %s%n\tFROM : %s%n\tOWNER: %s for %s",
+						long waitTime = status.waitUntilCompleted(
+							() -> ctx.printf("Waiting on a dependency:%n\tFOR  : %s%n\tFROM : %s%n\tOWNER: %s for %s",
 								status.getTargetLabel(), logLabel, status.getCreatorThread().getName(),
-								status.getReferrentLabel());
-						});
+								status.getReferrentLabel()));
 						ctx.printf("Waited for %s from %s for %d ms", status.getTargetLabel(), logLabel, waitTime);
 					} catch (InterruptedException e) {
 						Thread.interrupted();
