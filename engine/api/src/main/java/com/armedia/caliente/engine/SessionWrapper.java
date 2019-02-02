@@ -1,9 +1,11 @@
 package com.armedia.caliente.engine;
 
+import java.util.function.Supplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class SessionWrapper<SESSION> implements AutoCloseable {
+public abstract class SessionWrapper<SESSION> implements Supplier<SESSION>, AutoCloseable {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -28,7 +30,8 @@ public abstract class SessionWrapper<SESSION> implements AutoCloseable {
 
 	protected abstract boolean isSupportsNestedTransactions();
 
-	public final SESSION getWrapped() {
+	@Override
+	public final SESSION get() {
 		assertValid();
 		return this.wrapped;
 	}
