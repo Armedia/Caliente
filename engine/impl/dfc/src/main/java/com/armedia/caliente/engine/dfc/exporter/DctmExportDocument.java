@@ -10,7 +10,10 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.activation.MimeType;
 
@@ -258,9 +261,10 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 		final IDfSession session = ctx.getSession();
 		final String parentId = document.getObjectId().getId();
 		final int pageCount = document.getPageCount();
-		List<CmfContentStream> cmfContentStream = new ArrayList<>();
 		Set<String> processed = new LinkedHashSet<>();
 		int index = 0;
+		final boolean ignoreContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
+		Collection<Supplier<CmfContentStream>> suppliers = new ArrayList<>(pageCount);
 		for (int i = 0; i < pageCount; i++) {
 			IDfCollection results = DfUtils.executeQuery(session, String.format(dql, parentId, i),
 				IDfQuery.DF_EXECREAD_QUERY);
@@ -274,10 +278,18 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 						continue;
 					}
 
-					final IDfContent content = IDfContent.class.cast(session.getObject(contentId));
-					CmfContentStream info = storeContentStream(session, translator, marshaled, document, content,
-						index++, streamStore, ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT));
-					cmfContentStream.add(info);
+					final int idx = (index++);
+					final IDfContent content;
+					try {
+						content = IDfContent.class.cast(session.getObject(contentId));
+					} catch (DfException e) {
+						this.log.error("Failed to retrieve the content stream object # {} (with id = [{}]) for {}", idx,
+							contentId, marshaled.getDescription(), e);
+						continue;
+					}
+
+					suppliers.add(() -> storeContentStream(session, translator, marshaled, document, content, contentId,
+						idx, streamStore, ignoreContent));
 				}
 			} finally {
 				DfUtils.closeQuietly(results);
@@ -288,70 +300,93 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				break;
 			}
 		}
-		return cmfContentStream;
+
+		// In preparation for tossing this to the background...
+		return suppliers.stream().map((s) -> s.get()).filter(Objects::nonNull)
+			.collect(Collectors.toCollection(ArrayList::new));
 	}
 
 	protected CmfContentStream storeContentStream(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, IDfSysObject document, IDfContent content, int index,
-		CmfContentStore<?, ?, ?> streamStore, boolean skipContent) throws Exception {
-		final String contentId = content.getObjectId().getId();
+		CmfObject<IDfValue> marshaled, IDfSysObject document, IDfContent content, IDfId contentId, int index,
+		CmfContentStore<?, ?, ?> streamStore, boolean skipContent) {
+
 		if (document == null) {
-			throw new Exception(String.format(
-				"Could not locate the referrent document for which content [%s] was to be exported", contentId));
+			this.log.error("Could not locate the actual {} for which content [{}] (# {}) was to be exported",
+				marshaled.getDescription(), contentId, index);
+			return null;
 		}
 
-		String format = content.getString(DctmAttributes.FULL_FORMAT);
-		int pageNumber = content.getInt(DctmAttributes.PAGE);
-		String pageModifier = content.getString(DctmAttributes.PAGE_MODIFIER);
-		if (pageModifier == null) {
-			pageModifier = "";
+		CmfContentStream info = null;
+		final String format;
+		final String objectName = marshaled.getName();
+
+		try {
+			format = content.getString(DctmAttributes.FULL_FORMAT);
+			final int renditionPage = content.getInt(DctmAttributes.PAGE);
+			final String modifier = Tools.coalesce(content.getString(DctmAttributes.PAGE_MODIFIER), "");
+			final int renditionNumber = content.getRendition();
+			final String renditionId = ((renditionNumber != 0)
+				? String.format("%08x.%s", content.getRendition(), format)
+				: null);
+			info = new CmfContentStream(index, renditionId, renditionPage, modifier);
+		} catch (Exception e) {
+			this.log.error(
+				"Failed to retrieve the base content metadata for the content stream # {} for {} (contentId = {})",
+				index, marshaled.getDescription(), contentId, e);
+			return null;
 		}
 
-		String renditionId = null;
-		if (content.getRendition() != 0) {
-			renditionId = String.format("%08x.%s", content.getRendition(), format);
-		} else {
-			renditionId = null;
-		}
-		CmfContentStream info = new CmfContentStream(index, renditionId, pageNumber, pageModifier);
-		IDfId formatId = content.getFormatId();
-		MimeType mimeType = MimeTools.DEFAULT_MIME_TYPE;
-		if (!formatId.isNull()) {
-			IDfFormat formatObj = IDfFormat.class.cast(session.getObject(formatId));
-			String ext = FilenameUtils.getExtension(document.getObjectName());
-			if (StringUtils.isEmpty(ext)) {
-				ext = formatObj.getDOSExtension();
-			}
-			info.setExtension(ext);
-			mimeType = MimeTools.resolveMimeType(formatObj.getMIMEType());
-		}
-		info.setMimeType(mimeType);
-		info.setFileName(document.getObjectName());
-		info.setLength(content.getContentSize());
-
-		info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
-		info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
-		info.setProperty(DctmAttributes.SET_TIME,
-			content.getTime(DctmAttributes.SET_TIME).asString(DctmDocument.CONTENT_SET_TIME_PATTERN));
-		info.setProperty(DctmAttributes.FULL_FORMAT, content.getString(DctmAttributes.FULL_FORMAT));
-		info.setProperty(DctmAttributes.PAGE_MODIFIER, content.getString(DctmAttributes.PAGE_MODIFIER));
-		info.setProperty(DctmAttributes.PAGE, content.getString(DctmAttributes.PAGE));
-		info.setProperty(DctmAttributes.RENDITION, content.getString(DctmAttributes.RENDITION));
-
-		// CmfStore the content in the filesystem
-		CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
-		if (!skipContent) {
-			if (contentHandle.getSourceStore().isSupportsFileAccess()) {
-				document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, pageNumber, pageModifier,
-					false);
+		try {
+			IDfId formatId = content.getFormatId();
+			final MimeType mimeType;
+			if (formatId.isNull()) {
+				mimeType = MimeTools.DEFAULT_MIME_TYPE;
 			} else {
-				// Doesn't support file-level, so we (sadly) use stream-level transfers
-				try (InputStream in = document.getContentEx3(format, pageNumber, pageModifier, false)) {
-					// Don't pull the content until we're sure we can put it somewhere...
-					contentHandle.setContents(in);
+				IDfFormat formatObj = IDfFormat.class.cast(session.getObject(formatId));
+				String ext = FilenameUtils.getExtension(objectName);
+				if (StringUtils.isEmpty(ext)) {
+					ext = formatObj.getDOSExtension();
+				}
+				info.setExtension(ext);
+				mimeType = MimeTools.resolveMimeType(formatObj.getMIMEType());
+			}
+			info.setMimeType(mimeType);
+			info.setFileName(objectName);
+			info.setLength(content.getContentSize());
+
+			info.setProperty(DctmAttributes.SET_FILE, content.getString(DctmAttributes.SET_FILE));
+			info.setProperty(DctmAttributes.SET_CLIENT, content.getString(DctmAttributes.SET_CLIENT));
+			info.setProperty(DctmAttributes.SET_TIME,
+				content.getTime(DctmAttributes.SET_TIME).asString(DctmDocument.CONTENT_SET_TIME_PATTERN));
+			info.setProperty(DctmAttributes.FULL_FORMAT, content.getString(DctmAttributes.FULL_FORMAT));
+			info.setProperty(DctmAttributes.PAGE_MODIFIER, content.getString(DctmAttributes.PAGE_MODIFIER));
+			info.setProperty(DctmAttributes.PAGE, content.getString(DctmAttributes.PAGE));
+			info.setProperty(DctmAttributes.RENDITION, content.getString(DctmAttributes.RENDITION));
+		} catch (Exception e) {
+			this.log.error("Failed to extract additional content metadata properties for the content stream {} for {}",
+				info, marshaled.getDescription(), e);
+		}
+
+		try {
+			// CmfStore the content in the filesystem
+			CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
+			if (!skipContent) {
+				if (contentHandle.getSourceStore().isSupportsFileAccess()) {
+					document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),
+						info.getModifier(), false);
+				} else {
+					// Doesn't support file-level, so we (sadly) use stream-level transfers
+					try (InputStream in = document.getContentEx3(format, info.getRenditionPage(), info.getModifier(),
+						false)) {
+						// Don't pull the content until we're sure we can put it somewhere...
+						contentHandle.setContents(in);
+					}
 				}
 			}
+			return info;
+		} catch (Exception e) {
+			this.log.error("Failed to store the content stream {} for {}", info, marshaled.getDescription(), e);
+			return null;
 		}
-		return info;
 	}
 }
