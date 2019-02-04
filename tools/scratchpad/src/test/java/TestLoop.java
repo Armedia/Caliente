@@ -16,9 +16,9 @@ import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.armedia.calienteng.DfUtils;
 import com.armedia.calienteng.EventRegistration;
 import com.armedia.commons.dfc.pool.DfcSessionPool;
+import com.armedia.commons.dfc.util.DfUtils;
 import com.armedia.commons.utilities.LazyFormatter;
 import com.armedia.commons.utilities.Tools;
 import com.documentum.fc.client.DfIdNotFoundException;
@@ -69,7 +69,7 @@ public class TestLoop {
 		case CREATE:
 			addWatcher(obj);
 			break;
-	
+
 		case UPDATE:
 			boolean updateRecord = true;
 			Record existing = getExistingRecord(obj);
@@ -89,7 +89,7 @@ public class TestLoop {
 				}
 			}
 			break;
-	
+
 		case DELETE:
 			removeWatcher(obj);
 			break;
@@ -536,8 +536,7 @@ public class TestLoop {
 
 							final String dateStr = DateFormatUtils.format(payload.date.getDate(), datePattern, utc);
 							this.log.info("Event #{}: [{}] from [{}] at [{}]{}",
-								LazyFormatter.lazyFormat("%08d", ++current), payload.event, path, dateStr,
-								Tools.NL);
+								LazyFormatter.lazyFormat("%08d", ++current), payload.event, path, dateStr, Tools.NL);
 
 							if (dateStr.hashCode() != utc.hashCode()) {
 								continue;
