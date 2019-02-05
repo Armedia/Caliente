@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="caliente-gui-3.8.0">
+        <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
+        <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/resources"/>
+        <dependent-module archiveName="caliente-cli-caliente-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-cli-caliente/caliente-cli-caliente">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-cli-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-cli/caliente-cli">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-tools-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-tools/caliente-tools">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-store-local-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-store-local/caliente-store-local">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-store-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-store/caliente-store">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-store-jdbc-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-store-jdbc/caliente-store-jdbc">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="datasource-locator-api-1.2.5.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/datasource-locator-api/datasource-locator-api">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-engine-dfc-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-engine-dfc/caliente-engine-dfc">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-engine-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-engine/caliente-engine">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-tools-dfc-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-tools-dfc/caliente-tools-dfc">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-engine-sharepoint-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-engine-sharepoint/caliente-engine-sharepoint">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-engine-cmis-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-engine-cmis/caliente-engine-cmis">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-engine-local-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-engine-local/caliente-engine-local">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-engine-ucm-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-engine-ucm/caliente-engine-ucm">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-engine-xml-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-engine-xml/caliente-engine-xml">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="caliente-engine-alfresco-bi-3.8.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/caliente-engine-alfresco-bi/caliente-engine-alfresco-bi">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="datasource-locator-pooled-1.2.5.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/datasource-locator-pooled/datasource-locator-pooled">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="dfc-session-pool-1.2.7.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/dfc-session-pool/dfc-session-pool">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="context-root" value="caliente-gui"/>
+        <property name="java-output-path" value="/caliente-gui/target/classes"/>
+    </wb-module>
+</project-modules>

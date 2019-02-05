@@ -578,6 +578,9 @@
 		<module>cli/exe/user-mapper</module>
 		<module>cli/exe/validator</module>
 
+		<!-- The Web-based GUI -->
+		<module>gui</module>
+
 		<!-- Some general-use tools -->
 		<module>tools/common</module>
 		<module>tools/dfc</module>
