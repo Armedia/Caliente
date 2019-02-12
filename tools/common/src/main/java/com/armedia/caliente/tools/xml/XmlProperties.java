@@ -45,10 +45,7 @@ public final class XmlProperties {
 	public static final Class<?>[] NO_CLASSES = {};
 
 	public static final <T> Function<T, String> getDefaultSerializer() {
-		return (value) -> {
-			if (value == null) { return null; }
-			return value.toString();
-		};
+		return (value) -> (value != null ? value.toString() : null);
 	}
 
 	public static final NamespaceContext NO_NAMESPACES = new NamespaceContext() {

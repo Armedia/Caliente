@@ -47,12 +47,12 @@ public class DctmSessionWrapper extends SessionWrapper<IDfSession> {
 
 	@Override
 	protected boolean isTransactionActive() throws Exception {
-		return getWrapped().isTransactionActive();
+		return get().isTransactionActive();
 	}
 
 	@Override
 	protected boolean beginTransaction() throws Exception {
-		IDfSession s = getWrapped();
+		IDfSession s = get();
 		if (s.isTransactionActive()) {
 			throw new Exception("Attempting to start a top-level transaction, but nesting is already in place");
 		}
@@ -62,7 +62,7 @@ public class DctmSessionWrapper extends SessionWrapper<IDfSession> {
 
 	@Override
 	protected boolean beginNestedTransaction() throws Exception {
-		IDfSession s = getWrapped();
+		IDfSession s = get();
 		if (!s.isTransactionActive()) {
 			throw new Exception("Attempting to start a nested transaction, but no enclosing transaction is in place");
 		}
@@ -72,7 +72,7 @@ public class DctmSessionWrapper extends SessionWrapper<IDfSession> {
 
 	@Override
 	protected void commitTransaction() throws Exception {
-		IDfSession s = getWrapped();
+		IDfSession s = get();
 		if (this.localTx.isEmpty()) {
 			s.commitTrans();
 		} else {
@@ -82,7 +82,7 @@ public class DctmSessionWrapper extends SessionWrapper<IDfSession> {
 
 	@Override
 	protected void rollbackTransaction() throws Exception {
-		IDfSession s = getWrapped();
+		IDfSession s = get();
 		if (this.localTx.isEmpty()) {
 			s.abortTrans();
 		} else {

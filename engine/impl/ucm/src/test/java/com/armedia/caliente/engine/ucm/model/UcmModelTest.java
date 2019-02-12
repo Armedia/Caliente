@@ -21,7 +21,7 @@ public class UcmModelTest extends BaseTest {
 	public void testIterator() throws Throwable {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 
 			FolderContentsIterator it = new FolderContentsIterator(s, "/", 3);
 			while (it.hasNext()) {
@@ -49,7 +49,7 @@ public class UcmModelTest extends BaseTest {
 	public void testRecursiveIterator() throws Throwable {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 
 			FolderTreeIterator.Config cfg = new FolderTreeIterator.Config();
 			cfg.setPageSize(100);
@@ -98,7 +98,7 @@ public class UcmModelTest extends BaseTest {
 	public void testModelRecursiveIteration() throws Throwable {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 
 			UcmModel m = new UcmModel();
 			UcmFolder f = s.getFolder("/");
@@ -134,7 +134,7 @@ public class UcmModelTest extends BaseTest {
 
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 			UcmModel model = new UcmModel();
 
 			processPaths(model, s, paths);
@@ -197,7 +197,7 @@ public class UcmModelTest extends BaseTest {
 
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 			UcmModel model = new UcmModel();
 			for (String p : paths) {
 				try {
@@ -230,7 +230,7 @@ public class UcmModelTest extends BaseTest {
 	public void testFullRecursion() throws Exception {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 			UcmModel model = new UcmModel();
 			UcmFolder root = model.getRootFolder(s);
 			model.iterateFolderContentsRecursive(s, root, false, new ObjectHandler() {
@@ -263,7 +263,7 @@ public class UcmModelTest extends BaseTest {
 	public void testFile() throws Exception {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 			UcmModel model = new UcmModel();
 
 			try {
@@ -284,7 +284,7 @@ public class UcmModelTest extends BaseTest {
 	public void testFolder() throws Exception {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 			UcmModel model = new UcmModel();
 
 			model.getFolder(s, "/");
@@ -304,7 +304,7 @@ public class UcmModelTest extends BaseTest {
 	public void testGetFile() throws Exception {
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 			UcmModel model = new UcmModel();
 
 			model.getFile(s, "/Test Folder/Second Level Folder/Good Idea.jpg");
@@ -325,7 +325,7 @@ public class UcmModelTest extends BaseTest {
 		String query = "<not>\n(\ndID\n<matches>\n`-1`\n)\n              {   dID                }         \n    [   3    ,    5     / 2 ]\n\n";
 		SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			UcmSession s = w.getWrapped();
+			UcmSession s = w.get();
 			UcmModel model = new UcmModel();
 
 			model.iterateDocumentSearchResults(s, query, 10000, new ObjectHandler() {

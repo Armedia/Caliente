@@ -1267,9 +1267,7 @@ public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOpera
 				}
 				this.objectFilterActive.set(true);
 				Map<CmfObject.Archetype, Long> ret = new EnumMap<>(CmfObject.Archetype.class);
-				counters.forEach((k, v) -> {
-					ret.put(k, v.get());
-				});
+				counters.forEach((k, v) -> ret.put(k, v.get()));
 				return ret;
 			} finally {
 				if (tx) {

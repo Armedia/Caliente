@@ -50,7 +50,7 @@ public abstract class UcmExportDelegate<T extends UcmModelObject> extends
 	@Override
 	protected List<CmfContentStream> storeContent(UcmExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception {
+		boolean includeRenditions) {
 		return new ArrayList<>();
 	}
 }

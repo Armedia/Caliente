@@ -59,7 +59,7 @@ public abstract class ShptExportDelegate<T> extends
 	@Override
 	protected List<CmfContentStream> storeContent(ShptExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception {
+		boolean includeRenditions) {
 		return null;
 	}
 

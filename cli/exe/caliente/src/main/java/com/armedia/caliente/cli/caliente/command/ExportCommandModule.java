@@ -78,10 +78,8 @@ public class ExportCommandModule extends CommandModule<ExportEngineFactory<?, ?,
 
 		PluggableServiceLocator<ExportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ExportEngineListener.class);
-		extraListeners.setErrorListener((serviceClass, t) -> {
-			ExportCommandModule.this.console.warn("Failed to register an additional listener class [{}]",
-				serviceClass.getCanonicalName(), t);
-		});
+		extraListeners.setErrorListener((serviceClass, t) -> ExportCommandModule.this.console
+			.warn("Failed to register an additional listener class [{}]", serviceClass.getCanonicalName(), t));
 		extraListeners.setHideErrors(false);
 
 		Map<String, Object> settings = new TreeMap<>();

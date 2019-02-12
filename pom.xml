@@ -581,7 +581,6 @@
 		<!-- Some general-use tools -->
 		<module>tools/common</module>
 		<module>tools/dfc</module>
-		<module>tools/pgsql</module>
 		<module>tools/scratchpad</module>
 	</modules>
 </project>

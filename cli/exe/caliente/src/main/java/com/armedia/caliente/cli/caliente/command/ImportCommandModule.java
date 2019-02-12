@@ -72,10 +72,8 @@ public class ImportCommandModule extends CommandModule<ImportEngineFactory<?, ?,
 
 		PluggableServiceLocator<ImportEngineListener> extraListeners = new PluggableServiceLocator<>(
 			ImportEngineListener.class);
-		extraListeners.setErrorListener((serviceClass, t) -> {
-			ImportCommandModule.this.log.warn("Failed to register an additional listener class [{}]",
-				serviceClass.getCanonicalName(), t);
-		});
+		extraListeners.setErrorListener((serviceClass, t) -> ImportCommandModule.this.log
+			.warn("Failed to register an additional listener class [{}]", serviceClass.getCanonicalName(), t));
 		extraListeners.setHideErrors(false);
 
 		// lock

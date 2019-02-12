@@ -136,9 +136,8 @@ public class AttributeNameMapping {
 				repl = this.activeDefault;
 			}
 
-			String value = Tools.toString(repl.evaluate((ctx) -> {
-				ctx.getBindings(ScriptContext.ENGINE_SCOPE).put("sqlName", sqlName);
-			}));
+			String value = Tools
+				.toString(repl.evaluate((ctx) -> ctx.getBindings(ScriptContext.ENGINE_SCOPE).put("sqlName", sqlName)));
 
 			// If there is no replacement, then we simply return the original name
 			if (value == null) { return sqlName; }

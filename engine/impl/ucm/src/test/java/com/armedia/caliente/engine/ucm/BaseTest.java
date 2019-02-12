@@ -48,7 +48,7 @@ public class BaseTest {
 	public ServiceResponse callService(String service, RequestPreparation prep) throws Exception {
 		final SessionWrapper<UcmSession> w = BaseTest.factory.acquireSession();
 		try {
-			ServiceResponse r = w.getWrapped().callService(service, prep);
+			ServiceResponse r = w.get().callService(service, prep);
 			if (r.getResponseType() == ResponseType.BINDER) {
 				dumpBinder(service, r.getResponseAsBinder());
 			}

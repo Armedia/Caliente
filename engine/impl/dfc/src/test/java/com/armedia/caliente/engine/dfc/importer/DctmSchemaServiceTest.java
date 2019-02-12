@@ -31,7 +31,7 @@ public class DctmSchemaServiceTest {
 		CfgTools cfg = new CfgTools(settings);
 		try (DctmSessionFactory factory = new DctmSessionFactory(cfg, new DctmCrypto())) {
 			try (SessionWrapper<IDfSession> session = factory.acquireSession()) {
-				try (DctmSchemaService schema = new DctmSchemaService(session.getWrapped())) {
+				try (DctmSchemaService schema = new DctmSchemaService(session.get())) {
 					for (String name : schema.getObjectTypeNames()) {
 						TypeDeclaration declaration = schema.getObjectTypeDeclaration(name);
 						System.out.printf("OBJECT TYPE    :%s%n", declaration);

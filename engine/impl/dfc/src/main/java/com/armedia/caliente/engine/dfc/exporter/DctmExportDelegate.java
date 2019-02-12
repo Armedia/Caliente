@@ -197,15 +197,20 @@ public abstract class DctmExportDelegate<T extends IDfPersistentObject> extends
 	@Override
 	protected final List<CmfContentStream> storeContent(DctmExportContext ctx,
 		CmfAttributeTranslator<IDfValue> translator, CmfObject<IDfValue> marshaled, ExportTarget referrent,
-		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) throws Exception {
-		return doStoreContent(ctx, translator, marshaled, referrent, castObject(this.object), streamStore,
-			includeRenditions);
+		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) {
+		try {
+			return doStoreContent(ctx, translator, marshaled, referrent, castObject(this.object), streamStore,
+				includeRenditions);
+		} catch (DfException e) {
+			this.log.error("Failed to store the content streams for {}", marshaled.getDescription(), e);
+			return new ArrayList<>();
+		}
 	}
 
 	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, T object, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception {
-		return null;
+		boolean includeRenditions) throws DfException {
+		return new ArrayList<>();
 	}
 
 	protected static <T extends IDfPersistentObject> T staticCast(Class<T> klazz, IDfPersistentObject p)

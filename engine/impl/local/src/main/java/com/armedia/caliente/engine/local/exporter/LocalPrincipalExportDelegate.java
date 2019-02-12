@@ -5,18 +5,13 @@ import java.nio.file.attribute.UserPrincipal;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.commons.codec.digest.DigestUtils;
 
 import com.armedia.caliente.engine.converter.IntermediateAttribute;
 import com.armedia.caliente.engine.exporter.ExportException;
-import com.armedia.caliente.engine.exporter.ExportTarget;
 import com.armedia.caliente.engine.local.common.LocalRoot;
 import com.armedia.caliente.store.CmfAttribute;
-import com.armedia.caliente.store.CmfAttributeTranslator;
-import com.armedia.caliente.store.CmfContentStore;
-import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 
@@ -89,12 +84,5 @@ public class LocalPrincipalExportDelegate extends LocalExportDelegate<Principal>
 	protected boolean calculateHistoryCurrent(LocalRoot root, Principal object) throws Exception {
 		// Always true
 		return true;
-	}
-
-	@Override
-	protected List<CmfContentStream> storeContent(LocalExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception {
-		return null;
 	}
 }

@@ -142,7 +142,7 @@ public abstract class ImportEngine<//
 							}
 
 							final CONTEXT ctx = this.contextFactory.newContext(next.getId(), next.getType(),
-								session.getWrapped(), i);
+								session.get(), i);
 							ImportResult result = ImportResult.FAILED;
 							String info = null;
 							try {
@@ -436,7 +436,7 @@ public abstract class ImportEngine<//
 			try {
 				SchemaService schemaService = null;
 				try {
-					schemaService = newSchemaService(baseSession.getWrapped());
+					schemaService = newSchemaService(baseSession.get());
 				} catch (SchemaServiceException e) {
 					throw new ImportException("Failed to initialize the required schema service", e);
 				}
@@ -464,7 +464,7 @@ public abstract class ImportEngine<//
 				}
 
 				try {
-					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, this.objectStore,
+					contextFactory = newContextFactory(baseSession.get(), configuration, this.objectStore,
 						this.contentStore, transformer, this.output, this.warningTracker);
 					final String fmt = "caliente.import.product.%s";
 					this.objectStore.setProperty(String.format(fmt, "name"),
@@ -476,7 +476,7 @@ public abstract class ImportEngine<//
 				}
 
 				try {
-					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
+					delegateFactory = newDelegateFactory(baseSession.get(), configuration);
 				} catch (Exception e) {
 					throw new ImportException("Failed to configure the delegate factory to carry out the import", e);
 				}
@@ -631,7 +631,7 @@ public abstract class ImportEngine<//
 				try (SessionWrapper<SESSION> rootSession = sessionFactory.acquireSession()) {
 					try {
 						rootSession.begin();
-						contextFactory.ensureTargetPath(rootSession.getWrapped());
+						contextFactory.ensureTargetPath(rootSession.get());
 						rootSession.commit();
 					} catch (Exception e) {
 						rootSession.rollback();
@@ -763,7 +763,7 @@ public abstract class ImportEngine<//
 							if (transformer != null) {
 								SchemaService schemaService = null;
 								try {
-									schemaService = newSchemaService(loaderSession.getWrapped());
+									schemaService = newSchemaService(loaderSession.get());
 								} catch (SchemaServiceException e) {
 									throw new CmfStorageException(String.format(
 										"Failed to initialize the required schema service while processing %s",

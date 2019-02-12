@@ -86,9 +86,8 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 		final IDfSession session = sysObject.getSession();
 		final Set<String> ret = new HashSet<>();
 
-		DfException e = DfUtils.runRetryable(session, (s) -> {
-			ret.addAll(StringTokenizer.getCSVInstance(sysObject.getXPermitList()).getTokenList());
-		});
+		DfException e = DfUtils.runRetryable(session,
+			(s) -> ret.addAll(StringTokenizer.getCSVInstance(sysObject.getXPermitList()).getTokenList()));
 		if ((e != null) && !StringUtils.equalsIgnoreCase("DM_SYSOBJECT_W_FOLDER_DEFACL", e.getMessageId())) { throw e; }
 
 		return ret;
@@ -494,10 +493,10 @@ public abstract class DctmImportSysObject<T extends IDfSysObject> extends DctmIm
 
 		/*
 		IDfACL acl = null;
-		
+
 		acl = session.getACL(aclDomain, aclName);
 		sysObj.setACL(acl);
-		
+
 		acl = IDfACL.class.cast(session.getObject(aclId));
 		sysObj.setACL(acl);
 		*/

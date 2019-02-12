@@ -379,11 +379,10 @@ public abstract class ExportEngine<//
 							String.format("No export status found for requirement [%s] of %s", requirement, logLabel));
 					}
 					try {
-						long waitTime = status.waitUntilCompleted(() -> {
-							ctx.printf("Waiting on a dependency:%n\tFOR  : %s%n\tFROM : %s%n\tOWNER: %s for %s",
+						long waitTime = status.waitUntilCompleted(
+							() -> ctx.printf("Waiting on a dependency:%n\tFOR  : %s%n\tFROM : %s%n\tOWNER: %s for %s",
 								status.getTargetLabel(), logLabel, status.getCreatorThread().getName(),
-								status.getReferrentLabel());
-						});
+								status.getReferrentLabel()));
 						ctx.printf("Waited for %s from %s for %d ms", status.getTargetLabel(), logLabel, waitTime);
 					} catch (InterruptedException e) {
 						Thread.interrupted();
@@ -675,7 +674,7 @@ public abstract class ExportEngine<//
 
 			@Override
 			public void process(SessionWrapper<SESSION> session, ExportTarget target) throws Exception {
-				final SESSION s = session.getWrapped();
+				final SESSION s = session.get();
 
 				CmfObject.Archetype nextType = target.getType();
 				final String nextId = target.getId();
@@ -806,7 +805,7 @@ public abstract class ExportEngine<//
 					};
 
 					LineScanner scanner = new LineScanner();
-					final SESSION session = baseSession.getWrapped();
+					final SESSION session = baseSession.get();
 					Collection<String> sources = exportState.cfg.getStrings(ExportSetting.FROM);
 
 					// Does it support multiple sources?
@@ -913,7 +912,7 @@ public abstract class ExportEngine<//
 			Transformer transformer = null;
 			ObjectFilter filter = null;
 			try (final SessionWrapper<SESSION> baseSession = sessionFactory.acquireSession()) {
-				validateEngine(baseSession.getWrapped());
+				validateEngine(baseSession.get());
 				try {
 					transformer = getTransformer(configuration, null);
 				} catch (Exception e) {
@@ -927,7 +926,7 @@ public abstract class ExportEngine<//
 				}
 
 				try {
-					contextFactory = newContextFactory(baseSession.getWrapped(), configuration, getObjectStore(),
+					contextFactory = newContextFactory(baseSession.get(), configuration, getObjectStore(),
 						getContentStore(), transformer, getOutput(), getWarningTracker());
 
 					final String fmt = "caliente.export.product.%s";
@@ -940,7 +939,7 @@ public abstract class ExportEngine<//
 				}
 
 				try {
-					delegateFactory = newDelegateFactory(baseSession.getWrapped(), configuration);
+					delegateFactory = newDelegateFactory(baseSession.get(), configuration);
 				} catch (Exception e) {
 					throw new ExportException("Failed to configure the delegate factory to carry out the export", e);
 				}

@@ -26,6 +26,7 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.tools.MimeTools;
 import com.armedia.commons.utilities.Tools;
@@ -134,7 +135,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	@Override
 	protected List<CmfContentStream> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception {
+		boolean includeRenditions) {
 		List<CmfContentStream> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
 		ContentStream main = this.object.getContentStream();
@@ -143,8 +144,12 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 		String name = main.getFileName();
 		mainInfo.setFileName(name);
 		mainInfo.setExtension(FilenameUtils.getExtension(name));
-		long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo);
-		mainInfo.setLength(length);
+		try {
+			final long length = storeContentStream(marshalled, translator, null, main, streamStore, mainInfo);
+			mainInfo.setLength(length);
+		} catch (CmfStorageException e) {
+			this.log.error("Failed to store the primary content stream for {}", marshalled.getDescription(), e);
+		}
 		ret.add(mainInfo);
 		if (includeRenditions) {
 			int i = 0;
@@ -161,8 +166,13 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 				info.setProperty("title", r.getTitle());
 				info.setProperty("height", String.valueOf(r.getHeight()));
 				info.setProperty("width", String.valueOf(r.getWidth()));
-				length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
-				info.setLength(length);
+				try {
+					final long length = storeContentStream(marshalled, translator, r, cs, streamStore, info);
+					info.setLength(length);
+				} catch (CmfStorageException e) {
+					this.log.error("Failed to store the {} rendition (# {}) for {}", r.getKind(), info.getIndex(),
+						marshalled.getDescription(), e);
+				}
 				ret.add(info);
 			}
 		}
@@ -170,7 +180,8 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	protected long storeContentStream(CmfObject<CmfValue> marshalled, CmfAttributeTranslator<CmfValue> translator,
-		Rendition r, ContentStream cs, CmfContentStore<?, ?, ?> streamStore, CmfContentStream info) throws Exception {
+		Rendition r, ContentStream cs, CmfContentStore<?, ?, ?> streamStore, CmfContentStream info)
+		throws CmfStorageException {
 		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
 		InputStream src = cs.getStream();
 		try {

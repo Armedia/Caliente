@@ -50,7 +50,7 @@ public abstract class CmisExportDelegate<T> extends
 	@Override
 	protected List<CmfContentStream> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception {
+		boolean includeRenditions) {
 		return new ArrayList<>();
 	}
 }

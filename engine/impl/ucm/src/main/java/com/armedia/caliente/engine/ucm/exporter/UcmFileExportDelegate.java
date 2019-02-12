@@ -1,5 +1,6 @@
 package com.armedia.caliente.engine.ucm.exporter;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,14 +19,18 @@ import com.armedia.caliente.engine.ucm.model.UcmAtt;
 import com.armedia.caliente.engine.ucm.model.UcmException;
 import com.armedia.caliente.engine.ucm.model.UcmFile;
 import com.armedia.caliente.engine.ucm.model.UcmFileHistory;
+import com.armedia.caliente.engine.ucm.model.UcmFileRevisionNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmRenditionInfo;
+import com.armedia.caliente.engine.ucm.model.UcmRenditionNotFoundException;
 import com.armedia.caliente.engine.ucm.model.UcmRevision;
+import com.armedia.caliente.engine.ucm.model.UcmServiceException;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfAttributeTranslator;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfContentStream;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfProperty;
+import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 
 public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
@@ -184,7 +189,7 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 	@Override
 	protected List<CmfContentStream> storeContent(UcmExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
 		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
-		boolean includeRenditions) throws Exception {
+		boolean includeRenditions) {
 		List<CmfContentStream> contents = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
 
@@ -192,7 +197,14 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 		if (this.object.isShortcut()) { return contents; }
 
 		final boolean skipContent = ctx.getSettings().getBoolean(TransferSetting.IGNORE_CONTENT);
-		final Map<String, UcmRenditionInfo> renditions = ctx.getSession().getRenditions(this.object);
+		Map<String, UcmRenditionInfo> renditions;
+		try {
+			renditions = ctx.getSession().getRenditions(this.object);
+		} catch (Exception e) {
+			this.log.error("Failed to retrieve the content streams for {}", marshalled.getDescription(), e);
+			return contents;
+		}
+
 		int index = contents.size();
 		for (String renditionLabel : renditions.keySet()) {
 			if (!UcmRenditionInfo.DEFAULT.equalsIgnoreCase(renditionLabel) && !includeRenditions) {
@@ -223,6 +235,21 @@ public class UcmFileExportDelegate extends UcmFSObjectExportDelegate<UcmFile> {
 				try (InputStream in = this.object.getInputStream(ctx.getSession(), rendition.getType())) {
 					// Don't pull the content until we're sure we can put it somewhere...
 					contentHandle.setContents(in);
+				} catch (UcmServiceException e) {
+					this.log.error("A Service Exception was raised while seeking the [{}] rendition for {}",
+						renditionLabel, marshalled.getDescription(), e);
+				} catch (UcmFileRevisionNotFoundException e) {
+					this.log.error("Failed to find the file revision for {} while storing rendition [{}]",
+						marshalled.getDescription(), renditionLabel, e);
+				} catch (UcmRenditionNotFoundException e) {
+					this.log.error("Failed to find the rendition [{}] for {} into the content store", renditionLabel,
+						marshalled.getDescription(), e);
+				} catch (CmfStorageException e) {
+					this.log.error("Failed to store the rendition [{}] for {} into the content store", renditionLabel,
+						marshalled.getDescription(), e);
+				} catch (IOException e) {
+					this.log.error("Failed to close the [{}] rendition's input stream for {}", renditionLabel,
+						marshalled.getDescription(), e);
 				}
 			}
 		}
