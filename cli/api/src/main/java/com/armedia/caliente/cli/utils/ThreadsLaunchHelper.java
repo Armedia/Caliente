@@ -1,12 +1,12 @@
 package com.armedia.caliente.cli.utils;
 
-import com.armedia.caliente.cli.IntegerValueFilter;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionGroup;
 import com.armedia.caliente.cli.OptionGroupImpl;
 import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.Options;
+import com.armedia.caliente.cli.filter.IntegerValueFilter;
 import com.armedia.commons.utilities.Tools;
 
 public final class ThreadsLaunchHelper extends Options {

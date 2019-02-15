@@ -7,8 +7,8 @@ import org.junit.Test;
 import com.armedia.caliente.cli.Command;
 import com.armedia.caliente.cli.CommandScheme;
 import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.exception.HelpRequestedException;
+import com.armedia.caliente.cli.filter.StringValueFilter;
 
 public class HelpRendererTest {
 

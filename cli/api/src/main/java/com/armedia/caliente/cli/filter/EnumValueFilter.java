@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.filter;
 
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -10,6 +10,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.cli.OptionValueFilter;
 import com.armedia.commons.utilities.Tools;
 
 public class EnumValueFilter<E extends Enum<E>> extends OptionValueFilter {

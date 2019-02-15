@@ -2,12 +2,12 @@ package com.armedia.caliente.cli.caliente.options;
 
 import java.util.function.Supplier;
 
-import com.armedia.caliente.cli.EnumValueFilter;
-import com.armedia.caliente.cli.IntegerValueFilter;
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.StringValueFilter;
 import com.armedia.caliente.cli.caliente.utils.SmtpServer.SslMode;
+import com.armedia.caliente.cli.filter.EnumValueFilter;
+import com.armedia.caliente.cli.filter.IntegerValueFilter;
+import com.armedia.caliente.cli.filter.StringValueFilter;
 import com.armedia.caliente.cli.utils.LibLaunchHelper;
 import com.armedia.caliente.cli.utils.ThreadsLaunchHelper;
 import com.armedia.caliente.engine.exporter.ExportResult;

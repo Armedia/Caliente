@@ -65,8 +65,8 @@ public abstract class AbstractEngineInterface {
 								(serviceClass, t) -> log.error("Failed to initialize the EngineInterface class {}",
 									serviceClass.getCanonicalName(), t));
 						}
-						Map<String, String> engineAliases = new TreeMap<>();
-						Map<String, AbstractEngineInterface> interfaces = new TreeMap<>();
+						final Map<String, String> engineAliases = new TreeMap<>();
+						final Map<String, AbstractEngineInterface> interfaces = new TreeMap<>();
 						abstractEngineInterfaces.forEach((abstractEngineInterface) -> {
 							final String canonicalName = AbstractEngineInterface
 								.canonicalizeName(abstractEngineInterface.getName());

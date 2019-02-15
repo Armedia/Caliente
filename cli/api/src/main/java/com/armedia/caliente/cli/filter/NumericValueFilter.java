@@ -1,9 +1,10 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.filter;
 
 import java.util.Comparator;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.cli.OptionValueFilter;
 import com.armedia.commons.utilities.Tools;
 
 public abstract class NumericValueFilter<N extends Number> extends OptionValueFilter implements Comparator<N> {
