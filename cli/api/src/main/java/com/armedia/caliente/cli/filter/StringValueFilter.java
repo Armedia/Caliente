@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.filter;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,6 +9,7 @@ import java.util.TreeSet;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.armedia.caliente.cli.OptionValueFilter;
 import com.armedia.commons.utilities.Tools;
 
 public class StringValueFilter extends OptionValueFilter {

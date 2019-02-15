@@ -1,8 +1,10 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.filter;
 
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+
+import com.armedia.caliente.cli.OptionValueFilter;
 
 public class RegexValueFilter extends OptionValueFilter {
 
