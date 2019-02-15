@@ -89,10 +89,6 @@ public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<C
 	}
 
 	protected final void endInvocation(OPERATION operation) {
-		endInvocation(operation, false);
-	}
-
-	private void endInvocation(OPERATION operation, boolean exclusive) {
 		final Lock lock = (operation.isExclusive() ? getWriteLock() : getReadLock());
 		try {
 			operation.closeQuietly();

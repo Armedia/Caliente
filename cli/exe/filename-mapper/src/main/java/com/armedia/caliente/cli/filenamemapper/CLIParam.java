@@ -4,7 +4,7 @@ import java.util.function.Supplier;
 
 import com.armedia.caliente.cli.Option;
 import com.armedia.caliente.cli.OptionImpl;
-import com.armedia.caliente.cli.StringValueFilter;
+import com.armedia.caliente.cli.filter.StringValueFilter;
 
 public enum CLIParam implements Supplier<Option> {
 	no_fix(

@@ -159,8 +159,8 @@ public class OptionGroupImpl implements OptionGroup {
 			Collection<O> added = new LinkedList<>();
 			boolean ok = false;
 			try {
-				Consumer<O> consumer = this::add;
-				StreamTools.of(options.iterator()).filter(Objects::nonNull).forEach(consumer.andThen(added::add));
+				Consumer<O> thisAdd = this::add;
+				StreamTools.of(options.iterator()).filter(Objects::nonNull).forEach(thisAdd.andThen(added::add));
 				ok = true;
 			} finally {
 				if (!ok) {

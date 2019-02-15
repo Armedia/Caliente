@@ -1,4 +1,4 @@
-package com.armedia.caliente.cli;
+package com.armedia.caliente.cli.filter;
 
 public class IntegerValueFilter extends NumericValueFilter<Integer> {
 

@@ -193,7 +193,7 @@ public abstract class AbstractLauncher {
 		// The logging is initialized, we can make use of it now.
 		showBanner(this.console);
 		for (String s : ClasspathPatcher.getAdditions()) {
-			this.log.info("Classpath addition: [{}]", s);
+			this.console.info("Classpath addition: [{}]", s);
 		}
 
 		try {
