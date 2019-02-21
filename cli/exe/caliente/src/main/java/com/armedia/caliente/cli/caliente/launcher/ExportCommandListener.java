@@ -1,6 +1,8 @@
 package com.armedia.caliente.cli.caliente.launcher;
 
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -22,6 +24,7 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	protected final AtomicLong start = new AtomicLong(0);
 	protected final AtomicLong previous = new AtomicLong(0);
 	protected final AtomicLong objectCounter = new AtomicLong();
+	protected final Set<String> sources = new LinkedHashSet<>();
 
 	public ExportCommandListener(Logger console) {
 		super(console);
@@ -67,6 +70,46 @@ public class ExportCommandListener extends AbstractCommandListener implements Ex
 	public void exportStarted(ExportState exportState) {
 		this.start.set(System.currentTimeMillis());
 		this.console.info("Export process started with settings:{}{}\t{}{}{}", exportState.cfg);
+	}
+
+	@Override
+	public void sourceSearchStarted(String source) {
+		if (this.sources.add(source)) {
+			this.console.info("Started retrieving export targets from [{}]", source);
+		}
+	}
+
+	@Override
+	public void sourceSearchMilestone(String source, long sourceCount, long totalCount) {
+		this.console.info("Source [{}] has yielded {} export targets so far ({} total)", source, sourceCount,
+			totalCount);
+	}
+
+	@Override
+	public void sourceSearchCompleted(String source, long sourceCount, long totalCount) {
+		this.console.info("Source [{}] yielded {} export targets ({} total)", source, sourceCount, totalCount);
+	}
+
+	@Override
+	public void sourceSearchFailed(String source, long sourceCount, long totalCount, Exception thrown) {
+		this.console.error(
+			"The export target retrieval from the source [{}] was stopped by an exception after {} objects ({} total objects retrieved)",
+			source, sourceCount, totalCount, thrown);
+	}
+
+	@Override
+	public void searchCompleted(long totalCount) {
+		final int totalSources = this.sources.size();
+		this.console.info("Retrieved {} export targets from {} {}source{}", totalCount, totalSources,
+			totalSources > 1 ? "different " : "", totalSources > 1 ? "s" : "");
+	}
+
+	@Override
+	public void searchFailed(long totalCount, Exception thrown) {
+		final int totalSources = this.sources.size();
+		this.console.error(
+			"The export target retrieval was stopped by an exception after {} total export targets were retrieved from {} {}source{}",
+			totalCount, totalSources, totalSources > 1 ? "different " : "", totalSources > 1 ? "s" : "", thrown);
 	}
 
 	@Override
