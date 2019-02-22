@@ -184,7 +184,7 @@ public class UcmExportEngine extends
 	public static List<String> decodePathList(String paths) {
 		if (StringUtils.isEmpty(paths)) { return Collections.emptyList(); }
 		List<String> ret = new ArrayList<>();
-		for (String str : Tools.splitCSVEscaped(paths)) {
+		for (String str : Tools.splitEscaped(',', paths)) {
 			if (!StringUtils.isEmpty(str)) {
 				ret.add(str);
 			}

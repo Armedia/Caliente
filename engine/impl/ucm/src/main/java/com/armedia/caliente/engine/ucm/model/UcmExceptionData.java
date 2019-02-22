@@ -21,7 +21,7 @@ public class UcmExceptionData {
 			this.allValues = Tools.freezeCopy(parameters);
 			this.tag = parameters.remove(0);
 			this.parameters = Tools.freezeList(parameters);
-			this.string = new LazySupplier<>(() -> Tools.joinCSVEscaped(this.allValues));
+			this.string = new LazySupplier<>(() -> Tools.joinEscaped(',', this.allValues));
 		}
 
 		public String getTag() {
