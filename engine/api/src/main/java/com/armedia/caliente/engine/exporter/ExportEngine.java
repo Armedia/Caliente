@@ -133,7 +133,7 @@ public abstract class ExportEngine<//
 	}
 
 	protected ExportEngine(ENGINE_FACTORY factory, Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings,
 		boolean supportsMultipleSources, SearchType... searchTypes) {
 		super(factory, ExportResult.class, output, warningTracker, baseData, objectStore, contentStore, settings,
 			"export");
@@ -269,8 +269,8 @@ public abstract class ExportEngine<//
 				ctx.pushReferrent(referrentTarget);
 				pushed = true;
 			}
-			final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
-			final CmfContentStore<?, ?, ?> streamStore = exportState.streamStore;
+			final CmfObjectStore<?> objectStore = exportState.objectStore;
+			final CmfContentStore<?, ?> streamStore = exportState.streamStore;
 
 			final CmfObject.Archetype type = target.getType();
 			final String id = target.getId();
@@ -640,7 +640,7 @@ public abstract class ExportEngine<//
 		final TransferContextFactory<SESSION, VALUE, CONTEXT, ?> contextFactory, final DELEGATE_FACTORY delegateFactory,
 		final Transformer transformer, final ObjectFilter filter) throws ExportException, CmfStorageException {
 		final Logger output = exportState.output;
-		final CmfObjectStore<?, ?> objectStore = exportState.objectStore;
+		final CmfObjectStore<?> objectStore = exportState.objectStore;
 		final CfgTools settings = exportState.cfg;
 		final int threadCount;
 		// Ensure nobody changes this under our feet
@@ -903,7 +903,7 @@ public abstract class ExportEngine<//
 	protected void initContext(CONTEXT ctx) {
 	}
 
-	protected void setExportProperties(CmfObjectStore<?, ?> store) {
+	protected void setExportProperties(CmfObjectStore<?> store) {
 	}
 
 	protected void validateEngine(SESSION session) throws ExportException {

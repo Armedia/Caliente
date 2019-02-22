@@ -32,16 +32,16 @@ public abstract class ImportContext< //
 > extends TransferContext<SESSION, VALUE, CONTEXT_FACTORY> {
 
 	private final ImportContextFactory<SESSION, ?, VALUE, ?, ?, ?> factory;
-	private final CmfObjectStore<?, ?> cmfObjectStore;
+	private final CmfObjectStore<?> cmfObjectStore;
 	private final CmfAttributeTranslator<VALUE> translator;
 	private final Transformer transformer;
-	private final CmfContentStore<?, ?, ?> streamStore;
+	private final CmfContentStore<?, ?> streamStore;
 	private final int historyPosition;
 
 	public ImportContext(CONTEXT_FACTORY factory, CfgTools settings, String rootId, CmfObject.Archetype rootType,
 		SESSION session, Logger output, WarningTracker tracker, Transformer transformer,
-		CmfAttributeTranslator<VALUE> translator, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, int historyPosition) {
+		CmfAttributeTranslator<VALUE> translator, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> streamStore, int historyPosition) {
 		super(factory, settings, rootId, rootType, session, output, tracker);
 		this.factory = factory;
 		this.translator = translator;
@@ -141,11 +141,11 @@ public abstract class ImportContext< //
 		return this.translator.decodeObject(rawObject);
 	}
 
-	public final CmfContentStore<?, ?, ?> getContentStore() {
+	public final CmfContentStore<?, ?> getContentStore() {
 		return this.streamStore;
 	}
 
-	protected final CmfObjectStore<?, ?> getObjectStore() {
+	protected final CmfObjectStore<?> getObjectStore() {
 		return this.cmfObjectStore;
 	}
 

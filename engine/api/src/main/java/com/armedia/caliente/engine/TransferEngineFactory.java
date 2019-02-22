@@ -88,11 +88,11 @@ public abstract class TransferEngineFactory< //
 	}
 
 	public abstract ENGINE newInstance(final Logger output, final WarningTracker warningTracker, final File baseData,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
+		final CmfObjectStore<?> objectStore, final CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws EXCEPTION;
 
 	public final ENGINE newInstance(final Logger output, final WarningTracker warningTracker, final File baseData,
-		final CmfObjectStore<?, ?> objectStore, final CmfContentStore<?, ?, ?> contentStore, Map<String, ?> settings)
+		final CmfObjectStore<?> objectStore, final CmfContentStore<?, ?> contentStore, Map<String, ?> settings)
 		throws EXCEPTION {
 		if (settings == null) {
 			settings = Collections.emptyMap();

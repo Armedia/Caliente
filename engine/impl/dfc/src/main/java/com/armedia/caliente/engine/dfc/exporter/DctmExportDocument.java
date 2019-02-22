@@ -241,7 +241,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 	@Override
 	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfSysObject document,
-		CmfContentStore<?, ?, ?> streamStore, boolean includeRenditions) throws DfException {
+		CmfContentStore<?, ?> streamStore, boolean includeRenditions) throws DfException {
 		if (isDfReference(document)) {
 			return super.doStoreContent(ctx, translator, marshaled, referrent, document, streamStore,
 				includeRenditions);
@@ -308,7 +308,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 
 	protected CmfContentStream storeContentStream(IDfSession session, CmfAttributeTranslator<IDfValue> translator,
 		CmfObject<IDfValue> marshaled, IDfSysObject document, IDfContent content, IDfId contentId, int index,
-		CmfContentStore<?, ?, ?> streamStore, boolean skipContent) {
+		CmfContentStore<?, ?> streamStore, boolean skipContent) {
 
 		if (document == null) {
 			this.log.error("Could not locate the actual {} for which content [{}] (# {}) was to be exported",
@@ -369,7 +369,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 
 		try {
 			// CmfStore the content in the filesystem
-			CmfContentStore<?, ?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
+			CmfContentStore<?, ?>.Handle contentHandle = streamStore.getHandle(translator, marshaled, info);
 			if (!skipContent) {
 				if (contentHandle.getSourceStore().isSupportsFileAccess()) {
 					document.getFileEx2(contentHandle.getFile(true).getAbsolutePath(), format, info.getRenditionPage(),

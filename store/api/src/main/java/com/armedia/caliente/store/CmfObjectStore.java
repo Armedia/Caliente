@@ -29,8 +29,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public abstract class CmfObjectStore<CONNECTION, OPERATION extends CmfStoreOperation<CONNECTION>>
-	extends CmfStore<CONNECTION, OPERATION> {
+public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> extends CmfStore<OPERATION> {
 
 	public static enum LockStatus {
 		//

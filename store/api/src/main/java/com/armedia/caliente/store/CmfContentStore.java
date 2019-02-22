@@ -13,8 +13,7 @@ import org.apache.commons.io.IOUtils;
 
 import com.armedia.commons.utilities.Tools;
 
-public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends CmfStoreOperation<CONNECTION>>
-	extends CmfStore<CONNECTION, OPERATION> {
+public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperation<?>> extends CmfStore<OPERATION> {
 
 	protected static final int MIN_BUFFER_SIZE = 4096;
 	public static final int DEFAULT_BUFFER_SIZE = 16384;
@@ -81,7 +80,7 @@ public abstract class CmfContentStore<LOCATOR, CONNECTION, OPERATION extends Cmf
 		 *
 		 * @return the {@link CmfContentStore} from which this handle was obtained.
 		 */
-		public final CmfContentStore<LOCATOR, CONNECTION, OPERATION> getSourceStore() {
+		public final CmfContentStore<LOCATOR, OPERATION> getSourceStore() {
 			return CmfContentStore.this;
 		}
 

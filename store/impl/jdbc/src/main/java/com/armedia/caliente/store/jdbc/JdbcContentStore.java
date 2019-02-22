@@ -32,7 +32,7 @@ import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
 
-public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, Connection, JdbcOperation> {
+public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, JdbcOperation> {
 
 	private static final String PROPERTY_TABLE = "cmf_content_info";
 	private static final String SCHEMA_CHANGE_LOG = "content.changelog.xml";

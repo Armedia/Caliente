@@ -134,7 +134,7 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 
 	@Override
 	protected List<CmfContentStream> storeContent(CmisExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
 		boolean includeRenditions) {
 		List<CmfContentStream> ret = super.storeContent(ctx, translator, marshalled, referrent, streamStore,
 			includeRenditions);
@@ -180,9 +180,9 @@ public class CmisDocumentDelegate extends CmisFileableDelegate<Document> {
 	}
 
 	protected long storeContentStream(CmfObject<CmfValue> marshalled, CmfAttributeTranslator<CmfValue> translator,
-		Rendition r, ContentStream cs, CmfContentStore<?, ?, ?> streamStore, CmfContentStream info)
+		Rendition r, ContentStream cs, CmfContentStore<?, ?> streamStore, CmfContentStream info)
 		throws CmfStorageException {
-		CmfContentStore<?, ?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
+		CmfContentStore<?, ?>.Handle h = streamStore.getHandle(translator, marshalled, info);
 		InputStream src = cs.getStream();
 		try {
 			return h.setContents(src);

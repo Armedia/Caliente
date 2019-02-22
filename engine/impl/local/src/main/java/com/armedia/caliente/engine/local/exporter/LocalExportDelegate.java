@@ -28,7 +28,7 @@ abstract class LocalExportDelegate<T> extends
 
 	@Override
 	protected List<CmfContentStream> storeContent(LocalExportContext ctx, CmfAttributeTranslator<CmfValue> translator,
-		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?, ?> streamStore,
+		CmfObject<CmfValue> marshalled, ExportTarget referrent, CmfContentStore<?, ?> streamStore,
 		boolean includeRenditions) {
 		return null;
 	}

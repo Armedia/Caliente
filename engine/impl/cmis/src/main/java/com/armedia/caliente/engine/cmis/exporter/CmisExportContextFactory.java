@@ -23,7 +23,7 @@ public class CmisExportContextFactory
 	private final PermissionMapper permissionMapper;
 
 	CmisExportContextFactory(CmisExportEngine engine, Session session, CfgTools settings,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		super(engine, settings, session, objectStore, contentStore, output, warningTracker);
 		this.repositoryInfo = session.getRepositoryInfo();

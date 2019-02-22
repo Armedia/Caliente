@@ -25,7 +25,7 @@ public class CmisImportEngineFactory extends
 
 	@Override
 	public CmisImportEngine newInstance(Logger output, WarningTracker warningTracker, File baseData,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings)
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings)
 		throws ImportException {
 		return new CmisImportEngine(this, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}

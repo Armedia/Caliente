@@ -60,7 +60,7 @@ import com.armedia.commons.utilities.Tools;
  * @author Diego Rivera &lt;diego.rivera@armedia.com&gt;
  *
  */
-public class JdbcObjectStore extends CmfObjectStore<Connection, JdbcOperation> {
+public class JdbcObjectStore extends CmfObjectStore<JdbcOperation> {
 
 	private static final String PROPERTY_TABLE = "cmf_info";
 	private static final String SCHEMA_CHANGE_LOG = "metadata.changelog.xml";

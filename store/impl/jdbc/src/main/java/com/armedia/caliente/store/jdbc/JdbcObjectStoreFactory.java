@@ -1,6 +1,5 @@
 package com.armedia.caliente.store.jdbc;
 
-import java.sql.Connection;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -13,7 +12,7 @@ import com.armedia.commons.dslocator.DataSourceDescriptor;
 import com.armedia.commons.dslocator.DataSourceLocator;
 import com.armedia.commons.utilities.CfgTools;
 
-public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<Connection, JdbcOperation, JdbcObjectStore> {
+public class JdbcObjectStoreFactory extends CmfObjectStoreFactory<JdbcOperation, JdbcObjectStore> {
 
 	private static final Logger LOG = LoggerFactory.getLogger(JdbcObjectStoreFactory.class);
 

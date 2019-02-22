@@ -56,7 +56,7 @@ public class CmisExportEngine extends
 	};
 
 	public CmisExportEngine(CmisExportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true);
 	}
 
@@ -187,7 +187,7 @@ public class CmisExportEngine extends
 
 	@Override
 	protected CmisExportContextFactory newContextFactory(Session session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		return new CmisExportContextFactory(this, session, cfg, objectStore, streamStore, output, warningTracker);
 	}

@@ -20,8 +20,8 @@ public class CmisImportContext extends ImportContext<Session, CmfValue, CmisImpo
 
 	CmisImportContext(CmisImportContextFactory factory, String rootId, CmfObject.Archetype rootType, Session session,
 		Logger output, WarningTracker warningTracker, Transformer transformer,
-		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?, ?> objectStore,
-		CmfContentStore<?, ?, ?> streamStore, int batchPosition) {
+		CmfAttributeTranslator<CmfValue> translator, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> streamStore, int batchPosition) {
 		super(factory, factory.getSettings(), rootId, rootType, session, output, warningTracker, transformer,
 			translator, objectStore, streamStore, batchPosition);
 	}

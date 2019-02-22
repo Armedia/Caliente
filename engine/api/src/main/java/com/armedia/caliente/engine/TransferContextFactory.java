@@ -49,15 +49,15 @@ public abstract class TransferContextFactory< //
 	private final Set<CmfObject.Archetype> excludes;
 	private final String productName;
 	private final String productVersion;
-	private final CmfContentStore<?, ?, ?> contentStore;
-	private final CmfObjectStore<?, ?> objectStore;
+	private final CmfContentStore<?, ?> contentStore;
+	private final CmfObjectStore<?> objectStore;
 	private final Transformer transformer;
 	private final Logger output;
 	private final WarningTracker warningTracker;
 
-	protected TransferContextFactory(ENGINE engine, CfgTools settings, SESSION session,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
-		WarningTracker tracker) throws Exception {
+	protected TransferContextFactory(ENGINE engine, CfgTools settings, SESSION session, CmfObjectStore<?> objectStore,
+		CmfContentStore<?, ?> contentStore, Transformer transformer, Logger output, WarningTracker tracker)
+		throws Exception {
 		if (engine == null) {
 			throw new IllegalArgumentException("Must provide an engine to which this factory is tied");
 		}
@@ -87,16 +87,16 @@ public abstract class TransferContextFactory< //
 		this.warningTracker = tracker;
 	}
 
-	protected void calculateExcludes(CmfObjectStore<?, ?> objectStore, Set<CmfObject.Archetype> excludes)
+	protected void calculateExcludes(CmfObjectStore<?> objectStore, Set<CmfObject.Archetype> excludes)
 		throws CmfStorageException {
 		// do nothing
 	}
 
-	protected final CmfObjectStore<?, ?> getObjectStore() {
+	protected final CmfObjectStore<?> getObjectStore() {
 		return this.objectStore;
 	}
 
-	protected final CmfContentStore<?, ?, ?> getContentStore() {
+	protected final CmfContentStore<?, ?> getContentStore() {
 		return this.contentStore;
 	}
 

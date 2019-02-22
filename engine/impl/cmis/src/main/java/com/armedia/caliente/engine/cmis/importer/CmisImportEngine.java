@@ -94,7 +94,7 @@ public class CmisImportEngine extends
 	};
 
 	public CmisImportEngine(CmisImportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings);
 	}
 
@@ -128,7 +128,7 @@ public class CmisImportEngine extends
 
 	@Override
 	protected CmisImportContextFactory newContextFactory(Session session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		return new CmisImportContextFactory(this, session, cfg, objectStore, streamStore, transformer, output,
 			warningTracker);

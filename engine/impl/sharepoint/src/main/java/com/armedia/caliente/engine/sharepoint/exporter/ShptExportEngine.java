@@ -37,7 +37,7 @@ public class ShptExportEngine extends
 	ExportEngine<ShptSession, ShptSessionWrapper, CmfValue, ShptExportContext, ShptExportContextFactory, ShptExportDelegateFactory, ShptExportEngineFactory> {
 
 	public ShptExportEngine(ShptExportEngineFactory factory, Logger output, WarningTracker warningTracker,
-		File baseData, CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, CfgTools settings) {
+		File baseData, CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, CfgTools settings) {
 		super(factory, output, warningTracker, baseData, objectStore, contentStore, settings, true, SearchType.PATH);
 	}
 
@@ -89,7 +89,7 @@ public class ShptExportEngine extends
 
 	@Override
 	protected ShptExportContextFactory newContextFactory(ShptSession session, CfgTools cfg,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> streamStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> streamStore, Transformer transformer, Logger output,
 		WarningTracker warningTracker) throws Exception {
 		return new ShptExportContextFactory(this, cfg, session, objectStore, streamStore, output, warningTracker);
 	}

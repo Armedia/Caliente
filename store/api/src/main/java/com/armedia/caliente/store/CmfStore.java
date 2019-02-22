@@ -14,7 +14,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class CmfStore<CONNECTION, OPERATION extends CmfStoreOperation<CONNECTION>> {
+public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 

@@ -35,7 +35,7 @@ public class AlfImportContextFactory
 	}, Collections.emptyMap());
 
 	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root,
-		CmfObjectStore<?, ?> objectStore, CmfContentStore<?, ?, ?> contentStore, Transformer transformer, Logger output,
+		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, Transformer transformer, Logger output,
 		WarningTracker tracker) throws Exception {
 		super(engine, settings, root, objectStore, contentStore, transformer, output, tracker);
 	}
@@ -59,7 +59,7 @@ public class AlfImportContextFactory
 	@Override
 	protected AlfImportContext constructContext(String rootId, CmfObject.Archetype rootType, AlfRoot session,
 		int batchPosition) {
-		final CmfObjectStore<?, ?> store = getObjectStore();
+		final CmfObjectStore<?> store = getObjectStore();
 		try {
 			this.renameMap.getChecked();
 		} catch (Exception e) {

@@ -568,7 +568,7 @@ abstract class AlfImportFileableDelegate extends AlfImportDelegate {
 				continue;
 			}
 
-			CmfContentStore<?, ?, ?>.Handle h = ctx.getContentStore().getHandle(this.factory.getTranslator(),
+			CmfContentStore<?, ?>.Handle h = ctx.getContentStore().getHandle(this.factory.getTranslator(),
 				this.cmfObject, content);
 
 			// First things first: identify the type we're going to store into
