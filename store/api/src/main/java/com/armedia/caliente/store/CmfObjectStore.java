@@ -212,7 +212,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 
 	public final Long storeObject(CmfObject<CmfValue> object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -236,7 +236,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -250,7 +250,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		throws CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide an object target"); }
 		if (status == null) { throw new IllegalArgumentException("Must provide a status to mark the object with"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -272,7 +272,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -283,7 +283,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
 		if ((content == null) || content.isEmpty()) { return; }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -304,7 +304,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -313,7 +313,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 
 	public final <VALUE> List<CmfContentStream> getContentStreams(CmfObject<VALUE> object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to store"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -328,7 +328,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -337,7 +337,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 
 	public final StoreStatus getStoreStatus(CmfObjectRef target) throws CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide an object spec to check for"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -353,7 +353,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -362,7 +362,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	public final LockStatus lockForStorage(CmfObjectRef target, CmfObjectRef referrent, String historyId, String lockId)
 		throws CmfStorageException {
 		if (target == null) { throw new IllegalArgumentException("Must provide an object spec to check for"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -419,7 +419,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -455,7 +455,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to work with"); }
 		if (historyId == null) { throw new IllegalArgumentException("Must provide a history ID to work with"); }
 
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -471,7 +471,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -485,7 +485,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 
 	public final Collection<CmfObject<CmfValue>> loadObjects(final CmfObject.Archetype type, Collection<String> ids)
 		throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -501,7 +501,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -538,7 +538,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		if (handler == null) {
 			throw new IllegalArgumentException("Must provide an object handler to handle the deserialized objects");
 		}
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -553,7 +553,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -582,7 +582,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 			if (ids.isEmpty()) { return 0; }
 		}
 
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		boolean ok = false;
 		try {
 			final boolean tx = operation.begin();
@@ -603,7 +603,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -612,7 +612,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 
 	public final void scanObjectTree(final CmfTreeScanner scanner) throws CmfStorageException {
 		if (scanner == null) { throw new IllegalArgumentException("Must provide scanner to process the object tree"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -627,7 +627,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -641,7 +641,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		if ((source == null) && (target == null)) {
 			throw new IllegalArgumentException("Must provide either a source or a target value for the mapping");
 		}
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -667,7 +667,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -679,7 +679,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 
 	public final Mapping getTargetMapping(CmfObject.Archetype type, String name, String source)
 		throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -696,7 +696,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -715,7 +715,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 
 	public final Collection<Mapping> getSourceMapping(CmfObject.Archetype type, String name, String target)
 		throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -732,7 +732,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -752,7 +752,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	}
 
 	public final Map<CmfObject.Archetype, Long> getStoredObjectTypes() throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -763,7 +763,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -779,7 +779,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	}
 
 	public final void resetAltNames() throws CmfStorageException {
-		OPERATION operation = beginExclusiveInvocation();
+		OPERATION operation = beginExclusiveOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -801,7 +801,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -815,7 +815,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		// Shortcut - do nothing if there's no name change
 		if (Tools.equals(newName, object.getName())) { return false; }
 
-		OPERATION operation = beginExclusiveInvocation();
+		OPERATION operation = beginExclusiveOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -838,7 +838,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -846,7 +846,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		final String newName) throws CmfStorageException;
 
 	public final int clearAttributeMappings() throws CmfStorageException {
-		OPERATION operation = beginExclusiveInvocation();
+		OPERATION operation = beginExclusiveOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -869,14 +869,14 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
 	protected abstract int clearAttributeMappings(OPERATION operation) throws CmfStorageException;
 
 	public final Map<CmfObject.Archetype, Set<String>> getAvailableMappings() throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -893,7 +893,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -902,7 +902,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 
 	public final Set<String> getAvailableMappings(CmfObject.Archetype type) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -919,7 +919,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -929,7 +929,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	public final Map<String, String> getMappings(CmfObject.Archetype type, String name) throws CmfStorageException {
 		if (type == null) { throw new IllegalArgumentException("Must provide an object type to search against"); }
 		if (name == null) { throw new IllegalArgumentException("Must provide a mapping name to search for"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -946,7 +946,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -954,7 +954,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		throws CmfStorageException;
 
 	public final void clearAllObjects() throws CmfStorageException {
-		OPERATION operation = beginExclusiveInvocation();
+		OPERATION operation = beginExclusiveOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -974,14 +974,14 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
 	protected abstract void clearAllObjects(OPERATION operation) throws CmfStorageException;
 
 	public final Map<CmfObject.Archetype, Map<String, String>> getRenameMappings() throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -996,7 +996,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1006,7 +1006,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	public final Map<CmfObjectRef, String> getObjectNames(Collection<CmfObjectRef> refs, boolean latest)
 		throws CmfStorageException {
 		if ((refs == null) || refs.isEmpty()) { return new HashMap<>(); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1021,7 +1021,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1031,7 +1031,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	public final Collection<CmfObjectRef> getContainers(CmfObjectRef object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
 		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1046,7 +1046,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1056,7 +1056,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	public final Collection<CmfObjectRef> getContainedObjects(CmfObjectRef object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
 		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1071,7 +1071,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1085,7 +1085,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 			throw new IllegalArgumentException("Must provide a requirement to associate to the base object");
 		}
 		if (requirement.isNull()) { throw new IllegalArgumentException("Null requirement references are not allowed"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1104,7 +1104,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1116,7 +1116,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
 		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
 		if (status == null) { throw new IllegalArgumentException("Must provide a non-null status"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1136,7 +1136,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1147,7 +1147,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		CmfObjectRef object) throws CmfStorageException {
 		if (object == null) { throw new IllegalArgumentException("Must provide an object to check for"); }
 		if (object.isNull()) { throw new IllegalArgumentException("Null object references are not allowed"); }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1162,7 +1162,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1170,7 +1170,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		Class<T> statusClass, CmfObjectRef object) throws CmfStorageException;
 
 	public final void clearImportPlan() throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1188,7 +1188,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1197,7 +1197,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 	protected abstract void clearBulkObjectLoaderFilter(OPERATION operation) throws CmfStorageException;
 
 	public final void clearBulkObjectLoaderFilter() throws CmfStorageException {
-		OPERATION operation = beginExclusiveInvocation();
+		OPERATION operation = beginExclusiveOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1217,7 +1217,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1246,7 +1246,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 		throws CmfStorageException {
 		// Shortcut - avoid starting a transaction over nothing
 		if (objects == null) { throw new IllegalArgumentException("Must provide a non-null Iterator instance"); }
-		OPERATION operation = beginExclusiveInvocation();
+		OPERATION operation = beginExclusiveOperation();
 		try {
 			final boolean tx = operation.begin();
 			// Remove the prior filter data...
@@ -1279,7 +1279,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -1291,7 +1291,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 
 	public final Map<CmfObject.Archetype, Set<CmfObjectRef>> getObjectFilter() throws CmfStorageException {
 		if (!isObjectFilterActive()) { return null; }
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -1307,7 +1307,7 @@ public abstract class CmfObjectStore<OPERATION extends CmfStoreOperation<?>> ext
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 

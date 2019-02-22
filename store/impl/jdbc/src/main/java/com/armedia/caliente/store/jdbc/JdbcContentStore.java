@@ -58,7 +58,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, JdbcOp
 			this.locator = locator;
 			boolean ok = false;
 			try {
-				this.operation = beginConcurrentInvocation();
+				this.operation = beginConcurrentOperation();
 				this.tx = this.operation.begin();
 
 				this.ps = this.operation.getConnection().prepareStatement(translateQuery(JdbcDialect.Query.GET_STREAM));
@@ -175,7 +175,7 @@ public class JdbcContentStore extends CmfContentStore<JdbcContentLocator, JdbcOp
 					}
 				}
 			} finally {
-				endInvocation(this.operation);
+				endOperation(this.operation);
 			}
 		}
 	}

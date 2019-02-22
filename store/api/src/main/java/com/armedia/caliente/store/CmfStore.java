@@ -64,15 +64,15 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 
 	protected abstract OPERATION newOperation(boolean exclusive) throws CmfStorageException;
 
-	protected final OPERATION beginConcurrentInvocation() throws CmfStorageException {
-		return beginInvocation(false);
+	protected final OPERATION beginConcurrentOperation() throws CmfStorageException {
+		return beginOperation(false);
 	}
 
-	protected final OPERATION beginExclusiveInvocation() throws CmfStorageException {
-		return beginInvocation(true);
+	protected final OPERATION beginExclusiveOperation() throws CmfStorageException {
+		return beginOperation(true);
 	}
 
-	private OPERATION beginInvocation(boolean exclusive) throws CmfStorageException {
+	private OPERATION beginOperation(boolean exclusive) throws CmfStorageException {
 		boolean ok = true;
 		final Lock lock = (exclusive ? getWriteLock() : getReadLock());
 		try {
@@ -88,7 +88,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 		}
 	}
 
-	protected final void endInvocation(OPERATION operation) {
+	protected final void endOperation(OPERATION operation) {
 		final Lock lock = (operation.isExclusive() ? getWriteLock() : getReadLock());
 		try {
 			operation.closeQuietly();
@@ -153,7 +153,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 	}
 
 	protected final Map<String, CmfValue> doClearProperties(Collection<String> properties) throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -181,12 +181,12 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
 	public final void clearAllProperties() throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -206,14 +206,14 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
 	protected abstract void clearAllProperties(OPERATION operation) throws CmfStorageException;
 
 	protected final CmfValue doGetProperty(String property) throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -229,14 +229,14 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
 	protected abstract CmfValue getProperty(OPERATION operation, String property) throws CmfStorageException;
 
 	protected final CmfValue doSetProperty(String property, CmfValue value) throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -258,12 +258,12 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
 	protected final Map<String, CmfValue> doSetProperties(Map<String, CmfValue> properties) throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -293,7 +293,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
@@ -301,7 +301,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 		throws CmfStorageException;
 
 	public final Set<String> getPropertyNames() throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			try {
@@ -316,14 +316,14 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
 	protected abstract Set<String> getPropertyNames(OPERATION operation) throws CmfStorageException;
 
 	protected final CmfValue doClearProperty(String property) throws CmfStorageException {
-		OPERATION operation = beginConcurrentInvocation();
+		OPERATION operation = beginConcurrentOperation();
 		try {
 			final boolean tx = operation.begin();
 			boolean ok = false;
@@ -344,7 +344,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> {
 				}
 			}
 		} finally {
-			endInvocation(operation);
+			endOperation(operation);
 		}
 	}
 
