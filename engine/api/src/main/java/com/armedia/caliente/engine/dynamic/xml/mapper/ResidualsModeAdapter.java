@@ -1,23 +1,9 @@
 package com.armedia.caliente.engine.dynamic.xml.mapper;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import com.armedia.commons.utilities.XmlEnumAdapter;
 
-import org.apache.commons.lang3.StringUtils;
-
-public class ResidualsModeAdapter extends XmlAdapter<String, ResidualsMode> {
-
-	@Override
-	public ResidualsMode unmarshal(String v) throws Exception {
-		if (v == null) { return null; }
-		v = StringUtils.strip(v);
-		v = StringUtils.upperCase(v);
-		return ResidualsMode.valueOf(v);
+public class ResidualsModeAdapter extends XmlEnumAdapter<ResidualsMode> {
+	public ResidualsModeAdapter() {
+		super(ResidualsMode.class);
 	}
-
-	@Override
-	public String marshal(ResidualsMode v) throws Exception {
-		if (v == null) { return null; }
-		return v.name();
-	}
-
 }
