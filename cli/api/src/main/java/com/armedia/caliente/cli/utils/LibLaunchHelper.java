@@ -76,7 +76,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		return this.envVarName;
 	}
 
-	protected boolean verifyValidLibrary(Path path) {
+	protected boolean isViableLibrary(Path path) {
 		if (!Files.isRegularFile(path)) { return false; }
 		// TODO: Do we want to perform additional validation? I.e. check the contents to
 		// see if it's really a JAR file
@@ -97,7 +97,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		if (!f.canRead()) { return; }
 
 		if (f.isFile()) {
-			if (verifyValidLibrary(f.toPath())) {
+			if (isViableLibrary(f.toPath())) {
 				ret.add(f.toURI().toURL());
 			}
 			return;
@@ -113,7 +113,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 			// Make sure they're sorted by name
 			Map<String, URL> urls = new TreeMap<>();
 			Files.newDirectoryStream(f.toPath(), LibLaunchHelper.LIB_FILTER).forEach((jar) -> {
-				if (verifyValidLibrary(jar)) {
+				if (isViableLibrary(jar)) {
 					try {
 						urls.put(jar.getFileName().toString(), jar.toUri().toURL());
 					} catch (MalformedURLException e) {
