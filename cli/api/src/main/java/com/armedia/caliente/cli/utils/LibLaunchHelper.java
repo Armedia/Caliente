@@ -76,6 +76,20 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		return this.envVarName;
 	}
 
+	protected boolean verifyValidLibrary(Path path) {
+		if (!Files.isRegularFile(path)) { return false; }
+		// TODO: Do we want to perform additional validation? I.e. check the contents to
+		// see if it's really a JAR file
+		/*
+		try (ZipFile zf = new ZipFile(path.toFile())) {
+			zf.size();
+		} catch (ZipException e) {
+			return false;
+		}
+		*/
+		return true;
+	}
+
 	protected void collectEntries(String path, List<URL> ret) throws IOException {
 		if (StringUtils.isEmpty(path)) { return; }
 		File f = CliUtils.newFileObject(path);
@@ -83,7 +97,9 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		if (!f.canRead()) { return; }
 
 		if (f.isFile()) {
-			ret.add(f.toURI().toURL());
+			if (verifyValidLibrary(f.toPath())) {
+				ret.add(f.toURI().toURL());
+			}
 			return;
 		}
 
@@ -97,10 +113,12 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 			// Make sure they're sorted by name
 			Map<String, URL> urls = new TreeMap<>();
 			Files.newDirectoryStream(f.toPath(), LibLaunchHelper.LIB_FILTER).forEach((jar) -> {
-				try {
-					urls.put(jar.getFileName().toString(), jar.toUri().toURL());
-				} catch (MalformedURLException e) {
-					throw new RuntimeException(String.format("Failed to convert the path [%s] to a URL", jar), e);
+				if (verifyValidLibrary(jar)) {
+					try {
+						urls.put(jar.getFileName().toString(), jar.toUri().toURL());
+					} catch (MalformedURLException e) {
+						throw new RuntimeException(String.format("Failed to convert the path [%s] to a URL", jar), e);
+					}
 				}
 			});
 			urls.values().stream().forEach(ret::add);
