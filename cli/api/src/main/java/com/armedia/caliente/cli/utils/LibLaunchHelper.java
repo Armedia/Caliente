@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -29,10 +31,10 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		.setShortOpt('l') //
 		.setLongOpt("lib") //
 		.setMinArguments(1) //
-		.setMaxArguments(1) //
-		.setArgumentName("directory") //
+		.setMaxArguments(-1) //
+		.setArgumentName("directory-or-file") //
 		.setDescription(
-			"The directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
+			"A JAR/ZIP library file, or a directory which contains extra classes (JARs, ZIPs or a classes directory) that should be added to the classpath") //
 	;
 
 	private static final DirectoryStream.Filter<Path> LIB_FILTER = (path) -> {
@@ -65,45 +67,67 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		;
 	}
 
+	protected void collectEntries(String path, List<URL> ret) throws IOException {
+		if (StringUtils.isEmpty(path)) { return; }
+		File f = CliUtils.newFileObject(path);
+		if (!f.exists()) { return; }
+		if (!f.canRead()) { return; }
+
+		if (f.isFile()) {
+			// Verify that it's a JAR/ZIP ...
+			try (ZipFile zf = new ZipFile(f)) {
+				// Read the entry count, just to be sure
+				zf.size();
+				ret.add(f.toURI().toURL());
+			} catch (ZipException e) {
+				// Do nothing...just checking the ZIP format
+			}
+			return;
+		}
+
+		if (f.isDirectory()) {
+			// Ok so we have the directory...does "classes" exist?
+			File classesDir = CliUtils.newFileObject(f, "classes");
+			if (classesDir.exists() && classesDir.isDirectory() && classesDir.canRead()) {
+				ret.add(classesDir.toURI().toURL());
+			}
+
+			// Make sure they're sorted by name
+			Map<String, URL> urls = new TreeMap<>();
+			Files.newDirectoryStream(f.toPath(), LibLaunchHelper.LIB_FILTER).forEach((jar) -> {
+				try {
+					urls.put(jar.getFileName().toString(), jar.toUri().toURL());
+				} catch (MalformedURLException e) {
+					throw new RuntimeException(String.format("Failed to convert the path [%s] to a URL", jar), e);
+				}
+			});
+			urls.values().stream().forEach(ret::add);
+		}
+	}
+
 	@Override
 	public Collection<URL> getClasspathPatchesPre(OptionValues cli) {
 		List<URL> ret = new ArrayList<>();
 		try {
-			// First...use the command-line option given, and apply any defaults
-			// we may be configured for
-			String var = cli.getString(LibLaunchHelper.LIB, this.defaultLib);
-			if (var == null) {
-				// No command-line option given...if we have an environment variable configured,
-				// given, we use that
+			if (!cli.isPresent(LibLaunchHelper.LIB)) {
+				// No option given, use the default or environment variable
+				String path = null;
 				if (this.libEnvVar != null) {
-					var = System.getenv(this.libEnvVar);
+					// Use the environment variable
+					path = System.getenv(this.libEnvVar);
+				} else if (this.defaultLib != null) {
+					// Use the configured default
+					path = this.defaultLib;
 				}
+
+				if (path != null) {
+					collectEntries(path, ret);
+				}
+				return ret;
 			}
 
-			// If we had no lib option, nor an environment variable to fall back upon, there's
-			// nothing else to be done
-			if (var == null) { return null; }
-
-			// We got something!! Inspect it...
-			// Next, is it a directory?
-			File f = CliUtils.newFileObject(var);
-			if (f.isDirectory() && f.canRead()) {
-				// Ok so we have the directory...does "classes" exist?
-				File classesDir = CliUtils.newFileObject(f, "classes");
-				if (classesDir.exists() && classesDir.isDirectory() && classesDir.canRead()) {
-					ret.add(classesDir.toURI().toURL());
-				}
-
-				// Make sure they're sorted by name
-				Map<String, URL> urls = new TreeMap<>();
-				Files.newDirectoryStream(f.toPath(), LibLaunchHelper.LIB_FILTER).forEach((jar) -> {
-					try {
-						urls.put(jar.getFileName().toString(), jar.toUri().toURL());
-					} catch (MalformedURLException e) {
-						throw new RuntimeException(String.format("Failed to convert the path [%s] to a URL", jar), e);
-					}
-				});
-				urls.values().stream().forEach(ret::add);
+			for (String path : cli.getStrings(LibLaunchHelper.LIB)) {
+				collectEntries(path, ret);
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(String.format("Failed to configure the dynamic library classpath for %s"), e);
