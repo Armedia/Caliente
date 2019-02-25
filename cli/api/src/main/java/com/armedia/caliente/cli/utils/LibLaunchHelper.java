@@ -14,8 +14,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -85,14 +83,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		if (!f.canRead()) { return; }
 
 		if (f.isFile()) {
-			// Verify that it's a JAR/ZIP ...
-			try (ZipFile zf = new ZipFile(f)) {
-				// Read the entry count, just to be sure
-				zf.size();
-				ret.add(f.toURI().toURL());
-			} catch (ZipException e) {
-				// Do nothing...just checking the ZIP format
-			}
+			ret.add(f.toURI().toURL());
 			return;
 		}
 
