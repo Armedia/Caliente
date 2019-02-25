@@ -2,6 +2,7 @@ package com.armedia.caliente.cli.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.DirectoryStream;
@@ -49,7 +50,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 	public static final String LIB_ENV_VAR = "CALIENTE_LIB";
 
 	private final String defaultLib;
-	private final String libEnvVar;
+	private final String envVarName;
 
 	private final OptionGroupImpl group;
 
@@ -63,10 +64,18 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 
 	public LibLaunchHelper(String defaultLib, String libEnvVar) {
 		this.defaultLib = defaultLib;
-		this.libEnvVar = libEnvVar;
+		this.envVarName = libEnvVar;
 		this.group = new OptionGroupImpl("Classpath Extender") //
 			.add(LibLaunchHelper.LIB) //
 		;
+	}
+
+	public final String getDefault() {
+		return this.defaultLib;
+	}
+
+	public final String getEnvVarName() {
+		return this.envVarName;
 	}
 
 	protected void collectEntries(String path, List<URL> ret) throws IOException {
@@ -110,13 +119,14 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 	@Override
 	public Collection<URL> getClasspathPatchesPre(OptionValues cli) {
 		List<URL> ret = new ArrayList<>();
+		String currentPath = null;
 		try {
 			if (!cli.isPresent(LibLaunchHelper.LIB)) {
 				// No option given, use the default or environment variable
 				Collection<String> paths = Collections.emptyList();
-				if (this.libEnvVar != null) {
+				if (this.envVarName != null) {
 					// Use the environment variable
-					String str = System.getenv(this.libEnvVar);
+					String str = System.getenv(this.envVarName);
 					if (str != null) {
 						paths = Tools.splitEscaped(File.pathSeparatorChar, str);
 					}
@@ -127,17 +137,18 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 
 				if (paths != null) {
 					for (String path : paths) {
-						collectEntries(path, ret);
+						collectEntries(currentPath = path, ret);
 					}
 				}
 				return ret;
 			}
 
 			for (String path : cli.getStrings(LibLaunchHelper.LIB)) {
-				collectEntries(path, ret);
+				collectEntries(currentPath = path, ret);
 			}
 		} catch (IOException e) {
-			throw new RuntimeException(String.format("Failed to configure the dynamic library classpath for %s"), e);
+			throw new UncheckedIOException(
+				String.format("Failed to configure the dynamic library classpath from [%s]", currentPath), e);
 		}
 		return ret;
 	}
@@ -149,7 +160,7 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 
 	@Override
 	public String toString() {
-		return String.format("LibLaunchHelper [defaultLib=%s, libEnvVar=%s]", this.defaultLib, this.libEnvVar);
+		return String.format("LibLaunchHelper [defaultLib=%s, libEnvVar=%s]", this.defaultLib, this.envVarName);
 	}
 
 	@Override
