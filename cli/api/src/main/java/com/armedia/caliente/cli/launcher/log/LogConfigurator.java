@@ -59,7 +59,7 @@ public abstract class LogConfigurator {
 						String.format("Failed to configure the boot log using [%s]", configurator), e);
 				}
 			} catch (ClassNotFoundException e) {
-				// No this one, move on...
+				// Not this one, move on...
 			}
 		}
 
