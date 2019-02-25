@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -24,6 +25,7 @@ import com.armedia.caliente.cli.OptionImpl;
 import com.armedia.caliente.cli.OptionValues;
 import com.armedia.caliente.cli.Options;
 import com.armedia.caliente.cli.launcher.LaunchClasspathHelper;
+import com.armedia.commons.utilities.Tools;
 
 public final class LibLaunchHelper extends Options implements LaunchClasspathHelper {
 
@@ -111,17 +113,22 @@ public final class LibLaunchHelper extends Options implements LaunchClasspathHel
 		try {
 			if (!cli.isPresent(LibLaunchHelper.LIB)) {
 				// No option given, use the default or environment variable
-				String path = null;
+				Collection<String> paths = Collections.emptyList();
 				if (this.libEnvVar != null) {
 					// Use the environment variable
-					path = System.getenv(this.libEnvVar);
+					String str = System.getenv(this.libEnvVar);
+					if (str != null) {
+						paths = Tools.splitEscaped(File.pathSeparatorChar, str);
+					}
 				} else if (this.defaultLib != null) {
 					// Use the configured default
-					path = this.defaultLib;
+					paths = Collections.singleton(this.defaultLib);
 				}
 
-				if (path != null) {
-					collectEntries(path, ret);
+				if (paths != null) {
+					for (String path : paths) {
+						collectEntries(path, ret);
+					}
 				}
 				return ret;
 			}
