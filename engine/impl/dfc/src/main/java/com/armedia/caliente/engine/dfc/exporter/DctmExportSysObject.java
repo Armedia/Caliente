@@ -468,6 +468,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 		try {
 			history = new DctmVersionHistory<>(session, chronicleId, this.objectClass);
+			ctx.setObject(historyObject, history);
 		} catch (DctmException e) {
 			throw new ExportException(
 				String.format("Failed to obtain the version tree for chronicle [%s]", chronicleId.getId()), e);
