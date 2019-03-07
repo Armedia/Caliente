@@ -1,8 +1,13 @@
 package com.armedia.caliente.engine.tools;
 
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -121,6 +126,18 @@ public class ReadWriteLockedTest {
 		final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
 		final ReadWriteLockable rwl = new BaseReadWriteLockable(lock);
 
+		try {
+			rwl.readLocked((Supplier<Object>) null);
+			Assert.fail("Did not fail with a null Supplier");
+		} catch (NullPointerException e) {
+		}
+
+		try {
+			rwl.readLocked((Runnable) null);
+			Assert.fail("Did not fail with a null Runnable");
+		} catch (NullPointerException e) {
+		}
+
 		Assert.assertFalse(writeLock.isHeldByCurrentThread());
 		ReadWriteLock ret = rwl.readLocked(() -> {
 			// Prove that we're holding the read lock
@@ -149,6 +166,17 @@ public class ReadWriteLockedTest {
 		final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 		final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
 		final ReadWriteLockable rwl = new BaseReadWriteLockable(lock);
+		try {
+			rwl.writeLocked((Supplier<Object>) null);
+			Assert.fail("Did not fail with a null Supplier");
+		} catch (NullPointerException e) {
+		}
+
+		try {
+			rwl.writeLocked((Runnable) null);
+			Assert.fail("Did not fail with a null Runnable");
+		} catch (NullPointerException e) {
+		}
 
 		Assert.assertTrue(writeLock.tryLock());
 		Assert.assertTrue(writeLock.isHeldByCurrentThread());
@@ -176,6 +204,7 @@ public class ReadWriteLockedTest {
 		final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
 		final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
 		final ReadWriteLockable rwl = new BaseReadWriteLockable(lock);
+		Object o = null;
 
 		Assert.assertFalse(writeLock.isHeldByCurrentThread());
 		Assert.assertTrue(writeLock.tryLock());
@@ -191,10 +220,88 @@ public class ReadWriteLockedTest {
 		final Object a = "Object-A";
 		final Object b = "Object-B";
 
+		{
+			Supplier<Object> sup = null;
+			Predicate<Object> pred = null;
+			Function<Object, Object> map = null;
+
+			try {
+				o = rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with all-null parameters");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = null;
+			pred = Objects::nonNull;
+			map = Function.identity();
+			try {
+				o = rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Supplier");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = Object::new;
+			pred = null;
+			map = Function.identity();
+			try {
+				o = rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Predicate");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = Object::new;
+			pred = Objects::nonNull;
+			map = null;
+			try {
+				o = rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null mapper Function");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = Object::new;
+			pred = null;
+			map = null;
+			try {
+				o = rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Predicate and mapper Function");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = null;
+			pred = Objects::nonNull;
+			map = null;
+			try {
+				o = rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Supplier and mapper Function");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = null;
+			pred = null;
+			map = Function.identity();
+			try {
+				o = rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Supplier and Predicate");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = Object::new;
+			pred = Objects::nonNull;
+			map = Function.identity();
+			o = rwl.readUpgradable(sup, pred, map);
+		}
+
 		Assert.assertEquals(0, lock.getReadHoldCount());
 		Assert.assertFalse(writeLock.isHeldByCurrentThread());
 		callCount.set(0);
-		Object o = rwl.readUpgradable(() -> {
+		o = rwl.readUpgradable(() -> {
 			// This should happen with the read lock held
 			Assert.assertEquals(1, lock.getReadHoldCount());
 			Assert.assertFalse(writeLock.isHeldByCurrentThread());
@@ -253,6 +360,84 @@ public class ReadWriteLockedTest {
 		Assert.assertFalse(writeLock.isHeldByCurrentThread());
 		Assert.assertEquals(2, callCount.get());
 		Assert.assertSame(o, b);
+
+		{
+			Supplier<Object> sup = null;
+			Predicate<Object> pred = null;
+			Consumer<Object> map = null;
+
+			try {
+				rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with all-null parameters");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = null;
+			pred = Objects::nonNull;
+			map = Objects::hashCode;
+			try {
+				rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Supplier");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = Object::new;
+			pred = null;
+			map = Objects::hashCode;
+			try {
+				rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Predicate");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = Object::new;
+			pred = Objects::nonNull;
+			map = null;
+			try {
+				rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null mapper Function");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = Object::new;
+			pred = null;
+			map = null;
+			try {
+				rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Predicate and mapper Function");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = null;
+			pred = Objects::nonNull;
+			map = null;
+			try {
+				rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Supplier and mapper Function");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = null;
+			pred = null;
+			map = Objects::hashCode;
+			try {
+				rwl.readUpgradable(sup, pred, map);
+				Assert.fail("Did not fail with null Supplier and Predicate");
+			} catch (NullPointerException e) {
+				// All is well
+			}
+
+			sup = Object::new;
+			pred = Objects::nonNull;
+			map = Objects::hashCode;
+			rwl.readUpgradable(sup, pred, map);
+		}
 
 		Assert.assertEquals(0, lock.getReadHoldCount());
 		Assert.assertFalse(writeLock.isHeldByCurrentThread());
