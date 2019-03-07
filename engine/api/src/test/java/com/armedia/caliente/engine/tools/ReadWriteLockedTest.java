@@ -1,6 +1,6 @@
 package com.armedia.caliente.engine.tools;
 
-import java.util.concurrent.locks.Lock;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -10,19 +10,42 @@ import org.junit.Test;
 public class ReadWriteLockedTest {
 
 	@Test
+	public void testGetReadLock() {
+		final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+		final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+		final ReadWriteLockable rwl = new BaseReadWriteLockable(lock);
+
+		Assert.assertSame(readLock, rwl.getReadLock());
+	}
+
+	@Test
+	public void testGetWriteLock() {
+		final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+		final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+		final ReadWriteLockable rwl = new BaseReadWriteLockable(lock);
+
+		Assert.assertSame(writeLock, rwl.getWriteLock());
+	}
+
+	@Test
 	public void testAcquireReadLock() {
-		final ReadWriteLock lock = new ReentrantReadWriteLock();
-		final Lock readLock = lock.readLock();
+		final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+		final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+		final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+		final ReadWriteLockable rwl = new BaseReadWriteLockable(lock);
 
-		ReadWriteLockable rwl = null;
-
-		rwl = new BaseReadWriteLockable(lock);
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
 		Assert.assertSame(lock.readLock(), rwl.acquireReadLock());
+		Assert.assertEquals(1, lock.getReadHoldCount());
 		Assert.assertFalse("Succeeded in acquiring the write lock while the read lock was held",
 			rwl.getWriteLock().tryLock());
+		Assert.assertEquals(1, lock.getReadHoldCount());
 		readLock.unlock();
+		Assert.assertEquals(0, lock.getReadHoldCount());
 
 		Assert.assertSame(lock.readLock(), rwl.getReadLock());
+		Assert.assertEquals(0, lock.getReadHoldCount());
 		try {
 			readLock.unlock();
 			Assert.fail("The read lock was not held but was unlocked");
@@ -30,10 +53,12 @@ public class ReadWriteLockedTest {
 			// All is well
 		}
 
+		Assert.assertEquals(0, lock.getReadHoldCount());
 		for (int i = 1; i <= 10; i++) {
 			Assert.assertNotNull(String.format("Failed to acquire the reading lock on attempt # %d", i),
 				rwl.acquireReadLock());
 		}
+		Assert.assertEquals(10, lock.getReadHoldCount());
 		Assert.assertFalse("Succeeded in acquiring the write lock while the read lock was held",
 			rwl.getWriteLock().tryLock());
 		for (int i = 10; i > 0; i--) {
@@ -43,6 +68,7 @@ public class ReadWriteLockedTest {
 				Assert.fail(String.format("Failed to release the reading lock on attempt # %d", i));
 			}
 		}
+		Assert.assertEquals(0, lock.getReadHoldCount());
 		Assert.assertTrue("Failed to acquire the write lock while the read lock was not held",
 			rwl.getWriteLock().tryLock());
 		rwl.getWriteLock().unlock();
@@ -52,7 +78,6 @@ public class ReadWriteLockedTest {
 	public void testAcquireWriteLock() throws Exception {
 		final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 		final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
-
 		final ReadWriteLockable rwl = new BaseReadWriteLockable(lock);
 
 		Assert.assertSame(lock.writeLock(), rwl.getWriteLock());
@@ -147,6 +172,144 @@ public class ReadWriteLockedTest {
 
 	@Test
 	public void testReadUpgradable() {
+		final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+		final ReentrantReadWriteLock.ReadLock readLock = lock.readLock();
+		final ReentrantReadWriteLock.WriteLock writeLock = lock.writeLock();
+		final ReadWriteLockable rwl = new BaseReadWriteLockable(lock);
+
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		Assert.assertTrue(writeLock.tryLock());
+		Assert.assertTrue(writeLock.isHeldByCurrentThread());
+		writeLock.unlock();
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+
+		Assert.assertTrue(readLock.tryLock());
+		Assert.assertFalse(writeLock.tryLock());
+		readLock.unlock();
+
+		final AtomicInteger callCount = new AtomicInteger(0);
+		final Object a = "Object-A";
+		final Object b = "Object-B";
+
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		callCount.set(0);
+		Object o = rwl.readUpgradable(() -> {
+			// This should happen with the read lock held
+			Assert.assertEquals(1, lock.getReadHoldCount());
+			Assert.assertFalse(writeLock.isHeldByCurrentThread());
+			callCount.incrementAndGet();
+			return a;
+		}, (e) -> {
+			return true;
+		}, (e) -> {
+			Assert.fail("This should not have been called");
+			return b;
+		});
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		Assert.assertEquals(1, callCount.get());
+		Assert.assertSame(o, a);
+
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		callCount.set(0);
+		o = rwl.readUpgradable(() -> {
+			// This should happen with the read lock held
+			if (callCount.getAndIncrement() == 0) {
+				Assert.assertEquals(1, lock.getReadHoldCount());
+				Assert.assertFalse(writeLock.isHeldByCurrentThread());
+			} else {
+				Assert.assertEquals(0, lock.getReadHoldCount());
+				Assert.assertTrue(writeLock.isHeldByCurrentThread());
+			}
+			return a;
+		}, (e) -> {
+			return callCount.get() > 1;
+		}, (e) -> {
+			Assert.fail("This should not have been called");
+			return b;
+		});
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		Assert.assertEquals(2, callCount.get());
+		Assert.assertSame(o, a);
+
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		callCount.set(0);
+		o = rwl.readUpgradable(() -> {
+			// This should happen with the read lock held
+			callCount.incrementAndGet();
+			return a;
+		}, (e) -> {
+			return false;
+		}, (e) -> {
+			Assert.assertEquals(0, lock.getReadHoldCount());
+			Assert.assertTrue(writeLock.isHeldByCurrentThread());
+			return b;
+		});
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		Assert.assertEquals(2, callCount.get());
+		Assert.assertSame(o, b);
+
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		callCount.set(0);
+		rwl.readUpgradable(() -> {
+			// This should happen with the read lock held
+			Assert.assertEquals(1, lock.getReadHoldCount());
+			Assert.assertFalse(writeLock.isHeldByCurrentThread());
+			callCount.incrementAndGet();
+			return a;
+		}, (e) -> {
+			return true;
+		}, (e) -> {
+			Assert.fail("This should not have been called");
+		});
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		Assert.assertEquals(1, callCount.get());
+
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		callCount.set(0);
+		rwl.readUpgradable(() -> {
+			// This should happen with the read lock held
+			if (callCount.getAndIncrement() == 0) {
+				Assert.assertEquals(1, lock.getReadHoldCount());
+				Assert.assertFalse(writeLock.isHeldByCurrentThread());
+			} else {
+				Assert.assertEquals(0, lock.getReadHoldCount());
+				Assert.assertTrue(writeLock.isHeldByCurrentThread());
+			}
+			return a;
+		}, (e) -> {
+			return callCount.get() > 1;
+		}, (e) -> {
+			Assert.fail("This should not have been called");
+		});
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		Assert.assertEquals(2, callCount.get());
+
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		callCount.set(0);
+		rwl.readUpgradable(() -> {
+			// This should happen with the read lock held
+			callCount.incrementAndGet();
+			return a;
+		}, (e) -> {
+			return false;
+		}, (e) -> {
+			Assert.assertEquals(0, lock.getReadHoldCount());
+			Assert.assertTrue(writeLock.isHeldByCurrentThread());
+		});
+		Assert.assertEquals(0, lock.getReadHoldCount());
+		Assert.assertFalse(writeLock.isHeldByCurrentThread());
+		Assert.assertEquals(2, callCount.get());
 	}
 
 }
