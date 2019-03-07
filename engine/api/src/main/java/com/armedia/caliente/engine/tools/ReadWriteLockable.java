@@ -11,21 +11,19 @@ import java.util.function.Supplier;
 @FunctionalInterface
 public interface ReadWriteLockable extends Supplier<ReadWriteLock> {
 
-	public default Lock readLock() {
-		Lock ret = get().readLock();
-		ret.lock();
-		return ret;
+	public default Lock getReadLock() {
+		return get().readLock();
 	}
 
-	public default Lock writeLock() {
-		Lock ret = get().writeLock();
+	public default Lock acquireReadLock() {
+		Lock ret = getReadLock();
 		ret.lock();
 		return ret;
 	}
 
 	public default <E> E readLocked(Supplier<E> operation) {
 		Objects.requireNonNull(operation, "Must provide a non-null supplier to invoke");
-		final Lock l = readLock();
+		final Lock l = acquireReadLock();
 		try {
 			return operation.get();
 		} finally {
@@ -35,7 +33,7 @@ public interface ReadWriteLockable extends Supplier<ReadWriteLock> {
 
 	public default void readLocked(Runnable operation) {
 		Objects.requireNonNull(operation, "Must provide a non-null runnable to invoke");
-		final Lock l = readLock();
+		final Lock l = acquireReadLock();
 		try {
 			operation.run();
 		} finally {
@@ -43,9 +41,19 @@ public interface ReadWriteLockable extends Supplier<ReadWriteLock> {
 		}
 	}
 
+	public default Lock getWriteLock() {
+		return get().writeLock();
+	}
+
+	public default Lock acquireWriteLock() {
+		Lock ret = getWriteLock();
+		ret.lock();
+		return ret;
+	}
+
 	public default <E> E writeLocked(Supplier<E> operation) {
 		Objects.requireNonNull(operation, "Must provide a non-null supplier to invoke");
-		final Lock l = writeLock();
+		final Lock l = acquireWriteLock();
 		try {
 			return operation.get();
 		} finally {
@@ -55,7 +63,7 @@ public interface ReadWriteLockable extends Supplier<ReadWriteLock> {
 
 	public default void writeLocked(Runnable operation) {
 		Objects.requireNonNull(operation, "Must provide a non-null runnable to invoke");
-		final Lock l = writeLock();
+		final Lock l = acquireWriteLock();
 		try {
 			operation.run();
 		} finally {
@@ -68,13 +76,13 @@ public interface ReadWriteLockable extends Supplier<ReadWriteLock> {
 		Objects.requireNonNull(decision, "Must provide a non-null decision");
 		Objects.requireNonNull(writeBlock, "Must provide a non-null writeBlock");
 
-		final Lock readLock = readLock();
+		final Lock readLock = acquireReadLock();
 		try {
 			E e = checker.get();
 			if (decision.test(e)) { return e; }
 
 			readLock.unlock();
-			final Lock writeLock = writeLock();
+			final Lock writeLock = acquireWriteLock();
 			try {
 				e = checker.get();
 				if (!decision.test(e)) {
@@ -95,13 +103,13 @@ public interface ReadWriteLockable extends Supplier<ReadWriteLock> {
 		Objects.requireNonNull(decision, "Must provide a non-null decision");
 		Objects.requireNonNull(writeBlock, "Must provide a non-null writeBlock");
 
-		final Lock readLock = readLock();
+		final Lock readLock = acquireReadLock();
 		try {
 			E e = checker.get();
 			if (decision.test(e)) { return; }
 
 			readLock.unlock();
-			final Lock writeLock = writeLock();
+			final Lock writeLock = acquireWriteLock();
 			try {
 				e = checker.get();
 				if (!decision.test(e)) {

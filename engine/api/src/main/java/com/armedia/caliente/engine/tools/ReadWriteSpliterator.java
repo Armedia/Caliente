@@ -4,26 +4,19 @@ import java.util.Comparator;
 import java.util.Objects;
 import java.util.Spliterator;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
-public class ReadWriteSpliterator<E> implements Spliterator<E>, ReadWriteLockable {
+public class ReadWriteSpliterator<E> extends BaseReadWriteLockable implements Spliterator<E> {
 
-	private final ReadWriteLock rwLock;
 	private final Spliterator<E> spliterator;
 
 	public ReadWriteSpliterator(Spliterator<E> spliterator) {
-		this(new ReentrantReadWriteLock(), spliterator);
+		this(null, spliterator);
 	}
 
 	public ReadWriteSpliterator(ReadWriteLock rwLock, Spliterator<E> spliterator) {
-		this.rwLock = Objects.requireNonNull(rwLock, "Must provide a non-null ReadWriteLock instannce");
+		super(rwLock);
 		this.spliterator = Objects.requireNonNull(spliterator, "Must provide a non-null backing spliterator");
-	}
-
-	@Override
-	public final ReadWriteLock get() {
-		return this.rwLock;
 	}
 
 	@Override

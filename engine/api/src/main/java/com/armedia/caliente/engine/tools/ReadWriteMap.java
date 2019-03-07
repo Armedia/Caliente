@@ -5,14 +5,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import com.armedia.commons.utilities.Tools;
 
-public class ReadWriteMap<KEY, VALUE> extends BaseReadWriteLockable implements Map<KEY, VALUE>, ReadWriteLockable {
+public class ReadWriteMap<KEY, VALUE> extends BaseReadWriteLockable implements Map<KEY, VALUE> {
 
 	protected final Map<KEY, VALUE> map;
 	protected final Set<KEY> keys;
@@ -20,7 +19,7 @@ public class ReadWriteMap<KEY, VALUE> extends BaseReadWriteLockable implements M
 	protected final Collection<VALUE> values;
 
 	public ReadWriteMap(Map<KEY, VALUE> map) {
-		this(new ReentrantReadWriteLock(), map);
+		this(null, map);
 	}
 
 	public ReadWriteMap(ReadWriteLock rwLock, Map<KEY, VALUE> map) {

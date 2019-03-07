@@ -7,28 +7,43 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import com.armedia.commons.utilities.Tools;
 
-public class ReadWriteCollection<ELEMENT> extends BaseReadWriteLockable
-	implements Collection<ELEMENT>, ReadWriteLockable {
+public class ReadWriteCollection<ELEMENT> extends BaseReadWriteLockable implements Collection<ELEMENT> {
 
 	private final Collection<ELEMENT> c;
+	protected final Function<ELEMENT, ELEMENT> canonicalizer;
 
-	public ReadWriteCollection(Collection<ELEMENT> set) {
-		this(new ReentrantReadWriteLock(), set);
+	public ReadWriteCollection(Collection<ELEMENT> c) {
+		this(null, c, null);
 	}
 
-	public ReadWriteCollection(ReadWriteLock rwLock, Collection<ELEMENT> set) {
+	public ReadWriteCollection(Collection<ELEMENT> c, Function<ELEMENT, ELEMENT> canonicalizer) {
+		this(null, c, canonicalizer);
+	}
+
+	public ReadWriteCollection(ReadWriteLock rwLock, Collection<ELEMENT> c) {
+		this(rwLock, c, null);
+	}
+
+	public ReadWriteCollection(ReadWriteLock rwLock, Collection<ELEMENT> c, Function<ELEMENT, ELEMENT> canonicalizer) {
 		super(rwLock);
-		this.c = Objects.requireNonNull(set, "Must provide a non-null backing Collection");
+		this.c = Objects.requireNonNull(c, "Must provide a non-null backing Collection");
+		this.canonicalizer = (canonicalizer != null ? canonicalizer : Objects::requireNonNull);
 	}
 
-	protected <E> E validate(E e) {
-		return Objects.requireNonNull(e, "Must provide a non-null value");
+	protected final ELEMENT canonicalizeObject(Object o) {
+		@SuppressWarnings("unchecked")
+		ELEMENT e = (ELEMENT) o;
+		return canonicalize(e);
+	}
+
+	protected final ELEMENT canonicalize(ELEMENT e) {
+		return this.canonicalizer.apply(e);
 	}
 
 	@Override
@@ -51,7 +66,7 @@ public class ReadWriteCollection<ELEMENT> extends BaseReadWriteLockable
 
 	@Override
 	public boolean contains(Object o) {
-		Object O = validate(o);
+		Object O = canonicalizeObject(o);
 		return readLocked(() -> {
 			return this.c.contains(O);
 		});
@@ -79,7 +94,7 @@ public class ReadWriteCollection<ELEMENT> extends BaseReadWriteLockable
 
 	@Override
 	public boolean add(ELEMENT e) {
-		ELEMENT E = validate(e);
+		ELEMENT E = canonicalize(e);
 		return writeLocked(() -> {
 			return this.c.add(E);
 		});
@@ -87,7 +102,7 @@ public class ReadWriteCollection<ELEMENT> extends BaseReadWriteLockable
 
 	@Override
 	public boolean remove(Object o) {
-		Object O = validate(o);
+		Object O = canonicalizeObject(o);
 		return writeLocked(() -> {
 			return this.c.remove(O);
 		});
@@ -156,7 +171,7 @@ public class ReadWriteCollection<ELEMENT> extends BaseReadWriteLockable
 	@Override
 	public boolean removeIf(Predicate<? super ELEMENT> filter) {
 		Objects.requireNonNull(filter, "Must provide a non-null filter to search with");
-		final Lock readLock = readLock();
+		final Lock readLock = acquireReadLock();
 		Lock writeLock = null;
 		try {
 			try {
@@ -165,7 +180,7 @@ public class ReadWriteCollection<ELEMENT> extends BaseReadWriteLockable
 						// Ok so we need to upgrade to a write lock
 						if (writeLock == null) {
 							readLock.unlock();
-							writeLock = writeLock();
+							writeLock = acquireWriteLock();
 						}
 						this.c.remove(e);
 					}
