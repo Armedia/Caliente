@@ -12,9 +12,9 @@ import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
-import com.armedia.caliente.tools.BaseReadWriteLockable;
 import com.armedia.commons.utilities.CfgTools;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
 
 public abstract class TransferContextFactory< //
 	SESSION, //

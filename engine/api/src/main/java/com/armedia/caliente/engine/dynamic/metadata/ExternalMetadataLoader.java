@@ -20,8 +20,8 @@ import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
 import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
-import com.armedia.caliente.tools.BaseReadWriteLockable;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
 
 public class ExternalMetadataLoader extends BaseReadWriteLockable {
 

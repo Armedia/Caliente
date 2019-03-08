@@ -16,7 +16,7 @@ import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
-import com.armedia.caliente.tools.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
 
 public class Transformer extends BaseReadWriteLockable {
 

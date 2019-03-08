@@ -20,8 +20,8 @@ import com.armedia.caliente.engine.dynamic.xml.filter.Filter;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
-import com.armedia.caliente.tools.BaseReadWriteLockable;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
 
 public class ObjectFilter extends BaseReadWriteLockable {
 

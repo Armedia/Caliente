@@ -47,10 +47,10 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoDataType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
-import com.armedia.caliente.tools.BaseReadWriteLockable;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.BinaryEncoding;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
 
 public class Validator extends BaseReadWriteLockable {
 

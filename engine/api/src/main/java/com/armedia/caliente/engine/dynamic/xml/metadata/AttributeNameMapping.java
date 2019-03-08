@@ -16,8 +16,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
 
 import com.armedia.caliente.engine.dynamic.xml.Expression;
-import com.armedia.caliente.tools.ReadWriteLockable;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "externalMetadataTransformNames.t", propOrder = {
