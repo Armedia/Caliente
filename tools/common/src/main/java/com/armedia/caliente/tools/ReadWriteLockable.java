@@ -8,6 +8,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import com.armedia.commons.utilities.function.CheckedRunnable;
+import com.armedia.commons.utilities.function.CheckedSupplier;
+
 @FunctionalInterface
 public interface ReadWriteLockable extends Supplier<ReadWriteLock> {
 
@@ -31,11 +34,31 @@ public interface ReadWriteLockable extends Supplier<ReadWriteLock> {
 		}
 	}
 
+	public default <E, EX extends Throwable> E readLockedChecked(CheckedSupplier<E, EX> operation) throws EX {
+		Objects.requireNonNull(operation, "Must provide a non-null supplier to invoke");
+		final Lock l = acquireReadLock();
+		try {
+			return operation.getChecked();
+		} finally {
+			l.unlock();
+		}
+	}
+
 	public default void readLocked(Runnable operation) {
 		Objects.requireNonNull(operation, "Must provide a non-null runnable to invoke");
 		final Lock l = acquireReadLock();
 		try {
 			operation.run();
+		} finally {
+			l.unlock();
+		}
+	}
+
+	public default <EX extends Throwable> void readLockedChecked(CheckedRunnable<EX> operation) throws EX {
+		Objects.requireNonNull(operation, "Must provide a non-null supplier to invoke");
+		final Lock l = acquireReadLock();
+		try {
+			operation.runChecked();
 		} finally {
 			l.unlock();
 		}
@@ -61,11 +84,31 @@ public interface ReadWriteLockable extends Supplier<ReadWriteLock> {
 		}
 	}
 
+	public default <E, EX extends Throwable> E writeLockedChecked(CheckedSupplier<E, EX> operation) throws EX {
+		Objects.requireNonNull(operation, "Must provide a non-null supplier to invoke");
+		final Lock l = acquireWriteLock();
+		try {
+			return operation.getChecked();
+		} finally {
+			l.unlock();
+		}
+	}
+
 	public default void writeLocked(Runnable operation) {
 		Objects.requireNonNull(operation, "Must provide a non-null runnable to invoke");
 		final Lock l = acquireWriteLock();
 		try {
 			operation.run();
+		} finally {
+			l.unlock();
+		}
+	}
+
+	public default <EX extends Throwable> void writeLockedChecked(CheckedRunnable<EX> operation) throws EX {
+		Objects.requireNonNull(operation, "Must provide a non-null runnable to invoke");
+		final Lock l = acquireWriteLock();
+		try {
+			operation.runChecked();
 		} finally {
 			l.unlock();
 		}

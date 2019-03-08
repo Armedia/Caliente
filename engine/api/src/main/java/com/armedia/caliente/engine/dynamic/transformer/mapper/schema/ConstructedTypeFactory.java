@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.commons.utilities.Tools;
-import com.armedia.commons.utilities.function.LazySupplier;
+import com.armedia.commons.utilities.function.CheckedLazySupplier;
 
 public class ConstructedTypeFactory {
 
@@ -28,9 +28,9 @@ public class ConstructedTypeFactory {
 	public static final boolean DEFAULT_EAGER = false;
 
 	private final boolean eager;
-	private final Map<String, LazySupplier<TypeDeclaration>> objectTypeDeclarations;
-	private final Map<String, LazySupplier<TypeDeclaration>> secondaryTypeDeclarations;
-	private final ConcurrentMap<String, LazySupplier<ConstructedType>> constructedTypes = new ConcurrentHashMap<>();
+	private final Map<String, CheckedLazySupplier<TypeDeclaration, SchemaServiceException>> objectTypeDeclarations;
+	private final Map<String, CheckedLazySupplier<TypeDeclaration, SchemaServiceException>> secondaryTypeDeclarations;
+	private final ConcurrentMap<String, CheckedLazySupplier<ConstructedType, SchemaServiceException>> constructedTypes = new ConcurrentHashMap<>();
 
 	public ConstructedTypeFactory(SchemaService schemaService) throws SchemaServiceException {
 		this(schemaService, null, null, false);
@@ -51,18 +51,18 @@ public class ConstructedTypeFactory {
 		if (usedTypes == null) {
 			usedTypes = schemaService.getObjectTypeNames();
 		}
-		Map<String, LazySupplier<TypeDeclaration>> objectTypeDeclarations = new TreeMap<>();
+		Map<String, CheckedLazySupplier<TypeDeclaration, SchemaServiceException>> objectTypeDeclarations = new TreeMap<>();
 		for (String typeName : usedTypes) {
-			objectTypeDeclarations.put(typeName, new LazySupplier<>());
+			objectTypeDeclarations.put(typeName, new CheckedLazySupplier<>());
 		}
 		this.objectTypeDeclarations = Tools.freezeMap(objectTypeDeclarations);
 
 		if (usedSecondaries == null) {
 			usedSecondaries = schemaService.getSecondaryTypeNames();
 		}
-		Map<String, LazySupplier<TypeDeclaration>> secondaryTypeDeclarations = new TreeMap<>();
+		Map<String, CheckedLazySupplier<TypeDeclaration, SchemaServiceException>> secondaryTypeDeclarations = new TreeMap<>();
 		for (String secondaryTypeName : usedSecondaries) {
-			secondaryTypeDeclarations.put(secondaryTypeName, new LazySupplier<>());
+			secondaryTypeDeclarations.put(secondaryTypeName, new CheckedLazySupplier<>());
 		}
 		this.secondaryTypeDeclarations = Tools.freezeMap(secondaryTypeDeclarations);
 
@@ -125,7 +125,7 @@ public class ConstructedTypeFactory {
 	protected final TypeDeclaration getObjectTypeDeclaration(final SchemaService schemaService, final String typeName)
 		throws SchemaServiceException {
 		if (StringUtils.isBlank(typeName)) { return null; }
-		LazySupplier<TypeDeclaration> ret = this.objectTypeDeclarations.get(typeName);
+		CheckedLazySupplier<TypeDeclaration, SchemaServiceException> ret = this.objectTypeDeclarations.get(typeName);
 		if (ret == null) { return null; }
 		try {
 			return ret.getChecked(() -> Objects
@@ -141,7 +141,8 @@ public class ConstructedTypeFactory {
 	protected final TypeDeclaration getSecondaryTypeDeclaration(final SchemaService schemaService,
 		final String secondaryTypeName) throws SchemaServiceException {
 		if (StringUtils.isBlank(secondaryTypeName)) { return null; }
-		LazySupplier<TypeDeclaration> ret = this.secondaryTypeDeclarations.get(secondaryTypeName);
+		CheckedLazySupplier<TypeDeclaration, SchemaServiceException> ret = this.secondaryTypeDeclarations
+			.get(secondaryTypeName);
 		if (ret == null) { return null; }
 
 		try {
@@ -183,8 +184,9 @@ public class ConstructedTypeFactory {
 		// for the complete list of secondaries that decorate this type
 		harvestData(schemaService, mainType, false, null, null, allSecondaries);
 		final String signature = getSignature(mainType, allSecondaries);
-		LazySupplier<ConstructedType> ret = ConcurrentUtils.createIfAbsentUnchecked(this.constructedTypes, signature,
-			() -> new LazySupplier<>(() -> newObjectType(
+		CheckedLazySupplier<ConstructedType, SchemaServiceException> ret = ConcurrentUtils.createIfAbsentUnchecked(
+			this.constructedTypes, signature,
+			() -> new CheckedLazySupplier<>(() -> newObjectType(
 				Objects.requireNonNull(schemaService,
 					"Must provide a non-null SchemaService instance for lazy initialization"),
 				mainType, allSecondaries, signature)));

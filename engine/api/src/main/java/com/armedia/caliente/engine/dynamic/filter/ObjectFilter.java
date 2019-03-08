@@ -3,9 +3,6 @@ package com.armedia.caliente.engine.dynamic.filter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -23,9 +20,10 @@ import com.armedia.caliente.engine.dynamic.xml.filter.Filter;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
+import com.armedia.caliente.tools.BaseReadWriteLockable;
 import com.armedia.commons.utilities.Tools;
 
-public class ObjectFilter {
+public class ObjectFilter extends BaseReadWriteLockable {
 
 	private static final XmlInstances<Filters> INSTANCES = new XmlInstances<>(Filters.class);
 
@@ -59,7 +57,6 @@ public class ObjectFilter {
 	private final Logger log = LoggerFactory.getLogger(getClass());
 	private final List<Filter> activeFilters = new ArrayList<>();
 	private final FilterOutcome defaultOutcome;
-	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private boolean closed = false;
 
 	private ObjectFilter(Filters filters) {
@@ -69,9 +66,7 @@ public class ObjectFilter {
 
 	public Boolean accept(CmfObject<CmfValue> cmfObject, CmfValueMapper mapper) throws ObjectFilterException {
 		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
-		Lock l = this.rwLock.readLock();
-		l.lock();
-		try {
+		return readLockedChecked(() -> {
 			if (this.closed) { throw new ObjectFilterException("This object filter is already closed"); }
 			DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject),
 				mapper, null);
@@ -103,9 +98,7 @@ public class ObjectFilter {
 			this.log.trace("Default action: {} {}", StringUtils.capitalize(this.defaultOutcome.name().toLowerCase()),
 				cmfObject.getDescription());
 			return ret;
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 
 	public <V> boolean acceptRaw(CmfObject<V> object, CmfValueMapper mapper) throws ObjectFilterException {
@@ -114,14 +107,13 @@ public class ObjectFilter {
 	}
 
 	public void close() {
-		final Lock l = this.rwLock.writeLock();
-		l.lock();
-		try {
-			if (this.closed) { return; }
-			this.activeFilters.clear();
-		} finally {
-			this.closed = true;
-			l.unlock();
-		}
+		writeLocked(() -> {
+			try {
+				if (this.closed) { return; }
+				this.activeFilters.clear();
+			} finally {
+				this.closed = true;
+			}
+		});
 	}
 }

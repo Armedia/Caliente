@@ -239,7 +239,7 @@ public class KeyLockableCache<K extends Serializable, V> {
 		}
 	}
 
-	public final V createIfAbsent(K key, CheckedSupplier<V> initializer) throws Exception {
+	public final <EX extends Throwable> V createIfAbsent(K key, CheckedSupplier<V, EX> initializer) throws EX {
 		Objects.requireNonNull(key, "Must provide a non-null key");
 		Objects.requireNonNull(initializer, "Must provide a non-null initializer");
 		final Lock l = getExclusiveLock(key);

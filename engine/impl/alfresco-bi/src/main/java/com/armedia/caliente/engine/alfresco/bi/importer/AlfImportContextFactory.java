@@ -20,19 +20,20 @@ import com.armedia.caliente.store.CmfObjectStore;
 import com.armedia.caliente.store.CmfStorageException;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.commons.utilities.CfgTools;
-import com.armedia.commons.utilities.function.LazySupplier;
+import com.armedia.commons.utilities.function.CheckedLazySupplier;
 
 public class AlfImportContextFactory
 	extends ImportContextFactory<AlfRoot, AlfSessionWrapper, CmfValue, AlfImportContext, AlfImportEngine, File> {
 
-	private final LazySupplier<Map<CmfObject.Archetype, Map<String, String>>> renameMap = new LazySupplier<>(() -> {
-		try {
-			return getObjectStore().getRenameMappings();
-		} catch (final CmfStorageException e) {
-			this.log.error("Failed to load the renamer map from the object store", e);
-			throw new ImportException(e);
-		}
-	}, Collections.emptyMap());
+	private final CheckedLazySupplier<Map<CmfObject.Archetype, Map<String, String>>, ImportException> renameMap = new CheckedLazySupplier<>(
+		() -> {
+			try {
+				return getObjectStore().getRenameMappings();
+			} catch (final CmfStorageException e) {
+				this.log.error("Failed to load the renamer map from the object store", e);
+				throw new ImportException(e);
+			}
+		}, Collections.emptyMap());
 
 	protected AlfImportContextFactory(AlfImportEngine engine, CfgTools settings, AlfRoot root,
 		CmfObjectStore<?> objectStore, CmfContentStore<?, ?> contentStore, Transformer transformer, Logger output,

@@ -1,9 +1,5 @@
 package com.armedia.caliente.engine.dynamic.transformer;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import com.armedia.caliente.engine.dynamic.ActionException;
 import com.armedia.caliente.engine.dynamic.DefaultDynamicObject;
 import com.armedia.caliente.engine.dynamic.DynamicElementContext;
@@ -20,8 +16,9 @@ import com.armedia.caliente.store.CmfAttributeNameMapper;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueMapper;
+import com.armedia.caliente.tools.BaseReadWriteLockable;
 
-public class Transformer {
+public class Transformer extends BaseReadWriteLockable {
 
 	private static final XmlInstances<Transformations> INSTANCES = new XmlInstances<>(Transformations.class);
 
@@ -53,7 +50,6 @@ public class Transformer {
 		return Transformer.INSTANCES.getDefaultFileName();
 	}
 
-	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 	private final Transformations transformations;
 	private final ExternalMetadataLoader metadataLoader;
 	private final AttributeMapper attributeMapper;
@@ -72,9 +68,7 @@ public class Transformer {
 
 	public CmfObject<CmfValue> transform(CmfValueMapper mapper, final CmfAttributeNameMapper nameMapper,
 		SchemaService schemaService, CmfObject<CmfValue> object) throws TransformerException {
-		Lock l = this.rwLock.readLock();
-		l.lock();
-		try {
+		return readLockedChecked(() -> {
 			if (this.closed) { throw new TransformerException("This transformer instance is already closed"); }
 			if (this.transformations == null) { return object; }
 			DynamicElementContext ctx = createContext(mapper, object);
@@ -103,9 +97,7 @@ public class Transformer {
 			} finally {
 				destroyContext(ctx);
 			}
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 
 	private void destroyContext(DynamicElementContext ctx) {
@@ -116,17 +108,16 @@ public class Transformer {
 	}
 
 	public void close() {
-		Lock l = this.rwLock.writeLock();
-		l.lock();
-		try {
-			if (this.closed) { return; }
-			if (this.metadataLoader != null) {
-				this.metadataLoader.close();
+		writeLocked(() -> {
+			try {
+				if (this.closed) { return; }
+				if (this.metadataLoader != null) {
+					this.metadataLoader.close();
+				}
+			} finally {
+				this.closed = true;
 			}
-		} finally {
-			this.closed = true;
-			l.unlock();
-		}
+		});
 	}
 
 }
