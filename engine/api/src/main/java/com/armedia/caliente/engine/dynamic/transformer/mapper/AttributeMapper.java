@@ -217,42 +217,44 @@ public class AttributeMapper {
 		return this.residualsPrefix;
 	}
 
+	private MappingRendererSet buildMappingRendererSet(ConstructedType type) {
+		Map<String, BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers = new LinkedHashMap<>();
+
+		// First, the type itself
+		MappingRendererSet set = AttributeMapper.this.typedMappings.get(type.getName());
+		if (set != null) {
+			renderers.put(type.getName(), set);
+		}
+
+		// Next, all of its hierarchical parents
+		for (String a : type.getAncestors()) {
+			set = AttributeMapper.this.typedMappings.get(a);
+			if ((set != null) && !renderers.containsKey(a)) {
+				renderers.put(a, set);
+			}
+		}
+
+		// Finally, all its secondaries
+		for (String s : type.getSecondaries()) {
+			set = AttributeMapper.this.typedMappings.get(s);
+			if ((set != null) && !renderers.containsKey(s)) {
+				renderers.put(s, set);
+			}
+		}
+
+		// Finally, add the common renderers
+		if (AttributeMapper.this.commonRenderers != null) {
+			renderers.put(null, AttributeMapper.this.commonRenderers);
+		}
+
+		return new MappingRendererSet(type.toString(), null, null, new ArrayList<>(renderers.values()));
+	}
+
 	private MappingRendererSet getMappingRendererSet(final ConstructedType type) {
 		if (type == null) { return this.commonRenderers; }
 		final String signature = type.getSignature();
 		try {
-			return this.cache.createIfAbsent(signature, () -> {
-				Map<String, BiFunction<DynamicObject, ResidualsModeTracker, Collection<AttributeMapping>>> renderers = new LinkedHashMap<>();
-
-				// First, the type itself
-				MappingRendererSet set = AttributeMapper.this.typedMappings.get(type.getName());
-				if (set != null) {
-					renderers.put(type.getName(), set);
-				}
-
-				// Next, all of its hierarchical parents
-				for (String a : type.getAncestors()) {
-					set = AttributeMapper.this.typedMappings.get(a);
-					if ((set != null) && !renderers.containsKey(a)) {
-						renderers.put(a, set);
-					}
-				}
-
-				// Finally, all its secondaries
-				for (String s : type.getSecondaries()) {
-					set = AttributeMapper.this.typedMappings.get(s);
-					if ((set != null) && !renderers.containsKey(s)) {
-						renderers.put(s, set);
-					}
-				}
-
-				// Finally, add the common renderers
-				if (AttributeMapper.this.commonRenderers != null) {
-					renderers.put(null, AttributeMapper.this.commonRenderers);
-				}
-
-				return new MappingRendererSet(type.toString(), null, null, new ArrayList<>(renderers.values()));
-			});
+			return this.cache.createIfAbsent(signature, () -> buildMappingRendererSet(type));
 		} catch (Exception e) {
 			throw new RuntimeException(String.format("Failed to generate the mapping renderers for type [%s] (%s)",
 				type.toString(), signature), e);
