@@ -124,9 +124,9 @@ public class FastLRUCache<KEY, VALUE> {
 	 * @param key
 	 * @param supplier
 	 * @return the calculated value for the key
-	 * @throws Exception
+	 * @throws EX
 	 */
-	public VALUE createIfAbsent(KEY key, CheckedSupplier<VALUE> supplier) throws Exception {
+	public <EX extends Throwable> VALUE createIfAbsent(KEY key, CheckedSupplier<VALUE, EX> supplier) throws EX {
 		return null;
 	}
 
