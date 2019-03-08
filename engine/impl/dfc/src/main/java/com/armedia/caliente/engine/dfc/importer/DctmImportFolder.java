@@ -55,8 +55,8 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 		// If updating an existing folder object, make sure that you have write
 		// permissions and CHANGE_LOCATION. If you don't, grant them, and reset it later on.
 		if (!newObject) {
-			this.mainTemporaryPermission = new TemporaryPermission(folder, IDfACL.DF_PERMIT_DELETE,
-				IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
+			this.mainTemporaryPermission = new TemporaryPermission(context.getSession(), folder,
+				IDfACL.DF_PERMIT_DELETE, IDfACL.DF_XPERMIT_CHANGE_LOCATION_STR);
 			if (this.mainTemporaryPermission.grant(folder)) {
 				folder.save();
 			}
@@ -90,7 +90,7 @@ public class DctmImportFolder extends DctmImportSysObject<IDfFolder> implements 
 	@Override
 	protected boolean cleanupAfterSave(IDfFolder folder, boolean newObject, DctmImportContext context)
 		throws DfException, ImportException {
-		cleanUpParents(folder.getSession());
+		cleanUpParents(context.getSession());
 		return super.cleanupAfterSave(folder, newObject, context);
 	}
 

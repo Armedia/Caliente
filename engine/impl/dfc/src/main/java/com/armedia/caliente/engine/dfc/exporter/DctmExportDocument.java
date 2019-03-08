@@ -174,7 +174,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 			IDfVirtualDocument vDoc = document.asVirtualDocument(ISysObject.CURRENT_VERSION_LABEL, false);
 			int components = vDoc.getUniqueObjectIdCount();
 			for (int i = 0; i < components; i++) {
-				req.add(this.factory.newExportDelegate(session.getObject(vDoc.getUniqueObjectId(i))));
+				req.add(this.factory.newExportDelegate(session, session.getObject(vDoc.getUniqueObjectId(i))));
 			}
 		}
 		return req;
@@ -200,7 +200,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				if (this.log.isDebugEnabled()) {
 					this.log.debug("Adding prior version [{}]", calculateVersionString(versionDoc, false));
 				}
-				req.add(this.factory.newExportDelegate(versionDoc));
+				req.add(this.factory.newExportDelegate(session, versionDoc));
 				previousCount++;
 			}
 			rootObject = (previousCount == 0);
@@ -232,7 +232,7 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 				if (this.log.isDebugEnabled()) {
 					this.log.debug("Adding subsequent version [{}]", calculateVersionString(versionDoc, false));
 				}
-				ret.add(this.factory.newExportDelegate(versionDoc));
+				ret.add(this.factory.newExportDelegate(session, versionDoc));
 			}
 		}
 		return ret;
@@ -240,8 +240,8 @@ public class DctmExportDocument extends DctmExportSysObject<IDfSysObject> implem
 
 	@Override
 	protected List<CmfContentStream> doStoreContent(DctmExportContext ctx, CmfAttributeTranslator<IDfValue> translator,
-		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfSysObject document,
-		CmfContentStore<?, ?> streamStore, boolean includeRenditions) throws DfException {
+		CmfObject<IDfValue> marshaled, ExportTarget referrent, IDfSysObject document, CmfContentStore<?, ?> streamStore,
+		boolean includeRenditions) throws DfException {
 		if (isDfReference(document)) {
 			return super.doStoreContent(ctx, translator, marshaled, referrent, document, streamStore,
 				includeRenditions);

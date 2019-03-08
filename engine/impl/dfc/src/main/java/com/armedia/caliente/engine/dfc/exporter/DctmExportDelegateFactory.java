@@ -44,8 +44,8 @@ public class DctmExportDelegateFactory
 		return newExportDelegate(session, session.getObject(new DfId(searchKey)), type);
 	}
 
-	DctmExportDelegate<?> newExportDelegate(IDfPersistentObject object) throws Exception {
-		return newExportDelegate(object.getSession(), object, null);
+	DctmExportDelegate<?> newExportDelegate(IDfSession session, IDfPersistentObject object) throws Exception {
+		return newExportDelegate(session, object, null);
 	}
 
 	DctmExportDelegate<?> newExportDelegate(IDfSession session, IDfPersistentObject object, CmfObject.Archetype type)

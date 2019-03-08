@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -85,19 +84,6 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return secondaries;
 	}
 
-	protected List<String> calculateFullPath(IDfSysObject f) throws DfException {
-		IDfSession session = f.getSession();
-		LinkedList<String> ret = new LinkedList<>();
-		while (f != null) {
-			ret.addFirst(f.getObjectName());
-			if (f.getValueCount(DctmAttributes.I_FOLDER_ID) < 1) {
-				break;
-			}
-			f = IDfSysObject.class.cast(session.getFolderBySpecification(f.getString(DctmAttributes.I_FOLDER_ID)));
-		}
-		return ret;
-	}
-
 	private final List<List<String>> calculateRecursions(final IDfSysObject f, Set<String> visited,
 		final RecursionCalculator calc) throws DfException {
 		final String oid = f.getObjectId().getId();
@@ -154,21 +140,50 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		return calculateRecursions(f, calc);
 	}
 
-	protected final List<List<String>> calculateAllPaths(IDfSysObject f) throws DfException {
-		return calculateRecursions(f, null, new RecursionCalculator() {
-			@Override
-			public String getValue(IDfSysObject o) throws DfException {
-				return o.getObjectName();
-			}
+	protected final List<List<String>> calculateAllPaths(IDfSession session, IDfSysObject f) throws DfException {
+		return calculateRecursions(f, null, (o) -> {
+			return o.getObjectName();
 		});
+
+		/*
+		final String oid = f.getObjectId().getId();
+		final int parentCount = f.getFolderIdCount();
+		List<List<String>> ret = new ArrayList<>();
+		for (int i = 0; i < parentCount; i++) {
+			final IDfId parentId = f.getFolderId(i);
+
+			// Validate that it's a valid ID...
+			if (parentId.isNull() || !parentId.isObjectId()) {
+				this.log.warn("Invalid parent ID [{}] read from object [{}]: [{}]", parentId.toString(), oid);
+				continue;
+			}
+
+			// Retrieve the parent...
+			final IDfFolder parent;
+			try {
+				parent = session.getFolderBySpecification(parentId.getId());
+			} catch (RuntimeException e) {
+				// This is a precaution, to catch unchecked exceptions due to DFC bugs...
+				throw new DfException(
+					String.format("DFC NPE Bug triggered by folder with ID [%s], which is a parent of object [%s]",
+						parentId.toString(), oid));
+			}
+
+			// Parent not found...?!?!?!
+			if (parent == null) { throw new DfIdNotFoundException(parentId); }
+
+			final int pathCount = parent.getFolderPathCount();
+			for (int j = 0; j < pathCount; j++) {
+				ret.add(FileNameTools.tokenize(parent.getFolderPath(j), '/'));
+			}
+		}
+		return ret;
+		*/
 	}
 
 	protected final List<List<String>> calculateAllParentIds(IDfSysObject f) throws DfException {
-		return calculateRecursions(f, null, new RecursionCalculator() {
-			@Override
-			public String getValue(IDfSysObject o) throws DfException {
-				return o.getChronicleId().getId();
-			}
+		return calculateRecursions(f, null, (o) -> {
+			return o.getChronicleId().getId();
 		});
 	}
 
@@ -249,7 +264,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 
 		// Calculate the parent paths in the correct order... r_folder_path may have a different
 		// order in some documentum instances
-		for (List<String> p : calculateAllPaths(object)) {
+		for (List<String> p : calculateAllPaths(ctx.getSession(), object)) {
 			paths.addValue(DfValueFactory.newStringValue(FileNameTools.reconstitute(p, true, false, '/')));
 		}
 
@@ -502,7 +517,9 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			String.format("None of the parent paths for object [%s] were found", sysObject.getObjectId().getId()));
 	}
 
-	protected int calculateSysObjectDepth(IDfSysObject object, Set<String> visited) throws DfException {
+	protected int calculateDocumentDepth(IDfSysObject object, Set<String> visited) throws DfException {
+		if (!object.isVirtualDocument() && (object.getLinkCount() <= 0)) { return 0; }
+
 		if (visited == null) {
 			// Allow for easy invocation with only one parameter
 			visited = new LinkedHashSet<>();
@@ -532,7 +549,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 						final int members = root.getChildCount();
 						for (int i = 0; i < members; i++) {
 							final IDfVirtualDocumentNode child = root.getChild(i);
-							int refDepth = calculateSysObjectDepth(child.getSelectedObject(), visited);
+							int refDepth = calculateDocumentDepth(child.getSelectedObject(), visited);
 
 							// If our depth exceeds that of the deepest object yet, then we take
 							// this as the new depth
@@ -559,13 +576,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		}
 	}
 
-	protected int calculateDepth(T object, Set<String> visited) throws DfException {
-		return calculateSysObjectDepth(object, visited);
+	protected int calculateDepth(T object) throws DfException {
+		return calculateDocumentDepth(object, null);
 	}
 
 	@Override
 	protected final int calculateDependencyTier(IDfSession session, T object) throws Exception {
-		int depth = calculateDepth(object, null);
+		int depth = calculateDepth(object);
 		if (isDfReference(object)) {
 			depth++;
 		}
@@ -592,7 +609,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			for (int i = 0; i < pathCount; i++) {
 				IDfId folderId = sysObject.getFolderId(i);
 				IDfFolder parent = session.getFolderBySpecification(folderId.getId());
-				req.add(this.factory.newExportDelegate(parent));
+				req.add(this.factory.newExportDelegate(session, parent));
 			}
 		}
 
@@ -602,7 +619,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			if (StringUtils.isNotBlank(storeName)) {
 				IDfStore store = DfUtils.getStore(session, storeName);
 				if (store != null) {
-					req.add(this.factory.newExportDelegate(store));
+					req.add(this.factory.newExportDelegate(session, store));
 				} else {
 					this.log.warn("SysObject {} refers to missing store [{}]", marshaled.getLabel(), storeName);
 				}
@@ -615,7 +632,8 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			if (Tools.equals(referrentId.getDocbaseId(), sysObject.getObjectId().getDocbaseId())) {
 				// The object is from the same docbase, so we make sure it's listed as a requirement
 				// to ensure it gets copied AFTER the referrent gets copied
-				DctmExportDelegate<?> delegate = this.factory.newExportDelegate(session.getObject(referrentId));
+				DctmExportDelegate<?> delegate = this.factory.newExportDelegate(session,
+					session.getObject(referrentId));
 				if (delegate == null) {
 					throw new ExportException(String.format(
 						"The %s [%s](%s) is a reference to an object with ID (%s), but that object is not supported to be exported",
@@ -632,7 +650,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		if (ctx.isSupported(CmfObject.Archetype.FORMAT)) {
 			IDfFormat format = sysObject.getFormat();
 			if (format != null) {
-				req.add(this.factory.newExportDelegate(format));
+				req.add(this.factory.newExportDelegate(session, format));
 			}
 		}
 
@@ -642,7 +660,7 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 			if (!DctmMappingUtils.isSubstitutionForMappableUser(owner) && !ctx.isSpecialUser(owner)) {
 				IDfUser user = session.getUser(sysObject.getOwnerName());
 				if (user != null) {
-					req.add(this.factory.newExportDelegate(user));
+					req.add(this.factory.newExportDelegate(session, user));
 				}
 			}
 		}
@@ -651,13 +669,13 @@ public class DctmExportSysObject<T extends IDfSysObject> extends DctmExportDeleg
 		if (ctx.isSupported(CmfObject.Archetype.GROUP)) {
 			IDfGroup group = session.getGroup(sysObject.getGroupName());
 			if (group != null) {
-				req.add(this.factory.newExportDelegate(group));
+				req.add(this.factory.newExportDelegate(session, group));
 			}
 		}
 
 		// Export the ACL requirements
 		if (ctx.isSupported(CmfObject.Archetype.ACL)) {
-			req.add(this.factory.newExportDelegate(sysObject.getACL()));
+			req.add(this.factory.newExportDelegate(session, sysObject.getACL()));
 		}
 		return req;
 	}

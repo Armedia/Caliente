@@ -74,7 +74,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 				if (existingMembers.isEmpty()) { return false; }
 			} else {
 				for (IDfValue v : att) {
-					final String name = DctmMappingUtils.resolveMappableUser(existingObject, v.asString());
+					final String name = DctmMappingUtils.resolveMappableUser(ctx.getSession(), v.asString());
 					if (!existingMembers.remove(name)) { return false; }
 				}
 				if (existingMembers.isEmpty()) { return false; }
@@ -97,7 +97,7 @@ public class DctmImportGroup extends DctmImportDelegate<IDfGroup> implements Dct
 		if (newObject) {
 			group.setGroupName(groupName.asString().toLowerCase());
 		}
-		final IDfSession session = group.getSession();
+		final IDfSession session = context.getSession();
 		CmfAttribute<IDfValue> usersNames = this.cmfObject.getAttribute(DctmAttributes.USERS_NAMES);
 		// Keep track of missing users so we don't look for them again.
 		Set<String> missingUsers = new HashSet<>();
