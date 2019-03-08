@@ -12,9 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.WarningTracker;
-import com.armedia.caliente.engine.tools.BaseReadWriteLockable;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
+import com.armedia.caliente.tools.BaseReadWriteLockable;
 
 public class CalienteWarningTracker extends BaseReadWriteLockable implements WarningTracker {
 

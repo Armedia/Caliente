@@ -1,4 +1,4 @@
-package com.armedia.caliente.engine.tools;
+package com.armedia.caliente.tools;
 
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -11,6 +11,9 @@ import java.util.function.Supplier;
 
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.armedia.caliente.tools.BaseReadWriteLockable;
+import com.armedia.caliente.tools.ReadWriteLockable;
 
 public class ReadWriteLockedTest {
 

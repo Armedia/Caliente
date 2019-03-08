@@ -18,9 +18,9 @@ import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
 import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
-import com.armedia.caliente.engine.tools.BaseReadWriteLockable;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
+import com.armedia.caliente.tools.BaseReadWriteLockable;
 import com.armedia.commons.utilities.Tools;
 
 public class ExternalMetadataLoader extends BaseReadWriteLockable {
