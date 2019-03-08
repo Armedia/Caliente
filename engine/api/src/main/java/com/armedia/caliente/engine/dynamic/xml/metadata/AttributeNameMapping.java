@@ -56,7 +56,7 @@ public class AttributeNameMapping implements ReadWriteLockable {
 	protected Boolean caseSensitive = null;
 
 	@Override
-	public final ReadWriteLock get() {
+	public final ReadWriteLock getMainLock() {
 		return this.rwLock;
 	}
 
