@@ -407,8 +407,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 
 		// If it doesn't support file access...
-		OPERATION operation = beginConcurrentOperation();
-		try {
+		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			try {
 				return openInput(operation, locator);
@@ -422,9 +421,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					}
 				}
 			}
-		} finally {
-			endOperation(operation);
-		}
+		});
 	}
 
 	protected abstract InputStream openInput(OPERATION operation, LOCATOR locator) throws CmfStorageException;
@@ -459,8 +456,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 
 		// If it doesn't support file access...
-		OPERATION operation = beginConcurrentOperation();
-		try {
+		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			boolean ok = false;
 			try {
@@ -480,9 +476,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					}
 				}
 			}
-		} finally {
-			endOperation(operation);
-		}
+		});
 	}
 
 	protected abstract long setContents(OPERATION operation, LOCATOR locator, InputStream in)
@@ -501,8 +495,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 
 		// If it doesn't support file access...
-		OPERATION operation = beginConcurrentOperation();
-		try {
+		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			try {
 				return isExists(operation, locator);
@@ -516,9 +509,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					}
 				}
 			}
-		} finally {
-			endOperation(operation);
-		}
+		});
 	}
 
 	protected abstract boolean isExists(OPERATION operation, LOCATOR locator) throws CmfStorageException;
@@ -540,8 +531,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 		}
 
 		// If it doesn't support file access...
-		OPERATION operation = beginConcurrentOperation();
-		try {
+		return runConcurrently((operation) -> {
 			final boolean tx = operation.begin();
 			try {
 				return getStreamSize(operation, locator);
@@ -555,16 +545,13 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					}
 				}
 			}
-		} finally {
-			endOperation(operation);
-		}
+		});
 	}
 
 	protected abstract long getStreamSize(OPERATION operation, LOCATOR locator) throws CmfStorageException;
 
 	public final void clearAllStreams() throws CmfStorageException {
-		OPERATION operation = beginExclusiveOperation();
-		try {
+		runExclusively((operation) -> {
 			final boolean tx = operation.begin();
 			try {
 				clearAllStreams(operation);
@@ -577,9 +564,7 @@ public abstract class CmfContentStore<LOCATOR, OPERATION extends CmfStoreOperati
 					}
 				}
 			}
-		} finally {
-			endOperation(operation);
-		}
+		});
 	}
 
 	protected abstract void clearAllStreams(OPERATION operation) throws CmfStorageException;
