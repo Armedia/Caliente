@@ -2,6 +2,7 @@ package com.armedia.caliente.engine.dynamic.xml.metadata;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
@@ -68,8 +69,7 @@ public class AttributeNameMapping implements ReadWriteLockable {
 	}
 
 	public void initialize(Boolean caseSensitive) {
-		writeLocked(() -> {
-			if (this.matchers != null) { return; }
+		readUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
 			this.caseSensitive = Tools.coalesce(caseSensitive, AttributeNameMapping.DEFAULT_CASE_SENSITIVE);
 			this.activeDefault = this.defaultTransform;
 			List<NameMatcher> matchers = new ArrayList<>();
@@ -100,7 +100,7 @@ public class AttributeNameMapping implements ReadWriteLockable {
 	}
 
 	public String transformName(final String sqlName) throws ScriptException {
-		return readLockedChecked(() -> {
+		return readLocked(() -> {
 			boolean hasGroups = false;
 			String regex = null;
 			Expression repl = null;

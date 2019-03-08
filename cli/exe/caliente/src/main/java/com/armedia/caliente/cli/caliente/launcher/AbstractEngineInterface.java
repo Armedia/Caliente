@@ -10,9 +10,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -31,10 +28,12 @@ import com.armedia.caliente.engine.exporter.ExportEngineFactory;
 import com.armedia.caliente.engine.importer.ImportEngineFactory;
 import com.armedia.commons.utilities.PluggableServiceLocator;
 import com.armedia.commons.utilities.Tools;
+import com.armedia.commons.utilities.concurrent.BaseReadWriteLockable;
+import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
 
 public abstract class AbstractEngineInterface {
 
-	private static final ReadWriteLock INTERFACES_LOCK = new ReentrantReadWriteLock();
+	private static final ReadWriteLockable INTERFACES_LOCK = new BaseReadWriteLockable();
 	private static final AtomicBoolean INTERFACES_INITIALIZED = new AtomicBoolean(false);
 	private static Map<String, String> ENGINE_ALIASES = null;
 	private static Map<String, AbstractEngineInterface> INTERFACES = null;
@@ -47,93 +46,72 @@ public abstract class AbstractEngineInterface {
 	}
 
 	private static void initializeInterfaces(final Logger log) {
-		final Lock read = AbstractEngineInterface.INTERFACES_LOCK.readLock();
-		final Lock write = AbstractEngineInterface.INTERFACES_LOCK.writeLock();
-
-		read.lock();
-		try {
-			if (!AbstractEngineInterface.INTERFACES_INITIALIZED.get()) {
-				read.unlock();
-				write.lock();
-				try {
-					if (!AbstractEngineInterface.INTERFACES_INITIALIZED.get()) {
-						final PluggableServiceLocator<AbstractEngineInterface> abstractEngineInterfaces = new PluggableServiceLocator<>(
-							AbstractEngineInterface.class);
-						abstractEngineInterfaces.setHideErrors(log == null);
-						if (!abstractEngineInterfaces.isHideErrors()) {
-							abstractEngineInterfaces.setErrorListener(
-								(serviceClass, t) -> log.error("Failed to initialize the EngineInterface class {}",
-									serviceClass.getCanonicalName(), t));
-						}
-						final Map<String, String> engineAliases = new TreeMap<>();
-						final Map<String, AbstractEngineInterface> interfaces = new TreeMap<>();
-						abstractEngineInterfaces.forEach((abstractEngineInterface) -> {
-							final String canonicalName = AbstractEngineInterface
-								.canonicalizeName(abstractEngineInterface.getName());
-							if (interfaces.containsKey(canonicalName)) {
-								AbstractEngineInterface oldInterface = interfaces.get(canonicalName);
-								String msg = String.format(
-									"EngineInterface title conflict on canonical title [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
-									canonicalName, oldInterface.getClass().getCanonicalName(), oldInterface.getName(),
-									abstractEngineInterface.getClass().getCanonicalName(),
-									abstractEngineInterface.getName());
-								if (log != null) {
-									log.warn(msg);
-								} else {
-									throw new IllegalStateException(msg);
-								}
-							}
-							// Add the proxy
-							interfaces.put(canonicalName, abstractEngineInterface);
-							// Add the identity alias mapping
-							engineAliases.put(canonicalName, canonicalName);
-
-							for (String alias : abstractEngineInterface.getAliases()) {
-								alias = AbstractEngineInterface.canonicalizeName(alias);
-								if (StringUtils.equals(canonicalName, alias)) {
-									continue;
-								}
-
-								if (engineAliases.containsKey(alias)) {
-									AbstractEngineInterface oldInterface = interfaces.get(engineAliases.get(alias));
-									String msg = String.format(
-										"EngineInterface alias conflict on alias [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
-										alias, oldInterface.getClass().getCanonicalName(), oldInterface.getName(),
-										abstractEngineInterface.getClass().getCanonicalName(),
-										abstractEngineInterface.getName());
-									if (log != null) {
-										log.warn(msg);
-									} else {
-										throw new IllegalStateException(msg);
-									}
-								}
-								// Add the alias mapping
-								engineAliases.put(alias, canonicalName);
-							}
-						});
-
-						if (interfaces.isEmpty()) {
-							AbstractEngineInterface.INTERFACES = Collections.emptyMap();
-							AbstractEngineInterface.ENGINE_ALIASES = Collections.emptyMap();
-							log.warn(
-								"No engine interfaces were located. Please check the contents of the service file for {}",
-								AbstractEngineInterface.class.getCanonicalName());
-						} else {
-							AbstractEngineInterface.INTERFACES = Tools.freezeMap(new LinkedHashMap<>(interfaces));
-							AbstractEngineInterface.ENGINE_ALIASES = Tools
-								.freezeMap(new LinkedHashMap<>(engineAliases));
-						}
-						AbstractEngineInterface.INTERFACES_INITIALIZED.set(true);
-					}
-					read.lock();
-				} finally {
-					write.unlock();
+		AbstractEngineInterface.INTERFACES_LOCK
+			.readUpgradable(() -> !AbstractEngineInterface.INTERFACES_INITIALIZED.get(), () -> {
+				final PluggableServiceLocator<AbstractEngineInterface> abstractEngineInterfaces = new PluggableServiceLocator<>(
+					AbstractEngineInterface.class);
+				abstractEngineInterfaces.setHideErrors(log == null);
+				if (!abstractEngineInterfaces.isHideErrors()) {
+					abstractEngineInterfaces.setErrorListener((serviceClass, t) -> log.error(
+						"Failed to initialize the EngineInterface class {}", serviceClass.getCanonicalName(), t));
 				}
-			}
-		} finally {
-			read.unlock();
-		}
+				final Map<String, String> engineAliases = new TreeMap<>();
+				final Map<String, AbstractEngineInterface> interfaces = new TreeMap<>();
+				abstractEngineInterfaces.forEach((abstractEngineInterface) -> {
+					final String canonicalName = AbstractEngineInterface
+						.canonicalizeName(abstractEngineInterface.getName());
+					if (interfaces.containsKey(canonicalName)) {
+						AbstractEngineInterface oldInterface = interfaces.get(canonicalName);
+						String msg = String.format(
+							"EngineInterface title conflict on canonical title [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
+							canonicalName, oldInterface.getClass().getCanonicalName(), oldInterface.getName(),
+							abstractEngineInterface.getClass().getCanonicalName(), abstractEngineInterface.getName());
+						if (log != null) {
+							log.warn(msg);
+						} else {
+							throw new IllegalStateException(msg);
+						}
+					}
+					// Add the proxy
+					interfaces.put(canonicalName, abstractEngineInterface);
+					// Add the identity alias mapping
+					engineAliases.put(canonicalName, canonicalName);
 
+					for (String alias : abstractEngineInterface.getAliases()) {
+						alias = AbstractEngineInterface.canonicalizeName(alias);
+						if (StringUtils.equals(canonicalName, alias)) {
+							continue;
+						}
+
+						if (engineAliases.containsKey(alias)) {
+							AbstractEngineInterface oldInterface = interfaces.get(engineAliases.get(alias));
+							String msg = String.format(
+								"EngineInterface alias conflict on alias [%s] between classes%n\t[%s]=[%s]%n\t[%s]=[%s]",
+								alias, oldInterface.getClass().getCanonicalName(), oldInterface.getName(),
+								abstractEngineInterface.getClass().getCanonicalName(),
+								abstractEngineInterface.getName());
+							if (log != null) {
+								log.warn(msg);
+							} else {
+								throw new IllegalStateException(msg);
+							}
+						}
+						// Add the alias mapping
+						engineAliases.put(alias, canonicalName);
+					}
+				});
+
+				if (interfaces.isEmpty()) {
+					AbstractEngineInterface.INTERFACES = Collections.emptyMap();
+					AbstractEngineInterface.ENGINE_ALIASES = Collections.emptyMap();
+					log.warn("No engine interfaces were located. Please check the contents of the service file for {}",
+						AbstractEngineInterface.class.getCanonicalName());
+				} else {
+					AbstractEngineInterface.INTERFACES = Tools.freezeMap(new LinkedHashMap<>(interfaces));
+					AbstractEngineInterface.ENGINE_ALIASES = Tools.freezeMap(new LinkedHashMap<>(engineAliases));
+				}
+				AbstractEngineInterface.INTERFACES_INITIALIZED.set(true);
+			});
 	}
 
 	public static AbstractEngineInterface get(final Logger log, final String engine) {

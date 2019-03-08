@@ -68,7 +68,7 @@ public class Transformer extends BaseReadWriteLockable {
 
 	public CmfObject<CmfValue> transform(CmfValueMapper mapper, final CmfAttributeNameMapper nameMapper,
 		SchemaService schemaService, CmfObject<CmfValue> object) throws TransformerException {
-		return readLockedChecked(() -> {
+		return readLocked(() -> {
 			if (this.closed) { throw new TransformerException("This transformer instance is already closed"); }
 			if (this.transformations == null) { return object; }
 			DynamicElementContext ctx = createContext(mapper, object);

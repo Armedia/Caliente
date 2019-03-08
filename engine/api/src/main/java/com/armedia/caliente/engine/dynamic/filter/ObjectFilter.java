@@ -66,7 +66,7 @@ public class ObjectFilter extends BaseReadWriteLockable {
 
 	public Boolean accept(CmfObject<CmfValue> cmfObject, CmfValueMapper mapper) throws ObjectFilterException {
 		Objects.requireNonNull(cmfObject, "Must provide an object to filter");
-		return readLockedChecked(() -> {
+		return readLocked(() -> {
 			if (this.closed) { throw new ObjectFilterException("This object filter is already closed"); }
 			DynamicElementContext ctx = new DynamicElementContext(cmfObject, new DefaultDynamicObject(cmfObject),
 				mapper, null);
