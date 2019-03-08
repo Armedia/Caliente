@@ -30,9 +30,6 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,11 +47,12 @@ import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoDataType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoSchema;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.AlfrescoType;
 import com.armedia.caliente.engine.alfresco.bi.importer.model.SchemaAttribute;
+import com.armedia.caliente.engine.tools.BaseReadWriteLockable;
 import com.armedia.caliente.tools.xml.XmlProperties;
 import com.armedia.commons.utilities.BinaryEncoding;
 import com.armedia.commons.utilities.Tools;
 
-public class Validator {
+public class Validator extends BaseReadWriteLockable {
 
 	private static final Logger LOG = LoggerFactory.getLogger(Validator.class);
 
@@ -538,8 +536,6 @@ public class Validator {
 
 	private final AlfrescoSchema schema;
 
-	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
 	private final AtomicBoolean closed = new AtomicBoolean(false);
 
 	public Validator(final Path reportDir, final Path sourceRoot, final Path candidateRoot,
@@ -913,9 +909,7 @@ public class Validator {
 	}
 
 	public void validate(final Path sourcePath) {
-		Lock l = this.rwLock.readLock();
-		l.lock();
-		try {
+		readLocked(() -> {
 			if (this.closed.get()) { throw new IllegalStateException("This validator has been closed, but not reset"); }
 			// Validate the source file against the target...
 			final Path relativePath = this.sourceRoot.relativize(sourcePath);
@@ -973,9 +967,7 @@ public class Validator {
 				(validated ? this.successCount : this.failureCount).incrementAndGet();
 				this.log.info("Validation for [{}] {}", relativePath.toString(), validated ? "PASSED" : "FAILED");
 			}
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 
 	private void resetState() {
@@ -985,21 +977,20 @@ public class Validator {
 	}
 
 	public void writeAndClear() throws IOException {
-		Lock l = this.rwLock.writeLock();
-		l.lock();
-		try {
-			for (ValidationErrorType t : this.errors.keySet()) {
-				closeQuietly(this.errors.get(t));
-				this.log.info("Detected {} {} faults", this.faultCounters.get(t).get(), t.name());
+		writeLocked(() -> {
+			try {
+				for (ValidationErrorType t : this.errors.keySet()) {
+					closeQuietly(this.errors.get(t));
+					this.log.info("Detected {} {} faults", this.faultCounters.get(t).get(), t.name());
+				}
+				this.log.info("Detected {} individual faults total", this.faultCount.get());
+				this.log.info("{} objects total PASSED", this.successCount.get());
+				this.log.info("{} objects total FAILED", this.failureCount.get());
+			} finally {
+				resetState();
+				this.closed.set(true);
 			}
-			this.log.info("Detected {} individual faults total", this.faultCount.get());
-			this.log.info("{} objects total PASSED", this.successCount.get());
-			this.log.info("{} objects total FAILED", this.failureCount.get());
-		} finally {
-			resetState();
-			this.closed.set(true);
-			l.unlock();
-		}
+		});
 	}
 
 	private void closeQuietly(Closeable c) {

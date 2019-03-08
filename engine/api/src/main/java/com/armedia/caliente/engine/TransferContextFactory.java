@@ -3,13 +3,12 @@ package com.armedia.caliente.engine;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.dynamic.transformer.Transformer;
+import com.armedia.caliente.engine.tools.BaseReadWriteLockable;
 import com.armedia.caliente.store.CmfContentStore;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.caliente.store.CmfObjectStore;
@@ -22,7 +21,7 @@ public abstract class TransferContextFactory< //
 	VALUE, //
 	CONTEXT extends TransferContext<SESSION, VALUE, ?>, //
 	ENGINE extends TransferEngine<?, ?, ?, SESSION, VALUE, CONTEXT, ?, ?, ?> //
-> {
+> extends BaseReadWriteLockable {
 
 	private static CmfObject.Archetype decodeObjectType(Object o) {
 		if (o == null) { return null; }
@@ -40,8 +39,6 @@ public abstract class TransferContextFactory< //
 	protected final Logger log = LoggerFactory.getLogger(getClass());
 
 	private boolean open = true;
-
-	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
 	private final AtomicLong contextId = new AtomicLong(0);
 	private CfgTools settings = CfgTools.EMPTY;
@@ -129,20 +126,20 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final void close() {
-		this.lock.writeLock().lock();
-		try {
-			if (!this.open) { return; }
-			doClose();
-		} catch (Exception e) {
-			if (this.log.isDebugEnabled()) {
-				this.log.error("Exception caught closing this a factory", e);
-			} else {
-				this.log.error("Exception caught closing this a factory: {}", e.getMessage());
+		writeLocked(() -> {
+			try {
+				if (!this.open) { return; }
+				doClose();
+			} catch (Exception e) {
+				if (this.log.isDebugEnabled()) {
+					this.log.error("Exception caught closing this a factory", e);
+				} else {
+					this.log.error("Exception caught closing this a factory: {}", e.getMessage());
+				}
+			} finally {
+				this.open = false;
 			}
-		} finally {
-			this.open = false;
-			this.lock.writeLock().unlock();
-		}
+		});
 	}
 
 	protected abstract String calculateProductName(SESSION session) throws Exception;
@@ -158,13 +155,10 @@ public abstract class TransferContextFactory< //
 	}
 
 	public final CONTEXT newContext(String rootId, CmfObject.Archetype rootType, SESSION session, int batchPosition) {
-		this.lock.readLock().lock();
-		try {
+		return readLocked(() -> {
 			if (!this.open) { throw new IllegalArgumentException("This context factory is not open"); }
 			return constructContext(rootId, rootType, session, batchPosition);
-		} finally {
-			this.lock.readLock().unlock();
-		}
+		});
 	}
 
 	protected abstract CONTEXT constructContext(String rootId, CmfObject.Archetype rootType, SESSION session,

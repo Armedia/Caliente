@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
@@ -15,10 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.armedia.caliente.engine.WarningTracker;
+import com.armedia.caliente.engine.tools.BaseReadWriteLockable;
 import com.armedia.caliente.store.CmfObjectCounter;
 import com.armedia.caliente.store.CmfObjectRef;
 
-public class CalienteWarningTracker implements WarningTracker {
+public class CalienteWarningTracker extends BaseReadWriteLockable implements WarningTracker {
 
 	public static enum WarningType {
 		//
@@ -75,7 +73,6 @@ public class CalienteWarningTracker implements WarningTracker {
 	}
 
 	private final Logger output;
-	private final ReadWriteLock lock = new ReentrantReadWriteLock();
 	private final AtomicBoolean warningsAdded = new AtomicBoolean(false);
 	private final CmfObjectCounter<WarningType> objectCounter = new CmfObjectCounter<>(WarningType.class);
 	private final List<Warning> warnings;
@@ -106,14 +103,10 @@ public class CalienteWarningTracker implements WarningTracker {
 
 	private boolean persistWarning(Warning w) {
 		if (this.warnings == null) { return false; }
-		Lock l = this.lock.writeLock();
-		l.lock();
-		try {
+		return writeLocked(() -> {
 			this.warnings.add(w);
 			return true;
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 
 	@Override
@@ -133,9 +126,7 @@ public class CalienteWarningTracker implements WarningTracker {
 	public String generateReport() {
 		if (!hasWarnings()) { return null; }
 
-		Lock l = this.lock.readLock();
-		l.lock();
-		try {
+		return readLocked(() -> {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			StringBuilder report = new StringBuilder();
@@ -156,17 +147,13 @@ public class CalienteWarningTracker implements WarningTracker {
 				}
 			}
 			return report.toString();
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 
 	public void generateReport(Logger output) {
 		if (!hasWarnings()) { return; }
 
-		Lock l = this.lock.readLock();
-		l.lock();
-		try {
+		readLocked(() -> {
 			Map<WarningType, Long> m = this.objectCounter.getCummulative();
 			final Long zero = Long.valueOf(0);
 			output.warn("Tracked Warnings Summary:");
@@ -187,8 +174,6 @@ public class CalienteWarningTracker implements WarningTracker {
 					output.warn(w.toString(true));
 				}
 			}
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 }

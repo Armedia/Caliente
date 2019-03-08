@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -20,11 +18,12 @@ import com.armedia.caliente.engine.dynamic.xml.XmlInstances;
 import com.armedia.caliente.engine.dynamic.xml.XmlNotFoundException;
 import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSet;
 import com.armedia.caliente.engine.dynamic.xml.metadata.MetadataSource;
+import com.armedia.caliente.engine.tools.BaseReadWriteLockable;
 import com.armedia.caliente.store.CmfAttribute;
 import com.armedia.caliente.store.CmfObject;
 import com.armedia.commons.utilities.Tools;
 
-public class ExternalMetadataLoader {
+public class ExternalMetadataLoader extends BaseReadWriteLockable {
 
 	private static final Collection<String> ALL_SOURCES = null;
 
@@ -68,8 +67,6 @@ public class ExternalMetadataLoader {
 	private final Map<String, MetadataSource> metadataSources = new LinkedHashMap<>();
 	private final Map<String, MetadataSet> metadataSets = new LinkedHashMap<>();
 
-	private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
 	private ExternalMetadataLoader(String location, ExternalMetadata metadata) {
 		if (location == null) {
 			this.locationDesc = "the default configuration";
@@ -84,7 +81,7 @@ public class ExternalMetadataLoader {
 	}
 
 	private void initialize(final Lock r) throws ExternalMetadataException {
-		final Lock w = this.rwLock.writeLock();
+		final Lock w = getWriteLock();
 		if (r != null) {
 			r.unlock();
 		}
@@ -154,7 +151,7 @@ public class ExternalMetadataLoader {
 	public <V> Map<String, CmfAttribute<V>> getAttributeValues(CmfObject<V> object, Collection<String> sourceNames)
 		throws ExternalMetadataException {
 		Objects.requireNonNull(object, "Must provide a CmfObject instance to retrieve extra metadata for");
-		final Lock l = this.rwLock.readLock();
+		final Lock l = getReadLock();
 		l.lock();
 		try {
 			initialize(l);
@@ -230,17 +227,13 @@ public class ExternalMetadataLoader {
 	}
 
 	public void close() {
-		final Lock l = this.rwLock.writeLock();
-		l.lock();
-		try {
+		writeLocked(() -> {
 			if (!this.initialized) { return; }
 			try {
 				closeSources();
 			} finally {
 				this.initialized = false;
 			}
-		} finally {
-			l.unlock();
-		}
+		});
 	}
 }
