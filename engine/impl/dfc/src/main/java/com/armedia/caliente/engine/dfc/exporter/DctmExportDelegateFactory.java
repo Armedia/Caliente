@@ -1,5 +1,10 @@
 package com.armedia.caliente.engine.dfc.exporter;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import com.armedia.caliente.engine.dfc.DctmObjectType;
 import com.armedia.caliente.engine.dfc.DctmSessionWrapper;
 import com.armedia.caliente.engine.dfc.UnsupportedDctmObjectTypeException;
@@ -15,8 +20,18 @@ import com.documentum.fc.common.IDfValue;
 public class DctmExportDelegateFactory
 	extends ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
 
+	final Map<String, Set<String>> pathCache = Collections.synchronizedMap(new HashMap<String, Set<String>>());
+	final Map<String, Set<String>> pathIdCache = Collections.synchronizedMap(new HashMap<String, Set<String>>());
+
 	DctmExportDelegateFactory(DctmExportEngine engine, CfgTools configuration) {
 		super(engine, configuration);
+	}
+
+	@Override
+	public void close() {
+		this.pathCache.clear();
+		this.pathIdCache.clear();
+		super.close();
 	}
 
 	@Override
