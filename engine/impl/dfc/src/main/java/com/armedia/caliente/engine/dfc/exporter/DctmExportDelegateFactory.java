@@ -20,7 +20,6 @@ import com.documentum.fc.common.IDfValue;
 public class DctmExportDelegateFactory
 	extends ExportDelegateFactory<IDfSession, DctmSessionWrapper, IDfValue, DctmExportContext, DctmExportEngine> {
 
-	final Map<String, Set<String>> pathCache = Collections.synchronizedMap(new HashMap<String, Set<String>>());
 	final Map<String, Set<String>> pathIdCache = Collections.synchronizedMap(new HashMap<String, Set<String>>());
 
 	DctmExportDelegateFactory(DctmExportEngine engine, CfgTools configuration) {
@@ -29,7 +28,6 @@ public class DctmExportDelegateFactory
 
 	@Override
 	public void close() {
-		this.pathCache.clear();
 		this.pathIdCache.clear();
 		super.close();
 	}
