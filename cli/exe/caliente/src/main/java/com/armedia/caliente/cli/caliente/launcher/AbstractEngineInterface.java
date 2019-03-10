@@ -47,7 +47,7 @@ public abstract class AbstractEngineInterface {
 
 	private static void initializeInterfaces(final Logger log) {
 		AbstractEngineInterface.INTERFACES_LOCK
-			.readUpgradable(() -> !AbstractEngineInterface.INTERFACES_INITIALIZED.get(), () -> {
+			.readLockedUpgradable(() -> !AbstractEngineInterface.INTERFACES_INITIALIZED.get(), () -> {
 				final PluggableServiceLocator<AbstractEngineInterface> abstractEngineInterfaces = new PluggableServiceLocator<>(
 					AbstractEngineInterface.class);
 				abstractEngineInterfaces.setHideErrors(log == null);

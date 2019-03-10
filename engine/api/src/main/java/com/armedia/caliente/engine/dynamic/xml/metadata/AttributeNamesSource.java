@@ -69,7 +69,7 @@ public abstract class AttributeNamesSource implements Iterable<String>, ReadWrit
 	protected abstract Set<String> getValues(Connection c) throws Exception;
 
 	public final void initialize(Connection c) throws Exception {
-		readUpgradable(() -> this.values, Objects::isNull, (e) -> {
+		readLockedUpgradable(() -> this.values, Objects::isNull, (e) -> {
 			this.activeCaseSensitive = isCaseSensitive();
 			Set<String> values = getValues(c);
 			if (values == null) {
@@ -117,7 +117,7 @@ public abstract class AttributeNamesSource implements Iterable<String>, ReadWrit
 	}
 
 	public final void close() {
-		readUpgradable(() -> this.values, Objects::nonNull, (e) -> {
+		readLockedUpgradable(() -> this.values, Objects::nonNull, (e) -> {
 			this.values = null;
 			this.activeCaseSensitive = null;
 		});

@@ -69,7 +69,7 @@ public class AttributeTypeMapping implements ReadWriteLockable {
 	}
 
 	public void initialize(Boolean caseSensitive) {
-		readUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
+		readLockedUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
 			this.caseSensitive = Tools.coalesce(caseSensitive, AttributeTypeMapping.DEFAULT_CASE_SENSITIVE);
 
 			this.activeDefault = this.defaultType;
@@ -111,7 +111,7 @@ public class AttributeTypeMapping implements ReadWriteLockable {
 	}
 
 	public void close() {
-		readUpgradable(() -> this.matchers, Objects::nonNull, (e) -> {
+		readLockedUpgradable(() -> this.matchers, Objects::nonNull, (e) -> {
 			this.activeDefault = null;
 			this.caseSensitive = null;
 			this.matchers = null;

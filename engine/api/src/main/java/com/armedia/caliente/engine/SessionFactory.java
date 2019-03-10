@@ -67,7 +67,7 @@ public abstract class SessionFactory<SESSION> extends BaseReadWriteLockable
 
 	@Override
 	public final void close() {
-		readUpgradable(() -> this.open, () -> {
+		readLockedUpgradable(() -> this.open, () -> {
 			try {
 				this.pool.close();
 				doClose();

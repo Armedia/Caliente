@@ -134,7 +134,7 @@ public class MetadataSource implements ReadWriteLockable {
 	}
 
 	public void initialize() throws Exception {
-		readUpgradable(() -> this.dataSource, Objects::isNull, (e) -> {
+		readLockedUpgradable(() -> this.dataSource, Objects::isNull, (e) -> {
 			if (this.dataSource != null) { return; }
 			Map<String, String> settingsMap = getSettingsMap();
 
@@ -179,7 +179,7 @@ public class MetadataSource implements ReadWriteLockable {
 	}
 
 	public void close() {
-		readUpgradable(() -> this.dataSource, Objects::nonNull, (e) -> {
+		readLockedUpgradable(() -> this.dataSource, Objects::nonNull, (e) -> {
 			// TODO: is there any uninitialization we should be doing here?
 			this.dataSource = null;
 		});

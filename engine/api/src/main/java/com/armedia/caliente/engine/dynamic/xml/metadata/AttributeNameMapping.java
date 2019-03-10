@@ -69,7 +69,7 @@ public class AttributeNameMapping implements ReadWriteLockable {
 	}
 
 	public void initialize(Boolean caseSensitive) {
-		readUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
+		readLockedUpgradable(() -> this.matchers, Objects::isNull, (e) -> {
 			this.caseSensitive = Tools.coalesce(caseSensitive, AttributeNameMapping.DEFAULT_CASE_SENSITIVE);
 			this.activeDefault = this.defaultTransform;
 			List<NameMatcher> matchers = new ArrayList<>();

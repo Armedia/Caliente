@@ -37,7 +37,7 @@ public abstract class CmfStore<OPERATION extends CmfStoreOperation<?>> extends B
 	}
 
 	final boolean close(boolean cleanupIfEmpty) {
-		return readUpgradable(() -> this.open, (e) -> e, (e) -> {
+		return readLockedUpgradable(() -> this.open, (e) -> e, (e) -> {
 			try {
 				return doClose(cleanupIfEmpty);
 			} finally {

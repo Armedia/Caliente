@@ -178,7 +178,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadW
 
 	@Override
 	public final void initialize(Connection c) throws Exception {
-		readUpgradable(() -> this.finalSql, Objects::isNull, (e) -> doInitialize(c));
+		readLockedUpgradable(() -> this.finalSql, Objects::isNull, (e) -> doInitialize(c));
 	}
 
 	protected final <V> Object evaluateExpression(Expression expression, final CmfObject<V> object,
@@ -348,7 +348,7 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadW
 
 	@Override
 	public final void close() {
-		readUpgradable(() -> this.finalSql, Objects::nonNull, (e) -> doClose());
+		readLockedUpgradable(() -> this.finalSql, Objects::nonNull, (e) -> doClose());
 	}
 
 }

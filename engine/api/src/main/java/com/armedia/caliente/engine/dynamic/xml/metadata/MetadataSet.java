@@ -95,7 +95,7 @@ public class MetadataSet implements ReadWriteLockable {
 	}
 
 	public void initialize(Map<String, MetadataSource> ds) throws Exception {
-		readUpgradable(() -> this.initializedLoaders, Objects::isNull, (e) -> {
+		readLockedUpgradable(() -> this.initializedLoaders, Objects::isNull, (e) -> {
 			if (this.initializedLoaders != null) { return; }
 			List<AttributeValuesLoader> initializedLoaders = new ArrayList<>();
 			Map<String, MetadataSource> dataSources = new HashMap<>();
@@ -187,7 +187,7 @@ public class MetadataSet implements ReadWriteLockable {
 	}
 
 	public void close() {
-		readUpgradable(() -> this.initializedLoaders, Objects::nonNull, (e) -> {
+		readLockedUpgradable(() -> this.initializedLoaders, Objects::nonNull, (e) -> {
 			if (this.initializedLoaders == null) { return; }
 			for (AttributeValuesLoader loader : this.initializedLoaders) {
 				try {
