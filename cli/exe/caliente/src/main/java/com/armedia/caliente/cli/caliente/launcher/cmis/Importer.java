@@ -84,8 +84,11 @@ class Importer extends ImportCommandModule implements DynamicCommandOptions {
 		}
 		String repoName = commandValues.getString(CLIParam.domain, "-default-");
 		settings.put(CmisSessionSetting.REPOSITORY_ID.getLabel(), Tools.coalesce(repoName, "-default-"));
-		settings.put(TransferSetting.EXCEPT_TYPES.getLabel(), commandValues.getStrings(CLIParam.except_types));
-		settings.put(TransferSetting.ONLY_TYPES.getLabel(), commandValues.getStrings(CLIParam.only_types));
+		if (commandValues.hasValues(CLIParam.only_types)) {
+			settings.put(TransferSetting.ONLY_TYPES.getLabel(), commandValues.getStrings(CLIParam.only_types));
+		} else if (commandValues.hasValues(CLIParam.except_types)) {
+			settings.put(TransferSetting.EXCEPT_TYPES.getLabel(), commandValues.getStrings(CLIParam.except_types));
+		}
 
 		return true;
 	}
