@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
@@ -38,6 +39,7 @@ import com.armedia.caliente.store.CmfValue;
 import com.armedia.caliente.store.CmfValueCodec;
 import com.armedia.commons.utilities.Tools;
 import com.armedia.commons.utilities.concurrent.ReadWriteLockable;
+import com.armedia.commons.utilities.function.CheckedConsumer;
 
 @XmlTransient
 public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadWriteLockable {
@@ -178,7 +180,8 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadW
 
 	@Override
 	public final void initialize(Connection c) throws Exception {
-		readLockedUpgradable(() -> this.finalSql, Objects::isNull, (e) -> doInitialize(c));
+		CheckedConsumer<String, Exception> consumer = (e) -> doInitialize(c);
+		readLockedUpgradable(() -> this.finalSql, Objects::isNull, consumer);
 	}
 
 	protected final <V> Object evaluateExpression(Expression expression, final CmfObject<V> object,
@@ -348,7 +351,8 @@ public abstract class MetadataReaderBase implements AttributeValuesLoader, ReadW
 
 	@Override
 	public final void close() {
-		readLockedUpgradable(() -> this.finalSql, Objects::nonNull, (e) -> doClose());
+		Consumer<String> consumer = (e) -> doClose();
+		readLockedUpgradable(() -> this.finalSql, Objects::nonNull, consumer);
 	}
 
 }
